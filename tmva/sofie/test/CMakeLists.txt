@@ -182,3 +182,4 @@ ROOT_ADD_TEST(tmva-sofie-EmitGNN COMMAND emitGNN)
 
 ROOT_EXECUTABLE(EmitGraphIndependent GNN/EmitGraphIndependent.cxx LIBRARIES ROOTTMVASofie)
 ROOT_ADD_TEST(tmva-sofie-EmitGraphIndependent COMMAND EmitGraphIndependent)
+

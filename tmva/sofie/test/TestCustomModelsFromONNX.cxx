@@ -165,149 +165,129 @@ TEST(ONNX, Linear32)
 }
 
 TEST(ONNX, Sub)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input1({
-         1, 2
-      });
-      std::vector<float> input2({
-         0, 1
-      });
+   // Preparing the standard input
+   std::vector<float> input1({1, 2});
+   std::vector<float> input2({0, 1});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sub", input1, input2);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sub", input1, input2);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Sub_ExpectedOutput::outputs) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Sub_ExpectedOutput::outputs) / sizeof(float));
 
-      float *correct = Sub_ExpectedOutput::outputs;
+   float *correct = Sub_ExpectedOutput::outputs;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Add)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input1({
-         1, 2
-      });
-      std::vector<float> input2({
-         0, 1
-      });
+   // Preparing the standard input
+   std::vector<float> input1({1, 2});
+   std::vector<float> input2({0, 1});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Add", input1, input2);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Add", input1, input2);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Add_ExpectedOutput::outputs) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Add_ExpectedOutput::outputs) / sizeof(float));
 
-      float *correct = Add_ExpectedOutput::outputs;
+   float *correct = Add_ExpectedOutput::outputs;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Mul)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input1({
-         1, 2
-      });
-      std::vector<float> input2({
-         0, 1
-      });
+   // Preparing the standard input
+   std::vector<float> input1({1, 2});
+   std::vector<float> input2({0, 1});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Mul", input1, input2);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Mul", input1, input2);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Mul_ExpectedOutput::outputs) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Mul_ExpectedOutput::outputs) / sizeof(float));
 
-      float *correct = Mul_ExpectedOutput::outputs;
+   float *correct = Mul_ExpectedOutput::outputs;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Div)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input1({
-         4, 2
-      });
-      std::vector<float> input2({
-         2, 2
-      });
+   // Preparing the standard input
+   std::vector<float> input1({4, 2});
+   std::vector<float> input2({2, 2});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Div", input1, input2);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Div", input1, input2);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Div_ExpectedOutput::outputs) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Div_ExpectedOutput::outputs) / sizeof(float));
 
-      float *correct = Div_ExpectedOutput::outputs;
+   float *correct = Div_ExpectedOutput::outputs;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Neg)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input({
-        -1.9100,  1.8811, -1.7269, -0.1094, -0.0145,  0.2509,  0.5893, -2.2733,
-        -0.7077,  1.0645, -0.8607,  0.2085
-      });
+   // Preparing the standard input
+   std::vector<float> input(
+      {-1.9100, 1.8811, -1.7269, -0.1094, -0.0145, 0.2509, 0.5893, -2.2733, -0.7077, 1.0645, -0.8607, 0.2085});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Neg", input);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Neg", input);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Neg_ExpectedOutput::outputs) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Neg_ExpectedOutput::outputs) / sizeof(float));
 
-      float *correct = Neg_ExpectedOutput::outputs;
+   float *correct = Neg_ExpectedOutput::outputs;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Elu)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input({
-        1.0, -2.0, 3.0, 0.5, -1.0, 2.0
-      });
+   // Preparing the standard input
+   std::vector<float> input({1.0, -2.0, 3.0, 0.5, -1.0, 2.0});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Elu", input);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Elu", input);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Elu_ExpectedOutput::outputs) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Elu_ExpectedOutput::outputs) / sizeof(float));
 
-      float *correct = Elu_ExpectedOutput::outputs;
+   float *correct = Elu_ExpectedOutput::outputs;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Constant)
 {
@@ -333,14 +313,12 @@ TEST(ONNX, ComplexTopK)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({
-        9.0000, 8.0000, 4.5000, 1.7000, 2.9000, 3.2000, 4.0000, 2.6000, 7.4000,
-        3.5000, 5.6000, 7.1000, 9.8000, 1.1000, 3.3000, 6.2000, 8.4000, 0.7000,
-        2.2000, 3.3000, 4.4000, 5.5000, 6.6000, 7.7000, 8.8000, 9.9000, 1.0000,
+   std::vector<float> input(
+      {9.0000, 8.0000, 4.5000, 1.7000, 2.9000, 3.2000, 4.0000, 2.6000, 7.4000, 3.5000, 5.6000, 7.1000, 9.8000, 1.1000,
+       3.3000, 6.2000, 8.4000, 0.7000, 2.2000, 3.3000, 4.4000, 5.5000, 6.6000, 7.7000, 8.8000, 9.9000, 1.0000,
 
-        1.0000, 2.0000, 3.0000, 4.0000, 5.0000, 6.0000, 7.0000, 8.0000, 9.0000,
-        9.0000, 8.0000, 7.0000, 6.0000, 5.0000, 4.0000, 3.0000, 2.0000, 1.0000,
-        5.0000, 4.0000, 3.0000, 2.0000, 1.0000, 6.0000, 7.0000, 8.0000, 9.0000 });
+       1.0000, 2.0000, 3.0000, 4.0000, 5.0000, 6.0000, 7.0000, 8.0000, 9.0000, 9.0000, 8.0000, 7.0000, 6.0000, 5.0000,
+       4.0000, 3.0000, 2.0000, 1.0000, 5.0000, 4.0000, 3.0000, 2.0000, 1.0000, 6.0000, 7.0000, 8.0000, 9.0000});
 
    ASSERT_INCLUDE_AND_RUN(TupleFloatInt64_t, "ComplexTopK", input);
    std::vector<float> values = std::get<0>(output);
@@ -349,24 +327,22 @@ TEST(ONNX, ComplexTopK)
    // Checking output size
    EXPECT_EQ(values.size(), sizeof(ComplexTopK_ExpectedOutput::values) / sizeof(float));
 
-float *correct_values = ComplexTopK_ExpectedOutput::values;
+   float *correct_values = ComplexTopK_ExpectedOutput::values;
 
-// Checking every output value, one by one
-for (size_t i = 0; i < values.size(); ++i) {
-    EXPECT_LE(std::abs(values[i] - correct_values[i]), TOLERANCE);
-}
+   // Checking every output value, one by one
+   for (size_t i = 0; i < values.size(); ++i) {
+      EXPECT_LE(std::abs(values[i] - correct_values[i]), TOLERANCE);
+   }
 
+   // Checking output size
+   EXPECT_EQ(indexes.size(), sizeof(ComplexTopK_ExpectedOutput::indexes) / sizeof(float));
 
-// Checking output size
-EXPECT_EQ(indexes.size(), sizeof(ComplexTopK_ExpectedOutput::indexes) / sizeof(float));
+   float *correct_indexes = ComplexTopK_ExpectedOutput::indexes;
 
-float *correct_indexes = ComplexTopK_ExpectedOutput::indexes;
-
-// Checking every output value, one by one
-for (size_t i = 0; i < indexes.size(); ++i) {
-    EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
-}
-
+   // Checking every output value, one by one
+   for (size_t i = 0; i < indexes.size(); ++i) {
+      EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
+   }
 }
 TEST(ONNX, TopK)
 {
@@ -392,45 +368,39 @@ TEST(ONNX, TopK)
    // Checking output size
    EXPECT_EQ(indexes.size(), sizeof(TopK_ExpectedOutput::indexes) / sizeof(float));
 
-   float *correct_indexes= TopK_ExpectedOutput::indexes;
+   float *correct_indexes = TopK_ExpectedOutput::indexes;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < indexes.size(); ++i) {
       EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
    }
 }
-   TEST(ONNX, EyeLike)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+TEST(ONNX, EyeLike)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input({
-        0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0
-      });
+   // Preparing the standard input
+   std::vector<float> input({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "EyeLike", input);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "EyeLike", input);
 
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(EyeLike_ExpectedOutput::output) / sizeof(float));
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(EyeLike_ExpectedOutput::output) / sizeof(float));
 
-      float *correct = EyeLike_ExpectedOutput::output;
+   float *correct = EyeLike_ExpectedOutput::output;
 
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
 
 TEST(ONNX, Cast)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<int64_t> input({
-      1,2,3,4,5,6
-   });
+   std::vector<int64_t> input({1, 2, 3, 4, 5, 6});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<double>, "Cast", input);
 
@@ -465,7 +435,6 @@ TEST(ONNX, Linear64)
    }
 }
 
-
 TEST(ONNX, LinearWithSelu)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -491,11 +460,9 @@ TEST(ONNX, Tanh)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<float> input({
-     -0.3896, -0.3521,  0.0363,  1.0962,  0.5085, -0.8523, -0.6766,  0.2421,
-      1.5971,  1.3873, -0.2112, -0.6895, -0.5069, -2.1395, -0.7087,  1.1658,
-      1.3493,  0.8132,  1.7156, -0.8637, -0.1971,  0.0411, -0.5662, -0.2516
-   });
+   std::vector<float> input({-0.3896, -0.3521, 0.0363,  1.0962,  0.5085,  -0.8523, -0.6766, 0.2421,
+                             1.5971,  1.3873,  -0.2112, -0.6895, -0.5069, -2.1395, -0.7087, 1.1658,
+                             1.3493,  0.8132,  1.7156,  -0.8637, -0.1971, 0.0411,  -0.5662, -0.2516});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Tanh", input);
 
@@ -515,10 +482,8 @@ TEST(ONNX, Erf)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<float> input({
-     -1.0412,  0.1918,  0.9985, -0.5959,  0.6842, -2.4718,  0.1804,  0.6851,
-      1.5646, -1.4981,  0.4248, -0.8504
-   });
+   std::vector<float> input(
+      {-1.0412, 0.1918, 0.9985, -0.5959, 0.6842, -2.4718, 0.1804, 0.6851, 1.5646, -1.4981, 0.4248, -0.8504});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Erf", input);
 
@@ -538,9 +503,7 @@ TEST(ONNX, Log)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<float> input({
-     1, 2, 3, 4
-   });
+   std::vector<float> input({1, 2, 3, 4});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Log", input);
 
@@ -560,11 +523,9 @@ TEST(ONNX, LinearWithLeakyRelu)
    constexpr float TOLERANCE = 1;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({
-      0.4369, -0.6882,  1.0309, -1.0263, -0.1519,  1.2237, -0.7054, -0.1762,
-      -0.6811, -2.2597,  1.0388, -0.7993,  0.1468,  1.3257, -0.4714, -0.0958,
-      0.7057, -0.3749, -0.3310,  0.0986, -0.1370,  0.0832, -1.6465, -0.2793
-   });
+   std::vector<float> input({0.4369,  -0.6882, 1.0309,  -1.0263, -0.1519, 1.2237, -0.7054, -0.1762,
+                             -0.6811, -2.2597, 1.0388,  -0.7993, 0.1468,  1.3257, -0.4714, -0.0958,
+                             0.7057,  -0.3749, -0.3310, 0.0986,  -0.1370, 0.0832, -1.6465, -0.2793});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithLeakyRelu", input);
 
@@ -578,7 +539,6 @@ TEST(ONNX, LinearWithLeakyRelu)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
 
 TEST(ONNX, LinearWithSigmoid)
 {
@@ -600,7 +560,6 @@ TEST(ONNX, LinearWithSigmoid)
    }
 }
 
-
 TEST(ONNX, ConvWithPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -620,7 +579,6 @@ TEST(ONNX, ConvWithPadding)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
 
 TEST(ONNX, ConvWithoutPadding)
 {
@@ -642,7 +600,6 @@ TEST(ONNX, ConvWithoutPadding)
    }
 }
 
-
 TEST(ONNX, ConvWithAutopadSameLower)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -662,7 +619,6 @@ TEST(ONNX, ConvWithAutopadSameLower)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
 
 TEST(ONNX, ConvWithStridesPadding)
 {
@@ -684,7 +640,6 @@ TEST(ONNX, ConvWithStridesPadding)
    }
 }
 
-
 TEST(ONNX, ConvWithStridesNoPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -704,7 +659,6 @@ TEST(ONNX, ConvWithStridesNoPadding)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
 
 // Disables test (asymmetric padding not supported)
 TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
@@ -727,22 +681,17 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    }
 }
 
-TEST(ONNX, MaxPool1d){
+TEST(ONNX, MaxPool1d)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input({0.0907,  0.1029,  0.8143,  1.4497, -0.7785,  0.3825, -0.3764,
-           1.5785, -0.0835,  0.1622,
-          1.5867,  0.9823, -0.8821,  0.4439, -0.1378, -0.2273, -0.0198,
-          -2.0230,  0.0905,  0.6674,
-         -1.4290, -1.3100, -0.9439, -0.0833, -0.1919,  0.6886,  0.9389,
-          -1.2914, -1.3584, -2.0341,
-         -0.3269,  0.1704,  1.1776,  1.3972, -1.8874, -1.5334,  1.1541,
-           0.3011,  0.6569, -2.3504,
-          0.4033,  0.1142,  2.2846, -1.3948, -0.8573,  0.5756, -1.0864,
-           0.2283,  0.8947,  1.7627,
-         -0.1657,  0.0649, -1.6066,  0.4162, -1.1525, -0.8184,  1.1324,
-          -1.1086,  0.1061,  1.0071});
+   std::vector<float> input({0.0907,  0.1029,  0.8143,  1.4497,  -0.7785, 0.3825,  -0.3764, 1.5785,  -0.0835, 0.1622,
+                             1.5867,  0.9823,  -0.8821, 0.4439,  -0.1378, -0.2273, -0.0198, -2.0230, 0.0905,  0.6674,
+                             -1.4290, -1.3100, -0.9439, -0.0833, -0.1919, 0.6886,  0.9389,  -1.2914, -1.3584, -2.0341,
+                             -0.3269, 0.1704,  1.1776,  1.3972,  -1.8874, -1.5334, 1.1541,  0.3011,  0.6569,  -2.3504,
+                             0.4033,  0.1142,  2.2846,  -1.3948, -0.8573, 0.5756,  -1.0864, 0.2283,  0.8947,  1.7627,
+                             -0.1657, 0.0649,  -1.6066, 0.4162,  -1.1525, -0.8184, 1.1324,  -1.1086, 0.1061,  1.0071});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool1d", input);
    // Checking output size
@@ -754,25 +703,18 @@ TEST(ONNX, MaxPool1d){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, MaxPool2d){
+TEST(ONNX, MaxPool2d)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input({
-      0.6266,  0.1656,  0.2753, -0.4558, -1.4592,  0.9285, -1.3410,
-            1.3223, -0.5936, -1.3648,
-          -0.2989,  0.5901, -0.8845, -0.0433,  0.8314, -1.7159, -0.5765,
-            0.8678,  1.0257,  0.7847,
-          -0.3421, -1.2364, -0.5805,  0.4421,  1.2184,  0.5043,  1.6823,
-           -1.0483, -2.2798, -1.8927,
-           0.7716,  0.0405,  0.3121, -0.3011, -0.3266, -1.9660,  1.0837,
-            0.2317,  0.9084, -0.3285,
-          -0.9398, -0.2065, -0.9499, -0.9739, -0.1288, -0.1375, -1.2612,
-            0.8810,  0.8506,  0.4455
-   });
+   std::vector<float> input({0.6266,  0.1656,  0.2753,  -0.4558, -1.4592, 0.9285,  -1.3410, 1.3223,  -0.5936, -1.3648,
+                             -0.2989, 0.5901,  -0.8845, -0.0433, 0.8314,  -1.7159, -0.5765, 0.8678,  1.0257,  0.7847,
+                             -0.3421, -1.2364, -0.5805, 0.4421,  1.2184,  0.5043,  1.6823,  -1.0483, -2.2798, -1.8927,
+                             0.7716,  0.0405,  0.3121,  -0.3011, -0.3266, -1.9660, 1.0837,  0.2317,  0.9084,  -0.3285,
+                             -0.9398, -0.2065, -0.9499, -0.9739, -0.1288, -0.1375, -1.2612, 0.8810,  0.8506,  0.4455});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool2d", input);
    // Checking output size
@@ -784,26 +726,18 @@ TEST(ONNX, MaxPool2d){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, MaxPool3d){
+TEST(ONNX, MaxPool3d)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input({
-      -2.6496,  1.0476, -0.5153,
-            0.3771,  0.4129, -0.3077,
-           -0.8717, -0.8040, -0.3525,
+   std::vector<float> input({-2.6496, 1.0476,  -0.5153, 0.3771,  0.4129,  -0.3077, -0.8717, -0.8040, -0.3525,
 
-          -0.1765, -0.3364,  0.8737,
-           -0.2381, -0.8297,  0.4666,
-            0.6984, -0.6760,  0.6298,
+                             -0.1765, -0.3364, 0.8737,  -0.2381, -0.8297, 0.4666,  0.6984,  -0.6760, 0.6298,
 
-           1.3833,  0.1101,  0.2039,
-           -0.5477,  0.2341,  0.9181,
-            0.3842,  0.2428,  1.7924
-   });
+                             1.3833,  0.1101,  0.2039,  -0.5477, 0.2341,  0.9181,  0.3842,  0.2428,  1.7924});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool3d", input);
    // Checking output size
@@ -815,25 +749,18 @@ TEST(ONNX, MaxPool3d){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, AvgPool){
+TEST(ONNX, AvgPool)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input({
-      0.4764, -0.1976,  1.6506, -0.2421,  0.6412,  1.9985,  0.3938,
-            0.1347,  0.2204, -0.7503,
-           0.2139,  0.7285, -0.0210, -0.4585, -1.5333, -0.4772,  0.5560,
-            0.6323, -2.5372,  1.4906,
-          -1.1062, -0.9703,  0.2366, -0.9184,  0.3014,  0.7985, -0.6841,
-           -2.2854, -2.7728, -1.2806,
-          -1.0947, -0.5990, -0.3033, -1.9042, -0.5403,  0.2332,  0.9215,
-           -0.1549,  0.0557, -0.5567,
-          -1.4971,  0.5386, -0.2922,  0.4860, -0.3973, -0.4624,  0.4514,
-            0.2385,  0.3783, -1.0500
-   });
+   std::vector<float> input({0.4764,  -0.1976, 1.6506,  -0.2421, 0.6412,  1.9985,  0.3938,  0.1347,  0.2204,  -0.7503,
+                             0.2139,  0.7285,  -0.0210, -0.4585, -1.5333, -0.4772, 0.5560,  0.6323,  -2.5372, 1.4906,
+                             -1.1062, -0.9703, 0.2366,  -0.9184, 0.3014,  0.7985,  -0.6841, -2.2854, -2.7728, -1.2806,
+                             -1.0947, -0.5990, -0.3033, -1.9042, -0.5403, 0.2332,  0.9215,  -0.1549, 0.0557,  -0.5567,
+                             -1.4971, 0.5386,  -0.2922, 0.4860,  -0.3973, -0.4624, 0.4514,  0.2385,  0.3783,  -1.0500});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AvgPool", input);
    // Checking output size
@@ -845,19 +772,15 @@ TEST(ONNX, AvgPool){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Pow){
+TEST(ONNX, Pow)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1, 2, 3
-   });
-   std::vector<float> input2({
-      4, 5, 6
-   });
+   std::vector<float> input1({1, 2, 3});
+   std::vector<float> input2({4, 5, 6});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pow", input1, input2);
    // Checking output size
@@ -869,19 +792,15 @@ TEST(ONNX, Pow){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Pow_broadcast){
+TEST(ONNX, Pow_broadcast)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1, 2, 3, 3, 4, 5
-   });
-   std::vector<float> input2({
-      2, 3, 4, 2, 3, 4
-   });
+   std::vector<float> input1({1, 2, 3, 3, 4, 5});
+   std::vector<float> input2({2, 3, 4, 2, 3, 4});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pow_broadcast", input1, input2);
    // Checking output size
@@ -893,17 +812,14 @@ TEST(ONNX, Pow_broadcast){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-   TEST(ONNX, ReduceMean){
+TEST(ONNX, ReduceMean)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input({
-      5, 2, 3,
-      5, 5, 4
-   });
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMean", input);
    // Checking output size
@@ -915,17 +831,14 @@ TEST(ONNX, Pow_broadcast){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-   TEST(ONNX, ReduceProd){
+TEST(ONNX, ReduceProd)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<float> input({
-      5, 2, 3,
-      5, 5, 4
-   });
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceProd", input);
    // Checking output size
@@ -937,18 +850,14 @@ TEST(ONNX, Pow_broadcast){
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, ReduceSum){
+TEST(ONNX, ReduceSum)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-
    // Preparing the standard  input
-   std::vector<float> input({
-      5, 2, 3,
-      5, 5, 4
-   });
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
 
    // test Reduce sum in all axis and  keeping the dimension
    // input tensor is shape [1,2,3]
@@ -966,19 +875,15 @@ TEST(ONNX, ReduceSum){
    }
 }
 
-TEST(ONNX, ReduceSumSquare){
+TEST(ONNX, ReduceSumSquare)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-
    // Preparing the standard  input
-   std::vector<float> input({
-      5, 2, 3,
-      5, 5, 4
-   });
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
 
    // reduce on last axis and do not keep dimension
    // output should be [1,2] and [25+4+9, 25+25+16]
-
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceSumSquare", input);
    // Checking output size
@@ -993,109 +898,110 @@ TEST(ONNX, ReduceSumSquare){
 }
 
 TEST(ONNX, Max)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
-      // Preparing the standard input
-      std::vector<float> input1({
-         1.0,  2.0, -1.0
-      });
-      std::vector<float> input2({
-         3.0, 0.0, 4.0
-      });
-
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Max", input1, input2);
-
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Max_ExpectedOutput::outputs) / sizeof(float));
-
-      float *correct = Max_ExpectedOutput::outputs;
-
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
-   }
-
-TEST(ONNX, MaxMultidirectionalBroadcast) {
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
-   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
-   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+   // Preparing the standard input
+   std::vector<float> input1({1.0, 2.0, -1.0});
+   std::vector<float> input2({3.0, 0.0, 4.0});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Max", input1, input2);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Max_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Max_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, MaxMultidirectionalBroadcast)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> a({0.35974154, -2.20873388, 0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754, 0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926, 0.56172534, 0.05616931});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MaxMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = MaxMultidirectionalBroadcast_ExpectedOutput::output;
+   float *correct = MaxMultidirectionalBroadcast_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
-TEST(ONNX, MinMultidirectionalBroadcast) {
+TEST(ONNX, MinMultidirectionalBroadcast)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
-   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
-   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+   std::vector<float> a({0.35974154, -2.20873388, 0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754, 0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926, 0.56172534, 0.05616931});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MinMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MinMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = MinMultidirectionalBroadcast_ExpectedOutput::output;
+   float *correct = MinMultidirectionalBroadcast_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
-TEST(ONNX, MeanMultidirectionalBroadcast) {
+TEST(ONNX, MeanMultidirectionalBroadcast)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
-   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
-   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+   std::vector<float> a({0.35974154, -2.20873388, 0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754, 0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926, 0.56172534, 0.05616931});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MeanMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MeanMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = MeanMultidirectionalBroadcast_ExpectedOutput::output;
+   float *correct = MeanMultidirectionalBroadcast_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
-TEST(ONNX, SumMultidirectionalBroadcast) {
+TEST(ONNX, SumMultidirectionalBroadcast)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
-   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
-   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+   std::vector<float> a({0.35974154, -2.20873388, 0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754, 0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926, 0.56172534, 0.05616931});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "SumMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(SumMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = SumMultidirectionalBroadcast_ExpectedOutput::output;
+   float *correct = SumMultidirectionalBroadcast_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
-TEST(ONNX, Shape){
+TEST(ONNX, Shape)
+{
    // test of Shape. Use shape operator to get shape and create a tensor equal to input shape and multiply the two
    // Avoid test directly Shape otherwise get a compilation warning for the input that is not used in infer function
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the input ( a tensor of shape [1,2,3])
-   std::vector<float> input( {1,2,3,4,5,6} );
+   std::vector<float> input({1, 2, 3, 4, 5, 6});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Shape", input);
    // Checking output size
@@ -1138,9 +1044,8 @@ TEST(ONNX, RNNBidirectional)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({0.,    0.01, 0.02, 0.03, 0.04, 0.05,
-                             0.06, 0.07, 0.08, 0.09, 0.1,  0.11,
-                             0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
+   std::vector<float> input(
+      {0., 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1171,10 +1076,8 @@ TEST(ONNX, RNNBidirectionalBatchwise)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({
-      0,    0.01, 0.06, 0.07, 0.12, 0.13,
-      0.02, 0.03, 0.08, 0.09, 0.14, 0.15,
-      0.04, 0.05, 0.1,  0.11, 0.16, 0.17});
+   std::vector<float> input(
+      {0, 0.01, 0.06, 0.07, 0.12, 0.13, 0.02, 0.03, 0.08, 0.09, 0.14, 0.15, 0.04, 0.05, 0.1, 0.11, 0.16, 0.17});
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNBidirectionalBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1269,16 +1172,10 @@ TEST(ONNX, RNNSequence)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({
-      0.01,   -0.01,   0.08,    0.09,  0.001,
-      0.09,   -0.7,   -0.35,    0.0,   0.001,
-      0.16,   -0.19,   0.003,   0.0,   0.0001,
-      0.05,   -0.09,   0.013,   0.5,   0.005,
-      0.2,    -0.05,   0.062,  -0.04, -0.04,
-      0.0,     0.0,    0.0,     0.0,   0.0,
-      0.06,    0.087,  0.01,    0.3,  -0.001,
-      0.0,     0.0,    0.0,     0.0,   0.0,
-      0.0,     0.0,    0.0,     0.0,   0.0});
+   std::vector<float> input({0.01,  -0.01, 0.08,   0.09, 0.001, 0.09,  -0.7, -0.35, 0.0,  0.001, 0.16,   -0.19,
+                             0.003, 0.0,   0.0001, 0.05, -0.09, 0.013, 0.5,  0.005, 0.2,  -0.05, 0.062,  -0.04,
+                             -0.04, 0.0,   0.0,    0.0,  0.0,   0.0,   0.06, 0.087, 0.01, 0.3,   -0.001, 0.0,
+                             0.0,   0.0,   0.0,    0.0,  0.0,   0.0,   0.0,  0.0,   0.0});
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNSequence", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1309,16 +1206,10 @@ TEST(ONNX, RNNSequenceBatchwise)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({
-      0.01,  -0.01,   0.08,   0.09,  0.001,
-      0.05,  -0.09,   0.013,  0.5,   0.005,
-      0.06,   0.087,  0.01,   0.3,  -0.001,
-      0.09,   -0.7,  -0.35,   0.0,   0.001,
-      0.2,    -0.05,  0.062, -0.04, -0.04,
-      0.0,     0.0,   0.0,    0.0,   0.0,
-      0.16,  -0.19,   0.003,  0.0,   0.0001,
-      0.0,     0.0,   0.0,    0.0,   0.0,
-      0.0,     0.0,   0.0,    0.0,   0.0});
+   std::vector<float> input({0.01,  -0.01, 0.08,   0.09, 0.001, 0.05,  -0.09, 0.013, 0.5,   0.005, 0.06,   0.087,
+                             0.01,  0.3,   -0.001, 0.09, -0.7,  -0.35, 0.0,   0.001, 0.2,   -0.05, 0.062,  -0.04,
+                             -0.04, 0.0,   0.0,    0.0,  0.0,   0.0,   0.16,  -0.19, 0.003, 0.0,   0.0001, 0.0,
+                             0.0,   0.0,   0.0,    0.0,  0.0,   0.0,   0.0,   0.0,   0.0});
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNSequenceBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1702,10 +1593,9 @@ TEST(ONNX, Softmax3d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> input({
-        -0.8939, -0.3674,  0.1763,  1.5804, -0.4687,  1.2253, -1.3488, -0.1000,
-        -0.1262,  0.4962,  1.0870,  0.6905, -0.3451, -1.6981, -0.4688,  0.4468,
-        -0.5479,  0.0650,  1.0446, -1.6249, -0.7190, -1.7520,  3.7753, -1.4939});
+   std::vector<float> input({-0.8939, -0.3674, 0.1763, 1.5804,  -0.4687, 1.2253,  -1.3488, -0.1000,
+                             -0.1262, 0.4962,  1.0870, 0.6905,  -0.3451, -1.6981, -0.4688, 0.4468,
+                             -0.5479, 0.0650,  1.0446, -1.6249, -0.7190, -1.7520, 3.7753,  -1.4939});
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softmax3d", input);
 
    EXPECT_EQ(output.size(), sizeof(Softmax3d_ExpectedOutput::output) / sizeof(float));
@@ -1722,13 +1612,11 @@ TEST(ONNX, Softmax4d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> input({
-        -0.5869, -1.4272, -0.1546,  0.0096,  0.1706,  0.0388, -0.3484, -0.7829,
-         1.1138, -0.5644, -0.6264, -1.1890,  1.6741, -0.7130,  0.9592,  1.7477,
-        -0.4775,  1.3407, -0.3882, -0.4560,  1.0385, -0.1669,  0.5540, -1.0790,
-        -0.6153, -0.6274, -1.2304, -0.6757,  1.0178, -0.2379, -0.7912, -0.0165,
-        -0.5423,  0.1459,  1.3585, -0.5005, -0.2187, -1.8181, -0.6642,  0.0287,
-        -1.9103,  0.7984, -0.7860,  1.5134,  1.3873, -0.6462, -0.6354, -0.1335});
+   std::vector<float> input({-0.5869, -1.4272, -0.1546, 0.0096,  0.1706,  0.0388,  -0.3484, -0.7829, 1.1138,  -0.5644,
+                             -0.6264, -1.1890, 1.6741,  -0.7130, 0.9592,  1.7477,  -0.4775, 1.3407,  -0.3882, -0.4560,
+                             1.0385,  -0.1669, 0.5540,  -1.0790, -0.6153, -0.6274, -1.2304, -0.6757, 1.0178,  -0.2379,
+                             -0.7912, -0.0165, -0.5423, 0.1459,  1.3585,  -0.5005, -0.2187, -1.8181, -0.6642, 0.0287,
+                             -1.9103, 0.7984,  -0.7860, 1.5134,  1.3873,  -0.6462, -0.6354, -0.1335});
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softmax4d", input);
 
    EXPECT_EQ(output.size(), sizeof(Softmax4d_ExpectedOutput::output) / sizeof(float));
@@ -1852,7 +1740,7 @@ TEST(ONNX, Sqrt)
 
    EXPECT_EQ(output.size(), sizeof(Sqrt_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = Sqrt_ExpectedOutput::output;
+   float *correct = Sqrt_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
@@ -1863,12 +1751,12 @@ TEST(ONNX, Reciprocal)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> input({1.2691, -1.2160,  0.6393, -0.4438,  0.8065,  0.2011});
+   std::vector<float> input({1.2691, -1.2160, 0.6393, -0.4438, 0.8065, 0.2011});
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Reciprocal", input);
 
    EXPECT_EQ(output.size(), sizeof(Reciprocal_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = Reciprocal_ExpectedOutput::output;
+   float *correct = Reciprocal_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
@@ -1879,38 +1767,37 @@ TEST(ONNX, Exp)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   std::vector<float> input({1.46566453,  0.63334515,  2.4048165 ,  0.54468453,
-      -1.41271672, -0.18609187,  0.2754482 ,  1.10615209,  0.88474389,  0.47531232});
+   std::vector<float> input({1.46566453, 0.63334515, 2.4048165, 0.54468453, -1.41271672, -0.18609187, 0.2754482,
+                             1.10615209, 0.88474389, 0.47531232});
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Exp", input);
 
    EXPECT_EQ(output.size(), sizeof(Exp_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = Exp_ExpectedOutput::output;
+   float *correct = Exp_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
-TEST(ONNX, AddBroadcast1) {
+TEST(ONNX, AddBroadcast1)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {5}
-   std::vector<float> A({-0.78023305, -1.34029483, -3.01482951, 0.53641361,
-                 -1.22594789});
+   std::vector<float> A({-0.78023305, -1.34029483, -3.01482951, 0.53641361, -1.22594789});
    // The shape of B is {4, 5}
-   std::vector<float> B({1.0626695,  0.43842875,  1.22476468,  0.79763274,  0.98688211,
-                 0.25267614, 0.44874883,  0.31516773,  -0.78771195, 0.64565664,
-                 0.50450593, -0.41265227, -0.22474539, -0.22362374, 0.00509674,
-                 0.16927211, 1.06756969,  -0.81634773, 0.88467744,  0.78902059});
+   std::vector<float> B({1.0626695,  0.43842875,  1.22476468, 0.79763274,  0.98688211,  0.25267614,  0.44874883,
+                         0.31516773, -0.78771195, 0.64565664, 0.50450593,  -0.41265227, -0.22474539, -0.22362374,
+                         0.00509674, 0.16927211,  1.06756969, -0.81634773, 0.88467744,  0.78902059});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast1", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast1_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast1_ExpectedOutput::output;
+   float *correct = AddBroadcast1_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -1918,51 +1805,42 @@ TEST(ONNX, AddBroadcast1) {
    }
 }
 
-TEST(ONNX, AddBroadcast2) {
+TEST(ONNX, AddBroadcast2)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {5}
    std::vector<float> A({0.60081805, 0.56575772, -0.58408511, -1.50827751, 1.2396254});
    // The shape of B is {2, 3, 4, 5}
-   std::vector<float> B({
-        -1.22516739e+00, -2.50373737e+00, -6.14517347e-01, 4.43165956e-01,
-        4.09232228e-03,  1.43520073e+00,  -8.37526920e-01, 1.18762642e+00,
-        -1.42122220e+00, 3.77123343e-01,  -6.16450821e-01, 1.96641319e+00,
-        -2.03568224e+00, -5.36703377e-01, -2.22149348e+00, -1.58297075e+00,
-        -1.25149214e+00, 6.50629098e-01,  2.06339687e+00,  6.02281648e-01,
-        -5.39034004e-01, -1.26280821e+00, 7.87767451e-01,  1.08251530e-01,
-        2.32829794e+00,  -1.50890004e+00, -5.95592927e-01, -9.20059053e-02,
-        1.63228625e+00,  1.94686070e+00,  7.45655684e-01,  3.86955114e-01,
-        -1.83205116e+00, -1.15734817e+00, 3.80085814e-02,  -2.16949162e-01,
-        -2.35165487e-01, 2.18171406e-01,  6.13588954e-02,  -8.57086260e-01,
-        -2.01864267e+00, -1.61373575e+00, -2.02050258e+00, -3.25052069e-01,
-        -1.07114643e-01, 4.68470099e-01,  1.99557999e-01,  -1.94637668e+00,
-        2.47900553e-01,  7.76198825e-01,  -1.98736855e-01, -2.00884998e+00,
-        1.46847865e+00,  9.61028795e-01,  -8.14965358e-03, 4.63333332e-01,
-        -1.11316244e-01, 1.82046921e+00,  -1.00519072e-01, 2.40577520e+00,
-        2.57814258e+00,  -1.51412865e+00, -6.48090386e-02, 9.22939224e-01,
-        -1.31486041e+00, 3.67387151e-01,  -2.17020478e-03, -4.74744054e-01,
-        -6.28942699e-01, -1.31704730e+00, -6.20633846e-01, -4.90250204e-01,
-        -2.12485120e-01, -2.36786681e-02, 2.88809968e-02,  -7.44777791e-01,
-        1.30091804e-02,  -1.68105549e+00, 8.22247057e-02,  -1.14939503e+00,
-        -1.57565418e+00, -7.99386689e-01, -4.06411097e-01, 1.09358391e+00,
-        1.58323366e+00,  -8.15174970e-02, -9.09925044e-02, 2.35596716e+00,
-        -6.85364818e-02, 4.12883924e-01,  5.00495425e-01,  -1.48442647e+00,
-        -5.19349052e-01, 3.81025828e-01,  -1.06188597e-01, 2.83921542e-01,
-        1.13215001e+00,  1.21558052e+00,  -1.04667496e+00, -9.41151099e-01,
-        -4.04363040e-02, 1.45554304e+00,  1.64025681e-01,  -3.34693361e-01,
-        1.27701314e+00,  8.64744621e-01,  1.09621430e+00,  -1.06563435e+00,
-        -1.55637568e+00, 2.14343040e+00,  4.69610352e-01,  9.09135609e-01,
-        -6.20603382e-01, -1.04235434e+00, -1.32974691e+00, -1.35968049e-01,
-        9.62438348e-01,  1.13413513e+00,  -9.24612219e-01, -2.26132356e+00});
+   std::vector<float> B(
+      {-1.22516739e+00, -2.50373737e+00, -6.14517347e-01, 4.43165956e-01,  4.09232228e-03,  1.43520073e+00,
+       -8.37526920e-01, 1.18762642e+00,  -1.42122220e+00, 3.77123343e-01,  -6.16450821e-01, 1.96641319e+00,
+       -2.03568224e+00, -5.36703377e-01, -2.22149348e+00, -1.58297075e+00, -1.25149214e+00, 6.50629098e-01,
+       2.06339687e+00,  6.02281648e-01,  -5.39034004e-01, -1.26280821e+00, 7.87767451e-01,  1.08251530e-01,
+       2.32829794e+00,  -1.50890004e+00, -5.95592927e-01, -9.20059053e-02, 1.63228625e+00,  1.94686070e+00,
+       7.45655684e-01,  3.86955114e-01,  -1.83205116e+00, -1.15734817e+00, 3.80085814e-02,  -2.16949162e-01,
+       -2.35165487e-01, 2.18171406e-01,  6.13588954e-02,  -8.57086260e-01, -2.01864267e+00, -1.61373575e+00,
+       -2.02050258e+00, -3.25052069e-01, -1.07114643e-01, 4.68470099e-01,  1.99557999e-01,  -1.94637668e+00,
+       2.47900553e-01,  7.76198825e-01,  -1.98736855e-01, -2.00884998e+00, 1.46847865e+00,  9.61028795e-01,
+       -8.14965358e-03, 4.63333332e-01,  -1.11316244e-01, 1.82046921e+00,  -1.00519072e-01, 2.40577520e+00,
+       2.57814258e+00,  -1.51412865e+00, -6.48090386e-02, 9.22939224e-01,  -1.31486041e+00, 3.67387151e-01,
+       -2.17020478e-03, -4.74744054e-01, -6.28942699e-01, -1.31704730e+00, -6.20633846e-01, -4.90250204e-01,
+       -2.12485120e-01, -2.36786681e-02, 2.88809968e-02,  -7.44777791e-01, 1.30091804e-02,  -1.68105549e+00,
+       8.22247057e-02,  -1.14939503e+00, -1.57565418e+00, -7.99386689e-01, -4.06411097e-01, 1.09358391e+00,
+       1.58323366e+00,  -8.15174970e-02, -9.09925044e-02, 2.35596716e+00,  -6.85364818e-02, 4.12883924e-01,
+       5.00495425e-01,  -1.48442647e+00, -5.19349052e-01, 3.81025828e-01,  -1.06188597e-01, 2.83921542e-01,
+       1.13215001e+00,  1.21558052e+00,  -1.04667496e+00, -9.41151099e-01, -4.04363040e-02, 1.45554304e+00,
+       1.64025681e-01,  -3.34693361e-01, 1.27701314e+00,  8.64744621e-01,  1.09621430e+00,  -1.06563435e+00,
+       -1.55637568e+00, 2.14343040e+00,  4.69610352e-01,  9.09135609e-01,  -6.20603382e-01, -1.04235434e+00,
+       -1.32974691e+00, -1.35968049e-01, 9.62438348e-01,  1.13413513e+00,  -9.24612219e-01, -2.26132356e+00});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast2", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast2_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast2_ExpectedOutput::output;
+   float *correct = AddBroadcast2_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -1970,46 +1848,38 @@ TEST(ONNX, AddBroadcast2) {
    }
 }
 
-TEST(ONNX, AddBroadcast3) {
+TEST(ONNX, AddBroadcast3)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {2, 1, 1, 5}
-   std::vector<float> A({0.13225244, -0.47801406, -1.47034622, 0.87786363, -0.51388502,
-                 0.77012016, 0.99407484,  -0.41014198, 1.76506248, 1.24142803});
+   std::vector<float> A({0.13225244, -0.47801406, -1.47034622, 0.87786363, -0.51388502, 0.77012016, 0.99407484,
+                         -0.41014198, 1.76506248, 1.24142803});
    // The shape of B is {2, 3, 4, 5}
-   std::vector<float> B({
-         -0.79900037, 1.26774471,  0.10287351,  -0.00704713, 0.19927171,
-        1.77125926,  0.23393901,  -0.75160577, -0.40987021, 0.02957325,
-        2.48770369,  2.72426688,  0.16116267,  0.13580884,  -1.34550983,
-        1.08341747,  -0.57232679, -0.27434247, 2.29759196,  0.72506479,
-        -0.35984264, -1.47553974, 0.46544721,  0.45304508,  0.39350919,
-        0.25335039,  -2.15455262, 0.58592831,  0.0907586,   1.32830358,
-        2.16876532,  -1.31509165, -0.77901816, 1.72970744,  0.89410519,
-        1.18891089,  0.58372505,  -0.6117035,  -0.83829228, 0.63917945,
-        0.66626077,  -1.07667629, 0.01411519,  -0.67082652, -0.04556866,
-        -0.04949148, -1.87075929, 0.25587637,  0.14715114,  -0.74584515,
-        -1.19373527, -1.52142058, -0.92522942, -0.98126531, -0.07535746,
-        -1.4692508,  -0.08861242, 0.64951867,  -0.16918995, 0.87015361,
-        0.57688991,  1.36293834,  1.28256834,  0.39245538,  0.43308474,
-        0.84529828,  -0.56686547, -0.84791844, -0.11286944, 0.60857973,
-        -0.79519511, -0.20491925, -1.52951743, -0.39030064, -2.76160767,
-        0.09055906,  -0.99142034, 0.33480785,  -1.09999883, 1.36149355,
-        0.18557576,  0.55407001,  1.23164067,  -0.23469015, -1.37274723,
-        1.80717934,  1.42966758,  0.72077395,  -0.09774939, 1.12065382,
-        -0.51515613, -0.9527945,  0.87646967,  -0.59440101, -0.12440208,
-        -0.71096692, -0.6301275,  0.51726169,  1.23726643,  1.56255466,
-        -0.94469759, -0.38114756, -0.42021761, -0.58921487, -0.71439637,
-        0.04793575,  -2.04214516, -0.45765407, -1.12307202, 0.90727137,
-        0.96272832,  0.54303206,  -0.84973033, 0.28780329,  0.17027854,
-        -0.11893711, -1.22414638, -1.62747593, 0.53264501,  0.53483601});
+   std::vector<float> B(
+      {-0.79900037, 1.26774471,  0.10287351,  -0.00704713, 0.19927171,  1.77125926,  0.23393901,  -0.75160577,
+       -0.40987021, 0.02957325,  2.48770369,  2.72426688,  0.16116267,  0.13580884,  -1.34550983, 1.08341747,
+       -0.57232679, -0.27434247, 2.29759196,  0.72506479,  -0.35984264, -1.47553974, 0.46544721,  0.45304508,
+       0.39350919,  0.25335039,  -2.15455262, 0.58592831,  0.0907586,   1.32830358,  2.16876532,  -1.31509165,
+       -0.77901816, 1.72970744,  0.89410519,  1.18891089,  0.58372505,  -0.6117035,  -0.83829228, 0.63917945,
+       0.66626077,  -1.07667629, 0.01411519,  -0.67082652, -0.04556866, -0.04949148, -1.87075929, 0.25587637,
+       0.14715114,  -0.74584515, -1.19373527, -1.52142058, -0.92522942, -0.98126531, -0.07535746, -1.4692508,
+       -0.08861242, 0.64951867,  -0.16918995, 0.87015361,  0.57688991,  1.36293834,  1.28256834,  0.39245538,
+       0.43308474,  0.84529828,  -0.56686547, -0.84791844, -0.11286944, 0.60857973,  -0.79519511, -0.20491925,
+       -1.52951743, -0.39030064, -2.76160767, 0.09055906,  -0.99142034, 0.33480785,  -1.09999883, 1.36149355,
+       0.18557576,  0.55407001,  1.23164067,  -0.23469015, -1.37274723, 1.80717934,  1.42966758,  0.72077395,
+       -0.09774939, 1.12065382,  -0.51515613, -0.9527945,  0.87646967,  -0.59440101, -0.12440208, -0.71096692,
+       -0.6301275,  0.51726169,  1.23726643,  1.56255466,  -0.94469759, -0.38114756, -0.42021761, -0.58921487,
+       -0.71439637, 0.04793575,  -2.04214516, -0.45765407, -1.12307202, 0.90727137,  0.96272832,  0.54303206,
+       -0.84973033, 0.28780329,  0.17027854,  -0.11893711, -1.22414638, -1.62747593, 0.53264501,  0.53483601});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast3", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast3_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast3_ExpectedOutput::output;
+   float *correct = AddBroadcast3_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2017,22 +1887,23 @@ TEST(ONNX, AddBroadcast3) {
    }
 }
 
-TEST(ONNX, AddBroadcast4) {
+TEST(ONNX, AddBroadcast4)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {2, 1}
    std::vector<float> A({1.94301397, 0.40606817});
    // The shape of B is {2, 4}
-   std::vector<float> B({0.50898894, -0.27829921, -0.68761628,  0.33186382,  0.57915535,
-        0.406858  ,  1.4203833 ,  0.19857093});
+   std::vector<float> B(
+      {0.50898894, -0.27829921, -0.68761628, 0.33186382, 0.57915535, 0.406858, 1.4203833, 0.19857093});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast4", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast4_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast4_ExpectedOutput::output;
+   float *correct = AddBroadcast4_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2040,26 +1911,26 @@ TEST(ONNX, AddBroadcast4) {
    }
 }
 
-TEST(ONNX, AddBroadcast5) {
+TEST(ONNX, AddBroadcast5)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {2, 1, 4}
-   std::vector<float> A({-0.45616139, -0.05853134,  1.09564217,  0.95880315,  0.94995322,
-       -0.35864105,  1.08570897,  0.6028053});
+   std::vector<float> A(
+      {-0.45616139, -0.05853134, 1.09564217, 0.95880315, 0.94995322, -0.35864105, 1.08570897, 0.6028053});
    // The shape of B is {2, 3, 4}
-   std::vector<float> B({1.69787452,  1.10641673,  2.19755165,  0.06709206,  0.04572308,
-       -2.14504366, -0.47730702,  0.15205423, -0.25159224, -0.07529807,
-        0.5174367 ,  0.08267595,  0.34015625,  0.09460231, -1.16608969,
-       -0.23466058, -0.5520268 , -0.13844847,  0.53055759,  0.17068648,
-       -0.49491276, -1.4246271 , -0.99973914, -0.2571329});
+   std::vector<float> B({1.69787452,  1.10641673, 2.19755165,  0.06709206,  0.04572308,  -2.14504366,
+                         -0.47730702, 0.15205423, -0.25159224, -0.07529807, 0.5174367,   0.08267595,
+                         0.34015625,  0.09460231, -1.16608969, -0.23466058, -0.5520268,  -0.13844847,
+                         0.53055759,  0.17068648, -0.49491276, -1.4246271,  -0.99973914, -0.2571329});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast5", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast5_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast5_ExpectedOutput::output;
+   float *correct = AddBroadcast5_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2067,33 +1938,29 @@ TEST(ONNX, AddBroadcast5) {
    }
 }
 
-TEST(ONNX, AddBroadcast6) {
+TEST(ONNX, AddBroadcast6)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {2, 1, 3, 1, 2}
-   std::vector<float> A({1.05498675, -1.64311041,  0.11925147, -1.59755778, -0.01445313,
-       -0.69440541, -0.12011281,  0.00539323, -0.16923531,  2.34533598,
-        1.30268048,  0.45699443});
+   std::vector<float> A({1.05498675, -1.64311041, 0.11925147, -1.59755778, -0.01445313, -0.69440541, -0.12011281,
+                         0.00539323, -0.16923531, 2.34533598, 1.30268048, 0.45699443});
    // The shape of B is {2, 2, 3, 2, 2}
-   std::vector<float> B({
-       0.03162163,  1.36340443, -0.34736459, -0.71856324,  0.40669968,
-       -0.37595741,  0.22234952,  1.69563792,  0.91459166, -0.02081215,
-       -1.64894217, -0.01189261,  0.58031339, -0.11880191,  0.70099317,
-       -0.37424243, -0.23980527, -0.03178407, -0.27969109,  0.01895688,
-        1.32111755,  0.02113906,  0.51450298, -1.41760768, -0.19220553,
-        0.23529522,  0.95199908, -1.38971445, -0.75836965, -0.90956958,
-       -0.13006828, -0.64390454, -0.0808229 ,  0.79134757,  1.00684867,
-       -1.43818087, -0.14550621, -0.33635512, -0.6185612 , -0.49281407,
-       -1.12947258,  1.61818821, -0.05826431, -1.47802183,  0.25637381,
-       -0.1547858 ,  2.50788792,  0.30898059});
+   std::vector<float> B({0.03162163,  1.36340443,  -0.34736459, -0.71856324, 0.40669968,  -0.37595741, 0.22234952,
+                         1.69563792,  0.91459166,  -0.02081215, -1.64894217, -0.01189261, 0.58031339,  -0.11880191,
+                         0.70099317,  -0.37424243, -0.23980527, -0.03178407, -0.27969109, 0.01895688,  1.32111755,
+                         0.02113906,  0.51450298,  -1.41760768, -0.19220553, 0.23529522,  0.95199908,  -1.38971445,
+                         -0.75836965, -0.90956958, -0.13006828, -0.64390454, -0.0808229,  0.79134757,  1.00684867,
+                         -1.43818087, -0.14550621, -0.33635512, -0.6185612,  -0.49281407, -1.12947258, 1.61818821,
+                         -0.05826431, -1.47802183, 0.25637381,  -0.1547858,  2.50788792,  0.30898059});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast6", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast6_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast6_ExpectedOutput::output;
+   float *correct = AddBroadcast6_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2101,24 +1968,24 @@ TEST(ONNX, AddBroadcast6) {
    }
 }
 
-TEST(ONNX, AddBroadcast7) {
+TEST(ONNX, AddBroadcast7)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    // The shape of A is {2, 1, 3, 1}
-   std::vector<float> A({-0.42164834, -0.61767078, -0.68778897, -1.14175916,  0.63204375,
-       -0.60630317});
+   std::vector<float> A({-0.42164834, -0.61767078, -0.68778897, -1.14175916, 0.63204375, -0.60630317});
    // The shae of B is {1, 1, 3, 4}
-   std::vector<float> B({1.40519865e+00, -2.87660856e-01,  7.49375999e-02,  1.22074840e+00,
-       -4.86212681e-01, -6.88210109e-01, -6.77434705e-01,  3.67088873e-01,
-        8.05744026e-04, -2.08031088e-01,  9.69779132e-01,  7.58373863e-01});
+   std::vector<float> B({1.40519865e+00, -2.87660856e-01, 7.49375999e-02, 1.22074840e+00, -4.86212681e-01,
+                         -6.88210109e-01, -6.77434705e-01, 3.67088873e-01, 8.05744026e-04, -2.08031088e-01,
+                         9.69779132e-01, 7.58373863e-01});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast7", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast7_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = AddBroadcast7_ExpectedOutput::output;
+   float *correct = AddBroadcast7_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2126,7 +1993,8 @@ TEST(ONNX, AddBroadcast7) {
    }
 }
 
-TEST(ONNX, Concat0D) {
+TEST(ONNX, Concat0D)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2137,7 +2005,7 @@ TEST(ONNX, Concat0D) {
    // Checking the output size
    EXPECT_EQ(expected_output.size(), expected_output.size());
 
-   float* correct = expected_output.data();
+   float *correct = expected_output.data();
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2145,7 +2013,8 @@ TEST(ONNX, Concat0D) {
    }
 }
 
-TEST(ONNX, LayerNormalization2d) {
+TEST(ONNX, LayerNormalization2d)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2156,7 +2025,7 @@ TEST(ONNX, LayerNormalization2d) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(LayerNormalization2d_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = LayerNormalization2d_ExpectedOutput::output;
+   float *correct = LayerNormalization2d_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2164,7 +2033,8 @@ TEST(ONNX, LayerNormalization2d) {
    }
 }
 
-TEST(ONNX, LayerNormalization4d) {
+TEST(ONNX, LayerNormalization4d)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2175,7 +2045,7 @@ TEST(ONNX, LayerNormalization4d) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(LayerNormalization4d_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = LayerNormalization4d_ExpectedOutput::output;
+   float *correct = LayerNormalization4d_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2183,16 +2053,13 @@ TEST(ONNX, LayerNormalization4d) {
    }
 }
 
-TEST(ONNX, Equal){
+TEST(ONNX, Equal)
+{
    constexpr float TOLERANCE = 0;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1.0, 2.0, 3.0
-   });
-   std::vector<float> input2({
-      4.0, 2.0, 6.0
-   });
+   std::vector<float> input1({1.0, 2.0, 3.0});
+   std::vector<float> input2({4.0, 2.0, 6.0});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "Equal", input1, input2);
    // Checking output size
@@ -2202,21 +2069,17 @@ TEST(ONNX, Equal){
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+      EXPECT_LE(((correct[i] == output[i]) ? 0 : 1), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, LessOrEqual){
+TEST(ONNX, LessOrEqual)
+{
    constexpr float TOLERANCE = 0;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1.0, 2.0, 3.0
-   });
-   std::vector<float> input2({
-      4.0, 2.0, 6.0
-   });
+   std::vector<float> input1({1.0, 2.0, 3.0});
+   std::vector<float> input2({4.0, 2.0, 6.0});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "LessOrEqual", input1, input2);
    // Checking output size
@@ -2226,21 +2089,17 @@ TEST(ONNX, LessOrEqual){
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+      EXPECT_LE(((correct[i] == output[i]) ? 0 : 1), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, GreaterOrEqual){
+TEST(ONNX, GreaterOrEqual)
+{
    constexpr float TOLERANCE = 0;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1.0, 2.0, 3.0
-   });
-   std::vector<float> input2({
-      4.0, 2.0, 6.0
-   });
+   std::vector<float> input1({1.0, 2.0, 3.0});
+   std::vector<float> input2({4.0, 2.0, 6.0});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "GreaterOrEqual", input1, input2);
    // Checking output size
@@ -2250,21 +2109,17 @@ TEST(ONNX, GreaterOrEqual){
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+      EXPECT_LE(((correct[i] == output[i]) ? 0 : 1), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Greater){
+TEST(ONNX, Greater)
+{
    constexpr float TOLERANCE = 0;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1.0, 2.0, 3.0
-   });
-   std::vector<float> input2({
-      4.0, 2.0, 6.0
-   });
+   std::vector<float> input1({1.0, 2.0, 3.0});
+   std::vector<float> input2({4.0, 2.0, 6.0});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "Greater", input1, input2);
    // Checking output size
@@ -2274,21 +2129,17 @@ TEST(ONNX, Greater){
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+      EXPECT_LE(((correct[i] == output[i]) ? 0 : 1), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Less){
+TEST(ONNX, Less)
+{
    constexpr float TOLERANCE = 0;
 
    // Preparing the standard  input
-   std::vector<float> input1({
-      1.0, 2.0, 3.0
-   });
-   std::vector<float> input2({
-      4.0, 2.0, 6.0
-   });
+   std::vector<float> input1({1.0, 2.0, 3.0});
+   std::vector<float> input2({4.0, 2.0, 6.0});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "Less", input1, input2);
    // Checking output size
@@ -2298,12 +2149,12 @@ TEST(ONNX, Less){
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+      EXPECT_LE(((correct[i] == output[i]) ? 0 : 1), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, ExpandSameSize) {
+TEST(ONNX, ExpandSameSize)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2313,7 +2164,7 @@ TEST(ONNX, ExpandSameSize) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(ExpandSameSize_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = ExpandSameSize_ExpectedOutput::output;
+   float *correct = ExpandSameSize_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2321,7 +2172,8 @@ TEST(ONNX, ExpandSameSize) {
    }
 }
 
-TEST(ONNX, ExpandDiffSize) {
+TEST(ONNX, ExpandDiffSize)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2331,7 +2183,7 @@ TEST(ONNX, ExpandDiffSize) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(ExpandDiffSize_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = ExpandDiffSize_ExpectedOutput::output;
+   float *correct = ExpandDiffSize_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2339,7 +2191,8 @@ TEST(ONNX, ExpandDiffSize) {
    }
 }
 
-TEST(ONNX, GatherAxis0) {
+TEST(ONNX, GatherAxis0)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2350,7 +2203,7 @@ TEST(ONNX, GatherAxis0) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis0_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = GatherAxis0_ExpectedOutput::output;
+   float *correct = GatherAxis0_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2358,7 +2211,8 @@ TEST(ONNX, GatherAxis0) {
    }
 }
 
-TEST(ONNX, GatherAxis1) {
+TEST(ONNX, GatherAxis1)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2369,7 +2223,7 @@ TEST(ONNX, GatherAxis1) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis1_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = GatherAxis1_ExpectedOutput::output;
+   float *correct = GatherAxis1_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2377,7 +2231,8 @@ TEST(ONNX, GatherAxis1) {
    }
 }
 
-TEST(ONNX, GatherAxis2) {
+TEST(ONNX, GatherAxis2)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2388,7 +2243,7 @@ TEST(ONNX, GatherAxis2) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis2_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = GatherAxis2_ExpectedOutput::output;
+   float *correct = GatherAxis2_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2396,7 +2251,8 @@ TEST(ONNX, GatherAxis2) {
    }
 }
 
-TEST(ONNX, GatherAxis3) {
+TEST(ONNX, GatherAxis3)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2407,7 +2263,7 @@ TEST(ONNX, GatherAxis3) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis3_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = GatherAxis3_ExpectedOutput::output;
+   float *correct = GatherAxis3_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2415,7 +2271,8 @@ TEST(ONNX, GatherAxis3) {
    }
 }
 
-TEST(ONNX, Gather2d) {
+TEST(ONNX, Gather2d)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2426,7 +2283,7 @@ TEST(ONNX, Gather2d) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(Gather2d_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = Gather2d_ExpectedOutput::output;
+   float *correct = Gather2d_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2434,7 +2291,8 @@ TEST(ONNX, Gather2d) {
    }
 }
 
-TEST(ONNX, GatherNegativeIndices) {
+TEST(ONNX, GatherNegativeIndices)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2445,7 +2303,7 @@ TEST(ONNX, GatherNegativeIndices) {
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherNegativeIndices_ExpectedOutput::output) / sizeof(float));
 
-   float* correct = GatherNegativeIndices_ExpectedOutput::output;
+   float *correct = GatherNegativeIndices_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2453,7 +2311,8 @@ TEST(ONNX, GatherNegativeIndices) {
    }
 }
 
-TEST(ONNX, Slice) {
+TEST(ONNX, Slice)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice::input;
@@ -2462,13 +2321,13 @@ TEST(ONNX, Slice) {
    EXPECT_EQ(output.size(), sizeof(Slice::output) / sizeof(float));
    float *correct = Slice::output;
 
-   for (size_t i=0; i<output.size(); i++) {
+   for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Slice_Default_Axis) {
+TEST(ONNX, Slice_Default_Axis)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice_Default_Axis::input;
@@ -2477,13 +2336,13 @@ TEST(ONNX, Slice_Default_Axis) {
    EXPECT_EQ(output.size(), sizeof(Slice_Default_Axis::output) / sizeof(float));
    float *correct = Slice_Default_Axis::output;
 
-   for (size_t i=0; i<output.size(); i++) {
+   for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Slice_Default_Steps) {
+TEST(ONNX, Slice_Default_Steps)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice_Default_Steps::input;
@@ -2492,13 +2351,13 @@ TEST(ONNX, Slice_Default_Steps) {
    EXPECT_EQ(output.size(), sizeof(Slice_Default_Steps::output) / sizeof(float));
    float *correct = Slice_Default_Steps::output;
 
-   for (size_t i=0; i<output.size(); i++) {
+   for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
-TEST(ONNX, Slice_Neg) {
+TEST(ONNX, Slice_Neg)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice_Neg::input;
@@ -2507,24 +2366,25 @@ TEST(ONNX, Slice_Neg) {
    EXPECT_EQ(output.size(), sizeof(Slice_Neg::output) / sizeof(float));
    float *correct = Slice_Neg::output;
 
-   for (size_t i=0; i<output.size(); i++) {
+   for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
-TEST(ONNX, RangeFloat) {
+TEST(ONNX, RangeFloat)
+{
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // inputs
    std::vector<float> start{1.};
    std::vector<float> limit{10.};
    std::vector<float> delta{2.};
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeFloat", "\"RangeFloat_FromONNX.dat\", 5", start, limit, delta);
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeFloat", "\"RangeFloat_FromONNX.dat\", 5", start, limit,
+                                       delta);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
 
-   float* correct = RangeFloat_ExpectedOutput::outputs;
+   float *correct = RangeFloat_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
@@ -2532,65 +2392,67 @@ TEST(ONNX, RangeFloat) {
    }
 }
 
-TEST(ONNX, RangeInt) {
+TEST(ONNX, RangeInt)
+{
    // inputs
    std::vector<int64_t> start{1};
    std::vector<int64_t> limit{10};
    std::vector<int64_t> delta{2};
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeInt", "\"RangeInt_FromONNX.dat\", 5", start, limit, delta);
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeInt", "\"RangeInt_FromONNX.dat\", 5", start, limit,
+                                       delta);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));
 
-   int64_t* correct = RangeInt_ExpectedOutput::outputs;
+   int64_t *correct = RangeInt_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_EQ(output[i], correct[i]);
    }
 }
-TEST(ONNX, Tile5D) {
-    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+TEST(ONNX, Tile5D)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-      // Preparing the standard input
-      std::vector<float> input_data({
-               0.2386120855808258,  0.5549510717391968,    -1.8190287351608276,  0.5724563598632812,    -0.6596977710723877,
-      0.17560836672782898, 0.7608169317245483,    0.08603227883577347,  -0.049375515431165695, 0.2705111503601074,
-      1.42119562625885,    0.032626643776893616,  -1.212586522102356,   -0.5129594802856445,   -0.43296414613723755,
-      -0.1606937050819397, 1.1884371042251587,    -0.662174642086029,   -2.291109323501587,    -0.6852569580078125,
-      2.325223922729492,   -0.19389064610004425,  -0.5784135460853577,  -0.39328137040138245,  0.2831517457962036,
-      0.4496127665042877,  -0.2029038816690445,   0.35477763414382935,  0.4266718924045563,    0.24683749675750732,
-      1.90426504611969,    -0.4861580729484558,   0.9139055013656616,   -0.5031066536903381,   0.9583520293235779,
-      -0.23210509121418,   1.3183971643447876,    1.7042455673217773,   -0.3201166093349457,   -0.14444805681705475,
-      -0.8829464912414551, 1.725736141204834,     0.45657631754875183,  0.4920198321342468,    -1.088847041130066,
-      0.49437597393989563, -0.006085286382585764, 2.475630760192871,    0.12170185893774033,   -0.8953945636749268,
-      1.1430096626281738,  1.3278610706329346,    0.3076854348182678,   0.036237504333257675,  0.05180325731635094,
-      0.2802475392818451,  0.5289335250854492,    0.9356630444526672,   0.7863689064979553,    0.4239695370197296,
-      0.8723016977310181,  -0.2248474359512329,   0.3891502320766449,   0.5463842153549194,    -0.7782878875732422,
-      -0.8570080399513245, -2.593783378601074,    -0.11392943561077118, 0.5637082457542419,    2.075004816055298,
-      -1.0598397254943848, 1.0823975801467896
-      });
-      // std::vector<size_t> repetitions({2, 1, 2, 1, 3});
+   // Preparing the standard input
+   std::vector<float> input_data(
+      {0.2386120855808258,  0.5549510717391968,    -1.8190287351608276,  0.5724563598632812,    -0.6596977710723877,
+       0.17560836672782898, 0.7608169317245483,    0.08603227883577347,  -0.049375515431165695, 0.2705111503601074,
+       1.42119562625885,    0.032626643776893616,  -1.212586522102356,   -0.5129594802856445,   -0.43296414613723755,
+       -0.1606937050819397, 1.1884371042251587,    -0.662174642086029,   -2.291109323501587,    -0.6852569580078125,
+       2.325223922729492,   -0.19389064610004425,  -0.5784135460853577,  -0.39328137040138245,  0.2831517457962036,
+       0.4496127665042877,  -0.2029038816690445,   0.35477763414382935,  0.4266718924045563,    0.24683749675750732,
+       1.90426504611969,    -0.4861580729484558,   0.9139055013656616,   -0.5031066536903381,   0.9583520293235779,
+       -0.23210509121418,   1.3183971643447876,    1.7042455673217773,   -0.3201166093349457,   -0.14444805681705475,
+       -0.8829464912414551, 1.725736141204834,     0.45657631754875183,  0.4920198321342468,    -1.088847041130066,
+       0.49437597393989563, -0.006085286382585764, 2.475630760192871,    0.12170185893774033,   -0.8953945636749268,
+       1.1430096626281738,  1.3278610706329346,    0.3076854348182678,   0.036237504333257675,  0.05180325731635094,
+       0.2802475392818451,  0.5289335250854492,    0.9356630444526672,   0.7863689064979553,    0.4239695370197296,
+       0.8723016977310181,  -0.2248474359512329,   0.3891502320766449,   0.5463842153549194,    -0.7782878875732422,
+       -0.8570080399513245, -2.593783378601074,    -0.11392943561077118, 0.5637082457542419,    2.075004816055298,
+       -1.0598397254943848, 1.0823975801467896});
+   // std::vector<size_t> repetitions({2, 1, 2, 1, 3});
 
-      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Tile5D", input_data);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Tile5D", input_data);
 
-      // EXPECT_EQ(output.size(), expected_output.size());
-      EXPECT_EQ(output.size(), sizeof(Tile5D_ExpectedOutput::output) / sizeof(float));
+   // EXPECT_EQ(output.size(), expected_output.size());
+   EXPECT_EQ(output.size(), sizeof(Tile5D_ExpectedOutput::output) / sizeof(float));
 
+   float *correct = Tile5D_ExpectedOutput::output;
 
-      float* correct = Tile5D_ExpectedOutput::output;
-
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
 }
-TEST(ONNX, Pad) {
+TEST(ONNX, Pad)
+{
    // add constant pad values of zeros
    // input tensor [1,2,2] and pad in (1,0),(0,1),(2,1) -> with shape (2,3,5)
-   std::vector<float> input = {1,2,3,4};
-   std::vector<float> correct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 3,
-       4, 0, 0, 0, 0, 0, 0, 0};
+   std::vector<float> input = {1, 2, 3, 4};
+   std::vector<float> correct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 1, 2, 0, 0, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0};
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pad", input);
 
    // Checking the output size
@@ -2601,13 +2463,14 @@ TEST(ONNX, Pad) {
       EXPECT_EQ(output[i], correct[i]);
    }
 }
-TEST(ONNX, Where) {
+TEST(ONNX, Where)
+{
    // test of Where using [[1,2]] and [[3,4],[5,6],[7,8]] with condition [[true],[false],[true]] -> [[1,2],[5,6],[1,2]]
    // test also the broadcast of boolean tensors
-   std::vector<float> input1 = {1,2};
-   std::vector<float> input2 = {3,4,5,6};
+   std::vector<float> input1 = {1, 2};
+   std::vector<float> input2 = {3, 4, 5, 6};
    std::vector<uint8_t> cond = {true, false, true};
-   std::vector<float> correct = {1,2,5,6,1,2};
+   std::vector<float> correct = {1, 2, 5, 6, 1, 2};
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Where", input1, input2, cond);
 
    // Checking the output size
@@ -2624,9 +2487,8 @@ TEST(ONNX, Sin)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing some random input
-   std::vector<float> input({
-     -0.786738,-0.197796,-0.187787,0.142758,0.876096,-0.653239,0.145444,-1.107658,2.259171,-0.947054,-0.506689,1.801250
-   });
+   std::vector<float> input({-0.786738, -0.197796, -0.187787, 0.142758, 0.876096, -0.653239, 0.145444, -1.107658,
+                             2.259171, -0.947054, -0.506689, 1.801250});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sin", input);
 
@@ -2644,9 +2506,8 @@ TEST(ONNX, Cos)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<float> input({
-     1.152504,-1.459324,0.691594,0.347690,-1.307323,1.832516,-1.261772,0.014224,1.311477,1.147405,-0.567206,-0.530606
-   });
+   std::vector<float> input({1.152504, -1.459324, 0.691594, 0.347690, -1.307323, 1.832516, -1.261772, 0.014224,
+                             1.311477, 1.147405, -0.567206, -0.530606});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Cos", input);
 
@@ -2664,7 +2525,7 @@ TEST(ONNX, Abs)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<float> input({1.,-2.,-3,4,-5.,6});
+   std::vector<float> input({1., -2., -3, 4, -5., 6});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Abs", input);
 
@@ -2682,7 +2543,7 @@ TEST(ONNX, Softplus)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<float> input({0.1,-0.2,0.3,-0.4,0.5,1.});
+   std::vector<float> input({0.1, -0.2, 0.3, -0.4, 0.5, 1.});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softplus", input);
 
@@ -2691,7 +2552,7 @@ TEST(ONNX, Softplus)
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      double exp_value = std::log(std::exp(input[i])+1);
+      double exp_value = std::log(std::exp(input[i]) + 1);
       EXPECT_LE(std::abs(output[i] - exp_value), TOLERANCE);
    }
 }
@@ -2716,7 +2577,7 @@ TEST(ONNX, Einsum_dotprod)
 {
    std::vector<float> input1{1, 2, 3};
    std::vector<float> input2{5, 6, 7};
-   std::vector<float> correct_output {5 +  12 + 21};
+   std::vector<float> correct_output{5 + 12 + 21};
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_dotprod", input1, input2);
 
@@ -2731,11 +2592,12 @@ TEST(ONNX, Einsum_dotprod)
 TEST(ONNX, Einsum_3)
 {
    // test abc,abd->ad   [2,2,3] , [2,2,3] -> [2,3]
-   std::vector<float> input1 {1.,2.,3,4,5,6,7,8,9,10,11,12};
-   std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12};
-   std::vector<float> correct_output {66. , 87. , 108., 498.,  555., 612. };
+   std::vector<float> input1{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+   std::vector<float> input2{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+   std::vector<float> correct_output{66., 87., 108., 498., 555., 612.};
 
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "Einsum_3", "\"Einsum_dotprod_FromONNX.dat\"", input1, input2);
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "Einsum_3", "\"Einsum_dotprod_FromONNX.dat\"", input1,
+                                       input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), 6);
@@ -2748,10 +2610,9 @@ TEST(ONNX, Einsum_3)
 TEST(ONNX, Einsum_4)
 {
    // test abcd,abed->abce  [2,1,2,3] , [2,1,3,3] -> [2,1,2,3]
-   std::vector<float> input1 {1.,2.,3,4,5,6,7,8,9,10,11,12};
-   std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
-   std::vector<float> correct_output { 14., 32.,  50., 32.,  77.,  122.,
-                                      266., 338., 410., 365., 464., 563. };
+   std::vector<float> input1{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+   std::vector<float> input2{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+   std::vector<float> correct_output{14., 32., 50., 32., 77., 122., 266., 338., 410., 365., 464., 563.};
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_4", input1, input2);
 
@@ -2779,7 +2640,7 @@ TEST(ONNX, RandomUniform)
 
 TEST(ONNX, RandomNormal)
 {
-    // output of gRandom->Gaus(1,3) with seed 111 - > shape(2,3)
+   // output of gRandom->Gaus(1,3) with seed 111 - > shape(2,3)
    std::vector<float> correct_output = {-0.808389, -0.985581, 0.616354, 2.1887, 1.13927, -0.228048};
 
    ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomNormal");
@@ -2795,8 +2656,8 @@ TEST(ONNX, RandomNormal)
 TEST(ONNX, Split_0)
 {
    // split in axis 0  in 2 tensor {2,2,3}
-   std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
-   std::vector<std::vector<float>> correct_output ={ {1,2,3,4,5,6}, {7,8,9,10,11,12} };
+   std::vector<float> input{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+   std::vector<std::vector<float>> correct_output = {{1, 2, 3, 4, 5, 6}, {7, 8, 9, 10, 11, 12}};
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_0", input);
 
@@ -2813,8 +2674,8 @@ TEST(ONNX, Split_0)
 TEST(ONNX, Split_1)
 {
    // split in axis 1  in 2 tensor {2,2,3}
-   std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
-   std::vector<std::vector<float>> correct_output ={ {1,2,3,7,8,9}, {4,5,6,10,11,12} };
+   std::vector<float> input{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+   std::vector<std::vector<float>> correct_output = {{1, 2, 3, 7, 8, 9}, {4, 5, 6, 10, 11, 12}};
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_1", input);
 
@@ -2831,8 +2692,8 @@ TEST(ONNX, Split_1)
 TEST(ONNX, Split_2)
 {
    // split in axis 2  in 2 tensor {2,2,3} -> { 2,2,2} and {2,2,1}
-   std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
-   std::vector<std::vector<float>> correct_output ={ {1,2,4,5,7,8,10,11}, {3,6,9,12} };
+   std::vector<float> input{1., 2., 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+   std::vector<std::vector<float>> correct_output = {{1, 2, 4, 5, 7, 8, 10, 11}, {3, 6, 9, 12}};
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_2", input);
 
@@ -2849,10 +2710,10 @@ TEST(ONNX, Split_2)
 TEST(ONNX, ScatterElements)
 {
    // test scatter elements (similar test as in ONNX doc)
-   std::vector<float> input(9, 0.);    // input tensor shape is (3.3)
-   std::vector<int64_t> indices = { 1, 0, 2, 0, 2, 1};
-   std::vector<float> updates = { 1, 1.1, 1.2, 2, 2.1, 2.2};
-   std::vector<float> correct_output = {2, 1.1, 0., 1., 0., 2.2, 0., 2.1, 1.2 };
+   std::vector<float> input(9, 0.); // input tensor shape is (3.3)
+   std::vector<int64_t> indices = {1, 0, 2, 0, 2, 1};
+   std::vector<float> updates = {1, 1.1, 1.2, 2, 2.1, 2.2};
+   std::vector<float> correct_output = {2, 1.1, 0., 1., 0., 2.2, 0., 2.1, 1.2};
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterElements", input, indices, updates);
 
@@ -2867,13 +2728,33 @@ TEST(ONNX, ScatterElements)
 TEST(ONNX, MatMul_Stacked)
 {
    // test scatter elements (similar test as in ONNX doc)
-   std::vector<float> input1 = {1,2,3,4,5,6,7,8};    // input tensor shape is (2,2,2)
-   std::vector<float> input2 = {2,3};                // shape is (2,1)
+   std::vector<float> input1 = {1, 2, 3, 4, 5, 6, 7, 8}; // input tensor shape is (2,2,2)
+   std::vector<float> input2 = {2, 3};                   // shape is (2,1)
 
-   std::vector<float> correct_output = {8,18, 28,38};
+   std::vector<float> correct_output = {8, 18, 28, 38};
 
    // model is dynamic , use N = 2
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked", "\"MatMul_Stacked_FromONNX.dat\", 2", 2, input1, input2);
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked", "\"MatMul_Stacked_FromONNX.dat\", 2", 2,
+                                       input1, input2);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, InstanceNormalization)
+{
+   // test instance normalization
+   std::vector<float> input = {1, 2, 3, 4, 5, 6, 7, 8}; // input tensor shape is (1,2,2,2)
+   std::vector<float> scale = {1, 2};                   // shape is (2)
+   std::vector<float> bias = {0, 1};                    // shape is (2)
+
+   std::vector<float> correct_output = {-1.34164, -0.44721, 0.44721, 1.34164, -1.68328, 0.10557, 1.89443, 3.68328};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "InstanceNormalization", input, scale, bias);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
