@@ -40,8 +40,6 @@ public:
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
 
-   void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
-
    void setOffsetting(bool flag) override;
 
    double operator()(const double *x) const;

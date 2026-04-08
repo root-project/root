@@ -41,7 +41,6 @@ public:
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
 
-   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
    std::string GetClassName() const override { return "RooUnbinnedL"; }
 
@@ -50,11 +49,6 @@ private:
    mutable bool _first = true;        ///<!
    std::unique_ptr<RooChangeTracker> paramTracker_;
    Section lastSection_ = {0, 0}; // used for cache together with the parameter tracker
-   // Last event section the dataset cache was recalculated for. The
-   // cache-and-track optimization tracks staleness globally per cached branch,
-   // but only refreshes the requested event range, so evaluating a different
-   // section requires forcing a cache update (see evaluatePartition).
-   Section lastCacheSection_ = {0, 0};
    mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
    std::shared_ptr<RooFit::Evaluator> evaluator_;  ///<! For batched evaluation
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources in batched evaluation

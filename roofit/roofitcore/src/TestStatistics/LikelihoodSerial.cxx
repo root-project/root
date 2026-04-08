@@ -42,10 +42,6 @@ LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood,
 /// \brief Helper function for the constructor.
 ///
 /// This is a separate function (instead of just in ctor) for historical reasons.
-/// Its predecessor RooRealMPFE::initVars() was used from multiple ctors, but also
-/// from RooRealMPFE::constOptimizeTestStatistic at the end, which makes sense,
-/// because it might change the set of variables. We may at some point want to do
-/// this here as well.
 void LikelihoodSerial::initVars()
 {
    // Empty current lists

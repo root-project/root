@@ -207,7 +207,6 @@ protected:
   void setCachedValue(double value, bool notifyClients = true) final;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
-  void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
   RooCatType* retrieveLegacyState(value_type index) const;

@@ -54,9 +54,6 @@ public:
 
    void applyWeightSquared(bool flag) override { _topNode->applyWeightSquared(flag); }
 
-   /// The RooFit::Evaluator is dealing with constant terms itself.
-   void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
-
    bool hasGradient() const override;
    bool hasHessian() const override;
 

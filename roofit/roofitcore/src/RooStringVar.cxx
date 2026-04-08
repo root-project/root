@@ -131,15 +131,3 @@ void RooStringVar::fillTreeBranch(TTree& t)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// (De)Activate associated tree branch
-
-void RooStringVar::setTreeBranchStatus(TTree& t, bool active)
-{
-  TBranch* branch = t.GetBranch(GetName()) ;
-  if (branch) {
-    t.SetBranchStatus(GetName(),active?true:false) ;
-  }
-}
-
-

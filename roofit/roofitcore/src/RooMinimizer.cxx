@@ -33,8 +33,7 @@ in the constant status etc is forwarded to MINUIT prior to
 execution of the MINUIT call. Afterwards the RooFit objects
 are resynchronized with the output state of MINUIT: changes
 parameter values, errors are propagated.
-Various methods are available to control verbosity, profiling,
-automatic PDF optimization.
+Various methods are available to control verbosity or profiling.
 **/
 
 #include "RooMinimizer.h"

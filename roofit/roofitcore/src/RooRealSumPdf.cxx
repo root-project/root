@@ -663,25 +663,6 @@ RooRealSumPdf::plotSamplingHint(RooArgList const &funcList, RooAbsRealLValue &ob
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Label OK'ed components of a RooRealSumPdf with cache-and-track
-
-void RooRealSumPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
-{
-  setCacheAndTrackHints(_funcList, trackNodes);
-}
-
-
-void RooRealSumPdf::setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes)
-{
-  for (const auto sarg : funcList) {
-    if (sarg->canNodeBeCached()==Always) {
-      trackNodes.add(*sarg) ;
-    }
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooRealSumPdf to more intuitively reflect the contents of the
 /// product operator construction
 

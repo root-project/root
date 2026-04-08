@@ -73,11 +73,6 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
    }
 }
 
-void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-   _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-}
-
 /// Evaluate function given the parameters in `x`.
 double RooMinimizerFcn::operator()(const double *x) const
 {

@@ -468,21 +468,6 @@ RooArgList RooProduct::CacheElem::containedArgs(Action)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Label OK'ed components of a RooProduct with cache-and-track
-
-void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
-{
-  RooArgSet comp(components()) ;
-  for (const auto parg : comp) {
-    if (parg->isDerived()) {
-      if (parg->canNodeBeCached()==Always) {
-        trackNodes.add(*parg) ;
-      }
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
 /// product operator construction
 

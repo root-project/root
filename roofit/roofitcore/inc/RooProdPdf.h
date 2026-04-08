@@ -165,8 +165,6 @@ private:
                      bool forceWrap=false) const ;
 
 
-  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
-  void setCacheAndTrackHints(RooArgSet&) override ;
 
   std::unique_ptr<CacheElem> createCacheElem(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=nullptr) const;
 

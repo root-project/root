@@ -1893,36 +1893,6 @@ std::list<double>* RooProdPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, 
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Label OK'ed components of a RooProdPdf with cache-and-track, _and_ label all RooProdPdf
-/// descendants with extra information about (conditional) normalization, needed to be able
-/// to Cache-And-Track them outside the RooProdPdf context.
-
-void RooProdPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
-{
-  for (const auto parg : _pdfList) {
-
-    if (parg->canNodeBeCached()==Always) {
-      trackNodes.add(*parg) ;
-
-      // Additional processing to fix normalization sets in case product defines conditional observables
-      if (RooArgSet* pdf_nset = findPdfNSet(static_cast<RooAbsPdf&>(*parg))) {
-        // Check if conditional normalization is specified
-        using RooHelpers::getColonSeparatedNameString;
-        if (string("nset")==pdf_nset->GetName() && !pdf_nset->empty()) {
-          parg->setStringAttribute("CATNormSet",getColonSeparatedNameString(*pdf_nset).c_str()) ;
-        }
-        if (string("cset")==pdf_nset->GetName()) {
-          parg->setStringAttribute("CATCondSet",getColonSeparatedNameString(*pdf_nset).c_str()) ;
-        }
-      } else {
-        coutW(Optimization) << "RooProdPdf::setCacheAndTrackHints(" << GetName() << ") WARNING product pdf does not specify a normalization set for component " << parg->GetName() << std::endl ;
-      }
-    }
-  }
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProdPdf to more intuitively reflect the contents of the

@@ -2940,22 +2940,6 @@ void RooLagrangianMorphFunc::printMetaArgs(std::ostream &os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the matrix of coefficients
 
-RooAbsArg::CacheMode RooLagrangianMorphFunc::canNodeBeCached() const
-{
-   return this->getFunc()->canNodeBeCached();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients
-
-void RooLagrangianMorphFunc::setCacheAndTrackHints(RooArgSet &arg)
-{
-   this->getFunc()->setCacheAndTrackHints(arg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients
-
 TMatrixD RooLagrangianMorphFunc::getMatrix() const
 {
    auto cache = getCache();

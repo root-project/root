@@ -62,16 +62,3 @@ void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
   }
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface for constant term optimization calls. The default implementation is to forward all these
-/// calls to all contained RooAbsArg objects as publicized through containedArg()
-
-void RooAbsCacheElement::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes)
-{
-  RooArgList list = containedArgs(FindConstantNodes) ;
-  for (const auto arg : list) {
-    arg->findConstantNodes(obs, cacheList, processedNodes);
-  }
-}

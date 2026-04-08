@@ -87,7 +87,7 @@ TEST_P(GaussBinnedFit, BatchFit)
    m.setVal(-1.);
    s.setVal(3.);
    MyTimer timer(evalBackend == EvalBackend::Value::Cpu ? "BatchBinned" : "ScalarBinned");
-   gaus.fitTo(*dataHist, EvalBackend(evalBackend), PrintLevel(-1), Optimize(0));
+   gaus.fitTo(*dataHist, EvalBackend(evalBackend), PrintLevel(-1));
    timer.interval();
    std::cout << timer << std::endl;
    EXPECT_NEAR(m.getVal(), 1., m.getError());

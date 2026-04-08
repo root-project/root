@@ -35,7 +35,7 @@
 /// coverity[UNINIT_CTOR]
 
 RooMomentMorph::RooMomentMorph()
-  : _cacheMgr(this,10,true,true)
+  : _cacheMgr(this, 10, true, true)
 {
 }
 

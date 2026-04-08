@@ -60,8 +60,6 @@ public:
   std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
-  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
-  void setCacheAndTrackHints(RooArgSet&) override ;
 
 protected:
 

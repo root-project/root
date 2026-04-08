@@ -49,7 +49,6 @@ class TH1;
 class TH2F;
 namespace RooFit::TestStatistics {
 class RooAbsL;
-struct ConstantTermsOptimizer;
 } // namespace RooFit::TestStatistics
 
 
@@ -257,7 +256,6 @@ public:
 
   void RecursiveRemove(TObject *obj) override;
 
-  bool hasFilledCache() const ;
 
   void addOwnedComponent(const char* idxlabel, RooAbsData& data) ;
 
@@ -304,9 +302,6 @@ protected:
   double corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, bool corr) const  ;
   RooFit::OwningPtr<TMatrixDSym> corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const  ;
 
-  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;
-  bool allClientsCached(RooAbsArg*, const RooArgSet&) ;
-
   struct PlotOpt {
    const char* cuts = "";
    Option_t* drawOptions = "P";
@@ -337,14 +332,8 @@ protected:
 
   // Constant term optimizer interface
   friend class RooAbsOptTestStatistic ;
-  friend struct RooFit::TestStatistics::ConstantTermsOptimizer;
   // for access into copied dataset:
   friend class RooFit::TestStatistics::RooAbsL;
-
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) ;
-  virtual void resetCache() ;
-  virtual void setArgStatus(const RooArgSet& set, bool active) ;
-  virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
   virtual std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                            std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max()) const = 0 ;

@@ -1268,17 +1268,10 @@ std::shared_ptr<RooAbsReal> xRooNLLVar::func() const
    if (!(*this)) {
       const_cast<xRooNLLVar *>(this)->reinitialize();
    } else if (auto f = std::unique_ptr<RooAbsCollection>(fConstVars->selectByAttrib("Constant", false)); !f->empty()) {
-      // have to reinitialize if const par values have changed - const optimization forces this
+      // have to reinitialize if const par values have changed
       // TODO: currently changes to globs also triggers this since the vars includes globs (vars are the non-obs pars)
       // std::cout << "Reinitializing because of change of const parameters:" << f->contentsString() << std::endl;
       const_cast<xRooNLLVar *>(this)->reinitialize();
-
-      // note ... it may be sufficient here to do:
-      // nll.constOptimizeTestStatistic(RooAbsArg::ConfigChange, constOptimize>1 /* do tracking too if >1 */); //
-      // trigger a re-evaluate of which nodes to cache-and-track nll.constOptimizeTestStatistic(RooAbsArg::ValueChange,
-      // constOptimize>1); // update the cache values -- is this needed??
-      // this forces the optimization to be redone
-      // for now leave as a reinitialize though, until had a chance to test this properly
    }
    if (fGlobs && fFuncGlobs) {
       *fFuncGlobs = *fGlobs;
@@ -1307,11 +1300,6 @@ void xRooNLLVar::SetOption(const RooCmdArg &opt)
    } else if (strcmp(opt.GetName(), "PrintLevel") == 0) {
       fitConfig()->MinimizerOptions().SetPrintLevel(opt.getInt(0));
    } else {
-      if (strcmp(opt.GetName(), "Optimize") == 0) {
-         // this flag will trigger constOptimizeTestStatistic to be called on the nll in createNLL method
-         // we should ensure that the fitconfig setting is consistent with it ...
-         fitConfigOptions()->SetValue("OptimizeConst", opt.getInt(0));
-      }
       if (auto prevObject = fOpts->FindObject(opt.GetName()); prevObject) {
          // replace previous option
          fOpts->Replace(prevObject, opt.Clone(nullptr));

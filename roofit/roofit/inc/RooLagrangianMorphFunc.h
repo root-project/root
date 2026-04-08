@@ -117,8 +117,6 @@ public:
                                  const char *rangeName = nullptr) const override;
    double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override;
    void printMetaArgs(std::ostream &os) const override;
-   RooAbsArg::CacheMode canNodeBeCached() const override;
-   void setCacheAndTrackHints(RooArgSet &) override;
 
    void insert(RooWorkspace *ws);
 
