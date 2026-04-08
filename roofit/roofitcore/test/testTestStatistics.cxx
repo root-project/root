@@ -157,12 +157,12 @@ TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"), _evalBackend, SumW2Error(false)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Range("range"), _evalBackend, SumW2Error(false)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"), Range("range"), NormRange("range"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"),
-                                                _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
+   std::unique_ptr<RooFitResult> fit2(
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Range("range"), _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"), Range("range"), NormRange("range"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -208,13 +208,12 @@ TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
    dataS->plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false), Optimize(0)));
+   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(*dataS, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),

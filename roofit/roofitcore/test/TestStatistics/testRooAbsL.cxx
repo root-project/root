@@ -340,5 +340,3 @@ TEST_F(SimBinnedConstrainedTest, VSRooNLLVar)
    auto RooNLL_value = nll->getVal();
    EXPECT_EQ(AbsL_value.Sum(), RooNLL_value);
 }
-
-// TODO: add tests covering all constOptimizeTestStatistic opcode cases.

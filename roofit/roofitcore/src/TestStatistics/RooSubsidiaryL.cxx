@@ -67,7 +67,5 @@ ROOT::Math::KahanSum<double> RooSubsidiaryL::evaluatePartition(RooAbsL::Section 
    return sum;
 }
 
-void RooSubsidiaryL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) {}
-
 } // namespace TestStatistics
 } // namespace RooFit

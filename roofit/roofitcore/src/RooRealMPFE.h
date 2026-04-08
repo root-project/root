@@ -55,7 +55,6 @@ public:
   // Function evaluation
   double evaluate() const override ;
   friend class RooAbsTestStatistic ;
-  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking=true) override ;
   virtual double getCarry() const;
 
   enum State { Initialize,Client,Server,Inline } ;

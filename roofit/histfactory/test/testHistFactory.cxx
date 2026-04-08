@@ -590,82 +590,67 @@ TEST_P(HFFixtureFit, Fit)
    auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
-   // This tests both correct pre-caching of constant terms and (if false) that all doEval() are correct.
-   for (bool constTermOptimization : {true, false}) {
+   std::unique_ptr<RooArgSet> pars(simPdf->getParameters(*data));
+   // Kick parameters:
+   for (auto par : *pars) {
+      auto real = dynamic_cast<RooAbsRealLValue *>(par);
+      if (real && !real->isConstant())
+         real->setVal(real->getVal() * 0.95);
+   }
+   if (makeModelMode == MakeModelMode::StatSyst) {
+      auto poi = dynamic_cast<RooRealVar *>(pars->find("SigXsecOverSM"));
+      ASSERT_NE(poi, nullptr);
+      poi->setVal(2.);
+      poi->setConstant();
+   }
 
-      // constTermOptimization makes only sense in the legacy backend
-      if (constTermOptimization && evalBackend != RooFit::EvalBackend::Legacy()) {
-         continue;
+   using namespace RooFit;
+   std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(
+      *data, evalBackend, GlobalObservables(*mc->GetGlobalObservables()), Save(), PrintLevel(verbose ? 1 : -1))};
+   ASSERT_NE(fitResult, nullptr);
+   if (verbose)
+      fitResult->Print("v");
+   EXPECT_EQ(fitResult->status(), 0);
+
+   auto checkParam = [&](const std::string &param, double target, double absPrecision = 1.e-2) {
+      auto par = dynamic_cast<RooRealVar *>(fitResult->floatParsFinal().find(param.c_str()));
+      if (!par) {
+         // Parameter was constant in this fit
+         par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
+         ASSERT_NE(par, nullptr) << param;
+         EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
+      } else {
+         EXPECT_NEAR(par->getVal(), target, par->getError())
+            << "Parameter " << param << " close to target " << target << " within uncertainty";
+         EXPECT_NEAR(par->getVal(), target, absPrecision) << "Parameter " << param << " close to target " << target;
       }
-      SCOPED_TRACE(constTermOptimization ? "const term optimisation" : "No const term optimisation");
+   };
 
-      // Stop if one of the previous runs had a failure to keep the terminal clean.
-      if (HasFailure())
-         break;
-
-      std::unique_ptr<RooArgSet> pars(simPdf->getParameters(*data));
-      // Kick parameters:
-      for (auto par : *pars) {
-         auto real = dynamic_cast<RooAbsRealLValue *>(par);
-         if (real && !real->isConstant())
-            real->setVal(real->getVal() * 0.95);
-      }
-      if (makeModelMode == MakeModelMode::StatSyst) {
-         auto poi = dynamic_cast<RooRealVar *>(pars->find("SigXsecOverSM"));
-         ASSERT_NE(poi, nullptr);
-         poi->setVal(2.);
-         poi->setConstant();
-      }
-
-      using namespace RooFit;
-      std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(*data, evalBackend, Optimize(constTermOptimization),
-                                                            GlobalObservables(*mc->GetGlobalObservables()), Save(),
-                                                            PrintLevel(verbose ? 1 : -1))};
-      ASSERT_NE(fitResult, nullptr);
-      if (verbose)
-         fitResult->Print("v");
-      EXPECT_EQ(fitResult->status(), 0);
-
-      auto checkParam = [&](const std::string &param, double target, double absPrecision = 1.e-2) {
-         auto par = dynamic_cast<RooRealVar *>(fitResult->floatParsFinal().find(param.c_str()));
-         if (!par) {
-            // Parameter was constant in this fit
-            par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
-            ASSERT_NE(par, nullptr) << param;
-            EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
-         } else {
-            EXPECT_NEAR(par->getVal(), target, par->getError())
-               << "Parameter " << param << " close to target " << target << " within uncertainty";
-            EXPECT_NEAR(par->getVal(), target, absPrecision) << "Parameter " << param << " close to target " << target;
-         }
-      };
-
-      if (makeModelMode == MakeModelMode::OverallSyst) {
-         // Model is set up such that background scale factors should be close to 1, and signal == 2
-         checkParam("SigXsecOverSM", 2.);
-         checkParam("alpha_syst2", 0.);
-         checkParam("alpha_syst3", 0.);
-         checkParam("alpha_syst4", 0.);
-         checkParam("gamma_stat_channel1_bin_0", 1.);
-         checkParam("gamma_stat_channel1_bin_1", 1.);
-      } else if (makeModelMode == MakeModelMode::HistoSyst) {
-         // Model is set up with a -1 sigma pull on the signal shape parameter.
-         checkParam("SigXsecOverSM", 2., 1.1E-1); // Higher tolerance: Expect a pull due to shape syst.
-         checkParam("gamma_stat_channel1_bin_0", 1.);
-         checkParam("gamma_stat_channel1_bin_1", 1.);
-         checkParam("alpha_SignalShape", -0.9, 5.E-2); // Pull slightly lower than 1 because of constraint term
-      } else if (makeModelMode == MakeModelMode::StatSyst) {
-         // Model is set up with a -1 sigma pull on the signal shape parameter.
-         checkParam("SigXsecOverSM", 2., 1.1E-1);       // Higher tolerance: Expect a pull due to shape syst.
-         checkParam("gamma_stat_channel1_bin_0", 1.09); // This should be pulled
-         checkParam("gamma_stat_channel1_bin_1", 1.);
-      } else if (makeModelMode == MakeModelMode::ShapeSyst) {
-         // This should be pulled down
-         checkParam("gamma_background1Shape_bin_0", 0.8866, 0.03);
-         // This should be pulled up, but not so much because the free signal
-         // strength will fit the excess in this bin.
-         checkParam("gamma_background2Shape_bin_1", 1.0250, 0.03);
-      }
+   if (makeModelMode == MakeModelMode::OverallSyst) {
+      // Model is set up such that background scale factors should be close to 1, and signal == 2
+      checkParam("SigXsecOverSM", 2.);
+      checkParam("alpha_syst2", 0.);
+      checkParam("alpha_syst3", 0.);
+      checkParam("alpha_syst4", 0.);
+      checkParam("gamma_stat_channel1_bin_0", 1.);
+      checkParam("gamma_stat_channel1_bin_1", 1.);
+   } else if (makeModelMode == MakeModelMode::HistoSyst) {
+      // Model is set up with a -1 sigma pull on the signal shape parameter.
+      checkParam("SigXsecOverSM", 2., 1.1E-1); // Higher tolerance: Expect a pull due to shape syst.
+      checkParam("gamma_stat_channel1_bin_0", 1.);
+      checkParam("gamma_stat_channel1_bin_1", 1.);
+      checkParam("alpha_SignalShape", -0.9, 5.E-2); // Pull slightly lower than 1 because of constraint term
+   } else if (makeModelMode == MakeModelMode::StatSyst) {
+      // Model is set up with a -1 sigma pull on the signal shape parameter.
+      checkParam("SigXsecOverSM", 2., 1.1E-1);       // Higher tolerance: Expect a pull due to shape syst.
+      checkParam("gamma_stat_channel1_bin_0", 1.09); // This should be pulled
+      checkParam("gamma_stat_channel1_bin_1", 1.);
+   } else if (makeModelMode == MakeModelMode::ShapeSyst) {
+      // This should be pulled down
+      checkParam("gamma_background1Shape_bin_0", 0.8866, 0.03);
+      // This should be pulled up, but not so much because the free signal
+      // strength will fit the excess in this bin.
+      checkParam("gamma_background2Shape_bin_1", 1.0250, 0.03);
    }
 
    if (false) {

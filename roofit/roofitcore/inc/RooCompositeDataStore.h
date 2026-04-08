@@ -89,19 +89,8 @@ public:
   void attachBuffers(const RooArgSet& extObs) override ;
   void resetBuffers() override ;
 
-  // Constant term  optimizer interface
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
-  const RooAbsArg* cacheOwner() override { return nullptr ; }
-  void setArgStatus(const RooArgSet& set, bool active) override ;
-  void resetCache() override ;
-
-  void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, bool /*skipZeroWeights*/) override ;
-  bool hasFilledCache() const override ;
-
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
-
-  void forceCacheUpdate() override ;
 
   RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override {
     //TODO
@@ -114,8 +103,6 @@ public:
 
 
  protected:
-
-  void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override ;
 
   std::map<Int_t,RooAbsDataStore*> _dataMap ;
   RooCategory* _indexCat = nullptr;

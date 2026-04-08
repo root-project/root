@@ -77,11 +77,6 @@ void LikelihoodWrapper::synchronizeParameterSettings(
 {
 }
 
-void LikelihoodWrapper::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-   likelihood_->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-}
-
 double LikelihoodWrapper::defaultErrorLevel() const
 {
    return likelihood_->defaultErrorLevel();

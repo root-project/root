@@ -41,11 +41,6 @@ public:
 
    bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
-   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
-   {
-      applyToLikelihood([&](auto &l) { l.constOptimizeTestStatistic(opcode, doAlsoTrackingOpt); });
-   }
-
    double operator()(const double *x) const;
 
    /// IMultiGradFunction overrides necessary for Minuit

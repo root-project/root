@@ -120,12 +120,5 @@ ROOT::Math::KahanSum<double> RooSumL::getSubsidiaryValue()
    return ROOT::Math::KahanSum<double>{};
 }
 
-void RooSumL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-   for (auto &component : components_) {
-      component->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-   }
-}
-
 } // namespace TestStatistics
 } // namespace RooFit

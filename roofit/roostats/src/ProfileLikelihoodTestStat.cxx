@@ -297,8 +297,6 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    int level = (fPrintLevel == 0) ? -1 : fPrintLevel -2;
    minim.setPrintLevel(level);
    minim.setEps(fTolerance);
-   // this causes a memory leak
-   minim.optimizeConst(2);
    TString minimizer = fMinimizer;
    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
    if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
@@ -329,5 +327,4 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
 
    //how to get cov quality faster?
    return std::unique_ptr<RooFitResult>{minim.save()};
-   //minim.optimizeConst(false);
 }

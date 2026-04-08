@@ -348,17 +348,6 @@ void RooRealMPFE::serverLoop()
       }
       break;
 
-    case ConstOpt:
-      {
-   bool doTrack ;
-   int code;
-   *_pipe >> code >> doTrack;
-   if (_verboseServer) std::cout << "RooRealMPFE::serverLoop(" << GetName()
-             << ") IPC fromClient> ConstOpt " << code << " doTrack = " << (doTrack?"T":"F") << std::endl ;
-   ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(static_cast<RooAbsArg::ConstOpCode>(code),doTrack) ;
-   break ;
-      }
-
     case Verbose:
       {
       bool flag ;
@@ -673,33 +662,6 @@ void RooRealMPFE::standby()
   }
 #endif // _WIN32
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Intercept call to optimize constant term in test statistics
-/// and forward it to object on server side.
-
-void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking)
-{
-#ifndef _WIN32
-  if (_state==Client) {
-
-    int msg = ConstOpt ;
-    int op = opcode;
-    *_pipe << msg << op << doAlsoTracking;
-    if (_verboseServer) std::cout << "RooRealMPFE::constOptimize(" << GetName()
-              << ") IPC toServer> ConstOpt " << opcode << std::endl ;
-
-    initVars() ;
-  }
-#endif // _WIN32
-
-  if (_state==Inline) {
-    ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(opcode,doAlsoTracking) ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
