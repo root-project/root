@@ -1,11 +1,11 @@
 //
 // Cling macro to test I/O of SMatrix classes and compare with a TMatrix
-// A ROOT tree is written and read in both using either a SMatrix  or
+// A ROOT tree is written and read in both using either a SMatrix or
 // a TMatrixD.
 //
 //  To execute the macro type in:
 //
-// root[0]: .x  smatrixIO.C
+// root[0]: .x testIO.cxx
 
 #include "Math/SMatrix.h"
 #include "TMatrixD.h"
@@ -44,10 +44,7 @@ double tol = 1.E-16;
 double tol32 = 1.E-6;
 
 std::string sfile1   = "smatrix.root";
-std::string sfile2   = "smatrix_rflx.root";
-
 std::string symfile1 = "smatrixsym.root";
-std::string symfile2 = "smatrixsym_rflx.root";
 
 
 
@@ -748,7 +745,7 @@ int testWrite(int nEvents, double & w1, double & w2) {
   return iret;
 }
 
-int testRead(double & r1, double & r2, double & r3) {
+int testRead(double & r1, double & r2) {
 
   int iret = 0;
 
@@ -761,16 +758,6 @@ int testRead(double & r1, double & r2, double & r3) {
     int pr = std::cout.precision(18);  std::cout << r1 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
     iret = 2;
   }
-
-  std::cout << "try to read file written with Reflex using Cling Dictionaries " << std::endl;
-
-  r3 = readSMatrix(sfile2);
-  if ( r3 != -1. && fabs(r2-r3) > tol) {
-    std::cout << "\nERROR: Differeces Reflex-Cling found  when reading SMatrices" << std::endl;
-    int pr = std::cout.precision(18);  std::cout << r2 << "   !=    " << r3 << std::endl; std::cout.precision(pr);
-    iret = 3;
-  }
-
 
   return iret;
 }
@@ -801,7 +788,7 @@ int testWriteSym(int nEvents, double & w1, double & w2) {
   return iret;
 }
 
-int testReadSym(double & r1, double & r2, double & r3) {
+int testReadSym(double & r1, double & r2) {
 
   int iret = 0;
 
@@ -814,19 +801,9 @@ int testReadSym(double & r1, double & r2, double & r3) {
     iret = 12;
   }
 
-  std::cout << "try to read file written with Reflex using Cling Dictionaries " << std::endl;
-
-  r3 = readSMatrixSym(symfile2);
-  if ( r3 != -1. && fabs(r2-r3) > tol) {
-    std::cout << "\nERROR: Differeces Reflex-Cling found  when reading SMatricesSym" << std::endl;
-    int pr = std::cout.precision(18);  std::cout << r2 << "   !=    " << r3 << std::endl; std::cout.precision(pr);
-    iret = 13;
-  }
-
-
   return iret;
 }
-int testResult(double w1, double r1, double w2, double r2, double r3) {
+int testResult(double w1, double r1, double w2, double r2) {
 
   int iret = 0;
 
@@ -839,11 +816,6 @@ int testResult(double w1, double r1, double w2, double r2, double r3) {
     std::cout << "\nERROR: Differeces found  when reading SMatrices" << std::endl;
     int pr = std::cout.precision(18);  std::cout << w2 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
     iret = -2;
-  }
-  if ( r3 != -1. && fabs(w2-r3)  > tol) {
-    std::cout << "\nERROR: Differeces found  when reading SMatrices with different Dictionary" << std::endl;
-    int pr = std::cout.precision(18);  std::cout << w2 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
-    iret = -3;
   }
   return iret;
 }
@@ -896,10 +868,10 @@ int testIO() {
 
 
 
-  double r1, r2, r3  = 0;
+  double r1, r2  = 0;
   int iret2 = 0;
-  iret2 |= testRead(r1,r2,r3);
-  iret2 |= testResult(w1,r1,w2,r2,r3);
+  iret2 |= testRead(r1,r2);
+  iret2 |= testResult(w1,r1,w2,r2);
   std::cout << "\n\n*************************************************************\n";
   if (iret2 == 0 )
     std::cout << "  Reading Test:\t" << "OK";
@@ -916,8 +888,8 @@ int testIO() {
   std::cout << "\n*****************************************************\n\n";
 
   iret = testWriteSym(nEvents,w1,w2);
-  iret2 = testReadSym(r1,r2,r3);
-  iret2 = testResult(w1,r1,w2,r2,r3);
+  iret2 = testReadSym(r1,r2);
+  iret2 = testResult(w1,r1,w2,r2);
 
   std::cout << "\n\n*************************************************************\n";
   if (iret2 == 0 )
