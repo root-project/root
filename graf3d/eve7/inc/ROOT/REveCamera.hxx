@@ -72,6 +72,9 @@ public:
    void SetCamBaseMtx(const std::vector<Double_t> &arr);
    void SetCamBaseMtx(const std::string &json_str);
 
+   void SetCamTransMtx(const std::vector<Double_t> &arr);
+   void SetCamTransMtx(const char* json_str);
+
    void BuildRenderData() override{};
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
