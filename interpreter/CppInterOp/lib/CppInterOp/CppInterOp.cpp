@@ -63,6 +63,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
@@ -173,16 +174,16 @@ struct InterpreterInfo {
 static void DefaultProcessCrashHandler(void*);
 // Function-static storage for interpreters
 static std::deque<InterpreterInfo>& GetInterpreters() {
-  // static int FakeArgc = 1;
-  // static const std::string VersionStr = GetVersion();
-  // static const char* ArgvBuffer[] = {VersionStr.c_str(), nullptr};
-  // static const char** FakeArgv = ArgvBuffer;
-  // static llvm::InitLLVM X(FakeArgc, FakeArgv);
+  static int FakeArgc = 1;
+  static const std::string VersionStr = GetVersion();
+  static const char* ArgvBuffer[] = {VersionStr.c_str(), nullptr};
+  static const char** FakeArgv = ArgvBuffer;
+  static llvm::InitLLVM X(FakeArgc, FakeArgv);
   // Cannot be a llvm::ManagedStatic because X will call shutdown which will
   // trigger destruction on llvm::ManagedStatics and the destruction of the
   // InterpreterInfos require to have llvm around.
   // FIXME: Currently we never call llvm::llvm_shutdown and sInterpreters leaks.
-  static llvm::ManagedStatic<std::deque<InterpreterInfo>> sInterpreters;
+  static auto sInterpreters = new std::deque<InterpreterInfo>();
   static std::once_flag ProcessInitialized;
   std::call_once(ProcessInitialized, []() {
     llvm::sys::PrintStackTraceOnErrorSignal("CppInterOp");
@@ -195,7 +196,6 @@ static std::deque<InterpreterInfo>& GetInterpreters() {
     llvm::InitializeAllAsmPrinters();
 
     llvm::sys::AddSignalHandler(DefaultProcessCrashHandler, /*Cookie=*/nullptr);
-    // std::atexit(llvm::llvm_shutdown);
   });
 
   return *sInterpreters;
