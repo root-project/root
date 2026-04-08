@@ -907,7 +907,7 @@ int testIO() {
   std::cout << "\n*****************************************************\n\n";
 
   // load track dictionary
-  iret |= gSystem->Load("libTrackDict");
+  // iret |= gSystem->Load("libTrackDict");
   if (iret != 0 ) return iret;
 
   iret |= testTrack(nEvents);
