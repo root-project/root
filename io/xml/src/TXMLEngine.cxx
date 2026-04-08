@@ -169,7 +169,7 @@ public:
 
 class TXMLInputStream {
 protected:
-   std::istream *fInp;
+   std::ifstream *fInp;
    const char *fInpStr;
    Int_t fInpStrLen;
 
@@ -231,6 +231,16 @@ public:
       free(fBuf);
       fBuf = nullptr;
    }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// return true when file stream is configured
+
+   inline Bool_t IsFile() const { return fInp != nullptr; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// return true when file stream is open
+
+   inline Bool_t IsFileOpen() const { return fInp && fInp->is_open(); }
 
    ////////////////////////////////////////////////////////////////////////////
    /// return true if end of file is achieved
@@ -1380,6 +1390,10 @@ XMLDocPointer_t TXMLEngine::ParseFile(const char *filename, Int_t maxbuf)
    if (maxbuf < 100000)
       maxbuf = 100000;
    TXMLInputStream inp(true, filename, maxbuf);
+   if (!inp.IsFileOpen()) {
+      Error("ParseFile", "Fail open XML file %s", filename);
+      return nullptr;
+   }
    return ParseStream(&inp);
 }
 
@@ -1426,7 +1440,7 @@ XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream *inp)
    } while (true);
 
    if (!success) {
-      DisplayError(resvalue, inp->CurrentLine());
+      DisplayError(resvalue, inp->CurrentLine(), inp->IsFile());
       FreeDoc(xmldoc);
       return nullptr;
    }
@@ -1492,7 +1506,7 @@ XMLNodePointer_t TXMLEngine::ReadSingleNode(const char *src)
    XMLNodePointer_t xmlnode = ReadNode(nullptr, &inp, resvalue);
 
    if (resvalue <= 0) {
-      DisplayError(resvalue, inp.CurrentLine());
+      DisplayError(resvalue, inp.CurrentLine(), kFALSE);
       FreeNode(xmlnode);
       return nullptr;
    }
@@ -2244,28 +2258,29 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 ////////////////////////////////////////////////////////////////////////////////
 /// Displays xml parsing error
 
-void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
+void TXMLEngine::DisplayError(Int_t error, Int_t linenumber, Bool_t is_parse_file)
 {
+   const char *method = is_parse_file ? "ParseFile" : "ParseString";
    switch (error) {
-   case -15: Error("ParseFile", "Block access to external XML file at line %d", linenumber); break;
-   case -14: Error("ParseFile", "Error include external XML file at line %d", linenumber); break;
-   case -13: Error("ParseFile", "Error processing DTD part of XML file at line %d", linenumber); break;
-   case -12: Error("ParseFile", "DOCTYPE missing after <! at line %d", linenumber); break;
+   case -15: Error(method, "Block access to external XML file at line %d", linenumber); break;
+   case -14: Error(method, "Error include external XML file at line %d", linenumber); break;
+   case -13: Error(method, "Error processing DTD part of XML file at line %d", linenumber); break;
+   case -12: Error(method, "DOCTYPE missing after <! at line %d", linenumber); break;
    case -11:
-      Error("ParseFile", "Node cannot be closed with > symbol at line %d, for instance <?xml ... ?> node", linenumber);
+      Error(method, "Node cannot be closed with > symbol at line %d, for instance <?xml ... ?> node", linenumber);
       break;
    case -10:
-      Error("ParseFile", "Error in xml comments definition at line %d, must be <!-- comments -->", linenumber);
+      Error(method, "Error in xml comments definition at line %d, must be <!-- comments -->", linenumber);
       break;
-   case -9: Error("ParseFile", "Multiple namespace definitions not allowed, line %d", linenumber); break;
-   case -8: Error("ParseFile", "Invalid namespace specification, line %d", linenumber); break;
-   case -7: Error("ParseFile", "Invalid attribute value, line %d", linenumber); break;
-   case -6: Error("ParseFile", "Invalid identifier for node attribute, line %d", linenumber); break;
-   case -5: Error("ParseFile", "Mismatch between open and close nodes, line %d", linenumber); break;
-   case -4: Error("ParseFile", "Unexpected close node, line %d", linenumber); break;
-   case -3: Error("ParseFile", "Valid identifier for close node is missing, line %d", linenumber); break;
-   case -2: Error("ParseFile", "No multiple content entries allowed, line %d", linenumber); break;
-   case -1: Error("ParseFile", "Unexpected end of xml file"); break;
-   default: Error("ParseFile", "XML syntax error at line %d", linenumber); break;
+   case -9: Error(method, "Multiple namespace definitions not allowed, line %d", linenumber); break;
+   case -8: Error(method, "Invalid namespace specification, line %d", linenumber); break;
+   case -7: Error(method, "Invalid attribute value, line %d", linenumber); break;
+   case -6: Error(method, "Invalid identifier for node attribute, line %d", linenumber); break;
+   case -5: Error(method, "Mismatch between open and close nodes, line %d", linenumber); break;
+   case -4: Error(method, "Unexpected close node, line %d", linenumber); break;
+   case -3: Error(method, "Valid identifier for close node is missing, line %d", linenumber); break;
+   case -2: Error(method, "No multiple content entries allowed, line %d", linenumber); break;
+   case -1: Error(method, "Unexpected end of xml file"); break;
+   default: Error(method, "XML syntax error at line %d", linenumber); break;
    }
 }
