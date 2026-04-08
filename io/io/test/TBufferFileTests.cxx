@@ -2,8 +2,12 @@
 
 #include "TBufferFile.h"
 #include "TClass.h"
+#include "TClonesArray.h"
+#include "TObjString.h"
 #include <vector>
 #include <iostream>
+#include <iostream>
+
 
 // Tests ROOT-8367
 TEST(TBufferFile, ROOT_8367)
@@ -26,3 +30,20 @@ TEST(TBufferFile, ROOT_8367)
    EXPECT_FLOAT_EQ(v2[6], 7.);
    EXPECT_EQ(v2.size(), 7);
 }
+
+// https://its.cern.ch/jira/browse/ROOT-6788
+TEST(TBufferFile, ROOT_6788)
+{  
+   TClonesArray clArray(TObjString::Class(), 100);
+   for (Int_t i=0; i<28; i++) {
+       new (clArray[i]) TObjString();
+   }
+   TBufferFile buf(TBuffer::kWrite, 10000);
+   for (Int_t i=0; i<27; i++) {
+       delete clArray.RemoveAt(i);
+   }
+   buf.SetBufferOffset(0);
+   buf.MapObject(&clArray);
+   clArray.Streamer(buf);
+}
+
