@@ -683,7 +683,6 @@ TEST(ONNX, ConvWithAutopadSameLower)
    }
 }
 
-
 TEST(ONNX, ConvWithAutopadSameUpper)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -704,7 +703,6 @@ TEST(ONNX, ConvWithAutopadSameUpper)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
 
 TEST(ONNX, ConvWithStridesPadding)
 {
