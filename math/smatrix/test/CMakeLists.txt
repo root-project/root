@@ -19,11 +19,8 @@ set(TestSource
     stressOperations.cxx
     stressKalman.cxx)
 
-if (USE_REFLEX)
-  REFLEX_GENERATE_DICTIONARY(TrackDict Track.h SELECTION TrackDict.xml)
-else()
-  ROOT_GENERATE_DICTIONARY(TrackDict Track.h LINKDEF TrackLinkDef.h OPTIONS -inlineInputHeader)
-endif()
+
+ROOT_GENERATE_DICTIONARY(TrackDict Track.h LINKDEF TrackLinkDef.h OPTIONS -inlineInputHeader)
 
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestSource})
@@ -43,9 +40,6 @@ foreach(file ${TestSource})
       target_link_libraries(${testname} PRIVATE "CLHEP" "m")
       target_link_directories(${testname} PRIVATE "${CLHEPBASE}/lib")
     endif()
-  endif()
-  if (USE_REFLEX)
-    target_compile_definitions(${testname} PRIVATE USE_REFLEX)
   endif()
   ROOT_ADD_TEST(smatrix-${testname} COMMAND ${testname} LABELS ${${testname}_LABELS})
 endforeach()
