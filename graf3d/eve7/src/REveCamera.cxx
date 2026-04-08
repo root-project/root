@@ -97,6 +97,21 @@ void REveCamera::SetCamBaseMtx(const std::string &json_str)
    SetCamBaseMtx(arr);
 }
 
+void REveCamera::SetCamTransMtx(const std::vector<Double_t> &arr)
+{
+   if (arr.size() == 16) {
+      fCamTrans.SetFromArray(arr.data());
+      StampObjProps();
+   }
+}
+
+void REveCamera::SetCamTransMtx(const char* json_str)
+{
+   auto j = nlohmann::json::parse(json_str);
+   std::vector<Double_t> arr = j.get<std::vector<Double_t>>();
+   SetCamTransMtx(arr);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write core JSON for camera
 
