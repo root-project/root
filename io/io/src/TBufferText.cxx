@@ -249,7 +249,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
       if (!sinfo) {
          Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %lu",
                onFileClass->GetName(), version, cl->GetName(), Length());
          CheckByteCount(start, count, onFileClass);
          return 0;
@@ -265,7 +265,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       auto infos = cl->GetStreamerInfos();
       auto ninfos = infos->GetSize();
       if (version < -1 || version >= ninfos) {
-         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %lu",
                cl->GetName(), version, Length());
          CheckByteCount(start, count, cl);
          return 0;
@@ -294,7 +294,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             return 0;
          } else {
             Error("ReadClassBuffer",
-                  "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                  "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %lu",
                   version, cl->GetName(), Length());
             CheckByteCount(start, count, cl);
             return 0;
@@ -352,7 +352,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
       if (!sinfo) {
          Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %lu",
                onFileClass->GetName(), version, cl->GetName(), Length());
          CheckByteCount(R__s, R__c, onFileClass);
          return 0;
@@ -377,7 +377,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             if (infocapacity) {
                if (version < -1 || version >= infocapacity) {
                   Error("ReadClassBuffer",
-                        "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                        "class: %s, attempting to access a wrong version: %d, object skipped at offset %lu",
                         cl->GetName(), version, Length());
                   CheckByteCount(R__s, R__c, cl);
                   return 0;
@@ -440,7 +440,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                return 0;
             } else {
                Error("ReadClassBuffer",
-                     "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                     "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %lu",
                      version, cl->GetName(), Length());
                CheckByteCount(R__s, R__c, cl);
                return 0;
