@@ -2,6 +2,8 @@
 
 #include "TBufferFile.h"
 #include "TClass.h"
+#include "TClonesArray.h"
+#include "TObjString.h"
 #include <vector>
 #include <iostream>
 
@@ -26,3 +28,24 @@ TEST(TBufferFile, ROOT_8367)
    EXPECT_FLOAT_EQ(v2[6], 7.);
    EXPECT_EQ(v2.size(), 7);
 }
+
+// ROOT-6788
+TEST(TBufferFile, TClonesArrayEmptySlotsStreaming)
+{
+	TClonesArray clArray(TObjString::Class(), 100);
+	for (Int_t i=0; i<28; i++) {
+		new (clArray[i]) TObjString();
+	}
+	for (Int_t i=0; i<27; i++) {
+		delete clArray.RemoveAt(i);
+	}
+	
+   TBufferFile buf(TBuffer::kWrite, 10000);
+   buf.WriteObject(&clArray);
+   buf.SetReadMode();
+   buf.Reset();
+   auto obj = buf.ReadObject(TClonesArray::Class());
+   auto &readClArray = *dynamic_cast<TClonesArray*>(obj);
+   EXPECT_EQ(readClArray.GetEntries(), clArray.GetEntries());
+}
+
