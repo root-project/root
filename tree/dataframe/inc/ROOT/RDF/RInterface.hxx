@@ -100,6 +100,7 @@ class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
 void ChangeBeginAndEndEntries(const RNode &node, Long64_t begin, Long64_t end);
 void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
+std::vector<std::pair<std::uint64_t, std::uint64_t>> GetDatasetGlobalClusterBoundaries(const RNode &node);
 void TriggerRun(ROOT::RDF::RNode node);
 std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
 void SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
@@ -134,6 +135,8 @@ class RInterface : public RInterfaceBase {
    friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
    friend void RDFInternal::ChangeBeginAndEndEntries(const RNode &node, Long64_t start, Long64_t end);
    friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
+   friend std::vector<std::pair<std::uint64_t, std::uint64_t>>
+   RDFInternal::GetDatasetGlobalClusterBoundaries(const RNode &node);
    friend std::string ROOT::Internal::RDF::GetDataSourceLabel(const RNode &node);
    friend void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
