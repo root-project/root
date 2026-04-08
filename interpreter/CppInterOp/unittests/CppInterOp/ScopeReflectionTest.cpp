@@ -4,18 +4,16 @@
 #include "clang-c/CXCppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
-#include "clang/Basic/Version.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Sema/Sema.h"
-
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/GlobalDecl.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/Version.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Sema/Sema.h"
 
 #include "llvm/Support/Valgrind.h"
-
-#include "clang-c/CXCppInterOp.h"
 
 #include "gtest/gtest.h"
 
@@ -24,6 +22,111 @@
 using namespace TestUtils;
 using namespace llvm;
 using namespace clang;
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTypeOfBuiltins) {
+  // Structural check: Ensure every valid BuiltinType kind can be resolved
+  TestFixture::CreateInterpreter();
+  ASTContext& C = Interp->getCI()->getASTContext(); // for brevity
+
+#define BUILTIN_TYPE(Id, SingletonId)                                          \
+  {                                                                            \
+    QualType QT = C.SingletonId;                                               \
+    if (!QT.isNull()) {                                                        \
+      std::string name = QT.getAsString(C.getPrintingPolicy());                \
+      if (name[0] != '<' && !QT->isPlaceholderType()) {                        \
+        const auto* FoundTy = Cpp::GetType(name);                              \
+        EXPECT_TRUE(FoundTy) << "Failed to find builtin: '" << name << "'";    \
+        if (FoundTy) {                                                         \
+          EXPECT_EQ(FoundTy, QT.getAsOpaquePtr())                              \
+              << "Type mismatch for '" << name << "'";                         \
+          EXPECT_TRUE(Cpp::IsBuiltin(FoundTy));                                \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+  }
+#include "clang/AST/BuiltinTypes.def"
+#undef BUILTIN_TYPE
+
+  auto Verify = [&](const char* Name, QualType Expected) {
+    void* Found = Cpp::GetType(Name);
+    EXPECT_EQ(Found, Expected.getAsOpaquePtr()) << "Failed for: " << Name;
+  };
+
+  // --- Integer Variations ---
+  Verify("int", C.IntTy);
+  Verify("signed int", C.IntTy);
+  Verify("signed", C.IntTy);
+  Verify("int signed", C.IntTy);
+
+  // --- Short Variations ---
+  Verify("short", C.ShortTy);
+  Verify("short int", C.ShortTy);
+  Verify("signed short", C.ShortTy);
+  Verify("signed short int", C.ShortTy);
+  Verify("int short signed", C.ShortTy);
+
+  // --- Long Variations ---
+  Verify("long", C.LongTy);
+  Verify("long int", C.LongTy);
+  Verify("signed long", C.LongTy);
+  Verify("signed long int", C.LongTy);
+  Verify("int long", C.LongTy);
+
+  // --- Long Long Variations ---
+  Verify("long long", C.LongLongTy);
+  Verify("long long int", C.LongLongTy);
+  Verify("signed long long", C.LongLongTy);
+  Verify("signed long long int", C.LongLongTy);
+  Verify("int long long signed", C.LongLongTy);
+
+  // --- Unsigned Variations ---
+  Verify("unsigned", C.UnsignedIntTy);
+  Verify("unsigned int", C.UnsignedIntTy);
+  Verify("int unsigned", C.UnsignedIntTy);
+
+  Verify("unsigned short", C.UnsignedShortTy);
+  Verify("unsigned short int", C.UnsignedShortTy);
+  Verify("int short unsigned", C.UnsignedShortTy);
+
+  Verify("unsigned long", C.UnsignedLongTy);
+  Verify("unsigned long int", C.UnsignedLongTy);
+
+  Verify("unsigned long long", C.UnsignedLongLongTy);
+  Verify("unsigned long long int", C.UnsignedLongLongTy);
+
+  // --- Character Variations (No 'int' suffix allowed) ---
+  Verify("char", C.CharTy);
+  Verify("signed char", C.SignedCharTy);
+  Verify("unsigned char", C.UnsignedCharTy);
+
+  // Negative check: signed char int is NOT a valid builtin
+  EXPECT_EQ(Cpp::GetType("signed char int"), nullptr);
+
+  // Maybe these should be considered builtins?
+  // EXPECT_EQ(Cpp::GetType("size_t"), C.getSizeType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("ptrdiff_t"),
+  // C.getPointerDiffType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("intptr_t"), C.getIntPtrType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("uintptr_t"), C.getUIntPtrType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("size_t"), C.getSizeType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("size_t"), C.getSizeType().getAsOpaquePtr());
+
+  // EXPECT_EQ(Cpp::GetType("wint_t"), C.WIntTy.getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("wchar_t"), C.WCharTy.getAsOpaquePtr());
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTypeOfTypedef) {
+  std::string code = R"(
+    typedef int Type_t;
+  )";
+
+  std::vector<Decl*> Decls;
+  GetAllTopLevelDecls(code, Decls);
+  auto Ty = Cpp::GetType("Type_t");
+  EXPECT_TRUE(Ty);
+  EXPECT_TRUE(Ty == Cpp::GetTypeFromScope(Decls[0]));
+  EXPECT_FALSE(Cpp::GetTypeFromScope(nullptr));
+}
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsEnumScope) {
   std::vector<Decl *> Decls;

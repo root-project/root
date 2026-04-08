@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <csignal>
 
 using ::testing::StartsWith;
 
@@ -108,7 +109,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeleteInterpreter) {
 
   EXPECT_EQ(I3, Cpp::GetInterpreter()) << "I3 is not active";
 
-  EXPECT_TRUE(Cpp::DeleteInterpreter(nullptr));
+  EXPECT_TRUE(Cpp::DeleteInterpreter(/*I=*/nullptr));
   EXPECT_EQ(I2, Cpp::GetInterpreter());
 
   auto* I4 = reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U));
@@ -456,3 +457,54 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ExternalInterpreter) {
   delete ExtInterp;
 #endif
 }
+
+// Verify the basic crash banner and Active Interpreter reporting
+#ifdef GTEST_HAS_DEATH_TEST
+TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_BasicBanner) {
+  // Ensure a clean registry for each JIT configuration
+
+  // FIXME: Uncomment after resolving compiler-research/CppInterOp#887
+
+  // while (Cpp::GetInterpreter())
+  //   Cpp::DeleteInterpreter(/*I=*/nullptr);
+
+  // EXPECT_FALSE(Cpp::GetInterpreter()) << "Failed to delete all interpreters";
+
+  // // Create an interpreter (this calls RegisterInterpreter internally)
+  // TInterp_t I = TestFixture::CreateInterpreter();
+  // ASSERT_NE(I, nullptr);
+
+  // We expect the banner to appear in stderr when the process dies
+  std::string ExpectedMsg = "CppInterOp CRASH DETECTED";
+#ifdef _WIN32
+  // FIXME: Windows says 'Actual msg:' without maybe capturing the message.
+  ExpectedMsg = "";
+#endif //_WIN32
+
+  EXPECT_DEATH(
+      {
+        // Trigger a synchronous signal
+        raise(SIGABRT);
+      },
+      ExpectedMsg);
+}
+#endif // GTEST_HAS_DEATH_TEST
+
+// Verify that the handler correctly lists multiple interpreters
+#ifdef GTEST_HAS_DEATH_TEST
+TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_MultipleInterpreters) {
+  ASSERT_NE(TestFixture::CreateInterpreter(), nullptr);
+  ASSERT_NE(TestFixture::CreateInterpreter(), nullptr);
+
+  // The handler iterates through the deque and prints the pointers
+
+  // We check for the "Active Interpreters:" header and the list format
+  std::string ExpectedMsg = "Active Interpreters:.*- 0x";
+#ifdef _WIN32
+  // FIXME: Windows says 'Actual msg:' without maybe capturing the message.
+  ExpectedMsg = "";
+#endif //_WIN32
+
+  EXPECT_DEATH({ raise(SIGSEGV); }, ExpectedMsg);
+}
+#endif // GTEST_HAS_DEATH_TEST
