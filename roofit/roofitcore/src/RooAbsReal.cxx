@@ -3118,18 +3118,6 @@ void RooAbsReal::fillTreeBranch(TTree& t)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// (De)Activate associated tree branch
-
-void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
-{
-  TBranch* branch = t.GetBranch(cleanBranchName()) ;
-  if (branch) {
-    t.SetBranchStatus(cleanBranchName(),active?true:false) ;
-  }
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooRealVar fundamental object with our properties. The new

@@ -55,14 +55,13 @@ public:
   // Function evaluation
   double evaluate() const override ;
   friend class RooAbsTestStatistic ;
-  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking=true) override ;
   virtual double getCarry() const;
 
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;
 
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate,
-       ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset } ;
+       Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset } ;
 
   void initialize() ;
   void initVars() ;

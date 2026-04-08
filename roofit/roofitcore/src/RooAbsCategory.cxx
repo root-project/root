@@ -527,18 +527,6 @@ void RooAbsCategory::fillTreeBranch(TTree& t)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// (De)activate associate tree branch
-
-void RooAbsCategory::setTreeBranchStatus(TTree& t, bool active)
-{
-  TBranch* branch = t.GetBranch(Form("%s_idx",GetName())) ;
-  if (branch) {
-    t.SetBranchStatus(Form("%s_idx",GetName()),active?true:false) ;
-  }
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Explicitly synchronize RooAbsCategory internal cache

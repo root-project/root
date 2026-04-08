@@ -67,7 +67,6 @@ public:
 
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
-  void setCacheAndTrackHints(RooArgSet&) override ;
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
                                        const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
