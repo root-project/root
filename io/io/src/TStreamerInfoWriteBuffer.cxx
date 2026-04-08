@@ -151,7 +151,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             } else {
                if (gDebug > 1) {
                   printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
-                         " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                         " %s, bufpos=%lu, arr=%p, eoffset=%d, Redirect=%p\n",
                          fClass->GetName(), aElement->GetName(), i, compinfo[i]->fType, aElement->ClassName(),
                          b.Length(), arr[0], eoffset, b.PeekDataCache()->GetObjectAt(0));
                }
@@ -161,7 +161,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
          } else {
             if (gDebug > 1) {
                printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
-                      " %s, bufpos=%d, arr=%p, eoffset=%d, not a write rule, skipping.\n",
+                      " %s, bufpos=%lu, arr=%p, eoffset=%d, not a write rule, skipping.\n",
                       fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
                       aElement->ClassName(),b.Length(),arr[0], eoffset);
             }
@@ -175,7 +175,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
       if (gDebug > 1) {
          printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, "
-               "bufpos=%d, arr=%p, offset=%d\n",
+               "bufpos=%lu, arr=%p, offset=%d\n",
                 fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,aElement->ClassName(),
                 b.Length(),arr[0],ioffset);
       }
