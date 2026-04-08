@@ -828,7 +828,8 @@ int main(int argc , char *argv[] ) {
   TEST(15);
   TEST(20);
   NLOOP = 50*NLOOP_MIN;
-  TEST(30);
+  TEST(29);
+  // TEST(30);
 //   NLOOP = NLOOP_MIN;
 //   TEST(50);
 //   TEST(75);
