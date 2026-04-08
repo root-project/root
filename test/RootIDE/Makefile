@@ -20,14 +20,14 @@ endif
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS   = "$(ROOTSYS)/lib/libGuiHtml.lib" "$(ROOTSYS)/lib/libHtml.lib"
+EXTRALIBS   = "$(ROOTSYS)/lib/libGuiHtml.lib"
 ifneq (,$(findstring $(VC_MAJOR),14 15))
 MT_MANIFEST = mt -nologo -manifest $(PROGRAMS).manifest -outputresource:$(PROGRAMS)\;2
 else
 MT_MANIFEST = 
 endif
 else
-EXTRALIBS   = -lGuiHtml -lHtml -lThread
+EXTRALIBS   = -lGuiHtml -lThread
 MT_MANIFEST = 
 endif
 
