@@ -46,8 +46,8 @@ int test_smatrix_kalman() {
    // need to write explicitly the dimensions
 
 
-   typedef SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
-   typedef SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
+   // typedef SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
+   // typedef SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
    typedef SMatrix<double, NDIM1, NDIM2>  MnMatrixNM;
    typedef SMatrix<double, NDIM2 , NDIM1> MnMatrixMN;
    typedef SMatrix<double, NDIM1 >        MnSymMatrixNN;
@@ -170,16 +170,16 @@ int test_smatrix_sym_kalman() {
    // need to write explicitly the dimensions
 
 
-   typedef SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
-   typedef SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
+   // typedef SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
+   // typedef SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
    typedef SMatrix<double, NDIM1, NDIM2>  MnMatrixNM;
    typedef SMatrix<double, NDIM2 , NDIM1> MnMatrixMN;
    typedef SMatrix<double, NDIM1, NDIM1, MatRepSym<double, NDIM1> >        MnSymMatrixNN;
    typedef SMatrix<double, NDIM2, NDIM2, MatRepSym<double, NDIM2> >        MnSymMatrixMM;
    typedef SVector<double, NDIM1>         MnVectorN;
    typedef SVector<double, NDIM2>         MnVectorM;
-   typedef SVector<double, NDIM1*(NDIM1+1)/2>   MnVectorN2;
-   typedef SVector<double, NDIM2*(NDIM2+1)/2>   MnVectorM2;
+   // typedef SVector<double, NDIM1*(NDIM1+1)/2>   MnVectorN2;
+   // typedef SVector<double, NDIM2*(NDIM2+1)/2>   MnVectorM2;
 
 
 

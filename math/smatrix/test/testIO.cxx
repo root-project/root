@@ -470,7 +470,7 @@ double readSMatrix(const std::string & file) {
 
   TFile f1(file.c_str());
   if (f1.IsZombie() ) {
-    std::cerr << "Error opening the ROOT file" << file << std::endl;
+    std::cerr << "Error opening the ROOT file " << file << std::endl;
     return -1;
   }
 
@@ -516,7 +516,7 @@ double readSMatrixSym(const std::string & file) {
 
   TFile f1(file.c_str());
   if (f1.IsZombie() ) {
-    std::cerr << "Error opening the ROOT file" << file << std::endl;
+    std::cerr << "Error opening the ROOT file " << file << std::endl;
     return -1;
   }
 
