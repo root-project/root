@@ -1017,7 +1017,8 @@ asim_apply_path( ASDrawContext *ctx, int start_x, int start_y, Bool fill, int fi
 
 	/* actually applying scratch : */
 	if (!ctx->canvas) { // ctx->canvas = im->alt.argb32; <-- argb32 may be null
-        ctx->canvas = safecalloc(ctx->canvas_width * ctx->canvas_height, sizeof(CARD32));
+		LOCAL_DEBUG_CALLER_OUT("empty ctx canvas");
+        return False;
 	}
 	{
 		int i = ctx->canvas_width*ctx->canvas_height ;
