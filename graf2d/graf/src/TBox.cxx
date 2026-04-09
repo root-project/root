@@ -238,8 +238,8 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Bool_t isBox = !(InheritsFrom("TPave") || InheritsFrom("TWbox"));
 
-   const Int_t kMaxDiff = 7;
-   const Int_t kMinSize = 20;
+   constexpr Int_t kMaxDiff = 7;
+   constexpr Int_t kMinSize = 20;
 
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
    static Int_t px1p, px2p, py1p, py2p, pxlp, pylp, pxtp, pytp;
@@ -247,12 +247,11 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
    Int_t  wx, wy;
    auto parent = gPad;
-   auto pp = parent->GetPainter();
-   Bool_t opaque  = gPad->OpaqueMoving();
-   Bool_t ropaque = gPad->OpaqueResizing();
+   Bool_t opaque  = parent->OpaqueMoving();
+   Bool_t ropaque = parent->OpaqueResizing();
 
    // convert to user coordinates and either paint ot set back
-   auto action = [parent,pp,isBox,this](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
+   auto action = [parent,isBox,this](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
       auto x1 = parent->AbsPixeltoX(_x1);
       auto y1 = parent->AbsPixeltoY(_y1);
       auto x2 = parent->AbsPixeltoX(_x2);
@@ -268,6 +267,8 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       }
       if (paint) {
+         auto pp = parent->GetPainter();
+         pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
          pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
       } else {
          SetX1(x1);
@@ -296,27 +297,15 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       oldY1 = fY1;
       oldX2 = fX2;
       oldY2 = fY2;
-      pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
 
       // No break !!!
 
    case kMouseMotion:
 
-      px1 = gPad->XtoAbsPixel(GetX1());
-      py1 = gPad->YtoAbsPixel(GetY1());
-      px2 = gPad->XtoAbsPixel(GetX2());
-      py2 = gPad->YtoAbsPixel(GetY2());
-
-      if (isBox) {
-         if (gPad->GetLogx()) {
-           if (GetX1() > 0) px1 = gPad->XtoAbsPixel(TMath::Log10(GetX1()));
-           if (GetX2() > 0) px2 = gPad->XtoAbsPixel(TMath::Log10(GetX2()));
-         }
-         if (gPad->GetLogy()) {
-           if (GetY1() > 0) py1 = gPad->YtoAbsPixel(TMath::Log10(GetY1()));
-           if (GetY2() > 0) py2 = gPad->YtoAbsPixel(TMath::Log10(GetY2()));
-         }
-      }
+      px1 = parent->XtoAbsPixel(isBox ? parent->XtoPad(GetX1()) : GetX1());
+      py1 = parent->YtoAbsPixel(isBox ? parent->YtoPad(GetY1()) : GetY1());
+      px2 = parent->XtoAbsPixel(isBox ? parent->XtoPad(GetX2()) : GetX2());
+      py2 = parent->YtoAbsPixel(isBox ? parent->YtoPad(GetY2()) : GetY2());
 
       if (px1 < px2) {
          pxl = px1;
@@ -355,64 +344,59 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
 
-                                                         // case pA
+      // case pA
       if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
          pxold = pxl; pyold = pyl; pA = kTRUE;
-         gPad->SetCursor(kTopLeft);
+         parent->SetCursor(kTopLeft);
       }
-                                                         // case pB
+      // case pB
       if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
          pxold = pxt; pyold = pyl; pB = kTRUE;
-         gPad->SetCursor(kTopRight);
+         parent->SetCursor(kTopRight);
       }
-                                                         // case pC
+      // case pC
       if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
          pxold = pxt; pyold = pyt; pC = kTRUE;
-         gPad->SetCursor(kBottomRight);
+         parent->SetCursor(kBottomRight);
       }
-                                                         // case pD
+      // case pD
       if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
          pxold = pxl; pyold = pyt; pD = kTRUE;
-         gPad->SetCursor(kBottomLeft);
+         parent->SetCursor(kBottomLeft);
       }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyl) < kMaxDiff) {             // top edge
+      // top edge
+      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) && TMath::Abs(py - pyl) < kMaxDiff) {
          pxold = pxl; pyold = pyl; pTop = kTRUE;
-         gPad->SetCursor(kTopSide);
+         parent->SetCursor(kTopSide);
       }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyt) < kMaxDiff) {             // bottom edge
+      // bottom edge
+      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) && TMath::Abs(py - pyt) < kMaxDiff) {
          pxold = pxt; pyold = pyt; pBot = kTRUE;
-         gPad->SetCursor(kBottomSide);
+         parent->SetCursor(kBottomSide);
       }
-
-      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
+      // left edge
+      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) && TMath::Abs(px - pxl) < kMaxDiff) {
          pxold = pxl; pyold = pyl; pL = kTRUE;
-         gPad->SetCursor(kLeftSide);
+         parent->SetCursor(kLeftSide);
       }
-
-      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
+      // right edge
+      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) && TMath::Abs(px - pxt) < kMaxDiff) {
          pxold = pxt; pyold = pyt; pR = kTRUE;
-         gPad->SetCursor(kRightSide);
+         parent->SetCursor(kRightSide);
       }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {    // inside box
+      // inside box
+      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) && (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {
          pxold = px; pyold = py; pINSIDE = kTRUE;
          if (event == kButton1Down)
-            gPad->SetCursor(kMove);
+            parent->SetCursor(kMove);
          else
-            gPad->SetCursor(kCross);
+            parent->SetCursor(kCross);
       }
 
       fResizing = pA || pB || pC || pD || pTop || pL || pR || pBot;
 
       if (!fResizing && !pINSIDE)
-         gPad->SetCursor(kCross);
+         parent->SetCursor(kCross);
 
       break;
 
@@ -568,9 +552,6 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (pA || pB || pC || pD || pTop || pL || pR || pBot)
          parent->Modified(kTRUE);
-
-      if (!opaque)
-         pp->SetAttLine({-1, 1, -1});
 
       break;
 
