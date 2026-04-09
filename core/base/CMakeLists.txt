@@ -267,6 +267,9 @@ if(PCRE2_FOUND)
 else()
   target_link_libraries(Core PRIVATE PCRE::PCRE)
 endif()
+if(builtin_xxhash)
+    add_dependencies(Core BUILTIN_PCRE)
+endif()
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
