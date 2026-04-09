@@ -12,14 +12,11 @@ TEST(ConvertToTH1I, RHistEngine)
    static constexpr std::size_t Bins = 20;
    RHistEngine<int> engine(Bins, {0, Bins});
 
-   engine.Fill(-100);
+   engine.SetBinContent(RBinIndex::Underflow(), 100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.SetBinContent(i, i + 1);
    }
-   engine.Fill(100);
-
-   // Fill bin 7 twice to test against accidental shifts.
-   engine.Fill(7);
+   engine.SetBinContent(RBinIndex::Overflow(), 200);
 
    auto th1i = ConvertToTH1I(engine);
    ASSERT_TRUE(th1i);
@@ -29,14 +26,11 @@ TEST(ConvertToTH1I, RHistEngine)
    ASSERT_EQ(th1i->GetNbinsY(), 1);
    ASSERT_EQ(th1i->GetNbinsZ(), 1);
 
-   for (std::size_t i = 0; i < Bins + 2; i++) {
-      // Bin 7 was filled twice.
-      if (i == 7 + 1) {
-         EXPECT_EQ(th1i->GetBinContent(i), 2);
-      } else {
-         EXPECT_EQ(th1i->GetBinContent(i), 1);
-      }
+   EXPECT_EQ(th1i->GetBinContent(0), 100);
+   for (std::size_t i = 1; i <= Bins; i++) {
+      EXPECT_EQ(th1i->GetBinContent(i), i);
    }
+   EXPECT_EQ(th1i->GetBinContent(Bins + 1), 200);
 
    EXPECT_EQ(th1i->GetEntries(), 0);
    Double_t stats[4];
@@ -53,10 +47,12 @@ TEST(ConvertToTH1I, RHistEngineNoFlowBins)
    const RRegularAxis axis(Bins, {0, Bins}, /*enableFlowBins=*/false);
    RHistEngine<int> engine({axis});
 
+   // Flow bins are disabled, so this fill will be discarded.
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.SetBinContent(i, i + 1);
    }
+   // Flow bins are disabled, so this fill will be discarded.
    engine.Fill(100);
 
    auto th1i = ConvertToTH1I(engine);
@@ -64,7 +60,7 @@ TEST(ConvertToTH1I, RHistEngineNoFlowBins)
 
    EXPECT_EQ(th1i->GetBinContent(0), 0);
    for (std::size_t i = 1; i <= Bins; i++) {
-      EXPECT_EQ(th1i->GetBinContent(i), 1);
+      EXPECT_EQ(th1i->GetBinContent(i), i);
    }
    EXPECT_EQ(th1i->GetBinContent(Bins + 1), 0);
 }
