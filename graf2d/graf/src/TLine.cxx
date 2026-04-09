@@ -292,6 +292,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             SetY1(oldY1);
             SetX2(oldX2);
             SetY2(oldY2);
+            gPad->ShowGuidelines(this, event);
             gPad->Modified(kTRUE);
             gPad->Update();
          }
