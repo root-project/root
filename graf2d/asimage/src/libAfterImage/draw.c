@@ -1016,10 +1016,6 @@ asim_apply_path( ASDrawContext *ctx, int start_x, int start_y, Bool fill, int fi
 	clear_flags( ctx->flags, ASDrawCTX_UsingScratch );	 
 
 	/* actually applying scratch : */
-	if (!ctx->canvas) { // ctx->canvas = im->alt.argb32; <-- argb32 may be null
-		LOCAL_DEBUG_CALLER_OUT("empty ctx canvas");
-        return False;
-	}
 	{
 		int i = ctx->canvas_width*ctx->canvas_height ;
 		if (get_flags (ctx->flags, ASDrawCTX_CanvasIsARGB))
