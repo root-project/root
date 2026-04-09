@@ -164,7 +164,7 @@ TDirectory::TContext::~TContext()
 // Mask deprecation warnings to allow for deprecating the fgAddDirectory bit.
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : C4996)
+#pragma warning(disable : 4996)
 #else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
