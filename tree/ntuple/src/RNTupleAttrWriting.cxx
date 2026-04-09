@@ -40,7 +40,7 @@ std::size_t ROOT::Experimental::Internal::RNTupleAttrEntry::Append()
 
    // Bind the user model's memory to the meta model's subfields
    const auto &userFields =
-      ROOT::Internal::GetFieldZeroOfModel(fMetaModel).GetMutableSubfields()[kUserModelIndex]->GetMutableSubfields();
+      ROOT::Internal::GetFieldZeroOfModel(fMetaModel).GetMutableSubfields()[kUserDataIndex]->GetMutableSubfields();
    assert(userFields.size() == fScopedEntry.fValues.size());
    for (std::size_t i = 0; i < fScopedEntry.fValues.size(); ++i) {
       std::shared_ptr<void> userPtr = fScopedEntry.fValues[i].GetPtr<void>();
@@ -78,7 +78,7 @@ ROOT::Experimental::RNTupleAttrSetWriter::Create(const RNTupleFillContext &mainF
    for (const auto *field : subfields) {
       fields.push_back(field->Clone(field->GetFieldName()));
    }
-   auto userRootField = std::make_unique<ROOT::RRecordField>(kUserModelName, std::move(fields));
+   auto userRootField = std::make_unique<ROOT::RRecordField>(kUserDataName, std::move(fields));
    metaModel->AddField(std::move(userRootField));
 
    metaModel->Freeze();
