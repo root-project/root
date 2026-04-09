@@ -112,12 +112,20 @@ TBuffer::TBuffer(EMode mode, ULong64_t bufsize, void *buf, Bool_t adopt, ReAlloc
 
    SetBit(kIsOwner);
 
+   if (buf && !adopt)
+      ResetBit(kIsOwner);
+
+   SetReAllocFunc( reallocfunc );
+
    if (buf) {
       fBuffer = (char *)buf;
       if ( (fMode&kWrite)!=0 ) {
-         fBufSize -= kExtraSpace;
+         if (fBufSize < kExtraSpace) {
+            Expand( kMinimalSize );
+         } else {
+            fBufSize -= kExtraSpace;
+         }
       }
-      if (!adopt) ResetBit(kIsOwner);
    } else {
       if (fBufSize < kMinimalSize) {
          fBufSize = kMinimalSize;
@@ -126,12 +134,6 @@ TBuffer::TBuffer(EMode mode, ULong64_t bufsize, void *buf, Bool_t adopt, ReAlloc
    }
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
-
-   SetReAllocFunc( reallocfunc );
-
-   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < kMinimalSize) {
-      Expand( kMinimalSize );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,22 +198,22 @@ void TBuffer::SetBuffer(void *buf, ULong64_t newsiz, Bool_t adopt, ReAllocCharFu
    else
       ResetBit(kIsOwner);
 
+   SetReAllocFunc( reallocfunc );
+
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
    if (newsiz > 0) {
       if ( (fMode&kWrite)!=0 ) {
-         fBufSize = newsiz - kExtraSpace;
+         if (newsiz >= kExtraSpace) {
+            fBufSize = newsiz - kExtraSpace;
+         } else {
+            Expand( kMinimalSize );
+         }
       } else {
          fBufSize = newsiz;
       }
    }
    fBufMax = fBuffer + fBufSize;
-
-   SetReAllocFunc( reallocfunc );
-
-   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
-      Expand( kMinimalSize );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
