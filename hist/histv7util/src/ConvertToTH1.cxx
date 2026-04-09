@@ -78,9 +78,13 @@ void ConvertGlobalStatistics(Hist &h, const RHistStats &stats)
    Double_t hStats[4] = {
       stats.GetSumW(),
       stats.GetSumW2(),
-      stats.GetDimensionStats(0).fSumWX,
-      stats.GetDimensionStats(0).fSumWX2,
+      0,
+      0,
    };
+   if (stats.IsEnabled(0)) {
+      hStats[2] = stats.GetDimensionStats(0).fSumWX;
+      hStats[3] = stats.GetDimensionStats(0).fSumWX2;
+   }
    h.PutStats(hStats);
 }
 } // namespace
