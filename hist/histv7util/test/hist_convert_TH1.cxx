@@ -172,7 +172,7 @@ TEST(ConvertToTH1L, RHistEngine)
    ASSERT_TRUE(th1l);
 
    // Get the value via TArrayL::At and store into a variable to be sure about the type. During direct comparison, a
-   // double return value may automatically promate Large to a double as well, introducing the truncation we want to
+   // double return value may automatically promote Large to a double as well, introducing the truncation we want to
    // test against.
    const long long value = th1l->At(2);
    EXPECT_EQ(value, Large);
