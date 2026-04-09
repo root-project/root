@@ -4086,7 +4086,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          auto current = fByteCountStack.size();
          (*iter)(*this,obj);
          if (current != fByteCountStack.size())
-            Fatal("ApplySequence", "We are out of sync starting at level %lld vs %zu", current, fByteCountStack.size());
+            Fatal("ApplySequence", "ByteCountStack is out of sync starting at level %zu vs %zu", current, fByteCountStack.size());
       }
    }
 
