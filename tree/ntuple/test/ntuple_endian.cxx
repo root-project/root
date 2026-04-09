@@ -96,6 +96,12 @@ protected:
    RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
    void LoadStreamerInfo() final {}
 
+   std::unique_ptr<ROOT::Internal::RPageSource>
+   OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
+   {
+      throw ROOT::RException(R__FAIL("method not implemented"));
+   }
+
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)
       : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages)

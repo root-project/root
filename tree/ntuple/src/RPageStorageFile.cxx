@@ -363,7 +363,7 @@ ROOT::Internal::RPageSourceFile::~RPageSourceFile()
    fClusterPool.StopBackgroundThread();
 }
 
-std::unique_ptr<ROOT::Internal::RPageSourceFile>
+std::unique_ptr<ROOT::Internal::RPageSource>
 ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
                                                          const ROOT::RNTupleReadOptions &options)
 {

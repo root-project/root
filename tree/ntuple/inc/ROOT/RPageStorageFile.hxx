@@ -186,10 +186,8 @@ public:
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
 
-   /// Creates a new PageSourceFile using the same underlying file as this but referring to a different RNTuple,
-   /// described by `anchorLink`.
-   std::unique_ptr<RPageSourceFile>
-   OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink, const ROOT::RNTupleReadOptions &options = {});
+   std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                        const ROOT::RNTupleReadOptions &options = {}) final;
 
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
