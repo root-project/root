@@ -30,7 +30,7 @@ protected:
    RGeomDescription &fDesc;                  ///<! geometry description, shared with external
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
 
-   void WebWindowCallback(unsigned connid, const std::string &arg);
+   virtual void WebWindowCallback(unsigned connid, const std::string &arg);
 
    void ProcessSignal(const std::string &kind);
 
