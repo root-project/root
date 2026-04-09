@@ -42,6 +42,12 @@ struct TSocketFriend {
    static Bool_t IsAuthenticated(const TSocket &s);
    static void SetSecContext(TSocket &s, TSecContext *ctx);
    static TSecContext *GetSecContext(const TSocket &s);
+
+   static TSocket *CreateAuthSocket(const char *user, const char *host,
+                                    Int_t port, Int_t size = 0,
+                                    Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+   static TSocket *CreateAuthSocket(const char *url, Int_t size = 0,
+                                    Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
 };
 } // namespace ROOT::Deprecated
 
@@ -183,9 +189,15 @@ public:
 
    static TSocket       *CreateAuthSocket(const char *user, const char *host,
                                           Int_t port, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr)
+                        R__DEPRECATED(6, 42, "Socket authentication is deprecated. See README.AUTH for details.")
+                        { return ROOT::Deprecated::TSocketFriend::CreateAuthSocket(
+                           user, host, port, size, tcpwindowsize, s, err); }
    static TSocket       *CreateAuthSocket(const char *url, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr)
+                        R__DEPRECATED(6, 42, "Socket authentication is deprecated. See README.AUTH for details.")
+                        { return ROOT::Deprecated::TSocketFriend::CreateAuthSocket(url, size, tcpwindowsize, s, err); }
+
    static void           NetError(const char *where, Int_t error);
 
    ClassDefOverride(TSocket,0)  //This class implements client sockets

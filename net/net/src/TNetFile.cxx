@@ -582,7 +582,7 @@ void ROOT::Deprecated::TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind,
    }
    url += TString(Form("://%s@%s:%d",
                        fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
-   fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize, fSocket, stat);
+   fSocket = ROOT::Deprecated::TSocketFriend::CreateAuthSocket(url, sSize, tcpwindowsize, fSocket, stat);
    if (!fSocket || (fSocket && !ROOT::Deprecated::TSocketFriend::IsAuthenticated(*fSocket))) {
       if (sSize > 1)
          Error("TNetFile", "can't open %d-stream connection to rootd on "
