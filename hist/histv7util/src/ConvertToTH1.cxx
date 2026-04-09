@@ -31,7 +31,8 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
    auto ret = std::make_unique<Hist>();
    ret->SetDirectory(nullptr);
 
-   ROOT::Experimental::Hist::Internal::ConvertAxis(*ret->GetXaxis(), engine.GetAxes()[0]);
+   const auto &axis = engine.GetAxes()[0];
+   ROOT::Experimental::Hist::Internal::ConvertAxis(*ret->GetXaxis(), axis);
    ret->SetBinsLength();
 
    Double_t *sumw2 = nullptr;
@@ -51,7 +52,6 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
    };
 
    // Copy the bin contents, accounting for TH1 numbering conventions.
-   const auto &axis = engine.GetAxes()[0];
    for (auto index : axis.GetFullRange()) {
       if (index.IsUnderflow()) {
          copyBinContent(0, index);
