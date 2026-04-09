@@ -296,6 +296,8 @@ class RGeomDescription {
 
    int IsPhysNodeVisible(const std::vector<int> &stack);
 
+   virtual bool IsFullModelStreamedAtOnce() const;
+
    virtual void RefineGeoItem(RGeoItem &item, const std::vector<int> &stack);
 
    /** clear drawing data without locking mutex */

@@ -771,6 +771,15 @@ void RGeomDescription::RefineGeoItem(RGeoItem & /* item */, const std::vector<in
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Decide if the whole model is streamed at once
+/// Function is called from ProcessBrowserRequest
+
+bool RGeomDescription::IsFullModelStreamedAtOnce() const
+{
+   return GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000);
+}
+
 /////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape
 /// If not exists - will be created
@@ -792,7 +801,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
    if (!request)
       return res;
 
-   if (request->path.empty() && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
+   if (request->path.empty() && (request->first == 0) && IsFullModelStreamedAtOnce()) {
 
       std::vector<RGeomNodeBase *> vect(fDesc.size(), nullptr);
 
