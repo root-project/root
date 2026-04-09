@@ -183,6 +183,9 @@ public:
    std::string GetObjectClass() const;
 
    void LoadStreamerInfo() final;
+
+   std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                        const ROOT::RNTupleReadOptions &options = {}) final;
 }; // class RPageSourceDaos
 
 } // namespace Internal
