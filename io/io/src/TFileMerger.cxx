@@ -661,6 +661,13 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                if (!hobj) {
                   TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(keyname);
                   if (key2) {
+                     if (strcmp(key2->GetClassName(), keyclassname) != 0) {
+                        Error("MergeRecursive",
+                              "Object type mismatch for key '%s' in file '%s': expected '%s' but found '%s'.", keyname,
+                              nextsource->GetName(), keyclassname, key2->GetClassName());
+                        nextsource = (TFile *)sourcelist->After(nextsource);
+                        return kFALSE;
+                     }
                      hobj = key2->ReadObj();
                      if (!hobj) {
                         switch (fErrBehavior) {
