@@ -2273,15 +2273,15 @@ Bool_t TASImage::InitVisual()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to initialize the image.
-Bool_t TASImage::InitImage(const TString &caller)
+Bool_t TASImage::InitImage(const char *caller)
 {
    if (!InitVisual()) {
-      Warning(caller.Data(), "Visual not initiated");
+      Warning(caller, "Visual not initiated");
       return false;
    }
 
    if (!fImage) {
-      Warning(caller.Data(), "no image");
+      Warning(caller, "no image");
       return false;
    }
 
@@ -2290,7 +2290,7 @@ Bool_t TASImage::InitImage(const TString &caller)
    }
 
    if (!fImage->alt.argb32) {
-      Warning(caller.Data(), "Failed to get argb32 pixel array");
+      Warning(caller, "Failed to get argb32 pixel array");
       return false;
    }
    return true;
