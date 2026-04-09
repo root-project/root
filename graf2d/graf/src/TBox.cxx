@@ -531,6 +531,8 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         if (opaque || ropaque)
+            parent->ShowGuidelines(this, event);
          if (opaque) {
             SetX1(oldX1);
             SetY1(oldY1);
