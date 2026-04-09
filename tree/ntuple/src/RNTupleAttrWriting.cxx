@@ -35,12 +35,13 @@ std::size_t ROOT::Experimental::Internal::RNTupleAttrEntry::Append()
 {
    std::size_t bytesWritten = 0;
    // Write the meta entry values
-   bytesWritten += fMetaEntry.fValues[kRangeStartIndex].Append();
-   bytesWritten += fMetaEntry.fValues[kRangeLenIndex].Append();
+   bytesWritten += fMetaEntry.fValues[kMetaFieldIndex_RangeStart].Append();
+   bytesWritten += fMetaEntry.fValues[kMetaFieldIndex_RangeLen].Append();
 
    // Bind the user model's memory to the meta model's subfields
-   const auto &userFields =
-      ROOT::Internal::GetFieldZeroOfModel(fMetaModel).GetMutableSubfields()[kUserDataIndex]->GetMutableSubfields();
+   const auto &userFields = ROOT::Internal::GetFieldZeroOfModel(fMetaModel)
+                               .GetMutableSubfields()[kMetaFieldIndex_UserData]
+                               ->GetMutableSubfields();
    assert(userFields.size() == fScopedEntry.fValues.size());
    for (std::size_t i = 0; i < fScopedEntry.fValues.size(); ++i) {
       std::shared_ptr<void> userPtr = fScopedEntry.fValues[i].GetPtr<void>();
@@ -70,15 +71,16 @@ ROOT::Experimental::RNTupleAttrSetWriter::Create(const RNTupleFillContext &mainF
    // the user model and store them under the meta model's fields (see RNTupleAttrEntry::Append())
    auto metaModel = RNTupleModel::Create();
    metaModel->SetDescription(userModel->GetDescription());
-   auto rangeStartPtr = metaModel->MakeField<ROOT::NTupleSize_t>(kRangeStartName);
-   auto rangeLenPtr = metaModel->MakeField<ROOT::NTupleSize_t>(kRangeLenName);
+   auto rangeStartPtr = metaModel->MakeField<ROOT::NTupleSize_t>(kMetaFieldNames[kMetaFieldIndex_RangeStart]);
+   auto rangeLenPtr = metaModel->MakeField<ROOT::NTupleSize_t>(kMetaFieldNames[kMetaFieldIndex_RangeLen]);
    std::vector<std::unique_ptr<RFieldBase>> fields;
    const auto subfields = userModel->GetConstFieldZero().GetConstSubfields();
    fields.reserve(subfields.size());
    for (const auto *field : subfields) {
       fields.push_back(field->Clone(field->GetFieldName()));
    }
-   auto userRootField = std::make_unique<ROOT::RRecordField>(kUserDataName, std::move(fields));
+   auto userRootField =
+      std::make_unique<ROOT::RRecordField>(kMetaFieldNames[kMetaFieldIndex_UserData], std::move(fields));
    metaModel->AddField(std::move(userRootField));
 
    metaModel->Freeze();

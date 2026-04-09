@@ -39,13 +39,15 @@ The order and name of the meta Model's fields is defined by the schema version.
 inline const std::uint16_t kSchemaVersionMajor = 1;
 inline const std::uint16_t kSchemaVersionMinor = 0;
 
-inline const char *const kRangeStartName = "_rangeStart";
-inline const char *const kRangeLenName = "_rangeLen";
-inline const char *const kUserDataName = "_userData";
+enum : std::size_t {
+   kMetaFieldIndex_RangeStart,
+   kMetaFieldIndex_RangeLen,
+   kMetaFieldIndex_UserData,
 
-inline constexpr std::size_t kRangeStartIndex = 0;
-inline constexpr std::size_t kRangeLenIndex = 1;
-inline constexpr std::size_t kUserDataIndex = 2;
+   kMetaFieldIndex_Count
+};
+inline constexpr const char *kMetaFieldNames[] = {"_rangeStart", "_rangeLen", "_userData"};
+static_assert(kMetaFieldIndex_Count == sizeof(kMetaFieldNames) / sizeof(kMetaFieldNames[0]));
 
 } // namespace ROOT::Experimental::Internal::RNTupleAttributes
 
