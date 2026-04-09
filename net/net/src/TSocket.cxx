@@ -1291,8 +1291,8 @@ Bool_t TSocket::Authenticate(const char *user)
 /// Returns pointer to an authenticated socket or 0 if creation or
 /// authentication is unsuccessful.
 
-TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindowsize,
-                                   TSocket *opensock, Int_t *err)
+TSocket *ROOT::Deprecated::TSocketFriend::CreateAuthSocket(
+   const char *url, Int_t size, Int_t tcpwindowsize, TSocket *opensock, Int_t *err)
 {
    R__LOCKGUARD2(gSocketAuthMutex);
 
@@ -1428,9 +1428,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 /// Returns pointer to an authenticated socket or 0 if creation or
 /// authentication is unsuccessful.
 
-TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
-                                   Int_t port, Int_t size, Int_t tcpwindowsize,
-                                   TSocket *opensock, Int_t *err)
+TSocket *ROOT::Deprecated::TSocketFriend::CreateAuthSocket(
+   const char *user, const char *url, Int_t port, Int_t size, Int_t tcpwindowsize, TSocket *opensock, Int_t *err)
 {
    R__LOCKGUARD2(gSocketAuthMutex);
 
@@ -1459,7 +1458,7 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    }
 
    // Create the socket and return it
-   return TSocket::CreateAuthSocket(eurl,size,tcpwindowsize,opensock,err);
+   return TSocketFriend::CreateAuthSocket(eurl,size,tcpwindowsize,opensock,err);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

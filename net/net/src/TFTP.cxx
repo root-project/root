@@ -102,7 +102,7 @@ void ROOT::Deprecated::TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    }
    hurl += TString(Form("://%s@%s:%d",
                         url.GetUser(), url.GetHost(), url.GetPort()));
-   fSocket = TSocket::CreateAuthSocket(hurl, par, wsize, fSocket);
+   fSocket = ROOT::Deprecated::TSocketFriend::CreateAuthSocket(hurl, par, wsize, fSocket);
    if (!fSocket || !ROOT::Deprecated::TSocketFriend::IsAuthenticated(*fSocket)) {
       if (par > 1)
          Error("TFTP", "can't open %d-stream connection to rootd on "
