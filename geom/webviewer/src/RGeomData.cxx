@@ -761,6 +761,17 @@ void RGeomDescription::CollectNodes(RGeomDrawing &drawing, bool all_nodes)
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Method which allows to add/modify information in RGeoItem which
+/// will be provided to client - like title or some visibility flags
+/// Changes in the item attributes do not affect geometry drawing
+
+void RGeomDescription::RefineGeoItem(RGeoItem & /* item */, const std::vector<int> & /* stack */)
+{
+   // do nothing by default, placeholder for derived classes
+}
+
+
+/////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape
 /// If not exists - will be created
 
@@ -830,6 +841,9 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                   temp_nodes.back().SetExpanded(true);
                if (stack == fSelectedStack)
                   temp_nodes.back().SetTop(true);
+
+               RefineGeoItem(temp_nodes.back(), stack);
+
                request->number--;
 
                if (!stack.empty())
