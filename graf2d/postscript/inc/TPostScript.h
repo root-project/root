@@ -55,7 +55,6 @@ protected:
    Int_t   fIXzone;          ///< Current zone along X
    Int_t   fIYzone;          ///< Current zone along Y
    Float_t fMarkerSizeCur;   ///< current transformed value of marker size
-   Int_t   fCurrentColor;    ///< current Postscript color index
    Int_t   fNpages;          ///< number of pages
    Int_t   fType;            ///< PostScript workstation type
    Int_t   fMode;            ///< PostScript mode
@@ -139,7 +138,7 @@ public:
    Int_t YtoPS(Double_t y);
    void  Zone();
 
-   ClassDefOverride(TPostScript,0)  //PostScript driver
+   ClassDefOverride(TPostScript,1)  //PostScript driver
 };
 
 #endif

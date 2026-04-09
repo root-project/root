@@ -275,7 +275,6 @@ TPostScript::TPostScript() : TVirtualPS()
    fClear           = kFALSE;
    fClip            = 0;
    fClipStatus      = kFALSE;
-   fCurrentColor    = 0;
    fDXC             = 0.;
    fDYC             = 0.;
    fFX              = 0.;
@@ -361,7 +360,6 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    }
 
    fMarkerSizeCur = 0;
-   fCurrentColor  = 0;
    fRed           = -1;
    fGreen         = -1;
    fBlue          = -1;
@@ -2558,7 +2556,6 @@ void TPostScript::SetMarkerColor( Color_t cindex )
 void TPostScript::SetColor(Int_t color)
 {
    if (color < 0) color = 0;
-   fCurrentColor = color;
    TColor *col = gROOT->GetColor(color);
    if (col)
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
