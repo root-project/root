@@ -17,7 +17,8 @@
 #include "TLine.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
+#include "TCanvasImp.h"
 #include "TMath.h"
 #include "TPoint.h"
 
@@ -130,19 +131,69 @@ TLine *TLine::DrawLineNDC(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 
 void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable()) return;
 
-   Int_t kMaxDiff = 20;
-   static Int_t d1,d2,px1,px2,py1,py2;
-   static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
+   constexpr Int_t kMaxDiff = 20;
+   static Int_t px1,px2,py1,py2,pxold,pyold;
    static Double_t oldX1, oldY1, oldX2, oldY2;
-   static Bool_t p1, p2, pL, ndcsav;
-   Double_t dpx,dpy,xp1,yp1;
-   Int_t dx, dy;
+   static Int_t selectPoint;
 
-   Bool_t opaque  = gPad->OpaqueMoving();
+   auto parent = gPad;
 
-   if (!gPad->IsEditable()) return;
+   Bool_t opaque  = parent->OpaqueMoving();
+
+   auto action = [this, parent](Int_t code, Int_t _x1, Int_t _y1, Int_t _x2 = 0, Int_t _y2 = 0) {
+      Double_t x1, y1, x2, y2;
+
+      if (TestBit(kLineNDC)) {
+         x1 = (1. * _x1 / parent->GetWw() - parent->GetAbsXlowNDC()) / parent->GetAbsWNDC();
+         y1 = ((1 - 1. * _y1 / parent->GetWh()) - parent->GetAbsYlowNDC()) / parent->GetAbsHNDC();
+         x2 = (1. * _x2 / parent->GetWw() - parent->GetAbsXlowNDC()) / parent->GetAbsWNDC();
+         y2 = ((1 - 1. * _y2 / parent->GetWh()) - parent->GetAbsYlowNDC()) / parent->GetAbsHNDC();
+      } else {
+         x1 = parent->AbsPixeltoX(_x1);
+         y1 = parent->AbsPixeltoY(_y1);
+         x2 = parent->AbsPixeltoX(_x2);
+         y2 = parent->AbsPixeltoY(_y2);
+         if (parent->GetLogx()) {
+            x1 = TMath::Power(10, x1);
+            x2 = TMath::Power(10, x2);
+         }
+         if (parent->GetLogy()) {
+            y1 = TMath::Power(10, y1);
+            y2 = TMath::Power(10, y2);
+         }
+      }
+      if (code == 0) {
+         auto pp = parent->GetPainter();
+         pp->SetAttLine(*this);
+         if (TestBit(kLineNDC))
+            pp->DrawLineNDC(x1, y1, x2, y2);
+         else
+            pp->DrawLine(x1, y1, x2, y2);
+      } else {
+         if (code & 1) {
+            SetX1(x1);
+            SetY1(y1);
+         }
+         if (code & 2) {
+            SetX2(x2);
+            SetY2(y2);
+         }
+         if (TestBit(kVertical)) {
+            if (code & 1)
+               SetX2(GetX1());
+            else
+               SetX1(GetX2());
+         }
+         if (TestBit(kHorizontal)) {
+            if (code & 1)
+               SetY2(GetY1());
+            else
+               SetY1(GetY2());
+         }
+      }
+   };
 
    switch (event) {
 
@@ -152,134 +203,76 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       oldY1 = GetY1();
       oldX2 = GetX2();
       oldY2 = GetY2();
-      ndcsav = TestBit(kLineNDC);
-      if (!opaque) {
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-      }
 
       // No break !!!
 
    case kMouseMotion:
 
       if (TestBit(kLineNDC)) {
-         px1 = gPad->UtoPixel(GetX1());
-         py1 = gPad->VtoPixel(GetY1());
-         px2 = gPad->UtoPixel(GetX2());
-         py2 = gPad->VtoPixel(GetY2());
+         px1 = parent->UtoAbsPixel(GetX1());
+         py1 = parent->VtoAbsPixel(GetY1());
+         px2 = parent->UtoAbsPixel(GetX2());
+         py2 = parent->VtoAbsPixel(GetY2());
       } else {
-         px1 = gPad->XtoAbsPixel(gPad->XtoPad(GetX1()));
-         py1 = gPad->YtoAbsPixel(gPad->YtoPad(GetY1()));
-         px2 = gPad->XtoAbsPixel(gPad->XtoPad(GetX2()));
-         py2 = gPad->YtoAbsPixel(gPad->YtoPad(GetY2()));
-      }
-      p1 = p2 = pL = kFALSE;
-
-      d1  = abs(px1 - px) + abs(py1-py); //simply take sum of pixels differences
-      if (d1 < kMaxDiff) { //*-*================>OK take point number 1
-         px1old = px1; py1old = py1;
-         p1 = kTRUE;
-         gPad->SetCursor(kPointer);
-         return;
-      }
-      d2  = abs(px2 - px) + abs(py2-py); //simply take sum of pixels differences
-      if (d2 < kMaxDiff) { //*-*================>OK take point number 2
-         px2old = px2; py2old = py2;
-         p2 = kTRUE;
-         gPad->SetCursor(kPointer);
-         return;
+         px1 = parent->XtoAbsPixel(parent->XtoPad(GetX1()));
+         py1 = parent->YtoAbsPixel(parent->YtoPad(GetY1()));
+         px2 = parent->XtoAbsPixel(parent->XtoPad(GetX2()));
+         py2 = parent->YtoAbsPixel(parent->YtoPad(GetY2()));
       }
 
-      pL = kTRUE;
-      pxold = px; pyold = py;
-      gPad->SetCursor(kMove);
+      //simply take sum of pixels differences
+      if (abs(px1 - px) + abs(py1 - py) < kMaxDiff) { //*-*================>OK take point number 1
+         selectPoint = 1;
+         parent->SetCursor(kPointer);
+      } else if (abs(px2 - px) + abs(py2 - py) < kMaxDiff) { //*-*================>OK take point number 2
+         selectPoint = 2;
+         parent->SetCursor(kPointer);
+      } else {
+         selectPoint = 3;
+         pxold = px;
+         pyold = py;
+         parent->SetCursor(kMove);
+      }
 
       break;
 
    case kArrowKeyRelease:
    case kButton1Motion:
-
-      if (p1) {
-         if (!opaque) {
-            gVirtualX->DrawLine(px1old, py1old, px2, py2);
-            gVirtualX->DrawLine(px, py, px2, py2);
-         } else {
-            if (ndcsav) {
-               SetNDC(kFALSE);
-               SetX2(gPad->GetX1() + oldX2*(gPad->GetX2()-gPad->GetX1()));
-               SetY2(gPad->GetY1() + oldY2*(gPad->GetY2()-gPad->GetY1()));
-            }
-            SetX1(gPad->AbsPixeltoX(px));
-            SetY1(gPad->AbsPixeltoY(py));
-         }
-         px1old = px;
-         py1old = py;
-      }
-      if (p2) {
-         if (!opaque) {
-            gVirtualX->DrawLine(px1, py1, px2old, py2old);
-            gVirtualX->DrawLine(px1, py1, px, py);
-         } else {
-            if (ndcsav) {
-               SetNDC(kFALSE);
-               SetX1(gPad->GetX1() + oldX1*(gPad->GetX2()-gPad->GetX1()));
-               SetY1(gPad->GetY1() + oldY1*(gPad->GetY2()-gPad->GetY1()));
-            }
-            SetX2(gPad->AbsPixeltoX(px));
-            SetY2(gPad->AbsPixeltoY(py));
-         }
-         px2old = px;
-         py2old = py;
-      }
-      if (pL) {
-         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
-         dx = px-pxold;  dy = py-pyold;
-         px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
+      if (!opaque)
+         action(0, px1, py1, px2, py2);
+      if (selectPoint == 1) {
+         px1 = px;
+         py1 = py;
+      } else if (selectPoint == 2) {
+         px2 = px;
+         py2 = py;
+      } else if (selectPoint == 3) {
+         px1 += px - pxold;
+         py1 += py - pyold;
+         px2 += px - pxold;
+         py2 += py  -pyold;
          pxold = px;
          pyold = py;
-         if (opaque) {
-            if (ndcsav) SetNDC(kFALSE);
-            SetX1(gPad->AbsPixeltoX(px1));
-            SetY1(gPad->AbsPixeltoY(py1));
-            SetX2(gPad->AbsPixeltoX(px2));
-            SetY2(gPad->AbsPixeltoY(py2));
-         }
       }
+      action(!opaque ? 0 : selectPoint, px1, py1, px2, py2);
       if (opaque) {
-         if (p1) {
+         if (selectPoint == 1) {
             //check in which corner the BBox is edited
-            if (GetX1() > GetX2()) {
-               if (GetY1() > GetY2())
-                  gPad->ShowGuidelines(this, event, '2', true);
-               else
-                  gPad->ShowGuidelines(this, event, '3', true);
-            } else {
-               if (GetY1() > GetY2())
-                  gPad->ShowGuidelines(this, event, '1', true);
-               else
-                  gPad->ShowGuidelines(this, event, '4', true);
-            }
-         }
-         if (p2) {
+            if (GetX1() > GetX2())
+               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '2' : '3', true);
+            else
+               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '1' : '4', true);
+         } else if (selectPoint == 2) {
             //check in which corner the BBox is edited
-            if (GetX1() > GetX2()) {
-               if (GetY1() > GetY2())
-                  gPad->ShowGuidelines(this, event, '4', true);
-               else
-                  gPad->ShowGuidelines(this, event, '1', true);
-            } else {
-               if (GetY1() > GetY2())
-                  gPad->ShowGuidelines(this, event, '3', true);
-               else
-                  gPad->ShowGuidelines(this, event, '2', true);
-            }
+            if (GetX1() > GetX2())
+               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '4' : '1', true);
+            else
+               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '3' : '2', true);
+         } else if (selectPoint == 3) {
+            parent->ShowGuidelines(this, event, 'i', true);
          }
-         if (pL) {
-            gPad->ShowGuidelines(this, event, 'i', true);
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
+         parent->Modified(kTRUE);
+         parent->Update();
       }
       break;
 
@@ -292,77 +285,29 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             SetY1(oldY1);
             SetX2(oldX2);
             SetY2(oldY2);
-            gPad->ShowGuidelines(this, event);
-            gPad->Modified(kTRUE);
-            gPad->Update();
+            parent->ShowGuidelines(this, event);
+            parent->Modified(kTRUE);
+            parent->Update();
          }
          break;
       }
       if (opaque) {
-         if (ndcsav && !TestBit(kLineNDC)) {
-            SetX1((GetX1() - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            SetX2((GetX2() - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            SetY1((GetY1() - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            SetY2((GetY2() - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            SetNDC();
-         }
-         gPad->ShowGuidelines(this, event);
+         parent->ShowGuidelines(this, event);
       } else {
-         if (TestBit(kLineNDC)) {
-            dpx  = gPad->GetX2() - gPad->GetX1();
-            dpy  = gPad->GetY2() - gPad->GetY1();
-            xp1  = gPad->GetX1();
-            yp1  = gPad->GetY1();
-            if (p1) {
-               SetX1((gPad->AbsPixeltoX(px)-xp1)/dpx);
-               SetY1((gPad->AbsPixeltoY(py)-yp1)/dpy);
-            }
-            if (p2) {
-               SetX2((gPad->AbsPixeltoX(px)-xp1)/dpx);
-               SetY2((gPad->AbsPixeltoY(py)-yp1)/dpy);
-            }
-            if (pL) {
-               SetX1((gPad->AbsPixeltoX(px1)-xp1)/dpx);
-               SetY1((gPad->AbsPixeltoY(py1)-yp1)/dpy);
-               SetX2((gPad->AbsPixeltoX(px2)-xp1)/dpx);
-               SetY2((gPad->AbsPixeltoY(py2)-yp1)/dpy);
-            }
-         } else {
-            if (p1) {
-               SetX1(gPad->PadtoX(gPad->AbsPixeltoX(px)));
-               SetY1(gPad->PadtoY(gPad->AbsPixeltoY(py)));
-            }
-            if (p2) {
-               SetX2(gPad->PadtoX(gPad->AbsPixeltoX(px)));
-               SetY2(gPad->PadtoY(gPad->AbsPixeltoY(py)));
-            }
-            if (pL) {
-               SetX1(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
-               SetY1(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
-               SetX2(gPad->PadtoX(gPad->AbsPixeltoX(px2)));
-               SetY2(gPad->PadtoY(gPad->AbsPixeltoY(py2)));
-            }
-         }
-         if (TestBit(kVertical)) {
-            if (p1) SetX2(GetX1());
-            if (p2) SetX1(GetX2());
-         }
-         if (TestBit(kHorizontal)) {
-            if (p1) SetY2(GetY1());
-            if (p2) SetY1(GetY2());
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         if (!opaque) gVirtualX->SetLineColor(-1);
+         action(selectPoint, px1, py1, px2, py2);
+         parent->Modified(kTRUE);
+         parent->Update();
       }
+      selectPoint = 0;
       break;
 
    case kButton1Locate:
 
+      // Sergey: code is never used, has to be removed in ROOT7
       ExecuteEvent(kButton1Down, px, py);
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1,1,px,py);
+         event = parent->GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
