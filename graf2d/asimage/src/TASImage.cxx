@@ -3836,11 +3836,6 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
 
 void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   if (!InitVisual()) {
-      Warning("Fill", "Visual not initiated");
-      return;
-   }
-
    ARGB32 color = ARGB32_White;
 
    if (col) {
@@ -3862,6 +3857,11 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
 
 void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawVLine", "Visual not initiated");
+      return;
+   }
+
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
 
@@ -3897,6 +3897,11 @@ void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thic
 
 void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawHLine", "Visual not initiated");
+      return;
+   }
+
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
 
@@ -4192,6 +4197,10 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
 void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
                              const char *pDash, UInt_t col, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawDashHLine", "Visual not initiated");
+      return;
+   }
    UInt_t iDash = 0;    // index of current dash
    int i = 0;
 
@@ -4246,6 +4255,10 @@ void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
 void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
                              const char *pDash, UInt_t col, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawDashVLine", "Visual not initiated");
+      return;
+   }
    UInt_t iDash = 0;    // index of current dash
    int i = 0;
 
@@ -4303,6 +4316,10 @@ void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
 void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                              UInt_t nDash, const char *tDash, UInt_t color)
 {
+   if (!InitVisual()) {
+      Warning("DrawDashZLine", "Visual not initiated");
+      return;
+   }
    int dx, dy, d;
    int i, i1, i2;
    int x, y, xend, yend;
@@ -4487,6 +4504,10 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                              UInt_t nDash, const char *tDash, UInt_t color, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawDashZTLine", "Visual not initiated");
+      return;
+   }
    int dx, dy;
    int i;
    double x, y, xend=0, yend=0, x0, y0;
@@ -5691,6 +5712,10 @@ static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
 void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                             UInt_t color, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawWideLine", "Visual not initiated");
+      return;
+   }
    Int_t sz = thick*thick;
    CARD32 *matrix;
    Bool_t use_cache = thick < kBrushCacheSize;
@@ -5737,6 +5762,10 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 
 void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 {
+   if (!InitVisual()) {
+      Warning("DrawGlyph", "Visual not initiated");
+      return;
+   }
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
    Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
@@ -6343,6 +6372,10 @@ void TASImage::SetTitle(const char *title)
 void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                              Int_t x3, Int_t y3, const char *col, UInt_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawCubeBezier", "Visual not initiated");
+      return;
+   }
    Int_t sz = thick*thick;
    CARD32 *matrix;
    Bool_t use_cache = thick < kBrushCacheSize;
@@ -6382,6 +6415,10 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
                                   const char *col, Int_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawStraightEllips", "Visual not initiated");
+      return;
+   }
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6421,6 +6458,11 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
 
 void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawCircle", "Visual not initiated");
+      return;
+   }
+
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6462,6 +6504,10 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
 void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawEllips", "Visual not initiated");
+      return;
+   }
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6502,6 +6548,10 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
 void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
+   if (!InitVisual()) {
+      Warning("DrawEllips2", "Visual not initiated");
+      return;
+   }
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
