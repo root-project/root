@@ -479,6 +479,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
         gROOT->SetEscape(kFALSE);
         if (opaque) {
+            gPad->ShowGuidelines(this, event);
             this->SetX1(oldX1);
             this->SetY1(oldY1);
             this->SetR1(oldR1);
