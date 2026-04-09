@@ -296,6 +296,8 @@ class RGeomDescription {
 
    int IsPhysNodeVisible(const std::vector<int> &stack);
 
+   virtual void RefineGeoItem(RGeoItem &item, const std::vector<int> &stack);
+
    /** clear drawing data without locking mutex */
    void _ClearDrawData()
    {
@@ -305,6 +307,7 @@ class RGeomDescription {
 
 public:
    RGeomDescription() = default;
+   virtual ~RGeomDescription() = default;
 
    void AddSignalHandler(const void *handler, RGeomSignalFunc_t func);
 
