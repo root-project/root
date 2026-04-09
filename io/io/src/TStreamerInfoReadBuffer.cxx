@@ -1192,10 +1192,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                               cont = contp[j];
                            }
                            TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
-                           Int_t nobjects;
-                           b >> nobjects;
-                           env = newProxy->Allocate(nobjects,true);
-                           if (!nobjects && (vers>=7)) {
+                           ULong64_t nobjects64 = TStreamerInfoUtils::ReadCollectionSize(b, vers);
+
+                           env = newProxy->Allocate(nobjects64,true);
+                           if (!nobjects64 && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
                               // we were calling ReadBuffer for empty collection.
                            } else {
@@ -1303,7 +1303,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                         for(; obj<end; obj+=objectSize) {
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
                            ULong64_t nobjects64 = TStreamerInfoUtils::ReadCollectionSize(b, vers);
-                           R__ASSERT(nobjects64 <= (ULong64_t)std::numeric_limits<Int_t>::max() && "Allocate is not yet 64 bit enabled");
+
                            void* env = newProxy->Allocate(nobjects64, true);
                            if (!nobjects64 && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,

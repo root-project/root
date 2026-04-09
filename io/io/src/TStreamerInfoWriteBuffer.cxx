@@ -17,6 +17,7 @@
 #include "TStreamer.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+#include "TStreamerInfoCollectionUtils.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRefTable.h"
 #include "TFile.h"
@@ -523,9 +524,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                      for(int j=0;j<compinfo[i]->fLength;++j) {
                         char *cont = contp[j];
                         TVirtualCollectionProxy::TPushPop helper( proxy, cont );
-                        Int_t nobjects = cont ? proxy->Size() : 0;
-                        b << nobjects;
-                        if (nobjects) {
+                        ULong64_t nobjects64 = cont ? proxy->Size() : 0;
+                        TStreamerInfoUtils::WriteCollectionSize(b, nobjects64);
+                        if (nobjects64) {
                            auto actions = proxy->GetWriteMemberWiseActions();
 
                            char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
@@ -587,9 +588,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
                      for(Int_t j=0; j<n; j++,obj+=size) {
                         TVirtualCollectionProxy::TPushPop helper( proxy, obj );
-                        Int_t nobjects = proxy->Size();
-                        b << nobjects;
-                        if (nobjects) {
+                        ULong64_t nobjects64 = proxy->Size();
+                        TStreamerInfoUtils::WriteCollectionSize(b, nobjects64);
+                        if (nobjects64) {
                            auto actions = proxy->GetWriteMemberWiseActions();
 
                            char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
