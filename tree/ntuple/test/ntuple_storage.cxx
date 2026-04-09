@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TKey.h>
 #include <TRandom3.h>
 #include <TMemFile.h>
 #include <TVirtualStreamerInfo.h>
@@ -1187,9 +1188,14 @@ TEST(RPageSourceFile, OpenDifferentAnchor)
       EXPECT_NE(desc->FindFieldId("f"), ROOT::kInvalidDescriptorId);
    }
 
+   TKey *anchor2Key = file->GetKey("ntpl2");
+   ROOT::RNTupleLocator anchorLoc;
+   anchorLoc.SetPosition(anchor2Key->GetSeekKey() + anchor2Key->GetKeylen());
+   anchorLoc.SetNBytesOnStorage(anchor2Key->GetNbytes() - anchor2Key->GetKeylen());
+   ROOT::Internal::RNTupleLink anchorLink{anchorLoc, static_cast<std::uint32_t>(anchor2Key->GetObjlen())};
    auto anchor2 = file->Get<ROOT::RNTuple>("ntpl2");
    ASSERT_NE(anchor2, nullptr);
-   auto source2 = source->OpenWithDifferentAnchor(*anchor2);
+   auto source2 = source->OpenWithDifferentAnchor(anchorLink);
    source2->Attach();
    EXPECT_EQ(source2->GetNTupleName(), "ntpl2");
    EXPECT_EQ(source2->GetNEntries(), 20);

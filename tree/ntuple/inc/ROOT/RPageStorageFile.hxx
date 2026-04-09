@@ -187,9 +187,9 @@ public:
    ~RPageSourceFile() override;
 
    /// Creates a new PageSourceFile using the same underlying file as this but referring to a different RNTuple,
-   /// represented by `anchor`.
+   /// described by `anchorLink`.
    std::unique_ptr<RPageSourceFile>
-   OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
+   OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink, const ROOT::RNTupleReadOptions &options = {});
 
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;

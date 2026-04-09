@@ -364,8 +364,14 @@ ROOT::Internal::RPageSourceFile::~RPageSourceFile()
 }
 
 std::unique_ptr<ROOT::Internal::RPageSourceFile>
-ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options)
+ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                         const ROOT::RNTupleReadOptions &options)
 {
+   assert(anchorLink.fLocator.GetType() == RNTupleLocator::kTypeFile);
+
+   const auto anchorPos = anchorLink.fLocator.GetPosition<std::uint64_t>();
+   auto anchor =
+      fReader.GetNTupleProperAtOffset(anchorPos, anchorLink.fLocator.GetNBytesOnStorage(), anchorLink.fLength).Unwrap();
    auto pageSource = std::make_unique<RPageSourceFile>("", fFile->Clone(), options);
    pageSource->fAnchor = anchor;
    // NOTE: fNTupleName gets set only upon Attach().
