@@ -3,6 +3,7 @@
 
 #include <ROOT/Hist/ConversionUtils.hxx>
 #include <ROOT/Hist/ConvertToTH1.hxx>
+#include <ROOT/Hist/ConvertToTH2.hxx>
 #include <ROOT/RAxisVariant.hxx>
 #include <ROOT/RBinWithError.hxx>
 #include <ROOT/RCategoricalAxis.hxx>
