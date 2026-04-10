@@ -70,6 +70,8 @@ Implement TVirtualPadPainter which abstracts painting operations.
 
 TPadPainter::TPadPainter()
 {
+   fDoubleBuffer = 1;
+   fWinContext = (WinContext_t) 0;
 }
 
 /*
@@ -185,6 +187,18 @@ void TPadPainter::SetDrawMode(Int_t device, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set double buffer mode for specified device
+
+void TPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
+{
+   // important flag - when disabled canvas pixmap used directly
+   // so one need to use absolute coordinates
+   fDoubleBuffer = mode;
+
+   gVirtualX->SetDoubleBuffer(device, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
 
 void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width*/, UInt_t /*height*/,
@@ -240,10 +254,10 @@ void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (fAttLine.GetLineWidth() <= 0)
       return;
 
-   const Int_t px1 = gPad->XtoPixel(x1);
-   const Int_t px2 = gPad->XtoPixel(x2);
-   const Int_t py1 = gPad->YtoPixel(y1);
-   const Int_t py2 = gPad->YtoPixel(y2);
+   const Int_t px1 = fDoubleBuffer ? gPad->XtoPixel(x1) : gPad->XtoAbsPixel(x1);
+   const Int_t px2 = fDoubleBuffer ? gPad->XtoPixel(x2) : gPad->XtoAbsPixel(x2);
+   const Int_t py1 = fDoubleBuffer ? gPad->YtoPixel(y1) : gPad->YtoAbsPixel(y1);
+   const Int_t py2 = fDoubleBuffer ? gPad->YtoPixel(y2) : gPad->YtoAbsPixel(y2);
    gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
 }
 
@@ -256,10 +270,10 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
    if (fAttLine.GetLineWidth() <= 0)
       return;
 
-   const Int_t px1 = gPad->UtoPixel(u1);
-   const Int_t py1 = gPad->VtoPixel(v1);
-   const Int_t px2 = gPad->UtoPixel(u2);
-   const Int_t py2 = gPad->VtoPixel(v2);
+   const Int_t px1 = fDoubleBuffer ? gPad->UtoPixel(u1) : gPad->UtoAbsPixel(u1);
+   const Int_t py1 = fDoubleBuffer ? gPad->VtoPixel(v1) : gPad->VtoAbsPixel(v1);
+   const Int_t px2 = fDoubleBuffer ? gPad->UtoPixel(u2) : gPad->UtoAbsPixel(u2);
+   const Int_t py2 = fDoubleBuffer ? gPad->VtoPixel(v2) : gPad->VtoAbsPixel(v2);
    gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
 }
 
@@ -272,10 +286,10 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
    if (fAttLine.GetLineWidth() <= 0 && mode == TVirtualPadPainter::kHollow)
       return;
 
-   Int_t px1 = gPad->XtoPixel(x1);
-   Int_t px2 = gPad->XtoPixel(x2);
-   Int_t py1 = gPad->YtoPixel(y1);
-   Int_t py2 = gPad->YtoPixel(y2);
+   Int_t px1 = fDoubleBuffer ? gPad->XtoPixel(x1) : gPad->XtoAbsPixel(x1);
+   Int_t px2 = fDoubleBuffer ? gPad->XtoPixel(x2) : gPad->XtoAbsPixel(x2);
+   Int_t py1 = fDoubleBuffer ? gPad->YtoPixel(y1) : gPad->YtoAbsPixel(y1);
+   Int_t py2 = fDoubleBuffer ? gPad->YtoPixel(y2) : gPad->YtoAbsPixel(y2);
 
    // Box width must be at least one pixel (WTF is this code???)
    if (TMath::Abs(px2 - px1) < 1)

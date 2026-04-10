@@ -24,6 +24,7 @@ class TVirtualPad;
 
 class TPadPainter : public TPadPainterBase {
    WinContext_t   fWinContext;
+   Int_t          fDoubleBuffer;
 
 public:
    TPadPainter();
@@ -46,6 +47,7 @@ public:
    void     SelectDrawable(Int_t device) override;
    void     UpdateDrawable(Int_t mode) override;
    void     SetDrawMode(Int_t device, Int_t mode) override;
+   void     SetDoubleBuffer(Int_t device, Int_t mode) override;
 
 
    //TASImage support (noop for a non-gl pad).
