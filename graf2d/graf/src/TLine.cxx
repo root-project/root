@@ -145,7 +145,9 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    auto action = [this, parent](Int_t code, Int_t _x1, Int_t _y1, Int_t _x2 = 0, Int_t _y2 = 0) {
       Double_t x1, y1, x2, y2;
 
-      if (TestBit(kLineNDC)) {
+      Bool_t isndc = TestBit(kLineNDC);
+
+      if (isndc) {
          x1 = (1. * _x1 / parent->GetWw() - parent->GetAbsXlowNDC()) / parent->GetAbsWNDC();
          y1 = ((1 - 1. * _y1 / parent->GetWh()) - parent->GetAbsYlowNDC()) / parent->GetAbsHNDC();
          x2 = (1. * _x2 / parent->GetWw() - parent->GetAbsXlowNDC()) / parent->GetAbsWNDC();
@@ -155,23 +157,24 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          y1 = parent->AbsPixeltoY(_y1);
          x2 = parent->AbsPixeltoX(_x2);
          y2 = parent->AbsPixeltoY(_y2);
-         if (parent->GetLogx()) {
-            x1 = TMath::Power(10, x1);
-            x2 = TMath::Power(10, x2);
-         }
-         if (parent->GetLogy()) {
-            y1 = TMath::Power(10, y1);
-            y2 = TMath::Power(10, y2);
-         }
       }
       if (code == 0) {
          auto pp = parent->GetPainter();
          pp->SetAttLine(*this);
-         if (TestBit(kLineNDC))
+         if (isndc)
             pp->DrawLineNDC(x1, y1, x2, y2);
          else
             pp->DrawLine(x1, y1, x2, y2);
       } else {
+         if (!isndc && parent->GetLogx()) {
+            x1 = TMath::Power(10, x1);
+            x2 = TMath::Power(10, x2);
+         }
+         if (!isndc && parent->GetLogy()) {
+            y1 = TMath::Power(10, y1);
+            y2 = TMath::Power(10, y2);
+         }
+
          if (code & 1) {
             SetX1(x1);
             SetY1(y1);
