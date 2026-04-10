@@ -2263,8 +2263,8 @@ namespace TStreamerInfoActions
          UInt_t start = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
 
          std::vector<T> *const vec = (std::vector<T>*)(((char*)addr)+config->fOffset);
-         Int_t nvalues = vec->size();
-         buf.WriteInt(nvalues);
+         auto nvalues = vec->size();
+         TStreamerInfoUtils::WriteCollectionSize(buf, nvalues);
 
          T *begin = vec->data();
          buf.WriteFastArray(begin, nvalues);
