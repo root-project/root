@@ -256,21 +256,21 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       auto y1 = parent->AbsPixeltoY(_y1);
       auto x2 = parent->AbsPixeltoX(_x2);
       auto y2 = parent->AbsPixeltoY(_y2);
-      if (isBox) {
-         if (parent->GetLogx()) {
-            x1 = TMath::Power(10, x1);
-            x2 = TMath::Power(10, x2);
-         }
-         if (parent->GetLogy()) {
-            y1 = TMath::Power(10, y1);
-            y2 = TMath::Power(10, y2);
-         }
-      }
       if (paint) {
          auto pp = parent->GetPainter();
          pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
          pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
       } else {
+         if (isBox) {
+            if (parent->GetLogx()) {
+               x1 = TMath::Power(10, x1);
+               x2 = TMath::Power(10, x2);
+            }
+            if (parent->GetLogy()) {
+               y1 = TMath::Power(10, y1);
+               y2 = TMath::Power(10, y2);
+            }
+         }
          SetX1(x1);
          SetY1(y1);
          SetX2(x2);
@@ -513,10 +513,11 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
+      if (opaque || ropaque)
+         parent->ShowGuidelines(this, event);
+
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         if (opaque || ropaque)
-            parent->ShowGuidelines(this, event);
          if (opaque) {
             SetX1(oldX1);
             SetY1(oldY1);
@@ -528,11 +529,9 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
 
-      if (opaque || ropaque) {
-         parent->ShowGuidelines(this, event);
-      } else {
-         if (px1 < 0)
-            break;
+      if ((!opaque && pINSIDE) || (!ropaque && (pTop || pBot || pL || pR)))
+         action(kFALSE, px1, py1, px2, py2);
+      else if (!ropaque) {
          if (pA)
             action(kFALSE, pxold, pyt, pxt, pyold);
          if (pB)
@@ -541,16 +540,9 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             action(kFALSE, pxl, pyold, pxold, pyl);
          if (pD)
             action(kFALSE, pxold, pyold, pxt, pyl);
-         if (pTop || pBot || pL || pR || pINSIDE)
-            action(kFALSE, px1, py1, px2, py2);
-         if (pINSIDE) {
-            // if it was not a pad that was moved then it must have been
-            // a box or something like that so we have to redraw the pad
-           if (parent == gPad) parent->Modified(kTRUE);
-         }
       }
 
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
+      if (pA || pB || pC || pD || pTop || pL || pR || pBot || pINSIDE)
          parent->Modified(kTRUE);
 
       break;
