@@ -1504,6 +1504,7 @@ void TypedefPrinter::DisplayTypedefDecl(TypedefNameDecl* typedefDecl)const
     printingPolicy.SuppressSpecifiers = false;
     printingPolicy.SuppressInitializers = true;
     printingPolicy.SuppressScope = false;
+    printingPolicy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
     printingPolicy.SuppressTagKeyword = true;
     llvm::raw_string_ostream out(textLine);
     typedefDecl->getUnderlyingType().

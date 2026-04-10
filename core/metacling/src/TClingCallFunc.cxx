@@ -114,6 +114,7 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    // compilation and other string operations.
    PrintingPolicy Policy(C.getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
+   Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    Policy.SuppressUnwrittenScope = false;
    Policy.SuppressInitializers = false;
    Policy.AnonymousTagLocations = false;
@@ -157,6 +158,7 @@ static void GetDeclName(const clang::Decl *D, ASTContext &Context, std::string &
 
    PrintingPolicy Policy(Context.getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
+   Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    Policy.SuppressUnwrittenScope = true;
    if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
       // This is a class, struct, or union member.

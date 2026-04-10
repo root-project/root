@@ -464,6 +464,7 @@ namespace cling {
         // Get the type of the type without specifiers
         PrintingPolicy Policy(m_Context->getLangOpts());
         Policy.SuppressTagKeyword = 1;
+        Policy.SuppressTagKeywordInAnonNames = 1; // Skip printing tags for anonymous entities
         std::string Res;
         CuredDeclTy.getAsStringInternal(Res, Policy);
         Inits.push_back(ConstructConstCharPtrExpr(Res.c_str()));
