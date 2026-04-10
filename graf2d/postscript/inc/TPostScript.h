@@ -48,6 +48,7 @@ protected:
    Float_t fRed;             ///< Per cent of red
    Float_t fGreen;           ///< Per cent of green
    Float_t fBlue;            ///< Per cent of blue
+   Float_t fWidth;           ///< Current line width
    Float_t fLineScale;       ///< Line width scale factor
    Int_t   fSave;            ///< Number of gsave for restore
    Int_t   fNXzone;          ///< Number of zones along X
@@ -123,6 +124,7 @@ public:
    void  SetLineScale(Float_t scale=3) {fLineScale = scale;}
    void  SetMarkerColor(Color_t cindex=1) override;
    void  SetTextColor(Color_t cindex=1) override;
+   void  SetWidth(Width_t linewidth = 1);
    void  MovePS(Int_t x, Int_t y);
    void  Range(Float_t xrange, Float_t yrange);
    void  SetColor(Int_t color = 1);
