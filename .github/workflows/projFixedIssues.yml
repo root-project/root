@@ -9,6 +9,7 @@ on:
         options: 
         - 6
         - 7
+        - 8
         required: true
         default: 6
       minor:
@@ -24,29 +25,32 @@ on:
         - 40
         - 42
         - 44
+        - 46
+        - 48
         required: true
         default: 40
       patch:
         type: choice
         description: Patch
         options: 
-        - 00
-        - 02
-        - 04
-        - 06
-        - 08
-        - 10
-        - 12
-        - 14
-        - 16
-        - 18
-        - 20
-        - 22
-        - 24
-        - 26
-        - 28
+        - "00"
+        - "02"
+        - "04"
+        - "06"
+        - "08"
+        - "10"
+        - "12"
+        - "14"
+        - "16"
+        - "18"
+        - "20"
+        - "22"
+        - "24"
+        - "26"
+        - "28"
+        - "30"
         required: true
-        default: 00
+        default: "00"
 
 jobs:
   check-tag:
@@ -55,4 +59,4 @@ jobs:
       - name: Generate list of closed issues for release notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh project item-list `gh project list |grep ${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}|awk '{print$1}` --owner root-project -L 8192|grep "Issue"|sort -t$'\t' -k3 -n -r| awk -v FS='\t' -v OFS='\t'  '{print $3"  * [[#"$3"](https://github.com/root-project/root/issues/"$3")] - "$2}'
+        run: gh project item-list `gh project list --owner root-project |grep ${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}|awk '{print $1}` --owner root-project -L 8192|grep "Issue"|sort -t$'\t' -k3 -n -r| awk -v FS='\t' -v OFS='\t'  '{print "  * [[#"$3"](https://github.com/root-project/root/issues/"$3")] - "$2}'
