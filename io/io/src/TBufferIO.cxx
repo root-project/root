@@ -195,7 +195,7 @@ void TBufferIO::MapObject(const TObject *obj, ULong64_t offset)
 
 void TBufferIO::MapObject(const void *obj, const TClass *cl, ULong64_t offset)
 {
-   R__ASSERT(offset <= kMaxUInt);
+   R__ASSERT(offset <= kMaxLong64);
    if (IsWriting()) {
       if (!fMap)
          InitMap();
