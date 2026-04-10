@@ -2025,14 +2025,14 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (newcode)
       return;
 
-   auto pp = GetPainter();
-
-   auto action = [this,pp,parent](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
+   auto action = [this,parent](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
       auto x1 = AbsPixeltoX(_x1);
       auto y1 = AbsPixeltoY(_y1);
       auto x2 = AbsPixeltoX(_x2);
       auto y2 = AbsPixeltoY(_y2);
       if (paint) {
+         auto pp = GetPainter();
+         pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
          pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
       } else {
          // Get parent corners pixels coordinates
@@ -2067,7 +2067,6 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       fXUpNDC = fXlowNDC + fWNDC;
       fYUpNDC = fYlowNDC + fHNDC;
-      pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
 
       // No break !!!
 
@@ -2353,7 +2352,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       pxold = px;
       pyold = py;
 
-      if ((!fResizing && opaque) || (fResizing && ropaque)) {
+      if ((pINSIDE && opaque) || (fResizing && ropaque)) {
          if (px != pxorg || py != pyorg) {
             if (pA)
                action(kFALSE, pxold, pyt, pxt, pyold);
@@ -2387,14 +2386,16 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
 
+      if (opaque || ropaque)
+         ShowGuidelines(this, event);
+
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         fResizing = kFALSE;
          break;
       }
 
-      if (opaque||ropaque) {
-         ShowGuidelines(this, event);
-      } else {
+      if ((pINSIDE && !opaque) || (fResizing && !ropaque)) {
          if (pA)
             action(kFALSE, pxold, pyt, pxt, pyold);
          if (pB)
@@ -2409,14 +2410,14 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (pA || pB || pC || pD || pTop || pL || pR || pBot)
             Modified(kTRUE);
 
-         pp->SetAttLine({-1, 1, -1});
-
          // Reset pad parameters and recompute conversion coefficients
          ResizePad();
 
          // emit signal
          RangeChanged();
       }
+
+      fResizing = kFALSE;
 
       break;
 
