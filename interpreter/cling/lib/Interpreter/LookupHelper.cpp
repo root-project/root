@@ -1928,6 +1928,7 @@ namespace cling {
 
       PrintingPolicy Policy(Context.getPrintingPolicy());
       Policy.SuppressTagKeyword = true;
+      Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
       Policy.SuppressUnwrittenScope = true;
       Policy.SuppressInitializers = true;
       Policy.AnonymousTagLocations = false;
