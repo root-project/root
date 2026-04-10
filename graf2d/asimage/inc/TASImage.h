@@ -77,6 +77,7 @@ protected:
    void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
    static Bool_t InitVisual();
+   Bool_t InitImage(const char *caller);
 
 public:
    TASImage();
