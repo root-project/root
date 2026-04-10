@@ -116,9 +116,7 @@ void TArrow::Copy(TObject &obj) const
 
 void TArrow::Draw(Option_t *option)
 {
-   Option_t *opt;
-   if (option && strlen(option)) opt = option;
-   else                          opt = (char*)GetOption();
+   Option_t *opt = option && *option ? option : GetOption();
 
    AppendPad(opt);
 }
@@ -130,15 +128,15 @@ void TArrow::Draw(Option_t *option)
 ///  - if `option=""`, `option` will be the current arrow option
 
 TArrow *TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
-                     Float_t arrowsize ,Option_t *option)
+                          Float_t arrowsize, Option_t *option)
 {
 
    Float_t size = arrowsize;
    if (size <= 0) size = fArrowSize;
    if (size <= 0) size = 0.05;
-   const char* opt = option;
-   if (!opt || !opt[0]) opt = fOption.Data();
-   if (!opt || !opt[0]) opt = "|>";
+   Option_t* opt = option;
+   if (!opt || !*opt) opt = GetOption();
+   if (!opt || !*opt) opt = "|>";
    TArrow *newarrow = new TArrow(x1,y1,x2,y2,size,opt);
    newarrow->SetAngle(fAngle);
    TAttLine::Copy(*newarrow);
@@ -154,14 +152,9 @@ TArrow *TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 void TArrow::Paint(Option_t *option)
 {
    if (!gPad) return;
-   Option_t *opt;
-   if (option && strlen(option)) opt = option;
-   else                          opt = (char*)GetOption();
+   Option_t *opt = option && *option ? option : GetOption();
    if (TestBit(kLineNDC))
-      PaintArrow(gPad->GetX1() + fX1 * (gPad->GetX2() - gPad->GetX1()),
-                 gPad->GetY1() + fY1 * (gPad->GetY2() - gPad->GetY1()),
-                 gPad->GetX1() + fX2 * (gPad->GetX2() - gPad->GetX1()),
-                 gPad->GetY1() + fY2 * (gPad->GetY2() - gPad->GetY1()), fArrowSize, opt);
+      PaintArrowNDC(fX1, fY1, fX2, fY2, fArrowSize, opt);
    else
       PaintArrow(gPad->XtoPad(fX1), gPad->YtoPad(fY1), gPad->XtoPad(fX2), gPad->YtoPad(fY2), fArrowSize, opt);
 }
@@ -173,11 +166,12 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
    if (!gPad) return;
+   auto &parent = *gPad;
    // Compute the gPad coordinates in TRUE normalized space (NDC)
-   Int_t iw = gPad->GetWw();
-   Int_t ih = gPad->GetWh();
+   Int_t iw = parent.GetWw();
+   Int_t ih = parent.GetWh();
    Double_t x1p,y1p,x2p,y2p;
-   gPad->GetPadPar(x1p,y1p,x2p,y2p);
+   parent.GetPadPar(x1p,y1p,x2p,y2p);
    Int_t ix1 = (Int_t)(iw*x1p);
    Int_t iy1 = (Int_t)(ih*y1p);
    Int_t ix2 = (Int_t)(iw*x2p);
@@ -187,8 +181,8 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    // Option and attributes
    TString opt = option;
    opt.ToLower();
-   TAttLine::Modify();
-   TAttFill::Modify();
+   TAttLine::ModifyOn(parent);
+   TAttFill::ModifyOn(parent);
 
 
    Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
@@ -202,7 +196,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 
    // Ratios to convert user space in TRUE normalized space (NDC)
    Double_t rx1,ry1,rx2,ry2;
-   gPad->GetRange(rx1,ry1,rx2,ry2);
+   parent.GetRange(rx1,ry1,rx2,ry2);
    Double_t rx = (x2ndc-x1ndc)/(rx2-rx1);
    Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
@@ -274,7 +268,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       yarr[i] = (1/ry)*(yarr[i]-y1ndc)+ry1;
    }
    // paint arrow main line with start/stop segment together
-   gPad->PaintSegments(cnt/2, xarr, yarr);
+   parent.PaintSegments(cnt/2, xarr, yarr);
 
    // Draw the arrow's head(s)
    if (opt.Contains(">")) {
@@ -295,15 +289,15 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("|>")) {
-         gPad->GetPainter()->SetLineStyle(1);
+         parent.GetPainter()->SetLineStyle(1);
          if (GetFillColor()) {
-            gPad->PaintFillArea(3,x2ar,y2ar);
-            gPad->PaintPolyLine(4,x2ar,y2ar);
+            parent.PaintFillArea(3,x2ar,y2ar);
+            parent.PaintPolyLine(4,x2ar,y2ar);
          } else {
-            gPad->PaintPolyLine(4,x2ar,y2ar);
+            parent.PaintPolyLine(4,x2ar,y2ar);
          }
       } else {
-         gPad->PaintPolyLine(3,x2ar,y2ar);
+         parent.PaintPolyLine(3,x2ar,y2ar);
       }
    }
 
@@ -324,15 +318,15 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("<|")) {
-         gPad->GetPainter()->SetLineStyle(1);
+         parent.GetPainter()->SetLineStyle(1);
          if (GetFillColor()) {
-            gPad->PaintFillArea(3,x1ar,y1ar);
-            gPad->PaintPolyLine(4,x1ar,y1ar);
+            parent.PaintFillArea(3,x1ar,y1ar);
+            parent.PaintPolyLine(4,x1ar,y1ar);
          } else {
-            gPad->PaintPolyLine(4,x1ar,y1ar);
+            parent.PaintPolyLine(4,x1ar,y1ar);
          }
       } else {
-         gPad->PaintPolyLine(3,x1ar,y1ar);
+         parent.PaintPolyLine(3,x1ar,y1ar);
       }
    }
 }
