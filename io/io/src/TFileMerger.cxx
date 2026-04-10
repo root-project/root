@@ -78,7 +78,11 @@ static Int_t R__GetSystemMaxOpenedFiles()
    }
 #endif
    if (maxfiles > kClingFileNumber) {
-      return maxfiles - kClingFileNumber;
+      // Limit the maximum number of opened files to 128 to mitigate memory
+      // consumption issues that may arise during merges with many files.
+      // For further details see analysis at:
+      // https://github.com/root-project/root/issues/21660
+      return std::min(128, maxfiles - kClingFileNumber);
    } else if (maxfiles > 5) {
       return maxfiles - 5;
    } else {
