@@ -760,14 +760,21 @@ void RModel::GenerateInitializedTensorInfo()
    for (auto &i : fInitializedTensors) {
       if (i.second.IsNotWritable())  continue;
       size_t length = ConvertShapeToLength(i.second.shape());
-      if (!fUseWeightFile || i.second.IsConstantTensor() || !i.second.IsWeightTensor() ) {
+      if (!fUseWeightFile || i.second.IsConstantTensor() || !i.second.IsWeightTensor() || i.second.type() != ETensorType::FLOAT ) {
          if (i.second.type() == ETensorType::FLOAT) {
             fGC += GenerateConstantTensorCode<float>(i);
             fConstantTensorSize += length * sizeof(float);
          } else if (i.second.type() == ETensorType::INT64) {
             fGC += GenerateConstantTensorCode<int64_t>(i);
             fConstantTensorSize += length * sizeof(int64_t);
+         } else if (i.second.type() == ETensorType::INT32) {
+            fGC += GenerateConstantTensorCode<int32_t>(i);
+            fConstantTensorSize += length * sizeof(int32_t);
+         }  else if (i.second.type() == ETensorType::BOOL || i.second.type() == ETensorType::UINT8 ) {
+            fGC += GenerateConstantTensorCode<uint8_t>(i);
+            fConstantTensorSize += length * sizeof(uint8_t);
          }
+
 
       } else {
          // case of tensors which are read from a file
