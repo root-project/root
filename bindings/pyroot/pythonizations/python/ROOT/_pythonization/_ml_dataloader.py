@@ -249,7 +249,7 @@ class BaseGenerator:
         # cling via cppyy) and the I/O thread.
         ROOT.EnableThreadSafety()
 
-        self.generator = ROOT.Experimental.Internal.ML.RBatchGenerator(template)(
+        self.generator = ROOT.Experimental.Internal.ML.RDataLoader(template)(
             self.noded_rdfs,
             chunk_size,
             block_size,
