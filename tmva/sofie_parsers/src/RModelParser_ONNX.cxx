@@ -26,6 +26,8 @@ extern ParserFuncSignature ParseSin;
 extern ParserFuncSignature ParseCos;
 extern ParserFuncSignature ParseAbs;
 extern ParserFuncSignature ParseSoftplus;
+extern ParserFuncSignature ParseAtan;
+extern ParserFuncSignature ParseFloor;
 // Binary operators
 extern ParserFuncSignature ParseAdd;
 extern ParserFuncSignature ParseSub;
@@ -62,6 +64,7 @@ extern ParserFuncSignature ParseTanh;
 extern ParserFuncSignature ParseConv;
 extern ParserFuncSignature ParseConvTranspose;
 extern ParserFuncSignature ParseLeakyRelu;
+extern ParserFuncSignature ParseGelu;
 extern ParserFuncSignature ParseSelu;
 extern ParserFuncSignature ParseSigmoid;
 extern ParserFuncSignature ParseGemm;
@@ -143,6 +146,18 @@ struct ExtractDataFromTP<int64_t> {
                                                             static_cast<int64_t *>(data));
    }
 };
+template<>
+struct ExtractDataFromTP<uint8_t> {
+   static void Copy(onnx::TensorProto * , void * ) {
+      throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in UINT8 not supported");
+   }
+};
+template<>
+struct ExtractDataFromTP<bool> {
+   static void Copy(onnx::TensorProto * , void *) {
+      throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in BOOL not supported");
+   }
+};
 template<typename T>
 std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, size_t length) {
    std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
@@ -174,6 +189,8 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Cos", ParseCos);
    RegisterOperator("Abs", ParseAbs);
    RegisterOperator("Softplus", ParseSoftplus);
+   RegisterOperator("Atan", ParseAtan);
+   RegisterOperator("Floor", ParseFloor);
    // Binary operators
    RegisterOperator("Add", ParseAdd);
    RegisterOperator("Sub", ParseSub);
@@ -223,6 +240,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Squeeze", ParseReshape);
    RegisterOperator("Unsqueeze", ParseReshape);
    RegisterOperator("RNN", ParseRNN);
+   RegisterOperator("Gelu", ParseGelu);
    RegisterOperator("Selu", ParseSelu);
    RegisterOperator("Shape", ParseShape);
    RegisterOperator("Sigmoid", ParseSigmoid);
@@ -647,6 +665,24 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          if (verbose) std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::INT64, shape, data);
          allInitializedTensors[input_name] = i;
+         break;
+      }
+      case ETensorType::BOOL: {
+         std::shared_ptr<void> data = GetInitializedTensorData<bool>(tensorproto, fLength);
+         if (verbose) std::cout << "add BOOL initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::BOOL, shape, data);
+         allInitializedTensors[input_name] = i;
+         if (verbose)
+            std::cout << "Bool initialized data: " << ConvertValuesToString<bool>(fLength,reinterpret_cast<bool *>(data.get(),10)) << std::endl;
+         break;
+      }
+      case ETensorType::UINT8: {
+         std::shared_ptr<void> data = GetInitializedTensorData<uint8_t>(tensorproto, fLength);
+         if (verbose) std::cout << "add UINT8 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::UINT8, shape, data);
+         allInitializedTensors[input_name] = i;
+         if (verbose)
+            std::cout << "uint8 initialized data: " << ConvertValuesToString<uint8_t>(fLength,reinterpret_cast<uint8_t *>(data.get(),10)) << std::endl;
          break;
       }
       default:
