@@ -85,6 +85,16 @@ ParserFuncSignature ParseSoftplus = [](RModelParser_ONNX &parser, const onnx::No
    return ParseBasicUnary<EBasicUnaryOperator::kSoftplus>(parser, nodeproto);
 };
 
+//Parse Atan
+ParserFuncSignature ParseAtan = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kAtan>(parser, nodeproto);
+};
+
+//Parse Floor
+ParserFuncSignature ParseFloor = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kFloor>(parser, nodeproto);
+};
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA

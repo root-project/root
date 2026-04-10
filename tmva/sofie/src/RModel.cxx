@@ -3,6 +3,7 @@
 #include <cctype>
 #include <memory>
 #include <string>
+#include <cstdlib>
 
 #ifdef SOFIE_SUPPORT_ROOT_BINARY
 #include "TFile.h"
@@ -291,7 +292,8 @@ void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, st
 void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape) {
     tensor_name = UTILITY::Clean_name(tensor_name);
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+        //throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+        tensor_name += "_" + std::to_string(rand());
     }
     TensorInfo new_tensor {type, shape};
     fIntermediateTensorInfos[tensor_name] = new_tensor;
