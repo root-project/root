@@ -59,4 +59,4 @@ jobs:
       - name: Generate list of closed issues for release notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh project item-list `gh project list --owner root-project |grep ${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}|awk '{print $1}` --owner root-project -L 8192|grep "Issue"|sort -t$'\t' -k3 -n -r| awk -v FS='\t' -v OFS='\t'  '{print "  * [[#"$3"](https://github.com/root-project/root/issues/"$3")] - "$2}'
+        run: gh project item-list `gh project list --owner root-project |grep ${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}|awk '{print $1}'` --owner root-project -L 8192|grep "Issue"|sort -t$'\t' -k3 -n -r| awk -v FS='\t' -v OFS='\t'  '{print "  * [[#"$3"](https://github.com/root-project/root/issues/"$3")] - "$2}'
