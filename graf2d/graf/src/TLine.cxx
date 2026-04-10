@@ -23,6 +23,18 @@
 #include "TPoint.h"
 
 
+namespace ROOT {
+namespace Internal {
+struct TLineInteractive {
+   Int_t px1, px2, py1, py2, pxold, pyold;
+   Double_t oldX1, oldY1, oldX2, oldY2;
+   Bool_t hasOld = kFALSE;
+   Int_t selectPoint = 0;
+};
+}
+}
+
+
 /** \class TLine
 \ingroup BasicGraphics
 
@@ -44,12 +56,24 @@ _**Example**_:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Line default constructor.
+/// Defined here to correctly instantiate fInteractive member
+
+TLine::TLine()
+{
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Line normal constructor.
 
 TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       :TObject(), TAttLine()
 {
-   fX1=x1; fY1=y1; fX2=x2; fY2=y2;
+   fX1 = x1;
+   fY1 = y1;
+   fX2 = x2;
+   fY2 = y2;
 }
 
 
@@ -59,6 +83,14 @@ TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line)
 {
    line.TLine::Copy(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Line destructor
+/// Defined here to correctly destroy fInteractive member
+
+TLine::~TLine()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,38 +166,44 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad || !gPad->IsEditable()) return;
 
    constexpr Int_t kMaxDiff = 20;
-   static Int_t px1,px2,py1,py2,pxold,pyold;
-   static Double_t oldX1, oldY1, oldX2, oldY2;
-   static Int_t selectPoint;
 
-   auto parent = gPad;
+   auto & parent = *gPad;
 
-   Bool_t opaque  = parent->OpaqueMoving();
+   Bool_t opaque  = parent.OpaqueMoving();
 
-   auto action = [this, parent](Int_t code, Int_t _x1, Int_t _y1, Int_t _x2 = 0, Int_t _y2 = 0) {
+   ROOT::Internal::TLineInteractive *i;
+
+   auto get_interactive = [this, &i](bool force) -> bool {
+      if (!fInteractive && force)
+         fInteractive = std::make_unique<ROOT::Internal::TLineInteractive>();
+      i = fInteractive.get();
+      return i != nullptr;
+   };
+
+   auto action = [this, &parent, &i](Int_t code) {
       Double_t x1, y1, x2, y2;
 
       if (TestBit(kLineNDC)) {
-         x1 = (1. * _x1 / parent->GetWw() - parent->GetAbsXlowNDC()) / parent->GetAbsWNDC();
-         y1 = ((1 - 1. * _y1 / parent->GetWh()) - parent->GetAbsYlowNDC()) / parent->GetAbsHNDC();
-         x2 = (1. * _x2 / parent->GetWw() - parent->GetAbsXlowNDC()) / parent->GetAbsWNDC();
-         y2 = ((1 - 1. * _y2 / parent->GetWh()) - parent->GetAbsYlowNDC()) / parent->GetAbsHNDC();
+         x1 = (1. * i->px1 / parent.GetWw() - parent.GetAbsXlowNDC()) / parent.GetAbsWNDC();
+         y1 = ((1 - 1. * i->py1 / parent.GetWh()) - parent.GetAbsYlowNDC()) / parent.GetAbsHNDC();
+         x2 = (1. * i->px2 / parent.GetWw() - parent.GetAbsXlowNDC()) / parent.GetAbsWNDC();
+         y2 = ((1 - 1. * i->py2 / parent.GetWh()) - parent.GetAbsYlowNDC()) / parent.GetAbsHNDC();
       } else {
-         x1 = parent->AbsPixeltoX(_x1);
-         y1 = parent->AbsPixeltoY(_y1);
-         x2 = parent->AbsPixeltoX(_x2);
-         y2 = parent->AbsPixeltoY(_y2);
-         if (parent->GetLogx()) {
+         x1 = parent.AbsPixeltoX(i->px1);
+         y1 = parent.AbsPixeltoY(i->py1);
+         x2 = parent.AbsPixeltoX(i->px2);
+         y2 = parent.AbsPixeltoY(i->py2);
+         if (parent.GetLogx()) {
             x1 = TMath::Power(10, x1);
             x2 = TMath::Power(10, x2);
          }
-         if (parent->GetLogy()) {
+         if (parent.GetLogy()) {
             y1 = TMath::Power(10, y1);
             y2 = TMath::Power(10, y2);
          }
       }
       if (code == 0) {
-         auto pp = parent->GetPainter();
+         auto pp = parent.GetPainter();
          pp->SetAttLine(*this);
          if (TestBit(kLineNDC))
             pp->DrawLineNDC(x1, y1, x2, y2);
@@ -199,106 +237,107 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-      oldX1 = GetX1();
-      oldY1 = GetY1();
-      oldX2 = GetX2();
-      oldY2 = GetY2();
+      get_interactive(true);
+      i->oldX1 = GetX1();
+      i->oldY1 = GetY1();
+      i->oldX2 = GetX2();
+      i->oldY2 = GetY2();
+      i->hasOld = kTRUE;
 
       // No break !!!
-
    case kMouseMotion:
-
+      get_interactive(true);
       if (TestBit(kLineNDC)) {
-         px1 = parent->UtoAbsPixel(GetX1());
-         py1 = parent->VtoAbsPixel(GetY1());
-         px2 = parent->UtoAbsPixel(GetX2());
-         py2 = parent->VtoAbsPixel(GetY2());
+         i->px1 = parent.UtoAbsPixel(GetX1());
+         i->py1 = parent.VtoAbsPixel(GetY1());
+         i->px2 = parent.UtoAbsPixel(GetX2());
+         i->py2 = parent.VtoAbsPixel(GetY2());
       } else {
-         px1 = parent->XtoAbsPixel(parent->XtoPad(GetX1()));
-         py1 = parent->YtoAbsPixel(parent->YtoPad(GetY1()));
-         px2 = parent->XtoAbsPixel(parent->XtoPad(GetX2()));
-         py2 = parent->YtoAbsPixel(parent->YtoPad(GetY2()));
+         i->px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
+         i->py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
+         i->px2 = parent.XtoAbsPixel(parent.XtoPad(GetX2()));
+         i->py2 = parent.YtoAbsPixel(parent.YtoPad(GetY2()));
       }
 
       //simply take sum of pixels differences
-      if (abs(px1 - px) + abs(py1 - py) < kMaxDiff) { //*-*================>OK take point number 1
-         selectPoint = 1;
-         parent->SetCursor(kPointer);
-      } else if (abs(px2 - px) + abs(py2 - py) < kMaxDiff) { //*-*================>OK take point number 2
-         selectPoint = 2;
-         parent->SetCursor(kPointer);
+      if (abs(i->px1 - px) + abs(i->py1 - py) < kMaxDiff) { //*-*================>OK take point number 1
+         i->selectPoint = 1;
+         parent.SetCursor(kPointer);
+      } else if (abs(i->px2 - px) + abs(i->py2 - py) < kMaxDiff) { //*-*================>OK take point number 2
+         i->selectPoint = 2;
+         parent.SetCursor(kPointer);
       } else {
-         selectPoint = 3;
-         pxold = px;
-         pyold = py;
-         parent->SetCursor(kMove);
+         i->selectPoint = 3;
+         i->pxold = px;
+         i->pyold = py;
+         parent.SetCursor(kMove);
       }
-
       break;
 
    case kArrowKeyRelease:
    case kButton1Motion:
+      if (!get_interactive(false))
+         break;
       if (!opaque)
-         action(0, px1, py1, px2, py2);
-      if (selectPoint == 1) {
-         px1 = px;
-         py1 = py;
-      } else if (selectPoint == 2) {
-         px2 = px;
-         py2 = py;
-      } else if (selectPoint == 3) {
-         px1 += px - pxold;
-         py1 += py - pyold;
-         px2 += px - pxold;
-         py2 += py  -pyold;
-         pxold = px;
-         pyold = py;
+         action(0);
+      if (i->selectPoint == 1) {
+         i->px1 = px;
+         i->py1 = py;
+      } else if (i->selectPoint == 2) {
+         i->px2 = px;
+         i->py2 = py;
+      } else if (i->selectPoint == 3) {
+         i->px1 += px - i->pxold;
+         i->py1 += py - i->pyold;
+         i->px2 += px - i->pxold;
+         i->py2 += py - i->pyold;
+         i->pxold = px;
+         i->pyold = py;
       }
-      action(!opaque ? 0 : selectPoint, px1, py1, px2, py2);
+      action(!opaque ? 0 : i->selectPoint);
       if (opaque) {
-         if (selectPoint == 1) {
+         if (i->selectPoint == 1) {
             //check in which corner the BBox is edited
             if (GetX1() > GetX2())
-               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '2' : '3', true);
+               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '2' : '3', true);
             else
-               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '1' : '4', true);
-         } else if (selectPoint == 2) {
+               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '1' : '4', true);
+         } else if (i->selectPoint == 2) {
             //check in which corner the BBox is edited
             if (GetX1() > GetX2())
-               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '4' : '1', true);
+               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '4' : '1', true);
             else
-               parent->ShowGuidelines(this, event, GetY1() > GetY2() ? '3' : '2', true);
-         } else if (selectPoint == 3) {
-            parent->ShowGuidelines(this, event, 'i', true);
+               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '3' : '2', true);
+         } else if (i->selectPoint == 3) {
+            parent.ShowGuidelines(this, event, 'i', true);
          }
-         parent->Modified(kTRUE);
-         parent->Update();
+         parent.Modified(kTRUE);
+         parent.Update();
       }
       break;
 
    case kButton1Up:
-
+      get_interactive(false);
+      if (opaque)
+         parent.ShowGuidelines(this, event);
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          if (opaque) {
-            SetX1(oldX1);
-            SetY1(oldY1);
-            SetX2(oldX2);
-            SetY2(oldY2);
-            parent->ShowGuidelines(this, event);
-            parent->Modified(kTRUE);
-            parent->Update();
+            if (i && i->hasOld) {
+               SetX1(i->oldX1);
+               SetY1(i->oldY1);
+               SetX2(i->oldX2);
+               SetY2(i->oldY2);
+            }
+            parent.Modified(kTRUE);
+            parent.Update();
          }
-         break;
+      } else if (!opaque) {
+         if (i) action(i->selectPoint);
+         parent.Modified(kTRUE);
+         parent.Update();
       }
-      if (opaque) {
-         parent->ShowGuidelines(this, event);
-      } else {
-         action(selectPoint, px1, py1, px2, py2);
-         parent->Modified(kTRUE);
-         parent->Update();
-      }
-      selectPoint = 0;
+      fInteractive.reset(nullptr); // delete interactive, no longer needed
       break;
 
    case kButton1Locate:
@@ -307,7 +346,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       ExecuteEvent(kButton1Down, px, py);
       while (true) {
          px = py = 0;
-         event = parent->GetCanvasImp()->RequestLocator(px, py);
+         event = parent.GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
