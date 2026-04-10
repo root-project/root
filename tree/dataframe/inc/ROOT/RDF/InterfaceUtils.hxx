@@ -439,25 +439,6 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::type_info &art, c
                            const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
                            const bool vector2RVec = true);
 
-// Allocate a weak_ptr on the heap, return a pointer to it. The user is responsible for deleting this weak_ptr.
-// This function is meant to be used by RInterface's methods that book code for jitting.
-// The problem it solves is that we generate code to be lazily jitted with the addresses of certain objects in them,
-// and we need to check those objects are still alive when the generated code is finally jitted and executed.
-// So we pass addresses to weak_ptrs allocated on the heap to the jitted code, which is then responsible for
-// the deletion of the weak_ptr object.
-template <typename T>
-std::weak_ptr<T> *MakeWeakOnHeap(const std::shared_ptr<T> &shPtr)
-{
-   return new std::weak_ptr<T>(shPtr);
-}
-
-// Same as MakeWeakOnHeap, but create a shared_ptr that makes sure the object is definitely kept alive.
-template <typename T>
-std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
-{
-   return new std::shared_ptr<T>(shPtr);
-}
-
 bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 
 /// Take a shared_ptr<AnyNodeType> and return a shared_ptr<RNodeBase>.
