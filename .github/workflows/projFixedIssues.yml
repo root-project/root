@@ -3,24 +3,56 @@ name: 'GetFixedIssues'
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: Generate the release notes of fixed issues for this tag (e.g. "v6-32-12")
-        type: string
+      major:
+        type: choice
+        description: Major
+        options: 
+        - 6
+        - 7
         required: true
+        default: 6
+      minor:
+        type: choice
+        description: Minor
+        options: 
+        - 26
+        - 28
+        - 30
+        - 32
+        - 36
+        - 38
+        - 40
+        - 42
+        - 44
+        required: true
+        default: 40
+      patch:
+        type: choice
+        description: Patch
+        options: 
+        - 00
+        - 02
+        - 04
+        - 06
+        - 08
+        - 10
+        - 12
+        - 14
+        - 16
+        - 18
+        - 20
+        - 22
+        - 24
+        - 26
+        - 28
+        required: true
+        default: 00
 
 jobs:
   check-tag:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v5
-      - name: Install python dependencies
-        run: |
-          pip install github3.py
-      - name: Download issue extraction script
-        run: |
-          wget https://raw.githubusercontent.com/root-project/root/master/.ci/get_solved_issues-github-actions.py
       - name: Generate list of closed issues for release notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python ./get_solved_issues-github-actions.py --project-name ${{ inputs.tag }}
+        run: gh project item-list `gh project list |grep ${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}|awk '{print$1}` --owner root-project -L 8192|grep "Issue"|sort -t$'\t' -k3 -n -r| awk -v FS='\t' -v OFS='\t'  '{print $3"  * [[#"$3"](https://github.com/root-project/root/issues/"$3")] - "$2}'
