@@ -21,20 +21,7 @@ RBatchLoader::RBatchLoader(std::size_t batchSize, const std::vector<std::string>
    fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
    fNumColumns = fCols.size() + fSumVecSizes - fVecSizes.size();
 
-   if (fBatchSize == 0) {
-      fBatchSize = fNumEntries;
-   }
-
-   fLeftoverBatchSize = fNumEntries % fBatchSize;
-   fNumFullBatches = fNumEntries / fBatchSize;
-
-   std::size_t numLeftoverBatches = fLeftoverBatchSize == 0 ? 0 : 1;
-
-   if (fDropRemainder) {
-      fNumBatches = fNumFullBatches;
-   } else {
-      fNumBatches = fNumFullBatches + numLeftoverBatches;
-   }
+   RecalculateBatchCounts(numEntries);
 
    fPrimaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
    fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
@@ -227,4 +214,20 @@ void RBatchLoader::CreateBatches(RFlat2DMatrix &chunkTensor, bool isLastBatch)
    fCV.notify_all();
 }
 
+/// \brief Recalculate batch counts from the given number of entries.
+/// Used at construction or when the true entry count is discovered lazily (filtered case).
+void RBatchLoader::RecalculateBatchCounts(std::size_t numEntries)
+{
+   fNumEntries = numEntries;
+
+   if (fBatchSize == 0) {
+      fBatchSize = fNumEntries;
+   }
+
+   fLeftoverBatchSize = fNumEntries % fBatchSize;
+   fNumFullBatches = fNumEntries / fBatchSize;
+
+   const std::size_t numLeftoverBatches = fLeftoverBatchSize == 0 ? 0 : 1;
+   fNumBatches = fDropRemainder ? fNumFullBatches : fNumFullBatches + numLeftoverBatches;
+}
 } // namespace ROOT::Experimental::Internal::ML
