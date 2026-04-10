@@ -2,9 +2,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistUtil
   HEADERS
     ROOT/Hist/ConversionUtils.hxx
     ROOT/Hist/ConvertToTH1.hxx
+    ROOT/Hist/ConvertToTH2.hxx
   SOURCES
     ConversionUtils.cxx
     ConvertToTH1.cxx
+    ConvertToTH2.cxx
   DEPENDENCIES
     Core
     Hist
