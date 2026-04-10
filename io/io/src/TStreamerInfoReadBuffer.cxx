@@ -13,6 +13,7 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TBufferFile.h"
+#include "TStreamerInfoCollectionUtils.h"
 #include "TClonesArray.h"
 #include "TError.h"
 #include "TRef.h"
@@ -1301,20 +1302,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
                         for(; obj<end; obj+=objectSize) {
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
-                           Int_t nobjects;
-                           b >> nobjects;
-                           ULong64_t nobjects64;
-                           if (std::signbit(nobjects) && vers >= 11) {
-                              nobjects64 = (static_cast<ULong64_t>(nobjects) & 0x7fffffff) << 32;
-                              UInt_t nobjectsLow;
-                              b >> nobjectsLow;
-                              nobjects64 |= nobjectsLow;
-                           } else {
-                              nobjects64 = nobjects;
-                           }
-                           R__ASSERT(nobjects64 == nobjects && "Allocate is not yet 64 bit enabled");
+                           ULong64_t nobjects64 = TStreamerInfoUtils::ReadCollectionSize(b, vers);
+                           R__ASSERT(nobjects64 <= (ULong64_t)std::numeric_limits<Int_t>::max() && "Allocate is not yet 64 bit enabled");
                            void* env = newProxy->Allocate(nobjects64, true);
-                           if (!nobjects && (vers>=7)) {
+                           if (!nobjects64 && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
                               // we were calling ReadBuffer for empty collection.
                            } else {
