@@ -1199,6 +1199,46 @@ namespace utils {
         return true;
       }
       // LLVM22: There is no ElaboratedType anymore.
+      case Type::Record: {
+        const RecordType* Ty = llvm::cast<RecordType>(QTy);
+
+        // In LLVM20, a type "::Object" was represented as:
+        //   ElaboratedType ('::Object')
+        //     `- RecordType ('class Object')
+        //
+        // Desugaring the ElaboratedType would "strip" the syntactic
+        // qualifier ("::") and gives just "class Object".
+        //
+        // In LLVM22, ElaboratedType has been removed and its information
+        // is now stored directly on the underlying type (RecordType here):
+        //
+        //   RecordType ('::Object')
+        //     |- NestedNameSpecifier Global  (i.e. "::")
+        //     `- CXXRecordDecl 'Object'
+        //
+        // Now, the previous desugaring step that implicitly removed the
+        // global "::" prefix no longer happens.
+        // Older behavior produced "Object", but now we get "::Object".
+        //
+        // To preserve the previous semantics of "partial desugaring", we
+        // explicitly detect and remove the unintended global prefix here.
+        // We only do this for the global namespace, since other prefixes
+        // (like "std::") must be preserved.
+
+        // Detect unwanted global qualifier (::)
+        if (const auto prefix = QT->getPrefix()) {
+          if (prefix.getKind() == NestedNameSpecifier::Kind::Global) { // global namespace ("::")
+            // Rebuild without prefix by going through the declaration
+            // Old ElaboratedType::desugar() behavior.
+            if (const CXXRecordDecl* RD = Ty->getAsCXXRecordDecl()) {
+              QT = RD->getASTContext().getCanonicalTagType(RD);
+              return true;
+            }
+          }
+        }
+
+        return false;
+      }
       //
       //  Conditionally sugared types.
       //
