@@ -232,7 +232,7 @@ std::string ConvertValuesToString(size_t n, const T * data, size_t maxprint = -1
          ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
       else
          // cast in case of boolean (int8)
-         ret << (int64_t) data[i];
+         ret << data[i];
 
       if (i < n-1) ret << ", ";
       if (i < n-1 && i == maxprint-1) ret << "..... ";

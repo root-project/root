@@ -370,6 +370,7 @@ namespace SOFIE{
          }
          bool extraA = (doStackMul && lengthExtra_A != "1");
          bool extraB = (doStackMul && lengthExtra_B != "1");
+         bool extraC = (doStackMul && haveExtraC && !fBroadcastBias);
          auto SP2 = SP;
          if (doStackMul) {
             out << SP << "size_t " << opName << "_y_offset = 0;\n"; // needed if we stack the gemm operations
@@ -377,6 +378,8 @@ namespace SOFIE{
                out << SP << "size_t " << opName << "_A_offset = 0;\n";
             if (extraB)
                out << SP << "size_t " << opName << "_B_offset = 0;\n";
+            if (extraC)
+               out << SP << "size_t " << opName << "_C_offset = 0;\n";
             out << SP << "for (size_t i = 0; i < " << lengthExtra_Y << "; i++){\n";
             SP2 += SP;
          }
@@ -431,12 +434,14 @@ namespace SOFIE{
             if (extraA) out << " + " << opName << "_A_offset";
             out << ", " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
             // in the case of bias and no broadcasting needed - I need to add bias as an extra tensor in Gemm call
-            if (!fNC.empty() && !fBroadcastBias)
+            if (!fNC.empty() && !fBroadcastBias) {
                out << "tensor_" << fNC;
-               if (doStackMul && haveExtraC)
-                  out << " + " << opName << " _C_offset";
-            else
+               if (extraC) {
+                  out << " + " << opName << "_C_offset";
+               }
+            } else {
                out << "nullptr";
+            }
             out << ");\n";
 
          }
@@ -447,7 +452,7 @@ namespace SOFIE{
                out << SP << SP << opName << "_A_offset += " << increment_A << ";\n";
             if (lengthExtra_B != "1")
                out << SP << SP << opName << "_B_offset += " << increment_B << ";\n";
-            if (!fNC.empty() && !fBroadcastBias && haveExtraC)
+            if (extraC)
                // increment_C is lengthGEmm
                out << SP << SP << opName << "_C_offset += " << lengthGemm << ";\n";
             out << SP << "}\n"; // end of loop on the stacked multiplication
