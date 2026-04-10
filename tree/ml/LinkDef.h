@@ -7,6 +7,6 @@
 //   corresponding dictionary source file, and apparently only the second one is necessary for cppyy.
 #pragma link C++ namespace ROOT::Experimental::ML;
 #pragma link C++ namespace ROOT::Experimental::Internal::ML;
-#pragma link C++ class ROOT::Experimental::Internal::ML::RBatchGenerator<int>;
+#pragma link C++ class ROOT::Experimental::Internal::ML::RDataLoader < int>;
 #endif
 #endif
