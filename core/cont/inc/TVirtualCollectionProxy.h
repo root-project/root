@@ -71,6 +71,8 @@ public:
       kCustomAlloc = BIT(5) ///< The collection has a custom allocator.
    };
 
+   using size_type = UInt_t;
+
    /// RAII helper class that ensures that `PushProxy()` / `PopProxy()` are called when entering / leaving a C++ context
    class TPushPop {
    public:
@@ -155,7 +157,7 @@ public:
    }
 
    /// Return the `sizeof()` of the collection object
-   virtual UInt_t Sizeof() const = 0;
+   virtual size_type Sizeof() const = 0;
 
    /// Set the address of the container being proxied and keep track of the previous one
    virtual void PushProxy(void *objectstart) = 0;
@@ -174,19 +176,19 @@ public:
    virtual EDataType GetType() const = 0;
 
    /// Return the address of the value at index `idx`
-   virtual void *At(UInt_t idx) = 0;
+   virtual void *At(size_type idx) = 0;
 
    /// Clear the container
    virtual void Clear(const char *opt = "") = 0;
 
    /// Return the current number of elements in the container
-   virtual UInt_t Size() const = 0;
+   virtual size_type Size() const = 0;
 
    /// Allocates space for storing at least `n` elements.  This function returns a pointer to the actual object on
    /// which insertions should take place.  For associative collections, this function returns a pointer to a temporary
    /// buffer known as the staging area.  If the insertion happened in a staging area (i.e. the returned pointer !=
    /// proxied object), `Commit()` should be called on the value returned by this function.
-   virtual void*     Allocate(UInt_t n, Bool_t forceDelete) = 0;
+   virtual void*     Allocate(size_type n, Bool_t forceDelete) = 0;
 
    /// Commits pending elements in a staging area (see Allocate() for more information).
    virtual void      Commit(void*) = 0;
@@ -196,7 +198,7 @@ public:
    virtual void Insert(const void *data, void *container, size_t size) = 0;
 
    /// Return the address of the value at index `idx`
-   char *operator[](UInt_t idx) const { return (char *)(const_cast<TVirtualCollectionProxy *>(this))->At(idx); }
+   char *operator[](size_type idx) const { return (char *)(const_cast<TVirtualCollectionProxy *>(this))->At(idx); }
 
    // Functions related to member-wise actions
    virtual TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *oldClass, Int_t version) = 0;
