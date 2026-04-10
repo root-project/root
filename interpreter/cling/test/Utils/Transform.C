@@ -236,6 +236,7 @@ Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str()
 clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
 Policy.SuppressUnwrittenScope = true; // Strip anonymous namespace names
 Policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
 Policy.SplitTemplateClosers = true; // Print a<b<c> >' rather than 'a<b<c>>'.
 std::string name;
 Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsStringInternal(name,Policy);

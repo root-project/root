@@ -36,6 +36,7 @@ namespace cling {
       m_Ctx(Ctx), m_SkipFlag(false), m_IgnoreFile(ignoreFiles) {
     m_PrintInstantiation = false;
     m_Policy.SuppressTagKeyword = true;
+    m_Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
 
     m_Policy.Bool = true; // Avoid printing _Bool instead of bool
 
