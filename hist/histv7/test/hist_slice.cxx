@@ -439,11 +439,11 @@ TEST(RHistEngine, SliceSum)
    engine.SetBinContent(RBinIndex::Underflow(), 0, 1000);
    engine.SetBinContent(RBinIndex::Underflow(), 2, 2000);
    for (std::size_t i = 0; i < Bins; i++) {
+      engine.SetBinContent(i, RBinIndex::Underflow(), 100 * i);
       for (std::size_t j = 0; j < Bins; j++) {
-         engine.SetBinContent(i, RBinIndex::Underflow(), 100 * i);
-         engine.SetBinContent(i, RBinIndex(j), i * Bins + j);
-         engine.SetBinContent(i, RBinIndex::Overflow(), 200 * i);
+         engine.SetBinContent(i, j, i * Bins + j);
       }
+      engine.SetBinContent(i, RBinIndex::Overflow(), 200 * i);
    }
    engine.SetBinContent(RBinIndex::Overflow(), 3, 3000);
    engine.SetBinContent(RBinIndex::Overflow(), 6, 4000);
@@ -470,11 +470,11 @@ TEST(RHistEngine, SliceRangeSum)
    engine.SetBinContent(RBinIndex::Underflow(), 0, 1000);
    engine.SetBinContent(RBinIndex::Underflow(), 2, 2000);
    for (std::size_t i = 0; i < Bins; i++) {
+      engine.SetBinContent(i, RBinIndex::Underflow(), 100 * i);
       for (std::size_t j = 0; j < Bins; j++) {
-         engine.SetBinContent(i, RBinIndex::Underflow(), 100 * i);
-         engine.SetBinContent(i, RBinIndex(j), i * Bins + j);
-         engine.SetBinContent(i, RBinIndex::Overflow(), 200 * i);
+         engine.SetBinContent(i, j, i * Bins + j);
       }
+      engine.SetBinContent(i, RBinIndex::Overflow(), 200 * i);
    }
    engine.SetBinContent(RBinIndex::Overflow(), 3, 3000);
    engine.SetBinContent(RBinIndex::Overflow(), 6, 4000);
