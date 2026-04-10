@@ -484,7 +484,7 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
 void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 {
    if (!InitVisual()) {
-      Warning("Scale", "Visual not initiated");
+      Warning("ReadImage", "Visual not initiated");
       return;
    }
 
@@ -1977,12 +1977,12 @@ void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
                      UInt_t toWidth, UInt_t toHeight)
 {
    if (!IsValid()) {
-      Warning("Scale", "Image not initiated");
+      Warning("Slice", "Image not initiated");
       return;
    }
 
    if (!InitVisual()) {
-      Warning("Scale", "Visual not initiated");
+      Warning("Slice", "Visual not initiated");
       return;
    }
 
@@ -2269,6 +2269,31 @@ Bool_t TASImage::InitVisual()
 #endif
 
    return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to initialize the image.
+Bool_t TASImage::InitImage(const char *caller)
+{
+   if (!InitVisual()) {
+      Warning(caller, "Visual not initiated");
+      return false;
+   }
+
+   if (!fImage) {
+      Warning(caller, "no image");
+      return false;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   if (!fImage->alt.argb32) {
+      Warning(caller, "Failed to get argb32 pixel array");
+      return false;
+   }
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2609,8 +2634,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    ASImage *text_im = nullptr;
    Bool_t ttfont = kFALSE;
 
-   if (!InitVisual()) {
-      Warning("DrawText", "Visual not initiated");
+   if (!InitImage("DrawText")) {
       return;
    }
 
@@ -3759,22 +3783,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
 
-   if (!InitVisual()) {
-      Warning("FillRectangle", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("FillRectangle", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("FillRectangle", "Failed to get pixel array");
+   if (!InitImage("FillRectangleInternal")) {
       return;
    }
 
@@ -3837,7 +3846,7 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
 void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
    if (!InitVisual()) {
-      Warning("Fill", "Visual not initiated");
+      Warning("FillRectangle", "Visual not initiated");
       return;
    }
 
@@ -3862,6 +3871,10 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
 
 void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thick)
 {
+   if (!InitImage("DrawVLine")) {
+      return;
+   }
+
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
 
@@ -3897,6 +3910,10 @@ void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thic
 
 void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thick)
 {
+   if (!InitImage("DrawHLine")) {
+      return;
+   }
+
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
 
@@ -3952,22 +3969,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    int idx;
    int yy;
 
-   if (!InitVisual()) {
-      Warning("DrawLine", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("DrawLine", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("DrawLine", "Failed to get pixel array");
+   if (!InitImage("DrawLineInternal")) {
       return;
    }
 
@@ -4123,7 +4125,7 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    }
 
    if (!fImage->alt.argb32) {
-      Warning("DrawRectangle", "Failed to get pixel array");
+      Warning("DrawRectangle", "Failed to get argb32 pixel array");
       return;
    }
 
@@ -4192,6 +4194,10 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
 void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
                              const char *pDash, UInt_t col, UInt_t thick)
 {
+   if (!InitImage("DrawDashHLine")) {
+      return;
+   }
+
    UInt_t iDash = 0;    // index of current dash
    int i = 0;
 
@@ -4246,6 +4252,9 @@ void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
 void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
                              const char *pDash, UInt_t col, UInt_t thick)
 {
+   if (!InitImage("DrawDashVLine")) {
+      return;
+   }
    UInt_t iDash = 0;    // index of current dash
    int i = 0;
 
@@ -4303,6 +4312,9 @@ void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
 void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                              UInt_t nDash, const char *tDash, UInt_t color)
 {
+   if (!InitImage("DrawDashZLine")) {
+      return;
+   }
    int dx, dy, d;
    int i, i1, i2;
    int x, y, xend, yend;
@@ -4487,6 +4499,9 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                              UInt_t nDash, const char *tDash, UInt_t color, UInt_t thick)
 {
+   if (!InitImage("DrawDashZTLine")) {
+      return;
+   }
    int dx, dy;
    int i;
    double x, y, xend=0, yend=0, x0, y0;
@@ -4646,22 +4661,7 @@ void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t 
                             const char *pDash, const char *col, UInt_t thick)
 
 {
-   if (!InitVisual()) {
-      Warning("DrawDashLine", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("DrawDashLine", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("DrawDashLine", "Failed to get pixel array");
+   if (!InitImage("DrawDashLine")) {
       return;
    }
 
@@ -4713,22 +4713,7 @@ void TASImage::DrawPolyLine(UInt_t nn, TPoint *xy, const char *col, UInt_t thick
 
 void TASImage::PutPixel(Int_t x, Int_t y, const char *col)
 {
-   if (!InitVisual()) {
-      Warning("PutPixel", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("PutPixel", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("PutPixel", "Failed to get pixel array");
+   if (!InitImage("PutPixel")) {
       return;
    }
 
@@ -4748,22 +4733,7 @@ void TASImage::PutPixel(Int_t x, Int_t y, const char *col)
 
 void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoordMode mode)
 {
-   if (!InitVisual()) {
-      Warning("PolyPoint", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("PolyPoint", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("PolyPoint", "Failed to get pixel array");
+   if (!InitImage("PolyPoint")) {
       return;
    }
 
@@ -4832,22 +4802,7 @@ void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t
 void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *col,
                          const char *stipple, UInt_t w, UInt_t h)
 {
-   if (!InitVisual()) {
-      Warning("FillSpans", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("FillSpans", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("FillSpans", "Failed to get pixel array");
+   if (!InitImage("FillSpans")) {
       return;
    }
 
@@ -4890,22 +4845,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
 
 void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 {
-   if (!InitVisual()) {
-      Warning("FillSpans", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("FillSpans", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("FillSpans", "Failed to get pixel array");
+   if (!InitImage("FillSpans")) {
       return;
    }
 
@@ -4944,22 +4884,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 
 void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
 {
-   if (!InitVisual()) {
-      Warning("CropSpans", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("CropSpans", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("CropSpans", "Failed to get pixel array");
+   if (!InitImage("CropSpans")) {
       return;
    }
 
@@ -5249,22 +5174,7 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
    *nspans = 0;
 
-   if (!InitVisual()) {
-      Warning("GetPolygonSpans", "Visual not initiated");
-      return kFALSE;
-   }
-
-   if (!fImage) {
-      Warning("GetPolygonSpans", "no image");
-      return kFALSE;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("GetPolygonSpans", "Failed to get pixel array");
+   if (!InitImage("GetPolygonSpans")) {
       return kFALSE;
    }
 
@@ -5451,22 +5361,7 @@ static const UInt_t NUMPTSTOBUFFER = 512;
 void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
                            const char *stipple, UInt_t w, UInt_t h)
 {
-   if (!InitVisual()) {
-      Warning("DrawFillArea", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("DrawFillArea", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("DrawFillArea", "Failed to get pixel array");
+   if (!InitImage("DrawFillArea")) {
       return;
    }
 
@@ -5567,22 +5462,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
 
 void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
 {
-   if (!InitVisual()) {
-      Warning("DrawFillArea", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      Warning("DrawFillArea", "no image");
-      return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
-   if (!fImage->alt.argb32) {
-      Warning("DrawFillArea", "Failed to get pixel array");
+   if (!InitImage("DrawFillArea")) {
       return;
    }
 
@@ -5691,6 +5571,9 @@ static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
 void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                             UInt_t color, UInt_t thick)
 {
+   if (!InitImage("DrawWideLine")) {
+      return;
+   }
    Int_t sz = thick*thick;
    CARD32 *matrix;
    Bool_t use_cache = thick < kBrushCacheSize;
@@ -5737,6 +5620,9 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 
 void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 {
+   if (!InitImage("DrawGlyph")) {
+      return;
+   }
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
    Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
@@ -5836,16 +5722,10 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 {
    if (!text)   return;
-   if (!fImage) return;
-   if (!gPad)   return;
-
-   if (!InitVisual()) {
-      Warning("DrawText", "Visual not initiated");
+   if (!gPad)
       return;
-   }
-
-   if (!fImage->alt.argb32) {
-      BeginPaint();
+   if (!InitImage("DrawText")) {
+      return;
    }
 
    if (!TTF::IsInitialized()) TTF::Init();
@@ -6119,10 +5999,12 @@ void TASImage::CreateThumbnail()
    const int sz = 64;
 
    if (!fImage) {
+      Warning("CreateThumbnail", "No image");
       return;
    }
 
    if (!InitVisual()) {
+      Warning("CreateThumbnail", "Visual not initiated");
       return;
    }
 
@@ -6343,6 +6225,9 @@ void TASImage::SetTitle(const char *title)
 void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                              Int_t x3, Int_t y3, const char *col, UInt_t thick)
 {
+   if (!InitImage("DrawCubeBezier")) {
+      return;
+   }
    Int_t sz = thick*thick;
    CARD32 *matrix;
    Bool_t use_cache = thick < kBrushCacheSize;
@@ -6382,6 +6267,9 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
                                   const char *col, Int_t thick)
 {
+   if (!InitImage("DrawStraightEllips")) {
+      return;
+   }
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6421,6 +6309,10 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
 
 void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thick)
 {
+   if (!InitImage("DrawCircle")) {
+      return;
+   }
+
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6462,6 +6354,9 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
 void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
+   if (!InitImage("DrawEllips")) {
+      return;
+   }
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6502,6 +6397,9 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
 void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
+   if (!InitImage("DrawEllips2")) {
+      return;
+   }
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
