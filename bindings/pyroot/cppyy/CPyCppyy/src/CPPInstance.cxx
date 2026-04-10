@@ -532,22 +532,6 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     Py_RETURN_TRUE;
 }
 
-static inline void* cast_actual(void* obj) {
-    void* address = ((CPPInstance*)obj)->GetObject();
-    if (((CPPInstance*)obj)->fFlags & CPPInstance::kIsActual)
-        return address;
-
-    Cppyy::TCppType_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
-    Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
-    if (clActual && clActual != klass) {
-        intptr_t offset = Cppyy::GetBaseOffset(
-             clActual, klass, address, -1 /* down-cast */, true /* report errors */);
-        if (offset != -1) address = (void*)((intptr_t)address + offset);
-    }
-
-    return address;
-}
-
 
 #define CPYCPPYY_ORDERED_OPERATOR_STUB(op, ometh, label)                      \
     if (!ometh) {                                                             \
@@ -592,25 +576,47 @@ static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
             result = eqneq_binop((CPPClass*)Py_TYPE(other), other, (PyObject*)self, op);
         if (result) return result;
 
-    // default behavior: type + held pointer value defines identity; if both are
-    // CPPInstance objects, perform an additional autocast if need be
-        bool bIsEq = false;
-
-        if ((Py_TYPE(self) == Py_TYPE(other) && \
-                self->GetObject() == ((CPPInstance*)other)->GetObject())) {
-        // direct match
-            bIsEq = true;
-        } else if (CPPInstance_Check(other)) {
-        // try auto-cast match
-            void* addr1 = cast_actual(self);
-            void* addr2 = cast_actual(other);
-            bIsEq = addr1 && addr2 && (addr1 == addr2);
+    // for non-CPPInstance objects, let Python handle dispatch/fallback
+        if (!CPPInstance_Check(other)) {
+            Py_INCREF(Py_NotImplemented);
+            return Py_NotImplemented;
         }
 
-        if ((op == Py_EQ && bIsEq) || (op == Py_NE && !bIsEq))
-            Py_RETURN_TRUE;
+    // if both proxies have the same type and at least one wraps nullptr,
+    // comparing nullness is unambiguous
+        auto ptr1 = self->GetObject();
+        auto ptr2 = ((CPPInstance*)other)->GetObject();
+        if(ptr1 == nullptr || ptr2 == nullptr) {
+        // Take this branch only for exact proxy type matches. Broadening this
+        // to inheritance-related types would be allowed in C++, but it would
+        // silently change previous cppyy behavior, where equality comparison
+        // of different-typed nullptr always resulted in `False`, straying away
+        // from C++.
+            if (Py_TYPE(self) == Py_TYPE(other)) {
+                bool bIsEq = ptr1 == ptr2;
+                if ((op == Py_EQ && bIsEq) || (op == Py_NE && !bIsEq))
+                    Py_RETURN_TRUE;
+                Py_RETURN_FALSE;
+            }
+        }
 
-        Py_RETURN_FALSE;
+    // in the remaining cases, the semantics of the comparison are ambiguous, so we raise an exception
+        const char* opstr = op == Py_EQ ? "==" : "!=";
+        const char* lhs = Py_TYPE(self)->tp_name;
+        const char* rhs = Py_TYPE(other)->tp_name;
+        const char *msg =
+            "\nC++ equality operator '%s' is not defined for objects of type \"%s\" and \"%s\"."
+            "\n\nThe Python proxy no longer falls back to comparing by type and held C++ pointer "
+            "address, because that can be misleading: using `%s` may look like a value comparison "
+            "even though no corresponding C++ operator is available."
+            "\n\nSome comparisons that are well-formed in C++ are still rejected here to avoid "
+            "changing legacy cppyy behavior silently."
+            "\n\nDefine a suitable C++ equality operator for these operands, or compare object identity explicitly "
+            "through another mechanism if that is what you intend."
+            "\n";
+
+        PyErr_Format(PyExc_TypeError, msg, opstr, lhs, rhs, opstr);
+        return NULL;
     }
 
 // ordered comparison operators

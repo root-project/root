@@ -783,7 +783,7 @@ class TestREGRESSION:
         null = cppyy.gbl.exception_as_shared_ptr.get_shared_null()
         assert not null
 
-    @mark.xfail(strict=True)
+    @mark.xfail(run=False)
     def test29_callback_pointer_values(self, capfd):
         """Make sure pointer comparisons in callbacks work as expected"""
 

@@ -301,8 +301,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       l1 = MakeNullPointer( TLorentzVector )
       self.assertFalse( l1 )
 
-      self.assertNotEqual( c1, l1 )
-      self.assertNotEqual( l1, c1 )
+    # Forbidden by the type system
+      with self.assertRaises(TypeError):
+          self.assertNotEqual( c1, l1 )
+      with self.assertRaises(TypeError):
+          self.assertNotEqual( l1, c1 )
 
       l2 = MakeNullPointer( TLorentzVector )
       self.assertEqual( l1, l2 )

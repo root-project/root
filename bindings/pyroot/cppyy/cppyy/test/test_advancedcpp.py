@@ -493,7 +493,6 @@ class TestADVANCEDCPP:
         r4 = r1.m_other
         assert r3 is r4
 
-        assert r3 == r2
         assert r3 is r2
 
         r3.extra = 42
