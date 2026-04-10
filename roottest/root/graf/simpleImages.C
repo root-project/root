@@ -15,9 +15,7 @@ int simpleImages()
    TH1D h("myHisto", "The Title;the X;the Y", 64, -4, 4);
    h.FillRandom("gaus");
    h.Draw();
-   // We test png and jpeg only. The creation of the gifs 
-   // is affected by an issue on some platforms. See #21561
-   std::vector<std::string> fileNames{"f.jpeg", "f.png", "f.gif"};
+   std::vector<std::string> fileNames{"f.jpeg", "f.png", "f.gif", "f.bmp"}; // TIFF not always there: only ON if asimage_tiff and libtiff installed in system (it's not a builtin like jpeg, png, gif)
    ImagesRAII iraii(fileNames);
    for (auto &&fileName : fileNames) {
       c.SaveAs(fileName.c_str());
