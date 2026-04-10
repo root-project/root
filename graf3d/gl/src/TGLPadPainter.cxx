@@ -397,12 +397,10 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
    if (fLocked) {
       // this code used when crosshair cursor is drawn
       if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
-         const Int_t px1 = gPad->UtoPixel(u1);
-         const Int_t py1 = gPad->VtoPixel(v1);
-         const Int_t px2 = gPad->UtoPixel(u2);
-         const Int_t py2 = gPad->VtoPixel(v2);
          // TODO: only here set line attributes to virtual x
-         gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
+         gVirtualX->DrawLineW(fWinContext,
+                              gPad->UtoAbsPixel(u1), gPad->VtoAbsPixel(v1),
+                              gPad->UtoAbsPixel(u2), gPad->VtoAbsPixel(v2));
       }
       return;
    }
@@ -422,7 +420,21 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
 
 void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   if (fLocked) return;
+   if (fLocked) {
+      //GL pad painter can be called in non-standard situation:
+      //not from TPad::Paint, but
+      //from TView3D::ExecuteRotateView. This means in fact,
+      //that TView3D wants to draw itself in a XOR mode, via
+      //gVirtualX.
+      // TODO: only here set line attributes to virtual x
+      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
+         gVirtualX->DrawBoxW(fWinContext,
+                             gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
+                             gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2),
+                             (TVirtualX::EBoxMode) mode);
+      }
+      return;
+   }
 
    if (IsGradientFill(GetAttFill().GetFillColor())) {
       Double_t xs[] = {x1, x2, x2, x1};
