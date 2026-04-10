@@ -635,6 +635,7 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          // white space.
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+         policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
          // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an
          // anonymous namespace. In LLVM22 (and before), SuppressUnwrittenScope suppresses anonymous namespaces. Inline
          // namespace suppression is separately controlled by SuppressInlineNamespace, which we probably don't want to
@@ -1434,6 +1435,7 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
    llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+   policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
 
    cl.getNameForDiagnostic(stream,policy,true);
@@ -4206,6 +4208,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
    policy.SuppressTagKeyword = true;     // Never get the class or struct keyword
+   policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    policy.AnonymousTagLocations = false; // Do not extract file name + line number for anonymous types.
    // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an
    // anonymous namespace. In LLVM22 (and before), SuppressUnwrittenScope suppresses anonymous namespaces. Inline
