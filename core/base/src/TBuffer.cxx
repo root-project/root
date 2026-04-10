@@ -20,7 +20,8 @@ Buffer base class used for serializing objects.
 #include "TProcessID.h"
 
 constexpr Int_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
-constexpr Int_t kMaxBufferSize  = 0x7FFFFFFE;  // largest possible size.
+constexpr Int_t kMaxBufferSize = 0x7FFFFFFE;  // largest possible size before we need to switch to the large buffer format (see TBufferFile::SetByteCount).
+constexpr ULong64_t kMaxLargeBufferSize  = 0x7FFFFFFFFFFFFFFE;  // largest possible size.
 
 
 
@@ -102,8 +103,8 @@ TBuffer::TBuffer(EMode mode, Long64_t bufsize)
 
 TBuffer::TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   if (bufsize > kMaxBufferSize)
-      Fatal("TBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%x.", bufsize, kMaxBufferSize);
+   if (bufsize > kMaxLargeBufferSize)
+      Fatal("TBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%llx.", bufsize, kMaxLargeBufferSize);
    fBufSize  = bufsize;
    fMode     = mode;
    fVersion  = 0;
@@ -229,11 +230,11 @@ void TBuffer::Expand(Long64_t newsize, Bool_t copy)
    }
    const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
 
-   if ( newsize > kMaxBufferSize - kExtraSpace) {
-      if (l < kMaxBufferSize) {
-         newsize = kMaxBufferSize - extraspace;
+   if ( newsize > kMaxLargeBufferSize - kExtraSpace) {
+      if (l < kMaxLargeBufferSize) {
+         newsize = kMaxLargeBufferSize - extraspace;
       } else {
-         Fatal("Expand","Requested size (%lld) is too large (max is %d).", newsize, kMaxBufferSize);
+         Fatal("Expand","Requested size (%lld) is too large (max is %lld).", newsize, kMaxBufferSize);
       }
    }
    if ( (fMode&kWrite)!=0 ) {

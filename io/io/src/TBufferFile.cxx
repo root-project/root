@@ -361,7 +361,7 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
    assert( (cntpos == kOverflowPosition ||
             (cntpos < kOverflowPosition && (sizeof(UInt_t) + cntpos) <  static_cast<ULong64_t>(fBufCur - fBuffer)))
         && (fBufCur >= fBuffer)
-        && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
+        && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<Long64_t>::max()
         && "Byte count position is after the end of the buffer");
 
    // We can either make this unconditional or we could split the routine
