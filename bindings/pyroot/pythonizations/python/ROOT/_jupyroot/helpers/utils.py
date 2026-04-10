@@ -574,8 +574,10 @@ class NotebookDrawerFile:
                 return f"File version {f.GetVersion()} is too old and not supported by JSROOT"
 
             sz = f.GetSize()
+            if sz > 300000000:
+                return f"File size {sz} is too large for JSROOT display."
             if sz > 10000000 and not self.drawForce:
-                return f"File size {sz} is too large for JSROOT display. Use '-f' flag like '%rootbrowse {self.drawFileName} -f' to show file nevertheless"
+                return f"File size {sz} is large for JSROOT display. Use '-f' flag like '%rootbrowse {self.drawFileName} -f' to show file nevertheless"
 
             # create plain buffer and get pointer on it
             u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
