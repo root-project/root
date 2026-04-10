@@ -109,6 +109,8 @@ public:
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    ~RGeoItem() override = default;
 
+   void SetLogicalVisibility(int logicalVis) { vis = logicalVis; }
+   void SetPhysicalVisibility(int physicalVis) { pvis = physicalVis; }
    void SetTop(bool on = true) { top = on; }
 };
 
