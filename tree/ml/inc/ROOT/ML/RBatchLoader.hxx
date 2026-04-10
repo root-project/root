@@ -78,6 +78,7 @@ public:
    std::unique_ptr<RFlat2DMatrix> CreateBatch(RFlat2DMatrix &chunkTensor, std::size_t idxs);
    RFlat2DMatrix GetBatch();
    void CreateBatches(RFlat2DMatrix &chunkTensor, bool isLastBatch);
+   void RecalculateBatchCounts(std::size_t numEntries);
 
    bool isProducerDone() { return fProducerDone; }
    std::size_t GetNumBatches() { return fNumBatches; }
