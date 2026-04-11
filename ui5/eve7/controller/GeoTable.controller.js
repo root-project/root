@@ -112,8 +112,8 @@ sap.ui.define([
                 width: '20%',
                 template: new HorizontalLayout({
                     content: [
-                        new mCheckBox({ enabled: true, visible: true, selected: "{avisible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} Visibility Children' }),
-                        new mCheckBox({ enabled: true, visible: true, selected: "{pvisible}", select: evnt => this.changeVisibility(evnt, true), tooltip: '{name} Visibility Self' })
+                        new mCheckBox({ enabled: true, visible: true, selected: "{pvisible}", select: evnt => this.changeVisibility(evnt, true), tooltip: 'Visibility Self' }),
+                        new mCheckBox({ enabled: true, visible: true, selected: "{avisible}", select: evnt => this.changeVisibility(evnt), tooltip: 'Visibility Children' })
                     ]
                 })
             }));
