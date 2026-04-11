@@ -6,7 +6,7 @@
 
 include(ExternalProject)
 
-set(XROOTD_VERSION "5.9.2")
+set(XROOTD_VERSION "6.0.0")
 set(XROOTD_PREFIX ${CMAKE_BINARY_DIR}/XROOTD-prefix)
 
 message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
@@ -26,8 +26,8 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_XROOTD
-    URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/xrootd-${XROOTD_VERSION}.tar.gz
-    URL_HASH SHA256=e29edb755d5f728eff0c74f7bd8cec35c954239ea747975eebd9c1e2bd61edb5
+    URL https://xrootd.web.cern.ch/download/v6.0.0/xrootd-${XROOTD_VERSION}.tar.gz
+    URL_HASH SHA256=bc8d00b6c0b48f9186e3ad09e8e4e6eedf1067fad68f6d6a4f4e939bcf87007c
     INSTALL_DIR ${XROOTD_PREFIX}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
