@@ -323,14 +323,6 @@ ifeq ($(HAS_PYTHON),yes)
          export PYTHONPATH := $(ROOTSYS)/lib:$(PYTHONPATH)
        endif
    endif
-   ifeq ($(PLATFORM),macosx)
-      PYTHONLIB:=$(shell grep ^PYTHONLIB $(ROOTSYS)/config/Makefile.config | sed -e 's,^.*\:=,,'  -e 's,^ *-L,,' | grep -v -e '^ -l' -e '^ *$$' )
-      PYTHONFWK:=$(dir $(PYTHONLIB))
-      ifneq ($(PYTHONFWK),)
-         export PATH:=$(PYTHONFWK)/bin:$(PATH)
-         export DYLD_LIBRARY_PATH:=$(PYTHONFWK):$(DYLD_LIBRARY_PATH)
-      endif
-   endif
 endif
 
 ifeq ($(PLATFORM),win32)
