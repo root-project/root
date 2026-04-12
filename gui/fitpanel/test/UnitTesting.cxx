@@ -99,7 +99,7 @@ public:
       const char* _exp;
    public:
       InvalidPointer(const char* exp): _exp(exp) {};
-      const char* what() { return _exp; };
+      const char* what() const noexcept override { return _exp; };
    };
 
    // Constructor: Receives the instance of the TFitEditor
