@@ -21,10 +21,15 @@
 #include <exception>
 #include <stdexcept>
 #include <cmath>
+#include <cstdio>
 
 #include "CommonDefs.h"
 
+#ifdef WIN32
+#include "io.h"
+#else
 #include "unistd.h"
+#endif
 
 // Function that compares to doubles up to an error limit
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-5)
@@ -100,12 +105,20 @@ public:
    // Constructor: Receives the instance of the TFitEditor
    FitEditorUnitTesting() {
       // Redirect the stdout to a file outputUnitTesting.txt
+      #ifdef WIN32
+      old_stdout = _dup (_fileno (stdout));
+      #else
       old_stdout = dup (fileno (stdout));
+      #endif
       auto res = freopen ("outputUnitTesting.txt", "w", stdout);
       if (!res) {
           throw InvalidPointer("In FitEditorUnitTesting constructor cannot freopen");
       }
+      #ifdef WIN32
+      out = _fdopen (old_stdout, "w");
+      #else
       out = fdopen (old_stdout, "w");
+      #endif
 
       // Execute the initial script
       TString scriptLine = TString(".x ") + TROOT::GetTutorialDir() + "/math/fit/FittingDemo.C+";
