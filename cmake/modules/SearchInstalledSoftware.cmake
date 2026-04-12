@@ -2081,7 +2081,7 @@ if (builtin_gtest)
 
   # Use gmock_main instead of gtest_main because it initializes gtest as well.
   # Note: The libraries are listed in reverse order of their dependencies.
-  foreach(lib gtest gtest_main gmock gmock_main)
+  foreach(lib GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     set_target_properties(${lib} PROPERTIES
       IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
@@ -2092,14 +2092,13 @@ if (builtin_gtest)
       target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
     endif()
   endforeach()
-  target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
-  target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
+  target_include_directories(GTest::gtest INTERFACE ${GTEST_INCLUDE_DIR})
+  target_include_directories(GTest::gmock INTERFACE ${GMOCK_INCLUDE_DIR})
 
-  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+  set_property(TARGET GTest::gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET GTest::gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET GTest::gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET GTest::gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
 #------------------------------------------------------------------------------------
