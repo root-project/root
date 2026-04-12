@@ -110,7 +110,6 @@ endforeach()
 
 # Request explicit user opt-in for required dependencies
 if(asimage)
-  ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype)
   ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
   ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
   # We cannot PNG here because while searching PNG, CMake will also find ZLIB.
@@ -246,6 +245,7 @@ if(unuran AND NOT builtin_unuran)
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
+ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also outside of it (for "graf" target)
 if(builtin_freetype)
   add_subdirectory(builtins/freetype)
 endif()
