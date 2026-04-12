@@ -14,6 +14,7 @@ include(ExternalProject)
 # Clear cache variables set by find_package(PCRE) and/or find_package(PCRE2)
 # to ensure that we use the builtin version
 foreach(var PCRE_FOUND PCRE_VERSION PCRE_INCLUDE_DIR PCRE_PCRE_LIBRARY PCRE_LIBRARIES PCRE2_FOUND PCRE2_VERSION PCRE2_INCLUDE_DIR PCRE2_PCRE2_LIBRARY PCRE2_LIBRARIES)
+  unset(${var})
   unset(${var} CACHE)
 endforeach()
 
@@ -56,6 +57,7 @@ ExternalProject_Add(BUILTIN_PCRE
   LOG_CONFIGURE TRUE
   LOG_BUILD     TRUE
   LOG_INSTALL   TRUE
+  LOG_OUTPUT_ON_FAILURE TRUE
 
   CMAKE_CACHE_ARGS
     -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
