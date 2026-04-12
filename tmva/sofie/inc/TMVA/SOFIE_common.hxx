@@ -772,6 +772,23 @@ inline void Gemm_Call(float *output, bool transa, bool transb, int m, int n, int
                                            &beta, output, ldc);
 }
 
+inline void Fill(float *output, float value, int size)
+{
+   std::fill(output, output + size, value);
+}
+
+inline void Copy(float *output, float const *input, int size)
+{
+   std::copy(input, input + size, output);
+}
+
+inline void Relu(float *output, float const *input, int size)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = (input[i] > 0.0f) ? input[i] : 0.0f;
+   }
+}
+
 template <class T>
 void ReadTensorFromStream(std::istream &is, T &target, std::string const &expectedName, std::size_t expectedLength)
 {
