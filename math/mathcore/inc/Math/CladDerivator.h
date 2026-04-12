@@ -1169,6 +1169,35 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
    }
 }
 
+inline void Copy_pullback(float *output, const float *input, int size, float *_d_output, float *_d_input, int *)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = input[i];
+      _d_input[i] += _d_output[i];
+      _d_output[i] = 0.F;
+   }
+}
+
+inline void Fill_pullback(float *output, float value, int size, float *_d_output, float *_d_value, int *)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = value;
+      *_d_value += _d_output[i];
+      _d_output[i] = 0.F;
+   }
+}
+
+inline void Relu_pullback(float *output, const float *input, int size, float *_d_output, float *_d_input, int *)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = input[i] > 0.F ? input[i] : 0.F;
+      float _r_d0 = _d_output[i];
+      _d_output[i] = 0.F;
+      if (input[i] > 0.F)
+         _d_input[i] += _r_d0;
+   }
+}
+
 } // namespace TMVA::Experimental::SOFIE
 
 } // namespace clad::custom_derivatives

@@ -397,29 +397,27 @@ namespace SOFIE{
             else
                out << "j;\n";
 
-            out << SP2 << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
-            std::string bias_index;
-            if (sC.size() != 2)
+            std::string prefix = SP2 + SP + "TMVA::Experimental::SOFIE::";
+            std::string target = "tensor_" + fNY;
+            if (sC.size() != 2) {
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid rank for bias tensor " + ConvertDimShapeToString(fDimShapeC) + ConvertDimShapeToString(sC));
-            if (sC[0].GetVal() == "1" && sC[1].GetVal() == sY[1].GetVal())
-               bias_index = "k";
-            else if (sC[1].GetVal() == "1" && sC[0].GetVal() == sY[0].GetVal())
-               bias_index = "j";
-            else if (sC[0].GetVal() == "1" && sC[1].GetVal() == "1")   // scalar case
-               bias_index = "0";
-            else {
+            } if (sC[0].GetVal() == "1" && sC[1].GetVal() == sY[1].GetVal()) {
+               out << prefix << "Copy(" << target << " + y_index, tensor_" << fNC << ", " << sY[1] << ");\n";
+            } else if (sC[1].GetVal() == "1" && sC[0].GetVal() == sY[0].GetVal()) {
+               out << prefix << "Fill(" << target << " + y_index, tensor_" << fNC << "[j], " << sY[1] << ");\n";
+            } else if (sC[0].GetVal() == "1" && sC[1].GetVal() == "1") {
+               // scalar case
+               out << prefix << "Fill(" << target << " + y_index, tensor_" << fNC << "[0], " << sY[1] << ");\n";
+            } else {
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid shape for bias tensor " + ConvertDimShapeToString(fDimShapeC));
             }
 
-            out << SP2 << SP << SP << "tensor_" << fNY << "[y_index + k] = " <<  "tensor_" << fNC << "[" << bias_index << "];\n";
-            out << SP2 << SP << "}\n";
             out << SP2 << "}\n";
          }
 
          if (fType == "float"){
 
-            out << SP2 << "TMVA::Experimental::SOFIE::Gemm_Call("
-             << "tensor_" << fNY;
+            out << SP2 << "TMVA::Experimental::SOFIE::Gemm_Call(" << "tensor_" << fNY;
              if (doStackMul) out << " + " << opName << "_y_offset";
             out <<   ", "
              << (fAttrTransB ? "true, " : "false, ")
@@ -461,15 +459,15 @@ namespace SOFIE{
          // fuse with Relu
          if(fActivation == EActivationType::RELU){
                out << SP << "//--- applying RELU to output\n";
-               out << SP << "for (int id = 0; id < " << ConvertDimShapeToLength(fShapeY) << " ; id++){\n";
-               out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
-               out << SP << "}\n";
+               std::string tnsr = "tensor_" + fNY;
+               std::string reluSize = ConvertDimShapeToLength(fShapeY);
+               out << SP << "TMVA::Experimental::SOFIE::Relu(" << tnsr << ", " << tnsr << ", " << reluSize << ");\n";
          }
 
          return out.str();
       }
 
-      std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Gemv") }; }
+      std::vector<std::string> GetBlasRoutines() override { return {"Gemm", "Gemv"}; }
 
    };
 

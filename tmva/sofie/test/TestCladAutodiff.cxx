@@ -1,5 +1,5 @@
-constexpr auto modelHeaderSuffix = "_FromONNX.hxx";
-constexpr auto modelDataSuffix = "_FromONNX.dat";
+constexpr auto modelHeaderSuffix = "_FromONNX_unoptimized.hxx";
+constexpr auto modelDataSuffix = "_FromONNX_unoptimized.dat";
 #include "test_helpers.h"
 
 #include "input_models/references/Linear_16.ref.hxx"
@@ -76,28 +76,46 @@ float Linear_16_wrapper_num_diff(TMVA_SOFIE_Linear_16::Session const &session, f
          .c_str());
 
    // If you want to see the gradient code:
-   // gInterpreter->ProcessLine("static_cast<void (*)(TMVA_SOFIE_Linear_16::Session const &, float const *, float
-   // *)>(Linear_16_outer_wrapper_grad_1)"); gInterpreter->ProcessLine("Linear_16_wrapper_pullback");
+   // clang-format off
+   // gInterpreter->ProcessLine("static_cast<void (*)(TMVA_SOFIE_Linear_16::Session const &, float const *, float *)>(Linear_16_outer_wrapper_grad_1)");
+   // gInterpreter->ProcessLine("Linear_16_wrapper_pullback");
    // gInterpreter->ProcessLine("TMVA_SOFIE_Linear_16::doInfer_reverse_forw");
    // gInterpreter->ProcessLine("TMVA_SOFIE_Linear_16::doInfer_pullback");
+   // clang-format on
 
-   auto retVal = gInterpreter->ProcessLine((R"(
-   double maxDiff = 0;
+   gInterpreter->ProcessLine((R"(
+   float numeric_output[1600]{};
    for (std::size_t i = 0; i < std::size(grad_output); ++i) {
-      double val = grad_output[i];
-      double ref = Linear_16_wrapper_num_diff(session_linear_16, )" +
-                                            inputInterp + R"(, i);
-      if (val != ref) {
-         maxDiff = std::max(std::abs(val - ref), maxDiff);
+      numeric_output[i] = Linear_16_wrapper_num_diff(session_linear_16, )" +
+                              inputInterp + R"(, i);
+   }
+   )")
+                                .c_str());
+
+   double tol = 0.0025;
+
+   auto arr_size = static_cast<std::size_t>(gInterpreter->ProcessLine("std::size(grad_output);"));
+   auto grad_arr = reinterpret_cast<float *>(gInterpreter->ProcessLine("grad_output;"));
+   auto numeric_arr = reinterpret_cast<float *>(gInterpreter->ProcessLine("numeric_output;"));
+
+   constexpr std::size_t kMaxPrint = 10;
+   std::size_t mismatchCount = 0;
+
+   for (std::size_t i = 0; i < arr_size; ++i) {
+      double diff = std::abs(grad_arr[i] - numeric_arr[i]);
+
+      if (diff > tol) {
+         if (mismatchCount < kMaxPrint) {
+            ADD_FAILURE() << "Mismatch at index " << i << " analytic=" << grad_arr[i] << " numeric=" << numeric_arr[i]
+                          << " diff=" << diff;
+         }
+         ++mismatchCount;
       }
    }
-   double tol = 0.0025;
-   // the "return" value
-   (maxDiff < tol);
-   )")
-                                              .c_str());
 
-   EXPECT_EQ(retVal, 1) << "The gradient from Clad and the numeric gradient didn't match within tolerance.";
+   if (mismatchCount > kMaxPrint) {
+      ADD_FAILURE() << "Further mismatches suppressed (total mismatches: " << mismatchCount << ")";
+   }
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
