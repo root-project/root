@@ -1,0 +1,25 @@
+From b043877060efafcfa00f1d07c264d69e32e5d3a9 Mon Sep 17 00:00:00 2001
+From: Frank Heckenbach <f.heckenbach@fh-soft.de>
+Date: Tue, 21 May 2019 23:09:18 +0200
+Subject: [PATCH] src/CMakeLists.txt: remove FTLibrary.h from
+ libftgl_la_SOURCES (it's only in ftgl_headers)
+
+---
+ src/CMakeLists.txt | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 693e49f..b0f26f6 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -26,7 +26,6 @@ SET(libftgl_la_SOURCES
+     FTGlyphContainer.h
+     FTInternals.h
+     FTLibrary.cpp
+-    FTLibrary.h
+     FTList.h
+     FTPoint.cpp
+     FTSize.cpp
+-- 
+2.34.1
+
