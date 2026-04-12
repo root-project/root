@@ -78,7 +78,7 @@ include(CheckIncludeFileCXX)
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
-set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
+set(lcgpackages https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
 #--- Search for packages that are absolutely necessary--------------------------
