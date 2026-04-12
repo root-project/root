@@ -563,7 +563,7 @@ endif()
 # features also depend on asimage. Therefore, the configuration will fail if
 # asimage is off. See also: https://github.com/root-project/root/issues/16250
 if(opengl AND NOT asimage)
-  message(FATAL_ERROR "OpenGL features enabled with \"opengl=ON\" require \"asimage=ON\"")
+  message(SEND_ERROR "OpenGL features enabled with \"opengl=ON\" require \"asimage=ON\"")
 endif()
 
 #---Check for gl2ps ------------------------------------------------------------------
@@ -573,6 +573,8 @@ if(opengl)
     add_subdirectory(builtins/gl2ps)
     list(APPEND ROOT_BUILTINS BUILTIN_GL2PS)
   endif()
+elseif(builtin_gl2ps)
+  message(SEND_ERROR "gl2ps features enabled with \"builtin_gl2ps=ON\" require \"opengl=ON\"")
 endif()
 
 #---Check for Graphviz installation-------------------------------------------------------
