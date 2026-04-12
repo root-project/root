@@ -4,6 +4,7 @@ CMAKE_CXX_STANDARD=20
 builtin_tbb=ON
 builtin_vdt=ON
 builtin_unuran=ON
+gnuinstall=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 pythia8=OFF
