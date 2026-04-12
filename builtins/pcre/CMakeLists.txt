@@ -9,7 +9,6 @@ include(ExternalProject)
 # Clear cache variables set by find_package(PCRE)
 # to ensure that we use the builtin version
 foreach(var PCRE_FOUND PCRE_VERSION PCRE_INCLUDE_DIR PCRE_PCRE_LIBRARY PCRE_LIBRARIES)
-  unset(${var})
   unset(${var} CACHE)
 endforeach()
 
