@@ -24,7 +24,7 @@ endif()
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
-  URL https://lcgpackages.web.cern.ch/tarFiles/sources/cfitsio-${CFITSIO_VERSION}.tar.gz
+  URL ${lcgpackages}/cfitsio-${CFITSIO_VERSION}.tar.gz
   URL_HASH SHA256=fad44fff274fdda5ffcc0c0fff3bc3c596362722b9292fc8944db91187813600
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_POLICY_VERSION_MINIMUM=3.5

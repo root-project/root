@@ -37,7 +37,7 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_ZLIB
-    URL https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/zlib-${ROOT_ZLIB_VERSION}.tar.gz
+    URL ${lcgpackages}/zlib-${ROOT_ZLIB_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_ZLIB_HASH}
     PREFIX ${ROOT_ZLIB_PREFIX}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}

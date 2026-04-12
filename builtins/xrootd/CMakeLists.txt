@@ -26,7 +26,7 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_XROOTD
-    URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/xrootd-${XROOTD_VERSION}.tar.gz
+    URL ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz
     URL_HASH SHA256=e29edb755d5f728eff0c74f7bd8cec35c954239ea747975eebd9c1e2bd61edb5
     INSTALL_DIR ${XROOTD_PREFIX}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>

@@ -13,7 +13,6 @@ else()
     set(cxx_visibility_flag "")
 endif()
 
-set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 set(libzeromq_version 4.3.5)
 ExternalProject_Add(BUILTIN_ZeroMQ
     URL ${lcgpackages}/zeromq-${libzeromq_version}.tar.gz 

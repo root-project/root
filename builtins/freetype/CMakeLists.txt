@@ -34,7 +34,7 @@ set(FREETYPE_LIBRARY ${FREETYPE_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freety
 
 ExternalProject_Add(
     BUILTIN_FREETYPE
-    URL https://lcgpackages.web.cern.ch/tarFiles/sources/freetype-${FREETYPE_VERSION}.tar.gz
+    URL ${lcgpackages}/freetype-${FREETYPE_VERSION}.tar.gz
     URL_HASH SHA256=${FREETYPE_HASH}
     PREFIX ${FREETYPE_PREFIX}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
