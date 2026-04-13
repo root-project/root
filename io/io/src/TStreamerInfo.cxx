@@ -245,14 +245,7 @@ TStreamerInfo::~TStreamerInfo()
 /// Makes sure kBuildRunning reset once Build finishes.
 
 namespace {
-   /// Round \p value up to the next multiple of \p align.
-   /// \p align must be a power of two.
-   template <typename T>
-   inline T AlignUp(T value, T align)
-   {
-      assert(ROOT::Internal::IsValidAlignment(align)); // must be a power of two
-      return (value + align - 1) & ~(align - 1);
-   }
+   using ROOT::Internal::AlignUp;
 
    struct TPreventRecursiveBuildGuard {
       TPreventRecursiveBuildGuard(TStreamerInfo* info): fInfo(info) {
