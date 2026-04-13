@@ -74,6 +74,7 @@ element type.
 #include "TVirtualMutex.h"
 
 #include "TStreamerInfoActions.h"
+#include "ROOT/RAlignmentUtils.hxx"
 
 #include <memory>
 #include <algorithm>
@@ -249,7 +250,7 @@ namespace {
    template <typename T>
    inline T AlignUp(T value, T align)
    {
-      assert((align & (align - 1)) == 0); // must be a power of two
+      assert(ROOT::Internal::IsValidAlignment(align)); // must be a power of two
       return (value + align - 1) & ~(align - 1);
    }
 
@@ -5018,6 +5019,7 @@ void* TStreamerInfo::New(void *obj)
       auto align = fClass->GetClassAlignment();
       // Use aligned new (C++17). This will return memory aligned to
       // 'align' and can be freed with the matching delete[].
+      assert(ROOT::Internal::IsValidAlignment(align)); // align must be a power of 2
       p = static_cast<char*>(::operator new[](fSize, std::align_val_t(align)));
       memset(p, 0, fSize);
    }
