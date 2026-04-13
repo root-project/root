@@ -37,8 +37,10 @@
 #include "clang/AST/ASTContext.h"
 
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
 
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Lex/Pragma.h"
 
 #include "cling/Interpreter/CIFactory.h"
@@ -1085,26 +1087,60 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
       parserArgsC.push_back(parserArgs[i].c_str());
    }
 
+   std::string Std = "-std=c++" +
+        std::to_string(cling::CIFactory::CxxStdCompiledWith());
+   //parserArgsC.push_back("-E");
+   parserArgsC.push_back("-fsyntax-only");
+   parserArgsC.push_back("-U__CINT__");
+   // parserArgsC.push_back(Std.c_str());
    // Extract all #pragmas
    std::unique_ptr<llvm::MemoryBuffer> memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CLING #pragma extraction");
    clang::CompilerInstance *pragmaCI =
       cling::CIFactory::createCI(std::move(memBuf), parserArgsC.size(), &parserArgsC[0], llvmdir,
                                  std::nullopt /*Consumer*/, {} /*ModuleFileExtension*/, true /*OnlyLex*/);
 
+   struct PragmaCollectAction : public clang::SyntaxOnlyAction {
+      LinkdefReader &fLDR;
+      cling::Interpreter &fInterp;
+      PragmaCollectAction(LinkdefReader &ldr, cling::Interpreter &Interp) : fLDR(ldr), fInterp(Interp) {}
+      bool BeginSourceFileAction(clang::CompilerInstance &CI) override
+      {
+         if (CI.getLangOpts().Modules)
+            cling::CIFactory::collectModule(CI);
+         clang::Preprocessor &PP = CI.getPreprocessor();
+         // Attach the handlers before we have started. PP takes the ownership.
+         PP.AddPragmaHandler(new PragmaLinkCollector(fLDR));
+         PP.AddPragmaHandler(new PragmaCreateCollector(fLDR));
+         PP.AddPragmaHandler(new PragmaExtraInclude(fLDR));
+         PP.AddPragmaHandler(new PragmaIoReadInclude(fLDR));
+         // cling::CIFactory::setupCompiler(&CI, fInterp.getOptions().CompilerOpts);
+         return clang::SyntaxOnlyAction::BeginSourceFileAction(CI);
+      }
+
+      void ExecuteAction() override
+      {
+         clang::CompilerInstance &CI = getCompilerInstance();
+         if (!CI.hasPreprocessor())
+            return;
+
+         // FIXME: Move the truncation aspect of this into Sema, we delayed this
+         // till here so the source manager would be initialized.
+         if (hasCodeCompletionSupport() && !CI.getFrontendOpts().CodeCompletionAt.FileName.empty())
+            CI.createCodeCompletionConsumer();
+
+         // Use a code completion consumer?
+         clang::CodeCompleteConsumer *CompletionConsumer = nullptr;
+         if (CI.hasCodeCompletionConsumer())
+            CompletionConsumer = &CI.getCodeCompletionConsumer();
+
+         if (!CI.hasSema())
+            CI.createSema(getTranslationUnitKind(), CompletionConsumer);
+      }
+
+   } Act(*this, fInterp);
+
+   pragmaCI->ExecuteAction(Act);
    clang::Preprocessor &PP = pragmaCI->getPreprocessor();
-   clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();
-   DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
-
-   // FIXME: Reduce the code duplication across these collector classes.
-   PragmaLinkCollector pragmaLinkCollector(*this);
-   PragmaCreateCollector pragmaCreateCollector(*this);
-   PragmaExtraInclude pragmaExtraInclude(*this);
-   PragmaIoReadInclude pragmaIoReadInclude(*this);
-
-   PP.AddPragmaHandler(&pragmaLinkCollector);
-   PP.AddPragmaHandler(&pragmaCreateCollector);
-   PP.AddPragmaHandler(&pragmaExtraInclude);
-   PP.AddPragmaHandler(&pragmaIoReadInclude);
 
    // Start parsing the specified input file.
    PP.EnterMainSourceFile();
@@ -1114,5 +1150,5 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    } while (tok.isNot(clang::tok::annot_repl_input_end));
 
    fSelectionRules = nullptr;
-   return 0 == DClient.getNumErrors();
+   return 0 == pragmaCI->getDiagnosticClient().getNumErrors();
 }
