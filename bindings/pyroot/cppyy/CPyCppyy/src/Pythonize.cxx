@@ -52,6 +52,19 @@ bool HasAttrDirect(PyObject* pyclass, PyObject* pyname, bool mustBeCPyCppyy = fa
     return false;
 }
 
+bool HasAttrInMRO(PyObject *pyclass, PyObject *pyname)
+{
+   // Check base classes in the MRO (skipping the class itself) for a CPyCppyy overload.
+   PyObject *mro = ((PyTypeObject *)pyclass)->tp_mro;
+   if (mro && PyTuple_Check(mro)) {
+      for (Py_ssize_t i = 1; i < PyTuple_GET_SIZE(mro); ++i) {
+         if (HasAttrDirect(PyTuple_GET_ITEM(mro, i), pyname, /*mustBeCPyCppyy=*/true))
+            return true;
+      }
+   }
+   return false;
+}
+
 PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
 // get an attribute without causing getattr lookups
     PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
@@ -1755,12 +1768,36 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, pybool_name, (PyCFunction)NullCheckBool, METH_NOARGS);
     }
 
-// for STL containers, and user classes modeled after them
-// the attribute must be a CPyCppyy overload, otherwise the check gives false
-// positives in the case where the class has a non-function attribute that is
-// called "size".
-    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true)) {
-        Utility::AddToClass(pyclass, "__len__", "size");
+    // for STL containers, and user classes modeled after them. Guard the alias to
+    // __len__ by verifying that size() returns an integer type and the class has
+    // begin()/end() or operator[] (i.e. is container-like). This prevents bool()
+    // returning False for valid objects whose size() returns non-integer types like
+    // std::optional<std::size_t>. Skip if size() has multiple overloads, as that
+    // indicates it is not the simple container-style size() one would map to __len__.
+    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/true) || HasAttrInMRO(pyclass, PyStrings::gSize)) {
+       bool sizeIsInteger = false;
+       PyObject *pySizeMethod = PyObject_GetAttr(pyclass, PyStrings::gSize);
+       if (pySizeMethod && CPPOverload_Check(pySizeMethod)) {
+          auto *ol = (CPPOverload *)pySizeMethod;
+          if (ol->HasMethods() && ol->fMethodInfo->fMethods.size() == 1) {
+             PyObject *pyrestype =
+                ol->fMethodInfo->fMethods[0]->Reflex(Cppyy::Reflex::RETURN_TYPE, Cppyy::Reflex::AS_STRING);
+             if (pyrestype) {
+                sizeIsInteger = Cppyy::IsIntegerType(CPyCppyy_PyText_AsString(pyrestype));
+                Py_DECREF(pyrestype);
+             }
+          }
+       }
+       Py_XDECREF(pySizeMethod);
+
+       if (sizeIsInteger) {
+          bool hasIterators = (HasAttrDirect(pyclass, PyStrings::gBegin) || HasAttrInMRO(pyclass, PyStrings::gBegin)) &&
+                              (HasAttrDirect(pyclass, PyStrings::gEnd) || HasAttrInMRO(pyclass, PyStrings::gEnd));
+          bool hasSubscript = HasAttrDirect(pyclass, PyStrings::gGetItem) || HasAttrInMRO(pyclass, PyStrings::gGetItem);
+          if (hasIterators || hasSubscript) {
+             Utility::AddToClass(pyclass, "__len__", "size");
+          }
+       }
     }
 
     if (HasAttrDirect(pyclass, PyStrings::gContains)) {

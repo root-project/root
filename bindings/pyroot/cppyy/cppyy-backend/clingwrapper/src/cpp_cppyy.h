@@ -136,6 +136,8 @@ namespace Cppyy {
     RPY_EXPORTED
     bool IsAggregate(TCppType_t type);
     RPY_EXPORTED
+    bool IsIntegerType(const std::string &type_name);
+    RPY_EXPORTED
     bool IsDefaultConstructable(TCppType_t type);
 
     RPY_EXPORTED

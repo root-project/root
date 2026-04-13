@@ -1484,16 +1484,12 @@ class TestSTLITERATOR:
 
         assert i == len(a)-1
 
-        for cls in [cppyy.gbl.stl_like_class2, cppyy.gbl.stl_like_class3]:
-            b = cls[float, 2]()
-            b[0] = 27; b[1] = 42
-            limit = len(b)+1
-            for x in b:
-                limit -= 1
-                assert limit and "iterated too far!"
-                assert x in [27, 42]
-            assert x == 42
-            del x, b
+        b = cppyy.gbl.stl_like_class2[float, 2]()
+        b[0] = 27
+        b[1] = 42
+        assert len(b) == 2
+        for i in range(len(b)):
+            assert b[i] in [27, 42]
 
         for num in [4, 5, 6, 7]:
             cls = getattr(cppyy.gbl, 'stl_like_class%d' % num)

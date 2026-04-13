@@ -370,6 +370,33 @@ class TestClassPYTHONIZATION:
         optr.__smartptr__().reset(o2)
         assert optr == o2
 
+    def test11_size_len_pythonization_guards(self):
+        """Verify __len__ is only installed when size() returns int and class is iterable"""
+
+        import cppyy
+
+        # size() returns int AND has begin/end -> __len__ installed
+        obj_int = cppyy.gbl.pyzables.SizeReturnsInt()
+        assert hasattr(obj_int, "__len__")
+        assert len(obj_int) == 3
+        assert bool(obj_int)
+
+        # size() returns non-integer type -> __len__ NOT installed
+        obj_opt = cppyy.gbl.pyzables.SizeReturnsNonInt()
+        assert not hasattr(obj_opt, "__len__")
+        assert bool(obj_opt)  # should be True (valid object)
+
+        # size() returns int but no begin/end or operator[] -> __len__ NOT installed
+        obj_noiter = cppyy.gbl.pyzables.SizeWithoutIterator()
+        assert not hasattr(obj_noiter, "__len__")
+        assert bool(obj_noiter)
+
+        # fully inherited container interface -> __len__ installed via MRO
+        obj_inherited = cppyy.gbl.pyzables.InheritedContainer()
+        assert hasattr(obj_inherited, "__len__")
+        assert len(obj_inherited) == 2
+
+
 ## actual test run
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
