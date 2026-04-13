@@ -1950,35 +1950,27 @@ void TPad::DrawColorTable()
 
 void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   const Int_t kMaxDiff = 5;
-   const Int_t kMinSize = 20;
-   static Int_t pxorg, pyorg;
-   static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
-   static Int_t px1p, px2p, py1p, py2p, pxlp, pylp, pxtp, pytp;
-   static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
-   Int_t  wx, wy;
+   constexpr Int_t kMaxDiff = 5;
+   constexpr Int_t kMinSize = 20;
+   static Int_t px1, px2, py1, py2, dpx1, dpy2;
+   static Int_t px1p, px2p, py1p, py2p;
+   static enum { pNone, pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
+   static Bool_t firstPaint = kFALSE;
    Bool_t opaque  = OpaqueMoving();
    Bool_t ropaque = OpaqueResizing();
-   Bool_t fixedr  = HasFixedAspectRatio();
 
    if (!IsEditable() && event != kMouseEnter) return;
-   TVirtualPad  *parent = GetMother();
-   if (!parent->IsEditable()) return;
+   TVirtualPad  &parent = *GetMother();
+   if (!parent.IsEditable()) return;
 
    HideToolTip(event);
 
    if (fXlowNDC < 0 && event != kButton1Down) return;
    if (fYlowNDC < 0 && event != kButton1Down) return;
 
-   // keep old mouse position
-   if (event == kButton1Down) {
-      pxorg = px;
-      pyorg = py;
-   }
-
    Int_t newcode = gROOT->GetEditorMode();
    if (newcode)
-      pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
+      mode = pNone;
    switch (newcode) {
       case kPad:
          TCreatePrimitives::Pad(event,px,py,0);
@@ -2025,21 +2017,18 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (newcode)
       return;
 
-   auto action = [this,parent](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
-      auto x1 = AbsPixeltoX(_x1);
-      auto y1 = AbsPixeltoY(_y1);
-      auto x2 = AbsPixeltoX(_x2);
-      auto y2 = AbsPixeltoY(_y2);
-      if (paint) {
-         auto pp = GetPainter();
-         pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
-         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-      } else {
+   auto paint_or_set = [this, &parent](Bool_t paint)
+   {
+      auto x1 = AbsPixeltoX(px1);
+      auto y1 = AbsPixeltoY(py1);
+      auto x2 = AbsPixeltoX(px2);
+      auto y2 = AbsPixeltoY(py2);
+      if (!paint) {
          // Get parent corners pixels coordinates
-         Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
-         Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
-         Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
-         Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
+         Int_t parentpx1 = fMother->XtoAbsPixel(parent.GetX1());
+         Int_t parentpx2 = fMother->XtoAbsPixel(parent.GetX2());
+         Int_t parentpy1 = fMother->YtoAbsPixel(parent.GetY1());
+         Int_t parentpy2 = fMother->YtoAbsPixel(parent.GetY2());
 
          // Get pad new corners pixels coordinates
          Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
@@ -2052,7 +2041,48 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
          fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
          fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
+      } else if (firstPaint) {
+         // first paint with original coordinates not required
+         firstPaint = kFALSE;
+      } else {
+         auto pp = GetPainter();
+         pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
+         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
       }
+   };
+
+   Int_t prevpx1 = px1, prevpx2 = px2, prevpy1 = py1, prevpy2 = py2;
+
+   // function check how to restore pad ratio
+   auto adjustRatio = [this, &parent](int choise = 11) -> bool
+   {
+      if (!HasFixedAspectRatio())
+         return true; // do nothing
+
+      if (choise == 11) {
+         Int_t dx = parent.UtoPixel(fAspectRatio * (py1 - py2) / parent.VtoPixel(0));
+         Int_t npx1 = (px1 + px2) / 2 - dx / 2;
+         Int_t npx2 = npx1 + dx;
+         if ((npx1 >= px1p) && (npx2 <= px2p)) {
+            px1 = npx1; px2 = npx2;
+            return true;
+         }
+      } else {
+         Int_t dy = parent.VtoPixel(1. - (0. + px2 - px1) / parent.UtoPixel(1.) / fAspectRatio);
+         Int_t npy1 = py1;
+         Int_t npy2 = py2;
+         switch (choise) {
+            case -1: npy2 = py1 - dy; break;
+            case  0: npy2 = (py1 + py2) / 2 - dy / 2; npy1 = npy2 + dy; break;
+            case  1: npy1 = py2 + dy; break;
+         }
+         if ((npy1 <= py1p) && (npy2 >= py2p)) {
+            py1 = npy1; py2 = npy2;
+            return true;
+         }
+      }
+
+      return false; // fail to adjust ratio, need to restore values
    };
 
    switch (event) {
@@ -2077,100 +2107,63 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       px2 = XtoAbsPixel(fX2);
       py2 = YtoAbsPixel(fY2);
 
-      if (px1 < px2) {
-         pxl = px1;
-         pxt = px2;
-      } else {
-         pxl = px2;
-         pxt = px1;
-      }
-      if (py1 < py2) {
-         pyl = py1;
-         pyt = py2;
-      } else {
-         pyl = py2;
-         pyt = py1;
-      }
+      if (px1 > px2)
+         std::swap(px1, px2);
 
-      px1p = parent->XtoAbsPixel(parent->GetX1()) + parent->GetBorderSize();
-      py1p = parent->YtoAbsPixel(parent->GetY1()) - parent->GetBorderSize();
-      px2p = parent->XtoAbsPixel(parent->GetX2()) - parent->GetBorderSize();
-      py2p = parent->YtoAbsPixel(parent->GetY2()) + parent->GetBorderSize();
+      if (py1 < py2)
+         std::swap(py1, py2);
 
-      if (px1p < px2p) {
-         pxlp = px1p;
-         pxtp = px2p;
-      } else {
-         pxlp = px2p;
-         pxtp = px1p;
-      }
-      if (py1p < py2p) {
-         pylp = py1p;
-         pytp = py2p;
-      } else {
-         pylp = py2p;
-         pytp = py1p;
-      }
+      px1p = parent.XtoAbsPixel(parent.GetX1()) + parent.GetBorderSize();
+      py1p = parent.YtoAbsPixel(parent.GetY1()) - parent.GetBorderSize();
+      px2p = parent.XtoAbsPixel(parent.GetX2()) - parent.GetBorderSize();
+      py2p = parent.YtoAbsPixel(parent.GetY2()) + parent.GetBorderSize();
 
-      pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
+      if (px1p > px2p)
+         std::swap(px1p, px2p);
 
-                                                         // case pA
-      if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
-         pxold = pxl; pyold = pyl; pA = kTRUE;
+      if (py1p < py2p)
+         std::swap(py1p, py2p);
+
+      mode = pNone;
+      if (TMath::Abs(px - px1) <= kMaxDiff && TMath::Abs(py - py2) <= kMaxDiff) {
+         mode = pA;
          SetCursor(kTopLeft);
-      }
-                                                         // case pB
-      if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
-         pxold = pxt; pyold = pyl; pB = kTRUE;
+      } else if (TMath::Abs(px - px2) <= kMaxDiff && TMath::Abs(py - py2) <= kMaxDiff) {
+         mode = pB;
          SetCursor(kTopRight);
-      }
-                                                         // case pC
-      if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
-         pxold = pxt; pyold = pyt; pC = kTRUE;
+      } else if (TMath::Abs(px - px2) <= kMaxDiff && TMath::Abs(py - py1) <= kMaxDiff) {
+         mode = pC;
          SetCursor(kBottomRight);
-      }
-                                                         // case pD
-      if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
-         pxold = pxl; pyold = pyt; pD = kTRUE;
+      } else if (TMath::Abs(px - px1) <= kMaxDiff && TMath::Abs(py - py1) <= kMaxDiff) {
+         mode = pD;
          SetCursor(kBottomLeft);
-      }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyl) < kMaxDiff) {             // top edge
-         pxold = pxl; pyold = pyl; pTop = kTRUE;
+      } else if ((px > px1 + kMaxDiff && px < px2 - kMaxDiff) && TMath::Abs(py - py2) < kMaxDiff) {
+         mode = pTop;
          SetCursor(kTopSide);
-      }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyt) < kMaxDiff) {             // bottom edge
-         pxold = pxt; pyold = pyt; pBot = kTRUE;
+      } else if ((px > px1 + kMaxDiff && px < px2 - kMaxDiff) && TMath::Abs(py - py1) < kMaxDiff) {
+         mode = pBot;
          SetCursor(kBottomSide);
-      }
-
-      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
-         pxold = pxl; pyold = pyl; pL = kTRUE;
+      } else if ((py > py2 + kMaxDiff && py < py1 - kMaxDiff) && TMath::Abs(px - px1) < kMaxDiff) {
+         mode = pL;
          SetCursor(kLeftSide);
-      }
-
-      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-         TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-         pxold = pxt; pyold = pyt; pR = kTRUE;
+      } else if ((py > py2 + kMaxDiff && py < py1 - kMaxDiff) && TMath::Abs(px - px2) < kMaxDiff) {
+         mode = pR;
          SetCursor(kRightSide);
-      }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {    // inside box
-         pxold = px; pyold = py; pINSIDE = kTRUE;
+      } else if ((px > px1+kMaxDiff && px < px2-kMaxDiff) && (py > py2+kMaxDiff && py < py1-kMaxDiff)) {
+         dpx1 = px - px1; // cursor position relative to top-left corner
+         dpy2 = py - py2;
+         mode = pINSIDE;
          if (event == kButton1Down)
             SetCursor(kMove);
          else
             SetCursor(kCross);
       }
 
-      fResizing = pA || pB || pC || pD || pTop || pL || pR || pBot;
+      fResizing = (mode != pNone) && (mode != pINSIDE);
 
-      if (!fResizing && !pINSIDE)
+      firstPaint = kTRUE;
+
+      if (mode == pNone)
          SetCursor(kCross);
 
       break;
@@ -2179,205 +2172,107 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Motion:
 
       if (TestBit(kCannotMove)) break;
-      wx = wy = 0;
 
-      if (pA) {
-         if (!ropaque) action(kTRUE, pxold, pyt, pxt, pyold);
-         if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
-         if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
-         if (px < pxlp) { px = pxlp; wx = px; }
-         if (py < pylp) { py = pylp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < pylp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
+      switch (mode) {
+      case pNone:
+         return;
+      case pA:
+         if (!ropaque) paint_or_set(kTRUE);
+         px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
+         py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
+         if (!adjustRatio(-1)) {
+            px1 = prevpx1;
+            py2 = prevpy2;
          }
-         if (!ropaque) action(kTRUE, px, pyt, pxt, py);
-      }
-      if (pB) {
-         if (!ropaque) action(kTRUE, pxl, pyt, pxold, pyold);
-         if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
-         if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
-         if (px > pxtp) { px = pxtp; wx = px; }
-         if (py < pylp) { py = pylp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < pylp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
+         paint_or_set(!ropaque);
+         break;
+      case pB:
+         if (!ropaque) paint_or_set(kTRUE);
+         px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
+         py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
+         if (!adjustRatio(-1)) {
+            px2 = prevpx2;
+            py2 = prevpy2;
          }
-         if (!ropaque) action(kTRUE, pxl, pyt, px, py);
-      }
-      if (pC) {
-         if (!ropaque) action(kTRUE, pxl, pyl, pxold, pyold);
-         if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
-         if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
-         if (px > pxtp) { px = pxtp; wx = px; }
-         if (py > pytp) { py = pytp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 > pytp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
+         paint_or_set(!ropaque);
+         break;
+      case pC:
+         if (!ropaque) paint_or_set(kTRUE);
+         px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
+         py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
+         if (!adjustRatio(1)) {
+            px2 = prevpx2;
+            py1 = prevpy1;
          }
-         if (!ropaque) action(kTRUE, pxl, pyl, px, py);
-      }
-      if (pD) {
-         if (!ropaque) action(kTRUE, pxold, pyold, pxt, pyl);
-         if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
-         if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
-         if (px < pxlp) { px = pxlp; wx = px; }
-         if (py > pytp) { py = pytp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 > pytp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
+         paint_or_set(!ropaque);
+         break;
+      case pD:
+         if (!ropaque) paint_or_set(kTRUE);
+         px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
+         py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
+         if (!adjustRatio(1)) {
+            px1 = prevpx1;
+            py1 = prevpy1;
          }
-         if (!ropaque) action(kTRUE, px, py, pxt, pyl);
-      }
-      if (pTop) {
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-         py2 += py - pyold;
-         if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
-         if (py2 < py2p) { py2 = py2p; wy = py2; }
-         if (fixedr) {
-            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
-                          fAspectRatio;
-            Int_t npx2 = px1 + parent->UtoPixel(dx);
-            if (npx2 > px2p)
-               py2 -= py - pyold;
-            else
-               px2 = npx2;
-         }
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-      }
-      if (pBot) {
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-         py1 += py - pyold;
-         if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
-         if (py1 > py1p) { py1 = py1p; wy = py1; }
-         if (fixedr) {
-            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
-                          fAspectRatio;
-            Int_t npx2 = px1 + parent->UtoPixel(dx);
-            if (npx2 > px2p)
-               py1 -= py - pyold;
-            else
-               px2 = npx2;
-         }
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-      }
-      if (pL) {
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-         px1 += px - pxold;
-         if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
-         if (px1 < px1p) { px1 = px1p; wx = px1; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < py2p)
-               px1 -= px - pxold;
-            else
-               py2 = npy2;
-         }
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-      }
-      if (pR) {
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-         px2 += px - pxold;
-         if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
-         if (px2 > px2p) { px2 = px2p; wx = px2; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < py2p)
-               px2 -= px - pxold;
-            else
-               py2 = npy2;
-         }
-         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
-      }
-      if (pINSIDE) {
-         if (!opaque) action(kTRUE, px1, py1, px2, py2);  // draw the old box
-         Int_t dx = px - pxold;
-         Int_t dy = py - pyold;
-         px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         if (px1 < px1p) { dx = px1p - px1; px1 += dx; px2 += dx; wx = px+dx; }
-         if (px2 > px2p) { dx = px2 - px2p; px1 -= dx; px2 -= dx; wx = px-dx; }
-         if (py1 > py1p) { dy = py1 - py1p; py1 -= dy; py2 -= dy; wy = py-dy; }
-         if (py2 < py2p) { dy = py2p - py2; py1 += dy; py2 += dy; wy = py+dy; }
-         if (!opaque) action(kTRUE, px1, py1, px2, py2);  // draw the new box
+         paint_or_set(!ropaque);
+         break;
+      case pTop:
+         if (!ropaque) paint_or_set(kTRUE);
+         py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
+         if (!adjustRatio(11))
+            py2 = prevpy2;
+         paint_or_set(!ropaque);
+         break;
+      case pBot:
+         if (!ropaque) paint_or_set(kTRUE);
+         py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
+         if (!adjustRatio(11))
+            py1 = prevpy1;
+         paint_or_set(!ropaque);
+         break;
+      case pL:
+         if (!ropaque) paint_or_set(kTRUE);
+         px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
+         if (!adjustRatio(0))
+            px1 = prevpx1;
+         paint_or_set(!ropaque);
+         break;
+      case pR:
+         if (!ropaque) paint_or_set(kTRUE);
+         px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
+         if (!adjustRatio(0))
+            px2 = prevpx2;
+         paint_or_set(!ropaque);
+         break;
+      case pINSIDE:
+         if (!opaque) paint_or_set(kTRUE);  // draw the old box
+         px2 += px - dpx1 - px1;
+         px1 = px - dpx1;
+         py1 += py - dpy2 - py2;
+         py2 = py - dpy2;
+         if (px1 < px1p) { px2 += px1p - px1; px1 = px1p; }
+         if (px2 > px2p) { px1 -= px2 - px2p; px2 = px2p; }
+         if (py1 > py1p) { py2 -= py1 - py1p; py1 = py1p; }
+         if (py2 < py2p) { py1 += py2p - py2; py2 = py2p; }
+         paint_or_set(!opaque);  // draw the new box
+         break;
       }
 
-      if (wx || wy) {
-         if (wx) px = wx;
-         if (wy) py = wy;
-         GetCanvasImp()->Warp(px, py);
-      }
-
-      pxold = px;
-      pyold = py;
-
-      if ((pINSIDE && opaque) || (fResizing && ropaque)) {
-         if (px != pxorg || py != pyorg) {
-            if (pA)
-               action(kFALSE, pxold, pyt, pxt, pyold);
-            if (pB)
-               action(kFALSE, pxl, pyt, pxold, pyold);
-            if (pC)
-               action(kFALSE, pxl, pyold, pxold, pyl);
-            if (pD)
-               action(kFALSE, pxold, pyold, pxt, pyl);
-            if (pTop || pBot || pL || pR || pINSIDE)
-               action(kFALSE, px1, py1, px2, py2);
-         }
-
+      if ((mode == pINSIDE && opaque) || (fResizing && ropaque)) {
          // Reset pad parameters and recompute conversion coefficients
          ResizePad();
-
-         if (pINSIDE) gPad->ShowGuidelines(this, event);
-         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
-         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
-         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
-         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
-         if (pA) gPad->ShowGuidelines(this, event, '1', true);
-         if (pB) gPad->ShowGuidelines(this, event, '2', true);
-         if (pC) gPad->ShowGuidelines(this, event, '3', true);
-         if (pD) gPad->ShowGuidelines(this, event, '4', true);
+         switch(mode) {
+            case pINSIDE: gPad->ShowGuidelines(this, event); break;
+            case pTop: gPad->ShowGuidelines(this, event, 't', true); break;
+            case pBot: gPad->ShowGuidelines(this, event, 'b', true); break;
+            case pL: gPad->ShowGuidelines(this, event, 'l', true); break;
+            case pR: gPad->ShowGuidelines(this, event, 'r', true); break;
+            case pA: gPad->ShowGuidelines(this, event, '1', true); break;
+            case pB: gPad->ShowGuidelines(this, event, '2', true); break;
+            case pC: gPad->ShowGuidelines(this, event, '3', true); break;
+            case pD: gPad->ShowGuidelines(this, event, '4', true); break;
+            default: break;
+         }
 
          Modified(kTRUE);
       }
@@ -2392,22 +2287,14 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          fResizing = kFALSE;
+         mode = pNone;
          break;
       }
 
-      if ((pINSIDE && !opaque) || (fResizing && !ropaque)) {
-         if (pA)
-            action(kFALSE, pxold, pyt, pxt, pyold);
-         if (pB)
-            action(kFALSE, pxl, pyt, pxold, pyold);
-         if (pC)
-            action(kFALSE, pxl, pyold, pxold, pyl);
-         if (pD)
-            action(kFALSE, pxold, pyold, pxt, pyl);
-         if (pTop || pBot || pL || pR || pINSIDE)
-            action(kFALSE, px1, py1, px2, py2);
+      if ((mode == pINSIDE && !opaque) || (fResizing && !ropaque)) {
+         paint_or_set(kFALSE);
 
-         if (pA || pB || pC || pD || pTop || pL || pR || pBot)
+         if (fResizing)
             Modified(kTRUE);
 
          // Reset pad parameters and recompute conversion coefficients
@@ -2417,6 +2304,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          RangeChanged();
       }
 
+      mode = pNone;
       fResizing = kFALSE;
 
       break;
