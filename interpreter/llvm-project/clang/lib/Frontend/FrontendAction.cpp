@@ -164,6 +164,8 @@ std::unique_ptr<ASTConsumer>
 FrontendAction::CreateWrappedASTConsumer(CompilerInstance &CI,
                                          StringRef InFile) {
   std::unique_ptr<ASTConsumer> Consumer = CreateASTConsumer(CI, InFile);
+  if (Consumer)
+    return Consumer;
   if (!Consumer)
     return nullptr;
 
@@ -863,7 +865,15 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
     CI.getLangOpts().CurrentModule = CI.getLangOpts().ModuleName;
   }
 
-  if (!CI.InitializeSourceManager(Input))
+  if (getTranslationUnitKind() == TU_Incremental) {
+    bool Res = false;
+    if (CI.hasIncrementalSourceMgrInitializer())
+      Res = CI.runIncrementalSourceMgrInitializer(Input);
+    // else
+  //  Res = CI.initializeDefaultIncrementalSourceMgr(Input);
+    if (!Res)
+      return false;
+  } else if (!CI.InitializeSourceManager(Input))
     return false;
 
   if (CI.getLangOpts().CPlusPlusModules && Input.getKind().isHeaderUnit() &&
