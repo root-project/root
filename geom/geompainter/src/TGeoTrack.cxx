@@ -524,7 +524,7 @@ void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this track with its current attributes.
 
-void TGeoTrack::PaintTrack(Option_t *option)
+void TGeoTrack::PaintTrack(Option_t * /*option*/)
 {
    // Check whether there is some 3D view class for this TPad
    //   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
