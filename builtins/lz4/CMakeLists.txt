@@ -63,6 +63,7 @@ file(MAKE_DIRECTORY ${LIBLZ4_INCLUDE_DIR})
 
 add_library(LibLZ4 STATIC IMPORTED GLOBAL)
 add_library(LZ4::LZ4 ALIAS LibLZ4)
+add_dependencies(LZ4::LZ4 BUILTIN_LZ4)
 target_include_directories(LibLZ4 INTERFACE ${LIBLZ4_INCLUDE_DIR})
 set_target_properties(LibLZ4 PROPERTIES IMPORTED_LOCATION ${ROOT_LZ4_LIBRARY})
 
