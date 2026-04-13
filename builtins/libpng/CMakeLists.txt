@@ -72,6 +72,7 @@ set_target_properties(PNG::PNG PROPERTIES
     IMPORTED_LOCATION ${ROOT_LIBPNG_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBPNG_PREFIX}/include
 )
+add_dependencies(PNG::PNG BUILTIN_LIBPNG)
 
 if(builtin_zlib)
     add_dependencies(BUILTIN_LIBPNG BUILTIN_ZLIB)

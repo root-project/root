@@ -69,6 +69,7 @@ set_target_properties(Freetype::Freetype PROPERTIES
     IMPORTED_LINK_INTERFACE_LANGUAGES "C"
     IMPORTED_LOCATION "${FREETYPE_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES "${incdir}")
+add_dependencies(Freetype::Freetype BUILTIN_FREETYPE)
 
 if(builtin_zlib)
     add_dependencies(BUILTIN_FREETYPE BUILTIN_ZLIB)
