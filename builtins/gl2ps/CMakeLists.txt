@@ -8,6 +8,9 @@
 # 30 Apr 2020, https://gitlab.onelab.info/gl2ps/gl2ps/-/releases/gl2ps_1_4_2
 set(ROOT_GL2PS_VERSION 1.4.2)
 set(ROOT_GL2PS_HASH "8d1c00c1018f96b4b97655482e57dcb0ce42ae2f1d349cd6d4191e7848d9ffe9")
+# Backport fix for static Win32 having being overwritten by shared lib: https://gitlab.onelab.info/gl2ps/gl2ps/-/work_items/30
+# We use all seven commits between 1.4.2 and before bump to 1.4.3
+set(ROOT_GL2PS_PATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/v142_post_tag_fixes.patch)
 
 set(ROOT_GL2PS_PREFIX ${CMAKE_BINARY_DIR}/builtins/GL2PS-prefix)
 
@@ -27,6 +30,7 @@ ExternalProject_Add(
   PREFIX ${ROOT_GL2PS_PREFIX}
   URL ${lcgpackages}/gl2ps-${ROOT_GL2PS_VERSION}.tgz
   URL_HASH SHA256=${ROOT_GL2PS_HASH}
+  PATCH_COMMAND git apply ${ROOT_GL2PS_PATCH_FILE}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
              -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
@@ -35,6 +39,7 @@ ExternalProject_Add(
              -DCMAKE_POLICY_VERSION_MINIMUM=3.5
              -DENABLE_PNG=OFF
              -DENABLE_ZLIB=OFF
+             -DBUILD_SHARED_LIBS=OFF
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_GL2PS_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_GL2PS_BUILD_COMMAND_FLAGS} --target install
   LOG_DOWNLOAD 1
