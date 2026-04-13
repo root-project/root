@@ -49,13 +49,21 @@ using TBuffer3D mechanism.
 #include "TMath.h"
 #include "TVirtualGeoChecker.h"
 
-#include "X3DBuffer.h"
-
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
 
+#include <cstring>
+
+namespace {
+
+bool IsX3DViewer(const TVirtualViewer3D *viewer)
+{
+   return viewer && viewer->IsA() && std::strcmp(viewer->IsA()->GetName(), "TViewerX3D") == 0;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -115,9 +123,10 @@ TGeoPainter::~TGeoPainter()
 
 void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
 {
-   gSize3D.numPoints += numpoints;
-   gSize3D.numSegs += numsegs;
-   gSize3D.numPolys += numpolys;
+   // Legacy no-op kept for the obsolete x3d sizing interface.
+   (void)numpoints;
+   (void)numsegs;
+   (void)numpolys;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a primary TGeoTrack.
@@ -938,6 +947,11 @@ void TGeoPainter::DrawCurrentPoint(Int_t color)
       return;
    if (!gPad->GetView())
       return;
+
+   TVirtualViewer3D *viewer = gPad->GetViewer3D();
+   if (!viewer || IsX3DViewer(viewer))
+      return;
+
    TPolyMarker3D *pm = new TPolyMarker3D();
    pm->SetMarkerColor(color);
    const Double_t *point = fGeoManager->GetCurrentPoint();
