@@ -121,6 +121,7 @@ public:
    void     SetWindowTitle(const char *newTitle) override;
    void     SetCanvasSize(UInt_t w, UInt_t h) override;
    void     SetStatusText(const char *txt = nullptr, Int_t partidx = 0) override;
+   void UpdateViewWithMenu();
 
    void     Show() override { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE) override;

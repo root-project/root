@@ -195,8 +195,8 @@ void help()
    hdemo->AddText("- .... press j/k to zoom/unzoom");
    hdemo->AddText("- .... press l/h/u/i to move the view center around");
    hdemo->AddText("- Click Ray-trace ON/OFF to toggle ray-tracing");
-   hdemo->AddText("- Use <View with x3d> from the <View> menu to get an x3d view");
-   hdemo->AddText("- .... same methods to rotate/zoom/move the view");
+   hdemo->AddText("- Use <View>/<View With>/<OpenGL> for an external 3D view");
+   hdemo->AddText("- .... use the OpenGL viewer controls to rotate/zoom/move the view");
    hdemo->AddText("- Execute box(1,8) to divide a box in 8 equal slices along X");
    hdemo->AddText("- Most shapes can be divided on X,Y,Z,Rxy or Phi :");
    hdemo->AddText("- .... root[0] <shape>(IAXIS, NDIV, START, STEP);");

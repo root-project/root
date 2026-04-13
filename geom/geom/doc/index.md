@@ -292,7 +292,7 @@ represented by TGeoNode objects. This hierarchy is a tree since a
 node can have only one parent and several daughters. For a better
 understanding of the hierarchy, have a look at TGeoManage.
 
-Just close now the `X3D` window and focus at the wire frame picture
+Just close now the external 3D viewer and focus at the wire frame picture
 drawn in a pad. Activate Options/Event Status. Moving the mouse in the
 pad, you will notice that objects are sometimes changing color to red.
 Volumes are highlighted in this way whenever the mouse pointer is close
@@ -2269,8 +2269,7 @@ and volume hierarchies.
 
 The main component of the visualization system is volume primitive
 painting in a ROOT pad. Starting from this one, several specific options
-or subsystems are available, like: X3D viewing using hidden line and
-surface removal algorithms, OpenGL viewing\* or ray tracing.
+or subsystems are available, like: OpenGL viewing\* or ray tracing.
 
 The method TGeoManager::GetGeomPainter() loads the painting library in
 memory.
@@ -3153,4 +3152,3 @@ the volume editor interface to:
   - [Presentation at ROOT 2007](http://indico.cern.ch/materialDisplay.py?contribId=35&materialId=slides&confId=13356)
 
 See also [the use of the geometry classes in AliROOT package of ALICE](https://alice-offline.web.cern.ch/AliRoot/Manual.html).
-

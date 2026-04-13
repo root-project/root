@@ -73,6 +73,45 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 
 #include "HelpText.h"
 
+namespace {
+
+bool IsGeometryPrimitive(TObject *obj)
+{
+   static TClass *geoVolumeClass = TClass::GetClass("TGeoVolume");
+   static TClass *geoShapeClass = TClass::GetClass("TGeoShape");
+   static TClass *geoOverlapClass = TClass::GetClass("TGeoOverlap");
+   static TClass *geoTrackClass = TClass::GetClass("TGeoTrack");
+
+   if (!obj)
+      return false;
+
+   return (geoVolumeClass && obj->InheritsFrom(geoVolumeClass)) ||
+          (geoShapeClass && obj->InheritsFrom(geoShapeClass)) ||
+          (geoOverlapClass && obj->InheritsFrom(geoOverlapClass)) ||
+          (geoTrackClass && obj->InheritsFrom(geoTrackClass));
+}
+
+bool PadHasGeometryContent(TVirtualPad *pad)
+{
+   if (!pad)
+      return false;
+
+   TList *primitives = pad->GetListOfPrimitives();
+   if (!primitives)
+      return false;
+
+   TIter next(primitives);
+   while (TObject *obj = next()) {
+      if (IsGeometryPrimitive(obj))
+         return true;
+      if (obj->InheritsFrom(TVirtualPad::Class()) && PadHasGeometryContent(static_cast<TVirtualPad *>(obj)))
+         return true;
+   }
+
+   return false;
+}
+
+} // namespace
 
 // Canvas menu command ids
 enum ERootCanvasCommands {
@@ -473,6 +512,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fEditClearMenu->Associate(this);
    fViewMenu->Associate(this);
    fViewWithMenu->Associate(this);
+   fViewWithMenu->Connect("PoppedUp()", "TRootCanvas", this, "UpdateViewWithMenu()");
    fOptionMenu->Associate(this);
    fToolsMenu->Associate(this);
    fHelpMenu->Associate(this);
@@ -1044,9 +1084,14 @@ again:
                   case kViewIconify:
                      Iconify();
                      break;
-                  case kViewX3D:
-                     gPad->GetViewer3D("x3d");
+                  case kViewX3D: {
+                     TVirtualPad *pad = gPad ? gPad : (fCanvas ? fCanvas->GetSelectedPad() : nullptr);
+                     if (!pad)
+                        pad = fCanvas;
+                     if (!PadHasGeometryContent(pad))
+                        pad->GetViewer3D("x3d");
                      break;
+                  }
                   case kViewOpenGL:
                      gPad->GetViewer3D("ogl");
                      break;
@@ -2091,6 +2136,21 @@ void TRootCanvas::Activated(Int_t id)
          }
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update the "View With" submenu based on the currently selected pad content.
+
+void TRootCanvas::UpdateViewWithMenu()
+{
+   TVirtualPad *pad = fCanvas ? fCanvas->GetSelectedPad() : nullptr;
+   if (!pad)
+      pad = fCanvas;
+
+   if (PadHasGeometryContent(pad))
+      fViewWithMenu->DisableEntry(kViewX3D);
+   else
+      fViewWithMenu->EnableEntry(kViewX3D);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

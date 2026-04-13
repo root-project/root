@@ -2716,7 +2716,6 @@ void TGeoManager::SaveAttributes(const char *filename)
    }
    out << "   // draw top volume with new settings" << std::endl;
    out << "   top->Draw();" << std::endl;
-   out << "   gPad->x3d();" << std::endl;
    out << "}" << std::endl;
    out.close();
 }

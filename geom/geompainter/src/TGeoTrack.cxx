@@ -32,7 +32,6 @@ of all tracks that will be deleted on destruction of
 gGeoManager.
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
@@ -525,20 +524,13 @@ void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this track with its current attributes.
 
-void TGeoTrack::PaintTrack(Option_t *option)
+void TGeoTrack::PaintTrack(Option_t * /*option*/)
 {
    // Check whether there is some 3D view class for this TPad
    //   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
    //   if (view3D) view3D->PaintGeoTrack(this,option); // to be implemented
 
-   // Check if option is 'x3d'.      NOTE: This is a simple checking
-   //                                      but since there is no other
-   //                                      options yet, this works fine.
-   TString opt(option);
-   opt.ToLower();
    TObject::SetBit(kGeoPDrawn, kFALSE);
-   if (opt.Contains("x"))
-      return;
    Int_t np = fNpoints >> 2;
    Int_t imin = 0;
    Int_t imax = np - 1;
