@@ -579,23 +579,7 @@ if(fftw3)
   endif()
 endif()
 if(builtin_fftw3)
-  set(FFTW_VERSION 3.3.10)
-  message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
-  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
-  ExternalProject_Add(
-    FFTW3
-    URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
-    URL_HASH SHA256=56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
-    BUILD_COMMAND make CFLAGS=-fPIC
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
-    TIMEOUT 600
-  )
-  set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(FFTW3_TARGET FFTW3)
+  add_subdirectory(builtins/fftw3)
   set(fftw3 ON CACHE BOOL "Enabled because builtin_fftw3 requested (${fftw3_description})" FORCE)
 endif()
 
@@ -931,74 +915,7 @@ if(builtin_tbb)
 endif()
 
 if(builtin_tbb)
-  set(tbb_url ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
-  set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
-
-  if(MSVC)
-    if(CMAKE_GENERATOR MATCHES Ninja)
-      if(CMAKE_BUILD_TYPE MATCHES Debug)
-        set(tbbsuffix "_debug")
-      endif()
-    else()
-      set(tbb_build Release)
-      if(winrtdebug)
-        set(tbb_build Debug)
-        set(tbbsuffix "_debug")
-      endif()
-    endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
-    set(TBB_CXXFLAGS "-D__TBB_NO_IMPLICIT_LINKAGE=1")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
-  else()
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(tbbsuffix "_debug")
-    endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${tbbsuffix}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
-  endif()
-  if(tbb_build)
-    set(TBB_EXTRA_BUILD_ARGS --config ${tbb_build})
-  endif()
-
-  ExternalProject_Add(
-    TBB
-    URL ${tbb_url}
-    URL_HASH SHA256=${tbb_sha256}
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include
-               -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
-               -DTBBMALLOC_BUILD=OFF
-               -DTBBMALLOC_PROXY_BUILD=OFF
-               -DTBB_ENABLE_IPO=OFF
-               -DTBB_STRICT=OFF
-               -DTBB_TEST=OFF
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${TBB_EXTRA_BUILD_ARGS}
-    INSTALL_COMMAND ${CMAKE_COMMAND}  --install . ${TBB_EXTRA_BUILD_ARGS}
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_BYPRODUCTS ${TBB_LIBRARIES}
-    TIMEOUT 600
-  )
-
-  ExternalProject_Add_Step(
-     TBB tbb2externals
-     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${CMAKE_BINARY_DIR}/ginclude/tbb
-     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/oneapi ${CMAKE_BINARY_DIR}/ginclude/oneapi
-     DEPENDEES install
-  )
-  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
-  # The following line is needed to generate the proper dependency with: BUILTINS TBB (in Imt)
-  # and generated with this syntax: add_dependencies(${library} ${${arg1}_TARGET})
-  set(TBB_TARGET TBB)
+  add_subdirectory(builtins/tbb)
 endif()
 
 if(builtin_vdt)
@@ -1026,45 +943,7 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.6)
-    set(VDT_FOUND True)
-    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      BUILTIN_VDT
-      URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-        -DSSE=OFF # breaks on ARM without this
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-        -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_BYPRODUCTS ${VDT_LIBRARIES}
-      TIMEOUT 600
-    )
-    ExternalProject_Add_Step(
-       BUILTIN_VDT copy2externals
-       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
-       DEPENDEES install
-    )
-    set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
-    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-
-    add_library(VDT::VDT SHARED IMPORTED GLOBAL)
-    add_dependencies(VDT::VDT BUILTIN_VDT)
-    set_target_properties(VDT::VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
-    target_include_directories(VDT::VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
-
-    install(FILES ${VDT_LIBRARIES}
-            DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT::VDT)
+    add_subdirectory(builtins/vdt)
   else()
     BUILD_ROOT_INCLUDE_PATH("${VDT_INCLUDE_DIR}")
   endif()
@@ -1225,38 +1104,7 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
       endif()
     endif()
   else()
-    set(gsl_version 2.8)
-    message(STATUS "Downloading and building GSL version ${gsl_version}")
-    foreach(l gsl gslcblas)
-      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
-    set(GSL_CBLAS_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gslcblas${CMAKE_STATIC_LIBRARY_SUFFIX})
-    if(CMAKE_OSX_SYSROOT)
-      set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
-      set(_gsl_ldflags  "-isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    ExternalProject_Add(
-      GSL
-      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
-      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-      URL_HASH SHA256=6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
-      SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-                        --libdir=<INSTALL_DIR>/lib
-                        --enable-shared=no --with-pic
-                        CC=${CMAKE_C_COMPILER}
-                        CFLAGS=${CMAKE_C_FLAGS}
-                        CPPFLAGS=${_gsl_cppflags}
-                        LDFLAGS=${_gsl_ldflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_BYPRODUCTS ${GSL_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(GSL_TARGET GSL)
-    # FIXME: one need to find better way to extract path with GSL include files
-    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
-    set(GSL_FOUND ON)
+    add_subdirectory(builtins/gsl)
     set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
   endif()
 endif()
@@ -1445,121 +1293,7 @@ if (testing OR testsupport)
 endif()
 
 if (builtin_gtest)
-  # Add googletest
-  # http://stackoverflow.com/questions/9689183/cmake-googletest
-
-  set(_gtest_byproduct_binary_dir
-    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build)
-  set(_gtest_byproducts
-    ${_gtest_byproduct_binary_dir}/lib/libgtest.a
-    ${_gtest_byproduct_binary_dir}/lib/libgtest_main.a
-    ${_gtest_byproduct_binary_dir}/lib/libgmock.a
-    ${_gtest_byproduct_binary_dir}/lib/libgmock_main.a
-    )
-
-  set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS}")
-  if(MSVC)
-     if(winrtdebug)
-      set(GTEST_BUILD_TYPE Debug)
-    else()
-      set(GTEST_BUILD_TYPE Release)
-    endif()
-    set(_gtest_byproducts
-      ${_gtest_byproduct_binary_dir}/lib/gtest.lib
-      ${_gtest_byproduct_binary_dir}/lib/gtest_main.lib
-      ${_gtest_byproduct_binary_dir}/lib/gmock.lib
-      ${_gtest_byproduct_binary_dir}/lib/gmock_main.lib
-    )
-    if(CMAKE_GENERATOR MATCHES Ninja)
-      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>")
-    else()
-      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${GTEST_BUILD_TYPE}")
-    endif()
-    if(asan)
-      if(NOT winrtdebug)
-        set(gtestbuild "RelWithDebInfo")
-      endif()
-      set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
-    endif()
-    set(EXTRA_GTEST_OPTS
-      -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -Dgtest_force_shared_crt=ON
-      ${GTEST_BUILD_COMMAND})
-  else()
-    set(GTEST_BUILD_TYPE Release)
-  endif()
-  if(APPLE)
-    set(EXTRA_GTEST_OPTS
-      -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
-  endif()
-  set(ROOT_GOOGLETEST_VERSION 1.17.0) # https://github.com/google/googletest/releases/tag/v1.17.0 Date: Apr 30, 2025
-  set(ROOT_GOOGLETEST_HASH "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c")
-  ExternalProject_Add(
-    googletest
-    # GIT_REPOSITORY https://github.com/google/googletest.git
-    # GIT_SHALLOW 1
-    # GIT_TAG v1.17.0
-    URL ${lcgpackages}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
-    URL_HASH SHA256=${ROOT_GOOGLETEST_HASH}
-    UPDATE_COMMAND ""
-    # # Force separate output paths for debug and release builds to allow easy
-    # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
-    # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-    #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-    #            -Dgtest_force_shared_crt=ON
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-                  -DCMAKE_BUILD_TYPE=${GTEST_BUILD_TYPE}
-                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                  -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
-                  -DCMAKE_AR=${CMAKE_AR}
-                  -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                  ${EXTRA_GTEST_OPTS}
-    # Disable install step
-    INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS ${_gtest_byproducts}
-    # Wrap download, configure and build steps in a script to log output
-    LOG_DOWNLOAD ON LOG_CONFIGURE ON LOG_BUILD ON LOG_OUTPUT_ON_FAILURE ON
-    TIMEOUT 600
-  )
-
-  # Specify include dirs for gtest and gmock
-  ExternalProject_Get_Property(googletest source_dir)
-  set(GTEST_INCLUDE_DIR ${source_dir}/googletest/include)
-  set(GMOCK_INCLUDE_DIR ${source_dir}/googlemock/include)
-  # Create the directories. Prevents bug https://gitlab.kitware.com/cmake/cmake/issues/15052
-  file(MAKE_DIRECTORY ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
-
-  # Libraries
-  ExternalProject_Get_Property(googletest binary_dir)
-  set(_G_LIBRARY_PATH ${binary_dir}/lib/)
-
-  # Use gmock_main instead of gtest_main because it initializes gtest as well.
-  # Note: The libraries are listed in reverse order of their dependencies.
-  foreach(lib gtest gtest_main gmock gmock_main)
-    add_library(${lib} IMPORTED STATIC GLOBAL)
-    set_target_properties(${lib} PROPERTIES
-      IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    )
-    add_dependencies(${lib} googletest)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
-        ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
-      target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
-    endif()
-  endforeach()
-  target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
-  target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
-
-  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+  add_subdirectory(builtins/gtest)
 endif()
 
 # Starting from cmake 3.23, the GTest targets will have stable names.
@@ -1590,52 +1324,10 @@ if(webgui)
      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
         $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
   else()
-    if(builtin_openui5)
-      ExternalProject_Add(
-        OPENUI5
-        URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=b9e6495d8640302d9cf2fe3c99331311335aaab0f48794565ebd69ecc7449e58
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
-        TIMEOUT 600
-      )
-    else()
-      ExternalProject_Add(
-        OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.135.0/openui5-runtime-1.135.0.zip
-        URL_HASH SHA256=13acdb88a7f3f1d4afef6d1d500b53bccc4b593e7acf442721bb4e3da4e2690b
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
-        TIMEOUT 600
-      )
-    endif()
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+    add_subdirectory(builtins/openui5)
   endif()
-  ExternalProject_Add(
-    RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-2.0.tar.gz
-    URL_HASH SHA256=6bdcf70fbdec1f950057ab1df722775c468ad6894f8a364f15f589d58c326667
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
-    TIMEOUT 600
-  )
-  ExternalProject_Add(
-     MATHJAX
-     URL ${CMAKE_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
-     URL_HASH SHA256=c5e22e60430a65963a87ab4dcc8856b9be5bd434d3b3871f27ee65b584c3c3ea
-     CONFIGURE_COMMAND ""
-     BUILD_COMMAND ""
-     INSTALL_COMMAND ""
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
-     TIMEOUT 600
-  )
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+  add_subdirectory(builtins/rendercore)
+  add_subdirectory(builtins/mathjax)
 endif()
 
 #------------------------------------------------------------------------------------
