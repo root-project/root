@@ -240,6 +240,7 @@ std::string vectorizedArgType()
     2. Two Dimensional functions:
       - `xygaus` is a substitute for `[Constant]*exp(-0.5*pow(((x-[MeanX])/[SigmaX]),2 )- 0.5*pow(((y-[MeanY])/[SigmaY]),2))`, a 2d Gaussian without correlation.
       - `bigaus` is a substitute for `[Constant]*ROOT::Math::bigaussian_pdf (x,y,[SigmaX],[SigmaY],[Rho],[MeanX],[MeanY])`, a 2d gaussian including a correlation parameter.
+         Note the different order of parameters for bigaus: [Constant]=[0], [SigmaX]=[2], [SigmaY]=[4], [Rho]=[5], [MeanX]=[1], [MeanY]=[3]
     3. Three Dimensional functions:
       - `xyzgaus` is for a 3d Gaussians without correlations:
       `[Constant]*exp(-0.5*pow(((x-[MeanX])/[SigmaX]),2 )- 0.5*pow(((y-[MeanY])/[SigmaY]),2 )- 0.5*pow(((z-[MeanZ])/[SigmaZ]),2))`
