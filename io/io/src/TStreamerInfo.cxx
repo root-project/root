@@ -247,6 +247,26 @@ TStreamerInfo::~TStreamerInfo()
 namespace {
    using ROOT::Internal::AlignUp;
 
+   /// Layout of the cookie header that NewArray writes before the data and
+   /// DeleteArray reads back.  Both functions must use exactly this struct to
+   /// stay in sync;
+   /// The header holds two Long_t cookie values (size and nElements).
+   /// Round the header size up to the next multiple of 'align' so that
+   /// dataBegin (= p + headerSize) is itself aligned to 'align'.
+   struct ArrayCookieLayout {
+      std::size_t align;       ///< Alignment of the class (and of the whole block).
+      std::size_t cookieSize;  ///< Raw size of the two Long_t cookie fields.
+      std::size_t headerSize;  ///< Padded header size (cookieSize rounded up to align).
+
+      explicit ArrayCookieLayout(const TClass *cl)
+         : align(std::max(cl->GetClassAlignment(), alignof(Long_t))),
+           cookieSize(sizeof(Long_t) * 2),
+           headerSize(AlignUp(cookieSize, align))
+      {
+         assert(ROOT::Internal::IsValidAlignment(align));
+      }
+   };
+
    struct TPreventRecursiveBuildGuard {
       TPreventRecursiveBuildGuard(TStreamerInfo* info): fInfo(info) {
          fInfo->SetBit(TStreamerInfo::kBuildRunning);
@@ -5167,35 +5187,24 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
 
    char* p = (char*) ary;
 
-   if (!p) {
-      // Determine the alignment requirement for the class.
-      const std::size_t align = std::max(fClass->GetClassAlignment(), alignof(Long_t));
-      // The header holds two Long_t cookie values (size and nElements).
-      // Round the header size up to the next multiple of 'align' so that
-      // dataBegin (= p + headerSize) is itself aligned to 'align'.
-      const std::size_t cookieSize = sizeof(Long_t) * 2;
-      const std::size_t headerSize = AlignUp(cookieSize, align);
+   // Determine the alignment requirement for the class.
+   const ArrayCookieLayout layout(fClass);
 
-      Long_t len = nElements * size + headerSize;
+   if (!p) {
+
+      Long_t len = nElements * size + layout.headerSize;
 
       // Allocate and initialize the memory block.  Request alignment so
       // that the raw block starts on an 'align'-boundary; combined with
       // the rounded-up header this guarantees dataBegin is also aligned.
-      p = static_cast<char*>(::operator new[](len, std::align_val_t(align)));
+      p = static_cast<char*>(::operator new[](len, std::align_val_t(layout.align)));
       memset(p, 0, len);
    }
 
-   // Store the array cookie in the two Long_t slots immediately before dataBegin.
-   // Recompute headerSize from the class alignment so the layout matches DeleteArray.
-   const std::size_t align = std::max(fClass->GetClassAlignment(), alignof(Long_t));
-   assert(ROOT::Internal::IsValidAlignment(align));
-   const std::size_t cookieSize = sizeof(Long_t) * 2;
-   const std::size_t headerSize = AlignUp(cookieSize, align);
-
-   Long_t* r = (Long_t*)(p + headerSize - cookieSize);
+   Long_t* r = (Long_t*)(p + layout.headerSize - layout.cookieSize);
    r[0] = size;
    r[1] = nElements;
-   char* dataBegin = p + headerSize;
+   char* dataBegin = p + layout.headerSize;
 
    // Do a placement new for each element.
    char* q = dataBegin;
@@ -5394,14 +5403,12 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
    // Recover the cookie layout: the two Long_t values sit in the header
    // block immediately before dataBegin, with the same alignment-based
    // headerSize that NewArray used.
-   const std::size_t align      = fClass->GetClassAlignment();
-   const std::size_t cookieSize = sizeof(Long_t) * 2;
-   const std::size_t headerSize = ((cookieSize + align - 1) / align) * align;
+   const ArrayCookieLayout layout(fClass);
 
-   Long_t* r = (Long_t*)((char*)ary - cookieSize);
+   Long_t* r = (Long_t*)((char*)ary - layout.cookieSize);
    Long_t arrayLen = r[1];
    Long_t size     = r[0];
-   char* memBegin  = (char*)ary - headerSize;
+   char* memBegin  = (char*)ary - layout.headerSize;
 
    char* p = ((char*) ary) + ((arrayLen - 1) * size);
    for (Long_t cnt = 0; cnt < arrayLen; ++cnt, p -= size) {
@@ -5410,7 +5417,7 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
    } // for arrayItemSize
 
    if (!dtorOnly) {
-      ::operator delete[](memBegin, std::align_val_t(align));
+      ::operator delete[](memBegin, std::align_val_t(layout.align));
    }
 }
 
