@@ -3243,7 +3243,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
       // If we added default parameter, allocate new type in the AST.
       if (mightHaveChanged) {
-         instanceType = Ctx.getTemplateSpecializationType(TST->getKeyword(),
+         instanceType = Ctx.getTemplateSpecializationType(clang::ElaboratedTypeKeyword::None,
                                                           TST->getTemplateName(),
                                                           desArgs,
                                                           /*CanonicalArgs=*/{},
@@ -3264,11 +3264,11 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
         // Specialization Type. We need to fully qualify their arguments.
 
         const clang::Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-            Ctx, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
+            Ctx, TT, clang::ElaboratedTypeKeyword::None, prefix, /*WithGlobalNsPrefix=*/false);
         instanceType = clang::QualType(TypePtr, 0);
       } else if (const auto *TT = llvm::dyn_cast<clang::TypedefType>(instanceType.getTypePtr())) {
         instanceType = Ctx.getTypedefType(
-            TT->getKeyword(), prefix, TT->getDecl(),
+            clang::ElaboratedTypeKeyword::None, prefix, TT->getDecl(),
             clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
       }
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
@@ -3760,7 +3760,7 @@ clang::TemplateName ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clan
 
    if (const TemplateSpecializationType* tst = llvm::dyn_cast_or_null<const TemplateSpecializationType>(theType)) {
       theTemplateName = tst->getTemplateName();
-      theKeyword = tst->getKeyword();
+      theKeyword = clang::ElaboratedTypeKeyword::None;
    } // We step into the decl dimension
    else if (ClassTemplateDecl* ctd = QualType2ClassTemplateDecl(qt)) {
       theTemplateName = TemplateName(ctd);
@@ -4058,7 +4058,7 @@ static void KeepNParams(clang::QualType& normalizedType,
 
    // We extract the template name from the type
    TemplateName theTemplateName;
-   ElaboratedTypeKeyword theKeyword = ElaboratedTypeKeyword::None;
+   ElaboratedTypeKeyword theKeyword = clang::ElaboratedTypeKeyword::None;
    ExtractTemplateNameFromQualType(normalizedType, theTemplateName, theKeyword);
    if (theTemplateName.isNull()) {
       normalizedType=originalNormalizedType;
@@ -4199,11 +4199,11 @@ static void KeepNParams(clang::QualType& normalizedType,
         // Specialization Type. We need to fully qualify their arguments.
 
         const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-            astCtxt, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
+            astCtxt, TT, clang::ElaboratedTypeKeyword::None, prefix, /*WithGlobalNsPrefix=*/false);
         normalizedType = QualType(TypePtr, 0);
       } else if (const auto *TT = dyn_cast<TypedefType>(normalizedType.getTypePtr())) {
         normalizedType = astCtxt.getTypedefType(
-            TT->getKeyword(), prefix, TT->getDecl(),
+            clang::ElaboratedTypeKeyword::None, prefix, TT->getDecl(),
             clang::TypeName::getFullyQualifiedType(TT->desugar(), astCtxt, /*WithGlobalNsPrefix=*/false));
       } else if (const auto *TST =
                  dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr())) {
@@ -5047,7 +5047,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // If desugaring happened allocate new type in the AST.
       if (mightHaveChanged) {
          clang::Qualifiers qualifiers = input.getLocalQualifiers();
-         input = astCtxt.getTemplateSpecializationType(inputTST->getKeyword(),
+         input = astCtxt.getTemplateSpecializationType(clang::ElaboratedTypeKeyword::None,
                                                        inputTST->getTemplateName(),
                                                        desArgs,
                                                        /*CanonicalArgs=*/{},

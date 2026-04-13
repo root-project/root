@@ -492,11 +492,11 @@ namespace utils {
           // Specialization Type. We need to fully qualify their arguments.
 
           const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-              Ctx, TT, TT->getKeyword(), outer_scope, /*WithGlobalNsPrefix=*/false);
+              Ctx, TT, ElaboratedTypeKeyword::None, outer_scope, /*WithGlobalNsPrefix=*/false);
           desugared = QualType(TypePtr, 0);
         } else if (const auto *TT = dyn_cast<TypedefType>(desugared.getTypePtr())) {
           desugared = Ctx.getTypedefType(
-              TT->getKeyword(), outer_scope, TT->getDecl(),
+              ElaboratedTypeKeyword::None, outer_scope, TT->getDecl(),
               clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
         }
       }
@@ -1293,7 +1293,7 @@ namespace utils {
       // If desugaring happened allocate new type in the AST.
       if (mightHaveChanged) {
         Qualifiers qualifiers = QT.getLocalQualifiers();
-        QT = Ctx.getTemplateSpecializationType(TST->getKeyword(),
+        QT = Ctx.getTemplateSpecializationType(ElaboratedTypeKeyword::None,
                                                TST->getTemplateName(),
                                                desArgs,
                                                /*CanonicalArgs=*/{},
@@ -1387,11 +1387,11 @@ namespace utils {
         // Specialization Type. We need to fully qualify their arguments.
 
         const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-            Ctx, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
+            Ctx, TT, ElaboratedTypeKeyword::None, prefix, /*WithGlobalNsPrefix=*/false);
         QT = QualType(TypePtr, 0);
       } else if (const auto *TT = dyn_cast<TypedefType>(QT.getTypePtr())) {
         QT = Ctx.getTypedefType(
-            TT->getKeyword(), prefix, TT->getDecl(),
+            ElaboratedTypeKeyword::None, prefix, TT->getDecl(),
             clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
       } else if (const auto *TST =
                  dyn_cast<TemplateSpecializationType>(QT.getTypePtr())) {
