@@ -2655,6 +2655,7 @@ void TStreamerInfo::BuildOld()
          }
          // Use the precise alignment of the element type, falling back to
          // max_align_t for types whose alignment is not known.
+         // (e.g. forward declared classes, or classes with incomplete types info, etc..)
          std::size_t align = alignof(std::max_align_t);
          if (element->GetClass() && element->GetClass()->GetClassAlignment())
             align = element->GetClass()->GetClassAlignment();

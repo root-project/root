@@ -41,6 +41,7 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
       R__LOCKGUARD(gInterpreterMutex);
       SetName(gCling->TypedefInfo_Name(fInfo));
       SetTitle(gCling->TypedefInfo_Title(fInfo));
+      // SetType sets fTrueName, fType , fSize and fAlignOf.
       SetType(gCling->TypedefInfo_TrueName(fInfo));
       fProperty = gCling->TypedefInfo_Property(fInfo);
       fSize = gCling->TypedefInfo_Size(fInfo);
