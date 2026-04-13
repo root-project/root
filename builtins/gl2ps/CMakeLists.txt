@@ -52,10 +52,10 @@ ExternalProject_Add(
 
 file(MAKE_DIRECTORY ${ROOT_GL2PS_PREFIX}/include)
 add_library(gl2ps::gl2ps IMPORTED STATIC GLOBAL)
+add_dependencies(gl2ps::gl2ps BUILTIN_GL2PS)
 set_target_properties(gl2ps::gl2ps PROPERTIES
     IMPORTED_LOCATION ${ROOT_GL2PS_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_GL2PS_PREFIX}/include)
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS gl2ps::gl2ps)
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names

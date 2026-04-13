@@ -214,8 +214,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     Ged
     RCsg
     ASImage
-  BUILTINS
-    BUILTIN_GL2PS
   INSTALL_OPTIONS
     ${installoptions}
 )
