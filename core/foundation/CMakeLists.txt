@@ -14,6 +14,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TClassEdit.h
   TError.h
   ThreadLocalStorage.h
+  ROOT/RAlignmentUtils.hxx
   ROOT/RError.hxx
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx

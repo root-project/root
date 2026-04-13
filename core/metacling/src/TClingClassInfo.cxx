@@ -51,6 +51,8 @@ but the class metadata comes from the Clang C++ compiler, not CINT.
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "ROOT/RAlignmentUtils.hxx"
+
 #include <sstream>
 #include <string>
 
@@ -1398,7 +1400,7 @@ size_t TClingClassInfo::GetAlignOf() const
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
    const ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
    auto align = Layout.getAlignment().getQuantity();
-   assert(align > 0);
+   assert(ROOT::Internal::IsValidAlignment(align));
    return align;
 }
 

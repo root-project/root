@@ -124,6 +124,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClonesArray.h"
 #include "TRef.h"
 #include "TRefArray.h"
+#include "ROOT/RAlignmentUtils.hxx"
 
 using std::multimap, std::make_pair, std::string;
 
