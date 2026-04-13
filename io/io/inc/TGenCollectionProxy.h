@@ -287,39 +287,6 @@ public:
       }
    };
 
-   /// Allocator that allocates memory aligned to at least \a Align bytes.
-   /// The alignment is chosen at construction time and must be a power of two.
-   template <typename T>
-   struct AlignedAllocator {
-      using value_type = T;
-
-      std::size_t alignment;
-
-      explicit AlignedAllocator(std::size_t align = alignof(std::max_align_t)) : alignment(align) {}
-
-      template <typename U>
-      AlignedAllocator(const AlignedAllocator<U> &other) noexcept : alignment(other.alignment) {}
-
-      T *allocate(std::size_t n)
-      {
-         std::size_t effectiveAlign = alignment < alignof(T) ? alignof(T) : alignment;
-         std::size_t bytes = ROOT::Internal::AlignUp(n * sizeof(T), effectiveAlign);
-         return static_cast<T *>(::operator new(bytes, std::align_val_t{effectiveAlign}));
-      }
-
-      void deallocate(T *p, std::size_t n) noexcept
-      {
-         std::size_t effectiveAlign = alignment < alignof(T) ? alignof(T) : alignment;
-         std::size_t bytes = ROOT::Internal::AlignUp(n * sizeof(T), effectiveAlign);
-         ::operator delete(p, bytes, std::align_val_t{effectiveAlign});
-      }
-
-      template <typename U>
-      bool operator==(const AlignedAllocator<U> &other) const noexcept { return alignment == other.alignment; }
-      template <typename U>
-      bool operator!=(const AlignedAllocator<U> &other) const noexcept { return !(*this == other); }
-   };
-
 protected:
    typedef ROOT::Detail::TCollectionProxyInfo::Environ<char[64]> Env_t;
    typedef ROOT::Detail::TCollectionProxyInfo::EnvironBase EnvironBase_t;
