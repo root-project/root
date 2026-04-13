@@ -22,6 +22,7 @@
 #include "TGeoManager.h"
 #include "TClass.h"
 #include "TGeoNode.h"
+#include "TGeoMatrix.h"
 #include "TBase64.h"
 #include "TStopwatch.h"
 
