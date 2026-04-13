@@ -26,6 +26,15 @@ inline constexpr bool IsValidAlignment(std::size_t align) noexcept
    return align > 0 && (align & (align - 1)) == 0;
 }
 
+/// Round \p value up to the next multiple of \p align.
+/// \p align must be a power of two (asserted at runtime in debug builds).
+template <typename T>
+inline constexpr T AlignUp(T value, T align) noexcept
+{
+   assert(IsValidAlignment(static_cast<std::size_t>(align))); // must be a power of two
+   return (value + align - 1) & ~(align - 1);
+}
+
 } // namespace Internal
 } // namespace ROOT
 
