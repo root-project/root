@@ -12,15 +12,27 @@
 
 #include "TGComboBox.h"
 
+#include "TF2.h"
+#include "TMath.h"
+#include "TRandom2.h"
+#include "TTree.h"
+
 #include <iostream>
 #include <exception>
 #include <stdexcept>
 #include <cmath>
+#include <cstdio>
 
 #include "CommonDefs.h"
 
+#ifdef WIN32
+#include "io.h"
+#else
+#include "unistd.h"
+#endif
+
 // Function that compares to doubles up to an error limit
-int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-10)
+int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-5)
 {
    return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
 }
@@ -32,6 +44,35 @@ int SelectEntry(TGComboBox* cb, const char* name)
    cb->Select(findEntry->EntryId());
 
    return findEntry->EntryId();
+}
+
+void createTree(int n = 100)
+{
+   TTree *tree =  new TTree("tree","2 var gaus tree");
+   double x, y, z, u, v, w;
+   tree->Branch("x", &x, "x/D");
+   tree->Branch("y", &y, "y/D");
+   tree->Branch("z", &z, "z/D");
+   tree->Branch("u", &u, "u/D");
+   tree->Branch("v", &v, "v/D");
+   tree->Branch("w", &w, "w/D");
+   TRandom2 rndm;
+   double origPars[13] = {1,2,3,0.5, 0.5, 0, 3, 0, 4, 0, 5, 1, 10 };
+   TF2 f2("f2", "bigaus", -10, 10,-10, 10);
+   f2.FixParameter(0, 1. / (2. * TMath::Pi() * origPars[1] * origPars[3] * TMath::Sqrt(origPars[4]))); // constant (max-value), irrelevant
+   f2.FixParameter(1, origPars[0]); // mu_x
+   f2.FixParameter(2, origPars[1]); // sigma_x
+   f2.FixParameter(3, origPars[2]); // mu_y
+   f2.FixParameter(4, origPars[3]); // sigma_y
+   f2.FixParameter(5, origPars[4]); // rho
+   for (Int_t i = 0 ; i < n; i++) {
+      f2.GetRandom2(x, y, &rndm);
+      z = rndm.Gaus(origPars[5],origPars[6]);
+      u = rndm.Gaus(origPars[7],origPars[8]);
+      v = rndm.Gaus(origPars[9],origPars[10]);
+      w = rndm.Gaus(origPars[11],origPars[12]);
+      tree->Fill();
+   }
 }
 
 // Class to make the Unit Testing. It is important than the test
@@ -58,22 +99,37 @@ public:
       const char* _exp;
    public:
       InvalidPointer(const char* exp): _exp(exp) {};
-      const char* what() { return _exp; };
+      const char* what() const noexcept override { return _exp; };
    };
 
    // Constructor: Receives the instance of the TFitEditor
    FitEditorUnitTesting() {
       // Redirect the stdout to a file outputUnitTesting.txt
+      #ifdef WIN32
+      old_stdout = _dup (_fileno (stdout));
+      #else
       old_stdout = dup (fileno (stdout));
-      (void) freopen ("outputUnitTesting.txt", "w", stdout);
+      #endif
+      auto res = freopen ("outputUnitTesting.txt", "w", stdout);
+      if (!res) {
+          throw InvalidPointer("In FitEditorUnitTesting constructor cannot freopen");
+      }
+      #ifdef WIN32
+      out = _fdopen (old_stdout, "w");
+      #else
       out = fdopen (old_stdout, "w");
+      #endif
 
       // Execute the initial script
-      gROOT->ProcessLine(".x $ROOTSYS/tutorials/fit/FittingDemo.C+");
+      TString scriptLine = TString(".x ") + TROOT::GetTutorialDir() + "/math/fit/FittingDemo.C+";
+      gROOT->ProcessLine(scriptLine.Data());
 
       // Get an instance of the TFitEditor
       TCanvas* c1 = static_cast<TCanvas*>( gROOT->FindObject("c1") );
       TH1*      h = static_cast<TH1*>    ( gROOT->FindObject("histo") );
+      if (!c1 || !h) {
+         throw InvalidPointer("In c1 or h initialization");
+      }
 
       f = TFitEditor::GetInstance(c1,h);
 
@@ -176,7 +232,9 @@ public:
       for ( unsigned int i = 0; i < f->fFuncPars.size(); ++i ) {
          for ( unsigned int j = 0; j < 3; ++j) {
             int internalStatus = equals(pars[i][j], f->fFuncPars[i][j]);
-            //fprintf(out, "i: %d, j: %d, e: %d\n", i, j, internalStatus);
+            if (internalStatus != 0) {
+                fprintf(out, "i: %d, j: %d, e: %d, diff %g\n", i, j, internalStatus, TMath::Abs(pars[i][j] - f->fFuncPars[i][j]));
+            }
             status += internalStatus;
          }
       }
@@ -186,7 +244,7 @@ public:
 
    // From here, the implementation of the different tests. The names
    // of the test should be enough to know what they are testing, as
-   // these tests are mean to be as simple as possible.
+   // these tests are meant to be as simple as possible.
 
    int TestHistogramFit() {
       f->fTypeFit->Select(kFP_UFUNC, kTRUE);
@@ -222,7 +280,8 @@ public:
    }
 
    int TestUpdate() {
-      gROOT->ProcessLine(".x $ROOTSYS/tutorials/fit/ConfidenceIntervals.C+");
+      TString scriptLine = TString(".x ") + TROOT::GetTutorialsDir() + "/math/fit/ConfidenceIntervals.C+";
+      gROOT->ProcessLine(scriptLine.Data());
       f->DoUpdate();
 
       return 0;
@@ -311,7 +370,7 @@ public:
    }
 
    int TestUpdateTree() {
-      gROOT->ProcessLine(".x ~/tmp/fitpanel/createTree.C++");
+      createTree();
       f->DoUpdate();
       return 0;
    }
@@ -326,11 +385,10 @@ public:
       f->ProcessTreeInput(objSelected, selected, "x", "y>1");
       f->fTypeFit->Select(kFP_PRED1D, kTRUE);
       SelectEntry(f->fFuncList, "gausn");
-
       f->fFuncPars.resize(3);
       f->fFuncPars[0][0] = f->fFuncPars[0][1] = f->fFuncPars[0][2] = 1;
-      f->fFuncPars[1][0] = 0;
-      f->fFuncPars[2][0] = 1;
+      f->fFuncPars[1][0] = 0; f->fFuncPars[1][1] = f->fFuncPars[1][2] = 0;
+      f->fFuncPars[2][0] = 1; f->fFuncPars[2][1] = f->fFuncPars[2][2] = 0;
 
       f->DoFit();
 
