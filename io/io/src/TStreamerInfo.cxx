@@ -5173,7 +5173,7 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
 
    if (!p) {
       // Determine the alignment requirement for the class.
-      const std::size_t align = fClass->GetClassAlignment();
+      const std::size_t align = std::max(fClass->GetClassAlignment(), alignof(Long_t));
       // The header holds two Long_t cookie values (size and nElements).
       // Round the header size up to the next multiple of 'align' so that
       // dataBegin (= p + headerSize) is itself aligned to 'align'.
@@ -5191,7 +5191,7 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
 
    // Store the array cookie in the two Long_t slots immediately before dataBegin.
    // Recompute headerSize from the class alignment so the layout matches DeleteArray.
-   const std::size_t align      = fClass->GetClassAlignment();
+   const std::size_t align = std::max(fClass->GetClassAlignment(), alignof(Long_t));
    const std::size_t cookieSize = sizeof(Long_t) * 2;
    const std::size_t headerSize = AlignUp(cookieSize, align);
 
