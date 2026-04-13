@@ -2655,6 +2655,7 @@ void TStreamerInfo::BuildOld()
             align = element->GetClass()->GetClassAlignment();
          else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
             align = eldt->GetAlignOf();
+         assert(ROOT::Internal::IsValidAlignment(align));
          offset = (Int_t)AlignUp((std::size_t)offset, align);
          element->SetOffset(offset);
          offset += asize;
@@ -5187,6 +5188,7 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
    // Store the array cookie in the two Long_t slots immediately before dataBegin.
    // Recompute headerSize from the class alignment so the layout matches DeleteArray.
    const std::size_t align = std::max(fClass->GetClassAlignment(), alignof(Long_t));
+   assert(ROOT::Internal::IsValidAlignment(align));
    const std::size_t cookieSize = sizeof(Long_t) * 2;
    const std::size_t headerSize = AlignUp(cookieSize, align);
 
@@ -5344,6 +5346,7 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
    } // iter over elements
 
    if (!dtorOnly) {
+      assert(ROOT::Internal::IsValidAlignment(fClass->GetClassAlignment()));
       ::operator delete[](p, std::align_val_t(fClass->GetClassAlignment()));
    }
 }
@@ -6024,6 +6027,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
          }
       }
       // a class
+      assert(ROOT::Internal::IsValidAlignment(clm->GetClassAlignment()));
       align = std::max(align, clm->GetClassAlignment());
       if (needAlign && align != alignof(std::max_align_t) && ((offset % align) != 0))
          offset = (Int_t)AlignUp((size_t)offset, align);
@@ -6076,9 +6080,10 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
    if (fel) {
       i->GetElements()->Add(fel);
 
-      if (fel->GetClass() && fel->GetClass()->GetClassAlignment())
+      if (fel->GetClass() && fel->GetClass()->GetClassAlignment()) {
+         assert(ROOT::Internal::IsValidAlignment(fel->GetClass()->GetClassAlignment()));
          i->fAlignment = std::max(align, fel->GetClass()->GetClassAlignment());
-      else if (auto *dt = TDataType::GetDataType((EDataType)fel->GetType()); dt && dt->GetAlignOf())
+      } else if (auto *dt = TDataType::GetDataType((EDataType)fel->GetType()); dt && dt->GetAlignOf())
          i->fAlignment = std::max(align, dt->GetAlignOf());
    } else {
       delete i;
@@ -6090,9 +6095,10 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
       R__CreateEmulatedElement("second", secondname, size, silent, /*needAlign=*/!hint_pair_offset);
    if (second) {
       i->GetElements()->Add(second);
-      if (second->GetClass() && second->GetClass()->GetClassAlignment())
+      if (second->GetClass() && second->GetClass()->GetClassAlignment()){
+         assert(ROOT::Internal::IsValidAlignment(second->GetClass()->GetClassAlignment()));
          i->fAlignment = std::max(align, second->GetClass()->GetClassAlignment());
-      else if (auto *dt = TDataType::GetDataType((EDataType)second->GetType()); dt && dt->GetAlignOf())
+      } else if (auto *dt = TDataType::GetDataType((EDataType)second->GetType()); dt && dt->GetAlignOf())
          i->fAlignment = std::max(align, dt->GetAlignOf());
    } else {
       delete i;
