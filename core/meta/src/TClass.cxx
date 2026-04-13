@@ -5868,6 +5868,7 @@ size_t TClass::GetClassAlignment() const
       }
       return alignof(std::vector<char>);
    }
+   assert(GetStreamerInfo() && GetStreamerInfo()->GetClassAlignment() != 0);
    return GetStreamerInfo()->GetClassAlignment();
 }
 

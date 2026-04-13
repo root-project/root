@@ -63,6 +63,7 @@ public:
          // If the collection contains pointers, we need to use the alignment of a pointer, not of the value class.
          align = alignof(void*);
       } else if (vcl) {
+         assert(ROOT::Internal::IsValidAlignment(vcl->GetClassAlignment()));
          align = vcl->GetClassAlignment();
       } else {
          switch( int(fVal->fKind) ) {
@@ -76,8 +77,13 @@ public:
             case kULong_t:  align = alignof(long); break;
             case kLong64_t:
             case kULong64_t:align = alignof(long long); break;
+            case kFloat16_t:
             case kFloat_t:  align = alignof(float); break;
+            case kDouble32_t:
             case kDouble_t: align = alignof(double); break;
+            default:
+               Fatal("TEmulatedCollectionProxy::WithCont", "Unsupported value type %s for value class %s",
+                     EDataTypeName(fVal->fKind), vcl ? vcl->GetName() : "<unknown>");
          }
       }
       switch (align) {
