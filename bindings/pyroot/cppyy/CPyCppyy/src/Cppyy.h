@@ -139,6 +139,8 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool IsAggregate(TCppType_t type);
     CPPYY_IMPORT
+    bool IsIntegerType(const std::string &type_name);
+    CPPYY_IMPORT
     bool IsDefaultConstructable(TCppType_t type);
 
     CPPYY_IMPORT

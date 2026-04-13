@@ -123,4 +123,43 @@ public:
 
 class IndexableDerived : public IndexableBase {};
 
+//===========================================================================
+// for testing size() -> __len__ pythonization guards
+class SizeReturnsInt {
+public:
+   int size() { return 3; }
+   int *begin() { return m_data; }
+   int *end() { return m_data + 3; }
+
+private:
+   int m_data[3] = {1, 2, 3};
+};
+
+class SizeReturnsNonInt {
+public:
+   struct OptSize {};
+   OptSize size() { return {}; }
+   int *begin() { return nullptr; }
+   int *end() { return nullptr; }
+};
+
+class SizeWithoutIterator {
+public:
+   int size() { return 5; }
+   // no begin()/end() or operator[]
+};
+
+// for testing __len__ with fully inherited container interface
+class ContainerBase {
+public:
+   int size() { return 2; }
+   int *begin() { return m_data; }
+   int *end() { return m_data + 2; }
+
+private:
+   int m_data[2] = {10, 20};
+};
+
+class InheritedContainer : public ContainerBase {};
+
 } // namespace pyzables

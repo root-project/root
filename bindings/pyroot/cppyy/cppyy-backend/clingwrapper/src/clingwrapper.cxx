@@ -1247,6 +1247,18 @@ bool Cppyy::IsAggregate(TCppType_t type)
     return false;
 }
 
+bool Cppyy::IsIntegerType(const std::string &type_name)
+{
+   // Test if the named type is an integer type
+   TypeInfo_t *ti = gInterpreter->TypeInfo_Factory(type_name.c_str());
+   if (!ti)
+      return false;
+   void *qtp = gInterpreter->TypeInfo_QualTypePtr(ti);
+   bool result = qtp ? gInterpreter->IsIntegerType(qtp) : false;
+   gInterpreter->TypeInfo_Delete(ti);
+   return result;
+}
+
 bool Cppyy::IsDefaultConstructable(TCppType_t type)
 {
 // Test if this type has a default constructor or is a "plain old data" type
