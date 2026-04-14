@@ -50,7 +50,6 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
       }
    } else {
       fValues = {};
-      fContext = 0;
    }
    SetRefCount(1);
 }
@@ -61,20 +60,14 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
 TGGC::TGGC(GCValues_t *values)
 {
    fContext = 0;
+   SetRefCount(1);
    // case of default ctor at program startup before gClient exists
-   if (!values) {
+   if (!values)
       fValues = {};
-      fContext = 0;
-      SetRefCount(1);
-      return;
-   }
-
-   if (gClient)
+   else if (gClient)
       gClient->GetGC(values, kTRUE);
-   else {
-      fContext = 0;
+   else
       Error("TGGC", "TGClient not yet initialized, should never happen");
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
