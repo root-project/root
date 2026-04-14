@@ -916,6 +916,7 @@ if(builtin_tbb)
 endif()
 
 if(builtin_tbb)
+  list(APPEND ROOT_BUILTINS BUILTIN_TBB)
   add_subdirectory(builtins/tbb)
 endif()
 

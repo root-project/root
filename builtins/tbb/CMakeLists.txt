@@ -1,5 +1,5 @@
-set(tbb_url ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
-set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
+set(ROOT_TBB_URL ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
+set(ROOT_TBB_HASH 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
 
 if(MSVC)
   if(CMAKE_GENERATOR MATCHES Ninja)
@@ -13,15 +13,14 @@ if(MSVC)
       set(tbbsuffix "_debug")
     endif()
   endif()
-  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
-  set(TBB_CXXFLAGS "-D__TBB_NO_IMPLICIT_LINKAGE=1")
+  set(ROOT_TBB_LIBRARY ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
   install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
 else()
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(tbbsuffix "_debug")
   endif()
-  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${tbbsuffix}${CMAKE_SHARED_LIBRARY_SUFFIX})
+  set(ROOT_TBB_LIBRARY ${CMAKE_BINARY_DIR}/lib/libtbb${tbbsuffix}${CMAKE_SHARED_LIBRARY_SUFFIX})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
 endif()
 if(tbb_build)
@@ -29,9 +28,9 @@ if(tbb_build)
 endif()
 
 ExternalProject_Add(
-  TBB
-  URL ${tbb_url}
-  URL_HASH SHA256=${tbb_sha256}
+  BUILTIN_TBB
+  URL ${ROOT_TBB_URL}
+  URL_HASH SHA256=${ROOT_TBB_HASH}
   INSTALL_DIR ${CMAKE_BINARY_DIR}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_POLICY_VERSION_MINIMUM=3.5
@@ -41,6 +40,7 @@ ExternalProject_Add(
              -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
              -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
              -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include
+             -DCMAKE_INSTALL_BINDIR=${CMAKE_BINARY_DIR}/bin
              -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib
              -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
              -DTBBMALLOC_BUILD=OFF
@@ -51,18 +51,31 @@ ExternalProject_Add(
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${TBB_EXTRA_BUILD_ARGS}
   INSTALL_COMMAND ${CMAKE_COMMAND}  --install . ${TBB_EXTRA_BUILD_ARGS}
   LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-  BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+  BUILD_BYPRODUCTS ${ROOT_TBB_LIBRARY}
   TIMEOUT 600
 )
 
+set(ROOT_TBB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
+
 ExternalProject_Add_Step(
-   TBB tbb2externals
-   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${CMAKE_BINARY_DIR}/ginclude/tbb
-   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/oneapi ${CMAKE_BINARY_DIR}/ginclude/oneapi
+   BUILTIN_TBB tbb2externals
+   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${ROOT_TBB_INCLUDE_DIR}/tbb
+   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/oneapi ${ROOT_TBB_INCLUDE_DIR}/oneapi
    DEPENDEES install
 )
-set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude PARENT_SCOPE)
-set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1" PARENT_SCOPE)
-# The following line is needed to generate the proper dependency with: BUILTINS TBB (in Imt)
-# and generated with this syntax: add_dependencies(${library} ${${arg1}_TARGET})
-set(TBB_TARGET TBB PARENT_SCOPE)
+
+file(MAKE_DIRECTORY ${ROOT_TBB_INCLUDE_DIR})
+add_library(TBB::tbb IMPORTED STATIC GLOBAL)
+add_dependencies(TBB::tbb BUILTIN_TBB)
+set_target_properties(TBB::tbb PROPERTIES
+    IMPORTED_LOCATION ${ROOT_TBB_LIBRARY}
+    INTERFACE_INCLUDE_DIRECTORIES ${ROOT_TBB_INCLUDE_DIR})
+target_compile_definitions(TBB::tbb INTERFACE TBB_SUPPRESS_DEPRECATED_MESSAGES=1)
+if(MSVC)
+  target_compile_definitions(TBB::tbb INTERFACE __TBB_NO_IMPLICIT_LINKAGE=1)
+endif()
+
+set(TBB_FOUND ON PARENT_SCOPE)
+set(TBB_VERSION ${ROOT_TBB_VERSION} PARENT_SCOPE)
+set(TBB_INCLUDE_DIRS ${ROOT_TBB_INCLUDE_DIR} PARENT_SCOPE)
+set(TBB_LIBRARIES ${ROOT_TBB_LIBRARY} PARENT_SCOPE)
