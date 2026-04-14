@@ -20,7 +20,11 @@ set(TestSource
     stressKalman.cxx)
 
 
-ROOT_GENERATE_DICTIONARY(TrackDict Track.h LINKDEF TrackLinkDef.h OPTIONS -inlineInputHeader)
+if (DEFINED ENV{USE_REFLEX})
+  REFLEX_GENERATE_DICTIONARY(TrackDict Track.h SELECTION TrackDict.xml)
+else()
+  ROOT_GENERATE_DICTIONARY(TrackDict Track.h LINKDEF TrackLinkDef.h OPTIONS -inlineInputHeader)
+endif()
 
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestSource})
@@ -31,6 +35,9 @@ foreach(file ${TestSource})
     ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
   endif()
   target_include_directories(${testname} PRIVATE ./)
+  if (DEFINED ENV{USE_REFLEX})
+    target_compile_definitions(${testname} PRIVATE USE_REFLEX)
+  endif()
   if (DEFINED ENV{CLHEPBASE})
     target_include_directories(${testname} PRIVATE $ENV{CLHEPBASE})
     target_compile_definitions(${testname} PRIVATE HAVE_CLHEP)
