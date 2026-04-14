@@ -1262,7 +1262,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kMouseEnter:
       // mouse enters canvas
-      if (!fDoubleBuffer) FeedbackMode(kTRUE);
+      //FeedbackMode(kTRUE);
       break;
 
    case kMouseLeave:
@@ -1276,7 +1276,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          EnterLeave(prevSelPad, prevSelObj);
          fSelected     = sobj;
          fSelectedPad  = spad;
-         if (!fDoubleBuffer) FeedbackMode(kFALSE);
+         //FeedbackMode(kFALSE);
       }
       break;
 
