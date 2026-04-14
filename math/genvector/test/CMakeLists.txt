@@ -19,6 +19,18 @@ ROOT_EXECUTABLE(testVectorIO testVectorIO.cxx LIBRARIES GenVector Tree Hist Gpad
 ROOT_ADD_TEST(test-genvector-vectorio COMMAND testVectorIO
                                       COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h)
 
+if (DEFINED ENV{USE_REFLEX})
+  REFLEX_GENERATE_DICTIONARY(TrackDict Track.h SELECTION TrackDict.xml)
+else()
+  ROOT_GENERATE_DICTIONARY(TrackDict Track.h LINKDEF TrackLinkDef.h OPTIONS -inlineInputHeader)
+endif()
+ROOT_EXECUTABLE(testVectorIOdict testVectorIO.cxx TrackDict.cxx LIBRARIES GenVector Tree Hist Gpad Physics)
+if (DEFINED ENV{USE_REFLEX})
+  target_compile_definitions(testVectorIOdict PRIVATE USE_REFLEX)
+endif()
+ROOT_ADD_TEST(test-genvector-vectoriodict COMMAND testVectorIOdict
+                                      COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h)
+
 ROOT_EXECUTABLE(coordinates3D coordinates3D.cxx LIBRARIES GenVector)
 ROOT_ADD_TEST(test-genvector-coordinates3D COMMAND coordinates3D)
 
