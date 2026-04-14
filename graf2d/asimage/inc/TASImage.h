@@ -71,6 +71,7 @@ protected:
 
    static ASVisual *fgVisual;      ///< pointer to visual structure
    static Bool_t    fgInit;        ///< global flag to init afterimage only once
+   static Bool_t    fgBatch;       ///< global flag to signal if batch mode is active ie fgVisual->dpy was set to nullptr
 
    EImageFileTypes GetFileType(const char *ext);
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
