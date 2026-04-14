@@ -1140,30 +1140,28 @@ void TCanvas::FeedbackMode(Bool_t set)
 
 void TCanvas::Flush()
 {
-   if ((fCanvasID == -1) || IsWeb()) return;
+   if ((fCanvasID == -1) || IsWeb() || IsBatch())
+      return;
 
-   TContext ctxt(this, kTRUE);
-   if (!IsBatch()) {
-      if (!UseGL() || fGLDevice == -1) {
-         fPainter->SelectDrawable(fCanvasID);
-         gPad = ctxt.GetSaved(); //don't do cd() because than also the pixmap is changed
-         CopyPixmaps();
-         fPainter->UpdateDrawable(1);
-      } else {
-         TVirtualPS *tvps = gVirtualPS;
-         gVirtualPS = nullptr;
-         gGLManager->MakeCurrent(fGLDevice);
-         fPainter->InitPainter();
-         Paint();
-         if (ctxt.GetSaved() && ctxt.GetSaved()->GetCanvas() == this) {
-            ctxt.GetSaved()->cd();
-            ctxt.GetSaved()->HighLight(ctxt.GetSaved()->GetHighLightColor());
-            //cd();
-         }
-         fPainter->LockPainter();
-         gGLManager->Flush(fGLDevice);
-         gVirtualPS = tvps;
-      }
+   if (!UseGL() || fGLDevice == -1) {
+      fPainter->SelectDrawable(fCanvasID);
+      CopyPixmaps();
+      fPainter->UpdateDrawable(1);
+   } else {
+      if (IsEditable())
+         fHilightPadBorder = gPad;
+
+      TContext ctxt(this, kTRUE);
+
+      TVirtualPS *tvps = gVirtualPS;
+      gVirtualPS = nullptr;
+      gGLManager->MakeCurrent(fGLDevice);
+      fPainter->InitPainter();
+      Paint();
+      fPainter->LockPainter();
+      gGLManager->Flush(fGLDevice);
+      gVirtualPS = tvps;
+      fHilightPadBorder = nullptr;
    }
 }
 
