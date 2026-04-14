@@ -11,10 +11,7 @@ set(ROOT_LZ4_HASH "537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f
 
 project(LZ4 C)
 
-set(LZ4_VERSION ${ROOT_LZ4_VERSION} CACHE INTERNAL "" FORCE) # used in roottest
-
 set(ROOT_LZ4_PREFIX ${CMAKE_BINARY_DIR}/builtins/LZ4-prefix)
-
 set(ROOT_LZ4_LIBRARY ${ROOT_LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 if(MSVC)
@@ -58,17 +55,17 @@ ExternalProject_Add(
 )
 
 
-set(LIBLZ4_INCLUDE_DIR ${ROOT_LZ4_PREFIX}/include)
-file(MAKE_DIRECTORY ${LIBLZ4_INCLUDE_DIR})
+set(LZ4_INCLUDE_DIR ${ROOT_LZ4_PREFIX}/include)
+file(MAKE_DIRECTORY ${LZ4_INCLUDE_DIR})
 
-add_library(LibLZ4 STATIC IMPORTED GLOBAL)
-add_library(LZ4::LZ4 ALIAS LibLZ4)
-target_include_directories(LibLZ4 INTERFACE ${LIBLZ4_INCLUDE_DIR})
-set_target_properties(LibLZ4 PROPERTIES IMPORTED_LOCATION ${ROOT_LZ4_LIBRARY})
+add_library(LZ4::LZ4 STATIC IMPORTED GLOBAL)
+add_dependencies(LZ4::LZ4 BUILTIN_LZ4)
+target_include_directories(LZ4::LZ4 INTERFACE ${LZ4_INCLUDE_DIR})
+set_target_properties(LZ4::LZ4 PROPERTIES IMPORTED_LOCATION ${ROOT_LZ4_LIBRARY})
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
-set(LZ4_INCLUDE_DIRS ${LIBLZ4_INCLUDE_DIR} PARENT_SCOPE)
+set(LZ4_INCLUDE_DIRS ${LZ4_INCLUDE_DIR} PARENT_SCOPE)
 set(LZ4_LIBRARIES ${ROOT_LZ4_LIBRARY} PARENT_SCOPE)
 set(LZ4_FOUND TRUE PARENT_SCOPE)
 set(LZ4_VERSION ${ROOT_LZ4_VERSION} PARENT_SCOPE)

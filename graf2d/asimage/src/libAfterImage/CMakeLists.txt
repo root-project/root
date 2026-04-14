@@ -59,18 +59,7 @@ set(SRC_FILES
 add_library(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
 set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(TARGET BUILTIN_LIBGIF)
-  add_dependencies(${LIB_NAME} BUILTIN_LIBGIF)
-endif()
-if(TARGET BUILTIN_LIBJPEG)
-  add_dependencies(${LIB_NAME} BUILTIN_LIBJPEG)
-endif()
-if(TARGET BUILTIN_LIBPNG)
-  add_dependencies(${LIB_NAME} BUILTIN_LIBPNG)
-endif()
-if(TARGET BUILTIN_FREETYPE)
-  add_dependencies(${LIB_NAME} BUILTIN_FREETYPE)
-endif()
+# ASEXTRA_LIBRARIES: PNG::PNG JPEG::JPEG GIF::GIF
 
 target_include_directories(${LIB_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${LIB_NAME} PRIVATE ${ASEXTRA_LIBRARIES} Freetype::Freetype ZLIB::ZLIB)

@@ -4,12 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-find_package(LZ4 REQUIRED)
 find_package(xxHash REQUIRED)
-
-if(builtin_lz4)
-    add_dependencies(Core BUILTIN_LZ4)
-endif()
 
 target_sources(Core PRIVATE src/ZipLZ4.cxx)
 target_link_libraries(Core PRIVATE xxHash::xxHash LZ4::LZ4)

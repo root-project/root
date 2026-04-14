@@ -49,6 +49,7 @@ set_target_properties(GIF::GIF PROPERTIES
     IMPORTED_LOCATION ${ROOT_LIBGIF_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBGIF_PREFIX}/include
 )
+add_dependencies(GIF::GIF BUILTIN_LIBGIF)
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
