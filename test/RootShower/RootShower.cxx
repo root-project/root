@@ -54,7 +54,6 @@
 #include <TGToolBar.h>
 #include <TGSplitter.h>
 #include <TColor.h>
-#include <THtml.h>
 
 #include <TPluginManager.h>
 #include <TVirtualGL.h>
@@ -700,13 +699,13 @@ Bool_t RootShower::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm
 
                   case M_FILE_HTML:
                      {
-                        THtml html;
+                        /*THtml html;
                         html.SetInputDir(gProgPath);
                         html.MakeClass("MyParticle");
                         html.MakeClass("MyDetector");
                         html.MakeClass("EventHeader");
                         html.MakeClass("MyEvent");
-                        html.MakeIndex();
+                        html.MakeIndex();*/
                      }
                      break;
 

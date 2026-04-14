@@ -17,6 +17,7 @@
 #include <TH1.h>
 #include "canvsave.h"
 #include <TCanvas.h>
+#include <TVirtualX.h>
 #include <snprintf.h>
 
 #if !defined S_ISDIR

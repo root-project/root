@@ -10,6 +10,9 @@
  *************************************************************************/
 
 #include "TApplication.h"
+#include "TVirtualX.h"
+#include "TRootHelpDialog.h"
+#include "HelpText.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TGMenu.h"

@@ -42,7 +42,6 @@ class TGTabElement;
 class TGVerticalFrame;
 class TGHorizontalFrame;
 class TGPictureButton;
-class THtml;
 class TGLabel;
 class TProcessID;
 class TGHtml;
@@ -126,7 +125,6 @@ protected:
    TGComboBox        *fComboBox;          // url history combo box
    TGTextBuffer      *fURLBuf;            // url buffer
    TGTextEntry       *fURL;               // url text entry
-   THtml             *fHtml;              // html doc
    TGHtml            *fGuiHtml;           // html widget
 
    virtual void       Build();
