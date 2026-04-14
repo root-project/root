@@ -1,0 +1,708 @@
+From eb23884c2c43f54f6dc2df9d5243c520a5ec7393 Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Fri, 24 Apr 2020 10:37:09 +0200
+Subject: [PATCH 1/7] don't build both static and shared lib; and build shared
+ lib by default (fixes #30)
+
+---
+ CMakeLists.txt | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0001c4f..be27ddb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -49,6 +49,7 @@ project(gl2ps C)
+ 
+ option(ENABLE_ZLIB "Enable compression using ZLIB" ON)
+ option(ENABLE_PNG "Enable PNG support" ON)
++option(BUILD_SHARED_LIBS "Enable dynamic/static libs" ON)
+ 
+ set(GL2PS_MAJOR_VERSION 1)
+ set(GL2PS_MINOR_VERSION 4)
+@@ -139,21 +140,19 @@ if(APPLE)
+ endif()
+ 
+ if(OPENGL_FOUND)
+-  add_library(lib STATIC gl2ps.c gl2ps.h)
+-  set_target_properties(lib PROPERTIES OUTPUT_NAME gl2ps)
++  add_library(gl2ps gl2ps.c gl2ps.h)
+ 
+-  add_library(shared SHARED gl2ps.c gl2ps.h)
+-  target_link_libraries(shared ${EXTERNAL_LIBRARIES})
+-  set_target_properties(shared PROPERTIES OUTPUT_NAME gl2ps
++  target_link_libraries(gl2ps ${EXTERNAL_LIBRARIES})
++  set_target_properties(gl2ps PROPERTIES
+     VERSION ${GL2PS_MAJOR_VERSION}.${GL2PS_MINOR_VERSION}.${GL2PS_PATCH_VERSION}
+     SOVERSION ${GL2PS_MAJOR_VERSION})
+   if(WIN32 OR CYGWIN)
+     set_target_properties(shared PROPERTIES
+         COMPILE_FLAGS "-DGL2PSDLL -DGL2PSDLL_EXPORTS")
+   endif()
+-  install(TARGETS lib shared RUNTIME DESTINATION bin
+-                             LIBRARY DESTINATION lib${LIB_SUFFIX}
+-                             ARCHIVE DESTINATION lib${LIB_SUFFIX})
++  install(TARGETS gl2ps RUNTIME DESTINATION bin
++                        LIBRARY DESTINATION lib${LIB_SUFFIX}
++                        ARCHIVE DESTINATION lib${LIB_SUFFIX})
+ endif()
+ 
+ if(WIN32)
+@@ -171,9 +170,9 @@ install(FILES ${CMAKE_SOURCE_DIR}/gl2psTestSimple.c DESTINATION ${GL2PS_DOC})
+ 
+ if(GLUT_FOUND)
+   add_executable(gl2psTest WIN32 gl2psTest.c)
+-  target_link_libraries(gl2psTest lib ${EXTERNAL_LIBRARIES})
++  target_link_libraries(gl2psTest gl2ps ${EXTERNAL_LIBRARIES})
+   add_executable(gl2psTestSimple WIN32 gl2psTestSimple.c)
+-  target_link_libraries(gl2psTestSimple lib ${EXTERNAL_LIBRARIES})
++  target_link_libraries(gl2psTestSimple gl2ps ${EXTERNAL_LIBRARIES})
+ endif()
+ 
+ find_package(LATEX)
+-- 
+2.34.1
+
+
+From 056540d1e738bc1a7764fe2bc7b3bf3f58e0e418 Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Fri, 24 Apr 2020 10:38:49 +0200
+Subject: [PATCH 2/7] issue error if opengl is not found (fixes #31)
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index be27ddb..c178857 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -92,7 +92,7 @@ if(NOT HAVE_VSNPRINTF)
+   add_definitions(-DHAVE_NO_VSNPRINTF)
+ endif()
+ 
+-find_package(OpenGL)
++find_package(OpenGL REQUIRED)
+ if(OPENGL_FOUND)
+   list(APPEND EXTERNAL_INCLUDES ${OPENGL_INCLUDE_DIR})
+   list(APPEND EXTERNAL_LIBRARIES ${OPENGL_LIBRARIES})
+-- 
+2.34.1
+
+
+From b88558faefc69aa7afe43fdfde572ce4501c57bc Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Fri, 24 Apr 2020 10:47:32 +0200
+Subject: [PATCH 3/7] use CMAKE_HOST_SYSTEM to install doc in correct location
+ when cross-compiling (fixes #25)
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c178857..429aa57 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -155,7 +155,7 @@ if(OPENGL_FOUND)
+                         ARCHIVE DESTINATION lib${LIB_SUFFIX})
+ endif()
+ 
+-if(WIN32)
++if(CMAKE_HOST_SYSTEM MATCHES Windows)
+   set(GL2PS_DOC .)
+ else()
+   set(GL2PS_DOC share/doc/gl2ps)
+-- 
+2.34.1
+
+
+From 85b37cf1cc453a40cd45698066f8175542a6992c Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Fri, 24 Apr 2020 10:48:32 +0200
+Subject: [PATCH 4/7] fix windows build (fixes #32)
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 429aa57..59dc238 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -147,7 +147,7 @@ if(OPENGL_FOUND)
+     VERSION ${GL2PS_MAJOR_VERSION}.${GL2PS_MINOR_VERSION}.${GL2PS_PATCH_VERSION}
+     SOVERSION ${GL2PS_MAJOR_VERSION})
+   if(WIN32 OR CYGWIN)
+-    set_target_properties(shared PROPERTIES
++    set_target_properties(gl2ps PROPERTIES
+         COMPILE_FLAGS "-DGL2PSDLL -DGL2PSDLL_EXPORTS")
+   endif()
+   install(TARGETS gl2ps RUNTIME DESTINATION bin
+-- 
+2.34.1
+
+
+From 896547d24c9826385832a9ff78aaef25310a51fb Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Fri, 24 Apr 2020 11:13:05 +0200
+Subject: [PATCH 5/7] fix the fix - install in default location unless the dir
+ is set by hand
+
+---
+ CMakeLists.txt | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 59dc238..3569987 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -155,9 +155,7 @@ if(OPENGL_FOUND)
+                         ARCHIVE DESTINATION lib${LIB_SUFFIX})
+ endif()
+ 
+-if(CMAKE_HOST_SYSTEM MATCHES Windows)
+-  set(GL2PS_DOC .)
+-else()
++if(NOT DEFINED GL2PS_DOC)
+   set(GL2PS_DOC share/doc/gl2ps)
+ endif()
+ 
+-- 
+2.34.1
+
+
+From 13996b51cd4a9c311a5ff6c7acdffa8f9324e606 Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Thu, 30 Apr 2020 08:03:30 +0200
+Subject: [PATCH 6/7] phasing out mailing list
+
+---
+ CMakeLists.txt    |  41 +++++++++---------
+ gl2ps.c           |  42 +++++++++----------
+ gl2ps.h           |  42 +++++++++----------
+ gl2ps.tex         | 105 ++++++++++++++++++++++------------------------
+ gl2psTest.c       |  44 ++++++++++---------
+ gl2psTestSimple.c |  44 ++++++++++---------
+ 6 files changed, 150 insertions(+), 168 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3569987..58bacdd 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,35 +1,32 @@
+ #  GL2PS, an OpenGL to PostScript Printing Library
+ #  Copyright (C) 1999-2017 C. Geuzaine
+ #
+-#  This program is free software; you can redistribute it and/or
+-#  modify it under the terms of either:
++#  This program is free software; you can redistribute it and/or modify it under
++#  the terms of either:
+ #
+-#  a) the GNU Library General Public License as published by the Free
+-#  Software Foundation, either version 2 of the License, or (at your
+-#  option) any later version; or
++#  a) the GNU Library General Public License as published by the Free Software
++#  Foundation, either version 2 of the License, or (at your option) any later
++#  version; or
+ #
+-#  b) the GL2PS License as published by Christophe Geuzaine, either
+-#  version 2 of the License, or (at your option) any later version.
++#  b) the GL2PS License as published by Christophe Geuzaine, either version 2 of
++#  the License, or (at your option) any later version.
+ #
+-#  This program is distributed in the hope that it will be useful, but
+-#  WITHOUT ANY WARRANTY; without even the implied warranty of
+-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+-#  the GNU Library General Public License or the GL2PS License for
+-#  more details.
++#  This program is distributed in the hope that it will be useful, but WITHOUT
++#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++#  FOR A PARTICULAR PURPOSE.  See either the GNU Library General Public License
++#  or the GL2PS License for more details.
+ #
+-#  You should have received a copy of the GNU Library General Public
+-#  License along with this library in the file named "COPYING.LGPL";
+-#  if not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+-#  Cambridge, MA 02139, USA.
++#  You should have received a copy of the GNU Library General Public License
++#  along with this library in the file named "COPYING.LGPL"; if not, write to
++#  the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ #
+-#  You should have received a copy of the GL2PS License with this
+-#  library in the file named "COPYING.GL2PS"; if not, I will be glad
+-#  to provide one.
++#  You should have received a copy of the GL2PS License with this library in the
++#  file named "COPYING.GL2PS"; if not, I will be glad to provide one.
+ #
+-#  For the latest info about gl2ps and a full list of contributors,
+-#  see http://www.geuz.org/gl2ps/.
++#  For the latest info about gl2ps and a full list of contributors, see
++#  http://www.geuz.org/gl2ps/.
+ #
+-#  Please report all bugs and problems to <gl2ps@geuz.org>.
++#  Please report all issues on https://gitlab.onelab.info/gl2ps/gl2ps/issues.
+ 
+ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+ 
+diff --git a/gl2ps.c b/gl2ps.c
+index c7506ec..06cb633 100644
+--- a/gl2ps.c
++++ b/gl2ps.c
+@@ -2,35 +2,33 @@
+  * GL2PS, an OpenGL to PostScript Printing Library
+  * Copyright (C) 1999-2020 C. Geuzaine
+  *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of either:
++ * This program is free software; you can redistribute it and/or modify it under
++ * the terms of either:
+  *
+- * a) the GNU Library General Public License as published by the Free
+- * Software Foundation, either version 2 of the License, or (at your
+- * option) any later version; or
++ * a) the GNU Library General Public License as published by the Free Software
++ * Foundation, either version 2 of the License, or (at your option) any later
++ * version; or
+  *
+- * b) the GL2PS License as published by Christophe Geuzaine, either
+- * version 2 of the License, or (at your option) any later version.
++ * b) the GL2PS License as published by Christophe Geuzaine, either version 2 of
++ * the License, or (at your option) any later version.
+  *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+- * the GNU Library General Public License or the GL2PS License for
+- * more details.
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE.  See either the GNU Library General Public License
++ * or the GL2PS License for more details.
+  *
+- * You should have received a copy of the GNU Library General Public
+- * License along with this library in the file named "COPYING.LGPL";
+- * if not, write to the Free Software Foundation, Inc., 51 Franklin
+- * Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ * You should have received a copy of the GNU Library General Public License
++ * along with this library in the file named "COPYING.LGPL"; if not, write to
++ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
++ * MA 02110-1301, USA.
+  *
+- * You should have received a copy of the GL2PS License with this
+- * library in the file named "COPYING.GL2PS"; if not, I will be glad
+- * to provide one.
++ * You should have received a copy of the GL2PS License with this library in the
++ * file named "COPYING.GL2PS"; if not, I will be glad to provide one.
+  *
+- * For the latest info about gl2ps and a full list of contributors,
+- * see http://www.geuz.org/gl2ps/.
++ * For the latest info about gl2ps and a full list of contributors, see
++ * http://www.geuz.org/gl2ps/.
+  *
+- * Please report all bugs and problems to <gl2ps@geuz.org>.
++ * Please report all issues on https://gitlab.onelab.info/gl2ps/gl2ps/issues.
+  */
+ 
+ #include "gl2ps.h"
+diff --git a/gl2ps.h b/gl2ps.h
+index 2fafabb..f8f8c2c 100644
+--- a/gl2ps.h
++++ b/gl2ps.h
+@@ -2,35 +2,33 @@
+  * GL2PS, an OpenGL to PostScript Printing Library
+  * Copyright (C) 1999-2020 C. Geuzaine
+  *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of either:
++ * This program is free software; you can redistribute it and/or modify it under
++ * the terms of either:
+  *
+- * a) the GNU Library General Public License as published by the Free
+- * Software Foundation, either version 2 of the License, or (at your
+- * option) any later version; or
++ * a) the GNU Library General Public License as published by the Free Software
++ * Foundation, either version 2 of the License, or (at your option) any later
++ * version; or
+  *
+- * b) the GL2PS License as published by Christophe Geuzaine, either
+- * version 2 of the License, or (at your option) any later version.
++ * b) the GL2PS License as published by Christophe Geuzaine, either version 2 of
++ * the License, or (at your option) any later version.
+  *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+- * the GNU Library General Public License or the GL2PS License for
+- * more details.
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE.  See either the GNU Library General Public License
++ * or the GL2PS License for more details.
+  *
+- * You should have received a copy of the GNU Library General Public
+- * License along with this library in the file named "COPYING.LGPL";
+- * if not, write to the Free Software Foundation, Inc., 51 Franklin
+- * Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ * You should have received a copy of the GNU Library General Public License
++ * along with this library in the file named "COPYING.LGPL"; if not, write to
++ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
++ * MA 02110-1301, USA.
+  *
+- * You should have received a copy of the GL2PS License with this
+- * library in the file named "COPYING.GL2PS"; if not, I will be glad
+- * to provide one.
++ * You should have received a copy of the GL2PS License with this library in the
++ * file named "COPYING.GL2PS"; if not, I will be glad to provide one.
+  *
+- * For the latest info about gl2ps and a full list of contributors,
+- * see http://www.geuz.org/gl2ps/.
++ * For the latest info about gl2ps and a full list of contributors, see
++ * http://www.geuz.org/gl2ps/.
+  *
+- * Please report all bugs and problems to <gl2ps@geuz.org>.
++ * Please report all issues on https://gitlab.onelab.info/gl2ps/gl2ps/issues.
+  */
+ 
+ #ifndef GL2PS_H
+diff --git a/gl2ps.tex b/gl2ps.tex
+index 8c3e5be..e8bc318 100644
+--- a/gl2ps.tex
++++ b/gl2ps.tex
+@@ -2,35 +2,33 @@
+ %  GL2PS, an OpenGL to PostScript Printing Library
+ %  Copyright (C) 1999-2020 C. Geuzaine
+ %
+-%  This program is free software; you can redistribute it and/or
+-%  modify it under the terms of either:
++%  This program is free software; you can redistribute it and/or modify it under
++%  the terms of either:
+ %
+-%  a) the GNU Library General Public License as published by the Free
+-%  Software Foundation, either version 2 of the License, or (at your
+-%  option) any later version; or
++%  a) the GNU Library General Public License as published by the Free Software
++%  Foundation, either version 2 of the License, or (at your option) any later
++%  version; or
+ %
+-%  b) the GL2PS License as published by Christophe Geuzaine, either
+-%  version 2 of the License, or (at your option) any later version.
++%  b) the GL2PS License as published by Christophe Geuzaine, either version 2 of
++%  the License, or (at your option) any later version.
+ %
+-%  This program is distributed in the hope that it will be useful, but
+-%  WITHOUT ANY WARRANTY; without even the implied warranty of
+-%  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+-%  the GNU Library General Public License or the GL2PS License for
+-%  more details.
++%  This program is distributed in the hope that it will be useful, but WITHOUT
++%  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++%  FOR A PARTICULAR PURPOSE.  See either the GNU Library General Public License
++%  or the GL2PS License for more details.
+ %
+-%  You should have received a copy of the GNU Library General Public
+-%  License along with this library in the file named "COPYING.LGPL";
+-%  if not, write to the Free Software Foundation, Inc., 51 Franklin
+-%  Street, Fifth Floor, Boston, MA 02110-1301, USA.
++%  You should have received a copy of the GNU Library General Public License
++%  along with this library in the file named "COPYING.LGPL"; if not, write to
++%  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
++%  MA 02110-1301, USA.
+ %
+-%  You should have received a copy of the GL2PS License with this
+-%  library in the file named "COPYING.GL2PS"; if not, I will be glad
+-%  to provide one.
++%  You should have received a copy of the GL2PS License with this library in the
++%  file named "COPYING.GL2PS"; if not, I will be glad to provide one.
+ %
+-%  For the latest info about gl2ps and a full list of contributors,
+-%  see http://www.geuz.org/gl2ps/.
++%  For the latest info about gl2ps and a full list of contributors, see
++%  http://www.geuz.org/gl2ps/.
+ %
+-%  Please report all bugs and problems to <gl2ps@geuz.org>.
++%  Please report all issues on https://gitlab.onelab.info/gl2ps/gl2ps/issues.
+ 
+ %%tth: \begin{html}<meta name="viewport" content="width=device-width, initial-scale=1.0"> <link href="http://geuz.org/geuz.css" rel="stylesheet" type="text/css"> <style type="text/css"> h3 { border-bottom: 0; }</style><title>GL2PS: an OpenGL to PostScript printing library</title>\end{html}
+ 
+@@ -93,18 +91,14 @@
+ The latest stable version of GL2PS is <a
+ href="http://geuz.org/gl2ps/src/gl2ps-1.4.2.tgz">gl2ps-1.4.2.tgz</a>.  Older
+ versions and source snapshots are available <a
+-href="http://geuz.org/gl2ps/src/">here</a>.  For access to the Git repository use:
+-'<code>git clone <a href="http://gitlab.onelab.info/gl2ps/gl2ps.git"
+->http://gitlab.onelab.info/gl2ps/gl2ps.git</a></code>'.
++href="http://geuz.org/gl2ps/src/">here</a>.
+ <p>
+-For questions and discussions about GL2PS see the <a
+-href="http://geuz.org/mailman/listinfo/gl2ps/">gl2ps mailing list</a>. If you
+-think you have found a bug you can also file a report directly <a
+-href="http://gitlab.onelab.info/gl2ps/gl2ps/issues">here</a>.
+-You can also subscribe to the <a
+-href="http://geuz.org/mailman/listinfo/gl2ps-announce/">gl2ps-announce</a>
+-mailing list to be notified automatically when a new version of GL2PS is
+-released.
++To access the Git repository use: '<code>git clone <a
++href="http://gitlab.onelab.info/gl2ps/gl2ps.git"
++>http://gitlab.onelab.info/gl2ps/gl2ps.git</a></code>'.  Please report all
++issues on <a href="https://gitlab.onelab.info/gl2ps/gl2ps/issues"
++><code>https://gitlab.onelab.info/gl2ps/gl2ps/issues</code></a>.
++</p>
+ <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+   <p>
+     <input type="hidden" name="cmd" value="_xclick">
+@@ -125,29 +119,28 @@ released.
+ \section{Introduction}
+ 
+ GL2PS is a C library providing high quality vector output for any OpenGL
+-application. The main difference between GL2PS and other similar libraries
+-(see section~\ref{sec:links}) is the use of sorting algorithms capable of
+-handling intersecting and stretched polygons, as well as non manifold
+-objects. GL2PS provides advanced smooth shading and text rendering, culling
+-of invisible primitives, mixed vector/bitmap output, and much more...
+-
+-GL2PS can currently create PostScript (PS), Encapsulated PostScript
+-(EPS), Portable Document Format (PDF) and Scalable Vector Graphics (SVG)
+-files, as well as \LaTeX\ files for the text fragments. GL2PS also
+-provides limited, experimental support for Portable LaTeX Graphics
+-(PGF). Adding new vector output formats should be relatively easy; you
+-can also use the excellent \href{http://www.pstoedit.net}{pstoedit}
+-program to transform the PostScript files generated by GL2PS into many
+-other vector formats such as xfig, cgm, wmf, etc.
+-
+-GL2PS is available at \url{http://www.geuz.org/gl2ps/} and is released under
+-the GNU Library General Public License (see
+-\href{http://www.geuz.org/gl2ps/COPYING.LGPL}{COPYING.LGPL}). GL2PS can also
+-be used under an alternative license that allows (amongst other things, and
+-under certain conditions) for static linking with closed-source software
+-(see \href{http://www.geuz.org/gl2ps/COPYING.GL2PS}{COPYING.GL2PS}). Any
+-corrections, questions or suggestions should be e-mailed to the GL2PS
+-mailing list \email{gl2ps@geuz.org}{gl2ps@geuz.org}.
++application. The main difference between GL2PS and other similar libraries (see
++section~\ref{sec:links}) is the use of sorting algorithms capable of handling
++intersecting and stretched polygons, as well as non manifold objects. GL2PS
++provides advanced smooth shading and text rendering, culling of invisible
++primitives, mixed vector/bitmap output, and much more...
++
++GL2PS can currently create PostScript (PS), Encapsulated PostScript (EPS),
++Portable Document Format (PDF) and Scalable Vector Graphics (SVG) files, as well
++as \LaTeX\ files for the text fragments. GL2PS also provides limited,
++experimental support for Portable LaTeX Graphics (PGF). Adding new vector output
++formats should be relatively easy; you can also use the excellent
++\href{http://www.pstoedit.net}{pstoedit} program to transform the PostScript
++files generated by GL2PS into many other vector formats such as xfig, cgm, wmf,
++etc.
++
++GL2PS is available at \url{http://www.geuz.org/gl2ps/} and is released under the
++GNU Library General Public License (see
++\href{http://www.geuz.org/gl2ps/COPYING.LGPL}{COPYING.LGPL}). GL2PS can also be
++used under an alternative license that allows (amongst other things, and under
++certain conditions) for static linking with closed-source software (see
++\href{http://www.geuz.org/gl2ps/COPYING.GL2PS}{COPYING.GL2PS}).  Issues can be
++reported through \url{https://gitlab.onelab.info/gl2ps/gl2ps/issues}.
+ 
+ \section{Usage}
+ 
+diff --git a/gl2psTest.c b/gl2psTest.c
+index 15b4776..744917e 100644
+--- a/gl2psTest.c
++++ b/gl2psTest.c
+@@ -1,36 +1,34 @@
+ /*
+  * GL2PS, an OpenGL to PostScript Printing Library
+- * Copyright (C) 1999-2017 Christophe Geuzaine <geuz@geuz.org>
++ * Copyright (C) 1999-2020 C. Geuzaine
+  *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of either:
++ * This program is free software; you can redistribute it and/or modify it under
++ * the terms of either:
+  *
+- * a) the GNU Library General Public License as published by the Free
+- * Software Foundation, either version 2 of the License, or (at your
+- * option) any later version; or
++ * a) the GNU Library General Public License as published by the Free Software
++ * Foundation, either version 2 of the License, or (at your option) any later
++ * version; or
+  *
+- * b) the GL2PS License as published by Christophe Geuzaine, either
+- * version 2 of the License, or (at your option) any later version.
++ * b) the GL2PS License as published by Christophe Geuzaine, either version 2 of
++ * the License, or (at your option) any later version.
+  *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+- * the GNU Library General Public License or the GL2PS License for
+- * more details.
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE.  See either the GNU Library General Public License
++ * or the GL2PS License for more details.
+  *
+- * You should have received a copy of the GNU Library General Public
+- * License along with this library in the file named "COPYING.LGPL";
+- * if not, write to the Free Software Foundation, Inc., 51 Franklin
+- * Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ * You should have received a copy of the GNU Library General Public License
++ * along with this library in the file named "COPYING.LGPL"; if not, write to
++ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
++ * MA 02110-1301, USA.
+  *
+- * You should have received a copy of the GL2PS License with this
+- * library in the file named "COPYING.GL2PS"; if not, I will be glad
+- * to provide one.
++ * You should have received a copy of the GL2PS License with this library in the
++ * file named "COPYING.GL2PS"; if not, I will be glad to provide one.
+  *
+- * For the latest info about gl2ps and a full list of contributors,
+- * see http://www.geuz.org/gl2ps/.
++ * For the latest info about gl2ps and a full list of contributors, see
++ * http://www.geuz.org/gl2ps/.
+  *
+- * Please report all bugs and problems to <gl2ps@geuz.org>.
++ * Please report all issues on https://gitlab.onelab.info/gl2ps/gl2ps/issues.
+  */
+ 
+ /*
+diff --git a/gl2psTestSimple.c b/gl2psTestSimple.c
+index 366db54..3e40b6d 100644
+--- a/gl2psTestSimple.c
++++ b/gl2psTestSimple.c
+@@ -1,36 +1,34 @@
+ /*
+  * GL2PS, an OpenGL to PostScript Printing Library
+- * Copyright (C) 1999-2017 Christophe Geuzaine <geuz@geuz.org>
++ * Copyright (C) 1999-2020 C. Geuzaine
+  *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of either:
++ * This program is free software; you can redistribute it and/or modify it under
++ * the terms of either:
+  *
+- * a) the GNU Library General Public License as published by the Free
+- * Software Foundation, either version 2 of the License, or (at your
+- * option) any later version; or
++ * a) the GNU Library General Public License as published by the Free Software
++ * Foundation, either version 2 of the License, or (at your option) any later
++ * version; or
+  *
+- * b) the GL2PS License as published by Christophe Geuzaine, either
+- * version 2 of the License, or (at your option) any later version.
++ * b) the GL2PS License as published by Christophe Geuzaine, either version 2 of
++ * the License, or (at your option) any later version.
+  *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+- * the GNU Library General Public License or the GL2PS License for
+- * more details.
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE.  See either the GNU Library General Public License
++ * or the GL2PS License for more details.
+  *
+- * You should have received a copy of the GNU Library General Public
+- * License along with this library in the file named "COPYING.LGPL";
+- * if not, write to the Free Software Foundation, Inc., 51 Franklin
+- * Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ * You should have received a copy of the GNU Library General Public License
++ * along with this library in the file named "COPYING.LGPL"; if not, write to
++ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
++ * MA 02110-1301, USA.
+  *
+- * You should have received a copy of the GL2PS License with this
+- * library in the file named "COPYING.GL2PS"; if not, I will be glad
+- * to provide one.
++ * You should have received a copy of the GL2PS License with this library in the
++ * file named "COPYING.GL2PS"; if not, I will be glad to provide one.
+  *
+- * For the latest info about gl2ps and a full list of contributors,
+- * see http://www.geuz.org/gl2ps/.
++ * For the latest info about gl2ps and a full list of contributors, see
++ * http://www.geuz.org/gl2ps/.
+  *
+- * Please report all bugs and problems to <gl2ps@geuz.org>.
++ * Please report all issues on https://gitlab.onelab.info/gl2ps/gl2ps/issues.
+  */
+ 
+ /*
+-- 
+2.34.1
+
+
+From 092901a4f53b003f66d5a7a3b100c3a933005130 Mon Sep 17 00:00:00 2001
+From: Christophe Geuzaine <cgeuzaine@uliege.be>
+Date: Sun, 12 Jul 2020 10:04:45 +0200
+Subject: [PATCH 7/7] clamp float RGBA values in [0,1] to fix #21 #34
+
+---
+ gl2ps.c | 30 ++++++++++++++++++++++++++----
+ 1 file changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/gl2ps.c b/gl2ps.c
+index 06cb633..e4893fc 100644
+--- a/gl2ps.c
++++ b/gl2ps.c
+@@ -4456,17 +4456,33 @@ static int gl2psPrintPDFShaderStreamDataRGB(GL2PSvertex *vertex,
+   int offs = 0;
+   unsigned long imap;
+   double dmax = ~1UL;
++  GLfloat tmp;
+ 
+   /* FIXME: temp bux fix for 64 bit archs: */
+   if(sizeof(unsigned long) == 8) dmax = dmax - 2048.;
+ 
+-  imap = (unsigned long)((vertex->rgba[0]) * dmax);
++  tmp = vertex->rgba[0];
++  if(tmp > 1)
++    tmp = 1.0F;
++  else if(tmp < 0)
++    tmp = 0.0F;
++  imap = (unsigned long)(tmp * dmax);
+   offs += (*action)(imap, 1);
+ 
+-  imap = (unsigned long)((vertex->rgba[1]) * dmax);
++  tmp = vertex->rgba[1];
++  if(tmp > 1)
++    tmp = 1.0F;
++  else if(tmp < 0)
++    tmp = 0.0F;
++  imap = (unsigned long)(tmp * dmax);
+   offs += (*action)(imap, 1);
+ 
+-  imap = (unsigned long)((vertex->rgba[2]) * dmax);
++  tmp = vertex->rgba[2];
++  if(tmp > 1)
++    tmp = 1.0F;
++  else if(tmp < 0)
++    tmp = 0.0F;
++  imap = (unsigned long)(tmp * dmax);
+   offs += (*action)(imap, 1);
+ 
+   return offs;
+@@ -4481,6 +4497,7 @@ static int gl2psPrintPDFShaderStreamDataAlpha(GL2PSvertex *vertex,
+   int offs = 0;
+   unsigned long imap;
+   double dmax = ~1UL;
++  GLfloat tmp;
+ 
+   /* FIXME: temp bux fix for 64 bit archs: */
+   if(sizeof(unsigned long) == 8) dmax = dmax - 2048.;
+@@ -4490,7 +4507,12 @@ static int gl2psPrintPDFShaderStreamDataAlpha(GL2PSvertex *vertex,
+ 
+   sigbyte /= 8;
+ 
+-  imap = (unsigned long)((vertex->rgba[3]) * dmax);
++  tmp = vertex->rgba[3];
++  if(tmp > 1)
++    tmp = 1.0F;
++  else if(tmp < 0)
++    tmp = 0.0F;
++  imap = (unsigned long)(tmp * dmax);
+ 
+   offs += (*action)(imap, sigbyte);
+ 
+-- 
+2.34.1
+

@@ -247,7 +247,7 @@ endif()
 #---Check for Freetype---------------------------------------------------------------
 ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also outside of it (for "graf" target)
 if(builtin_freetype)
-  list(APPEND ROOT_BUILTINS FREETYPE)
+  list(APPEND ROOT_BUILTINS BUILTIN_FREETYPE)
   add_subdirectory(builtins/freetype)
 endif()
 
@@ -509,21 +509,18 @@ endif()
 # features also depend on asimage. Therefore, the configuration will fail if
 # asimage is off. See also: https://github.com/root-project/root/issues/16250
 if(opengl AND NOT asimage)
-  message(FATAL_ERROR "OpenGL features enabled with \"opengl=ON\" require \"asimage=ON\"")
+  message(SEND_ERROR "OpenGL features enabled with \"opengl=ON\" require \"asimage=ON\"")
 endif()
 
 #---Check for gl2ps ------------------------------------------------------------------
-if(opengl AND NOT builtin_gl2ps)
-  message(STATUS "Looking for gl2ps")
-  if(fail-on-missing)
-    find_Package(gl2ps REQUIRED)
-  else()
-    find_Package(gl2ps)
-    if(NOT GL2PS_FOUND)
-      message(STATUS "gl2ps not found. Switching on builtin_gl2ps option")
-      set(builtin_gl2ps ON CACHE BOOL "Enabled because opengl requested and gl2ps not found (${builtin_gl2ps_description})" FORCE)
-    endif()
+if(opengl)
+  ROOT_FIND_REQUIRED_DEP(gl2ps builtin_gl2ps)
+  if (builtin_gl2ps)
+    add_subdirectory(builtins/gl2ps)
+    list(APPEND ROOT_BUILTINS BUILTIN_GL2PS)
   endif()
+elseif(builtin_gl2ps)
+  message(SEND_ERROR "gl2ps features enabled with \"builtin_gl2ps=ON\" require \"opengl=ON\"")
 endif()
 
 #---Check for Graphviz installation-------------------------------------------------------

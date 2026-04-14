@@ -17,11 +17,6 @@ if(x11)
   set(RGL_EXTRA_SOURCES TX11GL.cxx)
 endif()
 
-
-if(builtin_gl2ps)
-  set(RGL_EXTRA_SOURCES ${RGL_EXTRA_SOURCES} src/gl2ps.cxx)
-endif()
-
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 
@@ -208,7 +203,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     OpenGL::GL
     OpenGL::GLU
     ${FTGL_LIBRARIES}
-    ${GL2PS_LIBRARIES}
+    gl2ps::gl2ps
     Freetype::Freetype
     ZLIB::ZLIB
     ${X11_LIBRARIES}
@@ -223,16 +218,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     ${installoptions}
 )
 
+
 target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
      ${FTGL_INCLUDE_DIR}
 )
-
-if(builtin_gl2ps)
-  target_include_directories(RGL PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gl2ps)
-else()
-  target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
-endif()
 
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
