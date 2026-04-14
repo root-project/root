@@ -122,6 +122,7 @@ extern "C" {
 
 ASVisual *TASImage::fgVisual = nullptr;
 Bool_t TASImage::fgInit = kFALSE;
+Bool_t TASImage::fgBatch = kFALSE;
 
 static ASFontManager *gFontManager = nullptr;
 static unsigned long kAllPlanes = ~0;
@@ -2225,30 +2226,33 @@ void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 
 Bool_t TASImage::InitVisual()
 {
-   Bool_t inbatch = fgVisual && (fgVisual->dpy == (void*)1); // was in batch
+   Bool_t inbatch = fgVisual && fgBatch; // was in batch
    Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
 
    // was in batch, but switched to gui
    if (inbatch && !noX) {
       destroy_asvisual(fgVisual, kFALSE);
       fgVisual = nullptr;
+      fgBatch = false;
    }
 
-   if (fgVisual && fgVisual->dpy) { // already initialized
+   if (fgVisual && (fgVisual->dpy || fgBatch)) { // already initialized
       return kTRUE;
    }
 
    // batch or win32 mode
    if (!fgVisual && noX) {
       fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-      fgVisual->dpy = (Display*)1; //fake (not used)
+      fgVisual->dpy = nullptr; // fake (not used)
+      fgBatch = true;
       return kTRUE;
    }
 
 #ifndef WIN32
 #ifdef R__HAS_COCOA
    fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-   fgVisual->dpy = (Display*)1; //fake (not used)
+   fgVisual->dpy = nullptr; // fake (not used)
+   fgBatch = true;
 #else
    Display *disp = (Display*) gVirtualX->GetDisplay();
    Int_t screen  = gVirtualX->GetScreen();
@@ -2257,6 +2261,7 @@ Bool_t TASImage::InitVisual()
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
 
    if (!vis || cmap == 0) {
+      destroy_asvisual(fgVisual, kFALSE);
       fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
    } else {
       fgVisual = create_asvisual_for_id(disp, screen, depth,
@@ -2265,7 +2270,8 @@ Bool_t TASImage::InitVisual()
 #endif
 #else
    fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-   fgVisual->dpy = (Display*)1; //fake (not used)
+   fgVisual->dpy = nullptr; // fake (not used)
+   fgBatch = true;
 #endif
 
    return kTRUE;
@@ -6753,4 +6759,3 @@ Int_t TASImage::Idx(Int_t idx)
    // The size of arrays like fImage->alt.argb32 is fImage->width*fImage->height
    return TMath::Min(idx,(Int_t)(fImage->width*fImage->height));
 }
-
