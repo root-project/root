@@ -302,8 +302,9 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
                          kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask, kNone, kNone);
 
-   AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
-            kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
+   AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask | kExposureMask |
+            kStructureNotifyMask | kEnterWindowMask | kLeaveWindowMask);
+
    fEditDisabled = kEditDisable;
 }
 
@@ -2012,6 +2013,9 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
    // either kNotifyGrab or kNotifyUngrab, don't propagate these events
    if (event->fType == kLeaveNotify && event->fCode == kNotifyNormal)
       fCanvas->HandleInput(kMouseLeave, x, y);
+
+   if (event->fType == kEnterNotify && event->fCode == kNotifyNormal)
+      fCanvas->HandleInput(kMouseEnter, x, y);
 
    return kTRUE;
 }
