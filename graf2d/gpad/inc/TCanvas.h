@@ -66,6 +66,8 @@ protected:
    //
    TVirtualPadPainter *fPainter;   ///<! Canvas (pad) painter.
 
+   TVirtualPad *fHilightPadBorder = nullptr; ///<! pad which border will be hilghlighrt when paint canvas
+
    static Bool_t fgIsFolder;       ///< Indicates if canvas can be browsed as a folder
 
 private:

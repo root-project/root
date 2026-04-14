@@ -3629,6 +3629,9 @@ void TPad::Paint(Option_t * /*option*/)
          obj->Paint(lnk->GetOption());
          lnk = lnk->Next();
       }
+
+      if (fCanvas && (fCanvas->fHilightPadBorder == this))
+         PaintBorder(-GetHighLightColor(), kTRUE);
    }
 
    fPadPaint = 0;
