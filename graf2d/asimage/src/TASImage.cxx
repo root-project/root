@@ -2226,53 +2226,36 @@ void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 
 Bool_t TASImage::InitVisual()
 {
-   Bool_t inbatch = fgVisual && fgBatch; // was in batch
-   Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
+   Bool_t noX = gROOT->IsBatch() || !gVirtualX->InheritsFrom("TGX11");
 
-   // was in batch, but switched to gui
-   if (inbatch && !noX) {
+   if (fgVisual && (noX == fgBatch))
+      return kTRUE;
+
+   if (fgVisual)
       destroy_asvisual(fgVisual, kFALSE);
-      fgVisual = nullptr;
-      fgBatch = false;
-   }
-
-   if (fgVisual && (fgVisual->dpy || fgBatch)) { // already initialized
-      return kTRUE;
-   }
-
-   // batch or win32 mode
-   if (!fgVisual && noX) {
-      fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-      fgVisual->dpy = nullptr; // fake (not used)
-      fgBatch = true;
-      return kTRUE;
-   }
+   fgVisual = nullptr;
+   fgBatch = false;
 
 #ifndef WIN32
-#ifdef R__HAS_COCOA
-   fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-   fgVisual->dpy = nullptr; // fake (not used)
-   fgBatch = true;
-#else
+#ifndef R__HAS_COCOA
    Display *disp = (Display*) gVirtualX->GetDisplay();
    Int_t screen  = gVirtualX->GetScreen();
    Int_t depth   = gVirtualX->GetDepth();
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
 
-   if (!vis || cmap == 0) {
-      destroy_asvisual(fgVisual, kFALSE);
-      fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-   } else {
+   if (vis && cmap)
       fgVisual = create_asvisual_for_id(disp, screen, depth,
                                         XVisualIDFromVisual(vis), cmap, nullptr);
+#endif
+#endif
+
+   if (!fgVisual) {
+      // create dummy fgVisual for batch mode
+      fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
+      fgVisual->dpy = nullptr; // fake (not used)
+      fgBatch = true;
    }
-#endif
-#else
-   fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-   fgVisual->dpy = nullptr; // fake (not used)
-   fgBatch = true;
-#endif
 
    return kTRUE;
 }
