@@ -94,42 +94,36 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
 
    TGPicture *pic = (TGPicture *)fPicList->FindObject(pname);
    if (pic && !pic->IsScaled()) {
-      if (pic->fPic == kNone)
-         return 0;
+      // in batch mode allow to return dummy image
+      if ((pic->fPic == kNone) && !gROOT->IsBatch())
+         return nullptr;
       pic->AddReference();
       return pic;
    }
 
    char *picnam = gSystem->Which(fPath, pname, kReadPermission);
-   if (!picnam) {
-      pic = new TGPicture(pname);
-      pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
-      pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
-      pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
-      fPicList->Add(pic);
-      return 0;
-   }
 
-   TImage *img = TImage::Open(picnam);
+   TImage *img = picnam ? TImage::Open(picnam) : nullptr;
+
+   delete [] picnam;
+
    if (!img) {
       pic = new TGPicture(pname);
       pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
       pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
       pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
       fPicList->Add(pic);
-      delete [] picnam;
-      return 0;
+      return nullptr;
    }
 
    pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
-   delete [] picnam;
    delete img;
    fPicList->Add(pic);
    return pic;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Like TGPicturePool::GetPicture() but, instead of returning null when the 
+/// Like TGPicturePool::GetPicture() but, instead of returning null when the
 /// picture is not found, it returns a valid empty picture.
 
 const TGPicture *TGPicturePool::GetPictureOrEmpty(const char *name)
