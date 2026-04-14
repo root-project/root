@@ -2210,6 +2210,8 @@ void TStreamerInfo::BuildOld()
             }
             element->SetOffset(baseOffset);
             offset += asize;
+            if (TClass *bcPtr = element->GetClassPointer())
+               fAlignment = std::max(fAlignment, bcPtr->GetClassAlignment());
             element->Init(this);
             continue;
          } // if element is of type TStreamerBase or not.
@@ -2337,6 +2339,15 @@ void TStreamerInfo::BuildOld()
             }
          }
       } // Class corresponding to StreamerInfo is emulated or not.
+
+      // For non-emulated (loaded) classes, propagate the member's alignment into
+      // fAlignment so that ComputeSize() has a valid value for older StreamerInfos.
+      if (fClass->GetState() > TClass::kEmulated && !fClass->IsSyntheticPair()) {
+         if (TClass *elCl = element->GetClass())
+            fAlignment = std::max(fAlignment, elCl->GetClassAlignment());
+         else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
+            fAlignment = std::max(fAlignment, eldt->GetAlignOf());
+      }
 
       // Now let's deal with Schema evolution
       Int_t newType = -1;
