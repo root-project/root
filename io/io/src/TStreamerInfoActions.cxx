@@ -4198,6 +4198,7 @@ void TStreamerInfo::Compile()
       fCompFull = new TCompInfo*[1];
       fCompOpt  = new TCompInfo*[1];
       fCompOpt[0] = fCompFull[0] = &(fComp[0]);
+      fAlignment = 1;
       SetIsCompiled();
       return;
    }

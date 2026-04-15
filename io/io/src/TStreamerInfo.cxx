@@ -3388,6 +3388,15 @@ void TStreamerInfo::ComputeSize()
       fSize = fVirtualInfoLoc[0] + sizeof(TStreamerInfo*);
    }
 
+   if (fClass->GetCollectionProxy()) {
+      fAlignment = fClass->GetClassAlignment();
+   }
+
+   if (!fAlignment && fElements->IsEmpty()) {
+      // Empty class alignment is 1.
+      fAlignment = 1;
+   }
+
    // If we have no information use the default alignment.
    if (!fAlignment) {
       // FIXME-ALIGN: this currently happens when the TStreamerInfo is not
