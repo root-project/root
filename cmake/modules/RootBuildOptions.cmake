@@ -89,7 +89,7 @@ ROOT_BUILD_OPTION(builtin_fftw3 OFF "Build FFTW3 internally (requires network) [
 ROOT_BUILD_OPTION(builtin_freetype OFF "Build freetype internally (requires network)")
 ROOT_BUILD_OPTION(builtin_ftgl OFF "Build bundled copy of FTGL")
 ROOT_BUILD_OPTION(builtin_gif OFF "Build libgif internally (requires network)")
-ROOT_BUILD_OPTION(builtin_gl2ps OFF "Build bundled copy of gl2ps")
+ROOT_BUILD_OPTION(builtin_gl2ps OFF "Build gl2ps internally (requires network)")
 ROOT_BUILD_OPTION(builtin_gsl OFF "Build GSL internally (requires network) [GPL]")
 ROOT_BUILD_OPTION(builtin_gtest OFF "Build googletest internally (requires network)")
 ROOT_BUILD_OPTION(builtin_jpeg OFF "Build libjpeg internally (requires network)")
