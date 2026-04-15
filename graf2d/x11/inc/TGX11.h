@@ -197,6 +197,7 @@ public:
 
    //---- Methods used for old graphics -----
    void      SetFillColor(Color_t cindex) override;
+   Color_t   GetFillColor() const override;
    void      SetFillStyle(Style_t style) override;
    Style_t   GetFillStyle() const override;
    void      SetLineColor(Color_t cindex) override;
