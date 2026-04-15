@@ -461,6 +461,22 @@ void TVirtualX::UpdateWindowW(WinContext_t /* wctxt */, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set opactity for specified window
+
+void TVirtualX::SetOpacityW(WinContext_t /* wctxt */, Int_t percent)
+{
+   SetOpacity(percent);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy pixmap to specified window
+
+void TVirtualX::CopyPixmapW(WinContext_t /* wctxt */, Int_t wid, Int_t xpos, Int_t ypos)
+{
+   CopyPixmap(wid, xpos, ypos);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw box on specified window
 
 void TVirtualX::DrawBoxW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
