@@ -129,4 +129,23 @@ struct IMTRAII {
 /// The function is backend agnostic (file, DAOS, ...).
 void CreateCorruptedRNTuple(const std::string &uri);
 
+enum class EEndianness {
+   LE,
+   BE
+};
+
+/// Given the file at `filePath` containing an UNCOMPRESSED RNTuple, and given the seek/len of a section of this
+/// RNTuple, patches a byte range of this section with the given buffer `bytesToWrite`. After doing this, it recomputes
+/// and updates the section's checksum.
+/// `sectionSeek` must point to the start of the section's payload, excluding the key (and, in case of the Anchor, the
+/// first 6 bytes containing the object's version and nbytes).
+/// `sectionLen` must refer to the in-memory of the section's payload, excluding the key and the checksum.
+/// Note that this is assumed to be equal to the on-disk size since the section must be uncompressed.
+///
+/// This function does very minimal checks (e.g. it does not verify that the given section is actually correct or in
+/// the file at all), so the caller must validate these assumptions.
+void PatchRNTupleSection(std::string_view filePath, std::uint64_t sectionSeek, std::uint64_t sectionLen,
+                         std::uint64_t patchedOffsetIntoSection, const std::byte *bytesToWrite,
+                         std::size_t bytesToWriteLen, EEndianness sectionEndianness);
+
 #endif
