@@ -268,8 +268,11 @@ public:
 
    /// Creates a new Attribute Set called `name` associated to this Writer and returns a non-owning pointer to it.
    /// The lifetime of the Attribute Set ends at the same time as the Writer's.
+   /// If `options` are passed, they will be used for the attribute set writer; otherwise, they will be derived from
+   /// the main writer.
    ROOT::Experimental::RNTupleAttrSetWriterHandle
-   CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name);
+   CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name,
+                      const ROOT::RNTupleWriteOptions *options = nullptr);
 
    /// Writes the given AttributeSet to the underlying storage and closes it. This method is only useful if you
    /// want to close the AttributeSet early: otherwise it will automatically closed when the RNTupleWriter gets

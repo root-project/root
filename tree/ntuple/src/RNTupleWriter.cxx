@@ -174,7 +174,8 @@ ROOT::Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> mod
 }
 
 ROOT::Experimental::RNTupleAttrSetWriterHandle
-ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view name)
+ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view name,
+                                        const ROOT::RNTupleWriteOptions *optsPtr)
 {
    if (IsReservedRNTupleAttrSetName(name)) {
       throw ROOT::RException(R__FAIL("Cannot create Attribute Set named \"" + std::string(name) +
@@ -184,7 +185,7 @@ ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> mode
    if (name.empty())
       throw ROOT::RException(R__FAIL("cannot create an Attribute Set with an empty name"));
 
-   auto opts = ROOT::RNTupleWriteOptions();
+   const RNTupleWriteOptions &opts = optsPtr != nullptr ? *optsPtr : fFillContext.fSink->GetWriteOptions();
    auto attrSink = fFillContext.fSink->CloneAsHidden(name, opts);
 
    std::string nameStr{name};

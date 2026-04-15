@@ -111,8 +111,6 @@ public:
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
 
-   /// Creates a new sink that uses the same underlying file/directory but writes to a different RNTuple with the
-   /// given `name`.
    std::unique_ptr<RPageSink>
    CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const override;
 }; // class RPageSinkFile

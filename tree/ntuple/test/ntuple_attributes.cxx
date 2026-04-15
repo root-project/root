@@ -197,7 +197,9 @@ TEST(RNTupleAttributes, MultipleSets)
 
       auto attrModel2 = RNTupleModel::Create();
       auto pString2 = attrModel2->MakeField<std::string>("string");
-      auto attrSet2 = writer->CreateAttributeSet(attrModel2->Clone(), "MyAttrSet2");
+      auto attrOpts2 = ROOT::RNTupleWriteOptions();
+      attrOpts2.SetCompression(404);
+      auto attrSet2 = writer->CreateAttributeSet(attrModel2->Clone(), "MyAttrSet2", &attrOpts2);
 
       auto attrRange2 = attrSet2->BeginRange();
       for (int i = 0; i < 100; ++i) {
@@ -211,12 +213,39 @@ TEST(RNTupleAttributes, MultipleSets)
       attrSet2->CommitRange(std::move(attrRange2));
    }
 
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntpl = tfile->Get<ROOT::RNTuple>("ntpl");
+   auto reader = RNTupleReader::Open(*ntpl);
    EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 2);
    int n = 1;
    for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
       EXPECT_EQ(attrSetIt.GetName(), "MyAttrSet" + std::to_string(n));
       ++n;
+   }
+
+   // Verify compression
+   auto tkeys = tfile->WalkTKeys();
+   int nHeader = 0;
+   for (const auto &key : tkeys) {
+      if (key.fType != ROOT::Detail::TKeyMapNode::kKey || key.fClassName != "RBlob")
+         continue;
+
+      // The first 3 RBlobs we're gonna find are, in order: the main RNTuple header, MyAttrSet1's header
+      // and MyAttrSet2's header.
+      const auto headerSeek = key.fSeekKey + key.fKeyLen;
+
+      // Extract the header's compression
+      tfile->Seek(headerSeek);
+      unsigned char zipHeader[9];
+      bool ok = tfile->ReadBuffer(reinterpret_cast<char *>(zipHeader), sizeof(zipHeader));
+      ASSERT_FALSE(ok);
+
+      const int expectedCompression = nHeader < 2 ? ROOT::RCompressionSetting::EAlgorithm::kZSTD : 4;
+      const auto realCompression = R__getCompressionAlgorithm(zipHeader, sizeof(zipHeader));
+      ASSERT_EQ(realCompression, expectedCompression);
+
+      if (++nHeader == 3)
+         break;
    }
 }
 
