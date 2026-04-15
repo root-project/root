@@ -1081,45 +1081,34 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
                                bool *, int *, int *, int *, float *_d_alpha, float *_d_A, float *_d_B, float *_d_beta,
                                float *_d_C)
 {
+   using ::TMVA::Experimental::SOFIE::Gemm_Call;
+
    // TODO:
    //    - fix and test the implementation for alpha != 1.0
    if (alpha != 1.0f) {
       return;
    }
 
-   char ct = 't';
-   char cn = 'n';
-
    // beta needs to be one because we want to add to _d_A and _d_B instead of
    // overwriting it.
    float one = 1.;
 
-   // Leading dimensions for the original storage (must match how sgemm_ is called in the primal)
-   const int lda_opA = transa ? k : m; // lda used with transa flag as in primal
-   const int ldb_opB = transb ? n : k; // ldb used with transb flag as in primal
-
-   // Flags for op(A), op(B)
-   const char TA = transa ? ct : cn;
-   const char TB = transb ? ct : cn;
-
-   // Flags for op(A)^T and op(B)^T
-   const char TAT = transa ? cn : ct; // (A^T)^T = A, A^T if A
-   const char TBT = transb ? cn : ct; // (B^T)^T = B, B^T if B
-
+   // ---- dA ----
    if (!transa) {
-      // dA += alpha * dY * op(B)^T    (m x n) * (n x k) -> (m x k)
-      ::sgemm_(&cn, &TBT, &m, &k, &n, &alpha, _d_output, &m, B, &ldb_opB, &one, _d_A, &m);
+      // dA += dY * op(B)^T
+      Gemm_Call(_d_A, false, !transb, m, k, n, one, _d_output, B, one, _d_A);
    } else {
-      // dA (shape k x m) += alpha * op(B) * dY^T   (k x n) * (n x m) -> (k x m)
-      ::sgemm_(&TB, &ct, &k, &m, &n, &alpha, B, &ldb_opB, _d_output, &m, &one, _d_A, &k);
+      // dA += op(B) * dY^T
+      Gemm_Call(_d_A, transb, true, k, m, n, one, B, _d_output, one, _d_A);
    }
 
+   // ---- dB ----
    if (!transb) {
-      // dB += alpha * op(A)^T * dY   (k x m) * (m x n) -> (k x n)
-      ::sgemm_(&TAT, &cn, &k, &n, &m, &alpha, A, &lda_opA, _d_output, &m, &one, _d_B, &k);
+      // dB += op(A)^T * dY
+      Gemm_Call(_d_B, !transa, false, k, n, m, one, A, _d_output, one, _d_B);
    } else {
-      // dB (shape n x k) += alpha * dY^T * op(A)   (n x m) * (m x k) -> (n x k)
-      ::sgemm_(&ct, &TA, &n, &k, &m, &alpha, _d_output, &m, A, &lda_opA, &one, _d_B, &n);
+      // dB += dY^T * op(A)
+      Gemm_Call(_d_B, true, transa, n, k, m, one, _d_output, A, one, _d_B);
    }
 
    int sizeC = n * m;
