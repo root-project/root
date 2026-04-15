@@ -74,7 +74,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     # We use color output only for Ninja, because Ninja by default is buffering the output,
     # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics")
   endif()
   if(ccache AND CCACHE_VERSION VERSION_LESS "3.2.0")
     # https://bugzilla.samba.org/show_bug.cgi?id=8118
@@ -82,7 +81,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     # "clang: warning: argument unused during compilation: '-c"
     # Adding -Qunused-arguments provides a workaround for the bug.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
   endif()
 else()
   set(CLANG_MAJOR 0)
