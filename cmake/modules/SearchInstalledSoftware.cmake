@@ -732,6 +732,14 @@ if(xrootd AND NOT builtin_xrootd)
         set(builtin_xrootd ON CACHE BOOL "Enabled because xrootd is enabled, but external xrootd was not found (${xrootd_description})" FORCE)
       endif()
     endif()
+  else()
+    # XROOTD was found. Check now for required components
+    foreach (component CLIENT UTILS) # ROOT requires XrdCl and XrdUtils
+      if("${XROOTD_${component}_LIBRARIES}" STREQUAL "XROOTD_${component}_LIBRARIES-NOTFOUND")
+        message(SEND_ERROR "XROOTD found but missing component ${component}. Install missing package on your system (preferred). "
+                           "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+      endif()
+    endforeach()
   endif()
 
   if(XRootD_VERSION VERSION_LESS 5.8.4)
