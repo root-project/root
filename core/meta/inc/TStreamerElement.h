@@ -101,6 +101,7 @@ public:
    Int_t            GetArrayLength() const {return fArrayLength;}
    virtual TClass  *GetClassPointer() const;
            TClass  *GetClass()        const {return GetClassPointer();}
+   virtual std::size_t GetAlignment() const;
    virtual Int_t    GetExecID() const;
    virtual const char *GetFullName() const;
    virtual const char *GetInclude() const {return "";}
@@ -172,6 +173,7 @@ public:
    const char      *GetInclude() const override;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
    ULongptr_t       GetMethod() const override {return 0;}
+   std::size_t      GetAlignment() const override;
    Int_t            GetSize() const override;
    TVirtualStreamerInfo *GetBaseStreamerInfo() const { return fStreamerInfo; }
    void             Init(TVirtualStreamerInfo *obj = nullptr) override;
@@ -213,6 +215,7 @@ public:
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
    ULongptr_t     GetMethod() const override;
+   std::size_t    GetAlignment() const override { return alignof(void *); }
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         HasCounter() const override { return fCounter != nullptr; }
@@ -249,6 +252,7 @@ public:
    Int_t          GetCountVersion() const {return fCountVersion;}
    const char    *GetInclude() const override;
    ULongptr_t     GetMethod() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         IsaPointer() const override {return kTRUE; }
@@ -297,6 +301,7 @@ public:
    TStreamerObject(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObject();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
 
@@ -316,6 +321,7 @@ public:
    TStreamerObjectAny(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectAny();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
 
@@ -335,6 +341,7 @@ public:
    TStreamerObjectPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectPointer();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override { return alignof(void *); }
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         IsaPointer() const override {return kTRUE;}
@@ -356,6 +363,7 @@ public:
    TStreamerObjectAnyPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectAnyPointer();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override { return alignof(void *); }
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         IsaPointer() const override { return kTRUE; }
@@ -377,6 +385,7 @@ public:
    TStreamerString(const char *name, const char *title, Int_t offset);
    virtual       ~TStreamerString();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override { return alignof(TString); }
    Int_t          GetSize() const override;
 
    ClassDefOverride(TStreamerString,2)  //Streamer element of type TString
@@ -408,6 +417,7 @@ public:
    Int_t          GetSTLtype() const {return fSTLtype;}
    Int_t          GetCtype()   const {return fCtype;}
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           ls(Option_t *option="") const override;
    void           SetSTLtype(Int_t t) {fSTLtype = t;}

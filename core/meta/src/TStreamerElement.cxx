@@ -20,6 +20,7 @@
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "ROOT/RAlignmentUtils.hxx"
 #include "TEnum.h"
 #include "TRealData.h"
 #include "ThreadLocalStorage.h"
@@ -390,6 +391,23 @@ Int_t TStreamerElement::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of this element in bytes.
+/// The bare underlying type (stripping kOffsetL / kOffsetP array/pointer markers)
+/// is used to determine the alignment from TDataType.
+
+std::size_t TStreamerElement::GetAlignment() const
+{
+   // Strip kOffsetL / kOffsetP markers to recover the bare type id.
+   const EDataType bareType = (EDataType)(fType % TVirtualStreamerInfo::kOffsetL);
+   if (bareType == kCounter || bareType == kBits)
+      return sizeof(UInt_t);
+   if (auto *dt = TDataType::GetDataType(bareType); dt && dt->GetAlignOf())
+      return dt->GetAlignOf();
+   Fatal("TStreamerElement::GetAlignment", "Cannot determine alignment for type %d (bare type %d)", fType, bareType);
+   return alignof(std::max_align_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the local streamer object.
 
 TMemberStreamer *TStreamerElement::GetStreamer() const
@@ -691,6 +709,20 @@ Int_t TStreamerBase::GetSize() const
    if (cl)
       return cl->Size();
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the base class in bytes.
+
+std::size_t TStreamerBase::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   Fatal("TStreamerBase::GetAlignment", "Cannot determine alignment for base class %s", GetName());
+   return alignof(std::max_align_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1056,6 +1088,23 @@ TStreamerLoop::~TStreamerLoop()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of this element in bytes.
+/// The bare underlying type (stripping kOffsetL / kOffsetP array/pointer markers)
+/// is used to determine the alignment from TDataType.
+
+std::size_t TStreamerLoop::GetAlignment() const
+{
+   // Strip kOffsetL / kOffsetP markers to recover the bare type id.
+   const EDataType bareType = (EDataType)(fType % TVirtualStreamerInfo::kOffsetL);
+   if (bareType == kCounter || bareType == kBits)
+      return sizeof(UInt_t);
+   if (auto *dt = TDataType::GetDataType(bareType); dt && dt->GetAlignOf())
+      return dt->GetAlignOf();
+   Fatal("TStreamerLoop::GetAlignment", "Cannot determine alignment for type %d (bare type %d)", fType, bareType);
+   return alignof(std::max_align_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// return address of counter
 
 ULongptr_t TStreamerLoop::GetMethod() const
@@ -1301,6 +1350,20 @@ Int_t TStreamerObject::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the object class in bytes.
+
+std::size_t TStreamerObject::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   Fatal("TStreamerObject::GetAlignment", "Cannot determine alignment for class %s", GetName());
+   return alignof(std::max_align_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TStreamerObject.
 
 void TStreamerObject::Streamer(TBuffer &R__b)
@@ -1394,6 +1457,20 @@ Int_t TStreamerObjectAny::GetSize() const
    if (fArrayLength)
       return fArrayLength * classSize;
    return classSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the object (non-TObject) class in bytes.
+
+std::size_t TStreamerObjectAny::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   Fatal("TStreamerObjectAny::GetAlignment", "Cannot determine alignment for class %s", GetName());
+   return alignof(std::max_align_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1931,6 +2008,20 @@ Int_t TStreamerSTL::GetSize() const
 
    if (fArrayLength) return fArrayLength*size;
    return size;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the STL container in bytes.
+
+std::size_t TStreamerSTL::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   Fatal("TStreamerSTL::GetAlignment", "Cannot determine alignment for class %s", GetName());
+   return alignof(std::max_align_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
