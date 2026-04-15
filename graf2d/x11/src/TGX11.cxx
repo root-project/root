@@ -2282,6 +2282,17 @@ void TGX11::SetFillColor(Color_t cindex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return current fill color
+
+Color_t TGX11::GetFillColor() const
+{
+   // TODO: remove in ROOT7, no longer used in the code
+
+   return gCws ? gCws->fAttFill.GetFillColor() : TAttFill::GetFillColor();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set fill area style.
 ///
 ///  \param [in] fstyle   : compound fill area interior style
@@ -2299,10 +2310,11 @@ void TGX11::SetFillStyle(Style_t fstyle)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current fill style
-/// FIXME: Only as temporary solution while some code analyze current fill style
 
 Style_t TGX11::GetFillStyle() const
 {
+   // TODO: remove in ROOT7, no longer used in the code
+
    return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
 }
 
@@ -2371,10 +2383,11 @@ void TGX11::SetLineStyle(Style_t lstyle)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current line style
-/// FIXME: Only as temporary solution while some code analyze current line style
 
 Style_t TGX11::GetLineStyle() const
 {
+   // TODO: remove in ROOT7, no loner used in ROOT code
+
    return gCws ? gCws->fAttLine.GetLineStyle() : TAttLine::GetLineStyle();
 }
 
@@ -2395,10 +2408,11 @@ void TGX11::SetLineWidth(Width_t width)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current line width
-/// FIXME: Only as temporary solution while some code analyze current line wide
 
 Width_t TGX11::GetLineWidth() const
 {
+   // TODO: remove in ROOT7, no loner used in ROOT code
+
    return gCws ? gCws->fAttLine.GetLineWidth() : TAttLine::GetLineWidth();
 }
 
@@ -3234,11 +3248,19 @@ Int_t TGX11::SupportsExtension(const char *ext) const
    return XQueryExtension((Display*)fDisplay, ext, &major_opcode, &first_event, &first_error);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns window context for specified window id
+/// Window context is valid until window not closed or destroyed
+/// Provided methods to work with window context like DrawLineW allows to
+/// perform actions independently on different windows
 
 WinContext_t TGX11::GetWindowContext(Int_t wid)
 {
    return (WinContext_t) fWindows[wid].get();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes for specified window
 
 void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
 {
@@ -3288,6 +3310,9 @@ void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
          ctxt->fillHollow = 1;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes for specified window
 
 void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
 {
@@ -3347,6 +3372,9 @@ void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
 
    ctxt->fAttLine = att;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker attributes for specified window
 
 void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
 {
@@ -3842,6 +3870,9 @@ void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set text attributes for specified window
+
 void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
 {
    auto ctxt = (XWindow_t *) wctxt;
@@ -3910,9 +3941,9 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
    // use first existing font
    for (int i = 0; i < kMAXFONT; i++)
       if (gFont[i].id) {
-         gCws->textFont = gFont[i].id;
-         XSetFont((Display*)fDisplay, gCws->fGClist[kGCtext], gCws->textFont->fid);
-         XSetFont((Display*)fDisplay, gCws->fGClist[kGCinvt], gCws->textFont->fid);
+         ctxt->textFont = gFont[i].id;
+         XSetFont((Display*)fDisplay, ctxt->fGClist[kGCtext], ctxt->textFont->fid);
+         XSetFont((Display*)fDisplay, ctxt->fGClist[kGCinvt], ctxt->textFont->fid);
          break;
       }
 
