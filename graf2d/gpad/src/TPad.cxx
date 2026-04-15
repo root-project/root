@@ -3973,8 +3973,8 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
 {
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
-   if (GetPainter())
-      GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
+   if (auto pp = GetPainter())
+      pp->CopyDrawable(GetPixmapID(), px-x, py-y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
