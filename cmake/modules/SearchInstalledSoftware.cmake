@@ -205,6 +205,7 @@ if(NOT builtin_nlohmannjson)
 endif()
 
 if(builtin_nlohmannjson)
+  list(APPEND ROOT_BUILTINS BUILTIN_NLOHMANN)
   add_subdirectory(builtins/nlohmann)
 endif()
 
