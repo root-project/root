@@ -46,7 +46,7 @@ TEST(ROOT, Linear16)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_16", input);
 
    // Testing the actual and expected output sizes
-   EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(Linear_16_ExpectedOutput::all_ones));
 
    float *correct = Linear_16_ExpectedOutput::all_ones;
 
@@ -67,7 +67,7 @@ TEST(ROOT, Linear32)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_32", input);
 
    // Testing the actual and expected output sizes
-   EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(Linear_32_ExpectedOutput::all_ones));
 
    float *correct = Linear_32_ExpectedOutput::all_ones;
 
@@ -88,7 +88,7 @@ TEST(ROOT, Linear64)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_64", input);
 
    // Testing the actual and expected output values
-   EXPECT_EQ(output.size(), sizeof(Linear_64_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(Linear_64_ExpectedOutput::all_ones));
 
    float *correct = Linear_64_ExpectedOutput::all_ones;
 
@@ -109,7 +109,7 @@ TEST(ROOT, LinearWithSelu)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithSelu", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(LinearWithSelu_ExpectedOutput::all_ones));
 
    float *correct = LinearWithSelu_ExpectedOutput::all_ones;
 
@@ -131,7 +131,7 @@ TEST(ROOT, LinearWithSigmoid)
 
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(LinearWithSigmoid_ExpectedOutput::all_ones));
 
    float *correct = LinearWithSigmoid_ExpectedOutput::all_ones;
 
@@ -152,7 +152,7 @@ TEST(ROOT, ConvWithPadding)
    ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithPadding", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvWithPadding_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(ConvWithPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithPadding_ExpectedOutput::all_ones;
 
@@ -172,7 +172,7 @@ TEST(ROOT, ConvWithoutPadding)
    ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithoutPadding", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvWithoutPadding_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(ConvWithoutPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithoutPadding_ExpectedOutput::all_ones;
 
@@ -193,7 +193,7 @@ TEST(ROOT, ConvWithAutopadSameLower)
    ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithAutopadSameLower", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvWithAutopadSameLower_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(ConvWithAutopadSameLower_ExpectedOutput::all_ones));
 
    float *correct = ConvWithAutopadSameLower_ExpectedOutput::all_ones;
 
@@ -214,7 +214,7 @@ TEST(ROOT, ConvWithStridesPadding)
    ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithStridesPadding", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvWithStridesPadding_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(ConvWithStridesPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithStridesPadding_ExpectedOutput::all_ones;
 
@@ -235,7 +235,7 @@ TEST(ROOT, ConvWithStridesNoPadding)
    ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithStridesNoPadding", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvWithStridesNoPadding_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(ConvWithStridesNoPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithStridesNoPadding_ExpectedOutput::all_ones;
 
@@ -256,7 +256,7 @@ TEST(DISABLED_ROOT, ConvWithAsymmetricPadding)
    ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithAsymmetricPadding", input);
 
    // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvWithAsymmetricPadding_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(ConvWithAsymmetricPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithAsymmetricPadding_ExpectedOutput::all_ones;
 
@@ -278,8 +278,8 @@ TEST(ROOT, RNNBatchwise)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNBatchwise_ExpectedOutput::all_ones) / sizeof(float));
-   EXPECT_EQ(output_yh.size(), sizeof(RNNBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNBatchwise_ExpectedOutput::all_ones));
+   EXPECT_EQ(output_yh.size(), std::size(RNNBatchwise_ExpectedOutput::all_ones));
 
    float *correct = RNNBatchwise_ExpectedOutput::all_ones;
 
@@ -303,7 +303,7 @@ TEST(ROOT, RNNBidirectional)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNBidirectional_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNBidirectional_ExpectedOutput::all_ones_y));
 
    float *correct_y = RNNBidirectional_ExpectedOutput::all_ones_y;
 
@@ -313,7 +313,7 @@ TEST(ROOT, RNNBidirectional)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(RNNBidirectional_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(RNNBidirectional_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = RNNBidirectional_ExpectedOutput::all_ones_yh;
 
@@ -337,7 +337,7 @@ TEST(ROOT, RNNBidirectionalBatchwise)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNBidirectionalBatchwise_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNBidirectionalBatchwise_ExpectedOutput::all_ones_y));
 
    float *correct_y = RNNBidirectionalBatchwise_ExpectedOutput::all_ones_y;
 
@@ -347,7 +347,7 @@ TEST(ROOT, RNNBidirectionalBatchwise)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(RNNBidirectionalBatchwise_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(RNNBidirectionalBatchwise_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = RNNBidirectionalBatchwise_ExpectedOutput::all_ones_yh;
 
@@ -369,7 +369,7 @@ TEST(ROOT, RNNDefaults)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNDefaults_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNDefaults_ExpectedOutput::all_ones_y));
 
    float *correct_y = RNNDefaults_ExpectedOutput::all_ones_y;
 
@@ -379,7 +379,7 @@ TEST(ROOT, RNNDefaults)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(RNNDefaults_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(RNNDefaults_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = RNNDefaults_ExpectedOutput::all_ones_yh;
 
@@ -401,7 +401,7 @@ TEST(ROOT, RNNSeqLength)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNSeqLength_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNSeqLength_ExpectedOutput::all_ones_y));
 
    float *correct_y = RNNSeqLength_ExpectedOutput::all_ones_y;
 
@@ -411,7 +411,7 @@ TEST(ROOT, RNNSeqLength)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(RNNSeqLength_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(RNNSeqLength_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = RNNSeqLength_ExpectedOutput::all_ones_yh;
 
@@ -441,7 +441,7 @@ TEST(ROOT, RNNSequence)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNSequence_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNSequence_ExpectedOutput::all_ones_y));
 
    float *correct_y = RNNSequence_ExpectedOutput::all_ones_y;
 
@@ -451,7 +451,7 @@ TEST(ROOT, RNNSequence)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(RNNSequence_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(RNNSequence_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = RNNSequence_ExpectedOutput::all_ones_yh;
 
@@ -481,7 +481,7 @@ TEST(ROOT, RNNSequenceBatchwise)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(RNNSequenceBatchwise_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(RNNSequenceBatchwise_ExpectedOutput::all_ones_y));
 
    float *correct_y = RNNSequenceBatchwise_ExpectedOutput::all_ones_y;
 
@@ -491,7 +491,7 @@ TEST(ROOT, RNNSequenceBatchwise)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(RNNSequenceBatchwise_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(RNNSequenceBatchwise_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = RNNSequenceBatchwise_ExpectedOutput::all_ones_yh;
 
@@ -513,7 +513,7 @@ TEST(ROOT, LSTMBatchwise)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(LSTMBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(LSTMBatchwise_ExpectedOutput::all_ones));
 
    float *correct = LSTMBatchwise_ExpectedOutput::all_ones;
 
@@ -523,7 +523,7 @@ TEST(ROOT, LSTMBatchwise)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(LSTMBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(LSTMBatchwise_ExpectedOutput::all_ones));
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -544,7 +544,7 @@ TEST(ROOT, LSTMBidirectional)
    std::vector<float> output_yc = output[2];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(LSTMBidirectional_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(LSTMBidirectional_ExpectedOutput::all_ones_y));
 
    float *correct_y = LSTMBidirectional_ExpectedOutput::all_ones_y;
 
@@ -554,7 +554,7 @@ TEST(ROOT, LSTMBidirectional)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(LSTMBidirectional_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(LSTMBidirectional_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = LSTMBidirectional_ExpectedOutput::all_ones_yh;
 
@@ -564,7 +564,7 @@ TEST(ROOT, LSTMBidirectional)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yc.size(), sizeof(LSTMBidirectional_ExpectedOutput::all_ones_yc) / sizeof(float));
+   EXPECT_EQ(output_yc.size(), std::size(LSTMBidirectional_ExpectedOutput::all_ones_yc));
 
    float *correct_yc = LSTMBidirectional_ExpectedOutput::all_ones_yc;
 
@@ -586,7 +586,7 @@ TEST(ROOT, LSTMDefaults)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(LSTMDefaults_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(LSTMDefaults_ExpectedOutput::all_ones_y));
 
    float *correct_y = LSTMDefaults_ExpectedOutput::all_ones_y;
 
@@ -596,7 +596,7 @@ TEST(ROOT, LSTMDefaults)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(LSTMDefaults_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(LSTMDefaults_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = LSTMDefaults_ExpectedOutput::all_ones_yh;
 
@@ -618,7 +618,7 @@ TEST(ROOT, LSTMInitialBias)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(LSTMInitialBias_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(LSTMInitialBias_ExpectedOutput::all_ones_y));
 
    float *correct_y = LSTMInitialBias_ExpectedOutput::all_ones_y;
 
@@ -628,7 +628,7 @@ TEST(ROOT, LSTMInitialBias)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(LSTMInitialBias_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(LSTMInitialBias_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = LSTMInitialBias_ExpectedOutput::all_ones_yh;
 
@@ -650,7 +650,7 @@ TEST(ROOT, LSTMPeepholes)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(LSTMPeepholes_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(LSTMPeepholes_ExpectedOutput::all_ones));
 
    float *correct = LSTMPeepholes_ExpectedOutput::all_ones;
 
@@ -660,7 +660,7 @@ TEST(ROOT, LSTMPeepholes)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(LSTMPeepholes_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(LSTMPeepholes_ExpectedOutput::all_ones));
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -680,7 +680,7 @@ TEST(ROOT, GRUBatchwise)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(GRUBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(GRUBatchwise_ExpectedOutput::all_ones));
 
    float *correct = GRUBatchwise_ExpectedOutput::all_ones;
 
@@ -690,7 +690,7 @@ TEST(ROOT, GRUBatchwise)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(GRUBatchwise_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(GRUBatchwise_ExpectedOutput::all_ones));
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -710,7 +710,7 @@ TEST(ROOT, GRUBidirectional)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(GRUBidirectional_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(GRUBidirectional_ExpectedOutput::all_ones));
 
    float *correct = GRUBidirectional_ExpectedOutput::all_ones;
 
@@ -720,7 +720,7 @@ TEST(ROOT, GRUBidirectional)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(GRUBidirectional_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(GRUBidirectional_ExpectedOutput::all_ones));
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -740,7 +740,7 @@ TEST(ROOT, GRUDefaults)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(GRUDefaults_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(GRUDefaults_ExpectedOutput::all_ones));
 
    float *correct = GRUDefaults_ExpectedOutput::all_ones;
 
@@ -750,7 +750,7 @@ TEST(ROOT, GRUDefaults)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(GRUDefaults_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(GRUDefaults_ExpectedOutput::all_ones));
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -770,7 +770,7 @@ TEST(ROOT, GRUInitialBias)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(GRUInitialBias_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(GRUInitialBias_ExpectedOutput::all_ones));
 
    float *correct = GRUInitialBias_ExpectedOutput::all_ones;
 
@@ -780,7 +780,7 @@ TEST(ROOT, GRUInitialBias)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(GRUInitialBias_ExpectedOutput::all_ones) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(GRUInitialBias_ExpectedOutput::all_ones));
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -800,7 +800,7 @@ TEST(ROOT, GRUSeqLength)
    std::vector<float> output_yh = output[1];
 
    // Checking output size
-   EXPECT_EQ(output_y.size(), sizeof(GRUSeqLength_ExpectedOutput::all_ones_y) / sizeof(float));
+   EXPECT_EQ(output_y.size(), std::size(GRUSeqLength_ExpectedOutput::all_ones_y));
 
    float *correct_y = GRUSeqLength_ExpectedOutput::all_ones_y;
 
@@ -810,7 +810,7 @@ TEST(ROOT, GRUSeqLength)
    }
 
    // Checking output size
-   EXPECT_EQ(output_yh.size(), sizeof(GRUSeqLength_ExpectedOutput::all_ones_yh) / sizeof(float));
+   EXPECT_EQ(output_yh.size(), std::size(GRUSeqLength_ExpectedOutput::all_ones_yh));
 
    float *correct_yh = GRUSeqLength_ExpectedOutput::all_ones_yh;
 
@@ -830,7 +830,7 @@ TEST(ROOT, RangeFloat) {
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeFloat", "\"\", 5", start, limit, delta);
 
    // Checking the output size
-   EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
+   EXPECT_EQ(output.size(), std::size(RangeFloat_ExpectedOutput::outputs));
 
    float* correct = RangeFloat_ExpectedOutput::outputs;
 
@@ -848,7 +848,7 @@ TEST(ROOT, RangeInt) {
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeInt", "\"\", 5", start, limit, delta);
 
    // Checking the output size
-   EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));
+   EXPECT_EQ(output.size(), std::size(RangeInt_ExpectedOutput::outputs));
 
    int64_t* correct = RangeInt_ExpectedOutput::outputs;
 
