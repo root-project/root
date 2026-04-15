@@ -30,6 +30,7 @@ private:
    FT_Vector   fAlign;                 ///< alignment vector
 #ifdef R__HAS_XFT
    TXftFontHash  *fXftFontHash;        ///< hash table for Xft fonts
+   static Bool_t  gXftInit;            ///< does xft was initialized
 #endif
 
    void     Align(WinContext_t wctxt);
