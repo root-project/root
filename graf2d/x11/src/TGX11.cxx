@@ -472,11 +472,7 @@ void TGX11::CloseWindow()
 
 void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 {
-   gTws = fWindows[wid].get();
-
-   XCopyArea((Display*)fDisplay, gTws->fDrawing, gCws->fDrawing, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth,
-             gTws->fHeight, xpos, ypos);
-   XFlush((Display*)fDisplay);
+   CopyPixmapW((WinContext_t) gCws, wid, xpos, ypos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2460,7 +2456,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set opacity of a window. This image manipulation routine works
+/// Set opacity of a selected window. This image manipulation routine works
 /// by adding to a percent amount of neutral to each pixels RGB.
 /// Since it requires quite some additional color map entries is it
 /// only supported on displays with more than > 8 color planes (> 256
@@ -2468,64 +2464,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 
 void TGX11::SetOpacity(Int_t percent)
 {
-   if (fDepth <= 8) return;
-   if (percent == 0) return;
-   // if 100 percent then just make white
-
-   ULong_t *orgcolors = nullptr, *tmpc = nullptr;
-   Int_t    maxcolors = 0, ncolors = 0, ntmpc = 0;
-
-   // save previous allocated colors, delete at end when not used anymore
-   if (gCws->fNewColors) {
-      tmpc = gCws->fNewColors;
-      ntmpc = gCws->fNcolors;
-   }
-
-   // get pixmap from server as image
-   XImage *image = XGetImage((Display*)fDisplay, gCws->fDrawing, 0, 0, gCws->fWidth,
-                             gCws->fHeight, AllPlanes, ZPixmap);
-   if (!image) return;
-   // collect different image colors
-   int x, y;
-   for (y = 0; y < (int) gCws->fHeight; y++) {
-      for (x = 0; x < (int) gCws->fWidth; x++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
-      }
-   }
-   if (ncolors == 0) {
-      XDestroyImage(image);
-      ::operator delete(orgcolors);
-      return;
-   }
-
-   // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors, ncolors);
-
-   if (gCws->fNewColors) {
-      // put opaque colors in image
-      for (y = 0; y < (int) gCws->fHeight; y++) {
-         for (x = 0; x < (int) gCws->fWidth; x++) {
-            ULong_t pixel = XGetPixel(image, x, y);
-            Int_t idx = FindColor(pixel, orgcolors, ncolors);
-            XPutPixel(image, x, y, gCws->fNewColors[idx]);
-         }
-      }
-   }
-
-   // put image back in pixmap on server
-   XPutImage((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCpxmp], image, 0, 0, 0, 0,
-             gCws->fWidth, gCws->fHeight);
-   XFlush((Display*)fDisplay);
-
-   // clean up
-   if (tmpc) {
-      if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, tmpc, ntmpc, 0);
-      delete [] tmpc;
-   }
-   XDestroyImage(image);
-   ::operator delete(orgcolors);
+   SetOpacityW((WinContext_t) gCws, percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2809,6 +2748,89 @@ void TGX11::UpdateWindowW(WinContext_t wctxt, Int_t mode)
    } else {
       XSync((Display*)fDisplay, False);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set opacity of a specified window. This image manipulation routine works
+/// by adding to a percent amount of neutral to each pixels RGB.
+/// Since it requires quite some additional color map entries is it
+/// only supported on displays with more than > 8 color planes (> 256
+/// colors).
+
+void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
+{
+   if ((fDepth <= 8) || (percent <= 0)) return;
+   // if 100 percent then just make white
+
+   auto ctxt = (XWindow_t *) wctxt;
+
+   ULong_t *orgcolors = nullptr, *tmpc = nullptr;
+   Int_t    maxcolors = 0, ncolors = 0, ntmpc = 0;
+
+   // save previous allocated colors, delete at end when not used anymore
+   if (ctxt->fNewColors) {
+      tmpc = ctxt->fNewColors;
+      ntmpc = ctxt->fNcolors;
+   }
+
+   // get pixmap from server as image
+   XImage *image = XGetImage((Display*)fDisplay, ctxt->fDrawing, 0, 0, ctxt->fWidth,
+                             ctxt->fHeight, AllPlanes, ZPixmap);
+   if (!image) return;
+   // collect different image colors
+   for (unsigned y = 0; y < ctxt->fHeight; y++) {
+      for (unsigned x = 0; x < ctxt->fWidth; x++) {
+         ULong_t pixel = XGetPixel(image, x, y);
+         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+      }
+   }
+   if (ncolors == 0) {
+      XDestroyImage(image);
+      ::operator delete(orgcolors);
+      return;
+   }
+
+   // create opaque counter parts
+   MakeOpaqueColors(percent, orgcolors, ncolors);
+
+   if (ctxt->fNewColors) {
+      // put opaque colors in image
+      for (unsigned y = 0; y < ctxt->fHeight; y++) {
+         for (unsigned x = 0; x < ctxt->fWidth; x++) {
+            ULong_t pixel = XGetPixel(image, x, y);
+            Int_t idx = FindColor(pixel, orgcolors, ncolors);
+            XPutPixel(image, x, y, ctxt->fNewColors[idx]);
+         }
+      }
+   }
+
+   // put image back in pixmap on server
+   XPutImage((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCpxmp], image, 0, 0, 0, 0,
+             ctxt->fWidth, ctxt->fHeight);
+   XFlush((Display*)fDisplay);
+
+   // clean up
+   if (tmpc) {
+      if (fRedDiv == -1)
+         XFreeColors((Display*)fDisplay, fColormap, tmpc, ntmpc, 0);
+      delete [] tmpc;
+   }
+   XDestroyImage(image);
+   ::operator delete(orgcolors);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the pixmap wid at the position xpos, ypos in the specified window.
+
+void TGX11::CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
+   gTws = fWindows[wid].get();
+
+   XCopyArea((Display*)fDisplay, gTws->fDrawing, ctxt->fDrawing, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth,
+             gTws->fHeight, xpos, ypos);
+   XFlush((Display*)fDisplay);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
