@@ -744,13 +744,9 @@ void TPad::Clear(Option_t *option)
    }
 
    auto pp = GetPainter();
-   // If pad painter uses PS, ClearDrawable() start new page
-   if (pp) {
-      if (pp->IsNative())
-         pp->ClearDrawable();
-      else if (this == GetCanvas())
-         pp->NewPage();
-   }
+   // If pad painter uses PS, TPad::Clear() start new page
+   if (pp && pp->GetPS())
+      pp->NewPage();
 
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
@@ -3660,23 +3656,44 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
    pp->OnPad(this);
 
    if (color >= 0) {
-      TAttLine::Modify();  //Change line attributes only if necessary
-      TAttFill::Modify();  //Change fill area attributes only if necessary
 
-      //With Cocoa we have a transparency. But we also have
-      //pixmaps, and if you just paint a new content over the old one
-      //with alpha < 1., you'll be able to see the old content.
-      if (pp->IsNative() && pp->IsCocoa())
+      Bool_t do_paint_box = kTRUE;
+
+      Style_t style = GetFillStyle();
+      if (!IsBatch() && (pp->IsCocoa() || (pp->IsNative() && (style > 3000) && (style < 3026))))
          pp->ClearDrawable();
 
-      PaintBox(fX1, fY1, fX2, fY2);
-   }
-   if (color < 0)
-      color = -color;
-   if (IsTransparent())
-      return;
+      if ((style >= 4000) && (style <= 4100) && pp->IsNative()) {
+         if (this == fMother) {
+            style = 1001;
+         } else if (pp->IsCocoa()) {
+            auto col = gROOT->GetColor(color);
+            if (col)
+               color = TColor::GetColor(col->GetRed(), col->GetGreen(), col->GetBlue(), (style - 4000) / 100.);
+            style = 1001;
+         } else {
+            // copy all pixmaps
+            do_paint_box = kFALSE;
+            int px, py;
+            XYtoAbsPixel(fX1, fY2, px, py);
+            if (fMother) {
+               fMother->CopyBackgroundPixmap(px, py);
+               CopyBackgroundPixmaps(fMother, this, px, py);
+            }
+            pp->SetOpacity(style - 4000);
+         }
+      } else if ((color == 10) && (style > 3000) && (style < 3100))
+         color = 1;
 
-   if (fBorderMode == 0)
+      if (do_paint_box) {
+         pp->SetAttFill({color, style});
+         pp->SetAttLine(*this);
+         PaintBox(fX1, fY1, fX2, fY2);
+      }
+   } else
+      color = -color;
+
+   if (IsTransparent() || (fBorderMode == 0))
       return;
 
    // then paint 3d frame (depending on bordermode)
@@ -3802,14 +3819,8 @@ void TPad::PaintModified()
    fPadPaint = 1;
    {
       TContext ctxt(this, kTRUE);
-      if (IsModified() || IsTransparent()) {
-         if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-            auto pp = GetPainter();
-            if (pp && pp->IsNative())
-               pp->ClearDrawable();
-         }
+      if (IsModified() || IsTransparent())
          PaintBorder(GetFillColor(), kTRUE);
-      }
 
       PaintDate();
 
@@ -3894,42 +3905,9 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    } else if ((style >= 1000) && (style < 2000)) {
       draw_fill = kTRUE;
    } else if (style > 3000 && style < 3100) {
-      if (style < 3026)
-         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-      //special case for TAttFillCanvas on real display
-      if (att.GetFillColor() == 10) {
-         // SL: reproduce old sequence of painting calls, can have some side effects on opaque pads
-         att.SetFillColor(1);
-         pp->SetAttFill(att);
-         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-         att.SetFillColor(10);
-         pp->SetAttFill(att);
-      }
+      draw_fill = style < 3026;
    } else if (style >= 4000 && style <= 4100) {
-      // For style >=4000 we make the window transparent.
-      // From 4000 to 4100 the window is 100% transparent to 100% opaque
-
-      //ignore this style option when this is the canvas itself
-      if (this == fMother) {
-         //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
-         if (pp->IsCocoa()) {
-            style0 = style;
-            att.SetFillStyle(1000);
-            pp->SetAttFill(att);
-         }
-         draw_fill = kTRUE;
-      } else {
-         //draw background by blitting all bottom pads
-         int px, py;
-         XYtoAbsPixel(fX1, fY2, px, py);
-
-         if (fMother) {
-            fMother->CopyBackgroundPixmap(px, py);
-            CopyBackgroundPixmaps(fMother, this, px, py);
-         }
-
-         pp->SetOpacity(style - 4000);
-      }
+      // only used by pad, ignored by all other objects
    } else if (style > 0)
       draw_border = kTRUE;
 
