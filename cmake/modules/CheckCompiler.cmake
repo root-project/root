@@ -75,13 +75,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
   endif()
-  if(ccache AND CCACHE_VERSION VERSION_LESS "3.2.0")
-    # https://bugzilla.samba.org/show_bug.cgi?id=8118
-    # Call to 'ccache clang' is triggering next warning (valid for ccache 3.1.x, fixed in 3.2):
-    # "clang: warning: argument unused during compilation: '-c"
-    # Adding -Qunused-arguments provides a workaround for the bug.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
-  endif()
 else()
   set(CLANG_MAJOR 0)
   set(CLANG_MINOR 0)
