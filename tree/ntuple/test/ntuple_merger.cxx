@@ -3984,33 +3984,12 @@ TEST(RNTupleMerger, MergeNewerVersion)
    }
 
    // Patch the anchor version (and update its checksum)
-   {
-      auto file = fopen(fileGuard.GetPath().c_str(), "r+b");
-      // change the major version to 0x99
-      fseek(file, anchorSeek + 9, SEEK_SET);
-      fputc(0x99, file);
-
-      // NOTE: skipping the first 6 bytes (nbytes and class version) for checksum calculation
-      anchorSeek += 6;
-      anchorNbytes -= 6;
-      fseek(file, anchorSeek, SEEK_SET);
-
-      // recompute checksum
-      auto buf = MakeUninitArray<std::byte>(anchorNbytes);
-      auto read = fread(buf.get(), 1, anchorNbytes, file);
-      ASSERT_EQ(read, anchorNbytes);
-      std::uint64_t checksum = XXH3_64bits(buf.get(), anchorNbytes);
-#if !IS_BIG_ENDIAN
-      // checksum needs to be stored in little endian. We byteswap here if we're in LE because fwrite will write
-      // this bytes effectively in "big endian".
-      checksum = RByteSwap<8>::bswap(checksum);
-#endif
-      // NOTE: we need to seek here to guarantee that the writing operation following the previous read will succeed
-      // (see "File access flags" here https://en.cppreference.com/w/c/io/fopen).
-      fseek(file, anchorSeek + anchorNbytes, SEEK_SET);
-      fwrite(&checksum, 1, sizeof(checksum), file);
-      fclose(file);
-   }
+   const std::byte newMajorVersion{0x99};
+   // NOTE: skipping the first 6 bytes (nbytes and class version) for checksum calculation
+   anchorSeek += 6;
+   anchorNbytes -= 6;
+   PatchRNTupleSection(fileGuard.GetPath(), anchorSeek, anchorNbytes, 3, &newMajorVersion, sizeof(newMajorVersion),
+                       EEndianness::BE);
 
    // Merge
    FileRaii fileGuardOut("test_ntuple_merge_newer_version_out.root");
