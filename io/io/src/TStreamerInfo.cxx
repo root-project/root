@@ -530,6 +530,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
          }
          if (element) {
             fElements->Add(element);
+            fAlignment = std::max(fAlignment, element->GetAlignment());
          }
       } // end of base class loop
    }
@@ -827,6 +828,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
       }
 
       fElements->Add(element);
+      fAlignment = std::max(fAlignment, element->GetAlignment());
    } // end of member loop
 
    // Now add artificial TStreamerElement (i.e. rules that creates new members or set transient members).
@@ -2340,14 +2342,7 @@ void TStreamerInfo::BuildOld()
          }
       } // Class corresponding to StreamerInfo is emulated or not.
 
-      // For non-emulated (loaded) classes, propagate the member's alignment into
-      // fAlignment so that ComputeSize() has a valid value for older StreamerInfos.
-      if (fClass->GetState() > TClass::kEmulated && !fClass->IsSyntheticPair()) {
-         if (TClass *elCl = element->GetClass())
-            fAlignment = std::max(fAlignment, elCl->GetClassAlignment());
-         else if (auto *eldt = TDataType::GetDataType((EDataType)(element->GetType() % kOffsetL)); eldt && eldt->GetAlignOf())
-            fAlignment = std::max(fAlignment, eldt->GetAlignOf());
-      }
+      fAlignment = std::max(fAlignment, element->GetAlignment());
 
       // Now let's deal with Schema evolution
       Int_t newType = -1;
@@ -2681,26 +2676,12 @@ void TStreamerInfo::BuildOld()
          // Use the precise alignment of the element type, falling back to
          // max_align_t for types whose alignment is not known.
          // (e.g. forward declared classes, or classes with incomplete types info, etc..)
-         // Strip kOffsetL / kOffsetP markers to get the bare underlying type id.
-         const EDataType bareType = (EDataType)(element->GetType() % kOffsetL);
-         std::size_t align = alignof(std::max_align_t);
-         if (element->GetClass() && element->GetClass()->GetClassAlignment())
-            align = element->GetClass()->GetClassAlignment();
-         else if (auto *eldt = TDataType::GetDataType(bareType); eldt && eldt->GetAlignOf())
-            align = eldt->GetAlignOf();
-         else
-            Fatal("BuildOld",
-                  "Cannot determine the alignment of the element %s::%s of type %s, unable to build the StreamerInfo "
-                  "for version %d of %s",
-                  GetName(), element->GetName(), element->GetTypeName(), GetClassVersion(), GetName());
+         const std::size_t align = element->GetAlignment();
          assert(ROOT::Internal::IsValidAlignment(align));
          offset = (Int_t)AlignUp((std::size_t)offset, align);
          element->SetOffset(offset);
          offset += asize;
-         if (element->GetClass())
-            fAlignment = std::max(fAlignment, element->GetClass()->GetClassAlignment());
-         else if (auto *eldt = TDataType::GetDataType(bareType); eldt && eldt->GetAlignOf())
-            fAlignment = std::max(fAlignment, eldt->GetAlignOf());
+         fAlignment = std::max(fAlignment, align);
       }
 
       if (!wasCompiled && rules) {
@@ -3369,6 +3350,7 @@ void TStreamerInfo::ComputeSize()
    if (this == fClass->GetCurrentStreamerInfo()) {
       if (fClass->GetState() >= TClass::kInterpreted || fClass->fIsSyntheticPair) {
          fSize = fClass->GetClassSize();
+         fAlignment = fClass->GetClassAlignment();
          return;
       }
    }
@@ -6121,15 +6103,9 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
    i->GetElements()->Delete();
    TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0, silent, /*needAlign=*/false);
    Int_t size = 0;
-   size_t align = alignof(std::max_align_t);
    if (fel) {
       i->GetElements()->Add(fel);
-
-      if (fel->GetClass() && fel->GetClass()->GetClassAlignment()) {
-         assert(ROOT::Internal::IsValidAlignment(fel->GetClass()->GetClassAlignment()));
-         i->fAlignment = std::max(align, fel->GetClass()->GetClassAlignment());
-      } else if (auto *dt = TDataType::GetDataType((EDataType)fel->GetType()); dt && dt->GetAlignOf())
-         i->fAlignment = std::max(align, dt->GetAlignOf());
+      i->fAlignment = std::max(i->fAlignment, fel->GetAlignment());
    } else {
       delete i;
       return 0;
@@ -6140,11 +6116,7 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
       R__CreateEmulatedElement("second", secondname, size, silent, /*needAlign=*/!hint_pair_offset);
    if (second) {
       i->GetElements()->Add(second);
-      if (second->GetClass() && second->GetClass()->GetClassAlignment()){
-         assert(ROOT::Internal::IsValidAlignment(second->GetClass()->GetClassAlignment()));
-         i->fAlignment = std::max(align, second->GetClass()->GetClassAlignment());
-      } else if (auto *dt = TDataType::GetDataType((EDataType)second->GetType()); dt && dt->GetAlignOf())
-         i->fAlignment = std::max(align, dt->GetAlignOf());
+      i->fAlignment = std::max(i->fAlignment, second->GetAlignment());
    } else {
       delete i;
       return 0;
