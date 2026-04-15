@@ -3373,6 +3373,13 @@ void TStreamerInfo::ComputeSize()
       }
    }
 
+   // Note for TStreamerInfo that do not represent the current in memory
+   // layout of the class (whether that layout is the compiled, interpreted
+   // or emulated), the size calculated below is fantasy since the last element
+   // of this StreamerInfo may or may not be the last one in the in-memory layout.
+   // However this is per se a non issue as this size will not be used for
+   // anything.
+
    TStreamerElement *element = (TStreamerElement*)fElements->Last();
    //faster and more precise to use last element offset +size
    //on 64 bit machines, offset may be forced to be a multiple of 8 bytes
