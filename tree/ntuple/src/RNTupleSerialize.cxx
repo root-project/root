@@ -291,6 +291,7 @@ ROOT::RResult<std::uint32_t> SerializeColumnsOfFields(const ROOT::RNTupleDescrip
 
    const auto *xHeader = !forHeaderExtension ? desc.GetHeaderExtension() : nullptr;
 
+   std::vector<const ROOT::RColumnDescriptor *> columnsToSerialize;
    for (auto parentId : fieldList) {
       // If we're serializing the non-extended header and we already have a header extension (which may happen if
       // we load an RNTuple for incremental merging), we need to skip all the extended fields, as they need to be
@@ -301,12 +302,22 @@ ROOT::RResult<std::uint32_t> SerializeColumnsOfFields(const ROOT::RNTupleDescrip
       for (const auto &c : desc.GetColumnIterable(parentId)) {
          if (c.IsAliasColumn() || (xHeader && xHeader->ContainsExtendedColumnRepresentation(c.GetLogicalId())))
             continue;
+         columnsToSerialize.push_back(&c);
+      }
+   }
 
-         if (auto res = SerializePhysicalColumn(c, context, *where)) {
-            pos += res.Unwrap();
-         } else {
-            return R__FORWARD_ERROR(res);
-         }
+   // Make sure the columns are sorted by physical ID.
+   // This is usually the case already, but it may not be true if we have a late-model-extended column in one
+   // of the fields.
+   std::sort(columnsToSerialize.begin(), columnsToSerialize.end(), [&context](const auto *a, const auto *b) {
+      return context.GetOnDiskColumnId(a->GetPhysicalId()) < context.GetOnDiskColumnId(b->GetPhysicalId());
+   });
+
+   for (const auto *c : columnsToSerialize) {
+      if (auto res = SerializePhysicalColumn(*c, context, *where)) {
+         pos += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
       }
    }
 
