@@ -2686,6 +2686,11 @@ void TStreamerInfo::BuildOld()
             align = element->GetClass()->GetClassAlignment();
          else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
             align = eldt->GetAlignOf();
+         else
+            Fatal("BuildOld",
+                  "Cannot determine the alignment of the element %s::%s of type %s, unable to build the StreamerInfo "
+                  "for version %d of %s",
+                  GetName(), element->GetName(), element->GetTypeName(), GetClassVersion(), GetName());
          assert(ROOT::Internal::IsValidAlignment(align));
          offset = (Int_t)AlignUp((std::size_t)offset, align);
          element->SetOffset(offset);
@@ -3376,6 +3381,10 @@ void TStreamerInfo::ComputeSize()
 
    // If we have no information use the default alignment.
    if (!fAlignment) {
+      // FIXME-ALIGN: this currently happens when the TStreamerInfo is not
+      // the current one.
+      Fatal("ComputeSize", "No information on the alignment of class %s, using default alignment of %d bytes",
+            GetName(), (Int_t)alignof(std::max_align_t));
       fAlignment = alignof(std::max_align_t);
    }
    if ((fSize % fAlignment) != 0) {

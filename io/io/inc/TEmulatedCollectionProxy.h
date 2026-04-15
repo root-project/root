@@ -82,8 +82,8 @@ public:
             case kDouble32_t:
             case kDouble_t: align = alignof(double); break;
             default:
-               Fatal("TEmulatedCollectionProxy::WithCont", "Unsupported value type %s for value class %s",
-                     EDataTypeName(fVal->fKind), vcl ? vcl->GetName() : "<unknown>");
+               Fatal("TEmulatedCollectionProxy::WithCont", "Unsupported value type %d for value class %s", fVal->fKind,
+                     vcl ? vcl->GetName() : "<unknown>");
          }
       }
       switch (align) {
