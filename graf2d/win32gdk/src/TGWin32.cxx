@@ -3131,6 +3131,16 @@ void TGWin32::SetFillColor(Color_t cindex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return current fill color
+
+Color_t TGWin32::GetFillColor() const
+{
+   // TODO: remove in ROOT7, no longer used in ROOT
+
+   return gCws ? gCws->fAttFill.GetFillColor() : TAttFill::GetFillColor();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set fill area style.
 /// fstyle   : compound fill area interior style
 ///    fstyle = 1000*interiorstyle + styleindex
@@ -3147,10 +3157,11 @@ void TGWin32::SetFillStyle(Style_t fstyle)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current fill style
-/// FIXME: Only as temporary solution while some code analyze current fill style
 
 Style_t TGWin32::GetFillStyle() const
 {
+   // TODO: remove in ROOT7, no longer used in ROOT
+
    return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
 }
 
@@ -3263,10 +3274,11 @@ void TGWin32::SetLineStyle(Style_t lstyle)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current line style
-/// FIXME: Only as temporary solution while some code analyze current line style
 
 Style_t TGWin32::GetLineStyle() const
 {
+   // TODO: remove in ROOT7, no longer used in ROOT
+
    return gCws ? gCws->fAttLine.GetLineStyle() : TAttLine::GetLineStyle();
 }
 
@@ -3286,10 +3298,11 @@ void TGWin32::SetLineWidth(Width_t width)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current line width
-/// FIXME: Only as temporary solution while some code analyze current line wide
 
 Width_t TGWin32::GetLineWidth() const
 {
+   // TODO: remove in ROOT7, no longer used in ROOT
+
    return gCws ? gCws->fAttLine.GetLineWidth() : TAttLine::GetLineWidth();
 }
 
