@@ -1932,6 +1932,7 @@ endfunction()
 #                        [TIMEOUT seconds]
 #                        [COPY_TO_BUILDDIR file1 file2] Copy listed files when ctest invokes the test.
 #                        [LIBRARIES lib1 lib2...] -- Libraries to link against
+#                        [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                        [LABELS label1 label2...] -- Labels to annotate the test
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
@@ -1943,7 +1944,7 @@ function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "TIMEOUT;REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1979,6 +1980,18 @@ function(ROOT_ADD_GTEST test_suite)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
 
+  if (ARG_FIXTURES_SETUP)
+    set(fixtures_setup ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set(fixtures_cleanup ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set(fixtures_required ${ARG_FIXTURES_REQUIRED})
+  endif()
+
   ROOT_PATH_TO_STRING(name_with_path ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
   ROOT_ADD_TEST(
@@ -1989,6 +2002,9 @@ function(ROOT_ADD_GTEST test_suite)
     ${willfail}
     TIMEOUT "${ARG_TIMEOUT}"
     LABELS "${ARG_LABELS}"
+    FIXTURES_SETUP ${fixtures_setup}
+    FIXTURES_CLEANUP ${fixtures_cleanup}
+    FIXTURES_REQUIRED ${fixtures_required}
     FAILREGEX "${ARG_FAILREGEX}"
     ENVIRONMENT "${ARG_ENVIRONMENT}"
   )
