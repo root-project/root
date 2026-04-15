@@ -70,10 +70,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
 
   if(CMAKE_GENERATOR STREQUAL "Ninja")
-    # LLVM/Clang are automatically checking if we are in interactive terminal mode.
-    # We use color output only for Ninja, because Ninja by default is buffering the output,
-    # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+    # Since Ninja buffers outputs, the builtin tty colour detection fails
+    # https://github.com/ninja-build/ninja/wiki/FAQ#why-does-my-program-with-colored-output-not-have-color-under-ninja
+    set(CMAKE_COLOR_DIAGNOSTICS ON)
   endif()
 else()
   set(CLANG_MAJOR 0)
