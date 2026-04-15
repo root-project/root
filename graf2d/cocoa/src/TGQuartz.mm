@@ -815,6 +815,10 @@ void TGQuartz::SetOpacity(Int_t /*percent*/)
    // colors).
 }
 
+//______________________________________________________________________________
+void TGQuartz::SetOpacityW(WinContext_t /* wctxt */, Int_t /* percent */)
+{
+}
 
 //______________________________________________________________________________
 void TGQuartz::SetAttFill(WinContext_t wctxt, const TAttFill &att)
