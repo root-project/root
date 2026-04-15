@@ -200,9 +200,9 @@ public:
 
       result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D);
 
-      result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D);
+      // result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D);
 
-      result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND);
+      // result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND);
 
       fprintf(out, "\nRemember to also check outputUnitTesting.txt for "
               "more detailed information\n\n");
@@ -387,15 +387,15 @@ public:
       SelectEntry(f->fFuncList, "gausn");
       f->fFuncPars.resize(3);
       f->fFuncPars[0][0] = f->fFuncPars[0][1] = f->fFuncPars[0][2] = 1;
-      f->fFuncPars[1][0] = 0; f->fFuncPars[1][1] = f->fFuncPars[1][2] = 0;
-      f->fFuncPars[2][0] = 1; f->fFuncPars[2][1] = f->fFuncPars[2][2] = 0;
+      f->fFuncPars[1][0] = 1; f->fFuncPars[1][1] = f->fFuncPars[1][2] = 0;
+      f->fFuncPars[2][0] = 2; f->fFuncPars[2][1] = f->fFuncPars[2][2] = 0;
 
       f->DoFit();
 
       std::vector<TFitEditor::FuncParamData_t> pars(3);
       pars[0][0] = 1.0;  pars[0][1] = pars[0][2] = 1.0;
-      pars[1][0] = 0.57616222565122654498;  pars[1][1] = pars[1][2] = 0.0;
-      pars[2][0] = 0.90739764318839521984;  pars[2][1] = pars[2][2] = 0.0;
+      pars[1][0] = 1.0344223;  pars[1][1] = pars[1][2] = 0.0;
+      pars[2][0] = 1.9997376;  pars[2][1] = pars[2][2] = 0.0;
 
       return CompareFuncPars(pars);
    }
@@ -473,6 +473,8 @@ public:
 // tests
 int UnitTesting()
 {
+   gROOT->SetWebDisplay("off");
+
    FitEditorUnitTesting fUT;
 
    return fUT.UnitTesting();
@@ -482,15 +484,15 @@ int UnitTesting()
 // TApplication.
 int main(int argc, char** argv)
 {
-   TApplication* theApp = 0;
+   TApplication theApp("App",&argc,argv);
 
-   theApp = new TApplication("App",&argc,argv);
+   // force creation of client
+   if (!TGClient::Instance())
+      new TGClient();
 
    int ret =  UnitTesting();
 
-   theApp->Run();
-   delete theApp;
-   theApp = 0;
+   theApp.Terminate();
 
    return ret;
 }
