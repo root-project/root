@@ -38,3 +38,18 @@ else()
 endif()
 
 add_subdirectory(vectorisedPDFs)
+
+if(tmva-sofie)
+  ROOT_FIND_PYTHON_MODULE(torch)
+  ROOT_FIND_PYTHON_MODULE(onnx)
+
+  if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND)
+    ROOT_ADD_TEST(roofit-create-onnx-model COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/create_onnx_model.py
+       FIXTURES_SETUP roofit-onnx-model
+    )
+    ROOT_ADD_GTEST(testRooONNXFunction testRooONNXFunction.cxx LIBRARIES RooFit
+       FIXTURES_REQUIRED roofit-onnx-model
+    )
+  endif()
+
+endif()
