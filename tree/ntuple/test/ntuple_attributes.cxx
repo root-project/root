@@ -1,6 +1,7 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RNTupleAttrWriting.hxx>
 #include <ROOT/RNTupleAttrReading.hxx>
+#include <TKey.h>
 
 static std::size_t Count(ROOT::Experimental::RNTupleAttrEntryIterable iterable)
 {
@@ -945,4 +946,99 @@ TEST(RNTupleAttributes, AccessAttrSetWriterAfterClosingMainWriter)
       writer.reset();
       EXPECT_THROW(attrSet->CommitRange(std::move(attrEntry)), ROOT::RException);
    }
+}
+
+TEST(RNTupleAttributes, ReadAttributesUnknownMajor)
+{
+   // Try reading an attribute set with an unknown Major schema version and verify it fails.
+   FileRaii fileGuard("test_ntuple_attrs_futuremajorschema.root");
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   // Write a regular RNTuple with attributes
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto opts = RNTupleWriteOptions();
+      opts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(RNTupleModel::Create(), "ntpl", *file, opts);
+      auto attrSet = writer->CreateAttributeSet(RNTupleModel::Create(), "MyAttrSet");
+
+      auto attrRange = attrSet->BeginRange();
+      for (int i = 0; i < 10; ++i) {
+         writer->Fill();
+      }
+      attrSet->CommitRange(std::move(attrRange));
+   }
+
+   // Get metadata about the main footer that we're gonna patch.
+   std::uint64_t footerSeek = 0, footerNBytes = 0;
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      const ROOT::RNTuple *mainAnchor = file->Get<ROOT::RNTuple>("ntpl");
+      ASSERT_NE(mainAnchor, nullptr);
+
+      footerSeek = mainAnchor->GetSeekFooter();
+      footerNBytes = mainAnchor->GetNBytesFooter() - 8;
+   }
+
+   // Patch the attribute schema version (and update the footer checksum)
+   const std::uint64_t majorOff = 0xA0;
+   const std::byte newMajorVersion{0x99};
+   PatchRNTupleSection(fileGuard.GetPath(), footerSeek, footerNBytes, majorOff, &newMajorVersion,
+                       sizeof(newMajorVersion), EEndianness::LE);
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // Fetch an attribute set
+   try {
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+      FAIL() << "opening an attribute set with an unknown major version should fail.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("unsupported attribute schema version"));
+   }
+}
+
+TEST(RNTupleAttributes, ReadAttributesUnknownMinor)
+{
+   // Try reading an attribute set with an unknown Minor schema version and verify it works.
+   FileRaii fileGuard("test_ntuple_attrs_futureminorschema.root");
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   // Write a regular RNTuple with attributes
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto opts = RNTupleWriteOptions();
+      opts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(RNTupleModel::Create(), "ntpl", *file, opts);
+      auto attrSet = writer->CreateAttributeSet(RNTupleModel::Create(), "MyAttrSet");
+
+      auto attrRange = attrSet->BeginRange();
+      for (int i = 0; i < 10; ++i) {
+         writer->Fill();
+      }
+      attrSet->CommitRange(std::move(attrRange));
+   }
+
+   // Get metadata about the main footer that we're gonna patch.
+   std::uint64_t footerSeek = 0, footerNBytes = 0;
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      const ROOT::RNTuple *mainAnchor = file->Get<ROOT::RNTuple>("ntpl");
+      ASSERT_NE(mainAnchor, nullptr);
+
+      footerSeek = mainAnchor->GetSeekFooter();
+      footerNBytes = mainAnchor->GetNBytesFooter() - 8;
+   }
+
+   // Patch the attribute schema version (and update the footer checksum)
+   const std::uint64_t majorOff = 0xA2;
+   const std::byte newMinorVersion{0x99};
+   PatchRNTupleSection(fileGuard.GetPath(), footerSeek, footerNBytes, majorOff, &newMinorVersion,
+                       sizeof(newMinorVersion), EEndianness::LE);
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_NO_THROW(reader->OpenAttributeSet("MyAttrSet"));
 }
