@@ -110,6 +110,7 @@ public:
    EDrawMode GetDrawModeW(WinContext_t wctxt) override;
    void      ClearWindowW(WinContext_t wctxt) override;
    void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
+   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,

@@ -2430,27 +2430,34 @@ void TGCocoa::SelectPixmap(Int_t pixmapID)
 //______________________________________________________________________________
 void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 {
-   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
-          "CopyPixmap, parameter 'pixmapID' is not a valid id");
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
           "CopyPixmap, fSelectedDrawable is not a valid window id");
+
+   CopyPixmapW((WinContext_t) fPimpl->GetDrawable(fSelectedDrawable), pixmapID, x, y);
+}
+
+//______________________________________________________________________________
+void TGCocoa::CopyPixmapW(WinContext_t wctxt, Int_t pixmapID, Int_t x, Int_t y)
+{
+   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
+          "CopyPixmapW, parameter 'pixmapID' is not a valid id");
 
    NSObject<X11Drawable> * const source = fPimpl->GetDrawable(pixmapID);
    assert([source isKindOfClass : [QuartzPixmap class]] &&
           "CopyPixmap, source is not a pixmap");
    QuartzPixmap * const pixmap = (QuartzPixmap *)source;
 
-   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
+   auto drawable = (NSObject<X11Drawable> * const) wctxt;
    NSObject<X11Drawable> * destination = nil;
 
    if (drawable.fIsPixmap) {
       destination = drawable;
    } else {
-      NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
+      NSObject<X11Window> * const window = (NSObject<X11Window> * const) drawable;
       if (window.fBackBuffer) {
          destination = window.fBackBuffer;
       } else {
-         Warning("CopyPixmap", "Operation skipped, since destination"
+         Warning("CopyPixmapW", "Operation skipped, since destination"
                                " window is not double buffered");
          return;
       }
