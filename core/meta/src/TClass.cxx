@@ -5777,8 +5777,7 @@ size_t TClass::GetClassAlignment() const
       // If the collection proxy has a dictionary, it will have return earlier,
       // so we know that the collection proxy is emulated.
       if (!(fCollectionProxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated)) {
-         Fatal("TClass::GetClassAlignment", "Cannot determine alignment for collection proxy of class %s, returning 0",
-               GetName());
+         Fatal("TClass::GetClassAlignment", "Cannot determine alignment for collection proxy of class %s.", GetName());
          return 0;
       }
       return alignof(std::vector<char>);
