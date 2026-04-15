@@ -71,7 +71,8 @@ TGLPadPainter::TGLPadPainter()
 
 void TGLPadPainter::SetOpacity(Int_t percent)
 {
-   gVirtualX->SetOpacity(percent);
+   // does not work this way
+   gVirtualX->SetOpacityW(fWinContext, percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +184,7 @@ Bool_t TGLPadPainter::IsCocoa() const
 
 void TGLPadPainter::CopyDrawable(Int_t /* device */, Int_t /* px */, Int_t /* py */)
 {
-   // gVirtualX->CopyPixmap(device, px, py);
+   // gVirtualX->CopyPixmapW(fWinContext, device, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

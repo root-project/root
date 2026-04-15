@@ -89,7 +89,7 @@ gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
 
 void TPadPainter::SetOpacity(Int_t percent)
 {
-   gVirtualX->SetOpacity(percent);
+   gVirtualX->SetOpacityW(fWinContext, percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,9 +146,8 @@ void TPadPainter::ClearDrawable()
 
 void TPadPainter::CopyDrawable(Int_t device, Int_t px, Int_t py)
 {
-   gVirtualX->CopyPixmap(device, px, py);
+   gVirtualX->CopyPixmapW(fWinContext, device, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close the current gVirtualX pixmap.
@@ -159,7 +158,6 @@ void TPadPainter::DestroyDrawable(Int_t device)
    gVirtualX->ClosePixmap();
    fWinContext = (WinContext_t) 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Select the window in which the graphics will go.
