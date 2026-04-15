@@ -2345,7 +2345,7 @@ void TStreamerInfo::BuildOld()
       if (fClass->GetState() > TClass::kEmulated && !fClass->IsSyntheticPair()) {
          if (TClass *elCl = element->GetClass())
             fAlignment = std::max(fAlignment, elCl->GetClassAlignment());
-         else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
+         else if (auto *eldt = TDataType::GetDataType((EDataType)(element->GetType() % kOffsetL)); eldt && eldt->GetAlignOf())
             fAlignment = std::max(fAlignment, eldt->GetAlignOf());
       }
 
@@ -2681,10 +2681,12 @@ void TStreamerInfo::BuildOld()
          // Use the precise alignment of the element type, falling back to
          // max_align_t for types whose alignment is not known.
          // (e.g. forward declared classes, or classes with incomplete types info, etc..)
+         // Strip kOffsetL / kOffsetP markers to get the bare underlying type id.
+         const EDataType bareType = (EDataType)(element->GetType() % kOffsetL);
          std::size_t align = alignof(std::max_align_t);
          if (element->GetClass() && element->GetClass()->GetClassAlignment())
             align = element->GetClass()->GetClassAlignment();
-         else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
+         else if (auto *eldt = TDataType::GetDataType(bareType); eldt && eldt->GetAlignOf())
             align = eldt->GetAlignOf();
          else
             Fatal("BuildOld",
@@ -2697,7 +2699,7 @@ void TStreamerInfo::BuildOld()
          offset += asize;
          if (element->GetClass())
             fAlignment = std::max(fAlignment, element->GetClass()->GetClassAlignment());
-         else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
+         else if (auto *eldt = TDataType::GetDataType(bareType); eldt && eldt->GetAlignOf())
             fAlignment = std::max(fAlignment, eldt->GetAlignOf());
       }
 
