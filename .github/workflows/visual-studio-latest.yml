@@ -35,6 +35,7 @@ jobs:
           ref: master
 
       - name: Build after VS update
+        if: ${{ !cancelled() }}
         shell: cmd
         run: "C:\\setenv.bat x64 &&
               python .github/workflows/root-ci-config/build_root.py
