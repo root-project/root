@@ -218,6 +218,8 @@ public:
    EDrawMode GetDrawModeW(WinContext_t wctxt) override;
    void      ClearWindowW(WinContext_t wctxt) override;
    void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
+   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
+   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
 
    void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
    void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;

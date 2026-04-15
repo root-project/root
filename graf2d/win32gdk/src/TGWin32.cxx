@@ -1648,13 +1648,7 @@ void TGWin32::CloseWindow()
 
 void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 {
-   if (fWindows.count(wid) == 0)
-      return;
-
-   gTws = fWindows[wid].get();
-   gdk_window_copy_area(gCws->drawing, gTws->fGClist[kGCpxmp], xpos, ypos, gTws->drawing,
-                        0, 0, gTws->width, gTws->height);
-   GdiFlush();
+   CopyPixmapW((WinContext_t) gCws, wid, xpos, ypos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4076,7 +4070,7 @@ void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set opacity of a window. This image manipulation routine works
+/// Set opacity of a current window. This image manipulation routine works
 /// by adding to a percent amount of neutral to each pixels RGB.
 /// Since it requires quite some additional color map entries is it
 /// only supported on displays with more than > 8 color planes (> 256
@@ -4084,62 +4078,7 @@ void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
 
 void TGWin32::SetOpacity(Int_t percent)
 {
-   Int_t depth = gdk_visual_get_best_depth();
-
-   if (depth <= 8) return;
-   if (percent == 0) return;
-
-   // if 100 percent then just make white
-   ULong_t *orgcolors = 0;
-   ULong_t *tmpc = 0;
-   Int_t maxcolors = 0, ncolors, ntmpc = 0;
-
-   // save previous allocated colors, delete at end when not used anymore
-   if (gCws->new_colors) {
-      tmpc = gCws->new_colors;
-      ntmpc = gCws->ncolors;
-   }
-   // get pixmap from server as image
-   GdkImage *image = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
-                                   gCws->width, gCws->height);
-
-   // collect different image colors
-   int x, y;
-   for (y = 0; y < (int) gCws->height; y++) {
-      for (x = 0; x < (int) gCws->width; x++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
-      }
-   }
-   if (ncolors == 0) {
-      gdk_image_unref(image);
-      ::operator delete(orgcolors);
-      return;
-   }
-   // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors, ncolors);
-
-   // put opaque colors in image
-   for (y = 0; y < (int) gCws->height; y++) {
-      for (x = 0; x < (int) gCws->width; x++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         PutPixel((Drawable_t)image, x, y, gCws->new_colors[idx]);
-      }
-   }
-
-   // put image back in pixmap on server
-   gdk_draw_image(gCws->drawing, gCws->fGClist[kGCpxmp], (GdkImage *)image,
-                  0, 0, 0, 0, gCws->width, gCws->height);
-   GdiFlush();
-
-   // clean up
-   if (tmpc) {
-      gdk_colors_free((GdkColormap *)fColormap, tmpc, ntmpc, 0);
-      delete[]tmpc;
-   }
-   gdk_image_unref(image);
-   ::operator delete(orgcolors);
+   SetOpacityW((WinContext_t) gCws, percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4322,6 +4261,92 @@ void TGWin32::UpdateWindowW(WinContext_t wctxt, Int_t mode)
    }
    Update(mode);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set opacity of a specified window. This image manipulation routine works
+/// by adding to a percent amount of neutral to each pixels RGB.
+/// Since it requires quite some additional color map entries is it
+/// only supported on displays with more than > 8 color planes (> 256
+/// colors)
+
+void TGWin32::SetOpacityW(WinContext_t wctxt, Int_t percent)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
+   Int_t depth = gdk_visual_get_best_depth();
+
+   if (depth <= 8) return;
+   if (percent == 0) return;
+
+   // if 100 percent then just make white
+   ULong_t *orgcolors = 0;
+   ULong_t *tmpc = 0;
+   Int_t maxcolors = 0, ncolors, ntmpc = 0;
+
+   // save previous allocated colors, delete at end when not used anymore
+   if (ctxt->new_colors) {
+      tmpc = ctxt->new_colors;
+      ntmpc = ctxt->ncolors;
+   }
+   // get pixmap from server as image
+   GdkImage *image = gdk_image_get((GdkDrawable*)ctxt->drawing, 0, 0,
+                                   ctxt->width, ctxt->height);
+
+   // collect different image colors
+   int x, y;
+   for (y = 0; y < (int) ctxt->height; y++) {
+      for (x = 0; x < (int) ctxt->width; x++) {
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+      }
+   }
+   if (ncolors == 0) {
+      gdk_image_unref(image);
+      ::operator delete(orgcolors);
+      return;
+   }
+   // create opaque counter parts
+   MakeOpaqueColors(percent, orgcolors, ncolors);
+
+   // put opaque colors in image
+   for (y = 0; y < (int) ctxt->height; y++) {
+      for (x = 0; x < (int) ctxt->width; x++) {
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         Int_t idx = FindColor(pixel, orgcolors, ncolors);
+         PutPixel((Drawable_t)image, x, y, ctxt->new_colors[idx]);
+      }
+   }
+
+   // put image back in pixmap on server
+   gdk_draw_image(ctxt->drawing, ctxt->fGClist[kGCpxmp], (GdkImage *)image,
+                  0, 0, 0, 0, ctxt->width, ctxt->height);
+   GdiFlush();
+
+   // clean up
+   if (tmpc) {
+      gdk_colors_free((GdkColormap *)fColormap, tmpc, ntmpc, 0);
+      delete[]tmpc;
+   }
+   gdk_image_unref(image);
+   ::operator delete(orgcolors);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the pixmap wid at the position xpos, ypos in the specified window.
+
+void TGWin32::CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos)
+{
+   if (fWindows.count(wid) == 0)
+      return;
+
+   auto ctxt = (XWindow_t *) wctxt;
+
+   gTws = fWindows[wid].get();
+   gdk_window_copy_area(ctxt->drawing, gTws->fGClist[kGCpxmp], xpos, ypos, gTws->drawing,
+                        0, 0, gTws->width, gTws->height);
+   GdiFlush();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position.
