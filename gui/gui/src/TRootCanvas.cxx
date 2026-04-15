@@ -379,12 +379,12 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // Create menus
    fFileSaveMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fFileSaveMenu->AddEntry(Form("%s.&ps",  name), kFileSaveAsPS);
-   fFileSaveMenu->AddEntry(Form("%s.&eps", name), kFileSaveAsEPS);
-   fFileSaveMenu->AddEntry(Form("%s.p&df", name), kFileSaveAsPDF);
-   fFileSaveMenu->AddEntry(Form("%s.&svg", name), kFileSaveAsSVG);
-   fFileSaveMenu->AddEntry(Form("%s.&tex", name), kFileSaveAsTEX);
-   fFileSaveMenu->AddEntry(Form("%s.&gif", name), kFileSaveAsGIF);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&ps",  name), kFileSaveAsPS);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&eps", name), kFileSaveAsEPS);
+   fFileSaveMenu->AddEntry(TString::Format("%s.p&df", name), kFileSaveAsPDF);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&svg", name), kFileSaveAsSVG);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&tex", name), kFileSaveAsTEX);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&gif", name), kFileSaveAsGIF);
 
    static Int_t img = 0;
 
@@ -400,12 +400,12 @@ void TRootCanvas::CreateCanvas(const char *name)
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
-      fFileSaveMenu->AddEntry(Form("%s.&jpg",name),  kFileSaveAsJPG);
-      fFileSaveMenu->AddEntry(Form("%s.&png",name),  kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&jpg",name),  kFileSaveAsJPG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&png",name),  kFileSaveAsPNG);
    }
 
-   fFileSaveMenu->AddEntry(Form("%s.&C",   name), kFileSaveAsC);
-   fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&C",   name), kFileSaveAsC);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&root",name), kFileSaveAsRoot);
 
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Canvas",   kFileNewCanvas);
@@ -1380,7 +1380,7 @@ void TRootCanvas::SetWindowTitle(const char *title)
 {
    SetWindowName(title);
    SetIconName(title);
-   fToolDock->SetWindowName(Form("ToolBar: %s", title));
+   fToolDock->SetWindowName(TString::Format("ToolBar: %s", title));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1668,7 +1668,7 @@ void TRootCanvas::ShowToolBar(Bool_t show)
       }
       fToolDock->MapSubwindows();
       fToolDock->Layout();
-      fToolDock->SetWindowName(Form("ToolBar: %s", GetWindowName()));
+      fToolDock->SetWindowName(TString::Format("ToolBar: %s", GetWindowName()));
       fToolDock->Connect("Docked()", "TRootCanvas", this, "AdjustSize()");
       fToolDock->Connect("Undocked()", "TRootCanvas", this, "AdjustSize()");
    }
@@ -2040,7 +2040,7 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
       if (!obj) return kTRUE;
       gPad->Clear();
       if (obj->InheritsFrom("TKey")) {
-         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%zx)->ReadObj();", (size_t)obj));
+         TObject *object = (TObject *)gROOT->ProcessLine(TString::Format("((TKey *)0x%zx)->ReadObj();", (size_t)obj));
          if (!object) return kTRUE;
          if (object->InheritsFrom("TGraph"))
             object->Draw("ALP");
