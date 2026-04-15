@@ -127,6 +127,9 @@ public:
       delete data;
    }
 };
+
+Bool_t TGX11TTF::gXftInit = kFALSE;
+
 #endif  // R__HAS_XFT
 
 /** \class TTFX11Init
@@ -597,6 +600,11 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
    // already loaded
    if (data) {
       return (FontStruct_t)data->fXftFont;
+   }
+
+   if (!gXftInit) {
+      XftInit(nullptr);
+      gXftInit = kTRUE;
    }
 
    XftFont *xftfont = XftFontOpenXlfd((Display*)fDisplay, fScreenNumber, font_name);
