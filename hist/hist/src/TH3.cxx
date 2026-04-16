@@ -81,7 +81,6 @@ TH3::TH3()
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for fix bin size 3-D histograms.
 /// Creates the main histogram structure.
@@ -100,6 +99,7 @@ TH3::TH3()
 /// \param[in] nbinsz number of bins along the Z axis
 /// \param[in] zlow low edge of the Z axis first bin
 /// \param[in] zup upper edge of the Z axis last bin (not included in last bin)
+/// \note if xup <= xlow/yup <= ylow/zup <= zlow, automatic bins are calculated when buffer size is reached
 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup

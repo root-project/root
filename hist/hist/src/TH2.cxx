@@ -76,7 +76,6 @@ TH2::TH2()
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for fix bin size 2-D histograms.
 /// Creates the main histogram structure.
@@ -92,6 +91,7 @@ TH2::TH2()
 /// \param[in] nbinsy number of bins along the Y axis
 /// \param[in] ylow low edge of the Y axis first bin
 /// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
+/// \note if xup <= xlow or yup <= ylow, automatic bins are calculated when buffer size is reached
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
