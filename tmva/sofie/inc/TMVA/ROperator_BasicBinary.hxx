@@ -54,13 +54,13 @@ template <typename T>
 struct BinaryOperatorTrait<T, Mod> {
    static const std::string Name() { return "Mod"; }
    static std::string Op(const std::string & t1, const std::string t2) { return "(" + t1 + " % " + t2 + ")"; }
-   static T Func (T t1, T t2) { return std::pow(t1,t2);}
+   static T Func(T t1, T t2) { return t1 % t2; }
 };
 template <typename T>
 struct BinaryOperatorTrait<T, FMod> {
    static const std::string Name() { return "FMod"; }
    static std::string Op(const std::string & t1, const std::string t2) { return "std::fmod(" + t1 + "," + t2 + ")"; }
-   static T Func (T t1, T t2) { return std::pow(t1,t2);}
+   static T Func(T t1, T t2) { return std::fmod(t1, t2); }
 };
 
 template <typename T, EBasicBinaryOperator Op>

@@ -933,6 +933,28 @@ TEST(ONNX, Pow_broadcast){
 
 }
 
+TEST(ONNX, FMod_ConstantFolding)
+{
+   // Both inputs are Constant nodes, so SOFIE constant-folds via Func().
+   // fmod([10, 7, 5], [3, 3, 3]) = [1, 1, 2]
+   std::vector<float> correct_output = {1, 1, 2};
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "FMod_ConstantFolding");
+   EXPECT_EQ(output.size(), correct_output.size());
+   for (size_t i = 0; i < output.size(); ++i)
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Mod_ConstantFolding)
+{
+   // Both inputs are Constant nodes, so SOFIE constant-folds via Func().
+   // [10, 7, 5] % [3, 3, 3] = [1, 1, 2]
+   std::vector<int64_t> correct_output = {1, 1, 2};
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<int64_t>, "Mod_ConstantFolding");
+   EXPECT_EQ(output.size(), correct_output.size());
+   for (size_t i = 0; i < output.size(); ++i)
+      EXPECT_EQ(output[i], correct_output[i]);
+}
+
    TEST(ONNX, ReduceMean){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
