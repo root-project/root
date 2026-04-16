@@ -122,7 +122,6 @@ ROOT_FIND_REQUIRED_DEP(LZ4 builtin_lz4)
 ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
 ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
 ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
-# ROOT_FIND_REQUIRED_DEP(PCRE2 builtin_pcre) More complex due to multiple versions, dealt below
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   message(FATAL_ERROR "The following packages need to be installed or enabled to build ROOT: ${MISSING_PACKAGES}")
