@@ -81,6 +81,7 @@ ExternalProject_Add(
   TIMEOUT 600
 )
 
+file(MAKE_DIRECTORY ${ROOT_PCRE2_INCLUDE_DIR})
 add_library(PCRE2::PCRE2 IMPORTED STATIC GLOBAL)
 add_dependencies(PCRE2::PCRE2 BUILTIN_PCRE)
 set_target_properties(PCRE2::PCRE2 PROPERTIES
