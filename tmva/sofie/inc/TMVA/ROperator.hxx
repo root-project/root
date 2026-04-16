@@ -33,6 +33,9 @@ public:
    virtual std::string GenerateSessionMembersCode(std::string /*opName*/) { return ""; }
    virtual std::string Header() { return "";}
 
+   /// check if the output of the operator is Constant and is evaluated at initialization time
+   bool IsOutputConstant() const { return fIsOutputConstant; }
+
    //virtual void Forward_reference() = 0;
    //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
