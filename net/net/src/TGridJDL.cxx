@@ -30,7 +30,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup.
 
-TGridJDL::~TGridJDL()
+ROOT::Deprecated::TGridJDL::~TGridJDL()
 {
    Clear();
 }
@@ -38,7 +38,7 @@ TGridJDL::~TGridJDL()
 ////////////////////////////////////////////////////////////////////////////////
 /// Clears the JDL information.
 
-void TGridJDL::Clear(const Option_t*)
+void ROOT::Deprecated::TGridJDL::Clear(const Option_t*)
 {
    fMap.DeleteAll();
 }
@@ -46,7 +46,7 @@ void TGridJDL::Clear(const Option_t*)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets a value. If the entry already exists the old one is replaced.
 
-void TGridJDL::SetValue(const char *key, const char *value)
+void ROOT::Deprecated::TGridJDL::SetValue(const char *key, const char *value)
 {
    TObject *object = fMap.FindObject(key);
    TPair *pair = dynamic_cast<TPair*>(object);
@@ -73,7 +73,7 @@ void TGridJDL::SetValue(const char *key, const char *value)
 /// Returns the value corresponding to the provided key. Return 0 in case
 /// key is not found.
 
-const char *TGridJDL::GetValue(const char *key)
+const char *ROOT::Deprecated::TGridJDL::GetValue(const char *key)
 {
    if (!key)
       return 0;
@@ -100,7 +100,7 @@ const char *TGridJDL::GetValue(const char *key)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets a value. If the entry already exists the old one is replaced.
 
-void TGridJDL::SetDescription(const char *key, const char* description)
+void ROOT::Deprecated::TGridJDL::SetDescription(const char *key, const char* description)
 {
    TObject *object = fDescriptionMap.FindObject(key);
    TPair *pair = dynamic_cast<TPair*>(object);
@@ -127,7 +127,7 @@ void TGridJDL::SetDescription(const char *key, const char* description)
 /// Returns the value corresponding to the provided key. Return 0 in case
 /// key is not found.
 
-const char *TGridJDL::GetDescription(const char *key)
+const char *ROOT::Deprecated::TGridJDL::GetDescription(const char *key)
 {
    if (!key)
       return 0;
@@ -155,7 +155,7 @@ const char *TGridJDL::GetDescription(const char *key)
 /// Adds quotes to the provided string.
 ///  E.g. Value --> "Value"
 
-TString TGridJDL::AddQuotes(const char *value)
+TString ROOT::Deprecated::TGridJDL::AddQuotes(const char *value)
 {
    TString temp = TString("\"");
    temp += value;
@@ -168,7 +168,7 @@ TString TGridJDL::AddQuotes(const char *value)
 /// Adds a value to a key value which hosts a set of values.
 /// E.g. InputSandbox: {"file1","file2"}
 
-void TGridJDL::AddToSet(const char *key, const char *value)
+void ROOT::Deprecated::TGridJDL::AddToSet(const char *key, const char *value)
 {
    const char *oldValue = GetValue(key);
    TString newString;
@@ -191,7 +191,7 @@ void TGridJDL::AddToSet(const char *key, const char *value)
 /// Adds a value to a key value which hosts a set of values.
 /// E.g. InputSandbox: {"file1","file2"}
 
-void TGridJDL::AddToSetDescription(const char *key, const char *description)
+void ROOT::Deprecated::TGridJDL::AddToSetDescription(const char *key, const char *description)
 {
    const char *oldValue = GetDescription(key);
    TString newString;
@@ -204,7 +204,7 @@ void TGridJDL::AddToSetDescription(const char *key, const char *description)
 ////////////////////////////////////////////////////////////////////////////////
 /// Generates the JDL snippet.
 
-TString TGridJDL::Generate()
+TString ROOT::Deprecated::TGridJDL::Generate()
 {
    TString output("");
 
