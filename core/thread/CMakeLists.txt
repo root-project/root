@@ -75,7 +75,7 @@ target_include_directories(Thread PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
-if(TBB_FOUND)
+if(TARGET TBB::tbb)
   target_link_libraries(Thread PRIVATE TBB::tbb)
   target_compile_definitions(Thread PUBLIC ROOT_CORE_THREAD_TBB)
 endif()
