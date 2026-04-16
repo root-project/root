@@ -76,7 +76,7 @@ ExternalProject_Add(
   BUILD_COMMAND
     ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre2_config} --target pcre2-8-static
   INSTALL_COMMAND
-    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre2_config} --target pcre2-8-static --install
+    ${CMAKE_COMMAND} --build <BINARY_DIR> --target install
 
   BUILD_BYPRODUCTS
     ${ROOT_PCRE2_BYPRODUCTS}
