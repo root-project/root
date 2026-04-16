@@ -45,7 +45,7 @@
 #pragma link C++ class TGridJob+;
 #pragma link C++ class TGridJobStatus+;
 #pragma link C++ class TGridJobStatusList+;
-#pragma link C++ class TGridCollection+;
+#pragma link C++ class ROOT::Deprecated::TGridCollection+;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
 #pragma link C++ class TFileStager;
@@ -59,5 +59,7 @@
 #pragma link C++ class ROOT::Deprecated::TS3WebFile+;
 #pragma link C++ class TSSLSocket;
 #endif
+
+#pragma read sourceClass="TGridCollection" version="[-1]" targetClass="ROOT::Deprecated::TGridCollection"
 
 #endif
