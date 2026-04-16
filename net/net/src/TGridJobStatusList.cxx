@@ -19,6 +19,5 @@
 
 #include "TGridJobStatusList.h"
 
-TGridJobStatusList *gGridJobStatusList = 0;
-
-
+ROOT::Deprecated::TGridJobStatusList *ROOT::Deprecated::gGridJobStatusList = 0;
+ROOT::Deprecated::TGridJobStatusList *&gGridJobStatusList = ROOT::Deprecated::gGridJobStatusList;

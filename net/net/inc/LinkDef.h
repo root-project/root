@@ -44,7 +44,7 @@
 #pragma link C++ class ROOT::Deprecated::TGridJDL+;
 #pragma link C++ class ROOT::Deprecated::TGridJob+;
 #pragma link C++ class ROOT::Deprecated::TGridJobStatus+;
-#pragma link C++ class TGridJobStatusList+;
+#pragma link C++ class ROOT::Deprecated::TGridJobStatusList+;
 #pragma link C++ class ROOT::Deprecated::TGridCollection+;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
@@ -64,5 +64,6 @@
 #pragma read sourceClass="TGridJDL" version="[-1]" targetClass="ROOT::Deprecated::TGridJDL"
 #pragma read sourceClass="TGridJob" version="[-1]" targetClass="ROOT::Deprecated::TGridJob"
 #pragma read sourceClass="TGridJobStatus" version="[-1]" targetClass="ROOT::Deprecated::TGridJobStatus"
+#pragma read sourceClass="TGridJobStatusList" version="[-1]" targetClass="ROOT::Deprecated::TGridJobStatusList"
 
 #endif
