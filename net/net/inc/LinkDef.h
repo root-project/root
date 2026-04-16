@@ -42,7 +42,7 @@
 #pragma link C++ class ROOT::Deprecated::TGrid;
 #pragma link C++ class TGridResult+;
 #pragma link C++ class ROOT::Deprecated::TGridJDL+;
-#pragma link C++ class TGridJob+;
+#pragma link C++ class ROOT::Deprecated::TGridJob+;
 #pragma link C++ class TGridJobStatus+;
 #pragma link C++ class TGridJobStatusList+;
 #pragma link C++ class ROOT::Deprecated::TGridCollection+;
@@ -62,5 +62,6 @@
 
 #pragma read sourceClass="TGridCollection" version="[-1]" targetClass="ROOT::Deprecated::TGridCollection"
 #pragma read sourceClass="TGridJDL" version="[-1]" targetClass="ROOT::Deprecated::TGridJDL"
+#pragma read sourceClass="TGridJob" version="[-1]" targetClass="ROOT::Deprecated::TGridJob"
 
 #endif
