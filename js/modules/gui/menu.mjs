@@ -722,8 +722,12 @@ class JSRootMenu {
    addTAxisMenu(EAxisBits, painter, faxis, kind, axis_painter, frame_painter) {
       const is_gaxis = faxis._typename === clTGaxis;
 
-      this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+      this.add('Divisions', () => this.input('Set Ndivisions', is_gaxis ? faxis.fNdiv : faxis.fNdivisions, 'int').then(val => {
+         if (is_gaxis)
+            faxis.fNdiv = val;
+         else
+            faxis.fNdivisions = val;
+         painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       this.sub('Labels');
