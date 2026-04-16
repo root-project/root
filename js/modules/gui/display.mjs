@@ -1281,7 +1281,7 @@ class BatchDisplay extends MDIDisplay {
       if (!mainsvg.attr('width') && !mainsvg.attr('height'))
          mainsvg.attr('width', this.width).attr('height', this.height);
 
-      if (style_filter)
+      if (style_filter && (style_filter !== 'none'))
          mainsvg.style('filter', style_filter);
 
       function clear_element() {

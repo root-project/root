@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '10/03/2026',
+version_date = '16/04/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -81644,8 +81644,12 @@ class JSRootMenu {
    addTAxisMenu(EAxisBits, painter, faxis, kind, axis_painter, frame_painter) {
       const is_gaxis = faxis._typename === clTGaxis;
 
-      this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+      this.add('Divisions', () => this.input('Set Ndivisions', is_gaxis ? faxis.fNdiv : faxis.fNdivisions, 'int').then(val => {
+         if (is_gaxis)
+            faxis.fNdiv = val;
+         else
+            faxis.fNdivisions = val;
+         painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       if (kind !== 'v') {
@@ -82990,7 +82994,7 @@ const AxisPainterMethods = {
 
    /** @summary Produce axis ticks */
    produceTicks(ndiv, ndiv2) {
-      if (!this.noticksopt) {
+      if (!this.noticksopt && !this.exact_ticks) {
          const total = ndiv * (ndiv2 || 1);
 
          if (this.log)
@@ -83263,14 +83267,18 @@ class TAxisPainter extends ObjectPainter {
       else
          this.gr = this.func;
 
-      delete this.format;// remove formatting func
+      delete this.format; // remove formatting func
 
       let ndiv = 508;
       if (this.is_gaxis)
          ndiv = axis.fNdiv;
       else if (axis)
-         ndiv = axis.fNdivisions ? Math.max(axis.fNdivisions, 4) : 0;
+         ndiv = axis.fNdivisions;
 
+      this.exact_ticks = ndiv < 0;
+      if (this.exact_ticks)
+         ndiv = Math.abs(ndiv);
+      ndiv = Math.max(ndiv, 4);
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
       this.nticks3 = Math.floor(ndiv / 10000);
@@ -88849,7 +88857,7 @@ class BatchDisplay extends MDIDisplay {
       if (!mainsvg.attr('width') && !mainsvg.attr('height'))
          mainsvg.attr('width', this.width).attr('height', this.height);
 
-      if (style_filter)
+      if (style_filter && (style_filter !== 'none'))
          mainsvg.style('filter', style_filter);
 
       function clear_element() {
@@ -92565,7 +92573,7 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Function called when canvas menu item Save is called */
    saveCanvasAsFile(fname) {
-      const pnt = fname.indexOf('.');
+      const pnt = fname.lastIndexOf('.');
       this.createImage(fname.slice(pnt + 1))
           .then(res => this.sendWebsocket(`SAVE:${fname}:${res}`));
    }
@@ -166102,7 +166110,7 @@ async function makeImage(args) {
          if (!mainsvg.attr('width') && !mainsvg.attr('height'))
             mainsvg.attr('width', args.width).attr('height', args.height);
 
-         if (style_filter)
+         if (style_filter && (style_filter !== 'none'))
             mainsvg.style('filter', style_filter);
 
          function clear_element() {
@@ -169237,12 +169245,15 @@ class HierarchyPainter extends BasePainter {
          }
 
          return this.refreshHtml();
-      }).catch(() => {
+      }).catch(err => {
          // make CORS warning
-         if (isBatchMode())
-            console.error(`Fail to open ${msg} - check CORS headers`);
-         else if (!select('#gui_fileCORS').style('background', 'red').empty())
-            setTimeout(() => select('#gui_fileCORS').style('background', ''), 5000);
+         const elem = isBatchMode() ? null : select('#gui_fileCORS');
+         if (!elem || elem.empty())
+            console.error(`Fail to open ${msg} - ${err?.message ?? 'check CORS headers'}`);
+         else {
+            elem.style('background', 'red');
+            setTimeout(() => elem.style('background', ''), 5000);
+         }
          return false;
       }).finally(() => showProgress());
    }
@@ -186210,7 +186221,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Function called when canvas menu item Save is called */
    saveCanvasAsFile(fname) {
-      const pnt = fname.indexOf('.');
+      const pnt = fname.lastIndexOf('.');
       this.createImage(fname.slice(pnt + 1))
           .then(res => this.sendWebsocket(`SAVE:${fname}:${res}`));
    }
