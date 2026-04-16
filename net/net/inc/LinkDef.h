@@ -14,7 +14,7 @@
 #pragma link C++ enum ESockOptions;
 #pragma link C++ enum ESendRecvOptions;
 
-#pragma link C++ global gGrid;
+#pragma link C++ global ROOT::Deprecated::gGrid;
 #pragma link C++ global gGridJobStatusList;
 
 #pragma link C++ global kSrvAuth;
@@ -39,7 +39,7 @@
 #pragma link C++ class TSQLTableInfo;
 #pragma link C++ class TSQLColumnInfo;
 #pragma link C++ class TSQLMonitoringWriter;
-#pragma link C++ class TGrid;
+#pragma link C++ class ROOT::Deprecated::TGrid;
 #pragma link C++ class TGridResult+;
 #pragma link C++ class TGridJDL+;
 #pragma link C++ class TGridJob+;

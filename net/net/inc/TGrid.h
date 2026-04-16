@@ -40,6 +40,7 @@ class TGridJob;
 class TGridCollection;
 class TGridJobStatusList;
 
+namespace ROOT::Deprecated {
 
 class TGrid : public TObject {
 
@@ -126,5 +127,10 @@ public:
 };
 
 R__EXTERN TGrid *gGrid;
+
+} // namespace ROOT::Deprecated
+
+using TGrid R__DEPRECATED(6, 42, "TGrid is expected to be unused and thus deprecated") = ROOT::Deprecated::TGrid;
+R__EXTERN ROOT::Deprecated::TGrid *&gGrid R__DEPRECATED(6, 42, "gGrid is expected to be unused and thus deprecated");
 
 #endif
