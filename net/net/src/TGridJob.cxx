@@ -27,7 +27,7 @@
 /// Must be implemented by actual GRID job implementation. Returns -1 in
 /// case of error, 0 otherwise.
 
-Int_t TGridJob::GetOutputSandbox(const char *, Option_t *)
+Int_t ROOT::Deprecated::TGridJob::GetOutputSandbox(const char *, Option_t *)
 {
    MayNotUse("GetOutputSandbox");
    return -1;
