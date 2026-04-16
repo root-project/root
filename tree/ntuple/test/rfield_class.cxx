@@ -260,12 +260,14 @@ TEST(RNTuple, TClassReadRules)
       auto ptrOldCoord = model->MakeField<OldCoordinates>("oldCoord");
       auto ptrLowPrecisionFloat = model->MakeField<LowPrecisionFloatWithIORules>("lowPrecisionFloat");
       auto ptrOldName = model->MakeField<OldName<OldName<int>>>("rename");
+      auto ptrOldNameVersionChange = model->MakeField<OldName<float>>("renameVersionChange");
       auto ptrWithSource = model->MakeField<StructWithSourceStruct>("withSource");
       ptrCoord->fX = ptrOldCoord->fOldX = 1.0;
       ptrCoord->fY = ptrOldCoord->fOldY = 1.0;
       ptrLowPrecisionFloat->fFoo = 1.0;
       ptrLowPrecisionFloat->fLast8BitsZero = last8BitsZero;
       ptrOldName->fValue.fValue = 42;
+      ptrOldNameVersionChange->fValue = 1.0;
       // The following two members are transient and should not be stored.
       ptrWithSource->fSource.fTransient = 1;
       ptrWithSource->fTransient = 2;
@@ -322,6 +324,10 @@ TEST(RNTuple, TClassReadRules)
 
    auto viewRename = reader->GetView<NewName<OldName<int>>>("rename");
    EXPECT_EQ(42, viewRename(0).fValue.fValue);
+
+   EXPECT_NE(ROOT::RField<OldName<float>>("").GetTypeVersion(), ROOT::RField<NewName<float>>("").GetTypeVersion());
+   auto viewRenameVersionChange = reader->GetView<NewName<float>>("renameVersionChange");
+   EXPECT_FLOAT_EQ(1.0, viewRenameVersionChange(0).fValue);
 }
 
 // Adjusted from

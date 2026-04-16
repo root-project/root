@@ -142,6 +142,9 @@
 #pragma link C++ options = version(3) class NewName < int> + ;
 #pragma link C++ options = version(3) class NewName < NewName < int>> + ;
 #pragma read sourceClass = "OldName<OldName<int>>" targetClass = "NewName<OldName<int>>" version = "[3]"
+#pragma link C++ options = version(4) class OldName<float>+;
+#pragma link C++ options = version(5) class NewName<float>+;
+#pragma read sourceClass = "OldName<float>" targetClass = "NewName<float>"
 
 #pragma link C++ struct SourceStruct + ;
 #pragma link C++ struct StructWithSourceStruct + ;
