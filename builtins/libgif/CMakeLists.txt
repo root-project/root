@@ -23,12 +23,17 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
     endif()
 endif()
 
+# flag required only on Windows, on old alma paltforms it make troubles
+if(WIN32)
+  set(patch_args --ignore-whitespace)
+endif()
+
 ExternalProject_Add(
     BUILTIN_LIBGIF
     PREFIX ${ROOT_LIBGIF_PREFIX}
     URL ${lcgpackages}/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBGIF_HASH}
-    PATCH_COMMAND git apply ${ROOT_LIBGIF_PATCH_FILE}
+    PATCH_COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
