@@ -95,6 +95,6 @@ add_library(pcre2_builtin INTERFACE)
 target_include_directories(pcre2_builtin INTERFACE $<BUILD_INTERFACE:${PCRE2_INCLUDE_DIR}>)
 target_link_libraries(pcre2_builtin INTERFACE $<BUILD_INTERFACE:${PCRE2_LIBRARIES}>)
 add_library(PCRE2::PCRE2 ALIAS pcre2_builtin)
-add_dependencies(pcre2_builtin PCRE2)
+add_dependencies(pcre2_builtin BUILTIN_PCRE)
 
 set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS BUILTIN_PCRE)
