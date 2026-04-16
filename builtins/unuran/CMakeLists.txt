@@ -10,7 +10,12 @@ set(ROOT_UNURAN_VERSION 1.11.0)
 set(ROOT_UNURAN_URL "https://github.com/unuran/unuran/archive/refs/tags/unuran-${ROOT_UNURAN_VERSION}.tar.gz") # TODO Move to LCG
 set(ROOT_UNURAN_HASH "e46c15eff050150966988ec56969526b60ce0b97120a7821aa96703d0f175623")
 set(ROOT_UNURAN_PREFIX ${CMAKE_BINARY_DIR}/builtins/UNURAN-prefix)
-set(ROOT_UNURAN_LIBRARY ${ROOT_UNURAN_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ftgl${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(ROOT_UNURAN_LIBRARY ${ROOT_UNURAN_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}unuran${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(ROOT_UNURAN_PATCH_FILE_1 "${CMAKE_CURRENT_SOURCE_DIR}/0001-allow-compilation-from-CMake.patch")
+if (NOT DEFINED GIT_EXECUTABLE)
+  set(GIT_EXECUTABLE "git")
+endif()
+
 
 include(ExternalProject)
 
@@ -34,22 +39,24 @@ ExternalProject_Add(
   PREFIX ${ROOT_UNURAN_PREFIX}
   URL ${ROOT_UNURAN_URL}
   URL_HASH SHA256=${ROOT_UNURAN_HASH}
-
+  PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_UNURAN_PATCH_FILE_1}
+  SOURCE_SUBDIR src
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE TRUE
   LOG_BUILD     TRUE
   LOG_INSTALL   TRUE
   LOG_OUTPUT_ON_FAILURE TRUE
-  INSTALL_DIR ${ROOT_UNURAN_PREFIX}
-  CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix <INSTALL_DIR>
-                    --libdir=<INSTALL_DIR>/lib
-                    --disable-shared --with-pic
-                    CC=${CMAKE_C_COMPILER}
-                    CFLAGS=${CMAKE_C_FLAGS}
-                    CPPFLAGS=${_gsl_cppflags}
-                    LDFLAGS=${_gsl_ldflags}
-                     COMMAND touch ./doc/version.texi COMMAND touch ./doc/version_win32.texi # See https://github.com/unuran/unuran/issues/1
-  BUILD_IN_SOURCE TRUE
+  CMAKE_ARGS -G ${CMAKE_GENERATOR}
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+  -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  -DCMAKE_C_VISIBILITY_PRESET=hidden
+  # -DGSL_LIBRARIES=${GSL_LIBRARIES}
+  -DROOT_ARCHITECTURE=${ROOT_ARCHITECTURE}
+  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_UNURAN_BUILD_COMMAND_FLAGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_UNURAN_BUILD_COMMAND_FLAGS} --target install
   BUILD_BYPRODUCTS
     ${ROOT_UNURAN_LIBRARY}
   TIMEOUT 600
@@ -59,11 +66,10 @@ set(ROOT_UNURAN_INCLUDE_DIR ${ROOT_UNURAN_PREFIX}/include)
 file(MAKE_DIRECTORY ${ROOT_UNURAN_INCLUDE_DIR})
 add_library(Unuran::unuran IMPORTED STATIC GLOBAL)
 add_dependencies(Unuran::unuran BUILTIN_UNURAN)
-target_compile_definitions(Unuran::unuran INTERFACE HAVE_CONFIG_H)
 set_target_properties(Unuran::unuran PROPERTIES
     IMPORTED_LOCATION ${ROOT_UNURAN_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_UNURAN_INCLUDE_DIR})
-
+# target_compile_options(Unuran::unuran INTERFACE 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
 set(Unuran_INCLUDE_DIRS ${ROOT_UNURAN_INCLUDE_DIR} PARENT_SCOPE)
@@ -77,25 +83,6 @@ set(UNURAN_LIBRARIES ${ROOT_UNURAN_LIBRARY} PARENT_SCOPE)
 set(UNURAN_FOUND TRUE PARENT_SCOPE)
 set(UNURAN_VERSION ${ROOT_UNURAN_VERSION} PARENT_SCOPE)
 
-#  #---Define special compiler settings for unurun-----------------------------------------------------
-#  set(UNR_CC ${CMAKE_C_COMPILER})
-#  if(ROOT_ARCHITECTURE MATCHES hpuxia64acc)
-#    set(UNR_CC "${UNR_CC} +DD64 -Ae")
-#  elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
-#    set(UNR_CC "${UNR_CC} -m64 -fPIC")
-#  elseif(ROOT_ARCHITECTURE MATCHES linuxx8664gcc)
-#    set(UNR_CFLAGS "-m64 -fPIC")
-#  elseif(ROOT_ARCHITECTURE MATCHES linuxicc)
-#    set(UNR_CFLAGS "-m32")
-#  elseif(ROOT_ARCHITECTURE MATCHES linuxx8664icc)
-#    set(UNR_CFLAGS "-m64")
-#  elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
-#    set(UNR_CFLAGS "-MD -G5 -GX")
-#  endif()
-#  if(CMAKE_OSX_SYSROOT)
-#    set(UNR_CFLAGS "${UNR_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
-#  endif()
-#
 ##---We need to disable some warnings-------------------------------------------------------------------
 #string(REPLACE -Wall "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 #if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
