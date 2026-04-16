@@ -40,7 +40,7 @@
 #pragma link C++ class TSQLColumnInfo;
 #pragma link C++ class TSQLMonitoringWriter;
 #pragma link C++ class ROOT::Deprecated::TGrid;
-#pragma link C++ class TGridResult+;
+#pragma link C++ class ROOT::Deprecated::TGridResult+;
 #pragma link C++ class ROOT::Deprecated::TGridJDL+;
 #pragma link C++ class ROOT::Deprecated::TGridJob+;
 #pragma link C++ class ROOT::Deprecated::TGridJobStatus+;
@@ -65,5 +65,6 @@
 #pragma read sourceClass="TGridJob" version="[-1]" targetClass="ROOT::Deprecated::TGridJob"
 #pragma read sourceClass="TGridJobStatus" version="[-1]" targetClass="ROOT::Deprecated::TGridJobStatus"
 #pragma read sourceClass="TGridJobStatusList" version="[-1]" targetClass="ROOT::Deprecated::TGridJobStatusList"
+#pragma read sourceClass="TGridResult" version="[-1]" targetClass="ROOT::Deprecated::TGridResult"
 
 #endif

@@ -34,14 +34,13 @@
 
 #include "TGridJob.h"
 
-class TGridResult;
-
 namespace ROOT::Deprecated {
 
 class TGridCollection;
 class TGridJDL;
 class TGridJob;
 class TGridJobStatusList;
+class TGridResult;
 
 class TGrid : public TObject {
 
