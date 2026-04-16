@@ -30,6 +30,7 @@ ssl=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 tmva-sofie=OFF
+use_gsl_cblas=ON
 vdt=OFF
 x11=OFF
 xrootd=OFF

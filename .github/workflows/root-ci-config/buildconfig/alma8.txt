@@ -4,3 +4,4 @@ builtin_tbb=ON
 builtin_vdt=ON
 curl=OFF
 pythia8=ON
+use_gsl_cblas=ON
