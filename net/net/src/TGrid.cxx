@@ -30,7 +30,8 @@
 #include "TPluginManager.h"
 #include "TError.h"
 
-TGrid *gGrid = 0;
+ROOT::Deprecated::TGrid *ROOT::Deprecated::gGrid = 0;
+ROOT::Deprecated::TGrid *&gGrid = ROOT::Deprecated::gGrid;
 
 
 
@@ -45,8 +46,8 @@ TGrid *gGrid = 0;
 /// -debug=`<debug level from 1 to 10>`
 /// Example: "-domain=cern.ch -debug=5"
 
-TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
-                      const char *options)
+ROOT::Deprecated::TGrid *
+ROOT::Deprecated::TGrid::Connect(const char *grid, const char *uid, const char *pw, const char *options)
 {
    TPluginHandler *h;
    TGrid *g = 0;
