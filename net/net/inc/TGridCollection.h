@@ -30,6 +30,7 @@ class TDSet;
 class TGridResult;
 class TFileCollection;
 
+namespace ROOT::Deprecated {
 
 class TGridCollection : public TObject {
 public:
@@ -114,5 +115,10 @@ public:
 
    ClassDefOverride(TGridCollection,1)  // ABC managing collection of files on the Grid
 };
+
+} // namespace ROOT::Deprecated
+
+using TGridCollection R__DEPRECATED(6, 42, "TGridCollection is expected to be unused and thus deprecated") =
+   ROOT::Deprecated::TGridCollection;
 
 #endif
