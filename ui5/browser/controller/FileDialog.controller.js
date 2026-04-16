@@ -471,6 +471,38 @@ sap.ui.define(['rootui5/panel/Controller',
       /** @summary Press Ok button id Dialog,
         * @desc send selected file name and wait if confirmation required */
       onOkPress() {
+         // ensure that selected file name really has selected file extension
+         if (this.lastSelectedExt && (this.lastSelectedExt != 'AllFiles') &&
+             this.oModel.getProperty('/showFileExt') && this.oModel.getProperty('/canEditName')) {
+
+            let fname = this.oModel.getProperty('/fileName') || '',
+                p = fname.lastIndexOf('.'),
+                expect_to_find = (p > 0) && (p < fname.length - 1) ? '*' + fname.slice(p) : '',
+                arr = this.oModel.getProperty('/fileExtList'),
+                found_ext = false, new_ext = '';
+
+            for (let n = 0; n < arr?.length; ++n) {
+               if (arr[n].id == this.lastSelectedExt) {
+                  const k = expect_to_find ? arr[n].text.indexOf(expect_to_find) : -1;
+                  found_ext = (k > 0) && (arr[n].text.slice(k + expect_to_find.length).search(/[,\s\)]/g) == 0);
+
+                  let p1 = arr[n].text.indexOf('*.');
+                  if (p1 > 0) {
+                     let sub = arr[n].text.slice(p1+2),
+                         p2 = sub.search(/[,\s\)]/g);
+                     if (p2 > 0) new_ext = sub.slice(0, p2);
+                  }
+               }
+            }
+
+            if (!found_ext && new_ext) {
+               if (fname.at(-1) != '.')
+                  fname += '.';
+               fname += new_ext;
+               this.oModel.setProperty('/fileName', fname);
+            }
+         }
+
          let fullname = this.getFullFileName();
 
          if (this.websocket)
