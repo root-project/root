@@ -22,6 +22,7 @@
 
 #include "TNamed.h"
 
+namespace ROOT::Deprecated {
 
 class TGridJobStatus : public TNamed {
 
@@ -49,5 +50,10 @@ public:
 
   ClassDefOverride(TGridJobStatus,1)  // ABC defining status of a Grid job
 };
+
+} // namespace ROOT::Deprecated
+
+using TGridJobStatus R__DEPRECATED(6, 42, "TGridJobStatus is expected to be unused and thus deprecated") =
+   ROOT::Deprecated::TGridJobStatus;
 
 #endif
