@@ -304,7 +304,7 @@ const AxisPainterMethods = {
 
    /** @summary Produce axis ticks */
    produceTicks(ndiv, ndiv2) {
-      if (!this.noticksopt) {
+      if (!this.noticksopt && !this.exact_ticks) {
          const total = ndiv * (ndiv2 || 1);
 
          if (this.log)
@@ -577,14 +577,18 @@ class TAxisPainter extends ObjectPainter {
       else
          this.gr = this.func;
 
-      delete this.format;// remove formatting func
+      delete this.format; // remove formatting func
 
       let ndiv = 508;
       if (this.is_gaxis)
          ndiv = axis.fNdiv;
       else if (axis)
-         ndiv = axis.fNdivisions ? Math.max(axis.fNdivisions, 4) : 0;
+         ndiv = axis.fNdivisions;
 
+      this.exact_ticks = ndiv < 0;
+      if (this.exact_ticks)
+         ndiv = Math.abs(ndiv);
+      ndiv = Math.max(ndiv, 4);
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
       this.nticks3 = Math.floor(ndiv / 10000);

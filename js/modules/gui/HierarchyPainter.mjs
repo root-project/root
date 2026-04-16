@@ -3062,12 +3062,15 @@ class HierarchyPainter extends BasePainter {
          }
 
          return this.refreshHtml();
-      }).catch(() => {
+      }).catch(err => {
          // make CORS warning
-         if (isBatchMode())
-            console.error(`Fail to open ${msg} - check CORS headers`);
-         else if (!d3_select('#gui_fileCORS').style('background', 'red').empty())
-            setTimeout(() => d3_select('#gui_fileCORS').style('background', ''), 5000);
+         const elem = isBatchMode() ? null : d3_select('#gui_fileCORS');
+         if (!elem || elem.empty())
+            console.error(`Fail to open ${msg} - ${err?.message ?? 'check CORS headers'}`);
+         else {
+            elem.style('background', 'red');
+            setTimeout(() => elem.style('background', ''), 5000);
+         }
          return false;
       }).finally(() => showProgress());
    }

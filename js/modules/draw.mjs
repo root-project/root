@@ -711,7 +711,7 @@ async function makeImage(args) {
          if (!mainsvg.attr('width') && !mainsvg.attr('height'))
             mainsvg.attr('width', args.width).attr('height', args.height);
 
-         if (style_filter)
+         if (style_filter && (style_filter !== 'none'))
             mainsvg.style('filter', style_filter);
 
          function clear_element() {

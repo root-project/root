@@ -21,11 +21,12 @@
 1. Let define alternative draw function #378
 1. Implement padsN draw option for `THStack` and `TMultiGraph`
 1. Support custom click handler for `TGraph` https://root-forum.cern.ch/t/64744
+1. Correctly draw axis ticks when `fNdivisions` is negative
 1. Use `resvg-js` backend for PNG support in node.js #391, thanks to https://github.com/OmarMesqq
-1. Remove support for deprectaed `TH1K` class
 1. Introduce `settings.ServerTimeout` global timeout for THttpServer operations
 1. Let set custom color palette with `setColorPalette` function
 1. Upgrade three.js r180 -> r183
+1. Remove support for deprectaed `TH1K` class
 1. Fix - paint frame border mode/size from `TCanvas`
 1. Fix - interactivity for TH3 palette drawing #398
 

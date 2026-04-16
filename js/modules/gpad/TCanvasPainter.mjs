@@ -267,7 +267,7 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Function called when canvas menu item Save is called */
    saveCanvasAsFile(fname) {
-      const pnt = fname.indexOf('.');
+      const pnt = fname.lastIndexOf('.');
       this.createImage(fname.slice(pnt + 1))
           .then(res => this.sendWebsocket(`SAVE:${fname}:${res}`));
    }
