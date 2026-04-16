@@ -3666,11 +3666,14 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
       if ((style >= 4000) && (style <= 4100) && pp->IsNative()) {
          if (this == fMother) {
             style = 1001;
-         } else if (pp->IsCocoa()) {
-            auto col = gROOT->GetColor(color);
-            if (col)
+         } else if (pp->IsCocoa() || (fCanvas && fCanvas->UseGL())) {
+            TColor *col = (style == 4000) ? nullptr : gROOT->GetColor(color);
+            if (!col) {
+               do_paint_box = kFALSE;
+            } else {
                color = TColor::GetColor(col->GetRed(), col->GetGreen(), col->GetBlue(), (style - 4000) / 100.);
-            style = 1001;
+               style = 1001;
+            }
          } else {
             // copy all pixmaps
             do_paint_box = kFALSE;
