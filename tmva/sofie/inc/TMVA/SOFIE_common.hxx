@@ -258,7 +258,7 @@ public:
    std::shared_ptr<void> const &sharedptr() const { return fData; }
    // query if tensor comes from a Constant operator
    bool IsConstantTensor() const { return fConstant;}
-   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a separate file
    bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
    // check if a Tensor is Writable (need to be written in the file or in the generated code (e.g. as a constant tensor)
    // if an initialized tensors is used in a constant operator at compile time does not need to be written and can be omitted in
@@ -266,6 +266,8 @@ public:
    bool IsNotWritable() const { return fIsNotWritable; }
    // set not writable initialized tensors - i.e. tensor that must not be written in a file
    void SetNotWritable() { fIsNotWritable = true;}
+   // set writable initialized tensors - i.e. tensor that must be written in a file
+   void SetWritable() { fIsNotWritable = false;}
    // set as constant (needed for non-float initialized tensors)
    void SetConstant() { fConstant = true;}
 
@@ -788,6 +790,13 @@ inline void Relu(float *output, float const *input, int size)
       output[i] = (input[i] > 0.0f) ? input[i] : 0.0f;
    }
 }
+// function to read float from the file dealing with inf and nan values
+inline float ParseFloatToken (const std::string & s)  {
+   if (s == "inf")  return  std::numeric_limits<float>::infinity();
+   if (s == "-inf") return -std::numeric_limits<float>::infinity();
+   if (s == "nan")  return  std::numeric_limits<float>::quiet_NaN();
+   return std::stof(s);
+}
 
 template <class T>
 void ReadTensorFromStream(std::istream &is, T &target, std::string const &expectedName, std::size_t expectedLength)
@@ -805,8 +814,10 @@ void ReadTensorFromStream(std::istream &is, T &target, std::string const &expect
                             std::to_string(expectedLength) + " , read " + std::to_string(length);
       throw std::runtime_error(err_msg);
    }
+   std::string token;
    for (size_t i = 0; i < length; ++i) {
-      is >> target[i];
+      is >> token;
+      target[i] = ParseFloatToken(token);
    }
    if (is.fail()) {
       throw std::runtime_error("TMVA-SOFIE failed to read the values for tensor " + expectedName);

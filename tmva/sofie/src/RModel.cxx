@@ -292,8 +292,7 @@ void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, st
 void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape) {
     tensor_name = UTILITY::Clean_name(tensor_name);
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        //throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
-        tensor_name += "_" + std::to_string(rand());
+        throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
     }
     TensorInfo new_tensor {type, shape};
     fIntermediateTensorInfos[tensor_name] = new_tensor;
@@ -630,6 +629,8 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
 
    std::vector<size_t> temp_available_stack; // vector stores individual chunks of available memory that maybe reused
 
+   // Build set of initialized tensors consumed by at least one runtime operator (need for later)
+   std::unordered_set<std::string> runtimeInitializedInputs;
    for(size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx){
       if (verbose) {
          auto& r = *fOperators[op_idx].get();
@@ -646,14 +647,35 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
             fIntermediateTensorFrequencyLookup[it] = op_idx;
          }
       }
+      // loop for non-constant operators and flag the inputs which are initialized tensors to make sure they are writable
+      if (!fOperators[op_idx]->IsOutputConstant()) {
+         for (auto &it : fOperators[op_idx]->GetOpInputTensors()) {
+            std::string name = std::string{it};
+            if (fInitializedTensors.find(name) != fInitializedTensors.end()) {
+               runtimeInitializedInputs.insert(name);
+            }
+         }
+      }
+
       i++;
    }
 
    // loop on initialized tensors and make the integers as constant to be
-   // not written in a weight file
+   // not written in a weight file and check if the tensors flagged as not writable are really not writable,
+   // i.e. are not used by non constant operators
    for (auto &it : fInitializedTensors) {
-      if (it.second.IsWeightTensor() && it.second.type() !=  ETensorType::FLOAT)
+      // check if not-writable tensors are really not writable, i.e. are not used by non constant operators
+      if (it.second.IsNotWritable() && runtimeInitializedInputs.find(it.first) != runtimeInitializedInputs.end()) {
+         it.second.SetWritable();
+         if (verbose) {
+            std::cout << "Initialized tensor " << it.first << " is flagged as not writable but is used by non constant operators, set it as writable \n";
+         }
+      }
+      // if the tensor is an integer we can flag it as constant since it will not be written in a weight file and it is considered equivalent as being created from a Constant operator
+      // only FLOAT tensors are written in a weight file
+      if (it.second.type() !=  ETensorType::FLOAT) {
          it.second.SetConstant();
+      }
    }
 
    // check if there are initialized tensors to write in a weight file
@@ -1630,7 +1652,13 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
                   // round to zero sub-normal values
                   float value = data[idx];
                   if (value != 0. && std::abs(value) < std::numeric_limits<float>::min() ) value = 0;
-                  f << std::setprecision(std::numeric_limits<float>::max_digits10) << value;
+                  // handle non-finite values explicitly
+                  if (std::isinf(value))
+                     f << (value > 0 ? "inf" : "-inf");
+                  else if (std::isnan(value))
+                     f << "nan";
+                  else
+                     f << std::setprecision(std::numeric_limits<float>::max_digits10) << value;
                   f <<  ( (idx < length-1) ? " " : "\n" );
                }
             }
@@ -1705,7 +1733,7 @@ void RModel::PrintInitializedTensors() const {
         }
         std::cout << "]";
         if (it.second.IsConstantTensor()) std::cout << " (Constant)";
-        else if (!it.second.IsWeightTensor()) std::cout << " (Not Writable)";
+        if (it.second.IsNotWritable()) std::cout << " (Not Writable)";
         std::cout << std::endl;
     }
     std::cout << "\n";
