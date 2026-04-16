@@ -403,9 +403,9 @@ void TRootCanvas::CreateCanvas(const char *name)
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
-      fFileSaveMenu->AddEntry(Form("%s.&jpg", name), kFileSaveAsJPG);
-      fFileSaveMenu->AddEntry(Form("%s.&png", name), kFileSaveAsPNG);
-      fFileSaveMenu->AddEntry(Form("%s.&bmp", name), kFileSaveAsBMP);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&jpg", name), kFileSaveAsJPG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&png", name), kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&bmp", name), kFileSaveAsBMP);
    }
 
    fFileSaveMenu->AddEntry(TString::Format("%s.&C",   name), kFileSaveAsC);
