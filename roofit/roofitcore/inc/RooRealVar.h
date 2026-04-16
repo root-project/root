@@ -91,6 +91,9 @@ public:
   RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) override ;
   std::list<std::string> getBinningNames() const override ;
 
+  /// remove a named binning (or a named range, which are stored internally as binnings)
+  void removeBinning(const char* name);
+
   // Set infinite fit range limits
   /// Remove lower range limit for binning with given name. Empty name means default range.
   void removeMin(const char* name=nullptr);

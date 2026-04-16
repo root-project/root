@@ -45,6 +45,13 @@ TEST(RooRealVar, AlternativeBinnings)
 
   auto& transferredOwnership = dynamic_cast<RooRealVar&>(survivingX["x"]).getBinning("uniform");
   EXPECT_EQ(transferredOwnership.numBins(), 2);
+
+  // test removing the binning too
+  auto& var = dynamic_cast<RooRealVar&>(survivingX["x"]);
+  EXPECT_TRUE( var.hasBinning("uniform") );
+  var.removeBinning("uniform");
+  EXPECT_FALSE( var.hasBinning("uniform") );
+
 }
 
 /// ROOT-10781

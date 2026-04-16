@@ -436,6 +436,29 @@ std::list<std::string> RooRealVar::getBinningNames() const
   return binningNames;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a named binning (or a named range, which are stored internally as binnings)
+
+void RooRealVar::removeBinning(const char* name) {
+  // Remove any old binning with this name
+  auto sharedProps = sharedProp();
+  auto item = sharedProps->_altBinning.find(name);
+  if (item != sharedProps->_altBinning.end()) {
+    item->second->removeHook(*this);
+    if (sharedProps->_ownBinnings)
+         delete item->second;
+
+    sharedProps->_altBinning.erase(item);
+  }
+  auto item2 = _altNonSharedBinning.find(name);
+  if (item2 != _altNonSharedBinning.end()) {
+    item2->second->removeHook(*this);
+    _altNonSharedBinning.erase(item2);
+  }
+}
+
+
+
 void RooRealVar::removeMin(const char* name) {
   getBinning(name).setMin(-RooNumber::infinity());
 }
@@ -471,20 +494,7 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
     _binning = std::move(newBinning);
   } else {
     // Remove any old binning with this name
-    auto sharedProps = sharedProp();
-    auto item = sharedProps->_altBinning.find(name);
-    if (item != sharedProps->_altBinning.end()) {
-      item->second->removeHook(*this);
-      if (sharedProps->_ownBinnings)
-        delete item->second;
-
-      sharedProps->_altBinning.erase(item);
-    }
-    auto item2 = _altNonSharedBinning.find(name);
-    if (item2 != _altNonSharedBinning.end()) {
-      item2->second->removeHook(*this);
-      _altNonSharedBinning.erase(item2);
-    }
+    removeBinning(name);
 
     // Install new
     newBinning->SetName(name) ;
