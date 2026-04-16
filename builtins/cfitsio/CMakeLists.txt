@@ -21,6 +21,11 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   endif()
 endif()
 
+# flag required only on Windows, on old alma paltforms it make troubles
+if(WIN32)
+  set(patch_args --ignore-whitespace)
+endif()
+
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
@@ -38,7 +43,7 @@ ExternalProject_Add(
              -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
              -DZLIB_LIBRARIES=$<TARGET_FILE:ZLIB::ZLIB>
   # Skip the find_package(ZLIB REQUIRED), because we feed CFITSIO our own ZLIB flags.
-  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
+  PATCH_COMMAND git apply ${patch_args}
                 ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
                 ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS}

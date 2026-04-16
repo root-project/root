@@ -14,8 +14,7 @@ set(ROOT_GL2PS_PATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/v142_post_tag_fixes.patch)
 
 set(ROOT_GL2PS_PREFIX ${CMAKE_BINARY_DIR}/builtins/GL2PS-prefix)
 
-set(ROOT_GL2PS_LIBRARY ${ROOT_GL2PS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gl2ps${CMAKE_STATIC_LIBRARY_SUFFIX}
-)
+set(ROOT_GL2PS_LIBRARY ${ROOT_GL2PS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gl2ps${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if(winrtdebug)
@@ -25,12 +24,17 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   endif()
 endif()
 
+# flag required only on Windows, on old alma paltforms it make troubles
+if(WIN32)
+  set(patch_args --ignore-whitespace)
+endif()
+
 ExternalProject_Add(
   BUILTIN_GL2PS
   PREFIX ${ROOT_GL2PS_PREFIX}
   URL ${lcgpackages}/gl2ps-${ROOT_GL2PS_VERSION}.tgz
   URL_HASH SHA256=${ROOT_GL2PS_HASH}
-  PATCH_COMMAND git apply ${ROOT_GL2PS_PATCH_FILE}
+  PATCH_COMMAND git apply ${patch_args} ${ROOT_GL2PS_PATCH_FILE}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
              -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
