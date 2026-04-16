@@ -24,51 +24,67 @@ TF1 *gam1 = new TF1("gam", "1/(1+0.1*x*0.1*x)", -1., .25);
 TF1 *iga = new TF1("inv gam", "1.-1/(1+0.1*x*0.1*x)", -100., 100.);
 TF1 *iga1 = new TF1("inv gam", "1.-1/(1+0.1*x*0.1*x)", -.5, 1.);
 
-void hist101_TH1_autobinning(unsigned opt = 1, unsigned n = 1001)
-{
+enum class EHist101_Func {
+   kGaus = 1,
+   kLinear = 2,
+   kGamma = 3,
+   kGamma1 = 4,
+   kInvGamma = 5,
+   kInvGamma1 = 6
+};
 
-   UInt_t nh = 10;
-   UInt_t bsize = 1000;
+void hist101_TH1_autobinning(EHist101_Func function = EHist101_Func::kGaus, unsigned nEntriesPerHisto = 1001)
+{
+   const Int_t nbins = 50;
 
    TRandom3 rndm((Long64_t)time(0));
 
-   // Standard autobinning reference
-   auto href = new TH1D("myhref", "current", 50, 0., -1.);
-   href->SetBuffer(bsize);
+   TH1D::SetDefaultBufferSize(1000);
 
-   // New autobinning 1-histo reference
-   auto href2 = new TH1D("myhref", "Auto P2, sequential", 50, 0., -1.);
+   // Create a histogram with `nbins` bins and range [0, -1].
+   // When a histogram is created with an upper limit lower or equal to its lower limit, it will automatically
+   // compute the axis limits.
+   // The binning is decided as soon as the histogram's internal entry buffer is filled, i.e. when you fill in a number
+   // of entries equal to the buffer size.
+   // The default buffer size is determined by TH1::SetDefaultBufferSize, or you can customize each individual histogram's
+   // buffer by calling TH1D::SetBuffer(int bufferSize).
+   auto href = std::make_unique<TH1D>("myhref", "current", nbins, 0., -1.);
+
+   auto href2 = std::make_unique<TH1D>("myhref", "Auto P2, sequential", nbins, 0., -1.);
+   // If you want to enable power-of-2 auto binning, call this:
    href2->SetBit(TH1::kAutoBinPTwo);
-   href2->SetBuffer(bsize);
 
-   TList *hlist = new TList;
-
-   Int_t nbins = 50;
+   // list to hold all histograms we're going to create
+   TList histoList;
+   // tell the list it should delete its elements upon destruction.
+   histoList.SetOwner(true);
 
    TStatistic x("min"), y("max"), d("dif"), a("mean"), r("rms");
-   for (UInt_t j = 0; j < nh; ++j) {
-      Double_t xmi = 1e15, xma = -1e15;
+
+   // Fill a bunch of histograms with the selected function
+   for (int j = 0; j < 10; ++j) {
+      double xmi = 1e15, xma = -1e15;
       TStatistic xw("work");
-      TString hname = TString::Format("myh%d", j);
-      auto hw = new TH1D(hname.Data(), "Auto P2, merged", nbins, 0., -1.);
+      const std::string hname = "myh" + std::to_string(j);
+
+      // Create more auto-binning histograms and add them to the list
+      auto hw = new TH1D(hname.c_str(), "Auto P2, merged", nbins, 0., -1.);
       hw->SetBit(TH1::kAutoBinPTwo);
-      hw->SetBuffer(bsize);
 
-      Double_t xhma, xhmi, ovf, unf;
-      Bool_t emptied = kFALSE, tofill = kTRUE;
-      Bool_t buffering = kTRUE;
-      for (UInt_t i = 0; i < n; ++i) {
-
-         Double_t xx;
-         switch (opt) {
-         case 1: xx = rndm.Gaus(3, 1); break;
-         case 2: xx = rndm.Rndm() * 100. - 50.; break;
-         case 3: xx = gam->GetRandom(); break;
-         case 4: xx = gam1->GetRandom(); break;
-         case 5: xx = iga->GetRandom(); break;
-         case 6: xx = iga1->GetRandom(); break;
-         default: xx = rndm.Gaus(0, 1);
+      bool buffering = true;
+      for (UInt_t i = 0; i < nEntriesPerHisto; ++i) {
+         double xx = 0;
+         // clang-format off
+         switch (function) {
+         case EHist101_Func::kGaus:      xx = rndm.Gaus(3, 1);          break;
+         case EHist101_Func::kLinear:    xx = rndm.Rndm() * 100. - 50.; break;
+         case EHist101_Func::kGamma:     xx = gam->GetRandom();         break;
+         case EHist101_Func::kGamma1:    xx = gam1->GetRandom();        break;
+         case EHist101_Func::kInvGamma:  xx = iga->GetRandom();         break;
+         case EHist101_Func::kInvGamma1: xx = iga1->GetRandom();        break;
+         default:                        xx = rndm.Gaus(0, 1);
          }
+         // clang-format on
 
          if (buffering) {
             if (xx > xma)
@@ -81,8 +97,8 @@ void hist101_TH1_autobinning(unsigned opt = 1, unsigned n = 1001)
          href->Fill(xx);
          href2->Fill(xx);
          if (!hw->GetBuffer()) {
-            // Not buffering anymore
-            buffering = kFALSE;
+            // We exhausted the histogram's buffer
+            buffering = false;
          }
       }
       x.Fill(xmi);
@@ -91,7 +107,7 @@ void hist101_TH1_autobinning(unsigned opt = 1, unsigned n = 1001)
       a.Fill(xw.GetMean());
       r.Fill(xw.GetRMS());
 
-      hlist->Add(hw);
+      histoList.Add(hw);
    }
 
    x.Print();
@@ -100,15 +116,18 @@ void hist101_TH1_autobinning(unsigned opt = 1, unsigned n = 1001)
    a.Print();
    r.Print();
 
-   TH1D *h0 = (TH1D *)hlist->First();
-   hlist->Remove(h0);
-   if (!h0->Merge(hlist))
+   // Merge all histograms into one
+   auto h0 = std::unique_ptr<TH1D>(static_cast<TH1D *>(histoList.First()));
+   histoList.Remove(h0.get());
+   if (!h0->Merge(&histoList))
       return;
 
+   // Set what we want to display in the histogram stat box
    gStyle->SetOptStat(111110);
 
    if (gROOT->GetListOfCanvases()->FindObject("c3"))
       delete gROOT->GetListOfCanvases()->FindObject("c3");
+
    TCanvas *c3 = new TCanvas("c3", "c3", 800, 800);
    c3->Divide(1, 3);
    c3->cd(1);
@@ -126,10 +145,4 @@ void hist101_TH1_autobinning(unsigned opt = 1, unsigned n = 1001)
    std::cout << " ent: " << h0->GetEntries() << "\n";
    h0->Print();
    href->Print();
-
-   hlist->SetOwner(kTRUE);
-   delete hlist;
-   delete href;
-   delete href2;
-   delete h0;
 }
