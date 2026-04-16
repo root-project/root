@@ -685,7 +685,7 @@ TH1::~TH1()
 /// \param[in] nbins number of bins
 /// \param[in] xlow low edge of first bin
 /// \param[in] xup upper edge of last bin (not included in last bin)
-
+/// \note if xup <= xlow, automatic bins are calculated when buffer size is reached
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
     :TNamed(name,title)
