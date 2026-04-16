@@ -844,6 +844,42 @@ struct MemoryResult {
 /// Greedy best-fit planner with coalescing free list.
 MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> & tensorsInfo );
 
+// Simple Dimension classes ans helpers to add constexpr meta info on input
+// tensors to the emitted code.
+struct SingleDim {
+   enum class Kind {
+      Static,
+      Symbolic
+   };
+
+   Kind kind;
+   std::size_t dim;
+   std::string_view name;
+
+   constexpr SingleDim(std::size_t v) : kind(Kind::Static), dim(v), name() {}
+   constexpr SingleDim(const char *v) : kind(Kind::Symbolic), dim(0), name(v) {}
+};
+
+struct TensorDims {
+   const SingleDim *data;
+   std::size_t size;
+
+   constexpr std::size_t total_size() const
+   {
+      std::size_t result = 1;
+      for (std::size_t i = 0; i < size; ++i) {
+         result *= data[i].dim;
+      }
+      return result;
+   }
+};
+
+template<class Arr>
+constexpr TensorDims makeDims(Arr const &arr)
+{
+   return TensorDims{arr.data(), arr.size()};
+}
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA

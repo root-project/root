@@ -197,6 +197,7 @@ protected:
    void GenerateSessionCode();
    bool IsInputTensorShapeParam(std::string const &name) const;
    std::vector<std::string> CollectTensorMemberNames(const std::string &input);
+   void GenerateRequiredInputTensorInfo();
 
 public:
    const std::vector<std::string> & GetInputTensorNames() const { return fInputTensorNames; }
