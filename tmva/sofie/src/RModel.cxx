@@ -1364,6 +1364,8 @@ void RModel::GenerateSessionCode()
    // end of session
    if (fUseSession && !fIsGNNComponent) {
       fGC += "};   // end of Session\n\n";
+
+      GenerateRequiredInputTensorInfo();
    }
 
    fGC += doInferSignature + " {\n";
@@ -1689,6 +1691,52 @@ void RModel::PrintSummary() const {
       for (auto & t_out : r.GetOpOutputTensors()) std::cout << t_out << "  ";
       std::cout << std::endl;
    }
+}
+
+/// To emit the dimensions of the input tensors as a data member of a session,
+/// which is helpful when validating the inference inputs.
+void RModel::GenerateRequiredInputTensorInfo()
+{
+   fGC += "\n// Input tensor dimensions\n";
+   fGC += "using TMVA::Experimental::SOFIE::SingleDim;\n";
+   fGC += "using TMVA::Experimental::SOFIE::TensorDims;\n";
+   fGC += "using TMVA::Experimental::SOFIE::makeDims;\n\n";
+   bool hasDynamicInputTensors = false;
+
+   for (std::size_t iInput = 0; iInput < fInputTensorNames.size(); ++iInput) {
+      auto const &name = fInputTensorNames[iInput];
+      if (IsDimInputTensor(name)) {
+         hasDynamicInputTensors = true;
+      }
+      std::vector<Dim> shape = GetDimTensorShape(name);
+      fGC += "constexpr std::array<SingleDim, " + std::to_string(shape.size()) + "> dim_" + name + "{";
+      for (std::size_t iDim = 0; iDim < shape.size(); ++iDim) {
+         auto const &dim = shape[iDim];
+         if (dim.isParam) {
+            fGC += "SingleDim{\"" + dim.GetVal() + "\"}";
+         } else {
+            fGC += "SingleDim{" + dim.GetVal() + "}";
+         }
+         if (iDim != shape.size() - 1) {
+            fGC += ", ";
+         }
+      }
+      fGC += "};\n";
+   }
+   fGC += "\nconstexpr std::array<TensorDims, " + std::to_string(fInputTensorNames.size()) + "> inputTensorDims{\n";
+   for (std::size_t iInput = 0; iInput < fInputTensorNames.size(); ++iInput) {
+      auto const &name = fInputTensorNames[iInput];
+      fGC += SP + "makeDims(dim_" + name + ")";
+      if (iInput == fInputTensorNames.size() - 1) {
+         fGC += "\n";
+      } else {
+         fGC += ",\n";
+      }
+   }
+   fGC += "};\n";
+
+   fGC +=
+      "\nconstexpr bool hasDynamicInputTensors{" + std::string{hasDynamicInputTensors ? "true" : "false"} + "};\n\n";
 }
 
 void RModel::PrintRequiredInputTensors() const {
