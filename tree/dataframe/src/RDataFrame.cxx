@@ -534,6 +534,8 @@ h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
 
 Learn more at ROOT::VecOps::RVec.
 
+ROOT provides convenience utility functions to work with RVec which are available in the [ROOT::VecOps namespace](\ref vecops)
+
 \anchor transformations
 ## Transformations: manipulating data
 \anchor Filters
