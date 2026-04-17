@@ -47,7 +47,7 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst);
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t close_path);
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
 
 template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
@@ -211,7 +211,9 @@ void TPadPainter::SetAttFill(const TAttFill &att)
 {
    TPadPainterBase::SetAttFill(att);
 
-   gVirtualX->SetAttFill(fWinContext, att);
+   TAttFill fill = GetAttFillInternal(IsCocoa());
+
+   gVirtualX->SetAttFill(fWinContext, fill);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,6 +286,9 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
    if (fAttLine.GetLineWidth() <= 0 && mode == TVirtualPadPainter::kHollow)
       return;
 
+   if (fFullyTransparent && mode == TVirtualPadPainter::kFilled)
+      return;
+
    Int_t px1 = fDoubleBuffer ? gPad->XtoPixel(x1) : gPad->XtoAbsPixel(x1);
    Int_t px2 = fDoubleBuffer ? gPad->XtoPixel(x2) : gPad->XtoAbsPixel(x2);
    Int_t py1 = fDoubleBuffer ? gPad->YtoPixel(y1) : gPad->YtoAbsPixel(y1);
@@ -308,7 +313,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
       return;
    }
 
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fAttFill.GetFillStyle() == 0);
+   // if fully transparent, add first point to draw line
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
 }
 
 
@@ -322,7 +328,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
       return;
    }
 
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fAttFill.GetFillStyle() == 0);
+   // if fully transparent, add first point to draw line
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -788,7 +795,7 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t close_path)
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point)
 {
    std::vector<TPoint> xy;
 
@@ -806,12 +813,12 @@ void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T
    else
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
-   //We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
-   if (close_path)
+   //We close the 'polygon' so it can be rendered as a polyline by gVirtualX.
+   if (add_first_point)
       xy.push_back(xy.front());
 
    if (xy.size() > 2)
-      gVirtualX->DrawFillAreaW(cont, xy.size(), &xy[0]);
+      gVirtualX->DrawFillAreaW(cont, xy.size(), xy.data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
