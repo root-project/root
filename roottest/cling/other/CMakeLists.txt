@@ -61,3 +61,7 @@ ROOTTEST_ADD_TEST(checkMissingSymbolExitCode
 ROOTTEST_ADD_TEST(assertDirWithParen
                   MACRO assertDirWithParen.C
                   LABELS roottest regression cling)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    add_test(NAME testPerfMap COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/testPerfMap.sh)
+endif()
