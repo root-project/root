@@ -1384,8 +1384,7 @@ size_t TClingClassInfo::GetAlignOf() const
    Decl::Kind DK = GetDecl()->getKind();
    if (DK == Decl::Namespace) {
       return 0;
-   }
-   else if (DK == Decl::Enum) {
+   } else if (DK == Decl::Enum) {
       return 0;
    }
    const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());

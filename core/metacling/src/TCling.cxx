@@ -8262,9 +8262,9 @@ std::string TCling::CallFunc_GetWrapperCode(CallFunc_t *func) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-size_t TCling::ClassInfo_AlignOf(ClassInfo_t* cinfo) const
+size_t TCling::ClassInfo_AlignOf(ClassInfo_t *cinfo) const
 {
-   TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
+   TClingClassInfo *TClinginfo = (TClingClassInfo *)cinfo;
    return TClinginfo->GetAlignOf();
 }
 

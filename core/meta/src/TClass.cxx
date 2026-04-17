@@ -5782,7 +5782,7 @@ size_t TClass::GetClassAlignment() const
 {
    if (fAlignment != 0)
       return fAlignment;
-   if ((fState < kEmulated && !fCollectionProxy) || Property() & (kIsNamespace|kIsEnum))
+   if ((fState < kEmulated && !fCollectionProxy) || Property() & (kIsNamespace | kIsEnum))
       return 0;
    if (HasInterpreterInfo()) {
       return gCling->ClassInfo_AlignOf(GetClassInfo());

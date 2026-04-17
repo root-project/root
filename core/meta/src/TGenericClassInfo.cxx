@@ -82,63 +82,116 @@ namespace Internal {
    }
 } // Internal
 
+TGenericClassInfo::TGenericClassInfo(const char *fullClassname, const char *declFileName, Int_t declFileLine,
+                                     const std::type_info &info, const Internal::TInitBehavior *action,
+                                     DictFuncPtr_t dictionary, TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof,
+                                     std::size_t alignof_)
+   : fAction(action),
+     fClass(nullptr),
+     fClassName(fullClassname),
+     fDeclFileName(declFileName),
+     fDeclFileLine(declFileLine),
+     fDictionary(dictionary),
+     fInfo(info),
+     fImplFileName(nullptr),
+     fImplFileLine(0),
+     fIsA(isa),
+     fVersion(1),
+     fMerge(nullptr),
+     fResetAfterMerge(nullptr),
+     fNew(nullptr),
+     fNewArray(nullptr),
+     fDelete(nullptr),
+     fDeleteArray(nullptr),
+     fDestructor(nullptr),
+     fDirAutoAdd(nullptr),
+     fStreamer(nullptr),
+     fStreamerFunc(nullptr),
+     fConvStreamerFunc(nullptr),
+     fCollectionProxy(nullptr),
+     fSizeof(sizof),
+     fAlignment(alignof_),
+     fPragmaBits(pragmabits),
+     fCollectionProxyInfo(nullptr),
+     fCollectionStreamerInfo(nullptr)
+{
+   // Constructor.
 
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const std::type_info &info, const Internal::TInitBehavior  *action,
-                                        DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_)
-      : fAction(action), fClass(nullptr), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info),
-        fImplFileName(nullptr), fImplFileLine(0),
-        fIsA(isa),
-        fVersion(1),
-        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
-        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fAlignment(alignof_), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
-   {
-      // Constructor.
+   Init(pragmabits);
+}
 
-      Init(pragmabits);
-   }
+TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version, const char *declFileName,
+                                     Int_t declFileLine, const std::type_info &info,
+                                     const Internal::TInitBehavior *action, DictFuncPtr_t dictionary,
+                                     TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_)
+   : fAction(action),
+     fClass(nullptr),
+     fClassName(fullClassname),
+     fDeclFileName(declFileName),
+     fDeclFileLine(declFileLine),
+     fDictionary(dictionary),
+     fInfo(info),
+     fImplFileName(nullptr),
+     fImplFileLine(0),
+     fIsA(isa),
+     fVersion(version),
+     fMerge(nullptr),
+     fResetAfterMerge(nullptr),
+     fNew(nullptr),
+     fNewArray(nullptr),
+     fDelete(nullptr),
+     fDeleteArray(nullptr),
+     fDestructor(nullptr),
+     fDirAutoAdd(nullptr),
+     fStreamer(nullptr),
+     fStreamerFunc(nullptr),
+     fConvStreamerFunc(nullptr),
+     fCollectionProxy(nullptr),
+     fSizeof(sizof),
+     fAlignment(alignof_),
+     fPragmaBits(pragmabits),
+     fCollectionProxyInfo(nullptr),
+     fCollectionStreamerInfo(nullptr)
 
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const std::type_info &info, const Internal::TInitBehavior  *action,
-                                        DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_)
-      : fAction(action), fClass(nullptr), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info),
-        fImplFileName(nullptr), fImplFileLine(0),
-        fIsA(isa),
-        fVersion(version),
-        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
-        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fAlignment(alignof_), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
+{
+   // Constructor with version number and no showmembers.
 
-   {
-      // Constructor with version number and no showmembers.
-
-      Init(pragmabits);
-   }
+   Init(pragmabits);
+}
 
    class TForNamespace {}; // Dummy class to give a typeid to namespace (See also TClassTable.cc)
 
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const Internal::TInitBehavior  *action,
+   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version, const char *declFileName,
+                                        Int_t declFileLine, const Internal::TInitBehavior *action,
                                         DictFuncPtr_t dictionary, Int_t pragmabits)
-      : fAction(action), fClass(nullptr), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(typeid(TForNamespace)),
-        fImplFileName(nullptr), fImplFileLine(0),
+      : fAction(action),
+        fClass(nullptr),
+        fClassName(fullClassname),
+        fDeclFileName(declFileName),
+        fDeclFileLine(declFileLine),
+        fDictionary(dictionary),
+        fInfo(typeid(TForNamespace)),
+        fImplFileName(nullptr),
+        fImplFileLine(0),
         fIsA(nullptr),
         fVersion(version),
-        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
-        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(0), fAlignment(0), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
+        fMerge(nullptr),
+        fResetAfterMerge(nullptr),
+        fNew(nullptr),
+        fNewArray(nullptr),
+        fDelete(nullptr),
+        fDeleteArray(nullptr),
+        fDestructor(nullptr),
+        fDirAutoAdd(nullptr),
+        fStreamer(nullptr),
+        fStreamerFunc(nullptr),
+        fConvStreamerFunc(nullptr),
+        fCollectionProxy(nullptr),
+        fSizeof(0),
+        fAlignment(0),
+        fPragmaBits(pragmabits),
+        fCollectionProxyInfo(nullptr),
+        fCollectionStreamerInfo(nullptr)
 
    {
       // Constructor for namespace

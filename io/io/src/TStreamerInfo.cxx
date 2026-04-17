@@ -5095,7 +5095,7 @@ void* TStreamerInfo::New(void *obj)
       // Use aligned new (C++17). This will return memory aligned to
       // 'align' and can be freed with the matching delete[].
       assert(ROOT::Internal::IsValidAlignment(align)); // align must be a power of 2
-      p = static_cast<char*>(::operator new[](fSize, std::align_val_t(align)));
+      p = static_cast<char *>(::operator new[](fSize, std::align_val_t(align)));
       memset(p, 0, fSize);
    }
 
@@ -5258,17 +5258,17 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
       // Allocate and initialize the memory block.  Request alignment so
       // that the raw block starts on an 'align'-boundary; combined with
       // the rounded-up header this guarantees dataBegin is also aligned.
-      p = static_cast<char*>(::operator new[](len, std::align_val_t(layout.align)));
+      p = static_cast<char *>(::operator new[](len, std::align_val_t(layout.align)));
       memset(p, 0, len);
    }
 
    Long_t* r = (Long_t*)(p + layout.headerSize - layout.cookieSize);
    r[0] = size;
    r[1] = nElements;
-   char* dataBegin = p + layout.headerSize;
+   char *dataBegin = p + layout.headerSize;
 
    // Do a placement new for each element.
-   char* q = dataBegin;
+   char *q = dataBegin;
    for (Long_t cnt = 0; cnt < nElements; ++cnt) {
       New(q);
       q += size;
@@ -5472,10 +5472,10 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
    // headerSize that NewArray used.
    const ArrayCookieLayout layout(fClass);
 
-   Long_t* r = (Long_t*)((char*)ary - layout.cookieSize);
-   Long_t arrayLen = r[1];
-   Long_t size     = r[0];
-   char* memBegin  = (char*)ary - layout.headerSize;
+   Long_t *r        = (Long_t *)((char *)ary - layout.cookieSize);
+   Long_t  arrayLen = r[1];
+   Long_t  size     = r[0];
+   char   *memBegin = (char *)ary - layout.headerSize;
 
    char* p = ((char*) ary) + ((arrayLen - 1) * size);
    for (Long_t cnt = 0; cnt < arrayLen; ++cnt, p -= size) {
@@ -6032,7 +6032,8 @@ TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &inf
 //
 // Utility functions
 //
-static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset, bool silent, bool needAlign)
+static TStreamerElement *
+R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset, bool silent, bool needAlign)
 {
    // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
 

@@ -25,7 +25,6 @@
 #include "TDictionary.h"
 #include <cstddef>
 
-
 enum EDataType {
    kChar_t   = 1,  kUChar_t  = 11, kShort_t    = 2,  kUShort_t = 12,
    kInt_t    = 3,  kUInt_t   = 13, kLong_t     = 4,  kULong_t  = 14,
@@ -46,8 +45,8 @@ class TDataType : public TDictionary {
 
 private:
    TypedefInfo_t    *fInfo;     ///<!pointer to CINT typedef info
-   Int_t             fSize;        //size of type
-   std::size_t       fAlignOf;     //alignment of type (0 if unknown)
+   Int_t             fSize;     // size of type
+   std::size_t       fAlignOf;  // alignment of type (0 if unknown)
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class
    TString           fTrueName; //Qualified name of the (potential) underlying class, e.g. "MyClass*const*"
