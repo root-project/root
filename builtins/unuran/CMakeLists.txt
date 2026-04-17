@@ -42,9 +42,11 @@ ExternalProject_Add(
   PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_UNURAN_PATCH_FILE_1}
   SOURCE_SUBDIR src
   LOG_DOWNLOAD  TRUE
-  LOG_CONFIGURE TRUE
-  LOG_BUILD     TRUE
-  LOG_INSTALL   TRUE
+# The following three are disabled to avoid CI failure in Ubuntu22 that has outdated CMake version
+# See https://github.com/root-project/root/issues/16733
+#  LOG_CONFIGURE TRUE
+#  LOG_BUILD     TRUE
+#  LOG_INSTALL   TRUE
   LOG_OUTPUT_ON_FAILURE TRUE
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
   -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
