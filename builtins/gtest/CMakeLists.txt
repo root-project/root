@@ -49,6 +49,7 @@ if(APPLE)
   set(EXTRA_GTEST_OPTS
     -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
 endif()
+
 set(ROOT_GOOGLETEST_VERSION 1.17.0) # https://github.com/google/googletest/releases/tag/v1.17.0 Date: Apr 30, 2025
 set(ROOT_GOOGLETEST_HASH "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c")
 ExternalProject_Add(
@@ -100,6 +101,7 @@ foreach(lib gtest gtest_main gmock gmock_main)
     IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
   )
   add_dependencies(${lib} googletest)
+  add_library(GTest::${lib} ALIAS ${lib})
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
       ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
     target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
