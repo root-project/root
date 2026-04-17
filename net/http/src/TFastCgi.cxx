@@ -160,7 +160,6 @@ void process_request(TFastCgi *engine, FCGX_Request *request, bool can_postpone)
       FCGX_ROOT_send_file(request, (const char *)arg->GetContent());
    } else {
 
-      // TODO: check in request header that gzip encoding is supported
       if (arg->GetZipping() != THttpCallArg::kNoZip)
          arg->CompressWithGzip();
 

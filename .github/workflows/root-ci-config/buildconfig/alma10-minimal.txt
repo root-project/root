@@ -1,4 +1,5 @@
 ccache=ON
+builtin_civetweb=ON
 builtin_vdt=ON
 fail-on-missing=ON
 minimal=ON

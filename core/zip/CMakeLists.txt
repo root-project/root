@@ -4,8 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-find_package(ZLIB REQUIRED)
-
 target_sources(Core PRIVATE
   src/Bits.c
   src/ZDeflate.c
