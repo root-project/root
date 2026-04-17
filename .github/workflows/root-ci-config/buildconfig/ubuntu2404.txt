@@ -1,2 +1,3 @@
+builtin_civetweb=ON
 experimental_adaptivecpp=OFF
 experimental_genvectorx=OFF

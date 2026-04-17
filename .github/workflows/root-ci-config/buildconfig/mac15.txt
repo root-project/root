@@ -1,4 +1,5 @@
 builtin_cfitsio=ON
+builtin_civetweb=ON
 builtin_fftw3=ON
 builtin_freetype=ON
 builtin_ftgl=ON

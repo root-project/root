@@ -1,5 +1,6 @@
 asimage_tiff=OFF
 builtin_cfitsio=ON
+builtin_civetweb=ON
 builtin_freetype=ON
 builtin_ftgl=ON
 builtin_gif=ON

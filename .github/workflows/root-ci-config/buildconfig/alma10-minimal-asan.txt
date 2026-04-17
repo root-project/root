@@ -2,6 +2,7 @@ CMAKE_BUILD_TYPE=Debug
 CMAKE_CXX_FLAGS_DEBUG="-Og -g"
 asan=ON
 ccache=ON
+builtin_civetweb=ON
 builtin_vdt=ON
 fail-on-missing=ON
 minimal=ON

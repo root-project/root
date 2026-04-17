@@ -3,6 +3,7 @@ arrow=OFF
 asan=OFF
 asimage=ON
 asserts=OFF
+builtin_civetweb=OFF
 builtin_cfitsio=OFF
 builtin_clang=ON
 builtin_cling=ON
