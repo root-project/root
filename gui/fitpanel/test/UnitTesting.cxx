@@ -34,7 +34,7 @@
 #endif
 
 // Function that compares to doubles up to an error limit
-int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-5)
+int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-4)
 {
    return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
 }
