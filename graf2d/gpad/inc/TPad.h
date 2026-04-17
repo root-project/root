@@ -136,8 +136,7 @@ private:
    TPad(const TPad &pad) = delete;
    TPad &operator=(const TPad &rhs) = delete;
 
-   void CopyBackgroundPixmap(Int_t x, Int_t y);
-   void CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y);
+   void CopyBackgroundPixmaps(TPad *stop, Int_t x, Int_t y);
    void DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode);
 
    Bool_t            Collide(Int_t i, Int_t j, Int_t w, Int_t h);

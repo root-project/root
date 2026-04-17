@@ -3663,26 +3663,18 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
       if (!IsBatch() && (pp->IsCocoa() || (pp->IsNative() && (style > 3000) && (style < 3026))))
          pp->ClearDrawable();
 
-      if ((style >= 4000) && (style <= 4100) && pp->IsNative()) {
+      // special only for transparent pads in plain X11;
+      // Cocoa, GL, Web and PS implement transparency different
+      if ((style >= 4000) && (style <= 4100) && pp->IsNative() && !pp->IsCocoa() && !pp->GetPS() && !(fCanvas && fCanvas->UseGL()) && !IsWeb() && !IsBatch()) {
          if (this == fMother) {
             style = 1001;
-         } else if (pp->IsCocoa() || (fCanvas && fCanvas->UseGL())) {
-            TColor *col = (style == 4000) ? nullptr : gROOT->GetColor(color);
-            if (!col) {
-               do_paint_box = kFALSE;
-            } else {
-               color = TColor::GetColor(col->GetRed(), col->GetGreen(), col->GetBlue(), (style - 4000) / 100.);
-               style = 1001;
-            }
          } else {
             // copy all pixmaps
             do_paint_box = kFALSE;
-            int px, py;
-            XYtoAbsPixel(fX1, fY2, px, py);
-            if (fMother) {
-               fMother->CopyBackgroundPixmap(px, py);
-               CopyBackgroundPixmaps(fMother, this, px, py);
-            }
+            Int_t px, py;
+            XYtoAbsPixel(GetX1(), GetY2(), px, py);
+            if (fMother)
+               fMother->CopyBackgroundPixmaps(this, px, py);
             pp->SetOpacity(style - 4000);
          }
       } else if ((color == 10) && (style > 3000) && (style < 3100))
@@ -3910,7 +3902,8 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    } else if (style > 3000 && style < 3100) {
       draw_fill = style < 3026;
    } else if (style >= 4000 && style <= 4100) {
-      // only used by pad, ignored by all other objects
+      // transparency styles, supported now by all engines
+      draw_fill = style > 4000;
    } else if (style > 0)
       draw_border = kTRUE;
 
@@ -3932,30 +3925,21 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 /// Copy pixmaps of pads laying below pad "stop" into pad "stop". This
 /// gives the effect of pad "stop" being transparent.
 
-void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
+void TPad::CopyBackgroundPixmaps(TPad *stop, Int_t x, Int_t y)
 {
-   if (!start) return;
-   TObject *obj;
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter next(start->GetListOfPrimitives());
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TPad::Class())) {
-         if (obj == stop) break;
-         ((TPad*)obj)->CopyBackgroundPixmap(x, y);
-         ((TPad*)obj)->CopyBackgroundPixmaps((TPad*)obj, stop, x, y);
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy pixmap of this pad as background of the current pad.
-
-void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
-{
-   int px, py;
-   XYtoAbsPixel(fX1, fY2, px, py);
+   Int_t px, py;
+   XYtoAbsPixel(GetX1(), GetY2(), px, py);
+   /// Copy pixmap of this pad as background of the current pad.
    if (auto pp = GetPainter())
-      pp->CopyDrawable(GetPixmapID(), px-x, py-y);
+      pp->CopyDrawable(GetPixmapID(), px - x, py - y);
+
+   TIter next(GetListOfPrimitives());
+   while (auto obj = next()) {
+      if (obj == stop)
+         break;
+      if (auto pad = dynamic_cast<TPad *>(obj))
+         pad->CopyBackgroundPixmaps(stop, x, y);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
