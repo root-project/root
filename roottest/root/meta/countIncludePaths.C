@@ -26,11 +26,12 @@ int countIncludePaths()
       nEnvVarPaths = countSubstring(envVar, ":") + 1 - (envVar.back() == ':') - (envVar.front() == ':');
    }
 
-   // At most 10
+   // At most 12
    auto nPaths = countSubstring(includePath, "-I");
-   if ((nPaths - nEnvVarPaths) > 10) {
-      std::cerr << "The number of include paths is too high (>9) " << nPaths
-                << ". The number of \"-I\"s has been counted in the include path of ROOT (gSystem->GetIncludePath()=" << includePath << ")." << std::endl;
+   if ((nPaths - nEnvVarPaths) > 12) {
+      std::cerr << "The number of include paths is too high (>12) " << nPaths
+                << ". The number of \"-I\"s has been counted in the include path of ROOT (gSystem->GetIncludePath()="
+                << includePath << ")." << std::endl;
       return nPaths;
    }
    return 0;
