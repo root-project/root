@@ -54,6 +54,7 @@ The following people have contributed to this new version:
   To fit 2D data with errors in and `x` and `y`, use specialized tools like `TGraphErrors::Fit()`, or build an explicit likelihood model if you want to stay with RooFit.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method are deprecated and will be removed in ROOT 6.42.
   We kindly ask users to write their own ROOT-based plotting code, possibly based on the source code of the deprecated **HybridPlot** class, as pre-existing plot helpers are usually failing to be flexible enough for large-scale adoption.
+* The `TGrid*` family of abstract classes provided the basis for accessing GRID services from ROOT. All the concrete plugins (AliEn, glite, etc.) were removed years ago. These facilities should now be unused. The classes will be removed in ROOT 6.42.
 
 ## Removals
 
@@ -178,7 +179,7 @@ See: https://github.com/root-project/root/pull/20963 for implementation details 
 * Fixed a bug in `TDirectoryFile::mkdir` where passing `returnExistingDirectory = true` would not work properly in case of directory hierarchies. The option is now correctly propagated to `mkdir`'s inner invocations.
 ### File Permissions Now Respect System `umask`
 
-ROOT now respects the system `umask` when creating files, following standard Unix conventions. 
+ROOT now respects the system `umask` when creating files, following standard Unix conventions.
 
 **Previous behavior:** Files were created with hardcoded `0644` permissions (owner read/write, group/others read-only), ignoring the system `umask`.
 
@@ -484,7 +485,7 @@ sum(1 for x in collection if x == obj)   # value comparison (if defined for the 
 ## Versions of built-in packages
 
 The version of the following packages has been updated:
- 
+
  - cppzeromq: 4.10.0
  - fftw3: 3.3.10
  - freetype: 2.14.3
