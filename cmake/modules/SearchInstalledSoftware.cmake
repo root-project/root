@@ -210,28 +210,6 @@ if(builtin_nlohmannjson)
   add_subdirectory(builtins/nlohmann)
 endif()
 
-#--- Check for civetweb ---------------------------------------------------------
-if(http AND NOT builtin_civetweb)
-  message(STATUS "Looking for civetweb")
-  if(NOT "$ENV{CIVETWEB_BUILD}" STREQUAL "" AND NOT "$ENV{CIVETWEB_SRC}" STREQUAL "")
-     set(civetweb_LIBRARIES $ENV{CIVETWEB_BUILD}/src/libcivetweb.so)
-     set(civetweb_INCLUDE_DIR $ENV{CIVETWEB_SRC}/include)
-     message(STATUS "Use civetweb ${civetweb_LIBRARIES} and ${civetweb_INCLUDE_DIR}")
-  else()
-    if(fail-on-missing)
-      find_package(civetweb 1.15 REQUIRED)
-    else()
-      find_package(civetweb 1.15 QUIET)
-      if(civetweb_FOUND)
-        message(STATUS "Found civetweb version ${civetweb_VERSION}")
-      else()
-        message(STATUS "civetweb not found. Switching on builtin_civetweb option")
-        set(builtin_civetweb ON CACHE BOOL "Enabled because civetweb not found" FORCE)
-      endif()
-    endif()
-  endif()
-endif()
-
 #---Check for Unuran ------------------------------------------------------------------
 if(unuran AND NOT builtin_unuran)
   message(STATUS "Looking for Unuran")
@@ -551,6 +529,64 @@ if(fcgi)
       set(fcgi OFF CACHE BOOL "Disabled because FastCGI not found" FORCE)
     endif()
   endif()
+endif()
+
+#--- Check for civetweb - (has to go after SSL) ---------------------------------------
+if(http AND NOT builtin_civetweb)
+  message(STATUS "Looking for civetweb")
+  if(fail-on-missing)
+    find_package(civetweb 1.16 REQUIRED)
+  else()
+    find_package(civetweb 1.16 QUIET)
+    if(civetweb_FOUND)
+      message(STATUS "Found civetweb version ${civetweb_VERSION}")
+    else()
+      message(STATUS "civetweb not found. Switching on builtin_civetweb option")
+      set(builtin_civetweb ON CACHE BOOL "Enabled because civetweb not found" FORCE) # TODO replace with ROOT_FIND_REQUIRED_DEP
+    endif()
+  endif()
+  if(civetweb_FOUND)
+    get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_NONE)
+    try_compile(CIVETWEB_FEATURE_API
+      SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
+      CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
+      LINK_LIBRARIES ${CIVETWEB_IMPORTED_LOCATION}
+      OUTPUT_VARIABLE CIVETWEB_FEATURE_API_LOG
+    )
+    if (CIVETWEB_FEATURE_API)
+      try_run(RUN_RESULT COMPILE_RESULT
+        SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
+        CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
+        LINK_LIBRARIES ${CIVETWEB_IMPORTED_LOCATION}
+        COMPILE_OUTPUT_VARIABLE BUILD_LOG
+        RUN_OUTPUT_VARIABLE CIVETWEB_FEATURES
+      )
+      if(COMPILE_RESULT)
+        message(STATUS "Detected civetweb feature mask: ${CIVETWEB_FEATURES}")
+      else()
+        message(FATAL_ERROR "Could not run civetweb features: ${BUILD_LOG}")
+      endif()
+      math(EXPR CIVETWEB_HAS_WEBSOCKET "(${CIVETWEB_FEATURES} >> 4) & 0x1")
+      math(EXPR CIVETWEB_HAS_ZLIB "(${CIVETWEB_FEATURES} >> 9) & 0x1")
+      math(EXPR CIVETWEB_HAS_X_DOM_SOCKET "(${CIVETWEB_FEATURES} >> 11) & 0x1")
+      message(STATUS "civetweb websocket ; zlib ; xdomsocket support: ${CIVETWEB_HAS_WEBSOCKET} ; ${CIVETWEB_HAS_ZLIB} ; ${CIVETWEB_HAS_X_DOM_SOCKET}")
+    else()
+      message(FATAL_ERROR "Could not check for civetweb features: ${CIVETWEB_FEATURE_API_LOG}")
+    endif()
+
+    if(NOT "${CIVETWEB_HAS_WEBSOCKET}" STREQUAL "1" OR NOT "${CIVETWEB_HAS_ZLIB}" STREQUAL "1" OR NOT "${CIVETWEB_HAS_X_DOM_SOCKET}" STREQUAL "1")
+      # Clear cache vars by find_package system-civetweb
+      foreach(var CIVETWEB_LIBRARIES CIVETWEB_LIBRARY CIVETWEB_LIBRARY_DEBUG CIVETWEB_LIBRARY_RELEASE CIVETWEB_FOUND CIVETWEB_VERSION CIVETWEB_INCLUDE_DIR CIVETWEB_LIBRARY CIVETWEB_LIBRARIES)
+        unset(${var})
+        unset(${var} CACHE)
+      endforeach()
+      message(WARNING "Force-enabling builtin_civetweb since found system-wide version does not include websocket or zlib or xdomsocket components (-DCIVETWEB_ENABLE_WEBSOCKETS=ON -DCIVETWEB_ENABLE_ZLIB=ON -DCIVETWEB_ENABLE_X_DOM_SOCKET=ON)")
+      set(builtin_civetweb ON CACHE BOOL "Enabled because system-wide civetweb version was compiled without websockets or zlib or xdomsocket (-DCIVETWEB_ENABLE_WEBSOCKETS=ON -DCIVETWEB_ENABLE_ZLIB=ON -DCIVETWEB_ENABLE_X_DOM_SOCKET=ON)" FORCE)
+    endif()
+  endif()
+endif()
+if(http AND builtin_civetweb)
+  add_subdirectory(builtins/civetweb)
 endif()
 
 #---Check for SQLite-------------------------------------------------------------------
