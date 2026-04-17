@@ -403,7 +403,8 @@ std::size_t TStreamerElement::GetAlignment() const
       return sizeof(UInt_t);
    if (auto *dt = TDataType::GetDataType(bareType); dt && dt->GetAlignOf())
       return dt->GetAlignOf();
-   Fatal("TStreamerElement::GetAlignment", "Cannot determine alignment for type %d (bare type %d)", fType, bareType);
+   Error("TStreamerElement::GetAlignment", "Cannot determine alignment for type %d (bare type %d) for element %s",
+         fType, bareType, GetName());
    return alignof(std::max_align_t);
 }
 
@@ -721,8 +722,9 @@ std::size_t TStreamerBase::GetAlignment() const
       cl = GetClassPointer();
    if (cl && cl->GetClassAlignment())
       return cl->GetClassAlignment();
-   Fatal("TStreamerBase::GetAlignment", "Cannot determine alignment for base class %s", GetName());
-   return alignof(std::max_align_t);
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1100,7 +1102,8 @@ std::size_t TStreamerLoop::GetAlignment() const
       return sizeof(UInt_t);
    if (auto *dt = TDataType::GetDataType(bareType); dt && dt->GetAlignOf())
       return dt->GetAlignOf();
-   Fatal("TStreamerLoop::GetAlignment", "Cannot determine alignment for type %d (bare type %d)", fType, bareType);
+   Error("TStreamerLoop::GetAlignment", "Cannot determine alignment for type %d (bare type %d) for element %s", fType,
+         bareType, GetName());
    return alignof(std::max_align_t);
 }
 
@@ -1359,8 +1362,9 @@ std::size_t TStreamerObject::GetAlignment() const
       cl = GetClassPointer();
    if (cl && cl->GetClassAlignment())
       return cl->GetClassAlignment();
-   Fatal("TStreamerObject::GetAlignment", "Cannot determine alignment for class %s", GetName());
-   return alignof(std::max_align_t);
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1469,8 +1473,9 @@ std::size_t TStreamerObjectAny::GetAlignment() const
       cl = GetClassPointer();
    if (cl && cl->GetClassAlignment())
       return cl->GetClassAlignment();
-   Fatal("TStreamerObjectAny::GetAlignment", "Cannot determine alignment for class %s", GetName());
-   return alignof(std::max_align_t);
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2020,8 +2025,9 @@ std::size_t TStreamerSTL::GetAlignment() const
       cl = GetClassPointer();
    if (cl && cl->GetClassAlignment())
       return cl->GetClassAlignment();
-   Fatal("TStreamerSTL::GetAlignment", "Cannot determine alignment for class %s", GetName());
-   return alignof(std::max_align_t);
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

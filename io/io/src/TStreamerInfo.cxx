@@ -530,6 +530,10 @@ void TStreamerInfo::Build(Bool_t isTransient)
          }
          if (element) {
             fElements->Add(element);
+            // We are building the TStreamerInfo for the in-memory representation
+            // of a loaded class, so we don't need to cross check the element's
+            // alignment (fAlignment will eventually be set to the one provided
+            // to the dictionary).
             fAlignment = std::max(fAlignment, element->GetAlignment());
          }
       } // end of base class loop
@@ -828,6 +832,10 @@ void TStreamerInfo::Build(Bool_t isTransient)
       }
 
       fElements->Add(element);
+      // We are building the TStreamerInfo for the in-memory representation
+      // of a loaded class, so we don't need to cross check the element's
+      // alignment (fAlignment will eventually be set to the one provided
+      // to the dictionary).
       fAlignment = std::max(fAlignment, element->GetAlignment());
    } // end of member loop
 
@@ -2247,7 +2255,7 @@ void TStreamerInfo::BuildOld()
          fVirtualInfoLoc = new ULong_t[1]; // To allow for a single delete statement.
          fVirtualInfoLoc[0] = offset;
          offset += sizeof(TStreamerInfo*);
-         fAlignment = std::max(fAlignment, sizeof(TStreamerInfo*));
+         fAlignment          = std::max(fAlignment, alignof(TStreamerInfo *));
       }
 
       TDataMember* dm = 0;
@@ -2364,7 +2372,19 @@ void TStreamerInfo::BuildOld()
          }
       } // Class corresponding to StreamerInfo is emulated or not.
 
-      fAlignment = std::max(fAlignment, element->GetAlignment());
+      {
+         auto align = element->GetAlignment();
+         if (!ROOT::Internal::IsValidAlignment(align)) {
+            // Print error only if this is meant to be the 'current'
+            // class layout description.
+            if (fClass->GetClassVersion() == fClassVersion) {
+               Error("TStreamerInfo::BuildOld", "Cannot determine alignment for type %s for element %s",
+                     element->GetTypeName(), GetName());
+            }
+            align = alignof(std::max_align_t);
+         }
+         fAlignment = std::max(fAlignment, align);
+      }
 
       // Now let's deal with Schema evolution
       Int_t newType = -1;
@@ -2802,6 +2822,7 @@ void TStreamerInfo::BuildOld()
    // If we get here, this means that there no data member after the last base class
    // (or no base class at all).
    if (shouldHaveInfoLoc && fNVirtualInfoLoc==0) {
+      offset = (Int_t)AlignUp((size_t)offset, alignof(TStreamerInfo *));
       fNVirtualInfoLoc = 1;
       fVirtualInfoLoc = new ULong_t[1]; // To allow for a single delete statement.
       fVirtualInfoLoc[0] = offset;
@@ -3403,9 +3424,7 @@ void TStreamerInfo::ComputeSize()
 
    // If we have no information use the default alignment.
    if (!fAlignment) {
-      // FIXME-ALIGN: this currently happens when the TStreamerInfo is not
-      // the current one.
-      Fatal("ComputeSize", "No information on the alignment of class %s, using default alignment of %d bytes",
+      Error("ComputeSize", "No information on the alignment of class %s, using default alignment of %d bytes",
             GetName(), (Int_t)alignof(std::max_align_t));
       fAlignment = alignof(std::max_align_t);
    }
@@ -6078,7 +6097,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
       // a class
       assert(ROOT::Internal::IsValidAlignment(clm->GetClassAlignment()));
       align = std::max(align, clm->GetClassAlignment());
-      if (needAlign && align != alignof(std::max_align_t) && ((offset % align) != 0))
+      if (needAlign && ((offset % align) != 0))
          offset = (Int_t)AlignUp((size_t)offset, align);
       if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
