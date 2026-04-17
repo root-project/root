@@ -24,6 +24,9 @@ protected:
    TAttLine   fAttLine;   ///< current line attributes
    TAttMarker fAttMarker; ///< current marker attributes
    TAttText   fAttText;   ///< current text attributes
+   Bool_t      fFullyTransparent = kFALSE; ///< if transformed fill attributes fully transparent
+
+   TAttFill   GetAttFillInternal(Bool_t with_transparency);
 
 public:
 

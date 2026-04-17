@@ -47,6 +47,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     src/TGroupButton.cxx
     src/TInspectCanvas.cxx
     src/TPad.cxx
+    src/TPadPainterBase.cxx
     src/TPadPainter.cxx
     src/TPadPainterPS.cxx
     src/TPaveClass.cxx
