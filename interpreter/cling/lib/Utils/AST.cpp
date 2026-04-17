@@ -980,6 +980,24 @@ namespace utils {
           original_prefix = embedded_prefix;
           // TODO: LLVM22: In the old API this was:
           // QT = QualType(etype_input->getNamedType().getTypePtr(), 0);
+
+          // Strip the prefix from QT by rebuilding the TemplateSpecializationType
+          // with an unqualified template name, so the desugaring can resolve
+          // e.g. ROOT::RVec (UsingShadowDecl) -> ROOT::VecOps::RVec
+          if (const TemplateSpecializationType* TST = QT->getAs<TemplateSpecializationType>()) {
+            TemplateName TName = TST->getTemplateName();
+            if (TemplateDecl* TD = TName.getAsTemplateDecl()) {
+                // Rebuild TemplateName WITHOUT prefix
+                TemplateName NewName(TD);
+                // Recreate the type
+                QT = Ctx.getTemplateSpecializationType(
+                    ElaboratedTypeKeyword::None,
+                    NewName,
+                    TST->template_arguments(),
+                    /*CanonicalArgs=*/{},
+                    TST->getCanonicalTypeInternal());
+            }
+          }
         }
     }
 
