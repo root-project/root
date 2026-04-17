@@ -5,10 +5,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
-# 20 Apr 2023, https://github.com/unuran/unuran/releases/tag/unuran-1.11.0
+# 20 Apr 2023, https://github.com/unuran/unuran/releases/tag/unuran-1.11.0 but using preprocessed configure and make ROOTdist option within this repo and then uploading to LCG
 set(ROOT_UNURAN_VERSION 1.11.0)
-set(ROOT_UNURAN_URL "https://github.com/unuran/unuran/archive/refs/tags/unuran-${ROOT_UNURAN_VERSION}.tar.gz") # TODO Move to LCG
-set(ROOT_UNURAN_HASH "e46c15eff050150966988ec56969526b60ce0b97120a7821aa96703d0f175623")
+set(ROOT_UNURAN_URL "${lcgpackages}/unuran-${ROOT_UNURAN_VERSION}.tar.gz")
+set(ROOT_UNURAN_HASH "098793854c590b4c2c7e98bc48a45408875f48c5ad47650b5fabbd3e94dd8049")
 set(ROOT_UNURAN_PREFIX ${CMAKE_BINARY_DIR}/builtins/UNURAN-prefix)
 set(ROOT_UNURAN_LIBRARY ${ROOT_UNURAN_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}unuran${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(ROOT_UNURAN_PATCH_FILE_1 "${CMAKE_CURRENT_SOURCE_DIR}/0001-allow-compilation-from-CMake.patch")
