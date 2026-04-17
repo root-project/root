@@ -3874,49 +3874,34 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
    pp->OnPad(this);
 
-   TAttFill att = pp->GetAttFill();
-
-   Int_t style0 = -1111, style = att.GetFillStyle();
-   Bool_t draw_border = kFALSE, draw_fill = kFALSE;
-   if (option && *option == 's') {
-      style0 = style;
-      att.SetFillStyle(0);
-      pp->SetAttFill(att);
-      style = 0;
-      draw_border = kTRUE;
-   } else if (option && *option == 'l')
+   Style_t style = pp->GetAttFill().GetFillStyle();
+   Bool_t draw_border = kFALSE, draw_fill = kFALSE, skip_fill = kFALSE;
+   if (option && *option == 's')
+      skip_fill = draw_border = kTRUE;
+   else if (option && *option == 'l')
       draw_border = kTRUE;
 
    if (style >= 3100 && style < 4000) {
       Double_t xb[4] = {x1, x1, x2, x2};
       Double_t yb[4] = {y1, y2, y2, y1};
       PaintFillAreaHatches(4, xb, yb, style);
-   } else if (pp->GetPS()) {
-      draw_fill = kTRUE;
-      if (style == 0)
-         draw_border = kFALSE;
-   } else if ((style > 0) && (style < 1000)) {
+   } else if (style >= 0 && style < 1000) {
       draw_border = kTRUE;
-   } else if ((style >= 1000) && (style < 2000)) {
+   } else if (style >= 1000 && style < 2000) {
       draw_fill = kTRUE;
    } else if (style > 3000 && style < 3100) {
       draw_fill = style < 3026;
    } else if (style >= 4000 && style <= 4100) {
-      // transparency styles, supported now by all engines
+      // transparency styles, supported now by all painters
       draw_fill = style > 4000;
    } else if (style > 0)
       draw_border = kTRUE;
 
-   if (draw_fill)
+   if (draw_fill && !skip_fill)
       pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
 
    if (draw_border)
       pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-
-   if (style0 != -1111) {
-      att.SetFillStyle(style0);
-      pp->SetAttFill(att);
-   }
 
    Modified();
 }
