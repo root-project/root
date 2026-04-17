@@ -2053,6 +2053,7 @@ void TStreamerInfo::BuildOld()
 
             // Calculate the offset using the 'real' base class name (as opposed to the
             // '@@emulated' in the case of the emulation of an abstract base class.
+            // baseOffset already take alignment in consideration.
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
 
             // Deal with potential schema evolution (renaming) of the base class.
@@ -2117,15 +2118,24 @@ void TStreamerInfo::BuildOld()
                fNVirtualInfoLoc += infobase->fNVirtualInfoLoc;
             }
 
-
-            {
-               if (baseOffset < 0) {
-                  element->SetNewType(TVirtualStreamerInfo::kNoType);
+            if (baseOffset < 0) {
+               element->SetNewType(TVirtualStreamerInfo::kNoType);
+            } else {
+               auto align = baseclass->GetClassAlignment();
+               if (!ROOT::Internal::IsValidAlignment(align)) {
+                  // Print error only if this is meant to be the 'current'
+                  // class layout description.
+                  if (fClass->GetClassVersion() == fClassVersion) {
+                     Error("TStreamerInfo::BuildOld", "Cannot determine alignment for base class %s for element %s",
+                           baseclass->GetName(), GetName());
+                  }
+                  align = alignof(std::max_align_t);
                }
+               fAlignment = std::max(fAlignment, align);
             }
             element->SetOffset(baseOffset);
-            offset += baseclass->Size();
-            fAlignment = std::max(fAlignment, baseclass->GetClassAlignment());
+            // We might be treating the base classes out of memory order.
+            offset = std::max(offset, baseOffset + baseclass->Size());
 
             continue;
          } else {
@@ -2210,10 +2220,22 @@ void TStreamerInfo::BuildOld()
                element->SetNewType(TVirtualStreamerInfo::kNoType);
                continue;
             }
+
+            auto align = element->GetAlignment();
+            if (!ROOT::Internal::IsValidAlignment(align)) {
+               // Print error only if this is meant to be the 'current'
+               // class layout description.
+               if (fClass->GetClassVersion() == fClassVersion) {
+                  Error("TStreamerInfo::BuildOld", "Cannot determine alignment for base class %s for element %s",
+                        element->GetClassPointer()->GetName(), GetName());
+               }
+               align = alignof(std::max_align_t);
+            }
+            fAlignment = std::max(fAlignment, align);
+
             element->SetOffset(baseOffset);
-            offset += asize;
-            if (TClass *bcPtr = element->GetClassPointer())
-               fAlignment = std::max(fAlignment, bcPtr->GetClassAlignment());
+            // We might be treating the base classes out of memory order.
+            offset = std::max(offset, baseOffset + asize);
             element->Init(this);
             continue;
          } // if element is of type TStreamerBase or not.
