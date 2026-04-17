@@ -2736,6 +2736,13 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
                   if (!baseclass) return -1;
                   Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
                   if (subOffset == -2) return -2;
+                  auto align = baseclass->GetClassAlignment();
+                  if (ROOT::Internal::IsValidAlignment(align)) {
+                     offset = ROOT::Internal::AlignUp((size_t)offset, align);
+                  } else {
+                     Error("GetBaseClassOffsetRecurse", "Can not determine alignment for base class %s (got %zu)\n",
+                           baseclass->GetName(), align);
+                  }
                   if (subOffset != -1) return offset+subOffset;
                   offset += baseclass->Size();
                } else if (element->IsA() == TStreamerSTL::Class()) {
@@ -2744,6 +2751,13 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
                   if (!baseclass) return -1;
                   Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
                   if (subOffset == -2) return -2;
+                  auto align = baseclass->GetClassAlignment();
+                  if (ROOT::Internal::IsValidAlignment(align)) {
+                     offset = ROOT::Internal::AlignUp((size_t)offset, align);
+                  } else {
+                     Error("GetBaseClassOffsetRecurse", "Can not determine alignment for base class %s (got %zu)\n",
+                           baseclass->GetName(), align);
+                  }
                   if (subOffset != -1) return offset+subOffset;
                   offset += baseclass->Size();
 
