@@ -101,6 +101,8 @@ void TGLPadPainter::SetAttFill(const TAttFill &att)
 {
    TPadPainterBase::SetAttFill(att);
 
+   fGlFillAtt = GetAttFillInternal(kTRUE);
+
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
    if (fWinContext && gVirtualX)
       gVirtualX->SetAttFill(fWinContext, att);
@@ -437,7 +439,7 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
       return;
    }
 
-   if (IsGradientFill(GetAttFill().GetFillColor())) {
+   if (IsGradientFill(fGlFillAtt.GetFillColor())) {
       Double_t xs[] = {x1, x2, x2, x1};
       Double_t ys[] = {y1, y1, y2, y2};
       DrawPolygonWithGradient(4, xs, ys);
@@ -452,7 +454,7 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       glLineWidth(1.f);
    } else {
-      const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &GetAttFill());//Set filling parameters.
+      const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &fGlFillAtt);//Set filling parameters.
       glRectd(x1, y1, x2, y2);
    }
 }
@@ -474,15 +476,15 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   if (IsGradientFill(GetAttFill().GetFillColor()))
+   if (IsGradientFill(fGlFillAtt.GetFillColor()))
       return DrawPolygonWithGradient(n, x, y);
 
-   if (!GetAttFill().GetFillStyle()) {
+   if (fFullyTransparent) {
       fIsHollowArea = kTRUE;
       return DrawPolyLine(n, x, y);
    }
 
-   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &GetAttFill());
+   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &fGlFillAtt);
    DrawTesselation(n, x, y);
 }
 
@@ -494,7 +496,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 {
    if (fLocked) return;
 
-   if (!GetAttFill().GetFillStyle()) {
+   if (fFullyTransparent) {
       fIsHollowArea = kTRUE;
       return DrawPolyLine(n, x, y);
    }
@@ -506,7 +508,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
       fVs[i * 3 + 1] = y[i];
    }
 
-   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &GetAttFill());
+   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &fGlFillAtt);
 
    GLUtesselator *t = (GLUtesselator *)fTess.GetTess();
    gluBeginPolygon(t);
@@ -1082,7 +1084,7 @@ void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Do
    assert(x != nullptr && "DrawPolygonWithGradient, parameter 'x' is null");
    assert(y != nullptr && "DrawPolygonWithGradient, parameter 'y' is null");
 
-   auto grad = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetAttFill().GetFillColor()));
+   auto grad = dynamic_cast<TColorGradient *>(gROOT->GetColor(fGlFillAtt.GetFillColor()));
    assert(grad != nullptr && "DrawPolygonWithGradient, the current fill color is not a gradient fill");
 
    if (fLocked)
