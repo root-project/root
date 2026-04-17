@@ -141,7 +141,7 @@ public:
    ~TEmulatedCollectionProxy() override;
 
    // Virtual constructor
-   void* New() const override
+   void *New() const override
    {
       void *mem = ::operator new(sizeof(Cont_t));
       WithCont(mem, [](auto *c, std::size_t) { new (c) std::decay_t<decltype(*c)>(); });
@@ -149,51 +149,42 @@ public:
    }
 
    // Virtual in-place constructor
-   void* New(void* memory) const override
+   void *New(void *memory) const override
    {
       WithCont(memory, [](auto *c, std::size_t) { new (c) std::decay_t<decltype(*c)>(); });
       return memory;
    }
 
    // Virtual constructor
-   TClass::ObjectPtr NewObject() const override
-   {
-      return {New(), nullptr};
-   }
+   TClass::ObjectPtr NewObject() const override { return {New(), nullptr}; }
 
    // Virtual in-place constructor
-   TClass::ObjectPtr NewObject(void* memory) const override
-   {
-      return {New(memory), nullptr};
-   }
+   TClass::ObjectPtr NewObject(void *memory) const override { return {New(memory), nullptr}; }
 
    // Virtual array constructor
-   void* NewArray(Int_t nElements) const override
+   void *NewArray(Int_t nElements) const override
    {
       void *arr = ::operator new(nElements * sizeof(Cont_t));
       for (Int_t i = 0; i < nElements; ++i)
-         WithCont(static_cast<char*>(arr) + i * sizeof(Cont_t),
+         WithCont(static_cast<char *>(arr) + i * sizeof(Cont_t),
                   [](auto *c, std::size_t) { new (c) std::decay_t<decltype(*c)>(); });
       return arr;
    }
 
    // Virtual in-place array constructor
-   void* NewArray(Int_t nElements, void* memory) const override
+   void *NewArray(Int_t nElements, void *memory) const override
    {
       for (Int_t i = 0; i < nElements; ++i)
-         WithCont(static_cast<char*>(memory) + i * sizeof(Cont_t),
+         WithCont(static_cast<char *>(memory) + i * sizeof(Cont_t),
                   [](auto *c, std::size_t) { new (c) std::decay_t<decltype(*c)>(); });
       return memory;
    }
 
    // Virtual array constructor
-   TClass::ObjectPtr NewObjectArray(Int_t nElements) const override
-   {
-      return {NewArray(nElements), nullptr};
-   }
+   TClass::ObjectPtr NewObjectArray(Int_t nElements) const override { return {NewArray(nElements), nullptr}; }
 
    // Virtual in-place array constructor
-   TClass::ObjectPtr NewObjectArray(Int_t nElements, void* memory) const override
+   TClass::ObjectPtr NewObjectArray(Int_t nElements, void *memory) const override
    {
       return {NewArray(nElements, memory), nullptr};
    }

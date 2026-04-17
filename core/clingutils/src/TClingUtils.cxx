@@ -1987,7 +1987,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       rootflag = rootflag | TClassTable__kHasCustomStreamerMember;
    }
-   finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << "), alignof(" << csymbol << ") );" << "\n";
+   finalString << "isa_proxy, " << rootflag << "," << "\n"
+               << "                  sizeof(" << csymbol << "), alignof(" << csymbol << ") );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
       if (args.size()==0 && NeedDestructor(decl, interp))
@@ -2051,7 +2052,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
 
       finalString << "      static_assert(alignof(" << csymbol << "::value_type) <= 4096,\n";
-      finalString << "          \"Class with alignment strictly greater than 4096 are currently not supported in CollectionProxy. \"\n";
+      finalString << "          \"Class with alignment strictly greater than 4096 are currently not supported in "
+                     "CollectionProxy. \"\n";
       finalString << "          \"Please report this case to the developers\");\n";
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 

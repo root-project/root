@@ -1519,7 +1519,7 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
       return;
    }
    *begin_arena = vec->data();
-   *end_arena = vec->data() + vec->size();
+   *end_arena   = vec->data() + vec->size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1625,7 +1625,7 @@ TVirtualCollectionProxy::CreateIterators_t TGenCollectionProxy::GetFunctionCreat
    // TODO could we do better than SlowCreateIterators for RVec?
    if (fProperties & kIsEmulated)
       return fFunctionCreateIterators = TGenCollectionProxy__VectorCreateIterators;
-   else if (fSTL_type==ROOT::kSTLvector)
+   else if (fSTL_type == ROOT::kSTLvector)
       return fFunctionCreateIterators = TGenCollectionProxy__VectorCreateIterators;
    else if ( (fProperties & kIsAssociative) && read)
       return TGenCollectionProxy__StagingCreateIterators;

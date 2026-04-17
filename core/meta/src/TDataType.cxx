@@ -70,15 +70,16 @@ TDataType::TDataType(const char *typenam) : fInfo(nullptr), fProperty(kIsFundame
 ////////////////////////////////////////////////////////////////////////////////
 ///copy constructor
 
-TDataType::TDataType(const TDataType& dt) :
-  TDictionary(dt),
-  fInfo(gCling->TypedefInfo_FactoryCopy(dt.fInfo)),
-  fSize(dt.fSize),
-  fAlignOf(dt.fAlignOf),
-  fType(dt.fType),
-  fProperty(dt.fProperty),
-  fTrueName(dt.fTrueName),
-  fTypeNameIdx(dt.fTypeNameIdx), fTypeNameLen(dt.fTypeNameLen)
+TDataType::TDataType(const TDataType &dt)
+   : TDictionary(dt),
+     fInfo(gCling->TypedefInfo_FactoryCopy(dt.fInfo)),
+     fSize(dt.fSize),
+     fAlignOf(dt.fAlignOf),
+     fType(dt.fType),
+     fProperty(dt.fProperty),
+     fTrueName(dt.fTrueName),
+     fTypeNameIdx(dt.fTypeNameIdx),
+     fTypeNameLen(dt.fTypeNameLen)
 {
 }
 
@@ -387,7 +388,7 @@ void TDataType::SetType(const char *name)
    }
    if (!strcmp("char*",fName.Data())) {
       fType = kCharStar;
-      fAlignOf = alignof(char*);
+      fAlignOf = alignof(char *);
    }
    // kCounter =  6, kBits     = 15
 }

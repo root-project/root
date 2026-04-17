@@ -47,7 +47,7 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProx
    fProperties |= kIsEmulated;
 }
 
-TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name, Bool_t silent)
+TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char *cl_name, Bool_t silent)
    : TGenCollectionProxy(typeid(Cont_t), sizeof(Cont_t::iterator))
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
@@ -88,7 +88,10 @@ void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly) const
       const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
    }
    if (dtorOnly) {
-      WithCont(p, [](auto *c, std::size_t) { using Vec_t = std::decay_t<decltype(*c)>; c->~Vec_t(); });
+      WithCont(p, [](auto *c, std::size_t) {
+         using Vec_t = std::decay_t<decltype(*c)>;
+         c->~Vec_t();
+      });
    } else {
       WithCont(p, [](auto *c, std::size_t) { delete c; });
    }
@@ -265,7 +268,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
 {
    // Shrink the container
 
-   typedef std::string  String_t;
+   typedef std::string String_t;
    char* addr  = ((char*)fEnv->fStart) + fValDiff*left;
    size_t i;
 
@@ -361,7 +364,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
          }
    }
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
-      assert( fValDiff % alignmentElemSize == 0 );
+      assert(fValDiff % alignmentElemSize == 0);
       c->resize(left * fValDiff / alignmentElemSize);
       fEnv->fStart = left > 0 ? c->data() : nullptr;
    });
@@ -374,7 +377,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    size_t i;
    void *oldstart = fEnv->fStart;
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
-      assert( fValDiff % alignmentElemSize == 0 );
+      assert(fValDiff % alignmentElemSize == 0);
       c->resize(left * fValDiff / alignmentElemSize);
       fEnv->fStart = left > 0 ? c->data() : nullptr;
    });
