@@ -252,7 +252,7 @@ public:
          for ( unsigned int j = 0; j < 3; ++j) {
             int internalStatus = equals(pars[i][j], f->fFuncPars[i][j]);
             if (internalStatus != 0) {
-                fprintf(out, "i: %d, j: %d, e: %d, diff %g\n", i, j, internalStatus, TMath::Abs(pars[i][j] - f->fFuncPars[i][j]));
+                fprintf(out, "i: %d, j: %d, e: %d, diff %g\n", i, j, internalStatus, (pars[i][j] - f->fFuncPars[i][j]));
             }
             status += internalStatus;
          }
@@ -413,8 +413,8 @@ public:
 
       std::vector<TFitEditor::FuncParamData_t> pars(3);
       pars[0][0] = 1.0;  pars[0][1] = pars[0][2] = 1.0;
-      pars[1][0] = 1.0344223;  pars[1][1] = pars[1][2] = 0.0;
-      pars[2][0] = 1.9997376;  pars[2][1] = pars[2][2] = 0.0;
+      pars[1][0] = 1.0344223+0.239877;  pars[1][1] = pars[1][2] = 0.0;
+      pars[2][0] = 1.9997376+0.0332284;  pars[2][1] = pars[2][2] = 0.0;
 
       return CompareFuncPars(pars);
    }
