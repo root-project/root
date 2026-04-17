@@ -16,12 +16,12 @@
 
 #include "TPadPainterPS.h"
 #include "TVirtualPS.h"
-#include "TVirtualX.h"
 #include "TCanvas.h"
 #include "TPoint.h"
 #include "TError.h"
 #include "TImage.h"
 #include "TROOT.h"
+#include "TColor.h"
 #include "TMath.h"
 #include "TPad.h"
 
@@ -57,7 +57,9 @@ so actual value can be requested without asking of gVirtualPS instance
 
 void TPadPainterPS::SetOpacity(Int_t percent)
 {
-   fPS->SetFillStyle(4000 + percent);
+   TAttFill att = GetAttFill();
+   att.SetFillStyle(4000 + percent);
+   SetAttFill(att);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +69,9 @@ void TPadPainterPS::SetAttFill(const TAttFill &att)
 {
    TPadPainterBase::SetAttFill(att);
 
-   fPS->SetFillColor(att.GetFillColor());
-   fPS->SetFillStyle(att.GetFillStyle());
+   auto fill = GetAttFillInternal(kTRUE);
+   fPS->SetFillColor(fill.GetFillColor());
+   fPS->SetFillStyle(fill.GetFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +216,8 @@ void TPadPainterPS::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
       style0 = fPS->GetFillStyle();
       if (style0 > 0)
          fPS->SetFillStyle(0);
-   }
+   } else if (fFullyTransparent)
+      return;
 
    fPS->DrawBox(x1, y1, x2, y2);
 
@@ -231,7 +235,8 @@ void TPadPainterPS::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double
       return;
    }
 
-   fPS->DrawPS(-nPoints, const_cast<Double_t *>(xs), const_cast<Double_t *>(ys));
+   if (!fFullyTransparent || (fPS->GetLineWidth() > 0))
+      fPS->DrawPS(-nPoints, const_cast<Double_t *>(xs), const_cast<Double_t *>(ys));
 }
 
 
@@ -245,7 +250,8 @@ void TPadPainterPS::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t
       return;
    }
 
-   fPS->DrawPS(-nPoints, const_cast<Float_t *>(xs), const_cast<Float_t *>(ys));
+   if (!fFullyTransparent || (fPS->GetLineWidth() > 0))
+      fPS->DrawPS(-nPoints, const_cast<Float_t *>(xs), const_cast<Float_t *>(ys));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
