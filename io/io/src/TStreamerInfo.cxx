@@ -5416,6 +5416,12 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
    } // iter over elements
 
    if (!dtorOnly) {
+      // Note: We rely on fClass->GetClassAlignment() being the same than we had
+      // on construction time.
+      // However it technically can change but there is no much we can sensibly do to detect it. eg. "allocate object,
+      // unload library, reload library, destruct object" (but in this case the 'unload' library is meant to/should also
+      // destruct the object (unload transaction) but this is not always possible) or "allocate emulated object, load
+      // library, destruct object".
       assert(ROOT::Internal::IsValidAlignment(fClass->GetClassAlignment()));
       ::operator delete[](p, std::align_val_t(fClass->GetClassAlignment()));
    }
