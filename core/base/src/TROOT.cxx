@@ -783,6 +783,40 @@ Int_t gDebug;
 
 TROOT::TROOT() : TDirectory() {}
 
+namespace {
+
+void WarnIfInconsistentRootSys()
+{
+   namespace fs = std::filesystem;
+
+   const char *envRootSys = std::getenv("ROOTSYS");
+   if (!envRootSys) {
+      return;
+   }
+   bool isConsistent = false;
+   // Should never throw because it's a valid path
+   fs::path detected = fs::canonical(TROOT::GetRootSys().Data());
+   try {
+      fs::path fromEnv = fs::canonical(envRootSys);
+      if (detected == fromEnv) {
+         isConsistent = true;
+      }
+   } catch (const fs::filesystem_error &) {
+      // Happens if the path in ROOTSYS fails to canonicalize, e.g. because the
+      // directory doesn't exist. In that case, we also print the warning.
+   }
+   if (isConsistent)
+      return;
+   Warning("TROOT",
+           "ROOTSYS is set but inconsistent with detected ROOT installation:\n"
+           "   ROOTSYS=%s\n"
+           "   Detected=%s\n"
+           "ROOT will use the detected installation.",
+           envRootSys, detected.string().c_str());
+}
+
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the ROOT system. The creation of the TROOT object initializes
 /// the ROOT system. It must be the first ROOT related action that is
@@ -838,6 +872,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
    GetTutorialDir();
    GetIconPath();
    GetTTFFontDir();
+
+   // Warn if ROOTSYS is in the environment, but it's inconsistent with what
+   // TROOT has figured out.
+   WarnIfInconsistentRootSys();
 
    gRootDir = GetRootSys().Data();
 
