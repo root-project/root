@@ -24,8 +24,7 @@ endif()
 ExternalProject_Add(
   BUILTIN_NLOHMANN
   PREFIX ${ROOT_NLOHMANN_PREFIX}
-  # URL ${lcgpackages}/nlohmann-${ROOT_NLOHMANN_VERSION}.tgz
-  URL https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz # TODO move to LCG
+  URL ${lcgpackages}/json-${ROOT_NLOHMANN_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_NLOHMANN_HASH}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
