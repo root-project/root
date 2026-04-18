@@ -873,7 +873,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          std::cout << "\t" << i << "  " << nodesOrder[i] << " parsing operator " << op_type << std::endl;
       }
 
-      std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder, nodesChildren[i]);
+      std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder, nodesChildren[nodesOrder[i]]);
       if (!op) {
          if (verbose) {
             std::cout << "\t\tskipping operator since it is fused with previous one" << std::endl;
