@@ -29,7 +29,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBJPEG
     PREFIX ${ROOT_LIBJPEG_PREFIX}
-    URL https://root.cern/download/libjpeg-turbo-${ROOT_LIBJPEG_VERSION}.tar.gz
+    URL ${lcgpackages}/libjpeg-turbo-${ROOT_LIBJPEG_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBJPEG_HASH}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
