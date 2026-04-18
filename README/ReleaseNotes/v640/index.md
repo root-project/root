@@ -55,6 +55,10 @@ The following people have contributed to this new version:
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method are deprecated and will be removed in ROOT 6.42.
   We kindly ask users to write their own ROOT-based plotting code, possibly based on the source code of the deprecated **HybridPlot** class, as pre-existing plot helpers are usually failing to be flexible enough for large-scale adoption.
 * The `TGrid*` family of abstract classes provided the basis for accessing GRID services from ROOT. All the concrete plugins (AliEn, glite, etc.) were removed years ago. These facilities should now be unused. The classes will be removed in ROOT 6.42.
+* The `TFTP`, `TNetFile`, `TNetFileStager`, and `TNetSystem` classes are deprecated and will be removed in ROOT 6.42. These classes rely on **rootd**, which was removed in release 6.16.
+* The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are deprecated and will be remove in ROOT 6.42.
+  The security assumtions in the current socket authentication implementation is not up to date anymore.
+  Secure communication should be provided by standard means, such as SSL sockets or SSH tunneling.
 
 ## Removals
 
