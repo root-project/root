@@ -32,6 +32,7 @@ TConfidenceLevel.
 #include "RooDataHist.h"
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h" // for RooFit::Extended()
+#include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooAbsData.h"
 
@@ -115,7 +116,7 @@ double HybridResult::NullPValue() const
    if (fComputationsNulDoneFlag==false) {
       int nToys = fTestStat_b.size();
       if (nToys==0) {
-         std::cout << "Error: no toy data present. Returning -1.\n";
+         coutE(Eval) << "Error: no toy data present. Returning -1.\n";
          return -1;
       }
 
@@ -128,7 +129,7 @@ double HybridResult::NullPValue() const
      if ( fTestStat_b[iToy] <= fTestStat_data ) ++larger_than_measured;
       }
 
-      if (larger_than_measured==0) std::cout << "Warning: CLb = 0 ... maybe more toys are needed!\n";
+      if (larger_than_measured==0) coutW(Eval) << "Warning: CLb = 0 ... maybe more toys are needed!\n";
 
       fComputationsNulDoneFlag = true;
       fNullPValue = 1-larger_than_measured/nToys;
@@ -145,7 +146,7 @@ double HybridResult::AlternatePValue() const
    if (fComputationsAltDoneFlag==false) {
       int nToys = fTestStat_b.size();
       if (nToys==0) {
-         std::cout << "Error: no toy data present. Returning -1.\n";
+         coutE(Eval) << "Error: no toy data present. Returning -1.\n";
          return -1;
       }
 
@@ -158,7 +159,7 @@ double HybridResult::AlternatePValue() const
      if ( fTestStat_sb[iToy] <= fTestStat_data ) ++larger_than_measured;
       }
 
-      if (larger_than_measured==0) std::cout << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
+      if (larger_than_measured==0) coutW(Eval) << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
 
       fComputationsAltDoneFlag = true;
       fAlternatePValue = larger_than_measured/nToys;

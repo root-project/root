@@ -112,14 +112,14 @@ bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
   // Method to determine if a parameter point is in the interval
   if( !this->CheckParameters(parameterPoint) ) {
-    std::cout << "parameters don't match" << std::endl;
+    coutE(InputArguments) << "parameters don't match" << std::endl;
     RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false;
   }
 
   // make sure likelihood ratio is set
   if(!fLikelihoodRatio) {
-    std::cout << "likelihood ratio not set" << std::endl;
+    coutE(Eval) << "likelihood ratio not set" << std::endl;
     RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false;
   }
@@ -132,7 +132,7 @@ bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
 
   // evaluate likelihood ratio, see if it's bigger than threshold
   if (fLikelihoodRatio->getVal()<0){
-    std::cout << "The likelihood ratio is < 0, indicates a bad minimum or numerical precision problems.  Will return true" << std::endl;
+    coutW(Eval) << "The likelihood ratio is < 0, indicates a bad minimum or numerical precision problems.  Will return true" << std::endl;
     RooMsgService::instance().setGlobalKillBelow(msglevel);
     return true;
   }
@@ -165,11 +165,11 @@ RooArgSet* LikelihoodInterval::GetParameters() const
 bool LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
   if (parameterPoint.size() != fParameters.size() ) {
-    std::cout << "size is wrong, parameters don't match" << std::endl;
+    coutE(InputArguments) << "size is wrong, parameters don't match" << std::endl;
     return false;
   }
   if ( ! parameterPoint.equals( fParameters ) ) {
-    std::cout << "size is ok, but parameters don't match" << std::endl;
+    coutE(InputArguments) << "size is ok, but parameters don't match" << std::endl;
     return false;
   }
   return true;

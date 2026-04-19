@@ -33,6 +33,7 @@ store the interval.
 
 #include "RooDataSet.h"
 #include "RooDataHist.h"
+#include "RooMsgService.h"
 
 #include "RooStats/RooStatsUtils.h"
 
@@ -77,7 +78,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& 
 ////////////////////////////////////////////////////////////////////////////////
 
 double ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, double cl, double leftside) {
-  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
+  if(cl>0 || leftside > 0) coutI(Eval) << "using default cl, leftside for now" << std::endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetLowerLimit() : TMath::QuietNaN();
 }
@@ -85,7 +86,7 @@ double ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, double 
 ////////////////////////////////////////////////////////////////////////////////
 
 double ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, double cl, double leftside) {
-  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
+  if(cl>0 || leftside > 0) coutI(Eval) << "using default cl, leftside for now" << std::endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetUpperLimit() : TMath::QuietNaN();
 }
@@ -102,7 +103,7 @@ vector<double> ConfidenceBelt::ConfidenceLevels() const {
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsIndex,
                 double lower, double upper,
                 double cl, double leftside){
-  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
+  if(cl>0 || leftside > 0) coutI(Eval) << "using default cl, leftside for now" << std::endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
   RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
@@ -110,14 +111,14 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
   //  std::cout << "add: " << tree << " " << hist << std::endl;
 
   if( !this->CheckParameters(parameterPoint) )
-    std::cout << "problem with parameters" << std::endl;
+    coutE(InputArguments) << "problem with parameters" << std::endl;
 
   Int_t luIndex = fSamplingSummaryLookup.GetLookupIndex(cl, leftside);
   //  std::cout << "lookup index = " << luIndex << std::endl;
   if(luIndex <0 ) {
     fSamplingSummaryLookup.Add(cl,leftside);
     luIndex = fSamplingSummaryLookup.GetLookupIndex(cl, leftside);
-    std::cout << "lookup index = " << luIndex << std::endl;
+    coutI(Eval) << "lookup index = " << luIndex << std::endl;
   }
   AcceptanceRegion* thisRegion = new AcceptanceRegion(luIndex, lower, upper);
 
@@ -159,13 +160,13 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
 
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRegion region,
                 double cl, double leftside){
-  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
+  if(cl>0 || leftside > 0) coutI(Eval) << "using default cl, leftside for now" << std::endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
   RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
 
   if( !this->CheckParameters(parameterPoint) )
-    std::cout << "problem with parameters" << std::endl;
+    coutE(InputArguments) << "problem with parameters" << std::endl;
 
 
   if( hist ) {
@@ -198,13 +199,13 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRe
 
 AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, double cl, double leftside)
 {
-  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
+  if(cl>0 || leftside > 0) coutI(Eval) << "using default cl, leftside for now" << std::endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
   RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
 
   if( !this->CheckParameters(parameterPoint) ){
-    std::cout << "problem with parameters" << std::endl;
+    coutE(InputArguments) << "problem with parameters" << std::endl;
     return nullptr;
   }
 
@@ -244,7 +245,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
     return &(fSamplingSummaries[index].GetAcceptanceRegion());
   }
   else {
-      std::cout << "dataset is not initialized properly" << std::endl;
+      coutE(InputArguments) << "dataset is not initialized properly" << std::endl;
   }
 
   return nullptr;
@@ -264,11 +265,11 @@ RooArgSet* ConfidenceBelt::GetParameters() const
 bool ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
 {
    if (parameterPoint.size() != fParameterPoints->get()->size() ) {
-      std::cout << "size is wrong, parameters don't match" << std::endl;
+      coutE(InputArguments) << "size is wrong, parameters don't match" << std::endl;
       return false;
    }
    if ( ! parameterPoint.equals( *(fParameterPoints->get() ) ) ) {
-      std::cout << "size is ok, but parameters don't match" << std::endl;
+      coutE(InputArguments) << "size is ok, but parameters don't match" << std::endl;
       return false;
    }
    return true;
