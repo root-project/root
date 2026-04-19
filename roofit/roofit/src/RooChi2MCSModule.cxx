@@ -91,8 +91,11 @@ RooDataSet *RooChi2MCSModule::finalizeRun()
 ////////////////////////////////////////////////////////////////////////////////
 /// Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
 
-bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
+bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
 {
+  if(!fitOk)
+     return true;
+
   RooAbsData* data = genSample() ;
   std::unique_ptr<RooDataHist> binnedDataOwned;
   RooDataHist* binnedData = dynamic_cast<RooDataHist*>(data) ;

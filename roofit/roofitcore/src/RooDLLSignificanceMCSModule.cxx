@@ -145,8 +145,11 @@ RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 /// null hypothesis value and rerun fit Save difference in likelihood
 /// and associated Gaussian significance in auxiliary dataset
 
-bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
+bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
 {
+  if(!fitOk)
+     return true;
+
   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
   par->setVal(_nullValue) ;
   par->setConstant(true) ;

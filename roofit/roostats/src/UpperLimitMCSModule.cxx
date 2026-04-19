@@ -131,8 +131,23 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// bool UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/)
-// {
+bool UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
+{
+   if (!fitOk)
+      return true;
+   _data->add(RooArgSet(*_ul));
+   coutI(Eval)<<"UL:"<<_ul->getVal()<<std::endl;
+//   if (_ul->getVal()<1){
+
+//   RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
+//   TCanvas c1;
+//   plotpll.Draw();
+//   c1.Print("test.ps");
+//   std::cout<<" UL<1 whats going on here?"<<std::endl;
+//   abort();
+//   }
+
+
 //   // Save likelihood from nominal fit, fix chosen parameter to its
 //   // null hypothesis value and rerun fit Save difference in likelihood
 //   // and associated Gaussian significance in auxiliary dataset
@@ -154,9 +169,8 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 //   _data->add(RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
 
 //   delete frnull ;
-//   return true ;
-
-// }
+   return true ;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -192,18 +206,6 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
 
   _ul->setVal((static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
-
-  _data->add(RooArgSet(*_ul));
-  coutI(Eval)<<"UL:"<<_ul->getVal()<<std::endl;
-//   if (_ul->getVal()<1){
-
-//   RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
-//   TCanvas c1;
-//   plotpll.Draw();
-//   c1.Print("test.ps");
-//   std::cout<<" UL<1 whats going on here?"<<std::endl;
-//   abort();
-//   }
 
   delete pllint;
 

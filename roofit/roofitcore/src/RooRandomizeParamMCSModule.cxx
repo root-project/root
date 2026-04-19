@@ -398,12 +398,20 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
     }
   }
 
-  // Store generator values for all modified parameters
-  _data->add(_genParSet) ;
+  // Store generator values later in processAfterFit if fit succeeded.
 
   return true ;
 }
 
+
+bool RooRandomizeParamMCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
+{
+   if (!fitOk)
+      return true;
+   // Store generator values for all modified parameters
+   _data->add(_genParSet);
+   return true;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -65,10 +65,11 @@ public:
     return true ;
   }
 
-  /// Method called after fit has been performed.
-  virtual bool processAfterFit(Int_t /*sampleNum*/) {
-    return true ;
-  }
+  /// Method called after fit has been performed. It's crucial that this is
+  /// implemented, because it's the responsability of this method to ensure
+  /// that this MC study module will not have added an element to its internal
+  /// RooDataSet if the fit has failed.
+  virtual bool processAfterFit(Int_t sampleNum, bool fitOk) = 0;
 
 protected:
 
