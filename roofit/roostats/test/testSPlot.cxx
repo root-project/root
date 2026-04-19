@@ -32,3 +32,27 @@ TEST(SPlot, UseWithRooLinearVar) {
   EXPECT_EQ(splot.GetNumSWeightVars(), 2);
   EXPECT_NE(data->get(0)->find("c1_sw"), nullptr);
 }
+
+// Regression test for https://github.com/root-project/root/issues/11768:
+// passing a discriminating variable of the fit in the yields list must
+// produce an error, since the resulting sWeights would be invalid.
+TEST(SPlot, ErrorOnDiscriminatingVariableAsYield)
+{
+   RooRealVar x("x", "observable", 0, 0, 20);
+   RooRealVar m("m", "mean", 5., -10, 10);
+   RooRealVar s("s", "sigma", 2., 0.1, 10);
+   RooGaussian gauss("gauss", "gauss", x, m, s);
+
+   RooRealVar a("a", "exp", -0.2, -10., 0.);
+   RooExponential ex("ex", "ex", x, a);
+
+   RooRealVar nsig("nsig", "nsig", 500, 0, 1000);
+   RooRealVar nbkg("nbkg", "nbkg", 500, 0, 1000);
+   RooAddPdf sum("sum", "sum", RooArgSet(gauss, ex), RooArgSet(nsig, nbkg));
+
+   std::unique_ptr<RooDataSet> data{sum.generate(x, 1000)};
+
+   // "x" is a discriminating variable of the fit, so using it in the yields
+   // list is a user error that must throw.
+   EXPECT_THROW(RooStats::SPlot("splot", "splot", *data, &sum, RooArgList(nsig, x)), std::invalid_argument);
+}
