@@ -37,6 +37,11 @@ public:
              const RooCmdArg& arg3={}, const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
              const RooCmdArg& arg6={}, const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
+  RooMCStudy(const RooMCStudy&) = delete;
+  RooMCStudy(RooMCStudy &&) = delete;
+  RooMCStudy& operator=(const RooMCStudy&) = delete;
+  RooMCStudy& operator=(RooMCStudy &&) = delete;
+
   ~RooMCStudy() override ;
 
   // Method to add study modules
@@ -144,10 +149,6 @@ protected:
   RooFit::OwningPtr<RooFitResult> refit(RooAbsData* genSample=nullptr) ;
   void resetFitParams() ;
   void RecursiveRemove(TObject *obj) override;
-
-private:
-
-  RooMCStudy(const RooMCStudy&) ;
 
   ClassDefOverride(RooMCStudy,0) // A general purpose toy Monte Carlo study manager
 } ;
