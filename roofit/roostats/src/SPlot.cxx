@@ -400,10 +400,27 @@ Int_t SPlot::GetNumSWeightVars() const
 /// and will be considered parameters, not observables.
 /// \param[in] includeWeights Include weights of the input data in calculation of s weights.
 /// \param[in] arg5,arg6,arg7,arg8 Optional additional arguments for the fitting step.
-void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
-         const RooArgSet &projDeps, bool includeWeights,
-         const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
+void SPlot::AddSWeight(RooAbsPdf *pdf, const RooArgList &yieldsTmp, const RooArgSet &projDeps, bool includeWeights,
+                       const RooCmdArg &arg5, const RooCmdArg &arg6, const RooCmdArg &arg7, const RooCmdArg &arg8)
 {
+   // Check that no yield variable is also a discriminating variable used in the fit.
+   // The sPlot formalism requires that the yield parameters are independent of the
+   // discriminating observables; otherwise, the resulting sWeights are mathematically
+   // invalid. See https://github.com/root-project/root/issues/11768.
+   std::unique_ptr<RooArgSet> discrimVars{pdf->getObservables(fSData)};
+   for (auto const *yield : yieldsTmp) {
+      if (discrimVars->find(yield->GetName()) || yield->dependsOn(*discrimVars)) {
+         coutE(InputArguments) << "SPlot::AddSWeight(" << GetName() << ") the yield variable \"" << yield->GetName()
+                               << "\" is also a discriminating variable used in the fit, "
+                               << "or depends on one. The sPlot formalism requires the yield parameters to be "
+                               << "independent of the discriminating observables. The resulting sWeights would "
+                               << "be invalid. Please remove this variable from either the fit observables or "
+                               << "from the list of yields." << std::endl;
+         throw std::invalid_argument(Form("SPlot::AddSWeight(%s) yield variable \"%s\" is also used "
+                                          "as a discriminating variable in the fit.",
+                                          GetName(), yield->GetName()));
+      }
+   }
 
   // Find Parameters in the PDF to be considered fixed when calculating the SWeights
   // and be sure to NOT include the yields in that list
