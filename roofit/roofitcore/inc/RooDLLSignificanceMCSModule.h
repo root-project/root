@@ -30,10 +30,10 @@ public:
 
   bool initializeInstance() override ;
 
-  bool initializeRun(Int_t /*numSamples*/) override ;
+  bool initializeRun(Int_t numSamples) override ;
   RooDataSet* finalizeRun() override ;
 
-  bool processAfterFit(Int_t /*sampleNum*/) override  ;
+  bool processAfterFit(Int_t sampleNum, bool fitOk) override  ;
 
 private:
 
