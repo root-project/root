@@ -579,7 +579,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
 //#define DO_DEBUG
 #ifdef DO_DEBUG
-   std::cout << "using graph for search " << lowSearch << " min " << axmin << " max " << axmax << std::endl;
+   ccoutD(Eval) << "using graph for search " << lowSearch << " min " << axmin << " max " << axmax << std::endl;
 #endif
 
 
@@ -618,7 +618,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    if (axmin >= axmax ) {
 
 #ifdef DO_DEBUG
-      std::cout << "No range given - check if extrapolation is needed " << std::endl;
+      ccoutD(Eval) << "No range given - check if extrapolation is needed " << std::endl;
 #endif
 
       xmin = graph.GetX()[0];
@@ -649,8 +649,8 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    brf.SetFunction(f1d,xmin,xmax);
    brf.SetNpx(std::max(graph.GetN()*2,100) );
 #ifdef DO_DEBUG
-   std::cout << "findind root for " << xmin << " ,  "<< xmax << "f(x) : " << graph.Eval(xmin) << " , " << graph.Eval(0.5*(xmax+xmin))
-             << " , " << graph.Eval(xmax) << " target " << y0 << std::endl;
+   ccoutD(Eval) << "findind root for " << xmin << " ,  "<< xmax << "f(x) : " << graph.Eval(xmin) << " , " << graph.Eval(0.5*(xmax+xmin))
+                << " , " << graph.Eval(xmax) << " target " << y0 << std::endl;
 #endif
 
    bool ret = brf.Solve(100, 1.E-16, 1.E-6);
@@ -664,10 +664,10 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    double limit =  brf.Root();
 
 #ifdef DO_DEBUG
-   if (lowSearch) std::cout << "lower limit search : ";
-   else std::cout << "Upper limit search :  ";
-   std::cout << "interpolation done between " << xmin << "  and " << xmax
-             << "\n Found limit using RootFinder is " << limit << std::endl;
+   if (lowSearch) ccoutD(Eval) << "lower limit search : ";
+   else ccoutD(Eval) << "Upper limit search :  ";
+   ccoutD(Eval) << "interpolation done between " << xmin << "  and " << xmax
+                << "\n Found limit using RootFinder is " << limit << std::endl;
 
    TString fname = "graph_upper.root";
    if (lowSearch) fname = "graph_lower.root";
@@ -682,7 +682,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    if (axmin >= axmax) {
       int index = TMath::BinarySearch(n, graph.GetX(), limit);
 #ifdef DO_DEBUG
-   std::cout << "do new interpolation dividing from " << index << "  and " << y[index] << std::endl;
+   ccoutD(Eval) << "do new interpolation dividing from " << index << "  and " << y[index] << std::endl;
 #endif
 
       if (lowSearch && index >= 1 && (y[0] - y0) * ( y[index]- y0) < 0) {
@@ -751,7 +751,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       double xwithymax = graph.GetX()[iymax];
 
 #ifdef DO_DEBUG
-      std::cout << " max of y " << iymax << "  " << xwithymax << "  " << ymax << " target is " << target << std::endl;
+      ccoutD(Eval) << " max of y " << iymax << "  " << xwithymax << "  " << ymax << " target is " << target << std::endl;
 #endif
       // look if maximum is above/below target
       if (ymax > target) {
@@ -794,7 +794,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       }
 
 #ifdef DO_DEBUG
-      std::cout << " found xmin, xmax  = " << xmin << "  " << xmax << " for search " << lowSearch << std::endl;
+      ccoutD(Eval) << " found xmin, xmax  = " << xmin << "  " << xmax << " for search " << lowSearch << std::endl;
 #endif
 
       // now come here if I have already found a lower/upper limit
@@ -819,7 +819,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    }
 
 #ifdef DO_DEBUG
-   std::cout << "finding " << lowSearch << " limit between " << xmin << "  " << xmax << std::endl;
+   ccoutD(Eval) << "finding " << lowSearch << " limit between " << xmin << "  " << xmax << std::endl;
 #endif
 
    // compute now the limit using the TGraph interpolations routine
@@ -834,7 +834,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       << "the computed " << limitType << " limit is " << limit << " +/- " << error << std::endl;
 
 #ifdef DO_DEBUG
-   std::cout << "Found limit is " << limit << " +/- " << error << std::endl;
+   ccoutD(Eval) << "Found limit is " << limit << " +/- " << error << std::endl;
 #endif
 
 
@@ -914,7 +914,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
   int index1 = TMath::BinarySearch( n, &xsorted[0], xtarget);
 
 #ifdef DO_DEBUG
-  std::cout << "finding closest point to " << xtarget << " is " << index1 << "  " << indx[index1] << std::endl;
+  ccoutD(Eval) << "finding closest point to " << xtarget << " is " << index1 << "  " << indx[index1] << std::endl;
 #endif
 
    // case xtarget is outside the range (before or afterwards)
@@ -988,8 +988,8 @@ double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower
   TString type = (!lower) ? "upper" : "lower";
 
 #ifdef DO_DEBUG
-  std::cout << "calculate estimate error " << type << " between " << xmin << " and " << xmax << std::endl;
-  std::cout << "computed limit is " << ( (lower) ? fLowerLimit : fUpperLimit ) << std::endl;
+  ccoutD(Eval) << "calculate estimate error " << type << " between " << xmin << " and " << xmax << std::endl;
+  ccoutD(Eval) << "computed limit is " << ( (lower) ? fLowerLimit : fUpperLimit ) << std::endl;
 #endif
 
     // make a TGraph Errors with the sorted points
@@ -1042,7 +1042,7 @@ double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower
 
 #ifdef DO_DEBUG
   TCanvas * c1 = new TCanvas();
-  std::cout << "fitting for limit " << type << "between " << minX << " , " << maxX << " points considered " << graph.GetN() <<  std::endl;
+  ccoutD(Eval) << "fitting for limit " << type << "between " << minX << " , " << maxX << " points considered " << graph.GetN() <<  std::endl;
   int fitstat = graph.Fit(&fct," EX0");
   graph.SetMarkerStyle(20);
   graph.Draw("AP");
@@ -1073,7 +1073,7 @@ double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower
   }
 
 #ifdef DO_DEBUG
-  std::cout << "closes point to the limit is " << index << "  " << GetXValue(index) << " and has error " << GetYError(index) << std::endl;
+  ccoutD(Eval) << "closes point to the limit is " << index << "  " << GetXValue(index) << " and has error " << GetYError(index) << std::endl;
 #endif
 
   return theError;

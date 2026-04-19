@@ -181,18 +181,18 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-         std::cout << "    ----> Doing a re-scan first" << std::endl;
+         oocoutW(nullptr,Minimization) << "    ----> Doing a re-scan first" << std::endl;
          minim.minimize(minimType,"Scan");
          if (tries == 2) {
             if (strategy == 0 ) {
-               std::cout << "    ----> trying with strategy = 1" << std::endl;
+               oocoutW(nullptr,Minimization) << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            std::cout << "    ----> trying with improve" << std::endl;
+            oocoutW(nullptr,Minimization) << "    ----> trying with improve" << std::endl;
             minimType = "Minuit";
             minimAlgo = "migradimproved";
          }

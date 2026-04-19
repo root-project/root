@@ -499,7 +499,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          int ncp = fInterval->GetContourPoints(*myparam, *myparamY, gr->GetX(), gr->GetY(),nPoints);
 
          if (int(ncp) < nPoints) {
-            std::cout << "Warning - Less points calculated in contours np = " << ncp << " / " << nPoints << std::endl;
+            coutW(Eval) << "Warning - Less points calculated in contours np = " << ncp << " / " << nPoints << std::endl;
             for (int i = ncp; i < nPoints; ++i) gr->RemovePoint(i);
          }
          // add last point to same as first one to close the contour

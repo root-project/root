@@ -559,7 +559,7 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
       hcResult->Append(more.get());
       clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
       clsMidErr = (fUseCLs ? hcResult->CLsError() : hcResult->CLsplusbError());
-      if (fVerbose) std::cout << (fUseCLs ? "\tCLs = " : "\tCLsplusb = ") << clsMid << " +/- " << clsMidErr << std::endl;
+      if (fVerbose) oocoutP(nullptr,Eval) << (fUseCLs ? "\tCLs = " : "\tCLsplusb = ") << clsMid << " +/- " << clsMidErr << std::endl;
    }
 
    }
@@ -792,7 +792,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
   fLimitPlot = std::make_unique<TGraphErrors>();
 
-  if (fVerbose > 0) std::cout << "Search for upper limit to the limit" << std::endl;
+  if (fVerbose > 0) oocoutI(nullptr,Eval) << "Search for upper limit to the limit" << std::endl;
   for (int tries = 0; tries < 6; ++tries) {
      if (! RunOnePoint(rMax) ) {
         oocoutE(nullptr,Eval) << "HypoTestInverter::RunLimit - Hypotest failed at upper limit of scan range: " << rMax << std::endl;
@@ -890,7 +890,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
      clsMid = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
 
      if (clsMid.second == -1) {
-        std::cerr << "Hypotest failed" << std::endl;
+        oocoutE(nullptr,Eval) << "Hypotest failed" << std::endl;
         return false;
      }
 
@@ -902,7 +902,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
          rMin = limit; clsMin = clsMid;
        }
      } else {
-       if (fVerbose > 0) std::cout << "Trying to move the interval edges closer" << std::endl;
+       if (fVerbose > 0) oocoutI(nullptr,Eval) << "Trying to move the interval edges closer" << std::endl;
        double rMinBound = rMin;
        double rMaxBound = rMax;
        // try to reduce the size of the interval
@@ -934,7 +934,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
   if (!done) { // didn't reach accuracy with scan, now do fit
       if (fVerbose) {
          oocoutI(nullptr,Eval) << "HypoTestInverter::RunLimit - Before fit   --- \n";
-         std::cout << "Limit: " << r->GetName() << " < " << limit << " +/- " << limitErr << " [" << rMin << ", " << rMax << "]\n";
+         oocoutI(nullptr,Eval) << "Limit: " << r->GetName() << " < " << limit << " +/- " << limitErr << " [" << rMin << ", " << rMax << "]\n";
       }
 
       expoFit.FixParameter(0,clsTarget);
@@ -1203,7 +1203,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
                                        << nToys << std::endl;
 
 
-      std::cout << "\n\nshnapshot of s+b model \n";
+      oocoutI(nullptr,Eval) << "\n\nsnapshot of s+b model \n";
       sbModel->GetSnapshot()->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset
@@ -1250,7 +1250,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       hL->Fill(r->LowerLimit() );
 
 
-      std::cout << "The computed upper limit for toy #" << itoy << " is " << value << std::endl;
+      oocoutI(nullptr,Eval) << "The computed upper limit for toy #" << itoy << " is " << value << std::endl;
 
       // write every 10 toys
       if (itoy%10 == 0 || itoy == nToys-1) {

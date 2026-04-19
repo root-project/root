@@ -18,6 +18,7 @@ http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 #include <map>
 
 #include "RooStats/HybridPlot.h"
+#include "RooMsgService.h"
 #include "TStyle.h"
 #include "TF1.h"
 #include "TAxis.h"
@@ -262,7 +263,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
 
    delete gauss;
 
-   std::cout << "Center is 1st pass = " << mean << std::endl;
+   coutI(Eval) << "Center is 1st pass = " << mean << std::endl;
 
    double skewness = histo->GetSkewness();
 
@@ -300,7 +301,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
 double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    if (percentage>1){
-      std::cerr << "Percentage greater or equal to 1!\n";
+      coutE(InputArguments) << "Percentage greater or equal to 1!\n";
       return nullptr;
    }
 

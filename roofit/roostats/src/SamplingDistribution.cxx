@@ -380,7 +380,7 @@ double SamplingDistribution::InverseCDF(double pvalue,
     return fSamplingDist[nominal+1];
   }
   else{
-    std::cout << "problem in SamplingDistribution::InverseCDF" << std::endl;
+    coutE(Eval) << "problem in SamplingDistribution::InverseCDF" << std::endl;
   }
   inverseWithVariation = RooNumber::infinity();
   return RooNumber::infinity();

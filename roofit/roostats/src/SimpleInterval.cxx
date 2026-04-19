@@ -27,6 +27,7 @@ In addition, you can ask it for the upper- or lower-bound.
 
 #include "RooStats/SimpleInterval.h"
 #include "RooAbsReal.h"
+#include "RooMsgService.h"
 #include "RooRealVar.h"
 #include <string>
 
@@ -121,11 +122,11 @@ RooArgSet* SimpleInterval::GetParameters() const
 bool SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
    if (parameterPoint.size() != fParameters.size() ) {
-      std::cout << "size is wrong, parameters don't match" << std::endl;
+      coutE(InputArguments) << "size is wrong, parameters don't match" << std::endl;
       return false;
    }
    if ( ! parameterPoint.equals( fParameters ) ) {
-      std::cout << "size is ok, but parameters don't match" << std::endl;
+      coutE(InputArguments) << "size is ok, but parameters don't match" << std::endl;
       return false;
    }
    return true;

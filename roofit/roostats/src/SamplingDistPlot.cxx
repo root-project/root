@@ -227,7 +227,7 @@ void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 {
 
   if(nullptr == obj) {
-    std::cerr << fName << "::addObject: called with a null pointer" << std::endl;
+    coutE(InputArguments) << fName << "::addObject: called with a null pointer" << std::endl;
     return;
   }
 
@@ -561,7 +561,7 @@ void SamplingDistPlot::DumpToFile(const char* RootFileName, Option_t *option, co
    // All the objects are written to rootfile
 
    if(!fRooPlot) {
-      std::cout << "Plot was not drawn yet. Dump can only be saved after it was drawn with Draw()." << std::endl;
+      coutW(Plotting) << "Plot was not drawn yet. Dump can only be saved after it was drawn with Draw()." << std::endl;
       return;
    }
 

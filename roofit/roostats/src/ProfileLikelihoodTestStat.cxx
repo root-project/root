@@ -96,7 +96,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
        if (fPrintLevel > 1) {
-            std::cout << "POIs: " << std::endl;
+            oocoutI(nullptr,Eval) << "POIs: " << std::endl;
             paramsOfInterest.Print("v");
        }
 
@@ -116,21 +116,21 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
                                  RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset))};
 
           if (fPrintLevel > 0) {
-             std::cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset mode \""
-                 << fLOffset << "\" in creating NLL" << std::endl;
+             oocoutI(nullptr,Eval) << "ProfileLikelihoodTestStat::Evaluate - Use Offset mode \""
+                         << fLOffset << "\" in creating NLL" << std::endl;
           }
 
           created = true ;
-          if (fPrintLevel > 1) std::cout << "creating NLL " << &*fNll << " with data = " << &data << std::endl ;
+          if (fPrintLevel > 1) oocoutI(nullptr,Eval) << "creating NLL " << &*fNll << " with data = " << &data << std::endl ;
        }
        if (reuse && !created) {
-         if (fPrintLevel > 1) std::cout << "reusing NLL " << &*fNll << " new data = " << &data << std::endl ;
+         if (fPrintLevel > 1) oocoutI(nullptr,Eval) << "reusing NLL " << &*fNll << " new data = " << &data << std::endl ;
          fNll->setData(data,false) ;
        }
        // print data in case of number counting (simple data sets)
        if (fPrintLevel > 1 && data.numEntries() == 1) {
-          std::cout << "Data set used is:  ";
-          RooStats::PrintListContent(*data.get(0), std::cout);
+          oocoutI(nullptr,Eval) << "Data set used is:  ";
+          RooStats::PrintListContent(*data.get(0), ooccoutI(nullptr,Eval));
        }
 
 
@@ -161,7 +161,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           if (!minimizationNeeded(*attachedSet)) {
              uncondML = fNll->getVal();
           } else {
-             if (fPrintLevel>1) std::cout << "Do unconditional fit" << std::endl;
+             if (fPrintLevel>1) oocoutI(nullptr,Eval) << "Do unconditional fit" << std::endl;
              std::tie(uncondML, statusD) = minimizeNLL("fitUncond_");
           }
 
@@ -189,7 +189,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
        if (doConditionalFit) {
 
-          if (fPrintLevel>1) std::cout << "Do conditional fit " << std::endl;
+          if (fPrintLevel>1) oocoutI(nullptr,Eval) << "Do conditional fit " << std::endl;
 
 
           //       std::cout <<" reestablish snapshot"<< std::endl;
@@ -242,7 +242,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
          if (fSigned) {
             if (pll<0.0) {
-               if (fPrintLevel > 0) std::cout << "pll is negative - setting it to zero " << std::endl;
+               if (fPrintLevel > 0) oocoutW(nullptr,Eval) << "pll is negative - setting it to zero " << std::endl;
                pll = 0.0;   // bad fit
             }
            if (fLimitType==oneSidedDiscovery ? (fit_favored_mu < initial_mu_value)
@@ -252,15 +252,15 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        }
 
        if (fPrintLevel > 0) {
-          std::cout << "EvaluateProfileLikelihood - ";
+          oocoutP(nullptr,Eval) << "EvaluateProfileLikelihood - ";
           if (type <= 1)
-             std::cout << "mu hat = " << fit_favored_mu  <<  ", uncond ML = " << uncondML;
+             ooccoutP(nullptr,Eval) << "mu hat = " << fit_favored_mu  <<  ", uncond ML = " << uncondML;
           if (type != 1)
-             std::cout << ", cond ML = " << condML;
+             ooccoutP(nullptr,Eval) << ", cond ML = " << condML;
           if (type == 0)
-             std::cout << " pll = " << pll;
-          std::cout << " time (create/fit1/2) " << createTime << " , " << fitTime1 << " , " << fitTime2
-                    << std::endl;
+             ooccoutP(nullptr,Eval) << " pll = " << pll;
+          ooccoutP(nullptr,Eval) << " time (create/fit1/2) " << createTime << " , " << fitTime1 << " , " << fitTime2
+                                 << std::endl;
        }
 
 

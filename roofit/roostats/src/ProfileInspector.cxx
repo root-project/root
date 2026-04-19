@@ -29,6 +29,7 @@ Utility class to plot conditional MLE of nuisance parameters vs. Parameters of I
 #include "RooArgSet.h"
 #include "RooAbsPdf.h"
 #include "RooCurve.h"
+#include "RooMsgService.h"
 #include "TAxis.h"
 
 
@@ -71,24 +72,24 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
 
   if(!poi_set){
-    std::cout << "no parameters of interest" << std::endl;
+    oocoutE(nullptr,InputArguments) << "no parameters of interest" << std::endl;
     return nullptr;
   }
 
   if(poi_set->size()!=1){
-    std::cout << "only one parameter of interest is supported currently" << std::endl;
+    oocoutE(nullptr,InputArguments) << "only one parameter of interest is supported currently" << std::endl;
     return nullptr;
   }
   RooRealVar* poi = static_cast<RooRealVar*>(poi_set->first());
 
 
   if(!nuis_params){
-    std::cout << "no nuisance parameters" << std::endl;
+    oocoutE(nullptr,InputArguments) << "no nuisance parameters" << std::endl;
     return nullptr;
   }
 
   if(!pdf){
-    std::cout << "pdf not set" << std::endl;
+    oocoutE(nullptr,InputArguments) << "pdf not set" << std::endl;
     return nullptr;
   }
 
