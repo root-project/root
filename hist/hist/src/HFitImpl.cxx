@@ -77,7 +77,7 @@ namespace HFit {
    void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
 
    template <class FitObject>
-   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, ROOT::Fit::EChisquareType type );
+   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, ROOT::Fit::EChisquareType type, bool useIntegral = false);
 
 
 
@@ -1029,8 +1029,8 @@ TFitResultPtr ROOT::Fit::FitObject(THnBase * s1, TF1 *f1 , Foption_t & foption ,
 // function to compute the simple chi2 for graphs and histograms
 
 
-double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, ROOT::Fit::EChisquareType type) {
-   return HFit::ComputeChi2(h1,f1,useRange, type);
+double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, ROOT::Fit::EChisquareType type, bool useIntegral) {
+   return HFit::ComputeChi2(h1,f1,useRange, type, useIntegral);
 }
 
 double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
@@ -1038,13 +1038,14 @@ double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
 }
 
 template<class FitObject>
-double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT::Fit::EChisquareType type ) {
+double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT::Fit::EChisquareType type, bool useIntegral ) {
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
    opt.fUseEmpty = (type != ROOT::Fit::EChisquareType::kNeyman);  // use empty bin when not using Neyman chisquare (observed error)
    opt.fExpErrors = (type == ROOT::Fit::EChisquareType::kPearson);
    opt.fErrors1 = (type == ROOT::Fit::EChisquareType::kPearson);  // not using observed errors in Pearson chi2
+   opt.fIntegral = useIntegral;  // use bin integral instead of value at bin center
 
    ROOT::Fit::DataRange range;
    // get range of function
