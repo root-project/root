@@ -59,6 +59,8 @@ The following people have contributed to this new version:
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are deprecated and will be remove in ROOT 6.42.
   The security assumtions in the current socket authentication implementation is not up to date anymore.
   Secure communication should be provided by standard means, such as SSL sockets or SSH tunneling.
+* The `builtin_davix` build option has been removed.
+  The Davix I/O code in ROOT remains uneffected and is built as before provided that the Davix library is found on the system.
 
 ## Removals
 
@@ -202,7 +204,20 @@ This change affects the following classes:  `TFile`, `TMapFile`, `TMemFile`, `TD
 
 ### RNTuple
 
-* `RRawPtrWriteEntry` is now part of the stable API, in the `ROOT::Detail` namespace. It is useful for frameworks passing data to RNTuple as `const` raw pointers.
+- A new API to create "active entry tokens" was added to the `RNTupleReader`. Active entry tokens that are used prevent cache eviction of the entries at hand.
+This should be used for multi-stream reading where multiple threads share a single reader.
+- `RRawPtrWriteEntry` is now part of the stable API, in the `ROOT::Detail` namespace. It is useful for frameworks passing data to RNTuple as `const` raw pointers.
+- RNTuple reads into a memory-adopted `RVec` (instead of turning it into an owning `RVec`) if the vector size matches the size of the collection on disk.
+- Enable XRootD redirection when opening an RNTuple from a file on EOS
+- Python API: Both the reader's and writer's context objects will close the underlying file upon `__exit__`. The object will raise an exception if accessed after the `with` statement.
+- Several improvements to avoid header auto-parsing caused by RNTuple reading classes.
+- Various performance and memory improvements.
+- Initial support for SoA layout support was added as an experimental feature. Dictionaries for classes can be annotated as SoA layout classes of an underlying record type through the `rntupleSoARecord(<underlying record type>)` dictionary attribute. A new `RSoAField` class was added. Currently, only writing is supported. To read, users need to impose a model or use views. Read support for the SoA field will follow.
+- Support for RNTuple "attributes" was added as an experimental feature. RNTuple attributes are used to store meta-data associated with a main RNTuple.
+
+### HTTP I/O
+
+- There is a new HTTP I/O implementation in ROOT based on libcurl. It provides modern HTTP remote read capabilities (HTTP/2, compression, secure transport, etc.) on Linux, macOS, and Windows. The new HTTP I/O can also connect to protected resources on S3 enpoints using the `S3_ACCCESS_KEY`, `S3_SECRET_KEY`, and `S3_REGION` environment variables. By default, the new HTTP I/O is automaticlly built if libcurl is found on the system (manual cmake option: `-Dcurl=[on|off]`). If both, Davix based and libcurl based HTTP plugins are available, the Davix plugin has precedence unless `Curl.ReplaceDavix: yes` is set in the `root.rc`.
 
 ## Math
 
