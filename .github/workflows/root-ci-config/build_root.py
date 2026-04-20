@@ -432,7 +432,7 @@ def dump_requested_config(options):
 
 @github_log_group("Build")
 def cmake_build(buildtype):
-    generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
+    generator_flags = "-- '-verbosity:minimal' '-consoleloggerparameters:summary'" if WINDOWS else ""
     parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
