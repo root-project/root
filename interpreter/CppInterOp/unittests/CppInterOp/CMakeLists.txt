@@ -1,43 +1,35 @@
 if (EMSCRIPTEN)
-  # So we create a html file, as well as the javascript file
+  # Build a .html shell alongside the .js main module.
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  # Omitting CUDATest.cpp since Emscripten build currently has no GPU support
-  # For Emscripten builds linking to gtest_main will not suffice for gtest to run
-  # the tests and an explicitly main.cpp is needed
-  set(EXTRA_TEST_SOURCE_FILES main.cpp)
 
   string(REPLACE "@" "@@" ESCAPED_SYSROOT_PATH "${SYSROOT_PATH}")
-  # Explanation of Emscripten-specific link flags for CppInterOpTests:
+  # Explanation of Emscripten-specific link flags for CppInterOp tests:
   #
   # MAIN_MODULE=1:
-  # Enables building CppInterOpTests.js as the main WebAssembly module, allowing dynamic linking of side modules.
+  # Enables the test binary as the main WebAssembly module, allowing dynamic
+  # linking of side modules (TestSharedLib).
   #
   # WASM_BIGINT:
-  # Ensures support for 64-bit integer types by enabling JavaScript BigInt integration in WASM.
+  # Enables JS BigInt integration in WASM so 64-bit integer types round-trip.
   #
   # ALLOW_MEMORY_GROWTH=1:
-  # Allows the WebAssembly memory to grow dynamically at runtime to accommodate increasing memory needs.
-  # Would lead to an abortOnCannotGrowMemory error if memory cannot be grown while running the tests.
+  # Lets the WebAssembly linear memory grow at runtime. Without it we hit
+  # abortOnCannotGrowMemory during the tests.
   #
-  # STACK_SIZE=32mb: Allocates 32MB of stack space to handle deep recursion or large stack-allocated objects safely.
-  # INITIAL_MEMORY=128mb: Sets the initial linear memory size to 128MB to reduce the likelihood of early memory expansion and improve performance.
-  # The STACK_SIZE and INITIAL_MEMORY values are chosen based on what has been put to use for running xeus-cpp-lite.
-  # Check https://github.com/jupyter-xeus/xeus/blob/main/cmake/WasmBuildOptions.cmake#L35-L36 for more details.
-  # Not setting these flags would lead to a memory access out of bounds error while running the tests.
+  # STACK_SIZE=32mb / INITIAL_MEMORY=64mb:
+  # Chosen to match xeus-cpp-lite
+  # (https://github.com/jupyter-xeus/xeus/blob/main/cmake/WasmBuildOptions.cmake#L35-L36).
+  # Smaller values trigger out-of-bounds memory accesses while running the tests.
   #
   # --preload-file ${SYSROOT_PATH}/include@/include:
-  # Preloads the system include directory into the Emscripten virtual filesystem to make headers accessible at runtime.
+  # Preloads the system include directory into the Emscripten VFS so headers
+  # are available at runtime.
   #
-  # --emrun
-  # Makes it so that we run the html file created by this target, that we can capture the standard output
-  # and output to the terminal
-
-  # Common compile flags for WASM tests
+  # --emrun:
+  # Makes emrun drive the .html shell and pipe stdout back to the terminal.
   set(CPPINTEROP_COMMON_WASM_TEST_COMPILE_FLAGS
     "SHELL:${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
-
-  # Common link flags for WASM tests
   set(CPPINTEROP_COMMON_WASM_TEST_LINK_FLAGS
     "SHELL:${CPPINTEROP_EXTRA_WASM_FLAGS}"
     "SHELL:-s MAIN_MODULE=1"
@@ -48,9 +40,6 @@ if (EMSCRIPTEN)
     "SHELL:--preload-file ${ESCAPED_SYSROOT_PATH}/include@/include"
     "SHELL:--emrun"
   )
-else()
-  # Do not need main.cpp for native builds, but we do have GPU support for native builds
-  set(EXTRA_TEST_SOURCE_FILES CUDATest.cpp)
 endif()
 
 add_cppinterop_unittest(CppInterOpTests
@@ -64,55 +53,51 @@ add_cppinterop_unittest(CppInterOpTests
   TypeReflectionTest.cpp
   Utils.cpp
   VariableReflectionTest.cpp
-  ${EXTRA_TEST_SOURCE_FILES}
 )
+if (NOT EMSCRIPTEN)
+  # Emscripten has no GPU; CUDA tests are native-only.
+  target_sources(CppInterOpTests PRIVATE CUDATest.cpp)
+endif()
 
 if(NOT WIN32)
   set_source_files_properties(VariableReflectionTest.cpp PROPERTIES COMPILE_FLAGS
     "-Wno-pedantic"
-)
-endif ()
+  )
+endif()
 
 set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
 )
 
-if(EMSCRIPTEN)
-  target_compile_options(CppInterOpTests
-    PUBLIC ${CPPINTEROP_COMMON_WASM_TEST_COMPILE_FLAGS}
-  )
-  target_link_options(CppInterOpTests
-    PUBLIC ${CPPINTEROP_COMMON_WASM_TEST_LINK_FLAGS}
-  )
-endif()
-
-unset(LLVM_LINK_COMPONENTS)
-
-if (NOT EMSCRIPTEN)
-  set(EXTRA_TEST_SOURCE_FILES "")
-endif()
-
-add_cppinterop_unittest(DynamicLibraryManagerTests 
-  DynamicLibraryManagerTest.cpp 
-  Utils.cpp 
-  ${EXTRA_TEST_SOURCE_FILES}
+add_cppinterop_unittest(DynamicLibraryManagerTests
+  DynamicLibraryManagerTest.cpp
+  Utils.cpp
 )
-
 if(EMSCRIPTEN)
   set(TEST_SHARED_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/")
   string(REPLACE "@" "@@" ESCAPED_TEST_SHARED_LIBRARY_PATH "${TEST_SHARED_LIBRARY_PATH}")
-  target_compile_options(DynamicLibraryManagerTests
-    PUBLIC ${CPPINTEROP_COMMON_WASM_TEST_COMPILE_FLAGS}
-  )
-  target_link_options(DynamicLibraryManagerTests
-    PUBLIC
-      ${CPPINTEROP_COMMON_WASM_TEST_LINK_FLAGS}
-      "SHELL:--preload-file ${ESCAPED_TEST_SHARED_LIBRARY_PATH}/libTestSharedLib.so@/libTestSharedLib.so"
+  target_link_options(DynamicLibraryManagerTests PRIVATE
+    "SHELL:--preload-file ${ESCAPED_TEST_SHARED_LIBRARY_PATH}/libTestSharedLib.so@/libTestSharedLib.so"
   )
 endif()
 
-add_dependencies(DynamicLibraryManagerTests TestSharedLib)
+add_cppinterop_unittest(TracingTests
+  TracingTests.cpp
+  Utils.cpp
+)
+target_compile_definitions(TracingTests PRIVATE
+  "CPPINTEROP_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../../\""
+)
+# GCC 12 and (less often) 13/14 emit a -Wmaybe-uninitialized false positive
+# inside libstdc++'s <regex> headers when the std::function subobject of
+# std::__detail::_State is move-constructed. The analysis only fails once the
+# inliner is perturbed, so sanitizer builds (which insert shadow-memory
+# barriers and inline less) are where this reliably surfaces. Clang and newer
+# GCCs are fine. See gcc bug 105562 and friends.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(TracingTests.cpp
+    PROPERTIES COMPILE_FLAGS "-Wno-maybe-uninitialized")
+endif()
 
-#export_executable_symbols_for_plugins(TestSharedLib)
 add_subdirectory(TestSharedLib)
-
+add_dependencies(DynamicLibraryManagerTests TestSharedLib)

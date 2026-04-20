@@ -20,7 +20,11 @@
 #include "clang/Config/config.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
+#if CLANG_VERSION_MAJOR < 22
 #include "clang/Driver/Options.h"
+#else
+#include "clang/Options/Options.h"
+#endif
 #include "clang/Frontend/TextDiagnosticBuffer.h"
 #include "clang/Sema/Sema.h"
 
@@ -32,6 +36,24 @@
 #include <cstring>
 #include <memory>
 #include <string>
+
+#if CLANG_VERSION_MAJOR < 22
+#define clang_driver_options clang::driver::options
+#else
+#define clang_driver_options clang::options
+#endif
+
+#if CLANG_VERSION_MAJOR < 22
+#define Suppress_Elab SuppressElaboration
+#else
+#define Suppress_Elab FullyQualifiedName
+#endif
+
+#if CLANG_VERSION_MAJOR < 22
+#define Get_Tag_Type getTagDeclType
+#else
+#define Get_Tag_Type getCanonicalTagType
+#endif
 
 #ifdef _MSC_VER
 #define dup _dup
@@ -266,7 +288,7 @@ inline bool detectCudaInstallPath(const std::vector<const char*>& args,
 
   // --cuda-path was explicitly provided in user args
   if (auto* A =
-          C->getArgs().getLastArg(clang::driver::options::OPT_cuda_path_EQ)) {
+          C->getArgs().getLastArg(clang_driver_options::OPT_cuda_path_EQ)) {
     std::string Candidate = A->getValue();
     if (llvm::sys::fs::is_directory(Candidate + "/include")) {
       CudaPath = Candidate;
@@ -502,8 +524,20 @@ inline void maybeMangleDeclName(const clang::GlobalDecl& GD,
 // Clang 18 - Add new Interpreter methods: CodeComplete
 
 inline llvm::orc::LLJIT* getExecutionEngine(clang::Interpreter& I) {
+#if CLANG_VERSION_MAJOR < 22
   auto* engine = &llvm::cantFail(I.getExecutionEngine());
   return const_cast<llvm::orc::LLJIT*>(engine);
+#else
+  // FIXME: Remove the need of exposing the low-level execution engine and kill
+  // this horrible hack.
+  struct OrcIncrementalExecutor : public clang::IncrementalExecutor {
+    std::unique_ptr<llvm::orc::LLJIT> Jit;
+  };
+
+  auto& engine = static_cast<OrcIncrementalExecutor&>(
+      llvm::cantFail(I.getExecutionEngine()));
+  return engine.Jit.get();
+#endif
 }
 
 inline llvm::Expected<llvm::JITTargetAddress>
@@ -612,19 +646,11 @@ inline void InstantiateClassTemplateSpecialization(
 #ifdef CPPINTEROP_USE_CLING
   cling::Interpreter::PushTransactionRAII RAII(&interp);
 #endif
-#if CLANG_VERSION_MAJOR < 20
-  interp.getSema().InstantiateClassTemplateSpecialization(
-      clang::SourceLocation::getFromRawEncoding(1), CTSD,
-
-      clang::TemplateSpecializationKind::TSK_ExplicitInstantiationDefinition,
-      /*Complain=*/true);
-#else
   interp.getSema().InstantiateClassTemplateSpecialization(
       clang::SourceLocation::getFromRawEncoding(1), CTSD,
       clang::TemplateSpecializationKind::TSK_ExplicitInstantiationDefinition,
       /*Complain=*/true,
       /*PrimaryHasMatchedPackOnParmToNonPackOnArg=*/false);
-#endif
 }
 } // namespace compat
 

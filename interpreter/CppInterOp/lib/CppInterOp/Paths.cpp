@@ -178,32 +178,6 @@ void CopyIncludePaths(const clang::HeaderSearchOptions& Opts,
       if (withFlags)
         incpaths.push_back("-isystem");
       break;
-      // Option was removed in llvm 20. Git log message below.
-      // git log --grep="index-header"
-      // commit 19b4f17d4c0ae12725050d09f04f85bccc686d8e
-      // Author: Jan Svoboda <jan_svoboda@apple.com>
-      // Date:   Thu Oct 31 16:04:35 2024 -0700
-      //
-      //    [clang][lex] Remove `-index-header-map` (#114459)
-      //
-      //    This PR removes the `-index-header-map` functionality from Clang.
-      //    AFAIK this was only used internally at Apple and is now dead code.
-      //    The main motivation behind this change is to enable the removal of
-      //    `HeaderFileInfo::Framework` member and reducing the size of that
-      //    data structure.
-      //
-      //    rdar://84036149
-
-#if CLANG_VERSION_MAJOR < 20
-    case frontend::IndexHeaderMap:
-      if (!withSystem)
-        continue;
-      if (withFlags)
-        incpaths.push_back("-index-header-map");
-      if (withFlags)
-        incpaths.push_back(E.IsFramework ? "-F" : "-I");
-      break;
-#endif
 
     case frontend::CSystem:
       if (!withSystem)

@@ -274,11 +274,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableType) {
 CODE
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
   std::vector<Decl *> Decls;
 #define Stringify(s) Stringifyx(s)
 #define Stringifyx(...) #__VA_ARGS__

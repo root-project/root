@@ -54,3 +54,4 @@
 -Wl,--export=_ZN4llvm15SmallVectorBaseIjE8set_sizeEm
 -Wl,--export=_ZN5clang11Interpreter6createENSt3__210unique_ptrINS_16CompilerInstanceENS1_14default_deleteIS3_EEEENS2_IN4llvm3orc12LLJITBuilderENS4_IS9_EEEE
 -Wl,--export=_ZNK5clang13CXXRecordDecl19isInjectedClassNameEv
+-Wl,--export=_ZNK5clang8QualType11getAsStringERKNS_14PrintingPolicyE

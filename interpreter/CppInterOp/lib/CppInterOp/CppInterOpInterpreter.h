@@ -171,14 +171,14 @@ public:
 private:
   static std::tuple<int, int, int>
   initAndGetFileDescriptors(std::vector<const char*>& vargs,
-                            std::unique_ptr<IOContext>& io_ctx) {
+                            IOContext& io_ctx) {
     int stdin_fd = 0;
     int stdout_fd = 1;
     int stderr_fd = 2;
 
     // Only initialize temp files if not already initialized
-    if (!io_ctx->stdin_file || !io_ctx->stdout_file || !io_ctx->stderr_file) {
-      bool init = io_ctx->initializeTempFiles();
+    if (!io_ctx.stdin_file || !io_ctx.stdout_file || !io_ctx.stderr_file) {
+      bool init = io_ctx.initializeTempFiles();
       if (!init) {
         llvm::errs() << "Can't start out-of-process JIT execution.\n";
         stdin_fd = -1;
@@ -186,9 +186,9 @@ private:
         stderr_fd = -1;
       }
     }
-    stdin_fd = fileno(io_ctx->stdin_file.get());
-    stdout_fd = fileno(io_ctx->stdout_file.get());
-    stderr_fd = fileno(io_ctx->stderr_file.get());
+    stdin_fd = fileno(io_ctx.stdin_file.get());
+    stdout_fd = fileno(io_ctx.stdout_file.get());
+    stderr_fd = fileno(io_ctx.stderr_file.get());
 
     return std::make_tuple(stdin_fd, stdout_fd, stderr_fd);
   }
@@ -208,13 +208,6 @@ public:
          const std::vector<std::shared_ptr<clang::ModuleFileExtension>>&
              moduleExtensions = {},
          void* extraLibHandle = nullptr, bool noRuntime = true) {
-    // Initialize all targets (required for device offloading)
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
-
     std::vector<const char*> vargs(argv + 1, argv + argc);
 
     int stdin_fd = 0;
@@ -233,7 +226,7 @@ public:
 
     if (outOfProcess) {
       std::tie(stdin_fd, stdout_fd, stderr_fd) =
-          initAndGetFileDescriptors(vargs, io_ctx);
+          initAndGetFileDescriptors(vargs, *io_ctx);
 
       if (stdin_fd == -1 || stdout_fd == -1 || stderr_fd == -1) {
         llvm::errs()
