@@ -44,11 +44,11 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
    // Now populate p with parameters
    RooArgSet allVars;
    for (Int_t i = 0; i < _dh.numEntries(); i++) {
-      _dh.get(i);
+      const double wi = _dh.weight(i);
       const char *vname = Form("%s_gamma_bin_%i", GetName(), i);
       RooRealVar *var = new RooRealVar(vname, vname, 0, 1000);
-      var->setVal(_relParam ? 1 : _dh.weight());
-      var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
+      var->setVal(_relParam ? 1 : wi);
+      var->setError(_relParam ? 1 / sqrt(wi) : sqrt(wi));
       var->setConstant(true);
       allVars.add(*var);
       _p.add(*var);
@@ -94,8 +94,7 @@ void RooParamHistFunc::setActual(Int_t ibin, double newVal)
 
 double RooParamHistFunc::getNominal(Int_t ibin) const
 {
-  _dh.get(ibin) ;
-  return _dh.weight() ;
+  return _dh.weight(ibin) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

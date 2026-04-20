@@ -392,8 +392,8 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
   // Zero output histogram below lowest calculable X value
   for (int i=0; i<_yatXmin ; i++) {
     dIter->Next() ;
-    //_hist->get(i) ;
-    hist()->set(0) ;
+    const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
+    hist()->set(binIdx, 0, -1) ;
   }
 
   double x1 = _x->getMin("cache");
@@ -420,14 +420,16 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     double fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
 
     dIter->Next() ;
-    //_hist->get(i) ;
-    hist()->set(fbarX) ;
+    {
+      const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
+      hist()->set(binIdx, fbarX, -1) ;
+    }
   }
   // Zero output histogram above highest calculable X value
   for (int i=_yatXmax+1 ; i<nbins ; i++) {
     dIter->Next() ;
-    //_hist->get(i) ;
-    hist()->set(0) ;
+    const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
+    hist()->set(binIdx, 0, -1) ;
   }
 
   pdf()->setUnitNorm(true) ;

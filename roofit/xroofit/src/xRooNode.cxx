@@ -2136,7 +2136,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             // need to divide by bin widths first
             for (int i = 0; i < _f->dataHist().numEntries(); i++) {
                auto bin_pars = _f->dataHist().get(i);
-               _f->dataHist().set(*bin_pars, _f->dataHist().weight() / _f->dataHist().binVolume(*bin_pars));
+               _f->dataHist().set(*bin_pars, _f->dataHist().weight(i) / _f->dataHist().binVolume(*bin_pars));
             }
             _f->setAttribute("autodensity", false);
             _f->setValueDirty();
@@ -3329,7 +3329,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
             // need to divide by bin widths first
             for (int i = 0; i < _f->dataHist().numEntries(); i++) {
                auto bin_pars = _f->dataHist().get(i);
-               _f->dataHist().set(*bin_pars, _f->dataHist().weight() / _f->dataHist().binVolume(*bin_pars));
+               _f->dataHist().set(*bin_pars, _f->dataHist().weight(i) / _f->dataHist().binVolume(*bin_pars));
             }
             _f->setValueDirty();
 
@@ -4893,7 +4893,7 @@ bool xRooNode::SetBinError(int bin, double value)
          TString origName = (f->getStringAttribute("origName")) ? f->getStringAttribute("origName") : GetName();
          rrv->setStringAttribute(Form("sumw2_%s", origName.Data()), TString::Format("%f", pow(value, 2)));
          auto bin_pars = f->dataHist().get(bin - 1);
-         auto _binContent = f->dataHist().weight();
+         auto _binContent = f->dataHist().weight(bin - 1);
          if (f->getAttribute("density")) {
             _binContent *= f->dataHist().binVolume(*bin_pars);
          }
