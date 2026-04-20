@@ -72,10 +72,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, DynamicLibraryManager_Sanity) {
 TYPED_TEST(CPPINTEROP_TEST_MODE, DynamicLibraryManager_BasicSymbolLookup) {
 #ifndef EMSCRIPTEN
   GTEST_SKIP() << "This test is only intended for Emscripten builds.";
-#else
-  #if CLANG_VERSION_MAJOR < 20
-    GTEST_SKIP() << "Support for loading shared libraries was added in LLVM 20.";
-  #endif
 #endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";

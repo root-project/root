@@ -38,6 +38,7 @@ using TCppIndex_t = size_t;
 using TCppScope_t = void*;
 using TCppConstScope_t = const void*;
 using TCppType_t = void*;
+using TCppConstType_t = const void*;
 using TCppFunction_t = void*;
 using TCppConstFunction_t = const void*;
 using TCppFuncAddr_t = void*;
@@ -94,12 +95,14 @@ enum Operator : unsigned char {
 };
 
 enum OperatorArity : unsigned char { kUnary = 1, kBinary, kBoth };
+enum Signedness : unsigned char { kSigned = 1, kUnsigned };
 
 /// Enum modelling CVR qualifiers.
 enum QualKind : unsigned char {
   Const = 1 << 0,
   Volatile = 1 << 1,
-  Restrict = 1 << 2
+  Restrict = 1 << 2,
+  All = Const | Volatile | Restrict
 };
 
 /// Enum modelling programming languages.
@@ -368,7 +371,7 @@ CPPINTEROP_API bool IsComplete(TCppScope_t scope);
 CPPINTEROP_API size_t SizeOf(TCppScope_t scope);
 
 /// Checks if it is a "built-in" or a "complex" type.
-CPPINTEROP_API bool IsBuiltin(TCppType_t type);
+CPPINTEROP_API bool IsBuiltin(TCppConstType_t type);
 
 /// Checks if it is a templated class.
 CPPINTEROP_API bool IsTemplate(TCppScope_t handle);
@@ -685,6 +688,20 @@ CPPINTEROP_API bool IsRecordType(TCppType_t type);
 
 /// Checks if the provided parameter is a Plain Old Data Type (POD).
 CPPINTEROP_API bool IsPODType(TCppType_t type);
+
+/// Checks if type has an integer representation.
+/// If \p s is non-null, it is set to the signedness of the type.
+CPPINTEROP_API bool IsIntegerType(TCppType_t type, Signedness* s = nullptr);
+
+/// Checks if type has a floating representation
+CPPINTEROP_API bool IsFloatingType(TCppType_t type);
+
+/// Checks if two types are the equivalent
+/// i.e. have the same canonical type
+CPPINTEROP_API bool IsSameType(TCppType_t type_a, TCppType_t type_b);
+
+/// Checks if type is a void pointer
+CPPINTEROP_API bool IsVoidPointerType(TCppType_t type);
 
 /// Checks if type is a pointer
 CPPINTEROP_API bool IsPointerType(TCppType_t type);

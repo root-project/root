@@ -4,26 +4,130 @@
 #include "clang-c/CXCppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
-#include "clang/Basic/Version.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Sema/Sema.h"
-
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/GlobalDecl.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/Version.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Sema/Sema.h"
 
 #include "llvm/Support/Valgrind.h"
 
-#include "clang-c/CXCppInterOp.h"
-
 #include "gtest/gtest.h"
 
+#include <memory>
 #include <string>
 
 using namespace TestUtils;
 using namespace llvm;
 using namespace clang;
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTypeOfBuiltins) {
+  // Structural check: Ensure every valid BuiltinType kind can be resolved
+  TestFixture::CreateInterpreter();
+  ASTContext& C = Interp->getCI()->getASTContext(); // for brevity
+
+#define BUILTIN_TYPE(Id, SingletonId)                                          \
+  {                                                                            \
+    QualType QT = C.SingletonId;                                               \
+    if (!QT.isNull()) {                                                        \
+      std::string name = QT.getAsString(C.getPrintingPolicy());                \
+      if (name[0] != '<' && !QT->isPlaceholderType()) {                        \
+        const auto* FoundTy = Cpp::GetType(name);                              \
+        EXPECT_TRUE(FoundTy) << "Failed to find builtin: '" << name << "'";    \
+        if (FoundTy) {                                                         \
+          EXPECT_EQ(FoundTy, QT.getAsOpaquePtr())                              \
+              << "Type mismatch for '" << name << "'";                         \
+          EXPECT_TRUE(Cpp::IsBuiltin(FoundTy));                                \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+  }
+#include "clang/AST/BuiltinTypes.def"
+#undef BUILTIN_TYPE
+
+  auto Verify = [&](const char* Name, QualType Expected) {
+    void* Found = Cpp::GetType(Name);
+    EXPECT_EQ(Found, Expected.getAsOpaquePtr()) << "Failed for: " << Name;
+  };
+
+  // --- Integer Variations ---
+  Verify("int", C.IntTy);
+  Verify("signed int", C.IntTy);
+  Verify("signed", C.IntTy);
+  Verify("int signed", C.IntTy);
+
+  // --- Short Variations ---
+  Verify("short", C.ShortTy);
+  Verify("short int", C.ShortTy);
+  Verify("signed short", C.ShortTy);
+  Verify("signed short int", C.ShortTy);
+  Verify("int short signed", C.ShortTy);
+
+  // --- Long Variations ---
+  Verify("long", C.LongTy);
+  Verify("long int", C.LongTy);
+  Verify("signed long", C.LongTy);
+  Verify("signed long int", C.LongTy);
+  Verify("int long", C.LongTy);
+
+  // --- Long Long Variations ---
+  Verify("long long", C.LongLongTy);
+  Verify("long long int", C.LongLongTy);
+  Verify("signed long long", C.LongLongTy);
+  Verify("signed long long int", C.LongLongTy);
+  Verify("int long long signed", C.LongLongTy);
+
+  // --- Unsigned Variations ---
+  Verify("unsigned", C.UnsignedIntTy);
+  Verify("unsigned int", C.UnsignedIntTy);
+  Verify("int unsigned", C.UnsignedIntTy);
+
+  Verify("unsigned short", C.UnsignedShortTy);
+  Verify("unsigned short int", C.UnsignedShortTy);
+  Verify("int short unsigned", C.UnsignedShortTy);
+
+  Verify("unsigned long", C.UnsignedLongTy);
+  Verify("unsigned long int", C.UnsignedLongTy);
+
+  Verify("unsigned long long", C.UnsignedLongLongTy);
+  Verify("unsigned long long int", C.UnsignedLongLongTy);
+
+  // --- Character Variations (No 'int' suffix allowed) ---
+  Verify("char", C.CharTy);
+  Verify("signed char", C.SignedCharTy);
+  Verify("unsigned char", C.UnsignedCharTy);
+
+  // Negative check: signed char int is NOT a valid builtin
+  EXPECT_EQ(Cpp::GetType("signed char int"), nullptr);
+
+  // Maybe these should be considered builtins?
+  // EXPECT_EQ(Cpp::GetType("size_t"), C.getSizeType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("ptrdiff_t"),
+  // C.getPointerDiffType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("intptr_t"), C.getIntPtrType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("uintptr_t"), C.getUIntPtrType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("size_t"), C.getSizeType().getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("size_t"), C.getSizeType().getAsOpaquePtr());
+
+  // EXPECT_EQ(Cpp::GetType("wint_t"), C.WIntTy.getAsOpaquePtr());
+  // EXPECT_EQ(Cpp::GetType("wchar_t"), C.WCharTy.getAsOpaquePtr());
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTypeOfTypedef) {
+  std::string code = R"(
+    typedef int Type_t;
+  )";
+
+  std::vector<Decl*> Decls;
+  GetAllTopLevelDecls(code, Decls);
+  auto Ty = Cpp::GetType("Type_t");
+  EXPECT_TRUE(Ty);
+  EXPECT_TRUE(Ty == Cpp::GetTypeFromScope(Decls[0]));
+  EXPECT_FALSE(Cpp::GetTypeFromScope(nullptr));
+}
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsEnumScope) {
   std::vector<Decl *> Decls;
@@ -72,9 +176,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsEnumConstant) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_Demangle) {
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
-
   std::string code = R"(
     int add(int x, int y) { return x + y; }
     int add(double x, double y) { return x + y; }
@@ -230,6 +331,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsBuiltin) {
   EXPECT_TRUE(Cpp::IsBuiltin(C.getComplexType(C.LongDoubleTy).getAsOpaquePtr()));
   EXPECT_TRUE(Cpp::IsBuiltin(C.getComplexType(C.Float128Ty).getAsOpaquePtr()));
 
+// FIXME as part of llvm 22 PR. getTypeDeclType was deleted between llvm 21 and 22
+#if CLANG_VERSION_MAJOR < 22
   // std::complex
   Interp->declare("#include <complex>");
   Sema &S = Interp->getCI()->getSema();
@@ -237,6 +340,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsBuiltin) {
   auto *CTD = cast<ClassTemplateDecl>(lookup.front());
   for (ClassTemplateSpecializationDecl *CTSD : CTD->specializations())
     EXPECT_TRUE(Cpp::IsBuiltin(C.getTypeDeclType(CTSD).getAsOpaquePtr()));
+#endif
 
   // User-defined records (even with "complex" in the name) are not builtins.
   Interp->declare("class complex_number {}; class regular_record {};");
@@ -398,7 +502,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteName) {
   EXPECT_EQ(Cpp::GetCompleteName(Cpp::GetScopeFromType(
                                              Cpp::GetVariableType(
                                                      Decls[9]))), "A<int>");
+#if CLANG_VERSION_MAJOR < 22
   EXPECT_EQ(Cpp::GetCompleteName(Decls[10]), "(unnamed)");
+#else
+  EXPECT_EQ(Cpp::GetCompleteName(Decls[10]), "(unnamed enum)");
+#endif
   EXPECT_EQ(Cpp::GetCompleteName(Decls[11]), "fn");
   EXPECT_EQ(Cpp::GetCompleteName(nullptr), "<unnamed>");
 
@@ -817,21 +925,29 @@ CODE;
 #undef Stringify
 #undef CODE
 
-  auto *c = new C();
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[2], Decls[0]), (char *)(A*)c - (char *)c);
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[2], Decls[1]), (char *)(B*)c - (char *)c);
+  std::unique_ptr<C> c(new C());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[2], Decls[0]),
+            (char*)(A*)c.get() - (char*)c.get());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[2], Decls[1]),
+            (char*)(B*)c.get() - (char*)c.get());
 
-  auto *d = new D();
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[3], Decls[0]), (char *)(A*)d - (char *)d);
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[3], Decls[1]), (char *)(B*)d - (char *)d);
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[3], Decls[2]), (char *)(C*)d - (char *)d);
+  std::unique_ptr<D> d(new D());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[3], Decls[0]),
+            (char*)(A*)d.get() - (char*)d.get());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[3], Decls[1]),
+            (char*)(B*)d.get() - (char*)d.get());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[3], Decls[2]),
+            (char*)(C*)d.get() - (char*)d.get());
 
-  auto *e = new E();
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[4], Decls[0]), (char *)(A*)e - (char *)e);
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[4], Decls[1]), (char *)(B*)e - (char *)e);
+  std::unique_ptr<E> e(new E());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[4], Decls[0]),
+            (char*)(A*)e.get() - (char*)e.get());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[4], Decls[1]),
+            (char*)(B*)e.get() - (char*)e.get());
 
-  auto *g = new G();
-  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[6], Decls[0]), (char *)(A*)g - (char *)g);
+  std::unique_ptr<G> g(new G());
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[6], Decls[0]),
+            (char*)(A*)g.get() - (char*)g.get());
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetAllCppNames) {

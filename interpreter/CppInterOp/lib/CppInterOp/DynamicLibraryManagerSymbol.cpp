@@ -1125,6 +1125,7 @@ bool Dyld::ShouldPermanentlyIgnore(StringRef FileName) const {
 
   auto ObjF = llvm::object::ObjectFile::createObjectFile(FileName);
   if (!ObjF) {
+    llvm::consumeError(ObjF.takeError());
     LLVM_DEBUG(dbgs() << "[DyLD] Failed to read object file " << FileName
                       << "\n");
     return true;

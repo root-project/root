@@ -26,6 +26,8 @@ Checks: >
   -readability-implicit-bool-conversion,
   -readability-magic-numbers,
   -readability-named-parameter,
+  -modernize-concat-nested-namespaces,
+  -readability-avoid-return-with-void-value,
   -readability-function-cognitive-complexity,
   -readability-redundant-access-specifiers,
   -cppcoreguidelines-avoid-magic-numbers,

@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <csignal>
 
 using ::testing::StartsWith;
 
@@ -108,7 +109,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeleteInterpreter) {
 
   EXPECT_EQ(I3, Cpp::GetInterpreter()) << "I3 is not active";
 
-  EXPECT_TRUE(Cpp::DeleteInterpreter(nullptr));
+  EXPECT_TRUE(Cpp::DeleteInterpreter(/*I=*/nullptr));
   EXPECT_EQ(I2, Cpp::GetInterpreter());
 
   auto* I4 = reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U));
@@ -174,6 +175,22 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Process) {
   EXPECT_EQ(Res, CXError_Success);
   clang_Value_dispose(CXV);
   clang_Interpreter_dispose(CXI);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeclareSilent) {
+#if CLANG_VERSION_MAJOR > 21
+  GTEST_SKIP() << "Test crashes gtest for llvm 22 based build";
+#endif
+  TestFixture::CreateInterpreter();
+
+  // Valid code with silent=true should succeed.
+  EXPECT_EQ(0, Cpp::Declare("int x = 42;", /*silent=*/true));
+
+  // Invalid code with silent=true should still report failure.
+  EXPECT_NE(0, Cpp::Declare("invalid_syntax!!!;", /*silent=*/true));
+
+  // The interpreter should remain usable after a silent failure.
+  EXPECT_EQ(0, Cpp::Declare("int y = 123;", /*silent=*/false));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_EmscriptenExceptionHandling) {
@@ -456,3 +473,101 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ExternalInterpreter) {
   delete ExtInterp;
 #endif
 }
+
+// Verify the basic crash banner and Active Interpreter reporting
+#ifdef GTEST_HAS_DEATH_TEST
+TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_BasicBanner) {
+  // Ensure a clean registry for each JIT configuration
+
+  // FIXME: Uncomment after resolving compiler-research/CppInterOp#887
+
+  // while (Cpp::GetInterpreter())
+  //   Cpp::DeleteInterpreter(/*I=*/nullptr);
+
+  // EXPECT_FALSE(Cpp::GetInterpreter()) << "Failed to delete all interpreters";
+
+  // // Create an interpreter (this calls RegisterInterpreter internally)
+  // TInterp_t I = TestFixture::CreateInterpreter();
+  // ASSERT_NE(I, nullptr);
+
+  // We expect the banner to appear in stderr when the process dies
+  std::string ExpectedMsg = "CppInterOp CRASH DETECTED";
+#ifdef _WIN32
+  // FIXME: Windows says 'Actual msg:' without maybe capturing the message.
+  ExpectedMsg = "";
+#endif //_WIN32
+
+  EXPECT_DEATH(
+      {
+        // Trigger a synchronous signal
+        raise(SIGABRT);
+      },
+      ExpectedMsg);
+}
+#endif // GTEST_HAS_DEATH_TEST
+
+// Verify that the handler correctly lists multiple interpreters
+#ifdef GTEST_HAS_DEATH_TEST
+TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_MultipleInterpreters) {
+  ASSERT_NE(TestFixture::CreateInterpreter(), nullptr);
+  ASSERT_NE(TestFixture::CreateInterpreter(), nullptr);
+
+  // The handler iterates through the deque and prints the pointers
+
+  // We check for the "Active Interpreters:" header and the list format
+  std::string ExpectedMsg = "Active Interpreters:.*- 0x";
+#ifdef _WIN32
+  // FIXME: Windows says 'Actual msg:' without maybe capturing the message.
+  ExpectedMsg = "";
+#endif //_WIN32
+
+  EXPECT_DEATH({ raise(SIGSEGV); }, ExpectedMsg);
+}
+#endif // GTEST_HAS_DEATH_TEST
+
+#ifndef EMSCRIPTEN
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  // Create first interpreter: add(a,b) returns a + b.
+  auto* I1 = TestFixture::CreateInterpreter();
+  ASSERT_NE(I1, nullptr);
+  Cpp::ActivateInterpreter(I1);
+  Cpp::Declare("int add(int a, int b) { return a + b; }" DFLT_FALSE);
+  auto* AddDecl1 = Cpp::GetNamed("add" DFLT_NULLPTR);
+  ASSERT_NE(AddDecl1, nullptr);
+
+  Cpp::Declare("#include <new>" DFLT_FALSE); // Needed by JitCall
+  auto JC1 = Cpp::MakeFunctionCallable(AddDecl1);
+  ASSERT_TRUE(JC1.isValid());
+
+  int a1 = 3, b1 = 4, r1 = 0;
+  void* args1[] = {&a1, &b1};
+  JC1.Invoke(&r1, {args1, 2});
+  EXPECT_EQ(r1, 7);
+
+  // Create second interpreter: add(a,b) returns a * b.
+  auto* I2 = TestFixture::CreateInterpreter();
+  ASSERT_NE(I2, nullptr);
+  Cpp::ActivateInterpreter(I2);
+  Cpp::Declare("int add(int a, int b) { return a * b; }" DFLT_FALSE);
+  auto* AddDecl2 = Cpp::GetNamed("add" DFLT_NULLPTR);
+  ASSERT_NE(AddDecl2, nullptr);
+
+  Cpp::Declare("#include <new>" DFLT_FALSE); // Needed by JitCall
+  auto JC2 = Cpp::MakeFunctionCallable(AddDecl2);
+  ASSERT_TRUE(JC2.isValid());
+
+  // Delete the first interpreter.
+  EXPECT_TRUE(Cpp::DeleteInterpreter(I1));
+
+  // The second interpreter's wrapper must still work and must use its own
+  // implementation (multiply), not a stale cache entry from deleted I1.
+  int a2 = 3, b2 = 4, r2 = 0;
+  void* args2[] = {&a2, &b2};
+  JC2.Invoke(&r2, {args2, 2});
+  EXPECT_EQ(r2, 12) << "Wrapper should use I2's implementation (multiply), "
+                       "not a stale cache from deleted I1";
+}
+#endif // !EMSCRIPTEN

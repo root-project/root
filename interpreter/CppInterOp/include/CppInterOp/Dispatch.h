@@ -84,6 +84,7 @@ extern "C" CPPINTEROP_API CppFnPtrTy CppGetProcAddress(const char* procname);
   DISPATCH_API(GetClassTemplateInstantiationArgs,                              \
                decltype(&CppImpl::GetClassTemplateInstantiationArgs))          \
   DISPATCH_API(IsClass, decltype(&CppImpl::IsClass))                           \
+  DISPATCH_API(IsIntegerType, decltype(&CppImpl::IsIntegerType))               \
   DISPATCH_API(GetType, decltype(&CppImpl::GetType))                           \
   DISPATCH_API(GetTypeFromScope, decltype(&CppImpl::GetTypeFromScope))         \
   DISPATCH_API(GetComplexType, decltype(&CppImpl::GetComplexType))             \

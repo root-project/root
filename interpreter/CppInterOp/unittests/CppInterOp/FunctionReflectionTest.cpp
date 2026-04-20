@@ -1549,11 +1549,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsStaticMethod) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionAddress) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
@@ -1623,11 +1618,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsVirtualMethod) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_JitCallAdvanced) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
 #if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
   GTEST_SKIP() << "Test fails with Cling on Windows";
 #endif
@@ -1677,11 +1667,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_JitCallAdvanced) {
 #if !defined(NDEBUG) && GTEST_HAS_DEATH_TEST
 #ifndef _WIN32 // Death tests do not work on Windows
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_JitCallDebug) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 
@@ -1714,9 +1699,15 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_JitCallDebug) {
   EXPECT_DEATH(
       { JC.InvokeConstructor(&result, 0UL); },
       "Number of objects to construct should be atleast 1");
+  // InvokeConstructor below uses is_arena=nullptr and so does its own new[5],
+  // overwriting result. Release the throw-away arena first.
+  Cpp::Deallocate(Decls[0], result DFLT_1);
 
-  // Succeeds
+  // Succeeds; with is_arena=nullptr and nary>1 the ctor wrapper picks its
+  // array-new branch and overwrites result with the new[5] pointer. The
+  // matching withFree+nary>1 branch of the dtor wrapper emits delete[].
   JC.InvokeConstructor(&result, 5UL);
+  Cpp::Destruct(result, Decls[0], /*withFree=*/true, /*count=*/5);
 
   Decls.clear();
   code = R"(
@@ -1758,6 +1749,12 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_JitCallDebug) {
   EXPECT_DEATH(
       { JC.Invoke(&object_C, {args0, 1}); },
       "Destructor called with arguments");
+
+  // Only slot 0 of the 5-slot arena was placement-constructed above, so
+  // destruct a single object and then release the whole arena.
+  Cpp::Destruct(result, Decls[0], /*withFree=*/false, /*count=*/0);
+  Cpp::Deallocate(Decls[0], result, 5);
+  Cpp::Destruct(object_C, scope_C, /*withFree=*/true, /*count=*/0);
 }
 #endif // _WIN32
 #endif
@@ -1983,6 +1980,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
   bool boolean = false;
   FCI_op.Invoke((void*)&boolean, {args, /*args_size=*/1}, toperator);
   EXPECT_TRUE(boolean);
+  Cpp::Destruct(toperator, TOperator, /*withFree=*/true, /*count=*/0);
 
   Interp->process(R"(
     namespace N1 {
@@ -2441,11 +2439,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionArgDefault) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
@@ -2479,32 +2472,41 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
   std::string output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Constructor Executed");
   output.clear();
+  // Construct(scope, arena=nullptr) new-expressions the object; release it.
+  Cpp::Destruct(object, scope, /*withFree=*/true, /*count=*/0);
 
   // Placement.
   testing::internal::CaptureStdout();
   void* where = Cpp::Allocate(scope DFLT_1);
   EXPECT_TRUE(where == Cpp::Construct(scope, where DFLT_1));
   // Check for the value of x which should be at the start of the object.
-  EXPECT_TRUE(*(int *)where == 12345);
-  Cpp::Deallocate(scope, where DFLT_1);
+  EXPECT_TRUE(*(int*)where == 12345);
   output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Constructor Executed");
   output.clear();
+  Cpp::Destruct(where, scope, /*withFree=*/false, /*count=*/0);
+  Cpp::Deallocate(scope, where DFLT_1);
 
   // Pass a constructor
   testing::internal::CaptureStdout();
   where = Cpp::Allocate(scope DFLT_1);
   EXPECT_TRUE(where == Cpp::Construct(SubDecls[3], where DFLT_1));
   EXPECT_TRUE(*(int*)where == 12345);
-  Cpp::Deallocate(scope, where DFLT_1);
   output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Constructor Executed");
   output.clear();
+  Cpp::Destruct(where, scope, /*withFree=*/false, /*count=*/0);
+  Cpp::Deallocate(scope, where DFLT_1);
 
-  // Pass a non-class decl, this should fail
+  // Pass a non-class decl, this should fail. Capture the failing
+  // Construct's nullptr in a separate variable so the arena pointer in
+  // `where` stays alive for Deallocate. FIXME: Construct's failure path
+  // could own the arena release itself rather than leaking this contract
+  // to every caller — see Cpp::Construct in lib/CppInterOp/CppInterOp.cpp.
   where = Cpp::Allocate(scope DFLT_1);
-  where = Cpp::Construct(Decls[2], where DFLT_1);
-  EXPECT_TRUE(where == nullptr);
+  void* construct_fail = Cpp::Construct(Decls[2], where DFLT_1);
+  EXPECT_TRUE(construct_fail == nullptr);
+  Cpp::Deallocate(scope, where DFLT_1);
   // C API
   testing::internal::CaptureStdout();
   auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
@@ -2514,6 +2516,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
   output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Constructor Executed");
   output.clear();
+  clang_destruct(object_c, scope_c, /*withFree=*/true, /*nary=*/0);
   auto* dummy = clang_allocate(8);
   EXPECT_TRUE(dummy);
   clang_deallocate(dummy);
@@ -2524,11 +2527,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
 
 // Test zero initialization of PODs and default initialization cases
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructPOD) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
@@ -2557,6 +2555,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructPOD) {
   EXPECT_TRUE(object != nullptr);
   int* fInt = reinterpret_cast<int*>(reinterpret_cast<char*>(object));
   EXPECT_TRUE(*fInt == 0);
+  Cpp::Destruct(object, scope, /*withFree=*/true, /*count=*/0);
 
   scope = Cpp::GetNamed("SomePOD_C", ns);
   EXPECT_TRUE(scope);
@@ -2565,15 +2564,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructPOD) {
   auto* fDouble =
       reinterpret_cast<double*>(reinterpret_cast<char*>(object) + sizeof(int));
   EXPECT_EQ(*fDouble, 0.0);
+  Cpp::Destruct(object, scope, /*withFree=*/true, /*count=*/0);
 }
 
 // Test nested constructor calls
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructNested) {
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR < 20
-  GTEST_SKIP() << "Test fails for Emscipten builds";
-#endif
-#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
@@ -2614,6 +2609,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructNested) {
   std::string output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "A Constructor Called\nB Constructor Called\n");
   output.clear();
+  Cpp::Destruct(object, scope_B, /*withFree=*/true, /*count=*/0);
 
   // In-memory construction
   testing::internal::CaptureStdout();
