@@ -10,6 +10,7 @@ builtin_lzma=ON
 builtin_nlohmann=ON
 builtin_pcre=ON
 builtin_png=ON
+builtin_tiff=ON
 builtin_vdt=ON
 builtin_xxhash=ON
 builtin_zlib=ON
