@@ -808,6 +808,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             rnr_data.vtxBuff, hit.fTexX, hit.fTexY,
             txName);
 
+         // bounding box
+         let bb = rnr_data.nrmBuff;
+         s.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+
          this.RcPickable(hit, s);
 
          return s;
@@ -1174,10 +1178,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       {
          if (this.TestRnr("boxset", boxset, rnr_data)) return null;
          // use instancing if texture coordinates
+         let mesh;
          if (boxset.instanced === true)
-            return this.makeBoxSetInstanced(boxset, rnr_data);
+            mesh = this.makeBoxSetInstanced(boxset, rnr_data);
          else
-            return this.makeFreeBoxSet(boxset, rnr_data);
+            mesh = this.makeFreeBoxSet(boxset, rnr_data);
+
+         // bounding box
+         let bb = rnr_data.nrmBuff;
+         mesh.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+
+         return mesh;
       }
 
       makeFreeBoxSet(boxset, rnr_data)
