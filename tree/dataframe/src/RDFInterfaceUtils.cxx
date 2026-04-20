@@ -628,7 +628,8 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> prevNode, std::string_view n
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
    if (type != "bool")
-      std::runtime_error("Filter: the following expression does not evaluate to bool:\n" + std::string(expression));
+      throw std::runtime_error("Filter: the following expression does not evaluate to bool:\n" +
+                               std::string(expression));
 
    auto *lm = prevNode->GetLoopManagerUnchecked();
    const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(
