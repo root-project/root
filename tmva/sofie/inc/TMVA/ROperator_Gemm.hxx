@@ -423,12 +423,9 @@ namespace SOFIE{
              << (fAttrTransB ? "true, " : "false, ")
              << (fAttrTransA ? "true, " : "false, ")
              << n << ", " << m << ", " << k << ", ";
-            // TODO: the cast to (float *) is not needed here from the C++ language perspective (the arguments to
-            // Gemm_Call are const already), but Clad bug https://github.com/vgvassilev/clad/issues/1721 is requiring
-            // us to do this cast to keep Clad working. Remove this hack once the Clad issue is fixed.
-            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ", (float*)tensor_" << fNB;
+            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ", tensor_" << fNB;
             if (extraB) out << " + " << opName << "_B_offset";
-            out << ", (float*)tensor_" << fNA; // TODO: same here
+            out << ", tensor_" << fNA;
             if (extraA) out << " + " << opName << "_A_offset";
             out << ", " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
             // in the case of bias and no broadcasting needed - I need to add bias as an extra tensor in Gemm call
