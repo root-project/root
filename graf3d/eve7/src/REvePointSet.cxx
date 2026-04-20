@@ -239,16 +239,24 @@ void REvePointSet::BuildRenderData()
    if (fSize > 0)
    {
       if (gEve->IsRCore()) {
-         fRenderData = std::make_unique<REveRenderData>("makeHit", 4*fTexX*fTexY);
+         fRenderData = std::make_unique<REveRenderData>("makeHit", 4*fTexX*fTexY, 6);
          for (int i = 0; i < fSize; ++i) {
             fRenderData->PushV(&fPoints[i].fX, 3);
             fRenderData->PushV(0);
          }
          fRenderData->ResizeV(4*fTexX*fTexY);
+
+         // save bbox in render data normals
+         ComputeBBox();
+         float* bb = GetBBox();
+         fRenderData->PushN(bb[0], bb[1], bb[2]);
+         fRenderData->PushN(bb[3], bb[4], bb[5]);
       } else {
          fRenderData = std::make_unique<REveRenderData>("makeHit", 3*fSize);
          fRenderData->PushV(&fPoints[0].fX, 3*fSize);
       }
+
+      REveElement::BuildRenderData();
    }
 }
 
