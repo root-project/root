@@ -12,6 +12,7 @@ builtin_nlohmannjson=ON
 builtin_openssl=ON
 builtin_pcre=ON
 builtin_tbb=ON
+builtin_tiff=ON
 builtin_unuran=ON
 builtin_vdt=ON
 builtin_xrootd=ON
