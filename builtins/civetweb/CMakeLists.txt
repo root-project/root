@@ -32,10 +32,41 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   endif()
 endif()
 
+if(ssl)
+  if(OPENSSL_VERSION)
+    string(REPLACE "." ";" lst ${OPENSSL_VERSION})
+    list(GET lst 0 ssl_major)
+    list(GET lst 1 ssl_minor)
+  else()
+    MESSAGE(SEND_ERROR "No openSSL version defined.")
+  endif()
+
+  if((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "1"))
+    MESSAGE(STATUS "Use SSL API VERSION 1.1 for civetweb")
+    set(ROOT_SSL_API "-DCIVETWEB_SSL_OPENSSL_API_1_1=ON" "-DCIVETWEB_SSL_OPENSSL_API_3_0=OFF" "-DCIVETWEB_SSL_OPENSSL_API_1_0=OFF" "-DCIVETWEB_ENABLE_SSL=ON")
+  elseif((${ssl_major} EQUAL "3"))
+    MESSAGE(STATUS "Use SSL API VERSION 3.${ssl_minor} for civetweb")
+    set(ROOT_SSL_API "-DCIVETWEB_SSL_OPENSSL_API_3_0=ON" "-DCIVETWEB_SSL_OPENSSL_API_1_1=OFF" "-DCIVETWEB_SSL_OPENSSL_API_1_0=OFF" "-DCIVETWEB_ENABLE_SSL=ON")
+  elseif((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "0"))
+    MESSAGE(STATUS "Use SSL API VERSION 1.0 for civetweb")
+    set(ROOT_SSL_API "-DCIVETWEB_SSL_OPENSSL_API_1_0=ON" "-DCIVETWEB_SSL_OPENSSL_API_3_0=OFF" "-DCIVETWEB_SSL_OPENSSL_API_1_1=OFF" "-DCIVETWEB_ENABLE_SSL=ON")
+  else()
+    MESSAGE(WARNING "Not able to recognize SSL version ${OPENSSL_VERSION}, disable SSL")
+    set(ROOT_SSL_API "")
+  endif()
+else()
+  set(ROOT_SSL_API "")
+endif()
+if(NOT MSVC)
+  set(ROOT_SOCKET_FLAGS "-DUSE_X_DOM_SOCKET")
+else()
+  set(ROOT_SOCKET_FLAGS "")
+endif()
+
 ExternalProject_Add(BUILTIN_CIVETWEB
   PREFIX ${ROOT_CIVETWEB_PREFIX}
   # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
-  URL https://github.com/civetweb/civetweb/archive/refs/tags/v1.16.tar.gz # TODO move to LCG
+  URL https://github.com/civetweb/civetweb/archive/refs/tags/v${ROOT_CIVETWEB_VERSION}.tar.gz # TODO move to LCG
   URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
 
   LOG_DOWNLOAD  TRUE
@@ -49,11 +80,16 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     -DCMAKE_C_COMPILER:STRING=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}
+    -DCMAKE_C_FLAGS:STRING=${ROOT_SOCKET_FLAGS}
+    -DCMAKE_CXX_FLAGS:STRING=${ROOT_SOCKET_FLAGS}
     -DBUILD_SHARED_LIBS:BOOL=FALSE
     -DBUILD_TESTING=FALSE
     -DCIVETWEB_BUILD_TESTING=FALSE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    -DCIVETWEB_ENABLE_WEBSOCKETS=ON
+    -DOpenSSL_DIR=${OPENSSL_ROOT} # TODO check if it correctly picks up builtin if simultaneous to system-wide. Maybe we need to pass explicit OpenSSL_DIR
+    ${ROOT_SSL_API}
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_CIVETWEB_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_CIVETWEB_BUILD_COMMAND_FLAGS} --target install
   BUILD_BYPRODUCTS
@@ -64,10 +100,16 @@ ExternalProject_Add(BUILTIN_CIVETWEB
 file(MAKE_DIRECTORY ${ROOT_CIVETWEB_PREFIX}/include)
 add_library(civetweb::civetweb IMPORTED STATIC GLOBAL)
 add_dependencies(civetweb::civetweb BUILTIN_CIVETWEB)
+if(builtin_ssl)
+  add_dependencies(BUILTIN_CIVETWEB BUILTIN_SSL)
+endif()
 set_target_properties(civetweb::civetweb PROPERTIES
     IMPORTED_LOCATION ${ROOT_CIVETWEB_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_CIVETWEB_PREFIX}/include)
 target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC) # needed for Win32 since public flag is not correctly propagated to parent scope (BUILD_SHARED_LIBS works fine for building but when installing, flag info is lost)
+if (NOT ROOT_SSL_API STREQUAL "")
+  target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
+endif()
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
@@ -91,49 +133,9 @@ set(civetweb_VERSION ${ROOT_CIVETWEB_VERSION} PARENT_SCOPE)
 
 
 
-#~ if(builtin_civetweb)
-   #~ target_include_directories(RHTTP PRIVATE civetweb)
-
-  #~ if(ssl)
-    #~ target_include_directories(RHTTP SYSTEM PRIVATE ${OPENSSL_INCLUDE_DIR})
   #~ endif()
 
-  #~ target_compile_definitions(RHTTP PRIVATE -DUSE_WEBSOCKET)
 
-  #~ if(NOT MSVC)
-    #~ target_compile_definitions(RHTTP PRIVATE -DUSE_X_DOM_SOCKET)
-  #~ endif()
-
-  #~ if(ssl)
-    #~ if(OPENSSL_VERSION)
-      #~ string(REPLACE "." ";" lst ${OPENSSL_VERSION})
-      #~ list(GET lst 0 ssl_major)
-      #~ list(GET lst 1 ssl_minor)
-    #~ endif()
-
-    #~ if((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "1"))
-      #~ MESSAGE(STATUS "Use SSL API VERSION 1.1 for civetweb")
-      #~ target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_1_1)
-      #~ set(link_ssl ON)
-    #~ elseif((${ssl_major} EQUAL "3"))
-      #~ MESSAGE(STATUS "Use SSL API VERSION 3.${ssl_minor} for civetweb")
-      #~ target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_3_0)
-      #~ set(link_ssl ON)
-    #~ elseif((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "0"))
-      #~ MESSAGE(STATUS "Use SSL API VERSION 1.0 for civetweb")
-      #~ target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_1_0)
-      #~ set(link_ssl ON)
-    #~ else()
-      #~ MESSAGE(WARNING "Not able to recognize SSL version ${OPENSSL_VERSION}, disable SSL")
-      #~ target_compile_definitions(RHTTP PUBLIC -DNO_SSL)
-    #~ endif()
-    #~ if(link_ssl)
-      #~ target_compile_definitions(RHTTP PUBLIC -DNO_SSL_DL)
-      #~ target_link_libraries(RHTTP PRIVATE ${OPENSSL_LIBRARIES})
-    #~ endif()
-  #~ else()
-    #~ target_compile_definitions(RHTTP PUBLIC -DNO_SSL)
-  #~ endif()
   
     #~ # workaround for R__memcompress failure with external civetweb
   #~ target_compile_definitions(RHTTP PRIVATE -D_EXTERNAL_CIVETWEB)
