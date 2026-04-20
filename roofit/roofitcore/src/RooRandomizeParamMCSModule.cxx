@@ -404,7 +404,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
 }
 
 
-bool RooRandomizeParamMCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
+bool RooRandomizeParamMCSModule::processAfterFit(bool fitOk)
 {
    if (!fitOk)
       return true;

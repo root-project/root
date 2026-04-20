@@ -41,7 +41,7 @@ public:
 
   bool processBeforeGen(Int_t /*sampleNum*/) override ;
 
-  bool processAfterFit(Int_t sampleNum, bool fitOk) override;
+  bool processAfterFit(bool fitOk) override;
 
 private:
 

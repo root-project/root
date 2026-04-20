@@ -131,7 +131,7 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
+bool UpperLimitMCSModule::processAfterFit(bool fitOk)
 {
    if (!fitOk)
       return true;

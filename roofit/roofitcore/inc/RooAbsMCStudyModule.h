@@ -69,7 +69,7 @@ public:
   /// implemented, because it's the responsability of this method to ensure
   /// that this MC study module will not have added an element to its internal
   /// RooDataSet if the fit has failed.
-  virtual bool processAfterFit(Int_t sampleNum, bool fitOk) = 0;
+  virtual bool processAfterFit(bool fitOk) = 0;
 
 protected:
 

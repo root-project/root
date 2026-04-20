@@ -33,7 +33,7 @@ public:
   bool initializeRun(Int_t numSamples) override ;
   RooDataSet* finalizeRun() override ;
 
-  bool processAfterFit(Int_t sampleNum, bool fitOk) override  ;
+  bool processAfterFit(bool fitOk) override  ;
 
 private:
 
