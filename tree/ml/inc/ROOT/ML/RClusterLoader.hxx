@@ -43,7 +43,8 @@ struct RClusterRange {
    std::size_t rdfIdx;                  // which rdf this cluster belongs to
    std::uint64_t start;                 // first raw entry (incl)
    std::uint64_t end;                   // one-past-last entry (excl)
-   std::size_t numEntries{end - start}; // number of entries in the cluster (that pass filters, if any)
+   std::size_t numEntries{
+      static_cast<std::size_t>(end - start)}; // number of entries in the cluster (that pass filters, if any)
 
    std::size_t GetNumEntries() const { return numEntries; }
    void SetNumEntries(std::size_t num) { numEntries = num; }
