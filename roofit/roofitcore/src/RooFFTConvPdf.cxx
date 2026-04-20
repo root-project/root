@@ -657,10 +657,11 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
     while (j>=N2) j-= N2 ;
 
     iter->Next() ;
+    const std::size_t binIdx = cacheHist.getIndex(*cacheHist.get(), /*fast=*/true);
 #ifndef ROOFIT_MATH_FFTW3
-    cacheHist.set(output[j]);
+    cacheHist.set(binIdx, output[j], -1.);
 #else
-    cacheHist.set(aux.fftc2r->GetPointReal(j));
+    cacheHist.set(binIdx, aux.fftc2r->GetPointReal(j), -1.);
 #endif
   }
 }

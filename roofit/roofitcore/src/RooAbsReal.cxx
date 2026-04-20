@@ -1151,7 +1151,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
     const RooArgSet* obs = hist->get(i) ;
     double binVal = theClone->getVal(normSet?normSet:obs)*scaleFactor ;
     if (correctForBinSize) {
-      binVal*= hist->binVolume() ;
+      binVal*= hist->binVolume(i) ;
     }
     hist->set(i, binVal, 0.);
   }

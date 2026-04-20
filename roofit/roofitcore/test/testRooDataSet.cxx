@@ -374,10 +374,9 @@ TEST(RooDataSet, ImportDataHist)
    RooDataSet ds{"ds", "ds", x, RooFit::Import(dh)};
 
    for (int i = 0; i < x.numBins(); ++i) {
-      dh.get(i);
       ds.get(i);
-      EXPECT_FLOAT_EQ(ds.weight(), dh.weight()) << "weight() is off in bin " << i;
-      EXPECT_FLOAT_EQ(ds.weightSquared(), dh.weightSquared()) << "weightSquared() is off in bin " << i;
+      EXPECT_FLOAT_EQ(ds.weight(), dh.weight(i)) << "weight() is off in bin " << i;
+      EXPECT_FLOAT_EQ(ds.weightSquared(), dh.weightSquared(i)) << "weightSquared() is off in bin " << i;
    }
 }
 

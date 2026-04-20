@@ -192,7 +192,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
       cache.bin_center = bin_center;
       cache.observables = obsSet;
 
-      cache.binVolume = param_func->binVolume();
+      cache.binVolume = param_func->binVolume(bin_index);
 
       // Delete this part, simply a comment
       RooArgList obs_list( *(cache.bin_center) );

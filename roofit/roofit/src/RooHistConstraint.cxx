@@ -60,11 +60,11 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
 
     // Now populate nominal with parameters
     for (int i=0 ; i<phf->_dh.numEntries() ; i++) {
-      phf->_dh.get(i) ;
-      if (phf->_dh.weight()<threshold && phf->_dh.weight() != 0.) {
+      const double wi = phf->_dh.weight(i) ;
+      if (wi<threshold && wi != 0.) {
         const char* vname = Form("%s_nominal_bin_%i",GetName(),i) ;
         auto var = std::make_unique<RooRealVar>(vname,vname,0,1.E30);
-        var->setVal(phf->_dh.weight()) ;
+        var->setVal(wi) ;
         var->setConstant(true);
 
         auto gamma = static_cast<RooRealVar*>(phf->_p.at(i));

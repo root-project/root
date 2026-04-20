@@ -48,7 +48,7 @@ public:
 
   RooDataHist const& dataHist() const { return _dataSet; }
 
-  double binVolume() const { return _dataSet.binVolume(); }
+  double binVolume(std::size_t i) const { return _dataSet.binVolume(i); }
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
 

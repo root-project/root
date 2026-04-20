@@ -1697,26 +1697,27 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVa
   Int_t histOutSum(0) ;
   for (int i=0 ; i<hist->numEntries() ; i++) {
     hist->get(i) ;
+    const double wi = hist->weight(i) ;
     if (expectedData) {
 
       // Expected data, multiply p.d.f by nEvents
-      double w=hist->weight()*nEvents ;
+      double w=wi*nEvents ;
       hist->set(i, w, sqrt(w));
 
     } else if (extended) {
 
       // Extended mode, set contents to Poisson(pdf*nEvents)
-      double w = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
-      hist->set(w,sqrt(w)) ;
+      double w = RooRandom::randomGenerator()->Poisson(wi*nEvents) ;
+      hist->set(i, w, sqrt(w)) ;
 
     } else {
 
       // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
       // histogram yet.
-      if (hist->weight()>histMax) {
-        histMax = hist->weight() ;
+      if (wi>histMax) {
+        histMax = wi ;
       }
-      histOut[i] = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
+      histOut[i] = RooRandom::randomGenerator()->Poisson(wi*nEvents) ;
       histOutSum += histOut[i] ;
     }
   }
@@ -1739,7 +1740,7 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVa
       hist->get(ibinRand) ;
       double ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
 
-      if (ranY<hist->weight()) {
+      if (ranY<hist->weight(ibinRand)) {
         if (wgt==1) {
           histOut[ibinRand]++ ;
         } else {
@@ -1762,8 +1763,7 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVa
 
     // Transfer working array to histogram
     for (int i=0 ; i<hist->numEntries() ; i++) {
-      hist->get(i) ;
-      hist->set(histOut[i],sqrt(1.0*histOut[i])) ;
+      hist->set(i, histOut[i], sqrt(1.0*histOut[i])) ;
     }
 
   } else if (expectedData) {
@@ -1773,8 +1773,8 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVa
     // bin average and bin integral in sampling bins
     double corr = nEvents/hist->sumEntries() ;
     for (int i=0 ; i<hist->numEntries() ; i++) {
-      hist->get(i) ;
-      hist->set(hist->weight()*corr,sqrt(hist->weight()*corr)) ;
+      const double wnew = hist->weight(i)*corr ;
+      hist->set(i, wnew, sqrt(wnew)) ;
     }
 
   }
