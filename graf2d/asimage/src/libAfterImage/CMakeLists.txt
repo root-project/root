@@ -80,6 +80,7 @@ target_compile_definitions(
           HAVE_PROTOTYPES
           HAVE_STDARG_H
           HAVE_STDDEF_H
+          HAVE_STDLIB_H
           HAVE_STRING_H
           HAVE_SYS_STAT_H
           HAVE_SYS_TYPES_H
