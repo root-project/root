@@ -52,7 +52,7 @@ if(ssl)
     set(ROOT_SSL_API "-DCIVETWEB_SSL_OPENSSL_API_1_0=ON" "-DCIVETWEB_SSL_OPENSSL_API_3_0=OFF" "-DCIVETWEB_SSL_OPENSSL_API_1_1=OFF" "-DCIVETWEB_ENABLE_SSL=ON")
   else()
     MESSAGE(WARNING "Not able to recognize SSL version ${OPENSSL_VERSION}, disable SSL")
-    set(ROOT_SSL_API "")
+    set(ROOT_SSL_API "-DCIVETWEB_ENABLE_SSL=OFF")
   endif()
 else()
   set(ROOT_SSL_API "")
@@ -108,7 +108,7 @@ set_target_properties(civetweb::civetweb PROPERTIES
     IMPORTED_LOCATION ${ROOT_CIVETWEB_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_CIVETWEB_PREFIX}/include)
 target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC) # needed for Win32 since public flag is not correctly propagated to parent scope (BUILD_SHARED_LIBS works fine for building but when installing, flag info is lost)
-#~ if (NOT ROOT_SSL_API STREQUAL "")
+#~ if (NOT ROOT_SSL_API STREQUAL "DCIVETWEB_ENABLE_SSL=OFF")
   #~ target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
 #~ endif()
 
