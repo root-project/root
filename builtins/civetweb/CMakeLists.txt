@@ -107,9 +107,9 @@ set_target_properties(civetweb::civetweb PROPERTIES
     IMPORTED_LOCATION ${ROOT_CIVETWEB_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_CIVETWEB_PREFIX}/include)
 target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC) # needed for Win32 since public flag is not correctly propagated to parent scope (BUILD_SHARED_LIBS works fine for building but when installing, flag info is lost)
-if (NOT ROOT_SSL_API STREQUAL "")
-  target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
-endif()
+#~ if (NOT ROOT_SSL_API STREQUAL "")
+  #~ target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
+#~ endif()
 target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civeweb one gets failure R__memcompress
 
 # Set the canonical output of find_package according to
