@@ -55,7 +55,7 @@ if(ssl)
     set(ROOT_SSL_API "-DCIVETWEB_ENABLE_SSL=OFF")
   endif()
 else()
-  set(ROOT_SSL_API "")
+  set(ROOT_SSL_API "-DCIVETWEB_ENABLE_SSL=OFF")
 endif()
 if(NOT MSVC)
   set(ROOT_SOCKET_FLAGS "-DUSE_X_DOM_SOCKET")
@@ -86,6 +86,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DBUILD_SHARED_LIBS:BOOL=FALSE
     -DBUILD_TESTING=FALSE
     -DCIVETWEB_ENABLE_ASAN=OFF # If set to ON, you need to set below link_library interface to UBSAN libs
+    -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF # If set to ON, you need to set below link_library interface to CMAKE_DL_LIBS
     -DCIVETWEB_BUILD_TESTING=FALSE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
@@ -109,9 +110,9 @@ set_target_properties(civetweb::civetweb PROPERTIES
     IMPORTED_LOCATION ${ROOT_CIVETWEB_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_CIVETWEB_PREFIX}/include)
 target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC) # needed for Win32 since public flag is not correctly propagated to parent scope (BUILD_SHARED_LIBS works fine for building but when installing, flag info is lost)
-#~ if (NOT ROOT_SSL_API STREQUAL "DCIVETWEB_ENABLE_SSL=OFF")
-  #~ target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
-#~ endif()
+if (NOT ROOT_SSL_API STREQUAL "DCIVETWEB_ENABLE_SSL=OFF")
+  target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
+endif()
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
