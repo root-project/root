@@ -141,27 +141,28 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
   double histMax(-1) ;
   Int_t histOutSum(0) ;
   for (int i=0 ; i<_hist->numEntries() ; i++) {
-    _hist->get(i) ;
+    const RooArgSet* coords = _hist->get(i) ;
+    const double wi = _hist->weight(i) ;
     if (_expectedData) {
 
       // Expected data, multiply p.d.f by nEvents
-      double w=_hist->weight()*nEvents ;
-      wudata->add(*_hist->get(),w) ;
+      double w=wi*nEvents ;
+      wudata->add(*coords,w) ;
 
     } else if (extended) {
 
       // Extended mode, set contents to Poisson(pdf*nEvents)
-      double w = RooRandom::randomGenerator()->Poisson(_hist->weight()*nEvents) ;
-      wudata->add(*_hist->get(),w) ;
+      double w = RooRandom::randomGenerator()->Poisson(wi*nEvents) ;
+      wudata->add(*coords,w) ;
 
     } else {
 
       // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
       // histogram yet.
-      if (_hist->weight()>histMax) {
-   histMax = _hist->weight() ;
+      if (wi>histMax) {
+   histMax = wi ;
       }
-      histOut[i] = RooRandom::randomGenerator()->Poisson(_hist->weight()*nEvents) ;
+      histOut[i] = RooRandom::randomGenerator()->Poisson(wi*nEvents) ;
       histOutSum += histOut[i] ;
     }
   }
@@ -182,7 +183,7 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
       _hist->get(ibinRand) ;
       double ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
 
-      if (ranY<_hist->weight()) {
+      if (ranY<_hist->weight(ibinRand)) {
    if (wgt==1) {
      histOut[ibinRand]++ ;
    } else {

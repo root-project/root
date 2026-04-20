@@ -107,9 +107,9 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
     }
     if (!doSelect) continue ;
 
-    const double nData = hdata->weight() ;
+    const double nData = hdata->weight(i) ;
 
-    const double nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;
+    const double nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume(i) ;
 
     const double eExt = nPdf-nData ;
 
