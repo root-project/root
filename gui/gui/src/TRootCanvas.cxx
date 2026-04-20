@@ -127,6 +127,7 @@ enum ERootCanvasCommands {
    kFileSaveAsGIF,
    kFileSaveAsJPG,
    kFileSaveAsPNG,
+   kFileSaveAsBMP,
    kFileSaveAsTEX,
    kFilePrint,
    kFileCloseCanvas,
@@ -198,7 +199,7 @@ enum ERootCanvasCommands {
    kToolCutG
 
 };
-
+// clang-format off
 static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
@@ -211,6 +212,7 @@ static const char *gSaveAsTypes[] = { "PDF",          "*.pdf",
                                       "PNG",          "*.png",
                                       "JPEG",         "*.jpg",
                                       "GIF",          "*.gif",
+                                      "BMP",          "*.bmp",
                                       "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
                                       "XML",          "*.xml",
@@ -255,6 +257,7 @@ static ToolBarData_t gToolBarData1[] = {
    { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       0 },
    { 0,                0,                  kFALSE,    0,               0 }
 };
+// clang-format on
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -400,8 +403,9 @@ void TRootCanvas::CreateCanvas(const char *name)
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
-      fFileSaveMenu->AddEntry(TString::Format("%s.&jpg",name),  kFileSaveAsJPG);
-      fFileSaveMenu->AddEntry(TString::Format("%s.&png",name),  kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&jpg", name), kFileSaveAsJPG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&png", name), kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&bmp", name), kFileSaveAsBMP);
    }
 
    fFileSaveMenu->AddEntry(TString::Format("%s.&C",   name), kFileSaveAsC);
@@ -923,6 +927,7 @@ Bool_t TRootCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         Bool_t  appendedType = kFALSE;
                         TString fn = fi.fFilename;
                         TString ft = fi.fFileTypes[fi.fFileTypeIdx+1];
+                        // clang-format off
                         dir     = fi.fIniDir;
                         typeidx = fi.fFileTypeIdx;
                         overwr  = fi.fOverwrite;
@@ -934,6 +939,7 @@ again:
                             fn.EndsWith(".svg")  ||
                             fn.EndsWith(".tex")  ||
                             fn.EndsWith(".gif")  ||
+                            fn.EndsWith(".bmp")  ||
                             fn.EndsWith(".xml")  ||
                             fn.EndsWith(".xpm")  ||
                             fn.EndsWith(".jpg")  ||
@@ -953,11 +959,11 @@ again:
                            }
                            Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
                         }
-                        for (int i=1;gSaveAsTypes[i];i+=2) {
+                        for (int i = 1; gSaveAsTypes[i]; i += 2) {
                            TString ftype = gSaveAsTypes[i];
                            ftype.ReplaceAll("*.", ".");
                            if (fn.EndsWith(ftype.Data())) {
-                              typeidx = i-1;
+                              typeidx = i - 1;
                               break;
                            }
                         }
@@ -989,6 +995,9 @@ again:
                      break;
                   case kFileSaveAsPNG:
                      fCanvas->SaveAs(".png");
+                     break;
+                  case kFileSaveAsBMP:
+                     fCanvas->SaveAs(".bmp");
                      break;
                   case kFileSaveAsTEX:
                      fCanvas->SaveAs(".tex");
@@ -1292,6 +1301,7 @@ again:
                      hd->SetText(gHelpPostscript);
                      hd->Popup();
                      break;
+                     // clang-format on
                }
             default:
                break;
