@@ -211,6 +211,28 @@ auto MakeDatasetColReadersKey(std::string_view colName, const std::type_info &ti
    //    df.Sum<RVecI>("stdVectorBranch");
    return std::string(colName) + ':' + ti.name();
 }
+
+/// \brief Check if object of a certain type is in the directory
+///
+/// Attempts to read an object of the specified type via TDirectory::Get, wraps
+/// it in a std::unique_ptr to avoid leaking the object.
+template <typename T>
+bool IsObjectInDir(std::string_view objName, TDirectory &dir)
+{
+   std::unique_ptr<T> o{dir.Get<T>(objName.data())};
+   return o.get();
+}
+
+/// \brief Check if a generic object is in the directory
+///
+/// Checks if a generic object is in the directory, uses TDirectory::GetKey
+/// to avoid having to deal with memory management of the object being read
+/// without having its type.
+template <>
+bool IsObjectInDir<void>(std::string_view objName, TDirectory &dir)
+{
+   return dir.GetKey(objName.data());
+}
 } // anonymous namespace
 
 /**
@@ -391,8 +413,8 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    fSamples = spec.MoveOutSamples();
    fSampleMap.clear();
 
-   const bool isTTree = inFile->Get<TTree>(datasetName[0].data());
-   const bool isRNTuple = inFile->Get<ROOT::RNTuple>(datasetName[0].data());
+   const bool isTTree = IsObjectInDir<TTree>(datasetName[0], *inFile);
+   const bool isRNTuple = IsObjectInDir<ROOT::RNTuple>(datasetName[0], *inFile);
 
    if (isTTree || isRNTuple) {
 
@@ -458,7 +480,8 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
             v.second.reset();
       }
    } else {
-      std::string errMsg = inFile->Get(datasetName[0].data()) ? "unsupported data format for" : "cannot find";
+      std::string errMsg =
+         IsObjectInDir<void>(datasetName[0].data(), *inFile) ? "unsupported data format for" : "cannot find";
       throw std::invalid_argument("RDataFrame: " + errMsg + " dataset \"" + std::string(datasetName[0]) + "\" in file \"" +
                                   inFile->GetName() + "\".");
    }
@@ -1252,13 +1275,13 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
 
    auto inFile = OpenFileWithSanityChecks(fileNameGlob);
 
-   if (inFile->Get<TTree>(datasetName.data())) {
+   if (IsObjectInDir<TTree>(datasetName, *inFile)) {
       return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
+   } else if (IsObjectInDir<ROOT::RNTuple>(datasetName, *inFile)) {
       return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
    }
 
-   std::string errMsg = inFile->Get(datasetName.data()) ? "unsupported data format for" : "cannot find";
+   std::string errMsg = IsObjectInDir<void>(datasetName, *inFile) ? "unsupported data format for" : "cannot find";
 
    throw std::invalid_argument("RDataFrame: " + errMsg + " dataset \"" + std::string(datasetName) + "\" in file \"" +
                                inFile->GetName() + "\".");
@@ -1274,13 +1297,13 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
 
    auto inFile = OpenFileWithSanityChecks(fileNameGlobs[0]);
 
-   if (inFile->Get<TTree>(datasetName.data())) {
+   if (IsObjectInDir<TTree>(datasetName, *inFile)) {
       return CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
+   } else if (IsObjectInDir<ROOT::RNTuple>(datasetName, *inFile)) {
       return CreateLMFromRNTuple(datasetName, fileNameGlobs, defaultColumns);
    }
 
-   std::string errMsg = inFile->Get(datasetName.data()) ? "unsupported data format for" : "cannot find";
+   std::string errMsg = IsObjectInDir<void>(datasetName, *inFile) ? "unsupported data format for" : "cannot find";
 
    throw std::invalid_argument("RDataFrame: " + errMsg + " dataset \"" + std::string(datasetName) + "\" in file \"" +
                                inFile->GetName() + "\".");
