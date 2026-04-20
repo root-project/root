@@ -172,7 +172,7 @@ struct RTFString {
       // The length of strings with 255 characters and longer are encoded with a 32-bit integer following the first
       // byte. This is currently not handled.
       R__ASSERT(str.length() < 255);
-      fLName = str.length();
+      fLName = static_cast<unsigned char>(str.length());
       memcpy(fData, str.data(), fLName);
    }
    std::size_t GetSize() const
@@ -228,7 +228,7 @@ struct RTFKey {
       // For writing, we alywas produce "big" keys with 64-bit SeekKey and SeekPdir.
       fVersion = fVersion + kBigKeyVersion;
       fObjLen = szObjInMem;
-      fKeyLen = GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize();
+      fKeyLen = static_cast<RUInt16BE>(GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize());
       fInfoLong.fSeekKey = seekKey;
       fInfoLong.fSeekPdir = seekPdir;
       // Depends on fKeyLen being set
