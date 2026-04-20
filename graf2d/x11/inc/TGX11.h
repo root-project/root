@@ -79,10 +79,7 @@ private:
                    UChar_t *image, Drawable_t id);
    void   SetColor(XWindow_t *ctxt, void *gc, Int_t ci);
    void   SetInput(Int_t inp);
-   void   CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
-                             Int_t &maxcolors);
    void   MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors, const XColor_t &bkgr);
-   Int_t  FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
    void   ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----

@@ -2468,30 +2468,6 @@ void TGX11::SetOpacity(Int_t percent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Collect in orgcolors all different original image colors.
-
-void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
-                               Int_t &maxcolors)
-{
-   if (maxcolors == 0) {
-      ncolors   = 0;
-      maxcolors = 100;
-      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
-   }
-
-   for (int i = 0; i < ncolors; i++)
-      if (pixel == orgcolors[i]) return;
-
-   if (ncolors >= maxcolors) {
-      orgcolors = (ULong_t*) TStorage::ReAlloc(orgcolors,
-          maxcolors*2*sizeof(ULong_t), maxcolors*sizeof(ULong_t));
-      maxcolors *= 2;
-   }
-
-   orgcolors[ncolors++] = pixel;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Get RGB values for orgcolors, add percent neutral to the RGB and
 /// allocate fNewColors.
 
@@ -2525,19 +2501,6 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors, c
       gCws->fNewColors[i] = xcol[i].pixel;
 
    delete [] xcol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns index in orgcolors (and fNewColors) for pixel.
-
-Int_t TGX11::FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors)
-{
-   for (int i = 0; i < ncolors; i++)
-      if (pixel == orgcolors[i]) return i;
-
-   Error("FindColor", "did not find color, should never happen!");
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2754,8 +2717,8 @@ void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
 
    auto ctxt = (XWindow_t *) wctxt;
 
-   ULong_t *orgcolors = nullptr, *tmpc = nullptr;
-   Int_t    maxcolors = 0, ncolors = 0, ntmpc = 0;
+   ULong_t *tmpc = nullptr;
+   Int_t   ntmpc = 0;
 
    // save previous allocated colors, delete at end when not used anymore
    if (ctxt->fNewColors) {
@@ -2768,30 +2731,36 @@ void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
                              ctxt->fHeight, AllPlanes, ZPixmap);
    if (!image) return;
    // collect different image colors
-   for (unsigned y = 0; y < ctxt->fHeight; y++) {
-      for (unsigned x = 0; x < ctxt->fWidth; x++) {
+
+   std::vector<ULong_t> orgcolors;
+
+   for (UInt_t y = 0; y < ctxt->fHeight; y++) {
+      for (UInt_t x = 0; x < ctxt->fWidth; x++) {
          ULong_t pixel = XGetPixel(image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
+            orgcolors.emplace_back(pixel);
       }
    }
-   if (ncolors == 0) {
+   if (orgcolors.empty()) {
       XDestroyImage(image);
-      ::operator delete(orgcolors);
       return;
    }
 
    XColor_t &bkgr = GetColor(ctxt->fAttFill.GetFillColor());
 
    // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors, ncolors, bkgr);
+   MakeOpaqueColors(percent, orgcolors.data(), orgcolors.size(), bkgr);
 
    if (ctxt->fNewColors) {
       // put opaque colors in image
-      for (unsigned y = 0; y < ctxt->fHeight; y++) {
-         for (unsigned x = 0; x < ctxt->fWidth; x++) {
+      for (UInt_t y = 0; y < ctxt->fHeight; y++) {
+         for (UInt_t x = 0; x < ctxt->fWidth; x++) {
             ULong_t pixel = XGetPixel(image, x, y);
-            Int_t idx = FindColor(pixel, orgcolors, ncolors);
-            XPutPixel(image, x, y, ctxt->fNewColors[idx]);
+            auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+            if (iter != orgcolors.end()) {
+               auto idx = iter - orgcolors.begin();
+               XPutPixel(image, x, y, ctxt->fNewColors[idx]);
+            }
          }
       }
    }
@@ -2808,7 +2777,6 @@ void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
       delete [] tmpc;
    }
    XDestroyImage(image);
-   ::operator delete(orgcolors);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2907,54 +2875,51 @@ static void PutByte(Byte_t b)
 
 void TGX11::ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B)
 {
-   ULong_t *orgcolors = nullptr;
-   Int_t    maxcolors = 0, ncolors = 0;
+   std::vector<ULong_t> orgcolors;
 
    // collect different image colors
-   int x, y;
-   for (x = 0; x < (int) gCws->fWidth; x++) {
-      for (y = 0; y < (int) gCws->fHeight; y++) {
+   for (UInt_t x = 0; x < gCws->fWidth; x++) {
+      for (UInt_t y = 0; y < gCws->fHeight; y++) {
          ULong_t pixel = XGetPixel(image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
+            orgcolors.emplace_back(pixel);
       }
    }
 
    // get RGB values belonging to pixels
-   RXColor *xcol = new RXColor[ncolors];
+   std::vector<RXColor> xcol(orgcolors.size());
 
-   int i;
-   for (i = 0; i < ncolors; i++) {
+   for (size_t i = 0; i < orgcolors.size(); i++) {
       xcol[i].pixel = orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
       xcol[i].flags = DoRed | DoGreen | DoBlue;
    }
-   QueryColors(fColormap, xcol, ncolors);
+   QueryColors(fColormap, xcol.data(), orgcolors.size());
 
    // create RGB arrays and store RGB's for each color and set number of colors
    // (space must be delete by caller)
-   R = new Int_t[ncolors];
-   G = new Int_t[ncolors];
-   B = new Int_t[ncolors];
+   R = new Int_t[orgcolors.size()];
+   G = new Int_t[orgcolors.size()];
+   B = new Int_t[orgcolors.size()];
 
-   for (i = 0; i < ncolors; i++) {
+   for (size_t i = 0; i < orgcolors.size(); i++) {
       R[i] = xcol[i].red;
       G[i] = xcol[i].green;
       B[i] = xcol[i].blue;
    }
-   ncol = ncolors;
+   ncol = (Int_t) orgcolors.size();
 
    // update image with indices (pixels) into the new RGB colormap
-   for (x = 0; x < (int) gCws->fWidth; x++) {
-      for (y = 0; y < (int) gCws->fHeight; y++) {
+   for (UInt_t x = 0; x < gCws->fWidth; x++) {
+      for (UInt_t y = 0; y < gCws->fHeight; y++) {
          ULong_t pixel = XGetPixel(image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         XPutPixel(image, x, y, idx);
+         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+         if (iter != orgcolors.end()) {
+            auto idx = iter - orgcolors.begin();
+            XPutPixel(image, x, y, idx);
+         }
       }
    }
-
-   // cleanup
-   delete [] xcol;
-   ::operator delete(orgcolors);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
