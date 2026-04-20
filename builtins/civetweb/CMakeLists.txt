@@ -110,6 +110,7 @@ target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC)
 if (NOT ROOT_SSL_API STREQUAL "")
   target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
 endif()
+target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civeweb one gets failure R__memcompress
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
@@ -117,25 +118,3 @@ set(civetweb_INCLUDE_DIRS ${ROOT_CIVETWEB_PREFIX}/include PARENT_SCOPE)
 set(civetweb_LIBRARIES ${ROOT_CIVETWEB_LIBRARY} PARENT_SCOPE)
 set(civetweb_FOUND TRUE PARENT_SCOPE)
 set(civetweb_VERSION ${ROOT_CIVETWEB_VERSION} PARENT_SCOPE)
-
-# TODO:
-#~ # look for the realtime extensions library and use it if it exists
-#~ find_library(RT_LIBRARY rt)
-#~ if(RT_LIBRARY)
-  #~ set(RT_LIBRARIES ${RT_LIBRARY})
-#~ endif()
-
-#~ if(builtin_civetweb)
-   #~ set(_civetweb_src civetweb/civetweb.c)
-   #~ set(_civetweb_libs ${RT_LIBRARIES})
-#~ endif()
-
-
-
-
-  #~ endif()
-
-
-  
-    #~ # workaround for R__memcompress failure with external civetweb
-  #~ target_compile_definitions(RHTTP PRIVATE -D_EXTERNAL_CIVETWEB)

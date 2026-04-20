@@ -40,7 +40,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
   LIBRARIES
     ZLIB::ZLIB
     civetweb::civetweb
-    ${CMAKE_DL_LIBS}
   DEPENDENCIES
     RIO
     Thread
