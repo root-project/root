@@ -130,7 +130,7 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
 
    // Check that the special column #<collection> works without jitting...
    auto identity = [](std::size_t sz) { return sz; };
-   auto max_njets = df.Define("njets", identity, {"R_rdf_sizeof_jets"}).Max<std::size_t>("njets");
+   auto max_njets = df.Define("njets", identity, {"R_rdf_sizeof_jets"}).Max("njets");
    auto max_njets2 = df.Max<std::size_t>("#jets");
    auto max_rvec = df.Max<std::size_t>("#rvec");
    EXPECT_EQ(*max_njets, *max_njets2);
@@ -138,8 +138,8 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
    EXPECT_EQ(*max_rvec, 3);
 
    // ...and with jitting
-   auto max_njets_jitted = df.Define("njets", "R_rdf_sizeof_jets").Max<std::size_t>("njets");
-   auto max_njets_jitted2 = df.Define("njets", "#jets").Max<std::size_t>("njets");
+   auto max_njets_jitted = df.Define("njets", "R_rdf_sizeof_jets").Max("njets");
+   auto max_njets_jitted2 = df.Define("njets", "#jets").Max("njets");
    auto max_njets_jitted3 = df.Max("#jets");
    auto max_rvec2 = df.Max("#rvec");
    EXPECT_EQ(*max_njets_jitted, *max_njets_jitted2);
