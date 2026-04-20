@@ -25,13 +25,6 @@
 #include <plugins/include/clad/Differentiator/Differentiator.h>
 #include "TMath.h"
 
-// For the digamma function, that is the derivative of lgamma. We get it via
-// mathmore from the GSL, so the pullbacks that use digamma are only available
-// with mathmore=ON.
-#ifdef R__HAS_MATHMORE
-#include "Math/SpecFuncMathMore.h"
-#endif
-
 #include <stdexcept>
 
 namespace clad {
@@ -103,15 +96,11 @@ ValueAndPushforward<T, T> Erfc_pushforward(T x, T d_x)
    return {::TMath::Erfc(x), -Erf_pushforward(x, d_x).pushforward};
 }
 
-#ifdef R__HAS_MATHMORE
-
 template <typename T>
 ValueAndPushforward<T, T> LnGamma_pushforward(T z, T d_z)
 {
-   return {::TMath::LnGamma(z), ::ROOT::Math::digamma(z) * d_z};
+   return {::TMath::LnGamma(z), ::clad::custom_derivatives::std::clad_digamma(z) * d_z};
 }
-
-#endif
 
 template <typename T>
 ValueAndPushforward<T, T> Exp_pushforward(T x, T d_x)
@@ -633,8 +622,6 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
    *d_xi += _d_v * -((x - x0) / (xi * xi));
 }
 
-#ifdef R__HAS_MATHMORE
-
 inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x);
 
 inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
@@ -674,9 +661,8 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -753,9 +739,8 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    }
    {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -822,9 +807,8 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -1085,14 +1069,11 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    }
    {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
-
-#endif // R__HAS_MATHMORE
 
 } // namespace Math
 } // namespace ROOT
