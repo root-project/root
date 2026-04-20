@@ -59,7 +59,7 @@ TEST(RooRealVar, AlternativeBinnings)
   std::unique_ptr<RooRealVar> var2(dynamic_cast<RooRealVar*>(var.clone()));
   var2->setRange("myRange",1,2);
   EXPECT_EQ( var.getMin("myRange"), 0. ); // still has old range, because not shared
-  EXPECT_EQ( var2->getMin("myRange"), 0. );
+  EXPECT_EQ( var2->getMin("myRange"), 1. );
   var2->removeBinning("myRange");
   EXPECT_FALSE( var2->hasRange("myRange") );
   EXPECT_TRUE( var.hasRange("myRange") );
