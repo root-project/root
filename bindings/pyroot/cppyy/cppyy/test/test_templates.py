@@ -351,7 +351,6 @@ class TestTEMPLATES:
         assert type(d.get3()) == int
         assert d.get3() == 5
 
-    @mark.xfail(strict=True)
     def test14_templated_return_type(self):
         """Use of a templated return type"""
 
