@@ -74,7 +74,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   LOG_BUILD     TRUE
   LOG_INSTALL   TRUE
   LOG_OUTPUT_ON_FAILURE TRUE
-
+  INSTALL_DIR ${ROOT_CIVETWEB_PREFIX}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
@@ -110,7 +110,6 @@ target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC)
 #~ if (NOT ROOT_SSL_API STREQUAL "")
   #~ target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
 #~ endif()
-target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civeweb one gets failure R__memcompress
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
