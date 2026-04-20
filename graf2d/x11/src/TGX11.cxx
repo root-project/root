@@ -2495,33 +2495,23 @@ void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolor
 /// Get RGB values for orgcolors, add percent neutral to the RGB and
 /// allocate fNewColors.
 
-void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
+void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors, const XColor_t &bkgr)
 {
    if (ncolors == 0) return;
 
    RXColor *xcol = new RXColor[ncolors];
 
-   int i;
-   for (i = 0; i < ncolors; i++) {
+   for (Int_t i = 0; i < ncolors; i++) {
       xcol[i].pixel = orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
       xcol[i].flags = DoRed | DoGreen | DoBlue;
    }
    QueryColors(fColormap, xcol, ncolors);
 
-   UShort_t add = percent * kBIGGEST_RGB_VALUE / 100;
-
-   Int_t val;
-   for (i = 0; i < ncolors; i++) {
-      val = xcol[i].red + add;
-      if (val > kBIGGEST_RGB_VALUE) val = kBIGGEST_RGB_VALUE;
-      xcol[i].red = (UShort_t) val;
-      val = xcol[i].green + add;
-      if (val > kBIGGEST_RGB_VALUE) val = kBIGGEST_RGB_VALUE;
-      xcol[i].green = (UShort_t) val;
-      val = xcol[i].blue + add;
-      if (val > kBIGGEST_RGB_VALUE) val = kBIGGEST_RGB_VALUE;
-      xcol[i].blue = (UShort_t) val;
+   for (Int_t i = 0; i < ncolors; i++) {
+      xcol[i].red   = (UShort_t) TMath::Min((Int_t) xcol[i].red * (100 - percent) / 100  + bkgr.fRed * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].green = (UShort_t) TMath::Min((Int_t) xcol[i].green * (100 - percent) / 100  + bkgr.fGreen * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].blue  = (UShort_t) TMath::Min((Int_t) xcol[i].blue * (100 - percent) / 100  + bkgr.fBlue * percent / 100, kBIGGEST_RGB_VALUE);
       if (!AllocColor(fColormap, &xcol[i]))
          Warning("MakeOpaqueColors", "failed to allocate color %hd, %hd, %hd",
                  xcol[i].red, xcol[i].green, xcol[i].blue);
@@ -2531,7 +2521,7 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
    gCws->fNewColors = new ULong_t[ncolors];
    gCws->fNcolors   = ncolors;
 
-   for (i = 0; i < ncolors; i++)
+   for (Int_t i = 0; i < ncolors; i++)
       gCws->fNewColors[i] = xcol[i].pixel;
 
    delete [] xcol;
@@ -2790,8 +2780,10 @@ void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
       return;
    }
 
+   XColor_t &bkgr = GetColor(ctxt->fAttFill.GetFillColor());
+
    // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors, ncolors);
+   MakeOpaqueColors(percent, orgcolors, ncolors, bkgr);
 
    if (ctxt->fNewColors) {
       // put opaque colors in image
