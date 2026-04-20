@@ -129,7 +129,6 @@ else()
             HAVE_DIRENT_H
             HAVE_LONG_LONG
             HAVE_STDINT_H
-            HAVE_STDLIB_H
             HAVE_UNISTD_H
             HAVE_STRINGS_H
             SHAPE
