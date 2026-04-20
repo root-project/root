@@ -438,7 +438,7 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
 
     // Call module between generation and fitting hook
     for (RooAbsMCStudyModule *mod : _modList) {
-      mod->processAfterFit(nSamples, fitOk) ;
+      mod->processAfterFit(fitOk) ;
     }
 
     // Optionally write to ascii file

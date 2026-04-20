@@ -91,7 +91,7 @@ RooDataSet *RooChi2MCSModule::finalizeRun()
 ////////////////////////////////////////////////////////////////////////////////
 /// Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
 
-bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/, bool fitOk)
+bool RooChi2MCSModule::processAfterFit(bool fitOk)
 {
   if(!fitOk)
      return true;
