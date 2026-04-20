@@ -594,6 +594,32 @@ Entries within the buffer are shuffled together before batching if shuffling is 
 
 ## Experimental features
 
+### Opting out of object auto registration
+In preparation for ROOT 7, ROOT 6.40 introduces an experimental mode for opting out of the auto-registration of objects.
+In ROOT 7, this will be the default, and an opt-in will be required to make these objects auto-register themselves.
+The table below shows which objects currently honour this mode, and which objects are planned to be added on the path to ROOT 7.
+
+The planned ROOT 7 behaviour can be enabled in one of three ways:
+1. `ROOT::Experimental::DisableObjectAutoRegistration()`: This disables auto registration *for the current thread*.
+2. Setting the environment variable `ROOT_OBJECT_AUTO_REGISTRATION=0`: This sets the default for every thread that starts.
+3. In `.rootrc`, set the entry `Root.ObjectAutoRegistration: 0`: This sets the default for every thread that starts.
+
+**Note that method 1 affects only the current thread**, whereas methods 2 and 3 set the default for every thread that is started in this ROOT session.
+Using `ROOT::Experimental::EnableObjectAutoRegistration()`, the auto-registration can be enabled for a single thread without affecting the rest of the session.
+
+Consult the doxygen documentation of these functions in the [ROOT::Experimental namespace](https://root.cern.ch/doc/v640/namespaceROOT_1_1Experimental.html) for details.
+
+|                       | Honours `DisableObjectAutoRegistration()`? | Could this be disabled previously? |
+| --------------------- | ------------------------------------------ | ---------------------------------- |
+| TH1 and derived       | Yes                                        | TH1::AddDirectoryStatus()          |
+| TGraph2D              | Yes                                        | TH1::AddDirectoryStatus()          |
+| RooPlot               | Yes                                        | RooPlot::addDirectoryStatus()      |
+| TEfficiency           | Yes                                        | No                                 |
+| TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
+| TEntryList            | No, but planned for 6.42                   | No                                 |
+| TEventList            | No, but planned for 6.42                   | No                                 |
+| TFunction             | No, but work in progress                   | No                                 |
+
 ## Versions of built-in packages
 
 The version of the following packages has been updated:
