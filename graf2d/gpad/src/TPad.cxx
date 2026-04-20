@@ -3675,6 +3675,7 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
             XYtoAbsPixel(GetX1(), GetY2(), px, py);
             if (fMother)
                fMother->CopyBackgroundPixmaps(this, px, py);
+            pp->SetAttFill({color, 1001}); // use fill color producing opacity
             pp->SetOpacity(style - 4000);
          }
       } else if ((color == 10) && (style > 3000) && (style < 3100))
