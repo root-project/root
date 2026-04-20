@@ -4354,26 +4354,44 @@ static void PutByte(Byte_t b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns in R G B the ncol colors of the palette used by the image.
-/// The image pixels are changed to index values in these R G B arrays.
-/// This produces a colormap with only the used colors (so even on displays
-/// with more than 8 planes we will be able to create GIF's when the image
-/// contains no more than 256 different colors). If it does contain more
-/// colors we will have to use GIFquantize to reduce the number of colors.
-/// The R G B arrays must be deleted by the caller.
+/// Writes the current window into GIF file.
 
-void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
-                             Int_t * &G, Int_t * &B)
+Int_t TGWin32::WriteGIF(char *name)
 {
+   Byte_t scline[2000], r[256], b[256], g[256];
+
+   if (gGifImage) {
+      gdk_image_unref(gGifImage);
+   }
+
+   gGifImage = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
+                             gCws->width, gCws->height);
+   if (!gGifImage)
+      return 0;
+
+   /// Collect R G B of colors of the palette used by the image.
+   /// The image pixels are changed to index values in these R G B arrays.
+   /// This produces a colormap with only the used colors (so even on displays
+   /// with more than 8 planes we will be able to create GIF's when the image
+   /// contains no more than 256 different colors). If it does contain more
+   /// colors we will have to use GIFquantize to reduce the number of colors.
+
    std::vector<ULong_t> orgcolors;
 
    // collect different image colors
-   for (UInt_t x = 0; x < (int) gCws->width; x++) {
-      for (UInt_t y = 0; y < (int) gCws->height; y++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+   for (UInt_t x = 0; x < gCws->width; x++) {
+      for (UInt_t y = 0; y < gCws->height; y++) {
+         ULong_t pixel = GetPixelImage((Drawable_t)gGifImage, x, y);
          if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
             orgcolors.emplace_back(pixel);
       }
+   }
+
+   if (orgcolors.size() > 256) {
+      Error("WriteGIF", "can not create GIF of image containing more than 256 colors");
+      gdk_image_unref(gGifImage);
+      gGifImage = nullptr;
+      return 0;
    }
 
    // get RGB values belonging to pixels
@@ -4390,93 +4408,48 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    gdk_color_context_query_colors(cc, xcol.data(), orgcolors.size());
    gdk_color_context_free(cc);
 
-   // create RGB arrays and store RGB's for each color and set number of colors
-   // (space must be delete by caller)
-   R = new Int_t[orgcolors.size()];
-   G = new Int_t[orgcolors.size()];
-   B = new Int_t[orgcolors.size()];
-
+   UChar_t maxcol = 0;
    for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      R[i] = xcol[i].red;
-      G[i] = xcol[i].green;
-      B[i] = xcol[i].blue;
+      maxcol = TMath::Max(maxcol, xcol[i].red);
+      maxcol = TMath::Max(maxcol, xcol[i].green);
+      maxcol = TMath::Max(maxcol, xcol[i].blue);
    }
-   ncol = (Int_t) orgcolors.size();
+   if (maxcol == 0)
+      maxcol = 255;
 
    // update image with indices (pixels) into the new RGB colormap
    for (UInt_t x = 0; x < gCws->width; x++) {
       for (UInt_t y = 0; y < gCws->height; y++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         ULong_t pixel = GetPixelImage((Drawable_t)gGifImage, x, y);
          auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
          if (iter != orgcolors.end()) {
             auto idx = iter - orgcolors.begin();
-            PutPixel((Drawable_t)image, x, y, idx);
+            PutPixel((Drawable_t)gGifImage, x, y, idx);
          }
       }
    }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Writes the current window into GIF file.
-
-Int_t TGWin32::WriteGIF(char *name)
-{
-   Byte_t scline[2000], r[256], b[256], g[256];
-   Int_t *R, *G, *B;
-   Int_t ncol, maxcol, i;
-
-   if (gGifImage) {
-      gdk_image_unref((GdkImage *)gGifImage);
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      r[i] = xcol[i].red * 255 / maxcol;
+      g[i] = xcol[i].green * 255 / maxcol;
+      b[i] = xcol[i].blue * 255 / maxcol;
    }
 
-   gGifImage = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
-                             gCws->width, gCws->height);
-
-   ImgPickPalette(gGifImage, ncol, R, G, B);
-
-   if (ncol > 256) {
-      //GIFquantize(...);
-      Error("WriteGIF",
-            "can not create GIF of image containing more than 256 colors");
-      delete[]R;
-      delete[]G;
-      delete[]B;
-      return 0;
-   }
-
-   maxcol = 0;
-   for (i = 0; i < ncol; i++) {
-      if (maxcol < R[i]) maxcol = R[i];
-      if (maxcol < G[i]) maxcol = G[i];
-      if (maxcol < B[i]) maxcol = B[i];
-      r[i] = 0;
-      g[i] = 0;
-      b[i] = 0;
-   }
-   if (maxcol != 0) {
-      for (i = 0; i < ncol; i++) {
-         r[i] = R[i] * 255 / maxcol;
-         g[i] = G[i] * 255 / maxcol;
-         b[i] = B[i] * 255 / maxcol;
-      }
-   }
-
+   Int_t ret = 0;
    gGifFile = fopen(name, "wb");
 
    if (gGifFile) {
       GIFencode(gCws->width, gCws->height,
-          ncol, r, g, b, scline, ::GetPixel, PutByte);
+                orgcolors.size(), r, g, b, scline, ::GetPixel, PutByte);
       fclose(gGifFile);
-      i = 1;
+      ret = 1;
     } else {
       Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
    }
-   delete[]R;
-   delete[]G;
-   delete[]B;
+   gdk_image_unref(gGifImage);
+   gGifImage = nullptr;
 
-   return i;
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -86,7 +86,6 @@ private:
    void  RemovePixmap(GdkDrawable *pix);
    void  SetColor(XWindow_t *ctxt, GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
-   void  ImgPickPalette(GdkImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
    void MapGCValues(GCValues_t &gval, ULong_t &xmask, GdkGCValues &xgval, Bool_t tox = kTRUE);
