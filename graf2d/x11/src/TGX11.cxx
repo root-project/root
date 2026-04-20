@@ -103,8 +103,7 @@ struct XWindow_t {
    Int_t    fYclip = 0;               ///< y coordinate of the clipping rectangle
    UInt_t   fWclip = 0;               ///< width of the clipping rectangle
    UInt_t   fHclip = 0;               ///< height of the clipping rectangle
-   ULong_t *fNewColors = 0;           ///< new image colors (after processing)
-   Int_t    fNcolors = 0;             ///< number of different colors
+   std::vector<ULong_t> fNewColors;   ///< extra image colors created for transparency (after processing)
    Bool_t   fShared = 0;              ///< notify when window is shared
    GC       fGClist[kMAXGC];          ///< list of GC object, individual for each window
    TVirtualX::EDrawMode drawMode = TVirtualX::kCopy;    ///< current draw mode
@@ -423,11 +422,10 @@ void TGX11::CloseWindow()
    if (gCws->fBuffer)
       XFreePixmap((Display*)fDisplay, gCws->fBuffer);
 
-   if (gCws->fNewColors) {
+   if (!gCws->fNewColors.empty()) {
       if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
-      delete [] gCws->fNewColors;
-      gCws->fNewColors = nullptr;
+         XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors.data(), gCws->fNewColors.size(), 0);
+      gCws->fNewColors.clear();
    }
 
    if (!gCws->fShared) { // if not QT window
@@ -1442,7 +1440,6 @@ Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
    gCws->fClip          = 0;
    gCws->fWidth         = wval;
    gCws->fHeight        = hval;
-   gCws->fNewColors     = nullptr;
    gCws->fShared        = kFALSE;
 
    return wid;
@@ -1505,7 +1502,6 @@ Int_t TGX11::InitWindow(ULong_t win)
    gCws->fClip         = 0;
    gCws->fWidth        = wval;
    gCws->fHeight       = hval;
-   gCws->fNewColors    = nullptr;
    gCws->fShared       = kFALSE;
 
    return wid;
@@ -1531,7 +1527,6 @@ Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
    gCws->fClip          = 0;
    gCws->fWidth         = w;
    gCws->fHeight        = h;
-   gCws->fNewColors     = nullptr;
    gCws->fShared        = kTRUE;
 
    return wid;
@@ -2468,42 +2463,6 @@ void TGX11::SetOpacity(Int_t percent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get RGB values for orgcolors, add percent neutral to the RGB and
-/// allocate fNewColors.
-
-void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors, const XColor_t &bkgr)
-{
-   if (ncolors == 0) return;
-
-   RXColor *xcol = new RXColor[ncolors];
-
-   for (Int_t i = 0; i < ncolors; i++) {
-      xcol[i].pixel = orgcolors[i];
-      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed | DoGreen | DoBlue;
-   }
-   QueryColors(fColormap, xcol, ncolors);
-
-   for (Int_t i = 0; i < ncolors; i++) {
-      xcol[i].red   = (UShort_t) TMath::Min((Int_t) xcol[i].red * (100 - percent) / 100  + bkgr.fRed * percent / 100, kBIGGEST_RGB_VALUE);
-      xcol[i].green = (UShort_t) TMath::Min((Int_t) xcol[i].green * (100 - percent) / 100  + bkgr.fGreen * percent / 100, kBIGGEST_RGB_VALUE);
-      xcol[i].blue  = (UShort_t) TMath::Min((Int_t) xcol[i].blue * (100 - percent) / 100  + bkgr.fBlue * percent / 100, kBIGGEST_RGB_VALUE);
-      if (!AllocColor(fColormap, &xcol[i]))
-         Warning("MakeOpaqueColors", "failed to allocate color %hd, %hd, %hd",
-                 xcol[i].red, xcol[i].green, xcol[i].blue);
-      // assumes that in case of failure xcol[i].pixel is not changed
-   }
-
-   gCws->fNewColors = new ULong_t[ncolors];
-   gCws->fNcolors   = ncolors;
-
-   for (Int_t i = 0; i < ncolors; i++)
-      gCws->fNewColors[i] = xcol[i].pixel;
-
-   delete [] xcol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set color intensities for given color index.
 ///
 ///  \param [in] cindex     : color index
@@ -2713,27 +2672,17 @@ void TGX11::UpdateWindowW(WinContext_t wctxt, Int_t mode)
 void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
 {
    if ((fDepth <= 8) || (percent <= 0)) return;
-   // if 100 percent then just make white
+   if (percent > 100) percent = 100;
 
    auto ctxt = (XWindow_t *) wctxt;
-
-   ULong_t *tmpc = nullptr;
-   Int_t   ntmpc = 0;
-
-   // save previous allocated colors, delete at end when not used anymore
-   if (ctxt->fNewColors) {
-      tmpc = ctxt->fNewColors;
-      ntmpc = ctxt->fNcolors;
-   }
 
    // get pixmap from server as image
    XImage *image = XGetImage((Display*)fDisplay, ctxt->fDrawing, 0, 0, ctxt->fWidth,
                              ctxt->fHeight, AllPlanes, ZPixmap);
    if (!image) return;
+
    // collect different image colors
-
    std::vector<ULong_t> orgcolors;
-
    for (UInt_t y = 0; y < ctxt->fHeight; y++) {
       for (UInt_t x = 0; x < ctxt->fWidth; x++) {
          ULong_t pixel = XGetPixel(image, x, y);
@@ -2746,21 +2695,48 @@ void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
       return;
    }
 
+   // clean up old colors
+   if (!ctxt->fNewColors.empty()) {
+      if (fRedDiv == -1)
+         XFreeColors((Display*)fDisplay, fColormap, ctxt->fNewColors.data(), ctxt->fNewColors.size(), 0);
+      ctxt->fNewColors.clear();
+   }
+
+   std::vector<RXColor> xcol(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].pixel = orgcolors[i];
+      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
+      xcol[i].flags = DoRed | DoGreen | DoBlue;
+   }
+   QueryColors(fColormap, xcol.data(), orgcolors.size());
+
+   // create new colors mixing:  "100-percent" of old color and "percent" of new background color
    XColor_t &bkgr = GetColor(ctxt->fAttFill.GetFillColor());
 
-   // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors.data(), orgcolors.size(), bkgr);
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].red   = (UShort_t) TMath::Min((Int_t) xcol[i].red * (100 - percent) / 100  + bkgr.fRed * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].green = (UShort_t) TMath::Min((Int_t) xcol[i].green * (100 - percent) / 100  + bkgr.fGreen * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].blue  = (UShort_t) TMath::Min((Int_t) xcol[i].blue * (100 - percent) / 100  + bkgr.fBlue * percent / 100, kBIGGEST_RGB_VALUE);
+      if (!AllocColor(fColormap, &xcol[i]))
+         Warning("SetOpacityW", "failed to allocate color %hd, %hd, %hd",
+                 xcol[i].red, xcol[i].green, xcol[i].blue);
+      // assumes that in case of failure xcol[i].pixel is not changed
+   }
 
-   if (ctxt->fNewColors) {
-      // put opaque colors in image
-      for (UInt_t y = 0; y < ctxt->fHeight; y++) {
-         for (UInt_t x = 0; x < ctxt->fWidth; x++) {
-            ULong_t pixel = XGetPixel(image, x, y);
-            auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
-            if (iter != orgcolors.end()) {
-               auto idx = iter - orgcolors.begin();
-               XPutPixel(image, x, y, ctxt->fNewColors[idx]);
-            }
+   ctxt->fNewColors.resize(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++)
+      ctxt->fNewColors[i] = xcol[i].pixel;
+
+   // put opaque colors in image
+   for (UInt_t y = 0; y < ctxt->fHeight; y++) {
+      for (UInt_t x = 0; x < ctxt->fWidth; x++) {
+         ULong_t pixel = XGetPixel(image, x, y);
+         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+         if (iter != orgcolors.end()) {
+            auto idx = iter - orgcolors.begin();
+            XPutPixel(image, x, y, ctxt->fNewColors[idx]);
          }
       }
    }
@@ -2770,12 +2746,6 @@ void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
              ctxt->fWidth, ctxt->fHeight);
    XFlush((Display*)fDisplay);
 
-   // clean up
-   if (tmpc) {
-      if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, tmpc, ntmpc, 0);
-      delete [] tmpc;
-   }
    XDestroyImage(image);
 }
 
@@ -3204,7 +3174,6 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
    gCws->fClip = 0;
    gCws->fWidth = w;
    gCws->fHeight = h;
-   gCws->fNewColors = nullptr;
    gCws->fShared = kFALSE;
 
    return wid;
