@@ -113,11 +113,12 @@ endforeach()
 if(asimage)
   ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
   ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
-  # We cannot PNG here because while searching PNG, CMake will also find ZLIB.
+  # We cannot PNG/TIFF here because while searching, CMake will also find ZLIB.
   # If found, CMake will define the default variables and target:
   # see https://cmake.org/cmake/help/latest/module/FindZLIB.html).
   # For this reason, the check has to be put below, after ZLIB is searched for.
   #ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+  #ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
 endif()
 ROOT_FIND_REQUIRED_DEP(LZ4 builtin_lz4)
 ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
@@ -177,6 +178,7 @@ if(asimage)
   # This check can be added only now because of the reasons explained above, where all
   # other required dependencies are checked.
   ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+  ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
 endif()
 
 #---Check for nlohmann/json.hpp---------------------------------------------------------
@@ -368,18 +370,12 @@ if(asimage)
   endif()
   list(APPEND ASEXTRA_LIBRARIES JPEG::JPEG)
   
-  if(asimage_tiff)
-    find_Package(TIFF)
-    if(TIFF_FOUND)
-      list(APPEND ASEXTRA_LIBRARIES TIFF::TIFF)
-    else()
-      if(fail-on-missing)
-          message(SEND_ERROR "libtiff required but not found. Please make sure it's installed on the system, or disable TIFF support with '-Dasimage_tiff=OFF', or set '-Dfail-on-missing=OFF' to automatically disable features")
-      else()
-        set(asimage_tiff OFF CACHE BOOL "Disabled because libtiff was not found" FORCE)
-      endif()
-    endif()
+  if(builtin_tiff)
+    add_subdirectory(builtins/libtiff)
+    get_target_property(TIFF_INCLUDE_DIR TIFF::TIFF INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(TIFF_LIBRARY_LOCATION TIFF::TIFF IMPORTED_LOCATION)
   endif()
+  list(APPEND ASEXTRA_LIBRARIES TIFF::TIFF)
 endif()
 
 #---Check for Python installation-------------------------------------------------------
