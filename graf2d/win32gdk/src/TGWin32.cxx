@@ -141,8 +141,7 @@ struct XWindow_t {
    Int_t    yclip = 0;            ///< y coordinate of the clipping rectangle
    UInt_t   wclip = 0;            ///< width of the clipping rectangle
    UInt_t   hclip = 0;            ///< height of the clipping rectangle
-   ULong_t *new_colors = nullptr; ///< new image colors (after processing)
-   Int_t    ncolors = 0;          ///< number of different colors
+   std::vector<ULong_t> new_colors; ///< new image colors for transparency (after processing)
    GdkGC   *fGClist[kMAXGC];      ///< array of GC objects for concrete window
    TVirtualX::EDrawMode drawMode = TVirtualX::kCopy;    ///< current draw mode
    TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
@@ -542,32 +541,6 @@ static ULong_t GetPixelImage(Drawable_t id, Int_t x, Int_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Collect in orgcolors all different original image colors.
-
-static void CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
-                                 Int_t & ncolors, Int_t & maxcolors)
-{
-   if (maxcolors == 0) {
-      ncolors = 0;
-      maxcolors = 100;
-      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
-   }
-
-   for (int i = 0; i < ncolors; i++) {
-      if (pixel == orgcolors[i]) return;
-   }
-   if (ncolors >= maxcolors) {
-      orgcolors = (ULong_t *) TStorage::ReAlloc(orgcolors,
-                                                maxcolors * 2 *
-                                                sizeof(ULong_t),
-                                                maxcolors *
-                                                sizeof(ULong_t));
-      maxcolors *= 2;
-   }
-   orgcolors[ncolors++] = pixel;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// debug function for printing event mask
 
 static char *EventMask2String(UInt_t evmask)
@@ -944,7 +917,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    GdkPixmap *pixmp1, *pixmp2;
    GdkColor fore, back;
    GdkColor color;
-   int i;
 
    HWND hDesktop = ::GetDesktopWindow();
    if (!IsWindow(hDesktop) || !IsWindowVisible(hDesktop))
@@ -1044,9 +1016,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    // Setup color information
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
 
-   if ( gdk_visual_get_best_type() == GDK_VISUAL_TRUE_COLOR) {
-      int i;
-      for (i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
+   if (gdk_visual_get_best_type() == GDK_VISUAL_TRUE_COLOR) {
+      for (int i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
          if (fBlueShift == -1 && ((fVisual->blue_mask >> i) & 1)) {
             fBlueShift = i;
          }
@@ -1055,7 +1026,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
             break;
          }
       }
-      for (i = 0; i < int(sizeof(fVisual->green_mask)*kBitsPerByte); i++) {
+      for (int i = 0; i < int(sizeof(fVisual->green_mask)*kBitsPerByte); i++) {
          if (fGreenShift == -1 && ((fVisual->green_mask >> i) & 1)) {
             fGreenShift = i;
          }
@@ -1064,7 +1035,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
             break;
          }
       }
-      for (i = 0; i < int(sizeof(fVisual->red_mask)*kBitsPerByte); i++) {
+      for (int i = 0; i < int(sizeof(fVisual->red_mask)*kBitsPerByte); i++) {
          if (fRedShift == -1 && ((fVisual->red_mask >> i) & 1)) {
             fRedShift = i;
          }
@@ -1611,12 +1582,11 @@ void TGWin32::CloseWindow()
    if (gCws->buffer) {
       gdk_pixmap_unref(gCws->buffer);
    }
-   if (gCws->new_colors) {
+   if (!gCws->new_colors.empty()) {
       gdk_colormap_free_colors((GdkColormap *) fColormap,
-                               (GdkColor *)gCws->new_colors, gCws->ncolors);
+                               (GdkColor *)gCws->new_colors.data(), gCws->new_colors.size());
 
-      delete [] gCws->new_colors;
-      gCws->new_colors = nullptr;
+      gCws->new_colors.clear();
    }
 
    for (int i = 0; i < kMAXGC; i++)
@@ -2142,8 +2112,6 @@ Int_t TGWin32::AddWindowHandle()
    ctxt->drawing = nullptr;
    ctxt->window = nullptr;
    ctxt->buffer = nullptr;
-   ctxt->new_colors = nullptr;
-   ctxt->ncolors = 0;
 
    ctxt->drawMode = TVirtualX::kCopy;
 
@@ -4082,80 +4050,6 @@ void TGWin32::SetOpacity(Int_t percent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get RGB values for orgcolors, add percent neutral to the RGB and
-/// allocate new_colors.
-
-void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
-{
-   Int_t ret;
-   if (ncolors <= 0) return;
-   GdkColor *xcol = new GdkColor[ncolors];
-
-   int i;
-   for (i = 0; i < ncolors; i++) {
-      xcol[i].pixel = orgcolors[i];
-      xcol[i].red = xcol[i].green = xcol[i].blue = 0;
-   }
-
-   GdkColorContext *cc;
-   cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
-   gdk_color_context_query_colors(cc, xcol, ncolors);
-   gdk_color_context_free(cc);
-
-   UShort_t add = percent * kBIGGEST_RGB_VALUE / 100;
-
-   Int_t val;
-   for (i = 0; i < ncolors; i++) {
-      val = xcol[i].red + add;
-      if (val > kBIGGEST_RGB_VALUE) {
-         val = kBIGGEST_RGB_VALUE;
-      }
-      xcol[i].red = (UShort_t) val;
-      val = xcol[i].green + add;
-      if (val > kBIGGEST_RGB_VALUE) {
-         val = kBIGGEST_RGB_VALUE;
-      }
-      xcol[i].green = (UShort_t) val;
-      val = xcol[i].blue + add;
-      if (val > kBIGGEST_RGB_VALUE) {
-         val = kBIGGEST_RGB_VALUE;
-      }
-      xcol[i].blue = (UShort_t) val;
-
-      ret = gdk_color_alloc((GdkColormap *)fColormap, &xcol[i]);
-
-      if (!ret) {
-         Warning("MakeOpaqueColors",
-                 "failed to allocate color %hd, %hd, %hd", xcol[i].red,
-                 xcol[i].green, xcol[i].blue);
-      // assumes that in case of failure xcol[i].pixel is not changed
-      }
-   }
-
-   gCws->new_colors = new ULong_t[ncolors];
-   gCws->ncolors = ncolors;
-
-   for (i = 0; i < ncolors; i++) {
-      gCws->new_colors[i] = xcol[i].pixel;
-   }
-
-   delete []xcol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns index in orgcolors (and new_colors) for pixel.
-
-Int_t TGWin32::FindColor(ULong_t pixel, ULong_t * orgcolors, Int_t ncolors)
-{
-   for (int i = 0; i < ncolors; i++) {
-      if (pixel == orgcolors[i]) return i;
-   }
-   Error("FindColor", "did not find color, should never happen!");
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set color intensities for given color index.
 /// cindex     : color index
 /// r,g,b      : red, green, blue intensities between 0.0 and 1.0
@@ -4271,49 +4165,82 @@ void TGWin32::UpdateWindowW(WinContext_t wctxt, Int_t mode)
 
 void TGWin32::SetOpacityW(WinContext_t wctxt, Int_t percent)
 {
-   auto ctxt = (XWindow_t *) wctxt;
-
    Int_t depth = gdk_visual_get_best_depth();
 
-   if (depth <= 8) return;
-   if (percent == 0) return;
+   if ((depth <= 8) || (percent <= 0)) return;
+   if (percent > 100) percent = 100;
 
-   // if 100 percent then just make white
-   ULong_t *orgcolors = 0;
-   ULong_t *tmpc = 0;
-   Int_t maxcolors = 0, ncolors, ntmpc = 0;
+   auto ctxt = (XWindow_t *) wctxt;
 
-   // save previous allocated colors, delete at end when not used anymore
-   if (ctxt->new_colors) {
-      tmpc = ctxt->new_colors;
-      ntmpc = ctxt->ncolors;
-   }
    // get pixmap from server as image
    GdkImage *image = gdk_image_get((GdkDrawable*)ctxt->drawing, 0, 0,
                                    ctxt->width, ctxt->height);
 
+   if (!image) return;
+
+   std::vector<ULong_t> orgcolors;
+
    // collect different image colors
-   int x, y;
-   for (y = 0; y < (int) ctxt->height; y++) {
-      for (x = 0; x < (int) ctxt->width; x++) {
+   for (UInt_t y = 0; y < ctxt->height; y++) {
+      for (UInt_t x = 0; x < ctxt->width; x++) {
          ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
+            orgcolors.emplace_back(pixel);
       }
    }
-   if (ncolors == 0) {
+   if (orgcolors.empty()) {
       gdk_image_unref(image);
-      ::operator delete(orgcolors);
       return;
    }
-   // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors, ncolors);
+
+   if (!ctxt->new_colors.empty()) {
+      gdk_colors_free((GdkColormap *)fColormap, ctxt->new_colors.data(), ctxt->new_colors.size(), 0);
+      ctxt->new_colors.clear();
+   }
+
+   std::vector<GdkColor> xcol(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].pixel = orgcolors[i];
+      xcol[i].red = xcol[i].green = xcol[i].blue = 0;
+   }
+
+   GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
+   gdk_color_context_query_colors(cc, xcol.data(), orgcolors.size());
+   gdk_color_context_free(cc);
+
+   // create new colors mixing:  "100-percent" of old color and "percent" of new background color
+   XColor_t &bkgr = GetColor(ctxt->fAttFill.GetFillColor());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].red   = (UShort_t) TMath::Min((Int_t) xcol[i].red * (100 - percent) / 100  + bkgr.color.red * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].green = (UShort_t) TMath::Min((Int_t) xcol[i].green * (100 - percent) / 100  + bkgr.color.green * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].blue  = (UShort_t) TMath::Min((Int_t) xcol[i].blue * (100 - percent) / 100  + bkgr.color.blue * percent / 100, kBIGGEST_RGB_VALUE);
+
+      auto ret = gdk_color_alloc((GdkColormap *)fColormap, &xcol[i]);
+
+      if (!ret) {
+         Warning("SetOpacityW",
+                 "failed to allocate color %hd, %hd, %hd", xcol[i].red,
+                 xcol[i].green, xcol[i].blue);
+      // assumes that in case of failure xcol[i].pixel is not changed
+      }
+   }
+
+   ctxt->new_colors.resize(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++)
+      ctxt->new_colors[i] = xcol[i].pixel;
 
    // put opaque colors in image
-   for (y = 0; y < (int) ctxt->height; y++) {
-      for (x = 0; x < (int) ctxt->width; x++) {
+   for (UInt_t y = 0; y < ctxt->height; y++) {
+      for (UInt_t x = 0; x < ctxt->width; x++) {
          ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         PutPixel((Drawable_t)image, x, y, ctxt->new_colors[idx]);
+         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+         if (iter != orgcolors.end()) {
+            auto idx = iter - orgcolors.begin();
+            PutPixel((Drawable_t)image, x, y, ctxt->new_colors[idx]);
+         }
       }
    }
 
@@ -4323,12 +4250,7 @@ void TGWin32::SetOpacityW(WinContext_t wctxt, Int_t percent)
    GdiFlush();
 
    // clean up
-   if (tmpc) {
-      gdk_colors_free((GdkColormap *)fColormap, tmpc, ntmpc, 0);
-      delete[]tmpc;
-   }
    gdk_image_unref(image);
-   ::operator delete(orgcolors);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4443,60 +4365,55 @@ static void PutByte(Byte_t b)
 void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
                              Int_t * &G, Int_t * &B)
 {
-   ULong_t *orgcolors = 0;
-   Int_t maxcolors = 0, ncolors;
+   std::vector<ULong_t> orgcolors;
 
    // collect different image colors
-   int x, y;
-   for (x = 0; x < (int) gCws->width; x++) {
-      for (y = 0; y < (int) gCws->height; y++) {
+   for (UInt_t x = 0; x < (int) gCws->width; x++) {
+      for (UInt_t y = 0; y < (int) gCws->height; y++) {
          ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
+            orgcolors.emplace_back(pixel);
       }
    }
 
    // get RGB values belonging to pixels
-   GdkColor *xcol = new GdkColor[ncolors];
+   std::vector<GdkColor> xcol(orgcolors.size());
 
-   int i;
-   for (i = 0; i < ncolors; i++) {
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
       xcol[i].pixel = orgcolors[i];
-//      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
       xcol[i].red = GetRValue(xcol[i].pixel);
       xcol[i].green = GetGValue(xcol[i].pixel);
       xcol[i].blue = GetBValue(xcol[i].pixel);
    }
 
-   GdkColorContext *cc;
-   cc =  gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
-   gdk_color_context_query_colors(cc, xcol, ncolors);
+   GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
+   gdk_color_context_query_colors(cc, xcol.data(), orgcolors.size());
    gdk_color_context_free(cc);
 
    // create RGB arrays and store RGB's for each color and set number of colors
    // (space must be delete by caller)
-   R = new Int_t[ncolors];
-   G = new Int_t[ncolors];
-   B = new Int_t[ncolors];
+   R = new Int_t[orgcolors.size()];
+   G = new Int_t[orgcolors.size()];
+   B = new Int_t[orgcolors.size()];
 
-   for (i = 0; i < ncolors; i++) {
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
       R[i] = xcol[i].red;
       G[i] = xcol[i].green;
       B[i] = xcol[i].blue;
    }
-   ncol = ncolors;
+   ncol = (Int_t) orgcolors.size();
 
    // update image with indices (pixels) into the new RGB colormap
-   for (x = 0; x < (int) gCws->width; x++) {
-      for (y = 0; y < (int) gCws->height; y++) {
+   for (UInt_t x = 0; x < gCws->width; x++) {
+      for (UInt_t y = 0; y < gCws->height; y++) {
          ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         PutPixel((Drawable_t)image, x, y, idx);
+         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+         if (iter != orgcolors.end()) {
+            auto idx = iter - orgcolors.begin();
+            PutPixel((Drawable_t)image, x, y, idx);
+         }
       }
    }
-
-   // cleanup
-   delete[]xcol;
-   ::operator delete(orgcolors);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

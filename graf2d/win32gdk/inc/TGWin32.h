@@ -86,8 +86,6 @@ private:
    void  RemovePixmap(GdkDrawable *pix);
    void  SetColor(XWindow_t *ctxt, GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
-   void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
-   Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
    void  ImgPickPalette(GdkImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
