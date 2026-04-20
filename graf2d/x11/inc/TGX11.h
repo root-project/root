@@ -79,7 +79,6 @@ private:
                    UChar_t *image, Drawable_t id);
    void   SetColor(XWindow_t *ctxt, void *gc, Int_t ci);
    void   SetInput(Int_t inp);
-   void   ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
    void MapGCValues(GCValues_t &gval, ULong_t &xmask, RXGCValues &xgval, Bool_t tox = kTRUE);

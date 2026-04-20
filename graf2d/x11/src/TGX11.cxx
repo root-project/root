@@ -2834,63 +2834,6 @@ static void PutByte(Byte_t b)
    if (ferror(gOut) == 0) fputc(b, gOut);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns in R G B the ncol colors of the palette used by the image.
-/// The image pixels are changed to index values in these R G B arrays.
-/// This produces a colormap with only the used colors (so even on displays
-/// with more than 8 planes we will be able to create GIF's when the image
-/// contains no more than 256 different colors). If it does contain more
-/// colors we will have to use GIFquantize to reduce the number of colors.
-/// The R G B arrays must be deleted by the caller.
-
-void TGX11::ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B)
-{
-   std::vector<ULong_t> orgcolors;
-
-   // collect different image colors
-   for (UInt_t x = 0; x < gCws->fWidth; x++) {
-      for (UInt_t y = 0; y < gCws->fHeight; y++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
-            orgcolors.emplace_back(pixel);
-      }
-   }
-
-   // get RGB values belonging to pixels
-   std::vector<RXColor> xcol(orgcolors.size());
-
-   for (size_t i = 0; i < orgcolors.size(); i++) {
-      xcol[i].pixel = orgcolors[i];
-      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed | DoGreen | DoBlue;
-   }
-   QueryColors(fColormap, xcol.data(), orgcolors.size());
-
-   // create RGB arrays and store RGB's for each color and set number of colors
-   // (space must be delete by caller)
-   R = new Int_t[orgcolors.size()];
-   G = new Int_t[orgcolors.size()];
-   B = new Int_t[orgcolors.size()];
-
-   for (size_t i = 0; i < orgcolors.size(); i++) {
-      R[i] = xcol[i].red;
-      G[i] = xcol[i].green;
-      B[i] = xcol[i].blue;
-   }
-   ncol = (Int_t) orgcolors.size();
-
-   // update image with indices (pixels) into the new RGB colormap
-   for (UInt_t x = 0; x < gCws->fWidth; x++) {
-      for (UInt_t y = 0; y < gCws->fHeight; y++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
-         if (iter != orgcolors.end()) {
-            auto idx = iter - orgcolors.begin();
-            XPutPixel(image, x, y, idx);
-         }
-      }
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes the current window into GIF file. Returns 1 in case of success,
@@ -2899,8 +2842,6 @@ void TGX11::ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, In
 Int_t TGX11::WriteGIF(char *name)
 {
    Byte_t    scline[2000], r[256], b[256], g[256];
-   Int_t    *red, *green, *blue;
-   Int_t     ncol, maxcol, i;
 
    if (gXimage) {
       XDestroyImage(gXimage);
@@ -2911,49 +2852,93 @@ Int_t TGX11::WriteGIF(char *name)
                        gCws->fWidth, gCws->fHeight,
                        AllPlanes, ZPixmap);
 
-   ImgPickPalette((RXImage*)gXimage, ncol, red, green, blue);
-
-   if (ncol > 256) {
-      //GIFquantize(...);
-      Error("WriteGIF", "Cannot create GIF of image containing more than 256 colors. Try in batch mode.");
-      delete [] red;
-      delete [] green;
-      delete [] blue;
+   if (!gXimage) {
+      Error("WriteGIF", "Cannot create image for writing GIF. Try in batch mode.");
       return 0;
    }
 
-   maxcol = 0;
-   for (i = 0; i < ncol; i++) {
-      if (maxcol < red[i] )   maxcol = red[i];
-      if (maxcol < green[i] ) maxcol = green[i];
-      if (maxcol < blue[i] )  maxcol = blue[i];
-      r[i] = 0;
-      g[i] = 0;
-      b[i] = 0;
-   }
-   if (maxcol != 0) {
-      for (i = 0; i < ncol; i++) {
-         r[i] = red[i] * 255/maxcol;
-         g[i] = green[i] * 255/maxcol;
-         b[i] = blue[i] * 255/maxcol;
+   /// Collect R G B colors of the palette used by the image.
+   /// The image pixels are changed to index values in these R G B arrays.
+   /// This produces a colormap with only the used colors (so even on displays
+   /// with more than 8 planes we will be able to create GIF's when the image
+   /// contains no more than 256 different colors). If it does contain more
+   /// colors we will have to use GIFquantize to reduce the number of colors.
+
+   std::vector<ULong_t> orgcolors;
+
+   // collect different image colors
+   for (UInt_t x = 0; x < gCws->fWidth; x++) {
+      for (UInt_t y = 0; y < gCws->fHeight; y++) {
+         ULong_t pixel = XGetPixel(gXimage, x, y);
+         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
+            orgcolors.emplace_back(pixel);
       }
+   }
+
+   if (orgcolors.size() > 256) {
+      Error("WriteGIF", "Cannot create GIF of image containing more than 256 colors. Try in batch mode.");
+      XDestroyImage(gXimage);
+      gXimage = nullptr;
+      return 0;
+   }
+
+   // get RGB values belonging to pixels
+   std::vector<RXColor> xcol(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].pixel = orgcolors[i];
+      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
+      xcol[i].flags = DoRed | DoGreen | DoBlue;
+   }
+
+   QueryColors(fColormap, xcol.data(), orgcolors.size());
+
+   UShort_t maxcol = 0;
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      maxcol = TMath::Max(maxcol, xcol[i].red);
+      maxcol = TMath::Max(maxcol, xcol[i].green);
+      maxcol = TMath::Max(maxcol, xcol[i].blue);
+   }
+   if (maxcol == 0)
+      maxcol = 255;
+
+   // update image with indices (pixels) into the new RGB colormap
+   for (UInt_t x = 0; x < gCws->fWidth; x++) {
+      for (UInt_t y = 0; y < gCws->fHeight; y++) {
+         ULong_t pixel = XGetPixel(gXimage, x, y);
+         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+         if (iter != orgcolors.end()) {
+            auto idx = iter - orgcolors.begin();
+            XPutPixel(gXimage, x, y, idx);
+         }
+      }
+   }
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      r[i] = xcol[i].red * 255 / maxcol;
+      g[i] = xcol[i].green * 255 / maxcol;
+      b[i] = xcol[i].blue * 255 / maxcol;
    }
 
    gOut = fopen(name, "w+");
 
+   Int_t ret = 0;
+
    if (gOut) {
       GIFencode(gCws->fWidth, gCws->fHeight,
-             ncol, r, g, b, scline, ::GetPixel, PutByte);
+                orgcolors.size(), r, g, b, scline, ::GetPixel, PutByte);
       fclose(gOut);
-      i = 1;
+      ret = 1;
    } else {
       Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
+      ret = 0;
    }
-   delete [] red;
-   delete [] green;
-   delete [] blue;
-   return i;
+
+   // cleanup image at the end
+   XDestroyImage(gXimage);
+   gXimage = nullptr;
+
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
