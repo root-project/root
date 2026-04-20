@@ -660,7 +660,7 @@ void RooDataHist::importDHistSet(const RooArgList & /*vars*/, RooCategory &index
       // Transfer contents
       for (Int_t i = 0; i < dhist->numEntries(); i++) {
          _vars.assign(*dhist->get(i));
-         add(_vars, dhist->weight() * initWgt, pow(dhist->weightError(SumW2), 2));
+         add(_vars, dhist->weight(i) * initWgt, pow(dhist->weightError(SumW2), 2));
       }
    }
 }
@@ -955,7 +955,7 @@ std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, c
 
     if (!cloneVar || cloneVar->getVal()) {
       weightError(lo,hi,SumW2) ;
-      rdh->add(*row,weight(),lo*lo) ;
+      rdh->add(*row,weight(i),lo*lo) ;
     }
   }
 
@@ -1572,7 +1572,7 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
     throw std::invalid_argument("RooDataHist::weightError(" + std::string(GetName()) + ") error type Expected not allowed here");
     break ;
 
-  case Poisson:
+  case Poisson: {
     if (_errLo && _errLo[_curIndex] >= 0.0) {
       // Weight is preset or precalculated
       lo = _errLo[_curIndex];
@@ -1586,12 +1586,14 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
     // Calculate poisson errors
     double ym;
     double yp;
-    RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
-    _errLo[_curIndex] = weight()-ym;
-    _errHi[_curIndex] = yp-weight();
+    const double w = weight(_curIndex);
+    RooHistError::instance().getPoissonInterval(Int_t(w+0.5),ym,yp,1) ;
+    _errLo[_curIndex] = w-ym;
+    _errHi[_curIndex] = yp-w;
     lo = _errLo[_curIndex];
     hi = _errHi[_curIndex];
     return ;
+  }
 
   case SumW2:
     lo = std::sqrt(weightSquared(_curIndex));
@@ -2348,7 +2350,7 @@ void RooDataHist::printContents(std::ostream& os) const
 
         double lo, hi;
         weightError(lo, hi, RooAbsData::SumW2);
-        os << ", weight=" << weight() << " +/- [" << lo << "," << hi << "]"
+        os << ", weight=" << weight(i) << " +/- [" << lo << "," << hi << "]"
            << std::endl;
     }
 }

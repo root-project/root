@@ -530,8 +530,7 @@ double RooHistPdf::maxVal(Int_t code) const
 
   double max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
-    _dataHist->get(i) ;
-    double wgt = _dataHist->weight() ;
+    double wgt = _dataHist->weight(i) ;
     if (wgt>max) max=wgt ;
   }
 
@@ -548,9 +547,7 @@ bool RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
   if (std::abs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
   if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
-    dh1.get(i) ;
-    dh2.get(i) ;
-    if (std::abs(dh1.weight()-dh2.weight())>1e-8) return false ;
+    if (std::abs(dh1.weight(i)-dh2.weight(i))>1e-8) return false ;
   }
   return true ;
 }

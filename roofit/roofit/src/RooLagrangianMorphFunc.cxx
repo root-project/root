@@ -2572,12 +2572,12 @@ TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateEr
             continue;
          }
          const RooDataHist &dhist = hf->dataHist();
-         dhist.get(i);
          RooAbsReal *formula = dynamic_cast<RooAbsReal *>(prod->components().find(Form("w_%s", prod->GetName())));
          double weight = formula->getVal();
-         unc2 += dhist.weightSquared() * weight * weight;
-         unc += sqrt(dhist.weightSquared()) * weight;
-         val += dhist.weight() * weight;
+         const double w2 = dhist.weightSquared(i);
+         unc2 += w2 * weight * weight;
+         unc += sqrt(w2) * weight;
+         val += dhist.weight(i) * weight;
       }
       hist->SetBinContent(i + 1, val);
       hist->SetBinError(i + 1, correlateErrors ? unc : sqrt(unc2));
@@ -2827,8 +2827,7 @@ double RooLagrangianMorphFunc::expectedUncertainty() const
       if (hf) {
          const RooDataHist &hist = hf->dataHist();
          for (Int_t j = 0; j < observable->getBins(); ++j) {
-            hist.get(j);
-            newunc2 += hist.weightSquared();
+            newunc2 += hist.weightSquared(j);
          }
       } else if (rv) {
          newunc2 = pow(rv->getError(), 2);
