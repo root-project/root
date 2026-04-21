@@ -79,7 +79,7 @@ public:
    static EDataType GetType(const std::type_info &typeinfo);
    static void AddBuiltins(TCollection* types);
 
-   ClassDefOverride(TDataType,2)  //Basic data type descriptor
+   ClassDefOverride(TDataType,3)  //Basic data type descriptor
 };
 
 #endif
