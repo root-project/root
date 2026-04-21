@@ -63,6 +63,7 @@ by Olivier Couet (package X11INT).
 #endif
 
 #include "gifencode.h"
+#include "gifdecode.h"
 
 extern float   XRotVersion(char*, int);
 extern void    XRotSetMagnification(float);
@@ -2802,16 +2803,6 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
    XWriteBitmapFile((Display*)fDisplay, pxname, gTws->fDrawing, wval, hval, -1, -1);
 }
 
-
-//
-// Functions for GIFencode()
-//
-
-extern "C" {
-   int GIFdecode(Byte_t *gifArr, Byte_t *pixArr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
-   int GIFinfo(Byte_t *gifArr, int *Width, int *Height, int *Ncols);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get pixels in line y and put in array scline.
 
@@ -3003,14 +2994,13 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
 
 Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   FILE  *fd;
    Seek_t filesize = 0;
    unsigned char *gifArr, *pixArr, red[256], green[256], blue[256], *j1, *j2, icol;
    int   i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
    Pixmap_t pic = 0;
 
-   fd = fopen(file, "r");
+   FILE  *fd = fopen(file, "r");
    if (!fd) {
       Error("ReadGIF", "unable to open GIF file");
       return pic;
@@ -3041,7 +3031,7 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    }
    fclose(fd);
 
-   irep = GIFinfo(gifArr, &width, &height, &ncolor);
+   irep = TGifDecode::GIFinfo(gifArr, &width, &height, &ncolor);
    if (irep != 0) {
       free(gifArr);
       return pic;
@@ -3053,7 +3043,9 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
       return pic;
    }
 
-   irep = GIFdecode(gifArr, pixArr, &width, &height, &ncolor, red, green, blue);
+   TGifDecode gif;
+
+   irep = gif.GIFdecode(gifArr, pixArr, &width, &height, &ncolor, red, green, blue);
    if (irep != 0) {
       free(gifArr);
       free(pixArr);
@@ -3081,7 +3073,8 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
          icol = *j1; *j1++ = *j2; *j2++ = icol;
       }
    }
-   if (id) pic = CreatePixmap(id, width, height);
+   if (id)
+      pic = CreatePixmap(id, width, height);
    PutImage(offset,-1,x0,y0,width,height,0,0,width-1,height-1,pixArr,pic);
 
    free(gifArr);
@@ -3089,7 +3082,8 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 
    if (pic)
       return pic;
-   else if (gCws->fDrawing)
+
+   if (gCws->fDrawing)
       return (Pixmap_t)gCws->fDrawing;
    return 0;
 }

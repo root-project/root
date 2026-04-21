@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
   HEADERS
     TGX11.h
   SOURCES
-    src/gifdecode.c
+    src/gifdecode.cxx
     src/gifencode.cxx
     src/gifquantize.c
     src/GX11Gui.cxx

@@ -1,33 +1,25 @@
 /* @(#)root/x11:$Id$ */
-/* Author: Rene Brun   11/06/97*/
-#include <stdio.h>
-#include <string.h>
+/* Author: Rene Brun   11/06/97 */
+/* C++ interface Sergey Linev  21/04/2026 */
+
+#include "gifdecode.h"
+
+#include <cstdio>
+#include <cstring>
+
 
 
 #define BITS    12                      /* largest code size */
 #define TSIZE   4096                    /* tables size */
 
-typedef unsigned char byte;
-
-static int      Prefix[TSIZE];          /* prefix table */
-static byte     Suffix[TSIZE];          /* suffix table */
-static byte     OutCode[TSIZE];         /* output stack */
-
-static byte     *ptr1,                  /* pointer to GIF array */
-                *ptr2;                  /* pointer to PIX array */
-
-static int      CurCodeSize,            /* current number of bits per code */
-                CurMaxCode;             /* maximum code, given CurCodeSize */
-
-static long     CurBit;                 /* current bit in GIF image data */
-
 /***************************************************************
  *                                                             *
  ***************************************************************/
-static int ReadCode()
+int TGifDecode::ReadCode()
 {
-  static long   b3[3], CurByte;
-  static byte   lblk;
+  long          b3[3] = {0, 0, 0};
+  long          CurByte;
+  unsigned char lblk;
   int           shift, nbyte;
   long          OldByte;
 
@@ -57,7 +49,7 @@ static int ReadCode()
 /***************************************************************
  *                                                             *
  ***************************************************************/
-static void OutPixel(byte pix)
+void TGifDecode::OutPixel(unsigned char pix)
 {
   *ptr2++ = pix;
 }
@@ -77,15 +69,15 @@ static void OutPixel(byte pix)
  *                    1 - if error                             *
  *                                                             *
  ***************************************************************/
-int GIFinfo(byte *GIFarr, int *Width, int *Height, int *Ncols)
+int TGifDecode::GIFinfo(unsigned char *GIFarr, int *Width, int *Height, int *Ncols)
 {
-  byte          b;
+  unsigned char       b;
 
-  ptr1 = GIFarr;
+  unsigned char *ptr1 = GIFarr;
 
   /*   R E A D   H E A D E R   */
 
-  if (strncmp((char *)GIFarr,"GIF87a",6) && strncmp((char *)GIFarr,"GIF89a",6))
+  if (strncmp((const char *)GIFarr,"GIF87a",6) && strncmp((const char *)GIFarr,"GIF89a",6))
   {
     fprintf(stderr,"\nGIFinfo: not a GIF\n");
     return 1;
@@ -146,9 +138,9 @@ int GIFinfo(byte *GIFarr, int *Width, int *Height, int *Ncols)
  *                    1 - if error                             *
  *                                                             *
  ***************************************************************/
-int GIFdecode(byte *GIFarr, byte *PIXarr, int *Width, int *Height, int *Ncols, byte *R, byte *G, byte *B)
+int TGifDecode::GIFdecode(unsigned char *GIFarr, unsigned char *PIXarr, int *Width, int *Height, int *Ncols, unsigned char *R, unsigned char *G, unsigned char *B)
 {
-  byte          b,                      /* working variable */
+  unsigned char b,                      /* working variable */
                 FinChar;                /* final character */
 
   int           i,                      /* working variable for loops */
@@ -164,6 +156,10 @@ int GIFdecode(byte *GIFarr, byte *PIXarr, int *Width, int *Height, int *Ncols, b
                 OutCount;               /* output stack counter */
 
   long          Npix;                   /* number of pixels */
+
+  int      Prefix[TSIZE];          /* prefix table */
+  unsigned char Suffix[TSIZE];          /* suffix table */
+  unsigned char  OutCode[TSIZE];         /* output stack */
 
   ptr1    = GIFarr;
   ptr2    = PIXarr;
@@ -271,8 +267,8 @@ int GIFdecode(byte *GIFarr, byte *PIXarr, int *Width, int *Height, int *Ncols, b
           fprintf(stderr,"\nGIFdecode: corrupted GIF (big output count)\n");
           return 1;
         }
-      OutCode[OutCount++] = Suffix[CurCode];
-      CurCode = Prefix[CurCode];
+        OutCode[OutCount++] = Suffix[CurCode];
+        CurCode = Prefix[CurCode];
       }
       FinChar = CurCode;
       OutCode[OutCount++] = FinChar;
