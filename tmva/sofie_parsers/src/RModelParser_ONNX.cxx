@@ -88,6 +88,7 @@ extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseGatherND;
 extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
+extern ParserFuncSignature ParseHardSigmoid;
 extern ParserFuncSignature ParseEyeLike;
 extern ParserFuncSignature ParseRange;
 extern ParserFuncSignature ParseTopK;
@@ -367,6 +368,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("GatherND", ParseGatherND);
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
+   RegisterOperator("HardSigmoid", ParseHardSigmoid);
    RegisterOperator("EyeLike", ParseEyeLike);
    RegisterOperator("Range", ParseRange);
    RegisterOperator("TopK", ParseTopK);

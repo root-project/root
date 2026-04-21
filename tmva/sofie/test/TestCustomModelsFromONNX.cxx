@@ -97,6 +97,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/Log.ref.hxx"
 #include "input_models/references/Elu.ref.hxx"
 #include "input_models/references/Gelu.ref.hxx"
+#include "input_models/references/HardSigmoid.ref.hxx"
 #include "input_models/references/Equal.ref.hxx"
 #include "input_models/references/EluAlpha.ref.hxx"
 #include "input_models/references/LessOrEqual.ref.hxx"
@@ -3321,6 +3322,26 @@ TEST(ONNX, Swish)
    EXPECT_EQ(output.size(), std::size(Swish_ExpectedOutput::outputs));
 
    float *correct = Swish_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, HardSigmoid)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard input
+   std::vector<float> input{1.0, -2.0, 3.0, 0.5, -1.0, 2.0};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "HardSigmoid", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), std::size(HardSigmoid_ExpectedOutput::outputs));
+
+   float *correct = HardSigmoid_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
