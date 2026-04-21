@@ -100,7 +100,7 @@ class RRDFCardinalityField final : public RRDFCardinalityFieldBase {
    {
       if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, std::uint64_t>)
          return;
-      if (size > std::numeric_limits<T>::max()) {
+      if (size > static_cast<ROOT::NTupleSize_t>(std::numeric_limits<T>::max())) {
          throw RException(R__FAIL(std::string("integer overflow in field ") + GetFieldName() +
                                   ". Please read the column with a larger-sized integral type."));
       }
