@@ -7,7 +7,7 @@
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
 # 17 Dec 2025, https://github.com/tukaani-project/xz/releases/tag/v5.8.2
 set(ROOT_LZMA_VERSION 5.8.2)
-set(ROOT_LZMA_HASH "f21fdf2c1ee004de30ca40377a273e3369186e6b7ab7b50a410eaa2e2bbefafb")
+set(ROOT_LZMA_HASH "ce09c50a5962786b83e5da389c90dd2c15ecd0980a258dd01f70f9e7ce58a8f1")
 
 set(LZMA_TARGET LZMA)
 set(ROOT_LZMA_PREFIX ${CMAKE_BINARY_DIR}/builtins/LZMA-prefix)
@@ -40,7 +40,7 @@ endif()
 
 ExternalProject_Add(
     LZMA
-    URL https://root.cern/download/xz-${ROOT_LZMA_VERSION}.tar.gz
+    URL ${lcgpackages}/xz-${ROOT_LZMA_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LZMA_HASH}
     PREFIX ${ROOT_LZMA_PREFIX}
     CMAKE_ARGS -G ${CMAKE_GENERATOR} 
