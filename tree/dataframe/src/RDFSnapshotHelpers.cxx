@@ -260,7 +260,8 @@ void EnsureValidSnapshotRNTupleOutput(const ROOT::RDF::RSnapshotOptions &opts, c
    if (!outFile || outFile->IsZombie())
       throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
 
-   auto *outNTuple = outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
+   std::unique_ptr<RNTuple> uoNT { outFile->Get<ROOT::RNTuple>(ntupleName.c_str()) };
+   auto *outNTuple = uoNT.get();
 
    if (outNTuple) {
       if (opts.fOverwriteIfExists) {
@@ -937,6 +938,8 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
    writeOptions.SetEnablePageChecksums(fOptions.fEnablePageChecksums);
    writeOptions.SetEnableSamePageMerging(fOptions.fEnableSamePageMerging);
 
+   // Delete beforehand (.reset does it in inverse order, creates new and then deletes)
+   delete fOutputFile.release();
    fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
    if (!fOutputFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
