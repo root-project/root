@@ -330,6 +330,44 @@ Given the risk of silently incorrect physics results, and the absence of known w
 - The change of default compression settings used by Snapshot for the TTree output data format introduced in 6.38 (was 101 before 6.38, became 505 in 6.38) is reverted. That choice was based on evidence available up to that point that indicated that ZSTD was outperforming ZLIB in all cases for the available datasets. New evidence demonstrated that this is not always the case, and in particular for the notable case of TTree branches made of collections where many (up to all) of them are empty. The investigation is described at https://github.com/vepadulano/ttree-lossless-compression-studies. The new default compression settings for Snapshot are respectively `kUndefined` for the compression algorithm and `0` for the compression level. When Snapshot detects `kUndefined` used in the options, it changes the compression settings to the new defaults of 101 (for TTree) and 505 (for RNTuple).
 - Signatures of the HistoND and HistoNSparseD operations have been changed. Previously, the list of input column names was allowed to contain an extra column for events weights. This was done to align the logic with the THnBase::Fill method. But this signature was inconsistent with all other Histo* operations, which have a separate function argument that represents the column to get the weights from. Thus, HistoND and HistoNSparseD both now have a separate function argument for the weights. The previous signature is still supported, but deprecated: a warning will be raised if the user passes the column name of the weights as an extra element of the list of input column names. In a future version of ROOT this functionality will be removed. From now on, creating a (sparse) N-dim histogram with weights should be done by calling `HistoN[Sparse]D(histoModel, inputColumns, weightColumn)`.
 
+## Histograms
+
+A first version of the new histogram package is now available in the `ROOT::Experimental` namespace.
+The main user-facing classes are [`ROOT::Experimental::RHist`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RHist.html)
+and [`ROOT::Experimental::RHistEngine`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RHistEngine.html),
+as well as the three supported axis types:
+[`ROOT::Experimental::RRegularAxis`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RRegularAxis.html),
+[`ROOT::Experimental::RVariableBinAxis`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RVariableBinAxis.html),
+[`ROOT::Experimental::RCategoricalAxis`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RCategoricalAxis.html).
+The two histogram classes are templated on the bin content type and can be multidimensional with dynamic axis types at run-time.
+Histograms can be filled via the known `Fill` method, with arguments passed to the variadic function template or as `std::tuple`.
+An optional weight must be wrapped in `ROOT::Experimental::RWeight` and passed as the last argument.
+Examples are available as [tutorials in the documentation](https://root.cern/doc/v640/group__tutorial__histv7.html).
+
+A key feature of the new histogram package is concurrent filling using atomic instructions.
+Support is built into the design of the classes and requires no change of the bin content type:
+For `RHistEngine`, directly call one of the `FillAtomic` methods, taking the same arguments as `Fill`.
+For `RHist`, first construct an [`ROOT::Experimental::RHistConcurrentFiller`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RHistConcurrentFiller.html)
+and then create [`RHistFillContext`](https://root.cern/doc/v640/classROOT_1_1Experimental_1_1RHistFillContext.html)s, which will efficiently handle global histogram statistics.
+
+Experimental support for the new histograms is integrated into RDataFrame:
+The single overloaded method `Hist()` allows to fill one- and multidimensional histograms.
+```C++
+auto hist1 = df.Hist(10, {5.0, 15.0}, "x");
+auto hist2 = df.Hist({axis1, axis2}, {"x", "y"}, "w");
+```
+
+For the moment, histograms can be merged, scaled, sliced, rebinned, and projected.
+Furthermore, one-dimensional histograms can be converted to the known `TH1`
+via free-standing functions provided in the [`ROOT::Experimental::Hist`](https://root.cern/doc/v640/namespaceROOT_1_1Experimental_1_1Hist.html) namespace.
+More operations and conversion for higher dimensions will be added in the future.
+
+Note that all classes are in the `ROOT::Experimental` namespace and remain under active development.
+As such, interfaces may change at any moment, without consideration of compatibility.
+Nevertheless, we encourage interested parties to test the provided functionality and solicit feedback.
+This will allow improving the interfaces and their documentation, and prioritize among missing features.
+Once the class layout is finalized, we will also support serialization ("streaming") to ROOT files, which is currently disabled.
+
 ## Python Interface
 
 - ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
