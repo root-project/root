@@ -836,12 +836,18 @@ void TImageDump::DrawDashPolyLine(Int_t nn, TPoint *xy, UInt_t nDash,
 
 void TImageDump::NewPage()
 {
+   fX0 = fY0 = 0;
    if (gPad && fImage) {
-      UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC()) * gStyle->GetImageScaling();
-      UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC()) * gStyle->GetImageScaling();
+      UInt_t w = gPad->GetWw() * gStyle->GetImageScaling();
+      UInt_t h = gPad->GetWh() * gStyle->GetImageScaling();
+      if (gPad != gPad->GetMother()) {
+         fX0 = gPad->XtoAbsPixel(gPad->GetX1())* gStyle->GetImageScaling();
+         fY0 = gPad->YtoAbsPixel(gPad->GetY2())* gStyle->GetImageScaling();
+         w = w * gPad->GetAbsWNDC();
+         h = h * gPad->GetAbsHNDC();
+      }
       fImage->DrawRectangle(0, 0, w, h, "#ffffffff");
    }
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -994,7 +1000,7 @@ void TImageDump::SetColor(Float_t /*r*/, Float_t /*g*/, Float_t /*b*/)
 
 Int_t TImageDump::XtoPixel(Double_t x)
 {
-   return  gPad->XtoAbsPixel(x)*gStyle->GetImageScaling();
+   return gPad->XtoAbsPixel(x)*gStyle->GetImageScaling() - fX0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1002,5 +1008,5 @@ Int_t TImageDump::XtoPixel(Double_t x)
 
 Int_t TImageDump::YtoPixel(Double_t y)
 {
-   return  gPad->YtoAbsPixel(y)*gStyle->GetImageScaling();
+   return  gPad->YtoAbsPixel(y)*gStyle->GetImageScaling() - fY0;
 }
