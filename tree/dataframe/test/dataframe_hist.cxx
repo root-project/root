@@ -265,7 +265,7 @@ TEST_P(RDFHist, InvalidNumberOfArguments)
       // Cannot use EXPECT_THROW because of template arguments...
       dfX.Hist</*BinContentType=*/double, double, double>({axis}, {"x", "x"});
       FAIL() << "expected std::invalid_argument";
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       // expected
    }
 
@@ -274,7 +274,7 @@ TEST_P(RDFHist, InvalidNumberOfArguments)
       // Cannot use EXPECT_THROW because of template arguments...
       dfX.Hist<double, double>(hist, {"x", "x"});
       FAIL() << "expected std::invalid_argument";
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       // expected
    }
 
@@ -283,7 +283,7 @@ TEST_P(RDFHist, InvalidNumberOfArguments)
       // Cannot use EXPECT_THROW because of template arguments...
       dfX.Hist<double, double>(engine, {"x", "x"});
       FAIL() << "expected std::invalid_argument";
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       // expected
    }
 }
@@ -417,7 +417,7 @@ TEST_P(RDFHist, WeightInvalidNumberOfArguments)
       // Cannot use EXPECT_THROW because of template arguments...
       dfXW.Hist</*BinContentType=*/double, double, double, double>({axis}, {"x", "x"}, "w");
       FAIL() << "expected std::invalid_argument";
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       // expected
    }
 
@@ -426,7 +426,7 @@ TEST_P(RDFHist, WeightInvalidNumberOfArguments)
       // Cannot use EXPECT_THROW because of template arguments...
       dfXW.Hist<double, double, double>(hist, {"x", "x"}, "w");
       FAIL() << "expected std::invalid_argument";
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       // expected
    }
 
@@ -435,7 +435,7 @@ TEST_P(RDFHist, WeightInvalidNumberOfArguments)
       // Cannot use EXPECT_THROW because of template arguments...
       dfXW.Hist<double, double, double>(engine, {"x", "x"}, "w");
       FAIL() << "expected std::invalid_argument";
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       // expected
    }
 }
