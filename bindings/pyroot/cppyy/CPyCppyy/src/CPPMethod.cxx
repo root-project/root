@@ -282,8 +282,10 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 //      C++ method to give some context.
 //   2. A C++ exception has occurred:
 //      Augment the exception message with the docstring of this method
-//   3. A Python exception has occurred:
+//   3. A Python exception has occurred with a traceback:
 //      Do nothing, Python exceptions are already informative enough
+//   4. If the Python exception has no traceback hinting to an internally set error stack,
+//      extract its message and wrap it with C++ method docstring context.
 
 #if PY_VERSION_HEX >= 0x030c0000
     PyObject *evalue = PyErr_Occurred() ? PyErr_GetRaisedException() : nullptr;
@@ -299,16 +301,32 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 #endif
 
     const bool isCppExc = evalue && PyType_IsSubtype((PyTypeObject*)etype, &CPPExcInstance_Type);
- // If the error is not a CPPExcInstance, the error from Python itself is
- // already complete and messing with it would only make it less informative.
+    std::string details;
+
+ // If the error is not a CPPExcInstance and has a traceback, the error from
+ // Python itself is already complete and messing with it would only make it
+ // less informative.
  // Just restore and return.
      if (evalue && !isCppExc) {
 #if PY_VERSION_HEX >= 0x030c0000
-        PyErr_SetRaisedException(evalue);
+         PyObject* tb = PyException_GetTraceback(evalue);
+         if (tb) {
+             Py_DECREF(tb);
+             PyErr_SetRaisedException(evalue);
+             return;
+         }
 #else
-        PyErr_Restore(etype, evalue, etrace);
+         if (etrace) {
+             PyErr_Restore(etype, evalue, etrace);
+             return;
+         }
 #endif
-        return;
+ // no traceback, extract its message and fall through
+         PyObject* descr = PyObject_Str(evalue);
+         if (descr) {
+             details = CPyCppyy_PyText_AsString(descr);
+             Py_DECREF(descr);
+         }
      }
 
     PyObject* doc = GetDocString();
@@ -319,9 +337,15 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
     const char* cname = pyname ? CPyCppyy_PyText_AsString(pyname) : "Exception";
 
     if (!isCppExc) {
-    // this is the case where no Python error has occurred yet, and we set a new
-    // error with context info
-        PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
+    // this is the case where no Python error has occured yet, or an internal
+    // one without traceback set a new error with context
+        if (details.empty()) {
+            PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
+        } else if (cmsg) {
+            PyErr_Format(errtype, "%s =>\n    %s: %s (%s)", cdoc, cname, cmsg, details.c_str());
+        } else {
+            PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, details.c_str());
+        }
     } else {
     // augment the top message with context information
         PyObject *&topMessage = ((CPPExcInstance*)evalue)->fTopMessage;
