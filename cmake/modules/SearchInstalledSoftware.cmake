@@ -513,7 +513,7 @@ if(fcgi)
   endif()
 endif()
 
-#--- Check for civetweb - (has to after SSL) ------------------------------------------
+#--- Check for civetweb - (has to go after SSL) ---------------------------------------
 if(http AND NOT builtin_civetweb)
   message(STATUS "Looking for civetweb")
   if(fail-on-missing)
