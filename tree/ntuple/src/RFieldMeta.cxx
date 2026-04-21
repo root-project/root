@@ -541,22 +541,28 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
          }
       }
 
-      if (!rules.empty()) {
+      const bool hasSources = std::any_of(rules.begin(), rules.end(), [](const auto &r) {
+         return r->GetSource() && (r->GetSource()->GetEntries() > 0);
+      });
+
+      // A staging class (conversion streamer info) only exists if there is at least one rule that has an
+      // on disk source member defined.
+      if (hasSources) {
          SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
          PrepareStagingArea(rules, desc, fieldDesc);
          for (auto &[_, si] : fStagingItems) {
             Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
             si.fField = std::move(static_cast<RFieldZero *>(si.fField.get())->ReleaseSubfields()[0]);
          }
+      }
 
-         // Remove target member of read rules from the list of regular members of the underlying on-disk field
-         for (const auto rule : rules) {
-            if (!rule->GetTarget())
-               continue;
+      // Remove target member of read rules from the list of regular members of the underlying on-disk field
+      for (const auto rule : rules) {
+         if (!rule->GetTarget())
+            continue;
 
-            for (const auto target : ROOT::Detail::TRangeStaticCast<const TObjString>(*rule->GetTarget())) {
-               regularSubfields.erase(std::string(target->GetString()));
-            }
+         for (const auto target : ROOT::Detail::TRangeStaticCast<const TObjString>(*rule->GetTarget())) {
+            regularSubfields.erase(std::string(target->GetString()));
          }
       }
    }
