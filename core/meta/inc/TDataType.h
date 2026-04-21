@@ -46,7 +46,7 @@ class TDataType : public TDictionary {
 private:
    TypedefInfo_t    *fInfo;     ///<!pointer to CINT typedef info
    Int_t             fSize;     // size of type
-   std::size_t       fAlignOf;  // alignment of type (0 if unknown)
+   UInt_t            fAlignOf;  // alignment of type (0 if unknown)
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class
    TString           fTrueName; //Qualified name of the (potential) underlying class, e.g. "MyClass*const*"
