@@ -17,10 +17,12 @@ defined types (accessible via TROOT::GetListOfTypes()).
 */
 
 #include "TDataType.h"
+#include "TError.h"
 #include "TInterpreter.h"
 #include "TCollection.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
+#include <limits>
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
@@ -308,68 +310,77 @@ void TDataType::SetType(const char *name)
    fSize = 0;
    fAlignOf = 0;
 
+   // Assigns an alignof() result to fAlignOf after verifying it fits in unsigned int.
+   // All standard C++ alignments are small powers-of-two; the assert is a safety
+   // net against exotic future platforms.
+   auto setAlignOf = [this](std::size_t al) {
+      R__ASSERT(al <= static_cast<std::size_t>(std::numeric_limits<unsigned int>::max()) &&
+                "alignof value exceeds unsigned int range");
+      fAlignOf = static_cast<unsigned int>(al);
+   };
+
    if (name==nullptr) {
       return;
    } else if (!strcmp("unsigned int", name)) {
       fType = kUInt_t;
       fSize = sizeof(UInt_t);
-      fAlignOf = alignof(UInt_t);
+      setAlignOf(alignof(UInt_t));
    } else if (!strcmp("unsigned", name)) {
       fType = kUInt_t;
       fSize = sizeof(UInt_t);
-      fAlignOf = alignof(UInt_t);
+      setAlignOf(alignof(UInt_t));
    } else if (!strcmp("int", name)) {
       fType = kInt_t;
       fSize = sizeof(Int_t);
-      fAlignOf = alignof(Int_t);
+      setAlignOf(alignof(Int_t));
    } else if (!strcmp("unsigned long", name)) {
       fType = kULong_t;
       fSize = sizeof(ULong_t);
-      fAlignOf = alignof(ULong_t);
+      setAlignOf(alignof(ULong_t));
    } else if (!strcmp("long", name)) {
       fType = kLong_t;
       fSize = sizeof(Long_t);
-      fAlignOf = alignof(Long_t);
+      setAlignOf(alignof(Long_t));
    } else if (!strcmp("unsigned long long", name) || !strcmp("ULong64_t",name)) {
       fType = kULong64_t;
       fSize = sizeof(ULong64_t);
-      fAlignOf = alignof(ULong64_t);
+      setAlignOf(alignof(ULong64_t));
    } else if (!strcmp("long long", name) || !strcmp("Long64_t",name)) {
       fType = kLong64_t;
       fSize = sizeof(Long64_t);
-      fAlignOf = alignof(Long64_t);
+      setAlignOf(alignof(Long64_t));
    } else if (!strcmp("unsigned short", name)) {
       fType = kUShort_t;
       fSize = sizeof(UShort_t);
-      fAlignOf = alignof(UShort_t);
+      setAlignOf(alignof(UShort_t));
    } else if (!strcmp("short", name)) {
       fType = kShort_t;
       fSize = sizeof(Short_t);
-      fAlignOf = alignof(Short_t);
+      setAlignOf(alignof(Short_t));
    } else if (!strcmp("unsigned char", name)) {
       fType = kUChar_t;
       fSize = sizeof(UChar_t);
-      fAlignOf = alignof(UChar_t);
+      setAlignOf(alignof(UChar_t));
    } else if (!strcmp("char", name)) {
       fType = kChar_t;
       fSize = sizeof(Char_t);
-      fAlignOf = alignof(Char_t);
+      setAlignOf(alignof(Char_t));
    } else if (!strcmp("bool", name)) {
       fType = kBool_t;
       fSize = sizeof(Bool_t);
-      fAlignOf = alignof(Bool_t);
+      setAlignOf(alignof(Bool_t));
    } else if (!strcmp("float", name)) {
       fType = kFloat_t;
       fSize = sizeof(Float_t);
-      fAlignOf = alignof(Float_t);
+      setAlignOf(alignof(Float_t));
    } else if (!strcmp("double", name)) {
       fType = kDouble_t;
       fSize = sizeof(Double_t);
-      fAlignOf = alignof(Double_t);
+      setAlignOf(alignof(Double_t));
    } else if (!strcmp("signed char", name)) {
       fType = kChar_t; // kDataTypeAliasSignedChar_t;
       fSize = sizeof(Char_t);
-      fAlignOf = alignof(Char_t);
+      setAlignOf(alignof(Char_t));
    } else if (!strcmp("void", name)) {
       fType = kVoid_t;
       fSize = 0;
@@ -378,17 +389,17 @@ void TDataType::SetType(const char *name)
 
    if (!strcmp("Float16_t", fName.Data())) {
       fSize = sizeof(Float16_t);
-      fAlignOf = alignof(Float16_t);
+      setAlignOf(alignof(Float16_t));
       fType = kFloat16_t;
    }
    if (!strcmp("Double32_t", fName.Data())) {
       fSize = sizeof(Double32_t);
-      fAlignOf = alignof(Double32_t);
+      setAlignOf(alignof(Double32_t));
       fType = kDouble32_t;
    }
    if (!strcmp("char*",fName.Data())) {
       fType = kCharStar;
-      fAlignOf = alignof(char *);
+      setAlignOf(alignof(char *));
    }
    // kCounter =  6, kBits     = 15
 }
