@@ -15,7 +15,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
   SOURCES
     src/gifdecode.cxx
     src/gifencode.cxx
-    src/gifquantize.c
     src/GX11Gui.cxx
     src/Rotated.cxx
     src/TGX11.cxx
