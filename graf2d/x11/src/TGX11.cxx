@@ -62,6 +62,8 @@ by Olivier Couet (package X11INT).
 #   include <sys/socket.h>
 #endif
 
+#include "gifencode.h"
+
 extern float   XRotVersion(char*, int);
 extern void    XRotSetMagnification(float);
 extern void    XRotSetBoundingBoxPad(int);
@@ -2811,8 +2813,8 @@ static XImage *gXimage = nullptr;       // image used in WriteGIF and GetPixel
 extern "C" {
    int GIFquantize(UInt_t width, UInt_t height, Int_t *ncol, Byte_t *red, Byte_t *green,
                    Byte_t *blue, Byte_t *outputBuf, Byte_t *outputCmap);
-   long GIFencode(int Width, int Height, Int_t Ncol, Byte_t R[], Byte_t G[], Byte_t B[], Byte_t ScLine[],
-                  void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
+   // long GIFencode(int Width, int Height, Int_t Ncol, Byte_t R[], Byte_t G[], Byte_t B[], Byte_t ScLine[],
+//                  void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
    int GIFdecode(Byte_t *gifArr, Byte_t *pixArr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
    int GIFinfo(Byte_t *gifArr, int *Width, int *Height, int *Ncols);
 }
@@ -2834,6 +2836,19 @@ static void PutByte(Byte_t b)
    if (ferror(gOut) == 0) fputc(b, gOut);
 }
 
+class TX11GifEncode : public TGifEncode {
+   private:
+      XImage *fXimage = nullptr;
+   protected:
+      void get_scline(int y, int width, unsigned char *buf) override
+      {
+         for (int i = 0; i < width; i++)
+            buf[i] = XGetPixel(fXimage, i, y);
+      }
+   public:
+      TX11GifEncode(XImage *image) : fXimage(image) {}
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes the current window into GIF file. Returns 1 in case of success,
@@ -2841,7 +2856,7 @@ static void PutByte(Byte_t b)
 
 Int_t TGX11::WriteGIF(char *name)
 {
-   Byte_t    scline[2000], r[256], b[256], g[256];
+   unsigned char r[256], b[256], g[256];
 
    if (gXimage) {
       XDestroyImage(gXimage);
@@ -2920,18 +2935,16 @@ Int_t TGX11::WriteGIF(char *name)
       b[i] = xcol[i].blue * 255 / maxcol;
    }
 
-   gOut = fopen(name, "w+");
-
    Int_t ret = 0;
 
-   if (gOut) {
-      GIFencode(gCws->fWidth, gCws->fHeight,
-                orgcolors.size(), r, g, b, scline, ::GetPixel, PutByte);
-      fclose(gOut);
-      ret = 1;
+   TX11GifEncode gif(gXimage);
+   if (gif.OpenFile(name)) {
+      auto len = gif.GIFencode(gCws->fWidth, gCws->fHeight, orgcolors.size(), r, g, b);
+      if (len > 0)
+         ret = 1;
+      gif.CloseFile();
    } else {
-      Error("WriteGIF","cannot write file: %s",name);
-      ret = 0;
+      Error("WriteGIF","cannot write file: %s", name);
    }
 
    // cleanup image at the end

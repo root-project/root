@@ -1,43 +1,132 @@
 /* @(#)root/x11:$Id$ */
-/* Author: E.Chernyaev   19/01/94*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+/* Author: E.Chernyaev   19/01/94
+ * C++ interface: S.Linev 20/04/2026 */
 
-#ifdef __STDC__
-#define ARGS(alist) alist
-#else
-#define ARGS(alist) ()
-#endif
+#include "gifencode.h"
+
+#include <vector>
+
 
 #define BITS     12                     /* largest code size */
 #define THELIMIT 4096                   /* NEVER generate this */
-#define HSIZE    5003                   /* hash table size */
 #define SHIFT    4                      /* shift for hashing */
 
-#define put_byte(A) (*put_b)((byte)(A)); Nbyte++
 
-typedef unsigned char byte;
+void TGifEncode::put_byte(unsigned char b)
+{
+   if (fOut && (ferror(fOut) == 0)) {
+      fputc(b, fOut);
+      fNbyte++;
+   }
+}
 
-static long     HashTab [HSIZE];        /* hash table */
-static int      CodeTab [HSIZE];        /* code table */
+bool TGifEncode::OpenFile(const char *fname)
+{
+   fOut = fopen(fname, "w+");
+   return fOut != nullptr;
+}
 
-static int      BitsPixel,              /* number of bits per pixel */
-                IniCodeSize,            /* initial number of bits per code */
-                CurCodeSize,            /* current number of bits per code */
-                CurMaxCode,             /* maximum code, given CurCodeSize */
-                ClearCode,              /* reset code */
-                EOFCode,                /* end of file code */
-                FreeCode;               /* first unused entry */
+void TGifEncode::CloseFile()
+{
+   if (fOut)
+      fclose(fOut);
+   fOut = nullptr;
+}
 
-static long      Nbyte;
-static void     (*put_b) ARGS((byte));
 
-static void     output ARGS((int));
-static void     char_init();
-static void     char_out ARGS((int));
-static void     char_flush();
-static void     put_short ARGS((int));
+void TGifEncode::char_init()
+{
+   a_count = 0;
+   cur_accum = 0;
+   cur_bits  = 0;
+}
+
+void TGifEncode::char_out(unsigned char c)
+{
+   accum[a_count++] = c;
+   if (a_count >= 254)
+      char_flush();
+}
+
+void TGifEncode::char_flush()
+{
+  if (a_count == 0) return;
+  put_byte(a_count);
+  for (int i=0; i<a_count; i++) {
+    put_byte(accum[i]);
+  }
+  a_count = 0;
+}
+
+void TGifEncode::put_short(int word)
+{
+  put_byte(word & 0xFF);
+  put_byte((word>>8) & 0xFF);
+}
+
+/***************************************************************
+ *                                                             *
+ * Name: output                                 Date: 02.10.92 *
+ *                                                             *
+ * Function: output GIF code                                   *
+ *                                                             *
+ * Input: code - GIF code                                      *
+ *                                                             *
+ ***************************************************************/
+void TGifEncode::output(int code)
+{
+   /*   O U T P U T   C O D E   */
+
+   static unsigned long masks[] = { 0x0000,
+                                    0x0001, 0x0003, 0x0007, 0x000F,
+                                    0x001F, 0x003F, 0x007F, 0x00FF,
+                                    0x01FF, 0x03FF, 0x07FF, 0x0FFF,
+                                    0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
+
+   cur_accum &= masks[cur_bits];
+   if (cur_bits > 0)
+     cur_accum |= ((long)code << cur_bits);
+   else
+     cur_accum = code;
+   cur_bits += CurCodeSize;
+   while( cur_bits >= 8 ) {
+     char_out(cur_accum & 0xFF);
+     cur_accum >>= 8;
+     cur_bits -= 8;
+   }
+
+  /*   R E S E T   */
+
+  if (code == ClearCode ) {
+    memset((char *) HashTab, -1, sizeof(HashTab));
+    FreeCode = ClearCode + 2;
+    CurCodeSize = IniCodeSize;
+    CurMaxCode  = (1 << (IniCodeSize)) - 1;
+  }
+
+  /*   I N C R E A S E   C O D E   S I Z E   */
+
+  if (FreeCode > CurMaxCode ) {
+      CurCodeSize++;
+      if ( CurCodeSize == BITS )
+        CurMaxCode = THELIMIT;
+      else
+        CurMaxCode = (1 << (CurCodeSize)) - 1;
+   }
+
+  /*   E N D   O F   F I L E :  write the rest of the buffer  */
+
+  if( code == EOFCode ) {
+    while( cur_bits > 0 ) {
+      char_out(cur_accum & 0xff);
+      cur_accum >>= 8;
+      cur_bits -= 8;
+    }
+    char_flush();
+  }
+}
+
+
 
 /***********************************************************************
  *                                                                     *
@@ -60,11 +149,13 @@ static void     put_short ARGS((int));
  * Return: size of GIF                                                 *
  *                                                                     *
  ***********************************************************************/
-long GIFencode(int Width, int Height, int Ncol, byte R[], byte G[], byte B[], byte ScLine[],
-               void(*get_scline) ARGS((int, int, byte *)), void(*pb) ARGS((byte)))
+long TGifEncode::GIFencode(int Width, int Height, int Ncol, unsigned char *R, unsigned char *G, unsigned char *B)
+//               void(*get_scline) ARGS((int, int, byte *)), void(*pb) ARGS((byte)))
 {
   long          CodeK;
   int           ncol, i, x, y, disp, Code, K;
+
+  std::vector<unsigned char> ScLine(Width);
 
   /*   C H E C K   P A R A M E T E R S   */
 
@@ -82,8 +173,7 @@ long GIFencode(int Width, int Height, int Ncol, byte R[], byte G[], byte B[], by
 
   /*   I N I T I A L I S A T I O N   */
 
-  put_b  = pb;
-  Nbyte  = 0;
+  fNbyte  = 0;
   char_init();                          /* initialise "char_..." routines */
 
   /*   F I N D   #   O F   B I T S   P E R    P I X E L   */
@@ -149,7 +239,7 @@ long GIFencode(int Width, int Height, int Ncol, byte R[], byte G[], byte B[], by
   FreeCode    = ClearCode + 2;
   output(ClearCode);
   for (y=0; y<Height; y++) {
-    (*get_scline)(y, Width, ScLine);
+    get_scline(y, Width, ScLine.data());
     x     = 0;
     if (y == 0)
       Code  = ScLine[x++];
@@ -199,103 +289,6 @@ NOMATCH:
   put_byte(0);                          /* zero-length packet (EOF) */
   put_byte(';');                        /* GIF file terminator */
 
-  return (Nbyte);
+  return fNbyte;
 }
 
-static unsigned long cur_accum;
-static int           cur_bits;
-static int           a_count;
-static char          accum[256];
-static unsigned long masks[] = { 0x0000,
-                                 0x0001, 0x0003, 0x0007, 0x000F,
-                                 0x001F, 0x003F, 0x007F, 0x00FF,
-                                 0x01FF, 0x03FF, 0x07FF, 0x0FFF,
-                                 0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
-
-/***************************************************************
- *                                                             *
- * Name: output                                 Date: 02.10.92 *
- *                                                             *
- * Function: output GIF code                                   *
- *                                                             *
- * Input: code - GIF code                                      *
- *                                                             *
- ***************************************************************/
-static void output(int code)
-{
-  /*   O U T P U T   C O D E   */
-
-   cur_accum &= masks[cur_bits];
-   if (cur_bits > 0)
-     cur_accum |= ((long)code << cur_bits);
-   else
-     cur_accum = code;
-   cur_bits += CurCodeSize;
-   while( cur_bits >= 8 ) {
-     char_out( (unsigned int) (cur_accum & 0xFF) );
-     cur_accum >>= 8;
-     cur_bits -= 8;
-   }
-
-  /*   R E S E T   */
-
-  if (code == ClearCode ) {
-    memset((char *) HashTab, -1, sizeof(HashTab));
-    FreeCode = ClearCode + 2;
-    CurCodeSize = IniCodeSize;
-    CurMaxCode  = (1 << (IniCodeSize)) - 1;
-  }
-
-  /*   I N C R E A S E   C O D E   S I Z E   */
-
-  if (FreeCode > CurMaxCode ) {
-      CurCodeSize++;
-      if ( CurCodeSize == BITS )
-        CurMaxCode = THELIMIT;
-      else
-        CurMaxCode = (1 << (CurCodeSize)) - 1;
-   }
-
-  /*   E N D   O F   F I L E :  write the rest of the buffer  */
-
-  if( code == EOFCode ) {
-    while( cur_bits > 0 ) {
-      char_out( (unsigned int)(cur_accum & 0xff) );
-      cur_accum >>= 8;
-      cur_bits -= 8;
-    }
-    char_flush();
-  }
-}
-
-static void char_init()
-{
-   a_count = 0;
-   cur_accum = 0;
-   cur_bits  = 0;
-}
-
-static void char_out(int c)
-{
-   accum[a_count++] = c;
-   if (a_count >= 254)
-      char_flush();
-}
-
-static void char_flush()
-{
-  int i;
-
-  if (a_count == 0) return;
-  put_byte(a_count);
-  for (i=0; i<a_count; i++) {
-    put_byte(accum[i]);
-  }
-  a_count = 0;
-}
-
-static void put_short(int word)
-{
-  put_byte(word & 0xFF);
-  put_byte((word>>8) & 0xFF);
-}
