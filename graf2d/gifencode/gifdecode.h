@@ -10,9 +10,13 @@ class TGifDecode {
       unsigned char  *ptr1 = nullptr;     /* pointer to GIF array */
       unsigned char  *ptr2 = nullptr;     /* pointer to PIX array */
 
-      int      CurCodeSize = 0;           /* current number of bits per code */
-      int      CurMaxCode = 0;            /* maximum code, given CurCodeSize */
-      long     CurBit = 0;                /* current bit in GIF image data */
+      int           CurCodeSize = 0;           /* current number of bits per code */
+      int           CurMaxCode = 0;            /* maximum code, given CurCodeSize */
+      long          CurBit = -1;                /* current bit in GIF image data */
+
+      long          b3[3] = {0, 0, 0};
+      long          CurByte = -1;
+      unsigned char lblk = 0;
 
       int ReadCode();
       void OutPixel(unsigned char pix);

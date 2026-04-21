@@ -17,22 +17,16 @@
  ***************************************************************/
 int TGifDecode::ReadCode()
 {
-  long          b3[3] = {0, 0, 0};
-  long          CurByte;
-  unsigned char lblk;
-  int           shift, nbyte;
-  long          OldByte;
-
   if (CurBit == -1) {
     lblk = 0;
     CurByte = -1;
   }
 
   CurBit += CurCodeSize;
-  OldByte = CurByte;
+  long OldByte = CurByte;
   CurByte = CurBit/8;
-  nbyte   = CurByte - OldByte;
-  shift   = 17 + (CurBit%8) - CurCodeSize;
+  int nbyte   = CurByte - OldByte;
+  int shift   = 17 + (CurBit%8) - CurCodeSize;
   while (nbyte-- > 0) {
     if (lblk == 0) {
       lblk = *ptr1++;
