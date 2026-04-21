@@ -537,6 +537,43 @@ sum(1 for x in collection if x is obj)   # pointer comparison
 sum(1 for x in collection if x == obj)   # value comparison (if defined for the element C++ class)
 ```
 
+## Machine Learning integration
+
+ROOT provides built-in support for feeding data from ROOT files directly into ML training workflows, without intermediate conversions to other formats.
+The central tool for this, previously known as `RBatchGenerator` in the `TMVA` namespace, has been renamed to `ROOT.Experimental.ML.RDataLoader` and redesigned in this release.
+Note that the interface and functionality is still experimental: don't rely on it for production purposes, but feedback is much appreciated!
+[Tutorials](https://root.cern/doc/master/ml__dataloader__PyTorch_8py.html) are updated to demonstrate the new interface.
+
+### New `RDataLoader` interface
+`RDataLoader` is now a Python class that exposes methods for splitting the dataset into training and test sets, and reading batches in 3 formats: NumPy arrays, PyTorch tensors and TensorFlow datasets.
+If more formats became popular, they could be easily added in the future.
+
+Usage:
+```python
+dl = ROOT.Experimental.ML.RDataLoader(
+    df,
+    batch_size=1024,
+    batches_in_memory=10,
+    target="label",
+)
+
+train, test = dl.train_test_split(test_size=0.2)
+
+for x, y in train.as_torch(): ...
+for x, y in test.as_numpy(): ...
+for x, y in train.as_tensorflow(): ...
+```
+
+A new parameter `batches_in_memory` controls how many batches worth of data are held in the in-memory shuffle buffer at once. Larger values improve shuffling quality at the cost of higher memory usage.
+
+### Cluster-aligned reading and improved shuffling
+The loader now reads data in chunks aligned to TTree/RNTuple cluster boundaries on disk rather than fixed-size blocks into an in-memory buffer.
+Entries within the buffer are shuffled together before batching if shuffling is enabled. This is done to ensure most efficient I/O scheduling.
+
+### Multiple RDataFrames as input
+`RDataLoader` now accepts a list of RDataFrames as input allowing data from multiple files or sources to be combined transparently into a single training stream.
+
+
 ## ROOT executable
 
 - Removed stray linebreak when running `root -q` with input files or commands passed with `-e`.
