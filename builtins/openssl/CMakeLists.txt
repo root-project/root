@@ -37,7 +37,7 @@ else()
   set(OPENSSL_CONFIG_CMD ./config)
 endif()
 
-ExternalProject_Add(OPENSSL
+ExternalProject_Add(BUILTIN_OPENSSL
   URL ${OPENSSL_URL} URL_HASH ${OPENSSL_URLHASH}
   INSTALL_DIR ${OPENSSL_PREFIX}
   CONFIGURE_COMMAND ${OPENSSL_CONFIG_CMD} no-shared --prefix=<INSTALL_DIR> --openssldir=<INSTALL_DIR>
@@ -64,12 +64,12 @@ file(MAKE_DIRECTORY ${OPENSSL_INCLUDE_DIR})
 add_library(builtin_crypto INTERFACE)
 target_include_directories(builtin_crypto INTERFACE $<BUILD_INTERFACE:${OPENSSL_INCLUDE_DIR}>)
 target_link_libraries(builtin_crypto INTERFACE $<BUILD_INTERFACE:${OPENSSL_CRYPTO_LIBRARY}>)
-add_dependencies(builtin_crypto OPENSSL)
+add_dependencies(builtin_crypto BUILTIN_OPENSSL)
 
 add_library(builtin_ssl INTERFACE)
 target_include_directories(builtin_ssl INTERFACE $<BUILD_INTERFACE:${OPENSSL_INCLUDE_DIR}>)
 target_link_libraries(builtin_ssl INTERFACE $<BUILD_INTERFACE:${OPENSSL_LIBRARIES}>)
-add_dependencies(builtin_ssl OPENSSL)
+add_dependencies(builtin_ssl BUILTIN_OPENSSL)
 
 add_library(OpenSSL::Crypto ALIAS builtin_crypto)
 add_library(OpenSSL::SSL ALIAS builtin_ssl)

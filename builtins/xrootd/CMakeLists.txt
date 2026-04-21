@@ -57,7 +57,7 @@ ExternalProject_Add(
 file(MAKE_DIRECTORY ${XROOTD_PREFIX}/include/xrootd)
 
 if(builtin_openssl)
-  add_dependencies(BUILTIN_XROOTD OPENSSL)
+  add_dependencies(BUILTIN_XROOTD BUILTIN_OPENSSL)
 endif()
 
 install(DIRECTORY ${XROOTD_PREFIX}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
