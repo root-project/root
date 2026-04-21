@@ -38,7 +38,7 @@ find_path(xxHash_INCLUDE_DIR NAME xxhash.h PATH_SUFFIXES include)
 # and then considered with platform-specific prefixes (e.g. lib) and suffixes (e.g. .so), as defined by 
 # the variables CMAKE_FIND_LIBRARY_PREFIXES and CMAKE_FIND_LIBRARY_SUFFIXES. Therefore one may specify 
 # library file names such as libfoo.a directly. This can be used to locate static libraries on UNIX-like systems.
-find_library(xxHash_LIBRARY NAMES libxxhash.${CMAKE_STATIC_LIBRARY_SUFFIX} libxxHash.${CMAKE_STATIC_LIBRARY_SUFFIX} xxhash xxHash PATH_SUFFIXES lib)
+find_library(xxHash_LIBRARY NAMES libxxhash${CMAKE_STATIC_LIBRARY_SUFFIX} libxxHash${CMAKE_STATIC_LIBRARY_SUFFIX} xxhash xxHash PATH_SUFFIXES lib)
 
 mark_as_advanced(xxHash_INCLUDE_DIR)
 
