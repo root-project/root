@@ -24,7 +24,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
 
 add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
-ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
+ROOT_LINKER_LIBRARY(Core)
 
 # This sets RUNPATH for libCore, which enables it to dlopen any ROOT library in its directory.
 # If omitted, Core might try to load libraries from a ROOT that's installed in the system.
