@@ -49,7 +49,6 @@
 #pragma link C++ class RooStats::HybridCalculator+;
 #pragma link C++ class RooStats::FrequentistCalculator+;
 #pragma link C++ class RooStats::AsymptoticCalculator+;
-#pragma link C++ class RooStats::HybridPlot+;
 #pragma link C++ class RooStats::HybridResult+;
 
 #pragma link C++ class RooStats::DetailedOutputAggregator+;

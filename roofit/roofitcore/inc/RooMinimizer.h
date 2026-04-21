@@ -145,11 +145,7 @@ public:
    void setPrintLevel(int newLevel);
 
    // Setters on _fcn
-   void optimizeConst(int flag)
-#ifndef ROOFIT_BUILDS_ITSELF
-     R__DEPRECATED(6, 42, "Please use the default \"cpu\" likelihood evaluation backend if you want all optimizations.")
-#endif
-   ;
+   void optimizeConst(int flag);
    void setEvalErrorWall(bool flag) { _cfg.doEEWall = flag; }
    void setRecoverFromNaNStrength(double strength);
    void setOffsetting(bool flag);

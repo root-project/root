@@ -636,9 +636,13 @@ RooCmdArg PrefitDataFraction(double data_ratio)
 {
    return RooCmdArg("Prefit", 0, 0, data_ratio, 0, nullptr, nullptr, nullptr, nullptr);
 }
-RooCmdArg Optimize(Int_t flag)
+
+/// \deprecated Has no effect anymore. Functionality was removed in ROOT 6.42,
+/// and this function is kept as an empty shell that does nothing (for API
+/// compatibility between different ROOT versions).
+RooCmdArg Optimize(Int_t /*flag*/)
 {
-   return RooCmdArg("Optimize", flag);
+   return RooCmdArg{};
 }
 RooCmdArg Verbose(bool flag)
 {

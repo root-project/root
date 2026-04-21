@@ -30,7 +30,6 @@ if(roofit_legacy_eval_backend)
     src/RooChi2Var.cxx
     src/RooNLLVar.cxx
     src/RooRealMPFE.cxx
-    src/RooXYChi2Var.cxx
   )
 endif()
 
@@ -471,7 +470,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 )
 
 # The following definitions are PUBLIC so they can also be used in ROOT-internal tests
-target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 
 if(roofit_legacy_eval_backend)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_LEGACY_EVAL_BACKEND)

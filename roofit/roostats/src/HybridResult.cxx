@@ -37,7 +37,6 @@ TConfidenceLevel.
 #include "RooAbsData.h"
 
 #include "RooStats/HybridResult.h"
-#include "RooStats/HybridPlot.h"
 
 #include <TMath.h>
 
@@ -239,38 +238,6 @@ void HybridResult::Add(HybridResult* other)
    fComputationsNulDoneFlag = false;
 
    return;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// prepare a plot showing a result and return a pointer to a HybridPlot object
-/// the needed arguments are: an object name, a title and the number of bins in the plot
-
-HybridPlot* HybridResult::GetPlot(const char* name,const char* title, int n_bins)
-{
-   // default plot name
-   TString plot_name;
-   if ( TString(name)=="" ) {
-      plot_name += GetName();
-      plot_name += "_plot";
-   } else plot_name = name;
-
-   // default plot title
-   TString plot_title;
-   if ( TString(title)=="" ) {
-      plot_title += GetTitle();
-      plot_title += "_plot (";
-      plot_title += fTestStat_b.size();
-      plot_title += " toys)";
-   } else plot_title = title;
-
-   HybridPlot* plot = new HybridPlot( plot_name.Data(),
-                                      plot_title.Data(),
-                                      fTestStat_sb,
-                                      fTestStat_b,
-                                      fTestStat_data,
-                                      n_bins,
-                                      true );
-   return plot;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
