@@ -76,8 +76,8 @@ public:
 
   void setBins(Int_t nBins);
   void setBinning(const RooAbsBinning& binning, const char* name=nullptr) ;
-  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const override ;
-  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) override ;
+  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) const override ;
+  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) override ;
   bool hasBinning(const char* name) const override ;
   std::list<std::string> getBinningNames() const override ;
 

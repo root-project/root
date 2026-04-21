@@ -71,10 +71,10 @@ public:
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
-  void setMin(const char* name, double value) ;
-  void setMax(const char* name, double value) ;
-  void setRange(const char* name, double min, double max) ;
-  void setRange(const char* name, RooAbsReal& min, RooAbsReal& max) ;
+  void setMin(const char* name, double value, bool shared=true) ;
+  void setMax(const char* name, double value, bool shared=true) ;
+  void setRange(const char* name, double min, double max, bool shared=true) ;
+  void setRange(const char* name, RooAbsReal& min, RooAbsReal& max, bool shared=true) ;
   inline void setMin(double value) { setMin(nullptr,value) ; }
   inline void setMax(double value) { setMax(nullptr,value) ; }
   /// Set the limits of the default range.
@@ -82,13 +82,13 @@ public:
   /// Set parameterised limits of the default range. See setRange(const char*, RooAbsReal&, RooAbsReal&).
   inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(nullptr,min,max) ; }
 
-  void setBins(Int_t nBins, const char* name=nullptr);
-  void setBinning(const RooAbsBinning& binning, const char* name=nullptr) ;
+  void setBins(Int_t nBins, const char* name=nullptr, bool shared=true);
+  void setBinning(const RooAbsBinning& binning, const char* name=nullptr, bool shared=true) ;
 
   // RooAbsRealLValue implementation
   bool hasBinning(const char* name) const override ;
-  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const override ;
-  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) override ;
+  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) const override ;
+  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) override ;
   std::list<std::string> getBinningNames() const override ;
 
   /// remove a named binning (or a named range, which are stored internally as binnings)

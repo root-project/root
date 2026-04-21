@@ -86,9 +86,9 @@ bool RooErrorVar::hasBinning(const char* name) const
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, bool createOnTheFly) const
+const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, bool createOnTheFly, bool shared) const
 {
-  return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
+  return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly, shared) ;
 }
 
 
@@ -97,7 +97,7 @@ const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, boo
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool createOnTheFly)
+RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool createOnTheFly, bool)
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==nullptr) {
