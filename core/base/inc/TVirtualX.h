@@ -123,6 +123,7 @@ public:
    virtual void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy);
    virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
    virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode);
+   virtual Int_t     WriteGIFW(WinContext_t wctxt, const char *name);
 
 
    //---- OpenGL related stuff, required only with R__HAS_COCOA ----

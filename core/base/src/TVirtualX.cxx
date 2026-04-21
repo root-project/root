@@ -541,6 +541,14 @@ void TVirtualX::DrawTextW(WinContext_t /* wctxt */, Int_t x, Int_t y, Float_t an
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Save specified window as GIF image
+
+Int_t TVirtualX::WriteGIFW(WinContext_t /* wctxt */, const char *name)
+{
+   return WriteGIF((char *) name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Executes the command "code" coming from the other threads (Win32)
 
 UInt_t TVirtualX::ExecCommand(TGWin32Command * /*code*/)
