@@ -135,6 +135,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::unordered_map<ROOT::DescriptorId_t, std::string> fFieldId2QualifiedName;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
+   std::vector<std::string> fTopLevelFieldNames;
    /// List of column readers returned by GetColumnReaders() organized by slot. Used to reconnect readers
    /// to new page sources when the files in the chain change.
    std::vector<std::vector<ROOT::Internal::RDF::RNTupleColumnReader *>> fActiveColumnReaders;
@@ -235,6 +236,7 @@ public:
    void SetNSlots(unsigned int nSlots) final;
    std::size_t GetNFiles() const final { return fFileNames.empty() ? 1 : fFileNames.size(); }
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
+   const std::vector<std::string> &GetTopLevelFieldNames() const final { return fTopLevelFieldNames; }
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;

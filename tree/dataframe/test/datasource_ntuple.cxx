@@ -855,3 +855,15 @@ TEST(RNTupleDS, Int8)
    std::vector<std::int8_t> expected{0, 1, 2, 3, 4};
    EXPECT_EQ(expected, df.Take<std::int8_t>("x").GetValue());
 }
+
+TEST_F(RNTupleDSTest, GetTopLevelFieldNames)
+{
+   ROOT::RDataFrame df{fNtplName, fFileName};
+
+   EXPECT_VEC_EQ(
+      df.GetDatasetTopLevelFieldNames(),
+      std::vector<std::string>{"VecElectron", "electron", "energy", "jets", "nElectron", "nnlo", "pt", "rvec", "tag"});
+   EXPECT_VEC_EQ(df.GetColumnNames(),
+                 std::vector<std::string>{"VecElectron", "VecElectron.pt", "electron", "electron.pt", "energy", "jets",
+                                          "nElectron", "nnlo", "pt", "rvec", "tag"});
+}

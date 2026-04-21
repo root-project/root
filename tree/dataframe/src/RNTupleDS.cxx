@@ -448,6 +448,12 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pag
 
    AddField(fPrincipalDescriptor, "", fPrincipalDescriptor.GetFieldZeroId(),
             std::vector<ROOT::RDF::RNTupleDS::RFieldInfo>());
+
+   auto topLevelFields = fPrincipalDescriptor.GetTopLevelFields();
+   const auto nTopLevelFields = std::distance(topLevelFields.begin(), topLevelFields.end());
+   fTopLevelFieldNames.reserve(nTopLevelFields);
+   for (const auto &field : topLevelFields)
+      fTopLevelFieldNames.push_back(field.GetFieldName());
 }
 
 namespace {
