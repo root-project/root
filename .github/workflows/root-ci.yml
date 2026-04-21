@@ -413,7 +413,7 @@ jobs:
           - image: alma10
             platform_config: alma10-clang_ninja
             is_special: true
-            property: "clang Ninja builtin"
+            property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20"]
           # Fedora Rawhide with Python debug build
           - image: rawhide
@@ -474,6 +474,10 @@ jobs:
           ccache -s || true
           if [ -d /py-venv/ROOT-CI/bin/ ]; then
             . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV;
+          fi
+          if ${{ contains(matrix.property, 'auto-registration off') }}; then
+            echo "Disabling ROOT's object auto registration for this job"
+            echo ROOT_OBJECT_AUTO_REGISTRATION=0 >> $GITHUB_ENV;
           fi
 
       - name: Checkout
