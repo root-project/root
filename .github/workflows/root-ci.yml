@@ -468,17 +468,13 @@ jobs:
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
 
     steps:
-      - name: Configure ccache
+      - name: Set up environment
         run: |
           ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
-          ccache -p || true
           ccache -s || true
-
-      - name: Set up Python Virtual Env
-        # if the `if` expr is false, `if` still has exit code 0.
-        # if the `if` block is entered, the block's exit code becomes the exit
-        # code of the `if`.
-        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+          if [ -d /py-venv/ROOT-CI/bin/ ]; then
+            . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV;
+          fi
 
       - name: Checkout
         uses: actions/checkout@v6
@@ -499,7 +495,8 @@ jobs:
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
-               ls -la
+               ls -la;
+               echo "Path is: $PATH"
               '
 
       - uses: root-project/gcc-problem-matcher-improved@main
