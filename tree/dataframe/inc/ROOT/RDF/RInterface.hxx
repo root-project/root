@@ -1480,7 +1480,17 @@ public:
       // RemoveDuplicates should preserve ordering of the columns: it might be meaningful.
       RDFInternal::RemoveDuplicates(columnNames);
 
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
+      std::vector<std::string> selectedColumns;
+      try {
+         selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
+      }
+      catch (const std::runtime_error &e){
+         // No columns were found, try again but consider all input data source columns
+         if (auto ds = GetDataSource())
+            selectedColumns = RDFInternal::ConvertRegexToColumns(ds->GetColumnNames(), columnNameRegexp, "Snapshot");
+         else
+            throw e;
+      }
 
       if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
          RDFInternal::RemoveRNTupleSubfields(selectedColumns);
