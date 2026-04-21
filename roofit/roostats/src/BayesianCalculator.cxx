@@ -54,7 +54,6 @@ credible interval from the given function.
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgSet.h"
-#include "RooBrentRootFinder.h"
 #include "RooFormulaVar.h"
 #include "RooGenericPdf.h"
 #include "RooPlot.h"
@@ -167,7 +166,6 @@ public:
       fFunctor(nll, bindParams, RooArgList() ),              // functor
       fPriorFunc(nullptr),
       fLikelihood(fFunctor, nullptr, nllMinimum),         // integral of exp(-nll) function
-      fIntegrator(ROOT::Math::IntegratorMultiDim::GetType(integType) ),  // integrator
       fXmin(bindParams.size()),               // vector of parameters (min values)
       fXmax(bindParams.size())
    {
@@ -176,7 +174,15 @@ public:
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
-      fIntegrator.SetFunction(fLikelihood, bindParams.size() );
+      // ROOT::Math::IntegratorMultiDim does not support dim = 1, so fall back to
+      // the 1D integrator when there are no nuisance parameters.
+      if (bindParams.size() == 1) {
+         fIntegratorOneDim = std::make_unique<ROOT::Math::Integrator>(ROOT::Math::IntegratorOneDim::GetType(integType));
+         fIntegratorOneDim->SetFunction(fLikelihood);
+      } else {
+         fIntegrator = std::make_unique<ROOT::Math::IntegratorMultiDim>(ROOT::Math::IntegratorMultiDim::GetType(integType));
+         fIntegrator->SetFunction(fLikelihood, bindParams.size());
+      }
 
       ooccoutD(nullptr,NumericIntegration) << "PosteriorCdfFunction::Compute integral of posterior in nuisance and poi. "
                                            << " nllMinimum is " << nllMinimum << std::endl;
@@ -191,7 +197,10 @@ public:
                                               << " in interval [ " <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
 
-      fIntegrator.Options().Print(ooccoutD(nullptr,NumericIntegration));
+      if (fIntegrator)
+         fIntegrator->Options().Print(ooccoutD(nullptr,NumericIntegration));
+      else
+         fIntegratorOneDim->Options().Print(ooccoutD(nullptr,NumericIntegration));
 
       // store max POI value because it will be changed when evaluating the function
       fMaxPOI = fXmax[0];
@@ -214,7 +223,6 @@ public:
       //fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
       fPriorFunc(rhs.fPriorFunc),
       fLikelihood(fFunctor, fPriorFunc.get(), rhs.fLikelihood.fOffset),
-      fIntegrator(ROOT::Math::IntegratorMultiDim::GetType( rhs.fIntegrator.Name().c_str() ) ),  // integrator
       fXmin( rhs.fXmin),
       fXmax( rhs.fXmax),
       fNorm( rhs.fNorm),
@@ -226,7 +234,13 @@ public:
       fError(rhs.fError),
       fNormCdfValues(rhs.fNormCdfValues)
    {
-      fIntegrator.SetFunction(fLikelihood, fXmin.size() );
+      if (rhs.fIntegratorOneDim) {
+         fIntegratorOneDim = std::make_unique<ROOT::Math::Integrator>(ROOT::Math::IntegratorOneDim::GetType(rhs.fIntegratorOneDim->Name().c_str()));
+         fIntegratorOneDim->SetFunction(fLikelihood);
+      } else {
+         fIntegrator = std::make_unique<ROOT::Math::IntegratorMultiDim>(ROOT::Math::IntegratorMultiDim::GetType(rhs.fIntegrator->Name().c_str()));
+         fIntegrator->SetFunction(fLikelihood, fXmin.size());
+      }
       // need special treatment for the smart pointer
       // if (rhs.fPriorFunc.get() ) {
       //    fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*(rhs.fPriorFunc) ) );
@@ -277,8 +291,15 @@ private:
 
       fFunctor.binding().resetNumCall();  // reset number of calls for debug
 
-      double cdf = fIntegrator.Integral(&fXmin[0],&fXmax[0]);
-      double error = fIntegrator.Error();
+      double cdf;
+      double error;
+      if (fIntegratorOneDim) {
+         cdf = fIntegratorOneDim->Integral(fXmin[0], fXmax[0]);
+         error = fIntegratorOneDim->Error();
+      } else {
+         cdf = fIntegrator->Integral(&fXmin[0], &fXmax[0]);
+         error = fIntegrator->Error();
+      }
       double normcdf =  cdf/fNorm;  // normalize the cdf
 
       ooccoutD(nullptr,NumericIntegration) << "PosteriorCdfFunction: poi = [" << fXmin[0] << " , "
@@ -324,7 +345,8 @@ private:
    mutable RooFunctor fFunctor;                   // functor binding nll
    mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior
    LikelihoodFunction fLikelihood;               // likelihood function
-   mutable ROOT::Math::IntegratorMultiDim  fIntegrator; // integrator  (mutable because Integral() is not const
+   mutable std::unique_ptr<ROOT::Math::IntegratorMultiDim> fIntegrator; // multi-dim integrator (for >=2 dims)
+   mutable std::unique_ptr<ROOT::Math::Integrator> fIntegratorOneDim;   // 1D integrator (for POI-only case)
    mutable std::vector<double> fXmin;    // min value of parameters (poi+nuis) -
    mutable std::vector<double> fXmax;   // max value of parameters (poi+nuis) - max poi changes so it is mutable
    double fNorm = 1.0;                  // normalization value (computed in constructor)
@@ -1127,14 +1149,7 @@ SimpleInterval* BayesianCalculator::GetInterval() const
       }
 
       else {
-         // use integration method if there are nuisance parameters
-         if (!fNuisanceParameters.empty()) {
-            ComputeIntervalFromCdf(lowerCutOff, upperCutOff);
-         }
-         else {
-            // case of no nuisance - just use createCdf from roofit
-            ComputeIntervalUsingRooFit(lowerCutOff, upperCutOff);
-         }
+         ComputeIntervalFromCdf(lowerCutOff, upperCutOff);
          // case cdf failed (scan then the posterior)
          if (!fValidInterval) {
             fNScanBins = 100;
@@ -1185,55 +1200,6 @@ double BayesianCalculator::GetMode() const {
    TH1 * h = fApproxPosterior->GetHistogram();
    return h->GetBinCenter(h->GetMaximumBin() );
    //return  fApproxPosterior->GetMaximumX();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// internal function compute the interval using RooFit
-
-void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double upperCutOff ) const {
-
-   coutI(Eval) <<  "BayesianCalculator: Compute interval using RooFit:  posteriorPdf + createCdf + RooBrentRootFinder " << std::endl;
-
-   RooRealVar* poi = dynamic_cast<RooRealVar*>(fPOI.first() );
-   assert(poi);
-
-   fValidInterval = false;
-   if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
-   if (!fPosteriorPdf) return;
-
-   std::unique_ptr<RooAbsReal> cdf{fPosteriorPdf->createCdf(fPOI,RooFit::ScanNoCdf())};
-   if (!cdf) return;
-
-   std::unique_ptr<RooAbsFunc> cdf_bind{cdf->bindVars(fPOI,&fPOI)};
-   if (!cdf_bind) return;
-
-   RooBrentRootFinder brf(*cdf_bind);
-   brf.setTol(fBrfPrecision); // set the brf precision
-
-   double tmpVal = poi->getVal();  // patch used because findRoot changes the value of poi
-
-   bool ret = true;
-   if (lowerCutOff > 0) {
-      double y = lowerCutOff;
-      ret &= brf.findRoot(fLower,poi->getMin(),poi->getMax(),y);
-   }
-   else
-      fLower = poi->getMin();
-
-   if (upperCutOff < 1.0) {
-      double y=upperCutOff;
-      ret &= brf.findRoot(fUpper,poi->getMin(),poi->getMax(),y);
-   }
-   else
-      fUpper = poi->getMax();
-   if (!ret) {
-      coutE(Eval) << "BayesianCalculator::GetInterval "
-                  << "Error returned from Root finder, estimated interval is not fully correct" << std::endl;
-   } else {
-      fValidInterval = true;
-   }
-
-   poi->setVal(tmpVal); // patch: restore the original value of poi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
