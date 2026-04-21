@@ -2231,8 +2231,6 @@ Bool_t TASImage::InitVisual()
    if (fgVisual && (noX == fgBatch))
       return kTRUE;
 
-   if (fgVisual)
-      destroy_asvisual(fgVisual, kFALSE);
    fgVisual = nullptr;
    fgBatch = false;
 
@@ -2244,16 +2242,27 @@ Bool_t TASImage::InitVisual()
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
 
-   if (vis && cmap)
-      fgVisual = create_asvisual_for_id(disp, screen, depth,
+   static ASVisual *vis_x = nullptr;
+
+   if (vis && cmap && !noX) {
+      if (!vis_x)
+         vis_x = create_asvisual_for_id(disp, screen, depth,
                                         XVisualIDFromVisual(vis), cmap, nullptr);
+      fgVisual = vis_x;
+   }
 #endif
 #endif
 
+   static ASVisual *vis_batch = nullptr;
+
    if (!fgVisual) {
-      // create dummy fgVisual for batch mode
-      fgVisual = create_asvisual(nullptr, 0, 0, nullptr);
-      fgVisual->dpy = nullptr; // fake (not used)
+      if (!vis_batch) {
+         // create dummy visual for batch mode
+         vis_batch = create_asvisual(nullptr, 0, 0, nullptr);
+         vis_batch->dpy = nullptr; // fake (not used)
+      }
+
+      fgVisual = vis_batch;
       fgBatch = true;
    }
 
