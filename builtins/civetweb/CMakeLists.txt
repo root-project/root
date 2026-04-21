@@ -106,7 +106,7 @@ file(MAKE_DIRECTORY ${ROOT_CIVETWEB_PREFIX}/include)
 add_library(civetweb::civetweb IMPORTED STATIC GLOBAL)
 add_dependencies(civetweb::civetweb BUILTIN_CIVETWEB)
 if(builtin_ssl)
-  add_dependencies(BUILTIN_CIVETWEB BUILTIN_SSL)
+  add_dependencies(BUILTIN_CIVETWEB OPENSSL)
 endif()
 set_target_properties(civetweb::civetweb PROPERTIES
     IMPORTED_LOCATION ${ROOT_CIVETWEB_LIBRARY}
