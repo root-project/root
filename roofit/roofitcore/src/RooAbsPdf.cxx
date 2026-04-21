@@ -867,9 +867,6 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *   <tr><td> **codegen_no_grad** <td> **Experimental** - Same as **codegen**, but doesn't generate and compile the gradient code and use the regular numerical differentiation instead.
  *                                     This is expected to be slower, but useful for debugging problems with the analytic gradient.
  *   </table>
- * <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization.
- *                                               Only relevant for `legacy` evaluation backend and off by default, as the default `cpu` backend already includes this optimization unconditionally.
- *                                               \warning Deprecated option that will be removed in ROOT 6.42!
  * <tr><td> `SplitRange(bool flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
  *                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
  * Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
@@ -980,9 +977,6 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData &data, const Roo
  *   </table>
  *
  * <tr><td> `InitialHesse(bool flag)`       <td>  Flag controls if HESSE before MIGRAD as well, off by default
- * <tr><td> `Optimize(bool flag)`           <td>  Activate constant term optimization of test statistic during minimization.
- *                                                Only relevant for `legacy` evaluation backend and off by default, as the default `cpu` backend already includes this optimization unconditionally.
- *                                                \warning Deprecated option that will be removed in ROOT 6.42!
  * <tr><td> `Hesse(bool flag)`              <td>  Flag controls if HESSE is run after MIGRAD, on by default
  * <tr><td> `Minos(bool flag)`              <td>  Flag controls if MINOS is run after HESSE, off by default
  * <tr><td> `Minos(const RooArgSet& set)`     <td>  Only run MINOS on given subset of arguments

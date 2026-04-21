@@ -469,10 +469,6 @@ void RooRealVar::removeMin(const char* name) {
 void RooRealVar::removeMax(const char* name) {
   getBinning(name).setMax(RooNumber::infinity());
 }
-void RooRealVar::removeRange(const char* name) {
-  getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity());
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a uniform binning under name 'name' for this variable.

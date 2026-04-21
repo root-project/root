@@ -83,11 +83,7 @@ public:
 
   // Set infinite fit range limits
   void removeMin(const char* name=nullptr);
-  void removeMax(const char* name=nullptr);
-  void removeRange(const char *name = nullptr)
-     R__DEPRECATED(6, 42,
-                   "\"removeRange\" was a misleading name."
-                   " Please use \"removeMin()\" and \"removeMax()\" instead, for the same effect.");
+  void removeMax(const char *name = nullptr);
 
   using RooAbsRealLValue::operator= ;
   using RooAbsRealLValue::setVal ;

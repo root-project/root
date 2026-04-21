@@ -98,12 +98,7 @@ public:
   /// Remove lower range limit for binning with given name. Empty name means default range.
   void removeMin(const char* name=nullptr);
   /// Remove upper range limit for binning with given name. Empty name means default range.
-  void removeMax(const char* name=nullptr);
-  /// Remove range limits for binning with given name. Empty name means default range.
-  void removeRange(const char* name=nullptr)
-     R__DEPRECATED(6, 42,
-                   "\"removeRange\" was a misleading name."
-                   " Please use \"removeMin()\" and \"removeMax()\" instead, for the same effect.");
+  void removeMax(const char *name = nullptr);
 
   // I/O streaming interface (machine readable)
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;

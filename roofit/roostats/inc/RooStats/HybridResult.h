@@ -45,9 +45,6 @@ namespace RooStats {
 
       void Add(HybridResult* other);
 
-      HybridPlot* GetPlot(const char* name,const char* title, int n_bins)
-      R__DEPRECATED(6, 42, "Please write your own ROOT-based plotting code, possibly based on the source code of the deprecated HybridPlot class.");
-
       void PrintMore(const char* options);
 
       /// Get test statistics values for the sb model

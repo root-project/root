@@ -29,7 +29,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/FrequentistCalculator.h
     RooStats/Heaviside.h
     RooStats/HybridCalculator.h
-    RooStats/HybridPlot.h
     RooStats/HybridResult.h
     RooStats/HypoTestCalculatorGeneric.h
     RooStats/HypoTestCalculator.h
@@ -83,7 +82,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/FrequentistCalculator.cxx
     src/Heaviside.cxx
     src/HybridCalculator.cxx
-    src/HybridPlot.cxx
     src/HybridResult.cxx
     src/HypoTestCalculatorGeneric.cxx
     src/HypoTestInverter.cxx

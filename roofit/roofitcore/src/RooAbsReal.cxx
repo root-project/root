@@ -3979,9 +3979,6 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
 /// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
-/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization.
-///                                               Only relevant for `legacy` evaluation backend and off by default, as the default `cpu` backend already includes this optimization unconditionally.
-///                                               \warning Deprecated option that will be removed in ROOT 6.42!
 /// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
 /// <tr><td> `Verbose()`    <td> Verbose output of GOF framework
 /// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
@@ -4066,93 +4063,6 @@ std::unique_ptr<RooAbsReal> RooAbsReal::createChi2Impl(RooDataHist& data, const 
 {
    return RooFit::FitHelpers::createChi2(*this, data, cmdList);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Perform a 2-D \f$ \chi^2 \f$ fit using a series of x and y values stored in the dataset `xydata`.
-/// The y values can either be the event weights, or can be another column designated
-/// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
-/// be well defined.
-///
-/// <table>
-/// <tr><th><th> Options to control construction of the chi-square
-/// <tr><td> `YVar(RooRealVar& yvar)`          <td>  Designate given column in dataset as Y value
-/// <tr><td> `Integrate(bool flag)`          <td>  Integrate function over range specified by X errors
-///                                    rather than take value at bin center.
-///
-/// <tr><th><th> Options to control flow of fit procedure
-/// <tr><td> `InitialHesse(bool flag)`      <td>  Flag controls if HESSE before MIGRAD as well, off by default
-/// <tr><td> `Hesse(bool flag)`             <td>  Flag controls if HESSE is run after MIGRAD, on by default
-/// <tr><td> `Minos(bool flag)`             <td>  Flag controls if MINOS is run after HESSE, on by default
-/// <tr><td> `Minos(const RooArgSet& set)`    <td>  Only run MINOS on given subset of arguments
-/// <tr><td> `Save(bool flag)`              <td>  Flag controls if RooFitResult object is produced and returned, off by default
-/// <tr><td> `Strategy(Int_t flag)`           <td>  Set Minuit strategy (0 through 2, default is 1)
-///
-/// <tr><th><th> Options to control informational output
-/// <tr><td> `Verbose(bool flag)`           <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
-/// <tr><td> `Timer(bool flag)`             <td>  Time CPU and wall clock consumption of fit steps, off by default
-/// <tr><td> `PrintLevel(Int_t level)`        <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational
-///                                   messages are suppressed as well
-/// <tr><td> `Warnings(bool flag)`          <td>  Enable or disable MINUIT warnings (enabled by default)
-/// <tr><td> `PrintEvalErrors(Int_t numErr)`  <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
-///                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
-///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
-/// </table>
-///
-/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                  const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
-{
-  CREATE_CMD_LIST;
-  return chi2FitTo(xydata,l) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, xydata, cmdList, true));
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create a \f$ \chi^2 \f$ from a series of x and y values stored in a dataset.
-/// The y values can either be the event weights (default), or can be another column designated
-/// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
-/// be well defined.
-///
-/// The following named arguments are supported
-///
-/// | | Options to control construction of the \f$ \chi^2 \f$
-/// |-|-----------------------------------------
-/// | `YVar(RooRealVar& yvar)`  | Designate given column in dataset as Y value
-/// | `Integrate(bool flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
-///
-/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                 const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                 const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
-{
-  CREATE_CMD_LIST;
-  return createChi2(data,l) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-///
-/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current evaluation error logging mode.

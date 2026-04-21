@@ -39,6 +39,10 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+* The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` that were deprecated in ROOT 6.40 are now removed.
+* The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
+* The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
+
 ## Python Interface
 
 ## I/O
@@ -50,6 +54,18 @@ The following people have contributed to this new version:
 ## Math
 
 ## RooFit
+
+### Removal of the the constant term optimization for legacy test statistic classes
+
+The **RooFit::Optimize()** option (constant term optimization) has been deprecated in ROOT 6.40 its functionality was now removed.
+The `RooFit::Optimize()` and `RooMinimizer::optimizeConst()` methods are kept for API consistency across ROOT versions, but they have no effect anymore.
+
+This option only affected the `legacy` evaluation backend.
+
+The default vectorized CPU evaluation backend (introduced in ROOT 6.32) already performs these optimizations automatically and is not affected by this change.
+Users are strongly encouraged to switch to the vectorized CPU backend if they are still using the legacy backend.
+
+If the vectorized backend does not work for a given use case, **please report it by opening an issue on the ROOT GitHub repository**.
 
 ## Graphics and GUI
 
