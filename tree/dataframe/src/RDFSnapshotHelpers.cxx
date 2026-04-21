@@ -260,7 +260,7 @@ void EnsureValidSnapshotRNTupleOutput(const ROOT::RDF::RSnapshotOptions &opts, c
    if (!outFile || outFile->IsZombie())
       throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
 
-   std::unique_ptr<RNTuple> uoNT { outFile->Get<ROOT::RNTuple>(ntupleName.c_str()) };
+   std::unique_ptr<ROOT::RNTuple> uoNT { outFile->Get<ROOT::RNTuple>(ntupleName.c_str()) };
    auto *outNTuple = uoNT.get();
 
    if (outNTuple) {
