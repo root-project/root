@@ -105,9 +105,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
     TGWin32.h
     TGWin32GL.h
   SOURCES
-    src/gifdecode.c
-    src/gifencode.c
-    src/gifquantize.c
+    ../gifencode/gifdecode.cxx
+    ../gifencode/gifencode.cxx
     src/TGWin32.cxx
     src/TGWin32GL.cxx
     src/TGWin32ProxyBase.cxx
@@ -127,6 +126,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   BUILTINS
     FREETYPE
 )
+
+target_include_directories(Win32gdk PRIVATE ../gifencode)
 
 add_dependencies(Win32gdk GDKLIB glib)
 install(FILES ${gdkdlla} ${glibdlla} ${iconvdlla} DESTINATION ${CMAKE_INSTALL_BINDIR})

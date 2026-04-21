@@ -60,6 +60,9 @@ by Olivier Couet (package X11INT).
 #include "RStipples.h"
 #include "GuiTypes.h"
 
+#include "gifencode.h"
+#include "gifdecode.h"
+
 // DND protocol version
 #define XDND_PROTOCOL_VERSION   5
 #ifndef IDC_HAND
@@ -4313,61 +4316,44 @@ void TGWin32::WritePixmap(int wid, unsigned int w, unsigned int h,
 //   XWriteBitmapFile(fDisplay,pxname,(Pixmap)gTws->drawing,wval,hval,-1,-1);
 }
 
+class TWin32GifEncode : public TGifEncode {
+   private:
+      GdkImage *fImage = nullptr;
+   protected:
+      void get_scline(int y, int width, unsigned char *buf) override
+      {
+         for (int x = 0; x < width; x++) {
+            ULong_t pixel = GetPixelImage((Drawable_t)fImage, x, y);
+            buf[x] = 0;
 
-//
-// Functions for GIFencode()
-//
+            auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+            if (iter != orgcolors.end()) {
+               auto idx = iter - orgcolors.begin();
+               if (idx < 256)
+                  buf[x] = (unsigned char) idx;
+            }
+         }
+      }
+   public:
+      std::vector<ULong_t> orgcolors;
 
-static FILE *gGifFile;           // output unit used WriteGIF and PutByte
-static GdkImage *gGifImage = 0;  // image used in WriteGIF and GetPixel
+      TWin32GifEncode(GdkImage *image) : fImage(image) {}
+};
 
-extern "C" {
-   int GIFquantize(UInt_t width, UInt_t height, Int_t * ncol, Byte_t * red,
-                   Byte_t * green, Byte_t * blue, Byte_t * outputBuf,
-                   Byte_t * outputCmap);
-   long GIFencode(int Width, int Height, Int_t Ncol, Byte_t R[],
-                  Byte_t G[], Byte_t B[], Byte_t ScLine[],
-                  void (*get_scline) (int, int, Byte_t *),
-                  void (*pb) (Byte_t));
-   int GIFdecode(Byte_t * GIFarr, Byte_t * PIXarr, int *Width, int *Height,
-                 int *Ncols, Byte_t * R, Byte_t * G, Byte_t * B);
-   int GIFinfo(Byte_t * GIFarr, int *Width, int *Height, int *Ncols);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get pixels in line y and put in array scline.
-
-static void GetPixel(int y, int width, Byte_t * scline)
-{
-   for (int i = 0; i < width; i++) {
-       scline[i] = Byte_t(GetPixelImage((Drawable_t)gGifImage, i, y));
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Put byte b in output stream.
-
-static void PutByte(Byte_t b)
-{
-   if (ferror(gGifFile) == 0) fputc(b, gGifFile);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes the current window into GIF file.
 
 Int_t TGWin32::WriteGIF(char *name)
 {
-   Byte_t scline[2000], r[256], b[256], g[256];
-
-   if (gGifImage) {
-      gdk_image_unref(gGifImage);
+   GdkImage *image = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
+                                   gCws->width, gCws->height);
+   if (!image) {
+      Error("WriteGIF", "Cannot create image for writing GIF. Try in batch mode.");
+      return 0;
    }
 
-   gGifImage = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
-                             gCws->width, gCws->height);
-   if (!gGifImage)
-      return 0;
+   TWin32GifEncode gif(image);
 
    /// Collect R G B of colors of the palette used by the image.
    /// The image pixels are changed to index values in these R G B arrays.
@@ -4376,40 +4362,39 @@ Int_t TGWin32::WriteGIF(char *name)
    /// contains no more than 256 different colors). If it does contain more
    /// colors we will have to use GIFquantize to reduce the number of colors.
 
-   std::vector<ULong_t> orgcolors;
-
    // collect different image colors
    for (UInt_t x = 0; x < gCws->width; x++) {
       for (UInt_t y = 0; y < gCws->height; y++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)gGifImage, x, y);
-         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
-            orgcolors.emplace_back(pixel);
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         if (std::find(gif.orgcolors.begin(), gif.orgcolors.end(), pixel) == gif.orgcolors.end())
+            gif.orgcolors.emplace_back(pixel);
       }
    }
 
-   if (orgcolors.size() > 256) {
+   auto ncolors = gif.orgcolors.size();
+
+   if (ncolors > 256) {
       Error("WriteGIF", "can not create GIF of image containing more than 256 colors");
-      gdk_image_unref(gGifImage);
-      gGifImage = nullptr;
+      gdk_image_unref(image);
       return 0;
    }
 
    // get RGB values belonging to pixels
-   std::vector<GdkColor> xcol(orgcolors.size());
+   std::vector<GdkColor> xcol(ncolors);
 
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      xcol[i].pixel = orgcolors[i];
+   for (std::size_t i = 0; i < ncolors; i++) {
+      xcol[i].pixel = gif.orgcolors[i];
       xcol[i].red = GetRValue(xcol[i].pixel);
       xcol[i].green = GetGValue(xcol[i].pixel);
       xcol[i].blue = GetBValue(xcol[i].pixel);
    }
 
    GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
-   gdk_color_context_query_colors(cc, xcol.data(), orgcolors.size());
+   gdk_color_context_query_colors(cc, xcol.data(), ncolors);
    gdk_color_context_free(cc);
 
-   UChar_t maxcol = 0;
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+   UShort_t maxcol = 0;
+   for (std::size_t i = 0; i < ncolors; i++) {
       maxcol = TMath::Max(maxcol, xcol[i].red);
       maxcol = TMath::Max(maxcol, xcol[i].green);
       maxcol = TMath::Max(maxcol, xcol[i].blue);
@@ -4417,37 +4402,25 @@ Int_t TGWin32::WriteGIF(char *name)
    if (maxcol == 0)
       maxcol = 255;
 
-   // update image with indices (pixels) into the new RGB colormap
-   for (UInt_t x = 0; x < gCws->width; x++) {
-      for (UInt_t y = 0; y < gCws->height; y++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)gGifImage, x, y);
-         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
-         if (iter != orgcolors.end()) {
-            auto idx = iter - orgcolors.begin();
-            PutPixel((Drawable_t)gGifImage, x, y, idx);
-         }
-      }
-   }
+   std::vector<unsigned char> r(ncolors), b(ncolors), g(ncolors);
 
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      r[i] = xcol[i].red * 255 / maxcol;
-      g[i] = xcol[i].green * 255 / maxcol;
-      b[i] = xcol[i].blue * 255 / maxcol;
+   for (std::size_t i = 0; i < ncolors; i++) {
+      r[i] = (unsigned char) (xcol[i].red * 255 / maxcol);
+      g[i] = (unsigned char) (xcol[i].green * 255 / maxcol);
+      b[i] = (unsigned char) (xcol[i].blue * 255 / maxcol);
    }
 
    Int_t ret = 0;
-   gGifFile = fopen(name, "wb");
 
-   if (gGifFile) {
-      GIFencode(gCws->width, gCws->height,
-                orgcolors.size(), r, g, b, scline, ::GetPixel, PutByte);
-      fclose(gGifFile);
-      ret = 1;
+   if (gif.OpenFile(name)) {
+      auto len = gif.GIFencode(gCws->width, gCws->height, ncolors, r.data(), g.data(), b.data());
+      if (len > 0)
+         ret = 1;
+      gif.CloseFile();
     } else {
-      Error("WriteGIF","cannot write file: %s",name);
+      Error("WriteGIF", "cannot write file: %s",name);
    }
-   gdk_image_unref(gGifImage);
-   gGifImage = nullptr;
+   gdk_image_unref(image);
 
    return ret;
 }
@@ -4539,14 +4512,13 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
 
 Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   FILE *fd;
    Seek_t filesize;
    unsigned char *GIFarr, *PIXarr, R[256], G[256], B[256], *j1, *j2, icol;
    int i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
    Pixmap_t pic = 0;
 
-   fd = fopen(file, "r+b");
+   FILE *fd = fopen(file, "r+b");
    if (!fd) {
       Error("ReadGIF", "unable to open GIF file");
       return pic;
@@ -4570,7 +4542,7 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
    }
    fclose(fd);
 
-   irep = GIFinfo(GIFarr, &width, &height, &ncolor);
+   irep = TGifDecode::GIFinfo(GIFarr, &width, &height, &ncolor);
    if (irep != 0) {
       return pic;
    }
@@ -4580,7 +4552,9 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
       return pic;
    }
 
-   irep = GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
+   TGifDecode gif;
+
+   irep = gif.GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
    if (irep != 0) {
       return pic;
    }
@@ -4608,12 +4582,15 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
       }
    }
 
-   if (id) pic = CreatePixmap(id, width, height);
+   if (id)
+      pic = CreatePixmap(id, width, height);
    PutImage(offset, -1, x0, y0, width, height, 0, 0, width-1, height-1, PIXarr, pic);
 
-   if (pic) return pic;
-   else if (gCws->drawing) return  (Pixmap_t)gCws->drawing;
-   else return 0;
+   if (pic)
+      return pic;
+   if (gCws->drawing)
+      return (Pixmap_t)gCws->drawing;
+   return 0;
 }
 
 //////////////////////////// GWin32Gui //////////////////////////////////////////
