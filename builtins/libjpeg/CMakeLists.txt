@@ -62,7 +62,7 @@ add_dependencies(JPEG::JPEG BUILTIN_LIBJPEG)
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
-set(JPEG_INCLUDE_DIRS ${${ROOT_LIBJPEG_PREFIX}/include} PARENT_SCOPE)
+set(JPEG_INCLUDE_DIRS ${ROOT_LIBJPEG_PREFIX}/include PARENT_SCOPE)
 set(JPEG_LIBRARIES ${ROOT_LIBJPEG_LIBRARY} PARENT_SCOPE)
 set(JPEG_FOUND TRUE PARENT_SCOPE)
 set(JPEG_VERSION ${ROOT_LIBJPEG_VERSION} PARENT_SCOPE)
