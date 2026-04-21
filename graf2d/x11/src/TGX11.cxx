@@ -2804,7 +2804,7 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get pixels in line y and put in array scline.
+/// Helper class to extract pixel information from XImage for store in the GIF
 
 class TX11GifEncode : public TGifEncode {
    private:
@@ -2812,10 +2812,21 @@ class TX11GifEncode : public TGifEncode {
    protected:
       void get_scline(int y, int width, unsigned char *buf) override
       {
-         for (int i = 0; i < width; i++)
-            buf[i] = XGetPixel(fXimage, i, y);
+         for (int x = 0; x < width; x++) {
+            ULong_t pixel = XGetPixel(fXimage, x, y);
+            buf[x] = 0;
+
+            auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+            if (iter != orgcolors.end()) {
+               auto idx = iter - orgcolors.begin();
+               if (idx < 256)
+                  buf[x] = (unsigned char) idx;
+            }
+         }
       }
    public:
+      std::vector<ULong_t> orgcolors; // all unique pixels
+
       TX11GifEncode(XImage *image) : fXimage(image) {}
 };
 
@@ -2842,36 +2853,38 @@ Int_t TGX11::WriteGIF(char *name)
    /// contains no more than 256 different colors). If it does contain more
    /// colors we will have to use GIFquantize to reduce the number of colors.
 
-   std::vector<ULong_t> orgcolors;
+   TX11GifEncode gif(image);
 
    // collect different image colors
    for (UInt_t x = 0; x < gCws->fWidth; x++) {
       for (UInt_t y = 0; y < gCws->fHeight; y++) {
          ULong_t pixel = XGetPixel(image, x, y);
-         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
-            orgcolors.emplace_back(pixel);
+         if (std::find(gif.orgcolors.begin(), gif.orgcolors.end(), pixel) == gif.orgcolors.end())
+            gif.orgcolors.emplace_back(pixel);
       }
    }
 
-   if (orgcolors.size() > 256) {
+   auto ncolors = gif.orgcolors.size();
+
+   if (ncolors > 256) {
       Error("WriteGIF", "Cannot create GIF of image containing more than 256 colors. Try in batch mode.");
       XDestroyImage(image);
       return 0;
    }
 
    // get RGB values belonging to pixels
-   std::vector<RXColor> xcol(orgcolors.size());
+   std::vector<RXColor> xcol(ncolors);
 
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      xcol[i].pixel = orgcolors[i];
+   for (std::size_t i = 0; i < ncolors; i++) {
+      xcol[i].pixel = gif.orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
       xcol[i].flags = DoRed | DoGreen | DoBlue;
    }
 
-   QueryColors(fColormap, xcol.data(), orgcolors.size());
+   QueryColors(fColormap, xcol.data(), ncolors);
 
    UShort_t maxcol = 0;
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+   for (std::size_t i = 0; i < ncolors; i++) {
       maxcol = TMath::Max(maxcol, xcol[i].red);
       maxcol = TMath::Max(maxcol, xcol[i].green);
       maxcol = TMath::Max(maxcol, xcol[i].blue);
@@ -2879,36 +2892,23 @@ Int_t TGX11::WriteGIF(char *name)
    if (maxcol == 0)
       maxcol = 255;
 
-   // update image with indices (pixels) into the new RGB colormap
-   for (UInt_t x = 0; x < gCws->fWidth; x++) {
-      for (UInt_t y = 0; y < gCws->fHeight; y++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
-         if (iter != orgcolors.end()) {
-            auto idx = iter - orgcolors.begin();
-            XPutPixel(image, x, y, idx);
-         }
-      }
-   }
+   std::vector<unsigned char> r(ncolors), b(ncolors), g(ncolors);
 
-   std::vector<unsigned char> r(orgcolors.size()), b(orgcolors.size()), g(orgcolors.size());
-
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      r[i] = xcol[i].red * 255 / maxcol;
-      g[i] = xcol[i].green * 255 / maxcol;
-      b[i] = xcol[i].blue * 255 / maxcol;
+   for (std::size_t i = 0; i < ncolors; i++) {
+      r[i] = (unsigned char) (xcol[i].red * 255 / maxcol);
+      g[i] = (unsigned char) (xcol[i].green * 255 / maxcol);
+      b[i] = (unsigned char) (xcol[i].blue * 255 / maxcol);
    }
 
    Int_t ret = 0;
 
-   TX11GifEncode gif(image);
    if (gif.OpenFile(name)) {
-      auto len = gif.GIFencode(gCws->fWidth, gCws->fHeight, orgcolors.size(), r.data(), g.data(), b.data());
+      auto len = gif.GIFencode(gCws->fWidth, gCws->fHeight, ncolors, r.data(), g.data(), b.data());
       if (len > 0)
          ret = 1;
       gif.CloseFile();
    } else {
-      Error("WriteGIF","cannot write file: %s", name);
+      Error("WriteGIF", "cannot write file: %s", name);
    }
 
    // cleanup image at the end
