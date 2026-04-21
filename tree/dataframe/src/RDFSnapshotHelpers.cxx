@@ -535,6 +535,7 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::SetEmptyBranches(TTree *in
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::Initialize()
 {
+   delete fOutputFile.release(); // delete before create. reset does it the other way round
    fOutputFile.reset(
       TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
                   ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
