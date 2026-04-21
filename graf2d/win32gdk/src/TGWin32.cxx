@@ -4346,10 +4346,22 @@ class TWin32GifEncode : public TGifEncode {
 
 Int_t TGWin32::WriteGIF(char *name)
 {
-   GdkImage *image = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
-                                   gCws->width, gCws->height);
+   return WriteGIFW((WinContext_t)gCws, name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Writes the specified window into GIF file.
+
+Int_t TGWin32::WriteGIFW(WinContext_t wctxt, const char *name)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return 0;
+
+   GdkImage *image = gdk_image_get((GdkDrawable*)ctxt->drawing, 0, 0,
+                                   ctxt->width, ctxt->height);
    if (!image) {
-      Error("WriteGIF", "Cannot create image for writing GIF. Try in batch mode.");
+      Error("WriteGIFW", "Cannot create image for writing GIF. Try in batch mode.");
       return 0;
    }
 
@@ -4363,8 +4375,8 @@ Int_t TGWin32::WriteGIF(char *name)
    /// colors we will have to use GIFquantize to reduce the number of colors.
 
    // collect different image colors
-   for (UInt_t x = 0; x < gCws->width; x++) {
-      for (UInt_t y = 0; y < gCws->height; y++) {
+   for (UInt_t x = 0; x < ctxt->width; x++) {
+      for (UInt_t y = 0; y < ctxt->height; y++) {
          ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
          if (std::find(gif.orgcolors.begin(), gif.orgcolors.end(), pixel) == gif.orgcolors.end())
             gif.orgcolors.emplace_back(pixel);
@@ -4374,7 +4386,7 @@ Int_t TGWin32::WriteGIF(char *name)
    auto ncolors = gif.orgcolors.size();
 
    if (ncolors > 256) {
-      Error("WriteGIF", "can not create GIF of image containing more than 256 colors");
+      Error("WriteGIFW", "can not create GIF of image containing more than 256 colors");
       gdk_image_unref(image);
       return 0;
    }
@@ -4413,12 +4425,12 @@ Int_t TGWin32::WriteGIF(char *name)
    Int_t ret = 0;
 
    if (gif.OpenFile(name, "wb")) {
-      auto len = gif.GIFencode(gCws->width, gCws->height, ncolors, r.data(), g.data(), b.data());
+      auto len = gif.GIFencode(ctxt->width, ctxt->height, ncolors, r.data(), g.data(), b.data());
       if (len > 0)
          ret = 1;
       gif.CloseFile();
     } else {
-      Error("WriteGIF", "cannot write file: %s",name);
+      Error("WriteGIFW", "cannot write file: %s",name);
    }
    gdk_image_unref(image);
 
