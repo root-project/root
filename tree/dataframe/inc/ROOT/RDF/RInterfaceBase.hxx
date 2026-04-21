@@ -209,6 +209,7 @@ public:
    RInterfaceBase(RDFDetail::RLoopManager &lm, const RDFInternal::RColumnRegister &colRegister);
 
    ColumnNames_t GetColumnNames();
+   ColumnNames_t GetDatasetTopLevelFieldNames();
 
    std::string GetColumnType(std::string_view column);
 
