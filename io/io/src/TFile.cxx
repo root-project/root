@@ -2119,7 +2119,6 @@ Int_t TFile::Recover()
 
    if (fWritable && !fFree) fFree  = new TList;
 
-   TKey *key;
    Int_t nrecov = 0;
    nwheader = 1024;
    Int_t nread = nwheader;
@@ -2171,14 +2170,15 @@ Int_t TFile::Recover()
       TClass *tclass = TClass::GetClass(classname);
       if (seekpdir == fSeekDir && tclass && !tclass->InheritsFrom(TFile::Class())
                                && strcmp(classname,"TBasket")) {
-         key = new TKey(this);
+         TKey *key = new TKey(this);
          key->ReadKeyBuffer(bufread);
          if (!strcmp(key->GetName(),"StreamerInfo")) {
             fSeekInfo = seekkey;
             SafeDelete(fInfoCache);
             fNbytesInfo = nbytes;
+            delete key;
          } else {
-            AppendKey(key);
+            AppendKey(key); // ownership transferred, do not to delete key here
             nrecov++;
             SetBit(kRecovered);
             Info("Recover", "%s, recovered key %s:%s at address %lld",GetName(),key->GetClassName(),key->GetName(),idcur);
