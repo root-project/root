@@ -2389,6 +2389,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = R__CLING_PTRCHECK \
+                         R__HAS_ROOT7 \
                          R__USE_IMT \
                          R__SUGGEST_ALTERNATIVE(x)= \
                          __attribute__(x)= \
