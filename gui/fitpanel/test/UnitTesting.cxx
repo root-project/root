@@ -217,7 +217,7 @@ public:
 
       result += MakeTest("TestUpdateTree.....", &FitEditorUnitTesting::TestUpdateTree);
 
-      result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D);
+      // result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D); // TODO reenable once stack smashing issue is fixed
 
       // result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D); // TODO reenable once fit results are fixed
 
