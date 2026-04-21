@@ -23,6 +23,7 @@ class TImageDump : public TVirtualPS {
 protected:
    TImage           *fImage{nullptr};     ///< Image
    Int_t             fType{0};            ///< PostScript workstation type
+   Int_t             fX0{0}, fY0{0};      ///< offset of selected pad to canvas
 
    Int_t  XtoPixel(Double_t x);
    Int_t  YtoPixel(Double_t y);
