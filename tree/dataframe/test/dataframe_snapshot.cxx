@@ -411,8 +411,8 @@ TEST_F(RDFSnapshot, Snapshot_update_same_treename)
       TestSnapshotUpdate(tdf, "snap_update_sametreenames.root", "t", "t", false);
    } catch (const std::invalid_argument &e) {
       const std::string msg =
-         "Snapshot: tree \"t\" already present in file \"snap_update_sametreenames.root\". If you want to delete the "
-         "original tree and write another, please set RSnapshotOptions::fOverwriteIfExists to true.";
+         "Snapshot: object \"t\" already present in file \"snap_update_sametreenames.root\". If you want to delete the "
+         "original object and write another, please set the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
       EXPECT_EQ(e.what(), msg);
       exceptionCaught = true;
    }
@@ -1292,8 +1292,8 @@ TEST_F(RDFSnapshotMT, Snapshot_update_same_treename)
       TestSnapshotUpdate(tdf, "snap_update_sametreenames.root", "t", "t", false);
    } catch (const std::invalid_argument &e) {
       const std::string msg =
-         "Snapshot: tree \"t\" already present in file \"snap_update_sametreenames.root\". If you want to delete the "
-         "original tree and write another, please set RSnapshotOptions::fOverwriteIfExists to true.";
+         "Snapshot: object \"t\" already present in file \"snap_update_sametreenames.root\". If you want to delete the "
+         "original object and write another, please set the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
       EXPECT_EQ(e.what(), msg);
       exceptionCaught = true;
    }

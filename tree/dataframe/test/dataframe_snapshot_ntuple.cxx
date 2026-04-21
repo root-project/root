@@ -521,9 +521,9 @@ TEST(RDFSnapshotRNTuple, UpdateSameName)
       FAIL() << "snapshotting in \"UPDATE\" mode to the same ntuple name without `fOverwriteIfExists` is not allowed ";
    } catch (const std::invalid_argument &err) {
       EXPECT_STREQ(err.what(),
-                   "Snapshot: RNTuple \"ntuple\" already present in file "
+                   "Snapshot: object \"ntuple\" already present in file "
                    "\"RDFSnapshotRNTuple_update_same_name.root\". If you want to delete the original "
-                   "ntuple and write another, please set the 'fOverwriteIfExists' option to true in RSnapshotOptions.");
+                   "object and write another, please set the 'fOverwriteIfExists' option to true in RSnapshotOptions.");
    }
 
    opts.fOverwriteIfExists = true;
