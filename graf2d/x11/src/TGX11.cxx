@@ -2807,34 +2807,13 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 // Functions for GIFencode()
 //
 
-static FILE *gOut;                      // output unit used WriteGIF and PutByte
-static XImage *gXimage = nullptr;       // image used in WriteGIF and GetPixel
-
 extern "C" {
-   int GIFquantize(UInt_t width, UInt_t height, Int_t *ncol, Byte_t *red, Byte_t *green,
-                   Byte_t *blue, Byte_t *outputBuf, Byte_t *outputCmap);
-   // long GIFencode(int Width, int Height, Int_t Ncol, Byte_t R[], Byte_t G[], Byte_t B[], Byte_t ScLine[],
-//                  void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
    int GIFdecode(Byte_t *gifArr, Byte_t *pixArr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
    int GIFinfo(Byte_t *gifArr, int *Width, int *Height, int *Ncols);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get pixels in line y and put in array scline.
-
-static void GetPixel(int y, int width, Byte_t *scline)
-{
-   for (int i = 0; i < width; i++)
-      scline[i] = Byte_t(XGetPixel(gXimage, i, y));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Put byte b in output stream.
-
-static void PutByte(Byte_t b)
-{
-   if (ferror(gOut) == 0) fputc(b, gOut);
-}
 
 class TX11GifEncode : public TGifEncode {
    private:
@@ -2856,18 +2835,11 @@ class TX11GifEncode : public TGifEncode {
 
 Int_t TGX11::WriteGIF(char *name)
 {
-   unsigned char r[256], b[256], g[256];
+   XImage *image = XGetImage((Display*)fDisplay, gCws->fDrawing, 0, 0,
+                             gCws->fWidth, gCws->fHeight,
+                             AllPlanes, ZPixmap);
 
-   if (gXimage) {
-      XDestroyImage(gXimage);
-      gXimage = nullptr;
-   }
-
-   gXimage = XGetImage((Display*)fDisplay, gCws->fDrawing, 0, 0,
-                       gCws->fWidth, gCws->fHeight,
-                       AllPlanes, ZPixmap);
-
-   if (!gXimage) {
+   if (!image) {
       Error("WriteGIF", "Cannot create image for writing GIF. Try in batch mode.");
       return 0;
    }
@@ -2884,7 +2856,7 @@ Int_t TGX11::WriteGIF(char *name)
    // collect different image colors
    for (UInt_t x = 0; x < gCws->fWidth; x++) {
       for (UInt_t y = 0; y < gCws->fHeight; y++) {
-         ULong_t pixel = XGetPixel(gXimage, x, y);
+         ULong_t pixel = XGetPixel(image, x, y);
          if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
             orgcolors.emplace_back(pixel);
       }
@@ -2892,8 +2864,7 @@ Int_t TGX11::WriteGIF(char *name)
 
    if (orgcolors.size() > 256) {
       Error("WriteGIF", "Cannot create GIF of image containing more than 256 colors. Try in batch mode.");
-      XDestroyImage(gXimage);
-      gXimage = nullptr;
+      XDestroyImage(image);
       return 0;
    }
 
@@ -2920,14 +2891,16 @@ Int_t TGX11::WriteGIF(char *name)
    // update image with indices (pixels) into the new RGB colormap
    for (UInt_t x = 0; x < gCws->fWidth; x++) {
       for (UInt_t y = 0; y < gCws->fHeight; y++) {
-         ULong_t pixel = XGetPixel(gXimage, x, y);
+         ULong_t pixel = XGetPixel(image, x, y);
          auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
          if (iter != orgcolors.end()) {
             auto idx = iter - orgcolors.begin();
-            XPutPixel(gXimage, x, y, idx);
+            XPutPixel(image, x, y, idx);
          }
       }
    }
+
+   std::vector<unsigned char> r(orgcolors.size()), b(orgcolors.size()), g(orgcolors.size());
 
    for (std::size_t i = 0; i < orgcolors.size(); i++) {
       r[i] = xcol[i].red * 255 / maxcol;
@@ -2937,9 +2910,9 @@ Int_t TGX11::WriteGIF(char *name)
 
    Int_t ret = 0;
 
-   TX11GifEncode gif(gXimage);
+   TX11GifEncode gif(image);
    if (gif.OpenFile(name)) {
-      auto len = gif.GIFencode(gCws->fWidth, gCws->fHeight, orgcolors.size(), r, g, b);
+      auto len = gif.GIFencode(gCws->fWidth, gCws->fHeight, orgcolors.size(), r.data(), g.data(), b.data());
       if (len > 0)
          ret = 1;
       gif.CloseFile();
@@ -2948,8 +2921,7 @@ Int_t TGX11::WriteGIF(char *name)
    }
 
    // cleanup image at the end
-   XDestroyImage(gXimage);
-   gXimage = nullptr;
+   XDestroyImage(image);
 
    return ret;
 }
