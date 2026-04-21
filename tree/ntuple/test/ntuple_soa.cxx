@@ -71,7 +71,9 @@ TEST(RNTuple, SoACheck)
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA fields with inheritance are currently unsupported"));
    }
-   EXPECT_NO_THROW(std::make_unique<RSoAField>("f", "SoABase"));
+   {
+      EXPECT_NO_THROW(auto f = std::make_unique<RSoAField>("f", "SoABase"));
+   }
 
    try {
       auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
@@ -104,7 +106,9 @@ TEST(RNTuple, SoACheck)
       EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA member type mismatch: fY (double [Double32_t] vs. float)"));
    }
 
-   EXPECT_NO_THROW(std::make_unique<RSoAField>("f", "SoASimple"));
+   {
+      EXPECT_NO_THROW(auto f = std::make_unique<RSoAField>("f", "SoASimple"));
+   }
 
    try {
       auto f = std::make_unique<ROOT::RField<SoA>>("f");
