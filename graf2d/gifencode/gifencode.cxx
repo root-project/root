@@ -20,9 +20,9 @@ void TGifEncode::put_byte(unsigned char b)
    }
 }
 
-bool TGifEncode::OpenFile(const char *fname)
+bool TGifEncode::OpenFile(const char *fname, const char *opt)
 {
-   fOut = fopen(fname, "w+");
+   fOut = fopen(fname, opt);
    return fOut != nullptr;
 }
 

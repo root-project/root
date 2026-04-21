@@ -4412,7 +4412,7 @@ Int_t TGWin32::WriteGIF(char *name)
 
    Int_t ret = 0;
 
-   if (gif.OpenFile(name)) {
+   if (gif.OpenFile(name, "wb")) {
       auto len = gif.GIFencode(gCws->width, gCws->height, ncolors, r.data(), g.data(), b.data());
       if (len > 0)
          ret = 1;

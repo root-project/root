@@ -50,7 +50,7 @@ class TGifEncode {
     public:
        virtual ~TGifEncode() { CloseFile(); }
 
-       bool OpenFile(const char *fname);
+       bool OpenFile(const char *fname, const char *opt = "w+");
        void CloseFile();
 
        long GIFencode(int Width, int Height, int Ncol, unsigned char *R, unsigned char *G, unsigned char *B);
