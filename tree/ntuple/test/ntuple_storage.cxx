@@ -1247,3 +1247,29 @@ TEST(RPageSinkFile, CloneAsHidden)
    EXPECT_TRUE(found[0]);
    EXPECT_TRUE(found[1]);
 }
+
+TEST(RPageSink, AddColumnRepresentation)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_add_colrep.root");
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto sink = std::make_unique<RPageSinkFile>("ntuple", *file, RNTupleWriteOptions());
+   auto model = RNTupleModel::Create();
+   auto fInt = std::make_unique<RField<int>>("int");
+   fInt->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kInt32}});
+   model->AddField(std::move(fInt));
+   sink->Init(*model);
+
+   const auto fId = sink->GetDescriptor().FindFieldId("int");
+   const auto &desc = sink->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(fId);
+   sink->AddColumnRepresentation(fdesc, {ROOT::ENTupleColumnType::kSplitInt32});
+
+   EXPECT_EQ(fdesc.GetColumnCardinality(), 1);
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 2);
+
+   const auto &col1 = desc.GetColumnDescriptor(0);
+   const auto &col2 = desc.GetColumnDescriptor(1);
+   EXPECT_EQ(col1.GetType(), ROOT::ENTupleColumnType::kInt32);
+   EXPECT_EQ(col2.GetType(), ROOT::ENTupleColumnType::kSplitInt32);
+}
