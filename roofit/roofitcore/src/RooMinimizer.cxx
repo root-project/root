@@ -131,7 +131,7 @@ void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vecto
 //
 // This should be called before running any routine via the _minimizer data
 // member. The RAII object should only be destructed after the routine is done.
-std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModesDirty(RooAbsReal &function)
+std::unique_ptr<ChangeOperModeRAII> setOperModesDirty(RooAbsReal &function)
 {
    if (auto *wrapper = dynamic_cast<RooFit::Experimental::RooEvaluatorWrapper *>(&function)) {
       return wrapper->setOperModes(RooAbsArg::ADirty);

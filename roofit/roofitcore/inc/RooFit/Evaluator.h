@@ -20,7 +20,6 @@
 #include <RConfig.h>
 
 #include <memory>
-#include <stack>
 
 class ChangeOperModeRAII;
 class RooAbsArg;
@@ -45,7 +44,7 @@ public:
 
    void setOffsetMode(RooFit::EvalContext::OffsetMode);
 
-   std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModes(RooAbsArg::OperMode opMode);
+   std::unique_ptr<ChangeOperModeRAII> setOperModes(RooAbsArg::OperMode opMode);
 
 private:
    void processVariable(NodeInfo &nodeInfo);
@@ -68,7 +67,7 @@ private:
    RooFit::EvalContext _evalContextCUDA;
    std::vector<NodeInfo> _nodes;                             // the ordered computation graph
    std::unordered_map<TNamed const *, NodeInfo *> _nodesMap; // for quick lookup of nodes
-   std::stack<std::unique_ptr<ChangeOperModeRAII>> _changeOperModeRAIIs;
+   std::unique_ptr<ChangeOperModeRAII> _operModeChanges;
 };
 
 } // end namespace RooFit

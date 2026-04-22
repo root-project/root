@@ -46,25 +46,51 @@ private:
    bool _oldState;
 };
 
-/// Struct to temporarily change the operation mode of a RooAbsArg until it
-/// goes out of scope.
+/// Scope guard that temporarily changes the operation mode of one or more
+/// RooAbsArg instances. Each call to change() records the arg's current
+/// operMode before flipping it to the requested mode (non-recursively, i.e.
+/// value clients are not touched). Destruction (or an explicit clear())
+/// restores every recorded mode in LIFO order.
+///
+/// The class is movable but not copyable, so it can be returned from
+/// functions that build up a batch of changes to hand to the caller.
 class ChangeOperModeRAII {
 public:
-   ChangeOperModeRAII(RooAbsArg *arg, RooAbsArg::OperMode opMode) : _arg{arg}, _oldOpMode(arg->operMode())
+   ChangeOperModeRAII() = default;
+
+   /// Convenience ctor: behaves like a scope guard for a single arg.
+   ChangeOperModeRAII(RooAbsArg *arg, RooAbsArg::OperMode opMode) { change(arg, opMode); }
+
+   ~ChangeOperModeRAII() { clear(); }
+
+   ChangeOperModeRAII(ChangeOperModeRAII &&) = default;
+   ChangeOperModeRAII &operator=(ChangeOperModeRAII &&) = default;
+   ChangeOperModeRAII(ChangeOperModeRAII const &) = delete;
+   ChangeOperModeRAII &operator=(ChangeOperModeRAII const &) = delete;
+
+   /// Record arg's current operMode and flip it to opMode. If the current
+   /// mode already equals opMode, this is a no-op (nothing to restore).
+   void change(RooAbsArg *arg, RooAbsArg::OperMode opMode)
    {
-      arg->setOperMode(opMode, /*recurse=*/false);
+      if (opMode == arg->operMode())
+         return;
+      _entries.emplace_back(arg, arg->operMode());
+      arg->setOperMode(opMode, /*recurseADirty=*/false);
    }
 
-   ChangeOperModeRAII(ChangeOperModeRAII const &other) = delete;
-   ChangeOperModeRAII &operator=(ChangeOperModeRAII const &other) = delete;
-   ChangeOperModeRAII(ChangeOperModeRAII &&other) = delete;
-   ChangeOperModeRAII &operator=(ChangeOperModeRAII &&other) = delete;
+   /// Restore every recorded change right away, emptying this guard.
+   void clear()
+   {
+      for (auto it = _entries.rbegin(); it != _entries.rend(); ++it) {
+         it->first->setOperMode(it->second, /*recurseADirty=*/false);
+      }
+      _entries.clear();
+   }
 
-   ~ChangeOperModeRAII() { _arg->setOperMode(_oldOpMode, /*recurse=*/false); }
+   bool empty() const { return _entries.empty(); }
 
 private:
-   RooAbsArg *_arg = nullptr;
-   RooAbsArg::OperMode _oldOpMode;
+   std::vector<std::pair<RooAbsArg *, RooAbsArg::OperMode>> _entries;
 };
 
 namespace RooHelpers {

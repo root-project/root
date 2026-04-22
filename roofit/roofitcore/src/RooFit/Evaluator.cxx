@@ -628,9 +628,9 @@ void Evaluator::markGPUNodes()
 /// Evaluator gets deleted.
 void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 {
-   if (opMode != arg->operMode()) {
-      _changeOperModeRAIIs.emplace(std::make_unique<ChangeOperModeRAII>(arg, opMode));
-   }
+   if (!_operModeChanges)
+      _operModeChanges = std::make_unique<ChangeOperModeRAII>();
+   _operModeChanges->change(arg, opMode);
 }
 
 // Change the operation modes of all RooAbsArgs in the computation graph.
@@ -646,9 +646,9 @@ void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 // like a RooRealVar) would be left permanently in ADirty after the first
 // minimization, dramatically slowing down later scalar evaluations (for
 // example on pdfs held by the legacy test statistics' internal cache).
-std::stack<std::unique_ptr<ChangeOperModeRAII>> Evaluator::setOperModes(RooAbsArg::OperMode opMode)
+std::unique_ptr<ChangeOperModeRAII> Evaluator::setOperModes(RooAbsArg::OperMode opMode)
 {
-   std::stack<std::unique_ptr<ChangeOperModeRAII>> out{};
+   auto out = std::make_unique<ChangeOperModeRAII>();
    std::unordered_set<RooAbsArg *> visited;
 
    std::vector<RooAbsArg *> queue;
@@ -663,9 +663,7 @@ std::stack<std::unique_ptr<ChangeOperModeRAII>> Evaluator::setOperModes(RooAbsAr
       if (!visited.insert(node).second)
          continue;
 
-      if (opMode != node->operMode()) {
-         out.emplace(std::make_unique<ChangeOperModeRAII>(node, opMode));
-      }
+      out->change(node, opMode);
 
       // Only follow value-client links: that is exactly the propagation path
       // used by RooAbsArg::setOperMode with mode==ADirty.

@@ -841,12 +841,12 @@ double RooRealIntegral::evaluate() const
         // from caching subgraph results (e.g. for nested numeric integrals).
         RooArgList serverList;
         _function->treeNodeServerList(&serverList, nullptr, true, true, false, true);
-        std::list<ChangeOperModeRAII> operModeRAII;
+        ChangeOperModeRAII operModeRAII;
 
         for (auto *arg : serverList) {
            arg->syncCache();
            if (arg->operMode() == RooAbsArg::AClean) {
-              operModeRAII.emplace_back(arg, RooAbsArg::Auto);
+              operModeRAII.change(arg, RooAbsArg::Auto);
            }
         }
 
