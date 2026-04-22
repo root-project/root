@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     import ROOT
 
 
+# ci test
 class _RDataLoader:
     def get_template(
         self,
