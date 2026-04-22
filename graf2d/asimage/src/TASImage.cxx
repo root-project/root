@@ -6760,5 +6760,5 @@ Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
 Int_t TASImage::Idx(Int_t idx)
 {
    // The size of arrays like fImage->alt.argb32 is fImage->width*fImage->height
-   return TMath::Min(idx,(Int_t)(fImage->width*fImage->height));
+   return TMath::Max(0, TMath::Min(idx,(Int_t)(fImage->width*fImage->height)));
 }
