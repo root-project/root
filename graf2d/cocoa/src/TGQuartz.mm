@@ -79,9 +79,7 @@ TGQuartz::TGQuartz()
 {
    //Default ctor.
 
-
-   if (!TTF::IsInitialized())
-      TTF::Init();
+   TTF::Init();
 
    //I do not know why TTF::Init returns void and I have to check IsInitialized() again.
    if (!TTF::IsInitialized())
@@ -100,8 +98,8 @@ TGQuartz::TGQuartz(const char *name, const char *title)
               fUseAA(true), fUseFAAA(false)
 {
    //Constructor.
-   if (!TTF::IsInitialized())
-      TTF::Init();
+
+   TTF::Init();
 
    //I do not know why TTF::Init returns void and I have to check IsInitialized() again.
    if (!TTF::IsInitialized())
@@ -535,6 +533,8 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
 
    AlignTTFString(wctxt);
    RenderTTFString(wctxt, x, y, mode);
+
+   TTF::CleanupGlyphs();
 }
 
 //______________________________________________________________________________
