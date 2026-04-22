@@ -201,6 +201,7 @@ public:
                          const char * /*color*/ = nullptr, const char * /*font*/ = "fixed",
                          EText3DType /*type*/ = TImage::kPlain, const char * /*fore_file*/ = nullptr, Float_t /*angle*/ = 0) { }
    virtual void DrawText(TText * /*text*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0) { }
+   virtual void DrawTextOnPad(TText * /*text*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, TVirtualPad * /* pad */ = nullptr, Int_t  /* offx */ = 0, Int_t /* offy */ = 0);
    virtual void FillPolygon(UInt_t /*npt*/, TPoint * /*ppt*/, const char * /*col*/ = "#000000",
                            const char * /*stipple*/ = nullptr, UInt_t /*w*/ = 16, UInt_t /*h*/ = 16) {}
    virtual void FillPolygon(UInt_t /*npt*/, TPoint * /*ppt*/, TImage * /*tile*/) {}

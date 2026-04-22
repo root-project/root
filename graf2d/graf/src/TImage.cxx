@@ -187,5 +187,16 @@ TImage *TImage::Open(char **data)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text on specified pad, check pad clipping rules
+
+void TImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *, Int_t, Int_t)
+{
+   // call simple DrawText to ensure minimal backward compatibility
+
+   DrawText(text, x, y);
+}
+
+
 TImage operator+(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "+"); return ret; }
 TImage operator/(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "/"); return ret; }
