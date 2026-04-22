@@ -108,6 +108,9 @@ gInterpreter->Print("autoparsed");
 for example, this can be used to enforce that no header is loaded for I/O operations. To disable the
 auto-parsing during `TClass::GetClass`, you can either set the shell environment variable
 `ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING` (to anything) or set the `rootrc` key `Root.TClass.GetClass.AutoParsing` to `false`.
+* Alignment of classes and numerical types is now recorded in the dictionary and propagated through `TClass`, `TDataType`, and `TStreamerElement`.  `TStreamerInfo::BuildOld` uses this information to correctly lay out emulated classes and older-version StreamerInfos (for the input of I/O customization), ensuring proper alignment for over-aligned types.
+  Fixes [#21667](https://github.com/root-project/root/issues/21667).
+  (PR [#21669](https://github.com/root-project/root/pull/21669))
 
 ## Geometry
 
