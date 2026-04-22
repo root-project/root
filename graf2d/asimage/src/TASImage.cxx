@@ -5731,7 +5731,7 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
    if (!InitImage("DrawTextOnPad"))
       return;
 
-   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::Init();
 
    // set text font
    TTF::SetTextFont(text->GetTextFont());
@@ -5857,6 +5857,8 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
 
       DrawGlyph(source, color, bx, by, pad, offx, offy);
    }
+
+   TTF::CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5868,7 +5870,7 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    if (!InitImage("DrawTextTTF"))
       return;
 
-   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::Init();
 
    TTF::SetTextFont(font_name);
    TTF::SetTextSize(size);
