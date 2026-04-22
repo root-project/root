@@ -63,6 +63,9 @@ TTF::~TTF()
 
 void TTF::Init()
 {
+   if (fgInit)
+      return;
+
    fgInit = kTRUE;
 
    // initialize FTF library
@@ -80,13 +83,21 @@ void TTF::Init()
 
 void TTF::Cleanup()
 {
-   if (!fgInit) return;
+   if (!fgInit)
+      return;
+
+   CleanupGlyphs();
 
    for (int i = 0; i < fgFontCount; i++) {
       delete [] fgFontName[i];
+      fgFontName[i] = nullptr;
+
       FT_Done_Face(fgFace[i]);
    }
-   if (fgRotMatrix) delete fgRotMatrix;
+   if (fgRotMatrix) {
+      delete fgRotMatrix;
+      fgRotMatrix = nullptr;
+   }
    FT_Done_FreeType(fgLibrary);
 
    fgInit = kFALSE;
@@ -152,7 +163,7 @@ void TTF::ComputeTrailingBlanksWidth(Int_t n)
 
 void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
 {
-   if (!fgInit) Init();
+   Init();
 
    SetRotationMatrix(0);
    PrepareString(text);
@@ -161,6 +172,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
    w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
    h = fgCBox.yMax + Yoff;
+   CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,12 +180,13 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
 
 void TTF::GetTextAdvance(UInt_t &a, char *text)
 {
-   if (!fgInit) Init();
+   Init();
 
    SetRotationMatrix(0);
    PrepareString(text);
    LayoutGlyphs();
-   a = GetWidth()>>6;
+   a = GetWidth() >> 6;
+   CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +194,7 @@ void TTF::GetTextAdvance(UInt_t &a, char *text)
 
 void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
 {
-   if (!fgInit) Init();
+   Init();
 
    SetRotationMatrix(0);
    PrepareString(text);
@@ -190,6 +203,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
    w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
    h = fgCBox.yMax + Yoff;
+   CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +278,25 @@ void TTF::LayoutGlyphs()
       if (bbox.yMax > fgCBox.yMax) fgCBox.yMax = bbox.yMax;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove temporary data created by LayoutGlyphs
+
+void TTF::CleanupGlyphs()
+{
+   TTGlyph*  glyph = fgGlyphs;
+
+   for (int n = 0; n < fgNumGlyphs; n++, glyph++) {
+      // clear existing image if there is one
+      if (glyph->fImage) {
+         FT_Done_Glyph(glyph->fImage);
+         glyph->fImage = nullptr;
+      }
+   }
+
+   fgNumGlyphs = 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Put the characters in "string" in the "glyphs" array.
