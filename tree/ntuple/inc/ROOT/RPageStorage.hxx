@@ -543,6 +543,9 @@ public:
    [[nodiscard]] std::unique_ptr<RNTupleModel>
    InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
 
+   void
+   AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const ENTupleColumnType> newRepresentation);
+
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;

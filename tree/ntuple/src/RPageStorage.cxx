@@ -1144,6 +1144,71 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    return model;
 }
 
+void ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
+                                                                  std::span<const ENTupleColumnType> newRepresentation)
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   assert(&descriptor.GetFieldDescriptor(field.GetId()) == &field);
+   assert(!field.IsProjectedField());
+   assert(field.GetColumnCardinality() > 0);
+   assert(!field.GetLogicalColumnIds().empty());
+   assert(newRepresentation.size() == field.GetColumnCardinality());
+
+   const std::size_t firstPhysicalIndex = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
+   const std::uint16_t reprIndex = field.GetLogicalColumnIds().size() / field.GetColumnCardinality();
+
+   fDescriptorBuilder.ShiftAliasColumns(newRepresentation.size());
+
+   std::uint16_t columnIndex = 0; // index into the representation
+   for (auto columnType : newRepresentation) {
+      // Extending columns with variable bit width is currently unsupported.
+      const auto [rangeMin, rangeMax] = ROOT::Internal::RColumnElementBase::GetValidBitRange(columnType);
+      R__ASSERT(rangeMin == rangeMax);
+
+      const ROOT::DescriptorId_t firstReprColumnId = field.GetLogicalColumnIds()[columnIndex];
+      const auto &firstReprColumnRange = fOpenColumnRanges.at(firstReprColumnId);
+      const ROOT::DescriptorId_t columnId = firstPhysicalIndex + columnIndex;
+
+      RColumnDescriptorBuilder columnBuilder;
+      columnBuilder.LogicalColumnId(columnId)
+         .PhysicalColumnId(columnId)
+         .FieldId(field.GetId())
+         .BitsOnStorage(rangeMax)
+         .Type(columnType)
+         .Index(columnIndex)
+         // NOTE: marking this column as suppressed with the minus sign
+         .FirstElementIndex(-firstReprColumnRange.GetFirstElementIndex())
+         .RepresentationIndex(reprIndex);
+      fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
+
+      for (auto parentId = field.GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
+         const ROOT::RFieldDescriptor &parent = descriptor.GetFieldDescriptor(parentId);
+         if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
+             parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
+            fDescriptorBuilder.SetFeature(RNTupleDescriptor::kFeatureFlag_NestedDeferredColumns);
+            break;
+         }
+         parentId = parent.GetParentId();
+      }
+
+      ROOT::RClusterDescriptor::RColumnRange columnRange;
+      columnRange.SetPhysicalColumnId(columnId);
+      columnRange.SetFirstElementIndex(firstReprColumnRange.GetFirstElementIndex());
+      columnRange.SetNElements(0);
+      columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
+      fOpenColumnRanges.emplace_back(columnRange);
+
+      ROOT::RClusterDescriptor::RPageRange pageRange;
+      pageRange.SetPhysicalColumnId(columnId);
+      fOpenPageRanges.emplace_back(std::move(pageRange));
+
+      fSerializationContext.MapPhysicalColumnId(columnId);
+
+      ++columnIndex;
+   }
+}
+
 void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(ColumnHandle_t columnHandle)
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).SetIsSuppressed(true);
