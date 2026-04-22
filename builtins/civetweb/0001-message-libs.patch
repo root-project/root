@@ -16,7 +16,7 @@ index 43f3a77e..eab761fb 100644
      include_directories(${OPENSSL_INCLUDE_DIR})
      message(STATUS "OpenSSL include directory: ${OPENSSL_INCLUDE_DIR}")
 +    message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-+    target_include_directories(civetweb-c-library ${OPENSSL_INCLUDE_DIR})
++    target_include_directories(civetweb-c-library PUBLIC ${OPENSSL_INCLUDE_DIR})
      target_link_libraries(civetweb-c-library ${OPENSSL_LIBRARIES})
    endif()
  endif()
