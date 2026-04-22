@@ -10,6 +10,7 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Sebastian Alba Vives, Instituto Tecnologico de Costa Rica (TEC),\
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Lukas Breitwieser, CERN/EP-SFT,\
@@ -616,9 +617,9 @@ Consult the doxygen documentation of these functions in the [ROOT::Experimental 
 | RooPlot               | Yes                                        | RooPlot::addDirectoryStatus()      |
 | TEfficiency           | Yes                                        | No                                 |
 | TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
-| TEntryList            | No, but planned for 6.42                   | No                                 |
-| TEventList            | No, but planned for 6.42                   | No                                 |
-| TFunction             | No, but work in progress                   | No                                 |
+| TEntryList            | No, planned for 6.42                       | No                                 |
+| TEventList            | No, planned for 6.42                       | No                                 |
+| TFunction             | No, work in progress                       | No                                 |
 
 ## Versions of built-in packages
 
@@ -641,3 +642,154 @@ The version of the following packages has been updated:
 
 
 ## Items addressed for this release
+More than 130 items were addressed for this release:
+
+  * [[#21997](https://github.com/root-project/root/issues/21997)] - Memory leak in TFile::Open with UPDATE mode
+  * [[#21991](https://github.com/root-project/root/issues/21991)] - Link errors for tbb and xxhash libraries
+  * [[#21974](https://github.com/root-project/root/issues/21974)] - [ntuple] Incorrect treatment of I/O rule with empty source
+  * [[#21933](https://github.com/root-project/root/issues/21933)] - Web canvas saves files in the wrong format if extension is not specified
+  * [[#21915](https://github.com/root-project/root/issues/21915)] - [xrootd] error when building: XROOTD_CLIENT_LIBRARIES-NOTFOUND
+  * [[#21881](https://github.com/root-project/root/issues/21881)] - [gui,asimage] crash when opening xpm icon in batch mode
+  * [[#21880](https://github.com/root-project/root/issues/21880)] - [asimage] crash with DrawCircle
+  * [[#21863](https://github.com/root-project/root/issues/21863)] - hadd does not perform type checks of objects to be merged
+  * [[#21787](https://github.com/root-project/root/issues/21787)] - ROOT and Python 3.15
+  * [[#21782](https://github.com/root-project/root/issues/21782)] - [ML] ROOT.Experimental.ML.CreatePyTorchGenerators only uses the first dataframe
+  * [[#21774](https://github.com/root-project/root/issues/21774)] - [tmva][sofie] Pool operator ignores ceil_mode attribute, always uses floor division for output shape
+  * [[#21759](https://github.com/root-project/root/issues/21759)] - [tmva][sofie] ParseBatchNormalization accepts invalid input count and fails late
+  * [[#21758](https://github.com/root-project/root/issues/21758)] - [RDF] "error: macro name must be an identifier" when declaring C++ code for a distributed RDF
+  * [[#21756](https://github.com/root-project/root/issues/21756)] - [RDF] RDF.RSnapshotOptions with a distributed RDF
+  * [[#21747](https://github.com/root-project/root/issues/21747)] - [io][ML] Sporadic crash of the RDataLoader (and RBatchGenerator)
+  * [[#21736](https://github.com/root-project/root/issues/21736)] - [tmva][sofie] ParseMod validation for float/double never fires
+  * [[#21734](https://github.com/root-project/root/issues/21734)] - [tmva][sofie] Mod/FMod constant-folding uses std::pow instead of modulo
+  * [[#21732](https://github.com/root-project/root/issues/21732)] - invalid looping over the `std::array<long double,..>` objects  in PyROOT
+  * [[#21717](https://github.com/root-project/root/issues/21717)] - RooFit::chi2FitTo ignores the Range argument
+  * [[#21716](https://github.com/root-project/root/issues/21716)] - Strange error message when reading RNTuples
+  * [[#21699](https://github.com/root-project/root/issues/21699)] - Missing documentation for RooChi2Var since ROOT 6.36
+  * [[#21693](https://github.com/root-project/root/issues/21693)] - [PyROOT] ROOT package import method changes gDirectory.pwd() result
+  * [[#21682](https://github.com/root-project/root/issues/21682)] - [tmva][sofie] ReduceMean: loop variable typo in kFirst path causes infinite loop or wrong result
+  * [[#21667](https://github.com/root-project/root/issues/21667)] - Missing alignment information in TClass/TStreamerInfo
+  * [[#21608](https://github.com/root-project/root/issues/21608)] - Position dependent code of builtin lzma breaks ATLAS stat utils
+  * [[#21576](https://github.com/root-project/root/issues/21576)] - Add public accessor to RooPlot::_hist ?
+  * [[#21561](https://github.com/root-project/root/issues/21561)] - [graf2d] Cannot create gif images on some platforms
+  * [[#21542](https://github.com/root-project/root/issues/21542)] - [RF] Behavior of RooRealVar::removeRange
+  * [[#21541](https://github.com/root-project/root/issues/21541)] - [RF] `createChi2` ignores ranges provided by the Range() option
+  * [[#21539](https://github.com/root-project/root/issues/21539)] - [tmva][sofie] `ROperator_Elu.hxx` generates incorrect C++ inference code when alpha != 1.0.
+  * [[#21484](https://github.com/root-project/root/issues/21484)] - Last axis title is not set for THn and THnSparseD histograms, affects also HistoND and HistoNSparseD
+  * [[#21469](https://github.com/root-project/root/issues/21469)] - TPad::PaintHatches() fails for complex polygons
+  * [[#21438](https://github.com/root-project/root/issues/21438)] - Poisson interval calculation with asymptotic approximation
+  * [[#21405](https://github.com/root-project/root/issues/21405)] - [PyROOT] Assinging to `TemplateProxy` affects others
+  * [[#21379](https://github.com/root-project/root/issues/21379)] - Missing numpy.uint8 pythonisation in SetBranchAddress in ROOT 6.38
+  * [[#21378](https://github.com/root-project/root/issues/21378)] - [Python] NumPy conversion fails for multidimensional arrays (incorrect itemsize in LowLevelView)
+  * [[#21366](https://github.com/root-project/root/issues/21366)] - TGraph2D::Build function may leave the newly created object in inconsistent non-initialised state
+  * [[#21317](https://github.com/root-project/root/issues/21317)] - New feature: Add modified Anderson Bjork's algorithm for solving nonlinear equations
+  * [[#21284](https://github.com/root-project/root/issues/21284)] - [RF] Add new PDF Student-T distribution as one of RooAbsPdfs
+  * [[#21253](https://github.com/root-project/root/issues/21253)] - TH1::GetSumOfAllWeights return 9xvalue for 1D and (3x) 2D histograms when including underflows/overflows
+  * [[#21244](https://github.com/root-project/root/issues/21244)] - TPad Print() Title option issue
+  * [[#21173](https://github.com/root-project/root/issues/21173)] - TLegend header drawn in different position with jsroot and more than 1 column
+  * [[#21165](https://github.com/root-project/root/issues/21165)] - RDataFrame progress bar changes stream output precision
+  * [[#21159](https://github.com/root-project/root/issues/21159)] - [RF] Unexpected result with RooFFTConvPDF after ROOT 6.32
+  * [[#21104](https://github.com/root-project/root/issues/21104)] - Out-of-bounds access in TFormula constructor
+  * [[#21098](https://github.com/root-project/root/issues/21098)] - Typo in RooWorkspace factory documentation
+  * [[#21080](https://github.com/root-project/root/issues/21080)] - Bad interference for TH1.Fit and EnableImplicitMT
+  * [[#21070](https://github.com/root-project/root/issues/21070)] - RedirectServers - Server not redirected
+  * [[#21066](https://github.com/root-project/root/issues/21066)] - [RF] Crash doing HistFactory Workspace combination
+  * [[#21058](https://github.com/root-project/root/issues/21058)] - ROOT interpreter crashes when using `nlohmann::json`
+  * [[#20973](https://github.com/root-project/root/issues/20973)] - TEveManager::GetGeometry could support ROOT file with non standard extension
+  * [[#20954](https://github.com/root-project/root/issues/20954)] - [Minuit2] Analytical Hessian indexing mismatch
+  * [[#20948](https://github.com/root-project/root/issues/20948)] - [net] Insufficient length validation in TAuthenticate::SecureRecv()
+  * [[#20913](https://github.com/root-project/root/issues/20913)] - MIGRAD can call G2 even if HasG2 is set to false
+  * [[#20904](https://github.com/root-project/root/issues/20904)] - [RF] RooWorkspace::data returns null pointer if the workspace contains 52 or more datasets
+  * [[#20894](https://github.com/root-project/root/issues/20894)] - ProfileLikelihood calculator defines wrongly the tolerance
+  * [[#20872](https://github.com/root-project/root/issues/20872)] - hadd crashes when already existing output file is used with remote file input paths
+  * [[#20860](https://github.com/root-project/root/issues/20860)] - Inconsistent information for histogram contours
+  * [[#20858](https://github.com/root-project/root/issues/20858)] - Make "LIST" draw option for contour plot work with "CONT1", "CONT2", and "CONT3" options
+  * [[#20846](https://github.com/root-project/root/issues/20846)] - [RDF] Implement `Display` for distributed execution
+  * [[#20834](https://github.com/root-project/root/issues/20834)] - c++20 related test filure on ix86 (32 bit intel)
+  * [[#20831](https://github.com/root-project/root/issues/20831)] - New test failure with gcc 16 (possibly c++20 related)
+  * [[#20816](https://github.com/root-project/root/issues/20816)] - Improve `RInterface::HistoND` signature with an extra argument for weight
+  * [[#20792](https://github.com/root-project/root/issues/20792)] - TGraph.Fit() usage with EnableImplicitMT() produces inconsistent results
+  * [[#20790](https://github.com/root-project/root/issues/20790)] - Applications compiled on MacOS with -Wshadow report warnings from 14 ROOT headers
+  * [[#20786](https://github.com/root-project/root/issues/20786)] - thisroot.sh can set incorrect ROOTSYS
+  * [[#20780](https://github.com/root-project/root/issues/20780)] - Font precision 3 doesn't work with divided canvas
+  * [[#20761](https://github.com/root-project/root/issues/20761)] - Chi2Test: Report residuals also for higher dimensions
+  * [[#20755](https://github.com/root-project/root/issues/20755)] - `minimal` should be used only to set default feature
+  * [[#20750](https://github.com/root-project/root/issues/20750)] - Insufficient checks around R__unzip_header
+  * [[#20743](https://github.com/root-project/root/issues/20743)] - [ci] PR branch not checked out in CI tests if it's called `master`
+  * [[#20738](https://github.com/root-project/root/issues/20738)] - roottest-cling-parsing-semicolon  is not running, because semicolon is special in cmake?
+  * [[#20733](https://github.com/root-project/root/issues/20733)] - [math] xyexpo does not work in TFormula
+  * [[#20719](https://github.com/root-project/root/issues/20719)] - [math] TH2 FillRandom xygaus does not work
+  * [[#20706](https://github.com/root-project/root/issues/20706)] - Segmentation violation in the TTree::Merge method for root >= v6.36.00
+  * [[#20703](https://github.com/root-project/root/issues/20703)] - ROOT::Fit::FitResult fixed / bound parameter states not updated
+  * [[#20688](https://github.com/root-project/root/issues/20688)] - Make `TF3::Draw()` behave as expected
+  * [[#20687](https://github.com/root-project/root/issues/20687)] - Zero-parameter `TF1` created from C++ functor crashes `TCanvas::SaveAs()`
+  * [[#20674](https://github.com/root-project/root/issues/20674)] - .rootlogon.C ignored when running TRootBrowser
+  * [[#20665](https://github.com/root-project/root/issues/20665)] - Analytical Hessian is not made positive-definite during minimizer seeding in Minuit2
+  * [[#20602](https://github.com/root-project/root/issues/20602)] - TGTextEntry spills text out of the text box on macOS but not on Ubuntu
+  * [[#20572](https://github.com/root-project/root/issues/20572)] - A public field with a "private" type in the TFileMergeInfo class
+  * [[#20511](https://github.com/root-project/root/issues/20511)] - CMSSW DQM bin-by-bin comparison failed with ROOT 6.36
+  * [[#20506](https://github.com/root-project/root/issues/20506)] - [RDF] When combining a JIT-ted Vary and Define, the varied values are missing in a Snapshot
+  * [[#20476](https://github.com/root-project/root/issues/20476)] - Save THStack in root file
+  * [[#20472](https://github.com/root-project/root/issues/20472)] - jsroot from pip install root not working in notebooks (no TWebCanvas?)
+  * [[#20470](https://github.com/root-project/root/issues/20470)] - ROOT still uses hard-coded open mode flags, overriding umask and ACL settings
+  * [[#20448](https://github.com/root-project/root/issues/20448)] - [ntuple] detect custom streamers of class members
+  * [[#20436](https://github.com/root-project/root/issues/20436)] - [hist] TScatter (unwanted) background color is at 10 instead of at 0 if negative Z content
+  * [[#20383](https://github.com/root-project/root/issues/20383)] - [RF] Broken rf501_simultaneouspdf.py  in dev3/nighlies
+  * [[#20377](https://github.com/root-project/root/issues/20377)] - Investigate I/O of `std::unique_ptr` on latest MacOS beta
+  * [[#20356](https://github.com/root-project/root/issues/20356)] - Auxiliaries of volumes are not exportet in gdml
+  * [[#20315](https://github.com/root-project/root/issues/20315)] - Some test fails with a minimal build
+  * [[#20312](https://github.com/root-project/root/issues/20312)] - Support for std::complex on Windows
+  * [[#20282](https://github.com/root-project/root/issues/20282)] - [ntuple] use meta normalized name for streamer info records
+  * [[#20265](https://github.com/root-project/root/issues/20265)] - UHI histogram kind
+  * [[#20208](https://github.com/root-project/root/issues/20208)] - Flag to disable cling's `NVPTX` target
+  * [[#20174](https://github.com/root-project/root/issues/20174)] - TH1 and derivates projections produce incorrect results for histograms with infinite bin edges
+  * [[#20085](https://github.com/root-project/root/issues/20085)] - [cppyy] Review xfail'ed tests
+  * [[#20066](https://github.com/root-project/root/issues/20066)] - [Python] cppyy cannot bind select types
+  * [[#20047](https://github.com/root-project/root/issues/20047)] - Code coverage shows incorrect missed lines
+  * [[#19798](https://github.com/root-project/root/issues/19798)] - Removed option `tbb` is still considered to enable secret optimization of `ROOT::gCoreMutex`
+  * [[#19371](https://github.com/root-project/root/issues/19371)] - "read too few bytes" with class version zero for 'foreign' classes.
+  * [[#19329](https://github.com/root-project/root/issues/19329)] - h2root fragilities
+  * [[#18949](https://github.com/root-project/root/issues/18949)] - `Vc.pcm` not found when running root after building with external Vc with runtime_cxxmodules ON
+  * [[#18837](https://github.com/root-project/root/issues/18837)] - [Python] Calling `std::span::begin()` broken with gcc15
+  * [[#18754](https://github.com/root-project/root/issues/18754)] - Replace use of TSystem::ConcatFileName with PrependPathName.
+  * [[#18718](https://github.com/root-project/root/issues/18718)] - [RF] Regression in ranged fits with RooSimultaneous due to new likelihood evaluation
+  * [[#18471](https://github.com/root-project/root/issues/18471)] - Migrate from GLEW to libepoxy or GLAD
+  * [[#18314](https://github.com/root-project/root/issues/18314)] - [ntuple] Heuristically reduce memory usage of buffered writing
+  * [[#17697](https://github.com/root-project/root/issues/17697)] - pyroot can trigger clang assertion failure on enum with value too big to fit in int64_t
+  * [[#17429](https://github.com/root-project/root/issues/17429)] - [RF] Inconsistent  prints from some RooStats classes
+  * [[#17019](https://github.com/root-project/root/issues/17019)] - [reve] Invalid bounding box calculation for REvePointSet and REveBoxSet
+  * [[#16673](https://github.com/root-project/root/issues/16673)] - [RF] Different behaviour of multi-range fit in RooAddPdf and RooProdPdf
+  * [[#16601](https://github.com/root-project/root/issues/16601)] - [6.32/master] Fail to materialise symbols from `libMatrix`
+  * [[#16512](https://github.com/root-project/root/issues/16512)] - Enable embedding hyperlinks in TLegend
+  * [[#15872](https://github.com/root-project/root/issues/15872)] - [PyROOT] The cppyy version inside ROOT doesn't support `long long`
+  * [[#15792](https://github.com/root-project/root/issues/15792)] - root_generate_dictionary should check target OUTPUT_NAME
+  * [[#15783](https://github.com/root-project/root/issues/15783)] - [ntuple, DAOS] maximum cage size should be part of the anchor
+  * [[#15537](https://github.com/root-project/root/issues/15537)] - [cling] Crash when non-void function does not return a value
+  * [[#15520](https://github.com/root-project/root/issues/15520)] - Rewrite the RDataFrame JIT logic to avoid controlled leaks
+  * [[#15474](https://github.com/root-project/root/issues/15474)] - [Web Graphics] Two failures with one simple PyROOT plotter
+  * [[#14943](https://github.com/root-project/root/issues/14943)] - (Web) graphics does not work from PyROOT
+  * [[#14790](https://github.com/root-project/root/issues/14790)] - [DF] 1D `std::array` "has both a leaf count and a static length"
+  * [[#14446](https://github.com/root-project/root/issues/14446)] - gtest-math-matrix-test-testMatrixTSparse fails on aarch64, ppc64le and s390x with gcc 14
+  * [[#14209](https://github.com/root-project/root/issues/14209)] - [cling] Enable JITLink for AArch64 and x86_64 on Linux
+  * [[#13744](https://github.com/root-project/root/issues/13744)] - [PyROOT, Graphics] Cannot pause pyROOT script with `input()` and see canvases
+  * [[#11768](https://github.com/root-project/root/issues/11768)] - [RF] Error out in `RooStats::sPlot` if variable for sWeights is already used in the fit
+  * [[#10678](https://github.com/root-project/root/issues/10678)] - TH3::Interpolate min/max value condition behaves differently for TH1/TH2
+  * [[#10254](https://github.com/root-project/root/issues/10254)] - [TTreeReader] No diagnostics printed before crash when reading a type with no dictionaries
+  * [[#9354](https://github.com/root-project/root/issues/9354)] - [Win] Warnings about missing PCMs
+  * [[#8875](https://github.com/root-project/root/issues/8875)] - [PyROOT] Error when copying a tuple into a specific position of a vector of tuples in PyROOT
+  * [[#8582](https://github.com/root-project/root/issues/8582)] - TThreadTimer behavior
+  * [[#8199](https://github.com/root-project/root/issues/8199)] - ROOT::Math C++ PRBS generator
+  * [[#8125](https://github.com/root-project/root/issues/8125)] - BMP TASImage artefacts and crashes
+  * [[#7196](https://github.com/root-project/root/issues/7196)] - gSystem->GetMemInfo reports wrong used RAM memory
+  * [[#7167](https://github.com/root-project/root/issues/7167)] - [TTreeProcessorMP] Warn if Process is called from a multi-thread program
+  * [[#7052](https://github.com/root-project/root/issues/7052)] - rootcp --replace option ineffective
+  * [[ROOT-10972](https://its.cern.ch/jira/browse/ROOT-10972)] - [TTreePerfStats] No result with EnableImplicitMT
+  * [[ROOT-10808](https://its.cern.ch/jira/browse/ROOT-10808)] - Crash in TPoolManager's destructor
+  * [[ROOT-10778](https://its.cern.ch/jira/browse/ROOT-10778)] - When using copyTree with TChain , friend Tree's are not correctly copied
+  * [[ROOT-10728](https://its.cern.ch/jira/browse/ROOT-10728)] - TClass::CanSplit() should automatically return 0 if a base class has a custom streamer.
+  * [[ROOT-10614](https://its.cern.ch/jira/browse/ROOT-10614)] - TFormula tests fail when vectorization is enabled
+  * [[ROOT-10567](https://its.cern.ch/jira/browse/ROOT-10567)] - Fix consistency in computing number of entries after performing additions/subtractions of TH1 objects
+  * [[ROOT-9971](https://its.cern.ch/jira/browse/ROOT-9971)] - VisualizeError seems to ignore the normalisation of extended PDFs
+  * [[ROOT-8842](https://its.cern.ch/jira/browse/ROOT-8842)] - TTreeReaderFast crashes reading flat TTree (fork: bbockelm/root branch: root-bulkapi-fastread-v2)
+  * [[ROOT-7499](https://its.cern.ch/jira/browse/ROOT-7499)] - ExpectedData generated from RooSimultaneous does not have non-integer weights
+  * [[ROOT-5306](https://its.cern.ch/jira/browse/ROOT-5306)] - Read a file with a versioned class layout fails if the current class layout is unversioned
+  * [[ROOT-5174](https://its.cern.ch/jira/browse/ROOT-5174)] - rootcling without linkdef
