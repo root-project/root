@@ -695,7 +695,7 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             collected_z_train = []
             collected_z_val = []
 
-            iter_train = iter(gen_train.as_torch())
+            iter_train = iter(gen_train.as_torch(device="cpu"))
             iter_val = iter(gen_validation.as_torch())
 
             for _ in range(self.n_train_batch):
@@ -1792,7 +1792,7 @@ class DataLoaderEagerLoading(unittest.TestCase):
             collected_z_val = []
 
             iter_train = iter(gen_train.as_torch())
-            iter_val = iter(gen_validation.as_torch())
+            iter_val = iter(gen_validation.as_torch(device="cpu"))
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
@@ -2984,7 +2984,7 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             collected_z_train = []
             collected_z_val = []
 
-            iter_train = iter(gen_train.as_torch())
+            iter_train = iter(gen_train.as_torch(device="cpu"))
             iter_val = iter(gen_validation.as_torch())
 
             for _ in range(self.n_train_batch):
@@ -4133,7 +4133,7 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             collected_z_val = []
 
             iter_train = iter(gen_train.as_torch())
-            iter_val = iter(gen_validation.as_torch())
+            iter_val = iter(gen_validation.as_torch(device="cpu"))
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
@@ -5546,7 +5546,7 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             collected_z_train = []
             collected_z_val = []
 
-            iter_train = iter(gen_train.as_torch())
+            iter_train = iter(gen_train.as_torch(device="cpu"))
             iter_val = iter(gen_validation.as_torch())
 
             for _ in range(self.n_train_batch):
@@ -7086,7 +7086,7 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             collected_z_val = []
 
             iter_train = iter(gen_train.as_torch())
-            iter_val = iter(gen_validation.as_torch())
+            iter_val = iter(gen_validation.as_torch(device="cpu"))
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
