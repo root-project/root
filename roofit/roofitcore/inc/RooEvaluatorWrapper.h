@@ -21,8 +21,10 @@
 #include <RooRealProxy.h>
 #include <RooSetProxy.h>
 
+#include <memory>
 #include <stack>
 
+class ChangeOperModeRAII;
 class RooAbsArg;
 class RooAbsCategory;
 class RooAbsPdf;
@@ -73,7 +75,7 @@ public:
    void setUseGeneratedFunctionCode(bool);
    void writeDebugMacro(std::string const &) const;
 
-   std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModes(RooAbsArg::OperMode opMode);
+   std::unique_ptr<ChangeOperModeRAII> setOperModes(RooAbsArg::OperMode opMode);
 
 protected:
    double evaluate() const override;
