@@ -5616,11 +5616,8 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw glyph bitmap.
 
-void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
+void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirtualPad *clippad, Int_t offx, Int_t offy)
 {
-   if (!InitImage("DrawGlyph")) {
-      return;
-   }
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
    Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
@@ -5674,15 +5671,15 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    yy = y0;
    ARGB32 acolor;
 
-   Int_t clipx1=0, clipx2=0, clipy1=0, clipy2=0;
+   Int_t clipx1 = 0, clipx2 = 0, clipy1 = 0, clipy2 = 0;
    Bool_t noClip = kTRUE;
 
-   if (gPad) {
+   if (clippad) {
       Float_t is = gStyle->GetImageScaling();
-      clipx1 = gPad->XtoAbsPixel(gPad->GetX1())*is;
-      clipx2 = gPad->XtoAbsPixel(gPad->GetX2())*is;
-      clipy1 = gPad->YtoAbsPixel(gPad->GetY1())*is;
-      clipy2 = gPad->YtoAbsPixel(gPad->GetY2())*is;
+      clipx1 = clippad->XtoAbsPixel(clippad->GetX1())*is - offx;
+      clipx2 = clippad->XtoAbsPixel(clippad->GetX2())*is - offx;
+      clipy1 = clippad->YtoAbsPixel(clippad->GetY1())*is - offy;
+      clipy2 = clippad->YtoAbsPixel(clippad->GetY2())*is - offy;
       noClip = kFALSE;
    }
 
@@ -5719,27 +5716,38 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
 void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 {
-   if (!text)   return;
-   if (!gPad)
+   if (gPad)
+      DrawTextOnPad(text, x, y, gPad, 0, 0);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text at the pixel position (x,y) checking clip on pad.
+
+void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, Int_t offx, Int_t  offy)
+{
+   if (!text)
       return;
-   if (!InitImage("DrawText")) {
+   if (!InitImage("DrawTextOnPad"))
       return;
-   }
 
    if (!TTF::IsInitialized()) TTF::Init();
 
    // set text font
    TTF::SetTextFont(text->GetTextFont());
 
-   Int_t wh = gPad->XtoPixel(gPad->GetX2());
-   Int_t hh = gPad->YtoPixel(gPad->GetY1());
+   Int_t wh = 100, hh = 100;
+   if (pad) {
+      wh = pad->XtoPixel(pad->GetX2());
+      hh = pad->YtoPixel(pad->GetY1());
+   }
 
    // set text size
    Float_t ttfsize;
    if (wh < hh) {
-      ttfsize = text->GetTextSize()*wh;
+      ttfsize = text->GetTextSize() * wh;
    } else {
-      ttfsize = text->GetTextSize()*hh;
+      ttfsize = text->GetTextSize() * hh;
    }
    TTF::SetTextSize(ttfsize*kScale);
 
@@ -5847,7 +5855,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
       Int_t bx = x - ftal.x + bitmap->left;
       Int_t by = y + ftal.y - bitmap->top;
 
-      DrawGlyph(source, color, bx, by);
+      DrawGlyph(source, color, bx, by, pad, offx, offy);
    }
 }
 
@@ -5857,6 +5865,9 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
                            UInt_t color, const char *font_name, Float_t angle)
 {
+   if (!InitImage("DrawTextTTF"))
+      return;
+
    if (!TTF::IsInitialized()) TTF::Init();
 
    TTF::SetTextFont(font_name);
