@@ -184,6 +184,7 @@ See: https://github.com/root-project/root/pull/20963 for implementation details 
 
 * The behavior or `TDirectoryFile::mkdir` (which is also `TFile::mkdir`) was changed regarding the creation of directory hierarchies: calling `mkdir("a/b/c", "myTitle")` will now assign `myTitle` to the innermost directory `"c"` (before this change it would assign it to `"a"`).
 * Fixed a bug in `TDirectoryFile::mkdir` where passing `returnExistingDirectory = true` would not work properly in case of directory hierarchies. The option is now correctly propagated to `mkdir`'s inner invocations.
+
 ### File Permissions Now Respect System `umask`
 
 ROOT now respects the system `umask` when creating files, following standard Unix conventions.
