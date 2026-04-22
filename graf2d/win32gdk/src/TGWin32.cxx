@@ -1052,7 +1052,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    SetName("Win32TTF");
    SetTitle("ROOT interface to Win32 with TrueType fonts");
 
-   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::Init();
 
    if (fDepth > 8) {
       TTF::SetSmoothing(kTRUE);
@@ -1293,12 +1293,13 @@ void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Flo
 {
    if (!wctxt) return;
 
-   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::Init();
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
    Align(wctxt);
    RenderString(wctxt, x, y, mode);
+   TTF::CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1321,12 +1322,13 @@ void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Flo
 {
    if (!wctxt) return;
 
-   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::Init();
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
    Align(wctxt);
    RenderString(wctxt, x, y, mode);
+   TTF::CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1386,7 +1388,6 @@ void TGWin32::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
 {
    auto ctxt = (XWindow_t *) wctxt;
 
-   TTF::TTGlyph* glyph = TTF::GetGlyphs();
    GdkGCValues gcvals;
 
    // compute the size and position of the XImage that will contain the text
@@ -1465,7 +1466,7 @@ void TGWin32::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
    }
 
    // paint the glyphs in the XImage
-   glyph = TTF::GetGlyphs();
+   TTF::TTGlyph* glyph = TTF::GetGlyphs();
    for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
       if (FT_Glyph_To_Bitmap(&glyph->fImage,
                              TTF::GetSmoothing() ? ft_render_mode_normal
