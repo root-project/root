@@ -514,6 +514,12 @@ public:
    ROOT::NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    const RColumnRange &GetColumnRange(ROOT::DescriptorId_t physicalId) const { return fColumnRanges.at(physicalId); }
+   const RColumnRange *TryGetColumnRange(ROOT::DescriptorId_t physicalId) const
+   {
+      if (auto it = fColumnRanges.find(physicalId); it != fColumnRanges.end())
+         return &it->second;
+      return nullptr;
+   }
    const RPageRange &GetPageRange(ROOT::DescriptorId_t physicalId) const { return fPageRanges.at(physicalId); }
    /// Returns an iterator over pairs { columnId, columnRange }. The iteration order is unspecified.
    RColumnRangeIterable GetColumnRangeIterable() const;
