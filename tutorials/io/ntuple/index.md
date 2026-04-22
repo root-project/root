@@ -21,3 +21,4 @@ RNTuple is the evolution of TTree, offering better performance and new, more rob
 | ntpl016_streaming_vector.C | A special purpose container that reads large vectors piece-wise |
 | ntpl017_shared_reader.C | Efficient multi-threaded reading when multiple threads share a single reader |
 | ntpl018_low_precision_floats.C | Creating low-precision floating point fields |
+| ntpl019_attributes.C | Write and read metadata via the Attributes interface (experimental) |

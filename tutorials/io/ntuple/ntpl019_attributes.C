@@ -74,11 +74,10 @@ static void Write()
    // fields in the attribute model; all the main RNTuple data you filled in before committing the range
    // will have those values as metadata associated to it.
    //
-   // Beginning an attribute range is done like this (note that attrEntry is an REntry, so filling
-   // in the attribute values uses the same interface of the regular values):
+   // Beginning an attribute range is done like this:
    auto attrRange = attrSet->BeginRange();
 
-   // Here you can assign values to your attributes. In this case we only have 1 attribute (the string "myAttr"),
+   // Here you can assign values to your attributes. In this case we only have 1 attribute (the integer "runNumber"),
    // so we only fill that.
    // Note that attribute values can be assigned anywhere between BeginRange() and CommitRange(), so we could do
    // this step even after the main data filling.
@@ -135,7 +134,7 @@ static void Read()
 
    std::cout << "\nOpened attribute set '" << attrSet->GetDescriptor().GetName() << "' with description: \""
              << attrSet->GetDescriptor().GetDescription() << "\"\n";
-   // Loop over the main entries and, for each, print its associated attribute "myAttr"
+   // Loop over the main entries and, for each, print its associated run number
    for (auto mainIdx : reader->GetEntryRange()) {
       // There are various ways to access attributes from a main entry index (see the RNTupleAttrSetReader's
       // documentation). Here we use GetAttributes to get all attributes associated to the main entry `mainIdx`:
