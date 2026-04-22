@@ -118,13 +118,12 @@ void TImageDump::Close(Option_t *)
 
 void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   if (!gPad || !fImage) {
+   if (!gPad || !fImage)
       return;
-   }
 
    fImage->BeginPaint();
 
-   static Double_t x[4], y[4];
+   Double_t x[4], y[4];
    Int_t ix1 = x1 < x2 ? XtoPixel(x1) : XtoPixel(x2);
    Int_t ix2 = x1 < x2 ? XtoPixel(x2) : XtoPixel(x1);
    Int_t iy1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
@@ -283,15 +282,14 @@ void TImageDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 
 void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   if (!gPad || !fImage) {
+   if (!gPad || !fImage)
       return;
-   }
 
    fImage->BeginPaint();
 
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-   static TPoint pt[20];
+   TPoint pt[20];
 
    if (ms == 4)
       ms = 24;
@@ -640,9 +638,8 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
 void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 {
-   if (!gPad || !fImage || !nn) {
+   if (!gPad || !fImage || !nn)
       return;
-   }
 
    fImage->BeginPaint();
 
