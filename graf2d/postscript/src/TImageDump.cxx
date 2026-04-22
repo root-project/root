@@ -858,9 +858,8 @@ void TImageDump::NewPage()
 
 void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 {
-   if (!gPad || !fImage) {
+   if (!gPad || !fImage)
       return;
-   }
 
    fImage->BeginPaint();
 
@@ -870,7 +869,7 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
    t.SetTextAlign(fTextAlign);
    t.SetTextAngle(fTextAngle);
    t.SetTextColor(fTextColor);
-   fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
+   fImage->DrawTextOnPad(&t, XtoPixel(x), YtoPixel(y), gPad, fX0, fY0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -881,9 +880,8 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 
 void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
 {
-   if (!gPad || !fImage) {
+   if (!gPad || !fImage)
       return;
-   }
 
    fImage->BeginPaint();
 
@@ -893,7 +891,7 @@ void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
    t.SetTextAlign(fTextAlign);
    t.SetTextAngle(fTextAngle);
    t.SetTextColor(fTextColor);
-   fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
+   fImage->DrawTextOnPad(&t, XtoPixel(x), YtoPixel(y), gPad, fX0, fY0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
