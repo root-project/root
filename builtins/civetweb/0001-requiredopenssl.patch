@@ -1,0 +1,25 @@
+From 19539b116ea69a8ceffc505297c152d52cc87bef Mon Sep 17 00:00:00 2001
+From: ferdymercury <ferdymercury@users.noreply.github.com>
+Date: Wed, 22 Apr 2026 15:27:40 +0200
+Subject: [PATCH] requiredopenssl
+
+---
+ src/CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 43f3a77e..39319c6e 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -53,7 +53,7 @@ if (CIVETWEB_ENABLE_SSL)
+       target_link_libraries(civetweb-c-library -ldl)
+     endif()
+   else()
+-    find_package(OpenSSL)
++    find_package(OpenSSL REQUIRED)
+     include_directories(${OPENSSL_INCLUDE_DIR})
+     message(STATUS "OpenSSL include directory: ${OPENSSL_INCLUDE_DIR}")
+     target_link_libraries(civetweb-c-library ${OPENSSL_LIBRARIES})
+-- 
+2.34.1
+
