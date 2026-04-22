@@ -331,20 +331,25 @@ ROOTTEST_ADD_TEST(test_snapshot_copyaddresses
 
 ROOT_ADD_GTEST(test_norootextension test_norootextension.cxx LIBRARIES ROOT::ROOTDataFrame)
 
-ROOTTEST_GENERATE_DICTIONARY(
-  ClassWithSequenceContainersDict
-  ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithSequenceContainers.hxx
-  LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithSequenceContainersLinkDef.hxx
-  FIXTURES_SETUP ClassWithSequenceContainersDict_setup
-)
-ROOTTEST_GENERATE_EXECUTABLE(
-    dataframe_sequence_containers
-    dataframe_sequence_containers.cxx ClassWithSequenceContainersDict.cxx
-    LIBRARIES Core RIO Tree ROOTDataFrame GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main ROOT::TestSupport
-    FIXTURES_REQUIRED ClassWithSequenceContainersDict_setup
-    FIXTURES_SETUP dataframe_sequence_containers_setup
-)
-ROOTTEST_ADD_TEST(dataframe_sequence_containers
-    EXEC ${CMAKE_CURRENT_BINARY_DIR}/dataframe_sequence_containers
-    FIXTURES_REQUIRED dataframe_sequence_containers_setup
-)
+# In 6.38 on Windows the following test would not be able to compile because it can't find the ROOT/TestSupport.hxx
+# header even though the dependency is specified in ROOTTEST_GENERATE_EXECUTABLE. Given this test properly compiles in
+# later versions of ROOT on Windows, we disable it for the 6.38 release.
+if(NOT MSVC)
+  ROOTTEST_GENERATE_DICTIONARY(
+    ClassWithSequenceContainersDict
+    ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithSequenceContainers.hxx
+    LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithSequenceContainersLinkDef.hxx
+    FIXTURES_SETUP ClassWithSequenceContainersDict_setup
+  )
+  ROOTTEST_GENERATE_EXECUTABLE(
+      dataframe_sequence_containers
+      dataframe_sequence_containers.cxx ClassWithSequenceContainersDict.cxx
+      LIBRARIES Core RIO Tree ROOTDataFrame GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main ROOT::TestSupport
+      FIXTURES_REQUIRED ClassWithSequenceContainersDict_setup
+      FIXTURES_SETUP dataframe_sequence_containers_setup
+  )
+  ROOTTEST_ADD_TEST(dataframe_sequence_containers
+      EXEC ${CMAKE_CURRENT_BINARY_DIR}/dataframe_sequence_containers
+      FIXTURES_REQUIRED dataframe_sequence_containers_setup
+  )
+endif()
