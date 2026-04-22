@@ -704,3 +704,8 @@ The list of issues addressed for this release is the following:
   * [[#16673](https://github.com/root-project/root/issues/16673)] - [RF] Different behaviour of multi-range fit in RooAddPdf and RooProdPdf
 
 ## HEAD of the v6-36-00-patches branch
+
+### Core
+* Alignment of classes and numerical types is now recorded in the dictionary and propagated through `TClass`, `TDataType`, and `TStreamerElement`.  `TStreamerInfo::BuildOld` uses this information to correctly lay out emulated classes and older-version StreamerInfos (for the input of I/O customization), ensuring proper alignment for over-aligned types.
+  Fixes [#21667](https://github.com/root-project/root/issues/21667).
+  (PR [#21669](https://github.com/root-project/root/pull/21669))
