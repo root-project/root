@@ -97,6 +97,7 @@ public:
    static void    PrepareString(const char *string);
    static void    PrepareString(const wchar_t *string);
    static void    SetRotationMatrix(Float_t angle);
+   static void    CleanupGlyphs();
 
 public:
    TTF() { }
