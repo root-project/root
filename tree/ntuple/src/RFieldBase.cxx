@@ -667,14 +667,14 @@ void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::stri
 
 ROOT::NTupleSize_t ROOT::RFieldBase::EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const
 {
-   std::size_t result = globalIndex;
+   ROOT::NTupleSize_t result = globalIndex;
    for (auto f = this; f != nullptr; f = f->GetParent()) {
       auto parent = f->GetParent();
       if (parent && (parent->GetStructure() == ROOT::ENTupleStructure::kCollection ||
                      parent->GetStructure() == ROOT::ENTupleStructure::kVariant)) {
          return 0U;
       }
-      result *= std::max(f->GetNRepetitions(), std::size_t{1U});
+      result *= std::max<ROOT::NTupleSize_t>(f->GetNRepetitions(), ROOT::NTupleSize_t{1U});
    }
    return result;
 }
