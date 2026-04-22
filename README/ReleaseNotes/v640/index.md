@@ -797,3 +797,4 @@ More than 130 items were addressed for this release:
   * [[ROOT-7499](https://its.cern.ch/jira/browse/ROOT-7499)] - ExpectedData generated from RooSimultaneous does not have non-integer weights
   * [[ROOT-5306](https://its.cern.ch/jira/browse/ROOT-5306)] - Read a file with a versioned class layout fails if the current class layout is unversioned
   * [[ROOT-5174](https://its.cern.ch/jira/browse/ROOT-5174)] - rootcling without linkdef
+
