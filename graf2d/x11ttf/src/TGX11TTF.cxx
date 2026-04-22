@@ -156,7 +156,7 @@ TGX11TTF::TGX11TTF(TGX11 &&org) : TGX11(std::move(org))
    SetName("X11TTF");
    SetTitle("ROOT interface to X11 with TrueType fonts");
 
-   if (!TTF::fgInit) TTF::Init();
+   TTF::Init();
 
    fHasTTFonts = kTRUE;
    fHasXft = kFALSE;
@@ -371,12 +371,13 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
    if (!fHasTTFonts) {
       TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
    } else {
-      if (!TTF::fgInit) TTF::Init();
+      TTF::Init();
       TTF::SetRotationMatrix(angle);
       TTF::PrepareString(text);
       TTF::LayoutGlyphs();
       Align(wctxt);
       RenderString(wctxt, x, y, mode);
+      TTF::CleanupGlyphs();
    }
 }
 
@@ -390,12 +391,13 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
    if (!fHasTTFonts) {
       TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
    } else {
-      if (!TTF::fgInit) TTF::Init();
+      TTF::Init();
       TTF::SetRotationMatrix(angle);
       TTF::PrepareString(text);
       TTF::LayoutGlyphs();
       Align(wctxt);
       RenderString(wctxt, x, y, mode);
+      TTF::CleanupGlyphs();
    }
 }
 
@@ -463,8 +465,6 @@ Bool_t TGX11TTF::IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_
 
 void TGX11TTF::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
 {
-   TTF::TTGlyph* glyph = TTF::fgGlyphs;
-
    // compute the size and position of the XImage that will contain the text
    Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
    Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
@@ -526,8 +526,8 @@ void TGX11TTF::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode
    }
 
    // paint the glyphs in the XImage
-   glyph = TTF::fgGlyphs;
-   for (int n = 0; n < TTF::fgNumGlyphs; n++, glyph++) {
+   TTF::TTGlyph *glyph = TTF::GetGlyphs();
+   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
       if (FT_Glyph_To_Bitmap(&glyph->fImage,
                              TTF::fgSmoothing ? ft_render_mode_normal
                                               : ft_render_mode_mono,
