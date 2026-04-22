@@ -546,6 +546,21 @@ public:
    [[nodiscard]] std::unique_ptr<RNTupleModel>
    InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
 
+   /// Adds a new column representation to the given field. It is NOT marked as suppressed.
+   /// This can only be legally done at cluster boundary (i.e. immediately after committing a cluster or before
+   /// writing any entry). This is NOT checked for you.
+   /// `newRepresentation` must have a number of elements equal to the field's cardinality and must contain
+   /// compatible column types.
+   /// NOTE: this function was designed for use by the Merger and it's not fit as-is for use with the higher level
+   /// API layers. In other words, you cannot use this with a Writer and write data through the regular Entry/Field
+   /// API, as this function only modifies the descriptor.
+   void
+   AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const ENTupleColumnType> newRepresentation);
+
+   /// Adds a new alias column pointing to an existing column with the given physical id to the given field.
+   void AddAliasColumn(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &field,
+                       ROOT::DescriptorId_t physicalId);
+
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
