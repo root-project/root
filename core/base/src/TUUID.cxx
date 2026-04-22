@@ -21,13 +21,12 @@ originally used in the Network Computing System (NCS) and
 later in the Open Software Foundation's (OSF) Distributed Computing
 Environment (DCE).
 
-\note In the way this UUID is constructed, when used outside of
-their original concept (NCS), they are actually not Globally unique
-and indeed multiple distinct concurrent processes are actually likely
-to generate the same UUID.  Technically this is because the UUID is
-constructed only from the node information and time information.
-To make a globally unique number, this needs to be combined with
-TProcessUUID.
+\note When ROOT is built against `libuuid` (the default on Unix when
+it is found at configure time), generation is delegated to
+`uuid_generate_time()`, which coordinates the clock sequence across
+processes on the same host. Without `libuuid` (e.g. on Windows) the
+fallback generator only coordinates within a single process, so
+concurrent processes on the same host can produce identical UUIDs.
 
 Structure of universal unique IDs (UUIDs).
 
@@ -144,13 +143,31 @@ system clock catches up.
 #include <netinet/in.h>
 #endif
 #include <chrono>
-
+#ifdef R__HAS_LIBUUID
+#include <uuid/uuid.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a UUID.
+/// Create a UUID. See the class docs for the libuuid vs. fallback distinction.
 
 TUUID::TUUID()
 {
+#ifdef R__HAS_LIBUUID
+   uuid_t buf;
+   uuid_generate_time(buf);
+   // libuuid writes RFC 4122 v1 UUIDs in network byte order:
+   //   bytes 0-3 = time_low, 4-5 = time_mid, 6-7 = time_hi_and_version,
+   //   8 = clock_seq_hi_and_reserved, 9 = clock_seq_low, 10-15 = node.
+   fTimeLow = (UInt_t(buf[0]) << 24) | (UInt_t(buf[1]) << 16) | (UInt_t(buf[2]) << 8) | UInt_t(buf[3]);
+   fTimeMid = static_cast<UShort_t>((UShort_t(buf[4]) << 8) | UShort_t(buf[5]));
+   fTimeHiAndVersion = static_cast<UShort_t>((UShort_t(buf[6]) << 8) | UShort_t(buf[7]));
+   fClockSeqHiAndReserved = buf[8];
+   fClockSeqLow = buf[9];
+   for (int i = 0; i < 6; ++i)
+      fNode[i] = buf[10 + i];
+   fUUIDIndex = 1 << 30;
+   return;
+#else
    TTHREAD_TLS(uuid_time_t) time_last;
    TTHREAD_TLS(UShort_t) clockseq(0);
    TTHREAD_TLS(Bool_t) firstTime(kTRUE);
@@ -189,6 +206,7 @@ TUUID::TUUID()
 
    time_last = timestamp;
    fUUIDIndex = 1<<30;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -227,6 +227,14 @@ if(ROOT_NEED_STDCXXFS)
     target_link_libraries(Core PRIVATE stdc++fs)
 endif()
 
+# Use libuuid's uuid_generate_time() in TUUID when available so that concurrent
+# processes on the same host coordinate their clock sequence and cannot collide
+# within the same 100ns tick. See root-project/root#22015.
+if(libuuid_FOUND)
+    target_link_libraries(Core PRIVATE uuid::uuid)
+    target_compile_definitions(Core PRIVATE R__HAS_LIBUUID)
+endif()
+
 # This code about the LIB_CORE_NAME define is important for TROOT::GetSharedLibDir()
 # On Linux, dl_iterate_phdr reports loaded libraries by their SONAME
 # (e.g. libCore.so.6.38), not their full filename (libCore.so.6.38.02).
