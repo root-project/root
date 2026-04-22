@@ -387,7 +387,7 @@ class _RDataLoader:
 
         return return_data
 
-    def ConvertBatchToPyTorch(self, batch: Any) -> torch.Tensor:
+    def ConvertBatchToPyTorch(self, batch: Any, device=None) -> torch.Tensor:
         """Convert a RTensor into a PyTorch tensor
 
         Args:
@@ -404,7 +404,7 @@ class _RDataLoader:
 
         data.reshape((batch_size * num_columns,))
 
-        return_data = torch.as_tensor(np.asarray(data)).reshape(batch_size, num_columns)
+        return_data = torch.as_tensor(np.asarray(data), device=device).reshape(batch_size, num_columns)
 
         # Splice target column from the data if target is given
         if self.target_given:
@@ -704,12 +704,16 @@ class RDataLoader:
         self._ensure_created()
         return FormattedLoader(self._internal, self._internal.ConvertBatchToNumpy, self._is_training)
 
-    def as_torch(self) -> FormattedLoader:
+    def as_torch(self, device: str | torch.device | None = None) -> FormattedLoader:
         """
         Return an iterable that yields batches as PyTorch tensors.
+
+        Args:
+            device: If given, the returned tensors are moved to the specified device.
         """
         self._ensure_created()
-        return FormattedLoader(self._internal, self._internal.ConvertBatchToPyTorch, self._is_training)
+        conversion_fn = lambda batch: self._internal.ConvertBatchToPyTorch(batch, device)  # noqa: E731
+        return FormattedLoader(self._internal, conversion_fn, self._is_training)
 
     def as_tensorflow(self) -> tf.data.Dataset:
         """
