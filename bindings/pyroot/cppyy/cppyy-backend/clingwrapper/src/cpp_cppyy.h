@@ -1,6 +1,7 @@
 #ifndef CPYCPPYY_CPPYY_H
 #define CPYCPPYY_CPPYY_H
 
+#include "precommondefs.h"
 #include <CppInterOp/Dispatch.h>
 
 // Standard
@@ -52,7 +53,7 @@ namespace Cppyy {
     typedef Cpp::TCppScope_t    TCppObject_t;
     typedef Cpp::TCppFunction_t TCppMethod_t;
     typedef Cpp::TCppIndex_t    TCppIndex_t;
-    typedef intptr_t                TCppFuncAddr_t;
+    typedef Cpp::TCppFuncAddr_t TCppFuncAddr_t;
 
 // // direct interpreter access -------------------------------------------------
     RPY_EXPORTED
