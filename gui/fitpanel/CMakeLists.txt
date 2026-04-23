@@ -30,3 +30,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel
     Tree
     TreePlayer
 )
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

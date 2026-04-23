@@ -1256,7 +1256,8 @@ void TFitEditor::CloseWindow()
 
 void TFitEditor::Terminate()
 {
-   TQObject::Disconnect("TCanvas", "Closed()");
+   if (HasConnection("DoNoSelection()"))
+      TQObject::Disconnect("TCanvas", "Closed()");
    delete fgFitDialog;
    fgFitDialog = 0;
 }
