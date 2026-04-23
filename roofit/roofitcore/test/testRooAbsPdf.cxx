@@ -226,10 +226,8 @@ TEST_P(FitTest, MultiRangeFit)
       }
    }
 
-   // If the BatchMode is off, we are doing the same cross-check also with the
-   // chi-square fit on the RooDataHist.
-   if (_evalBackend == EvalBackend::Legacy()) {
-
+   // Same cross-check, now for chi2FitTo on the RooDataHist.
+   {
       auto &dh = static_cast<RooDataHist &>(*dataHist);
 
       // loop over non-extended and extended fit
@@ -237,11 +235,13 @@ TEST_P(FitTest, MultiRangeFit)
 
          // full range
          resetValues();
-         std::unique_ptr<RooFitResult> fitResultFull{model->chi2FitTo(dh, Range("full"), Save(), PrintLevel(-1))};
+         std::unique_ptr<RooFitResult> fitResultFull{
+            model->chi2FitTo(dh, Range("full"), _evalBackend, Save(), PrintLevel(-1))};
 
          // part (side band fit, but the union of the side bands is the full range)
          resetValues();
-         std::unique_ptr<RooFitResult> fitResultPart{model->chi2FitTo(dh, Range("low,high"), Save(), PrintLevel(-1))};
+         std::unique_ptr<RooFitResult> fitResultPart{
+            model->chi2FitTo(dh, Range("low,high"), _evalBackend, Save(), PrintLevel(-1))};
 
          EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
             << "Results of fitting " << model->GetName()

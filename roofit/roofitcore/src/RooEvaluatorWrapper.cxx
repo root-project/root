@@ -125,7 +125,8 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
 /// represents the data entry.
 class RooFuncWrapper {
 public:
-   RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const &paramSet);
+   RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const &paramSet,
+                  std::string const &rangeName, bool skipZeroWeights);
 
    bool hasGradient() const { return _hasGradient; }
    bool hasHessian() const { return _hasHessian; }
@@ -155,7 +156,8 @@ public:
       return _func(_varBuffer.data(), _observables.data(), _xlArr.data());
    }
 
-   void loadData(RooAbsData const &data, RooSimultaneous const *simPdf);
+   void
+   loadData(RooAbsData const &data, RooSimultaneous const *simPdf, std::string const &rangeName, bool skipZeroWeights);
 
 private:
    void updateGradientVarBuffer() const;
@@ -223,11 +225,11 @@ auto getDependsOnData(RooAbsReal &obj, RooArgSet const &dataObs)
 } // namespace
 
 RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf,
-                               RooArgSet const &paramSet)
+                               RooArgSet const &paramSet, std::string const &rangeName, bool skipZeroWeights)
 {
    // Load the observables from the dataset
    if (data) {
-      loadData(*data, simPdf);
+      loadData(*data, simPdf, rangeName, skipZeroWeights);
    }
 
    // Define the parameters
@@ -288,11 +290,13 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
    _collectedFunctions = ctx.collectedFunctions();
 }
 
-void RooFuncWrapper::loadData(RooAbsData const &data, RooSimultaneous const *simPdf)
+void RooFuncWrapper::loadData(RooAbsData const &data, RooSimultaneous const *simPdf, std::string const &rangeName,
+                              bool skipZeroWeights)
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
-   auto spans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", simPdf, true, false, vectorBuffers);
+   auto spans =
+      RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, simPdf, skipZeroWeights, false, vectorBuffers);
 
    _observables.clear();
    // The first elements contain the sizes of the packed observable arrays
@@ -660,7 +664,8 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
    const std::size_t oldSize = _dataSpans.size();
 
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-   bool skipZeroWeights = !_pdf || !_pdf->getAttribute("BinnedLikelihoodActive");
+   const bool isChi2 = _topNode->getAttribute("Chi2EvaluationActive");
+   bool skipZeroWeights = !isChi2 && (!_pdf || !_pdf->getAttribute("BinnedLikelihoodActive"));
    auto simPdf = dynamic_cast<RooSimultaneous const *>(_pdf);
    _dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, simPdf, skipZeroWeights,
                                                            _takeGlobalObservablesFromData, _vectorBuffers);
@@ -677,7 +682,7 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
       }
    }
    if (_funcWrapper) {
-      _funcWrapper->loadData(*_data, simPdf);
+      _funcWrapper->loadData(*_data, simPdf, _rangeName, skipZeroWeights);
    }
    return true;
 }
@@ -688,8 +693,10 @@ void RooEvaluatorWrapper::createFuncWrapper()
    RooArgSet paramSet;
    this->getParameters(_data ? _data->get() : nullptr, paramSet, /*sripDisconnectedParams=*/false);
 
-   _funcWrapper =
-      std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf), paramSet);
+   const bool isChi2 = _topNode->getAttribute("Chi2EvaluationActive");
+   const bool skipZeroWeights = !isChi2 && (!_pdf || !_pdf->getAttribute("BinnedLikelihoodActive"));
+   _funcWrapper = std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf),
+                                                   paramSet, _rangeName, skipZeroWeights);
 }
 
 void RooEvaluatorWrapper::generateGradient()

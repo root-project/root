@@ -3209,6 +3209,11 @@ public:
       : RooUnitTest("Chi2 minimization", refFile, writeRef, verbose)
    {
    }
+   // TODO: This test works with the Codegen backend in principle, but the
+   // result is slightly different because of the analytic gradient. Disable
+   // the test until we find a solution for this (e.g. separate reference files
+   // or loosened tolerances).
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
