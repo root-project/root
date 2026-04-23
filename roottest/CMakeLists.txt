@@ -21,7 +21,7 @@ if(MSVC)
     set(WILLFAIL_ON_WIN32 WILLFAIL)
   endif()
 
-  # ROOT_BINDIR is set by ROOTConfig.cmake
+  # ROOT_BINDIR is set by ROOTConfiguration.cmake
   set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
   execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--prefix" OUTPUT_VARIABLE ROOTSYS RESULT_VARIABLE RETVAR OUTPUT_STRIP_TRAILING_WHITESPACE)
   cmake_path(CONVERT "${ROOTSYS}" TO_CMAKE_PATH_LIST ROOTSYS)
@@ -30,7 +30,6 @@ if(MSVC)
   cmake_path(CONVERT "${ROOT_TUTORIALS_DIR}" TO_CMAKE_PATH_LIST ROOT_TUTORIALS_DIR)
   set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
   set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd.exe)
-  set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex.exe)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint.exe)
   set(ROOT_rootcling_CMD ${ROOTSYS}/bin/rootcling.exe)
   if(CMAKE_GENERATOR MATCHES Ninja)
@@ -60,10 +59,10 @@ else()
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
   set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd)
-  set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
   set(ROOT_rootcling_CMD rootcling)
 endif()
+set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
 
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 

@@ -198,7 +198,7 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
-  set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
+  set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
   add_custom_command(
     OUTPUT ${gensrcdict} ${rootmapname}
     COMMAND ${ROOT_genreflex_CMD}
