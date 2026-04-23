@@ -51,6 +51,7 @@ private:
    void SetDefaults();
    void CreateThumbnail();
    void DestroyImage();
+   void DestroyScaledImage();
    const char *TypeFromMagicNumber(const char *file);
 
 protected:
