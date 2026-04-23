@@ -51,7 +51,6 @@ TImageDump can be used in any mode (batch, interactive) as follows
 
 TImageDump::TImageDump() : TVirtualPS()
 {
-   fStream    = nullptr;
    fImage     = nullptr;
    gVirtualPS = this;
    fType      = 0;
@@ -80,7 +79,6 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
 
 void TImageDump::Open(const char *fname, Int_t type)
 {
-   fStream = nullptr;
    fImage  = TImage::Create();
    fType   = type;
    SetName(fname);

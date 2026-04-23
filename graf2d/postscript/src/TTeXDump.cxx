@@ -154,10 +154,9 @@ void TTeXDump::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream   = new std::ofstream(fname,std::ios::out);
-   if (!fStream || !fStream->good()) {
-      printf("ERROR in TTeXDump::Open: Cannot open file:%s\n",fname);
-      if (!fStream) return;
+   if (!OpenStream(fname)) {
+      Error("Open", "Cannot open file:%s", fname);
+      return;
    }
 
    gVirtualPS = this;
@@ -200,9 +199,10 @@ TTeXDump::~TTeXDump()
 
 void TTeXDump::Close(Option_t *)
 {
-   if (!gVirtualPS) return;
-   if (!fStream) return;
-   if (gPad) gPad->Update();
+   if (!gVirtualPS || !fStream)
+      return;
+   if (gPad)
+      gPad->Update();
    PrintStr("@");
    PrintStr("\\end{tikzpicture}@");
    if (fStandalone) {
@@ -212,7 +212,7 @@ void TTeXDump::Close(Option_t *)
    }
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
+   CloseStream();
 
    gVirtualPS = nullptr;
 }

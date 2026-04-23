@@ -82,7 +82,6 @@ using the file extension `.svgz`.
 
 TSVG::TSVG() : TVirtualPS()
 {
-   fStream      = nullptr;
    fType        = 0;
    fCompact     = kFALSE;
    gVirtualPS   = this;
@@ -105,7 +104,6 @@ TSVG::TSVG() : TVirtualPS()
 
 TSVG::TSVG(const char *fname, Int_t wtype, Bool_t compact) : TVirtualPS(fname, wtype)
 {
-   fStream = nullptr;
    SetTitle("SVG");
    fCompact = compact;
    Open(fname, wtype);
@@ -141,10 +139,9 @@ void TSVG::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream   = new std::ofstream(fname,std::ios::out);
-   if (!fStream || !fStream->good()) {
-      printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
-      if (!fStream) return;
+   if (!OpenStream(fname)) {
+      Error("Open", "Cannot open file: %s", fname);
+      return;
    }
 
    gVirtualPS = this;
@@ -174,13 +171,14 @@ TSVG::~TSVG()
 
 void TSVG::Close(Option_t *)
 {
-   if (!gVirtualPS) return;
-   if (!fStream) return;
-   if (gPad) gPad->Update();
+   if (!gVirtualPS || !fStream)
+      return;
+   if (gPad)
+      gPad->Update();
    PrintStr("</svg>@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
+   CloseStream();
 
    gVirtualPS = nullptr;
 }
@@ -214,7 +212,7 @@ void TSVG::Off()
 
 void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   static Double_t x[4], y[4];
+   Double_t x[4], y[4];
    Double_t ix1 = XtoSVG(TMath::Min(x1,x2));
    Double_t ix2 = XtoSVG(TMath::Max(x1,x2));
    Double_t iy1 = YtoSVG(TMath::Min(y1,y2));

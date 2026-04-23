@@ -103,7 +103,6 @@ Int_t TPDF::fgLineCap = 0;
 
 TPDF::TPDF() : TVirtualPS()
 {
-   fStream = nullptr;
    fCompress = kFALSE;
    fPageNotEmpty = kFALSE;
    fObjectIsOpen = kFALSE;
@@ -144,7 +143,6 @@ TPDF::TPDF() : TVirtualPS()
 
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream = nullptr;
    fCompress = kFALSE;
    fPageNotEmpty = kFALSE;
    fObjectIsOpen = kFALSE;
@@ -214,11 +212,11 @@ void TPDF::CellArrayEnd()
 
 void TPDF::Close(Option_t *)
 {
-   Int_t i;
+   if (!gVirtualPS || !fStream)
+      return;
 
-   if (!gVirtualPS) return;
-   if (!fStream) return;
-   if (gPad) gPad->Update();
+   if (gPad)
+      gPad->Update();
 
    // Close the currently opened page
    WriteCompressedBuffer();
@@ -306,7 +304,7 @@ void TPDF::Close(Option_t *)
    WriteInteger(fNbPage);
    PrintStr("@");
    PrintStr("/Kids [");
-   for (i = 0; i < (int)fPageObjects.size(); i++) {
+   for (std::size_t i = 0; i < fPageObjects.size(); i++) {
       WriteInteger(fPageObjects[i]);
       PrintStr(" 0 R");
    }
@@ -331,14 +329,15 @@ void TPDF::Close(Option_t *)
    // List of transparencies
    NewObject(kObjTransList);
    PrintStr("<<@");
-   for (i=0; i<(int)fAlphas.size(); i++) {
+   for (std::size_t i = 0; i < fAlphas.size(); i++) {
       PrintStr(
-      Form("/ca%3.2f << /Type /ExtGState /ca %3.2f >> /CA%3.2f << /Type /ExtGState /CA %3.2f >>@",
+      TString::Format("/ca%3.2f << /Type /ExtGState /ca %3.2f >> /CA%3.2f << /Type /ExtGState /CA %3.2f >>@",
       fAlphas[i],fAlphas[i],fAlphas[i],fAlphas[i]));
    }
    PrintStr(">>@");
    EndObject();
-   if (!fAlphas.empty()) fAlphas.clear();
+   if (!fAlphas.empty())
+      fAlphas.clear();
 
    // Cross-Reference Table
    Int_t refInd = fNByte;
@@ -348,7 +347,7 @@ void TPDF::Close(Option_t *)
    PrintStr("@");
    PrintStr("0000000000 65535 f @");
    char str[21];
-   for (i=0; i<fNbObj; i++) {
+   for (int i = 0; i < fNbObj; i++) {
       snprintf(str,21,"%10.10d 00000 n @",fObjPos[i]);
       PrintStr(str);
    }
@@ -373,7 +372,7 @@ void TPDF::Close(Option_t *)
    PrintStr("%%EOF@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
+   CloseStream();
 
    gVirtualPS = nullptr;
 }
@@ -1748,15 +1747,9 @@ void TPDF::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream = new std::ofstream();
-#ifdef R__WIN32
-      fStream->open(fname, std::ofstream::out | std::ofstream::binary);
-#else
-      fStream->open(fname, std::ofstream::out);
-#endif
-   if (!fStream || !fStream->good()) {
-      printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
-      if (!fStream) return;
+   if (!OpenStream(fname, kTRUE)) {
+      Error("Open", "Cannot open file: %s", fname);
+      return;
    }
 
    gVirtualPS = this;
