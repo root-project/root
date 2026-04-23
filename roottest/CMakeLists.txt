@@ -21,7 +21,7 @@ if(MSVC)
     set(WILLFAIL_ON_WIN32 WILLFAIL)
   endif()
 
-  # ROOT_BINDIR is set by ROOTConfig.cmake
+  # ROOT_BINDIR is set by ROOTConfiguration.cmake
   set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
   execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--prefix" OUTPUT_VARIABLE ROOTSYS RESULT_VARIABLE RETVAR OUTPUT_STRIP_TRAILING_WHITESPACE)
   cmake_path(CONVERT "${ROOTSYS}" TO_CMAKE_PATH_LIST ROOTSYS)
@@ -107,8 +107,8 @@ find_library(OPENGL_gl_LIBRARY NAMES GL)
 
 # Set global include dirs and library dirs for roottest.
 # These are picked up in the old-style dictionary generation and when standard CMake targets are created.
-include_directories(${ROOTSYS}/include ${CMAKE_CURRENT_SOURCE_DIR})
-link_directories(${ROOTSYS}/lib)
+include_directories(${ROOT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+link_directories(${ROOT_LIBRARY_DIR})
 set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 include(RoottestCTest)
