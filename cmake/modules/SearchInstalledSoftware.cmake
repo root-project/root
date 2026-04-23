@@ -1564,12 +1564,15 @@ if (builtin_gtest)
     set(EXTRA_GTEST_OPTS
       -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
   endif()
-
+  set(ROOT_GOOGLETEST_VERSION 1.16.0) # https://github.com/google/googletest/releases/tag/v1.16.0 Date: Feb 7, 2025
+  set(ROOT_GOOGLETEST_HASH "78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399")
   ExternalProject_Add(
     googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_SHALLOW 1
-    GIT_TAG v1.17.0
+    # GIT_REPOSITORY https://github.com/google/googletest.git
+    # GIT_SHALLOW 1
+    # GIT_TAG v1.17.0
+    URL ${lcgpackages}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
+    URL_HASH SHA256=${ROOT_GOOGLETEST_HASH}
     UPDATE_COMMAND ""
     # # Force separate output paths for debug and release builds to allow easy
     # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
