@@ -643,101 +643,13 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    fImage->BeginPaint();
 
-   TColor *col = nullptr;
-   Int_t  fais = 0 , fasi = 0;
    Bool_t line = nn > 1;
    UInt_t n = TMath::Abs(nn);
-
-   fais = fFillStyle/1000;
-   fasi = fFillStyle%1000;
-
-   Short_t px1, py1, px2, py2;
-   static const UInt_t gCachePtSize = 200;
-   static TPoint gPointCache[gCachePtSize];
+   Int_t fais = fFillStyle / 1000;
+   Int_t fasi = fFillStyle % 1000;
 
    // SetLineStyle
-   Int_t ndashes = 0;
-   static char dashList[10];
-   Int_t dashSize = 0;
-
-   if (line) {
-      if (fLineWidth<=0) return;
-      // dash lines
-      if (fLineStyle > 1) {
-         TString st = gStyle->GetLineStyleString(fLineStyle);
-         TObjArray *tokens = st.Tokenize(" ");
-         ndashes = tokens->GetEntries();
-         char *dash = new char[ndashes];
-
-         for (int j = 0; j < ndashes; j++) {
-            Int_t it;
-            sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
-            dash[j] = (char)(it/4);
-         }
-
-         dashSize = TMath::Min((int)sizeof(dashList), ndashes);
-         for (int i = 0; i < dashSize; i++ ) {
-            dashList[i] = dash[i];
-         }
-         delete tokens;
-         delete [] dash;
-      }
-
-      // SetLineColor
-      col = gROOT->GetColor(fLineColor);
-      if (!col) { // no color, make it black
-         fLineColor = 1;
-         col = gROOT->GetColor(fLineColor);
-         if (!col) return;
-      }
-   }
-
-   if (n == 1) {  // point
-      col = gROOT->GetColor(fFillColor);
-      if (!col) { // no color, make it black
-         fFillColor = 1;
-         col = gROOT->GetColor(fFillColor);
-         if (!col) return;
-      }
-      px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
-      fImage->PutPixel(px1, py1, col->AsHexString());
-      return;
-   }
-
-   if (n == 2) {  // line
-      px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
-      px2 = XtoPixel(x[1]);   py2 = YtoPixel(y[1]);
-
-      // SetLineColor
-      col = gROOT->GetColor(fLineColor);
-      if (!col) { // no color, make it black
-         fLineColor = 1;
-         col = gROOT->GetColor(fLineColor);
-         if (!col) return;
-      }
-      if (fLineStyle < 2) {
-         fImage->DrawLine(px1, py1, px2, py2, col->AsHexString(), fLineWidth);
-      } else {
-         fImage->DrawDashLine(px1, py1, px2, py2, dashSize, (const char*)dashList,
-                                 col->AsHexString(), fLineWidth);
-      }
-      return;
-   }
-
-   if (!line && ((fais == 3) || (fais == 2)) && (fasi > 100) ) {
-      return;
-   }
-
-   TPoint *pt = nullptr;
-   Bool_t del = kTRUE;
-
-   if (n+1 < gCachePtSize) {
-      pt = (TPoint*)&gPointCache;
-      del = kFALSE;
-   } else {
-      pt = new TPoint[n+1];
-      del = kTRUE;
-   }
+   std::vector<char> dashList;
 
    TColor *fcol = gROOT->GetColor(fFillColor);
    if (!fcol) { // no color, set it white
@@ -751,6 +663,54 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       lcol = gROOT->GetColor(fLineColor);
    }
 
+   if (line) {
+      if (fLineWidth <= 0)
+         return;
+      // dash lines
+      if (fLineStyle > 1) {
+         TString st = gStyle->GetLineStyleString(fLineStyle);
+         std::unique_ptr<TObjArray> tokens(st.Tokenize(" "));
+
+         if (tokens)
+            for (int j = 0; j < tokens->GetEntries(); j++) {
+               Int_t it;
+               sscanf(tokens->At(j)->GetName(), "%d", &it);
+               dashList.emplace_back((char)(it/4));
+            }
+      }
+   }
+
+   if (n == 1) {  // point
+      auto px1 = XtoPixel(x[0]);
+      auto py1 = YtoPixel(y[0]);
+      if (fcol)
+         fImage->PutPixel(px1, py1, fcol->AsHexString());
+      return;
+   }
+
+   if (n == 2) {  // line
+      auto px1 = XtoPixel(x[0]);
+      auto py1 = YtoPixel(y[0]);
+      auto px2 = XtoPixel(x[1]);
+      auto py2 = YtoPixel(y[1]);
+
+      // SetLineColor
+      if (lcol) {
+         if (fLineStyle < 2) {
+            fImage->DrawLine(px1, py1, px2, py2, lcol->AsHexString(), fLineWidth);
+         } else {
+            fImage->DrawDashLine(px1, py1, px2, py2, dashList.size(), dashList.data(),
+                                 lcol->AsHexString(), fLineWidth);
+         }
+      }
+      return;
+   }
+
+   if (!line && ((fais == 3) || (fais == 2)) && (fasi > 100))
+      return;
+
+   std::vector<TPoint> pt(n+1);
+
    for (UInt_t i = 0; i < n; i++) {
       pt[i].fX = XtoPixel(x[i]);
       pt[i].fY = YtoPixel(y[i]);
@@ -761,39 +721,27 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? (const char*)gStipples[fasi] : nullptr;
 
    // filled polygon
-   if (!line && fFillStyle && (fFillStyle != 4000)) {
-      if (!fcol) {
-         if (del) delete [] pt;
-         return;
-      }
-
-      if (n < 5) {   // convex
-         fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
-      } else {       // non-convex fill area
-         fImage->DrawFillArea(n, pt, fcol->AsHexString(), stipple);
-      }
+   if (!line && fFillStyle && (fFillStyle != 4000) && fcol) {
+      if (n < 5)    // convex
+         fImage->FillPolygon(n, pt.data(), fcol->AsHexString(), stipple);
+      else        // non-convex fill area
+         fImage->DrawFillArea(n, pt.data(), fcol->AsHexString(), stipple);
    }
 
    // hollow polygon or polyline is drawn
    if (line || !fFillStyle || (fFillStyle == 4000)) {
-      if (!lcol) {
-         if (del)
-            delete [] pt;
-         return;
-      }
       if (!line) {
-         fImage->DrawPolyLine(n+1, pt, fcol->AsHexString(), 1);
-      } else {
+         if (fcol)
+            fImage->DrawPolyLine(n+1, pt.data(), fcol->AsHexString(), 1);
+      } else if (lcol) {
          if (fLineStyle < 2) { // solid
-            fImage->DrawPolyLine(n, pt, lcol->AsHexString(), fLineWidth);
+            fImage->DrawPolyLine(n, pt.data(), lcol->AsHexString(), fLineWidth);
          } else { // dashed
-            DrawDashPolyLine(n, pt,  dashSize, (const char*)dashList,
+            DrawDashPolyLine(n, pt.data(), dashList.size(), dashList.data(),
                             lcol->AsHexString(), fLineWidth);
          }
       }
    }
-   if (del)
-      delete [] pt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -814,12 +762,10 @@ void TImageDump::DrawDashPolyLine(Int_t nn, TPoint *xy, UInt_t nDash,
 {
    Int_t x0 = xy[0].GetX();
    Int_t y0 = xy[0].GetY();
-   Int_t x = 0;
-   Int_t y = 0;
 
    for (Int_t i = 1; i < nn; i++) {
-      x = xy[i].GetX();
-      y = xy[i].GetY();
+      Int_t x = xy[i].GetX();
+      Int_t y = xy[i].GetY();
 
       fImage->DrawDashLine(x0, y0, x, y, nDash, pDash, col, thick);
 
