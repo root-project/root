@@ -13,64 +13,10 @@
 // same, because the actual C++ type of the PyObject is PyMethodObject anyway.
 #define CustomInstanceMethod_GET_SELF(meth) reinterpret_cast<PyMethodObject *>(meth)->im_self
 #define CustomInstanceMethod_GET_FUNCTION(meth) reinterpret_cast<PyMethodObject *>(meth)->im_func
-#if PY_VERSION_HEX >= 0x03000000
 // TODO: this will break functionality
 #define CustomInstanceMethod_GET_CLASS(meth) Py_None
-#else
-#define CustomInstanceMethod_GET_CLASS(meth) PyMethod_GET_CLASS(meth)
-#endif
 
 namespace CPyCppyy {
-
-#if PY_VERSION_HEX < 0x03000000
-//= float type allowed for reference passing =================================
-PyTypeObject RefFloat_Type = {     // python float is a C/C++ double
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
-    (char*)"cppyy.Double",         // tp_name
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES |
-        Py_TPFLAGS_BASETYPE,       // tp_flags
-    (char*)"CPyCppyy float object for pass by reference",   // tp_doc
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
-    &PyFloat_Type,                 // tp_base
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-};
-
-//= long type allowed for reference passing ==================================
-PyTypeObject RefInt_Type = {       // python int is a C/C++ long
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
-    (char*)"cppyy.Long",           // tp_name
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES |
-        Py_TPFLAGS_BASETYPE
-#if PY_VERSION_HEX >= 0x03040000
-        | Py_TPFLAGS_LONG_SUBCLASS
-#endif
-        ,                          // tp_flags
-    (char*)"CPyCppyy long object for pass by reference",    // tp_doc
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
-    &PyInt_Type,                   // tp_base
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-};
-#endif
 
 //- custom type representing typedef to pointer of class ---------------------
 static PyObject* tptc_call(typedefpointertoclassobject* self, PyObject* args, PyObject* /* kwds */)
@@ -78,7 +24,7 @@ static PyObject* tptc_call(typedefpointertoclassobject* self, PyObject* args, Py
     long long addr = 0;
     if (!PyArg_ParseTuple(args, const_cast<char*>("|L"), &addr))
         return nullptr;
-    return BindCppObjectNoCast((Cppyy::TCppObject_t)(intptr_t)addr, self->fCppType);
+    return BindCppObjectNoCast(Cppyy::TCppObject_t((void*)addr), self->fCppType);
 }
 
 //-----------------------------------------------------------------------------
@@ -154,19 +100,11 @@ PyTypeObject TypedefPointerToClass_Type = {
     0,                              // tp_mro
     0,                              // tp_cache
     0,                              // tp_subclasses
-    0                               // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                           // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                           // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                           // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0,                              // tp_weaklist
+    0,                              // tp_del
+    0,                              // tp_version_tag
+    0,                              // tp_finalize
+    0                               // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
@@ -178,11 +116,7 @@ static int numfree = 0;
 #endif
 
 //-----------------------------------------------------------------------------
-PyObject* CustomInstanceMethod_New(PyObject* func, PyObject* self, PyObject*
-#if PY_VERSION_HEX < 0x03000000
-        pyclass
-#endif
-    )
+PyObject* CustomInstanceMethod_New(PyObject* func, PyObject* self, PyObject*)
 {
 // from instancemethod, but with custom type (at issue is that instancemethod is not
 // meant to be derived from)
@@ -209,10 +143,6 @@ PyObject* CustomInstanceMethod_New(PyObject* func, PyObject* self, PyObject*
     im->im_func = func;
     Py_XINCREF(self);
     im->im_self = self;
-#if PY_VERSION_HEX < 0x03000000
-    Py_XINCREF(pyclass);
-    im->im_class = pyclass;
-#endif
     PyObject_GC_Track(im);
     return (PyObject*)im;
 }
@@ -229,9 +159,6 @@ static void im_dealloc(PyMethodObject* im)
 
     Py_DECREF(im->im_func);
     Py_XDECREF(im->im_self);
-#if PY_VERSION_HEX < 0x03000000
-    Py_XDECREF(im->im_class);
-#endif
 
     if (numfree < PyMethod_MAXFREELIST) {
         im->im_self = (PyObject*)free_list;
@@ -291,12 +218,7 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
 {
 // from instancemethod: don't rebind an already bound method, or an unbound method
 // of a class that's not a base class of pyclass
-    if (CustomInstanceMethod_GET_SELF(meth)
-#if PY_VERSION_HEX < 0x03000000
-         || (CustomInstanceMethod_GET_CLASS(meth) &&
-             !PyObject_IsSubclass(pyclass, CustomInstanceMethod_GET_CLASS(meth)))
-#endif
-            ) {
+    if (CustomInstanceMethod_GET_SELF(meth)) {
         Py_INCREF(meth);
         return meth;
     }
@@ -323,19 +245,11 @@ PyTypeObject CustomInstanceMethod_Type = {
     &PyMethod_Type,                // tp_base
     0,
     im_descr_get,                  // tp_descr_get
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,                             // tp_del
+    0,                             // tp_version_tag
+    0,                             // tp_finalize
+    0                              // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
@@ -378,19 +292,11 @@ PyTypeObject IndexIter_Type = {
     0, 0, 0,
     PyObject_SelfIter,            // tp_iter
     (iternextfunc)indexiter_iternext,  // tp_iternext
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                           // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                           // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                           // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,                            // tp_del
+    0,                            // tp_version_tag
+    0,                            // tp_finalize
+    0                             // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
@@ -413,9 +319,9 @@ static PyObject* vectoriter_iternext(vectoriterobject* vi) {
     // The CPPInstance::kNoMemReg by-passes the memory regulator; the assumption here is
     // that objects in vectors are simple and thus do not need to maintain object identity
     // (or at least not during the loop anyway). This gains 2x in performance.
-        Cppyy::TCppObject_t cppobj = (Cppyy::TCppObject_t)((ptrdiff_t)vi->vi_data + vi->vi_stride * vi->ii_pos);
+        Cppyy::TCppObject_t cppobj((void*)((ptrdiff_t)vi->vi_data + vi->vi_stride * vi->ii_pos));
         if (vi->vi_flags & vectoriterobject::kIsPolymorphic)
-            result = CPyCppyy::BindCppObject(*(void**)cppobj, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
+            result = CPyCppyy::BindCppObject(*(void**)cppobj.data, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
         else
             result = CPyCppyy::BindCppObjectNoCast(cppobj, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
         if ((vi->vi_flags & vectoriterobject::kNeedLifeLine) && result)
@@ -444,19 +350,11 @@ PyTypeObject VectorIter_Type = {
     0, 0, 0,
     PyObject_SelfIter,            // tp_iter
     (iternextfunc)vectoriter_iternext,      // tp_iternext
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                           // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                           // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                           // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,                            // tp_del
+    0,                            // tp_version_tag
+    0,                            // tp_finalize
+    0                             // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
