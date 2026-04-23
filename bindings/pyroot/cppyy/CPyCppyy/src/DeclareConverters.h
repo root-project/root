@@ -63,7 +63,7 @@ public:                                                                      \
     bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;      \
     PyObject* FromMemory(void*) override;                                     \
     bool ToMemory(PyObject*, void*, PyObject* = nullptr) override;            \
-    bool HasState() { return true; }                                 \
+    bool HasState() override { return true; }                                 \
     virtual std::string GetFailureMsg() { return "[" #name "ArrayConverter]"; }\
 protected:                                                                   \
     dims_t fShape;                                                           \
