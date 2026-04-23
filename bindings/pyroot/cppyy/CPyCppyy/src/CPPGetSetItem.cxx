@@ -64,22 +64,12 @@ bool CPyCppyy::CPPSetItem::ProcessArgs(PyCallArgs& cargs)
     }
 
 // unroll any tuples, if present in the arguments
-#if PY_VERSION_HEX >= 0x03080000
     if (realsize != nArgs-1) {
         CPyCppyy_PyArgs_t unrolled = (PyObject**)PyMem_Malloc(realsize * sizeof(PyObject*));
         unroll(cargs.fArgs, unrolled, nArgs-1);
         cargs.fArgs = unrolled;
         cargs.fFlags |= PyCallArgs::kDoFree;
     }
-#else
-    if (realsize != nArgs-1) {
-        CPyCppyy_PyArgs_t unrolled = PyTuple_New(realsize);
-        unroll(cargs.fArgs, unrolled, nArgs-1);
-        cargs.fArgs = unrolled;
-    } else
-        cargs.fArgs = PyTuple_GetSlice(cargs.fArgs, 0, nArgs-1);
-    cargs.fFlags |= PyCallArgs::kDoDecref;
-#endif
     cargs.fNArgsf = realsize;
 
 // continue normal method processing
@@ -103,13 +93,8 @@ bool CPyCppyy::CPPGetItem::ProcessArgs(PyCallArgs& cargs)
 // unroll any tuples, if present in the arguments
     if (realsize != nArgs) {
         CPyCppyy_PyArgs_t packed_args = cargs.fArgs;
-#if PY_VERSION_HEX >= 0x03080000
         cargs.fArgs = (PyObject**)PyMem_Malloc(realsize * sizeof(PyObject*));
         cargs.fFlags |= PyCallArgs::kDoFree;
-#else
-        cargs.fArgs = PyTuple_New(realsize);
-        cargs.fFlags |= PyCallArgs::kDoDecref;
-#endif
         cargs.fNArgsf = realsize;
         unroll(packed_args, cargs.fArgs, nArgs);
     }

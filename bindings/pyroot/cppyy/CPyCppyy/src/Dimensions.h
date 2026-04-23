@@ -1,6 +1,9 @@
 #ifndef CPYCPPYY_DIMENSIONS_H
 #define CPYCPPYY_DIMENSIONS_H
 
+#include "Python.h"
+#include "Cppyy.h"
+
 // Bindings
 #include "CPyCppyy/CommonDefs.h"
 

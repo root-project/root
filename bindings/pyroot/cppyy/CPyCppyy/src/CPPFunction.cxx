@@ -10,7 +10,6 @@
 //- CFunction helpers -----------------------------------------------------------
 bool CPyCppyy::AdjustSelf(PyCallArgs& cargs)
 {
-#if PY_VERSION_HEX >= 0x03080000
     if (cargs.fNArgsf & PY_VECTORCALL_ARGUMENTS_OFFSET) {  // mutation allowed?
         std::swap(((PyObject**)cargs.fArgs-1)[0], (PyObject*&)cargs.fSelf);
         cargs.fFlags |= PyCallArgs::kSelfSwap;
@@ -31,21 +30,6 @@ bool CPyCppyy::AdjustSelf(PyCallArgs& cargs)
         cargs.fFlags |= PyCallArgs::kDoFree;
         cargs.fNArgsf += 1;
     }
-#else
-    Py_ssize_t sz = PyTuple_GET_SIZE(cargs.fArgs);
-    CPyCppyy_PyArgs_t newArgs = PyTuple_New(sz+1);
-    for (int i = 0; i < sz; ++i) {
-        PyObject* item = PyTuple_GET_ITEM(cargs.fArgs, i);
-        Py_INCREF(item);
-        PyTuple_SET_ITEM(newArgs, i+1, item);
-    }
-    Py_INCREF(cargs.fSelf);
-    PyTuple_SET_ITEM(newArgs, 0, (PyObject*)cargs.fSelf);
-
-    cargs.fArgs = newArgs;
-    cargs.fFlags |= PyCallArgs::kDoDecref;
-    cargs.fNArgsf += 1;
-#endif
     return true;
 }
 
@@ -73,14 +57,12 @@ PyObject* CPyCppyy::CPPFunction::Call(CPPInstance*& self,
             return nullptr;
     }
 
-#if PY_VERSION_HEX >= 0x03080000
 // special case, if this method was inserted as a constructor, then self is nullptr
 // and it will be the first argument and needs to be used as Python context
     if (IsConstructor(ctxt->fFlags) && !ctxt->fPyContext && \
             CPyCppyy_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf)) {
         ctxt->fPyContext = cargs.fArgs[0];
     }
-#endif
 
 // translate the arguments as normal
     if (!this->ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
@@ -89,7 +71,6 @@ PyObject* CPyCppyy::CPPFunction::Call(CPPInstance*& self,
 // execute function
     PyObject* result = this->Execute(nullptr, 0, ctxt);
 
-#if PY_VERSION_HEX >= 0x03080000
 // special case, if this method was inserted as a constructor, then if no self was
 // provided, it will be the first argument and may have been updated
     if (IsConstructor(ctxt->fFlags) && result && !cargs.fSelf && \
@@ -97,7 +78,6 @@ PyObject* CPyCppyy::CPPFunction::Call(CPPInstance*& self,
         self = (CPPInstance*)cargs.fArgs[0];
         Py_INCREF(self);
     }
-#endif
 
     return result;
 }
@@ -121,11 +101,7 @@ bool CPyCppyy::CPPReverseBinary::ProcessArgs(PyCallArgs& cargs)
     }
 
 // swap the arguments
-#if PY_VERSION_HEX >= 0x03080000
     std::swap(((PyObject**)cargs.fArgs)[0], ((PyObject**)cargs.fArgs)[1]);
-#else
-    std::swap(PyTuple_GET_ITEM(cargs.fArgs, 0), PyTuple_GET_ITEM(cargs.fArgs, 1));
-#endif
     cargs.fFlags |= PyCallArgs::kArgsSwap;
 
     return true;

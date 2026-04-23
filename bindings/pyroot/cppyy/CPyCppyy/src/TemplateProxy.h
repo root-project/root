@@ -22,7 +22,7 @@ class CPPOverload;
  */
 
 typedef std::pair<uint64_t, CPPOverload*> TP_DispatchEntry_t;
-typedef std::map<std::string, std::vector<TP_DispatchEntry_t>> TP_DispatchMap_t;
+typedef std::unordered_map<std::string, std::vector<TP_DispatchEntry_t>> TP_DispatchMap_t;
 
 class TemplateInfo {
 public:
@@ -55,9 +55,7 @@ public:                 // public, as the python C-API works with C structs
     PyObject* fSelf;              // must be first (same layout as CPPOverload)
     PyObject* fTemplateArgs;
     PyObject* fWeakrefList;
-#if PY_VERSION_HEX >= 0x03080000
     vectorcallfunc fVectorCall;
-#endif
     TP_TInfo_t fTI;
 
 public:
