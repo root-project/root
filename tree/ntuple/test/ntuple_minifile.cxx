@@ -828,6 +828,7 @@ TEST(MiniFile, UUID)
    TUUID uuid;
    uuid.SetUUID("00000000-0000-0000-0000-000000000000");
    EXPECT_NE(uuid, f->GetUUID());
+   EXPECT_EQ('4', f->GetUUID().AsString()[14]);
 }
 
 TEST(MiniFile, FreeSlots)
