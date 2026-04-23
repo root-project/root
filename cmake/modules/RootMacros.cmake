@@ -2749,7 +2749,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
     set(CMAKE_ROOTTEST_NOROOTMAP OFF)
   endif()
 
-  set(ROOT_genreflex_cmd ${ROOT_BINDIR}/genreflex)
+  set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
 
   ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictionary})
 
