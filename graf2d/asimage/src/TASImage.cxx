@@ -2368,32 +2368,25 @@ Pixmap_t TASImage::GetMask()
    UInt_t ow = img->width%8;
    UInt_t ww = img->width - ow + (ow ? 8 : 0);
 
-   UInt_t bit = 0;
-   int i = 0;
-   UInt_t y = 0;
-   UInt_t x = 0;
-
-   char *bits = new char[ww*hh]; //an array of bits
-
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
                                                 0, 0, ww, 0, nullptr);
-   if (!imdec) {
-      delete [] bits;
-      return 0;
-   }
+   if (!imdec)
+      return pxmap;
 
-   for (y = 0; y < hh; y++) {
+   std::vector<char> bits(ww * hh / 8); //an array of bits
+
+   UInt_t bit = 0, i = 0;
+   for (UInt_t y = 0; y < hh; y++) {
       imdec->decode_image_scanline(imdec);
       CARD32 *a = imdec->buffer.alpha;
 
-      for (x = 0; x < ww; x++) {
+      for (UInt_t x = 0; x < ww; x++) {
          if (a[x]) {
             SETBIT(bits[i], bit);
          } else {
             CLRBIT(bits[i], bit);
          }
-         bit++;
-         if (bit == 8) {
+         if (++bit == 8) {
             bit = 0;
             i++;
          }
@@ -2401,9 +2394,7 @@ Pixmap_t TASImage::GetMask()
    }
 
    stop_image_decoding(&imdec);
-   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
-                                   ww, hh);
-   delete [] bits;
+   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
    return pxmap;
 }
 
