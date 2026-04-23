@@ -3798,9 +3798,11 @@ private:
             throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
       }
 
+      // Cannot vary different input column types, assume the first
+      auto varyColType = GetColumnType(colNames[0]);
       auto jittedVariation =
          RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager,
-                                       GetDataSource(), fColRegister, isSingleColumn);
+                                       GetDataSource(), fColRegister, isSingleColumn, varyColType);
 
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
