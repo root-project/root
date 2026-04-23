@@ -11,8 +11,8 @@ configure_file(RootcpReplaceEntireFileCheck.C . COPYONLY)
 # We should explicitly use the Python executable from the Python version that
 # was used to build ROOT. Otherwise, we risk picking up a different Python
 # version at test time.
-set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE} ${ROOTSYS}/bin)
-set(TOOLS_PREFIX ${ROOTSYS}/bin)
+set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE} ${ROOT_BINDIR})
+set(TOOLS_PREFIX ${ROOT_BINDIR})
 
 if(MSVC)
     set(pyext .py)

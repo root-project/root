@@ -609,6 +609,8 @@ set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
 set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
 set(ROOT_BINDIR ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "")
+set(ROOT_LIBRARY_DIR ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "")
+set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include CACHE INTERNAL "")
 
 #---To be used from the binary tree--------------------------------------------------------------------------
 set(ROOT_INCLUDE_DIR_SETUP "
