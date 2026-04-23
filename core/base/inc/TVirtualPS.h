@@ -42,6 +42,9 @@ protected:
    char          *fBuffer{nullptr};         // File buffer
    const char    *fImplicitCREsc{nullptr};  // Escape symbol before enforced new line
 
+   Bool_t         OpenStream(const char *fname, Bool_t binary = kFALSE);
+   void           CloseStream();
+
 public:
    TVirtualPS();
    TVirtualPS(const char *filename, Int_t type=-111);

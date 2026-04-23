@@ -62,9 +62,46 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
 
 TVirtualPS::~TVirtualPS()
 {
-   if (fBuffer) delete [] fBuffer;
+   if (fBuffer)
+      delete [] fBuffer;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Open output stream
+
+Bool_t TVirtualPS::OpenStream(const char *fname, Bool_t binary)
+{
+   CloseStream();
+
+   auto flags = std::ofstream::out;
+#ifdef R__WIN32
+   if (binary)
+      flags = flags | std::ofstream::binary;
+#else
+   (void) binary;
+#endif
+
+   fStream = new std::ofstream(fname, flags);
+   if (!fStream || !fStream->good()) {
+      delete fStream;
+      fStream = nullptr;
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Close existing stream
+
+void TVirtualPS::CloseStream()
+{
+   if (fStream) {
+      fStream->close();
+      delete fStream;
+      fStream = nullptr;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Output the string str in the output buffer
