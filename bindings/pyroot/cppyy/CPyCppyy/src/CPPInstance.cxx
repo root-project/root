@@ -3,6 +3,7 @@
 #include "CPPInstance.h"
 #include "CPPScope.h"
 #include "CPPOverload.h"
+#include "Cppyy.h"
 #include "MemoryRegulator.h"
 #include "ProxyWrappers.h"
 #include "PyStrings.h"
@@ -181,20 +182,19 @@ void CPyCppyy::CPPInstance::SetSmart(PyObject* smart_type)
 }
 
 //----------------------------------------------------------------------------
-Cppyy::TCppType_t CPyCppyy::CPPInstance::GetSmartIsA() const
+Cppyy::TCppScope_t CPyCppyy::CPPInstance::GetSmartIsA() const
 {
-    if (!IsSmart()) return (Cppyy::TCppType_t)0;
+    if (!IsSmart()) return Cppyy::TCppScope_t{};
     return SMART_TYPE(this);
 }
 
 //----------------------------------------------------------------------------
-Cppyy::TCppType_t CPyCppyy::CPPInstance::GetSmartUnderlyingType() const
+Cppyy::TCppScope_t CPyCppyy::CPPInstance::GetSmartUnderlyingType() const
 {
-// The declared underlying type of the embedded smart pointer (e.g. 'Base' for
-// a std::unique_ptr<Base>). This is independent of any auto-down-cast applied
-// to the dereferenced object, and so is what must be used to decide whether the
-// smart pointer can be passed to a function expecting a particular smart type.
-    if (!IsSmart()) return (Cppyy::TCppType_t)0;
+// Declared underlying type of the embedded smart pointer ('Base' for a
+// std::unique_ptr<Base>), independent of any downcast of the dereferenced
+// object.
+    if (!IsSmart()) return Cppyy::TCppScope_t{};
     return SMART_CLS(this)->fUnderlyingType;
 }
 
@@ -219,7 +219,7 @@ void CPyCppyy::CPPInstance::SetDispatchPtr(void* ptr)
 void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
 
-    Cppyy::TCppType_t klass = pyobj->ObjectIsA(false /* check_smart */);
+    Cppyy::TCppScope_t klass = pyobj->ObjectIsA(false /* check_smart */);
     void*& cppobj = pyobj->GetObjectRaw();
 
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
@@ -285,7 +285,7 @@ static PyObject* op_destruct(CPPInstance* self)
 }
 
 //= CPyCppyy object dispatch support =========================================
-static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kwds */)
+static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws */)
 {
 // User-side __dispatch__ method to allow selection of a specific overloaded
 // method. The actual selection is in the __overload__() method of CPPOverload.
@@ -416,7 +416,7 @@ PyCFunction &CPPInstance::ReduceMethod() {
    return reducer;
 }
 
-PyObject *op_reduce(PyObject *self, PyObject * args)
+PyObject *op_reduce(PyObject *self, PyObject *args)
 {
    auto &reducer = CPPInstance::ReduceMethod();
    if (!reducer) {
@@ -500,6 +500,10 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     bool flipit = false;
     PyObject* binop = op == Py_EQ ? klass->fOperators->fEq : klass->fOperators->fNe;
     if (!binop) {
+        binop = op == Py_EQ ? klass->fOperators->fNe : klass->fOperators->fEq;
+        if (binop) flipit = true;
+    }
+    if (!binop) {
         const char* cppop = op == Py_EQ ? "==" : "!=";
         PyCallable* pyfunc = FindBinaryOperator(self, obj, cppop);
         if (pyfunc) binop = (PyObject*)CPPOverload_New(cppop, pyfunc);
@@ -510,11 +514,6 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     // sets the operator to Py_None if not found, indicating that search was done
         if (op == Py_EQ) klass->fOperators->fEq = binop;
         else klass->fOperators->fNe = binop;
-    }
-
-    if (binop == Py_None) {  // can try !== or !!= as alternatives
-        binop = op == Py_EQ ? klass->fOperators->fNe : klass->fOperators->fEq;
-        if (binop && binop != Py_None) flipit = true;
     }
 
     if (!binop || binop == Py_None) return nullptr;
@@ -548,8 +547,8 @@ static inline void* cast_actual(void* obj) {
     if (((CPPInstance*)obj)->fFlags & CPPInstance::kIsActual)
         return address;
 
-    Cppyy::TCppType_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
-    Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
+    Cppyy::TCppScope_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
+    Cppyy::TCppScope_t clActual = klass /* XXX: Cppyy::GetActualClass(klass, address) */;
     if (clActual && clActual != klass) {
         intptr_t offset = Cppyy::GetBaseOffset(
              clActual, klass, address, -1 /* down-cast */, true /* report errors */);
@@ -667,7 +666,7 @@ static PyObject* op_repr(CPPInstance* self)
         return PyBaseObject_Type.tp_repr((PyObject*)self);
     PyObject* modname = PyObject_GetAttr(pyclass, PyStrings::gModule);
 
-    Cppyy::TCppType_t klass = self->ObjectIsA();
+    Cppyy::TCppScope_t klass = self->ObjectIsA();
     std::string clName = klass ? Cppyy::GetFinalName(klass) : "<unknown>";
     if (self->fFlags & CPPInstance::kIsPtrPtr)
         clName.append("**");
@@ -714,7 +713,7 @@ static Py_hash_t op_hash(CPPInstance* self)
         return h;
     }
 
-    Cppyy::TCppScope_t stdhash = Cppyy::GetScope("std::hash<"+Cppyy::GetScopedFinalName(self->ObjectIsA())+">");
+    Cppyy::TCppScope_t stdhash = Cppyy::GetFullScope("std::hash<"+Cppyy::GetScopedFinalName(self->ObjectIsA())+">");
     if (stdhash) {
         PyObject* hashcls = CreateScopeProxy(stdhash);
         PyObject* dct = PyObject_GetAttr(hashcls, PyStrings::gDict);
@@ -745,25 +744,21 @@ static Py_hash_t op_hash(CPPInstance* self)
 //----------------------------------------------------------------------------
 static PyObject* op_str_internal(PyObject* pyobj, PyObject* lshift, bool isBound)
 {
-    static Cppyy::TCppScope_t sOStringStreamID = Cppyy::GetScope("std::ostringstream");
+    static Cppyy::TCppScope_t sOStringStreamID = Cppyy::GetFullScope("std::ostringstream");
     std::ostringstream s;
     PyObject* pys = BindCppObjectNoCast(&s, sOStringStreamID);
     Py_INCREF(pys);
-#if PY_VERSION_HEX >= 0x03000000
 // for py3 and later, a ref-count of 2 is okay to consider the object temporary, but
 // in this case, we can't lose our existing ostrinstring (otherwise, we'd have to peel
 // it out of the return value, if moves are used
     Py_INCREF(pys);
-#endif
 
     PyObject* res;
     if (isBound) res = PyObject_CallFunctionObjArgs(lshift, pys, NULL);
     else res = PyObject_CallFunctionObjArgs(lshift, pys, pyobj, NULL);
 
     Py_DECREF(pys);
-#if PY_VERSION_HEX >= 0x03000000
     Py_DECREF(pys);
-#endif
 
     if (res) {
         Py_DECREF(res);
@@ -806,7 +801,7 @@ static PyObject* op_str(CPPInstance* self)
             // normal lookup failed; attempt lazy install of global operator<<(ostream&, type&)
                 std::string rcname = Utility::ClassName((PyObject*)self);
                 Cppyy::TCppScope_t rnsID = Cppyy::GetScope(TypeManip::extract_namespace(rcname));
-                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream", rcname, "<<", rnsID);
+                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream&", rcname, "<<", rnsID);
                 if (!pyfunc)
                      continue;
 
@@ -1015,9 +1010,6 @@ static PyNumberMethods op_as_number = {
     (binaryfunc)op_add_stub,       // nb_add
     (binaryfunc)op_sub_stub,       // nb_subtract
     (binaryfunc)op_mul_stub,       // nb_multiply
-#if PY_VERSION_HEX < 0x03000000
-    (binaryfunc)op_div_stub,       // nb_divide
-#endif
     0,                             // nb_remainder
     0,                             // nb_divmod
     0,                             // nb_power
@@ -1031,46 +1023,26 @@ static PyNumberMethods op_as_number = {
     0,                             // nb_and
     0,                             // nb_xor
     0,                             // nb_or
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_coerce
-#endif
     0,                             // nb_int
     0,                             // nb_long (nb_reserved in p3)
     0,                             // nb_float
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_oct
-    0,                             // nb_hex
-#endif
     0,                             // nb_inplace_add
     0,                             // nb_inplace_subtract
     0,                             // nb_inplace_multiply
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_inplace_divide
-#endif
     0,                             // nb_inplace_remainder
     0,                             // nb_inplace_power
     0,                             // nb_inplace_lshift
     0,                             // nb_inplace_rshift
     0,                             // nb_inplace_and
     0,                             // nb_inplace_xor
-    0                              // nb_inplace_or
-#if PY_VERSION_HEX >= 0x02020000
-    , 0                            // nb_floor_divide
-#if PY_VERSION_HEX < 0x03000000
-    , 0                            // nb_true_divide
-#else
-    , (binaryfunc)op_div_stub      // nb_true_divide
-#endif
-    , 0                            // nb_inplace_floor_divide
-    , 0                            // nb_inplace_true_divide
-#endif
-#if PY_VERSION_HEX >= 0x02050000
-    , 0                            // nb_index
-#endif
-#if PY_VERSION_HEX >= 0x03050000
-    , 0                            // nb_matrix_multiply
-    , 0                            // nb_inplace_matrix_multiply
-#endif
+    0,                             // nb_inplace_or
+    0,                             // nb_floor_divide
+    (binaryfunc)op_div_stub,       // nb_true_divide
+    0,                             // nb_inplace_floor_divide
+    0,                             // nb_inplace_true_divide
+    0,                             // nb_index
+    0,                             // nb_matrix_multiply
+    0                              // nb_inplace_matrix_multiply
 };
 
 
@@ -1123,19 +1095,11 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_mro
     0,                             // tp_cache
     0,                             // tp_subclasses
-    0                              // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0,                             // tp_weaklist
+    0,                             // tp_del
+    0,                             // tp_version_tag
+    0,                             // tp_finalize
+    0                              // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 

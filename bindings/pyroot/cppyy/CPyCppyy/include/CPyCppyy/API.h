@@ -25,19 +25,27 @@
 #endif
 #include "Python.h"
 
-#define CPYCPPYY_VERSION_HEX 0x010c10
+#define CPYCPPYY_VERSION_HEX 0x011200
 
 // Cppyy types
-namespace Cppyy {
-    typedef size_t      TCppScope_t;
-    typedef TCppScope_t TCppType_t;
-    typedef void*       TCppEnum_t;
-    typedef void*       TCppObject_t;
-    typedef intptr_t    TCppMethod_t;
+#ifndef CPYCPPYY_INTERNAL
 
-    typedef size_t      TCppIndex_t;
-    typedef void*       TCppFuncAddr_t;
+namespace Cpp {
+struct DeclRef;
+struct TypeRef;
+struct FuncRef;
+struct ObjectRef;
+}  // namespace Cpp
+
+namespace Cppyy {
+typedef Cpp::DeclRef TCppScope_t;
+typedef Cpp::TypeRef TCppType_t;
+typedef Cpp::ObjectRef TCppObject_t;
+typedef Cpp::FuncRef TCppMethod_t;
+typedef size_t TCppIndex_t;
+typedef void* TCppFuncAddr_t;
 } // namespace Cppyy
+#endif
 
 // Bindings
 #include "CPyCppyy/CommonDefs.h"
@@ -123,6 +131,7 @@ public:
 
 // create a converter based on its full type name and dimensions
 CPYCPPYY_EXTERN Converter* CreateConverter(const std::string& name, cdims_t = 0);
+CPYCPPYY_EXTERN Converter* CreateConverter(Cppyy::TCppType_t type, cdims_t = 0);
 
 // delete a previously created converter
 CPYCPPYY_EXTERN void DestroyConverter(Converter* p);
@@ -153,6 +162,7 @@ public:
 
 // create an executor based on its full type name
 CPYCPPYY_EXTERN Executor* CreateExecutor(const std::string& name, cdims_t = 0);
+CPYCPPYY_EXTERN Executor* CreateExecutor(Cppyy::TCppType_t type, cdims_t = 0);
 
 // delete a previously created executor
 CPYCPPYY_EXTERN void DestroyConverter(Converter* p);
@@ -183,7 +193,8 @@ CPYCPPYY_EXTERN void* Instance_AsVoidPtr(PyObject* pyobject);
 // void* to C++ Instance (python object proxy) conversion, returns a new reference
 CPYCPPYY_EXTERN PyObject* Instance_FromVoidPtr(
     void* addr, const std::string& classname, bool python_owns = false);
-
+CPYCPPYY_EXTERN PyObject* Instance_FromVoidPtr(
+    void* addr, Cppyy::TCppScope_t klass_scope, bool python_owns = false);
 // type verifiers for C++ Scope
 CPYCPPYY_EXTERN bool Scope_Check(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Scope_CheckExact(PyObject* pyobject);

@@ -323,11 +323,7 @@ static inline int init_slice(Py_buffer* base, PyObject* _key, int dim)
 {
     Py_ssize_t start, stop, step, slicelength;
 
-#if PY_VERSION_HEX < 0x03000000
-    PySliceObject* key = (PySliceObject*)_key;
-#else
     PyObject* key = _key;
-#endif
 
     if (PySlice_GetIndicesEx(key, base->shape[dim], &start, &stop, &step, &slicelength) < 0)
         return -1;
@@ -610,27 +606,6 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
     return -1;
 }
 
-#if PY_VERSION_HEX < 0x03000000
-//---------------------------------------------------------------------------
-static Py_ssize_t ll_oldgetbuf(CPyCppyy::LowLevelView* self, Py_ssize_t seg, void** pptr)
-{
-    if (seg != 0) {
-        PyErr_SetString(PyExc_TypeError, "accessing non-existent segment");
-        return -1;
-    }
-
-    *pptr = self->get_buf();
-    return self->fBufInfo.len;
-}
-
-//---------------------------------------------------------------------------
-static Py_ssize_t ll_getsegcount(PyObject*, Py_ssize_t* lenp)
-{
-    if (lenp) *lenp = 1;
-    return 1;
-}
-#endif
-
 //---------------------------------------------------------------------------
 static int ll_getbuf(CPyCppyy::LowLevelView* self, Py_buffer* view, int flags)
 {
@@ -721,12 +696,6 @@ static PySequenceMethods ll_as_sequence = {
 
 //- buffer methods ----------------------------------------------------------
 static PyBufferProcs ll_as_buffer = {
-#if PY_VERSION_HEX < 0x03000000
-    (readbufferproc)ll_oldgetbuf,   // bf_getreadbuffer
-    (writebufferproc)ll_oldgetbuf,  // bf_getwritebuffer
-    (segcountproc)ll_getsegcount,   // bf_getsegcount
-    0,                              // bf_getcharbuffer
-#endif
     (getbufferproc)ll_getbuf,       // bf_getbuffer
     0,                              // bf_releasebuffer
 };
@@ -967,19 +936,11 @@ PyTypeObject LowLevelView_Type = {
     0,                             // tp_mro
     0,                             // tp_cache
     0,                             // tp_subclasses
-    0                              // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                            // tp_vectorcall
-#endif
+    0,                             // tp_weaklist
+    0,                             // tp_del
+    0,                             // tp_version_tag
+    0,                             // tp_finalize
+    0                              // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
@@ -1191,44 +1152,4 @@ PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t* address,  cdims_t shape) {
 PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t** address, cdims_t shape) {
     LowLevelView* ll = CreateLowLevelViewT<uint8_t>(address, shape, "B", "uint8_t");
     CPPYY_RET_W_CREATOR(uint8_t**, CreateLowLevelView_i8);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i16(int16_t* address,  cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
-    CPPYY_RET_W_CREATOR(int16_t*, CreateLowLevelView_i16);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i16(int16_t** address, cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
-    CPPYY_RET_W_CREATOR(int16_t**, CreateLowLevelView_i16);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i16(uint16_t* address,  cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
-    CPPYY_RET_W_CREATOR(uint16_t*, CreateLowLevelView_i16);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i16(uint16_t** address, cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
-    CPPYY_RET_W_CREATOR(uint16_t**, CreateLowLevelView_i16);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i32(int32_t* address,  cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
-    CPPYY_RET_W_CREATOR(int32_t*, CreateLowLevelView_i32);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i32(int32_t** address, cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
-    CPPYY_RET_W_CREATOR(int32_t**, CreateLowLevelView_i32);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i32(uint32_t* address,  cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
-    CPPYY_RET_W_CREATOR(uint32_t*, CreateLowLevelView_i32);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView_i32(uint32_t** address, cdims_t shape) {
-    LowLevelView* ll = CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
-    CPPYY_RET_W_CREATOR(uint32_t**, CreateLowLevelView_i32);
 }

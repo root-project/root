@@ -14,11 +14,7 @@ CPyCppyy::CPPOperator::CPPOperator(
     if (name == "__mul__")
         fStub = CPPInstance_Type.tp_as_number->nb_multiply;
     else if (name == CPPYY__div__)
-#if PY_VERSION_HEX < 0x03000000
-        fStub = CPPInstance_Type.tp_as_number->nb_divide;
-#else
         fStub = CPPInstance_Type.tp_as_number->nb_true_divide;
-#endif
     else if (name == "__add__")
         fStub = CPPInstance_Type.tp_as_number->nb_add;
     else if (name == "__sub__")
@@ -42,11 +38,9 @@ PyObject* CPyCppyy::CPPOperator::Call(CPPInstance*& self,
 
     Py_ssize_t idx_other = 0;
     if (CPyCppyy_PyArgs_GET_SIZE(args, nargsf) != 1) {
-#if PY_VERSION_HEX >= 0x03080000
         if ((CPyCppyy_PyArgs_GET_SIZE(args, nargsf) == 2 && CPyCppyy_PyArgs_GET_ITEM(args, 0) == (PyObject*)self))
             idx_other = 1;
         else
-#endif
         return result;
     }
 

@@ -1,8 +1,12 @@
 #ifndef CPYCPPYY_CALLCONTEXT_H
 #define CPYCPPYY_CALLCONTEXT_H
 
+#include "Python.h"
+#include "Cppyy.h"
+
 // Standard
 #include <vector>
+#include <cstdint>
 
 #include <sys/types.h>
 
@@ -22,11 +26,7 @@ struct Parameter {
     union Value {
         bool                 fBool;
         int8_t               fInt8;
-        int16_t              fInt16;
-        int32_t              fInt32;
         uint8_t              fUInt8;
-        uint16_t             fUInt16;
-        uint32_t             fUInt32;
         short                fShort;
         unsigned short       fUShort;
         int                  fInt;
@@ -50,7 +50,7 @@ struct Parameter {
 
 // extra call information
 struct CallContext {
-    CallContext() : fCurScope(0), fPyContext(nullptr), fFlags(0),
+    CallContext() : fCurScope(nullptr), fPyContext(nullptr), fFlags(0),
         fArgsVec(nullptr), fNArgs(0), fTemps(nullptr) {}
     CallContext(const CallContext&) = delete;
     CallContext& operator=(const CallContext&) = delete;
@@ -76,15 +76,19 @@ struct CallContext {
         kProtected                   = 0x008000, // if method should return on signals
         kUseFFI                      = 0x010000, // not implemented
         kIsPseudoFunc                = 0x020000, // internal, used for introspection
+        kUseStrict                   = 0x040000, // if method applies strict memory policy
     };
 
-// Policies about memory handling and signal safety
-    static bool SetGlobalPolicy(ECallFlags e, bool enabled);
-
-    static uint32_t& GlobalPolicyFlags();
+// memory handling
+    static ECallFlags sMemoryPolicy;
+    static bool SetMemoryPolicy(ECallFlags e);
 
     void AddTemporary(PyObject* pyobj);
     void Cleanup();
+
+// signal safety
+    static ECallFlags sSignalPolicy;
+    static bool SetGlobalSignalPolicy(bool setProtected);
 
     Parameter* GetArgs(size_t sz) {
         if (sz != (size_t)-1) fNArgs = sz;
@@ -146,9 +150,13 @@ inline bool ReleasesGIL(CallContext* ctxt) {
     return ctxt ? (ctxt->fFlags & CallContext::kReleaseGIL) : false;
 }
 
-inline bool UseStrictOwnership() {
-    using CC = CPyCppyy::CallContext;
-    return !(CC::GlobalPolicyFlags() & CC::kUseHeuristics);
+inline bool UseStrictOwnership(CallContext* ctxt) {
+    if (ctxt && (ctxt->fFlags & CallContext::kUseStrict))
+        return true;
+    if (ctxt && (ctxt->fFlags & CallContext::kUseHeuristics))
+        return false;
+
+    return CallContext::sMemoryPolicy == CallContext::kUseStrict;
 }
 
 template<CallContext::ECallFlags F>
