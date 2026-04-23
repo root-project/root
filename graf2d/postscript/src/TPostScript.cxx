@@ -400,8 +400,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fFileName = fname;
-   fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-   if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+   if (!OpenStream(fFileName.Data()) || gSystem->AccessPathName(fFileName.Data(), kWritePermission)) {
       Error("Open", "Cannot open file: %s", fFileName.Data());
       return;
    }
@@ -440,10 +439,11 @@ TPostScript::~TPostScript()
 
 void TPostScript::Close(Option_t *)
 {
-   if (!gVirtualPS) return;
-   if (!fStream) return;
-   if (gPad) gPad->Update();
-   if( fMode != 3) {
+   if (!gVirtualPS ||!fStream)
+      return;
+   if (gPad)
+      gPad->Update();
+   if(fMode != 3) {
       SaveRestore(-1);
       if( fPrinted ) { PrintStr("showpage@"); SaveRestore(-1);}
       PrintStr("@");
@@ -466,19 +466,17 @@ void TPostScript::Close(Option_t *)
       // Close the file fFileName
       if (fStream) {
          PrintStr("@");
-         fStream->close(); delete fStream; fStream = nullptr;
+         CloseStream();
       }
 
       // Rename the file fFileName
       TString tmpname = TString::Format("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
-      if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
+      if (gSystem->Rename(fFileName.Data(), tmpname.Data())) {
          Error("Close", "Cannot open temporary file: %s", tmpname.Data());
          return;
       }
 
-      // Reopen the file fFileName
-      fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-      if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+      if (!OpenStream(fFileName.Data()) || gSystem->AccessPathName(fFileName.Data(), kWritePermission)) {
          Error("Close", "Cannot open file: %s", fFileName.Data());
          return;
       }
@@ -506,7 +504,7 @@ void TPostScript::Close(Option_t *)
 
    // Close file stream
 
-   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
+   CloseStream();
 
    gVirtualPS = nullptr;
 }
@@ -2534,7 +2532,7 @@ void TPostScript::SetStyle(Style_t linestyle)
    if (linestyle == fStyle) return;
 
    fStyle = linestyle;
-   
+
    const char *st = gStyle->GetLineStyleString(fStyle);
    PrintFast(1,"[");
    Int_t nch = strlen(st);
