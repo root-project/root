@@ -63,10 +63,15 @@ protected:
    void  GetRandomInfo(UChar_t seed[16]);
    void  SetFromString(const char *uuid_str);
 
+   struct TV4Marker {};
+   explicit TUUID(TV4Marker);
+
 public:
    TUUID();
    TUUID(const char *uuid_str);
    virtual ~TUUID();
+
+   static TUUID UUIDv4();
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;

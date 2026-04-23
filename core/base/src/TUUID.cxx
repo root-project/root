@@ -124,6 +124,7 @@ system clock catches up.
 #include "Bytes.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
+#include <cassert>
 #include <cstring>
 #include <cstdlib>
 #ifdef R__WIN32
@@ -145,6 +146,36 @@ system clock catches up.
 #endif
 #include <chrono>
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a UUID version 4 (variant 1) UUID according to RFC 4122.
+/// The UUIDv4 also has 16 octets but all but the version and variant information is random.
+/// This leaves 122 random bits, which are filled by the system's cryptographic random number generator.
+/// For all intents and purposes, the resulting UUIDs are actually globally unique.
+
+TUUID TUUID::UUIDv4()
+{
+   return TUUID{TV4Marker()};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a version 4 UUID.
+
+TUUID::TUUID(TV4Marker)
+{
+   // Ensure we can treat the memory starting at uuid.fTimeLow as an array of 16 octets
+   assert(&fNode[5] - reinterpret_cast<unsigned char *>(&fTimeLow) + 1 == 16);
+
+   R__ASSERT(gSystem);
+   const auto rv = gSystem->GetCryptoRandom(&fTimeLow, 16);
+   R__ASSERT(rv == 16);
+   // Fix up variant
+   fClockSeqHiAndReserved = (fClockSeqHiAndReserved & 0x3F) | (2 << 6);
+   // Fix up version
+   fTimeHiAndVersion = (fTimeHiAndVersion & 0x0FFF) | (4 << 12);
+
+   // TODO(jblomer): we do what the default constructor does but is this still used? Can it be deprecated?
+   fUUIDIndex = 1 << 30;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a UUID.
