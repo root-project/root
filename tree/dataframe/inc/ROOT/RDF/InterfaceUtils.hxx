@@ -433,7 +433,8 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
-                 RDataSource *ds, const RColumnRegister &colRegister, bool isSingleColumn);
+                 RDataSource *ds, const RColumnRegister &colRegister, bool isSingleColumn,
+                 const std::string &varyColType);
 
 std::string JitBuildAction(const ColumnNames_t &bl, const std::type_info &art, const std::type_info &at, TTree *tree,
                            const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,

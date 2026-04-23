@@ -219,8 +219,8 @@ std::unordered_map<std::string, std::string> &GetJittedExprs() {
    return jittedExpressions;
 }
 
-std::string
-BuildFunctionString(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes)
+std::string BuildFunctionString(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes,
+                                bool isSingleColumn = false, const std::string &varyColType = "")
 {
    assert(vars.size() == varTypes.size());
 
@@ -278,22 +278,53 @@ BuildFunctionString(const std::string &expr, const ColumnNames_t &vars, const Co
    if (!vars.empty())
       ss.seekp(-2, ss.cur);
 
-   if (hasReturnStmt)
-      ss << "){";
+   // When building the function expression for a Vary call, we try to help the
+   // user by removing the need to explicitly write the vector return type.
+   // For now, Vary works by returning a (nested) RVec, depending on how many
+   // variables need to vary in lockstep.
+   auto finalizeExprForVary = [&]() {
+      std::string trailRetType{};
+      // Trim formatting characters at the extremes of the user expression
+      auto first_not_space = expr.find_first_not_of(" \n\t");
+      auto last_not_space = expr.find_last_not_of(" \n\t");
+      if (first_not_space != std::string::npos && last_not_space != std::string::npos && expr[first_not_space] == '{' &&
+          expr[last_not_space] == '}') {
+         // User expression is of type '{...}', a potential constructor for an
+         // RVec. At the same time, they have not decided the RVec return type
+         // Add trailing return type for the convenience of the user
+         // The innermost value type is by default the type of the first given column
+         trailRetType = " -> ";
+         if (isSingleColumn)
+            trailRetType += "ROOT::RVec<" + varyColType + ">";
+         else
+            trailRetType += "ROOT::RVec<ROOT::RVec<" + varyColType + ">>";
+         trailRetType += ' ';
+      }
+      std::string trailRetToken{trailRetType.empty() ? ") {" : ')' + trailRetType + '{'};
+      if (!hasReturnStmt)
+         trailRetToken += " return ";
+      return trailRetToken;
+   };
+
+   if (!varyColType.empty())
+      ss << finalizeExprForVary();
    else
-      ss << "){return ";
-   ss << expr << "\n;}";
+      ss << (hasReturnStmt ? ") {" : ") { return ");
+
+   // Must inject \n to avoid cases where the user puts a comment after the expression
+   ss << expr << "\n;}\n";
 
    return ss.str();
 }
 
 /// Declare a function to the interpreter in namespace R_rdf, return the name of the jitted function.
 /// If the function is already in GetJittedExprs, return the name for the function that has already been jitted.
-std::string DeclareFunction(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes)
+std::string DeclareFunction(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes,
+                            bool isSingleColumn = false, const std::string &varyColType = "")
 {
    R__LOCKGUARD(gROOTMutex);
 
-   const auto funcCode = BuildFunctionString(expr, vars, varTypes);
+   const auto funcCode = BuildFunctionString(expr, vars, varTypes, isSingleColumn, varyColType);
    auto &exprMap = GetJittedExprs();
    const auto exprIt = exprMap.find(funcCode);
    if (exprIt != exprMap.end()) {
@@ -728,14 +759,16 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
-                 RDataSource *ds, const RColumnRegister &colRegister, bool isSingleColumn)
+                 RDataSource *ds, const RColumnRegister &colRegister, bool isSingleColumn,
+                 const std::string &varyColType)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
    const auto parsedExpr = ParseRDFExpression(expression, colRegister, dsColumns);
    const auto exprVarTypes =
       GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, nullptr, ds, "Vary", /*vector2RVec=*/true);
-   const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
+   const auto funcName =
+      DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, isSingleColumn, varyColType);
    const auto type = RetTypeOfFunc(funcName);
 
    if (type.rfind("ROOT::VecOps::RVec", 0) != 0) {

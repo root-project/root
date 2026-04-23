@@ -1782,4 +1782,117 @@ TEST(RDFVary, CheckVariationNames)
    }
 }
 
+TEST_P(RDFVary, JittedVaryOneVariableImplicitRetType)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto sum = df.Vary("x", "{-1*x, 2*x}", 2).Sum<int>("x");
+   EXPECT_EQ(*sum, 10);
 
+   auto sums = VariationsFor(sum);
+
+   EXPECT_EQ(sums["nominal"], 10);
+   EXPECT_EQ(sums["x:0"], -10);
+   EXPECT_EQ(sums["x:1"], 20);
+}
+
+TEST_P(RDFVary, JittedVarySimultaneousVariationsImplicitRetType)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; }).Define("y", [] { return 42; });
+   auto h = df.Vary(std::vector<std::string>{"x", "y"}, "{{-1, 2, 3}, {41, 43, 44}}", {"down", "up", "other"}, "xy")
+               .Histo1D<int, int>("x", "y");
+   auto histos = VariationsFor(h);
+
+   const auto expectedKeys = std::vector<std::string>{"nominal", "xy:down", "xy:other", "xy:up"};
+   auto keys = histos.GetKeys();
+   std::sort(keys.begin(), keys.end()); // key ordering is not guaranteed
+   EXPECT_EQ(keys, expectedKeys);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMaximum(), 42. * 10.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 1.);
+   EXPECT_DOUBLE_EQ(histos["xy:down"].GetMaximum(), 41. * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:down"].GetMean(), -1.);
+   EXPECT_DOUBLE_EQ(histos["xy:up"].GetMaximum(), 43. * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:up"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMaximum(), 44 * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMean(), 3.);
+}
+
+TEST_P(RDFVary, JittedVarySimultaneousVariationsImplicitRetTypeMultiStringExpression)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; }).Define("y", [] { return 42; });
+   auto h = df.Vary(std::vector<std::string>{"x", "y"}, R"CODE(
+      {
+      {-1, 2, 3}, // x variations
+      {41, 43, 44} // y variations
+      }
+      )CODE",
+                    {"down", "up", "other"}, "xy")
+               .Histo1D<int, int>("x", "y");
+   auto histos = VariationsFor(h);
+
+   const auto expectedKeys = std::vector<std::string>{"nominal", "xy:down", "xy:other", "xy:up"};
+   auto keys = histos.GetKeys();
+   std::sort(keys.begin(), keys.end()); // key ordering is not guaranteed
+   EXPECT_EQ(keys, expectedKeys);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMaximum(), 42. * 10.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 1.);
+   EXPECT_DOUBLE_EQ(histos["xy:down"].GetMaximum(), 41. * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:down"].GetMean(), -1.);
+   EXPECT_DOUBLE_EQ(histos["xy:up"].GetMaximum(), 43. * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:up"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMaximum(), 44 * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMean(), 3.);
+}
+
+TEST_P(RDFVary, JittedVarySimultaneousVariationsVecColsImplicitRetType)
+{
+   auto df = ROOT::RDataFrame(10)
+                .Define("x", [] { return ROOT::RVecF{1.f, 1.f, 1.f}; })
+                .Define("y", [] { return ROOT::RVecF{42.f, 42.f, 42.f}; })
+                .Define("entry", [](ULong64_t entry) -> int { return entry; }, {"rdfentry_"});
+   auto h = df.Vary(std::vector<std::string>{"x", "y"}, "{{x*entry, x-1, x+2}, {y*entry, y-1, y+2}}",
+                    {"down", "up", "other"}, "xy")
+               .Define("xy", [](const ROOT::RVecF &x, const ROOT::RVecF &y) { return x + y; }, {"x", "y"})
+               .Histo1D<ROOT::RVecF>("xy");
+   auto histos = VariationsFor(h);
+
+   const auto expectedKeys = std::vector<std::string>{"nominal", "xy:down", "xy:other", "xy:up"};
+   auto keys = histos.GetKeys();
+   std::sort(keys.begin(), keys.end()); // key ordering is not guaranteed
+   EXPECT_EQ(keys, expectedKeys);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMaximum(), 30.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 43);
+   EXPECT_DOUBLE_EQ(histos["xy:down"].GetMaximum(), 3.); //
+   EXPECT_DOUBLE_EQ(histos["xy:down"].GetMean(), 193.5);
+   EXPECT_DOUBLE_EQ(histos["xy:up"].GetMaximum(), 30.);
+   EXPECT_DOUBLE_EQ(histos["xy:up"].GetMean(), 41.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMaximum(), 30.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMean(), 47.);
+}
+
+TEST_P(RDFVary, JittedVarySimultaneousVariationsDependingFromOtherColsImplicitRetType)
+{
+   auto df = ROOT::RDataFrame(10)
+                .Define("x", [] { return 1; })
+                .Define("y", [] { return 42; })
+                .Define("z", [] { return 100; })
+                .Define("entry", [](ULong64_t entry) -> int { return entry; }, {"rdfentry_"});
+   auto h =
+      df.Vary(std::vector<std::string>{"x", "y", "z"},
+              "{{-1*entry, 2, 3}, {41, 43*entry, 44}, {500-entry, 600, 700 + entry}}", {"down", "up", "other"}, "xyz")
+         .Define("xyz", [](int x, int y, int z) { return x + y + z; }, {"x", "y", "z"})
+         .Histo1D<int>("xyz");
+   auto histos = VariationsFor(h);
+
+   const auto expectedKeys = std::vector<std::string>{"nominal", "xyz:down", "xyz:other", "xyz:up"};
+   auto keys = histos.GetKeys();
+   std::sort(keys.begin(), keys.end()); // key ordering is not guaranteed
+   EXPECT_EQ(keys, expectedKeys);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMaximum(), 10.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 143.);
+   EXPECT_DOUBLE_EQ(histos["xyz:down"].GetMaximum(), 1.);
+   EXPECT_DOUBLE_EQ(histos["xyz:down"].GetMean(), 532.);
+   EXPECT_DOUBLE_EQ(histos["xyz:up"].GetMaximum(), 1.);
+   EXPECT_DOUBLE_EQ(histos["xyz:up"].GetMean(), 795.5);
+   EXPECT_DOUBLE_EQ(histos["xyz:other"].GetMaximum(), 1.);
+   EXPECT_DOUBLE_EQ(histos["xyz:other"].GetMean(), 751.5);
+}
