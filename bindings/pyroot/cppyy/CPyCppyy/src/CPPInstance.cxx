@@ -285,7 +285,7 @@ static PyObject* op_destruct(CPPInstance* self)
 }
 
 //= CPyCppyy object dispatch support =========================================
-static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws */)
+static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kwds */)
 {
 // User-side __dispatch__ method to allow selection of a specific overloaded
 // method. The actual selection is in the __overload__() method of CPPOverload.
@@ -548,7 +548,7 @@ static inline void* cast_actual(void* obj) {
         return address;
 
     Cppyy::TCppScope_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
-    Cppyy::TCppScope_t clActual = klass /* XXX: Cppyy::GetActualClass(klass, address) */;
+    Cppyy::TCppScope_t clActual = Cppyy::GetActualClass(klass, address);
     if (clActual && clActual != klass) {
         intptr_t offset = Cppyy::GetBaseOffset(
              clActual, klass, address, -1 /* down-cast */, true /* report errors */);
@@ -801,7 +801,7 @@ static PyObject* op_str(CPPInstance* self)
             // normal lookup failed; attempt lazy install of global operator<<(ostream&, type&)
                 std::string rcname = Utility::ClassName((PyObject*)self);
                 Cppyy::TCppScope_t rnsID = Cppyy::GetScope(TypeManip::extract_namespace(rcname));
-                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream&", rcname, "<<", rnsID);
+                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream", rcname, "<<", rnsID);
                 if (!pyfunc)
                      continue;
 
