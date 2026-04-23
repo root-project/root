@@ -600,7 +600,7 @@ void TUUID::Print() const
 
 const char *TUUID::AsString() const
 {
-   static char uuid[40];
+   TTHREAD_TLS(char) uuid[40];
 
    snprintf(uuid,40, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
            fTimeLow, fTimeMid, fTimeHiAndVersion, fClockSeqHiAndReserved,
