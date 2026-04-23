@@ -42,6 +42,8 @@ dict_lookup_func gDictLookupOrg = nullptr;
 } // namespace CPyCppyy
 #endif
 
+std::map<Cppyy::TCppType_t, Cppyy::TCppType_t> TypeReductionMap;
+
 // Note: as of py3.11, dictionary objects no longer carry a function pointer for
 // the lookup, so it can no longer be shimmed and "from cppyy.interactive import *"
 // thus no longer works.
@@ -444,7 +446,7 @@ static PyObject* SetCppLazyLookup(PyObject*, PyObject* args)
 }
 
 //----------------------------------------------------------------------------
-static PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
+static PyObject* MakeCppTemplateClass(PyObject* /* self */, PyObject* args)
 {
 // Create a binding for a templated class instantiation.
 
@@ -454,14 +456,31 @@ static PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
         PyErr_Format(PyExc_TypeError, "too few arguments for template instantiation");
         return nullptr;
     }
+    PyObject *cppscope = PyTuple_GET_ITEM(args, 0);
+    void * tmpl = PyLong_AsVoidPtr(cppscope);
 
 // build "< type, type, ... >" part of class name (modifies pyname)
-    const std::string& tmpl_name =
-        Utility::ConstructTemplateArgs(PyTuple_GET_ITEM(args, 0), args, nullptr, Utility::kNone, 1);
-    if (!tmpl_name.size())
-        return nullptr;
+    std::vector<Cpp::TemplateArgInfo> types =
+        Utility::GetTemplateArgsTypes(cppscope, args, nullptr, Utility::kNone, 1);
+    if (PyErr_Occurred())
+      return nullptr;
 
-    return CreateScopeProxy(tmpl_name);
+    Cppyy::TCppScope_t scope = 
+        Cppyy::InstantiateTemplate(tmpl, types.data(), types.size());
+    for (Cpp::TemplateArgInfo i: types) {
+        if (i.m_IntegralValue)
+            std::free((void*)i.m_IntegralValue);
+    }
+
+    if (!scope) {
+      PyErr_Format(PyExc_TypeError,
+                   "Template instantiation failed: '%s' with args: '%s\n'",
+                   Cppyy::GetScopedFinalName(cppscope).c_str(),
+                   CPyCppyy_PyText_AsString(PyObject_Repr(args)));
+      return nullptr;
+    }
+
+    return CreateScopeProxy(scope);
 }
 
 //----------------------------------------------------------------------------
@@ -551,6 +570,12 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args, PyObject* kwds
             void* caddr = (void*)PyCFunction_GetFunction(arg0);
             return PyLong_FromLongLong((intptr_t)caddr);
         }
+
+    // LowLevelViews
+    if (LowLevelView_CheckExact(arg0)) {
+        auto *llv = (LowLevelView*)arg0;
+        return PyLong_FromLongLong((intptr_t)llv->get_buf());
+    }
 
     // final attempt: any type of buffer
         Utility::GetBuffer(arg0, '*', 1, addr, false);
@@ -670,7 +695,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
     }
 
 // convert 2nd argument first (used for both pointer value and instance cases)
-    Cppyy::TCppType_t cast_type = 0;
+    Cppyy::TCppScope_t cast_type = 0;
     PyObject* arg1 = PyTuple_GET_ITEM(args, 1);
     if (!CPyCppyy_PyText_Check(arg1)) {          // not string, then class
         if (CPPScope_Check(arg1))
@@ -681,7 +706,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         Py_INCREF(arg1);
 
     if (!cast_type && arg1) {
-        cast_type = (Cppyy::TCppType_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(arg1));
+        cast_type = (Cppyy::TCppScope_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(arg1));
         Py_DECREF(arg1);
     }
 
@@ -698,7 +723,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
     // if this instance's class has a relation to the requested one, calculate the
     // offset, erase if from any caches, and update the pointer and type
         CPPInstance* arg0_pyobj = (CPPInstance*)arg0;
-        Cppyy::TCppType_t cur_type = arg0_pyobj->ObjectIsA(false /* check_smart */);
+        Cppyy::TCppScope_t cur_type = arg0_pyobj->ObjectIsA(false /* check_smart */);
 
         bool isPython = CPPScope_Check(arg1) && \
             (((CPPClass*)arg1)->fFlags & CPPScope::kIsPython);
@@ -709,12 +734,12 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         }
 
         int direction = 0;
-        Cppyy::TCppType_t base = 0, derived = 0;
-        if (Cppyy::IsSubtype(cast_type, cur_type)) {
+        Cppyy::TCppScope_t base = 0, derived = 0;
+        if (Cppyy::IsSubclass(cast_type, cur_type)) {
             derived = cast_type;
             base    = cur_type;
             direction = -1;      // down-cast
-        } else if (Cppyy::IsSubtype(cur_type, cast_type)) {
+        } else if (Cppyy::IsSubclass(cur_type, cast_type)) {
             base    = cast_type;
             derived = cur_type;
             direction =  1;      // up-cast
@@ -888,28 +913,48 @@ static PyObject* AddTypeReducer(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, const_cast<char*>("ss"), &reducable, &reduced))
         return nullptr;
 
-    Cppyy::AddTypeReducer(reducable, reduced);
+    Cppyy::TCppType_t reducable_type = Cppyy::GetTypeFromScope(Cppyy::GetScope(reducable));
+    Cppyy::TCppType_t reduced_type = Cppyy::GetTypeFromScope(Cppyy::GetScope(reduced));
+    TypeReductionMap[reducable_type] = reduced_type;
 
     Py_RETURN_NONE;
 }
 
-#define DEFINE_CALL_POLICY_TOGGLE(name, flagname) \
-static PyObject* name(PyObject*, PyObject* args) \
-{ \
-    PyObject* enabled = 0; \
-    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &enabled)) \
-        return nullptr; \
- \
-    if (CallContext::SetGlobalPolicy(CallContext::flagname, PyObject_IsTrue(enabled))) { \
-        Py_RETURN_TRUE; \
-    } \
- \
-    Py_RETURN_FALSE; \
+//----------------------------------------------------------------------------
+static PyObject* SetMemoryPolicy(PyObject*, PyObject* args)
+{
+// Set the global memory policy, which affects object ownership when objects
+// are passed as function arguments.
+    PyObject* policy = nullptr;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("O!"), &PyInt_Type, &policy))
+        return nullptr;
+
+    long old = (long)CallContext::sMemoryPolicy;
+
+    long l = PyInt_AS_LONG(policy);
+    if (CallContext::SetMemoryPolicy((CallContext::ECallFlags)l)) {
+        return PyInt_FromLong(old);
+    }
+
+    PyErr_Format(PyExc_ValueError, "Unknown policy %ld", l);
+    return nullptr;
 }
 
-DEFINE_CALL_POLICY_TOGGLE(SetHeuristicMemoryPolicy, kUseHeuristics);
-DEFINE_CALL_POLICY_TOGGLE(SetImplicitSmartPointerConversion, kImplicitSmartPtrConversion);
-DEFINE_CALL_POLICY_TOGGLE(SetGlobalSignalPolicy, kProtected);
+//----------------------------------------------------------------------------
+static PyObject* SetGlobalSignalPolicy(PyObject*, PyObject* args)
+{
+// Set the global signal policy, which determines whether a jmp address
+// should be saved to return to after a C++ segfault.
+    PyObject* setProtected = 0;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &setProtected))
+        return nullptr;
+
+    if (CallContext::SetGlobalSignalPolicy(PyObject_IsTrue(setProtected))) {
+        Py_RETURN_TRUE;
+    }
+
+    Py_RETURN_FALSE;
+}
 
 //----------------------------------------------------------------------------
 static PyObject* SetOwnership(PyObject*, PyObject* args)
@@ -996,13 +1041,10 @@ static PyMethodDef gCPyCppyyMethods[] = {
       METH_O, (char*)"Install a type pinning."},
     {(char*) "_add_type_reducer", (PyCFunction)AddTypeReducer,
       METH_VARARGS, (char*)"Add a type reducer."},
-    {(char*) "SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,
-      METH_VARARGS, (char*)"Set the global memory policy, which affects object ownership when objects are passed as function arguments."},
-    {(char*) "SetImplicitSmartPointerConversion", (PyCFunction)SetImplicitSmartPointerConversion,
-      METH_VARARGS, (char*)"Enable or disable the implicit conversion to smart pointers in function calls (on by default)."},
-    {(char *)"SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy, METH_VARARGS,
-     (char *)"Set the global signal policy, which determines whether a jmp address should be saved to return to after a "
-             "C++ segfault. In practical terms: trap signals in safe mode to prevent interpreter abort."},
+    {(char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
+      METH_VARARGS, (char*)"Determines object ownership model."},
+    {(char*) "SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy,
+      METH_VARARGS, (char*)"Trap signals in safe mode to prevent interpreter abort."},
     {(char*) "SetOwnership", (PyCFunction)SetOwnership,
       METH_VARARGS, (char*)"Modify held C++ object ownership."},
     {(char*) "AddSmartPtrType", (PyCFunction)AddSmartPtrType,
@@ -1046,12 +1088,13 @@ static struct PyModuleDef moduledef = {
     cpycppyymodule_clear,
     nullptr
 };
+
 #endif
 
 namespace CPyCppyy {
 
 //----------------------------------------------------------------------------
-PyObject* Init()
+extern "C" PyObject* PyInit_libcppyy()
 {
 // Initialization of extension module libcppyy.
 
@@ -1175,14 +1218,18 @@ PyObject* Init()
     gAbrtException = PyErr_NewException((char*)"cppyy.ll.AbortSignal", cppfatal, nullptr);
     PyModule_AddObject(gThisModule, (char*)"AbortSignal", gAbrtException);
 
+// policy labels
+    PyModule_AddObject(gThisModule, (char*)"kMemoryHeuristics",
+        PyInt_FromLong((int)CallContext::kUseHeuristics));
+    PyModule_AddObject(gThisModule, (char*)"kMemoryStrict",
+        PyInt_FromLong((int)CallContext::kUseStrict));
+
 // gbl namespace is injected in cppyy.py
 
 // create the memory regulator
     static MemoryRegulator s_memory_regulator;
 
-#if PY_VERSION_HEX >= 0x03000000
     Py_INCREF(gThisModule);
-#endif
     return gThisModule;
 }
 

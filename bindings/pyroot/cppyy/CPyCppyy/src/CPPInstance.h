@@ -64,7 +64,7 @@ public:
 // access to C++ pointer and type
     void*  GetObject();
     void*& GetObjectRaw() { return IsExtended() ? *(void**) fObject : fObject; }
-    Cppyy::TCppType_t ObjectIsA(bool check_smart = true) const;
+    Cppyy::TCppScope_t ObjectIsA(bool check_smart = true) const;
 
 // memory management: ownership of the underlying C++ object
     void PythonOwns();
@@ -90,6 +90,7 @@ public:
 // default but can be re-assigned by libraries that add C++ object
 // serialization support, like ROOT
     static PyCFunction &ReduceMethod();
+
 
 private:
     void  CreateExtension();
@@ -118,9 +119,9 @@ inline void* CPPInstance::GetObject()
         return GetExtendedObject();
 }
 
-//----------------------------------------------------------------------------
 #ifndef Py_LIMITED_API
-inline Cppyy::TCppType_t CPPInstance::ObjectIsA(bool check_smart) const
+//----------------------------------------------------------------------------
+inline Cppyy::TCppScope_t CPPInstance::ObjectIsA(bool check_smart) const
 {
 // Retrieve the C++ type identifier (or raw type if smart).
     if (check_smart || !IsSmart()) return ((CPPClass*)Py_TYPE(this))->fCppType;
@@ -128,14 +129,8 @@ inline Cppyy::TCppType_t CPPInstance::ObjectIsA(bool check_smart) const
 }
 #endif
 
-
 //- object proxy type and type verification ----------------------------------
-// Needs to be extern because the libROOTPythonizations is secretly using it
-#ifdef _MSC_VER
-extern __declspec(dllimport) PyTypeObject CPPInstance_Type;
-#else
-extern PyTypeObject CPPInstance_Type;
-#endif
+CPYCPPYY_IMPORT PyTypeObject CPPInstance_Type;
 
 #ifndef Py_LIMITED_API
 template<typename T>

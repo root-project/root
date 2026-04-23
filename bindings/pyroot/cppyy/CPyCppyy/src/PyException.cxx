@@ -4,6 +4,7 @@
 // Bindings
 #include "CPyCppyy.h"
 #define CPYCPPYY_INTERNAL 1
+#include "CPyCppyy/DispatchPtr.h"
 #include "CPyCppyy/PyException.h"
 #undef CPYCPPYY_INTERNAL
 
@@ -25,7 +26,7 @@
 CPyCppyy::PyException::PyException()
 {
 #ifdef WITH_THREAD
-    PyGILState_STATE state = PyGILState_Ensure();
+    PythonGILRAII python_gil_raii;
 #endif
 
 #if PY_VERSION_HEX >= 0x030c0000
@@ -115,10 +116,6 @@ CPyCppyy::PyException::PyException()
 
         fMsg += ")";
     }
-
-#ifdef WITH_THREAD
-    PyGILState_Release(state);
-#endif
 }
 
 CPyCppyy::PyException::~PyException() noexcept
@@ -136,6 +133,9 @@ const char* CPyCppyy::PyException::what() const noexcept
 
 void CPyCppyy::PyException::clear() const noexcept
 {
+#ifdef WITH_THREAD
+    PythonGILRAII python_gil_raii;
+#endif
 // clear Python error, to allow full error handling C++ side
     PyErr_Clear();
 }
