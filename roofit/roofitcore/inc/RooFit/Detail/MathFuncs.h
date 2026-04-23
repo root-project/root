@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 namespace RooFit::Detail::MathFuncs {
@@ -399,6 +400,53 @@ inline double logNormalStandard(double x, double sigma, double mu)
 inline double effProd(double eff, double pdf)
 {
    return eff * pdf;
+}
+
+/// Chi-squared contribution of one bin with "expected" errors:
+/// \f$ \sigma^2 = \mu \f$. Empty/no-prediction bins contribute zero; bins with
+/// non-positive \f$ \mu \f$ but non-empty data yield NaN (to let the minimizer
+/// recover).
+inline double chi2Expected(double mu, double weight)
+{
+   if (mu == 0.0 && weight == 0.0) {
+      return 0.0;
+   }
+   if (mu <= 0.0) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   const double diff = mu - weight;
+   return diff * diff / mu;
+}
+
+/// Chi-squared contribution of one bin with a user-supplied symmetric error
+/// squared (e.g. `SumW2` weights from the data).
+inline double chi2Symmetric(double mu, double weight, double sigma2)
+{
+   if (sigma2 == 0.0 && mu == 0.0 && weight == 0.0) {
+      return 0.0;
+   }
+   if (sigma2 <= 0.0) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   const double diff = mu - weight;
+   return diff * diff / sigma2;
+}
+
+/// Chi-squared contribution of one bin with asymmetric (Poisson-style) data
+/// errors. The side facing the prediction is used: `errHi` when
+/// \f$ \mu > \mathrm{weight} \f$, otherwise `errLo`.
+inline double chi2Asymmetric(double mu, double weight, double errLo, double errHi)
+{
+   const double diff = mu - weight;
+   const double err = diff > 0.0 ? errHi : errLo;
+   const double sigma2 = err * err;
+   if (sigma2 == 0.0 && mu == 0.0 && weight == 0.0) {
+      return 0.0;
+   }
+   if (sigma2 <= 0.0) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   return diff * diff / sigma2;
 }
 
 inline double nll(double pdf, double weight, int binnedL, int doBinOffset)
