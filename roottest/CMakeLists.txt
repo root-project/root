@@ -1,3 +1,29 @@
+# set(ROOT_CONFIG_EXECUTABLE $<TARGET_FILE:root-config>) # Does not exist
+# BINDIR set by RootConfiguration.cmake
+if(MSVC)
+  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
+else()
+  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config)
+endif()
+if(NOT EXISTS ${ROOT_CONFIG_EXECUTABLE})
+  message(FATAL_ERROR "root-config was not found in ${ROOT_CONFIG_EXECUTABLE}.")
+endif()
+set(ROOT_root_CMD $<TARGET_FILE:root.exe>)
+set(ROOT_hadd_CMD $<TARGET_FILE:hadd>)
+set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+set(ROOT_rootcint_CMD $<TARGET_FILE:rootcint>)
+set(ROOT_rootcling_CMD $<TARGET_FILE:rootcling>)
+
+execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--incdir" OUTPUT_VARIABLE ROOT_INCLUDE_DIRS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--libdir" OUTPUT_VARIABLE ROOT_LIBRARY_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--prefix" OUTPUT_VARIABLE ROOTSYS RESULT_VARIABLE RETVAR OUTPUT_STRIP_TRAILING_WHITESPACE)
+# root-config --prefix helps to retrieve ROOTSYS env variable.
+if(NOT IS_DIRECTORY ${ROOTSYS})
+  message(FATAL_ERROR "ROOTSYS should be set before configuring roottest.")
+endif()
+  
+
 if(MSVC)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
   set(CMAKE_SUPPRESS_REGENERATION TRUE)
@@ -21,25 +47,17 @@ if(MSVC)
     set(WILLFAIL_ON_WIN32 WILLFAIL)
   endif()
 
-  # ROOT_BINDIR is set by ROOTConfig.cmake
-  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
-  execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--prefix" OUTPUT_VARIABLE ROOTSYS RESULT_VARIABLE RETVAR OUTPUT_STRIP_TRAILING_WHITESPACE)
   cmake_path(CONVERT "${ROOTSYS}" TO_CMAKE_PATH_LIST ROOTSYS)
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
-  execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
   cmake_path(CONVERT "${ROOT_TUTORIALS_DIR}" TO_CMAKE_PATH_LIST ROOT_TUTORIALS_DIR)
-  set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
-  set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd.exe)
-  set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex.exe)
-  set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint.exe)
-  set(ROOT_rootcling_CMD ${ROOTSYS}/bin/rootcling.exe)
+  cmake_path(CONVERT "${ROOT_INCLUDE_DIRS}" TO_CMAKE_PATH_LIST ROOT_INCLUDE_DIRS)
+  cmake_path(CONVERT "${ROOT_LIBRARY_DIR}" TO_CMAKE_PATH_LIST ROOT_LIBRARY_DIR)
   if(CMAKE_GENERATOR MATCHES Ninja)
     set(ROOT_LIBRARIES Core RIO Net Hist Gpad Graf Tree Rint Matrix MathCore)
   else()
     set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libGraf libTree libRint libMatrix libMathCore)
   endif()
 else()
-
   # We can not use CMAKE_SHARED_LIBRARY_SUFFIX as on macos it uses the standard dylib rather than the .so
   set(libsuffix .so)
   set(grep_cmd grep)
@@ -47,25 +65,8 @@ else()
   # only for non-Windows platforms
   set(OptionalMultiProc MultiProc)
 
-  # root-config --prefix helps to retrieve ROOTSYS env variable.
-  # ROOT_BINDIR is set by ROOTConfig.cmake
-  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config)
-  if(NOT EXISTS ${ROOT_CONFIG_EXECUTABLE})
-    message(FATAL_ERROR "root-config was not found in ${ROOT_CONFIG_EXECUTABLE}.")
-  endif()
-  if(NOT IS_DIRECTORY ${ROOTSYS})
-    message(FATAL_ERROR "ROOTSYS should be set before configuring roottest.")
-  endif()
-  execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
-  set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
-  set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd)
-  set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
-  set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
-  set(ROOT_rootcling_CMD rootcling)
 endif()
-
-get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
 set(ref_suffix ".ref")
 
@@ -107,8 +108,8 @@ find_library(OPENGL_gl_LIBRARY NAMES GL)
 
 # Set global include dirs and library dirs for roottest.
 # These are picked up in the old-style dictionary generation and when standard CMake targets are created.
-include_directories(${ROOTSYS}/include ${CMAKE_CURRENT_SOURCE_DIR})
-link_directories(${ROOTSYS}/lib)
+include_directories(${ROOT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+link_directories(${ROOT_LIBRARY_DIR})
 set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 include(RoottestCTest)
