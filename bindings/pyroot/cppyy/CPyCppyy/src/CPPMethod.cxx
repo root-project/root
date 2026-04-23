@@ -277,7 +277,7 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 //      C++ method to give some context.
 //   2. A C++ exception has occured:
 //      Augment the exception message with the docstring of this method
-//   3. A Python exception has occured with a traceback:
+//   3. A Python exception has occurred with a traceback:
 //      Do nothing, Python exceptions are already informative enough
 //   4. If the Python exception has no traceback hinting to an internally set error stack,
 //      extract its message and wrap it with C++ method docstring context.
