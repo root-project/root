@@ -297,8 +297,8 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 
    if (img.IsValid()) {
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage   = fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
-      fGrayImage     = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
+      fScaledImage   = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
+      fGrayImage     = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
 
       if (img.fImage->alt.vector) {
          Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
@@ -327,8 +327,8 @@ TASImage &TASImage::operator=(const TASImage &img)
       DestroyImage();
       delete fScaledImage;
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage = fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
-      fGrayImage = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
+      fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
+      fGrayImage = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
 
       if (img.fImage->alt.vector) {
          Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
@@ -336,7 +336,6 @@ TASImage &TASImage::operator=(const TASImage &img)
          memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
       }
 
-      fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fZoomUpdate = kNoZoom;
       fZoomOffX   = img.fZoomOffX;
       fZoomOffY   = img.fZoomOffY;
