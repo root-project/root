@@ -172,7 +172,7 @@ TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, cons
 
    fFile        = new File();
    fInitCondVar = new XrdSysCondVar();
-   fUrl->SetProtocol(std::string("root"));
+
    fQueryReadVParams = 1;
    fReadvIorMax = 2097136;
    fReadvIovMax = 1024;
