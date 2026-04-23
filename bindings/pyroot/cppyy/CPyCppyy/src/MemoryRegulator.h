@@ -1,6 +1,9 @@
 #ifndef CPYCPPYY_MEMORYREGULATOR_H
 #define CPYCPPYY_MEMORYREGULATOR_H
 
+#include "Python.h"
+#include "Cppyy.h"
+
 #include <functional>
 #include <utility>
 
@@ -8,7 +11,7 @@ namespace CPyCppyy {
 
 class CPPInstance;
 
-typedef std::function<std::pair<bool, bool>(Cppyy::TCppObject_t, Cppyy::TCppType_t)> MemHook_t;
+typedef std::function<std::pair<bool, bool>(Cppyy::TCppObject_t, Cppyy::TCppScope_t)> MemHook_t;
 
 class MemoryRegulator {
 private:
@@ -18,10 +21,10 @@ public:
     MemoryRegulator();
 
 // callback from C++-side frameworks
-    static bool RecursiveRemove(Cppyy::TCppObject_t cppobj, Cppyy::TCppType_t klass);
+    static bool RecursiveRemove(Cppyy::TCppObject_t cppobj, Cppyy::TCppScope_t klass);
 
 // called when a new python proxy object is created
-    static bool RegisterPyObject(CPPInstance* pyobj, void* cppobj);
+    static bool RegisterPyObject(CPPInstance* pyobj, Cppyy::TCppObject_t cppobj);
 
 // called when a the python proxy object is about to be garbage collected or when it is
 // about to delete the proxied C++ object, if owned

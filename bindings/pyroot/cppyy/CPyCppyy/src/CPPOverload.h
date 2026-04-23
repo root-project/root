@@ -78,9 +78,7 @@ public:                 // public, as the python C-API works with C structs
     CPPInstance*   fSelf;         // must be first (same layout as TemplateProxy)
     MethodInfo_t*  fMethodInfo;
     uint32_t       fFlags;
-#if PY_VERSION_HEX >= 0x03080000
     vectorcallfunc fVectorCall;
-#endif
 
 private:
     CPPOverload() = delete;
