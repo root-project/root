@@ -5,12 +5,37 @@
 #endif
 #endif
 
-#include "precommondefs.h" // This defines several system feature macros and should be included before any system header.
-
-
 // Bindings
 #include "cpp_cppyy.h"
 #include "callcontext.h"
+
+// ROOT
+#include "TBaseClass.h"
+#include "TClass.h"
+#include "TClassRef.h"
+#include "TClassTable.h"
+#include "TClassEdit.h"
+#include "TCollection.h"
+#include "TDataMember.h"
+#include "TDataType.h"
+#include "TEnum.h"
+#include "TEnumConstant.h"
+#include "TEnv.h"
+#include "TError.h"
+#include "TException.h"
+#include "TFunction.h"
+#include "TFunctionTemplate.h"
+#include "TGlobal.h"
+#include "THashList.h"
+#include "TInterpreter.h"
+#include "TList.h"
+#include "TListOfDataMembers.h"
+#include "TListOfEnums.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TThread.h"
 
 #ifndef _WIN32
 #include <dlfcn.h>
@@ -114,9 +139,15 @@ class ApplicationStarter {
 public:
     ApplicationStarter() {
         std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
-        if (!Cpp::LoadDispatchAPI(
-                CPPINTEROP_DIR
-                "/lib/libclangCppInterOp" CMAKE_SHARED_LIBRARY_SUFFIX)) {
+
+        (void)gROOT;
+        char *libcling = gSystem->DynamicPathName("libCling");
+
+        if (!libcling) {
+            std::cerr << "[cppyy-backend] Failed to find libCling" << std::endl;
+            return;
+        }
+        if (!Cpp::LoadDispatchAPI(libcling)) {
             std::cerr << "[cppyy-backend] Failed to load CppInterOp" << std::endl;
             return;
         }
@@ -241,6 +272,25 @@ public:
     // helper for multiple inheritance
         Cpp::Declare("namespace __cppyy_internal { struct Sep; }",
                      /*silent=*/false);
+
+                         // retrieve all initial (ROOT) C++ names in the global scope to allow filtering later
+        gROOT->GetListOfGlobals(true);             // force initialize
+        gROOT->GetListOfGlobalFunctions(true);     // id.
+        std::set<std::string> initial;
+        Cppyy::GetAllCppNames(Cppyy::GetGlobalScope(), initial);
+        gInitialNames = initial;
+
+#ifndef WIN32
+        gRootSOs.insert("libCore.so ");
+        gRootSOs.insert("libRIO.so ");
+        gRootSOs.insert("libThread.so ");
+        gRootSOs.insert("libMathCore.so ");
+#else
+        gRootSOs.insert("libCore.dll ");
+        gRootSOs.insert("libRIO.dll ");
+        gRootSOs.insert("libThread.dll ");
+        gRootSOs.insert("libMathCore.dll ");
+#endif
 
         // std::string libInterOp = I->getDynamicLibraryManager()->lookupLibrary("libcling");
         // void *interopDL = dlopen(libInterOp.c_str(), RTLD_LAZY);
@@ -688,6 +738,12 @@ Cppyy::TCppScope_t Cppyy::GetScope(const std::string& name,
                                    TCppScope_t parent_scope)
 {
     std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+// CppInterOp directly looks at the AST which is not enough.
+// We require lazy module loading that ROOT relies on, so we do it here first.
+// Use TClass::GetClass to trigger auto-loading of dictionaries and modules.
+    if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
+        TClass::GetClass(name.c_str(), true /* load */, true /* silent */);
+
     if (Cppyy::TCppScope_t scope = Cpp::GetScope(name, parent_scope))
       return scope;
     if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
@@ -821,8 +877,15 @@ Cppyy::TCppScope_t Cppyy::GetActualClass(TCppScope_t klass, TCppObject_t obj) {
     std::string demangled_name = Cpp::Demangle(mangled_name);
 #endif
 
-    if (TCppScope_t scope = Cppyy::GetScope(demangled_name))
-        return scope;
+    if (TCppScope_t scope = Cppyy::GetScope(demangled_name)) {
+    // Only return the derived type if theres a complete definition in the
+    // interpreter. internal classes like TCling have no public header and
+    // no dictionary, so their CXXRecordDecl has no DefinitionData.
+    // returning them crashes when querying offsets. Fall back to the base
+    // type if the derived type is incomplete.
+        if (Cpp::IsComplete(scope))
+            return scope;
+    }
 
     return klass;
 }
@@ -1340,6 +1403,10 @@ ptrdiff_t Cppyy::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
     TCppObject_t address, int direction, bool rerror)
 {
     std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+    // Either base or derived class is incomplete, treat silently
+    if (!Cpp::IsComplete(derived) || !Cpp::IsComplete(base))
+        return rerror ? (ptrdiff_t)-1 : 0;
+
     intptr_t offset = Cpp::GetBaseClassOffset(derived, base);
     
     if (offset == -1)   // Cling error, treat silently
