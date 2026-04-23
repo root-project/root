@@ -4,11 +4,6 @@
 // Standard
 #include <vector>
 
-//Bindings
-#include "cpp_cppyy.h"
-
-//ROOT
-#include "Rtypes.h"
 
 namespace CPyCppyy {
 
