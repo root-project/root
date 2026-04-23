@@ -201,3 +201,9 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(gDirectory->GetName()), "c");
 }
+
+TEST(TFile, UUID)
+{
+   TMemFile f("uuidtest.root", "RECREATE");
+   EXPECT_EQ('4', f.GetUUID().AsString()[14]);
+}
