@@ -358,6 +358,239 @@ TEST(RooChi2Var, IntegrateBins)
 }
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
+static std::vector<RooFit::EvalBackend> chi2CrossCheckBackends()
+{
+   std::vector<RooFit::EvalBackend> backends;
+   backends.push_back(RooFit::EvalBackend::Cpu());
+#ifdef ROOFIT_CUDA
+   backends.push_back(RooFit::EvalBackend::Cuda());
+#endif
+   backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
+#ifdef ROOFIT_CLAD
+   // TODO: This should also work with Clad
+   // backends.push_back(RooFit::EvalBackend::Codegen());
+#endif
+   return backends;
+}
+
+/// Cross-check that every chi2 backend reproduces the legacy RooChi2Var for
+/// every supported DataError mode.
+TEST(RooChi2Var, ErrorTypesCrossCheck)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(1337ul);
+
+   // Use a wide PDF over a narrow range so every bin has substantial data.
+   // This keeps the SumW2 and Poisson error modes well-defined in every bin.
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[-3, 3], mean[0, -2, 2], sigma[2.0, 0.1, 5.0])");
+
+   RooRealVar &x = *ws.var("x");
+   x.setBins(12);
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 5000)};
+   std::unique_ptr<RooDataHist> hist{data->binnedClone()};
+
+   auto resetPars = [&]() {
+      ws.var("mean")->setVal(0.3);
+      ws.var("mean")->setError(0.0);
+      ws.var("sigma")->setVal(1.5);
+      ws.var("sigma")->setError(0.0);
+   };
+
+   for (auto const &backend : chi2CrossCheckBackends()) {
+      for (auto etype : {RooAbsData::Expected, RooAbsData::SumW2, RooAbsData::Poisson}) {
+         SCOPED_TRACE(std::string("backend = ") + backend.name() +
+                      ", DataError = " + std::to_string(static_cast<int>(etype)));
+
+         // Chi2 value at a fixed parameter point should match to full precision.
+         resetPars();
+         std::unique_ptr<RooAbsReal> chi2New{gauss.createChi2(*hist, DataError(etype), backend)};
+         std::unique_ptr<RooAbsReal> chi2Legacy{gauss.createChi2(*hist, DataError(etype), EvalBackend::Legacy())};
+         EXPECT_FLOAT_EQ(chi2New->getVal(), chi2Legacy->getVal());
+
+         // Minimisation should converge to the same minimum and parameter values.
+         resetPars();
+         std::unique_ptr<RooFitResult> fitLegacy{
+            gauss.chi2FitTo(*hist, DataError(etype), EvalBackend::Legacy(), Save(), PrintLevel(-1))};
+         resetPars();
+         std::unique_ptr<RooFitResult> fitNew{
+            gauss.chi2FitTo(*hist, DataError(etype), backend, Save(), PrintLevel(-1))};
+         ASSERT_NE(fitLegacy, nullptr);
+         ASSERT_NE(fitNew, nullptr);
+         EXPECT_NEAR(fitNew->minNll(), fitLegacy->minNll(), 1e-6 * std::abs(fitLegacy->minNll()) + 1e-6);
+         for (const char *parName : {"mean", "sigma"}) {
+            const double legacyVal = getVal(parName, fitLegacy->floatParsFinal());
+            const double newVal = getVal(parName, fitNew->floatParsFinal());
+            const double legacyErr = getErr(parName, fitLegacy->floatParsFinal());
+            const double newErr = getErr(parName, fitNew->floatParsFinal());
+            EXPECT_NEAR(newVal, legacyVal, 1e-5 * std::abs(legacyVal) + 1e-6) << "parameter " << parName;
+            EXPECT_NEAR(newErr, legacyErr, 1e-4 * std::abs(legacyErr) + 1e-6) << "error of " << parName;
+         }
+      }
+   }
+
+   // DataError(None) means "no errors" - legacy returns 0 for any non-empty
+   // bin. The other backends accept the mode and return 0 as well.
+   for (auto const &backend : chi2CrossCheckBackends()) {
+      SCOPED_TRACE(std::string("None check, backend = ") + backend.name());
+      std::unique_ptr<RooAbsReal> chi2{gauss.createChi2(*hist, DataError(RooAbsData::None), backend)};
+      EXPECT_DOUBLE_EQ(chi2->getVal(), 0.0);
+   }
+
+   // Function mode: createChi2 on a RooAbsReal that is NOT a pdf. Here the
+   // normalisation factor is unity: the function's value is the predicted
+   // per-unit-observable yield. We use a trivial uniform constant function.
+   {
+      RooRealVar nbkg("nbkg_func", "", 200., 0., 10000.);
+      RooFormulaVar flat("flat", "flat", "nbkg_func + 0*x", {nbkg, x});
+      std::unique_ptr<RooAbsReal> chi2Legacy{
+         flat.createChi2(*hist, DataError(RooAbsData::Expected), EvalBackend::Legacy())};
+      for (auto const &backend : chi2CrossCheckBackends()) {
+         SCOPED_TRACE(std::string("Function mode, backend = ") + backend.name());
+         std::unique_ptr<RooAbsReal> chi2New{flat.createChi2(*hist, DataError(RooAbsData::Expected), backend)};
+         EXPECT_FLOAT_EQ(chi2New->getVal(), chi2Legacy->getVal());
+      }
+   }
+}
+
+/// Cross-check that every backend reproduces the legacy RooChi2Var for
+/// named-range fits (including the multi-range "low,high" case) of a plain
+/// Gaussian model.
+TEST(RooChi2Var, RangedCrossCheck)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(1337ul);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[-5, 5], mean[0, -3, 3], sigma[1.5, 0.1, 3.0])");
+
+   RooRealVar &x = *ws.var("x");
+   x.setBins(40);
+   x.setRange("low", -5, -1);
+   x.setRange("high", 1, 5);
+   x.setRange("sig", -2, 2);
+
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 20000)};
+   std::unique_ptr<RooDataHist> hist{data->binnedClone()};
+
+   auto resetPars = [&]() {
+      ws.var("mean")->setVal(0.2);
+      ws.var("mean")->setError(0.0);
+      ws.var("sigma")->setVal(1.3);
+      ws.var("sigma")->setError(0.0);
+   };
+
+   for (auto const &backend : chi2CrossCheckBackends()) {
+      for (const char *rangeName : {"sig", "low,high"}) {
+         SCOPED_TRACE(std::string("backend = ") + backend.name() + ", rangeName = " + rangeName);
+
+         // Chi2 value at a fixed parameter point.
+         resetPars();
+         std::unique_ptr<RooAbsReal> chi2New{gauss.createChi2(*hist, Range(rangeName), backend)};
+         std::unique_ptr<RooAbsReal> chi2Legacy{gauss.createChi2(*hist, Range(rangeName), EvalBackend::Legacy())};
+         EXPECT_FLOAT_EQ(chi2New->getVal(), chi2Legacy->getVal());
+
+         // Fit comparison.
+         resetPars();
+         std::unique_ptr<RooFitResult> fitLegacy{
+            gauss.chi2FitTo(*hist, Range(rangeName), EvalBackend::Legacy(), Save(), PrintLevel(-1))};
+         resetPars();
+         std::unique_ptr<RooFitResult> fitNew{
+            gauss.chi2FitTo(*hist, Range(rangeName), backend, Save(), PrintLevel(-1))};
+         ASSERT_NE(fitLegacy, nullptr);
+         ASSERT_NE(fitNew, nullptr);
+         EXPECT_NEAR(fitNew->minNll(), fitLegacy->minNll(), 1e-5 * std::abs(fitLegacy->minNll()) + 1e-6);
+         for (const char *parName : {"mean", "sigma"}) {
+            const double legacyVal = getVal(parName, fitLegacy->floatParsFinal());
+            const double newVal = getVal(parName, fitNew->floatParsFinal());
+            const double legacyErr = getErr(parName, fitLegacy->floatParsFinal());
+            const double newErr = getErr(parName, fitNew->floatParsFinal());
+            EXPECT_NEAR(newVal, legacyVal, 1e-4 * std::abs(legacyVal) + 1e-5) << "parameter " << parName;
+            EXPECT_NEAR(newErr, legacyErr, 1e-3 * std::abs(legacyErr) + 1e-5) << "error of " << parName;
+         }
+      }
+   }
+}
+
+/// Cross-check that the evaluation backends for chi2 reproduce the legacy
+/// RooChi2Var value, fit minimum and fitted errors for a simultaneous fit.
+TEST(RooChi2Var, SimultaneousCrossCheck)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(1337ul);
+
+   // Two-channel simultaneous model (Gaussian signal + linear background, with
+   // shared mean). Each channel gets its own data.
+   RooWorkspace ws;
+   ws.factory("Gaussian::gaussA(x[-5, 5], mean[0, -3, 3], sigmaA[1.0, 0.1, 3.0])");
+   ws.factory("Gaussian::gaussB(x, mean, sigmaB[1.5, 0.1, 3.0])");
+
+   RooRealVar &x = *ws.var("x");
+   x.setBins(20);
+   auto &gaussA = *ws.pdf("gaussA");
+   auto &gaussB = *ws.pdf("gaussB");
+
+   RooCategory sample("sample", "sample");
+   sample.defineType("A");
+   sample.defineType("B");
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"A", &gaussA}, {"B", &gaussB}}, sample};
+
+   // Generate per-channel binned data at the "true" parameter values.
+   std::unique_ptr<RooDataSet> dsA{gaussA.generate(x, 4000)};
+   std::unique_ptr<RooDataSet> dsB{gaussB.generate(x, 6000)};
+   std::unique_ptr<RooDataHist> histA{dsA->binnedClone("histA")};
+   std::unique_ptr<RooDataHist> histB{dsB->binnedClone("histB")};
+   RooDataHist combHist("combHist", "combHist", x, sample,
+                        std::map<std::string, RooDataHist *>{{"A", histA.get()}, {"B", histB.get()}});
+
+   // Helper that resets the parameters to a common starting point before each fit.
+   auto resetPars = [&]() {
+      ws.var("mean")->setVal(0.3);
+      ws.var("mean")->setError(0.0);
+      ws.var("sigmaA")->setVal(0.7);
+      ws.var("sigmaA")->setError(0.0);
+      ws.var("sigmaB")->setVal(2.0);
+      ws.var("sigmaB")->setError(0.0);
+   };
+
+   // Legacy baseline, computed once.
+   resetPars();
+   std::unique_ptr<RooFitResult> fitLegacy{simPdf.chi2FitTo(combHist, EvalBackend::Legacy(), Save(), PrintLevel(-1))};
+   ASSERT_NE(fitLegacy, nullptr);
+
+   for (auto const &backend : chi2CrossCheckBackends()) {
+      SCOPED_TRACE(std::string("backend = ") + backend.name());
+
+      // Chi2 value at a fixed parameter point.
+      resetPars();
+      std::unique_ptr<RooAbsReal> chi2New{simPdf.createChi2(combHist, backend)};
+      std::unique_ptr<RooAbsReal> chi2Legacy{simPdf.createChi2(combHist, EvalBackend::Legacy())};
+      EXPECT_FLOAT_EQ(chi2New->getVal(), chi2Legacy->getVal());
+
+      // Fit with the current backend, compare to the legacy baseline.
+      resetPars();
+      std::unique_ptr<RooFitResult> fitNew{simPdf.chi2FitTo(combHist, backend, Save(), PrintLevel(-1))};
+      ASSERT_NE(fitNew, nullptr);
+      EXPECT_NEAR(fitNew->minNll(), fitLegacy->minNll(), 1e-6 * std::abs(fitLegacy->minNll()) + 1e-6);
+
+      for (const char *parName : {"mean", "sigmaA", "sigmaB"}) {
+         const double legacyVal = getVal(parName, fitLegacy->floatParsFinal());
+         const double newVal = getVal(parName, fitNew->floatParsFinal());
+         const double legacyErr = getErr(parName, fitLegacy->floatParsFinal());
+         const double newErr = getErr(parName, fitNew->floatParsFinal());
+         EXPECT_NEAR(newVal, legacyVal, 1e-5 * std::abs(legacyVal) + 1e-6) << "parameter " << parName;
+         EXPECT_NEAR(newErr, legacyErr, 1e-4 * std::abs(legacyErr) + 1e-6) << "error of " << parName;
+      }
+   }
+}
+
 /// Verifies that a ranged RooNLLVar has still the correct value when copied,
 /// as it happens when it is plotted Covers JIRA ticket ROOT-9752.
 TEST(RooNLLVar, CopyRangedNLL)

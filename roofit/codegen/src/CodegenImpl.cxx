@@ -546,9 +546,65 @@ void codegenImpl(RooLognormal &arg, CodegenContext &ctx)
    ctx.addResult(&arg, ctx.buildCall(mathFunc(funcName), arg.getX(), arg.getShapeK(), arg.getMedian()));
 }
 
+namespace {
+
+void codegenChi2(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
+{
+   using FuncMode = RooFit::Detail::RooNLLVarNew::FuncMode;
+
+   std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
+   ctx.addResult(&arg, resName);
+   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
+
+   // DataError::None means "no errors": every bin contributes zero.
+   if (arg.chi2ErrorType() == RooDataHist::None) {
+      return;
+   }
+
+   // Compute the per-bin normalization factor (constant with respect to the
+   // loop).
+   std::string normFactor;
+   if (arg.funcMode() == FuncMode::Function) {
+      normFactor = "1.0";
+   } else if (arg.funcMode() == FuncMode::ExtendedPdf) {
+      normFactor = ctx.getResult(*arg.expectedEvents());
+   } else { // Pdf
+      std::string weightSumName = RooFit::Detail::makeValidVarName(arg.GetName()) + "WeightSum";
+      ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
+      {
+         auto scope = ctx.beginLoop(&arg);
+         ctx.addToCodeBody(weightSumName + " += " + ctx.getResult(arg.weightVar()) + ";\n");
+      }
+      normFactor = weightSumName;
+   }
+
+   auto scope = ctx.beginLoop(&arg);
+   const std::string mu =
+      "(" + ctx.getResult(arg.func()) + " * " + ctx.getResult(*arg.binVolumes()) + " * " + normFactor + ")";
+
+   std::string term;
+   switch (arg.chi2ErrorType()) {
+   case RooDataHist::Expected: term = ctx.buildCall(mathFunc("chi2Expected"), mu, arg.weightVar()); break;
+   case RooDataHist::SumW2:
+      term = ctx.buildCall(mathFunc("chi2Symmetric"), mu, arg.weightVar(), arg.weightSquaredVar());
+      break;
+   case RooDataHist::Poisson:
+      term = ctx.buildCall(mathFunc("chi2Asymmetric"), mu, arg.weightVar(), *arg.weightErrLo(), *arg.weightErrHi());
+      break;
+   default: break;
+   }
+   ctx.addToCodeBody(&arg, resName + " += " + term + ";");
+}
+
+} // namespace
+
 void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
 {
-   if (arg.binnedL() && !arg.pdf().getAttribute("BinnedLikelihoodActiveYields")) {
+   if (arg.statistic() == RooFit::Detail::RooNLLVarNew::Statistic::Chi2) {
+      return codegenChi2(arg, ctx);
+   }
+
+   if (arg.binnedL() && !arg.func().getAttribute("BinnedLikelihoodActiveYields")) {
       std::stringstream errorMsg;
       errorMsg << "codegen: binned likelihood optimization is only supported when raw pdf "
                   "values can be interpreted as yields."
@@ -579,7 +635,7 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(&arg);
-      std::string term = ctx.buildCall(mathFunc("nll"), arg.pdf(), arg.weightVar(), arg.binnedL(), 0);
+      std::string term = ctx.buildCall(mathFunc("nll"), arg.func(), arg.weightVar(), arg.binnedL(), 0);
       ctx.addToCodeBody(&arg, resName + " += " + term + ";");
    }
    if (arg.expectedEvents()) {
