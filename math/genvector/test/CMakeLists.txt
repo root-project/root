@@ -17,8 +17,8 @@ ROOT_ADD_TEST(test-genvector-genvector COMMAND testGenvector)
 
 ROOT_EXECUTABLE(testVectorIO testVectorIO.cxx LIBRARIES GenVector Tree Hist Gpad Physics)
 target_include_directories(testVectorIO PRIVATE ./)
-ROOT_ADD_TEST(test-genvector-vectorio COMMAND testVectorIO)
-#                                      COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h)
+ROOT_ADD_TEST(test-genvector-vectorio COMMAND testVectorIO
+                                      COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h)
 
 ROOT_GENERATE_DICTIONARY(GVTrackDict Track.h LINKDEF TrackLinkDef.h OPTIONS -inlineInputHeader)
 ROOT_EXECUTABLE(testVectorIOdict testVectorIO.cxx GVTrackDict.cxx LIBRARIES GenVector Tree Hist Gpad Physics)
@@ -27,9 +27,10 @@ ROOT_EXECUTABLE(testVectorIOdictXml testVectorIO.cxx GVTrackDictXml.cxx LIBRARIE
 target_include_directories(testVectorIOdict PRIVATE ./)
 target_include_directories(testVectorIOdictXml PRIVATE ./)
 target_compile_definitions(testVectorIOdictXml PRIVATE USE_REFLEX)
-ROOT_ADD_TEST(test-genvector-vectoriodict COMMAND testVectorIOdict)
-ROOT_ADD_TEST(test-genvector-vectoriodictxml COMMAND testVectorIOdictXml)
-#                                      COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h)
+ROOT_ADD_TEST(test-genvector-vectoriodict COMMAND testVectorIOdict
+                                      COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h) # concurrency issue? separate fixtures-setup copying this?
+ROOT_ADD_TEST(test-genvector-vectoriodictxml COMMAND testVectorIOdictXml
+                                      COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/Track.h) # concurrency issue? separate fixtures-setup copying this?
 
 ROOT_EXECUTABLE(coordinates3D coordinates3D.cxx LIBRARIES GenVector)
 ROOT_ADD_TEST(test-genvector-coordinates3D COMMAND coordinates3D)

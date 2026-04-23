@@ -252,12 +252,12 @@ void kalman_do(const char *machine,int sym, int cut) {
 }
 
 int main(int argc, char *argv[]) {
-   if (argc == 1)
-      kalman(argv[0]);
-   else if (argc == 2)
-      kalman(argv[0], atoi(argv[1]));
+   if (argc == 2)
+      kalman(argv[1]);
    else if (argc == 3)
-      kalman(argv[0], atoi(argv[1]), atoi(argv[2]));
+      kalman(argv[1], atoi(argv[2]));
+   else if (argc == 4)
+      kalman(argv[1], atoi(argv[2]), atoi(argv[3]));
    else
       kalman();
   return 0;
