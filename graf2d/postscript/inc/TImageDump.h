@@ -25,6 +25,15 @@ protected:
    Int_t             fType{0};            ///< PostScript workstation type
    Int_t             fX0{0}, fY0{0};      ///< offset of selected pad to canvas
 
+   std::vector<UInt_t> fCellArrayColors;
+   Int_t               fCellArrayW{0};
+   Int_t               fCellArrayH{0};
+   Int_t               fCellArrayX1{0};
+   Int_t               fCellArrayX2{0};
+   Int_t               fCellArrayY1{0};
+   Int_t               fCellArrayY2{0};
+   UInt_t              fCellArrayIdx{0};
+
    Int_t  XtoPixel(Double_t x);
    Int_t  YtoPixel(Double_t y);
    void   DrawDashPolyLine(Int_t npoints, TPoint *pt, UInt_t nDash,
