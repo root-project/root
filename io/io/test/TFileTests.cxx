@@ -327,3 +327,8 @@ TEST(TFile, PersistTObjectStdArray)
    gSystem->Unlink(filename);
 }
 
+TEST(TFile, UUID)
+{
+   TMemFile f("uuidtest.root", "RECREATE");
+   EXPECT_EQ('4', f.GetUUID().AsString()[14]);
+}
