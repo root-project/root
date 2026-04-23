@@ -38,6 +38,7 @@ using TCppIndex_t = size_t;
 using TCppScope_t = void*;
 using TCppConstScope_t = const void*;
 using TCppType_t = void*;
+using TCppConstType_t = const void*;
 using TCppFunction_t = void*;
 using TCppConstFunction_t = const void*;
 using TCppFuncAddr_t = void*;
@@ -368,7 +369,7 @@ CPPINTEROP_API bool IsComplete(TCppScope_t scope);
 CPPINTEROP_API size_t SizeOf(TCppScope_t scope);
 
 /// Checks if it is a "built-in" or a "complex" type.
-CPPINTEROP_API bool IsBuiltin(TCppType_t type);
+CPPINTEROP_API bool IsBuiltin(TCppConstType_t type);
 
 /// Checks if it is a templated class.
 CPPINTEROP_API bool IsTemplate(TCppScope_t handle);

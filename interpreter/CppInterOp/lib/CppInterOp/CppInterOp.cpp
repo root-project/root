@@ -10,6 +10,7 @@
 #include "CppInterOp/CppInterOp.h"
 
 #include "Compatibility.h"
+#include "Sins.h" // for access to private members
 
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
@@ -62,8 +63,12 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Process.h"
+#include "llvm/Support/Signals.h"
+#include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/TargetParser/Host.h"
 #include "llvm/TargetParser/Triple.h"
@@ -78,6 +83,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <stack>
@@ -128,6 +134,9 @@ using namespace llvm;
 struct InterpreterInfo {
   compat::Interpreter* Interpreter = nullptr;
   bool isOwned = true;
+  // Store the list of builtin types.
+  llvm::StringMap<QualType> BuiltinMap;
+
   InterpreterInfo(compat::Interpreter* I, bool Owned)
       : Interpreter(I), isOwned(Owned) {}
 
@@ -162,15 +171,127 @@ struct InterpreterInfo {
   InterpreterInfo& operator=(const InterpreterInfo&) = delete;
 };
 
-// std::deque avoids relocations and calling the dtor of InterpreterInfo.
-static llvm::ManagedStatic<std::deque<InterpreterInfo>> sInterpreters;
+static void DefaultProcessCrashHandler(void*);
+// Function-static storage for interpreters
+static std::deque<InterpreterInfo>& GetInterpreters() {
+  static int FakeArgc = 1;
+  static const std::string VersionStr = GetVersion();
+  static const char* ArgvBuffer[] = {VersionStr.c_str(), nullptr};
+  static const char** FakeArgv = ArgvBuffer;
+  static llvm::InitLLVM X(FakeArgc, FakeArgv);
+  // Cannot be a llvm::ManagedStatic because X will call shutdown which will
+  // trigger destruction on llvm::ManagedStatics and the destruction of the
+  // InterpreterInfos require to have llvm around.
+  // FIXME: Currently we never call llvm::llvm_shutdown and sInterpreters leaks.
+  static auto sInterpreters = new std::deque<InterpreterInfo>();
+  static std::once_flag ProcessInitialized;
+  std::call_once(ProcessInitialized, []() {
+    llvm::sys::PrintStackTraceOnErrorSignal("CppInterOp");
+
+    // Initialize all targets (required for device offloading)
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+
+    llvm::sys::AddSignalHandler(DefaultProcessCrashHandler, /*Cookie=*/nullptr);
+  });
+
+  return *sInterpreters;
+}
+
+// Global crash handler for the entire process
+static void DefaultProcessCrashHandler(void*) {
+  // Access the static deque via the getter
+  std::deque<InterpreterInfo>& Interps = GetInterpreters();
+
+  llvm::errs() << "\n**************************************************\n";
+  llvm::errs() << "  CppInterOp CRASH DETECTED\n";
+
+  if (!Interps.empty()) {
+    llvm::errs() << "  Active Interpreters:\n";
+    for (const auto& Info : Interps) {
+      if (Info.Interpreter)
+        llvm::errs() << "    - " << Info.Interpreter << "\n";
+    }
+  }
+
+  llvm::errs() << "**************************************************\n";
+  llvm::errs().flush();
+
+  // Print backtrace (includes JIT symbols if registered)
+  llvm::sys::PrintStackTrace(llvm::errs());
+
+  llvm::errs() << "**************************************************\n";
+  llvm::errs().flush();
+
+  // The process must actually terminate for EXPECT_DEATH to pass.
+  // We use _exit to avoid calling atexit() handlers which might be corrupted.
+  llvm::sys::Process::Exit(/*RetCode=*/1, /*NoCleanup=*/false);
+}
+
+static void RegisterInterpreter(compat::Interpreter* I, bool Owned) {
+  std::deque<InterpreterInfo>& Interps = GetInterpreters();
+  Interps.emplace_back(I, Owned);
+}
 
 static compat::Interpreter& getInterp(TInterp_t I = nullptr) {
   if (I)
     return *static_cast<compat::Interpreter*>(I);
-  assert(!sInterpreters->empty() &&
+  auto& Interps = GetInterpreters();
+  assert(!Interps.empty() &&
          "Interpreter instance must be set before calling this!");
-  return *sInterpreters->back().Interpreter;
+  return *Interps.back().Interpreter;
+}
+
+TInterp_t GetInterpreter() {
+  std::deque<InterpreterInfo>& Interps = GetInterpreters();
+  if (Interps.empty())
+    return nullptr;
+  return Interps.back().Interpreter;
+}
+
+void UseExternalInterpreter(TInterp_t I) {
+  assert(GetInterpreters().empty() && "sInterpreter already in use!");
+  RegisterInterpreter(static_cast<compat::Interpreter*>(I), /*Owned=*/false);
+}
+
+bool ActivateInterpreter(TInterp_t I) {
+  if (!I)
+    return false;
+
+  std::deque<InterpreterInfo>& Interps = GetInterpreters();
+  auto found =
+      std::find_if(Interps.begin(), Interps.end(),
+                   [&I](const auto& Info) { return Info.Interpreter == I; });
+  if (found == Interps.end())
+    return false;
+
+  if (std::next(found) != Interps.end()) // if not already last element.
+    std::rotate(found, found + 1, Interps.end());
+
+  return true; // success
+}
+
+bool DeleteInterpreter(TInterp_t I /*=nullptr*/) {
+  std::deque<InterpreterInfo>& Interps = GetInterpreters();
+  if (Interps.empty())
+    return false;
+
+  if (!I) {
+    Interps.pop_back(); // Triggers ~InterpreterInfo() and potential delete
+    return true;
+  }
+
+  auto found =
+      std::find_if(Interps.begin(), Interps.end(),
+                   [&I](const auto& Info) { return Info.Interpreter == I; });
+  if (found == Interps.end())
+    return false; // failure
+
+  Interps.erase(found);
+  return true;
 }
 
 static clang::Sema& getSema() { return getInterp().getCI()->getSema(); }
@@ -408,7 +529,7 @@ size_t SizeOf(TCppScope_t scope) {
   return 0;
 }
 
-bool IsBuiltin(TCppType_t type) {
+bool IsBuiltin(TCppConstType_t type) {
   QualType Ty = QualType::getFromOpaquePtr(type);
   if (Ty->isBuiltinType() || Ty->isAnyComplexType())
     return true;
@@ -1887,83 +2008,133 @@ TCppType_t AddTypeQualifier(TCppType_t type, QualKind qual) {
   return QT.getAsOpaquePtr();
 }
 
-// Internal functions that are not needed outside the library are
-// encompassed in an anonymous namespace as follows. This function converts
-// from a string to the actual type. It is used in the GetType() function.
-namespace {
-static QualType findBuiltinType(llvm::StringRef typeName, ASTContext& Context) {
-  bool issigned = false;
-  bool isunsigned = false;
-  if (typeName.starts_with("signed ")) {
-    issigned = true;
-    typeName = StringRef(typeName.data() + 7, typeName.size() - 7);
-  }
-  if (!issigned && typeName.starts_with("unsigned ")) {
-    isunsigned = true;
-    typeName = StringRef(typeName.data() + 9, typeName.size() - 9);
-  }
-  if (typeName == "char") {
-    if (isunsigned)
-      return Context.UnsignedCharTy;
-    return Context.SignedCharTy;
-  }
-  if (typeName == "short") {
-    if (isunsigned)
-      return Context.UnsignedShortTy;
-    return Context.ShortTy;
-  }
-  if (typeName == "int") {
-    if (isunsigned)
-      return Context.UnsignedIntTy;
-    return Context.IntTy;
-  }
-  if (typeName == "long") {
-    if (isunsigned)
-      return Context.UnsignedLongTy;
-    return Context.LongTy;
-  }
-  if (typeName == "long long") {
-    if (isunsigned)
-      return Context.UnsignedLongLongTy;
-    return Context.LongLongTy;
-  }
-  if (!issigned && !isunsigned) {
-    if (typeName == "bool")
-      return Context.BoolTy;
-    if (typeName == "float")
-      return Context.FloatTy;
-    if (typeName == "double")
-      return Context.DoubleTy;
-    if (typeName == "long double")
-      return Context.LongDoubleTy;
-
-    if (typeName == "wchar_t")
-      return Context.WCharTy;
-    if (typeName == "char16_t")
-      return Context.Char16Ty;
-    if (typeName == "char32_t")
-      return Context.Char32Ty;
-  }
-  /* Missing
- CanQualType WideCharTy; // Same as WCharTy in C++, integer type in C99.
- CanQualType WIntTy;   // [C99 7.24.1], integer type unchanged by default
- promotions.
-   */
-  return QualType();
+// Registers all permutations of a word set
+static void RegisterPerms(llvm::StringMap<QualType>& Map, QualType QT,
+                          llvm::SmallVectorImpl<llvm::StringRef>& Words) {
+  std::sort(Words.begin(), Words.end());
+  do {
+    std::string Key;
+    for (size_t i = 0; i < Words.size(); ++i) {
+      if (i > 0)
+        Key += ' ';
+      Key += Words[i].str();
+    }
+    Map[Key] = QT;
+  } while (std::next_permutation(Words.begin(), Words.end()));
 }
-} // namespace
+ALLOW_ACCESS(ASTContext, Types, llvm::SmallVector<clang::Type*, 0>);
+static void PopulateBuiltinMap(ASTContext& Context) {
+  const PrintingPolicy Policy(Context.getLangOpts());
+  auto& BuiltinMap = GetInterpreters().back().BuiltinMap;
+  const auto& Types = ACCESS(Context, Types);
+
+  for (clang::Type* T : Types) {
+    auto* BT = llvm::dyn_cast<BuiltinType>(T);
+    if (!BT || BT->isPlaceholderType())
+      continue;
+
+    QualType QT(BT, 0);
+    std::string Name = QT.getAsString(Policy);
+    if (Name.empty() || Name[0] == '<')
+      continue;
+
+    // Initial entry (e.g., "int", "unsigned long")
+    BuiltinMap[Name] = QT;
+
+    llvm::SmallVector<llvm::StringRef, 4> Words;
+    llvm::StringRef(Name).split(Words, ' ', -1, false);
+
+    bool hasInt = false;
+    bool hasSigned = false;
+    bool hasUnsigned = false;
+    bool hasChar = false;
+    bool isModifiable = false;
+
+    for (auto W : Words) {
+      if (W == "int")
+        hasInt = true;
+      else if (W == "signed")
+        hasSigned = true;
+      else if (W == "unsigned")
+        hasUnsigned = true;
+      else if (W == "char")
+        hasChar = true;
+
+      if (W == "long" || W == "short" || hasInt)
+        isModifiable = true;
+    }
+
+    // Skip things like 'float' or 'double' that aren't combined
+    if (!isModifiable && !hasUnsigned && !hasSigned)
+      continue;
+
+    // Register base permutations (e.g., "long long" or "unsigned int")
+    if (Words.size() > 1)
+      RegisterPerms(BuiltinMap, QT, Words);
+
+    // Expansion: Add "int" suffix where missing (e.g., "short" -> "short int")
+    if (!hasInt && !hasChar) {
+      auto WithInt = Words;
+      WithInt.push_back("int");
+      RegisterPerms(BuiltinMap, QT, WithInt);
+
+      // If we are adding 'int', we should also try adding 'signed'
+      // to cover cases like "short" -> "signed short int"
+      if (!hasSigned && !hasUnsigned) {
+        auto WithBoth = WithInt;
+        WithBoth.push_back("signed");
+        RegisterPerms(BuiltinMap, QT, WithBoth);
+      }
+    }
+
+    // Expansion: Add "signed" prefix
+    // (e.g., "int" -> "signed int", "long" -> "signed long")
+    if (!hasSigned && !hasUnsigned) {
+      auto WithSigned = Words;
+      WithSigned.push_back("signed");
+      RegisterPerms(BuiltinMap, QT, WithSigned);
+    }
+  }
+
+  // Explicit global synonym
+  BuiltinMap["signed"] = Context.IntTy;
+  BuiltinMap["unsigned"] = Context.UnsignedIntTy;
+}
+static QualType findBuiltinType(llvm::StringRef typeName, ASTContext& Context) {
+  llvm::StringMap<QualType>& BuiltinMap = GetInterpreters().back().BuiltinMap;
+  if (BuiltinMap.empty())
+    PopulateBuiltinMap(Context);
+
+  // Fast Lookup
+  auto It = BuiltinMap.find(typeName);
+  if (It != BuiltinMap.end())
+    return It->second;
+
+  return QualType(); // Return null if not a builtin
+}
+static std::optional<QualType> GetTypeInternal(Decl* D) {
+  if (!D)
+    return {};
+  // Even though typedefs derive from TypeDecl, their getTypeForDecl()
+  // returns a nullptr.
+  if (const auto* TND = llvm::dyn_cast_or_null<TypedefNameDecl>(D))
+    return TND->getUnderlyingType();
+
+  if (auto* VD = dyn_cast<ValueDecl>(D))
+    return VD->getType();
+
+  if (const auto* TD = llvm::dyn_cast_or_null<TypeDecl>(D))
+    return QualType(TD->getTypeForDecl(), 0);
+
+  return {};
+}
 
 TCppType_t GetType(const std::string& name) {
   QualType builtin = findBuiltinType(name, getASTContext());
   if (!builtin.isNull())
     return builtin.getAsOpaquePtr();
 
-  auto* D = (Decl*)GetNamed(name, /* Within= */ 0);
-  if (auto* TD = llvm::dyn_cast_or_null<TypeDecl>(D)) {
-    return QualType(TD->getTypeForDecl(), 0).getAsOpaquePtr();
-  }
-
-  return (TCppType_t)0;
+  return GetTypeFromScope((Decl*)GetNamed(name, /*Within=*/nullptr));
 }
 
 TCppType_t GetComplexType(TCppType_t type) {
@@ -1974,17 +2145,12 @@ TCppType_t GetComplexType(TCppType_t type) {
 
 TCppType_t GetTypeFromScope(TCppScope_t klass) {
   if (!klass)
-    return 0;
+    return nullptr;
 
-  auto* D = (Decl*)klass;
+  if (auto QT = GetTypeInternal((Decl*)klass))
+    return QT->getAsOpaquePtr();
 
-  if (auto* VD = dyn_cast<ValueDecl>(D))
-    return VD->getType().getAsOpaquePtr();
-
-  if (auto* TD = dyn_cast<TypeDecl>(D))
-    return getASTContext().getTypeDeclType(TD).getAsOpaquePtr();
-
-  return (TCppType_t) nullptr;
+  return nullptr;
 }
 
 // Internal functions that are not needed outside the library are
@@ -3382,6 +3548,9 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
                  std::back_inserter(ClingArgv),
                  [&](const std::string& str) { return str.c_str(); });
 
+  // Force global process initialization.
+  (void)GetInterpreters();
+
 #ifdef CPPINTEROP_USE_CLING
   auto I = new compat::Interpreter(ClingArgv.size(), &ClingArgv[0]);
 #else
@@ -3424,7 +3593,7 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   )");
   }
 
-  sInterpreters->emplace_back(I, /*Owned=*/true);
+  RegisterInterpreter(I, /*Owned=*/true);
 
 // Define runtime symbols in the JIT dylib for clang-repl
 #if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)
@@ -3454,44 +3623,6 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
       reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueNoAlloc));
 #endif
   return I;
-}
-
-bool DeleteInterpreter(TInterp_t I /*=nullptr*/) {
-  if (!I) {
-    sInterpreters->pop_back();
-    return true;
-  }
-
-  auto found =
-      std::find_if(sInterpreters->begin(), sInterpreters->end(),
-                   [&I](const auto& Info) { return Info.Interpreter == I; });
-  if (found == sInterpreters->end())
-    return false; // failure
-
-  sInterpreters->erase(found);
-  return true;
-}
-
-bool ActivateInterpreter(TInterp_t I) {
-  if (!I)
-    return false;
-
-  auto found =
-      std::find_if(sInterpreters->begin(), sInterpreters->end(),
-                   [&I](const auto& Info) { return Info.Interpreter == I; });
-  if (found == sInterpreters->end())
-    return false;
-
-  if (std::next(found) != sInterpreters->end()) // if not already last element.
-    std::rotate(found, found + 1, sInterpreters->end());
-
-  return true; // success
-}
-
-TInterp_t GetInterpreter() {
-  if (sInterpreters->empty())
-    return nullptr;
-  return sInterpreters->back().Interpreter;
 }
 
 InterpreterLanguage GetLanguage(TInterp_t I /*=nullptr*/) {
@@ -3524,12 +3655,6 @@ InterpreterLanguageStandard GetLanguageStandard(TInterp_t I /*=nullptr*/) {
                  InterpreterLanguageStandard::lang_unspecified) &&
          "Unhandled language standard.");
   return langStandard;
-}
-
-void UseExternalInterpreter(TInterp_t I) {
-  assert(sInterpreters->empty() && "sInterpreter already in use!");
-  sInterpreters->emplace_back(static_cast<compat::Interpreter*>(I),
-                              /*isOwned=*/false);
 }
 
 void AddSearchPath(const char* dir, bool isUser, bool prepend) {
