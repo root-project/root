@@ -173,7 +173,6 @@ typedef struct {
 }\
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy image.
 
@@ -190,6 +189,18 @@ void TASImage::DestroyImage()
    fIsGray     = kFALSE;
    fGrayImage  = nullptr;
    fImage      = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy scaled image.
+
+void TASImage::DestroyScaledImage()
+{
+   if (fScaledImage) {
+      delete fScaledImage;
+      fScaledImage = nullptr;
+   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,7 +336,8 @@ TASImage &TASImage::operator=(const TASImage &img)
       TImage::operator=(img);
 
       DestroyImage();
-      delete fScaledImage;
+      DestroyScaledImage();
+
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
       fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fGrayImage = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
@@ -355,8 +367,7 @@ TASImage &TASImage::operator=(const TASImage &img)
 TASImage::~TASImage()
 {
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -585,8 +596,7 @@ end:
    fName.Form("%s.", gSystem->BaseName(fname.Data()));
 
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    fImage      = image;
    fZoomUpdate = kNoZoom;
@@ -998,8 +1008,7 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
    }
 
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    // get min and max value of image
    fMinValue = fMaxValue = *imageData;
@@ -1089,8 +1098,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    SetName(pad->GetName());
 
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    if (gROOT->IsBatch()) { // in batch mode
       TVirtualPS *psave = gVirtualPS;
@@ -1471,8 +1479,8 @@ void TASImage::Paint(Option_t *option)
    }
 
    if (tile) {
-      delete fScaledImage;
-      fScaledImage = (TASImage*)TImage::Create();
+      DestroyScaledImage();
+      fScaledImage = (TASImage*) TImage::Create();
       if (!fScaledImage) return;
       fScaledImage->fImage = tile_asimage(fgVisual, fImage, tile_x, tile_y,
                                           to_w, to_h, tile_tint, ASA_ASImage,
@@ -1491,8 +1499,7 @@ void TASImage::Paint(Option_t *option)
                 Int_t(fScaledImage->GetHeight()) != to_h ||
                 fZoomUpdate)) {
 
-            delete fScaledImage;
-            fScaledImage = nullptr;
+            DestroyScaledImage();
          }
 
          if (!fScaledImage) {
@@ -1925,9 +1932,7 @@ void TASImage::SetPalette(const TImagePalette *palette)
    for (Int_t col = 0; col < 4; col++)
       delete [] asPalette.channels[col];
 
-
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2083,8 +2088,7 @@ void TASImage::UnZoom()
    fZoomWidth  = fImage->width;
    fZoomHeight = fImage->height;
 
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2408,8 +2412,7 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    }
 
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    Int_t xy;
    UInt_t w, h;
@@ -6465,8 +6468,7 @@ void TASImage::Gray(Bool_t on)
       return;
    }
    ASImage *sav = nullptr;
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    if (fGrayImage)  {
       sav = fImage;
@@ -6514,8 +6516,7 @@ void TASImage::Gray(Bool_t on)
                                                 GetImageCompression(), GetImageQuality());
       if (!imout) {
          Warning("ToGray", "Failed to start image output");
-         delete fScaledImage;
-         fScaledImage = nullptr;
+         DestroyScaledImage();
          delete [] imdec;
          return;
       }
@@ -6589,8 +6590,7 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    static int x11 = -1;
    if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
@@ -6614,8 +6614,7 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
 {
    DestroyImage();
-   delete fScaledImage;
-   fScaledImage = nullptr;
+   DestroyScaledImage();
 
    UChar_t* xx = new UChar_t[4*w];
    for (UInt_t i = 0; i < h/2; ++i) {
