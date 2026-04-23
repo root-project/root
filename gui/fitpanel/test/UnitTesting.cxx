@@ -25,7 +25,7 @@
 #include <cmath>
 #include <cstdio>
 
-#include "CommonDefs.h"
+#include "../src/CommonDefs.h"
 
 #ifdef WIN32
 #include "io.h"
@@ -217,11 +217,15 @@ public:
 
       result += MakeTest("TestUpdateTree.....", &FitEditorUnitTesting::TestUpdateTree);
 
-      // result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D); // TODO reenable once stack smashing issue is fixed
+      // TODO: reenable in batch once stack smashing issue is fixed
+      if (!gROOT->IsBatch())
+         result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D);
 
-      // result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D); // TODO reenable once fit results are fixed
+      // TODO: reenable once fit results are fixed
+      // result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D);
 
-      // result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND); // TODO reenable once fit results are fixed
+      // TODO: reenable once fit results are fixed
+      // result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND);
 
       fprintf(out, "\nRemember to also check outputUnitTesting.txt for "
               "more detailed information\n\n");
