@@ -846,44 +846,26 @@ void TImageDump::TextUrl(Double_t x, Double_t y, const char *chars, const char *
    Text(x, y, chars);
 }
 
-////////////////////////// CellArray code ////////////////////////////////////
-static UInt_t *gCellArrayColors = nullptr;
-static Int_t   gCellArrayN = 0;
-static Int_t   gCellArrayW = 0;
-static Int_t   gCellArrayH = 0;
-static Int_t   gCellArrayX1 = 0;
-static Int_t   gCellArrayX2 = 0;
-static Int_t   gCellArrayY1 = 0;
-static Int_t   gCellArrayY2 = 0;
-static Int_t   gCellArrayIdx = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 ///cell array begin
 
 void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
                                 Double_t y1, Double_t y2)
 {
-   if (!gPad || !fImage || (w <= 0) || (h <= 0)) {
+   if (!gPad || !fImage || (w <= 0) || (h <= 0))
       return;
-   }
-
-   if (gCellArrayColors) {
-      delete [] gCellArrayColors;
-   }
 
    fImage->BeginPaint();
 
-   gCellArrayN = w * h;
-   gCellArrayW = w;
-   gCellArrayH = h;
-   gCellArrayColors = new UInt_t[gCellArrayN];
+   fCellArrayW = w;
+   fCellArrayH = h;
+   fCellArrayColors.resize(w * h);
+   fCellArrayIdx = 0;
 
-   gCellArrayX1 = x1 < x2 ? XtoPixel(x1) : XtoPixel(x2);
-   gCellArrayX2 = x1 > x2 ? XtoPixel(x2) : XtoPixel(x1);
-   gCellArrayY1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
-   gCellArrayY2 = y1 < y2 ? YtoPixel(y2) : YtoPixel(y1);
-
-   gCellArrayIdx = 0;
+   fCellArrayX1 = x1 < x2 ? XtoPixel(x1) : XtoPixel(x2);
+   fCellArrayX2 = x1 > x2 ? XtoPixel(x2) : XtoPixel(x1);
+   fCellArrayY1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
+   fCellArrayY2 = y1 < y2 ? YtoPixel(y2) : YtoPixel(y1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -891,12 +873,12 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
 
 void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
-   if (gCellArrayIdx >= gCellArrayN) return;
+   if (fCellArrayIdx >= fCellArrayColors.size())
+      return;
 
    fImage->BeginPaint();
 
-   gCellArrayColors[gCellArrayIdx] = ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
-   gCellArrayIdx++;
+   fCellArrayColors[fCellArrayIdx++] = ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -904,25 +886,22 @@ void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 
 void TImageDump::CellArrayEnd()
 {
-   if (!fImage || !gCellArrayColors || !gCellArrayW || !gCellArrayH) {
+   if (!fImage || fCellArrayColors.empty() || !fCellArrayW || !fCellArrayH)
       return;
-   }
 
    fImage->BeginPaint();
 
-   fImage->DrawCellArray(gCellArrayX1, gCellArrayX2, gCellArrayY1, gCellArrayY2,
-                         gCellArrayW, gCellArrayH, gCellArrayColors);
+   fImage->DrawCellArray(fCellArrayX1, fCellArrayX2, fCellArrayY1, fCellArrayY2,
+                         fCellArrayW, fCellArrayH, fCellArrayColors.data());
 
-   delete [] gCellArrayColors;
-   gCellArrayColors = nullptr;
-   gCellArrayN = 0;
-   gCellArrayW = 0;
-   gCellArrayH = 0;
-   gCellArrayX1 = 0;
-   gCellArrayX2 = 0;
-   gCellArrayY1 = 0;
-   gCellArrayY2 = 0;
-   gCellArrayIdx = 0;
+   fCellArrayColors.clear();
+   fCellArrayIdx = 0;
+   fCellArrayW = 0;
+   fCellArrayH = 0;
+   fCellArrayX1 = 0;
+   fCellArrayX2 = 0;
+   fCellArrayY1 = 0;
+   fCellArrayY2 = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
