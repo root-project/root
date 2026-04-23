@@ -37,23 +37,23 @@ namespace Utility { struct PyOperators; }
 class CPPScope {
 public:
     enum EFlags {
-        kNone            = 0x0,
-        kIsMeta          = 0x0001,
-        kIsNamespace     = 0x0002,
-        kIsException     = 0x0004,
-        kIsSmart         = 0x0008,
-        kIsPython        = 0x0010,
-        kIsMultiCross    = 0x0020,
-        kIsInComplete    = 0x0040,
-        kNoImplicit      = 0x0080,
-        kNoOSInsertion   = 0x0100,
-        kGblOSInsertion  = 0x0200,
-        kNoPrettyPrint   = 0x0400 };
+        kNone                    = 0x0,
+        kIsMeta                  = 0x0001,
+        kIsNamespace             = 0x0002,
+        kIsException             = 0x0004,
+        kIsSmart                 = 0x0008,
+        kIsPython                = 0x0010,
+        kIsMultiCross            = 0x0020,
+        kIsInComplete            = 0x0040,
+        kActiveImplicitCall      = 0x0080,
+        kNoOSInsertion           = 0x0100,
+        kGblOSInsertion          = 0x0200,
+        kNoPrettyPrint           = 0x0400 };
 
 public:
-    PyHeapTypeObject  fType;
-    Cppyy::TCppType_t fCppType;
-    uint32_t          fFlags;
+    PyHeapTypeObject   fType;
+    Cppyy::TCppScope_t fCppType;
+    uint32_t           fFlags;
     union {
         CppToPyMap_t*           fCppObjects;     // classes only
         std::vector<PyObject*>* fUsing;          // namespaces only
@@ -69,7 +69,7 @@ typedef CPPScope CPPClass;
 
 class CPPSmartClass : public CPPClass {
 public:
-    Cppyy::TCppType_t   fUnderlyingType;
+    Cppyy::TCppScope_t  fUnderlyingType;
     Cppyy::TCppMethod_t fDereferencer;
 };
 
