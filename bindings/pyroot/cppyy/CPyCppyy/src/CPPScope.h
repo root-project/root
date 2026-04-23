@@ -52,7 +52,7 @@ public:
 
 public:
     PyHeapTypeObject   fType;
-    Cppyy::TCppScope_t fCppType;
+    Cppyy::TCppType_t  fCppType;
     uint32_t           fFlags;
     union {
         CppToPyMap_t*           fCppObjects;     // classes only
@@ -69,7 +69,7 @@ typedef CPPScope CPPClass;
 
 class CPPSmartClass : public CPPClass {
 public:
-    Cppyy::TCppScope_t  fUnderlyingType;
+    Cppyy::TCppType_t   fUnderlyingType;
     Cppyy::TCppMethod_t fDereferencer;
 };
 
