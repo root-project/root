@@ -100,5 +100,9 @@ inline Bool_t operator==(const TUUID &u1, const TUUID &u2)
 inline Bool_t operator!=(const TUUID &u1, const TUUID &u2)
 { return !(u1 == u2); }
 
+inline Bool_t operator<(const TUUID &u1, const TUUID &u2)
+{
+   return u1.Compare(u2) == -1;
+}
 
 #endif
