@@ -2056,6 +2056,16 @@ void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a wcharacter string - use TTF
+
+void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess)
+{
+   TTF::SetTextFont(gTextFont);
+   TTF::SetTextSize(fTextSize);
+   TTF::GetTextExtent(w, h, mess);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the X11 window identifier.
 /// wid      : Workstation identifier (input)
 
