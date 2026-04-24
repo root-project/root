@@ -126,9 +126,6 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool IsPointerType(TCppType_t type);
 
-    CPPYY_IMPORT
-    TCppScope_t gGlobalScope;      // for fast access
-
 // memory management ---------------------------------------------------------
     CPPYY_IMPORT
     TCppObject_t Allocate(TCppType_t type);
