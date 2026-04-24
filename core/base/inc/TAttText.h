@@ -39,6 +39,7 @@ public:
    virtual Float_t  GetTextSize()  const {return fTextSize;}  ///< Return the text size
    virtual Float_t  GetTextSizePercent(Float_t size);   ///< Return the text in percent of the pad size
    virtual Float_t  GetTextSizePixels(TVirtualPad &pad) const; ///< Return the text size in pixels for specified pad
+   virtual Float_t  GetTextSizeRelative(TVirtualPad &pad) const; ///< Return the text size in relative units
    virtual void     Modify();
    virtual void     ModifyOn(TVirtualPad &pad);
    virtual void     ResetAttText(Option_t *toption="");
