@@ -291,17 +291,14 @@ void TGListTreeItemStd::SetCheckBoxPictures(const TGPicture *checked,
    fClient->FreePicture(fUncheckedPic);
 
    if (!checked) {
-         ::Warning("TGListTreeItem::SetCheckBoxPictures", "checked picture not specified, defaulting to checked_t");
-         checked = fClient->GetPicture("checked_t.xpm");
-   } else
-      ((TGPicture *)checked)->AddReference();
+      ::Warning("TGListTreeItem::SetCheckBoxPictures", "checked picture not specified, defaulting to checked_t");
+      checked = fClient->GetPicture("checked_t.xpm");
+   }
 
    if (!unchecked) {
-         ::Warning("TGListTreeItem::SetCheckBoxPictures", "unchecked picture not specified, defaulting to unchecked_t");
-         unchecked = fClient->GetPicture("unchecked_t.xpm");
-   } else
-      ((TGPicture *)unchecked)->AddReference();
-
+      ::Warning("TGListTreeItem::SetCheckBoxPictures", "unchecked picture not specified, defaulting to unchecked_t");
+      unchecked = fClient->GetPicture("unchecked_t.xpm");
+   }
    fCheckedPic   = checked;
    fUncheckedPic = unchecked;
 }
@@ -317,14 +314,12 @@ void TGListTreeItemStd::SetPictures(const TGPicture *opened, const TGPicture *cl
    if (!opened) {
       ::Warning("TGListTreeItem::SetPictures", "opened picture not specified, defaulting to ofolder_t");
       opened = fClient->GetPicture("ofolder_t.xpm");
-   } else
-      ((TGPicture *)opened)->AddReference();
+   }
 
    if (!closed) {
       ::Warning("TGListTreeItem::SetPictures", "closed picture not specified, defaulting to folder_t");
       closed = fClient->GetPicture("folder_t.xpm");
-   } else
-      ((TGPicture *)closed)->AddReference();
+   }
 
    fOpenPic   = opened;
    fClosedPic = closed;
