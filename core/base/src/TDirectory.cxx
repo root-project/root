@@ -52,10 +52,6 @@ Describe directory structure in memory.
 
 TDirectory::TDirectory() : TNamed()
 {
-   // In the context of rootcling, we don't have gSystem
-   if (gSystem)
-      fUUID = TUUID::UUIDv4();
-
    // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
    std::atomic_flag_clear( &fSpinLock );
 }
@@ -76,10 +72,6 @@ TDirectory::TDirectory() : TNamed()
 TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classname*/, TDirectory* initMotherDir)
    : TNamed(name, title)
 {
-   // In the context of rootcling, we don't have gSystem
-   if (gSystem)
-      fUUID = TUUID::UUIDv4();
-
    // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
    std::atomic_flag_clear( &fSpinLock );
 
