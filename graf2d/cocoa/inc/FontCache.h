@@ -58,15 +58,15 @@ public:
 
    //Typographical bounds (whatever it means),
    //for the current selected font and text.
-   void GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const;
-   void GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> & unichars)const;
+   void GetTextBounds(CTFontRef fontref, UInt_t &w, UInt_t &h, const char *text)const;
+   void GetTextBounds(CTFontRef fontref, UInt_t &w, UInt_t &h, const std::vector<UniChar> & unichars)const;
    //
-   double GetAscent()const;
-   double GetAscent(const char *text)const;
-   double GetAscent(const std::vector<UniChar> & unichars)const;
-   double GetDescent()const;
-   double GetDescent(const char *text)const;
-   double GetDescent(const std::vector<UniChar> & unichars)const;
+   double GetAscent(CTFontRef fontref) const;
+   double GetAscent(CTFontRef fontref, const char *text) const;
+   double GetAscent(CTFontRef fontref, const std::vector<UniChar> &unichars) const;
+   double GetDescent(CTFontRef fontref) const;
+   double GetDescent(CTFontRef fontref, const char *text) const;
+   double GetDescent(CTFontRef fontref, const std::vector<UniChar> &unichars) const;
    double GetLeading()const;
 
 private:

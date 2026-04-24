@@ -537,12 +537,12 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 }
 
 //_________________________________________________________________
-void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
+void FontCache::GetTextBounds(CTFontRef fontref, UInt_t &w, UInt_t &h, const char *text)const
 {
-   assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
+   assert(fontref != 0 && "GetTextBounds: no font was selected");
 
    try {
-      const Quartz::TextLine ctLine(text, fSelectedFont);
+      const Quartz::TextLine ctLine(text, fontref);
       ctLine.GetBounds(w, h);
       h += 2;
    } catch (const std::exception &) {
@@ -551,12 +551,12 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 }
 
 //_________________________________________________________________
-void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &unichars)const
+void FontCache::GetTextBounds(CTFontRef fontref, UInt_t &w, UInt_t &h, const std::vector<UniChar> &unichars)const
 {
-   assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
+   assert(fontref != 0 && "GetTextBounds: no font was selected");
 
    try {
-      const Quartz::TextLine ctLine(unichars, fSelectedFont);
+      const Quartz::TextLine ctLine(unichars, fontref);
       ctLine.GetBounds(w, h);
       h += 2;
    } catch (const std::exception &) {
@@ -565,20 +565,20 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &
 }
 
 //_________________________________________________________________
-double FontCache::GetAscent()const
+double FontCache::GetAscent(CTFontRef fontref) const
 {
-   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
-   return CTFontGetAscent(fSelectedFont) + 1;
+   assert(fontref != 0 && "GetAscent, no font was selected");
+   return CTFontGetAscent(fontref) + 1;
 }
 
 //_________________________________________________________________
-double FontCache::GetAscent(const char *text)const
+double FontCache::GetAscent(CTFontRef fontref, const char *text) const
 {
    assert(text != 0 && "GetAscent, parameter 'text' is null");
-   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+   assert(fontref != 0 && "GetAscent, no font was selected");
 
    try {
-      const Quartz::TextLine ctLine(text, fSelectedFont);
+      const Quartz::TextLine ctLine(text, fontref);
       Int_t ascent = 0, descent = 0;
       ctLine.GetAscentDescent(ascent, descent);
       return ascent;
@@ -588,12 +588,12 @@ double FontCache::GetAscent(const char *text)const
 }
 
 //_________________________________________________________________
-double FontCache::GetAscent(const std::vector<UniChar> &unichars)const
+double FontCache::GetAscent(CTFontRef fontref, const std::vector<UniChar> &unichars) const
 {
-   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+   assert(fontref != 0 && "GetAscent, no font was selected");
 
    try {
-      const Quartz::TextLine ctLine(unichars, fSelectedFont);
+      const Quartz::TextLine ctLine(unichars, fontref);
       Int_t ascent = 0, descent = 0;
       ctLine.GetAscentDescent(ascent, descent);
       return ascent;
@@ -603,20 +603,20 @@ double FontCache::GetAscent(const std::vector<UniChar> &unichars)const
 }
 
 //_________________________________________________________________
-double FontCache::GetDescent()const
+double FontCache::GetDescent(CTFontRef fontref) const
 {
-   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
-   return CTFontGetDescent(fSelectedFont) + 1;
+   assert(fontref != 0 && "GetDescent, no font was selected");
+   return CTFontGetDescent(fontref) + 1;
 }
 
 //_________________________________________________________________
-double FontCache::GetDescent(const char *text)const
+double FontCache::GetDescent(CTFontRef fontref, const char *text) const
 {
    assert(text != 0 && "GetDescent, parameter 'text' is null");
-   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+   assert(fontref != 0 && "GetDescent, no font was selected");
 
    try {
-      const Quartz::TextLine ctLine(text, fSelectedFont);
+      const Quartz::TextLine ctLine(text, fontref);
       Int_t ascent = 0, descent = 0;
       ctLine.GetAscentDescent(ascent, descent);
       return descent;
@@ -626,12 +626,12 @@ double FontCache::GetDescent(const char *text)const
 }
 
 //_________________________________________________________________
-double FontCache::GetDescent(const std::vector<UniChar> &unichars)const
+double FontCache::GetDescent(CTFontRef fontref, const std::vector<UniChar> &unichars) const
 {
-   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+   assert(fontref != 0 && "GetDescent, no font was selected");
 
    try {
-      const Quartz::TextLine ctLine(unichars, fSelectedFont);
+      const Quartz::TextLine ctLine(unichars, fontref);
       Int_t ascent = 0, descent = 0;
       ctLine.GetAscentDescent(ascent, descent);
       return descent;
