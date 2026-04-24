@@ -442,9 +442,20 @@ PyObject* VectorIAdd(PyObject* self, PyObject* args, PyObject* /* kwds */)
         if (PyObject_CheckBuffer(fi) && !(CPyCppyy_PyText_Check(fi) || PyBytes_Check(fi))) {
             PyObject* vend = PyObject_CallMethodNoArgs(self, PyStrings::gEnd);
             if (vend) {
-                PyObject* result = PyObject_CallMethodObjArgs(self, PyStrings::gInsert, vend, fi, nullptr);
+            // when __iadd__ is overriden, the operation does not end with
+            // calling the __iadd__ method, but also assigns the result to the
+            // lhs of the iadd. For example, performing vec += arr, Python
+            // first calls our override, and then does vec = vec.iadd(arr).
+                PyObject *it = PyObject_CallMethodObjArgs(self, PyStrings::gInsert, vend, fi, nullptr);
                 Py_DECREF(vend);
-                return result;
+
+                if (!it)
+                    return nullptr;
+
+                Py_DECREF(it);
+            // Assign the result of the __iadd__ override to the std::vector
+                Py_INCREF(self);
+                return self;
             }
         }
     }
@@ -521,6 +532,9 @@ PyObject* VectorData(PyObject* self, PyObject*)
 }
 
 
+// This function implements __array__, added to std::vector python proxies and causes
+// a bug (see explanation at Utility::AddToClass(pyclass, "__array__"...) in CPyCppyy::Pythonize)
+#if 0
 //---------------------------------------------------------------------------
 PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -531,6 +545,7 @@ PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_DECREF(pydata);
     return newarr;
 }
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -1837,8 +1852,8 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
             Utility::AddToClass(pyclass, "__real_data", "data");
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
-        // numpy array conversion
-            Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
+        // numpy array conversion (disabled: buggy for multi-dim vectors)
+        //    Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
 
         // checked getitem
             if (HasAttrDirect(pyclass, PyStrings::gLen)) {
