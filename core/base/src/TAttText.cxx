@@ -148,13 +148,20 @@ If the text precision (see next paragraph) is smaller than 3, the text
 size (`textsize`) is a fraction of the current pad size. Therefore the
 same `textsize` value can generate text outputs with different absolute
 sizes in two different pads.
-The text size in pixels (`charheight`) is computed the following way:
+The text size in pixels (`charheight`) computed in the following way:
 
 ~~~ {.cpp}
    pad_width  = gPad->XtoPixel(gPad->GetX2());
    pad_height = gPad->YtoPixel(gPad->GetY1());
    if (pad_width < pad_height)  charheight = textsize*pad_width;
    else                         charheight = textsize*pad_height;
+~~~
+
+This value can be obtained using GetTextSizePixels() method:
+
+~~~ {.cpp}
+   TText txt;
+   auto charheight = text.GetTextSizePixels(*gPad);
 ~~~
 
 If the text precision is equal to 3, the text size doesn't depend on the pad's
@@ -310,20 +317,36 @@ void TAttText::Copy(TAttText &atttext) const
 
 Float_t TAttText::GetTextSizePercent(Float_t size)
 {
-   Float_t rsize = size;
-   if (fTextFont%10 > 2 && gPad) {
-      auto ww = gPad->WtoAbsPixel(gPad->GetX1(), gPad->GetX2());
-      auto hh = gPad->HtoAbsPixel(gPad->GetY1(), gPad->GetY2());
-      rsize = rsize / TMath::Max(1, TMath::Min(ww, hh));
+   if ((GetTextFont() % 2 < 3) || !gPad)
+      return size;
+
+   auto size0 = fTextSize;
+   fTextSize = size;
+   size = GetTextSizeRelative(*gPad);
+   fTextSize = size0;
+   return size;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the text size in relative units
+///
+/// If the font precision grater then 2 use pad dimensions to get value
+
+Float_t TAttText::GetTextSizeRelative(TVirtualPad &pad) const
+{
+   Float_t rsize = GetTextSize();
+   if (GetTextFont() % 10 > 2) {
+      auto wh = pad.XtoPixel(pad.GetX2());
+      auto hh = pad.YtoPixel(pad.GetY1());
+      rsize = rsize / TMath::Max(1, TMath::Min(wh, hh));
    }
    return rsize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the text size in pixels for the specified pad
 ///
-/// If the font precision less than 2 size defined as percent of pad size and
+/// If the font precision less than 3 size defined as percent of pad size and
 /// scaled to minimal pad size
 
 Float_t TAttText::GetTextSizePixels(TVirtualPad &pad) const
@@ -356,24 +379,9 @@ void TAttText::ModifyOn(TVirtualPad &pad)
       return;
 
    Float_t tsize0 = fTextSize;
-   Float_t tsize = fTextSize;
 
-   // there was difference in text size handling, keep it in one place
-   if (pp->IsNative()) {
-      tsize = GetTextSizePixels(pad);
-   } else {
-      if (fTextFont % 10 > 2) {
-         Float_t wh = pad.XtoPixel(pad.GetX2());
-         Float_t hh = pad.YtoPixel(pad.GetY1());
-         if (wh < hh)  {
-            Float_t dy = pad.AbsPixeltoX(Int_t(tsize)) - pad.AbsPixeltoX(0);
-            tsize = dy/(pad.GetX2() - pad.GetX1());
-         } else {
-            Float_t dy = pad.AbsPixeltoY(0) - pad.AbsPixeltoY(Int_t(tsize));
-            tsize = dy/(pad.GetY2() - pad.GetY1());
-         }
-      }
-   }
+   // PS-based painter uses relative size, gVirtualX - pixels
+   Float_t tsize = pp->GetPS() ? GetTextSizeRelative(pad) : GetTextSizePixels(pad);
 
    fTextSize = tsize;
 
@@ -381,7 +389,6 @@ void TAttText::ModifyOn(TVirtualPad &pad)
 
    fTextSize = tsize0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this text attributes to default values.
