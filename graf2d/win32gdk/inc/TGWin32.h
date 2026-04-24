@@ -155,8 +155,6 @@ public:
    ULong_t   GetPixel(Color_t cindex) override;
    void      GetPlanes(Int_t &nplanes) override;
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b) override;
-   virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess) override;
-   virtual void GetTextExtent(UInt_t &, UInt_t &, wchar_t *) override {}
    Float_t   GetTextMagnitude() override {return fTextMagnitude;}
    Window_t  GetWindowID(Int_t wid) override;
    Bool_t    HasTTFonts() const override { return fHasTTFonts; }
@@ -204,6 +202,8 @@ public:
    Int_t     WriteGIF(char *name) override;
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
    Window_t  GetCurrentWindow() const override;
+   void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess) override;
+   void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess) override;
 
    //---- Methods used for new graphics -----
    WinContext_t GetWindowContext(Int_t wid) override;
