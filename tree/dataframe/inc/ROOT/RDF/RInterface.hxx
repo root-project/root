@@ -1072,6 +1072,18 @@ public:
    /// hx["pt:up"].Draw("SAME");
    /// ~~~
    ///
+   /// ## Short-hand expression syntax
+   ///
+   /// For convenience, when a C++ expression is passed to Vary, the return type can be omitted if the string begins
+   /// with '{' and ends with '}' (whitespace, tab and newline characters are excluded from the search). This means that
+   /// the following is equivalent to the example above:
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "{pt*0.9, pt*1.1}", {"down", "up"})
+   /// // Same as above
+   /// ~~~
+   ///
    /// \note See also This Vary() overload for more information.
    RInterface<Proxied> Vary(std::string_view colName, std::string_view expression,
                             const std::vector<std::string> &variationTags, std::string_view variationName = "")
@@ -1103,6 +1115,18 @@ public:
    /// hx["nominal"].Draw();
    /// hx["pt:0"].Draw("SAME");
    /// hx["pt:1"].Draw("SAME");
+   /// ~~~
+   ///
+   /// ## Short-hand expression syntax
+   ///
+   /// For convenience, when a C++ expression is passed to Vary, the return type can be omitted if the string begins
+   /// with '{' and ends with '}' (whitespace, tab and newline characters are excluded from the search). This means that
+   /// the following is equivalent to the example above:
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "{pt*0.9, pt*1.1}", 2)
+   /// // Same as above
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
@@ -1140,6 +1164,31 @@ public:
    /// hx["nominal"].Draw();
    /// hx["xy:0"].Draw("SAME");
    /// hx["xy:1"].Draw("SAME");
+   /// ~~~
+   ///
+   /// ## Short-hand expression syntax
+   ///
+   /// For convenience, when a C++ expression is passed to Vary, the return type can be omitted if the string begins
+   /// with '{' and ends with '}' (whitespace, tab and newline characters are excluded from the search). This means that
+   /// the following is equivalent to the example above:
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", 2, "xy")
+   /// // Same as above
+   /// ~~~
+   ///
+   /// or also:
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", R"(
+   ///    {
+   ///     {x*0.9, x*1.1}, // x variations
+   ///     {y*0.9, y*1.1}  // y variations
+   ///    }
+   ///      )", 2, "xy")
+   /// // Same as above
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
@@ -1192,6 +1241,31 @@ public:
    /// hx["nominal"].Draw();
    /// hx["xy:down"].Draw("SAME");
    /// hx["xy:up"].Draw("SAME");
+   /// ~~~
+   ///
+   /// ## Short-hand expression syntax
+   ///
+   /// For convenience, when a C++ expression is passed to Vary, the return type can be omitted if the string begins
+   /// with '{' and ends with '}' (whitespace, tab and newline characters are excluded from the search). This means that
+   /// the following is equivalent to the example above:
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", {"down", "up"}, "xy")
+   /// // Same as above
+   /// ~~~
+   ///
+   /// or also:
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", R"(
+   ///    {
+   ///     {x*0.9, x*1.1}, // x variations
+   ///     {y*0.9, y*1.1} // y variations
+   ///    }
+   ///      )", {"down", "up"}, "xy")
+   /// // Same as above
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
