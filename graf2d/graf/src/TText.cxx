@@ -14,10 +14,7 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include "TTF.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TPoint.h"
@@ -478,7 +475,8 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
-   if (!gPad) return;
+   if (!gPad)
+      return;
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
@@ -503,16 +501,10 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       w = x2-x1;
       h = y2-y1;
    } else {
-      if ((gVirtualX->HasTTFonts() && TTF::IsInitialized()) || gPad->IsBatch()) {
-         TTF::GetTextExtent(w, h, (char*)GetTitle());
-      } else {
-         const Font_t oldFont = gVirtualX->GetTextFont();
-         if (gVirtualX->InheritsFrom("TGCocoa"))
-            gVirtualX->SetTextFont(fTextFont);
-         gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
-         if (gVirtualX->InheritsFrom("TGCocoa"))
-            gVirtualX->SetTextFont(oldFont);
-      }
+      Double_t tsize = GetTextSizePixels(*gPad);
+      auto pp = gPad->GetPainter();
+      if (pp)
+         pp->GetTextExtent(GetTextFont(), tsize, w, h, GetTitle());
    }
 }
 
@@ -523,32 +515,14 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      a = TTF::GetBox().yMax;
-      d = TMath::Abs(TTF::GetBox().yMin);
-   } else {
-      const Font_t oldFont = gVirtualX->GetTextFont();
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(fTextFont);
-      gVirtualX->SetTextSize(tsize);
-      a = gVirtualX->GetFontAscent(text);
-      if (!a) {
-         UInt_t w;
-         gVirtualX->GetTextExtent(w, a, (char*)text);
-      }
-      d = gVirtualX->GetFontDescent(text);
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(oldFont);
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextAscentDescent(GetTextFont(), tsize, a, d, text);
 }
 
 
@@ -559,27 +533,14 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch() || gVirtualX->InheritsFrom("TGCocoa")) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      a = TTF::GetBox().yMax;
-      d = TMath::Abs(TTF::GetBox().yMin);
-   } else {
-      gVirtualX->SetTextSize(tsize);
-      a = gVirtualX->GetFontAscent();
-      if (!a) {
-         UInt_t w;
-         gVirtualX->GetTextExtent(w, a, (wchar_t*)text);
-      }
-      d = gVirtualX->GetFontDescent();
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextAscentDescent(GetTextFont(), tsize, a, d, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,26 +550,14 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      TTF::GetTextExtent(w, h, (char*)text);
-   } else {
-      const Font_t oldFont = gVirtualX->GetTextFont();
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(fTextFont);
-      gVirtualX->SetTextSize(tsize);
-      gVirtualX->GetTextExtent(w, h, (char*)text);
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(oldFont);
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextExtent(GetTextFont(), tsize, w, h, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -618,33 +567,14 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 
 void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
-      Bool_t kernsave = TTF::GetKerning();
-      TTF::SetKerning(kern);
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      TTF::GetTextAdvance(a, (char*)text);
-      TTF::SetKerning(kernsave);
-   } else {
-      UInt_t h;
-      const Font_t oldFont = gVirtualX->GetTextFont();
-      //how do I know what to calculate without a font???
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(fTextFont);
+   Double_t tsize = GetTextSizePixels(*gPad);
 
-      gVirtualX->SetTextSize(tsize);
-      gVirtualX->GetTextExtent(a, h, (char*)text);
-
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(oldFont);
-   }
+   auto pp = gPad->GetPainter();
+   if (pp)
+      a = pp->GetTextAdvance(GetTextFont(), tsize, text, kern);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -654,21 +584,14 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch() || gVirtualX->InheritsFrom("TGCocoa")) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      TTF::GetTextExtent(w, h, (wchar_t*)text);
-   } else {
-      gVirtualX->SetTextSize(tsize);
-      gVirtualX->GetTextExtent(w, h, (wchar_t*)text);
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextExtent(GetTextFont(), tsize, w, h, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
