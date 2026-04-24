@@ -2,10 +2,10 @@
 """
 
 import ctypes
+import platform
 import sys
 
 from . import _stdcpp_fix
-from cppyy_backend import loader
 
 __all__ = [
     'gbl',
@@ -19,11 +19,23 @@ __all__ = [
     '_end_capture_stderr'
     ]
 
-# first load the dependency libraries of the backend, then pull in the
-# libcppyy extension module
-c = loader.load_cpp_backend()
-import libcppyy as _backend
-_backend._cpp_backend = c
+# First load the dependency libraries of the backend, then pull in the libcppyy
+# extension module. If the backed can't be loaded, it was probably linked
+# statically into the extension module, so we don't error out at this point.
+try:
+    from cppyy_backend import loader
+    c = loader.load_cpp_backend()
+except ModuleNotFoundError:
+    c = None
+
+if platform.system() == "Windows":
+    # On Windows, the library has to be searched without prefix
+    import libcppyy as _backend
+else:
+    import cppyy.libcppyy as _backend
+
+if c is not None:
+    _backend._cpp_backend = c
 
 # explicitly expose APIs from libcppyy
 _w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)
@@ -191,16 +203,9 @@ nullptr       = _backend.nullptr
 default       = _backend.default
 
 def load_reflection_info(name):
-#    with _stderr_capture() as err:
-    #FIXME: Remove the .so and add logic in libcppinterop
-    name = name + ".so"
-    result = Cpp.LoadLibrary(name, True)
-    if name.endswith("Dict.so"):
-        header = name[:-7] + ".h"
-        Cpp.Declare('#include "' + header +'"', False)
-
-    if result == False:
-        raise RuntimeError('Could not load library "%s"' % (name))
+    sc = gbl.gSystem.Load(name)
+    if sc == -1:
+        raise RuntimeError("Unable to load reflection library "+name)
 
     return True
 
