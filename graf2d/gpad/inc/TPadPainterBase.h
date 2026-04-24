@@ -105,6 +105,12 @@ public:
          att.Copy(fAttText);
    }
 
+   void GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
+   void GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
+   void GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess) override;
+   void GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess) override;
+   UInt_t GetTextAdvance(Font_t font, Double_t size, const char *text, Bool_t kern) override;
+
    ClassDefOverride(TPadPainterBase, 0)//Pad painter with attributes handling
 };
 

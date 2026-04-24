@@ -12,11 +12,16 @@
 #include "TPadPainterBase.h"
 #include "TColor.h"
 
+#include "TTF.h"
+#include "TVirtualX.h"
+#include "TMathBase.h"
 
 /** \class TPadPainterBase
 \ingroup gpad
 
 Extends TVirtualPadPainter interface to simplify work with graphical attributes
+
+Plus for now central place for TTF handling
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,4 +43,106 @@ TAttFill TPadPainterBase::GetAttFillInternal(Bool_t with_transparency)
    }
 
    return { color, style };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text extend
+
+void TPadPainterBase::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess)
+{
+   Bool_t res = kFALSE;
+
+   if (!HasTTFonts() && gVirtualX)
+      res = gVirtualX->GetTextExtentA(font, size, w, h, mess);
+
+   if (!res) {
+      TTF::SetTextFont(font);
+      TTF::SetTextSize(size);
+      TTF::GetTextExtent(w, h, mess);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text extend
+
+void TPadPainterBase::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess)
+{
+   Bool_t res = kFALSE;
+
+   if (!HasTTFonts() && gVirtualX)
+      res = gVirtualX->GetTextExtentA(font, size, w, h, mess);
+
+   if (!res) {
+      TTF::SetTextFont(font);
+      TTF::SetTextSize(size);
+      TTF::GetTextExtent(w, h, mess);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text accent / descent
+
+void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess)
+{
+   Bool_t res = kFALSE;
+
+   if (!HasTTFonts() && gVirtualX) {
+      res = gVirtualX->GetFontAscentDescent(font, size, a, d, mess);
+      if (res & !a) {
+         UInt_t w = 0;
+         gVirtualX->GetTextExtentA(font, size, w, a, mess);
+      }
+   }
+
+   if (!res) {
+      TTF::SetTextFont(font);
+      TTF::SetTextSize(size);
+      a = TTF::GetBox().yMax;
+      d = TMath::Abs(TTF::GetBox().yMin);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text accent / descent
+
+void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess)
+{
+   Bool_t res = kFALSE;
+
+   // special use case for MacOS - directly use TTF
+   if (!HasTTFonts() && !IsCocoa() && gVirtualX) {
+      res = gVirtualX->GetFontAscentDescent(font, size, a, d, "");
+      if (res & !a) {
+         UInt_t w = 0;
+         gVirtualX->GetTextExtentA(font, size, w, a, mess);
+      }
+   }
+
+   if (!res) {
+      TTF::SetTextFont(font);
+      TTF::SetTextSize(size);
+      a = TTF::GetBox().yMax;
+      d = TMath::Abs(TTF::GetBox().yMin);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text advance
+
+UInt_t TPadPainterBase::GetTextAdvance(Font_t font, Double_t size, const char *mess, Bool_t kern)
+{
+   if (!HasTTFonts() && gVirtualX) {
+      UInt_t a = 0, h;
+      if (gVirtualX->GetTextExtentA(font, size, a, h, mess))
+         return a;
+   }
+
+   Bool_t kernsave = TTF::GetKerning();
+   TTF::SetKerning(kern);
+   TTF::SetTextFont(font);
+   TTF::SetTextSize(size);
+   UInt_t a = 0;
+   TTF::GetTextAdvance(a, mess);
+   TTF::SetKerning(kernsave);
+   return a;
 }
