@@ -1267,17 +1267,6 @@ const char *TWinNTSystem::GetError()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return cryptographic random number
-/// Fill provided buffer with random values
-/// Returns number of bytes written to buffer or -1 in case of error
-
-Int_t TWinNTSystem::GetCryptoRandom(void *buf, Int_t len)
-{
-   auto res = BCryptGenRandom((BCRYPT_ALG_HANDLE) NULL, (PUCHAR) buf, (ULONG) len, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-   return !res ? len : -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the system's host name.
 
 const char *TWinNTSystem::HostName()
@@ -5384,7 +5373,7 @@ int TWinNTSystem::OpenConnection(const char *server, int port, int tcpwindowsize
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 /// Returns socket fd or -1 if socket() failed, -2 if bind() failed
 /// or -3 if listen() failed.
@@ -5474,7 +5463,7 @@ int TWinNTSystem::AnnounceUdpService(int port, int backlog, ESocketBindOption so
    // how many sockets can be waiting to be accepted. If port is 0 a port
    // scan will be done to find a free port. This option is mutual exlusive
    // with the reuse option.
-   // The socketBindOption parameter allows to specify how the socket will be 
+   // The socketBindOption parameter allows to specify how the socket will be
    // bound. See the documentation of ESocketBindOption for the details.
 
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
