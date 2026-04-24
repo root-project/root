@@ -113,6 +113,8 @@ system clock tick, the UUID generator will stall until the
 system clock catches up.
 */
 
+#include <ROOT/RCryptoRandom.hxx>
+
 #include "TROOT.h"
 #include "TDatime.h"
 #include "TUUID.h"
@@ -165,9 +167,8 @@ TUUID::TUUID(TV4Marker)
    // Ensure we can treat the memory starting at uuid.fTimeLow as an array of 16 octets
    assert(&fNode[5] - reinterpret_cast<unsigned char *>(&fTimeLow) + 1 == 16);
 
-   R__ASSERT(gSystem);
-   const auto rv = gSystem->GetCryptoRandom(&fTimeLow, 16);
-   R__ASSERT(rv == 16);
+   const auto rv = ROOT::Internal::GetCryptoRandom(&fTimeLow, 16);
+   R__ASSERT(rv);
    // Fix up variant
    fClockSeqHiAndReserved = (fClockSeqHiAndReserved & 0x3F) | (2 << 6);
    // Fix up version
