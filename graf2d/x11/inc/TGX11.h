@@ -126,12 +126,15 @@ protected:
 
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
    void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
-   void      *GetGC(Int_t which) const;
    Window_t  GetWindow(WinContext_t wctxt) const;
    void      *GetGCW(WinContext_t wctxt, Int_t which) const;
    EAlign     GetTextAlignW(WinContext_t wctxt) const;
 
    XColor_t  &GetColor(Int_t cid);
+
+   //---- Methods used for old graphics -----
+   void      *GetGC(Int_t which) const;
+
 
    TGX11(TGX11 &&org);
    TGX11(const TGX11 &org) = delete;
