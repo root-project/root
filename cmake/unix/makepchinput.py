@@ -346,6 +346,7 @@ def copyLinkDefs(rootSrcDir, outdir):
    os.chdir(rootSrcDir)
    wildcards = (os.path.join("*", "inc", "*LinkDef*.h"),
                 os.path.join("*", "*", "inc", "*LinkDef*.h"),
+                os.path.join("*", "*", "*", "inc", "*LinkDef*.h"),
                 os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"))
    linkDefNames = []
    for wildcard in wildcards:

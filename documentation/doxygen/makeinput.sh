@@ -18,18 +18,18 @@ echo "        ../../core/dictgen/              \\" >> Doxyfile_INPUT
 echo "        ../../core/cont/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/foundation/           \\" >> Doxyfile_INPUT
 echo "        ../../core/gui/                  \\" >> Doxyfile_INPUT
-echo "        ../../core/macosx/               \\" >> Doxyfile_INPUT
+echo "        ../../core/os/macosx/            \\" >> Doxyfile_INPUT
 echo "        ../../core/meta/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
 echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
-echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
+echo "        ../../core/parallel/multiproc/   \\" >> Doxyfile_INPUT
 echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
-echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
-echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
-echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
-echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
-echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
+echo "        ../../core/parallel/thread/      \\" >> Doxyfile_INPUT
+echo "        ../../core/os/unix/              \\" >> Doxyfile_INPUT
+echo "        ../../core/os/winnt/             \\" >> Doxyfile_INPUT
+echo "        ../../core/parallel/imt/         \\" >> Doxyfile_INPUT
+echo "        ../../core/compression/zip/inc/Compression.h \\" >> Doxyfile_INPUT
 echo "        ../../geom/                      \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/asimage/            \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/cocoa/              \\" >> Doxyfile_INPUT
@@ -77,7 +77,7 @@ echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__
 echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 
 # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/compression/lzma/     \\" >> Doxyfile_INPUT
 # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
 # echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT

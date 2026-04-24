@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/thread package
+# CMakeLists.txt file for building ROOT core/parallel/thread package
 ############################################################################
 
 if(WIN32)
@@ -91,7 +91,7 @@ if(WIN32)
     src/TWin32Thread.cxx
     src/TWin32ThreadFactory.cxx
   )
-  target_include_directories(Thread PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+  target_include_directories(Thread PRIVATE ${CMAKE_SOURCE_DIR}/core/os/winnt/inc)
 else()
   target_sources(Thread PRIVATE
     src/TPosixCondition.cxx
