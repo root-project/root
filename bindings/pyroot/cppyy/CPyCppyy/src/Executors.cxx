@@ -1160,6 +1160,8 @@ public:
         gf["const unsigned char ptr"] =     gf["unsigned char ptr"];
         gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
         gf["const std::byte ptr"] =         gf["std::byte ptr"];
+        gf["byte ptr"] =                    gf["std::byte ptr"];
+        gf["const byte ptr"] =              gf["std::byte ptr"];
         gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
         gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
         gf["short ptr"] =                   (ef_t)+[](cdims_t d) { return new ShortArrayExecutor{d};    };
@@ -1183,7 +1185,9 @@ public:
         gf["internal_enum_type_t&"] =       gf["int&"];
         gf["internal_enum_type_t ptr"] =    gf["int ptr"];
         gf["std::byte"] =                   gf["uint8_t"];
+        gf["byte"] =                        gf["uint8_t"];
         gf["std::byte&"] =                  gf["uint8_t&"];
+        gf["byte&"] =                       gf["uint8_t&"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
         gf["const byte&"] =                 gf["const uint8_t&"];
         gf["std::int8_t"] =                 gf["int8_t"];
