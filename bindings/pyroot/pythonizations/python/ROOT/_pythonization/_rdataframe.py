@@ -524,7 +524,8 @@ def pythonize_rdataframe(klass):
         getter = MethodTemplateGetter(getattr(klass, method_name), HistoProfileWrapper, model_class)
         setattr(klass, method_name, getter)
 
-    klass.Hist = MethodTemplateGetter(klass.Hist, HistWrapper)
+    if hasattr(klass, "Hist"):
+        klass.Hist = MethodTemplateGetter(klass.Hist, HistWrapper)
 
     klass._OriginalFilter = klass.Filter
     klass._OriginalDefine = klass.Define
