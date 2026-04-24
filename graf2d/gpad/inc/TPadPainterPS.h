@@ -48,6 +48,9 @@ public:
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
 
+
+   Bool_t   HasTTFonts() const override { return kTRUE; }
+
    void     NewPage() override;
 
    //TASImage support (noop for a non-gl pad).
