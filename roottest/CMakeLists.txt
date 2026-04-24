@@ -1,4 +1,10 @@
-set(ROOT_CONFIG_EXECUTABLE $<TARGET_FILE:root-config>)
+# set(ROOT_CONFIG_EXECUTABLE $<TARGET_FILE:root-config>) # Does not exist
+# BINDIR set by RootConfiguration.cmake
+if(MSVC)
+  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
+else()
+  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config)
+endif()
 if(NOT EXISTS ${ROOT_CONFIG_EXECUTABLE})
   message(FATAL_ERROR "root-config was not found in ${ROOT_CONFIG_EXECUTABLE}.")
 endif()
