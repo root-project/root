@@ -138,11 +138,11 @@ can be replaced with the simpler and exception safe:
 
 protected:
 
-   TObject         *fMother{nullptr};   // pointer to mother of the directory
-   TList           *fList{nullptr};     // List of objects in memory
-   TUUID            fUUID;              // Unique identifier
-   mutable TString  fPathBuffer;        //! Buffer for GetPath() function
-   TContext        *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
+   TObject         *fMother{nullptr};   ///< pointer to mother of the directory
+   TList           *fList{nullptr};     ///< List of objects in memory
+   TUUID            fUUID{TUUID::UUIDv4()}; ///< Unique identifier
+   mutable TString  fPathBuffer;        ///<! Buffer for GetPath() function
+   TContext        *fContext{nullptr};  ///<! Pointer to a list of TContext object pointing to this TDirectory
 
    using SharedGDirectory_t = std::shared_ptr<std::atomic<TDirectory *>>;
 
