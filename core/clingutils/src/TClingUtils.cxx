@@ -4828,12 +4828,15 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
       assert(instance->getAsCXXRecordDecl() != nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
 
-      clang::QualType subTy = input;
-      if (desugaredPrefix.getKind() == NestedNameSpecifier::Kind::Type)
-         subTy = ReSubstTemplateArg(clang::QualType(desugaredPrefix.getAsType(),0),instance);
-
-      subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
-      return subTy;
+      if (desugaredPrefix.getKind() == NestedNameSpecifier::Kind::Type) {
+         clang::QualType subTy = ReSubstTemplateArg(clang::QualType(desugaredPrefix.getAsType(),0),instance);
+         subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
+         return subTy;
+      }
+      // For namespace prefixes (e.g. std::), do NOT return early.
+      // The SubstTemplateTypeParmType nodes are inside the template args
+      // of the type itself. Fall through so the substitution logic below
+      // can replace them (e.g. double -> Double32_t).
    }
 
    QualType QT = input;
