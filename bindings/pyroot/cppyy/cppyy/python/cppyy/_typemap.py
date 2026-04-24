@@ -15,8 +15,7 @@ def _create_mapper(cls, extra_dct=None):
             cppname = name
             modname = 'cppyy.gbl'
         dct = {'__cpp_name__' : cppname, '__module__' : modname}
-        if extra_dct:
-            dct.update(extra_dct)
+        if extra_dct: dct.update(extra_dct)
         return type(name, (cls,), dct)
     return mapper
 
@@ -66,10 +65,9 @@ def with_metaclass(meta, *bases):
 # --- end from six.py
 
 class _BoolMeta(type):
-    def __call__(cls, val = bool()):
-        if val:
-            return True
-        return False
+    def __call__(self, val = bool()):
+        if val: return True
+        else: return False
 
 class _Bool(with_metaclass(_BoolMeta, object)):
     pass
@@ -115,4 +113,4 @@ def initialize(backend):
         import cppyy, ctypes
         if arg == cppyy.nullptr: arg = 0
         ctypes.c_void_p.__init__(self, arg)
-    tm['void*'] = _create_mapper(ctypes.c_void_p, {'__init__' : voidp_init})
+    tm['void *'] = _create_mapper(ctypes.c_void_p, {'__init__' : voidp_init})
