@@ -732,30 +732,6 @@ const char *TUnixSystem::GetError()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return cryptographic random number
-/// Fill provided buffer with random values
-/// Returns number of bytes written to buffer or -1 in case of error
-
-Int_t TUnixSystem::GetCryptoRandom(void *buf, Int_t len)
-{
-#if defined(R__ARC4_STDLIB) || defined(R__ARC4_BSDLIB)
-   arc4random_buf(buf, len);
-   return len;
-#elif defined(R__GETRANDOM_CLIB)
-   return getrandom(buf, len, GRND_NONBLOCK);
-#elif defined(R__USE_URANDOM)
-   std::ifstream urandom{"/dev/urandom"};
-   if (!urandom)
-      return -1;
-   urandom.read(reinterpret_cast<char *>(buf), len);
-   return len;
-#else
-#error "Reliable cryptographic random function not defined"
-   return -1;
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the system's host name.
 
 const char *TUnixSystem::HostName()
@@ -4298,7 +4274,7 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 /// Returns socket fd or -1 if socket() failed, -2 if bind() failed
 /// or -3 if listen() failed.
@@ -4378,7 +4354,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
 /// how many sockets can be waiting to be accepted. If port is 0 a port
 /// scan will be done to find a free port. This option is mutual exlusive
 /// with the reuse option.
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 
 int TUnixSystem::UnixUdpService(int port, int backlog, ESocketBindOption socketBindOption)
@@ -5268,10 +5244,10 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
 
    /*
     * Compute memory partition like procps(free), see https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
-    * 
+    *
     * fMemShared is a part of Cached (see https://lore.kernel.org/patchwork/patch/648763/), does not subtract twice from used
     */
-   
+
    meminfo->fMemCached = meminfo->fMemCached + meminfo->fSReclaimable - meminfo->fMemShared;
    const Int_t usedDiff = meminfo->fMemFree + meminfo->fMemCached + meminfo->fSReclaimable + meminfo->fMemBuffer;
 

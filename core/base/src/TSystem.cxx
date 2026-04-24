@@ -22,6 +22,7 @@ allows a simple partial implementation for new OS'es.
 */
 
 #include <ROOT/FoundationUtils.hxx>
+#include <ROOT/RCryptoRandom.hxx>
 #include "strlcpy.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -258,13 +259,16 @@ const char *TSystem::GetError()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return cryptographic random number
-/// Fill provided buffer with random values
+/// Fill provided buffer with random values. The number of requested random bytes must not exceed 256.
 /// Returns number of bytes written to buffer or -1 in case of error
 
-Int_t TSystem::GetCryptoRandom(void * /* buf */, Int_t /* len */)
+Int_t TSystem::GetCryptoRandom(void *buf, Int_t len)
 {
-   Error("GetCryptoRandom", "Not implemented");
-   return -1;
+   if (len < 0) {
+      return -1;
+   }
+   const auto rv = ROOT::Internal::GetCryptoRandom(buf, len);
+   return rv ? len : -1;
 }
 
 

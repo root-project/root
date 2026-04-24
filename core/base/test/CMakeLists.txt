@@ -26,6 +26,8 @@ ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
 
+ROOT_ADD_GTEST(CoreCryptoRandomTest CryptoRandomTest.cxx LIBRARIES Core)
+
 ROOT_ADD_GTEST(CoreColorTests TColorTests.cxx LIBRARIES Core)
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_HOST_SYSTEM_VERSION VERSION_GREATER_EQUAL 25.4)
   set_tests_properties(gtest-core-base-CoreColorTests PROPERTIES DISABLED True)
