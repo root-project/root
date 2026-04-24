@@ -187,6 +187,7 @@ class make_smartptr(object):
 
 gbl.std.make_shared = make_smartptr(gbl.std.shared_ptr, gbl.std.make_shared)
 gbl.std.make_unique = make_smartptr(gbl.std.unique_ptr, gbl.std.make_unique)
+gbl.gInterpreter = gbl.TInterpreter.Instance()
 del make_smartptr
 
 
@@ -258,9 +259,18 @@ def macro(cppm):
 def load_library(name):
     """Explicitly load a shared library."""
     with _stderr_capture() as err:
-        result = gbl.Cpp.LoadLibrary(name, True)
-    if result == False:
-        raise RuntimeError('Could not load library "%s": %s' % (name, err.err))
+        gSystem = gbl.gSystem
+        if name[:3] != 'lib':
+            if not gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
+                   gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
+                name = 'lib'+name
+        sc = gSystem.Load(name)
+    if sc == -1:
+      # special case for Windows as of python3.8: use winmode=0, otherwise the default
+      # will not consider regular search paths (such as $PATH)
+        if 0x3080000 <= sys.hexversion and 'win32' in sys.platform and os.path.isabs(name):
+            return ctypes.CDLL(name, ctypes.RTLD_GLOBAL, winmode=0)  # raises on error
+        raise RuntimeError('Unable to load library "%s"%s' % (name, err.err))
 
     return True
 
@@ -292,7 +302,7 @@ def add_library_path(path):
     """Add a path to the library search paths available to Cling."""
     if not os.path.isdir(path):
         raise OSError('No such directory: %s' % path)
-    gbl.Cpp.AddSearchPath(path, True, False)
+    gbl.gSystem.AddDynamicPath(path)
 
 # add access to Python C-API headers
 apipath = sysconfig.get_path('include', 'posix_prefix' if os.name == 'posix' else os.name)
@@ -303,66 +313,6 @@ elif ispypy:
     apipath = os.path.dirname(apipath)
     if os.path.exists(apipath) and os.path.exists(os.path.join(apipath, 'Python.h')):
         add_include_path(apipath)
-
-# add access to extra headers for dispatcher (CPyCppyy only (?))
-if not ispypy:
-    try:
-        apipath_extra = os.environ['CPPYY_API_PATH']
-        if os.path.basename(apipath_extra) == 'CPyCppyy':
-            apipath_extra = os.path.dirname(apipath_extra)
-    except KeyError:
-        apipath_extra = None
-
-    if apipath_extra is None:
-        try:
-            import pkg_resources as pr
-
-            d = pr.get_distribution('CPyCppyy')
-            for line in d.get_metadata_lines('RECORD'):
-                if 'API.h' in line:
-                    part = line[0:line.find(',')]
-
-            ape = os.path.join(d.location, part)
-            if os.path.exists(ape):
-                apipath_extra = os.path.dirname(os.path.dirname(ape))
-
-            del part, d, pr
-        except Exception:
-            pass
-
-    if apipath_extra is None:
-        ldversion = sysconfig.get_config_var('LDVERSION')
-        if not ldversion: ldversion = sys.version[:3]
-
-        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
-        if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            import glob, libcppyy
-            ape = os.path.dirname(libcppyy.__file__)
-          # a "normal" structure finds the include directory up to 3 levels up,
-          # ie. dropping lib/pythonx.y[md]/site-packages
-            for i in range(3):
-                if os.path.exists(os.path.join(ape, 'include')):
-                    break
-                ape = os.path.dirname(ape)
-
-            ape = os.path.join(ape, 'include')
-            if os.path.exists(os.path.join(ape, 'CPyCppyy')):
-                apipath_extra = ape
-            else:
-              # add back pythonx.y or site/pythonx.y if present
-                for p in glob.glob(os.path.join(ape, 'python'+sys.version[:3]+'*'))+\
-                         glob.glob(os.path.join(ape, '*', 'python'+sys.version[:3]+'*')):
-                    if os.path.exists(os.path.join(p, 'CPyCppyy')):
-                        apipath_extra = p
-                        break
-
-    if apipath_extra.lower() != 'none':
-        if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            warnings.warn("CPyCppyy API not found (tried: %s); set CPPYY_API_PATH envar to the 'CPyCppyy' API directory to fix" % apipath_extra)
-        else:
-            add_include_path(apipath_extra)
-
-    del apipath_extra
 
 if os.getenv('CONDA_PREFIX'):
   # MacOS, Linux
