@@ -37,6 +37,7 @@ public:
 
    void SetPainting(TWebPainting *p) { fPainting = p; }
 
+   Bool_t   HasTTFonts() const override { return kTRUE; }
 
    void     SetOpacity(Int_t percent) override;
 
