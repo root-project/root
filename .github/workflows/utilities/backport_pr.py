@@ -62,9 +62,9 @@ def parse_args():
 
     return (args.requestor, pullN, targetBranches)
 
-def printFirstMessage(requestor, pullNumber, targetBranches):
+def formFirstMessage(requestor, pullNumber, targetBranches):
     '''
-    Prints a message useful for debugging, declaring what the script will do 
+    Forms a message useful for debugging, declaring what the script will do 
     for what branches
     
     :param requestor: The user who would like to prepare a backport
@@ -80,8 +80,8 @@ def printFirstMessage(requestor, pullNumber, targetBranches):
         targetBranchesStr = ', '.join(targetBranches[:-1])
         targetBranchesStr += f' and {targetBranches[-1]}' 
         plural = 'es'
-    requestorInfo = f' requested by {requestor}' if requestor else ''
-    printInfo(f'Preparing to backport PR #{pullNumber} to branch{plural} {targetBranchesStr} {requestorInfo}')
+    requestorInfo = f'requested by {requestor}' if requestor else ''
+    return f'Preparing to backport PR #{pullNumber} to branch{plural} {targetBranchesStr} {requestorInfo}'
 
 def getWorkflowRunUrl():
     if not "GITHUB_SERVER_URL" in os.environ:
@@ -237,7 +237,8 @@ def principal():
     requestor, pullNumber, targetBranches = parse_args()
     
     # We declare what we are about to do, for clarity and debugging purposes
-    printFirstMessage(requestor, pullNumber, targetBranches)
+    firstMsg = formFirstMessage(requestor, pullNumber, targetBranches)
+    printInfo(firstMsg)
 
     # We get some information about the PR
     thePR = OfficialROOTRepoPR(pullNumber)
@@ -249,13 +250,19 @@ def principal():
     baseRefName = thePR.getBaseRefName()
     originalPRAuthor = thePR.getAuthor()
     
+    thePR.postComment(firstMsg)
+
     requestorInfo = f', requested by @{requestor}.' if requestor else ''
     if originalPRAuthor!=requestor:
         requestorInfo += f' For your information @{originalPRAuthor}'
 
     bpPRUrlBranch = []
 
-    labelSwitch = [] if labels == '' else ['--add-label', f'"{labels}"']
+    labelSwitch = []
+    if labels != '':
+        for label in labels.split(','):
+            labelSwitch.append('--add-label')
+            labelSwitch.append(f'"{label}"')
     assigneesSwitch = [] if assignees == '' else ['--add-assignee', f'"{assignees}"']
 
     execCommandBotRepo(['git', 'config', 'user.email', f'{requestor}@no-reply.github.com'])
@@ -296,23 +303,35 @@ def principal():
                                         '--head',  f'root-project-bot:{bpBranchName}',
                                         '--title', f'[{targetBranch}] {prTitle}',
                                         '--body',  f'Backport of #{pullNumber}{requestorInfo}'])
-            execCommandBotRepo(['gh', 'pr', 'edit', 
-                                 '--repo', 'root-project/root'] + \
-                               labelSwitch + assigneesSwitch , 
-                               env = prEditEnv)
         except:
             wflowUrl = getWorkflowRunUrl()
             if wflowUrl:
-                prComment = f'Something went wrong with the backport to {targetBranch}: '
+                prComment = f'Something went wrong with the creation of the PR to backport to {targetBranch}: '
                 if requestor:
                     prComment += f'@{requestor} '
                 prComment += f'please see [the logs]({wflowUrl})'
                 thePR.postComment(prComment)
-            raise
-        bpPRUrlBranch.append((prUrl,targetBranch))       
+            continue
+        
+        bpPRUrlBranch.append((prUrl,targetBranch))
+        bpPrNumber = prUrl.split('/')[-1]
+
+        try:
+            execCommandBotRepo(['gh', 'pr', 'edit', f'{bpPrNumber}',
+                        '--repo', 'root-project/root'] + \
+                    labelSwitch + assigneesSwitch , 
+                    env = prEditEnv)
+        except:
+            wflowUrl = getWorkflowRunUrl()
+            if wflowUrl:
+                prComment = f'Something went wrong when assigning the PR or setting labels '
+                if requestor:
+                    prComment += f'@{requestor} '
+                prComment += f'please see [the logs]({wflowUrl})'
+                thePR.postComment(prComment)
 
     if bpPRUrlBranch == []:
-        Exception('No backport succeeded!')
+        Exception('The PR was not ported to any branch!')
 
     # Let's write a clear message as a comment to communicate everything went well
     prComment = 'This PR has been backported to'
