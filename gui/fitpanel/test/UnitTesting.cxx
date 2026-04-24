@@ -10,6 +10,7 @@
 #include "TError.h"
 
 #include "TGComboBox.h"
+#include "TVirtualX.h"
 
 #include "TF2.h"
 #include "TMath.h"
@@ -26,6 +27,17 @@
 
 #include "../src/CommonDefs.h"
 
+class TTestVirtualX : public TVirtualX {
+   Long_t fCounter = 1;
+   public:
+
+      TTestVirtualX(const char *name, const char *title) : TVirtualX(name, title) {}
+
+      GContext_t   CreateGC(Drawable_t, GCValues_t *) override
+      {
+         return (GContext_t) fCounter++;
+      }
+};
 
 TString gTmpfilename;
 
@@ -482,6 +494,9 @@ public:
 // tests
 int UnitTesting()
 {
+   if (gROOT->IsBatch())
+      gVirtualX = new TTestVirtualX("BatchTest", "ROOT Interface to batch graphics");
+
    gROOT->SetWebDisplay("off");
 
    gTmpfilename = "UnitTesting.log";
