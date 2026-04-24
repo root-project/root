@@ -161,7 +161,7 @@ void TTF::ComputeTrailingBlanksWidth(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
-void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
+void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
 {
    Init();
 
@@ -178,7 +178,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get advance (a) when text is horizontal.
 
-void TTF::GetTextAdvance(UInt_t &a, char *text)
+void TTF::GetTextAdvance(UInt_t &a, const char *text)
 {
    Init();
 
@@ -192,7 +192,7 @@ void TTF::GetTextAdvance(UInt_t &a, char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
-void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
+void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
 {
    Init();
 
