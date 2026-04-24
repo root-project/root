@@ -140,7 +140,7 @@ protected:
 
    TObject         *fMother{nullptr};   ///< pointer to mother of the directory
    TList           *fList{nullptr};     ///< List of objects in memory
-   TUUID            fUUID;              ///< Unique identifier
+   TUUID            fUUID{TUUID::UUIDv4()}; ///< Unique identifier
    mutable TString  fPathBuffer;        ///<! Buffer for GetPath() function
    TContext        *fContext{nullptr};  ///<! Pointer to a list of TContext object pointing to this TDirectory
 
