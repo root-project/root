@@ -63,12 +63,13 @@ public:
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();
-   virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
 
 
-   //---- Old graphics interface -----
+   //---- Old, no longer used graphics interface -----
+
+   virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
 
            void      SetFillColor(Color_t cindex) override;
            void      SetFillStyle(Style_t style) override;
@@ -100,6 +101,7 @@ public:
                               ETextMode mode);
    virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text,
                               ETextMode mode);
+
 
    //---- New graphics interface -----
 
