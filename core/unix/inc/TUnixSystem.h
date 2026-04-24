@@ -78,7 +78,6 @@ public:
    void              SetProgname(const char *name) override;
    void              SetDisplay() override;
    const char       *GetError() override;
-   Int_t             GetCryptoRandom(void *buf, Int_t len) override;
    const char       *HostName() override;
 
    //---- EventLoop --------------------------------------------
