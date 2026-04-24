@@ -1181,17 +1181,45 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
 
 void TGX11::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
-   w=0; h=0;
-   if (strlen(mess)==0) return;
+   w = h = 0;
+   if (!mess || !*mess)
+      return;
 
-   XPoint *cBox;
    XRotSetMagnification(fTextMagnitude);
-   cBox = XRotTextExtents((Display*)fDisplay, gTextFont, 0., 0, 0, mess, 0);
+   XPoint *cBox = XRotTextExtents((Display*)fDisplay, gTextFont, 0., 0, 0, mess, 0);
    if (cBox) {
       w    = cBox[2].x;
       h    = -cBox[2].y;
-      free((char *)cBox);
+      free(cBox);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a wcharacter string - not implemented
+
+void TGX11::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *)
+{
+   w = h = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a character string for specified font and size
+/// On plain X11 font and size is ignored - just some default font is used
+
+Bool_t TGX11::GetTextExtentA(Font_t, Double_t, UInt_t &w, UInt_t &h, const char *mess)
+{
+   GetTextExtent(w, h, (char *)mess);
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a wcharacter string - not implemented
+/// On plain X11 font and size is ignored - just some default font is used
+
+Bool_t TGX11::GetTextExtentA(Font_t, Double_t, UInt_t &w, UInt_t &h, const wchar_t *)
+{
+   w = h = 0;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

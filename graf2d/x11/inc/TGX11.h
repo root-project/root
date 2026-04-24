@@ -157,8 +157,6 @@ public:
    ULong_t   GetPixel(Color_t cindex) override;
    void      GetPlanes(Int_t &nplanes) override;
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b) override;
-   void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess) override;
-   void      GetTextExtent(UInt_t &, UInt_t &, wchar_t *) override {}
    Float_t   GetTextMagnitude() override { return fTextMagnitude; }
    Window_t  GetWindowID(Int_t wid) override;
    Bool_t    HasTTFonts() const override { return fHasTTFonts; }
@@ -224,6 +222,8 @@ public:
    void      DrawPolyMarker(Int_t n, TPoint *xy) override;
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
+   void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess) override;
+   void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess) override;
 
    //---- Methods used for new graphics -----
    WinContext_t GetWindowContext(Int_t wid) override;
@@ -239,7 +239,6 @@ public:
    void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
    Int_t     WriteGIFW(WinContext_t wctxt, const char *name) override;
 
-
    void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
    void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
    void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
@@ -248,6 +247,10 @@ public:
    void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
    void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
    void      DrawTextW(WinContext_t, Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
+
+   Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
+   Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
+
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;
