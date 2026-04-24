@@ -102,6 +102,13 @@ public:
    virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text,
                               ETextMode mode);
 
+   virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   virtual void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess);
+   virtual Int_t     GetFontAscent() const;
+   virtual Int_t     GetFontAscent(const char *mess) const;
+   virtual Int_t     GetFontDescent() const;
+   virtual Int_t     GetFontDescent(const char *mess) const;
+
 
    //---- New graphics interface -----
 
@@ -127,6 +134,10 @@ public:
    virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode);
    virtual Int_t     WriteGIFW(WinContext_t wctxt, const char *name);
 
+   virtual Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess);
+   virtual Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess);
+   virtual Bool_t    GetFontAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess);
+
 
    //---- OpenGL related stuff, required only with R__HAS_COCOA ----
    virtual Double_t  GetOpenGLScalingFactor();
@@ -146,12 +157,6 @@ public:
    virtual ULong_t   GetPixel(Color_t cindex);
    virtual void      GetPlanes(Int_t &nplanes);
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
-   virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
-   virtual void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess);
-   virtual Int_t     GetFontAscent() const;
-   virtual Int_t     GetFontAscent(const char *mess) const;
-   virtual Int_t     GetFontDescent() const;
-   virtual Int_t     GetFontDescent(const char *mess) const;
    virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const;

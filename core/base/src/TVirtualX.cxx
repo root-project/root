@@ -652,6 +652,34 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t * /*mess*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the size of the specified character string "mess" for font and size.
+
+Bool_t TVirtualX::GetTextExtentA(Font_t, Double_t, UInt_t &w, UInt_t &h, const char *)
+{
+   w = h = 0;
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the size of the specified character string "mess" for font and size.
+
+Bool_t TVirtualX::GetTextExtentA(Font_t, Double_t, UInt_t &w, UInt_t &h, const wchar_t *)
+{
+   w = h = 0;
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ascent/descent for specified character string "mess" with font and size.
+
+
+Bool_t TVirtualX::GetFontAscentDescent(Font_t, Double_t, UInt_t &a, UInt_t &d, const char *)
+{
+   a = d = 0;
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns the ascent of the current font (in pixels).
 /// The ascent of a font is the distance from the baseline
 /// to the highest position characters extend to
