@@ -73,6 +73,7 @@ public:
    Int_t     GetFontAscent(const char *text) const override;
    Int_t     GetFontDescent() const override;
    Int_t     GetFontDescent(const char *text) const override;
+
    Float_t   GetTextMagnitude() override;
 
    //---- Methods used for new graphics -----
@@ -91,6 +92,9 @@ public:
    void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
    void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
 
+   Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
+   Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
+   Bool_t    GetFontAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess) override;
 
 private:
 
