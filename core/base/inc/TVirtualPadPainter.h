@@ -115,6 +115,15 @@ public:
    virtual void     LockPainter();
    virtual void     NewPage() {}
 
+   //Methods for text dimensions handling
+   virtual Bool_t    HasTTFonts() const;
+   virtual void      GetTextExtent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const char * /* mess */) {}
+   virtual void      GetTextExtent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const wchar_t * /* mess */) {}
+   virtual void      GetTextAscentDescent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const char * /* mess */) {}
+   virtual void      GetTextAscentDescent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const wchar_t * /* mess */) {}
+   virtual UInt_t    GetTextAdvance(Font_t /* font */, Double_t /* size */, const char * /* text */, Bool_t /* kern */ ) { return 0; }
+
+
    //Now, drawing primitives.
    virtual void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) = 0;
    virtual void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2) = 0;
