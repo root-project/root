@@ -1695,6 +1695,42 @@ bool CPyCppyy::StdSpanConverter::SetArg(PyObject *pyobject, Parameter &para, Cal
 
 #endif // __cplusplus >= 202002L
 
+namespace {
+
+// Copy a buffer to memory address with an array converter.
+template<class type>
+bool ToArrayFromBuffer(PyObject* owner, void* address, PyObject* ctxt,
+                       const void * buf, Py_ssize_t buflen,
+                       CPyCppyy::dims_t& shape, bool isFixed)
+{
+    if (buflen == 0)
+        return false;
+
+    Py_ssize_t oldsz = 1;
+    for (Py_ssize_t idim = 0; idim < shape.ndim(); ++idim) {
+        if (shape[idim] == CPyCppyy::UNKNOWN_SIZE) {
+            oldsz = -1;
+            break;
+        }
+        oldsz *= shape[idim];
+    }
+    if (shape.ndim() != CPyCppyy::UNKNOWN_SIZE && 0 < oldsz && oldsz < buflen) {
+        PyErr_SetString(PyExc_ValueError, "buffer too large for value");
+        return false;
+    }
+
+    if (isFixed)
+        memcpy(*(type**)address, buf, (0 < buflen ? buflen : 1)*sizeof(type));
+    else {
+        *(type**)address = (type*)buf;
+        shape.ndim(1);
+        shape[0] = buflen;
+        SetLifeLine(ctxt, owner, (intptr_t)address);
+    }
+    return true;
+}
+
+}
 
 //----------------------------------------------------------------------------
 #define CPPYY_IMPL_ARRAY_CONVERTER(name, ctype, type, code, suffix)            \
@@ -1908,6 +1944,17 @@ PyObject* CPyCppyy::CStringArrayConverter::FromMemory(void* address)
     else if (fShape[0] == UNKNOWN_SIZE)
         return CreateLowLevelViewString((const char**)address, fShape);
     return CreateLowLevelViewString(*(const char***)address, fShape);
+}
+
+bool CPyCppyy::CStringArrayConverter::ToMemory(PyObject* value, void* address, PyObject* ctxt)
+{
+// As a special array converter, the CStringArrayConverter one can also copy strings in the array,
+// and not only buffers.
+    Py_ssize_t len;
+    if (const char* cstr = CPyCppyy_PyText_AsStringAndSize(value, &len)) {
+        return ToArrayFromBuffer<char>(value, address, ctxt, cstr, len, fShape, fIsFixed);
+    }
+    return SCharArrayConverter::ToMemory(value, address, ctxt);
 }
 
 //----------------------------------------------------------------------------
