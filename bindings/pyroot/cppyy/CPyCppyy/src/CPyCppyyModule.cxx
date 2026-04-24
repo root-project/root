@@ -982,7 +982,7 @@ static struct PyModuleDef moduledef = {
 namespace CPyCppyy {
 
 //----------------------------------------------------------------------------
-extern "C" PyObject* PyInit_libcppyy()
+PyObject* Init()
 {
 // Initialization of extension module libcppyy.
 
