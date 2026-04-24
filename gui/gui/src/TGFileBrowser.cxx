@@ -764,8 +764,10 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
          pic = (TGPicture *)gClient->GetPicture("cdrom_t.xpm");
       else if (infos.Contains("Network"))
          pic = (TGPicture *)gClient->GetPicture("netdisk_t.xpm");
-      if (pic)
+      if (pic) {
          item->SetPictures(pic, pic);
+         gClient->FreePicture(pic);
+      }
    }
 }
 

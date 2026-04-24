@@ -1051,11 +1051,15 @@ void RootShower::OnShowerProduce()
          lpic = gClient->GetPicture("leaf_t.xpm");
          lspic = gClient->GetPicture("leaf_t.xpm");
          gLTI[i]->SetPictures(lpic, lspic);
+         gClient->FreePicture(lpic);
+         gClient->FreePicture(lspic);
       }
       else {
          bpic = gClient->GetPicture("branch_t.xpm");
          bspic = gClient->GetPicture("branch_t.xpm");
          gLTI[i]->SetPictures(bpic, bspic);
+         gClient->FreePicture(bpic);
+         gClient->FreePicture(bspic);
       }
       // Show only charged and massive particles...
       if ((fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
@@ -1204,11 +1208,15 @@ void RootShower::OnOpenFile(const Char_t *filename)
          lpic = gClient->GetPicture("leaf_t.xpm");
          lspic = gClient->GetPicture("leaf_t.xpm");
          gLTI[i]->SetPictures(lpic, lspic);
+         gClient->FreePicture(lpic);
+         gClient->FreePicture(lspic);
       }
       else {
          bpic = gClient->GetPicture("branch_t.xpm");
          bspic = gClient->GetPicture("branch_t.xpm");
          gLTI[i]->SetPictures(bpic, bspic);
+         gClient->FreePicture(bpic);
+         gClient->FreePicture(bspic);
       }
 
       if ((fEvent->GetParticle(i)->GetPdgCode() != PHOTON) &&
