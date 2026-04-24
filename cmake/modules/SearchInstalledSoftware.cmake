@@ -1404,14 +1404,7 @@ endif()
 #---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
 
 if (roofit_multiprocess)
-  if(NOT builtin_zeromq)
     message(STATUS "Looking for ZeroMQ (libzmq)")
-    # Clear cache before calling find_package(ZeroMQ),
-    # necessary to be able to toggle builtin_zeromq and
-    # not have find_package(ZeroMQ) find builtin ZeroMQ.
-    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
-      unset(ZeroMQ_${suffix} CACHE)
-    endforeach()
 
     # Temporarily prefer config mode over module mode, so that a CMake-installed system version
     # gets detected before looking for an autotools-installed system version (which the
@@ -1419,67 +1412,14 @@ if (roofit_multiprocess)
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE ${CMAKE_FIND_PACKAGE_PREFER_CONFIG})
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
-    if(fail-on-missing)
-      find_package(ZeroMQ 4.3.5 REQUIRED)
-    else()
-      find_package(ZeroMQ 4.3.5)
-      if(NOT ZeroMQ_FOUND)
-        message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
-        set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
-        # If the ZeroMQ system version is too old, we can't use the system C++
-        # headers either (note that find_package(ZeroMQ) not only checks if the
-        # library exists, but also if it's a recent version with zmq_ppoll).
-        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_cppzmq_description})" FORCE)
-      endif()
-    endif()
+    find_package(ZeroMQ 4.3.5 REQUIRED)
 
     # Reset default find_package mode
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ${CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE})
     unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE)
-  endif()
 
-  if(builtin_zeromq)
-    ROOT_CHECK_CONNECTION("builtin_zeromq=OFF")
-    if(NO_CONNECTION)
-      message(STATUS "No internet connection, disabling the `builtin_zeromq` and `roofit_multiprocess` options")
-      set(builtin_zeromq OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-      set(roofit_multiprocess OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    else()
-      list(APPEND ROOT_BUILTINS ZeroMQ)
-      add_subdirectory(builtins/zeromq/libzmq)
-    endif()
-  endif()
-
-  if(NOT builtin_cppzmq)
     message(STATUS "Looking for ZeroMQ C++ bindings (cppzmq)")
-    # Clear cache before calling find_package(cppzmq),
-    # necessary to be able to toggle builtin_cppzmq and
-    # not have find_package(cppzmq) find builtin cppzmq.
-    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS)
-      unset(cppzmq_${suffix} CACHE)
-    endforeach()
-    if(fail-on-missing)
-      find_package(cppzmq REQUIRED)
-    else()
-      find_package(cppzmq QUIET)
-      if(NOT cppzmq_FOUND)
-        message(STATUS "ZeroMQ C++ bindings not found. Switching on builtin_cppzmq option")
-        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ C++ bindings not found (${builtin_cppzmq_description})" FORCE)
-      endif()
-    endif()
-  endif()
-
-  if(builtin_cppzmq)
-    ROOT_CHECK_CONNECTION("builtin_cppzmq=OFF")
-    if(NO_CONNECTION)
-      message(STATUS "No internet connection, disabling the `builtin_cppzmq` and `roofit_multiprocess` options")
-      set(builtin_cppzmq OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-      set(roofit_multiprocess OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    else()
-      list(APPEND ROOT_BUILTINS cppzmq)
-      add_subdirectory(builtins/zeromq/cppzmq)
-    endif()
-  endif()
+    find_package(cppzmq REQUIRED)
 endif (roofit_multiprocess)
 
 #---Check for googletest---------------------------------------------------------------
