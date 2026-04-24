@@ -340,6 +340,7 @@ namespace {
             try {
                desiredValue = std::stoi(env);
             } catch (std::invalid_argument &e) {
+               (void)e;
                Error("TROOT", "%s should be 0 or 1", envName);
             }
             if (desiredValue == 0) {
