@@ -1,6 +1,7 @@
 """ cppyy extensions for numba
 """
 
+import sys
 import cppyy
 import cppyy.types as cpp_types
 import cppyy.reflex as cpp_refl
@@ -32,7 +33,9 @@ class Qualified:
 ir_byte     = ir.IntType(8)
 ir_voidptr  = ir.PointerType(ir_byte)                 # by convention
 ir_byteptr  = ir_voidptr                              # for clarity
-ir_intptr_t = ir.IntType(cppyy.sizeof('void*')*8)
+# FIXME: Revert this to only use cppyy.sizeof once Cpp::Evaluate on macOS is fixed
+sz = 64 if 'darwin' in sys.platform else cppyy.sizeof('void*') * 8
+ir_intptr_t = ir.IntType(sz)
 
 # special case access to unboxing/boxing APIs
 cppyy_as_voidptr   = cppyy.addressof('Instance_AsVoidPtr')
@@ -81,7 +84,7 @@ def cpp2numba(val):
     elif val[-1] == '*' or val[-1] == '&':
         if val.startswith('const'):
             return nb_types.CPointer(cpp2numba(resolve_const_types(val)))
-        return nb_types.CPointer(_cpp2numba[val[:-1]])
+        return nb_types.CPointer(_cpp2numba[val[:-2]])
     return _cpp2numba[val]
 
 _numba2cpp = dict()
@@ -127,13 +130,13 @@ def numba_arg_convertor(args):
 def to_ref(type_list):
     ref_list = []
     for l in type_list:
-        ref_list.append(l + '&')
+        ref_list.append(l + ' &')
     return ref_list
 
 # TODO: looks like Numba treats unsigned types as signed when lowering,
 # which seems to work as they're just reinterpret_casts
 _cpp2ir = {
-    'char*'                  : ir_byteptr,
+    'char *'                  : ir_byteptr,
     'int8_t'                 : ir.IntType(8),
     'uint8_t'                : ir.IntType(8),
     'short'                  : ir.IntType(nb_types.short.bitwidth),
@@ -160,10 +163,10 @@ def cpp2ir(val):
             ## TODO should be possible to obtain the vector length from the CPPDataMember val
             type_arr = ir.VectorType(cpp2ir(resolve_std_vector(val)), 3)
             return type_arr
-        elif val != "char*" and val[-1] == "*":
+        elif val != "char *" and val[-1] == "*":
             if val.startswith('const'):
                 return ir.PointerType(cpp2ir(resolve_const_types(val)))
-            type_2 = _cpp2ir[val[:-1]]
+            type_2 = _cpp2ir[val[:-2]]
             return ir.PointerType(type_2)
 
 #
