@@ -208,7 +208,7 @@ TEST(RDFVary, RequireReturnTypeIsRVec)
    EXPECT_THROW(
       try { df.Vary("x", "0", /*nVariations=*/2); } catch (const std::runtime_error &err) {
          const auto msg = "Jitted Vary expressions must return an RVec object. "
-                          "The following expression returns a int instead:\n0";
+                          "The following expression return type is 'int' instead:\n0";
          EXPECT_STREQ(err.what(), msg);
          throw;
       },
@@ -1895,4 +1895,26 @@ TEST_P(RDFVary, JittedVarySimultaneousVariationsDependingFromOtherColsImplicitRe
    EXPECT_DOUBLE_EQ(histos["xyz:up"].GetMean(), 795.5);
    EXPECT_DOUBLE_EQ(histos["xyz:other"].GetMaximum(), 1.);
    EXPECT_DOUBLE_EQ(histos["xyz:other"].GetMean(), 751.5);
+}
+
+TEST_P(RDFVary, JittedVaryEmptyString)
+{
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 1; }).Define("y", [] { return 42.; });
+   EXPECT_THROW(
+      try { df.Vary("x", "", /*nVariations=*/2); } catch (const std::runtime_error &err) {
+         const auto msg = "Jitted Vary expressions must return an RVec object. "
+                          "The following expression return type is 'void' instead:\n";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
+
+   EXPECT_THROW(
+      try { df.Vary({"x", "y"}, "", 1, "broken"); } catch (const std::runtime_error &err) {
+         const auto msg = "Jitted Vary expressions must return an RVec object. "
+                          "The following expression return type is 'void' instead:\n";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 }
