@@ -773,8 +773,8 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
 
    if (type.rfind("ROOT::VecOps::RVec", 0) != 0) {
       throw std::runtime_error(
-         "Jitted Vary expressions must return an RVec object. The following expression returns a " + type +
-         " instead:\n" + parsedExpr.fExpr);
+         "Jitted Vary expressions must return an RVec object. The following expression return type is '" + type +
+         "' instead:\n" + parsedExpr.fExpr);
    }
 
    auto jittedVariation = std::make_shared<RJittedVariation>(colNames, variationName, variationTags, type, colRegister,
