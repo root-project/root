@@ -55,7 +55,7 @@ if(NOT MSVC AND NOT dev)
   if(xrootd)
     ROOTTEST_GENERATE_EXECUTABLE(processExecutorH1Test
                                 tProcessExecutorH1Test.cpp
-                                COMPILE_FLAGS "-I${ROOTSYS}/tutorials/legacy/multicore"
+                                COMPILE_FLAGS "-I${ROOT_TUTORIALS_DIR}/legacy/multicore"
                                 LIBRARIES ROOT::MultiProc ROOT::Core ROOT::Net ROOT::TreePlayer ROOT::Tree ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf
                                 FIXTURES_SETUP root-multicore-processExecutorH1Test-fixture)
 
