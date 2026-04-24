@@ -1564,8 +1564,8 @@ if (builtin_gtest)
     set(EXTRA_GTEST_OPTS
       -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
   endif()
-  set(ROOT_GOOGLETEST_VERSION 1.16.0) # https://github.com/google/googletest/releases/tag/v1.16.0 Date: Feb 7, 2025
-  set(ROOT_GOOGLETEST_HASH "78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399")
+  set(ROOT_GOOGLETEST_VERSION 1.17.0) # https://github.com/google/googletest/releases/tag/v1.17.0 Date: Apr 30, 2025
+  set(ROOT_GOOGLETEST_HASH "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c")
   ExternalProject_Add(
     googletest
     # GIT_REPOSITORY https://github.com/google/googletest.git
