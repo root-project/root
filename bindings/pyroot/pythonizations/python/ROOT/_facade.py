@@ -304,7 +304,8 @@ class ROOTFacade(types.ModuleType):
         self.__dict__["gROOT"] = self._cppyy.gbl.ROOT.GetROOT()
 
         # Make sure the interpreter is initialized once gROOT has been initialized
-        self._cppyy.gbl.TInterpreter.Instance()
+        self.__dict__["gInterpreter"] = self._cppyy.gbl.TInterpreter.Instance()
+        self.__dict__["gPad"] = self._cppyy.gbl.TVirtualPad.Pad()
 
         # Release the GIL on the heavy TInterpreter functions. This lets
         # background Python threads make progress - in particular, JupyROOT's
