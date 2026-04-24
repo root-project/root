@@ -255,6 +255,7 @@ public:
     using SCharArrayConverter::SCharArrayConverter;
     bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
     PyObject* FromMemory(void* address) override;
+    bool ToMemory(PyObject*, void*, PyObject* = nullptr) override;
     virtual std::string GetFailureMsg() { return "[CStringArrayConverter]"; };
 
 private:
