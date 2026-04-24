@@ -1204,6 +1204,14 @@ hx["pt:down"].Draw("SAME");
 hx["pt:up"].Draw("SAME");
 ~~~
 
+A shorter expression syntax is allowed for convenience (see the docs of the Vary overloads for more details):
+
+~~~{.cpp}
+auto nominal_hx =
+   df.Vary("pt", "{pt*0.9f, pt*1.1f}", {"down", "up"})
+// The rest is the same as above
+~~~
+
 A list of variation "tags" is passed as the last argument to Vary(). The tags give names to the varied values that are returned
 as elements of an RVec of the appropriate C++ type. The number of variation tags must correspond to the number of elements of
 this RVec (2 in the example above: the first element will correspond to the tag "down", the second
