@@ -25,6 +25,8 @@ ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
 
+ROOT_ADD_GTEST(CoreCryptoRandomTest CryptoRandomTest.cxx LIBRARIES Core)
+
 ROOT_ADD_GTEST(CoreColorTests TColorTests.cxx LIBRARIES Core)
 
 configure_file(Foo.C Foo.C COPYONLY)
