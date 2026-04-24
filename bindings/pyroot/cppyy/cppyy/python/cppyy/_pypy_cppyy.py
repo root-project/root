@@ -3,8 +3,7 @@
 
 from . import _stdcpp_fix
 
-import os
-import sys
+import os, sys
 from cppyy_backend import loader
 
 __all__ = [
