@@ -398,62 +398,6 @@ if(asimage)
   endif()
 endif()
 
-#---Check for GSL library---------------------------------------------------------------
-if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
-  if(builtin_gsl)
-    ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_gsl")
-  endif()
-  message(STATUS "Looking for GSL")
-  if(NOT builtin_gsl)
-    find_package(GSL 1.10)
-    if(NOT GSL_FOUND)
-      if(fail-on-missing)
-        message(SEND_ERROR "GSL package not found and 'mathmore' component if required ('fail-on-missing' enabled). "
-                            "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally.")
-      else()
-        message(STATUS "GSL not found. Set variable GSL_ROOT_DIR to point to your GSL installation")
-        message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
-        message(STATUS "               For the time being switching OFF 'mathmore' option")
-        set(mathmore OFF CACHE BOOL "Disable because builtin_gsl disabled and external GSL not found (${mathmore_description})" FORCE)
-      endif()
-    endif()
-  else()
-    set(gsl_version 2.8)
-    message(STATUS "Downloading and building GSL version ${gsl_version}")
-    foreach(l gsl gslcblas)
-      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
-    set(GSL_CBLAS_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gslcblas${CMAKE_STATIC_LIBRARY_SUFFIX})
-    if(CMAKE_OSX_SYSROOT)
-      set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
-      set(_gsl_ldflags  "-isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    ExternalProject_Add(
-      GSL
-      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
-      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-      URL_HASH SHA256=6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
-      SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-                        --libdir=<INSTALL_DIR>/lib
-                        --enable-shared=no --with-pic
-                        CC=${CMAKE_C_COMPILER}
-                        CFLAGS=${CMAKE_C_FLAGS}
-                        CPPFLAGS=${_gsl_cppflags}
-                        LDFLAGS=${_gsl_ldflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_BYPRODUCTS ${GSL_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(GSL_TARGET GSL)
-    # FIXME: one need to find better way to extract path with GSL include files
-    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
-    set(GSL_FOUND ON)
-    set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
-  endif()
-endif()
-
 #---Check for Python installation-------------------------------------------------------
 
 message(STATUS "Looking for Python")
@@ -1265,42 +1209,120 @@ if(tmva-sofie)
   endif()
 endif()
 
-#---TMVA and its dependencies------------------------------------------------------------
-if(tmva)
-  if(tmva-cpu AND imt)
-    message(STATUS "Looking for BLAS for optional parts of TMVA")
-    # ROOT internal BLAS target
-    add_library(Blas INTERFACE)
-    add_library(ROOT::BLAS ALIAS Blas)
-    if(use_gsl_cblas)
-      message(STATUS "Using GSL CBLAS for optional parts of TMVA")
-      if(builtin_gsl)
-        add_dependencies(Blas GSL)
-        target_include_directories(Blas INTERFACE ${GSL_INCLUDE_DIR})
-        target_link_libraries(Blas INTERFACE ${GSL_CBLAS_LIBRARY})
+#---Figure out if TMVA CPU should be built and which BLAS we will use ------------------
+if(tmva-cpu)
+  if (NOT tmva)
+    set(tmva-cpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-cpu_description})" FORCE)
+  elseif(NOT imt)
+    set(tmva-cpu OFF CACHE BOOL "Disabled because 'imt' is disabled (${tmva-cpu_description})" FORCE)
+  endif()
+endif()
+if(tmva-cpu)
+  if (NOT use_gsl_cblas)
+    find_package(BLAS)
+    if(NOT BLAS_FOUND)
+      # If no optimized BLAS library was found, we fall back to attempting to
+      # use the GSL CBLAS. If ROOT is built with fail-on-missing=ON, this
+      # usually means that the user does not want us to change build flags
+      # automatically, so we send an error.
+      if(fail-on-missing)
+        message(SEND_ERROR "Option tmva-cpu requires a BLAS library, but none could be found on the system. Either install a BLAS library like OpenBLAS (preferred), or set use_gsl_cblas=ON (possibly also builtin_gsl=ON if GSL not installed on the system).")
       else()
-        if(GSL_FOUND)
-          target_link_libraries(Blas INTERFACE GSL::gslcblas)
-        endif()
-      endif()
-      target_compile_definitions(Blas INTERFACE -DR__USE_CBLAS)
-    else()
-      find_package(BLAS)
-      if(BLAS_FOUND)
-        target_link_libraries(Blas INTERFACE BLAS::BLAS)
+        set(use_gsl_cblas ON CACHE BOOL "Auto-enabling GSL CBLAS for TMVA [GPL]" FORCE)
       endif()
     endif()
-    if(NOT BLAS_FOUND AND NOT GSL_FOUND)
+  endif()
+endif()
+
+#---Check for GSL library---------------------------------------------------------------
+if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
+  if(builtin_gsl)
+    ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_gsl")
+  endif()
+  message(STATUS "Looking for GSL")
+  if(NOT builtin_gsl)
+    find_package(GSL 1.10)
+    if(NOT GSL_FOUND)
       if(fail-on-missing)
-        message(SEND_ERROR "tmva-cpu can't be built because BLAS was not found!")
+        message(SEND_ERROR "GSL package not found and 'mathmore' component is required ('fail-on-missing' enabled). "
+                            "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally.")
       else()
-        message(STATUS "tmva-cpu disabled because BLAS was not found")
-        set(tmva-cpu OFF CACHE BOOL "Disabled because BLAS was not found (${tmva-cpu_description})" FORCE)
+        message(STATUS "GSL not found. Set variable GSL_ROOT_DIR to point to your GSL installation")
+        message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
+        if (mathmore)
+          message(STATUS "               For the time being switching OFF 'mathmore' option")
+          set(mathmore OFF CACHE BOOL "Disable because builtin_gsl disabled and external GSL not found (${mathmore_description})" FORCE)
+        endif()
+        if (tmva-cpu AND use_gsl_cblas)
+          message(STATUS "               For the time being switching OFF 'tmva-cpu' option")
+          set(tmva-cpu OFF CACHE BOOL "Disable because use_gsl_cblas enabled, builtin_gsl disabled and external GSL not found (${tmva-cpu_description})" FORCE)
+        endif()
       endif()
     endif()
   else()
-    set(tmva-cpu OFF CACHE BOOL "Disabled because 'imt' is disabled (${tmva-cpu_description})" FORCE)
+    set(gsl_version 2.8)
+    message(STATUS "Downloading and building GSL version ${gsl_version}")
+    foreach(l gsl gslcblas)
+      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
+    set(GSL_CBLAS_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gslcblas${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if(CMAKE_OSX_SYSROOT)
+      set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
+      set(_gsl_ldflags  "-isysroot ${CMAKE_OSX_SYSROOT}")
+    endif()
+    ExternalProject_Add(
+      GSL
+      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
+      URL_HASH SHA256=6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
+      SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib
+                        --enable-shared=no --with-pic
+                        CC=${CMAKE_C_COMPILER}
+                        CFLAGS=${CMAKE_C_FLAGS}
+                        CPPFLAGS=${_gsl_cppflags}
+                        LDFLAGS=${_gsl_ldflags}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+      BUILD_BYPRODUCTS ${GSL_LIBRARIES}
+      TIMEOUT 600
+    )
+    set(GSL_TARGET GSL)
+    # FIXME: one need to find better way to extract path with GSL include files
+    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
+    set(GSL_FOUND ON)
+    set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
   endif()
+endif()
+
+#---TMVA and its dependencies------------------------------------------------------------
+if(tmva-cpu)
+  # ROOT internal BLAS target for TMVA
+  add_library(Blas INTERFACE)
+  add_library(ROOT::BLAS ALIAS Blas)
+  if (NOT use_gsl_cblas AND BLAS_FOUND)
+    target_link_libraries(Blas INTERFACE BLAS::BLAS)
+  elseif(use_gsl_cblas AND builtin_gsl)
+    message(STATUS "Using builtin GSL CBLAS for optional parts of TMVA")
+    add_dependencies(Blas GSL)
+    target_include_directories(Blas INTERFACE ${GSL_INCLUDE_DIR})
+    target_link_libraries(Blas INTERFACE ${GSL_CBLAS_LIBRARY})
+    target_compile_definitions(Blas INTERFACE -DR__USE_CBLAS)
+  elseif(use_gsl_cblas AND GSL_FOUND)
+    message(STATUS "Using GSL CBLAS for optional parts of TMVA")
+    target_link_libraries(Blas INTERFACE GSL::gslcblas)
+    target_compile_definitions(Blas INTERFACE -DR__USE_CBLAS)
+  else()
+    if(fail-on-missing)
+      message(SEND_ERROR "tmva-cpu can't be built because BLAS was not found!")
+    else()
+      message(STATUS "tmva-cpu disabled because BLAS was not found")
+      set(tmva-cpu OFF CACHE BOOL "Disabled because BLAS was not found (${tmva-cpu_description})" FORCE)
+    endif()
+  endif()
+endif()
+if(tmva)
   if(tmva-gpu AND NOT CMAKE_CUDA_COMPILER)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
   endif()
@@ -1346,7 +1368,6 @@ if(tmva)
     set(tmva-rmva  OFF CACHE BOOL "Disabled because R was not found (${tmva-rmva_description})"  FORCE)
   endif()
 else()
-  set(tmva-cpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-cpu_description})"   FORCE)
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
   set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
