@@ -1183,15 +1183,9 @@ void TGCheckButton::Init()
 
    Resize();
 
-   if (!fOn) {
-      Error("TGCheckButton", "checked_t.xpm not found or the file format is not supported.");
-   } else if (!fOff) {
-      Error("TGCheckButton", "unchecked_t.xpm not found or the file format is not supported.");
-   } else if (!fDisOn) {
-      Error("TGCheckButton", "checked_dis_t.xpm not found or the file format is not supported.");
-   } else if (!fDisOff) {
-      Error("TGCheckButton", "unchecked_dis_t.xpm not found or the file format is not supported.");
-   }
+   if (!fOn || !fOff || !fDisOn || !fDisOff)
+      Error("Init", "checked*_t.xpm not found or the file format is not supported.");
+
    int hotchar;
 
    if ((hotchar = fLabel->GetHotChar()) != 0) {
@@ -1229,8 +1223,11 @@ TGCheckButton::~TGCheckButton()
 
 TGDimension TGCheckButton::GetDefaultSize() const
 {
-   UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 9;
-   UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;
+   UInt_t pic_width = fOff ? fOff->GetWidth() : 10;
+   UInt_t pic_height = fOff ? fOff->GetHeight() : 2;
+
+   UInt_t w = !fTWidth ? pic_width : fTWidth + pic_width + 9;
+   UInt_t h = !fTHeight ? pic_height : fTHeight + 2;
 
    w = GetOptions() & kFixedWidth ? fWidth : w;
    h = GetOptions() & kFixedHeight ? fHeight : h;
@@ -1548,7 +1545,7 @@ void TGRadioButton::Init()
    fDisOff = fClient->GetPicture("rbutton_dis_off.xpm");
 
    if (!fOn || !fOff || !fDisOn || !fDisOff)
-      Error("TGRadioButton", "rbutton_*.xpm not found or the file format is not supported.");
+      Error("Init", "rbutton_*.xpm not found or the file format is not supported.");
 
    Resize();
 
@@ -1593,14 +1590,18 @@ TGRadioButton::~TGRadioButton()
 
 TGDimension TGRadioButton::GetDefaultSize() const
 {
-   UInt_t w = !fTWidth ? ( fOff?fOff->GetWidth():10) : fTWidth + fOff->GetWidth() + 10;
-   UInt_t h = !fTHeight ? ( fOff?fOff->GetHeight():2) : fTHeight + 2;
+   UInt_t pic_width = fOff ? fOff->GetWidth() : 10;
+   UInt_t pic_height = fOff ? fOff->GetHeight() : 2;
+
+   UInt_t w = !fTWidth ? pic_width : fTWidth + pic_width + 10;
+   UInt_t h = !fTHeight ? pic_height : fTHeight + 2;
 
    w = GetOptions() & kFixedWidth ? fWidth : w;
    h = GetOptions() & kFixedHeight ? fHeight : h;
 
    return TGDimension(w, h);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set radio button state.
 
