@@ -39,8 +39,6 @@ class TTestVirtualX : public TVirtualX {
       }
 };
 
-TString gTmpfilename;
-
 // Function that compares to doubles up to an error limit
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-4)
 {
@@ -124,7 +122,8 @@ public:
    };
 
    // Constructor: Receives the instance of the TFitEditor
-   FitEditorUnitTesting() {
+   FitEditorUnitTesting()
+   {
 
       // Execute the initial script
       TString scriptLine = TString(".x ") + TROOT::GetTutorialDir() + "/math/fit/FittingDemo.C+";
@@ -151,7 +150,8 @@ public:
    // trying to retrieve the TFitEditor singleton. If the user wants
    // to play a bit with the fitpanel once the tests have finised,
    // then they should comment this method.
-   ~FitEditorUnitTesting() {
+   ~FitEditorUnitTesting()
+   {
       f->DoClose();
    }
 
@@ -191,7 +191,8 @@ public:
    // of the test should be enough to know what they are testing, as
    // these tests are meant to be as simple as possible.
 
-   int TestHistogramFit() {
+   int TestHistogramFit()
+   {
       f->fTypeFit->Select(kFP_UFUNC, kTRUE);
       f->fFuncList->Select(kFP_ALTFUNC, kTRUE);
       f->DoFit();
@@ -207,7 +208,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestGSLFit() {
+   int TestGSLFit()
+   {
       f->fTypeFit->Select(kFP_PREVFIT, kTRUE);
       f->fLibGSL->Toggled(kTRUE);
       f->fMinMethodList->Select(kFP_BFGS2, kTRUE);
@@ -224,7 +226,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestUpdate() {
+   int TestUpdate()
+   {
       TString scriptLine = TString(".x ") + TROOT::GetTutorialsDir() + "/math/fit/ConfidenceIntervals.C+";
       gROOT->ProcessLine(scriptLine.Data());
       f->DoUpdate();
@@ -232,7 +235,8 @@ public:
       return 0;
    }
 
-   int TestGraph() {
+   int TestGraph()
+   {
       SelectEntry(f->fDataSet, "TGraph::GraphNoError");
 
       f->fLibMinuit2->Toggled(kTRUE);
@@ -249,7 +253,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-    int TestGraphError() {
+    int TestGraphError()
+    {
       SelectEntry(f->fDataSet, "TGraphErrors::Graph");
 
       f->fLibMinuit2->Toggled(kTRUE);
@@ -266,7 +271,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestGraph2D() {
+   int TestGraph2D()
+   {
       SelectEntry(f->fDataSet, "TGraph2D::Graph2DNoError");
 
       f->fLibMinuit2->Toggled(kTRUE);
@@ -290,7 +296,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestGraph2DError() {
+   int TestGraph2DError()
+   {
       SelectEntry(f->fDataSet, "TGraph2DErrors::Graph2D");
 
       f->fLibMinuit2->Toggled(kTRUE);
@@ -314,13 +321,15 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestUpdateTree() {
+   int TestUpdateTree()
+   {
       createTree();
       f->DoUpdate();
       return 0;
    }
 
-   int TestTree1D() {
+   int TestTree1D()
+   {
       TObject* objSelected = gROOT->FindObject("tree");
       if ( !objSelected )
          throw InvalidPointer("In TestUpdateTree");
@@ -345,7 +354,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestTree2D() {
+   int TestTree2D()
+   {
       TObject* objSelected = gROOT->FindObject("tree");
       if ( !objSelected )
          throw InvalidPointer("In TestUpdateTree");
@@ -374,7 +384,8 @@ public:
       return CompareFuncPars(pars);
    }
 
-   int TestTreeND() {
+   int TestTreeND()
+   {
       TObject* objSelected = gROOT->FindObject("tree");
       if ( !objSelected )
          throw InvalidPointer("In TestUpdateTree");
@@ -421,7 +432,7 @@ public:
       return CompareFuncPars(pars);
    }
 
-      // This is a generic method to make the output of all the tests
+   // This is a generic method to make the output of all the tests
    // consistent. T is a function pointer to one of the tests
    // function. It has been implemented through templates to permit
    // more test types than the originally designed.
@@ -429,11 +440,11 @@ public:
    // @ func : Member function pointer to the real implementation of
    // the test.
    template <typename T>
-   int MakeTest(const char* str,  T func)
+   int MakeTest(const char *str,  T func, Bool_t first = kFALSE)
    {
       RedirectHandle_t gRH;
 
-      gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
+      gSystem->RedirectOutput("outputUnitTesting.txt", first ? "w" : "a", &gRH);
 
       fprintf(stdout, "\n***** %s *****\n", str);
 
@@ -455,7 +466,7 @@ public:
 
       fprintf(stdout, "\n**STARTING TFitEditor Unit Tests**\n\n");
 
-      result += MakeTest("TestHistogramFit...", &FitEditorUnitTesting::TestHistogramFit);
+      result += MakeTest("TestHistogramFit...", &FitEditorUnitTesting::TestHistogramFit, kTRUE);
 
       result += MakeTest("TestGSLFit.........", &FitEditorUnitTesting::TestGSLFit);
 
@@ -471,9 +482,7 @@ public:
 
       result += MakeTest("TestUpdateTree.....", &FitEditorUnitTesting::TestUpdateTree);
 
-      // TODO: reenable in batch once stack smashing issue is fixed
-      if (!gROOT->IsBatch())
-         result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D);
+      result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D);
 
       // TODO: reenable once fit results are fixed
       // result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D);
@@ -482,7 +491,7 @@ public:
       // result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND);
 
       fprintf(stdout, "\nRemember to also check outputUnitTesting.txt for "
-              "more detailed information\n\n");
+                      "more detailed information\n\n");
 
       return result;
    }
@@ -499,17 +508,9 @@ int UnitTesting()
 
    gROOT->SetWebDisplay("off");
 
-   gTmpfilename = "UnitTesting.log";
-   auto f = gSystem->TempFileName(gTmpfilename);
-   fclose(f);
-
    FitEditorUnitTesting fUT;
 
-   auto res = fUT.UnitTesting();
-
-   gSystem->Unlink(gTmpfilename.Data());
-
-   return res;
+   return fUT.UnitTesting();
 }
 
 #ifndef __ROOTCLING__
