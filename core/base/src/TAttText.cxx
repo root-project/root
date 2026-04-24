@@ -16,6 +16,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
+#include "TMathBase.h"
 #include "TStyle.h"
 #include "TError.h"
 #include "TColor.h"
@@ -301,7 +302,7 @@ void TAttText::Copy(TAttText &atttext) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the text in percent of the pad size.
+/// Return the text size in percent of the pad size.
 ///
 /// If the font precision is greater than 2, the text size returned is the size in pixel
 /// converted into percent of the pad size, otherwise the size returned is the same as the
@@ -311,14 +312,29 @@ Float_t TAttText::GetTextSizePercent(Float_t size)
 {
    Float_t rsize = size;
    if (fTextFont%10 > 2 && gPad) {
-      UInt_t w = gPad->WtoAbsPixel(gPad->GetX1(), gPad->GetX2());
-      UInt_t h = gPad->HtoAbsPixel(gPad->GetY1(), gPad->GetY2());
-      if (w < h)
-         rsize = rsize/w;
-      else
-         rsize = rsize/h;
+      auto ww = gPad->WtoAbsPixel(gPad->GetX1(), gPad->GetX2());
+      auto hh = gPad->HtoAbsPixel(gPad->GetY1(), gPad->GetY2());
+      rsize = rsize / TMath::Max(1, TMath::Min(ww, hh));
    }
    return rsize;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the text size in pixels for the specified pad
+///
+/// If the font precision less than 2 size defined as percent of pad size and
+/// scaled to minimal pad size
+
+Float_t TAttText::GetTextSizePixels(TVirtualPad &pad) const
+{
+   Float_t tsize = GetTextSize();
+   if (GetTextFont() % 10 <= 2) {
+      auto wh = pad.XtoPixel(pad.GetX2());
+      auto hh = pad.YtoPixel(pad.GetY1());
+      tsize *= TMath::Min(wh, hh);
+   }
+   return tsize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -344,12 +360,7 @@ void TAttText::ModifyOn(TVirtualPad &pad)
 
    // there was difference in text size handling, keep it in one place
    if (pp->IsNative()) {
-      if (fTextFont % 10 <= 2) {
-         auto  wh = pad.XtoPixel(pad.GetX2());
-         auto  hh = pad.YtoPixel(pad.GetY1());
-         if (wh < hh)  tsize *= wh;
-         else          tsize *= hh;
-      }
+      tsize = GetTextSizePixels(pad);
    } else {
       if (fTextFont % 10 > 2) {
          Float_t wh = pad.XtoPixel(pad.GetX2());
