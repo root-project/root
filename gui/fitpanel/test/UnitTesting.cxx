@@ -174,6 +174,12 @@ public:
    int CompareFuncPars(std::vector<TFitEditor::FuncParamData_t>& pars)
    {
       int status = 0;
+
+      if (f->fFuncPars.size() != pars.size()) {
+         fprintf(stderr, "ERROR: mismatch of parameters size  fitpanel: %u refs: %u\n",  (unsigned) f->fFuncPars.size(), (unsigned) pars.size());
+         return 111;
+      }
+
       for ( unsigned int i = 0; i < f->fFuncPars.size(); ++i ) {
          for ( unsigned int j = 0; j < 3; ++j) {
             int internalStatus = equals(pars[i][j], f->fFuncPars[i][j]);
