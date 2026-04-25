@@ -655,7 +655,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 
    // Easy work scheduling: one file per slot. We skip empty files (files without entries).
 
-   if ((nRemainingFiles >= fNSlots) || (fGlobalEntryRange.has_value())) {
+   if ((nRemainingFiles >= fNSlots) || (fGlobalEntryRange.has_value() && nRemainingFiles != 1)) {
       while ((fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles)) {
          REntryRangeDS range;
 
@@ -708,13 +708,26 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
          const auto descGuard = source->GetSharedDescriptorGuard();
          return ROOT::Internal::GetClusterBoundaries(descGuard.GetRef());
       }();
+      unsigned int iFirstRange = 0;
+      unsigned int iLastRange = rangesByCluster.size() - 1;
+      if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first != fGlobalEntryRange->second) {
+         for (size_t j = 0; j < rangesByCluster.size(); j++) {
+            if (rangesByCluster[j].fFirstEntry + fSeenEntriesNoGlobalRange <= fGlobalEntryRange->first) {
+               iFirstRange = j;
+            }
+            if (rangesByCluster[j].fLastEntryPlusOne + fSeenEntriesNoGlobalRange >= fGlobalEntryRange->second) {
+               iLastRange = j;
+               break;
+            }
+         }
+      }
 
-      const unsigned int nRangesByCluster = rangesByCluster.size();
+      const unsigned int nRangesByCluster = iLastRange - iFirstRange + 1;
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
       const auto nClustersPerSlot = nRangesByCluster / nSlotsPerFile;
       const auto remainder = nRangesByCluster % nSlotsPerFile;
-      std::size_t iRange = 0;
+      std::size_t iRange = iFirstRange;
       unsigned int iSlot = 0;
       const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
       for (; iSlot < N; ++iSlot) {
