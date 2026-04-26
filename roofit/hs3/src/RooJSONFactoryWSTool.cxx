@@ -544,7 +544,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
  *
  * This function imports an analysis, represented by the provided JSONNodes 'analysisNode' and 'likelihoodsNode',
  * into the workspace represented by the provided RooWorkspace. The analysis information is read from the JSONNodes
- * and added to the workspace as one or more RooStats::ModelConfig objects.
+ * and added to the workspace as one or more RooFit::ModelConfig objects.
  *
  * @param rootnode The root JSONNode representing the entire JSON file.
  * @param analysisNode The JSONNode representing the analysis to be imported.
@@ -567,8 +567,8 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (workspace.obj(mcname))
       return;
 
-   workspace.import(RooStats::ModelConfig{mcname.c_str(), mcname.c_str()});
-   auto *mc = static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
+   workspace.import(RooFit::ModelConfig{mcname.c_str(), mcname.c_str()});
+   auto *mc = static_cast<RooFit::ModelConfig *>(workspace.obj(mcname));
    mc->SetWS(workspace);
 
    auto *nllNode = RooJSONFactoryWSTool::findNamedChild(likelihoodsNode, analysisNode["likelihood"].val());
@@ -1738,7 +1738,7 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
    }
 }
 
-void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
+void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelConfig const &mc,
                                              const std::vector<CombinedData> &combDataSets,
                                              const std::vector<RooAbsData *> &singleDataSets)
 {
@@ -1773,7 +1773,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    }
 }
 
-void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
+void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::ModelConfig const &mc,
                                                    std::string const &analysisName,
                                                    std::map<std::string, std::string> const *dataComponents)
 {
@@ -1936,7 +1936,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 
    // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
-      if (auto mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
+      if (auto mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
          exportModelConfig(n, *mc, combData, singleData);
       }
    }
@@ -2446,7 +2446,7 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
    RooWorkspace tmpWS = RooWorkspace();
    if (onlyModelConfig) {
       for (auto *obj : ws.allGenericObjects()) {
-         if (auto *mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
+         if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
             tmpWS.import(*mc->GetPdf(), RooFit::RecycleConflictNodes(true));
          }
       }
@@ -2479,7 +2479,7 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
    }
 
    /*
-   if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)) {
+   if (auto* mc = dynamic_cast<RooFit::ModelConfig*>(obj)) {
          // Import the PDF
    tmpWS.import(*mc->GetPdf());
 
@@ -2500,7 +2500,7 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
    tmpWS.import(*nuis);
 
 
-   RooStats::ModelConfig* mc_new = new RooStats::ModelConfig(mc->GetName(), mc->GetName());
+   RooFit::ModelConfig* mc_new = new RooFit::ModelConfig(mc->GetName(), mc->GetName());
 
    mc_new->SetPdf(*tmpWS.pdf(mc->GetPdf()->GetName()));
    mc_new->SetObservables(*tmpWS.set(obs->GetName()));
@@ -2627,7 +2627,7 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
          }
       }
 
-      if (auto *mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
+      if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
          // Sanitize ModelConfig name
          if (!isValidName(mc->GetName())) {
             mc->SetName(sanitizeName(mc->GetName()).c_str());
