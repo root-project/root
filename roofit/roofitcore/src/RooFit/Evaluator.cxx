@@ -326,17 +326,6 @@ void Evaluator::updateOutputSizes()
    for (auto &info : _nodes) {
       info.outputSize = outputSizeMap.at(info.absArg);
       info.isDirty = true;
-      // We don't need dirty flag propagation because the evaluator takes care
-      // of deciding what needs to be re-evaluated. We can disable the regular
-      // dirty state propagation. However, fundamental variables like
-      // RooRealVars and RooCategories are usually shared with other
-      // computation graphs outside the evaluator, so they can't be mutated.
-      // See also the code of the RooMinimizer, which ensures that dirty state
-      // propagation is temporarily disabled during minimization to really
-      // eliminate any overhead from the dirty flag propagation.
-      if (!info.absArg->isFundamental()) {
-         setOperMode(info.absArg, RooAbsArg::ADirty);
-      }
    }
 
    if (_useGPU) {
