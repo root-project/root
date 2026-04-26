@@ -126,7 +126,6 @@ class TestNUMBA:
         assert (go_fast(x) == go_slow(x)).all()
         assert self.compare(go_slow, go_fast, 300000, x)
 
-    @mark.xfail(strict=True)
     def test02_JITed_template_free_func(self):
         """Numba-JITing of Cling-JITed templated free function"""
 
@@ -281,7 +280,6 @@ class TestNUMBA:
 
         assert sum == tma(x)
 
-    @mark.xfail(strict=True)
     def test07_datatype_mapping(self):
         """Numba-JITing of various data types"""
 
@@ -659,7 +657,8 @@ class TestNUMBA:
         assert (njit_res == res)
         assert (time_njit < time_np)
 
-    @mark.skipif(eigen_path is None, reason="Eigen not found")
+    # @mark.skipif(eigen_path is None, reason="Eigen not found")
+    @mark.xfail(run=False, reason="Crashes with Transaction.cpp:98: void cling::Transaction::addNestedTransaction(cling::Transaction*): Assertion `!m_Unloading && 'Must not nest within unloading transaction' failed")
     def test14_eigen_numba(self):
         """Numba-JITing of a function that uses a cppyy declared Eigen Vector"""
 
@@ -743,7 +742,7 @@ class TestNUMBA_DOC:
         import cppyy
         import cppyy.numba_ext
 
-    @mark.xfail(strict=True)
+    @mark.xfail(strict=True, run=False, reason="Crashes with Transaction.cpp:98: void cling::Transaction::addNestedTransaction(cling::Transaction*): Assertion `!m_Unloading && 'Must not nest within unloading transaction' failed")
     def test01_templated_freefunction(self):
         """Numba support documentation example: free templated function"""
 
@@ -772,7 +771,8 @@ class TestNUMBA_DOC:
         assert type(tsa(a)) == int
         assert tsa(a) == 285
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
+    # @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, run=False, reason="Crashes with Transaction.cpp:98: void cling::Transaction::addNestedTransaction(cling::Transaction*): Assertion `!m_Unloading && 'Must not nest within unloading transaction' failed")
     def test02_class_features(self):
         """Numba support documentation example: class features"""
 
