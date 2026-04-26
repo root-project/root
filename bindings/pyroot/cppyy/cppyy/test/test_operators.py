@@ -1,15 +1,9 @@
 import pytest, os
 from pytest import raises, skip, mark
-from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC
+from support import setup_make, pylong, maxvalue, IS_WINDOWS
 
 
 test_dct = "operators_cxx"
-
-
-def compiled_with_gcc16():
-    import cppyy
-
-    return "gcc16" in cppyy.gbl.gSystem.GetBuildCompilerVersion()
 
 
 class TestOPERATORS:
@@ -227,7 +221,6 @@ class TestOPERATORS:
             assert m[1]    == 74
             assert m(1,2)  == 74
 
-    @mark.xfail(strict=True, reason="Compilation of unused call wrappers emits errors")
     def test09_templated_operator(self, capfd):
         """Templated operator<()"""
 
@@ -346,7 +339,6 @@ class TestOPERATORS:
         b = ns.Bar()
         assert b[42] == 42
 
-    @mark.xfail(strict=True, condition=IS_MAC or compiled_with_gcc16(), reason="Fails on macOS or gcc 16")
     def test15_class_and_global_mix(self):
         """Iterator methods have both class and global overloads"""
 
@@ -357,10 +349,6 @@ class TestOPERATORS:
 
         x = std.vector[int]([1,2,3])
         assert (x.end() - 1).__deref__() == 3
-        # Next line fails with "TypeError: int/long conversion expects an integer object".
-        # The subtraction should pick the (iterator, iterator) -> int overload,
-        # but it somehow chooses the (iterator, iterator) -> iterator overload
-        # with compiling ROOT with gcc 16. TODO: fix this.
         assert std.max_element(x.begin(), x.end())-x.begin() == 2
         assert (x.end() - 3).__deref__() == 1
 

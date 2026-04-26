@@ -781,7 +781,6 @@ class TestADVERTISED:
         Advert02.Picam_OpenFirstCamera(cam)
         assert Advert02.Picam_CloseCamera(cam)
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
     def test03_use_of_ctypes_and_enum(self):
         """Use of (opaque) enum through ctypes.c_void_p"""
 
@@ -1123,7 +1122,6 @@ class TestTALKEXAMPLES:
 
         assert v.back().add(17) == 4+42+2*17
 
-    @mark.xfail(strict=True)
     def test_fallbacks(self):
         """Template instantation switches based on value sizes"""
 
@@ -1168,7 +1166,6 @@ class TestTALKEXAMPLES:
         assert CC.callPtr(lambda i: 5*i, 4) == 20
         assert CC.callFun(lambda i: 6*i, 4) == 24
 
-    @mark.xfail(strict=True)
     def test_templated_callback(self):
         """Templated callback example"""
 
