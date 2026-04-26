@@ -476,7 +476,6 @@ class TestCROSSINHERITANCE:
         class MyPyDerived4(VD.MyClass4[int]):
             pass
 
-    @mark.xfail(strict=True)
     def test14_protected_access(self):
         """Derived classes should have access to protected members"""
 
@@ -1021,7 +1020,6 @@ class TestCROSSINHERITANCE:
         assert a.return_const().m_value == "abcdef"
         assert ns.callit(a).m_value     == "abcdef"
 
-    @mark.xfail(strict=True)
     def test24_non_copyable(self):
         """Inheriting from a non-copyable base class"""
 
@@ -1779,7 +1777,6 @@ class TestCROSSINHERITANCE:
         assert pysub.f3() == "Python: PySub::f3()"
         assert ns.call_fs(pysub) == pysub.f1() + pysub.f2() + pysub.f3()
 
-    @mark.xfail(strict=True)
     def test38_protected_data(self):
         """Multiple cross inheritance with protected data"""
 
