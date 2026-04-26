@@ -46,7 +46,7 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
    // Simultaneous PDF and model config
    ws.factory("SIMUL::simPdf(channelCat[channel_1=0, channel_2=1], channel_1=model_1, channel_2=model_2)");
 
-   RooStats::ModelConfig modelConfig{"ModelConfig"};
+   RooFit::ModelConfig modelConfig{"ModelConfig"};
 
    modelConfig.SetWS(ws);
    modelConfig.SetPdf("simPdf");

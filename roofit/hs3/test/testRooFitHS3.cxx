@@ -25,7 +25,7 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 #include <RooFormulaVar.h>
-#include <RooStats/ModelConfig.h>
+#include <RooFit/ModelConfig.h>
 
 #include <TROOT.h>
 
@@ -524,7 +524,7 @@ TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
    ws1.import(mv, RooFit::Silence(), RooFit::RecycleConflictNodes());
 
    // Build a ModelConfig referencing the pdf and its observables
-   RooStats::ModelConfig mc{"mc", &ws1};
+   RooFit::ModelConfig mc{"mc", &ws1};
    mc.SetPdf(*ws1.pdf("mvgauss"));
    mc.SetObservables("x,y");
    ws1.import(mc);
