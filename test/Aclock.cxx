@@ -93,8 +93,8 @@ void ClockHand::Move(Float_t clock_angle)
   // ClockPoints used to rotate,scale and shift initial points
   static ClockPoints *points = new ClockPoints();
 
-  Float_t wh = (Float_t)fPad->XtoPixel(fPad->GetX2());
-  Float_t hh = (Float_t)fPad->YtoPixel(fPad->GetY1());
+  Float_t wh = (Float_t)fPad->GetPadWidth();
+  Float_t hh = (Float_t)fPad->GetPadHeight();
 
   for (int i = 0; i < n; i++) {
      points->SetXY(fX0[i],fY0[i]);
