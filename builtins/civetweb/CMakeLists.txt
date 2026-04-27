@@ -72,6 +72,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   # URL https://github.com/civetweb/civetweb/archive/refs/tags/v${ROOT_CIVETWEB_VERSION}.tar.gz # TODO move to LCG
   # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
   # TODO: once 1.17 released, review _EXTERNAL_CIVETWEB workaround and bump SearchInstalledSoftware find_package to 1.17 plus remove builtin_ force-enable workaround with fail-on-missing
+  # and potentially install libcivetweb-dev in root-ci-images and change RootBuildOptions default builtin_civetweb to OFF, if random crashes seen by linev are gone
   GIT_REPOSITORY https://github.com/civetweb/civetweb.git
   GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
   PATCH_COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385 and https://github.com/civetweb/civetweb/pull/1389
