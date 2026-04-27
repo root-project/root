@@ -3767,6 +3767,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //   libraries via ACLiC in the same session and have them depend on each other without
    //   the need to set further environment variables.
    cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir() + " -Wl,-rpath," + build_loc);
+   // $BinDir and $LibDir are not mentioned in the docs, but used internally to
+   // build the absolute paths to ROOTs directories
+   cmd.ReplaceAll("$BinDir", gROOT->GetBinDir());
+   cmd.ReplaceAll("$LibDir", gROOT->GetLibDir());
    TString optdebFlags;
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
