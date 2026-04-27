@@ -114,7 +114,7 @@ private:
    TRefArray     *fHighPt;            //array of High Pt tracks only
    TRefArray     *fMuons;             //array of Muon tracks only
    TRef           fLastTrack;         //reference pointer to last track
-   TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
+   TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a remote file
    TH1F          *fH;                 //->
    TBits          fTriggerBits;       //Bits triggered by this event.
                             

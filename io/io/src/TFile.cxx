@@ -1869,7 +1869,6 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 ///
 /// The value pos[i] is the seek position of block i of length len[i].
 /// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-/// This function is overloaded by TNetFile, TWebFile, etc.
 /// Returns kTRUE in case of failure.
 
 Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
@@ -3752,22 +3751,22 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// Create / open a file
 ///
 /// The type of the file can be either a
-/// TFile, TNetFile, TWebFile or any TFile derived class for which an
+/// TFile or any TFile derived class for which an
 /// plugin library handler has been registered with the plugin manager
 /// (for the plugin manager see the TPluginManager class). The returned
 /// type of TFile depends on the file name specified by 'url'.
 /// If 'url' is a '|'-separated list of file URLs, the 'URLs' are tried
 /// sequentially in the specified order until a successful open.
-/// If the file starts with "root:", "roots:" or "rootk:" a TNetFile object
-/// will be returned, with "http:" a TWebFile, with "file:" a local TFile,
+/// If the file starts with "root:", "roots:" or "rootk:" an XRootD-backed file
+/// will be returned, with "http:" a curl-based file, with "file:" a local TFile,
 /// etc. (see the list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc
 /// for regular expressions that will be checked) and as last a local file will
 /// be tried.
-/// Before opening a file via TNetFile a check is made to see if the URL
+/// Before opening a file via a remote API, a check is made to see if the URL
 /// specifies a local file. If that is the case the file will be opened
 /// via a normal TFile. To force the opening of a local file via a
-/// TNetFile use either TNetFile directly or specify as host "localhost".
-/// The netopt argument is only used by TNetFile. For the meaning of the
+/// specify as host "localhost".
+/// The netopt argument is not used, any more. For the meaning of the
 /// options and other arguments see the constructors of the individual
 /// file classes. In case of error, it returns a nullptr.
 ///
