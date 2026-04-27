@@ -15,14 +15,15 @@
 \ingroup IO
 \brief A file, usually with extension .root, that stores data and code in the form of serialized objects in a
 file-system-like logical structure, possibly including subdirectory hierarchies.
-\note ROOT files contain data, and executable code, for example through TExec, TMacro, and TFormula instances. As for all files, **do not open ROOT files from an unknown origin!**
+\note ROOT files contain data, and executable code, for example through TExec, TMacro, and TFormula instances. As for
+all files, **do not open ROOT files from an unknown origin!**
 \note See also \ref IO
 \note See also \ref rootio (or `io/doc/TFile` folder in your codebase)
 
-ROOT files a are an efficient mean to store C++ class instances, e.g. data, 
-both as individual objects, in a so called *row-wise fashion*, and in a 
+ROOT files a are an efficient mean to store C++ class instances, e.g. data,
+both as individual objects, in a so called *row-wise fashion*, and in a
 *so-called columnar fashion*. Also executable code can be stored in ROOT files,
-for example in the form of TMacro, TExec or TFormula instances, and the 
+for example in the form of TMacro, TExec or TFormula instances, and the
 related federation of classes.
 
 For example, a TCanvas or TPad instance may rely on TExec instances stored in
@@ -3984,11 +3985,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
                if (h->LoadPlugin() == -1)
                   return nullptr;
-               TClass *cl = TClass::GetClass(h->GetClass());
-               if (cl && cl->InheritsFrom("ROOT::Deprecated::TNetFile"))
-                  f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
-               else
-                  f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+               f = (TFile *)h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
                // plug-in in the case file name contains information about a special backend (e.g.)

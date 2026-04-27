@@ -422,7 +422,7 @@ RSA.KeyType:  1
 # UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
 #SrvAuth.CheckHostsEquivalence: 1
 
-# Force file opening via TNetFile (TNetXNGFile) if a hostname is specified
+# Force file opening via TNetXNGFile if a hostname is specified
 # in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
 #TFile.ForceRemote:  yes
@@ -530,9 +530,6 @@ NetXNG.QueryReadVParams: $(ROOT_XRD_QUERY_READV_PARAMS)
 # classes give a comprehensive client side support for HTTP and WebDAV,
 # with all the goodies (session caching, flexible authentication, support
 # for different dialects like S3, and others)
-
-# Use the old TWebFile instead of the new libDavix based version
-Davix.UseOldClient: @useoldwebfile@
 
 # Verbosity level of the external Davix library
 # Davix.Debug: 0

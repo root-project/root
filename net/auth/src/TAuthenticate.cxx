@@ -24,7 +24,6 @@
 #include "THostAuth.h"
 #include "TRootSecContext.h"
 #include "TPluginManager.h"
-#include "TNetFile.h"
 #include "TPSocket.h"
 #include "TMessage.h"
 #include "TSystem.h"
