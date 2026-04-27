@@ -192,10 +192,6 @@ public:
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != ROOT::kInvalidDescriptorId; }
    bool IsSoACollection() const { return fIsSoACollection; }
-
-   bool IsCustomClass() const R__DEPRECATED(6, 42, "removed from public interface");
-   bool IsCustomEnum(const RNTupleDescriptor &desc) const R__DEPRECATED(6, 42, "removed from public interface");
-   bool IsStdAtomic() const R__DEPRECATED(6, 42, "removed from public interface");
 };
 
 // clang-format off

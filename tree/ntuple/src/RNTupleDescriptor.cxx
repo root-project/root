@@ -151,35 +151,6 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    }
 }
 
-bool ROOT::RFieldDescriptor::IsCustomClass() const
-{
-   if (fStructure != ROOT::ENTupleStructure::kRecord && fStructure != ROOT::ENTupleStructure::kStreamer)
-      return false;
-
-   // Skip untyped structs
-   if (fTypeName.empty())
-      return false;
-
-   if (fStructure == ROOT::ENTupleStructure::kRecord) {
-      if (fTypeName.compare(0, 10, "std::pair<") == 0)
-         return false;
-      if (fTypeName.compare(0, 11, "std::tuple<") == 0)
-         return false;
-   }
-
-   return true;
-}
-
-bool ROOT::RFieldDescriptor::IsCustomEnum(const RNTupleDescriptor &desc) const
-{
-   return Internal::IsCustomEnumFieldDesc(desc, *this);
-}
-
-bool ROOT::RFieldDescriptor::IsStdAtomic() const
-{
-   return Internal::IsStdAtomicFieldDesc(*this);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ROOT::RColumnDescriptor::operator==(const RColumnDescriptor &other) const

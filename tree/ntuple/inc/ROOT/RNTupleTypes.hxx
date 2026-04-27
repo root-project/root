@@ -112,9 +112,6 @@ enum class ENTupleStructure : std::uint16_t {
    kVariant,
    kStreamer,
    kUnknown,
-
-   // for backwards compatibility
-   kLeaf R__DEPRECATED(6, 42, "use instead ROOT::ENTupleStructure::kPlain") = kPlain
 };
 
 inline std::ostream &operator<<(std::ostream &os, ENTupleStructure structure)
