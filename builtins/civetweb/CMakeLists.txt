@@ -10,6 +10,8 @@ set(ROOT_CIVETWEB_VERSION 1.16)
 set(ROOT_CIVETWEB_HASH "f0e471c1bf4e7804a6cfb41ea9d13e7d623b2bcc7bc1e2a4dd54951a24d60285")
 set(ROOT_CIVETWEB_PREFIX ${CMAKE_BINARY_DIR}/builtins/CIVETWEB-prefix)
 set(ROOT_CIVETWEB_LIBRARY ${ROOT_CIVETWEB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}civetweb${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(ROOT_CIVETWEB_PATCH_FILE_1 ${CMAKE_CURRENT_SOURCE_DIR}/v1_17.patch) # From master branch (https://github.com/civetweb/civetweb/commit/588860e30721bf5453b0440c390865a8e85dcae5): git format-patch v1.16 --stdout > v1_17.patch
+set(ROOT_CIVETWEB_PATCH_FILE_2 ${CMAKE_CURRENT_SOURCE_DIR}/0001-only-include-engine-when-needed.patch) # From https://github.com/civetweb/civetweb/pull/1389 git format-patch -1
 
 if (NOT DEFINED GIT_EXECUTABLE)
   set(GIT_EXECUTABLE "git")
@@ -71,10 +73,11 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
   URL https://github.com/civetweb/civetweb/archive/refs/tags/v${ROOT_CIVETWEB_VERSION}.tar.gz # TODO move to LCG
   URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
-
+  PATCH_COMMAND ${GIT_EXECUTABLE} apply ${ROOT_CIVETWEB_PATCH_FILE_1} ${ROOT_CIVETWEB_PATCH_FILE_2}
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
   LOG_BUILD     FALSE
+  LOG_PATCH     TRUE
   LOG_INSTALL   FALSE
   LOG_OUTPUT_ON_FAILURE FALSE
   USES_TERMINAL_DOWNLOAD true

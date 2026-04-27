@@ -1,0 +1,26 @@
+From 32dd125e9bdec6844fc8885eb467fb9bf24d44fa Mon Sep 17 00:00:00 2001
+From: ferdymercury <ferdymercury@users.noreply.github.com>
+Date: Mon, 27 Apr 2026 15:34:11 +0200
+Subject: [PATCH] only include engine when needed
+
+---
+ src/civetweb.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/civetweb.c b/src/civetweb.c
+index f6a60e21..003e9e28 100644
+--- a/src/civetweb.c
++++ b/src/civetweb.c
+@@ -1797,7 +1797,9 @@ typedef struct SSL_CTX SSL_CTX;
+ #include <openssl/conf.h>
+ #include <openssl/crypto.h>
+ #include <openssl/dh.h>
++#if defined(OPENSSL_API_1_0)
+ #include <openssl/engine.h>
++#endif
+ #include <openssl/err.h>
+ #include <openssl/opensslv.h>
+ #include <openssl/pem.h>
+-- 
+2.34.1
+
