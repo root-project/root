@@ -658,7 +658,6 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAF
    : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fSoAClass(source.fSoAClass),
      fSoAMemberOffsets(source.fSoAMemberOffsets),
-     fRecordMemberIndexes(source.fRecordMemberIndexes),
      fMaxAlignment(source.fMaxAlignment)
 {
    fTraits = source.GetTraits();
@@ -753,7 +752,6 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
       fMaxAlignment = std::max(fMaxAlignment, vecField->GetAlignment());
 
       fSoAMemberOffsets.emplace_back(dataMember->GetOffset());
-      fRecordMemberIndexes.emplace_back(itr->second);
    }
    if (recordFieldNameToIdx.size() != fSoAMemberOffsets.size()) {
       throw RException(R__FAIL("missing SoA members"));
