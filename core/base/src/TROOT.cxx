@@ -3481,23 +3481,12 @@ void TROOT::ShutDown()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the source directory in the installation. Static utility function.
+/// \deprecated This function is without any effect because it made only sense in the corner case where the ROOT source
+/// is copied inside the ROOT installation, which is never the case unless the user does it by hand.
 
 const TString& TROOT::GetSourceDir() {
-#ifdef ROOTSRCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootsrcdir;
-      if (rootsrcdir.IsNull()) {
-         rootsrcdir = "src";
-         gSystem->PrependPathName(GetRootSys(), rootsrcdir);
-      }
-      return rootsrcdir;
-#ifdef ROOTSRCDIR
-   } else {
-      const static TString rootsrcdir = ROOTSRCDIR;
-      return rootsrcdir;
-   }
-#endif
+   static TString ret;
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
