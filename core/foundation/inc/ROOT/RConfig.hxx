@@ -458,7 +458,7 @@
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
 # if (__GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2)) || defined(R__NO_DEPRECATION)
-/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269 
+/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269
    or deprecation turned off */
 #   define _R__DEPRECATED_LATER(REASON)
 # else
@@ -477,15 +477,9 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,40, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.40 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6, 39, 0)
-#define _R__DEPRECATED_640(REASON) _R__DEPRECATED_LATER(REASON)
-#else
-#define _R__DEPRECATED_640(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
-#endif
-
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6, 41, 0)
+/* USE AS `R__DEPRECATED(6,42, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.42 */
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 41, 2)
 #define _R__DEPRECATED_642(REASON) _R__DEPRECATED_LATER(REASON)
 #else
 #define _R__DEPRECATED_642(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
