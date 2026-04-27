@@ -1256,7 +1256,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooFFTConvPdfStreamer>(RooFFTConvPdf::Class(), false);
    registerExporter<RooExtendPdfStreamer>(RooExtendPdf::Class(), false);
    registerExporter<ParamHistFuncStreamer>(ParamHistFunc::Class(), false);
-   registerExporter<RooSplineStreamer>(RooSpline::Class(), false);   
+   registerExporter<RooSplineStreamer>(RooSpline::Class(), false);
 });
 
 } // namespace
