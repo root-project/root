@@ -59,6 +59,7 @@ ExternalProject_Add(
   # GIT_TAG v1.17.0
   URL ${lcgpackages}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_GOOGLETEST_HASH}
+  INSTALL_DIR ${CMAKE_BINARY_DIR}/builtins/gtest
   UPDATE_COMMAND ""
   # # Force separate output paths for debug and release builds to allow easy
   # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
@@ -72,7 +73,7 @@ ExternalProject_Add(
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
                 -DCMAKE_AR=${CMAKE_AR}
-                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                 ${EXTRA_GTEST_OPTS}
   # Disable install step
   INSTALL_COMMAND ""
