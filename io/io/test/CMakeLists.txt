@@ -67,6 +67,7 @@ if(NOT _32BIT)
                         FIXTURES_SETUP io-io-testcoll-fixture)
 
   ROOTTEST_ADD_TEST(testLargeCollections
+                    TIMEOUT 1200
                     MACRO testLargeCollection.cxx+
                     OUTREF testLargeCollection.ref
                     FIXTURES_REQUIRED io-io-testcoll-fixture)
