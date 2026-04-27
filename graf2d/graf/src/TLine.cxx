@@ -289,10 +289,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          if (opaque) {
+            gPad->ShowGuidelines(this, event);
             SetX1(oldX1);
             SetY1(oldY1);
             SetX2(oldX2);
             SetY2(oldY2);
+            SetNDC(ndcsav);
             gPad->Modified(kTRUE);
             gPad->Update();
          }

@@ -1092,6 +1092,18 @@ bool Cppyy::IsAggregate(TCppType_t klass)
     return false;
 }
 
+bool Cppyy::IsIntegerType(const std::string &type_name)
+{
+   // Test if the named type is an integer type
+   TypeInfo_t *ti = gInterpreter->TypeInfo_Factory(type_name.c_str());
+   if (!ti)
+      return false;
+   void *qtp = gInterpreter->TypeInfo_QualTypePtr(ti);
+   bool result = qtp ? gInterpreter->IsIntegerType(qtp) : false;
+   gInterpreter->TypeInfo_Delete(ti);
+   return result;
+}
+
 bool Cppyy::IsDefaultConstructable(TCppType_t type)
 {
 // Test if this type has a default constructor or is a "plain old data" type
@@ -2030,49 +2042,51 @@ Cppyy::TCppIndex_t Cppyy::GetGlobalOperator(
 }
 
 // method properties ---------------------------------------------------------
+
+static inline bool testMethodProperty(Cppyy::TCppMethod_t method, EProperty prop)
+{
+    if (!method)
+        return false;
+    TFunction *f = m2f(method);
+    return f->Property() & prop;
+}
+
+static inline bool testMethodExtraProperty(Cppyy::TCppMethod_t method, EFunctionProperty prop)
+{
+    if (!method)
+        return false;
+    TFunction *f = m2f(method);
+    return f->ExtraProperty() & prop;
+}
+
 bool Cppyy::IsPublicMethod(TCppMethod_t method)
 {
-    if (method) {
-        TFunction* f = m2f(method);
-        return f->Property() & kIsPublic;
-    }
-    return false;
+    return testMethodProperty(method, kIsPublic);
 }
 
 bool Cppyy::IsProtectedMethod(TCppMethod_t method)
 {
-    if (method) {
-        TFunction* f = m2f(method);
-        return f->Property() & kIsProtected;
-    }
-    return false;
+    return testMethodProperty(method, kIsProtected);
 }
 
 bool Cppyy::IsConstructor(TCppMethod_t method)
 {
-    if (method) {
-        TFunction* f = m2f(method);
-        return f->ExtraProperty() & kIsConstructor;
-    }
-    return false;
+    return testMethodExtraProperty(method, kIsConstructor);
 }
 
 bool Cppyy::IsDestructor(TCppMethod_t method)
 {
-    if (method) {
-        TFunction* f = m2f(method);
-        return f->ExtraProperty() & kIsDestructor;
-    }
-    return false;
+    return testMethodExtraProperty(method, kIsDestructor);
 }
 
 bool Cppyy::IsStaticMethod(TCppMethod_t method)
 {
-    if (method) {
-        TFunction* f = m2f(method);
-        return f->Property() & kIsStatic;
-    }
-    return false;
+    return testMethodProperty(method, kIsStatic);
+}
+
+bool Cppyy::IsExplicit(TCppMethod_t method)
+{
+    return testMethodProperty(method, kIsExplicit);
 }
 
 // data member reflection information ----------------------------------------
@@ -2803,6 +2817,10 @@ int cppyy_is_destructor(cppyy_method_t method) {
 
 int cppyy_is_staticmethod(cppyy_method_t method) {
     return (int)Cppyy::IsStaticMethod((Cppyy::TCppMethod_t)method);
+}
+
+int cppyy_is_explicit(cppyy_method_t method) {
+    return (int)Cppyy::IsExplicit((Cppyy::TCppMethod_t)method);
 }
 
 

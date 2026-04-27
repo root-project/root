@@ -113,6 +113,8 @@ system clock tick, the UUID generator will stall until the
 system clock catches up.
 */
 
+#include <ROOT/RCryptoRandom.hxx>
+
 #include "TROOT.h"
 #include "TDatime.h"
 #include "TUUID.h"
@@ -126,6 +128,9 @@ system clock catches up.
 #include "ThreadLocalStorage.h"
 #include <string.h>
 #include <stdlib.h>
+#include <cassert>
+#include <cstring>
+#include <cstdlib>
 #ifdef R__WIN32
 #include "Windows4Root.h"
 #include <Iphlpapi.h>
@@ -145,7 +150,35 @@ system clock catches up.
 #endif
 #include <chrono>
 
-ClassImp(TUUID);
+////////////////////////////////////////////////////////////////////////////////
+/// Create a UUID version 4 (variant 1) UUID according to RFC 4122.
+/// The UUIDv4 also has 16 octets but all but the version and variant information is random.
+/// This leaves 122 random bits, which are filled by the system's cryptographic random number generator.
+/// For all intents and purposes, the resulting UUIDs are actually globally unique.
+
+TUUID TUUID::UUIDv4()
+{
+   return TUUID{TV4Marker()};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a version 4 UUID.
+
+TUUID::TUUID(TV4Marker)
+{
+   // Ensure we can treat the memory starting at uuid.fTimeLow as an array of 16 octets
+   assert(&fNode[5] - reinterpret_cast<unsigned char *>(&fTimeLow) + 1 == 16);
+
+   const auto rv = ROOT::Internal::GetCryptoRandom(&fTimeLow, 16);
+   R__ASSERT(rv);
+   // Fix up variant
+   fClockSeqHiAndReserved = (fClockSeqHiAndReserved & 0x3F) | (2 << 6);
+   // Fix up version
+   fTimeHiAndVersion = (fTimeHiAndVersion & 0x0FFF) | (4 << 12);
+
+   // TODO(jblomer): we do what the default constructor does but is this still used? Can it be deprecated?
+   fUUIDIndex = 1 << 30;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a UUID.
@@ -570,7 +603,7 @@ void TUUID::Print() const
 
 const char *TUUID::AsString() const
 {
-   static char uuid[40];
+   TTHREAD_TLS(char) uuid[40];
 
    snprintf(uuid,40, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
            fTimeLow, fTimeMid, fTimeHiAndVersion, fClockSeqHiAndReserved,

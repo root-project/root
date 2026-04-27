@@ -52,6 +52,19 @@ bool HasAttrDirect(PyObject* pyclass, PyObject* pyname, bool mustBeCPyCppyy = fa
     return false;
 }
 
+bool HasAttrInMRO(PyObject *pyclass, PyObject *pyname)
+{
+   // Check base classes in the MRO (skipping the class itself) for a CPyCppyy overload.
+   PyObject *mro = ((PyTypeObject *)pyclass)->tp_mro;
+   if (mro && PyTuple_Check(mro)) {
+      for (Py_ssize_t i = 1; i < PyTuple_GET_SIZE(mro); ++i) {
+         if (HasAttrDirect(PyTuple_GET_ITEM(mro, i), pyname, /*mustBeCPyCppyy=*/true))
+            return true;
+      }
+   }
+   return false;
+}
+
 PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
 // get an attribute without causing getattr lookups
     PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
@@ -667,13 +680,18 @@ static PyObject* vector_iter(PyObject* v) {
     vectoriterobject* vi = PyObject_GC_New(vectoriterobject, &VectorIter_Type);
     if (!vi) return nullptr;
 
-    Py_INCREF(v);
     vi->ii_container = v;
 
 // tell the iterator code to set a life line if this container is a temporary
     vi->vi_flags = vectoriterobject::kDefault;
-    if (Py_REFCNT(v) <= 2 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+#if PY_VERSION_HEX >= 0x030e0000
+    if (PyUnstable_Object_IsUniqueReferencedTemporary(v) || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+#else
+    if (Py_REFCNT(v) <= 1 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+#endif
         vi->vi_flags = vectoriterobject::kNeedLifeLine;
+
+    Py_INCREF(v);
 
     PyObject* pyvalue_type = PyObject_GetAttr((PyObject*)Py_TYPE(v), PyStrings::gValueType);
     if (pyvalue_type) {
@@ -1749,12 +1767,36 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, pybool_name, (PyCFunction)NullCheckBool, METH_NOARGS);
     }
 
-// for STL containers, and user classes modeled after them
-// the attribute must be a CPyCppyy overload, otherwise the check gives false
-// positives in the case where the class has a non-function attribute that is
-// called "size".
-    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true)) {
-        Utility::AddToClass(pyclass, "__len__", "size");
+    // for STL containers, and user classes modeled after them. Guard the alias to
+    // __len__ by verifying that size() returns an integer type and the class has
+    // begin()/end() or operator[] (i.e. is container-like). This prevents bool()
+    // returning False for valid objects whose size() returns non-integer types like
+    // std::optional<std::size_t>. Skip if size() has multiple overloads, as that
+    // indicates it is not the simple container-style size() one would map to __len__.
+    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/true) || HasAttrInMRO(pyclass, PyStrings::gSize)) {
+       bool sizeIsInteger = false;
+       PyObject *pySizeMethod = PyObject_GetAttr(pyclass, PyStrings::gSize);
+       if (pySizeMethod && CPPOverload_Check(pySizeMethod)) {
+          auto *ol = (CPPOverload *)pySizeMethod;
+          if (ol->HasMethods() && ol->fMethodInfo->fMethods.size() == 1) {
+             PyObject *pyrestype =
+                ol->fMethodInfo->fMethods[0]->Reflex(Cppyy::Reflex::RETURN_TYPE, Cppyy::Reflex::AS_STRING);
+             if (pyrestype) {
+                sizeIsInteger = Cppyy::IsIntegerType(CPyCppyy_PyText_AsString(pyrestype));
+                Py_DECREF(pyrestype);
+             }
+          }
+       }
+       Py_XDECREF(pySizeMethod);
+
+       if (sizeIsInteger) {
+          bool hasIterators = (HasAttrDirect(pyclass, PyStrings::gBegin) || HasAttrInMRO(pyclass, PyStrings::gBegin)) &&
+                              (HasAttrDirect(pyclass, PyStrings::gEnd) || HasAttrInMRO(pyclass, PyStrings::gEnd));
+          bool hasSubscript = HasAttrDirect(pyclass, PyStrings::gGetItem) || HasAttrInMRO(pyclass, PyStrings::gGetItem);
+          if (hasIterators || hasSubscript) {
+             Utility::AddToClass(pyclass, "__len__", "size");
+          }
+       }
     }
 
     if (!IsTemplatedSTLClass(name, "vector")  &&      // vector is dealt with below
@@ -2064,7 +2106,14 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLViewStringStr,        METH_NOARGS);
     }
 
-    else if (name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >" || name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {
+// The first condition was already present in upstream CPyCppyy. The other two
+// are special to ROOT, because its reflection layer gives us the types without
+// the "std::" namespace. On some platforms, that applies only to the template
+// arguments, and on others also to the "basic_string".
+    else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >"
+          || name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
+          || name == "std::basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
+    ) {
         Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLWStringRepr,       METH_NOARGS);
         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLWStringStr,        METH_NOARGS);
         Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLWStringBytes,      METH_NOARGS);

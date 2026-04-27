@@ -24,3 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLIO
                                  src/TXMLPlayer.cxx
                                  src/TXMLSetup.cxx
                               DEPENDENCIES RIO)
+
+if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+  target_link_libraries(XMLIO PUBLIC stdc++fs)
+endif()

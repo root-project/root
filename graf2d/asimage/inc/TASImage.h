@@ -71,12 +71,14 @@ protected:
 
    static ASVisual *fgVisual;      ///< pointer to visual structure
    static Bool_t    fgInit;        ///< global flag to init afterimage only once
+   static Bool_t    fgBatch;       ///< global flag to signal if batch mode is active ie fgVisual->dpy was set to nullptr
 
    EImageFileTypes GetFileType(const char *ext);
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
    void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
    static Bool_t InitVisual();
+   Bool_t InitImage(const char *caller);
 
 public:
    TASImage();

@@ -63,10 +63,15 @@ protected:
    void  GetRandomInfo(UChar_t seed[16]);
    void  SetFromString(const char *uuid_str);
 
+   struct TV4Marker {};
+   explicit TUUID(TV4Marker);
+
 public:
    TUUID();
    TUUID(const char *uuid_str);
    virtual ~TUUID();
+
+   static TUUID UUIDv4();
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;
@@ -100,5 +105,9 @@ inline Bool_t operator==(const TUUID &u1, const TUUID &u2)
 inline Bool_t operator!=(const TUUID &u1, const TUUID &u2)
 { return !(u1 == u2); }
 
+inline Bool_t operator<(const TUUID &u1, const TUUID &u2)
+{
+   return u1.Compare(u2) == -1;
+}
 
 #endif

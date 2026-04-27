@@ -522,7 +522,7 @@ struct RTFUUID {
 
    RTFUUID()
    {
-      TUUID uuid;
+      TUUID uuid{TUUID::UUIDv4()};
       char *buffer = reinterpret_cast<char *>(this);
       uuid.FillBuffer(buffer);
       assert(reinterpret_cast<RTFUUID *>(buffer) <= (this + 1));

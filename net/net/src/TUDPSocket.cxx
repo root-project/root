@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUDPSocket                                                           //
-//                                                                      //
-// This class implements UDP client sockets. A socket is an endpoint    //
-// for communication between two machines.                              //
-// The actual work is done via the TSystem class (either TUnixSystem    //
-// or TWinNTSystem).                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TUDPSocket.cxx
+\class TUDPSocket
+\brief This class implements UDP client sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+A socket is an endpoint for communication between two machines. The actual work is done via the TSystem class (either
+TUnixSystem or TWinNTSystem).
+**/
 
 #include "Bytes.h"
 #include "Compression.h"
@@ -35,6 +35,8 @@
 #include "TVirtualAuth.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
+
+#include <limits>
 
 ULong64_t TUDPSocket::fgBytesSent = 0;
 ULong64_t TUDPSocket::fgBytesRecv = 0;
@@ -804,6 +806,11 @@ oncemore:
       return n;
    }
    len = net2host(len);  //from network to host byte order
+
+   if (len > (std::numeric_limits<decltype(len)>::max() - sizeof(decltype(len)))) {
+      Error("Recv", "Buffer length is %u and %u+sizeof(UInt_t) cannot be represented as an UInt_t.", len, len);
+      return -1;
+   }
 
    ResetBit(TUDPSocket::kBrokenConn);
    char *buf = new char[len+sizeof(UInt_t)];

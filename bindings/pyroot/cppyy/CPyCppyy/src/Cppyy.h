@@ -143,6 +143,8 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool IsAggregate(TCppType_t type);
     CPPYY_IMPORT
+    bool IsIntegerType(const std::string &type_name);
+    CPPYY_IMPORT
     bool IsDefaultConstructable(TCppType_t type);
 
     CPPYY_IMPORT
@@ -249,6 +251,8 @@ namespace Cppyy {
     bool IsDestructor(TCppMethod_t method);
     CPPYY_IMPORT
     bool IsStaticMethod(TCppMethod_t method);
+    CPPYY_IMPORT
+    bool IsExplicit(TCppMethod_t method);
 
 // data member reflection information ----------------------------------------
     CPPYY_IMPORT
