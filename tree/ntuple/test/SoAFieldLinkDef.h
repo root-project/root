@@ -21,4 +21,8 @@
 #pragma link C++ options=rntupleSoARecord(RecordSimple) class SoASimpleMissingMember+;
 #pragma link C++ options=rntupleSoARecord(RecordSimple) class SoASimpleWrongMember+;
 
+#pragma link C++ class ComplexMember+;
+#pragma link C++ class RecordComplex+;
+#pragma link C++ options=rntupleSoARecord(RecordComplex) class SoAComplex+;
+
 #endif // __CLING__
