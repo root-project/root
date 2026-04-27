@@ -202,9 +202,7 @@ if(builtin_llvm)
     set(LLVM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${LLVM_BUILD_TYPE}})
     # On Windows, use the same compiler flags than ROOT and not
     # the other way around
-    if(MSVC)
-      set(LLVM_CXX_FLAGS "${LLVM_CXX_FLAGS} /wd4266 /wd4005") # no override available for virtual member function, 'WINVER': macro redefinition
-    else()
+    if(NOT MSVC)
       foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
         string(TOUPPER ${CONFIG} CONFIG)
         set(CMAKE_C_FLAGS_${CONFIG} ${LLVM_C_FLAGS})
