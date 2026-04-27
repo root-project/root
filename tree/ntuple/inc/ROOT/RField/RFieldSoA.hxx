@@ -66,6 +66,8 @@ class RSoAField : public RFieldBase {
    /// The offset of the RVec members in the SoA type in the order of subfields of the underlying record type.
    /// In particular, the order is not necessarily the same then the order of RVec members in the SoA class.
    std::vector<std::size_t> fSoAMemberOffsets;
+   ///< A deleter returned by each record member's GetDeleter()
+   std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
    std::size_t fMaxAlignment = 1;
    ROOT::Internal::RColumnIndex fNWritten;
 
@@ -84,8 +86,6 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
-
-   void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
