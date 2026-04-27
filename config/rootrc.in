@@ -452,14 +452,6 @@ TFile.CrossProtocolRedirects:  yes
 # correct value but instead used verbatim the value stored in the file.
 # TFile.v630forwardCompatibility: no
 
-# List of S3 servers known to support multi-range HTTP GET requests.
-# This is the value sent back by the S3 server in the 'Server:' header
-# of the HTTP response.
-# Please note that Amazon S3 servers do not support this feature.
-# Add one line per server type with syntax:
-# +TS3WebFile.Root.MultiRangeServer: Mucura
-TS3WebFile.Root.MultiRangeServer:  Huawei OBS
-
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like file:/path/file.root or /alien/path/file.root.
 # In case the file namespace descriptor ends with - the namespace
