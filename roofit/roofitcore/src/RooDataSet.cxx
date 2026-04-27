@@ -624,7 +624,6 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, co
    if (!cutRange || strchr(cutRange, ',') == nullptr) {
       auto &ds = static_cast<RooDataSet &>(*out);
       ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, cutRange, nStart, nStop);
-      ds._cachedVars.add(_dstore->cachedVars());
    } else {
       // Composite case: multiple ranges
       auto tokens = ROOT::Split(cutRange, ",");
@@ -637,7 +636,6 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, co
          std::unique_ptr<RooAbsData> appendedData{createEmptyClone()};
          auto &ds = static_cast<RooDataSet &>(*appendedData);
          ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, token.c_str(), nStart, nStop);
-         ds._cachedVars.add(_dstore->cachedVars());
          static_cast<RooDataSet &>(*out).append(ds);
       }
    }

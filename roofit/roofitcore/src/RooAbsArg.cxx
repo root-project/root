@@ -1712,17 +1712,6 @@ bool RooAbsArg::findConstantNodes(const RooArgSet &observables, RooArgSet &cache
    return false;
 }
 
-/// Interface function signaling a request to perform constant term
-/// optimization. This default implementation takes no action other than to
-/// forward the calls to all servers
-
-void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-   for (const auto server : _serverList) {
-      server->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
-   }
-}
-
 /// Change cache operation mode to given mode. If recurseAdirty
 /// is true, then a mode change to AlwaysDirty will automatically
 /// be propagated recursively to all client nodes

@@ -161,40 +161,6 @@ std::unique_ptr<RooAbsDataStore> RooCompositeDataStore::reduce(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward recalculate request to all subsets
-
-void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, bool skipZeroWeights)
-{
-  for (auto const& item : _dataMap) {
-    item.second->recalculateCache(proj,firstEvent,lastEvent,stepSize,skipZeroWeights) ;
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool RooCompositeDataStore::hasFilledCache() const
-{
-  bool ret(false) ;
-  for (auto const& item : _dataMap) {
-    ret |= item.second->hasFilledCache() ;
-  }
-  return ret ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooCompositeDataStore::forceCacheUpdate()
-{
-  for (auto const& item : _dataMap) {
-    item.second->forceCacheUpdate() ;
-  }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Forward fill request to appropriate subset
 
 Int_t RooCompositeDataStore::fill()
@@ -392,57 +358,6 @@ void RooCompositeDataStore::reset()
   for (auto const& item : _dataMap) {
     item.second->reset() ;
   }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, bool skipZeroWeights)
-{
-  for (auto const& item : _dataMap) {
-    item.second->cacheArgs(owner,newVarSet,nset,skipZeroWeights) ;
-  }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooCompositeDataStore::setArgStatus(const RooArgSet& set, bool active)
-{
-  for (auto const& item : _dataMap) {
-    RooArgSet subset;
-    set.selectCommon(*item.second->get(), subset);
-    item.second->setArgStatus(subset,active) ;
-  }
-  return ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize cache of dataset: attach variables of cache ArgSet
-/// to the corresponding TTree branches
-
-void RooCompositeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& inCachedVars)
-{
-  for (auto const& item : _dataMap) {
-    item.second->attachCache(newOwner,inCachedVars) ;
-  }
-  return ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooCompositeDataStore::resetCache()
-{
-  for (auto const& item : _dataMap) {
-    item.second->resetCache() ;
-  }
-  return ;
 }
 
 

@@ -279,11 +279,6 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
     cloneVar->attachDataStore(tds) ;
   }
 
-  RooVectorDataStore* vds = dynamic_cast<RooVectorDataStore*>(&tds) ;
-  if (vds && vds->_cache) {
-    _cache = new RooVectorDataStore(*vds->_cache) ;
-  }
-
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 
   TRACE_CREATE;
@@ -311,7 +306,6 @@ RooVectorDataStore::~RooVectorDataStore()
     delete elm;
   }
 
-  delete _cache ;
   TRACE_DESTROY;
 }
 
@@ -371,10 +365,6 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
 
   // Update current weight cache
   _currentWeightIndex = index;
-
-  if (_cache) {
-    _cache->get(index) ;
-  }
 
   return &_vars;
 }
@@ -751,289 +741,6 @@ void RooVectorDataStore::reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Cache given RooAbsArgs: The tree is
-/// given direct write access of the args internal cache
-/// the args values is pre-calculated for all data points
-/// in this data collection. Upon a get() call, the
-/// internal cache of 'newVar' will be loaded with the
-/// precalculated value and it's dirty flag will be cleared.
-
-void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, bool skipZeroWeights)
-{
-  // Delete previous cache, if any
-  delete _cache ;
-  _cache = nullptr ;
-
-  // Reorder cached elements. First constant nodes, then tracked nodes in order of dependence
-
-  // Step 1 - split in constant and tracked
-  RooArgSet newVarSetCopy(newVarSet);
-  RooArgSet orderedArgs;
-  vector<RooAbsArg*> trackArgs;
-  for (const auto arg : newVarSetCopy) {
-    if (arg->getAttribute("ConstantExpression") && !arg->getAttribute("NOCacheAndTrack")) {
-      orderedArgs.add(*arg) ;
-    } else {
-
-      // Explicitly check that arg depends on any of the observables, if this
-      // is not the case, skip it, as inclusion would result in repeated
-      // calculation of a function that has the same value for every event
-      // in the likelihood
-      if (arg->dependsOn(_vars) && !arg->getAttribute("NOCacheAndTrack")) {
-        trackArgs.push_back(arg) ;
-      } else {
-        newVarSet.remove(*arg) ;
-      }
-    }
-  }
-
-  // Step 2 - reorder tracked nodes
-  std::sort(trackArgs.begin(), trackArgs.end(), [](RooAbsArg* left, RooAbsArg* right){
-    //LM: exclude same comparison. This avoids an issue when using sort in MacOS  versions
-    if (left == right) return false;
-    return right->dependsOn(*left);
-  });
-
-  // Step 3 - put back together
-  for (const auto trackedArg : trackArgs) {
-    orderedArgs.add(*trackedArg);
-  }
-
-  // WVE need to prune tracking entries _below_ constant nodes as the're not needed
-//   std::cout << "Number of Cache-and-Tracked args are " << trackArgs.size() << std::endl ;
-//   std::cout << "Compound ordered cache parameters = " << std::endl ;
-//   orderedArgs.Print("v") ;
-
-  checkInit() ;
-
-  std::vector<std::unique_ptr<RooArgSet>> vlist;
-  RooArgList cloneSet;
-
-  for (const auto var : orderedArgs) {
-
-    // Clone variable and attach to cloned tree
-    auto newVarCloneList = std::make_unique<RooArgSet>();
-    RooArgSet(*var).snapshot(*newVarCloneList);
-    RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;
-    newVarClone->recursiveRedirectServers(_vars,false) ;
-
-    vlist.emplace_back(std::move(newVarCloneList));
-    cloneSet.add(*newVarClone) ;
-  }
-
-  _cacheOwner = const_cast<RooAbsArg *>(owner);
-  RooVectorDataStore* newCache = new RooVectorDataStore("cache","cache",orderedArgs) ;
-
-
-  RooAbsArg::setDirtyInhibit(true) ;
-
-  std::vector<RooArgSet*> nsetList ;
-  std::vector<std::unique_ptr<RooArgSet>> argObsList ;
-
-  // Now need to attach branch buffers of clones
-  for (const auto arg : cloneSet) {
-    arg->attachToVStore(*newCache) ;
-
-    if(nset) argObsList.emplace_back(arg->getObservables(*nset));
-    else argObsList.emplace_back(arg->getVariables());
-    RooArgSet* argObs = argObsList.back().get();
-
-    RooArgSet* normSet(nullptr) ;
-    const char* catNset = arg->getStringAttribute("CATNormSet") ;
-    if (catNset) {
-//       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << std::endl ;
-
-      RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
-      normSet = anset.selectCommon(*argObs);
-
-    }
-    const char* catCset = arg->getStringAttribute("CATCondSet") ;
-    if (catCset) {
-//       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a conditional observable set specification CATCondSet = " << catCset << std::endl ;
-
-      RooArgSet acset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catCset);
-      argObs->remove(acset,true,true) ;
-      normSet = argObs ;
-    }
-
-    // now construct normalization set for component from cset/nset spec
-//     if (normSet) {
-//       std::cout << "RooVectorDaraStore::cacheArgs() component " << arg->GetName() << " has custom normalization set " << *normSet << std::endl ;
-//     }
-    nsetList.push_back(normSet) ;
-  }
-
-
-  // Fill values of placeholder
-  const std::size_t numEvt = size();
-  newCache->reserve(numEvt);
-  for (std::size_t i=0; i < numEvt; i++) {
-    get(i) ;
-    if (weight()!=0 || !skipZeroWeights) {
-      for (unsigned int j = 0; j < cloneSet.size(); ++j) {
-        auto& cloneArg = cloneSet[j];
-        auto argNSet = nsetList[j];
-        // WVE need to intervene here for condobs from ProdPdf
-        cloneArg.syncCache(argNSet ? argNSet : nset) ;
-      }
-    }
-    newCache->fill() ;
-  }
-
-  RooAbsArg::setDirtyInhibit(false) ;
-
-
-  // Now need to attach branch buffers of original function objects
-  for (const auto arg : orderedArgs) {
-    arg->attachToVStore(*newCache) ;
-
-    // Activate change tracking mode, if requested
-    if (!arg->getAttribute("ConstantExpression") && dynamic_cast<RooAbsReal*>(arg)) {
-      RealVector* rv = newCache->addReal(static_cast<RooAbsReal*>(arg)) ;
-      RooArgSet deps;
-      arg->getParameters(&_vars, deps);
-      rv->setDependents(deps) ;
-
-      // WV lookup normalization set and associate with RealVector
-      // find ordinal number of arg in original list
-      Int_t idx = cloneSet.index(arg->GetName()) ;
-
-      coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << deps << std::endl ;
-      rv->setNset(nsetList[idx]) ;
-    }
-
-  }
-
-  _cache = newCache ;
-  _cache->setDirtyProp(_doDirtyProp) ;
-}
-
-
-void RooVectorDataStore::forceCacheUpdate()
-{
-  if (_cache) _forcedUpdate = true ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, bool skipZeroWeights)
-{
-  if (!_cache) return ;
-
-  std::vector<RooVectorDataStore::RealVector *> tv;
-  tv.reserve(static_cast<std::size_t>(_cache->_realStoreList.size() * 0.7)); // Typically, 30..60% need to be recalculated
-
-  // Check which items need recalculation
-  for (const auto realVec : _cache->_realStoreList) {
-    if (_forcedUpdate || realVec->needRecalc()) {
-       tv.push_back(realVec);
-       realVec->_nativeReal->setOperMode(RooAbsArg::ADirty);
-       realVec->_nativeReal->_operMode = RooAbsArg::Auto;
-    }
-  }
-  _forcedUpdate = false ;
-
-  // If no recalculations are needed stop here
-  if (tv.empty()) {
-     return;
-  }
-
-
-  // Refill caches of elements that require recalculation
-  std::unique_ptr<RooArgSet> ownedNset;
-  RooArgSet* usedNset = nullptr;
-  if (projectedArgs && !projectedArgs->empty()) {
-    ownedNset = std::make_unique<RooArgSet>();
-    _vars.snapshot(*ownedNset, false) ;
-    ownedNset->remove(*projectedArgs,false,true);
-    usedNset = ownedNset.get();
-  } else {
-    usedNset = &_vars ;
-  }
-
-
-  for (int i=firstEvent ; i<lastEvent ; i+=stepSize) {
-    get(i) ;
-    bool zeroWeight = (weight()==0) ;
-    if (!zeroWeight || !skipZeroWeights) {
-       for (auto realVector : tv) {
-          realVector->_nativeReal->_valueDirty = true;
-          realVector->_nativeReal->getValV(realVector->_nset ? realVector->_nset : usedNset);
-          realVector->write(i);
-      }
-    }
-  }
-
-  for (auto realVector : tv) {
-     realVector->_nativeReal->setOperMode(RooAbsArg::AClean);
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize cache of dataset: attach variables of cache ArgSet
-/// to the corresponding TTree branches
-
-void RooVectorDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVarsIn)
-{
-  // Only applicable if a cache exists
-  if (!_cache) return ;
-
-  // Clone constructor, must connect internal storage to given new external set of variables
-  std::vector<RealVector*> cacheElements(_cache->realStoreList());
-  cacheElements.insert(cacheElements.end(), _cache->_realfStoreList.begin(), _cache->_realfStoreList.end());
-
-  for (const auto elm : cacheElements) {
-    auto real = static_cast<RooAbsReal*>(cachedVarsIn.find(elm->bufArg()->GetName()));
-    if (real) {
-      // Adjust buffer pointer
-      real->attachToVStore(*_cache) ;
-    }
-  }
-
-  for (const auto catVec : _cache->_catStoreList) {
-    auto cat = static_cast<RooAbsCategory*>(cachedVarsIn.find(catVec->bufArg()->GetName()));
-    if (cat) {
-      // Adjust buffer pointer
-      cat->attachToVStore(*_cache) ;
-    }
-  }
-
-  _cacheOwner = const_cast<RooAbsArg*>(newOwner);
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooVectorDataStore::resetCache()
-{
-  delete _cache;
-  _cache = nullptr;
-  _cacheOwner = nullptr;
-  return ;
-}
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Disabling of branches is (intentionally) not implemented in vector
-/// data stores (as the doesn't result in a net saving of time)
-
-void RooVectorDataStore::setArgStatus(const RooArgSet& /*set*/, bool /*active*/)
-{
-  return ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 void RooVectorDataStore::attachBuffers(const RooArgSet& extObs)
 {
@@ -1155,15 +862,6 @@ RooAbsData::RealSpans RooVectorDataStore::getBatches(std::size_t first, std::siz
   }
   for (const auto realVec : _realfStoreList) {
     emplace(realVec);
-  }
-
-  if (_cache) {
-    for (const auto realVec : _cache->_realStoreList) {
-      emplace(realVec);
-    }
-    for (const auto realVec : _cache->_realfStoreList) {
-      emplace(realVec);
-    }
   }
 
   return evalData;

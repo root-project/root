@@ -42,7 +42,7 @@ public:
    virtual void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) = 0;
 
    /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
-   bool synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst);
+   bool synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters);
    /// Like synchronizeParameterSettings, Synchronize informs Minuit through
    /// its parameter_settings vector of RooFit parameter properties, but
    /// Synchronize can be overridden to e.g. also include gradient strategy
@@ -77,8 +77,6 @@ public:
 
    unsigned int getNDim() const { return _floatableParamIndices.size(); }
 
-   void setOptimizeConst(Int_t flag);
-
    bool SetPdfParamVal(int index, double value) const;
 
    /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
@@ -94,11 +92,6 @@ public:
    virtual RooArgSet freezeDisconnectedParameters() const { return {}; }
 
 protected:
-   void optimizeConstantTerms(bool constStatChange, bool constValChange);
-   /// This function must be overridden in the derived class to pass on constant term optimization configuration
-   /// to the function to be minimized. For a RooAbsArg, this would be RooAbsArg::constOptimizeTestStatistic.
-   virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) = 0;
-
    void printEvalErrors() const;
 
    double applyEvalErrorHandling(double fvalue) const;
@@ -122,8 +115,6 @@ protected:
    // object containing all this would clean up this class. It would allow const
    // functions to be actually const (even though state still changes in the
    // error handling object).
-
-   bool _optConst = false;
 
    RooArgList _allParams;
    RooArgList _allParamsInit;

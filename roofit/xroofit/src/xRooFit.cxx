@@ -479,8 +479,6 @@ std::shared_ptr<RooLinkedList> xRooFit::defaultNLLOptions()
       delete l;
    });
    sDefaultNLLOptions->Add(RooFit::Offset().Clone());
-   // disable const-optimization at the construction step ... can happen in the minimization though
-   sDefaultNLLOptions->Add(RooFit::Optimize(0).Clone());
    return sDefaultNLLOptions;
 }
 
@@ -594,10 +592,6 @@ public:
    void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const override
    {
       fFunc->printMultiline(os, contents, verbose, indent);
-   }
-   void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt) override
-   {
-      fFunc->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
    }
 
    double evaluate() const override
@@ -988,26 +982,6 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       TString actualFirstMinimizer = _minimizer.fitter()->Config().MinimizerType();
 
       int status = 0;
-
-      int constOptimize = 2;
-      _minimizer.fitter()->Config().MinimizerOptions().ExtraOptions()->GetValue("OptimizeConst", constOptimize);
-      if (constOptimize) {
-         _minimizer.optimizeConst(constOptimize);
-         // for safety force a refresh of the cache (and tracking) in the nll
-         // DO NOT do a ConfigChange ... this is just a deactivate-reactivate of caching
-         // but it seems like doing this breaks the const optimization and function is badly behaved
-         // so once its turned on never turn it off.
-         // nll.constOptimizeTestStatistic(RooAbsArg::ConfigChange, constOptimize>1 /* do tracking too if >1 */); //
-         // trigger a re-evaluate of which nodes to cache-and-track
-         // the next line seems safe to do but wont bother doing it because not bothering with above
-         // need to understand why turning the cache off and on again breaks it??
-         // nll.constOptimizeTestStatistic(RooAbsArg::ValueChange, constOptimize>1); // update the cache values -- is
-         // this needed??
-      } else {
-         // disable const optimization
-         // warning - if the nll was previously activated then it seems like deactivating may break it.
-         nll.constOptimizeTestStatistic(RooAbsArg::DeActivate);
-      }
 
       int sIdx = -1;
       TString minim = _minimizer.fitter()->Config().MinimizerType();

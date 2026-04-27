@@ -258,7 +258,6 @@ double RooAbsTestStatistic::evaluate() const
       break ;
     }
 
-    runRecalculateCache(nFirst, nLast, nStep);
     double ret = evaluatePartition(nFirst,nLast,nStep);
 
     if (numSets()==1) {
@@ -335,33 +334,6 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
     os << indent << "RooAbsTestStatistic end GOF contents" << std::endl;
   } else if (MPMaster == _gofOpMode) {
     // WVE implement this
-  }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Forward constant term optimization management calls to component
-/// test statistics
-
-void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-  initialize();
-  if (SimMaster == _gofOpMode) {
-    // Forward to slaves
-    int i = 0;
-    for (auto& gof : _gofArray) {
-      // In SimComponents Splitting strategy only constOptimize the terms that are actually used
-      RooFit::MPSplit effSplit = (_mpinterl!=RooFit::Hybrid) ? _mpinterl : gof->_mpinterl;
-      if ( (i % _numSets == _setNum) || (effSplit != RooFit::SimComponents) ) {
-        gof->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
-      }
-      ++i;
-    }
-  } else if (MPMaster == _gofOpMode) {
-    for (Int_t i = 0; i < _nCPU; ++i) {
-      _mpfeArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
-    }
   }
 }
 

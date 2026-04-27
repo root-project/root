@@ -822,32 +822,12 @@ double RooRealIntegral::evaluate() const
           return 0;
         }
 
-        // Find any function dependents that are "AClean" and switch them temporarily to "Auto".
-        // We do this by compute graph traversal and RAII objects on the heap,
-        // which seems quite expensive, but is not as bad as it looks because:
-        //   1. The sub-graphs representing numerically-integrated functions
-        //      are usually small
-        //   2. The numerical integration itself dominates the runtime of the
-        //      evaluation.
-        //   3. The operMode is only "AClean" if we use the constant term
-        //      optimization of the legacy test statistics.
-        //   4. Once the legacy test statistics are deprecated and removed,
-        //      this code block can go away (TODO when that happens).
-        // Note: in the past, the "AClean" states were changed with a global
-        // setDirtyInhibit(true) before evaluating the numeric integral. While
-        // this avoids the bookkeeping overhead, it actually changes the oper
-        // mode of all nodes to "ADirty" and not to "Auto", resulting in
-        // significant performance loss in case the target function benefits
-        // from caching subgraph results (e.g. for nested numeric integrals).
+        // Not clear why this is still needed
         RooArgList serverList;
         _function->treeNodeServerList(&serverList, nullptr, true, true, false, true);
-        ChangeOperModeRAII operModeRAII;
 
         for (auto *arg : serverList) {
            arg->syncCache();
-           if (arg->operMode() == RooAbsArg::AClean) {
-              operModeRAII.change(arg, RooAbsArg::Auto);
-           }
         }
 
         // Save current integral dependent values
@@ -856,9 +836,6 @@ double RooRealIntegral::evaluate() const
 
         // Evaluate sum/integral
         retVal = sum() ;
-
-        // This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
-        operModeRAII.clear();
 
         // Restore integral dependent values
         _intList.assign(_saveInt) ;

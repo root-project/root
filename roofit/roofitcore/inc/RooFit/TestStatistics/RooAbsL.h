@@ -109,12 +109,6 @@ public:
    // necessary from MinuitFcnGrad to reach likelihood properties:
    virtual std::unique_ptr<RooArgSet> getParameters();
 
-   /// \brief Interface function signaling a request to perform constant term optimization.
-   ///
-   /// The default implementation takes no action other than to forward the calls to all servers. May be overridden in
-   /// likelihood classes without a cached dataset, like RooSubsidiaryL.
-   virtual void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
-
    virtual std::string GetName() const;
    virtual std::string GetTitle() const;
    virtual std::string GetInfo() const { return GetClassName() + "::" + pdf_->GetName(); }

@@ -471,7 +471,6 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
    m1.setPrintLevel(-1);
 
    m1.setOffsetting(true);
-   m1.optimizeConst(2);
 
    m1.minimize("Minuit2", "migrad");
 
