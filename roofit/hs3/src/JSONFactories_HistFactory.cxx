@@ -502,6 +502,10 @@ public:
 
          std::vector<double> errs(sumW.size());
          for (size_t i = 0; i < sumW.size(); ++i) {
+            if (sumW[i] == 0.) {
+               errs[i] = 0.;
+               continue;
+            }
             errs[i] = std::sqrt(sumW2[i]) / sumW[i];
             // avoid negative sigma. This NP will be set constant anyway later
             errs[i] = std::max(errs[i], 0.);
