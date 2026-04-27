@@ -6,13 +6,10 @@
 
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
 # 10 Apr 2023, https://github.com/civetweb/civetweb/releases/tag/v1.16
-set(ROOT_CIVETWEB_VERSION 1.16)
-set(ROOT_CIVETWEB_HASH "f0e471c1bf4e7804a6cfb41ea9d13e7d623b2bcc7bc1e2a4dd54951a24d60285")
+set(ROOT_CIVETWEB_VERSION 1.16) # with some patches, so almost 1.17
+# set(ROOT_CIVETWEB_HASH "f0e471c1bf4e7804a6cfb41ea9d13e7d623b2bcc7bc1e2a4dd54951a24d60285")
 set(ROOT_CIVETWEB_PREFIX ${CMAKE_BINARY_DIR}/builtins/CIVETWEB-prefix)
 set(ROOT_CIVETWEB_LIBRARY ${ROOT_CIVETWEB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}civetweb${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(ROOT_CIVETWEB_PATCH_FILE_1 ${CMAKE_CURRENT_SOURCE_DIR}/0001-v117patches.patch) # From master branch (squash all until https://github.com/civetweb/civetweb/commit/588860e30721bf5453b0440c390865a8e85dcae5), commit
-set(ROOT_CIVETWEB_PATCH_FILE_2 ${CMAKE_CURRENT_SOURCE_DIR}/0002-only-include-header-if-necessary.patch) # From https://github.com/civetweb/civetweb/pull/1389, commit
-# Then call git format-patch -2
 
 if (NOT DEFINED GIT_EXECUTABLE)
   set(GIT_EXECUTABLE "git")
@@ -72,9 +69,10 @@ endif()
 ExternalProject_Add(BUILTIN_CIVETWEB
   PREFIX ${ROOT_CIVETWEB_PREFIX}
   # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
-  URL https://github.com/civetweb/civetweb/archive/refs/tags/v${ROOT_CIVETWEB_VERSION}.tar.gz # TODO move to LCG
-  URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
-  PATCH_COMMAND ${GIT_EXECUTABLE} apply ${ROOT_CIVETWEB_PATCH_FILE_1} ${ROOT_CIVETWEB_PATCH_FILE_2}
+  # URL https://github.com/civetweb/civetweb/archive/refs/tags/v${ROOT_CIVETWEB_VERSION}.tar.gz # TODO move to LCG
+  # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
+  GIT_REPOSITORY https://github.com/civetweb/civetweb.git
+  GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
   LOG_BUILD     FALSE
