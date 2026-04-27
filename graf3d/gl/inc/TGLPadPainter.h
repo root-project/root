@@ -48,8 +48,17 @@ private:
 
    Bool_t                      fLocked;
 
+   void SelectGLFont(Font_t font, Float_t size);
+
    template<class Char_t>
    void DrawTextHelper(Double_t x, Double_t y, const Char_t *text, ETextMode mode);
+
+   template<class Char_t>
+   void TextExtentHelper(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const Char_t *text);
+
+   template<class Char_t>
+   void TextAscentDescentHelper(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const Char_t *text);
+
 public:
    TGLPadPainter();
 
@@ -99,6 +108,12 @@ public:
    void     DrawText(Double_t, Double_t, const wchar_t *, ETextMode) override;
    void     DrawTextNDC(Double_t x, Double_t y, const char *text, ETextMode mode) override;
    void     DrawTextNDC(Double_t, Double_t, const wchar_t *, ETextMode) override;
+
+   void     GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
+   void     GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
+   void     GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess) override;
+   void     GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess) override;
+   UInt_t   GetTextAdvance(Font_t font, Double_t size, const char *text, Bool_t kern) override;
 
    //jpg, png, gif and bmp output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
