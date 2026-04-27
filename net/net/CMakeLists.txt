@@ -13,14 +13,10 @@ if(ssl)
 
   set(NET_SSL_HEADERS
     TSSLSocket.h
-    TS3HTTPRequest.h
-    TS3WebFile.h
   )
 
   set(NET_SSL_SOURCES
     src/TSSLSocket.cxx
-    src/TS3HTTPRequest.cxx
-    src/TS3WebFile.cxx
   )
 
   if(MACOSX_SSL_DEPRECATED)

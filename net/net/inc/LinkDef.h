@@ -36,8 +36,6 @@
 #pragma link C++ class TParallelMergingFile+;
 
 #ifdef R__SSL
-#pragma link C++ class ROOT::Deprecated::TS3HTTPRequest+;
-#pragma link C++ class ROOT::Deprecated::TS3WebFile+;
 #pragma link C++ class TSSLSocket;
 #endif
 
