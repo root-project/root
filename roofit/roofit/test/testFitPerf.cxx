@@ -568,7 +568,7 @@ int FitUsingRooFit(TTree *tree, TF1 *func)
       result->Print();
 #endif
       if (save)
-         iret |= (result == 0);
+         iret |= int(result != 0);
 
       if (iret != 0) {
          std::cout << "Fit failed " << std::endl;
