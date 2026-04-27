@@ -151,10 +151,9 @@ sizes in two different pads.
 The text size in pixels (`charheight`) computed in the following way:
 
 ~~~ {.cpp}
-   pad_width  = gPad->XtoPixel(gPad->GetX2());
-   pad_height = gPad->YtoPixel(gPad->GetY1());
-   if (pad_width < pad_height)  charheight = textsize*pad_width;
-   else                         charheight = textsize*pad_height;
+   UInt_t pad_width  = gPad->GetPadWidth();
+   UInt_t pad_height = gPad->GetPadHeight();
+   Float_t charheight = textsize*TMath::Min(pad_width, pad_height);
 ~~~
 
 This value can be obtained using GetTextSizePixels() method:
@@ -336,9 +335,9 @@ Float_t TAttText::GetTextSizeRelative(TVirtualPad &pad) const
 {
    Float_t rsize = GetTextSize();
    if (GetTextFont() % 10 > 2) {
-      auto wh = pad.XtoPixel(pad.GetX2());
-      auto hh = pad.YtoPixel(pad.GetY1());
-      rsize = rsize / TMath::Max(1, TMath::Min(wh, hh));
+      UInt_t padw = pad.GetPadWidth();
+      UInt_t padh = pad.GetPadHeight();
+      rsize /= TMath::Max((UInt_t) 1, TMath::Min(padw, padh));
    }
    return rsize;
 }
@@ -353,9 +352,9 @@ Float_t TAttText::GetTextSizePixels(TVirtualPad &pad) const
 {
    Float_t tsize = GetTextSize();
    if (GetTextFont() % 10 <= 2) {
-      auto wh = pad.XtoPixel(pad.GetX2());
-      auto hh = pad.YtoPixel(pad.GetY1());
-      tsize *= TMath::Min(wh, hh);
+      UInt_t padw = pad.GetPadWidth();
+      UInt_t padh = pad.GetPadHeight();
+      tsize *= TMath::Min(padw, padh);
    }
    return tsize;
 }
