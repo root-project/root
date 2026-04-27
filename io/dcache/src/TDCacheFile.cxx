@@ -240,7 +240,7 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 /// Read the nbuf blocks described in arrays pos and len,
 /// where pos[i] is the seek position of block i of length len[i].
 /// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-/// This function is overloaded by TNetFile, TWebFile, etc.
+/// This function is overridden in remote-file implementations.
 /// Returns kTRUE in case of failure.
 
 Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)

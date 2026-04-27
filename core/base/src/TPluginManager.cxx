@@ -74,7 +74,7 @@ A list of currently defined handlers can be printed using:
 The use of the plugin library manager removes all textual references
 to hard-coded class and library names and the resulting dependencies
 in the base classes. The plugin manager is used to extend a.o.
-TFile, TSQLServer, TGrid, etc. functionality.
+TFile etc. functionality.
 */
 
 #include "TPluginManager.h"
