@@ -614,7 +614,7 @@ void TCanvas::Build()
       fPainter->SetAttFill({1, 1001});    //Set color index for fill area
       fPainter->SetAttLine({1, 1, 1});    //Set color index for lines
       fPainter->SetAttMarker({1, 1, 1});  //Set color index for markers
-      fPainter->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
+      // fPainter->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
       // Clear workstation
       fPainter->ClearDrawable();
 
