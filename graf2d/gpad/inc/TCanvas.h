@@ -166,6 +166,8 @@ public:
    UInt_t            GetWindowHeight() const { return fWindowHeight; }
    UInt_t            GetWw() const override { return fCw; }
    UInt_t            GetWh() const override { return fCh; }
+   UInt_t            GetPadWidth() const override { return fCw; }
+   UInt_t            GetPadHeight() const override { return fCh; }
    virtual void      GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &wh)
                      {wtopx=GetWindowTopX(); wtopy=fWindowTopY; ww=fWindowWidth; wh=fWindowHeight;}
    virtual void      HandleInput(EEventType button, Int_t x, Int_t y);
