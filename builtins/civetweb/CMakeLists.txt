@@ -71,13 +71,14 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
   # URL https://github.com/civetweb/civetweb/archive/refs/tags/v${ROOT_CIVETWEB_VERSION}.tar.gz # TODO move to LCG
   # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
+  # TODO: once 1.17 released, review _EXTERNAL_CIVETWEB workaround and bump SearchInstalledSoftware find_package to 1.17 plus remove builtin_ force-enable workaround with fail-on-missing
   GIT_REPOSITORY https://github.com/civetweb/civetweb.git
   GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
-  PATCH_COMMAND ${GIT_EXECUTABLE} apply 1389.patch 1385.patch # https://github.com/civetweb/civetweb/pull/1385 and https://github.com/civetweb/civetweb/pull/1389
+  PATCH_COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385 and https://github.com/civetweb/civetweb/pull/1389
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
   LOG_BUILD     FALSE
-  LOG_PATCH     TRUE
+  LOG_PATCH     FALSE
   LOG_INSTALL   FALSE
   LOG_OUTPUT_ON_FAILURE FALSE
   USES_TERMINAL_DOWNLOAD true
