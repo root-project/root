@@ -83,12 +83,18 @@ double bernstein(double x, double xmin, double xmax, DoubleArray coefs, int nCoe
    return result;
 }
 
-/// @brief Function to evaluate an un-normalized RooGaussian.
-inline double gaussian(double x, double mean, double sigma)
+/// Evaluate the logarithm of an un-normalized Gaussian.
+inline double logGaussian(double x, double mean, double sigma)
 {
    const double arg = x - mean;
    const double sig = sigma;
-   return std::exp(-0.5 * arg * arg / (sig * sig));
+   return -0.5 * arg * arg / (sig * sig);
+}
+
+/// @brief Function to evaluate an un-normalized Gaussian.
+inline double gaussian(double x, double mean, double sigma)
+{
+   return std::exp(logGaussian(x, mean, sigma));
 }
 
 template <typename DoubleArray>

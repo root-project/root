@@ -27,8 +27,6 @@ Plain Gaussian p.d.f
 
 #include <RooFit/Detail/MathFuncs.h>
 
-#include <vector>
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,10 +59,22 @@ double RooGaussian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gaussian distribution.
-void RooGaussian::doEval(RooFit::EvalContext & ctx) const
+void RooGaussian::doEval(RooFit::EvalContext &ctx) const
 {
-  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Gaussian, ctx.output(),
-          {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
+   if (ctx.config(this).takeLog()) {
+      auto output = ctx.output();
+      if (output.size() == 1) {
+         // If the ouput size is just one, which is common for constraints,
+         // calling into RooBatchCompute is not worth its overhead.
+         output[0] = RooFit::Detail::MathFuncs::logGaussian(ctx.at(x)[0], ctx.at(mean)[0], ctx.at(sigma)[0]);
+      } else {
+         RooBatchCompute::compute(ctx.config(this), RooBatchCompute::LogGaussian, output,
+                                  {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
+      }
+      return;
+   }
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Gaussian, ctx.output(),
+                            {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
