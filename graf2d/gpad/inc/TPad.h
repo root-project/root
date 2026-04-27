@@ -217,6 +217,8 @@ public:
    Double_t          GetHNDC() const override { return fHNDC; }
    UInt_t            GetWw() const override;
    UInt_t            GetWh() const override;
+   UInt_t            GetPadWidth() const override;
+   UInt_t            GetPadHeight() const override;
    Double_t          GetAbsXlowNDC() const override { return fAbsXlowNDC; }
    Double_t          GetAbsYlowNDC() const override { return fAbsYlowNDC; }
    Double_t          GetAbsWNDC() const override { return fAbsWNDC; }

@@ -118,6 +118,8 @@ public:
    virtual Double_t GetHNDC() const = 0;
    virtual UInt_t   GetWw() const = 0;
    virtual UInt_t   GetWh() const = 0;
+   virtual UInt_t   GetPadWidth() const = 0;
+   virtual UInt_t   GetPadHeight() const = 0;
    virtual Double_t GetAbsXlowNDC() const = 0;
    virtual Double_t GetAbsYlowNDC() const = 0;
    virtual Double_t GetAbsWNDC() const = 0;

@@ -14,6 +14,7 @@
 #include <iostream>
 #include <locale>
 #include <memory>
+#include <cmath>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -2816,7 +2817,7 @@ TVirtualPad *TPad::GetPadSave() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Wh.
+/// Get canvas height
 
 UInt_t TPad::GetWh() const
 {
@@ -2824,11 +2825,45 @@ UInt_t TPad::GetWh() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Ww.
+/// Get canvas width
 
 UInt_t TPad::GetWw() const
 {
    return  fCanvas ? fCanvas->GetWw() : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get pad width
+
+UInt_t TPad::GetPadWidth() const
+{
+   // Very often pad width was calculated as XtoPixel(GetX2());
+   // But if coordinate system broken such trnasformation fail.
+   // Therefore use canvas width multiplied by absolute NDC width value
+   // Keep fallback solution only when canvas width cannot be defined
+
+   auto cw = GetWw();
+   if (!cw)
+      return XtoPixel(GetX2());
+
+   return static_cast<UInt_t>(std::lround(cw * GetAbsWNDC()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get pad height
+
+UInt_t TPad::GetPadHeight() const
+{
+   // Very often pad height was calculated as YtoPixel(GetY1())
+   // But if coordinate system broken such trnasformation fail.
+   // Therefore use canvas height multiplied by absolute NDC height value
+   // Keep fallback solution only when canvas height cannot be defined
+
+   auto ch = GetWh();
+   if (!ch)
+      return YtoPixel(GetY1());
+
+   return static_cast<UInt_t>(std::lround(GetWh() * GetAbsHNDC()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
