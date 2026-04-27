@@ -204,3 +204,25 @@ TEST(RNTuple, SoASimple)
    EXPECT_FLOAT_EQ(5.0, v(2).at(1).fX);
    EXPECT_FLOAT_EQ(6.0, v(2).at(1).fY);
 }
+
+TEST(RNTuple, SoASimpleSwapped)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_simple_swapped.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("f", "SoASimpleSwapped"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto soa = writer->GetModel().GetDefaultEntry().GetPtr<SoASimpleSwapped>("f");
+      soa->fX.push_back(1.0);
+      soa->fY.push_back(2.0);
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   auto v = reader->GetView<std::vector<RecordSimple>>("f");
+   EXPECT_EQ(1u, v(0).size());
+   EXPECT_FLOAT_EQ(1.0, v(0).at(0).fX);
+   EXPECT_FLOAT_EQ(2.0, v(0).at(0).fY);
+}

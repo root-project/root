@@ -63,8 +63,10 @@ class RSoAField : public RFieldBase {
    };
 
    TClass *fSoAClass = nullptr;
-   std::vector<std::size_t> fSoAMemberOffsets;    ///< The offset of the RVec members in the SoA type
    std::vector<RFieldBase *> fRecordMemberFields; ///< Direct access to the member fields of the underlying record
+   /// The offset of the RVec members in the SoA type in the order of subfields of the underlying record type.
+   /// In particular, the order is not necessarily the same then the order of RVec members in the SoA class.
+   std::vector<std::size_t> fSoAMemberOffsets;
    std::size_t fMaxAlignment = 1;
    ROOT::Internal::RColumnIndex fNWritten;
 

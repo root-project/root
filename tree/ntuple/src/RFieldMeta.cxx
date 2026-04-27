@@ -715,6 +715,8 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
       throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
    }
 
+   fSoAMemberOffsets.resize(fRecordMemberFields.size());
+   unsigned int nMembers = 0;
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
       if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())
          continue;
@@ -751,12 +753,13 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
 
       fMaxAlignment = std::max(fMaxAlignment, vecField->GetAlignment());
 
-      fSoAMemberOffsets.emplace_back(dataMember->GetOffset());
+      assert(itr->second < fSoAMemberOffsets.size());
+      fSoAMemberOffsets[itr->second] = dataMember->GetOffset();
+      nMembers++;
    }
-   if (recordFieldNameToIdx.size() != fSoAMemberOffsets.size()) {
+   if (recordFieldNameToIdx.size() != nMembers) {
       throw RException(R__FAIL("missing SoA members"));
    }
-   assert(fRecordMemberFields.size() == fSoAMemberOffsets.size());
 
    std::string renormalizedAlias;
    if (ROOT::Internal::NeedsMetaNameAsAlias(fSoAClass->GetName(), renormalizedAlias))

@@ -51,6 +51,12 @@ struct SoASimple {
    ClassDefNV(SoASimple, 2);
 };
 
+struct SoASimpleSwapped {
+   ROOT::RVec<float> fY;
+   ROOT::RVec<float> fX;
+   ClassDefNV(SoASimpleSwapped, 2);
+};
+
 struct SoASimpleBadArray {
    ROOT::RVec<float> fX;
    float fY[3];
