@@ -49,7 +49,7 @@
 #pragma warning (disable: 4503)
 
 /* function is hidden */
-#pragma warning (3: 4266)
+#pragma warning (disable: 4266)
 /* loop control variable is used outside the for-loop scope */
 #pragma warning (3: 4289)
 
