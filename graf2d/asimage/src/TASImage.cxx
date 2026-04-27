@@ -5729,19 +5729,11 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
    // set text font
    TTF::SetTextFont(text->GetTextFont());
 
-   Int_t wh = 100, hh = 100;
-   if (pad) {
-      wh = pad->XtoPixel(pad->GetX2());
-      hh = pad->YtoPixel(pad->GetY1());
-   }
+   UInt_t padw = pad ? pad->GetPadWidth() : 100;
+   UInt_t padh = pad ? pad->GetPadHeight() : 100;
 
    // set text size
-   Float_t ttfsize;
-   if (wh < hh) {
-      ttfsize = text->GetTextSize() * wh;
-   } else {
-      ttfsize = text->GetTextSize() * hh;
-   }
+   Float_t ttfsize = text->GetTextSize() * TMath::Min(padw, padh);
    TTF::SetTextSize(ttfsize*kScale);
 
    // set text angle

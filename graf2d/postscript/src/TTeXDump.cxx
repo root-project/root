@@ -790,8 +790,8 @@ void TTeXDump::SetTextColor( Color_t cindex )
 
 void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
 {
-   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t wh = (Double_t)gPad->GetPadWidth();
+   Double_t hh = (Double_t)gPad->GetPadHeight();
    Float_t tsize, ftsize;
    if (wh < hh) {
       tsize = fTextSize*wh;
