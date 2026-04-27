@@ -24,6 +24,8 @@ endif()
 # flag required only on Windows, on old alma paltforms it make troubles
 if(WIN32)
   set(patch_args --ignore-whitespace)
+  # delete the source directory to make sure there is no conflict with the git apply command
+  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CFITSIO_PREFIX})
 endif()
 
 ExternalProject_Add(
@@ -48,7 +50,7 @@ ExternalProject_Add(
                 ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS} --target install
-  LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+  LOG_PATCH 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
   BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
   TIMEOUT 600
 )

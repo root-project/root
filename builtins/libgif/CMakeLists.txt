@@ -26,6 +26,8 @@ endif()
 # flag required only on Windows, on old alma paltforms it make troubles
 if(WIN32)
   set(patch_args --ignore-whitespace)
+  # delete the source directory to make sure there is no conflict with the git apply command
+  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${ROOT_LIBGIF_PREFIX})
 endif()
 
 ExternalProject_Add(
@@ -43,7 +45,7 @@ ExternalProject_Add(
     -DCMAKE_C_VISIBILITY_PRESET=hidden
     BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBGIF_BUILD_COMMAND_FLAGS}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBGIF_BUILD_COMMAND_FLAGS} --target install
-    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+    LOG_PATCH 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
     BUILD_BYPRODUCTS ${ROOT_LIBGIF_LIBRARY}
     TIMEOUT 600
 )
