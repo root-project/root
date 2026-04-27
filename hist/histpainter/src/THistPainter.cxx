@@ -10360,9 +10360,9 @@ void THistPainter::PaintTitle()
 
    if (ht <= 0) {
       if (gStyle->GetTitleFont("")%10 == 3) {
-         Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
-                                  (Double_t)gPad->YtoPixel(gPad->GetY1()));
-         ht = 1.1*(gStyle->GetTitleSize("")/hw);
+         Double_t hw = (Double_t) TMath::Max(gPad->GetPadWidth(), gPad->GetPadHeight());
+         if (hw > 0)
+            ht = 1.1 * (gStyle->GetTitleSize("")/hw);
       } else {
          ht = 1.1*gStyle->GetTitleFontSize();
       }
