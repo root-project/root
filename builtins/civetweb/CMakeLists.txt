@@ -73,6 +73,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
   GIT_REPOSITORY https://github.com/civetweb/civetweb.git
   GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
+  PATCH_COMMAND ${GIT_EXECUTABLE} apply 1389.patch 1385.patch # https://github.com/civetweb/civetweb/pull/1385 and https://github.com/civetweb/civetweb/pull/1389
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
   LOG_BUILD     FALSE
