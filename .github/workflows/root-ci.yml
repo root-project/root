@@ -395,6 +395,7 @@ jobs:
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2510
+          - image: ubuntu2604
           - image: debian13
             overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
