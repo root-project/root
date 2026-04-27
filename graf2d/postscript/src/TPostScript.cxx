@@ -2675,8 +2675,10 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    // Compute the font size. Exit if it is 0
    // The font size is computed from the TTF size to get exactly the same
    // size on the screen and in the PostScript file.
-   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t wh = (Double_t) gPad->GetPadWidth();
+   Double_t hh = (Double_t) gPad->GetPadHeight();
+   if (wh <= 0 || hh <= 0)
+      return;
    Float_t tsize, ftsize;
 
    if (wh < hh) {

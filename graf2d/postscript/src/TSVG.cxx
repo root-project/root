@@ -1361,8 +1361,8 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t txalv = fTextAlign%10;
    if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
 
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t     wh = (Double_t)gPad->GetPadWidth();
+   Double_t     hh = (Double_t)gPad->GetPadHeight();
    Float_t fontrap = 1.09; //scale down compared to X11
    Float_t ftsize;
 
