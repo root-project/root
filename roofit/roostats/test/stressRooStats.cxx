@@ -12,7 +12,6 @@
 #include "Math/MinimizerOptions.h"
 
 // ROOT headers
-#include "TWebFile.h"
 #include "TSystem.h"
 #include "TString.h"
 #include "TStopwatch.h"

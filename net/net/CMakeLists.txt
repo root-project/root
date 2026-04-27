@@ -36,18 +36,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     TApplicationRemote.h
     TApplicationServer.h
     TFileStager.h
-    TFTP.h
-    TGrid.h
-    TGridCollection.h
-    TGridJDL.h
-    TGridJob.h
-    TGridJobStatus.h
-    TGridJobStatusList.h
-    TGridResult.h
     TMessage.h
     TMonitor.h
-    TNetFile.h
-    TNetFileStager.h
     TParallelMergingFile.h
     TPServerSocket.h
     TPSocket.h
@@ -62,24 +52,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     TSQLStatement.h
     TSQLTableInfo.h
     TUDPSocket.h
-    TWebFile.h
     ${NET_SSL_HEADERS}
   SOURCES
     src/NetErrors.cxx
     src/TApplicationRemote.cxx
     src/TApplicationServer.cxx
     src/TFileStager.cxx
-    src/TFTP.cxx
-    src/TGrid.cxx
-    src/TGridJDL.cxx
-    src/TGridJob.cxx
-    src/TGridJobStatus.cxx
-    src/TGridJobStatusList.cxx
-    src/TGridResult.cxx
     src/TMessage.cxx
     src/TMonitor.cxx
-    src/TNetFile.cxx
-    src/TNetFileStager.cxx
     src/TParallelMergingFile.cxx
     src/TPServerSocket.cxx
     src/TPSocket.cxx
@@ -94,7 +74,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     src/TSQLStatement.cxx
     src/TSQLTableInfo.cxx
     src/TUDPSocket.cxx
-    src/TWebFile.cxx
     ${NET_SSL_SOURCES}
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM

@@ -85,7 +85,6 @@
 #include "TBranch.h"
 #include "TFile.h"
 #include "TH1.h"
-#include "TNetFile.h"
 #include "TRandom.h"
 #include "TStopwatch.h"
 #include "TTree.h"
@@ -113,7 +112,6 @@ int main(int argc, char** argv)
    Int_t read   = 0;
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
-   Int_t netf   = 0;
 
    const char* arg6 = 0;
    const char* arg7 = 0;
@@ -133,7 +131,6 @@ int main(int argc, char** argv)
    if (arg4 == 11) { write = 1; hfill = 1;}
    if (arg4 == 20) { write = 0; read  = 1;}  //read sequential
    if (arg4 == 25) { write = 0; read  = 2;}  //read random
-   if (arg4 >= 30) { netf  = 1; }            //use TNetFile
    if (arg4 == 30) { write = 0; read  = 1;}  //netfile + read sequential
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
@@ -179,11 +176,7 @@ int main(int argc, char** argv)
    if (read) {
       // -- Read case
       TFile* hfile = nullptr;
-      if (netf) {
-         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root");
-      } else {
-         hfile = new TFile(gFilename);
-      }
+      hfile = new TFile(gFilename);
       TTree* tree = (TTree*) hfile->Get("T");
       TBranch* branch = tree->GetBranch("event");
       Event* event = nullptr;
@@ -224,13 +217,7 @@ int main(int argc, char** argv)
       // Note that this file may contain any kind of ROOT objects, histograms,
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
-      TFile* hfile = 0;
-      if (netf) {
-         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root", "RECREATE",
-                                                "TTree benchmark ROOT file");
-      } else {
-         hfile = new TFile(gFilename, "RECREATE", "TTree benchmark ROOT file");
-      }
+      TFile* hfile = new TFile(gFilename, "RECREATE", "TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
 
       // Create histogram to show write_time in function of time

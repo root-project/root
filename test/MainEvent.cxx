@@ -96,7 +96,6 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
-#include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
 #include "TTreePerfStats.h"
@@ -121,7 +120,6 @@ int MainEvent(int nevent, int comp, int split, int arg4, int arg5, int enable_im
    Int_t write  = 1;       // by default the tree is filled
    Int_t hfill  = 0;       // by default histograms are not filled
    Int_t read   = 0;
-   Int_t netf   = 0;
    Int_t punzip = 0;
 
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
@@ -132,7 +130,6 @@ int MainEvent(int nevent, int comp, int split, int arg4, int arg5, int enable_im
    if (arg4 == 20) { write = 0; read  = 1;}  //read sequential
    if (arg4 == 21) { write = 0; read  = 1;  punzip = 1;}  //read sequential + parallel unzipping
    if (arg4 == 25) { write = 0; read  = 2;}  //read random
-   if (arg4 >= 30) { netf  = 1; }            //use TNetFile
    if (arg4 == 30) { write = 0; read  = 1;}  //netfile + read sequential
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
@@ -171,10 +168,7 @@ int MainEvent(int nevent, int comp, int split, int arg4, int arg5, int enable_im
 
 //         Read case
    if (read) {
-      if (netf) {
-         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root");
-      } else
-         hfile = new TFile(outFiles.back().c_str());
+      hfile = new TFile(outFiles.back().c_str());
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -215,11 +209,7 @@ int MainEvent(int nevent, int comp, int split, int arg4, int arg5, int enable_im
       // Note that this file may contain any kind of ROOT objects, histograms,
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
-      if (netf) {
-         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root","RECREATE",
-                                                "TTree benchmark ROOT file");
-      } else
-         hfile = new TFile(outFiles.back().c_str(),"RECREATE","TTree benchmark ROOT file");
+      hfile = new TFile(outFiles.back().c_str(),"RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
       hfile->SetCompressionAlgorithm(compAlg);
 
