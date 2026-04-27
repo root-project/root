@@ -243,7 +243,16 @@ void TPadPainter::SetAttText(const TAttText &att)
 {
    TPadPainterBase::SetAttText(att);
 
-   gVirtualX->SetAttText(fWinContext, att);
+   // TODO: in ROOT7 move text size handling directly to correspondent PS engine
+   //       One not need to recalculate text size many time back and forth
+
+   if (!fPad)
+      Fatal("SetAttText", "Pad not specified");
+
+   TAttText attm(att);
+   attm.SetTextSize(att.GetTextSizePixels(*fPad));
+
+   gVirtualX->SetAttText(fWinContext, attm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

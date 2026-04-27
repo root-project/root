@@ -132,18 +132,6 @@ void TGLPadPainter::SetAttMarker(const TAttMarker &att)
       gVirtualX->SetAttMarker(fWinContext, att);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set text attributes
-
-void TGLPadPainter::SetAttText(const TAttText &att)
-{
-   TPadPainterBase::SetAttText(att);
-
-   // TODO: dismiss in the future, gVirtualX attributes not needed in GL
-   if (fWinContext && gVirtualX)
-      gVirtualX->SetAttText(fWinContext, att);
-}
-
 /*
 "Pixmap" part of TGLPadPainter.
 */
@@ -810,9 +798,10 @@ void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETe
 
    fF.SetTextAlign(GetAttText().GetTextAlign());
 
-   fFM.RegisterFont(TMath::Max(Int_t(GetAttText().GetTextSize()) - 1, 10),//kTexture does not work if size < 10.
-                               TGLFontManager::GetFontNameFromId(fontIndex),
-                               TGLFont::kTexture, fF);
+   //kTexture does not work if size < 10.
+   Int_t textSize = TMath::Max(Int_t(GetAttText().GetTextSizePixels(*gPad)) - 1, 10);
+
+   fFM.RegisterFont(textSize, TGLFontManager::GetFontNameFromId(fontIndex), TGLFont::kTexture, fF);
    fF.PreRender();
 
    const UInt_t padH = UInt_t(gPad->GetAbsHNDC() * gPad->GetWh());

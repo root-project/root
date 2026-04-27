@@ -377,16 +377,9 @@ void TAttText::ModifyOn(TVirtualPad &pad)
    if (!pp)
       return;
 
-   Float_t tsize0 = fTextSize;
-
-   // PS-based painter uses relative size, gVirtualX - pixels
-   Float_t tsize = pp->GetPS() ? GetTextSizeRelative(pad) : GetTextSizePixels(pad);
-
-   fTextSize = tsize;
+   pp->OnPad(&pad);
 
    pp->SetAttText(*this);
-
-   fTextSize = tsize0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

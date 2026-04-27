@@ -63,7 +63,6 @@ public:
    void      SetAttFill(const TAttFill &att) override;
    void      SetAttLine(const TAttLine &att) override;
    void      SetAttMarker(const TAttMarker &att) override;
-   void      SetAttText(const TAttText &att) override;
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;

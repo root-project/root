@@ -5724,6 +5724,7 @@ void TPad::ResizePad(Option_t *option)
          pp->SetAttLine(attl);
          auto attt = pp->GetAttText();
          attt.SetTextSize(-1);
+         pp->OnPad(this);
          pp->SetAttText(attt);
          // create or re-create off-screen pixmap
          if (fPixmapID) {
@@ -6216,6 +6217,7 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
                tsize = dy/(GetY2()-GetY1());
             }
          }
+         pp->OnPad(this);
          pp->SetAttText({align, angle, color, font, tsize});
       }
 }

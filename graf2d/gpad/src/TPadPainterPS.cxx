@@ -105,10 +105,20 @@ void TPadPainterPS::SetAttText(const TAttText &att)
 {
    TPadPainterBase::SetAttText(att);
 
+   // TODO: in ROOT7 move text size handling directly to correspondent PS engine
+   //       One not need to recalculate text size many time back and forth
+
+   Float_t tsize = 0.03;
+
+   if (fPad)
+      tsize = att.GetTextSizeRelative(*fPad);
+   else
+      Fatal("SetAttText", "Pad not set when invoke method");
+
    fPS->SetTextAlign(att.GetTextAlign());
    fPS->SetTextAngle(att.GetTextAngle());
    fPS->SetTextColor(att.GetTextColor());
-   fPS->SetTextSize(att.GetTextSize());
+   fPS->SetTextSize(tsize);
    fPS->SetTextFont(att.GetTextFont());
 }
 
