@@ -986,6 +986,9 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bo
       var["value"] << rrv->getVal();
       if (rrv->isConstant() && storeConstant) {
          var["const"] << rrv->isConstant();
+      } else {
+         var["min"] << rrv->getMin();
+         var["max"] << rrv->getMax();
       }
       if (rrv->getBins() != 100 && storeBins) {
          var["nbins"] << rrv->getBins();
@@ -1507,10 +1510,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       return;
 
    JSONNode &output = appendNamedChild((*_rootnodeOutput)["data"], data.GetName());
-   /*std::ofstream file("/home/scello/Data/ZvvH126_5.txt", std::ios::app);
-   if (!file.is_open()) {
-      std::cerr << "Error: Could not open file for writing.\n";
-   }*/
 
    // This works around a problem in RooStats/HistFactory that was only fixed
    // in ROOT 6.30: until then, the weight variable of the observed dataset,
@@ -1947,17 +1946,15 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       // the ones that the pdfs encoded implicitly (like in the case of
       // HistFactory).
       for (RooAbsArg *arg : *snsh) {
-         if (exportedObjectNames.find(arg->GetName()) != exportedObjectNames.end()) {
-            bool do_export = false;
-            for (const auto &pdf : allpdfs) {
-               if (pdf->dependsOn(*arg)) {
-                  do_export = true;
-               }
+         bool do_export = false;
+         for (const auto &pdf : allpdfs) {
+            if (pdf->dependsOn(*arg)) {
+               do_export = true;
             }
-            if (do_export) {
-               RooJSONFactoryWSTool::testValidName(arg->GetName(), true);
-               snapshotSorted.add(*arg);
-            }
+         }
+         if (do_export) {
+            RooJSONFactoryWSTool::testValidName(arg->GetName(), true);
+            snapshotSorted.add(*arg);
          }
       }
       snapshotSorted.sort();
