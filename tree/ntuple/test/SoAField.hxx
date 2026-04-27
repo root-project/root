@@ -91,4 +91,27 @@ struct SoASimpleWrongMember {
    ClassDefNV(SoASimpleWrongMember, 2);
 };
 
+/// class with non-trivial constructor and destructor
+struct ComplexMember {
+   inline static int gNCallConstructor = 0;
+   inline static int gNCallDestructor = 0;
+
+   ComplexMember() { gNCallConstructor++; }
+   ~ComplexMember() { gNCallDestructor++; }
+
+   ClassDefNV(ComplexMember, 2);
+};
+
+struct RecordComplex {
+   ComplexMember fA;
+
+   ClassDefNV(RecordComplex, 2);
+};
+
+struct SoAComplex {
+   ROOT::RVec<ComplexMember> fA;
+
+   ClassDefNV(SoAComplex, 2);
+};
+
 #endif // ROOT_RNTuple_Test_SoAField

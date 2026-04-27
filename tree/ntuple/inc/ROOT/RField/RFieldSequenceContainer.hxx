@@ -31,6 +31,10 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+namespace Experimental {
+class RSoAField;
+}
+
 namespace Internal {
 std::unique_ptr<RFieldBase> CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
                                                       std::string_view emulatedFromType);
@@ -112,6 +116,7 @@ public:
 /// The type-erased field for a RVec<Type>
 class RRVecField : public RFieldBase {
    friend class RArrayAsRVecField; // to use the RRVecDeleter and to call ResizeRVec()
+   friend class ROOT::Experimental::RSoAField; // to call ResizeRVec()
 
    // Ensures that the RVec pointed to by rvec has at least nItems valid elements
    // Returns the possibly new "begin pointer" of the RVec, i.e. the pointer to the data area.
