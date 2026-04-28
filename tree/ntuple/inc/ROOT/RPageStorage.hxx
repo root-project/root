@@ -554,7 +554,8 @@ public:
    /// NOTE: this function was designed for use by the Merger and it's not fit as-is for use with the higher level
    /// API layers. In other words, you cannot use this with a Writer and write data through the regular Entry/Field
    /// API, as this function only modifies the descriptor.
-   void
+   /// \return The physical id of the first newly added column.
+   ROOT::DescriptorId_t
    AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const ENTupleColumnType> newRepresentation);
 
    /// Adds a new alias column pointing to an existing column with the given physical id to the given field.
