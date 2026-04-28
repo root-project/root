@@ -34,7 +34,9 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooNameReg.h"
+#include "RooRatio.h"
 #include "RooWrapperPdf.h"
+#include "RooFitImplHelpers.h"
 
  ////////////////////////////////////////////////////////////////////////////////
  /// Default constructor
@@ -280,16 +282,55 @@ RooProjectedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
    intpdf->getObservables(&normSet, nset2);
    nset2.add(intobs);
 
-   auto newArg = std::unique_ptr<RooAbsReal>{intpdf->createIntegral(intobs, &nset2)};
+   bool forcedAnalyticalInt = false;
+   for (RooAbsArg *obs : intobs) {
+      forcedAnalyticalInt |= intpdf->forceAnalyticalInt(*obs);
+   }
 
-   std::string namePdf = std::string{newArg->GetName()} + "_wrapped_pdf";
+   // If the pdf forces analytical integration, it is usually because it is
+   // expoliting the analytical integration hooks for special integral
+   // semantics (e.g. conditional RooProdPdfs). In these cases, we can't take
+   // the optimized code path below that splits up the projection into
+   // numerator and denominator, as the integral might not factorize like this.
+   if (forcedAnalyticalInt) {
+      auto newArg = std::unique_ptr<RooAbsReal>{intpdf->createIntegral(intobs, &nset2)};
 
-   auto newArgPdf = std::make_unique<RooWrapperPdf>(namePdf.c_str(), namePdf.c_str(), *newArg);
+      std::string namePdf = std::string{newArg->GetName()} + "_wrapped_pdf";
 
-   ctx.markAsCompiled(*newArg);
+      auto newArgPdf = std::make_unique<RooWrapperPdf>(namePdf.c_str(), namePdf.c_str(), *newArg);
+
+      ctx.markAsCompiled(*newArg);
+      newArgPdf->addOwnedComponents(std::move(newArg));
+
+      return newArgPdf;
+   }
+
+   // Build the projection as an explicit ratio of two integrals instead of a
+   // single RooRealIntegral with a function-normalization set. The latter
+   // would force the integrand to evaluate the *normalized* pdf, hiding the
+   // normalization integral inside RooAbsPdf::_normMgr. That hidden integral
+   // is invisible to the RooFit::Evaluator and is therefore re-run for every
+   // step of the outer integrator during minimization (because the evaluator
+   // sets all its tracked nodes to ADirty). Exposing the normalization as a
+   // sibling node lets the evaluator cache it once per likelihood evaluation.
+   std::unique_ptr<RooAbsReal> numerator{intpdf->createIntegral(intobs)};
+   std::unique_ptr<RooAbsReal> denominator{intpdf->createIntegral(nset2)};
+
+   std::string nameRatio =
+      std::string{numerator->GetName()} + "_Norm[" + RooHelpers::getColonSeparatedNameString(nset2, ',') + "]";
+   auto ratio = std::make_unique<RooRatio>(nameRatio.c_str(), nameRatio.c_str(), *numerator, *denominator);
+
+   std::string namePdf = nameRatio + "_wrapped_pdf";
+   auto newArgPdf = std::make_unique<RooWrapperPdf>(namePdf.c_str(), namePdf.c_str(), *ratio);
+
+   ctx.markAsCompiled(*numerator);
+   ctx.markAsCompiled(*denominator);
+   ctx.markAsCompiled(*ratio);
    ctx.markAsCompiled(*newArgPdf);
 
-   newArgPdf->addOwnedComponents(std::move(newArg));
+   newArgPdf->addOwnedComponents(std::move(numerator));
+   newArgPdf->addOwnedComponents(std::move(denominator));
+   newArgPdf->addOwnedComponents(std::move(ratio));
 
    return newArgPdf;
 }
