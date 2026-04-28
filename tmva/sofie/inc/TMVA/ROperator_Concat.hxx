@@ -275,10 +275,11 @@
                std::string offset;
                for(size_t i=0; i<fInputs.size(); ++i) {
                   auto length = ConvertDimShapeToLength(fInputShapes[i]);
-                  out << SP << "std::copy(tensor_" <<fInputs[i] << ", tensor_" <<fInputs[i] << "+" << length <<", tensor_"<<fOutput;
-                  if (i > 0)  out << offset;
+                  out << SP << "TMVA::Experimental::SOFIE::Copy(tensor_" << fOutput;
+                  if (i > 0)
+                     out << offset;
                   offset += " + " + length;
-                  out << ");\n";
+                  out << ", " << "tensor_" << fInputs[i] << ", " + length << ");\n";
                }
             }
             else {
