@@ -193,7 +193,7 @@ TEST(RNTupleProjection, AliasQuantDiffPrec)
    auto model = RNTupleModel::Create();
 
    auto field = std::make_unique<RField<float>>("q");
-   field->SetQuantized(0, 1, 20); // Set quantized with 20 bits of precision
+   field->SetQuantized(20, {0, 1}); // Set quantized with 20 bits of precision
    model->AddField(std::move(field));
 
    auto modelRead = model->Clone();
@@ -203,7 +203,7 @@ TEST(RNTupleProjection, AliasQuantDiffPrec)
       diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
 
       auto projField = std::make_unique<RField<float>>("projq");
-      projField->SetQuantized(0, 1, 30); // Set quantized with 30 bits of precision
+      projField->SetQuantized(30, {0, 1}); // Set quantized with 30 bits of precision
       model->AddProjectedField(std::move(projField), [](const auto &) { return "q"; });
    }
 
@@ -233,7 +233,7 @@ TEST(RNTupleProjection, AliasQuantDiffRange)
    auto model = RNTupleModel::Create();
 
    auto field = std::make_unique<RField<float>>("q");
-   field->SetQuantized(0, 1, 20);
+   field->SetQuantized(20, {0, 1});
    model->AddField(std::move(field));
 
    auto modelRead = model->Clone();
@@ -243,7 +243,7 @@ TEST(RNTupleProjection, AliasQuantDiffRange)
       diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
 
       auto projField = std::make_unique<RField<float>>("projq");
-      projField->SetQuantized(0, 2, 20);
+      projField->SetQuantized(20, {0, 2});
       model->AddProjectedField(std::move(projField), [](const auto &) { return "q"; });
    }
 
@@ -317,7 +317,7 @@ TEST(RNTupleProjection, AliasTruncQuantProj)
    fTrunc->SetTruncated(20);
    model->AddField(std::move(fTrunc));
    auto fQuant = std::make_unique<RField<float>>("quant");
-   fQuant->SetQuantized(-1, 1, 30);
+   fQuant->SetQuantized(30, {-1, 1});
    model->AddField(std::move(fQuant));
 
    auto modelRead = model->Clone();
@@ -327,7 +327,7 @@ TEST(RNTupleProjection, AliasTruncQuantProj)
       diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
 
       auto projTruncToQuant = std::make_unique<RField<float>>("truncToQuant");
-      projTruncToQuant->SetQuantized(0, 10, 20);
+      projTruncToQuant->SetQuantized(20, {0, 10});
       model->AddProjectedField(std::move(projTruncToQuant), [](const auto &) { return "trunc"; });
 
       auto projQuantToTrunc = std::make_unique<RField<float>>("quantToTrunc");
