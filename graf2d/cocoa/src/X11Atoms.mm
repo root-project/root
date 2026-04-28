@@ -80,7 +80,7 @@ const char *predefinedAtoms[] =
 const unsigned nPredefined = sizeof predefinedAtoms / sizeof predefinedAtoms[0];
 
 //______________________________________________________________________________
-void InitWithPredefinedAtoms(name_to_atom_map &nameToAtom, std::vector<std::string> &atomNames)
+void InitWithPredefinedAtoms(std::map<std::string, Atom_t> &nameToAtom, std::vector<std::string> &atomNames)
 {
    nameToAtom.clear();
 

@@ -27,6 +27,7 @@
 #include "TVirtualGL.h"
 #include "X11Events.h"
 #include "X11Buffer.h"
+#include "X11Atoms.h"
 #include "TGClient.h"
 #include "TGWindow.h"
 #include "TSystem.h"
@@ -600,7 +601,7 @@ void TGCocoa::ReconfigureDisplay()
 }
 
 //______________________________________________________________________________
-X11::Rectangle TGCocoa::GetDisplayGeometry()const
+X11::Rectangle TGCocoa::GetDisplayGeometry() const
 {
    if (fDisplayShapeChanged) {
       NSArray * const screens = [NSScreen screens];
@@ -4458,13 +4459,13 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 #pragma mark - Details and aux. functions.
 
 //______________________________________________________________________________
-ROOT::MacOSX::X11::EventTranslator *TGCocoa::GetEventTranslator()const
+ROOT::MacOSX::X11::EventTranslator *TGCocoa::GetEventTranslator() const
 {
    return &fPimpl->fX11EventTranslator;
 }
 
 //______________________________________________________________________________
-ROOT::MacOSX::X11::CommandBuffer *TGCocoa::GetCommandBuffer()const
+ROOT::MacOSX::X11::CommandBuffer *TGCocoa::GetCommandBuffer() const
 {
    return &fPimpl->fX11CommandBuffer;
 }
@@ -4483,7 +4484,7 @@ void TGCocoa::CocoaDrawOFF()
 }
 
 //______________________________________________________________________________
-bool TGCocoa::IsCocoaDraw()const
+bool TGCocoa::IsCocoaDraw() const
 {
    return bool(fCocoaDraw);
 }
