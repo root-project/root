@@ -134,11 +134,22 @@ Bool_t TPadPainter::IsSupportAlpha() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear the current gVirtualX window.
+/// Clear the current gVirtualX window - calling gVirtualX->ClearWindowW
 
 void TPadPainter::ClearDrawable()
 {
-   gVirtualX->ClearWindowW(fWinContext);
+   if (fWinContext)
+      gVirtualX->ClearWindowW(fWinContext);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window - calling gVirtualX->ClearWindowW
+
+void TPadPainter::ClearWindow(Int_t device)
+{
+   auto ctxt = gVirtualX->GetWindowContext(device);
+   if (ctxt)
+      gVirtualX->ClearWindowW(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
