@@ -42,7 +42,7 @@
 #include <RooLognormal.h>
 #include <RooMultiPdf.h>
 #include <RooMultiVarGaussian.h>
-#include <RooONNXFunction.h>
+#include <RooONNXFunc.h>
 #include <RooParamHistFunc.h>
 #include <RooPoisson.h>
 #include <RooPolyVar.h>
@@ -1003,7 +1003,7 @@ std::string codegenIntegralImpl(RooMultiVarGaussian &arg, int code, const char *
    return doubleToString(arg.analyticalIntegral(code, rangeName));
 }
 
-void codegenImpl(RooONNXFunction &arg, CodegenContext &ctx)
+void codegenImpl(RooONNXFunc &arg, CodegenContext &ctx)
 {
    std::stringstream ss;
    ss << arg.outerWrapperName() << "(";

@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooONNXFunction.h>
+#include <RooONNXFunc.h>
 
 #include <TBuffer.h>
 #include <TInterpreter.h>
@@ -20,16 +20,16 @@
 #include <mutex>
 
 /**
- \file RooONNXFunction.cxx
- \class RooONNXFunction
+ \file RooONNXFunc.cxx
+ \class RooONNXFunc
  \ingroup Roofit
 
- RooONNXFunction wraps an ONNX model as a RooAbsReal, allowing it to be used as
+ RooONNXFunc wraps an ONNX model as a RooAbsReal, allowing it to be used as
  a building block in likelihoods, fits, and statistical analyses without
  additional boilerplate code. The class supports models with **one or more
  statically-shaped input tensors** and a **single scalar output**. The class
  was designed to share workspaces with neural functions for combined fits in
- RooFit-based frameworks written in C++. Therefore, the RooONNXFunction doesn't
+ RooFit-based frameworks written in C++. Therefore, the RooONNXFunc doesn't
  depend on any Python packages and fully supports ROOT IO,
 
  The ONNX model is evaluated through compiled C++ code generated at runtime
@@ -38,7 +38,7 @@
  analytical gradients for fast minimization with Minuit 2.
 
  The ONNX model is stored internally as a byte payload and serialized together
- with the RooONNXFunction object using ROOT I/O. Upon reading from a file or
+ with the RooONNXFunc object using ROOT I/O. Upon reading from a file or
  workspace, the runtime backend is rebuilt automatically.
 
  ### Input handling
@@ -57,7 +57,7 @@
  RooRealVar z{"z", "z", 0.0};
 
  // Construct ONNX function, building the std::vector<RooArgList> in-place
- RooONNXFunction func{
+ RooONNXFunc func{
      "func", "func",
      {{x, y}, {z}},
      "model.onnx"
@@ -79,7 +79,7 @@
  z = ROOT.RooRealVar("z", "z", 0.0)
 
  # Create ONNX function
- func = ROOT.RooONNXFunction(
+ func = ROOT.RooONNXFunc(
      "func", "func",
      [[x, y], [z]],
      "model.onnx"
@@ -185,7 +185,7 @@ void RooFit::Detail::AnyWithVoidPtr::emplace(std::string const &typeName)
    gInterpreter->ProcessLine((anyPtrSession + "->emplace<" + typeName + ">();").c_str());
 }
 
-struct RooONNXFunction::RuntimeCache {
+struct RooONNXFunc::RuntimeCache {
    /// Uniform thunk signature regardless of input-tensor count.
    /// Args: (Session*, output, flat input buffer).
    using Func = void (*)(void *, float *, float const *);
@@ -196,7 +196,7 @@ struct RooONNXFunction::RuntimeCache {
 };
 
 /**
- Construct a RooONNXFunction from an ONNX model file.
+ Construct a RooONNXFunc from an ONNX model file.
 
  \param name Name of the RooFit object
  \param title Title of the RooFit object
@@ -212,7 +212,7 @@ struct RooONNXFunction::RuntimeCache {
         input tensors have the shape that you expect. If omitted, only the
         total size of each tensor is checked.
  */
-RooONNXFunction::RooONNXFunction(const char *name, const char *title, const std::vector<RooArgList> &inputTensors,
+RooONNXFunc::RooONNXFunc(const char *name, const char *title, const std::vector<RooArgList> &inputTensors,
                                  const std::string &onnxFile, const std::vector<std::string> & /*inputNames*/,
                                  const std::vector<std::vector<int>> & /*inputShapes*/)
    : RooAbsReal{name, title}, _onnxBytes{fileToBytes(onnxFile)}
@@ -227,7 +227,7 @@ RooONNXFunction::RooONNXFunction(const char *name, const char *title, const std:
    }
 }
 
-RooONNXFunction::RooONNXFunction(const RooONNXFunction &other, const char *newName)
+RooONNXFunc::RooONNXFunc(const RooONNXFunc &other, const char *newName)
    : RooAbsReal{other, newName}, _onnxBytes{other._onnxBytes}, _runtime{other._runtime}
 {
    for (std::size_t i = 0; i < other._inputTensors.size(); ++i) {
@@ -235,7 +235,7 @@ RooONNXFunction::RooONNXFunction(const RooONNXFunction &other, const char *newNa
    }
 }
 
-void RooONNXFunction::fillInputBuffer() const
+void RooONNXFunc::fillInputBuffer() const
 {
    _inputBuffer.clear();
    _inputBuffer.reserve(_inputTensors.size());
@@ -247,7 +247,7 @@ void RooONNXFunction::fillInputBuffer() const
    }
 }
 
-void RooONNXFunction::initialize()
+void RooONNXFunc::initialize()
 {
    if (_runtime) {
       return;
@@ -258,15 +258,15 @@ void RooONNXFunction::initialize()
    // We are jitting the SOFIE invocation lazily at runtime, to avoid the
    // link-time dependency to the SOFIE parser library.
    if (gSystem->Load("libROOTTMVASofieParser") < 0) {
-      throw std::runtime_error("RooONNXFunction: cannot load ONNX file since SOFIE ONNX parser is missing."
+      throw std::runtime_error("RooONNXFunc: cannot load ONNX file since SOFIE ONNX parser is missing."
                                " Please build ROOT with tmva-sofie=ON.");
    }
    using OnnxToCpp = std::string (*)(std::uint8_t const *, std::size_t, const char *);
-   auto onnxToCppWithSofie = resolveLazy<OnnxToCpp>("_RooONNXFunction_onnxToCppWithSofie",
+   auto onnxToCppWithSofie = resolveLazy<OnnxToCpp>("_RooONNXFunc_onnxToCppWithSofie",
                                                     R"(
 #include "TMVA/RModelParser_ONNX.hxx"
 
-std::string _RooONNXFunction_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::size_t onnxBytesSize, const char *outputName)
+std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::size_t onnxBytesSize, const char *outputName)
 {
    namespace SOFIE = TMVA::Experimental::SOFIE;
 
@@ -363,7 +363,7 @@ std::string _RooONNXFunction_onnxToCppWithSofie(std::uint8_t const *onnxBytes, s
 
    gInterpreter->ProcessLine(("clad::gradient(" + namespaceName + "::roo_wrapper, \"" + cladInputs + "\");").c_str());
 
-   // The codegen call site (CodegenImpl::codegenImpl(RooONNXFunction)) passes one
+   // The codegen call site (CodegenImpl::codegenImpl(RooONNXFunc)) passes one
    // double-array argument per input tensor. Emit roo_outer_wrapper and the matching
    // custom-derivative pullback with the corresponding number of parameters.
    {
@@ -423,7 +423,7 @@ std::string _RooONNXFunction_onnxToCppWithSofie(std::uint8_t const *onnxBytes, s
    }
 }
 
-double RooONNXFunction::evaluate() const
+double RooONNXFunc::evaluate() const
 {
    fillInputBuffer();
 
@@ -432,12 +432,12 @@ double RooONNXFunction::evaluate() const
    return static_cast<double>(out);
 }
 
-void RooONNXFunction::Streamer(TBuffer &R__b)
+void RooONNXFunc::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(RooONNXFunction::Class(), this);
+      R__b.ReadClassBuffer(RooONNXFunc::Class(), this);
       this->initialize();
    } else {
-      R__b.WriteClassBuffer(RooONNXFunction::Class(), this);
+      R__b.WriteClassBuffer(RooONNXFunc::Class(), this);
    }
 }

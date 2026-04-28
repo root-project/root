@@ -63,7 +63,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooNDKeysPdf.h
     RooNonCPEigenDecay.h
     RooNovosibirsk.h
-    RooONNXFunction.h
+    RooONNXFunc.h
     RooParamHistFunc.h
     RooParametricStepFunction.h
     RooPoisson.h
@@ -130,7 +130,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooNDKeysPdf.cxx
     src/RooNonCPEigenDecay.cxx
     src/RooNovosibirsk.cxx
-    src/RooONNXFunction.cxx
+    src/RooONNXFunc.cxx
     src/RooParamHistFunc.cxx
     src/RooParametricStepFunction.cxx
     src/RooPoisson.cxx
