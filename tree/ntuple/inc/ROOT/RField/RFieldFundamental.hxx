@@ -455,15 +455,21 @@ public:
 
    /// Sets this field to use a quantized integer representation using `nBits` per value.
    /// It must be $1 <= nBits <= 32$.
-   /// `minValue` and `maxValue` must not be infinity, `NaN` or denormal floats.
-   /// Calling this function establishes a promise by the caller to RNTuple that this field will only contain values
-   /// contained in `[minValue, maxValue]` inclusive. If a value outside this range is assigned to this field, the
-   /// behavior is undefined.
-   /// This is mutually exclusive with SetTruncated() and SetHalfPrecision() and supersedes them if called after them.
-   void SetQuantized(T minValue, T maxValue, std::size_t nBits)
+   /// `valueRange.first` and `valueRange.second` are respectively the min and max value allowed for this field.
+   /// They must not be infinity, `NaN` or denormal floats, and valueRange.second must be greater or equal to
+   /// valueRange.first.
+   /// Calling this function establishes a promise by the caller to RNTuple that this field will only
+   /// contain values contained in `[minValue, maxValue]` inclusive. If a value outside this range is assigned to this
+   /// field, the behavior is undefined. This is mutually exclusive with SetTruncated() and SetHalfPrecision() and
+   /// supersedes them if called after them.
+   void SetQuantized(std::size_t nBits, std::pair<T, T> valueRange)
    {
       const auto &[minBits, maxBits] =
          ROOT::Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Quant);
+      if (valueRange.second < valueRange.first) {
+         throw RException(R__FAIL("value range given to SetQuantized() has max < min! (" +
+                                  std::to_string(valueRange.second) + " < " + std::to_string(valueRange.first) + ")"));
+      }
       if (nBits < minBits || nBits > maxBits) {
          throw RException(R__FAIL("SetQuantized() argument nBits = " + std::to_string(nBits) +
                                   " is out of valid range [" + std::to_string(minBits) + ", " +
@@ -471,9 +477,12 @@ public:
       }
       SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32Quant}});
       fBitWidth = nBits;
-      fValueMin = minValue;
-      fValueMax = maxValue;
+      fValueMin = valueRange.first;
+      fValueMax = valueRange.second;
    }
+
+   R__DEPRECATED(6, 42, "Use SetQuantized(std::size_t nBits, std::pair<T> valueRange) instead")
+   void SetQuantized(T minValue, T maxValue, std::size_t nBits) { SetQuantized(nBits, {minValue, maxValue}); }
 };
 
 template <>
