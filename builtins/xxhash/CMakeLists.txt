@@ -8,7 +8,9 @@
 # 30 Dec 2024, https://github.com/Cyan4973/xxHash/releases/tag/v0.8.3
 set(ROOT_XXHASH_VERSION 0.8.3)
 set(ROOT_XXHASH_HASH "aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80")
-# The sources come w/o CMakeList.txt as of version 0.8.3. We add ours, it's very simple.
+# The official sources come w/o CMakeList.txt as of version 0.8.3. We add ours for the moment.
+# FIXME: This patch should be removed as soon as 0.8.4 is released and use instead the native one
+# https://github.com/Cyan4973/xxHash/blob/dev/build/cmake/CMakeLists.txt
 set(ROOT_XXHASH_PATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/xxhash_add_cmakelists.patch)
 
 set(ROOT_XXHASH_PREFIX ${CMAKE_BINARY_DIR}/builtins/XXHASH-prefix)
