@@ -834,10 +834,7 @@ void ROOT::RFieldBase::SetColumnRepresentatives(const RColumnRepresentations::Se
       if (itRepresentative == std::end(validTypes))
          throw RException(R__FAIL("invalid column representative"));
 
-      // don't add a duplicate representation
-      if (std::find_if(fColumnRepresentatives.begin(), fColumnRepresentatives.end(),
-                       [&r](const auto &rep) { return r == rep.get(); }) == fColumnRepresentatives.end())
-         fColumnRepresentatives.emplace_back(*itRepresentative);
+      fColumnRepresentatives.emplace_back(*itRepresentative);
    }
 }
 
