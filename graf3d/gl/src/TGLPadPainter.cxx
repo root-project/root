@@ -942,7 +942,9 @@ UInt_t TGLPadPainter::GetTextAdvance(Font_t font, Double_t size, const char *tex
 {
    SelectGLFont(font, size);
 
-   // return (UInt_t) fF.Advance(text);
+   auto advance = fF.Advance(text);
+
+   return (UInt_t) (advance > 0. ? advance : 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
