@@ -616,7 +616,7 @@ void TCanvas::Build()
       fPainter->SetAttMarker({1, 1, 1});  //Set color index for markers
       // fPainter->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
       // Clear workstation
-      fPainter->ClearDrawable();
+      fPainter->ClearWindow(fCanvasID);
 
       // Set Double Buffer on by default
       SetDoubleBuffer(1);

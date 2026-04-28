@@ -154,11 +154,20 @@ Int_t TGLPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Call gVirtualX->ClearWindow()
+/// Do nothing, sub-pads not cleared in GL
 
 void TGLPadPainter::ClearDrawable()
 {
-   gVirtualX->ClearWindow();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window - calling gVirtualX->ClearWindowW
+
+void TGLPadPainter::ClearWindow(Int_t device)
+{
+   auto ctxt = gVirtualX->GetWindowContext(device);
+   if (ctxt)
+      gVirtualX->ClearWindowW(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
