@@ -232,9 +232,10 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
          }
          std::string word = text.substr(i, wordLen);
          char color = kColorNone;
+         TDictionary::DeclId_t decl;
          if (gClassTable->GetDict(word.c_str())
              || gInterpreter->GetClassSharedLibs(word.c_str())
-             || gInterpreter->CheckClassInfo(word.c_str(), false /*autoload*/)
+             || gInterpreter->CheckClassInfo(word.c_str(), decl, false /*autoload*/)
              || ((THashTable*)gROOT->GetListOfTypes())
                 ->THashTable::FindObject(word.c_str())) {
             color = kColorType;
