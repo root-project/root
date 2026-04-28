@@ -95,6 +95,7 @@ public:
    //Currently, must be implemented only for X11/GDI
    virtual Int_t    CreateDrawable(UInt_t w, UInt_t h) = 0;//gVirtualX->OpenPixmap
    virtual void     ClearDrawable() = 0;//gVirtualX->Clear()
+   virtual void     ClearWindow(Int_t /* device */) {} //gVirtualX->ClearWindowW()
    virtual Int_t    ResizeDrawable(Int_t /* device */, UInt_t /* w */, UInt_t /* h */) { return 0; } //gVirtualX->ResizePixmap
    virtual void     CopyDrawable(Int_t device, Int_t px, Int_t py) = 0;
    virtual void     DestroyDrawable(Int_t device) = 0;//gVirtualX->CloseWindow
