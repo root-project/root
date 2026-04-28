@@ -15,11 +15,13 @@ Please note that the RNTupleMerger is currently experimental and the content of 
 
 Currently there is no guarantee for the user about which mode will be used to generate the merged RNTuple.
 At the moment, this is how it works:
-- if both compression and encoding of the target column match those of the source column, L1 is used;
-- otherwise, if compression matches but encoding doesn't, L2 is used;
-- otherwise L3 is used.
+- if the compression of the target column match that of the source column, L1 is used;
+- otherwise, L2 is used.
 
-Note that L0 and L4 are currently never used.
+L0, L3 and L4 are currently never used.
+
+**NOTE**: prior to ROOT 6.42, if two columns had the same compression but different encoding they would undergo L3 merging (implying a recompression and resealing);
+from 6.42 onwards the RNTupleMerger will instead attach a new column to the parent field as a new representation and L1-merge them.
 
 ## Goal
 The goal of the RNTuple merging process is producing one output RNTuple from *N* input RNTuples that can be used as if it were produced directly in the merged state. This means that:
@@ -44,15 +46,16 @@ Consequences of R3 and R4:
 The following properties are currently true but they are subject to change:
 
 * P1: all output pages have the **same compression** (which may be different from the input pages' compression);
-* P2: all pages in the same output column have the **same encoding** (which may be different from the inputs' encoding);
-* P3: the output clusters are **the same as the input clusters**;
-* P4: the output RNTuple **always has 1 cluster group**
+* P2: the output clusters are **the same as the input clusters**;
+* P3: the output RNTuple **always has 1 cluster group**
 
-Note that these properties influence and are influenced by the level of merging used.
-E.g. P1 and P2 are currently true because we only support L1 merging of pages with identical compressions. This is a limitation that we intend to lift at some point (both for L1 and L0 if we ever support it).
-P3 and P4 would not necessarily be true with L4 support (which might be desirable in some cases, e.g. to group pages into smaller/larger clusters).
+Note that these properties influence and are influenced by the level of merging used. 
+E.g. P1 is currently true because we only support L1 merging of pages with identical compressions. This is a limitation that we intend to lift at some point (both for L1 and L0 if we ever support it).
+P2 and P3 would not necessarily be true with L4 support (which might be desirable in some cases, e.g. to group pages into smaller/larger clusters).
 
-Therefore we *will* want to drop these properties at some point, in order to improve the capabilities of the Merger.
+Also note that the output pages coming from matching columns of a field may use mixed encodings.
+
+Therefore we *will* want to drop at least some of these properties at some point, in order to improve the capabilities of the Merger.
 
 ## High-level description
 The merging process requires at least 1 input, in the form of an `RPageSource`.
@@ -64,14 +67,15 @@ In `Union` mode only, we allow any subsequent input RNTuple to define new fields
 ## Descriptor compatibility and validation
 Whenever a new input is processed, we compare its descriptor with the output descriptor to verify that merging is possible.
 
-The comparison function does 3 main things:
+The comparison function does 4 main things:
 - collect all "extra destination fields" (i.e. fields that exist in the output but not in this input RNTuple)
 - collect all "extra source fields" from the input RNTuple
-- collect and validate all common fields.
+- collect and validate all common fields
+- collect all columns that need to be extended with additional representations.
 
-If the Merging Mode is set to **Filter** we require the "extra destination fields" list to be empty.
-If the Merging Mode is set to **Strict** we require both the "extra destination fields" and "extra source fields" lists to be empty.
-If the Merging Mode is set to **Union**, the "extra source fields" list is used to late model extend the destination model.
+If the merging mode is set to **Filter** we require the "extra destination fields" list to be empty.
+If the merging mode is set to **Strict** we require both the "extra destination fields" and "extra source fields" lists to be empty.
+If the merging mode is set to **Union**, the "extra source fields" list is used to late model extend the destination model.
 
 As for common fields, they are matched by name and validated as follows:
 - any field that is projected in the destination must be also projected in the source and must be projected to the same field;
@@ -90,3 +94,27 @@ As for common fields, they are matched by name and validated as follows:
 
 
 <sup>1</sup>: these restrictions will likely not be required for L4 merging.
+
+## Column representation extension
+In all merging modes, we allow new column representations to be attached to the source fields. This is done to allow for L1 merging of columns with different encodings, which would otherwise require recompressing.
+These new column representations are added to the output RNTuple's footer and become part of its Schema Extension section. Note that in general these columns will be added as deferred *and* suppressed.
+
+**Technical note**: this is *not* done via the regular late model extension API, but uses internal functionality.
+
+We add new (physical) column representations in the following cases:
+
+- when one or more columns of a field has a different type than its matching counterpart in the destination RNTuple;
+- when one or more columns of a field has the same type but different metadata than its matching counterpart in the destination RNTuple (e.g. in case of a Real32Quant column, different bit width or value range).
+
+Whenever we extend a physical column that is referred to by one or more alias columns in some projected fields, we also add a corresponding new alias column in those fields.
+
+#### Example
+Suppose we merge source RNTuples **S1** and **S2**, each with the following fields:
+
+1. `foo` of type `int`
+1. `fooProj` projecting onto field `foo`
+
+Suppose that S1 is compressed and thus its `foo` field is represented by a column of type `kSplitInt32`, whereas S2 is uncompressed and its `foo` field is represented by a column `kInt32`.
+When merging S1 and S2 we collate those two representations under the same field `foo`, so that it will now have representatives: `{kSplitInt32, kInt32}`.
+At the same time, we add a second alias column to the field `fooProj`, which will now have its first column aliasing the `kSplitInt32` column (column 0 of field `foo`) and its second one aliasing the `kInt32` one (column 1 of field `foo`).
+
