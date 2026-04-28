@@ -118,16 +118,16 @@ class RNTupleMerger final {
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    [[nodiscard]]
-   ROOT::RResult<void> MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
-                                          const ROOT::RClusterDescriptor &clusterDesc,
-                                          std::span<const RColumnMergeInfo> commonColumns,
-                                          const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
-                                          std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
-                                          const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc);
+   ROOT::RResult<void>
+   MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
+                      std::span<RColumnMergeInfo> commonColumns,
+                      const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
+                      RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
+                      ROOT::Internal::RPageAllocator &pageAlloc);
 
    [[nodiscard]]
    ROOT::RResult<void>
-   MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+   MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
                        std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
