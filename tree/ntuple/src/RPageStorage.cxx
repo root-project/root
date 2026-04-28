@@ -1209,6 +1209,27 @@ void ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RF
    }
 }
 
+void ROOT::Internal::RPagePersistentSink::AddAliasColumn(const ROOT::RNTupleDescriptor &desc,
+                                                         const ROOT::RFieldDescriptor &field,
+                                                         ROOT::DescriptorId_t physicalId)
+{
+   const auto &pointedColumn = desc.GetColumnDescriptor(physicalId);
+   assert(!pointedColumn.IsAliasColumn());
+
+   const auto columnId = fDescriptorBuilder.GetDescriptor().GetNLogicalColumns();
+   RColumnDescriptorBuilder columnBuilder;
+   columnBuilder.LogicalColumnId(columnId)
+      .PhysicalColumnId(physicalId)
+      .FieldId(field.GetId())
+      .Type(pointedColumn.GetType())
+      .Index(pointedColumn.GetIndex())
+      .BitsOnStorage(pointedColumn.GetBitsOnStorage())
+      .ValueRange(pointedColumn.GetValueRange())
+      .FirstElementIndex(pointedColumn.GetFirstElementIndex())
+      .RepresentationIndex(pointedColumn.GetRepresentationIndex());
+   fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
+}
+
 void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(ColumnHandle_t columnHandle)
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).SetIsSuppressed(true);
