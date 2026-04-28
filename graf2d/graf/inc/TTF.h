@@ -45,16 +45,7 @@ extern "C" {
 /// @endcond
 
 
-class TGX11TTF;
-class TGWin32;
-class TMathTextRenderer;
-
-
 class TTF {
-
-   friend class TGWin32;
-   friend class TMathTextRenderer;
-
 public:
 
 /** \class TTGlyph
@@ -108,6 +99,8 @@ public:
    static Int_t          GetAscent();
    static const FT_BBox &GetBox();
    static TTGlyph       *GetGlyphs();
+   static Int_t          GetCurFontIdx();
+   static FT_Face        GetCurFontFace();
    static Bool_t         GetHinting();
    static Bool_t         GetKerning();
    static Int_t          GetNumGlyphs();
@@ -115,6 +108,7 @@ public:
    static Bool_t         GetSmoothing();
    static Int_t          GetTrailingBlanksWidth();
    static Int_t          GetWidth();
+   static void           SetCurFontIdx(Int_t indx);
    static void           SetHinting(Bool_t state);
    static void           SetKerning(Bool_t state);
    static void           SetSmoothing(Bool_t state);

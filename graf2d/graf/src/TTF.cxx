@@ -359,6 +359,31 @@ void TTF::PrepareString(const wchar_t *string)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return current font index
+
+Int_t TTF::GetCurFontIdx()
+{
+   return fgCurFontIdx;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current font index
+
+FT_Face TTF::GetCurFontFace()
+{
+   return (fgCurFontIdx < 0) || (fgCurFontIdx >= kTTMaxFonts) ? nullptr : fgFace[fgCurFontIdx];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set current font index
+
+void TTF::SetCurFontIdx(Int_t indx)
+{
+   fgCurFontIdx = indx;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set hinting flag.
 
 void TTF::SetHinting(Bool_t state)

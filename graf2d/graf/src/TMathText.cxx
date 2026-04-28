@@ -227,7 +227,7 @@ public:
    bounding_box(const wchar_t character, float &current_x,
              const unsigned int family)
    {
-      const size_t old_font_index = TTF::fgCurFontIdx;
+      const auto old_font_index = TTF::GetCurFontIdx();
       const bool cyrillic_or_cjk = is_cyrillic_or_cjk(character);
 
       if (cyrillic_or_cjk) {
@@ -235,16 +235,16 @@ public:
       } else {
          TTF::SetTextFont((Font_t) root_face_number(family));
       }
+
+      auto font_face = TTF::GetCurFontFace();
+
       FT_Load_Glyph(
-         TTF::fgFace[TTF::fgCurFontIdx],
-         FT_Get_Char_Index(
-            TTF::fgFace[TTF::fgCurFontIdx], character),
+         font_face,
+         FT_Get_Char_Index(font_face, character),
          FT_LOAD_NO_SCALE);
 
-      const float scale = _current_font_size[family] /
-         TTF::fgFace[TTF::fgCurFontIdx]->units_per_EM;
-      const FT_Glyph_Metrics metrics =
-         TTF::fgFace[TTF::fgCurFontIdx]->glyph->metrics;
+      const float scale = _current_font_size[family] / font_face->units_per_EM;
+      const FT_Glyph_Metrics metrics = font_face->glyph->metrics;
       const float lower_left_x = metrics.horiBearingX;
       const float lower_left_y =
          metrics.horiBearingY - metrics.height;
@@ -263,7 +263,8 @@ public:
             advance, italic_correction) * scale;
 
       current_x += ret.advance();
-      TTF::fgCurFontIdx = old_font_index;
+
+      TTF::SetCurFontIdx(old_font_index);
 
       return ret;
    }
@@ -271,11 +272,10 @@ public:
    bounding_box(const std::wstring string,
              const unsigned int family = FAMILY_PLAIN) override
    {
-      if (TTF::fgCurFontIdx<0) return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
-      if (string.empty() || TTF::fgFace[TTF::fgCurFontIdx] == NULL ||
-         TTF::fgFace[TTF::fgCurFontIdx]->units_per_EM == 0) {
+      auto font_face = TTF::GetCurFontFace();
+
+      if (string.empty() || !font_face || font_face->units_per_EM == 0)
          return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
-      }
 
       std::wstring::const_iterator iterator = string.begin();
       float current_x = 0;
