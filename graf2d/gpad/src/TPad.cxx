@@ -5121,7 +5121,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!title && strstr(opt,"svg")) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
-      Bool_t noScreen = kFALSE;
+      Bool_t noScreen = kFALSE, wasModified = IsModified();
       if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
@@ -5149,6 +5149,8 @@ void TPad::Print(const char *filename, Option_t *option)
       Paint();
       if (noScreen)
          GetCanvas()->SetBatch(kFALSE);
+      if (wasModified && !IsBatch())
+         Modified(kTRUE);
 
       if (!gSystem->AccessPathName(psname))
          Info("Print", "SVG file %s has been created", psname.Data());
@@ -5163,7 +5165,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!title && (strstr(opt,"tex") || strstr(opt,"Standalone"))) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
-      Bool_t noScreen = kFALSE;
+      Bool_t noScreen = kFALSE, wasModified = IsModified();
       if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
@@ -5192,7 +5194,10 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS->NewPage();
       }
       Paint();
-      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+      if (noScreen)
+         GetCanvas()->SetBatch(kFALSE);
+      if (wasModified && !IsBatch())
+         Modified(kTRUE);
 
       if (!gSystem->AccessPathName(psname)) {
          if (standalone) {
@@ -5227,7 +5232,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (copen  || copenb)  mustClose = kFALSE;
    if (cclose || ccloseb) mustClose = kTRUE;
 
-   Bool_t noScreen = kFALSE;
+   Bool_t noScreen = kFALSE, wasModified = IsModified();
    if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
       noScreen = kTRUE;
       GetCanvas()->SetBatch(kTRUE);
@@ -5317,6 +5322,9 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS = nullptr;
       }
    }
+
+   if (wasModified && !IsBatch())
+      Modified(kTRUE);
 
    if (strstr(opt,"Preview"))
       gSystem->Exec(TString::Format("epstool --quiet -t6p %s %s", psname.Data(), psname.Data()).Data());
