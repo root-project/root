@@ -24,8 +24,13 @@ endif()
 # flag required only on Windows, on old alma paltforms it make troubles
 if(WIN32)
   set(patch_args --ignore-whitespace)
-  # delete the source directory to make sure there is no conflict with the git apply command
-  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CFITSIO_PREFIX})
+endif()
+
+if(NOT EXISTS "${CFITSIO_PREFIX}/src/BUILTIN_CFITSIO/._patched")
+  set(CFITSIO_PATCH_COMMAND PATCH_COMMAND git apply ${patch_args}
+                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
+                ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
+                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-marker.diff)
 endif()
 
 ExternalProject_Add(
@@ -45,9 +50,7 @@ ExternalProject_Add(
              -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
              -DZLIB_LIBRARIES=$<TARGET_FILE:ZLIB::ZLIB>
   # Skip the find_package(ZLIB REQUIRED), because we feed CFITSIO our own ZLIB flags.
-  PATCH_COMMAND git apply ${patch_args}
-                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
-                ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
+  ${CFITSIO_PATCH_COMMAND}
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS} --target install
   LOG_PATCH 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1

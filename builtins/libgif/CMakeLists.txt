@@ -26,8 +26,11 @@ endif()
 # flag required only on Windows, on old alma paltforms it make troubles
 if(WIN32)
   set(patch_args --ignore-whitespace)
-  # delete the source directory to make sure there is no conflict with the git apply command
-  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${ROOT_LIBGIF_PREFIX})
+endif()
+
+# check if the patch has already been applied
+if(NOT EXISTS "${ROOT_LIBGIF_PREFIX}/src/BUILTIN_LIBGIF/CMakeLists.txt")
+  set(LIBGIF_PATCH_COMMAND PATCH_COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE})
 endif()
 
 ExternalProject_Add(
@@ -35,7 +38,7 @@ ExternalProject_Add(
     PREFIX ${ROOT_LIBGIF_PREFIX}
     URL ${lcgpackages}/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBGIF_HASH}
-    PATCH_COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE}
+    ${LIBGIF_PATCH_COMMAND}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
