@@ -400,11 +400,11 @@ protected:
             fAvailableColumns.emplace_back(ROOT::Internal::RColumn::Create<T>(onDiskTypes[0], 0, representationIndex));
          if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Trunc) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
-            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[representationIndex]);
             column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
          } else if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Quant) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
-            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[representationIndex]);
             assert(coldesc.GetValueRange().has_value());
             const auto [valMin, valMax] = *coldesc.GetValueRange();
             column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
