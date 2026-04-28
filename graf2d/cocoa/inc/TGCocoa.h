@@ -15,7 +15,6 @@
 
 #include "CocoaGuiTypes.h"
 #include "TVirtualX.h"
-#include "X11Atoms.h"
 
 #include <map>
 #include <memory>
@@ -70,24 +69,24 @@ public:
    Bool_t      Init(void *display) override;
    Int_t       OpenDisplay(const char *displayName) override;
    const char *DisplayName(const char *) override;
-   Int_t       SupportsExtension(const char *extensionName)const override;
+   Int_t       SupportsExtension(const char *extensionName) const override;
    void        CloseDisplay() override;
-   Display_t   GetDisplay()const override;
-   Visual_t    GetVisual()const override;
-   Int_t       GetScreen()const override;
-   UInt_t      ScreenWidthMM()const override;
-   Int_t       GetDepth()const override;
+   Display_t   GetDisplay() const override;
+   Visual_t    GetVisual() const override;
+   Int_t       GetScreen() const override;
+   UInt_t      ScreenWidthMM() const override;
+   Int_t       GetDepth() const override;
    void        Update(Int_t mode) override;
 
    //Non-virtual functions.
-           void                         ReconfigureDisplay();
-           ROOT::MacOSX::X11::Rectangle GetDisplayGeometry()const;
+   void        ReconfigureDisplay();
+   ROOT::MacOSX::X11::Rectangle GetDisplayGeometry() const;
    //End of general.
    ///////////////////////////////////////
 
    ///////////////////////////////////////
    //Window management part:
-   Window_t  GetDefaultRootWindow()const override;
+   Window_t  GetDefaultRootWindow() const override;
    //-Functions used by TCanvas/TPad (work with window, selected by SelectWindow).
    Int_t     InitWindow(ULong_t window) override;
    Window_t  GetWindowID(Int_t wid) override;//TGCocoa simply returns wid.
@@ -98,7 +97,7 @@ public:
    void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h) override;
    void      ResizeWindow(Int_t wid) override;
    void      UpdateWindow(Int_t mode) override;
-   Window_t  GetCurrentWindow()const override;
+   Window_t  GetCurrentWindow() const override;
    void      CloseWindow() override;
    Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override; //-"Qt ROOT".
    void      RemoveWindow(ULong_t qwid) override; //-"Qt ROOT".
@@ -127,8 +126,8 @@ public:
    void      ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr) override;
    void      SelectInput(Window_t wid, UInt_t evmask) override;//Can also be in events-related part.
 
-           void      ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y);//Non-overrider.
-           void      ReparentTopLevel(Window_t wid, Window_t pid, Int_t x, Int_t y);//Non-overrider.
+   void      ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y);//Non-overrider.
+   void      ReparentTopLevel(Window_t wid, Window_t pid, Int_t x, Int_t y);//Non-overrider.
    void      ReparentWindow(Window_t wid, Window_t pid, Int_t x, Int_t y) override;
 
    void      MapWindow(Window_t wid) override;
@@ -150,7 +149,7 @@ public:
    void      SetWindowBackground(Window_t wid, ULong_t color) override;
    void      SetWindowBackgroundPixmap(Window_t wid, Pixmap_t pxm) override;
 
-   Window_t  GetParent(Window_t wid)const override;
+   Window_t  GetParent(Window_t wid) const override;
 
    void      SetWindowName(Window_t wid, char *name) override;
    void      SetIconName(Window_t wid, char *name) override;
@@ -176,23 +175,23 @@ public:
 
    ///////////////////////////////////////
    //GUI-rendering part.
-           void      DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, Int_t y1, Int_t x2, Int_t y2);//Non-overrider.
+   void      DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, Int_t y1, Int_t x2, Int_t y2);//Non-overrider.
    void      DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
-           void      DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments);//Non-overrider.
+   void      DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments);//Non-overrider.
    void      DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, Int_t nSegments) override;
-           void      DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
+   void      DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    void      DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
-           void      FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
+   void      FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    void      FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
-           void      FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point_t *polygon, Int_t nPoints) ;//Non-overrider.
+   void      FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point_t *polygon, Int_t nPoints) ;//Non-overrider.
    void      FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t nPoints) override;
-           void      CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gc, Int_t srcX, Int_t srcY, UInt_t width,
+   void      CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gc, Int_t srcX, Int_t srcY, UInt_t width,
                                  UInt_t height, Int_t dstX, Int_t dstY);//Non-overrider.
    void      CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX, Int_t srcY, UInt_t width,
-                              UInt_t height, Int_t dstX, Int_t dstY) override;
-           void      DrawStringAux(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *s, Int_t len);//Non-overrider.
+                      UInt_t height, Int_t dstX, Int_t dstY) override;
+   void      DrawStringAux(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *s, Int_t len);//Non-overrider.
    void      DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len) override;
-           void      ClearAreaAux(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
+   void      ClearAreaAux(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    void      ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    void      ClearWindow(Window_t wid) override;
    //End of GUI-rendering part.
@@ -215,7 +214,7 @@ public:
    Pixmap_t  CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height) override;
    Pixmap_t  CreateBitmap(Drawable_t wid, const char *bitmap,
                                   UInt_t width, UInt_t height) override;
-           void      DeletePixmapAux(Pixmap_t pixmapID);//Non-overrider.
+   void      DeletePixmapAux(Pixmap_t pixmapID);//Non-overrider.
    void      DeletePixmap(Pixmap_t pixmapID) override;
 
    //-"Qt ROOT".
@@ -231,7 +230,7 @@ public:
    void         GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height) override;
    void         PutPixel(Drawable_t wid, Int_t x, Int_t y, ULong_t pixel) override;
    void         PutImage(Drawable_t wid, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
-                                 Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+                         Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    void         DeleteImage(Drawable_t img) override;
    //"Images".
    /////////////////////////////
@@ -239,11 +238,11 @@ public:
    /////////////////////////////
    //Mouse (cursor, events, etc.)
    void      GrabButton(Window_t wid, EMouseButton button, UInt_t modifier,
-                                UInt_t evmask, Window_t confine, Cursor_t cursor,
-                                Bool_t grab = kTRUE) override;
+                        UInt_t evmask, Window_t confine, Cursor_t cursor,
+                        Bool_t grab = kTRUE) override;
    void      GrabPointer(Window_t wid, UInt_t evmask, Window_t confine,
-                                 Cursor_t cursor, Bool_t grab = kTRUE,
-                                 Bool_t owner_events = kTRUE) override;
+                         Cursor_t cursor, Bool_t grab = kTRUE,
+                         Bool_t owner_events = kTRUE) override;
    void      ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t) override;//Noop.
    //End of mouse related part.
    /////////////////////////////
@@ -307,8 +306,8 @@ public:
    void         SetCursor(Int_t win, ECursor cursor) override;
    void         QueryPointer(Int_t &x, Int_t &y) override;
    void         QueryPointer(Window_t wid, Window_t &rootw, Window_t &childw,
-                                     Int_t &root_x, Int_t &root_y, Int_t &win_x,
-                                     Int_t &win_y, UInt_t &mask) override;
+                             Int_t &root_x, Int_t &root_y, Int_t &win_x,
+                             Int_t &win_y, UInt_t &mask) override;
    //Cursors.
    /////////////////////////////
 
@@ -360,14 +359,14 @@ public:
    void      ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when) override;
    void      ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&) override;
    Int_t     GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
-                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**) override;
+                         Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**) override;
    void      GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
-                                    Bool_t del) override;
+                            Bool_t del) override;
 
    void      ChangeProperty(Window_t wid, Atom_t property, Atom_t type,
-                                    UChar_t *data, Int_t len) override;
+                            UChar_t *data, Int_t len) override;
    void      ChangeProperties(Window_t wid, Atom_t property, Atom_t type,
-                                      Int_t format, UChar_t *data, Int_t len) override;
+                              Int_t format, UChar_t *data, Int_t len) override;
    void      DeleteProperty(Window_t, Atom_t&) override;
 
    void      SetDNDAware(Window_t, Atom_t *) override;
@@ -405,11 +404,11 @@ public:
 
 
    Bool_t       CreatePictureFromFile(Drawable_t wid, const char *filename,
-                                              Pixmap_t &pict, Pixmap_t &pict_mask,
-                                              PictureAttributes_t &attr) override;
+                                      Pixmap_t &pict, Pixmap_t &pict_mask,
+                                      PictureAttributes_t &attr) override;
    Bool_t       CreatePictureFromData(Drawable_t wid, char **data,
-                                              Pixmap_t &pict, Pixmap_t &pict_mask,
-                                              PictureAttributes_t &attr) override;
+                                      Pixmap_t &pict, Pixmap_t &pict_mask,
+                                      PictureAttributes_t &attr) override;
    Bool_t       ReadPictureDataFromFile(const char *filename, char ***ret_data) override;
    void         DeletePictureData(void *data) override;
    void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n) override;
@@ -434,15 +433,15 @@ public:
    void         GetRegionBox(Region_t reg, Rectangle_t *rect) override;
    //
 
-   Bool_t       IsCmdThread()const override { return kTRUE; }
+   Bool_t       IsCmdThread() const override { return kTRUE; }
 
    //Non virtual, non-overriding functions.
-   ROOT::MacOSX::X11::EventTranslator *GetEventTranslator()const;
-   ROOT::MacOSX::X11::CommandBuffer *GetCommandBuffer()const;
+   ROOT::MacOSX::X11::EventTranslator *GetEventTranslator() const;
+   ROOT::MacOSX::X11::CommandBuffer *GetCommandBuffer() const;
 
    void CocoaDrawON();
    void CocoaDrawOFF();
-   Bool_t IsCocoaDraw()const;
+   Bool_t IsCocoaDraw() const;
 
 protected:
    void *GetCurrentContext();
@@ -463,7 +462,7 @@ private:
    bool fForegroundProcess;
    std::vector<GCValues_t> fX11Contexts;
    //
-   ROOT::MacOSX::X11::name_to_atom_map fNameToAtom;
+   std::map<std::string, Atom_t> fNameToAtom;
    std::vector<std::string> fAtomToName;
 
    std::map<Atom_t, Window_t> fSelectionOwners;

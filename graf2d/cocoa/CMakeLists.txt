@@ -14,6 +14,7 @@ find_library(OPENGL_FRAMEWORK OpenGL REQUIRED)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   HEADERS
+    CocoaGuiTypes.h
     TGCocoa.h
     TGOSXGL.h
     TGQuartz.h
