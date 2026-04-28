@@ -699,7 +699,7 @@ Bool_t TGQuartz::GetFontAscentDescent(Font_t font, Double_t size, UInt_t &a, UIn
       //Greek and math symbols.
       auto unichars = quartz_get_greek_unicars(text);
       a = fPimpl->fFontManager.GetAscent(fontref, unichars);
-      a = fPimpl->fFontManager.GetDescent(fontref, unichars);
+      d = fPimpl->fFontManager.GetDescent(fontref, unichars);
    } else {
       a = fPimpl->fFontManager.GetAscent(fontref, text);
       d = fPimpl->fFontManager.GetDescent(fontref, text);
