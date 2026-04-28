@@ -63,11 +63,12 @@ void execCheckErrors(bool what = 0)
   std::cout << "Float_t ... "  << r << std::endl;
   r = tree->SetBranchAddress("px", pxp);
   std::cout << "Float_t ... "  << r << std::endl;
-  r = tree->SetBranchAddress("px", &pxp);
-  std::cout << "Float_t ... "  << r << std::endl;
   
-  // Int_t ...  (should fail)
   std::cout << std::endl << "ALL should FAIL ... " << std::endl;
+  // Point to pointer ... (should fail)
+  r = tree->SetBranchAddress("px", &pxp);
+  std::cout << "Float_t pointer ... "  << r << std::endl;
+  // Int_t ...  (should fail)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("px", &ix, &p);
   std::cout << "Int_t ...  "  << r << std::endl;
@@ -83,7 +84,7 @@ void execCheckErrors(bool what = 0)
   r = tree->SetBranchAddress("px", ixp);
   std::cout << "Int_t ...  "  << r << std::endl;
   r = tree->SetBranchAddress("px", &ixp);
-  std::cout << "Int_t ...  "  << r << std::endl;
+  std::cout << "Int_t pointer ...  "  << r << std::endl;
   
   // TString ... (should fail)
   std::cout << std::endl << "ALL should FAIL ... " << std::endl;
