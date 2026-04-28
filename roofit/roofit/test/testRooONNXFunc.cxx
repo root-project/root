@@ -1,7 +1,7 @@
-// Tests for the RooONNXFunction
+// Tests for the RooONNXFunc
 // Authors: Jonas Rembser, CERN 2026
 
-#include <RooONNXFunction.h>
+#include <RooONNXFunc.h>
 #include <RooRealVar.h>
 #include <RooDataSet.h>
 #include <RooEvaluatorWrapper.h>
@@ -44,21 +44,21 @@ void fillArgs(RooArgList &args, int n, double value = 0.1, std::string const &pr
 
 } // namespace
 
-/// Basic test for the evaluation of a RooONNXFunction with a single input
+/// Basic test for the evaluation of a RooONNXFunc with a single input
 /// vector.
-TEST(RooONNXFunction, Basic_1Tensor)
+TEST(RooONNXFunc, Basic_1Tensor)
 {
    double refPred = readDoublesFromFile("regression_mlp_pred.txt")[0];
 
    RooArgList args;
    fillArgs(args, 10);
 
-   RooONNXFunction roo_func{"func", "", {args}, "regression_mlp.onnx"};
+   RooONNXFunc roo_func{"func", "", {args}, "regression_mlp.onnx"};
 
    EXPECT_NEAR(roo_func.getVal(), refPred, 1e-5);
 }
 
-TEST(RooONNXFunction, Basic_2Tensors)
+TEST(RooONNXFunc, Basic_2Tensors)
 {
    double refPred = readDoublesFromFile("regression_mlp_two_input_pred.txt")[0];
 
@@ -67,14 +67,14 @@ TEST(RooONNXFunction, Basic_2Tensors)
    RooArgList args1;
    fillArgs(args1, 5, 0.2, "b");
 
-   RooONNXFunction roo_func{"func", "", {args0, args1}, "regression_mlp_two_input.onnx"};
+   RooONNXFunc roo_func{"func", "", {args0, args1}, "regression_mlp_two_input.onnx"};
 
    EXPECT_NEAR(roo_func.getVal(), refPred, 1e-5);
 }
 
 // Test the serialization to RooWorkspace. The ONNX payload will be embedded in
 // the RooWorkspace as a binary blob.
-TEST(RooONNXFunction, Basic_RooWorkspace)
+TEST(RooONNXFunc, Basic_RooWorkspace)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::ObjectHandling, true};
 
@@ -83,25 +83,25 @@ TEST(RooONNXFunction, Basic_RooWorkspace)
       RooArgList args;
       fillArgs(args, 10);
 
-      RooONNXFunction roo_func{"func", "", {args}, "regression_mlp.onnx"};
+      RooONNXFunc roo_func{"func", "", {args}, "regression_mlp.onnx"};
       RooWorkspace ws{"ws"};
       ws.import(roo_func);
-      ws.writeToFile("RooONNXFunction_Basic.root");
+      ws.writeToFile("RooONNXFunc_Basic.root");
    }
 
    // Read back and validate
-   std::unique_ptr<TFile> file{TFile::Open("RooONNXFunction_Basic.root")};
+   std::unique_ptr<TFile> file{TFile::Open("RooONNXFunc_Basic.root")};
    RooWorkspace *ws = dynamic_cast<RooWorkspace *>(file->Get("ws"));
-   auto *roo_func = dynamic_cast<RooONNXFunction *>(ws->function("func"));
+   auto *roo_func = dynamic_cast<RooONNXFunc *>(ws->function("func"));
 
    double refPred = readDoublesFromFile("regression_mlp_pred.txt")[0];
    EXPECT_NEAR(roo_func->getVal(), refPred, 1e-5);
 }
 
 #ifdef ROOFIT_CLAD
-/// Basic test for getting the analytic gradient of a RooONNXFunction with a
+/// Basic test for getting the analytic gradient of a RooONNXFunc with a
 /// single input vector.
-TEST(RooONNXFunction, Basic_CodegenAD)
+TEST(RooONNXFunc, Basic_CodegenAD)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Fitting, true};
 
@@ -111,7 +111,7 @@ TEST(RooONNXFunction, Basic_CodegenAD)
    RooArgList args;
    fillArgs(args, 10);
 
-   RooONNXFunction roo_func{"func", "", {args}, "regression_mlp.onnx"};
+   RooONNXFunc roo_func{"func", "", {args}, "regression_mlp.onnx"};
 
    RooDataSet data("data", "data", {});
 
@@ -145,8 +145,8 @@ TEST(RooONNXFunction, Basic_CodegenAD)
    }
 }
 
-/// Test the analytic gradient of a RooONNXFunction with two input tensors.
-TEST(RooONNXFunction, Basic_CodegenAD_2Tensors)
+/// Test the analytic gradient of a RooONNXFunc with two input tensors.
+TEST(RooONNXFunc, Basic_CodegenAD_2Tensors)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Fitting, true};
 
@@ -159,7 +159,7 @@ TEST(RooONNXFunction, Basic_CodegenAD_2Tensors)
    RooArgList args1;
    fillArgs(args1, 5, 0.2, "b");
 
-   RooONNXFunction roo_func{"func", "", {args0, args1}, "regression_mlp_two_input.onnx"};
+   RooONNXFunc roo_func{"func", "", {args0, args1}, "regression_mlp_two_input.onnx"};
 
    RooDataSet data("data", "data", {});
 

@@ -271,13 +271,13 @@ This is new and efficient bracketing root-finding algorithm. It combines bisecti
 - The constructors of **RooDataSet** and **RooDataHist** that combine datasets via `Index()` and `Import()` now validate that the import names correspond to existing states of the index category. If an imported data slice refers to a category label that is not defined in the index category, the constructor now throws an error.
   Previously, such labels were silently added as new category states, which could lead to inconsistent datasets when the state names were not synchronized with the model definition. This change prevents the creation of invalid combined datasets and surfaces configuration problems earlier.
 
-### ONNX model integration via RooONNXFunction
+### ONNX model integration via RooONNXFunc
 
-A new class `RooONNXFunction` has been introduced to enable the use of machine learning models in ONNX format directly within RooFit workflows.
+A new class `RooONNXFunc` has been introduced to enable the use of machine learning models in ONNX format directly within RooFit workflows.
 
-`RooONNXFunction` wraps an ONNX model as a `RooAbsReal`, allowing it to be used as a building block in likelihoods, fits, and statistical analyses without additional boilerplate code. The class supports models with one or more statically-shaped input tensors and a single scalar output.
+`RooONNXFunc` wraps an ONNX model as a `RooAbsReal`, allowing it to be used as a building block in likelihoods, fits, and statistical analyses without additional boilerplate code. The class supports models with one or more statically-shaped input tensors and a single scalar output.
 The class was designed to share workspaces with neural functions for combined fits in RooFit-based frameworks written in C++.
-Therefore, the `RooONNXFunction` doesn't depend on any Python packages and fully supports ROOT IO,
+Therefore, the `RooONNXFunc` doesn't depend on any Python packages and fully supports ROOT IO,
 
 **Key features:**
 
@@ -285,7 +285,7 @@ Therefore, the `RooONNXFunction` doesn't depend on any Python packages and fully
 
   * **Automatic differentiation with Clad:** Gradients of the model output with respect to RooFit parameters are generated automatically for efficient gradient-based minimization with RooFits `"codegen"` backend.
 
-  * **Portable serialization:** The ONNX model is stored as part of the `RooONNXFunction` object and serialized with ROOT I/O. Upon reading a workspace, the inference code is regenerated automatically.
+  * **Portable serialization:** The ONNX model is stored as part of the `RooONNXFunc` object and serialized with ROOT I/O. Upon reading a workspace, the inference code is regenerated automatically.
 
 ### Deprecation of the the constant term optimization for legacy test statistic classes
 
