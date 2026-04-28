@@ -552,7 +552,8 @@ public:
    /// writing any entry). This is NOT checked for you.
    /// `newRepresentation` must have a number of elements equal to the field's cardinality and must contain
    /// compatible column types.
-   void
+   /// \return The physical id of the first newly added column.
+   ROOT::DescriptorId_t
    AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const ENTupleColumnType> newRepresentation);
 
    /// Adds a new alias column pointing to an existing column with the given physical id to the given field.

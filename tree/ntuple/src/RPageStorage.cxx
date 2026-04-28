@@ -1161,8 +1161,9 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    return model;
 }
 
-void ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
-                                                                  std::span<const ENTupleColumnType> newRepresentation)
+ROOT::DescriptorId_t
+ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
+                                                             std::span<const ENTupleColumnType> newRepresentation)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -1224,6 +1225,8 @@ void ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RF
 
       ++columnIndex;
    }
+
+   return firstPhysicalIndex;
 }
 
 void ROOT::Internal::RPagePersistentSink::AddAliasColumn(const ROOT::RNTupleDescriptor &desc,
