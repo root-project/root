@@ -336,7 +336,7 @@ struct RColReprMapping {
 };
 
 struct RColReprExtension : RColReprMapping {
-   ROOT::RFieldBase::ColumnRepresentation_t fSourceRepr;
+   std::vector<ROOT::Internal::RPagePersistentSink::RColumnReprElement> fSourceRepr;
 };
 
 static std::optional<std::uint32_t>
@@ -626,11 +626,15 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
                   } else if (matchingRepr < 0) {
                      // this representation was not found in the destination
                      assert(dstNColReprs < std::numeric_limits<std::uint32_t>::max());
-                     ROOT::RFieldBase::ColumnRepresentation_t newRepr;
+                     std::vector<ROOT::Internal::RPagePersistentSink::RColumnReprElement> newRepr;
+                     newRepr.reserve(srcColCardinality);
                      for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
                         const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
                         const auto &srcCol = src.GetColumnDescriptor(srcColId);
-                        newRepr.push_back(srcCol.GetType());
+                        auto &reprElement = newRepr.emplace_back();
+                        reprElement.fType = srcCol.GetType();
+                        reprElement.fBitWidth = srcCol.GetBitsOnStorage();
+                        reprElement.fValueRange = srcCol.GetValueRange();
                      }
                      RColReprExtension extension{{srcReprIdx, static_cast<std::uint32_t>(dstNColReprs)}, newRepr};
                      res.fColReprExtensions[field.fDst].push_back(extension);

@@ -4223,3 +4223,184 @@ TEST(RNTupleMerger, MergeNewerVersion)
       }
    }
 }
+
+TEST(RNTupleMerger, MergeReal32Trunc)
+{
+   // Merge two files, both containing the same Real32Trunc-encoded field, but with different bit widths.
+   FileRaii fileGuard1("test_ntuple_merge_real32trunc_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<float>>("flt");
+      field->SetTruncated(14);
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto fieldFlt = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = 0; i < 10; ++i) {
+         *fieldFlt = i;
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_real32trunc_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<float>>("flt");
+      field->SetTruncated(24);
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldFlt = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = 0; i < 10; ++i) {
+         *fieldFlt = 10 + i;
+         ntuple->Fill();
+      }
+   }
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_real32trunc_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            // Currently we're not supporting merging columns with the same type but different metadata.
+            // TODO: support this.
+            EXPECT_FALSE(bool(res));
+            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("have different column metadata"));
+         }
+      }
+   }
+}
+
+TEST(RNTupleMerger, MergeReal32Quant)
+{
+   // Merge two files, both containing the same Real32Quant-encoded field, but with different value ranges.
+   FileRaii fileGuard1("test_ntuple_merge_real32quant_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<float>>("flt");
+      field->SetQuantized(20, {0., 100.});
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto fieldFlt = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = 0; i < 10; ++i) {
+         *fieldFlt = i;
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_real32quant_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<float>>("flt");
+      field->SetQuantized(20, {-100., 100.});
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldFlt = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = 0; i < 10; ++i) {
+         *fieldFlt = 10 + i;
+         ntuple->Fill();
+      }
+   }
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_real32quant_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            // Currently we're not supporting merging columns with the same type but different metadata.
+            // TODO: support this.
+            ASSERT_FALSE(bool(res));
+            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("have different column metadata"));
+         }
+      }
+   }
+}
+
+TEST(RNTupleMerger, MergeReal32TruncQuantMixed)
+{
+   // Merge two files, both containing the same field, but with the first being Real32Trunc and the second Real32Quant
+   FileRaii fileGuard1("test_ntuple_merge_real32truncquant_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<float>>("flt");
+      field->SetTruncated(24);
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto fieldFlt = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = 0; i < 10; ++i) {
+         *fieldFlt = i;
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_real32truncquant_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<float>>("flt");
+      field->SetQuantized(20, {-1., 100.});
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldFlt = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = 0; i < 10; ++i) {
+         *fieldFlt = 10 + i;
+         ntuple->Fill();
+      }
+   }
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_real32truncquant_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            EXPECT_TRUE(bool(res));
+         }
+         {
+            auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+            EXPECT_EQ(reader->GetNEntries(), 20);
+            EXPECT_EQ(reader->GetDescriptor().GetNPhysicalColumns(), 2);
+            auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+            for (auto i : reader->GetEntryRange()) {
+               reader->LoadEntry(i);
+               EXPECT_NEAR(*pFlt, i, 0.01f);
+            }
+         }
+      }
+   }
+}
