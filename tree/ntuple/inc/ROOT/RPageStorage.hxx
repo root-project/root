@@ -543,7 +543,9 @@ public:
    [[nodiscard]] std::unique_ptr<RNTupleModel>
    InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
 
-   void
+   /// Adds a new column representation to the given field.
+   /// \return The physical id of the first newly added column.
+   ROOT::DescriptorId_t
    AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const ENTupleColumnType> newRepresentation);
 
    /// Adds a new alias column pointing to an existing column with the given physical id to the given field.
