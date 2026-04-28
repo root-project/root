@@ -4,8 +4,9 @@ import torch.nn as nn
 import torch.optim as optim
 
 
-# ---- 1) Define a small fully-connected regression model ----
 class SmallMLP(nn.Module):
+    """Single-input MLP regression model."""
+
     def __init__(self, in_features=10, hidden=32, out_features=1):
         super().__init__()
         self.net = nn.Sequential(
@@ -20,60 +21,43 @@ class SmallMLP(nn.Module):
         return self.net(x)
 
 
-def write_onnx_model(onnx_path):
+class TwoInputMLP(nn.Module):
+    """Dual-input MLP: concatenates two input tensors then runs an MLP."""
 
-    # ---- 2) Create synthetic regression data ----
-    torch.manual_seed(0)
+    def __init__(self, in_features_a=10, in_features_b=5, hidden=32, out_features=1):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_features_a + in_features_b, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, out_features),
+        )
 
-    num_samples = 1000
-    in_features = 10
+    def forward(self, x_a, x_b):
+        return self.net(torch.cat([x_a, x_b], dim=-1))
 
-    X = torch.randn(num_samples, in_features)
 
-    # True function: linear combination + noise
-    true_w = torch.randn(in_features, 1)
-    true_b = torch.randn(1)
+def export_model(
+    model,
+    input_shapes,
+    onnx_path,
+    seed=0,
+):
+    """
+    Train `model` on synthetic regression data and export it to ONNX.
 
-    y = X @ true_w + true_b + 0.1 * torch.randn(num_samples, 1)
+    `input_shapes` is a list of per-sample feature shapes, one per input tensor.
+    For a single-input model pass e.g. [(10,)]; for two inputs [(10,), (5,)].
+    """
+    torch.manual_seed(seed)
+    device = torch.device("cpu")
+    model = model.to(device)
 
-    dataset = torch.utils.data.TensorDataset(X, y)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-
-    # ---- 3) Train the model ----
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    model = SmallMLP(in_features=10, hidden=32, out_features=1).to(device)
-
-    criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-
-    epochs = 20
-    for epoch in range(epochs):
-        model.train()
-        total_loss = 0.0
-
-        for xb, yb in loader:
-            xb, yb = xb.to(device), yb.to(device)
-
-            optimizer.zero_grad()
-            pred = model(xb)
-            loss = criterion(pred, yb)
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item() * xb.size(0)
-
-        avg_loss = total_loss / len(dataset)
-        print(f"Epoch {epoch + 1}/{epochs} - loss: {avg_loss:.6f}")
-
-    # ---- 4) Export the trained model to ONNX ----
+    # ---- Export to ONNX ----
     model.eval()
-
-    # Create a torch.export program in the parent process.
-    # This does not require importing ONNX.
-    example_input = (torch.randn(1, 10, device=device),)
-    exported = torch.export.export(model, example_input)
-
+    example_inputs = tuple(torch.randn(1, *shape, device=device) for shape in input_shapes)
+    exported = torch.export.export(model, example_inputs)
     torch.onnx.export(
         exported,
         args=(),
@@ -81,27 +65,54 @@ def write_onnx_model(onnx_path):
         external_data=False,
         dynamo=True,
     )
-
     return model
 
 
-def main():
-
-    onnx_path = "regression_mlp.onnx"
-
-    model = write_onnx_model(onnx_path)
-
-    x = torch.tensor([[0.1] * 10], requires_grad=True)
-
-    y = model(x)
-
+def run_inference_and_save(model, example_inputs, name):
+    """Run forward+backward with fixed inputs and save prediction + gradients."""
+    model = model.cpu()
+    inputs = [t.clone().detach().requires_grad_(True) for t in example_inputs]
+    y = model(*inputs)
     y.backward()
 
-    print("prediction:", y.item())
-    print("input gradient:", x.grad)
+    print(f"[{name}] prediction:", y.item())
+    for i, x in enumerate(inputs):
+        print(f"[{name}] input[{i}] gradient:", x.grad)
 
-    np.savetxt("regression_mlp_pred.txt", y.detach().numpy())
-    np.savetxt("regression_mlp_grad.txt", x.grad.detach().numpy())
+    np.savetxt(f"{name}_pred.txt", y.detach().numpy())
+    for i, x in enumerate(inputs):
+        np.savetxt(f"{name}_grad_{i}.txt", x.grad.detach().numpy())
+
+
+def main():
+    # ---- Model 1: single input ----
+    model1 = SmallMLP(in_features=10, hidden=32, out_features=1)
+    model1 = export_model(
+        model1,
+        input_shapes=[(10,)],
+        onnx_path="regression_mlp.onnx",
+    )
+    run_inference_and_save(
+        model1,
+        example_inputs=[torch.tensor([[0.1] * 10])],
+        name="regression_mlp",
+    )
+
+    # ---- Model 2: two inputs ----
+    model2 = TwoInputMLP(in_features_a=10, in_features_b=5, hidden=32, out_features=1)
+    model2 = export_model(
+        model2,
+        input_shapes=[(10,), (5,)],
+        onnx_path="regression_mlp_two_input.onnx",
+    )
+    run_inference_and_save(
+        model2,
+        example_inputs=[
+            torch.tensor([[0.1] * 10]),
+            torch.tensor([[0.2] * 5]),
+        ],
+        name="regression_mlp_two_input",
+    )
 
 
 if __name__ == "__main__":

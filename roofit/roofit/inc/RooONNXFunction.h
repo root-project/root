@@ -33,11 +33,7 @@ public:
    std::size_t nInputTensors() const { return _inputTensors.size(); }
    RooArgList const &inputTensorList(int iTensor) const { return *(_inputTensors[iTensor]); }
 
-   std::string funcName() const
-   {
-      initialize();
-      return _funcName;
-   }
+   std::string funcName() const { return _funcName; }
    std::string outerWrapperName() const { return "TMVA_SOFIE_" + funcName() + "::roo_outer_wrapper"; }
 
 protected:
@@ -45,7 +41,7 @@ protected:
 
 private:
    /// Build transient runtime backend on first use.
-   void initialize() const;
+   void initialize();
 
    /// Gather current RooFit inputs into a contiguous feature buffer.
    void fillInputBuffer() const;
@@ -54,9 +50,9 @@ private:
 
    std::vector<std::unique_ptr<RooListProxy>> _inputTensors; ///< Inputs mapping to flattened input tensors.
    std::vector<std::uint8_t> _onnxBytes;                     ///< Persisted ONNX model bytes.
-   mutable std::shared_ptr<RuntimeCache> _runtime;           ///<! Transient runtime information.
+   std::shared_ptr<RuntimeCache> _runtime;                   ///<! Transient runtime information.
    mutable std::vector<float> _inputBuffer;                  ///<!
-   mutable std::string _funcName;                            ///<!
+   std::string _funcName;                                    ///<!
 
    ClassDefOverride(RooONNXFunction, 1)
 };
@@ -77,10 +73,10 @@ struct AnyWithVoidPtr {
    void emplace(std::string const &typeName);
 };
 
-template <class Session_t>
-void doInferWithSessionVoidPtr(void *session, float const *input, float *out)
+template <class Session_t, class... Inputs>
+void doInferWithSessionVoidPtr(void *session, float *out, Inputs const *...inputs)
 {
-   doInfer(*reinterpret_cast<Session_t *>(session), input, out);
+   doInfer(*reinterpret_cast<Session_t *>(session), inputs..., out);
 }
 
 } // namespace RooFit::Detail
