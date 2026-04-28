@@ -77,7 +77,7 @@
                 _nonInterfering.back().emplace_back(arg->GetName()); \
              }                                                       \
           } }";
-#pragma link C++ class RooONNXFunction+ ;
+#pragma link C++ class RooONNXFunction- ;
 
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
