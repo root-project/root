@@ -588,40 +588,15 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
                         const auto &srcCol = src.GetColumnDescriptor(srcColId);
                         const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
                         const auto &dstCol = dst.GetColumnDescriptor(dstColId);
-                        if (srcCol.GetType() != dstCol.GetType()) {
+                        if (srcCol.GetType() != dstCol.GetType() ||
+                            srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
+                            srcCol.GetValueRange() != dstCol.GetValueRange()) {
                            matches = false;
                            break;
                         }
                      }
 
                      if (matches) {
-                        // If this column representation matches by column type, we need to make sure that it also has
-                        // matching column metadata. Since we currently do not support multiple column representations
-                        // that only differ by such metadata, we forbid merging such columns (e.g. we cannot merge two
-                        // Real32Trunc columns with different bit widths). This could technically be supported, but it
-                        // would require significant effort, so we currently don't.
-                        for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
-                           const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
-                           const auto &srcCol = src.GetColumnDescriptor(srcColId);
-                           const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
-                           const auto &dstCol = dst.GetColumnDescriptor(dstColId);
-                           if (srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
-                               srcCol.GetValueRange() != dstCol.GetValueRange()) {
-                              std::stringstream ss;
-                              ss << "Source field `" << field.fSrc->GetFieldName()
-                                 << "` has a matching column representation as its destination field, however one or "
-                                    "more "
-                                    "of its columns have different column metadata (bit width and/or value range). "
-                                    "Merging variable-sized columns is currently only supported if all metadata is "
-                                    "identical between source and destination columns."
-                                 << "\n   bit width src: " << srcCol.GetBitsOnStorage()
-                                 << ", dst: " << dstCol.GetBitsOnStorage() << ""
-                                 << "\n   value range src: " << srcCol.GetValueRange()
-                                 << ", dst: " << dstCol.GetValueRange();
-                              errors.push_back(ss.str());
-                              break;
-                           }
-                        }
                         matchingRepr = dstReprIdx;
                         break;
                      }

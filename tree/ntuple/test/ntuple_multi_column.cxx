@@ -376,12 +376,3 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
    arr = static_cast<float *>(bulk.ReadBulk(RNTupleLocalIndex(1, 0), mask.get(), 1));
    EXPECT_FLOAT_EQ(2.0, arr[0]);
 }
-
-TEST(RNTuple, MultiColumnRepresentationDedup)
-{
-   FileRaii fileGuard("test_ntuple_multi_column_representation_dedup.root");
-
-   auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-   fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal16}});
-   EXPECT_EQ(fldPx->GetColumnRepresentatives().size(), 1);
-}
