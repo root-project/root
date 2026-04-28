@@ -10,25 +10,25 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_RooONNXFunction_h
-#define RooFit_RooONNXFunction_h
+#ifndef RooFit_RooONNXFunc_h
+#define RooFit_RooONNXFunc_h
 
 #include <RooAbsReal.h>
 #include <RooListProxy.h>
 
 #include <any>
 
-class RooONNXFunction : public RooAbsReal {
+class RooONNXFunc : public RooAbsReal {
 public:
-   RooONNXFunction() = default;
+   RooONNXFunc() = default;
 
-   RooONNXFunction(const char *name, const char *title, const std::vector<RooArgList> &inputTensors,
+   RooONNXFunc(const char *name, const char *title, const std::vector<RooArgList> &inputTensors,
                    const std::string &onnxFile, const std::vector<std::string> &inputNames = {},
                    const std::vector<std::vector<int>> &inputShapes = {});
 
-   RooONNXFunction(const RooONNXFunction &other, const char *newName = nullptr);
+   RooONNXFunc(const RooONNXFunc &other, const char *newName = nullptr);
 
-   TObject *clone(const char *newName) const override { return new RooONNXFunction(*this, newName); }
+   TObject *clone(const char *newName) const override { return new RooONNXFunc(*this, newName); }
 
    std::size_t nInputTensors() const { return _inputTensors.size(); }
    RooArgList const &inputTensorList(int iTensor) const { return *(_inputTensors[iTensor]); }
@@ -54,7 +54,7 @@ private:
    mutable std::vector<float> _inputBuffer;                  ///<!
    std::string _funcName;                                    ///<!
 
-   ClassDefOverride(RooONNXFunction, 1)
+   ClassDefOverride(RooONNXFunc, 1)
 };
 
 namespace RooFit::Detail {

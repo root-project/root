@@ -47,7 +47,7 @@ if(tmva-sofie)
     ROOT_ADD_TEST(roofit-create-onnx-model COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/create_onnx_model.py
        FIXTURES_SETUP roofit-onnx-model
     )
-    ROOT_ADD_GTEST(testRooONNXFunction testRooONNXFunction.cxx LIBRARIES RooFit
+    ROOT_ADD_GTEST(testRooONNXFunc testRooONNXFunc.cxx LIBRARIES RooFit
        FIXTURES_REQUIRED roofit-onnx-model
     )
   endif()
