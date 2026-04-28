@@ -43,16 +43,21 @@ REX::REveStraightLineSet *makeLineSet(Int_t nlines = 40, Int_t nmarkers = 4, boo
 void lineset(bool secondarySelect = true)
 {
    auto eveMng = REX::REveManager::Create();
+   // eveMng->AllowMultipleRemoteConnections(false, false);
 
    auto ls1 = makeLineSet(50, 10, secondarySelect);
+   ls1->SetLineWidth(2);
+   ls1->SetMarkerSize(8);
    ls1->SetMainColor(kViolet);
-   ls1->SetMarkerColor(kGreen + 3);
-   ls1->SetName("LineSet_1");
+   ls1->SetMarkerColor(kMagenta);
+   ls1->SetName("LineSet Violet");
 
-   auto ls2 = makeLineSet(200, 20, secondarySelect);
+   auto ls2 = makeLineSet(10, 10, secondarySelect);
+   ls2->SetLineWidth(2);
+   ls2->SetMarkerSize(8);
    ls2->SetMainColor(kBlue);
    ls2->SetMarkerColor(kCyan + 2);
-   ls2->SetName("LineSet_2");
+   ls2->SetName("LineSet Blue");
    ls2->InitMainTrans();
    ls2->RefMainTrans().Move3LF(40, 200, 200);
 
