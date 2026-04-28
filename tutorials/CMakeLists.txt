@@ -454,8 +454,6 @@ set(extra_veto
   io/tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
   io/tree/tree103_tree.C
   io/tree/tree106_tree.C
-  roofit/roostats/rs401d_FeldmanCousins.C  # Takes too much time
-  roofit/roostats/rs401d_FeldmanCousins.py
   roofit/histfactory/ModifyInterpolation.C
   io/tree/tree110_copy.C
   io/tree/tree111_copy.C
