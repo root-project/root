@@ -12,6 +12,7 @@
 
 #include <RooONNXFunction.h>
 
+#include <TBuffer.h>
 #include <TInterpreter.h>
 #include <TSystem.h>
 
@@ -32,9 +33,9 @@
  depend on any Python packages and fully supports ROOT IO,
 
  The ONNX model is evaluated through compiled C++ code generated at runtime
- using **TMVA SOFIE**. Automatic differentiation is supported via **Clad**,
- allowing RooFit to access analytical gradients for fast minimization with
- Minuit 2.
+ using **TMVA SOFIE**. Automatic differentiation is supported via
+ [Clad](https://github.com/vgvassilev/clad), allowing RooFit to access
+ analytical gradients for fast minimization with Minuit 2.
 
  The ONNX model is stored internally as a byte payload and serialized together
  with the RooONNXFunction object using ROOT I/O. Upon reading from a file or
@@ -160,6 +161,22 @@ std::string toPtrString(T *ptr, std::string const &castType)
       .Data();
 }
 
+// Expression for the offset into a flat input buffer to the i-th tensor:
+//   i=0: "0"; i=1: "inputTensorDims[0].total_size()";
+//   i=2: "inputTensorDims[0].total_size() + inputTensorDims[1].total_size()"
+std::string flatOffsetExpr(std::size_t i)
+{
+   if (i == 0)
+      return "0";
+   std::string out;
+   for (std::size_t j = 0; j < i; ++j) {
+      if (j > 0)
+         out += " + ";
+      out += "inputTensorDims[" + std::to_string(j) + "].total_size()";
+   }
+   return out;
+}
+
 } // namespace
 
 void RooFit::Detail::AnyWithVoidPtr::emplace(std::string const &typeName)
@@ -169,7 +186,9 @@ void RooFit::Detail::AnyWithVoidPtr::emplace(std::string const &typeName)
 }
 
 struct RooONNXFunction::RuntimeCache {
-   using Func = void (*)(void *, float const *, float *);
+   /// Uniform thunk signature regardless of input-tensor count.
+   /// Args: (Session*, output, flat input buffer).
+   using Func = void (*)(void *, float *, float const *);
 
    RooFit::Detail::AnyWithVoidPtr _session;
    RooFit::Detail::AnyWithVoidPtr _d_session;
@@ -198,6 +217,8 @@ RooONNXFunction::RooONNXFunction(const char *name, const char *title, const std:
                                  const std::vector<std::vector<int>> & /*inputShapes*/)
    : RooAbsReal{name, title}, _onnxBytes{fileToBytes(onnxFile)}
 {
+   initialize();
+
    for (std::size_t i = 0; i < inputTensors.size(); ++i) {
       std::string istr = std::to_string(i);
       _inputTensors.emplace_back(
@@ -226,7 +247,7 @@ void RooONNXFunction::fillInputBuffer() const
    }
 }
 
-void RooONNXFunction::initialize() const
+void RooONNXFunction::initialize()
 {
    if (_runtime) {
       return;
@@ -270,49 +291,69 @@ std::string _RooONNXFunction_onnxToCppWithSofie(std::uint8_t const *onnxBytes, s
    std::string modelCode = onnxToCppWithSofie(_onnxBytes.data(), _onnxBytes.size(), _funcName.c_str());
    gInterpreter->Declare(modelCode.c_str());
 
-   // Declare string to the interpreter, where the %%NAMESPACE%% placeholder
-   // will first be replaced by the namespace for the emitted code.
-   auto declareWithNamespace = [&](std::string codeTemplate) {
-      const std::string placeholder = "%%NAMESPACE%%";
-      size_t pos = 0;
+   auto nInputTensors = static_cast<unsigned long>(
+      gInterpreter->ProcessLine(("std::size(" + namespaceName + "::inputTensorDims);").c_str()));
 
-      while ((pos = codeTemplate.find(placeholder, pos)) != std::string::npos) {
-         codeTemplate.replace(pos, placeholder.length(), namespaceName);
-         pos += namespaceName.length();
+   // Per-input-tensor parameter / argument lists used by the JIT'd code below.
+   std::string innerParams;       // "float const *input0, float const *input1, ..."
+   std::string innerArgs;         // "input0, input1, ..."
+   std::string outerDoubleParams; // "double const *input0, double const *input1, ..."
+   std::string cladInputs;        // "input0, input1, ..."  (for clad::gradient param spec)
+   for (std::size_t i = 0; i < nInputTensors; ++i) {
+      std::string istr = std::to_string(i);
+      if (i > 0) {
+         innerParams += ", ";
+         innerArgs += ", ";
+         outerDoubleParams += ", ";
+         cladInputs += ", ";
       }
+      innerParams += "float const *input" + istr;
+      innerArgs += "input" + istr;
+      outerDoubleParams += "double const *input" + istr;
+      cladInputs += "input" + istr;
+   }
 
-      gInterpreter->Declare(codeTemplate.c_str());
-   };
+   // Non-template inner / wrapper functions, generated with the right number of inputs.
+   {
+      std::ostringstream ss;
+      ss << "namespace " << namespaceName << " {\n\n"
+         << "float roo_inner_wrapper(Session const &session, " << innerParams << ") {\n"
+         << "   float out = 0.;\n"
+         << "   doInfer(session, " << innerArgs << ", &out);\n"
+         << "   return out;\n"
+         << "}\n\n"
+         << "float roo_wrapper(Session const &session, " << innerParams << ") {\n"
+         << "   return roo_inner_wrapper(session, " << innerArgs << ");\n"
+         << "}\n\n"
+         << "} // namespace " << namespaceName << "\n";
+      gInterpreter->Declare(ss.str().c_str());
+   }
 
-   declareWithNamespace(R"(
-
-namespace %%NAMESPACE%% {
-
-float roo_inner_wrapper(Session const &session, float const *input)
-{
-   float out = 0.;
-   doInfer(session, input, &out);
-   return out;
-}
-
-float roo_wrapper(Session const &session, float const *input)
-{
-   return roo_inner_wrapper(session, input);
-}
-
-} // namespace %%NAMESPACE%%
-
-)");
+   // Evaluation thunk with a uniform signature regardless of the input-tensor count:
+   // takes a flat float buffer and splits it into the per-tensor pointers expected by
+   // SOFIE's doInfer.
+   {
+      std::ostringstream ss;
+      ss << "namespace " << namespaceName << " {\n"
+         << "void roo_eval_thunk(void *session_void, float *out, float const *flat_input) {\n"
+         << "   auto *session = reinterpret_cast<Session *>(session_void);\n"
+         << "   doInfer(*session";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", flat_input + (" << flatOffsetExpr(i) << ")";
+      }
+      ss << ", out);\n"
+         << "}\n"
+         << "} // namespace " << namespaceName << "\n";
+      gInterpreter->Declare(ss.str().c_str());
+   }
 
    std::string sessionName = "::TMVA_SOFIE_" + _funcName + "::Session";
 
    _runtime->_session.emplace(sessionName);
    auto ptrSession = toPtrString(_runtime->_session.ptr, sessionName);
 
-   std::stringstream ss2;
-   ss2 << "static_cast<void (*)(void *, float const *, float *)>(RooFit::Detail::doInferWithSessionVoidPtr<"
-       << sessionName << ">" << ");";
-   _runtime->_func = reinterpret_cast<RuntimeCache::Func>(gInterpreter->ProcessLine(ss2.str().c_str()));
+   _runtime->_func = reinterpret_cast<RuntimeCache::Func>(gInterpreter->ProcessLine(
+      ("static_cast<void(*)(void *, float *, float const *)>(" + namespaceName + "::roo_eval_thunk);").c_str()));
 
    // hardcode the gradient for now
    _runtime->_d_session.emplace(sessionName);
@@ -320,60 +361,83 @@ float roo_wrapper(Session const &session, float const *input)
 
    gInterpreter->Declare("#include <Math/CladDerivator.h>");
 
-   gInterpreter->ProcessLine(("clad::gradient(" + namespaceName + "::roo_wrapper, \"input\");").c_str());
+   gInterpreter->ProcessLine(("clad::gradient(" + namespaceName + "::roo_wrapper, \"" + cladInputs + "\");").c_str());
 
-   declareWithNamespace(R"(
-namespace %%NAMESPACE%% {
-
-double roo_outer_wrapper(double const *input) {
-    auto &session = *)" +
-                        ptrSession + R"(;
-    float inputFlt[inputTensorDims[0].total_size()];
-    for (std::size_t i = 0; i < std::size(inputFlt); ++i) {
-       inputFlt[i] = input[i];
-    }
-    return roo_inner_wrapper(session, inputFlt);
-}
-
-} // namespace %%NAMESPACE%%
-
-namespace clad::custom_derivatives {
-
-namespace %%NAMESPACE%% {
-
-void roo_outer_wrapper_pullback(double const *input, double d_y, double *d_input) {
-
-    using namespace ::%%NAMESPACE%%;
-
-    float inputFlt[inputTensorDims[0].total_size()];
-    float d_inputFlt[::std::size(inputFlt)];
-    for (::std::size_t i = 0; i < ::std::size(inputFlt); ++i) {
-       inputFlt[i] = input[i];
-       d_inputFlt[i] = d_input[i];
-    }
-    auto *session = )" + ptrSession +
-                        R"(;
-    auto *d_session = )" +
-                        ptrDSession + R"(;
-    roo_inner_wrapper_pullback(*session, inputFlt, d_y, d_session, d_inputFlt);
-    for (::std::size_t i = 0; i < ::std::size(inputFlt); ++i) {
-       d_input[i] += d_inputFlt[i];
-    }
-}
-
-} // namespace %%NAMESPACE%%
-
-} // namespace clad::custom_derivatives
-
-)");
+   // The codegen call site (CodegenImpl::codegenImpl(RooONNXFunction)) passes one
+   // double-array argument per input tensor. Emit roo_outer_wrapper and the matching
+   // custom-derivative pullback with the corresponding number of parameters.
+   {
+      std::ostringstream ss;
+      ss << "namespace " << namespaceName << " {\n\n"
+         << "double roo_outer_wrapper(" << outerDoubleParams << ") {\n"
+         << "    auto &session = *" << ptrSession << ";\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    float inputFlt" << i << "[inputTensorDims[" << i << "].total_size()];\n"
+            << "    for (std::size_t i = 0; i < std::size(inputFlt" << i << "); ++i) {\n"
+            << "       inputFlt" << i << "[i] = input" << i << "[i];\n"
+            << "    }\n";
+      }
+      ss << "    return roo_inner_wrapper(session";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", inputFlt" << i;
+      }
+      ss << ");\n"
+         << "}\n\n"
+         << "} // namespace " << namespaceName << "\n\n"
+         << "namespace clad::custom_derivatives {\n"
+         << "namespace " << namespaceName << " {\n\n"
+         << "void roo_outer_wrapper_pullback(" << outerDoubleParams << ", double d_y";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", double *d_input" << i;
+      }
+      ss << ") {\n"
+         << "    using namespace ::" << namespaceName << ";\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    float inputFlt" << i << "[inputTensorDims[" << i << "].total_size()];\n"
+            << "    float d_inputFlt" << i << "[::std::size(inputFlt" << i << ")];\n"
+            << "    for (::std::size_t i = 0; i < ::std::size(inputFlt" << i << "); ++i) {\n"
+            << "       inputFlt" << i << "[i] = input" << i << "[i];\n"
+            << "       d_inputFlt" << i << "[i] = d_input" << i << "[i];\n"
+            << "    }\n";
+      }
+      ss << "    auto *session = " << ptrSession << ";\n"
+         << "    auto *d_session = " << ptrDSession << ";\n"
+         << "    roo_inner_wrapper_pullback(*session";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", inputFlt" << i;
+      }
+      ss << ", d_y, d_session";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", d_inputFlt" << i;
+      }
+      ss << ");\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    for (::std::size_t i = 0; i < ::std::size(inputFlt" << i << "); ++i) {\n"
+            << "       d_input" << i << "[i] += d_inputFlt" << i << "[i];\n"
+            << "    }\n";
+      }
+      ss << "}\n\n"
+         << "} // namespace " << namespaceName << "\n"
+         << "} // namespace clad::custom_derivatives\n";
+      gInterpreter->Declare(ss.str().c_str());
+   }
 }
 
 double RooONNXFunction::evaluate() const
 {
-   initialize();
    fillInputBuffer();
 
    float out = 0.f;
-   _runtime->_func(_runtime->_session.ptr, _inputBuffer.data(), &out);
+   _runtime->_func(_runtime->_session.ptr, &out, _inputBuffer.data());
    return static_cast<double>(out);
+}
+
+void RooONNXFunction::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooONNXFunction::Class(), this);
+      this->initialize();
+   } else {
+      R__b.WriteClassBuffer(RooONNXFunction::Class(), this);
+   }
 }
