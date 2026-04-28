@@ -52,9 +52,8 @@ class TMathTextRenderer;
 
 class TTF {
 
-friend class TGX11TTF;
-friend class TGWin32;
-friend class TMathTextRenderer;
+   friend class TGWin32;
+   friend class TMathTextRenderer;
 
 public:
 

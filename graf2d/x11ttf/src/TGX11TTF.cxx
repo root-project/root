@@ -217,23 +217,23 @@ void TGX11TTF::Align(WinContext_t wctxt)
 
    // vertical alignment
    if (align == kTLeft || align == kTCenter || align == kTRight) {
-      fAlign.y = TTF::fgAscent;
+      fAlign.y = TTF::GetAscent();
    } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::fgAscent/2;
+      fAlign.y = TTF::GetAscent() / 2;
    } else {
       fAlign.y = 0;
    }
 
    // horizontal alignment
    if (align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::fgWidth;
+      fAlign.x = TTF::GetWidth();
    } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::fgWidth/2;
+      fAlign.x = TTF::GetWidth() / 2;
    } else {
       fAlign.x = 0;
    }
 
-   FT_Vector_Transform(&fAlign, TTF::fgRotMatrix);
+   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
    fAlign.x = fAlign.x >> 6;
    fAlign.y = fAlign.y >> 6;
 }
@@ -247,7 +247,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
 {
    UChar_t d = 0, *s = source->buffer;
 
-   if (TTF::fgSmoothing) {
+   if (TTF::GetSmoothing()) {
 
       static RXColor col[5];
       RXColor  *bcol = nullptr;
@@ -269,7 +269,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
          dotcnt = 0;
          for (y = 0; y < (int) source->rows; y++) {
             for (x = 0; x < (int) source->width; x++, bc++) {
-///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::fgAscent + y);
+///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::GetAscent() + y);
                bc->pixel = XGetPixel(xim, bx + x, by + y);
                bc->flags = DoRed | DoGreen | DoBlue;
                if (++dotcnt >= maxdots) break;
@@ -529,8 +529,8 @@ void TGX11TTF::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode
    TTF::TTGlyph *glyph = TTF::GetGlyphs();
    for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
       if (FT_Glyph_To_Bitmap(&glyph->fImage,
-                             TTF::fgSmoothing ? ft_render_mode_normal
-                                              : ft_render_mode_mono,
+                             TTF::GetSmoothing() ? ft_render_mode_normal
+                                                 : ft_render_mode_mono,
                              nullptr, 1 )) continue;
       FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
       FT_Bitmap*     source = &bitmap->bitmap;
