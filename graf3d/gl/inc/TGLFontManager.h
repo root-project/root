@@ -90,6 +90,7 @@ public:
    void  BBox(const wchar_t* txt,
               Float_t& llx, Float_t& lly, Float_t& llz,
               Float_t& urx, Float_t& ury, Float_t& urz) const;
+   Float_t Advance(const char* txt) const;
 
    void  Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;
    void  Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;

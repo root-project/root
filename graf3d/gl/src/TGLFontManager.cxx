@@ -170,6 +170,15 @@ void TGLFont::BBox(const wchar_t* txt,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get advance
+
+Float_t TGLFont::Advance(const char* txt) const
+{
+   // FTGL is not const correct.
+   return const_cast<FTFont*>(fFont)->Advance(txt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///mgn is simply ignored, because ROOT's TVirtualX TGX11 are complete mess with
 ///painting attributes.
 
