@@ -139,7 +139,7 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
    using namespace std::string_literals;
    REveGeomDescription &eveDesc = dynamic_cast<REveGeomDescription &>(fDesc);
 
-  REveGeoManagerHolder gmgr(REveGeomDescription::GetGeoManager());
+   REveGeoManagerHolder gmgr(REveGeomDescription::GetGeoManager());
    if (arg.compare(0, 6, "CDTOP:") == 0)
    {
       std::vector<std::string> ep;
@@ -195,13 +195,51 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
          stack.insert(stack.begin(), base.begin(), base.end());
 
          if (path && eveDesc.ChangeEveVisibility(stack, REveGeomDescription::kRnrSelf, on)) {
-            std::cout << "Set visibilty rnr PHY \n";
+            std::cout << "Set visibility rnr PHY \n";
             REveManager::ChangeGuard ch;
             fReceiver->VisibilityChanged(on, REveGeomDescription::kRnrSelf, stack);
          }
       }
    }
+   else if (arg.compare(0, 9, "PrintInfo") == 0)
+   {
+         auto a = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
+         auto prefix =  eveDesc.GetApexPath();
 
+         std::ostringstream oss;
+         oss << "/";
+         if (!prefix.empty()) {
+            a->erase(a->begin());
+            a->insert(a->begin(), prefix.begin(), prefix.end());
+            std::string topName = eveDesc.GetGeoManager()->GetTopNode()->GetName();
+            // strip "_1"
+            // TGeoNodeInterator does not hold _1 in the top node
+            if (topName.rfind("_1") != std::string::npos) {
+               topName = topName.substr(0, topName.size() - 2);
+            }
+            oss << topName << "/";
+         }
+         for (size_t i = 0; i < a->size(); ++i) {
+            if (i > 0)
+               oss << "/";
+            oss << a->at(i);
+         }
+
+         std::string targetPath = oss.str();
+         const char* savedPath = gGeoManager->GetPath();
+         bool res = gGeoManager->cd(targetPath.c_str());
+         printf("Node path:\n%s \n", targetPath.c_str());
+         if (res) {
+            TGeoNode* node = gGeoManager->GetCurrentNode();
+            node->GetVolume()->InspectShape();
+
+         }
+         else {
+            printf("ERROR locating the node with given path\n");
+         }
+         gGeoManager->cd(savedPath);
+
+   }
    else {
       RGeomHierarchy::WebWindowCallback(connid, arg);
    }
@@ -431,9 +469,7 @@ bool REveGeoTopNodeViz::AcceptNode(TGeoIterator &it, bool skip) const
       // printf("accep mkod eleaf node ptr %p \n", (void*)it.GetNode(it.GetLevel()));
       if (it.GetNode(it.GetLevel())->GetNdaughters())
          return false;
-   }
-   else if (fMode == EMode::kModeMixed)
-   {
+   } else if (fMode == EMode::kModeMixed) {
       if (it.GetLevel() > fGeoData->fDesc.GetVisLevel()) {
          if (skip) it.Skip();
          return false;
@@ -495,18 +531,18 @@ void REveGeoTopNodeViz::BuildDesc()
 
    timer.Stop();
 
-   printf("Real time: %.3f s\n", timer.RealTime());
-   printf("CPU  time: %.3f s\n", timer.CpuTime());
+   printf("Collect Shapes Real time: %.3f s\n", timer.RealTime());
+   // printf("CPU  time: %.3f s\n", timer.CpuTime());
 
    // node array
    timer.Start();
    CollectNodes(top->GetVolume(), fNodes, fShapes);
-   std::cout << "Node size " << fNodes.size() << "\n";
+   // std::cout << "Node size " << fNodes.size() << "\n";
 
    timer.Stop();
 
-   printf("NODES Real time: %.3f s\n", timer.RealTime());
-   printf("NODES CPU  time: %.3f s\n", timer.CpuTime());
+   printf("Collect Nodes Real time: %.3f s\n", timer.RealTime());
+   // printf("NODES CPU  time: %.3f s\n", timer.CpuTime());
 
    StampObjProps();
 }
@@ -791,7 +827,7 @@ int REveGeoTopNodeViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    if (box) {
       const Double_t *origin = box->GetOrigin();
 
-      printf("BBox center: (%f, %f, %f)\n", origin[0], origin[1], origin[2]);
+      // printf("BBox center: (%f, %f, %f)\n", origin[0], origin[1], origin[2]);
       //printf("origin lengths: (%f, %f, %f)\n", origin[0], origin[1], origin[2]);
 
       auto jbb = json::array();
