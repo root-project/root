@@ -56,6 +56,7 @@
 #pragma link C++ class RooMomentMorphFunc + ;
 #pragma link C++ class RooMomentMorphFuncND + ;
 #pragma link C++ class RooMomentMorphFuncND::Grid2 + ;
+#pragma link C++ class RooFit::Detail::RooMomentMorphFraction + ;
 #pragma link C++ class RooSpline+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
