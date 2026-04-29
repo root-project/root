@@ -453,18 +453,60 @@ sap.ui.define([
          this.controls.addEventListener('change', this.render.bind(this));
 
          // send to server when the client finishes camera setting
-         this.controls.addEventListener('end', () => {
-            let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
-            if (eveView && eveView.fCameraId && this.controls.camBaseMtx) {
-               let arr = Array.from(this.controls.camBaseMtx.elements);
-               this.controller.mgr.SendMIR("SetCamBaseMtx", eveView.fCameraId, 
-                                           "ROOT::Experimental::REveCamera", 
-                                           JSON.stringify(arr));
-               if (this._logLevel >= 2) {
-                  console.log("Camera matrix sent to server, ID:", eveView.fCameraId);
+         // use throttle
+
+         // Throttle helper (define once at module level)
+         function throttle(func, limit) {
+            let inThrottle;
+            return function (...args) {
+               if (!inThrottle) {
+                  func.apply(this, args);
+                  inThrottle = true;
+                  setTimeout(() => inThrottle = false, limit);
+               }
+            };
+         }
+         this.controls.addEventListener('end', throttle(() => {
+
+            let equal = true;
+            let a = glc.controls.getCamTrans().elements;
+            let eveView = glc.controller.mgr.GetElement(this.controller.eveViewerId);
+            let eveCamera = glc.controller.mgr.GetElement(eveView.fCameraId);
+            let b = eveCamera.camTrans;
+
+            // compare trans matrices
+            for (let i = 0; i < 16; i++) {
+               if (Math.abs(a[i] - b[i]) > 0.0000005) {
+                  equal = false;
                }
             }
-         });
+
+            // compare zoom if camera is orthographic
+            if (glc.camera.isOrthographicCamera) {
+               if (Math.abs(glc.camera.zoom - eveCamera.fZoom) > 0.0000005) {
+                  eveCamera.fZoom = glc.camera.zoom;
+                  equal = false;
+               }
+            }
+
+            if (equal !== true) {
+               // save trans matrix from orbit control to eve camera object
+               for (let i = 0; i < 16; i++) {
+                  b[i] = a[i];
+               }
+
+               // set trans matrix and zoom as array of 17 floats
+               if (eveView && eveView.fCameraId) {
+                  let sz = glc.camera.isOrthographicCamera === true ? glc.camera.zoom : 1;
+                  let fcall = "SetCamTransMtxStr(\"";
+                  fcall += b.join(",") + ","+ sz + "\")";
+                  glc.controller.mgr.SendMIR(fcall, eveView.fCameraId,
+                     "ROOT::Experimental::REveCamera");
+               }
+            }
+
+         }, 200));
+         //});
 
          // camera center marker
          let col = new RC.Color(0.5, 0, 0);
@@ -505,7 +547,7 @@ sap.ui.define([
          let sbbox = this.scene_bbox;
          let posV = new RC.Vector3; posV.subVectors(sbbox.max, this.rot_center);
          let negV = new RC.Vector3; negV.subVectors(sbbox.min, this.rot_center);
-      
+
          let extV = new RC.Vector3; extV = negV; extV.negate(); extV.max(posV);
          let extR = extV.length();
 
@@ -515,51 +557,34 @@ sap.ui.define([
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
 
          // Try to use standalone REveCamera if available
-         // let cameraId = eveView.fCameraId;
-         let cameraId = 8;
-         let camera = null;
-         let v1, v2;
-         
-         if (cameraId) {
-            camera = this.controller.mgr.GetElement(cameraId);
-            if (this._logLevel >= 2) {
-               console.log("GlViewerRCore.resetRenderer: Using standalone camera ID", cameraId);
-               if (camera) {
-                  console.log("  Camera name:", camera.fName);
-                  // console.log("  Camera fV1:", camera.fV1);
-                  // console.log("  Camera fV2:", camera.fV2);
-                  console.log("  Camera camBase:", camera.camBase);
-               }
+         let cameraId = eveView.fCameraId;
+
+         let camera = this.controller.mgr.GetElement(cameraId);
+         if (this._logLevel >= 2) {
+            console.log("GlViewerRCore.resetRenderer: Using standalone camera ID", cameraId);
+            if (camera) {
+               console.log("  Camera name:", camera.fName);
+               // console.log("  Camera fV1:", camera.fV1);
+               // console.log("  Camera fV2:", camera.fV2);
+               console.log("  Camera camBase:", camera.camBase);
             }
          }
-         
-         // In resetRenderer()
-         // if (camera && camera.fV1 && camera.fV2) {
-            // v1 = camera.fV1;
-            // v2 = camera.fV2;
-            if (camera && camera.camBase && camera.camBase.length === 16) {
-               v1 = [camera.camBase[8], camera.camBase[9], camera.camBase[10]];   // forward/direction
-               v2 = [camera.camBase[4], camera.camBase[5], camera.camBase[6]];    // up
 
-            // Apply camTrans if available
-            if (camera.camTrans && camera.camTrans.length === 16) {
-               this.controls.setCamTrans(camera.camTrans);
-               if (this._logLevel >= 2) {
-                  console.log("GlViewerRCore.resetRenderer: Applied camTrans from REveCamera");
-               }
-            }
+         let v1 = [camera.camBase[0], camera.camBase[1], camera.camBase[2]];   // forward/direction
+         let v2 = [camera.camBase[8], camera.camBase[9], camera.camBase[10]];    // up
 
+         // Apply camTrans if available
+         if (camera.camTrans && camera.camTrans.length === 16) {
+            this.controls.setCamTrans(camera.camTrans.slice());
             if (this._logLevel >= 2) {
-               console.log("GlViewerRCore.resetRenderer: Using standalone REveCamera");
-            }
-         } else {
-            // Fallback to nested camera for backward compatibility
-            v1 = eveView.camera.V1;
-            v2 = eveView.camera.V2;
-            if (this._logLevel >= 1) {
-               console.log("GlViewerRCore.resetRenderer: Using nested camera (fallback)");
+               console.log("GlViewerRCore.resetRenderer: Applied camTrans from REveCamera");
             }
          }
+
+         if (this._logLevel >= 2) {
+            console.log("GlViewerRCore.resetRenderer: Using standalone REveCamera");
+         }
+         
 
          if (this.camera.isPerspectiveCamera)
          {
@@ -595,10 +620,9 @@ sap.ui.define([
 
             let lc = this.lights.children;
             lc[1].position.set( 0, 0,  extR);
-            // lc[2].position.set( 0, 0, -extR);
-
-            // console.log("resetRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
+        
+         this.controls.setFromBBox(sbbox);
 
          this.centerMarker.visible = false;
 
@@ -734,8 +758,11 @@ sap.ui.define([
 
       render()
       {
+<<<<<<< HEAD
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
+=======
+>>>>>>> 7075e817ab0 (added fInitialized member)
          this.render_requested = false;
          if (this.render_requested_recalc_sbbox) {
             this.recalcSceneBBox();
@@ -1116,7 +1143,7 @@ sap.ui.define([
             menu.add("Set Camera Center", data, this.setCameraCenter.bind(data));
          }
 
-         menu.add("Reset camera", this.resetRenderer);
+         menu.add("Reset camera", this.resetCamera);
 
          if (RC.REveDevelMode) {
             menu.add("separator");
@@ -1125,6 +1152,15 @@ sap.ui.define([
          }
 
          menu.show(event);
+      }
+
+      // callback from popup "Re" menu
+      resetCamera()
+      {
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         let  eve_camera = this.controller.mgr.GetElement(eveView.fCameraId);
+         eve_camera.fInitialized = false;
+         this.resetRenderer();
       }
 
       setCameraCenter(data)
