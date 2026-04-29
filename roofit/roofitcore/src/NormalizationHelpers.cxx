@@ -76,6 +76,21 @@ void RooFit::Detail::CompileContext::markAsCompiled(RooAbsArg &arg) const
    arg.setAttribute("_COMPILED");
 }
 
+/// Mark `arg` and every branch node reachable through its server tree as
+/// already compiled. Use this after assembling or cloning a sub-graph
+/// yourself inside `compileForNormSet`: it prevents a follow-up
+/// `compileServers` call from re-cloning any of those internal nodes, while
+/// still letting the recursive descent reach the genuine leaves
+/// (fundamental observables and parameters) at the bottom of the tree.
+void RooFit::Detail::CompileContext::markSubtreeAsCompiled(RooAbsArg &arg) const
+{
+   RooArgSet branches;
+   arg.branchNodeServerList(&branches);
+   for (RooAbsArg *b : branches) {
+      markAsCompiled(*b);
+   }
+}
+
 bool RooFit::Detail::CompileContext::isMarkedAsCompiled(RooAbsArg const &arg) const
 {
    return arg.getAttribute("_COMPILED");
