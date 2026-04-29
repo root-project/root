@@ -10,6 +10,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
 
    class EveElemControl {
 
+      // Class notes:
+      // invoke_obj is created in GLViewerRCore from RnrQutor pick state
+      // invoke_obj == state.obj
+      // top_obj is also derived from RnrQutor pick state
+      // if the pick state does not have EveElement defined ti look up nto parent hierarchy
+
+
       constructor(iobj, tobj) {
          this.invoke_obj = iobj;
          this.top_obj = tobj ? tobj : iobj;
@@ -44,6 +51,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
       }
 
       DrawForSelection(sec_idcs, res) {
+         // Note: one needs to apply _modelViewMatrix and _normalMatrix
+         // on newly created objects
          if (this.top_obj.eve_el.fSecondarySelect) {
             if (sec_idcs.length > 0) {
                res.instance_object = this.top_obj;
