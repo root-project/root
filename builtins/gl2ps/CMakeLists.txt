@@ -10,7 +10,7 @@ set(ROOT_GL2PS_VERSION 1.4.2)
 set(ROOT_GL2PS_HASH "8d1c00c1018f96b4b97655482e57dcb0ce42ae2f1d349cd6d4191e7848d9ffe9")
 # Backport fix for static Win32 having being overwritten by shared lib: https://gitlab.onelab.info/gl2ps/gl2ps/-/work_items/30
 # We use all seven commits between 1.4.2 and before bump to 1.4.3
-set(ROOT_GL2PS_PATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/v142_post_tag_fixes.patch)
+set(ROOT_GL2PS_PATCH_FILES ${CMAKE_CURRENT_SOURCE_DIR}/v142_post_tag_fixes.patch ${CMAKE_CURRENT_SOURCE_DIR}/gl2ps-marker.patch)
 
 set(ROOT_GL2PS_PREFIX ${CMAKE_BINARY_DIR}/builtins/GL2PS-prefix)
 
@@ -29,12 +29,17 @@ if(WIN32)
   set(patch_args --ignore-whitespace)
 endif()
 
+# check if the patch has already been applied
+if(NOT EXISTS "${ROOT_GL2PS_PREFIX}/src/BUILTIN_GL2PS/._patched")
+  set(GL2PS_PATCH_COMMAND PATCH_COMMAND git apply ${patch_args} ${ROOT_GL2PS_PATCH_FILES})
+endif()
+
 ExternalProject_Add(
   BUILTIN_GL2PS
   PREFIX ${ROOT_GL2PS_PREFIX}
   URL ${lcgpackages}/gl2ps-${ROOT_GL2PS_VERSION}.tgz
   URL_HASH SHA256=${ROOT_GL2PS_HASH}
-  PATCH_COMMAND git apply ${patch_args} ${ROOT_GL2PS_PATCH_FILE}
+  ${GL2PS_PATCH_COMMAND}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
              -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
@@ -46,11 +51,7 @@ ExternalProject_Add(
              -DBUILD_SHARED_LIBS=OFF
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_GL2PS_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_GL2PS_BUILD_COMMAND_FLAGS} --target install
-  LOG_DOWNLOAD 1
-  LOG_CONFIGURE 1
-  LOG_BUILD 1
-  LOG_INSTALL 1
-  LOG_OUTPUT_ON_FAILURE 1
+  LOG_PATCH 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
   BUILD_BYPRODUCTS ${ROOT_GL2PS_LIBRARY}
   TIMEOUT 600)
 
