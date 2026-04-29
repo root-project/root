@@ -1418,6 +1418,11 @@ if (roofit_multiprocess)
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE ${CMAKE_FIND_PACKAGE_PREFER_CONFIG})
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
+    # The fail-on-missing branching is not implemented, and we always look for
+    # ZeroMQ and cppzmq with REQUIRED to fail configuration if not available.
+    # That's because the roofit_multiprocess option can only be deliberately
+    # enabled by the user with roofit_multiprocess=ON, in which case it would
+    # be frustrating to get it auto-disabled on missing dependencies.
     find_package(ZeroMQ 4.3.5 REQUIRED)
 
     # Reset default find_package mode
