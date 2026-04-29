@@ -224,17 +224,16 @@ public:
    {
    }
    inline mathtext::bounding_box_t
-   bounding_box(const wchar_t character, float &current_x,
-             const unsigned int family)
+   bounding_box(const wchar_t character, float &current_x, const unsigned int family)
    {
-      const auto old_font_index = TTF::GetCurFontIdx();
+      auto font = TTF::GetCurFont();
+
       const bool cyrillic_or_cjk = is_cyrillic_or_cjk(character);
 
-      if (cyrillic_or_cjk) {
+      if (cyrillic_or_cjk)
          TTF::SetTextFont((Font_t) root_cjk_face_number());
-      } else {
+      else
          TTF::SetTextFont((Font_t) root_face_number(family));
-      }
 
       auto font_face = TTF::GetCurFontFace();
 
@@ -264,13 +263,12 @@ public:
 
       current_x += ret.advance();
 
-      TTF::SetCurFontIdx(old_font_index);
+      TTF::SetCurFont(font);
 
       return ret;
    }
    inline mathtext::bounding_box_t
-   bounding_box(const std::wstring string,
-             const unsigned int family = FAMILY_PLAIN) override
+   bounding_box(const std::wstring string, const unsigned int family = FAMILY_PLAIN) override
    {
       auto font_face = TTF::GetCurFontFace();
 

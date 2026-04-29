@@ -48,12 +48,11 @@ extern "C" {
 
 
 class TTFhandle;
+struct TTFontHandle;
 
 class TTF {
 
    friend class TTFhandle;
-
-   static std::unique_ptr<TTFhandle>  fgHandle;   ///< global handle to support old static API
 
 public:
 
@@ -107,13 +106,14 @@ public:
    static Int_t          SetTextFont(const char *fontname, Int_t italic=0);
    static void           SetTextSize(Float_t textsize);
 
+   static TTFontHandle*  GetCurFont();
+   static void           SetCurFont(TTFontHandle* font);
+   static FT_Face        GetCurFontFace();
+
    static void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
    // new temporary methods, can be removed at the end
    static void           CleanupGlyphs();
-   static void           SetCurFontIdx(Int_t indx);
-   static Int_t          GetCurFontIdx();
-   static FT_Face        GetCurFontFace();
 
    ClassDef(TTF,0)  //Interface to TTF font handling
 };
@@ -122,19 +122,9 @@ class TTFhandle {
    friend class TTF;
 
    private:
-      enum { kTTMaxFonts = 32 };
-
-      static FT_Library fgLibrary;               ///< FreeType font library
-      static Bool_t     fgInit;                  ///< true if the Init has been called
-      static Int_t      fgSymbItaFontIdx;        ///< Symbol italic font index
-      static Int_t      fgFontCount;             ///< number of fonts loaded
-      static char      *fgFontName[kTTMaxFonts]; ///< font name
-      static FT_Face    fgFace[kTTMaxFonts];     ///< font face
-      static FT_CharMap fgCharMap[kTTMaxFonts];  ///< font character map
-
+      TTFontHandle  *fFont = nullptr;            ///< selected font
       Int_t          fAscent = 0;                ///< string ascent, used to compute Y alignment
       FT_BBox        fCBox;                      ///< string control box
-      Int_t          fCurFontIdx = -1;           ///< current font index
       std::vector<TTF::TTGlyph> fGlyphs;         ///< glyphs
       Bool_t         fHinting = kFALSE;          ///< use hinting (true by default)
       Bool_t         fKerning = kTRUE;           ///< use kerning (true by default)
@@ -143,7 +133,12 @@ class TTFhandle {
       Int_t          fTBlankW = 0;               ///< trailing blanks width
       Int_t          fWidth = 0;                 ///< string width, used to compute X alignment
 
+      UInt_t         CharToUnicode(UInt_t code);
       void           ComputeTrailingBlanksWidth(Int_t n);
+
+      FT_Library     InitClose(Int_t direction = 0);
+
+      Int_t          SelectFontHandle(Int_t arg, const char *name = nullptr);
 
    public:
       TTFhandle();
@@ -151,8 +146,7 @@ class TTFhandle {
 
       TTF::TTGlyph  *GetGlyphs() { return fGlyphs.data(); }
       UInt_t         GetNumGlyphs() const { return fGlyphs.size(); }
-      Int_t          GetCurFontIdx() const { return fCurFontIdx; }
-      FT_Face        GetCurFontFace() const;
+      FT_Face        GetFontFace() const;
       Int_t          GetAscent() const { return fAscent; }
       Bool_t         GetHinting() const { return fHinting; }
       Bool_t         GetKerning() const { return fKerning; }
@@ -163,7 +157,6 @@ class TTFhandle {
       const FT_BBox &GetBox() const { return fCBox; }
 
 
-      void           SetCurFontIdx(Int_t indx) { fCurFontIdx = indx; }
       void           SetHinting(Bool_t state) { fHinting = state; }
       void           SetKerning(Bool_t state) { fKerning = state; }
       void           SetSmoothing(Bool_t state) { fSmoothing = state; }
@@ -172,7 +165,6 @@ class TTFhandle {
       Int_t          SetTextFont(const char *fontname, Int_t italic = 0);
       Bool_t         SetTextSize(Float_t textsize);
 
-      Short_t        CharToUnicode(UInt_t code);
       void           LayoutGlyphs();
       void           PrepareString(const char *string);
       void           PrepareString(const wchar_t *string);
@@ -183,9 +175,10 @@ class TTFhandle {
       void           GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text);
       void           GetTextAdvance(UInt_t &a, const char *text);
 
-      void           Version(Int_t &major, Int_t &minor, Int_t &patch);
+      TTFontHandle*  GetFont() const { return fFont; }
+      void           SetFont(TTFontHandle *font) { fFont = font; }
 
-      static     void CloseLibrary();
+      void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
    ClassDef(TTFhandle, 0)  // Dynamic interface to TTF
 
