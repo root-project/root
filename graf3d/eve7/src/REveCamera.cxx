@@ -13,6 +13,7 @@
 #include <ROOT/REveManager.hxx>
 
 #include <nlohmann/json.hpp>
+#include <iostream>
 
 using namespace ROOT::Experimental;
 
@@ -39,43 +40,21 @@ REveCamera::REveCamera(const std::string &name) : REveElement(name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup camera with type, name, direction and up vectors
 
-void REveCamera::Setup(ECameraType type, const std::string &name, const REveVector &v1, const REveVector &v2)
+void REveCamera::Setup(ECameraType type, const std::string &name, const REveVector &hAxis, const REveVector &vAxis)
 {
    fType = type;
    fName = name;
-   // fV1 = v1;
-   // fV2 = v2;
-   
+
    // Set up base camera matrix from direction and up vectors
    fCamBase.UnitTrans();
    fCamTrans.UnitTrans();
-   
-   // Create a coordinate system from v1 (direction) and v2 (up)
-   REveVector dir = v1;
-   dir.Normalize();
-   
-   REveVector up = v2;
-   up.Normalize();
-   
-   // Right vector = dir × up
-   REveVector right;
-   right.fX = dir.fY * up.fZ - dir.fZ * up.fY;
-   right.fY = dir.fZ * up.fX - dir.fX * up.fZ;
-   right.fZ = dir.fX * up.fY - dir.fY * up.fX;
-   right.Normalize();
-   
-   // Recalculate up = right × dir for orthogonality
-   REveVector newUp;
-   newUp.fX = right.fY * dir.fZ - right.fZ * dir.fY;
-   newUp.fY = right.fZ * dir.fX - right.fX * dir.fZ;
-   newUp.fZ = right.fX * dir.fY - right.fY * dir.fX;
-   
-   // Set rotation part of matrix (as row vectors)
-   Double_t *M = fCamBase.Array();
-   M[0] = right.fX; M[4] = right.fY; M[8]  = right.fZ;
-   M[1] = newUp.fX; M[5] = newUp.fY; M[9]  = newUp.fZ;
-   M[2] = dir.fX;   M[6] = dir.fY;   M[10] = dir.fZ;
-   
+
+   fCamBase.SetBaseVec(1, hAxis.fX, hAxis.fY, hAxis.fZ);
+	fCamBase.SetBaseVec(3, vAxis.fX, vAxis.fY, vAxis.fZ);
+
+   REveVector y = vAxis.Cross(hAxis);
+   fCamBase.SetBaseVec(2, y.fX, y.fY, y.fZ);
+
    StampObjProps();
 }
 
@@ -101,15 +80,34 @@ void REveCamera::SetCamTransMtx(const std::vector<Double_t> &arr)
 {
    if (arr.size() == 16) {
       fCamTrans.SetFromArray(arr.data());
-      StampObjProps();
+      fInitialized = kTRUE;
    }
 }
 
-void REveCamera::SetCamTransMtx(const char* json_str)
+void REveCamera::SetCamTransMtxStr(const char *ins)
 {
-   auto j = nlohmann::json::parse(json_str);
-   std::vector<Double_t> arr = j.get<std::vector<Double_t>>();
+   std::stringstream ss(ins);
+   std::vector<double> arr;
+   std::string item;
+   while (std::getline(ss, item, ',')) {
+      arr.push_back(std::stod(item));
+   }
+
+   fOrthoZoom = arr.back();
+   arr.pop_back();
+   fCamTrans.SetFromArray(arr.data());
+
+   fInitialized = true;
+   // fCamTrans.Print();
+
+   StampObjProps();
    SetCamTransMtx(arr);
+}
+
+void REveCamera::SetOrthoZoom(float zoom)
+{
+   fOrthoZoom = zoom;
+   fInitialized = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,9 +119,8 @@ Int_t REveCamera::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["fType"] = fType;
    j["fName"] = fName;
-   // j["fV1"] = {fV1.fX, fV1.fY, fV1.fZ};
-   // j["fV2"] = {fV2.fX, fV2.fY, fV2.fZ};
-   
+   j["fInitialized"] = fInitialized;  // Stream to client
+
    // Stream both matrices
    // Client will read these as fMatrix arrays (16 elements each)
    const Double_t *camBaseArr = fCamBase.Array();
@@ -131,6 +128,7 @@ Int_t REveCamera::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    const Double_t *camTransArr = fCamTrans.Array();
    j["camTrans"] = std::vector<Double_t>(camTransArr, camTransArr + 16);
+   j["fZoom"] = fOrthoZoom;
 
    return ret;
 }

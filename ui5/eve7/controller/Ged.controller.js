@@ -828,16 +828,8 @@ sap.ui.define([
       },
       
       onCameraTypeChange: function(viewer, newCameraType) {
-         let cameras = this.getCameraList();
-         
-         for (let cam of cameras) {
-            if (cam.fType === newCameraType) {
-               let mir = "SetCameraByElementId(" + cam.fElementId + ")";
-               this.mgr.SendMIR(mir, viewer.fElementId, viewer._typename);
-               console.log("Camera switched to:", cam.fName, "(Type:", newCameraType, ")");
-               break;
-            }
-         }
+      let mir = "SetCameraType(" + newCameraType + ")";
+      this.mgr.SendMIR(mir, viewer.fElementId, viewer._typename);
       },
       
       getCameraList: function() {
