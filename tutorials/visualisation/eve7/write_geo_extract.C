@@ -94,16 +94,13 @@ void write_geo_extract()
    TFile::SetCacheFileDir(".");
 
    auto eveMng = REveManager::Create();
-   eveMng->AllowMultipleRemoteConnections(false, false);
-
+   // eveMng->AllowMultipleRemoteConnections(false, false);
    auto s_geoManager = TGeoManager::Import("http://xrd-cache-1.t2.ucsd.edu/alja/mail/geo/cmsSimGeo2026.root");
 
    // tracker wrapper
-   //REveElement *holder = new REveElement();
    REveGeoShape *tracker = makeShape("cms:OCMS/tracker:Tracker_1/otst:supportR1190Z1450_1", "tracker");
    tracker->SetMainColor(kRed);
    tracker->SetMainTransparency(50);
-  // holder->AddElement(tracker);
 
    // tracker barrel
    REveGeoShape *barrel =
