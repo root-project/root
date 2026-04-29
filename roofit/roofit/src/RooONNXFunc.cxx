@@ -213,8 +213,8 @@ struct RooONNXFunc::RuntimeCache {
         total size of each tensor is checked.
  */
 RooONNXFunc::RooONNXFunc(const char *name, const char *title, const std::vector<RooArgList> &inputTensors,
-                                 const std::string &onnxFile, const std::vector<std::string> & /*inputNames*/,
-                                 const std::vector<std::vector<int>> & /*inputShapes*/)
+                         const std::string &onnxFile, const std::vector<std::string> & /*inputNames*/,
+                         const std::vector<std::vector<int>> & /*inputShapes*/)
    : RooAbsReal{name, title}, _onnxBytes{fileToBytes(onnxFile)}
 {
    initialize();
@@ -228,7 +228,7 @@ RooONNXFunc::RooONNXFunc(const char *name, const char *title, const std::vector<
 }
 
 RooONNXFunc::RooONNXFunc(const RooONNXFunc &other, const char *newName)
-   : RooAbsReal{other, newName}, _onnxBytes{other._onnxBytes}, _runtime{other._runtime}
+   : RooAbsReal{other, newName}, _onnxBytes{other._onnxBytes}, _runtime{other._runtime}, _funcName{other._funcName}
 {
    for (std::size_t i = 0; i < other._inputTensors.size(); ++i) {
       _inputTensors.emplace_back(std::make_unique<RooListProxy>("!inputs", this, *other._inputTensors[i]));
@@ -397,7 +397,7 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
             << "    float d_inputFlt" << i << "[::std::size(inputFlt" << i << ")];\n"
             << "    for (::std::size_t i = 0; i < ::std::size(inputFlt" << i << "); ++i) {\n"
             << "       inputFlt" << i << "[i] = input" << i << "[i];\n"
-            << "       d_inputFlt" << i << "[i] = d_input" << i << "[i];\n"
+            << "       d_inputFlt" << i << "[i] = 0;\n"
             << "    }\n";
       }
       ss << "    auto *session = " << ptrSession << ";\n"
