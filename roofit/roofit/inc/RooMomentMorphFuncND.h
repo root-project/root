@@ -20,6 +20,7 @@
 #include "RooListProxy.h"
 #include "RooArgList.h"
 #include "RooBinning.h"
+#include "RooFit/Detail/NormalizationHelpers.h"
 
 #include "TMatrixD.h"
 #include "TMap.h"
@@ -29,6 +30,12 @@
 
 class RooChangeTracker;
 class RooRealSumFunc;
+
+namespace RooFit {
+namespace Detail {
+class RooMomentMorphFraction;
+}
+} // namespace RooFit
 
 class RooMomentMorphFuncND : public RooAbsReal {
 
@@ -129,6 +136,9 @@ public:
    double evaluate() const override;
    double getValV(const RooArgSet *set = nullptr) const override;
 
+   std::unique_ptr<RooAbsArg>
+   compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const override;
+
 protected:
    void initialize();
 
@@ -139,6 +149,7 @@ protected:
 
    friend class CacheElem;
    friend class Grid2;
+   friend class RooFit::Detail::RooMomentMorphFraction;
 
    mutable RooObjCacheManager _cacheMgr;     ///<! Transient cache manager
    mutable RooArgSet *_curNormSet = nullptr; ///<! Transient cache manager
@@ -161,5 +172,33 @@ protected:
 
    ClassDefOverride(RooMomentMorphFuncND, 4);
 };
+
+namespace RooFit {
+namespace Detail {
+
+/// Helper compute-graph node that exposes one of the morph mixing fractions to
+/// the RooFit::Evaluator. It re-runs RooMomentMorphFuncND::CacheElem::calculateFractions
+/// only when the morph parameters change, then returns the cached fraction value
+/// for this index.
+class RooMomentMorphFraction : public RooAbsReal {
+public:
+   RooMomentMorphFraction() {}
+   RooMomentMorphFraction(const char *name, const char *title, RooMomentMorphFuncND const &parent, int index);
+   RooMomentMorphFraction(RooMomentMorphFraction const &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooMomentMorphFraction(*this, newname); }
+
+protected:
+   double evaluate() const override;
+
+private:
+   RooListProxy _parList;
+   const RooMomentMorphFuncND *_parent = nullptr; ///<! morph that owns the cache (not owned)
+   int _index = 0;
+
+   ClassDefOverride(RooFit::Detail::RooMomentMorphFraction, 0);
+};
+
+} // namespace Detail
+} // namespace RooFit
 
 #endif
