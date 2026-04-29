@@ -459,3 +459,29 @@ void REveViewer::SetCameraByElementId(ElementId_t cameraId)
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set camera by type (backward compatibility with old API)
+
+void REveViewer::SetCameraType(REveCamera::ECameraType type)
+{
+   if (gEve) {
+      auto cameras = gEve->GetCameras();
+      if (cameras) {
+         for (auto child : cameras->RefChildren()) {
+            auto cam = dynamic_cast<REveCamera*>(child);
+            if (cam && cam->GetType() == type) {
+               fCamera = cam;
+               StampObjProps();
+               
+               if (gDebug > 0) {
+                  ::Info("REveViewer::SetCameraType", "Camera set to type %d (%s)", 
+                         type, cam->GetCameraName().c_str());
+               }
+               return;
+            }
+         }
+         ::Warning("REveViewer::SetCameraType", "Camera with type %d not found", type);
+      }
+   }
+}
