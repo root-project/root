@@ -270,6 +270,8 @@ public:
    /// The lifetime of the Attribute Set ends at the same time as the Writer's.
    /// If `options` are passed, they will be used for the attribute set writer; otherwise, they will be derived from
    /// the main writer.
+   /// \warning Currently this is only supported for writers created via RNTupleWriter::Append(). This limitation
+   /// will be lifted in the future.
    ROOT::Experimental::RNTupleAttrSetWriterHandle
    CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name,
                       const ROOT::RNTupleWriteOptions *options = nullptr);
