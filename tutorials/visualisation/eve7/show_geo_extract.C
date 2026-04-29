@@ -9,7 +9,7 @@
 void show_geo_extract(const char *file = "testShapeExtract.root")
 {
    auto eveMng = ROOT::Experimental::REveManager::Create();
-   eveMng->AllowMultipleRemoteConnections(false, false);
+   // eveMng->AllowMultipleRemoteConnections(false, false);
 
    TFile::Open(file);
    TIter next(gDirectory->GetListOfKeys());
