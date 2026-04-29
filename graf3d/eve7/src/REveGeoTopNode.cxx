@@ -207,7 +207,6 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
          auto prefix =  eveDesc.GetApexPath();
 
          std::ostringstream oss;
-         oss << "/";
          if (!prefix.empty()) {
             a->erase(a->begin());
             a->insert(a->begin(), prefix.begin(), prefix.end());
