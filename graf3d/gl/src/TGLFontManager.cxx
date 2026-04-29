@@ -36,6 +36,26 @@
 # include "FTGLBitmapFont.h"
 #endif
 
+namespace {
+#ifdef HAVE_UTF8
+// https://github.com/root-project/root/issues/22076#issuecomment-4342764706
+TString AsUTF8(const char *txt)
+{
+   TString utxt;
+   const auto len = strlen(txt);
+   for (auto i = 0UL; i < len; ++i) {
+      if (static_cast<unsigned char>(txt[i]) >= static_cast<unsigned char>(192)) {
+         utxt.Append(static_cast<unsigned char>(0xc3));
+         utxt.Append(static_cast<unsigned char>(0x80) +
+                     (static_cast<unsigned char>(txt[i]) - static_cast<unsigned char>(192)));
+      } else {
+         utxt.Append(txt[i]);
+      }
+   }
+   return utxt;
+}
+#endif
+} // namespace
 
 /** \class TGLFont
 \ingroup opengl
@@ -140,6 +160,10 @@ Float_t TGLFont::GetLineHeight() const
 void TGLFont::MeasureBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height,
                                     const char* txt) const
 {
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   txt = utxt.Data();
+#endif
    Float_t dum, lly, ury;
    const_cast<FTFont*>(fFont)->BBox(txt, dum, lly, dum, dum, ury, dum);
    ascent      =  ury;
@@ -154,6 +178,7 @@ void TGLFont::BBox(const char* txt,
                    Float_t& llx, Float_t& lly, Float_t& llz,
                    Float_t& urx, Float_t& ury, Float_t& urz) const
 {
+   // HAVE_UTF8 was already called by functions above BBox so no need to transform here
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
 }
@@ -165,6 +190,7 @@ void TGLFont::BBox(const wchar_t* txt,
                    Float_t& llx, Float_t& lly, Float_t& llz,
                    Float_t& urx, Float_t& ury, Float_t& urz) const
 {
+   // HAVE_UTF8 was already called by functions above BBox so no need to transform here
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
 }
@@ -174,6 +200,10 @@ void TGLFont::BBox(const wchar_t* txt,
 
 Float_t TGLFont::Advance(const char* txt) const
 {
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   txt = utxt.Data();
+#endif
    // FTGL is not const correct.
    return const_cast<FTFont*>(fFont)->Advance(txt);
 }
@@ -185,6 +215,8 @@ Float_t TGLFont::Advance(const char* txt) const
 template<class Char>
 void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t angle, Double_t /*mgn*/) const
 {
+   // no need to check HAVE_UTF8 here, since it was called by functions above it
+
    glPushMatrix();
    //glLoadIdentity();
 
@@ -251,6 +283,7 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
 
 void TGLFont::Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const
 {
+   // TODO handle UTF8
    RenderHelper(txt, x, y, angle, mgn);
 }
 
@@ -258,6 +291,10 @@ void TGLFont::Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle,
 
 void TGLFont::Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const
 {
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   txt = utxt.Data();
+#endif
    RenderHelper(txt, x, y, angle, mgn);
 }
 
@@ -275,8 +312,14 @@ void TGLFont::Render(const TString &txt) const
       glScalef(1.0f, 1.0f, fDepth);
    }
 
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
    // FTGL is not const correct.
-   const_cast<FTFont*>(fFont)->Render(txt);
+   const_cast<FTFont *>(fFont)->Render(utxt.Data());
+#else
+   // FTGL is not const correct.
+   const_cast<FTFont *>(fFont)->Render(txt.Data());
+#endif
 
    if (scaleDepth) {
       glPopMatrix();
@@ -286,8 +329,8 @@ void TGLFont::Render(const TString &txt) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Render text with given alignmentrepl and at given position.
 
-void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
-             ETextAlignH_e alignH, ETextAlignV_e alignV) const
+void TGLFont::Render(const TString &txt, Float_t x, Float_t y, Float_t z, ETextAlignH_e alignH,
+                     ETextAlignV_e alignV) const
 {
    glPushMatrix();
 
@@ -295,7 +338,13 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
 
    x=0, y=0;
    Float_t llx, lly, llz, urx, ury, urz;
-   BBox(txt, llx, lly, llz, urx, ury, urz);
+
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   BBox(utxt.Data(), llx, lly, llz, urx, ury, urz);
+#else
+   BBox(txt.Data(), llx, lly, llz, urx, ury, urz);
+#endif
 
    switch (alignH)
    {
@@ -331,7 +380,27 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
    {
       glTranslatef(x, y, 0);
    }
-   Render(txt);
+
+   Bool_t scaleDepth = (fMode == kExtrude && fDepth != 1.0f);
+
+   if (scaleDepth) {
+      glPushMatrix();
+      // !!! 0.2*fSize is hard-coded in TGLFontManager::GetFont(), too.
+      glTranslatef(0.0f, 0.0f, 0.5f * fDepth * 0.2f * fSize);
+      glScalef(1.0f, 1.0f, fDepth);
+   }
+
+#ifdef HAVE_UTF8
+   // FTGL is not const correct.
+   const_cast<FTFont *>(fFont)->Render(utxt.Data());
+#else
+   // FTGL is not const correct.
+   const_cast<FTFont *>(fFont)->Render(txt.Data());
+#endif
+
+   if (scaleDepth) {
+      glPopMatrix();
+   }
    glPopMatrix();
 }
 
