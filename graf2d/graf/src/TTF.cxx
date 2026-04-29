@@ -1,23 +1,27 @@
 // @(#)root/graf:$Id$
-// Author: Olivier Couet     01/10/02
+// Author: Olivier Couet     01/10/2002
+// Author: Sergey  Linev     29/04/2026
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TTF
+
+/** \class TTFhandle
 \ingroup BasicGraphics
 
-Interface to the freetype 2 library.
+Dynamic handle to work with freetype 2 library.
+in ROOT7 TTFhandle will be renamed into TTF class
 */
 
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include "TROOT.h"
 #include "TTF.h"
 #include "TSystem.h"
@@ -28,160 +32,130 @@ Interface to the freetype 2 library.
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
-TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
 
-Bool_t         TTF::fgInit           = kFALSE;
-Bool_t         TTF::fgSmoothing      = kTRUE;
-Bool_t         TTF::fgKerning        = kTRUE;
-Bool_t         TTF::fgHinting        = kFALSE;
-Int_t          TTF::fgTBlankW        = 0;
-Int_t          TTF::fgWidth          = 0;
-Int_t          TTF::fgAscent         = 0;
-Int_t          TTF::fgCurFontIdx     = -1;
-Int_t          TTF::fgSymbItaFontIdx = -1;
-Int_t          TTF::fgFontCount      = 0;
-Int_t          TTF::fgNumGlyphs      = 0;
-char          *TTF::fgFontName[kTTMaxFonts];
-FT_Matrix     *TTF::fgRotMatrix      = nullptr;
-FT_Library     TTF::fgLibrary;
-FT_BBox        TTF::fgCBox;
-FT_Face        TTF::fgFace[kTTMaxFonts];
-FT_CharMap     TTF::fgCharMap[kTTMaxFonts];
-TTF::TTGlyph   TTF::fgGlyphs[kMaxGlyphs];
+Bool_t      TTFhandle::fgInit   = kFALSE;
+FT_Library  TTFhandle::fgLibrary;
+Int_t       TTFhandle::fgFontCount      = 0;
+char       *TTFhandle::fgFontName[kTTMaxFonts];
+FT_Face     TTFhandle::fgFace[kTTMaxFonts];
+FT_CharMap  TTFhandle::fgCharMap[kTTMaxFonts];
+Int_t       TTFhandle::fgSymbItaFontIdx = -1;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Cleanup TTF environment.
 
-TTF::~TTF()
+TTFhandle::TTFhandle()
 {
-   Cleanup();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialise the TrueType fonts interface.
-
-void TTF::Init()
-{
-   if (fgInit)
-      return;
-
-   fgInit = kTRUE;
-
-   // initialize FTF library
-   if (FT_Init_FreeType(&fgLibrary)) {
-      Error("TTF::Init", "error initializing FreeType");
-      return;
+   if (!fgInit) {
+      // initialize FTF library
+      if (FT_Init_FreeType(&fgLibrary))
+         Error("TTFhandle::TTFhandle", "error initializing FreeType");
+      else
+         fgInit = kTRUE;
    }
+}
 
-   // load default font (arialbd)
-   SetTextFont(62);
+
+////////////////////////////////////////////////////////////////////////////////
+
+TTFhandle::~TTFhandle()
+{
+   CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Cleanup. Is called by the gCleanupTTF destructor.
+/// Close library handle. Is called by the gCleanupTTF destructor.
 
-void TTF::Cleanup()
+void TTFhandle::CloseLibrary()
 {
    if (!fgInit)
       return;
 
-   CleanupGlyphs();
-
-   for (int i = 0; i < fgFontCount; i++) {
+   for (Int_t i = 0; i < fgFontCount; i++) {
       delete [] fgFontName[i];
       fgFontName[i] = nullptr;
 
       FT_Done_Face(fgFace[i]);
    }
-   if (fgRotMatrix) {
-      delete fgRotMatrix;
-      fgRotMatrix = nullptr;
-   }
    FT_Done_FreeType(fgLibrary);
-
    fgInit = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Map char to unicode. Returns 0 in case no mapping exists.
 
-Short_t TTF::CharToUnicode(UInt_t code)
+Short_t TTFhandle::CharToUnicode(UInt_t code)
 {
-   if (!fgCharMap[fgCurFontIdx]) {
+   if (!fgCharMap[fCurFontIdx]) {
       UShort_t i, platform, encoding;
       FT_CharMap  charmap;
 
-      if (!fgFace[fgCurFontIdx]) return 0;
-      Int_t n = fgFace[fgCurFontIdx]->num_charmaps;
+      if (!fgFace[fCurFontIdx]) return 0;
+      Int_t n = fgFace[fCurFontIdx]->num_charmaps;
       for (i = 0; i < n; i++) {
-         if (!fgFace[fgCurFontIdx]) continue;
-         charmap  = fgFace[fgCurFontIdx]->charmaps[i];
+         if (!fgFace[fCurFontIdx]) continue;
+         charmap  = fgFace[fCurFontIdx]->charmaps[i];
          platform = charmap->platform_id;
          encoding = charmap->encoding_id;
          if ((platform == 3 && encoding == 1) ||
              (platform == 0 && encoding == 0) ||
              (platform == 1 && encoding == 0 &&
-              !strcmp(fgFontName[fgCurFontIdx], "wingding.ttf")) ||
+              !strcmp(fgFontName[fCurFontIdx], "wingding.ttf")) ||
              (platform == 1 && encoding == 0 &&
-              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")))
+              !strcmp(fgFontName[fCurFontIdx], "symbol.ttf")))
          {
-            fgCharMap[fgCurFontIdx] = charmap;
-            if (FT_Set_Charmap(fgFace[fgCurFontIdx], fgCharMap[fgCurFontIdx]))
+            fgCharMap[fCurFontIdx] = charmap;
+            if (FT_Set_Charmap(fgFace[fCurFontIdx], fgCharMap[fCurFontIdx]))
                 Error("TTF::CharToUnicode", "error in FT_Set_CharMap");
-            return FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)code);
+            return FT_Get_Char_Index(fgFace[fCurFontIdx], (FT_ULong)code);
          }
       }
    }
-   return FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)code);
+   return FT_Get_Char_Index(fgFace[fCurFontIdx], (FT_ULong)code);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the trailing blanks width. It is use to compute the text width in GetTextExtent
 /// `n` is the number of trailing blanks in a string.
 
-void TTF::ComputeTrailingBlanksWidth(Int_t n)
+void TTFhandle::ComputeTrailingBlanksWidth(Int_t n)
 {
-   fgTBlankW = 0;
+   fTBlankW = 0;
    if (n) {
-      FT_Face face = fgFace[fgCurFontIdx];
+      FT_Face face = fgFace[fCurFontIdx];
       char space = ' ';
       FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
+      if (!fHinting) load_flags |= FT_LOAD_NO_HINTING;
       FT_Load_Char(face, space, load_flags);
 
       FT_GlyphSlot slot      = face->glyph;
       FT_Pos advance_x       = slot->advance.x;
       Int_t advance_x_pixels = advance_x >> 6;
 
-      fgTBlankW = advance_x_pixels * n;
+      fTBlankW = advance_x_pixels * n;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
-void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
+void TTFhandle::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
 {
-   Init();
-
    SetRotationMatrix(0);
    PrepareString(text);
    LayoutGlyphs();
-   Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
-   Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
-   w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
-   h = fgCBox.yMax + Yoff;
+   Int_t Xoff = 0; if (fCBox.xMin < 0) Xoff = -fCBox.xMin;
+   Int_t Yoff = 0; if (fCBox.yMin < 0) Yoff = -fCBox.yMin;
+   w = fCBox.xMax + Xoff + GetTrailingBlanksWidth();
+   h = fCBox.yMax + Yoff;
    CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get advance (a) when text is horizontal.
 
-void TTF::GetTextAdvance(UInt_t &a, const char *text)
+void TTFhandle::GetTextAdvance(UInt_t &a, const char *text)
 {
-   Init();
-
    SetRotationMatrix(0);
    PrepareString(text);
    LayoutGlyphs();
@@ -192,17 +166,15 @@ void TTF::GetTextAdvance(UInt_t &a, const char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
-void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
+void TTFhandle::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
 {
-   Init();
-
    SetRotationMatrix(0);
    PrepareString(text);
    LayoutGlyphs();
-   Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
-   Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
-   w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
-   h = fgCBox.yMax + Yoff;
+   Int_t Xoff = 0; if (fCBox.xMin < 0) Xoff = -fCBox.xMin;
+   Int_t Yoff = 0; if (fCBox.yMin < 0) Yoff = -fCBox.yMin;
+   w = fCBox.xMax + Xoff + GetTrailingBlanksWidth();
+   h = fCBox.yMax + Yoff;
    CleanupGlyphs();
 }
 
@@ -213,115 +185,105 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
 /// If required take the "kerning" into account.
 /// SetRotation and PrepareString should have been called before.
 
-void TTF::LayoutGlyphs()
+void TTFhandle::LayoutGlyphs()
 {
-   TTGlyph*  glyph = fgGlyphs;
    FT_Vector origin;
    FT_UInt   load_flags;
    FT_UInt   prev_index = 0;
 
-   fgAscent = 0;
-   fgWidth  = 0;
+   fAscent = 0;
+   fWidth  = 0;
 
    load_flags = FT_LOAD_DEFAULT;
-   if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
+   if (!fHinting) load_flags |= FT_LOAD_NO_HINTING;
 
-   fgCBox.xMin = fgCBox.yMin =  32000;
-   fgCBox.xMax = fgCBox.yMax = -32000;
+   fCBox.xMin = fCBox.yMin =  32000;
+   fCBox.xMax = fCBox.yMax = -32000;
 
-   for (int n = 0; n < fgNumGlyphs; n++, glyph++) {
+   for (auto &glyph : fGlyphs) {
 
       // compute glyph origin
-      if (fgKerning) {
+      if (fKerning) {
          if (prev_index) {
             FT_Vector  kern;
-            FT_Get_Kerning(fgFace[fgCurFontIdx], prev_index, glyph->fIndex,
-                           fgHinting ? ft_kerning_default : ft_kerning_unfitted,
+            FT_Get_Kerning(fgFace[fCurFontIdx], prev_index, glyph.fIndex,
+                           fHinting ? ft_kerning_default : ft_kerning_unfitted,
                            &kern);
-            fgWidth += kern.x;
+            fWidth += kern.x;
          }
-         prev_index = glyph->fIndex;
+         prev_index = glyph.fIndex;
       }
 
-      origin.x = fgWidth;
+      origin.x = fWidth;
       origin.y = 0;
 
       // clear existing image if there is one
-      if (glyph->fImage) {
-         FT_Done_Glyph(glyph->fImage);
-         glyph->fImage = nullptr;
+      if (glyph.fImage) {
+         FT_Done_Glyph(glyph.fImage);
+         glyph.fImage = nullptr;
       }
 
       // load the glyph image (in its native format)
-      if (FT_Load_Glyph(fgFace[fgCurFontIdx], glyph->fIndex, load_flags))
+      if (FT_Load_Glyph(fgFace[fCurFontIdx], glyph.fIndex, load_flags))
          continue;
 
       // extract the glyph image
-      if (FT_Get_Glyph (fgFace[fgCurFontIdx]->glyph, &glyph->fImage))
+      if (FT_Get_Glyph(fgFace[fCurFontIdx]->glyph, &glyph.fImage))
          continue;
 
-      glyph->fPos = origin;
-      fgWidth    += fgFace[fgCurFontIdx]->glyph->advance.x;
-      fgAscent    = TMath::Max((Int_t)(fgFace[fgCurFontIdx]->glyph->metrics.horiBearingY), fgAscent);
+      glyph.fPos = origin;
+      fWidth    += fgFace[fCurFontIdx]->glyph->advance.x;
+      fAscent    = TMath::Max((Int_t)(fgFace[fCurFontIdx]->glyph->metrics.horiBearingY), fAscent);
 
       // transform the glyphs
-      FT_Vector_Transform(&glyph->fPos, fgRotMatrix);
-      if (FT_Glyph_Transform(glyph->fImage, fgRotMatrix, &glyph->fPos))
+      FT_Vector_Transform(&glyph.fPos, fRotMatrix.get());
+      if (FT_Glyph_Transform(glyph.fImage, fRotMatrix.get(), &glyph.fPos))
          continue;
 
       // compute the string control box
       FT_BBox  bbox;
-      FT_Glyph_Get_CBox(glyph->fImage, ft_glyph_bbox_pixels, &bbox);
-      if (bbox.xMin < fgCBox.xMin) fgCBox.xMin = bbox.xMin;
-      if (bbox.yMin < fgCBox.yMin) fgCBox.yMin = bbox.yMin;
-      if (bbox.xMax > fgCBox.xMax) fgCBox.xMax = bbox.xMax;
-      if (bbox.yMax > fgCBox.yMax) fgCBox.yMax = bbox.yMax;
+      FT_Glyph_Get_CBox(glyph.fImage, ft_glyph_bbox_pixels, &bbox);
+      if (bbox.xMin < fCBox.xMin) fCBox.xMin = bbox.xMin;
+      if (bbox.yMin < fCBox.yMin) fCBox.yMin = bbox.yMin;
+      if (bbox.xMax > fCBox.xMax) fCBox.xMax = bbox.xMax;
+      if (bbox.yMax > fCBox.yMax) fCBox.yMax = bbox.yMax;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove temporary data created by LayoutGlyphs
 
-void TTF::CleanupGlyphs()
+void TTFhandle::CleanupGlyphs()
 {
-   TTGlyph*  glyph = fgGlyphs;
-
-   for (int n = 0; n < fgNumGlyphs; n++, glyph++) {
+   for(auto &glyph : fGlyphs) {
       // clear existing image if there is one
-      if (glyph->fImage) {
-         FT_Done_Glyph(glyph->fImage);
-         glyph->fImage = nullptr;
+      if (glyph.fImage && fgInit) {
+         FT_Done_Glyph(glyph.fImage);
+         glyph.fImage = nullptr;
       }
    }
-
-   fgNumGlyphs = 0;
+   fGlyphs.clear();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Put the characters in "string" in the "glyphs" array.
 
-void TTF::PrepareString(const char *string)
+void TTFhandle::PrepareString(const char *string)
 {
+   CleanupGlyphs();
+
    const unsigned char *p = (const unsigned char*) string;
-   TTGlyph *glyph = fgGlyphs;
-   UInt_t index;       // Unicode value
+
    Int_t NbTBlank = 0; // number of trailing blanks
 
-   fgNumGlyphs = 0;
    while (*p) {
-      index = CharToUnicode((FT_ULong)*p);
-      if (index != 0) {
-         glyph->fIndex = index;
-         glyph++;
-         fgNumGlyphs++;
-      }
-      if (*p == ' ') {
+      UInt_t index = CharToUnicode((FT_ULong)*p);
+      if (index != 0)
+         fGlyphs.emplace_back(index);
+      if (*p == ' ')
          NbTBlank++;
-      } else {
+      else
          NbTBlank = 0;
-      }
-      if (fgNumGlyphs >= kMaxGlyphs) break;
       p++;
    }
 
@@ -331,27 +293,22 @@ void TTF::PrepareString(const char *string)
 ////////////////////////////////////////////////////////////////////////////////
 /// Put the characters in "string" in the "glyphs" array.
 
-void TTF::PrepareString(const wchar_t *string)
+void TTFhandle::PrepareString(const wchar_t *string)
 {
+   CleanupGlyphs();
+
    const wchar_t *p = string;
-   TTGlyph *glyph = fgGlyphs;
-   UInt_t index;       // Unicode value
+
    Int_t NbTBlank = 0; // number of trailing blanks
 
-   fgNumGlyphs = 0;
    while (*p) {
-      index = FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)*p);
-      if (index != 0) {
-         glyph->fIndex = index;
-         glyph++;
-         fgNumGlyphs++;
-      }
-      if (*p == ' ') {
+      UInt_t index = FT_Get_Char_Index(fgFace[fCurFontIdx], (FT_ULong) *p);
+      if (index != 0)
+         fGlyphs.emplace_back(index);
+      if (*p == ' ')
          NbTBlank++;
-      } else {
+      else
          NbTBlank = 0;
-      }
-      if (fgNumGlyphs >= kMaxGlyphs) break;
       p++;
    }
 
@@ -361,50 +318,17 @@ void TTF::PrepareString(const wchar_t *string)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current font index
 
-Int_t TTF::GetCurFontIdx()
+FT_Face TTFhandle::GetCurFontFace() const
 {
-   return fgCurFontIdx;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return current font index
-
-FT_Face TTF::GetCurFontFace()
-{
-   return (fgCurFontIdx < 0) || (fgCurFontIdx >= kTTMaxFonts) ? nullptr : fgFace[fgCurFontIdx];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set current font index
-
-void TTF::SetCurFontIdx(Int_t indx)
-{
-   fgCurFontIdx = indx;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set hinting flag.
-
-void TTF::SetHinting(Bool_t state)
-{
-   fgHinting = state;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set kerning flag.
-
-void TTF::SetKerning(Bool_t state)
-{
-   fgKerning = state;
+   return (fCurFontIdx < 0) || (fCurFontIdx >= kTTMaxFonts) ? nullptr : fgFace[fCurFontIdx];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the rotation matrix used to rotate the font outlines.
 
-void TTF::SetRotationMatrix(Float_t angle)
+void TTFhandle::SetRotationMatrix(Float_t angle)
 {
-   Float_t rangle = Float_t(angle * TMath::Pi() / 180.); // Angle in radian
+   Float_t rangle = angle * TMath::Pi() / 180.; // Angle in radian
 #if defined(FREETYPE_PATCH) && \
     (FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 1) && (FREETYPE_PATCH == 2)
    Float_t sin    = TMath::Sin(rangle);
@@ -414,20 +338,13 @@ void TTF::SetRotationMatrix(Float_t angle)
    Float_t cos    = TMath::Cos(-rangle);
 #endif
 
-   if (!fgRotMatrix) fgRotMatrix = new FT_Matrix;
+   if (!fRotMatrix)
+      fRotMatrix = std::make_unique<FT_Matrix>();
 
-   fgRotMatrix->xx = (FT_Fixed) (cos * (1<<16));
-   fgRotMatrix->xy = (FT_Fixed) (sin * (1<<16));
-   fgRotMatrix->yx = -fgRotMatrix->xy;
-   fgRotMatrix->yy =  fgRotMatrix->xx;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set smoothing (anti-aliasing) flag.
-
-void TTF::SetSmoothing(Bool_t state)
-{
-   fgSmoothing = state;
+   fRotMatrix->xx = (FT_Fixed) (cos * (1<<16));
+   fRotMatrix->xy = (FT_Fixed) (sin * (1<<16));
+   fRotMatrix->yx = -fRotMatrix->xy;
+   fRotMatrix->yy =  fRotMatrix->xx;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,14 +355,12 @@ void TTF::SetSmoothing(Bool_t state)
 /// Set text font to specified name. This function returns 0 if
 /// the specified font is found, 1 if not.
 
-Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
+Int_t TTFhandle::SetTextFont(const char *fontname, Int_t italic)
 {
-   if (!fgInit) Init();
-
    if (!fontname || !fontname[0]) {
-      Warning("TTF::SetTextFont",
+      Warning("TTFhandle::SetTextFont",
               "no font name specified, using default font %s", fgFontName[0]);
-      fgCurFontIdx = 0;
+      fCurFontIdx = 0;
       return 0;
    }
    const char *basename = gSystem->BaseName(fontname);
@@ -455,13 +370,13 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    for (i = 0; i < fgFontCount; i++) {
       if (!strcmp(fgFontName[i], basename)) {
          if (italic) {
-            if (i==fgSymbItaFontIdx) {
-               fgCurFontIdx = i;
+            if (i == fgSymbItaFontIdx) {
+               fCurFontIdx = i;
                return 0;
             }
          } else {
-            if (i!=fgSymbItaFontIdx) {
-               fgCurFontIdx = i;
+            if (i != fgSymbItaFontIdx) {
+               fCurFontIdx = i;
                return 0;
             }
          }
@@ -470,10 +385,10 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 
    // enough space in cache to load font?
    if (fgFontCount >= kTTMaxFonts) {
-      Error("TTF::SetTextFont", "too many fonts opened (increase kTTMaxFont = %d)",
+      Error("TTFhandle::SetTextFont", "too many fonts opened (increase kTTMaxFont = %d)",
             kTTMaxFonts);
-      Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
-      fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
+      Warning("TTFhandle::SetTextFont", "using default font %s", fgFontName[0]);
+      fCurFontIdx = 0;    // use font 0 (default font, set in ctor)
       return 0;
    }
 
@@ -483,25 +398,25 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 
    if (!ttfont) {
-      Error("TTF::SetTextFont", "font file %s not found in path %s", fontname, ttpath);
+      Error("TTFhandle::SetTextFont", "font file %s not found in path %s", fontname, ttpath);
       if (fgFontCount) {
-         Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
-         fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
+         Warning("TTFhandle::SetTextFont", "using default font %s", fgFontName[0]);
+         fCurFontIdx = 0;    // use font 0 (default font, set in ctor)
          return 0;
       } else {
          return 1;
       }
    }
 
-   FT_Face  tface = (FT_Face) 0;
+   FT_Face tface = (FT_Face) 0;
 
    if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
-      Error("TTF::SetTextFont", "error loading font %s", ttfont);
+      Error("TTFhandle::SetTextFont", "error loading font %s", ttfont);
       delete [] ttfont;
       if (tface) FT_Done_Face(tface);
       if (fgFontCount) {
-         Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
-         fgCurFontIdx = 0;
+         Warning("TTFhandle::SetTextFont", "using default font %s", fgFontName[0]);
+         fCurFontIdx = 0;
          return 0;
       } else {
          return 1;
@@ -511,19 +426,18 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    delete [] ttfont;
 
    fgFontName[fgFontCount] = StrDup(basename);
-   fgCurFontIdx            = fgFontCount;
-   fgFace[fgCurFontIdx]    = tface;
-   fgCharMap[fgCurFontIdx] = (FT_CharMap) 0;
-   fgFontCount++;
+   fgFace[fgFontCount]     = tface;
+   fgCharMap[fgFontCount]  = (FT_CharMap) 0;
+   fCurFontIdx             = fgFontCount++;
 
    if (italic) {
-      fgSymbItaFontIdx = fgCurFontIdx;
+      fgSymbItaFontIdx = fCurFontIdx;
       FT_Matrix slantMat;
       slantMat.xx = (1 << 16);
       slantMat.xy = ((1 << 16) >> 2);
       slantMat.yx = 0;
       slantMat.yy = (1 << 16);
-      FT_Set_Transform( fgFace[fgSymbItaFontIdx], &slantMat, NULL );
+      FT_Set_Transform(fgFace[fgSymbItaFontIdx], &slantMat, NULL);
    }
 
    return 0;
@@ -550,7 +464,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// |     13      |   Free Serif              |    Times-Roman                |
 /// |     14      |   Wingdings               |    ZapfDingbats               |
 
-void TTF::SetTextFont(Font_t fontnumber)
+void TTFhandle::SetTextFont(Font_t fontnumber)
 {
    // Added by cholm for use of DFSG - fonts - based on Kevins fix.
    // Table of Microsoft and (for non-MSFT operating systems) backup
@@ -621,104 +535,318 @@ void TTF::SetTextFont(Font_t fontnumber)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set current text size.
 
-void TTF::SetTextSize(Float_t textsize)
+Bool_t TTFhandle::SetTextSize(Float_t textsize)
 {
-   if (!fgInit) Init();
-   if (textsize < 0) return;
+   if (textsize < 0)
+      return kFALSE;
 
-   if (fgCurFontIdx < 0 || fgFontCount <= fgCurFontIdx) {
-      Error("TTF::SetTextSize", "current font index out of bounds");
-      fgCurFontIdx = 0;
-      return;
+   if (fCurFontIdx < 0 || fgFontCount <= fCurFontIdx) {
+      Error("TTFhandle::SetTextSize", "current font index out of bounds");
+      fCurFontIdx = 0;
+      return kFALSE;
    }
 
    Int_t tsize = (Int_t)(textsize*kScale+0.5) << 6;
-   FT_Error err = FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72);
+   FT_Error err = FT_Set_Char_Size(fgFace[fCurFontIdx], tsize, tsize, 72, 72);
+
    if (err)
-      Error("TTF::SetTextSize", "error in FT_Set_Char_Size: 0x%x (input size %f, calc. size 0x%x)", err, textsize,
-            tsize);
+      Error("TTFhandle::SetTextSize", "error in FT_Set_Char_Size: 0x%x (input size %f, calc. size 0x%x)", err, textsize, tsize);
+
+   return !err;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TTF::Version(Int_t &major, Int_t &minor, Int_t &patch)
+void TTFhandle::Version(Int_t &major, Int_t &minor, Int_t &patch)
 {
    FT_Library_Version(fgLibrary, &major, &minor, &patch);
+}
+
+
+/** \class TTF
+\ingroup BasicGraphics
+
+Interface to the freetype 2 library.
+Implements old static API.
+Unitl ROOT7 just redirects to static TTFhandle instance
+*/
+
+TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
+std::unique_ptr<TTFhandle> TTF::fgHandle; // static handle, destroyed automatically
+
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup TTF environment.
+
+TTF::~TTF()
+{
+   TTFhandle::CloseLibrary();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Init TTF environment.
+
+void TTF::Init()
+{
+   if (!fgHandle) {
+      fgHandle = std::make_unique<TTFhandle>();
+      fgHandle->SetTextFont(62);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetHinting()
 {
-   return fgHinting;
+   return fgHandle ? fgHandle->GetHinting() : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetKerning()
 {
-   return fgKerning;
+   return fgHandle ? fgHandle->GetKerning() : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetSmoothing()
 {
-   return fgSmoothing;
+   return fgHandle ? fgHandle->GetSmoothing() : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::IsInitialized()
 {
-   return fgInit;
+   return fgHandle.get() != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetWidth()
 {
-   return fgWidth;
+   return fgHandle ? fgHandle->GetWidth() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetAscent()
 {
-   return fgAscent;
+   return fgHandle ? fgHandle->GetAscent() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetNumGlyphs()
 {
-   return fgNumGlyphs;
+   return fgHandle ? fgHandle->GetNumGlyphs() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 FT_Matrix *TTF::GetRotMatrix()
 {
-   return fgRotMatrix;
+   return fgHandle ? fgHandle->GetRotMatrix() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetTrailingBlanksWidth()
 {
-   return fgTBlankW;
+   return fgHandle ? fgHandle->GetTrailingBlanksWidth() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const FT_BBox &TTF::GetBox()
 {
-   return fgCBox;
+   static FT_BBox dummy;
+   return fgHandle ? fgHandle->GetBox() : dummy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TTF::TTGlyph *TTF::GetGlyphs()
 {
-    return fgGlyphs;
+   return fgHandle ? fgHandle->GetGlyphs() : nullptr;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current font index
+
+Int_t TTF::GetCurFontIdx()
+{
+   return fgHandle ? fgHandle->GetCurFontIdx() : -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current font index
+
+FT_Face TTF::GetCurFontFace()
+{
+   return fgHandle ? fgHandle->GetCurFontFace() : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Map char to unicode. Returns 0 in case no mapping exists.
+
+Short_t TTF::CharToUnicode(UInt_t code)
+{
+   Init();
+   return fgHandle->CharToUnicode(code);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the rotation matrix used to rotate the font outlines.
+
+void TTF::SetRotationMatrix(Float_t angle)
+{
+   Init();
+   fgHandle->SetRotationMatrix(angle);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set current font index
+
+void TTF::SetCurFontIdx(Int_t indx)
+{
+   Init();
+   fgHandle->SetCurFontIdx(indx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set hinting flag.
+
+void TTF::SetHinting(Bool_t state)
+{
+   Init();
+   fgHandle->SetHinting(state);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set kerning flag.
+
+void TTF::SetKerning(Bool_t state)
+{
+   Init();
+   fgHandle->SetKerning(state);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set smoothing (anti-aliasing) flag.
+
+void TTF::SetSmoothing(Bool_t state)
+{
+   Init();
+   fgHandle->SetSmoothing(state);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set text font to specified name.
+///  - font       : font name
+///  - italic     : the fonts should be slanted. Used for symbol font.
+
+Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
+{
+   Init();
+   return fgHandle->SetTextFont(fontname, italic);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set specified font.
+
+void TTF::SetTextFont(Font_t fontnumber)
+{
+   Init();
+   fgHandle->SetTextFont(fontnumber);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TTF::SetTextSize(Float_t textsize)
+{
+   Init();
+   fgHandle->SetTextSize(textsize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Put the characters in "string" in the "glyphs" array.
+
+void TTF::PrepareString(const char *string)
+{
+   Init();
+   fgHandle->PrepareString(string);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Put the characters in "string" in the "glyphs" array.
+
+void TTF::PrepareString(const wchar_t *string)
+{
+   Init();
+   fgHandle->PrepareString(string);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the glyphs positions, fgAscent and fgWidth (needed for alignment).
+
+void TTF::LayoutGlyphs()
+{
+   if (fgHandle)
+      fgHandle->LayoutGlyphs();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the trailing blanks width. It is use to compute the text width in GetTextExtent
+/// `n` is the number of trailing blanks in a string.
+
+void TTF::ComputeTrailingBlanksWidth(Int_t n)
+{
+   if (fgHandle)
+      fgHandle->ComputeTrailingBlanksWidth(n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove temporary data created by LayoutGlyphs
+
+void TTF::CleanupGlyphs()
+{
+   if (fgHandle)
+      fgHandle->CleanupGlyphs();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get width (w) and height (h) when text is horizontal.
+
+void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
+{
+   Init();
+   fgHandle->GetTextExtent(w, h, text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get advance (a) when text is horizontal.
+
+void TTF::GetTextAdvance(UInt_t &a, const char *text)
+{
+   Init();
+   fgHandle->GetTextAdvance(a, text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get width (w) and height (h) when text is horizontal.
+
+void TTF::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
+{
+   Init();
+   fgHandle->GetTextExtent(w, h, text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TTF::Version(Int_t &major, Int_t &minor, Int_t &patch)
+{
+   Init();
+   fgHandle->Version(major, minor, patch);
+}
+

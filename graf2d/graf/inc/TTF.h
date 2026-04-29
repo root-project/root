@@ -1,9 +1,10 @@
 // @(#)root/graf:$Id$
-// Author: Olivier Couet     01/10/02
-// Author: Fons Rademakers   21/11/98
+// Author: Olivier Couet     01/10/2002
+// Author: Fons Rademakers   21/11/1998
+// Author: Sergey Linev      29/14/2026
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,6 +16,7 @@
 
 
 #include "Rtypes.h"
+#include <memory>
 
 /// @cond DOXYGEN_IGNORE
 // Forward declare for the headers:
@@ -45,62 +47,49 @@ extern "C" {
 /// @endcond
 
 
+class TTFhandle;
+
 class TTF {
+
+   friend class TTFhandle;
+
+   static std::unique_ptr<TTFhandle>  fgHandle;   ///< global handle to support old static API
+
 public:
 
-/** \class TTGlyph
-TTF helper class containing glyphs description.
-*/
+   /** \class TTGlyph
+       TTF helper class containing glyphs description.
+   */
 
    class TTGlyph {
    public:
       UInt_t     fIndex{0};     ///< glyph index in face
       FT_Vector  fPos;          ///< position of glyph origin
       FT_Glyph   fImage{nullptr}; ///< glyph image
+      TTGlyph(UInt_t indx = 0) : fIndex(indx) {}
    };
 
-protected:
-   enum { kTTMaxFonts = 32, kMaxGlyphs = 1024 };
-
-   static Int_t          fgAscent;                ///< string ascent, used to compute Y alignment
-   static FT_BBox        fgCBox;                  ///< string control box
-   static FT_CharMap     fgCharMap[kTTMaxFonts];  ///< font character map
-   static Int_t          fgCurFontIdx;            ///< current font index
-   static Int_t          fgSymbItaFontIdx;        ///< Symbol italic font index
-   static Int_t          fgFontCount;             ///< number of fonts loaded
-   static char          *fgFontName[kTTMaxFonts]; ///< font name
-   static FT_Face        fgFace[kTTMaxFonts];     ///< font face
-   static TTF::TTGlyph   fgGlyphs[kMaxGlyphs];    ///< glyphs
-   static Bool_t         fgHinting;               ///< use hinting (true by default)
-   static Bool_t         fgInit;                  ///< true if the Init has been called
-   static Bool_t         fgKerning;               ///< use kerning (true by default)
-   static FT_Library     fgLibrary;               ///< FreeType font library
-   static Int_t          fgNumGlyphs;             ///< number of glyphs in the string
-   static FT_Matrix     *fgRotMatrix;             ///< rotation matrix
-   static Bool_t         fgSmoothing;             ///< use anti-aliasing (true when >8 planes, false otherwise)
-   static Int_t          fgTBlankW;               ///< trailing blanks width
-   static Int_t          fgWidth;                 ///< string width, used to compute X alignment
-
-public:
-   static Short_t CharToUnicode(UInt_t code);
-   static void    LayoutGlyphs();
-   static void    PrepareString(const char *string);
-   static void    PrepareString(const wchar_t *string);
-   static void    SetRotationMatrix(Float_t angle);
-   static void    CleanupGlyphs();
-
-public:
-   TTF() { }
+   TTF() {}
    virtual ~TTF();
 
+   // old static methods which are fully replaced by TTFhandle
+   // remain here only for backward compatibility until ROOT7
+
+   // minimal static interface to initialize library and handle fonts
    static void           Init();
    static void           Cleanup();
+   static Bool_t         IsInitialized();
+
+   static Short_t        CharToUnicode(UInt_t code);
+   static void           LayoutGlyphs();
+   static void           PrepareString(const char *string);
+   static void           PrepareString(const wchar_t *string);
+   static void           SetRotationMatrix(Float_t angle);
+
    static void           ComputeTrailingBlanksWidth(Int_t n);
    static Int_t          GetAscent();
    static const FT_BBox &GetBox();
    static TTGlyph       *GetGlyphs();
-   static Int_t          GetCurFontIdx();
-   static FT_Face        GetCurFontFace();
    static Bool_t         GetHinting();
    static Bool_t         GetKerning();
    static Int_t          GetNumGlyphs();
@@ -108,7 +97,6 @@ public:
    static Bool_t         GetSmoothing();
    static Int_t          GetTrailingBlanksWidth();
    static Int_t          GetWidth();
-   static void           SetCurFontIdx(Int_t indx);
    static void           SetHinting(Bool_t state);
    static void           SetKerning(Bool_t state);
    static void           SetSmoothing(Bool_t state);
@@ -118,10 +106,89 @@ public:
    static void           SetTextFont(Font_t fontnumber);
    static Int_t          SetTextFont(const char *fontname, Int_t italic=0);
    static void           SetTextSize(Float_t textsize);
-   static Bool_t         IsInitialized();
+
    static void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
+   // new temporary methods, can be removed at the end
+   static void           CleanupGlyphs();
+   static void           SetCurFontIdx(Int_t indx);
+   static Int_t          GetCurFontIdx();
+   static FT_Face        GetCurFontFace();
+
    ClassDef(TTF,0)  //Interface to TTF font handling
+};
+
+class TTFhandle {
+   friend class TTF;
+
+   private:
+      enum { kTTMaxFonts = 32 };
+
+      static FT_Library fgLibrary;               ///< FreeType font library
+      static Bool_t     fgInit;                  ///< true if the Init has been called
+      static Int_t      fgSymbItaFontIdx;        ///< Symbol italic font index
+      static Int_t      fgFontCount;             ///< number of fonts loaded
+      static char      *fgFontName[kTTMaxFonts]; ///< font name
+      static FT_Face    fgFace[kTTMaxFonts];     ///< font face
+      static FT_CharMap fgCharMap[kTTMaxFonts];  ///< font character map
+
+      Int_t          fAscent = 0;                ///< string ascent, used to compute Y alignment
+      FT_BBox        fCBox;                      ///< string control box
+      Int_t          fCurFontIdx = -1;           ///< current font index
+      std::vector<TTF::TTGlyph> fGlyphs;         ///< glyphs
+      Bool_t         fHinting = kFALSE;          ///< use hinting (true by default)
+      Bool_t         fKerning = kTRUE;           ///< use kerning (true by default)
+      std::unique_ptr<FT_Matrix> fRotMatrix;     ///< rotation matrix
+      Bool_t         fSmoothing = kTRUE;         ///< use anti-aliasing (true when >8 planes, false otherwise)
+      Int_t          fTBlankW = 0;               ///< trailing blanks width
+      Int_t          fWidth = 0;                 ///< string width, used to compute X alignment
+
+      void           ComputeTrailingBlanksWidth(Int_t n);
+
+   public:
+      TTFhandle();
+      virtual ~TTFhandle();
+
+      TTF::TTGlyph  *GetGlyphs() { return fGlyphs.data(); }
+      UInt_t         GetNumGlyphs() const { return fGlyphs.size(); }
+      Int_t          GetCurFontIdx() const { return fCurFontIdx; }
+      FT_Face        GetCurFontFace() const;
+      Int_t          GetAscent() const { return fAscent; }
+      Bool_t         GetHinting() const { return fHinting; }
+      Bool_t         GetKerning() const { return fKerning; }
+      FT_Matrix     *GetRotMatrix() const { return fRotMatrix.get(); }
+      Bool_t         GetSmoothing() const { return fSmoothing; }
+      Int_t          GetTrailingBlanksWidth() const { return fTBlankW; }
+      Int_t          GetWidth() const { return fWidth; }
+      const FT_BBox &GetBox() const { return fCBox; }
+
+
+      void           SetCurFontIdx(Int_t indx) { fCurFontIdx = indx; }
+      void           SetHinting(Bool_t state) { fHinting = state; }
+      void           SetKerning(Bool_t state) { fKerning = state; }
+      void           SetSmoothing(Bool_t state) { fSmoothing = state; }
+
+      void           SetTextFont(Font_t fontnumber);
+      Int_t          SetTextFont(const char *fontname, Int_t italic = 0);
+      Bool_t         SetTextSize(Float_t textsize);
+
+      Short_t        CharToUnicode(UInt_t code);
+      void           LayoutGlyphs();
+      void           PrepareString(const char *string);
+      void           PrepareString(const wchar_t *string);
+      void           SetRotationMatrix(Float_t angle);
+      void           CleanupGlyphs();
+
+      void           GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
+      void           GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text);
+      void           GetTextAdvance(UInt_t &a, const char *text);
+
+      void           Version(Int_t &major, Int_t &minor, Int_t &patch);
+
+      static     void CloseLibrary();
+
+   ClassDef(TTFhandle, 0)  // Dynamic interface to TTF
+
 };
 
 #endif
