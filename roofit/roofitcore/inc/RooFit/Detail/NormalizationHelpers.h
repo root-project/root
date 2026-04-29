@@ -42,6 +42,7 @@ public:
    void compileServer(RooAbsArg &server, RooAbsArg &arg, RooArgSet const &normSet);
 
    void markAsCompiled(RooAbsArg &arg) const;
+   void markSubtreeAsCompiled(RooAbsArg &arg) const;
 
    // This information is used for the binned likelihood optimization.
    void setLikelihoodMode(bool flag) { _likelihoodMode = flag; }

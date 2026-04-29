@@ -368,7 +368,6 @@ RooMomentMorphFuncND::compileForNormSet(RooArgSet const &normSet, RooFit::Detail
    {
       RooArgSet branches;
       cache->_sum->branchNodeServerList(&branches);
-      branches.add(*cache->_sum);
       for (auto *b : branches) {
          std::vector<std::string> toRemove;
          for (auto const &attr : b->attributes()) {
@@ -408,17 +407,10 @@ RooMomentMorphFuncND::compileForNormSet(RooArgSet const &normSet, RooFit::Detail
    std::unique_ptr<RooAbsReal> newSum{static_cast<RooAbsReal *>(cust.build())};
    newSum->addOwnedComponents(std::move(newFractions));
 
-   // Mark every node in the freshly-cloned subtree as already compiled, so
-   // the recursive compileServers call below doesn't try to re-clone any of
-   // them. The leaves we still want compiled (the morph parameters and the
-   // observables) are reachable from these nodes' own server lists and will
-   // be visited.
-   ctx.markAsCompiled(*newSum);
-   RooArgSet allBranches;
-   newSum->branchNodeServerList(&allBranches);
-   for (auto *b : allBranches) {
-      ctx.markAsCompiled(*b);
-   }
+   // Tell the compile context the freshly-cloned subtree is already in its
+   // final form, so the recursive descent below only visits the leaves that
+   // still need compiling (the morph parameters and the observables).
+   ctx.markSubtreeAsCompiled(*newSum);
    ctx.compileServers(*newSum, normSet);
 
    return newSum;

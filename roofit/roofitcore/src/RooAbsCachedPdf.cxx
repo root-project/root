@@ -406,12 +406,9 @@ RooAbsCachedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
    auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
-   // The direct servers are this pdf and the normalization integral, which
-   // don't need to be compiled further.
-   for (RooAbsArg *server : newArg->servers()) {
-      ctx.markAsCompiled(*server);
-   }
-   ctx.markAsCompiled(*newArg);
+   // The direct servers are the cloned pdf (already compiled above) and the
+   // freshly-built normalization integral. Neither needs further compilation.
+   ctx.markSubtreeAsCompiled(*newArg);
    newArg->addOwnedComponents(std::move(pdfClone));
    return newArg;
 }
