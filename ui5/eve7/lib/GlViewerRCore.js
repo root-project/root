@@ -602,7 +602,15 @@ sap.ui.define([
             // console.log("resetRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
 
-         // this.controls.setFromBBox(sbbox);
+         // Only call setFromBBox if camera not initialized
+         if (!camera || !camera.fInitialized) {
+            // First time: auto-position from scene bounds
+            this.controls.setFromBBox(sbbox);
+            if (this._logLevel >= 2) {
+               console.log("Camera not initialized, using setFromBBox");
+            }
+         }
+
          /*
          if (this.camera.isPerspectiveCamera) {
             let camTransTest = [1, 0, 0, 0,
@@ -613,7 +621,9 @@ sap.ui.define([
             console.log("Applied hardcoded camTrans:", camTransTest);
          }
          */
-         if (camera.camTrans && camera.camTrans.length === 16) {
+
+         // Apply saved camTrans (if initialized)
+         if (camera && camera.fInitialized && camera.camTrans && camera.camTrans.length === 16) {
             this.controls.setCamTrans(camera.camTrans);
             if (this._logLevel >= 2) {
                console.log("GlViewerRCore.resetRenderer: Applied camTrans from REveCamera");

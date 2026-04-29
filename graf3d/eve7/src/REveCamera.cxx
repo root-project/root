@@ -101,6 +101,7 @@ void REveCamera::SetCamTransMtx(const std::vector<Double_t> &arr)
 {
    if (arr.size() == 16) {
       fCamTrans.SetFromArray(arr.data());
+      fInitialized = kTRUE; // Mark as initialized when user saves
       StampObjProps();
    }
 }
@@ -121,8 +122,7 @@ Int_t REveCamera::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["fType"] = fType;
    j["fName"] = fName;
-   // j["fV1"] = {fV1.fX, fV1.fY, fV1.fZ};
-   // j["fV2"] = {fV2.fX, fV2.fY, fV2.fZ};
+   j["fInitialized"] = fInitialized;  // Stream to client
    
    // Stream both matrices
    // Client will read these as fMatrix arrays (16 elements each)

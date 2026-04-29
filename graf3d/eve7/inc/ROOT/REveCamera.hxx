@@ -48,6 +48,7 @@ private:
    // Camera transformation matrices
    REveTrans   fCamBase;   // Base camera matrix (main positioning)
    REveTrans   fCamTrans;
+   Bool_t      fInitialized{kFALSE};
 
 public:
    REveCamera();
@@ -74,6 +75,9 @@ public:
 
    void SetCamTransMtx(const std::vector<Double_t> &arr);
    void SetCamTransMtx(const char* json_str);
+
+   Bool_t IsInitialized() const { return fInitialized; }
+   void SetInitialized(Bool_t val) { fInitialized = val; }
 
    void BuildRenderData() override{};
 
