@@ -68,7 +68,7 @@ namespace RooLinkedListImplDetails {
       ~Chunk() { delete[] _chunk; }
       /// chunk capacity
       Int_t capacity() const
-      { return (1 << _sz) / sizeof(RooLinkedListElem); }
+      { return (1ULL << _sz) / sizeof(RooLinkedListElem); }
       /// chunk free elements
       Int_t free() const { return _free; }
       /// chunk occupied elements

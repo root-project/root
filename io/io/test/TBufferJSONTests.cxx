@@ -119,7 +119,14 @@ TEST(TBufferJSON, SpecialNumbersFloat)
    p = nullptr;
 
    auto maxVal = std::numeric_limits<float>::max(); // 3.40282e+38f
+   #ifdef WIN32
+   #pragma warning( push )
+   #pragma warning( disable : 4756 ) // overflow in constant arithmetic
+   #endif
    auto ovfVal = std::numeric_limits<float>::max() * static_cast<float>(1 + 1e-7);
+   #ifdef WIN32
+   #pragma warning( pop )
+   #endif
    auto infVal = std::numeric_limits<float>::infinity();
    EXPECT_EQ(ovfVal, infVal);
    auto nanVal = std::numeric_limits<float>::quiet_NaN();

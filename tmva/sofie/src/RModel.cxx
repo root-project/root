@@ -1549,7 +1549,7 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
                fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(\"";
                fGC += dirName + "/" + tensor_name + "\"));\n";
             } else {
-               std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a ROOT file");
+               throw std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a ROOT file");
             }
             fGC += "  }\n";
         }
@@ -1617,7 +1617,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
             }
             else {
-               std::runtime_error("tmva-sofie tensor " + tensorName + " with type " + ConvertTypeToString(item.second.type()) +
+               throw std::runtime_error("tmva-sofie tensor " + tensorName + " with type " + ConvertTypeToString(item.second.type()) +
                                   " cannot be written to a ROOT file");
             }
         }
@@ -1668,7 +1668,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
                throw std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be written to a file");
             }
             if (f.fail())
-               std::runtime_error("tmva-sofie failed to write tensor data to file for  " + tensor_name);
+               throw std::runtime_error("tmva-sofie failed to write tensor data to file for  " + tensor_name);
         }
         long curr_pos = f.tellp();
         f.close();

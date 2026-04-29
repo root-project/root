@@ -340,7 +340,7 @@ namespace {
             try {
                desiredValue = std::stoi(env);
             } catch (std::invalid_argument &e) {
-               Error("TROOT", "%s should be 0 or 1", envName);
+               Error("TROOT", "%s should be 0 or 1, exception message: '%s'", envName, e.what());
             }
             if (desiredValue == 0) {
                autoReg = AutoReg::kOff;
