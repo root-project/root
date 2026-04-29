@@ -273,6 +273,14 @@ sap.ui.define([
                 }
             }));
 
+            this._oIdContextMenu.addItem(new MenuItem({
+                text: 'Print info',
+                select: () => {
+                    this.setPhysTopNode(prop.path);
+                    this.websocket.send('PrintInfo:' + JSON.stringify(prop.path));
+                }
+            }));
+
             //Open the menu on the cell
             let oCellDomRef = oEvent.getParameter("cellDomRef");
             this._oIdContextMenu.open(false, oCellDomRef, Popup.Dock.BeginTop, Popup.Dock.BeginBottom, oCellDomRef, "none none");
