@@ -346,6 +346,112 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
 }
 
 //_____________________________________________________________________________
+std::unique_ptr<RooAbsArg>
+RooMomentMorphFuncND::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   // Build (or fetch) the cache that holds the morph's internal compute graph:
+   // moment integrals, slope/offset formulas, RooLinearVar transforms, the per-pdf
+   // RooHistPdf clones, and the final RooAddPdf/RooRealSumFunc sum.
+   CacheElem *cache = getCache(&normSet);
+
+   // Make sure fractions hold sensible initial values (the replacement nodes
+   // below will keep them in sync going forward).
+   cache->calculateFractions(*this, false);
+
+   // The cache's subtree carries ORIGNAME: attributes left over from the
+   // RooCustomizer that built the per-pdf transformed RooHistPdf clones (it
+   // tagged each transVar with ORIGNAME:<obs>). RooCustomizer::build calls
+   // redirectServers with nameChange=true and will throw if it sees several
+   // candidates with the same ORIGNAME:* attribute, which is exactly what
+   // happens here once we ask it to clone the subtree. Strip those stale
+   // markers before cloning.
+   {
+      RooArgSet branches;
+      cache->_sum->branchNodeServerList(&branches);
+      branches.add(*cache->_sum);
+      for (auto *b : branches) {
+         std::vector<std::string> toRemove;
+         for (auto const &attr : b->attributes()) {
+            if (attr.rfind("ORIGNAME:", 0) == 0)
+               toRemove.push_back(attr);
+         }
+         for (auto const &attr : toRemove)
+            b->setAttribute(attr.c_str(), false);
+      }
+   }
+
+   // Replace each of the imperatively-updated fraction RooRealVars with a
+   // RooMomentMorphFraction node. This puts the fraction-recomputation inside
+   // the Evaluator's compute graph, so the moment integrals (which the
+   // fractions depend on transitively via the slope/offset formulas) become
+   // sibling nodes that the Evaluator caches once per minimization step.
+   RooArgList newFractions;
+   const int nFrac = cache->_frac.size();
+   for (int i = 0; i < nFrac; ++i) {
+      auto frac = static_cast<RooRealVar *>(cache->_frac.at(i));
+      std::string newName = std::string{frac->GetName()} + "_compiled";
+      newFractions.addOwned(
+         std::make_unique<RooFit::Detail::RooMomentMorphFraction>(newName.c_str(), frac->GetTitle(), *this, i));
+   }
+
+   RooArgSet clonedBranches;
+   RooCustomizer cust(*cache->_sum, "compiled");
+   cust.setCloneBranchSet(clonedBranches);
+   for (int i = 0; i < nFrac; ++i) {
+      cust.replaceArg(*cache->_frac.at(i), newFractions[i]);
+   }
+
+   // RooCustomizer::build() already transfers ownership of the cloned branches
+   // (everything in `clonedBranches` except the returned top node) to the new
+   // top node's owned-components list, so we only have to attach the
+   // newly-created fraction nodes here.
+   std::unique_ptr<RooAbsReal> newSum{static_cast<RooAbsReal *>(cust.build())};
+   newSum->addOwnedComponents(std::move(newFractions));
+
+   // Mark every node in the freshly-cloned subtree as already compiled, so
+   // the recursive compileServers call below doesn't try to re-clone any of
+   // them. The leaves we still want compiled (the morph parameters and the
+   // observables) are reachable from these nodes' own server lists and will
+   // be visited.
+   ctx.markAsCompiled(*newSum);
+   RooArgSet allBranches;
+   newSum->branchNodeServerList(&allBranches);
+   for (auto *b : allBranches) {
+      ctx.markAsCompiled(*b);
+   }
+   ctx.compileServers(*newSum, normSet);
+
+   return newSum;
+}
+
+namespace RooFit {
+namespace Detail {
+
+RooMomentMorphFraction::RooMomentMorphFraction(const char *name, const char *title, RooMomentMorphFuncND const &parent,
+                                               int index)
+   : RooAbsReal(name, title), _parList("parList", "parList", this), _parent(&parent), _index(index)
+{
+   _parList.add(parent._parList);
+}
+
+RooMomentMorphFraction::RooMomentMorphFraction(RooMomentMorphFraction const &other, const char *name)
+   : RooAbsReal(other, name), _parList("parList", this, other._parList), _parent(other._parent), _index(other._index)
+{
+}
+
+double RooMomentMorphFraction::evaluate() const
+{
+   auto *cache = _parent->getCache(nullptr);
+   if (cache->_tracker->hasChanged(true)) {
+      cache->calculateFractions(*_parent, false);
+   }
+   return cache->frac(_index)->getVal();
+}
+
+} // namespace Detail
+} // namespace RooFit
+
+//_____________________________________________________________________________
 RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet * /*nset*/) const
 {
    auto cache = static_cast<CacheElem *>(_cacheMgr.getObj(nullptr, static_cast<RooArgSet const*>(nullptr)));
