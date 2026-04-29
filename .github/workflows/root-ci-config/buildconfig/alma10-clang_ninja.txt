@@ -11,6 +11,7 @@ builtin_nlohmann=ON
 builtin_pcre=ON
 builtin_png=ON
 builtin_vdt=ON
+builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
 pythia8=ON
