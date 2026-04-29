@@ -66,7 +66,7 @@ sap.ui.define([
                            new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false })
                          ]
                       }),
-                      new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Actiavte GED", press: this.pressGedButton.bind(this) })
+                      new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Open Editor", press: this.pressGedButton.bind(this) })
                     ]
                 })
             ],
