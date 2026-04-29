@@ -48,6 +48,8 @@ private:
    // Camera transformation matrices
    REveTrans   fCamBase;   // Base camera matrix (main positioning)
    REveTrans   fCamTrans;
+   Bool_t      fInitialized{kFALSE};
+   float       fOrthoZoom{1.f};
 
 public:
    REveCamera();
@@ -73,7 +75,12 @@ public:
    void SetCamBaseMtx(const std::string &json_str);
 
    void SetCamTransMtx(const std::vector<Double_t> &arr);
-   void SetCamTransMtx(const char* json_str);
+   void SetCamTransMtxStr(const char* json_str);
+
+   void SetOrthoZoom(float);
+
+   Bool_t IsInitialized() const { return fInitialized; }
+   void SetInitialized(Bool_t val) { fInitialized = val; }
 
    void BuildRenderData() override{};
 
