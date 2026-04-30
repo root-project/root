@@ -33,10 +33,6 @@ to the requester. The actual work is done via the TSystem class
 #include <string>
 #include "TVirtualMutex.h"
 
-// Hook to server authentication wrapper
-ROOT::Deprecated::SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
-ROOT::Deprecated::SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
-
 TVirtualMutex *gSrvAuthenticateMutex = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,10 +148,6 @@ TServerSocket::~TServerSocket()
 {
    R__LOCKGUARD2(gSrvAuthenticateMutex);
    if (fSecContexts) {
-      if (fgSrvAuthClupHook) {
-         // Cleanup the security contexts
-         (*fgSrvAuthClupHook)(fSecContexts);
-      }
       // Remove the list
       fSecContexts->Delete();
       SafeDelete(fSecContexts);
@@ -226,79 +218,4 @@ Int_t TServerSocket::GetLocalPort()
       return fAddress.GetPort();
    }
    return -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check authentication request from the client on new
-/// open connection
-
-Bool_t TServerSocket::Authenticate(TSocket *sock)
-{
-   if (!fgSrvAuthHook) {
-      R__LOCKGUARD2(gSrvAuthenticateMutex);
-
-      // Load libraries needed for (server) authentication ...
-      TString srvlib = "libSrvAuth";
-      char *p = 0;
-      // The generic one
-      if ((p = gSystem->DynamicPathName(srvlib, kTRUE))) {
-         delete[] p;
-         if (gSystem->Load(srvlib) == -1) {
-            Error("Authenticate", "can't load %s",srvlib.Data());
-            return kFALSE;
-         }
-      } else {
-         Error("Authenticate", "can't locate %s",srvlib.Data());
-         return kFALSE;
-      }
-      //
-      // Locate SrvAuthenticate
-      Func_t f = gSystem->DynFindSymbol(srvlib,"SrvAuthenticate");
-      if (f)
-         fgSrvAuthHook = (ROOT::Deprecated::SrvAuth_t)(f);
-      else {
-         Error("Authenticate", "can't find SrvAuthenticate");
-         return kFALSE;
-      }
-      //
-      // Locate SrvAuthCleanup
-      f = gSystem->DynFindSymbol(srvlib,"SrvAuthCleanup");
-      if (f)
-         fgSrvAuthClupHook = (ROOT::Deprecated::SrvClup_t)(f);
-      else {
-         Warning("Authenticate", "can't find SrvAuthCleanup");
-      }
-   }
-
-   TString confdir = TROOT::GetRootSys();
-   if (!confdir.Length()) {
-      Error("Authenticate", "config dir undefined");
-      return kFALSE;
-   }
-
-   // dir for temporary files
-   TString tmpdir = TString(gSystem->TempDirectory());
-   if (gSystem->AccessPathName(tmpdir, kWritePermission))
-      tmpdir = TString("/tmp");
-
-   // Get Host name
-   TString openhost(sock->GetInetAddress().GetHostName());
-   if (gDebug > 2)
-      Info("Authenticate","OpenHost = %s", openhost.Data());
-
-   // Run Authentication now
-   std::string user;
-   Int_t meth = -1;
-   Int_t auth = 0;
-   Int_t type = 0;
-   std::string ctkn = "";
-   if (fgSrvAuthHook)
-      auth = (*fgSrvAuthHook)(sock, confdir, tmpdir, user,
-                              meth, type, ctkn, fSecContexts);
-
-   if (gDebug > 2)
-      Info("Authenticate","auth = %d, type= %d, ctkn= %s",
-            auth, type, ctkn.c_str());
-
-   return auth;
 }
