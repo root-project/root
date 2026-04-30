@@ -30,24 +30,15 @@
 #include "TBits.h"
 #include "TInetAddress.h"
 #include "MessageTypes.h"
-#include "TSecContext.h"
 #include "TTimeStamp.h"
 #include "TVirtualMutex.h"
 
 class TMessage;
 class TSocket;
 
-namespace ROOT::Deprecated {
-struct TSocketFriend {
-   static void SetSecContext(TSocket &s, TSecContext *ctx);
-   static TSecContext *GetSecContext(const TSocket &s);
-};
-} // namespace ROOT::Deprecated
-
 class TSocket : public TNamed {
 
 friend class TServerSocket;
-friend struct ROOT::Deprecated::TSocketFriend;
 
 public:
    enum EStatusBits { kIsUnix = BIT(16),    // set if unix socket
@@ -75,8 +66,6 @@ protected:
    Int_t         fCompress;       // Compression level and algorithm
    TInetAddress  fLocalAddress;   // local internet address and port #
    Int_t         fRemoteProtocol; // protocol of remote daemon
-   ROOT::Deprecated::TSecContext  *fSecContext; // after a successful Authenticate call
-                                                // points to related security context
    TString       fService;        // name of service (matches remote port #)
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
@@ -94,7 +83,7 @@ protected:
    static Int_t  fgClientProtocol; // client "protocol" version
 
    TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal),
-               fLocalAddress(), fRemoteProtocol(), fSecContext(nullptr), fService(),
+               fLocalAddress(), fRemoteProtocol(), fService(),
                fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
                fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(nullptr), fLastUsage() {}
 
@@ -136,9 +125,6 @@ public:
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
-   ROOT::Deprecated::TSecContext *GetSecContext() const
-      R__DEPRECATED(6, 42, "TSocket::GetSecContext is deprecated")
-      { return ROOT::Deprecated::TSocketFriend::GetSecContext(*this); }
    Int_t                 GetTcpWindowSize() const { return fTcpWindowSize; }
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl.Data(); }
@@ -162,9 +148,6 @@ public:
    void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
-   void                  SetSecContext(ROOT::Deprecated::TSecContext *ctx)
-      R__DEPRECATED(6, 42, "TSocket::SetSecContext is deprecated")
-      { ROOT::Deprecated::TSocketFriend::SetSecContext(*this, ctx); }
    void                  SetService(const char *service) { fService = service; }
    void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }

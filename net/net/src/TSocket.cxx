@@ -38,17 +38,6 @@ TUnixSystem or TWinNTSystem).
 
 #include <limits>
 
-void ROOT::Deprecated::TSocketFriend::SetSecContext(TSocket &s, TSecContext *ctx)
-{
-   s.fSecContext = ctx;
-}
-
-ROOT::Deprecated::TSecContext *ROOT::Deprecated::TSocketFriend::GetSecContext(const TSocket &s)
-{
-   return s.fSecContext;
-}
-
-
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
 
@@ -89,7 +78,6 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -132,7 +120,6 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    R__ASSERT(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -173,7 +160,6 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -227,7 +213,6 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    TString host(TUrl(fUrl).GetHost());
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
@@ -267,7 +252,6 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -295,7 +279,6 @@ TSocket::TSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressionSetti
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
-   fSecContext     = 0;
    fRemoteProtocol = 0;
    fService        = (char *)kSOCKD;
    fServType       = kSOCKD;
@@ -328,7 +311,6 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -361,7 +343,6 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fBytesSent      = s.fBytesSent;
    fBytesRecv      = s.fBytesRecv;
    fCompress       = s.fCompress;
-   fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
    fTcpWindowSize  = s.fTcpWindowSize;

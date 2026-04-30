@@ -154,7 +154,6 @@ TPSocket::TPSocket(const char *host, Int_t /* port */, Int_t size, TSocket *sock
    fBytesSent      = sock->GetBytesSent();
    fBytesRecv      = sock->GetBytesRecv();
    fCompress       = sock->GetCompressionSettings();
-   fSecContext     = ROOT::Deprecated::TSocketFriend::GetSecContext(*sock);
    fRemoteProtocol = sock->GetRemoteProtocol();
    fServType       = (TSocket::EServiceType)sock->GetServType();
    fTcpWindowSize  = sock->GetTcpWindowSize();
