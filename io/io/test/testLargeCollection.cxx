@@ -16,6 +16,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <sys/resource.h>
 
 // Timing helper — writes to a dedicated file, not captured by the ctest driver.
 static std::ofstream &timingLog()
@@ -28,13 +29,27 @@ static double now_sec()
    using namespace std::chrono;
    return duration<double>(steady_clock::now().time_since_epoch()).count();
 }
+
+// Returns the process peak RSS in MB.
+// ru_maxrss is bytes on macOS, kilobytes on Linux.
+static double peak_rss_mb()
+{
+   struct rusage ru;
+   getrusage(RUSAGE_SELF, &ru);
+#if defined(__APPLE__)
+   return ru.ru_maxrss / (1024.0 * 1024.0);
+#else
+   return ru.ru_maxrss / 1024.0;
+#endif
+}
 #define TIME_SUBTEST(timing, label, call)                                               \
    do {                                                                                 \
       std::cerr << (label) << " ...\n";                                                \
       double _t0 = (timing) ? now_sec() : 0.0;                                        \
       errors += (call);                                                                 \
       if (timing) {                                                                     \
-         timingLog() << (label) << " done in " << (now_sec() - _t0) << " s\n";        \
+         timingLog() << (label) << " done in " << (now_sec() - _t0)                   \
+                     << " s  peak RSS: " << peak_rss_mb() << " MB\n";                 \
          timingLog().flush();                                                           \
       }                                                                                 \
    } while (0)
@@ -268,13 +283,13 @@ int testDirectStruct(bool timing = false)
    { double t0 = now_sec();
    for (Long64_t i = 0; i < largeN; ++i)
       orig_large[i] = {float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
-   TLOG(timing, "  testDirectStruct fill:  " << (now_sec()-t0) << " s"); }
+   TLOG(timing, "  testDirectStruct fill:  " << (now_sec()-t0) << " s  peak RSS: " << peak_rss_mb() << " MB"); }
 
    auto startLarge = b.GetCurrent() - b.Buffer();
    b << largeN;
    { double t0 = now_sec();
    b.WriteFastArray(orig_large.data(), pointClass, largeN);
-   TLOG(timing, "  testDirectStruct write: " << (now_sec()-t0) << " s"); }
+   TLOG(timing, "  testDirectStruct write: " << (now_sec()-t0) << " s  peak RSS: " << peak_rss_mb() << " MB"); }
 
    // --- read back small ---
    b.SetReadMode();
@@ -307,7 +322,7 @@ int testDirectStruct(bool timing = false)
          std::vector<DataPoint> got(n);
          { double t0 = now_sec();
          b.ReadFastArray(got.data(), pointClass, n);
-         TLOG(timing, "  testDirectStruct read:  " << (now_sec()-t0) << " s"); }
+         TLOG(timing, "  testDirectStruct read:  " << (now_sec()-t0) << " s  peak RSS: " << peak_rss_mb() << " MB"); }
          if (!spotCheckFn(got, largeN,
                           [](Long64_t i) {
                              return DataPoint{float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
