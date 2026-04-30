@@ -31,9 +31,6 @@ to the requester. The actual work is done via the TSystem class
 #include "TROOT.h"
 #include "TError.h"
 #include <string>
-#include "TVirtualMutex.h"
-
-TVirtualMutex *gSrvAuthenticateMutex = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a server socket object for a named service. Set reuse to true
@@ -63,9 +60,6 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    R__ASSERT(gSystem);
 
    SetName("ServerSocket");
-
-   fSecContext = 0;
-   fSecContexts = new TList;
 
    // If this is a local path, try announcing a UNIX socket service
    ResetBit(TSocket::kIsUnix);
@@ -129,8 +123,6 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog, Int_t tcpw
 
    SetName("ServerSocket");
 
-   fSecContext = 0;
-   fSecContexts = new TList;
    fService = gSystem->GetServiceByPort(port);
    SetTitle(fService);
 
@@ -142,18 +134,10 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog, Int_t tcpw
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor: cleanup authentication stuff (if any) and close
+/// Destructor: close connection
 
 TServerSocket::~TServerSocket()
 {
-   R__LOCKGUARD2(gSrvAuthenticateMutex);
-   if (fSecContexts) {
-      // Remove the list
-      fSecContexts->Delete();
-      SafeDelete(fSecContexts);
-      fSecContexts = 0;
-   }
-
    Close();
 }
 
@@ -180,7 +164,6 @@ TSocket *TServerSocket::Accept(UChar_t /* opt */)
    if (soc == -2) { delete socket; return (TSocket*) -1; }
 
    socket->fSocket  = soc;
-   socket->fSecContext = 0;
    socket->fService = fService;
    if (!TestBit(TSocket::kIsUnix))
       socket->fAddress = gSystem->GetPeerName(socket->fSocket);

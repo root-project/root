@@ -33,9 +33,7 @@ class TSeqCollection;
 class TServerSocket : public TSocket {
 
 private:
-   TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
-
-   TServerSocket() : fSecContexts(nullptr) {}
+   TServerSocket() = default;
    TServerSocket(const TServerSocket &);
    void operator=(const TServerSocket &);
 
