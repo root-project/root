@@ -276,7 +276,7 @@ void TGLFont::Render(const TString &txt) const
    }
 
    // FTGL is not const correct.
-   const_cast<FTFont*>(fFont)->Render(txt);
+   const_cast<FTFont*>(fFont)->Render(txt.Data());
 
    if (scaleDepth) {
       glPopMatrix();
