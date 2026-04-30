@@ -59,7 +59,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -103,7 +102,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    R__ASSERT(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -144,7 +142,6 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -181,7 +178,6 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    TString host(TUrl(fUrl).GetHost());
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
@@ -221,7 +217,6 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -249,7 +244,6 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressio
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
-   fSecContext     = 0;
    fRemoteProtocol = 0;
    fService        = (char *)kSOCKD;
    fServType       = kSOCKD;
@@ -282,7 +276,6 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -315,7 +308,6 @@ TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
    fBytesSent      = s.fBytesSent;
    fBytesRecv      = s.fBytesRecv;
    fCompress       = s.fCompress;
-   fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
    fUUIDs          = 0;
