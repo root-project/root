@@ -54,7 +54,6 @@ private:
    TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
    static ROOT::Deprecated::SrvAuth_t fgSrvAuthHook;
    static ROOT::Deprecated::SrvClup_t fgSrvAuthClupHook;
-   static UChar_t fgAcceptOpt;     // Default accept options (DEPRECATED)
 
    TServerSocket() : fSecContexts(nullptr) {}
    TServerSocket(const TServerSocket &);
@@ -70,7 +69,7 @@ public:
                  Int_t backlog = kDefaultBacklog, Int_t tcpwindowsize = -1);
    virtual ~TServerSocket();
 
-   virtual TSocket      *Accept(UChar_t Opt = 0);
+   virtual TSocket      *Accept(UChar_t opt = 0);
    TInetAddress  GetLocalInetAddress() override;
    Int_t         GetLocalPort() override;
 
@@ -96,10 +95,6 @@ public:
                     { MayNotUse("Recv(char *, Int_t, Int_t &)"); return 0; }
    Int_t         RecvRaw(void *, Int_t, ESendRecvOptions = kDefault) override
                     { MayNotUse("RecvRaw(void *, Int_t, ESendRecvOptions)"); return 0; }
-
-   static UChar_t     GetAcceptOptions() R__DEPRECATED(6, 42, "Socket authentication is deprecated");
-   static void        SetAcceptOptions(UChar_t Opt) R__DEPRECATED(6, 42, "Socket authentication is deprecated");
-   static void        ShowAcceptOptions() R__DEPRECATED(6, 42, "Socket authentication is deprecated");
 
    ClassDefOverride(TServerSocket, 0);  //This class implements server sockets
 };
