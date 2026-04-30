@@ -221,6 +221,11 @@ TEST(RNTuple, SoASimple)
    EXPECT_FLOAT_EQ(4.0, v(2).at(0).fY);
    EXPECT_FLOAT_EQ(5.0, v(2).at(1).fX);
    EXPECT_FLOAT_EQ(6.0, v(2).at(1).fY);
+
+   auto card = reader->GetView<ROOT::RNTupleCardinality<std::uint64_t>>("f");
+   EXPECT_EQ(1u, card(0));
+   EXPECT_EQ(0u, card(1));
+   EXPECT_EQ(2u, card(2));
 }
 
 TEST(RNTuple, SoASimpleSwapped)
