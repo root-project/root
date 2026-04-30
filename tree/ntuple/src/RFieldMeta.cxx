@@ -692,6 +692,12 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    } catch (ROOT::RException &e) {
       throw RException(R__FAIL("invalid record type of SoA field " + GetTypeName() + " [" + e.what() + "]"));
    }
+   R__ASSERT(fSoAClass->GetClassVersion() >= 0);
+   if (static_cast<std::uint32_t>(fSoAClass->GetClassVersion()) != fSubfields[0]->GetTypeVersion()) {
+      throw RException(R__FAIL(std::string("version mismatch between SoA type and underlying record type: ") +
+                               std::to_string(fSoAClass->GetClassVersion()) + " vs. " +
+                               std::to_string(fSubfields[0]->GetTypeVersion())));
+   }
    fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
 
    std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;

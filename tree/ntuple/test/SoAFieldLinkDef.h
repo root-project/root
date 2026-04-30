@@ -4,6 +4,7 @@
 #pragma link C++ options=rntupleSoARecord(Record) class SoA+;
 
 #pragma link C++ options=rntupleSoARecord(xyz) class SoAUnknownRecord+;
+#pragma link C++ options=rntupleSoARecord(Record) class SoAVersionMismatch+;
 
 #pragma link C++ class RecordBase+;
 #pragma link C++ class RecordDerived+;
