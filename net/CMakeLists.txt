@@ -5,11 +5,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(net)
-add_subdirectory(auth)
-
-if(NOT WIN32 AND ssl)
-  add_subdirectory(rpdutils)
-endif()
 
 if(davix)
    add_subdirectory(davix)
