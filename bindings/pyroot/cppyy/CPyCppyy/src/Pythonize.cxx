@@ -1929,7 +1929,13 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         Utility::AddToClass(pyclass, "__iter__", (PyCFunction)PyObject_SelfIter, METH_NOARGS);
     }
 
-    else if (name == "std::basic_string<char>") { // TODO: ask backend as well
+// CPyCppyy upstream only checks the typedef-collapsed shape. Master ROOT's TClass
+// reflection produced that shape for free; with CppInterOp's GetQualifiedCompleteName
+// the canonical class name (with default template args, with spaces) is returned, so
+// we additionally recognise that shape here.
+    else if (name == "std::basic_string<char>"
+          || name == "std::basic_string<char, std::char_traits<char>, std::allocator<char> >"
+    ) { // TODO: ask backend as well
         Utility::AddToClass(pyclass, "__repr__",      (PyCFunction)STLStringRepr,       METH_NOARGS);
         Utility::AddToClass(pyclass, "__str__",       (PyCFunction)STLStringStr,        METH_NOARGS);
         Utility::AddToClass(pyclass, "__bytes__",     (PyCFunction)STLStringBytes,      METH_NOARGS);
@@ -1953,7 +1959,9 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)STLStringHash;
     }
 
-    else if (name == "std::basic_string_view<char>") {
+    else if (name == "std::basic_string_view<char>"
+          || name == "std::basic_string_view<char, std::char_traits<char> >"
+    ) {
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__",  (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
         Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLViewStringBytes,      METH_NOARGS);
@@ -1964,7 +1972,9 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLViewStringStr,        METH_NOARGS);
     }
 
-    else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {
+    else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >"
+          || name == "std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >"
+    ) {
         Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLWStringRepr,       METH_NOARGS);
         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLWStringStr,        METH_NOARGS);
         Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLWStringBytes,      METH_NOARGS);
