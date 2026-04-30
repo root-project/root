@@ -445,8 +445,8 @@ int testAsPartOfObject()
    int errors = 0;
 
    std::vector<char> raw;
-   raw.reserve(10 * 1024 * 1024 * 1024ll);
-   TBufferFile b(TBuffer::kWrite, 10 * 1024 * 1024 * 1024ll - 100, raw.data(), false /* don't adopt */,
+   raw.reserve(6 * 1024 * 1024 * 1024ll);
+   TBufferFile b(TBuffer::kWrite, 6 * 1024 * 1024 * 1024ll - 100, raw.data(), false /* don't adopt */,
                  DoNothingAllocator);
 
    LargeCollectionFixture fixture;
@@ -531,7 +531,7 @@ int testNested()
 // -----------------------------------------------------------------------
 // Entry point
 // -----------------------------------------------------------------------
-int testLargeCollection(bool timing = false)
+int testLargeCollection(bool timing = true)
 {
    int errors = 0;
 
