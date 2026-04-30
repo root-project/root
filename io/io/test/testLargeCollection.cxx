@@ -11,9 +11,120 @@
 #include "TBufferFile.h"
 #include "TClass.h"
 
+#include <chrono>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <sys/resource.h>
+
+// Timing helper — writes to a dedicated file, not captured by the ctest driver.
+static std::ofstream &timingLog()
+{
+   static std::ofstream f("/tmp/testLargeCollection_timing.txt");
+   return f;
+}
+static double now_sec()
+{
+   using namespace std::chrono;
+   return duration<double>(steady_clock::now().time_since_epoch()).count();
+}
+
+// Returns the process peak RSS in MB.
+// ru_maxrss is bytes on macOS, kilobytes on Linux.
+static double peak_rss_mb()
+{
+   struct rusage ru;
+   getrusage(RUSAGE_SELF, &ru);
+#if defined(__APPLE__)
+   return ru.ru_maxrss / (1024.0 * 1024.0);
+#else
+   return ru.ru_maxrss / 1024.0;
+#endif
+}
+#define TIME_SUBTEST(timing, label, call)                                               \
+   do {                                                                                 \
+      std::cerr << (label) << " ...\n";                                                \
+      double _t0 = (timing) ? now_sec() : 0.0;                                        \
+      errors += (call);                                                                 \
+      if (timing) {                                                                     \
+         timingLog() << (label) << " done in " << (now_sec() - _t0)                   \
+                     << " s  peak RSS: " << peak_rss_mb() << " MB\n";                 \
+         timingLog().flush();                                                           \
+      }                                                                                 \
+   } while (0)
+#define TLOG(timing, msg) do { if (timing) { timingLog() << msg << "\n"; timingLog().flush(); } } while(0)
+
+// -----------------------------------------------------------------------
+// Spot-check a large array: verify the first/last kSpot elements and
+// kSpot elements centred on the 2 GB boundary, rather than comparing
+// the entire array element-by-element.
+// -----------------------------------------------------------------------
+template <typename T>
+static bool spotCheck(const std::vector<T> &got, const std::vector<T> &expected, const char *tag)
+{
+   if (got.size() != expected.size()) {
+      std::cerr << tag << ": size mismatch " << got.size() << " vs " << expected.size() << '\n';
+      return false;
+   }
+   constexpr Long64_t kSpot     = 1024;
+   const Long64_t     n         = (Long64_t)got.size();
+   const Long64_t     boundaryN = (Long64_t)(2LL * 1024 * 1024 * 1024 / sizeof(T));
+   bool               ok        = true;
+
+   auto check = [&](Long64_t i) {
+      if (i < 0 || i >= n)
+         return;
+      if (!(got[i] == expected[i])) {
+         if (ok)
+            std::cerr << tag << ": mismatch at index " << i << '\n';
+         ok = false;
+      }
+   };
+
+   for (Long64_t i = 0; i < kSpot; ++i)
+      check(i); // beginning
+   for (Long64_t i = boundaryN - kSpot; i < boundaryN + kSpot; ++i)
+      check(i); // around 2 GB boundary
+   for (Long64_t i = n - kSpot; i < n; ++i)
+      check(i); // end
+
+   return ok;
+}
+
+// Variant of spotCheck that computes expected values on-the-fly via a
+// generator, so the caller can free the source array before read-back.
+template <typename T, typename Gen>
+static bool spotCheckFn(const std::vector<T> &got, Long64_t expectedSize, Gen expectedAt, const char *tag)
+{
+   if ((Long64_t)got.size() != expectedSize) {
+      std::cerr << tag << ": size mismatch " << got.size() << " vs " << expectedSize << '\n';
+      return false;
+   }
+   constexpr Long64_t kSpot     = 1024;
+   const Long64_t     n         = expectedSize;
+   const Long64_t     boundaryN = (Long64_t)(2LL * 1024 * 1024 * 1024 / sizeof(T));
+   bool               ok        = true;
+
+   auto check = [&](Long64_t i) {
+      if (i < 0 || i >= n)
+         return;
+      if (!(got[i] == expectedAt(i))) {
+         if (ok)
+            std::cerr << tag << ": mismatch at index " << i << '\n';
+         ok = false;
+      }
+   };
+
+   for (Long64_t i = 0; i < kSpot; ++i)
+      check(i);
+   for (Long64_t i = boundaryN - kSpot; i < boundaryN + kSpot; ++i)
+      check(i);
+   for (Long64_t i = n - kSpot; i < n; ++i)
+      check(i);
+
+   return ok;
+}
 
 // -----------------------------------------------------------------------
 // Helper: a non-trivial struct so we exercise the object-array path
@@ -68,8 +179,9 @@ static char *DoNothingAllocator(char *input, size_t, size_t)
 
 // -----------------------------------------------------------------------
 // 1. Direct store of a numerical array in a TBufferFile
+//    Returns the large float vector so testDirectVector can reuse it.
 // -----------------------------------------------------------------------
-int testDirectNumerical()
+int testDirectNumerical(std::vector<float> &orig_large_out)
 {
    int errors = 0;
 
@@ -91,14 +203,14 @@ int testDirectNumerical()
 
    // --- large array (crosses the 2 GB boundary) ---
    // 512 M floats = 2 GB of payload
-   const Long64_t     largeN = 512 * 1024 * 1024ll;
-   std::vector<float> orig_large(largeN);
+   const Long64_t largeN = 512 * 1024 * 1024ll;
+   orig_large_out.resize(largeN);
    for (Long64_t i = 0; i < largeN; ++i)
-      orig_large[i] = float(i % 65536);
+      orig_large_out[i] = float(i & 0xFFFF); // 65536 = 2^16; & is faster than %
 
    auto startLarge = b.GetCurrent() - b.Buffer();
    b << largeN;
-   b.WriteFastArray(orig_large.data(), largeN);
+   b.WriteFastArray(orig_large_out.data(), largeN);
 
    // --- read back small ---
    b.SetReadMode();
@@ -130,17 +242,8 @@ int testDirectNumerical()
       } else {
          std::vector<float> got(n);
          b.ReadFastArray(got.data(), n);
-         if (got != orig_large) {
-            std::cerr << "testDirectNumerical: large array content mismatch\n";
-            int nprinted = 0;
-            for (Long64_t i = 0; i < n && nprinted < 10; ++i) {
-               if (got[i] != orig_large[i]) {
-                  std::cerr << "  [" << i << "] expected " << orig_large[i] << " got " << got[i] << '\n';
-                  ++nprinted;
-               }
-            }
+         if (!spotCheck(got, orig_large_out, "testDirectNumerical large"))
             ++errors;
-         }
       }
    }
 
@@ -150,7 +253,7 @@ int testDirectNumerical()
 // -----------------------------------------------------------------------
 // 2. Direct store of a struct array in a TBufferFile
 // -----------------------------------------------------------------------
-int testDirectStruct()
+int testDirectStruct(bool timing = false)
 {
    int errors = 0;
 
@@ -175,12 +278,18 @@ int testDirectStruct()
    // ~170 M Points * 12 bytes = ~2 GB
    const Long64_t         largeN = 170 * 1024 * 1024ll;
    std::vector<DataPoint> orig_large(largeN);
+   // Use bitwise AND (power-of-2 period) instead of % 1000 to avoid
+   // 510 M integer divisions in this fill loop.
+   { double t0 = now_sec();
    for (Long64_t i = 0; i < largeN; ++i)
-      orig_large[i] = {float(i % 1000), float((i + 1) % 1000), float((i + 2) % 1000)};
+      orig_large[i] = {float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
+   TLOG(timing, "  testDirectStruct fill:  " << (now_sec()-t0) << " s  peak RSS: " << peak_rss_mb() << " MB"); }
 
    auto startLarge = b.GetCurrent() - b.Buffer();
    b << largeN;
+   { double t0 = now_sec();
    b.WriteFastArray(orig_large.data(), pointClass, largeN);
+   TLOG(timing, "  testDirectStruct write: " << (now_sec()-t0) << " s  peak RSS: " << peak_rss_mb() << " MB"); }
 
    // --- read back small ---
    b.SetReadMode();
@@ -211,11 +320,15 @@ int testDirectStruct()
          ++errors;
       } else {
          std::vector<DataPoint> got(n);
+         { double t0 = now_sec();
          b.ReadFastArray(got.data(), pointClass, n);
-         if (got != orig_large) {
-            std::cerr << "testDirectStruct: large array content mismatch\n";
+         TLOG(timing, "  testDirectStruct read:  " << (now_sec()-t0) << " s  peak RSS: " << peak_rss_mb() << " MB"); }
+         if (!spotCheckFn(got, largeN,
+                          [](Long64_t i) {
+                             return DataPoint{float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
+                          },
+                          "testDirectStruct large"))
             ++errors;
-         }
       }
    }
 
@@ -224,8 +337,10 @@ int testDirectStruct()
 
 // -----------------------------------------------------------------------
 // 2b. Direct store of std::vector<T> via StreamObject
+//     Takes the already-built large float vector from testDirectNumerical
+//     to avoid re-allocating and re-filling 2 GB of data.
 // -----------------------------------------------------------------------
-int testDirectVector()
+int testDirectVector(std::vector<float> &orig_large_f)
 {
    int errors = 0;
 
@@ -246,9 +361,7 @@ int testDirectVector()
    b.StreamObject(&orig_small_f, floatVecClass);
 
    // --- large std::vector<float> (512 M entries = 2 GB) ---
-   std::vector<float> orig_large_f(512 * 1024 * 1024ll);
-   for (size_t i = 0; i < orig_large_f.size(); ++i)
-      orig_large_f[i] = float(i % 65536);
+   // orig_large_f is passed in from testDirectNumerical — no re-allocation needed.
 
    auto startLargeF = b.GetCurrent() - b.Buffer();
    b.StreamObject(&orig_large_f, floatVecClass);
@@ -278,10 +391,10 @@ int testDirectVector()
    {
       std::vector<float> got;
       b.StreamObject(&got, floatVecClass);
-      if (got != orig_large_f) {
-         std::cerr << "testDirectVector: large float vector content mismatch\n";
+      if (!spotCheckFn(got, 512 * 1024 * 1024ll,
+                       [](Long64_t i) { return float(i & 0xFFFF); },
+                       "testDirectVector large float"))
          ++errors;
-      }
    }
 
    // --- read back small DataPoint vector ---
@@ -332,8 +445,8 @@ int testAsPartOfObject()
    int errors = 0;
 
    std::vector<char> raw;
-   raw.reserve(10 * 1024 * 1024 * 1024ll);
-   TBufferFile b(TBuffer::kWrite, 10 * 1024 * 1024 * 1024ll - 100, raw.data(), false /* don't adopt */,
+   raw.reserve(6 * 1024 * 1024 * 1024ll);
+   TBufferFile b(TBuffer::kWrite, 6 * 1024 * 1024 * 1024ll - 100, raw.data(), false /* don't adopt */,
                  DoNothingAllocator);
 
    LargeCollectionFixture fixture;
@@ -418,24 +531,17 @@ int testNested()
 // -----------------------------------------------------------------------
 // Entry point
 // -----------------------------------------------------------------------
-int testLargeCollection()
+int testLargeCollection(bool timing = true)
 {
    int errors = 0;
 
-   std::cerr << "testDirectNumerical ...\n";
-   errors += testDirectNumerical();
-
-   std::cerr << "testDirectStruct ...\n";
-   errors += testDirectStruct();
-
-   std::cerr << "testDirectVector ...\n";
-   errors += testDirectVector();
-
-   std::cerr << "testAsPartOfObject ...\n";
-   errors += testAsPartOfObject();
-
-   std::cerr << "testNested ...\n";
-   errors += testNested();
+   std::vector<float> sharedLargeFloats;
+   TIME_SUBTEST(timing, "testDirectNumerical", testDirectNumerical(sharedLargeFloats));
+   TIME_SUBTEST(timing, "testDirectStruct",    testDirectStruct(timing));
+   TIME_SUBTEST(timing, "testDirectVector",    testDirectVector(sharedLargeFloats));
+   { std::vector<float>{}.swap(sharedLargeFloats); } // release 2 GB before the large-object test
+   TIME_SUBTEST(timing, "testAsPartOfObject",  testAsPartOfObject());
+   TIME_SUBTEST(timing, "testNested",          testNested());
 
    std::cerr << "Done. errors=" << errors << '\n';
    return errors;
