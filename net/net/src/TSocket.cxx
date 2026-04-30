@@ -73,9 +73,6 @@ ULong64_t TSocket::fgBytesRecv = 0;
 //
 Int_t TSocket::fgClientProtocol = 17;  // increase when client protocol changes
 
-TVirtualMutex *gSocketAuthMutex = 0;
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a socket. Connect to the named service at address addr.
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
