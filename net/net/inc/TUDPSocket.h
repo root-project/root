@@ -56,7 +56,7 @@ protected:
    TString       fService;        // name of service (matches remote port #)
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
-   TString       fUrl;            // needs this for special authentication options
+   TString       fUrl;            // address of the remote service
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
    TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
 
