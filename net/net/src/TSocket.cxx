@@ -39,11 +39,6 @@ TUnixSystem or TWinNTSystem).
 
 #include <limits>
 
-Bool_t ROOT::Deprecated::TSocketFriend::IsAuthenticated(const TSocket &s)
-{
-   return s.fSecContext;
-}
-
 void ROOT::Deprecated::TSocketFriend::SetSecContext(TSocket &s, TSecContext *ctx)
 {
    s.fSecContext = ctx;
