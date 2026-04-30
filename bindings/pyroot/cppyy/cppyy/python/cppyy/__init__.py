@@ -132,7 +132,10 @@ def _standard_pythonizations(pyclass, name):
 
   # pythonization of std::basic_string<char>; placed here because it's simpler to write the
   # custom "npos" object (to allow easy result checking of find/rfind) in Python
-    elif pyclass.__cpp_name__ == "std::basic_string<char>":
+    elif pyclass.__cpp_name__ in (
+            "std::basic_string<char>",
+            "std::basic_string<char, std::char_traits<char>, std::allocator<char> >",
+        ):
         class NPOS(int):
             def __init__(self, npos):
                 self.__cpp_npos = npos
