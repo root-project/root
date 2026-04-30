@@ -19,6 +19,10 @@ struct SoAUnknownRecord {
    ClassDefNV(SoAUnknownRecord, 2);
 };
 
+struct SoAVersionMismatch {
+   ClassDefNV(SoAVersionMismatch, 4);
+};
+
 struct RecordBase {
    ClassDefNV(RecordBase, 2);
 };
