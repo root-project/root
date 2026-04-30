@@ -39,7 +39,6 @@ class TSocket;
 
 namespace ROOT::Deprecated {
 struct TSocketFriend {
-   static Bool_t IsAuthenticated(const TSocket &s);
    static void SetSecContext(TSocket &s, TSecContext *ctx);
    static TSecContext *GetSecContext(const TSocket &s);
 };
@@ -144,9 +143,6 @@ public:
    Int_t                 GetTcpWindowSize() const { return fTcpWindowSize; }
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl.Data(); }
-   virtual Bool_t        IsAuthenticated() const
-      R__DEPRECATED(6, 42, "TSocket::IsAuthenticated is deprecated")
-      { return ROOT::Deprecated::TSocketFriend::IsAuthenticated(*this); }
    virtual Bool_t        IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
    virtual Int_t         Recv(TMessage *&mess);
    virtual Int_t         Recv(Int_t &status, Int_t &kind);
