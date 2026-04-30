@@ -868,6 +868,11 @@ size_t ROOT::Experimental::RSoAField::GetValueSize() const
    return fSoAClass->GetClassSize();
 }
 
+std::uint32_t ROOT::Experimental::RSoAField::GetTypeVersion() const
+{
+   return fSoAClass->GetClassVersion();
+}
+
 std::uint32_t ROOT::Experimental::RSoAField::GetTypeChecksum() const
 {
    return fSoAClass->GetCheckSum();

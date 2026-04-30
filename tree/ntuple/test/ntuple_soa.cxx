@@ -146,15 +146,18 @@ TEST(RNTuple, SoADescriptor)
    const auto &f1Desc = desc.GetFieldDescriptor(desc.FindFieldId("f1"));
    EXPECT_TRUE(f1Desc.IsSoACollection());
    EXPECT_EQ(ROOT::ENTupleStructure::kCollection, f1Desc.GetStructure());
+   EXPECT_EQ(TClass::GetClass("SoA")->GetClassVersion(), f1Desc.GetTypeVersion());
    EXPECT_TRUE(f1Desc.GetTypeChecksum());
    EXPECT_EQ(TClass::GetClass("SoA")->GetCheckSum(), *f1Desc.GetTypeChecksum());
    const auto &f2Desc = desc.GetFieldDescriptor(desc.FindFieldId("f2"));
    EXPECT_TRUE(f2Desc.IsSoACollection());
+   EXPECT_EQ(TClass::GetClass("SoA")->GetClassVersion(), f2Desc.GetTypeVersion());
    EXPECT_EQ(ROOT::ENTupleStructure::kCollection, f2Desc.GetStructure());
    EXPECT_TRUE(f2Desc.GetTypeChecksum());
    EXPECT_EQ(TClass::GetClass("SoA")->GetCheckSum(), *f2Desc.GetTypeChecksum());
    const auto &f3Desc = desc.GetFieldDescriptor(desc.FindFieldId("f3"));
    EXPECT_FALSE(f3Desc.IsSoACollection());
+   EXPECT_EQ(0u, f3Desc.GetTypeVersion());
    EXPECT_EQ(ROOT::ENTupleStructure::kCollection, f3Desc.GetStructure());
    EXPECT_FALSE(f3Desc.GetTypeChecksum());
 }
