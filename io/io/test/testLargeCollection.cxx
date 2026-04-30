@@ -11,9 +11,34 @@
 #include "TBufferFile.h"
 #include "TClass.h"
 
+#include <chrono>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <vector>
+
+// Timing helper — writes to a dedicated file, not captured by the ctest driver.
+static std::ofstream &timingLog()
+{
+   static std::ofstream f("/tmp/testLargeCollection_timing.txt");
+   return f;
+}
+static double now_sec()
+{
+   using namespace std::chrono;
+   return duration<double>(steady_clock::now().time_since_epoch()).count();
+}
+#define TIME_SUBTEST(timing, label, call)                                               \
+   do {                                                                                 \
+      std::cerr << (label) << " ...\n";                                                \
+      double _t0 = (timing) ? now_sec() : 0.0;                                        \
+      errors += (call);                                                                 \
+      if (timing) {                                                                     \
+         timingLog() << (label) << " done in " << (now_sec() - _t0) << " s\n";        \
+         timingLog().flush();                                                           \
+      }                                                                                 \
+   } while (0)
+#define TLOG(timing, msg) do { if (timing) { timingLog() << msg << "\n"; timingLog().flush(); } } while(0)
 
 // -----------------------------------------------------------------------
 // Spot-check a large array: verify the first/last kSpot elements and
@@ -213,7 +238,7 @@ int testDirectNumerical(std::vector<float> &orig_large_out)
 // -----------------------------------------------------------------------
 // 2. Direct store of a struct array in a TBufferFile
 // -----------------------------------------------------------------------
-int testDirectStruct()
+int testDirectStruct(bool timing = false)
 {
    int errors = 0;
 
@@ -240,12 +265,16 @@ int testDirectStruct()
    std::vector<DataPoint> orig_large(largeN);
    // Use bitwise AND (power-of-2 period) instead of % 1000 to avoid
    // 510 M integer divisions in this fill loop.
+   { double t0 = now_sec();
    for (Long64_t i = 0; i < largeN; ++i)
       orig_large[i] = {float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
+   TLOG(timing, "  testDirectStruct fill:  " << (now_sec()-t0) << " s"); }
 
    auto startLarge = b.GetCurrent() - b.Buffer();
    b << largeN;
+   { double t0 = now_sec();
    b.WriteFastArray(orig_large.data(), pointClass, largeN);
+   TLOG(timing, "  testDirectStruct write: " << (now_sec()-t0) << " s"); }
 
    // --- read back small ---
    b.SetReadMode();
@@ -276,7 +305,9 @@ int testDirectStruct()
          ++errors;
       } else {
          std::vector<DataPoint> got(n);
+         { double t0 = now_sec();
          b.ReadFastArray(got.data(), pointClass, n);
+         TLOG(timing, "  testDirectStruct read:  " << (now_sec()-t0) << " s"); }
          if (!spotCheckFn(got, largeN,
                           [](Long64_t i) {
                              return DataPoint{float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
@@ -485,26 +516,17 @@ int testNested()
 // -----------------------------------------------------------------------
 // Entry point
 // -----------------------------------------------------------------------
-int testLargeCollection()
+int testLargeCollection(bool timing = false)
 {
    int errors = 0;
 
-   std::cerr << "testDirectNumerical ...\n";
    std::vector<float> sharedLargeFloats;
-   errors += testDirectNumerical(sharedLargeFloats);
-
-   std::cerr << "testDirectStruct ...\n";
-   errors += testDirectStruct();
-
-   std::cerr << "testDirectVector ...\n";
-   errors += testDirectVector(sharedLargeFloats);
+   TIME_SUBTEST(timing, "testDirectNumerical", testDirectNumerical(sharedLargeFloats));
+   TIME_SUBTEST(timing, "testDirectStruct",    testDirectStruct(timing));
+   TIME_SUBTEST(timing, "testDirectVector",    testDirectVector(sharedLargeFloats));
    { std::vector<float>{}.swap(sharedLargeFloats); } // release 2 GB before the large-object test
-
-   std::cerr << "testAsPartOfObject ...\n";
-   errors += testAsPartOfObject();
-
-   std::cerr << "testNested ...\n";
-   errors += testNested();
+   TIME_SUBTEST(timing, "testAsPartOfObject",  testAsPartOfObject());
+   TIME_SUBTEST(timing, "testNested",          testNested());
 
    std::cerr << "Done. errors=" << errors << '\n';
    return errors;
