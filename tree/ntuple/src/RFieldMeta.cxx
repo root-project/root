@@ -1152,7 +1152,7 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
 
 void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 }
 
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
@@ -1223,7 +1223,7 @@ void ROOT::RMapField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixesRegular = {"std::map<", "std::unordered_map<"};
 
-   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 
    switch (fMapType) {
    case EMapType::kMap:
@@ -1259,7 +1259,7 @@ void ROOT::RSetField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixesRegular = {"std::set<", "std::unordered_set<", "std::map<",
                                                             "std::unordered_map<"};
 
-   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 
    switch (fSetType) {
    case ESetType::kSet:
