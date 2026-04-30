@@ -11,6 +11,8 @@
 #include "SoAFieldXML.h"
 
 #include <TClass.h>
+#include <TFile.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <memory>
 #include <utility>
@@ -160,6 +162,19 @@ TEST(RNTuple, SoADescriptor)
    EXPECT_EQ(0u, f3Desc.GetTypeVersion());
    EXPECT_EQ(ROOT::ENTupleStructure::kCollection, f3Desc.GetStructure());
    EXPECT_FALSE(f3Desc.GetTypeChecksum());
+}
+
+TEST(RNTuple, SoAStreamerInfo)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_ntuple_soa_streamer_info.root");
+
+   auto model = ROOT::RNTupleModel::Create();
+   model->AddField(std::make_unique<ROOT::Experimental::RSoAField>("f", "SoASimple"));
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   writer.reset();
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   EXPECT_NE(nullptr, file->GetStreamerInfoList()->FindObject("SoASimple"));
 }
 
 TEST(RNTuple, SoAEmpty)

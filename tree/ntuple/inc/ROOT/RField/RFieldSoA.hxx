@@ -106,6 +106,8 @@ public:
    const std::type_info *GetPolymorphicTypeInfo() const;
    // TODO(jblomer)
    // void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+
+   TClass *GetSoAClass() const { return fSoAClass; }
 };
 
 } // namespace Experimental
