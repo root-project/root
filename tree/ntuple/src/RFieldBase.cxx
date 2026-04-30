@@ -1070,6 +1070,11 @@ ROOT::RFieldBase::EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::
    return R__FAIL(errMsg.str() + "\n" + Internal::GetTypeTraceReport(*this, desc));
 }
 
+ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingOnDiskCollection(const RNTupleDescriptor &desc) const
+{
+   return EnsureMatchingOnDiskField(desc, kDiffTypeName);
+}
+
 ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RNTupleDescriptor &desc,
                                                                const std::vector<std::string> &prefixes) const
 {

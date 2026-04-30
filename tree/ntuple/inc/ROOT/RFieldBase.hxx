@@ -539,6 +539,9 @@ protected:
    /// Throws an exception if the fields don't match.
    /// Optionally, a set of bits can be provided that should be ignored in the comparison.
    RResult<void> EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::uint32_t ignoreBits = 0) const;
+   /// Convenience wrapper for the common case of calling EnsureMatchinOnDiskField() for collections. Collections
+   /// may differ in type name (most collections schema evolve into each other).
+   RResult<void> EnsureMatchingOnDiskCollection(const RNTupleDescriptor &desc) const;
    /// Many fields accept a range of type prefixes for schema evolution,
    /// e.g. std::unique_ptr< and std::optional< for nullable fields
    RResult<void>
