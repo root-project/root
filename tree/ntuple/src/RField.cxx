@@ -104,7 +104,12 @@ void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc
                                   " expects an on-disk leaf field of the same type\n" +
                                   Internal::GetTypeTraceReport(*this, desc)));
       }
-   } else if (fieldDesc.GetStructure() != ENTupleStructure::kCollection) {
+   } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+      if (!fieldDesc.IsSoACollection() && fieldDesc.GetTypeVersion() != 0) {
+         throw RException(R__FAIL("invalid on-disk type version for RCardinalityField " + GetQualifiedFieldName() +
+                                  "\n" + Internal::GetTypeTraceReport(*this, desc)));
+      }
+   } else {
       throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName() +
                                "\n" + Internal::GetTypeTraceReport(*this, desc)));
    }
