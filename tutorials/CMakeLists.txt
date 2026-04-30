@@ -953,6 +953,8 @@ if(pyroot)
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/ml_dataloader_TensorFlow.py
       machine_learning/TMVA_CNN_Classification.py
+      machine_learning/TMVA_RNN_Classification.py
+      machine_learning/TMVA_Higgs_Classification.py
   )
 
   file(GLOB requires_matplotlib RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
