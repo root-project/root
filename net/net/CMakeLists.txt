@@ -37,7 +37,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     TParallelMergingFile.h
     TPServerSocket.h
     TPSocket.h
-    TSecContext.h
     TServerSocket.h
     TSocket.h
     TSQLColumnInfo.h
@@ -59,7 +58,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     src/TParallelMergingFile.cxx
     src/TPServerSocket.cxx
     src/TPSocket.cxx
-    src/TSecContext.cxx
     src/TServerSocket.cxx
     src/TSocket.cxx
     src/TSQLColumnInfo.cxx

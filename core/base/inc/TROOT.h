@@ -104,15 +104,10 @@ namespace ROOT {
    } // namespace Experimental
 }
 
-namespace ROOT::Deprecated::Internal {
-TSeqCollection *GetListOfSecContexts(const TROOT &);
-} // namespace ROOT::Deprecated::Internal
-
 class TROOT : public TDirectory {
 
 friend class TCling;
 friend TROOT *ROOT::Internal::GetROOT2();
-friend TSeqCollection *ROOT::Deprecated::Internal::GetListOfSecContexts(const TROOT &);
 
 private:
    Int_t           fLineIsProcessing = 0;   ///< To synchronize multi-threads
@@ -176,7 +171,6 @@ protected:
    TSeqCollection  *fMessageHandlers = nullptr;       ///< List of message handlers
    TSeqCollection  *fStreamerInfo = nullptr;          ///< List of active StreamerInfo classes
    TCollection     *fClassGenerators = nullptr;       ///< List of user defined class generators;
-   TSeqCollection  *fSecContexts = nullptr;           ///< List of security contexts (TSecContext)
    TSeqCollection  *fClipboard = nullptr;             ///< List of clipboard objects
    TSeqCollection  *fDataSets = nullptr;              ///< List of data sets (TDSet or TChain)
    AListOfEnums_t   fEnums = nullptr;                 ///< List of enum types
@@ -266,9 +260,6 @@ public:
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TCollection      *GetListOfClassGenerators() const { return fClassGenerators; }
-   TSeqCollection   *GetListOfSecContexts() const
-      R__DEPRECATED(6, 42, "GetListOfSecContexts is deprecated. See README.AUTH for details.")
-      { return ROOT::Deprecated::Internal::GetListOfSecContexts(*this); }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TCollection      *GetListOfEnums(Bool_t load = kFALSE);
