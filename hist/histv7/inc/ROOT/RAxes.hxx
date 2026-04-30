@@ -10,6 +10,7 @@
 #include "RBinIndexMultiDimRange.hxx"
 #include "RBinIndexRange.hxx"
 #include "RCategoricalAxis.hxx"
+#include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
 #include "RVariableBinAxis.hxx"
@@ -38,7 +39,7 @@ namespace Internal {
 /**
 Bin configurations for all dimensions of a histogram.
 */
-class RAxes final {
+class R__CLING_PTRCHECK(off) RAxes final {
    template <typename T>
    friend class ::ROOT::Experimental::RHistEngine;
 

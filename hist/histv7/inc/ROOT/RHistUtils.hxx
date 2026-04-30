@@ -12,6 +12,14 @@
 #include <intrin.h>
 #endif
 
+#ifdef __CLING__
+// This attribute can significantly speed up JIT-compiled code in CLING
+// It is also defined in ROOT, so keep the definitions the same.
+#define R__CLING_PTRCHECK(ONOFF) __attribute__((annotate("__cling__ptrcheck(" #ONOFF ")")))
+#else
+#define R__CLING_PTRCHECK(ONOFF)
+#endif
+
 namespace ROOT {
 namespace Experimental {
 namespace Internal {

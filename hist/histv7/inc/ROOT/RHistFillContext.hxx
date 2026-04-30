@@ -28,7 +28,7 @@ A context to concurrently fill an RHist.
 Feedback is welcome!
 */
 template <typename BinContentType>
-class RHistFillContext final {
+class R__CLING_PTRCHECK(off) RHistFillContext final {
    friend class RHistConcurrentFiller<BinContentType>;
 
 private:
