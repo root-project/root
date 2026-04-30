@@ -207,9 +207,17 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a socket; see CreateAuthSocket for the form of url.
+/// Create a socket. The url parameter has the form
+///
+///     [sockd://]host[:port][/service]
+///
+/// where
+///       [port] = is the remote port number
+///    [service] = service name used to determine the port
+///                (for backward compatibility, specification of
+///                 port as priority)
+///
 /// Connect to the specified port # on the remote host.
-/// If user is specified in url, try authentication as user.
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
@@ -1252,213 +1260,6 @@ Bool_t TSocket::Authenticate(const char *user)
    }
 
    return rc;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Creates a socket or a parallel socket and authenticates to the
-/// remote server.
-///
-/// url: [[proto][p][auth]://][user@]host[:port][/service]
-///
-/// where  proto = "sockd", "rootd"
-///                indicates the type of remote server;
-///                if missing "sockd" is assumed ("sockd" indicates
-///                any remote server session using TServerSocket)
-///       [auth] = "up" or "k" to force UsrPwd or Krb5 authentication
-///       [port] = is the remote port number
-///    [service] = service name used to determine the port
-///                (for backward compatibility, specification of
-///                 port as priority)
-///
-/// An already opened connection can be used by passing its socket
-/// in opensock.
-///
-/// If 'err' is defined, '*err' on return from a failed call contains an error
-/// code (see NetErrors.h).
-///
-/// Example:
-///
-///   TSocket::CreateAuthSocket("pk://qwerty@machine.fq.dn:5052",3)
-///
-///   creates an authenticated parallel socket of size 3 to a sockd
-///   server running on remote machine machine.fq.dn on port 5052;
-///   authentication will attempt protocol Kerberos first.
-///
-/// NB: may hang if the remote server is not of the correct type;
-///     at present TSocket has no way to find out the type of the
-///     remote server automatically
-///
-/// Returns pointer to an authenticated socket or 0 if creation or
-/// authentication is unsuccessful.
-
-TSocket *ROOT::Deprecated::TSocketFriend::CreateAuthSocket(
-   const char *url, Int_t size, Int_t tcpwindowsize, TSocket *opensock, Int_t *err)
-{
-   R__LOCKGUARD2(gSocketAuthMutex);
-
-   // Url to be passed to chosen constructor
-   TString eurl(url);
-
-   // Parse protocol, if any
-   Bool_t parallel = kFALSE;
-   TString proto(TUrl(url).GetProtocol());
-   TString protosave = proto;
-
-   // Get rid of authentication suffix
-   TString asfx = "";
-   if (proto.EndsWith("up") || proto.EndsWith("ug")) {
-      asfx = proto;
-      asfx.Remove(0,proto.Length()-2);
-      proto.Resize(proto.Length()-2);
-   } else if (proto.EndsWith("s") || proto.EndsWith("k") ||
-              proto.EndsWith("g") || proto.EndsWith("h")) {
-      asfx = proto;
-      asfx.Remove(0,proto.Length()-1);
-      proto.Resize(proto.Length()-1);
-   }
-
-   // Find out if parallel (force if rootd)
-   if ((proto.EndsWith("p") || size > 1) ||
-         proto.BeginsWith("root") ) {
-      parallel = kTRUE;
-      if (proto.EndsWith("p"))
-         proto.Resize(proto.Length()-1);
-   }
-
-   // Force "sockd" if the rest is not recognized
-   if (!proto.BeginsWith("sock") &&
-       !proto.BeginsWith("root"))
-      proto = "sockd";
-
-   // Substitute this for original proto in eurl
-   protosave += "://";
-   proto += asfx;
-   proto += "://";
-   eurl.ReplaceAll(protosave,proto);
-
-   // Create the socket now
-
-   TSocket *sock = 0;
-   if (!parallel) {
-
-      // Simple socket
-      if (opensock && opensock->IsValid())
-         sock = opensock;
-      else
-         sock = new TSocket(eurl, TUrl(url).GetPort(), tcpwindowsize);
-
-      // Authenticate now
-      if (sock && sock->IsValid()) {
-         if (!sock->Authenticate(TUrl(url).GetUser())) {
-            // Nothing to do except setting the error code (if required) and sock to NULL
-            if (err) {
-               *err = (Int_t)kErrAuthNotOK;
-               if (sock->TestBit(TSocket::kBrokenConn)) *err = (Int_t)kErrConnectionRefused;
-            }
-            sock->Close();
-            delete sock;
-            sock = 0;
-         }
-      }
-
-   } else {
-
-      // Tell TPSocket that we want authentication, which has to
-      // be done using the original socket before creation of set
-      // of parallel sockets
-      if (eurl.Contains("?"))
-         eurl.Resize(eurl.Index("?"));
-      eurl += "?A";
-
-      // Parallel socket
-      if (opensock && opensock->IsValid())
-         sock = new TPSocket(eurl, TUrl(url).GetPort(), size, opensock);
-      else
-         sock = new TPSocket(eurl, TUrl(url).GetPort(), size, tcpwindowsize);
-
-      // Cleanup if failure ...
-      if (sock && !ROOT::Deprecated::TSocketFriend::IsAuthenticated(*sock)) {
-         // Nothing to do except setting the error code (if required) and sock to NULL
-         if (err) {
-            *err = (Int_t)kErrAuthNotOK;
-            if (sock->TestBit(TSocket::kBrokenConn)) *err = (Int_t)kErrConnectionRefused;
-         }
-         if (sock->IsValid())
-            // And except when the sock is valid; this typically
-            // happens when talking to a old server, because the
-            // the parallel socket system is open before authentication
-            delete sock;
-         sock = 0;
-      }
-   }
-
-   return sock;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Creates a socket or a parallel socket and authenticates to the
-/// remote server specified in 'url' on remote 'port' as 'user'.
-///
-/// url: [[proto][auth]://]host
-///
-/// where  proto = "sockd", "rootd"
-///                indicates the type of remote server
-///                if missing "sockd" is assumed ("sockd" indicates
-///                any remote server session using TServerSocket)
-///       [auth] = "up" or "k" to force UsrPwd or Krb5 authentication
-///
-/// An already opened connection can be used by passing its socket
-/// in opensock.
-///
-/// If 'err' is defined, '*err' on return from a failed call contains an error
-/// code (see NetErrors.h).
-///
-/// Example:
-///
-///   TSocket::CreateAuthSocket("qwerty","pk://machine.fq.dn:5052",3)
-///
-///   creates an authenticated parallel socket of size 3 to a sockd
-///   server running on remote machine machine.fq.dn on port 5052;
-///   authentication will attempt protocol Kerberos first.
-///
-/// NB: may hang if the remote server is not of the correct type;
-///     at present TSocket has no way to find out the type of the
-///     remote server automatically
-///
-/// Returns pointer to an authenticated socket or 0 if creation or
-/// authentication is unsuccessful.
-
-TSocket *ROOT::Deprecated::TSocketFriend::CreateAuthSocket(
-   const char *user, const char *url, Int_t port, Int_t size, Int_t tcpwindowsize, TSocket *opensock, Int_t *err)
-{
-   R__LOCKGUARD2(gSocketAuthMutex);
-
-   // Extended url to be passed to base call
-   TString eurl;
-
-   // Add protocol, if any
-   if (TString(TUrl(url).GetProtocol()).Length() > 0) {
-      eurl += TString(TUrl(url).GetProtocol());
-      eurl += TString("://");
-   }
-   // Add user, if any
-   if (!user || strlen(user) > 0) {
-      eurl += TString(user);
-      eurl += TString("@");
-   }
-   // Add host
-   eurl += TString(TUrl(url).GetHost());
-   // Add port
-   eurl += TString(":");
-   eurl += (port > 0 ? port : 0);
-   // Add options, if any
-   if (TString(TUrl(url).GetOptions()).Length() > 0) {
-      eurl += TString("/?");
-      eurl += TString(TUrl(url).GetOptions());
-   }
-
-   // Create the socket and return it
-   return TSocketFriend::CreateAuthSocket(eurl,size,tcpwindowsize,opensock,err);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
