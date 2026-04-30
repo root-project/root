@@ -770,7 +770,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    if (ROOT::Internal::NeedsMetaNameAsAlias(fSoAClass->GetName(), renormalizedAlias))
       fTypeAlias = renormalizedAlias;
 
-   fTraits |= kTraitSoACollection;
+   fTraits |= kTraitSoACollection | kTraitTypeChecksum;
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::Experimental::RSoAField::CloneImpl(std::string_view newName) const
@@ -865,6 +865,11 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(
 size_t ROOT::Experimental::RSoAField::GetValueSize() const
 {
    return fSoAClass->GetClassSize();
+}
+
+std::uint32_t ROOT::Experimental::RSoAField::GetTypeChecksum() const
+{
+   return fSoAClass->GetCheckSum();
 }
 
 const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() const
