@@ -1929,7 +1929,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         Utility::AddToClass(pyclass, "__iter__", (PyCFunction)PyObject_SelfIter, METH_NOARGS);
     }
 
+// CPyCppyy upstream only checks the typedef-collapsed shape. Master ROOT's TClass
+// reflection produced that shape for free; with CppInterOp's GetQualifiedCompleteName
+// the canonical class name (with default template args, with spaces) is returned, so
+// we additionally recognise that shape here.
     else if (name == "std::basic_string<char>" ||
+             name == "std::basic_string<char, std::char_traits<char>, std::allocator<char> >" ||
              name == "std::__1::basic_string<char>" || // libc++ inline namespace
              name == "std::string") { // typedef preserved by GetScopedFinalName on libc++
         Utility::AddToClass(pyclass, "__repr__",      (PyCFunction)STLStringRepr,       METH_NOARGS);
@@ -1956,6 +1961,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
     }
 
     else if (name == "std::basic_string_view<char>" ||
+             name == "std::basic_string_view<char, std::char_traits<char> >" ||
              name == "std::__1::basic_string_view<char>" || // libc++ inline namespace
              name == "std::string_view") { // typedef preserved by GetScopedFinalName on libc++
         Utility::AddToClass(pyclass, "__real_init", "__init__");
@@ -1969,6 +1975,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
     }
 
     else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >" ||
+             name == "std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >" ||
              name == "std::__1::basic_string<wchar_t,std::__1::char_traits<wchar_t>,std::__1::allocator<wchar_t> >" ||
              name == "std::wstring") {
         Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLWStringRepr,       METH_NOARGS);
