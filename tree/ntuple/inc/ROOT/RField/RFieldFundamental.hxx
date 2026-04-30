@@ -480,9 +480,6 @@ public:
       fValueMin = valueRange.first;
       fValueMax = valueRange.second;
    }
-
-   R__DEPRECATED(6, 42, "Use SetQuantized(std::size_t nBits, std::pair<T> valueRange) instead")
-   void SetQuantized(T minValue, T maxValue, std::size_t nBits) { SetQuantized(nBits, {minValue, maxValue}); }
 };
 
 template <>

@@ -61,7 +61,7 @@ static void Write()
       auto fieldReal32Quant = std::make_unique<ROOT::RField<float>>("myReal32Quant");
       // Declare that this field will never store values outside of the [-1, 1] range (this will be checked dynamically)
       // and that we want to dedicate 24 bits to this number on disk.
-      fieldReal32Quant->SetQuantized(-1., 1., 24);
+      fieldReal32Quant->SetQuantized(24, {-1., 1.});
       model->AddField(std::move(fieldReal32Quant));
    }
 
