@@ -81,7 +81,7 @@ protected:
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
    Int_t         fTcpWindowSize;  // TCP window size (default 65535);
-   TString       fUrl;            // needs this for special authentication options
+   TString       fUrl;            // used to hold special authentication options
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
    TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
 
@@ -98,7 +98,6 @@ protected:
                fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
                fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(nullptr), fLastUsage() {}
 
-   Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
    void         SendStreamerInfos(const TMessage &mess);
    Bool_t       RecvStreamerInfos(TMessage *mess);
