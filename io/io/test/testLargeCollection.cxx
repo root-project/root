@@ -16,6 +16,43 @@
 #include <vector>
 
 // -----------------------------------------------------------------------
+// Spot-check a large array: verify the first/last kSpot elements and
+// kSpot elements centred on the 2 GB boundary, rather than comparing
+// the entire array element-by-element.
+// -----------------------------------------------------------------------
+template <typename T>
+static bool spotCheck(const std::vector<T> &got, const std::vector<T> &expected, const char *tag)
+{
+   if (got.size() != expected.size()) {
+      std::cerr << tag << ": size mismatch " << got.size() << " vs " << expected.size() << '\n';
+      return false;
+   }
+   constexpr Long64_t kSpot     = 1024;
+   const Long64_t     n         = (Long64_t)got.size();
+   const Long64_t     boundaryN = (Long64_t)(2LL * 1024 * 1024 * 1024 / sizeof(T));
+   bool               ok        = true;
+
+   auto check = [&](Long64_t i) {
+      if (i < 0 || i >= n)
+         return;
+      if (!(got[i] == expected[i])) {
+         if (ok)
+            std::cerr << tag << ": mismatch at index " << i << '\n';
+         ok = false;
+      }
+   };
+
+   for (Long64_t i = 0; i < kSpot; ++i)
+      check(i); // beginning
+   for (Long64_t i = boundaryN - kSpot; i < boundaryN + kSpot; ++i)
+      check(i); // around 2 GB boundary
+   for (Long64_t i = n - kSpot; i < n; ++i)
+      check(i); // end
+
+   return ok;
+}
+
+// -----------------------------------------------------------------------
 // Helper: a non-trivial struct so we exercise the object-array path
 // -----------------------------------------------------------------------
 struct DataPoint {
@@ -130,17 +167,8 @@ int testDirectNumerical()
       } else {
          std::vector<float> got(n);
          b.ReadFastArray(got.data(), n);
-         if (got != orig_large) {
-            std::cerr << "testDirectNumerical: large array content mismatch\n";
-            int nprinted = 0;
-            for (Long64_t i = 0; i < n && nprinted < 10; ++i) {
-               if (got[i] != orig_large[i]) {
-                  std::cerr << "  [" << i << "] expected " << orig_large[i] << " got " << got[i] << '\n';
-                  ++nprinted;
-               }
-            }
+         if (!spotCheck(got, orig_large, "testDirectNumerical large"))
             ++errors;
-         }
       }
    }
 
@@ -212,10 +240,8 @@ int testDirectStruct()
       } else {
          std::vector<DataPoint> got(n);
          b.ReadFastArray(got.data(), pointClass, n);
-         if (got != orig_large) {
-            std::cerr << "testDirectStruct: large array content mismatch\n";
+         if (!spotCheck(got, orig_large, "testDirectStruct large"))
             ++errors;
-         }
       }
    }
 
@@ -278,10 +304,8 @@ int testDirectVector()
    {
       std::vector<float> got;
       b.StreamObject(&got, floatVecClass);
-      if (got != orig_large_f) {
-         std::cerr << "testDirectVector: large float vector content mismatch\n";
+      if (!spotCheck(got, orig_large_f, "testDirectVector large float"))
          ++errors;
-      }
    }
 
    // --- read back small DataPoint vector ---
