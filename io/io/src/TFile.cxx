@@ -4715,17 +4715,12 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
    TString oopt = "RECREATE";
    TString ourl = dURL.GetUrl();
 
-   // Files will be open in RAW mode
-   TString raw = "filetype=raw";
-
    // Set optimization options for the destination file
    TString opt = dURL.GetOptions();
-   if (opt != "") opt += "&";
-   opt += raw;
-
-   // AliEn files need to know where the source file is
-   if (!strcmp(dURL.GetProtocol(), "alien"))
-      opt += TString::Format("&source=%s", GetName());
+   if (opt != "")
+      opt += "&";
+   // Files will be open in RAW mode
+   opt += "filetype=raw";
 
    dURL.SetOptions(opt);
 

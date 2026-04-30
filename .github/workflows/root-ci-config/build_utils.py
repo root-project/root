@@ -198,12 +198,12 @@ def load_config(filename) -> dict:
 
 def cmake_options_from_dict(config: Dict[str, str]) -> str:
     """Converts a dictionary of build options to string.
-       The output is sorted alphanumerically.
+    The output is sorted alphanumerically.
 
-       example: {"builtin_xrootd"="on", "alien"="on"}
-                        ->
-                 '"-Dalien=on" -Dbuiltin_xrootd=on"'
-       The key CMAKE_GENERATOR is used to set the CMake generator.
+    example: {"builtin_xrootd"="on", "arrow"="on"}
+                     ->
+              '"-Darrow=on" -Dbuiltin_xrootd=on"'
+    The key CMAKE_GENERATOR is used to set the CMake generator.
     """
 
     if not config:

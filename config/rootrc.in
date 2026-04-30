@@ -458,7 +458,9 @@ TFile.CrossProtocolRedirects:  yes
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
 Url.Special:         file: hpss: dcache:
-+Url.Special:        /alien/-
+# Note that AliEn support is removed from ROOT. The following line remains to
+# demonstrate the use of Url.Special
+# +Url.Special:        /alien/-
 
 # XNet.Debug            - log verbosity level (default 0)
 #                         (0 = nothing,
