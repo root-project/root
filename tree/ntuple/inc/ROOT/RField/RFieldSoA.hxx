@@ -99,6 +99,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
+   std::uint32_t GetTypeChecksum() const final;
    /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type
    /// of any user object. If the class is not polymorphic, return nullptr.
    /// TODO(jblomer): use information in unique pointer field
