@@ -408,7 +408,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::BeforeConnectPageSource(Inte
 
 void ROOT::RRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 }
 
 void ROOT::RRVecField::ConstructValue(void *where) const
@@ -618,7 +618,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::BeforeConnectPageSource(In
 
 void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 }
 
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -761,7 +761,7 @@ void ROOT::RField<std::vector<bool>>::ReconcileOnDiskField(const RNTupleDescript
       }
       fOnDiskNRepetitions = fieldDesc.GetNRepetitions();
    } else {
-      EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+      EnsureMatchingOnDiskCollection(desc).ThrowOnError();
    }
 }
 
