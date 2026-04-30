@@ -1102,6 +1102,7 @@ The on-disk representation is identical to a `std::vector<T>`, using two fields:
   - Child field of type `T` with name `_0`.
 
 The field's type name is the type of the SoA class.
+The type checksum and the type version of the SoA class is stored as field information.
 The SoA flag of the field descriptor must be set.
 
 ### ROOT::RNTupleCardinality<SizeT>
