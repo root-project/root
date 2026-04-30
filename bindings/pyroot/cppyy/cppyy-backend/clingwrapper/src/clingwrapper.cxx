@@ -1702,6 +1702,18 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
     // if it fails, use Sema to propogate info about why it failed (DeductionInfo)
 }
 
+static inline bool is_basic_string_of(const std::string& n, const char* charT) {
+    // Match "std::basic_string<charT" whether or not the default template
+    // arguments (char_traits, allocator) are spelled out; the character type
+    // must be followed by ',' or '>' so that e.g. "char" does not match
+    // "char16_t".
+    std::string prefix = "std::basic_string<";
+    prefix += charT;
+    if (n.compare(0, prefix.size(), prefix) != 0)
+        return false;
+    return n.size() > prefix.size() && (n[prefix.size()] == ',' || n[prefix.size()] == '>');
+}
+
 static inline std::string type_remap(const std::string& n1,
                                      const std::string& n2) {
     // Operator lookups of (C++ string, Python str) should succeed for the
@@ -1709,11 +1721,11 @@ static inline std::string type_remap(const std::string& n1,
     // since C++ does not have a operator+(std::string, std::wstring), we'll
     // have to look up the same type and rely on the converters in
     // CPyCppyy/_cppyy.
-    if (n1 == "str" || n1 == "unicode" || n1 == "std::basic_string<char>") {
-        if (n2 == "std::basic_string<wchar_t>")
+    if (n1 == "str" || n1 == "unicode" || is_basic_string_of(n1, "char")) {
+        if (is_basic_string_of(n2, "wchar_t"))
             return "std::basic_string<wchar_t>&";                      // match like for like
         return "std::basic_string<char>&"; // probably best bet
-    } else if (n1 == "std::basic_string<wchar_t>") {
+    } else if (is_basic_string_of(n1, "wchar_t")) {
         return "std::basic_string<wchar_t>&";
     } else if (n1 == "complex") {
         return "std::complex<double>";
