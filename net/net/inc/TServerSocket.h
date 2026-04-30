@@ -30,35 +30,14 @@
 
 class TSeqCollection;
 
-namespace ROOT::Deprecated {
-
-typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *,
-                           std::string&, Int_t &, Int_t &, std::string &,
-                           TSeqCollection *);
-typedef Int_t (*SrvClup_t)(TSeqCollection *);
-
-// These mask are globally available to manipulate the option to Accept
-const UChar_t kSrvAuth   = 0x1;            // Require client authentication
-const UChar_t kSrvNoAuth = (kSrvAuth<<4);  // Force no client authentication
-
-} // namespace ROOT::Deprecated
-
-using SrvAuth_t R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::SrvAuth_t;
-using SrvClup_t R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::SrvClup_t;
-const UChar_t kSrvAuth R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::kSrvAuth;
-const UChar_t kSrvNoAuth R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::kSrvNoAuth;
-
 class TServerSocket : public TSocket {
 
 private:
    TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
-   static ROOT::Deprecated::SrvAuth_t fgSrvAuthHook;
-   static ROOT::Deprecated::SrvClup_t fgSrvAuthClupHook;
 
    TServerSocket() : fSecContexts(nullptr) {}
    TServerSocket(const TServerSocket &);
    void operator=(const TServerSocket &);
-   Bool_t Authenticate(TSocket *);
 
 public:
    enum { kDefaultBacklog = 10 };
