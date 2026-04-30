@@ -31,7 +31,6 @@ The following lists are accessible from gROOT object:
       gROOT->GetListOfFiles
       gROOT->GetListOfMappedFiles
       gROOT->GetListOfSockets
-      gROOT->GetListOfSecContexts
       gROOT->GetListOfCanvases
       gROOT->GetListOfStyles
       gROOT->GetListOfFunctions
@@ -171,11 +170,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
 #endif
-
-TSeqCollection *ROOT::Deprecated::Internal::GetListOfSecContexts(const TROOT &r)
-{
-   return r.fSecContexts;
-}
 
 extern "C" void R__SetZipMode(int);
 
@@ -910,7 +904,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
    fBrowsables  = (TList*)setNameLocked(new TList, "Browsables");
    fCleanups    = setNameLocked(new THashList, "Cleanups");
    fMessageHandlers = setNameLocked(new TList, "MessageHandlers");
-   fSecContexts = setNameLocked(new TList, "SecContexts");
    fClipboard   = setNameLocked(new TList, "Clipboard");
    fDataSets    = setNameLocked(new TList, "DataSets");
    fTypes       = new TListOfTypes; fTypes->UseRWLock();
@@ -935,7 +928,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
    fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
    fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
-   fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
@@ -1068,7 +1060,6 @@ TROOT::~TROOT()
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
-      fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();           SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = nullptr; delete tl;

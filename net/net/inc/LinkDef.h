@@ -27,8 +27,6 @@
 #pragma link C++ class TSQLTableInfo;
 #pragma link C++ class TSQLColumnInfo;
 #pragma link C++ class TSQLMonitoringWriter;
-#pragma link C++ class ROOT::Deprecated::TSecContext;
-#pragma link C++ class ROOT::Deprecated::TSecContextCleanup;
 #pragma link C++ class TFileStager;
 #pragma link C++ class TApplicationRemote;
 #pragma link C++ class TApplicationServer;
