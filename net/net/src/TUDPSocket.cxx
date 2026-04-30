@@ -169,16 +169,7 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a socket; see CreateAuthSocket for the form of url.
-/// Connect to the specified port # on the remote host.
-/// If user is specified in url, try authentication as user.
-/// Use tcpwindowsize to specify the size of the receive buffer, it has
-/// to be specified here to make sure the window scale option is set (for
-/// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// Returns when connection has been accepted by remote side. Use IsValid()
-/// to check the validity of the socket. Every socket is added to the TROOT
-/// sockets list which will make sure that any open sockets are properly
-/// closed on program termination.
+/// Create a socket; see TSocket constructor.
 
 TUDPSocket::TUDPSocket(const char *url, Int_t port)
          : TNamed(TUrl(url).GetHost(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)

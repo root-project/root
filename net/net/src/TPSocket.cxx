@@ -107,49 +107,8 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    // to control the flow
    Bool_t valid = TSocket::IsValid();
 
-   // check if we are called from CreateAuthSocket()
-   Bool_t authreq = kFALSE;
-   char *pauth = (char *)strstr(host, "?A");
-   if (pauth) {
-      authreq = kTRUE;
-   }
-
    // perhaps we can use fServType here ... to be checked
    Bool_t rootdSrv = (strstr(host,"rootd")) ? kTRUE : kFALSE;
-
-   // try authentication , if required
-   if (authreq) {
-      if (valid) {
-         if (!Authenticate(TUrl(host).GetUser())) {
-            if (rootdSrv && (fRemoteProtocol > 0 && fRemoteProtocol < 10)) {
-               // We failed because we are talking to an old
-               // server: we need to re-open the connection
-               // and communicate the size first
-               Int_t tcpw = (size > 1 ? -1 : tcpwindowsize);
-               TSocket *ns = new TSocket(host, port, tcpw);
-               if (ns->IsValid()) {
-                  R__LOCKGUARD(gROOTMutex);
-                  gROOT->GetListOfSockets()->Remove(ns);
-                  fSocket = ns->GetDescriptor();
-                  fSize = size;
-                  Init(tcpwindowsize);
-               }
-               if ((valid = IsValid())) {
-                  if (!Authenticate(TUrl(host).GetUser())) {
-                     TSocket::Close();
-                     valid = kFALSE;
-                  }
-               }
-            } else {
-               TSocket::Close();
-               valid = kFALSE;
-            }
-         }
-      }
-      // reset url to the original state
-      *pauth = '\0';
-      SetUrl(host);
-   }
 
    // open the sockets ...
    if (!rootdSrv || fRemoteProtocol > 9) {
@@ -170,7 +129,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
 /// sockets list which will make sure that any open sockets are properly
 /// closed on program termination.
 
-TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
+TPSocket::TPSocket(const char *host, Int_t /* port */, Int_t size, TSocket *sock)
 {
    // To avoid uninitialization problems when Init is not called ...
    fSockets        = 0;
@@ -203,49 +162,8 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
    // to control the flow
    Bool_t valid = sock->IsValid();
 
-   // check if we are called from CreateAuthSocket()
-   Bool_t authreq = kFALSE;
-   char *pauth = (char *)strstr(host, "?A");
-   if (pauth) {
-      authreq = kTRUE;
-   }
-
    // perhaps we can use fServType here ... to be checked
    Bool_t rootdSrv = (strstr(host,"rootd")) ? kTRUE : kFALSE;
-
-   // try authentication , if required
-   if (authreq) {
-      if (valid) {
-         if (!Authenticate(TUrl(host).GetUser())) {
-            if (rootdSrv && (fRemoteProtocol > 0 && fRemoteProtocol < 10)) {
-               // We failed because we are talking to an old
-               // server: we need to re-open the connection
-               // and communicate the size first
-               Int_t tcpw = (size > 1 ? -1 : fTcpWindowSize);
-               TSocket *ns = new TSocket(host, port, tcpw);
-               if (ns->IsValid()) {
-                  R__LOCKGUARD(gROOTMutex);
-                  gROOT->GetListOfSockets()->Remove(ns);
-                  fSocket = ns->GetDescriptor();
-                  fSize = size;
-                  Init(fTcpWindowSize);
-               }
-               if ((valid = IsValid())) {
-                  if (!Authenticate(TUrl(host).GetUser())) {
-                     TSocket::Close();
-                     valid = kFALSE;
-                  }
-               }
-            } else {
-               TSocket::Close();
-               valid = kFALSE;
-            }
-         }
-      }
-      // reset url to the original state
-      *pauth = '\0';
-      SetUrl(host);
-   }
 
    // open the sockets ...
    if (!rootdSrv || fRemoteProtocol > 9) {
