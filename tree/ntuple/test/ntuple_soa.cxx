@@ -54,9 +54,16 @@ TEST(RNTuple, SoACheck)
 
    try {
       auto f = std::make_unique<RSoAField>("f", "SoAUnknownRecord");
-      FAIL() << "creating SoA field with missing record typedef should fail";
+      FAIL() << "creating SoA field with unknown underlying record type should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("invalid record type of SoA field SoAUnknownRecord"));
+   }
+
+   try {
+      auto f = std::make_unique<RSoAField>("f", "SoAVersionMismatch");
+      FAIL() << "creating SoA field with a class version different from the underlying record type's should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("version mismatch between SoA type and underlying record type"));
    }
 
    try {
