@@ -93,7 +93,7 @@ TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 /// In case of error 0 is returned and in case non-blocking I/O is
 /// enabled and no connections are available -1 is returned.
 
-TPSocket *TPServerSocket::Accept(UChar_t Opt)
+TPSocket *TPServerSocket::Accept(UChar_t opt)
 {
    TSocket  *setupSocket = 0;
    TSocket  **pSockets;
@@ -102,7 +102,7 @@ TPSocket *TPServerSocket::Accept(UChar_t Opt)
    Int_t size, port;
 
    // wait for the incoming connections to the server and accept them
-   setupSocket = TServerSocket::Accept(Opt);
+   setupSocket = TServerSocket::Accept(opt);
 
    if (setupSocket == 0) return 0;
 

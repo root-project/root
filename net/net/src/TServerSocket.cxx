@@ -37,25 +37,7 @@ to the requester. The actual work is done via the TSystem class
 ROOT::Deprecated::SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
 ROOT::Deprecated::SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
 
-// Defaul options for accept
-UChar_t TServerSocket::fgAcceptOpt = ROOT::Deprecated::kSrvNoAuth;
-
 TVirtualMutex *gSrvAuthenticateMutex = 0;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Kind of macro to parse input options
-/// Modify opt according to modifier mod.
-
-static void SetAuthOpt(UChar_t &opt, UChar_t mod)
-{
-   R__LOCKGUARD2(gSrvAuthenticateMutex);
-
-   if (!mod) return;
-
-   if ((mod & ROOT::Deprecated::kSrvAuth))   opt |= ROOT::Deprecated::kSrvAuth;
-   if ((mod & ROOT::Deprecated::kSrvNoAuth)) opt &= ~ROOT::Deprecated::kSrvAuth;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a server socket object for a named service. Set reuse to true
@@ -193,8 +175,9 @@ TServerSocket::~TServerSocket()
 /// any open sockets are properly closed on program termination.
 /// In case of error 0 is returned and in case non-blocking I/O is
 /// enabled and no connections are available -1 is returned.
+/// Note: opt used to pass authentication options but is currently unused.
 
-TSocket *TServerSocket::Accept(UChar_t opt)
+TSocket *TServerSocket::Accept(UChar_t /* opt */)
 {
    if (fSocket == -1) { return 0; }
 
@@ -204,11 +187,6 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    if (soc == -1) { delete socket; return 0; }
    if (soc == -2) { delete socket; return (TSocket*) -1; }
 
-   // Parse Opt
-   UChar_t acceptOpt = fgAcceptOpt;
-   SetAuthOpt(acceptOpt, opt);
-   Bool_t auth = (Bool_t)(acceptOpt & ROOT::Deprecated::kSrvAuth);
-
    socket->fSocket  = soc;
    socket->fSecContext = 0;
    socket->fService = fService;
@@ -217,14 +195,6 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    if (socket->fSocket >= 0) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(socket);
-   }
-
-   // Perform authentication, if required
-   if (auth) {
-      if (!Authenticate(socket)) {
-         delete socket;
-         socket = 0;
-      }
    }
 
    return socket;
@@ -256,34 +226,6 @@ Int_t TServerSocket::GetLocalPort()
       return fAddress.GetPort();
    }
    return -1;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return default options for Accept
-
-UChar_t TServerSocket::GetAcceptOptions()
-{
-   return fgAcceptOpt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set default options for Accept according to modifier 'mod'.
-/// Use:
-///   kSrvAuth                 require client authentication
-///   kSrvNoAuth               do not require client authentication
-
-void TServerSocket::SetAcceptOptions(UChar_t mod)
-{
-   SetAuthOpt(fgAcceptOpt, mod);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print default options for Accept.
-
-void TServerSocket::ShowAcceptOptions()
-{
-   ::Info("ShowAcceptOptions", "Use authentication: %s", (fgAcceptOpt & ROOT::Deprecated::kSrvAuth) ? "yes" : "no");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
