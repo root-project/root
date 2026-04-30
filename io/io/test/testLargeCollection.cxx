@@ -52,6 +52,40 @@ static bool spotCheck(const std::vector<T> &got, const std::vector<T> &expected,
    return ok;
 }
 
+// Variant of spotCheck that computes expected values on-the-fly via a
+// generator, so the caller can free the source array before read-back.
+template <typename T, typename Gen>
+static bool spotCheckFn(const std::vector<T> &got, Long64_t expectedSize, Gen expectedAt, const char *tag)
+{
+   if ((Long64_t)got.size() != expectedSize) {
+      std::cerr << tag << ": size mismatch " << got.size() << " vs " << expectedSize << '\n';
+      return false;
+   }
+   constexpr Long64_t kSpot     = 1024;
+   const Long64_t     n         = expectedSize;
+   const Long64_t     boundaryN = (Long64_t)(2LL * 1024 * 1024 * 1024 / sizeof(T));
+   bool               ok        = true;
+
+   auto check = [&](Long64_t i) {
+      if (i < 0 || i >= n)
+         return;
+      if (!(got[i] == expectedAt(i))) {
+         if (ok)
+            std::cerr << tag << ": mismatch at index " << i << '\n';
+         ok = false;
+      }
+   };
+
+   for (Long64_t i = 0; i < kSpot; ++i)
+      check(i);
+   for (Long64_t i = boundaryN - kSpot; i < boundaryN + kSpot; ++i)
+      check(i);
+   for (Long64_t i = n - kSpot; i < n; ++i)
+      check(i);
+
+   return ok;
+}
+
 // -----------------------------------------------------------------------
 // Helper: a non-trivial struct so we exercise the object-array path
 // -----------------------------------------------------------------------
@@ -105,8 +139,9 @@ static char *DoNothingAllocator(char *input, size_t, size_t)
 
 // -----------------------------------------------------------------------
 // 1. Direct store of a numerical array in a TBufferFile
+//    Returns the large float vector so testDirectVector can reuse it.
 // -----------------------------------------------------------------------
-int testDirectNumerical()
+int testDirectNumerical(std::vector<float> &orig_large_out)
 {
    int errors = 0;
 
@@ -128,14 +163,14 @@ int testDirectNumerical()
 
    // --- large array (crosses the 2 GB boundary) ---
    // 512 M floats = 2 GB of payload
-   const Long64_t     largeN = 512 * 1024 * 1024ll;
-   std::vector<float> orig_large(largeN);
+   const Long64_t largeN = 512 * 1024 * 1024ll;
+   orig_large_out.resize(largeN);
    for (Long64_t i = 0; i < largeN; ++i)
-      orig_large[i] = float(i % 65536);
+      orig_large_out[i] = float(i & 0xFFFF); // 65536 = 2^16; & is faster than %
 
    auto startLarge = b.GetCurrent() - b.Buffer();
    b << largeN;
-   b.WriteFastArray(orig_large.data(), largeN);
+   b.WriteFastArray(orig_large_out.data(), largeN);
 
    // --- read back small ---
    b.SetReadMode();
@@ -167,7 +202,7 @@ int testDirectNumerical()
       } else {
          std::vector<float> got(n);
          b.ReadFastArray(got.data(), n);
-         if (!spotCheck(got, orig_large, "testDirectNumerical large"))
+         if (!spotCheck(got, orig_large_out, "testDirectNumerical large"))
             ++errors;
       }
    }
@@ -203,8 +238,10 @@ int testDirectStruct()
    // ~170 M Points * 12 bytes = ~2 GB
    const Long64_t         largeN = 170 * 1024 * 1024ll;
    std::vector<DataPoint> orig_large(largeN);
+   // Use bitwise AND (power-of-2 period) instead of % 1000 to avoid
+   // 510 M integer divisions in this fill loop.
    for (Long64_t i = 0; i < largeN; ++i)
-      orig_large[i] = {float(i % 1000), float((i + 1) % 1000), float((i + 2) % 1000)};
+      orig_large[i] = {float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
 
    auto startLarge = b.GetCurrent() - b.Buffer();
    b << largeN;
@@ -240,7 +277,11 @@ int testDirectStruct()
       } else {
          std::vector<DataPoint> got(n);
          b.ReadFastArray(got.data(), pointClass, n);
-         if (!spotCheck(got, orig_large, "testDirectStruct large"))
+         if (!spotCheckFn(got, largeN,
+                          [](Long64_t i) {
+                             return DataPoint{float(i & 0x3FF), float((i + 1) & 0x3FF), float((i + 2) & 0x3FF)};
+                          },
+                          "testDirectStruct large"))
             ++errors;
       }
    }
@@ -250,8 +291,10 @@ int testDirectStruct()
 
 // -----------------------------------------------------------------------
 // 2b. Direct store of std::vector<T> via StreamObject
+//     Takes the already-built large float vector from testDirectNumerical
+//     to avoid re-allocating and re-filling 2 GB of data.
 // -----------------------------------------------------------------------
-int testDirectVector()
+int testDirectVector(std::vector<float> &orig_large_f)
 {
    int errors = 0;
 
@@ -272,9 +315,7 @@ int testDirectVector()
    b.StreamObject(&orig_small_f, floatVecClass);
 
    // --- large std::vector<float> (512 M entries = 2 GB) ---
-   std::vector<float> orig_large_f(512 * 1024 * 1024ll);
-   for (size_t i = 0; i < orig_large_f.size(); ++i)
-      orig_large_f[i] = float(i % 65536);
+   // orig_large_f is passed in from testDirectNumerical — no re-allocation needed.
 
    auto startLargeF = b.GetCurrent() - b.Buffer();
    b.StreamObject(&orig_large_f, floatVecClass);
@@ -304,7 +345,9 @@ int testDirectVector()
    {
       std::vector<float> got;
       b.StreamObject(&got, floatVecClass);
-      if (!spotCheck(got, orig_large_f, "testDirectVector large float"))
+      if (!spotCheckFn(got, 512 * 1024 * 1024ll,
+                       [](Long64_t i) { return float(i & 0xFFFF); },
+                       "testDirectVector large float"))
          ++errors;
    }
 
@@ -447,13 +490,15 @@ int testLargeCollection()
    int errors = 0;
 
    std::cerr << "testDirectNumerical ...\n";
-   errors += testDirectNumerical();
+   std::vector<float> sharedLargeFloats;
+   errors += testDirectNumerical(sharedLargeFloats);
 
    std::cerr << "testDirectStruct ...\n";
    errors += testDirectStruct();
 
    std::cerr << "testDirectVector ...\n";
-   errors += testDirectVector();
+   errors += testDirectVector(sharedLargeFloats);
+   { std::vector<float>{}.swap(sharedLargeFloats); } // release 2 GB before the large-object test
 
    std::cerr << "testAsPartOfObject ...\n";
    errors += testAsPartOfObject();
