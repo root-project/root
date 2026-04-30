@@ -99,7 +99,6 @@ set(BASE_HEADERS
   TUrl.h
   TUUID.h
   TVersionCheck.h
-  TVirtualAuth.h
   TVirtualFFT.h
   TVirtualGL.h
   TVirtualMonitoring.h
