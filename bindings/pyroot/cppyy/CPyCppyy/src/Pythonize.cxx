@@ -1469,7 +1469,7 @@ PyObject* STLStringGetAttr(CPPInstance* self, PyObject* attr_name)
     return attr;
 }
 
-
+#if 0
 PyObject* UTF8Repr(PyObject* self)
 {
 // force C++ string types conversion to Python str per Python __repr__ requirements
@@ -1480,6 +1480,7 @@ PyObject* UTF8Repr(PyObject* self)
     Py_DECREF(res);
     return str_res;
 }
+#endif
 
 PyObject* UTF8Str(PyObject* self)
 {
@@ -1847,6 +1848,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         PyObject_SetAttr(pyclass, PyStrings::gNe, top_ne);
     }
 
+#if 0
     if (HasAttrDirect(pyclass, PyStrings::gRepr, true)) {
     // guarantee that the result of __repr__ is a Python string
         Utility::AddToClass(pyclass, "__cpp_repr", "__repr__");
@@ -1858,6 +1860,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         Utility::AddToClass(pyclass, "__cpp_str", "__str__");
         Utility::AddToClass(pyclass, "__str__", (PyCFunction)UTF8Str, METH_NOARGS);
     }
+#endif
 
     if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
     // create a pseudo-constructor to allow initializer-style object creation
