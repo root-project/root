@@ -255,7 +255,7 @@ As part of this migration, the following build options are deprecated. From ROOT
 
 ### Added Modified Anderson-Bjork (ModAB) root-finding algorithm
 
-This is new and efficient bracketing root-finding algorithm. It combines bisection with Anderson-Bjork's method to achieve superlinear convergence (e.i. = 1.7-1.8), while preserving worst-case optimality. According to the benchmarks, it outperforms classical algorithms like ITP, Brent and Ridders. It is implemented as the `ROOT::Math::ModABRootFinder` class.
+This is new and efficient bracketing root-finding [(Ganchovski, et al. 2026)](https://www.mdpi.com/1999-4893/19/5/332). It combines bisection with Anderson-Bjork's method to achieve superlinear convergence (e.i. = 1.7-1.8), while preserving worst-case optimality. According to the benchmarks, it outperforms classical algorithms like ITP, Brent and Ridders. It is implemented as the `ROOT::Math::ModABRootFinder` class.
 
 ## RooFit
 
