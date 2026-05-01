@@ -95,8 +95,7 @@ nll_gauss = gauss.createNLL(obs_data)
 # Compute the morphed nll
 frame1 = morphing(ROOT.RooMomentMorphFuncND.Linear)
 
-# TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
-nll_morph = workspace["morph"].createNLL(obs_data, EvalBackend="legacy")
+nll_morph = workspace["morph"].createNLL(obs_data)
 
 # Plot the negative logarithmic summed likelihood
 frame2 = mu_var.frame(Title="Negative log Likelihood")
