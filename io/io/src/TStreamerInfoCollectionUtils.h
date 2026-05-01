@@ -14,7 +14,6 @@
 
 #include "TBuffer.h"
 #include "RtypesCore.h"
-#include <cmath>    // std::signbit
 #include <limits>   // std::numeric_limits
 
 namespace TStreamerInfoUtils {
@@ -32,7 +31,9 @@ inline ULong64_t ReadCollectionSize(TBuffer &b, Version_t vers)
    Int_t nobjects;
    b >> nobjects;
    ULong64_t nobjects64;
-   if (std::signbit(nobjects) && vers >= 11) {
+   // std::signbit is not available (yet?) on Windows.
+   // Instead, we check if nobjects is negative to determine if the high bit is set.
+   if (nobjects < 0 && vers >= 11) {
       nobjects64 = (static_cast<ULong64_t>(nobjects) & 0x7fffffff) << 32;
       UInt_t nobjectsLow;
       b >> nobjectsLow;
