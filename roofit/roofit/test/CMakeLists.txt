@@ -16,6 +16,7 @@ ROOT_ADD_GTEST(testRooFit
     testRooJohnson.cxx
     testRooKeysPdf.cxx
     testRooLandau.cxx
+    testRooMomentMorphFuncND.cxx
     testRooParamHistFunc.cxx
     testRooPoisson.cxx
     testRooStepFunc.cxx

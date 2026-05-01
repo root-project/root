@@ -407,11 +407,24 @@ RooMomentMorphFuncND::compileForNormSet(RooArgSet const &normSet, RooFit::Detail
    std::unique_ptr<RooAbsReal> newSum{static_cast<RooAbsReal *>(cust.build())};
    newSum->addOwnedComponents(std::move(newFractions));
 
-   // Tell the compile context the freshly-cloned subtree is already in its
-   // final form, so the recursive descent below only visits the leaves that
-   // still need compiling (the morph parameters and the observables).
-   ctx.markSubtreeAsCompiled(*newSum);
-   ctx.compileServers(*newSum, normSet);
+   if (_isPdfMode) {
+      // In pdf mode, _sum is a RooAddPdf whose value should be the normalized
+      // morph density. We must let the inner RooHistPdf clones go through
+      // their own compileForNormSet so they get wrapped in a RooNormalizedPdf.
+      RooArgSet branches;
+      newSum->branchNodeServerList(&branches);
+      for (auto *b : branches) {
+         if (dynamic_cast<RooFit::Detail::RooMomentMorphFraction *>(b))
+            ctx.markAsCompiled(*b);
+      }
+      ctx.compileServers(*newSum, normSet);
+   } else {
+      // Non-pdf mode: _sum is a RooRealSumFunc and the legacy path returns
+      // the raw weighted sum of the per-pdf bin values, with no per-component
+      // normalization. So cloned subtree is already in its final form.
+      ctx.markSubtreeAsCompiled(*newSum);
+      ctx.compileServers(*newSum, normSet);
+   }
 
    return newSum;
 }
