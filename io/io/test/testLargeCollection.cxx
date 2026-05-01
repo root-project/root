@@ -444,12 +444,12 @@ int testAsPartOfObject()
 {
    int errors = 0;
 
-   std::vector<char> raw;
-   raw.reserve(6 * 1024 * 1024 * 1024ll);
-   TBufferFile b(TBuffer::kWrite, 6 * 1024 * 1024 * 1024ll - 100, raw.data(), false /* don't adopt */,
-                 DoNothingAllocator);
+   // Let TBufferFile own and manage its own buffer so it can auto-expand freely.
+   // Start small; it will grow as needed (up to ~8+ GB for the 2G-float large object).
+   TBufferFile b(TBuffer::kWrite, 1024);
 
-   LargeCollectionFixture fixture;
+   {
+      LargeCollectionFixture fixture;
 
    // --- small object (well within 2 GB region) ---
    fixture.fFloats.assign(1000, 1.0f);
@@ -457,6 +457,8 @@ int testAsPartOfObject()
    auto startSmall = b.GetCurrent() - b.Buffer();
    b.WriteObject(&fixture, false /* cacheReuse */);
    errors += readAndCheckFixture("small object", b, startSmall, 1000, 500);
+   }
+   LargeCollectionFixture fixture;
 
    // --- large object (floats cross 2 GB, written in regular section) ---
    b.SetWriteMode();
@@ -529,9 +531,98 @@ int testNested()
 }
 
 // -----------------------------------------------------------------------
+// 5. Minimal reproducer for two related >4 GB TBufferFile bugs:
+//
+//    Bug A (write-side): WriteObject on an object whose serialised content
+//    crosses the 4 GB mark in the buffer.  SetByteCount fires an assert
+//    because cntpos < 4 GB but fBufCur - fBuffer > 4 GB after streaming.
+//    Minimal trigger: start writing just below 4 GB, payload > remaining space.
+//
+//    Bug B (read-side): ReadObjectAny on an object whose buffer start
+//    position > kMaxUInt.  MapObject fires "offset <= kMaxUInt" assert.
+//    Minimal trigger: seek to > 4 GB, WriteObject tiny fixture, ReadObjectAny.
+// -----------------------------------------------------------------------
+int testMapObjectLargeOffset()
+{
+   int errors = 0;
+
+   // Each sub-test uses its own fresh TBufferFile so the class map is clean,
+   // ensuring every read-back sees a genuine "new class" entry in ReadClass
+   // and exercises the MapObject path at the relevant buffer offset.
+
+   // --- Bug A: object START is just below 4 GB but the payload (10 M floats = 40 MB)
+   //     pushes fBufCur past kMaxUInt.  SetByteCount / WriteObjectClass must handle
+   //     a byte-count position that was recorded below 4 GB while the current
+   //     position is above it.
+   {
+      const Long64_t kBufSize = (4LL * 1024 + 128) * 1024 * 1024; // 4.125 GB
+      std::vector<char> raw(kBufSize, 0);
+      TBufferFile b(TBuffer::kWrite, kBufSize, raw.data(), false /* don't adopt */, DoNothingAllocator);
+
+      const Long64_t kStartA = 4LL * 1024 * 1024 * 1024 - 256;
+      b.SetBufferOffset(kStartA);
+      LargeCollectionFixture fixture;
+      fixture.fFloats.assign(10 * 1024 * 1024, 1.0f); // 40 MB — crosses the 4 GB boundary
+      fixture.fPoints.assign(3, {1.f, 2.f, 3.f});
+      b.WriteObject(&fixture, false /* cacheReuse */);
+
+      b.SetReadMode();
+      b.SetBufferOffset(kStartA);
+      auto *objA = b.ReadObjectAny(TClass::GetClass(typeid(LargeCollectionFixture)));
+      if (!objA) {
+         std::cerr << "testMapObjectLargeOffset BugA: ReadObjectAny returned null\n";
+         ++errors;
+      } else {
+         auto *f = static_cast<LargeCollectionFixture *>(objA);
+         if (f->fFloats.size() != 10u * 1024 * 1024 || f->fPoints.size() != 3) {
+            std::cerr << "testMapObjectLargeOffset BugA: size mismatch\n";
+            ++errors;
+         }
+         delete f;
+      }
+   }
+
+   // --- Bug B: object written and read at a start position entirely above kMaxUInt.
+   //     ReadObjectAny -> ReadClass -> MapObject(cl, startpos+kMapOffset) where
+   //     startpos+kMapOffset > kMaxUInt, hitting R__ASSERT(offset <= kMaxUInt)
+   //     in the TObject* overload of TBufferIO::MapObject.
+   //     A fresh TBufferFile is required so that ReadClass sees a "new class"
+   //     (not already cached) and calls MapObject with the >4 GB offset.
+   {
+      const Long64_t kBufSize = (4LL * 1024 + 128) * 1024 * 1024; // 4.125 GB
+      std::vector<char> raw(kBufSize, 0);
+      TBufferFile b(TBuffer::kWrite, kBufSize, raw.data(), false /* don't adopt */, DoNothingAllocator);
+
+      const Long64_t kStartB = 4LL * 1024 * 1024 * 1024 + 100; // just above kMaxUInt
+      b.SetBufferOffset(kStartB);
+      LargeCollectionFixture fixture;
+      fixture.fFloats.assign(10, 2.0f);
+      fixture.fPoints.assign(2, {2.f, 3.f, 4.f});
+      b.WriteObject(&fixture, false /* cacheReuse */);
+
+      b.SetReadMode();
+      b.SetBufferOffset(kStartB);
+      auto *objB = b.ReadObjectAny(TClass::GetClass(typeid(LargeCollectionFixture)));
+      if (!objB) {
+         std::cerr << "testMapObjectLargeOffset BugB: ReadObjectAny returned null\n";
+         ++errors;
+      } else {
+         auto *f = static_cast<LargeCollectionFixture *>(objB);
+         if (f->fFloats.size() != 10 || f->fPoints.size() != 2) {
+            std::cerr << "testMapObjectLargeOffset BugB: size mismatch\n";
+            ++errors;
+         }
+         delete f;
+      }
+   }
+
+   return errors;
+}
+
+// -----------------------------------------------------------------------
 // Entry point
 // -----------------------------------------------------------------------
-int testLargeCollection(bool timing = true)
+int testLargeCollection(bool timing = false)
 {
    int errors = 0;
 
@@ -541,6 +632,7 @@ int testLargeCollection(bool timing = true)
    TIME_SUBTEST(timing, "testDirectVector",    testDirectVector(sharedLargeFloats));
    { std::vector<float>{}.swap(sharedLargeFloats); } // release 2 GB before the large-object test
    TIME_SUBTEST(timing, "testAsPartOfObject",  testAsPartOfObject());
+   TIME_SUBTEST(timing, "testMapObjectLargeOffset", testMapObjectLargeOffset());
    TIME_SUBTEST(timing, "testNested",          testNested());
 
    std::cerr << "Done. errors=" << errors << '\n';
