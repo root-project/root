@@ -474,6 +474,9 @@ if (builtin_cling)
   endif(LLVM_ENABLE_PIC AND NOT MSVC)
   # Avoid cling being installed under ROOTSYS/include.
   set(CLING_ROOT_BUILD ON)
+  # ROOT only consumes the cling libraries (see CLING_LIBRARIES); skip the
+  # cling driver, libcling and the Jupyter kernel.
+  set(CLING_MINIMAL ON CACHE BOOL "" FORCE)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 

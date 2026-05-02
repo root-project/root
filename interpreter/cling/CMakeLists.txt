@@ -428,6 +428,10 @@ option(CLING_INCLUDE_TESTS
        "Generate build targets for the Cling unit tests."
        ${LLVM_INCLUDE_TESTS})
 
+option(CLING_MINIMAL
+       "Skip the cling driver, libcling and the Jupyter kernel; build only the cling libraries."
+       OFF)
+
 if (NOT WIN32)
   set(cling_path_delim ":")
 else()

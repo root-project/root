@@ -8,7 +8,7 @@
 
 add_subdirectory(Interpreter)
 add_subdirectory(MetaProcessor)
-if(CLING_INCLUDE_TESTS)
+if(NOT CLING_MINIMAL OR CLING_INCLUDE_TESTS)
    add_subdirectory(UserInterface)
 endif()
 add_subdirectory(Utils)
