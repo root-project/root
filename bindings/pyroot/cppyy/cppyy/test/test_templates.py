@@ -1160,7 +1160,8 @@ class TestTEMPLATES:
 
         ns = cppyy.gbl.CStringTemplateArg
 
-        assert type(ns.stringify("Alice")) == cppyy.gbl.std.string
+    # patched expect str instead of cppyy.gbl.std.string, due to ROOT patch 
+        assert type(ns.stringify("Alice")) == str
         assert ns.stringify("Alice", "Bob")                          == "Alice Bob "
         assert ns.stringify(1, 2, 3)                                 == "1 2 3 "
         assert ns.stringify["const char*"]("Aap")                    == "Aap "
