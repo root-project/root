@@ -96,9 +96,6 @@ TEST_P(FitTest, AsymptoticallyCorrectErrors)
 // evaluated in batch mode and data size is greater than one, the batch mode
 // will inform that a batched evaluation function is missing.
 //
-// This test is disabled if the legacy backend is not available, because then
-// we don't have any reference to compare to.
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST(RooAbsPdf, ConditionalFitBatchMode)
 {
    using namespace RooFit;
@@ -132,41 +129,67 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 
    auto data = makeFakeDataXY();
 
+   // The model x range is wider than the support of the data so that the
+   // Poisson normalisation integral over x is unity to high precision for any
+   // mean value encountered. With that simplification, the conditional MLE for
+   // `factor` has a closed form (see below) and the legacy evaluation backend
+   // is no longer needed as a reference.
    RooWorkspace ws;
    ws.factory("Product::mean1({factor[1.0, 0.0, 10.0], y[1.0, 5]})");
    ws.factory("Product::mean2({factor})");
-   ws.factory("Poisson::model1(x[0, 10], mean1)");
+   ws.factory("Poisson::model1(x[0, 30], mean1)");
    ws.factory("Poisson::model2(x, mean2)");
 
    RooRealVar &factor = *ws.var("factor");
    RooRealVar &y = *ws.var("y");
 
-   std::vector<bool> expectFastEvaluationsWarnings{true, false};
+   double sumX = 0.0;
+   double sumY = 0.0;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      const RooArgSet *row = data->get(i);
+      sumX += row->getRealValue("x");
+      sumY += row->getRealValue("y");
+   }
+   const double nEntries = data->numEntries();
+
+   // For each event, the conditional log-likelihood term is
+   //    log Poisson(x_i; factor * y_i) = x_i log(factor*y_i) - factor*y_i + const
+   // (the Poisson normalisation integral over x is unity by construction of
+   // the wide x range). Setting d(NLL)/d(factor) = 0 gives:
+   //    model1: factor_MLE = sum_i x_i / sum_i y_i           (mean depends on y)
+   //    model2: factor_MLE = sum_i x_i / N                   (mean is just factor)
+   // and the standard error from the inverse Hessian is in both cases
+   //    sigma(factor) = sqrt(sum_i x_i) / (sum_i y_i  or  N).
+   const std::vector<double> expectedFactor{sumX / sumY, sumX / nEntries};
+   const std::vector<double> expectedFactorErr{std::sqrt(sumX) / sumY, std::sqrt(sumX) / nEntries};
+   const std::vector<bool> expectFastEvaluationsWarnings{true, false};
 
    int iMean = 0;
    for (RooAbsPdf *model : {ws.pdf("model1"), ws.pdf("model2")}) {
 
-      std::vector<std::unique_ptr<RooFitResult>> fitResults;
-
       RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::FastEvaluations);
 
-      for (auto evalBackend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
-         factor.setVal(1.0);
-         factor.setError(0.0);
-         fitResults.emplace_back(model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), evalBackend));
-         if (verbose) {
-            fitResults.back()->Print();
-         }
+      factor.setVal(1.0);
+      factor.setError(0.0);
+      auto fitResult = std::unique_ptr<RooFitResult>{
+         model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), EvalBackend::Cpu())};
+      if (verbose) {
+         fitResult->Print();
       }
 
-      EXPECT_TRUE(fitResults[1]->isIdentical(*fitResults[0]));
+      auto *factorFinal = static_cast<RooRealVar *>(fitResult->floatParsFinal().find("factor"));
+      ASSERT_NE(factorFinal, nullptr);
+      EXPECT_NEAR(factorFinal->getVal(), expectedFactor[iMean], 1e-4 * expectedFactor[iMean])
+         << "value mismatch for " << model->GetName();
+      EXPECT_NEAR(factorFinal->getError(), expectedFactorErr[iMean], 1e-3 * expectedFactorErr[iMean])
+         << "error mismatch for " << model->GetName();
+
       EXPECT_EQ(hijack.str().find("does not implement the faster batch") != std::string::npos,
                 expectFastEvaluationsWarnings[iMean])
          << "Stream contents: " << hijack.str();
       ++iMean;
    }
 }
-#endif
 
 // ROOT-9530: RooFit side-band fit inconsistent with fit to full range
 TEST_P(FitTest, MultiRangeFit)

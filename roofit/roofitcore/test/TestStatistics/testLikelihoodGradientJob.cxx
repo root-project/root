@@ -63,6 +63,7 @@ ValAndError getValAndError(RooArgSet const &parsFinal, const char *name)
    return {var.getVal(), var.getError()};
 };
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 std::vector<double> getParamVals(RooAbsMinimizerFcn &fcn)
 {
    std::vector<double> values(fcn.getNDim());
@@ -73,6 +74,7 @@ std::vector<double> getParamVals(RooAbsMinimizerFcn &fcn)
 
    return values;
 }
+#endif
 
 std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &nll, bool offsetting)
 {
@@ -235,6 +237,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    m1.minimize("Minuit2", "migrad");
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND_
 TEST_P(LikelihoodGradientJobTest, GaussianND)
 {
    // do a minimization, but now using GradMinimizer and its MP version
@@ -315,6 +318,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
       EXPECT_EQ(std0[ix], std1[ix]);
    }
 }
+#endif
 
 INSTANTIATE_TEST_SUITE_P(NworkersSeed, LikelihoodGradientJobTest,
                          ::testing::Combine(::testing::Values(1, 2, 3),      // number of workers
@@ -579,6 +583,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
 }
 #undef EXPECT_NEAR_REL
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 class LikelihoodGradientJobErrorTest
    : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t, bool, bool>> {
    void SetUp() override
@@ -967,3 +972,4 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
    RFMP::Config::LikelihoodJob::defaultNEventTasks = RFMP::Config::LikelihoodJob::automaticNEventTasks;
    RFMP::Config::LikelihoodJob::defaultNComponentTasks = RFMP::Config::LikelihoodJob::automaticNComponentTasks;
 }
+#endif

@@ -25,6 +25,7 @@
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
 
 /// Forum issue
@@ -519,6 +520,12 @@ TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheckWithCondVar)
 /// GitHub issue #18718.
 /// Make sure that we can do a ranged fit on an extended RooAddPdf in a
 /// RooSimultaneous with the new CPU backend.
+///
+/// The reference value is computed analytically: each channel has a single
+/// fixed-shape exponential, so the extended-MLE for the yield reduces to
+/// `N_obs_in_range * I_full / I_range`, where the integrals run over the full
+/// observable range and the fit range respectively. This avoids depending on
+/// the legacy evaluation backend, which is not always built.
 TEST(RooSimultaneous, RangedExtendedRooAddPdf)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
@@ -526,16 +533,23 @@ TEST(RooSimultaneous, RangedExtendedRooAddPdf)
    const double nBkgA_nom = 9000;
    const double nBkgB_nom = 10000;
 
-   RooRealVar x("x", "Observable", 100, 150);
-   x.setRange("fitRange", 100, 130);
+   const double cA = -0.06;
+   const double cB = -0.09;
+
+   const double xMin = 100;
+   const double xMax = 150;
+   const double xFitMax = 130;
+
+   RooRealVar x("x", "Observable", xMin, xMax);
+   x.setRange("fitRange", xMin, xFitMax);
 
    RooRealVar nBkgA("nBkgA", "", nBkgA_nom, 0.8 * nBkgA_nom, 1.2 * nBkgA_nom);
    RooRealVar nBkgB("nBkgB", "", nBkgB_nom, 0.8 * nBkgB_nom, 1.2 * nBkgB_nom);
 
-   RooExponential expA("expA", "", x, RooFit::RooConst(-0.06));
+   RooExponential expA("expA", "", x, RooFit::RooConst(cA));
    RooAddPdf modelA("modelA", "", {expA}, {nBkgA});
 
-   RooExponential expB("expB", "", x, RooFit::RooConst(-0.09));
+   RooExponential expB("expB", "", x, RooFit::RooConst(cB));
    RooAddPdf modelB("modelB", "", {expB}, {nBkgB});
 
    RooCategory runCat("runCat", "", {{"RunA", 0}, {"RunB", 1}});
@@ -546,21 +560,26 @@ TEST(RooSimultaneous, RangedExtendedRooAddPdf)
 
    std::unique_ptr<RooDataSet> combData{simPdf.generate(RooArgSet(x, runCat), Extended())};
 
-   using Res = std::unique_ptr<RooFitResult>;
+   std::unique_ptr<RooFitResult> fitResult{
+      simPdf.fitTo(*combData, Save(), Range("fitRange"), EvalBackend(EvalBackend::Cpu()), PrintLevel(-1))};
 
-   RooArgSet params;
-   RooArgSet paramsSnap;
-   simPdf.getParameters(combData->get(), params);
-   params.snapshot(paramsSnap);
+   ASSERT_NE(fitResult, nullptr);
+   EXPECT_EQ(fitResult->status(), 0);
 
-   Res fitResult{simPdf.fitTo(*combData, Save(), Range("fitRange"), EvalBackend(EvalBackend::Cpu()), PrintLevel(-1))};
+   auto integ = [](double c, double a, double b) { return (std::exp(c * b) - std::exp(c * a)) / c; };
 
-   params.assign(paramsSnap);
+   const double ratioA = integ(cA, xMin, xMax) / integ(cA, xMin, xFitMax);
+   const double ratioB = integ(cB, xMin, xMax) / integ(cB, xMin, xFitMax);
 
-   Res fitResultRef{
-      simPdf.fitTo(*combData, Save(), Range("fitRange"), EvalBackend(EvalBackend::Legacy()), PrintLevel(-1))};
+   const double nBkgA_ref = combData->sumEntries("runCat==0", "fitRange") * ratioA;
+   const double nBkgB_ref = combData->sumEntries("runCat==1", "fitRange") * ratioB;
 
-   EXPECT_TRUE(fitResult->isIdentical(*fitResultRef));
+   auto getFinal = [&](const char *name) { return static_cast<RooRealVar *>(fitResult->floatParsFinal().find(name)); };
+
+   // Tolerance accounts for MINUIT's default convergence precision. The
+   // fit-vs-analytical mismatch caused by the bug in #18718 was several percent.
+   EXPECT_NEAR(getFinal("nBkgA")->getVal(), nBkgA_ref, 1e-3 * nBkgA_ref);
+   EXPECT_NEAR(getFinal("nBkgB")->getVal(), nBkgB_ref, 1e-3 * nBkgB_ref);
 }
 
 /// GitHub issue #20383.
