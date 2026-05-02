@@ -13,10 +13,49 @@
 
 #include <gtest/gtest.h>
 
-// These tests are disabled if the legacy backend is not available, because
-// then we don't have any reference to compare to.
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-// GitHub issue 9118: Problem running weighted binned fit in batch mode
+#include <cmath>
+#include <map>
+#include <string>
+
+namespace {
+
+// Compare two fit results parameter-by-parameter with relative tolerances on
+// values and errors. The error of each parameter in `ref` is multiplied by
+// `errorScale[name]` (default 1.0) before being compared to the same parameter
+// in `r`.
+void expectFitsCompatible(const RooFitResult &ref, const RooFitResult &r, double valTol, double errTol,
+                          const std::map<std::string, double> &errorScale = {})
+{
+   ASSERT_EQ(ref.floatParsFinal().size(), r.floatParsFinal().size());
+
+   for (auto *p : ref.floatParsFinal()) {
+      const std::string name = p->GetName();
+      auto *vRef = static_cast<RooRealVar *>(p);
+      auto *vNew = static_cast<RooRealVar *>(r.floatParsFinal().find(name.c_str()));
+      ASSERT_NE(vNew, nullptr) << "missing parameter " << name;
+
+      const double valScale = std::max(std::abs(vRef->getVal()), 1.0);
+      EXPECT_NEAR(vRef->getVal(), vNew->getVal(), valTol * valScale) << "value mismatch for " << name;
+
+      const double scale = errorScale.count(name) ? errorScale.at(name) : 1.0;
+      EXPECT_NEAR(vRef->getError() * scale, vNew->getError(), errTol * vRef->getError() * scale)
+         << "error mismatch for " << name;
+   }
+}
+
+} // namespace
+
+// GitHub issue 9118: Problem running weighted binned fit in batch mode.
+//
+// Test the SumW2Error correction for a non-extended fit by checking the
+// defining property of the correction: applied to data with a uniform weight
+// w, it should reproduce the parameter values and errors of the equivalent
+// unweighted fit. In a non-extended fit, all parameters are shape parameters
+// that are invariant under uniform reweighting, so:
+//   - Values are unchanged whether the data is weighted or not.
+//   - Errors with SumW2(true) match the unweighted-fit errors.
+//   - Errors with SumW2(false) on weighted data scale as 1/sqrt(w), because
+//     the (unrescaled) Hessian of the likelihood scales linearly with w.
 TEST(SumW2Error, BatchMode)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
@@ -37,11 +76,11 @@ TEST(SumW2Error, BatchMode)
    model.getParameters(dataSet->get(), params);
    params.snapshot(initialParams);
 
-   // these datasets will be filled with a weight that is not unity
-   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", *dataSet->get(), RooFit::WeightVar());
+   const double w = 0.5;
 
+   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", *dataSet->get(), RooFit::WeightVar());
    for (int i = 0; i < dataSet->numEntries(); ++i) {
-      dataSetWeighted.add(*dataSet->get(i), 0.5);
+      dataSetWeighted.add(*dataSet->get(i), w);
    }
 
    std::unique_ptr<RooDataHist> dataHist{dataSet->binnedClone()};
@@ -49,57 +88,49 @@ TEST(SumW2Error, BatchMode)
 
    using namespace RooFit;
 
-   auto fit = [&](RooAbsData &data, bool sumw2, EvalBackend evalBackend, std::string const &minimizer,
-                  int printLevel = -1) {
+   auto fit = [&](RooAbsData &data, bool sumw2) {
       params.assign(initialParams);
-
-      return std::unique_ptr<RooFitResult>{model.fitTo(data, Save(), SumW2Error(sumw2), Strategy(1), evalBackend,
-                                                       Minimizer(minimizer.c_str()), PrintLevel(printLevel))};
+      return std::unique_ptr<RooFitResult>{
+         model.fitTo(data, Save(), SumW2Error(sumw2), Strategy(1), EvalBackend::Cpu(), PrintLevel(-1))};
    };
 
-   auto scalar = EvalBackend::Legacy();
-   auto batchMode = EvalBackend::Cpu();
+   const double valTol = 1e-4;
+   const double errTol = 1e-2;
 
-   // Compare batch mode vs. scalar mode for non-SumW2 fits on UNWEIGHTED datasets
-   EXPECT_TRUE(fit(*dataSet, 0, scalar, "Minuit")->isIdentical(*fit(*dataSet, 0, batchMode, "Minuit")))
-      << " different results for Minuit fit to RooDataSet without SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 0, scalar, "Minuit")->isIdentical(*fit(*dataHist, 0, batchMode, "Minuit")))
-      << " different results for Minuit fit to RooDataHist without SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataSet, 0, scalar, "Minuit2")->isIdentical(*fit(*dataSet, 0, batchMode, "Minuit2")))
-      << " different results for Minuit2 fit to RooDataSet without SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 0, scalar, "Minuit2")->isIdentical(*fit(*dataHist, 0, batchMode, "Minuit2")))
-      << " different results for Minuit2 fit to RooDataHist without SumW2Error correction.";
+   for (const auto &dataPair : std::vector<std::pair<RooAbsData *, RooAbsData *>>{
+           {dataSet.get(), &dataSetWeighted}, {dataHist.get(), dataHistWeighted.get()}}) {
+      RooAbsData &dataUw = *dataPair.first;
+      RooAbsData &dataW = *dataPair.second;
 
-   // We can't compare the covariance matrix in these next cases, because it is
-   // externally provided. Still, it's okay because the parameter values and
-   // errors are compared, where the errors are inferred from the external
-   // covariance matrix.
+      // Reference: fit the unweighted dataset without SumW2Error.
+      auto refFit = fit(dataUw, /*sumw2=*/false);
 
-   // Compare batch mode vs. scalar mode for SumW2 fits on UNWEIGHTED datasets
-   EXPECT_TRUE(fit(*dataSet, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(*dataSet, 1, batchMode, "Minuit")))
-      << " different results for Minuit fit to RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(*dataHist, 1, batchMode, "Minuit")))
-      << " different results for Minuit fit to RooDataHist with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataSet, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(*dataSet, 1, batchMode, "Minuit2")))
-      << " different results for Minuit2 fit to RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(*dataHist, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(*dataHist, 1, batchMode, "Minuit2")))
-      << " different results for Minuit2 fit to RooDataHist with SumW2Error correction.";
+      // SumW2Error on unweighted data should be a near no-op (the internal
+      // sqrt(w)-weighted refit is the same fit), so values and errors
+      // should match the reference.
+      auto fitUwSw2 = fit(dataUw, /*sumw2=*/true);
+      expectFitsCompatible(*refFit, *fitUwSw2, valTol, errTol);
 
-   // Compare batch mode vs. scalar mode for SumW2 fits on WEIGHTED datasets
-   EXPECT_TRUE(
-      fit(dataSetWeighted, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(dataSetWeighted, 1, batchMode, "Minuit")))
-      << " different results for Minuit fit to weighted RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(
-      fit(*dataHistWeighted, 1, scalar, "Minuit")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, batchMode, "Minuit")))
-      << " different results for Minuit fit to weighted RooDataHist with SumW2Error correction.";
-   EXPECT_TRUE(
-      fit(dataSetWeighted, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(dataSetWeighted, 1, batchMode, "Minuit2")))
-      << " different results for Minuit2 fit to weighted RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(
-      fit(*dataHistWeighted, 1, scalar, "Minuit2")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, batchMode, "Minuit2")))
-      << " different results for Minuit2 fit to weighted RooDataHist with SumW2Error correction.";
+      // SumW2Error on weighted data should reproduce the unweighted errors.
+      auto fitWSw2 = fit(dataW, /*sumw2=*/true);
+      expectFitsCompatible(*refFit, *fitWSw2, valTol, errTol);
+
+      // Without SumW2Error, the errors on a uniformly weighted dataset
+      // scale as 1/sqrt(w) for shape parameters.
+      auto fitWNoSw2 = fit(dataW, /*sumw2=*/false);
+      std::map<std::string, double> scale;
+      for (auto *p : refFit->floatParsFinal()) {
+         scale[p->GetName()] = 1.0 / std::sqrt(w);
+      }
+      expectFitsCompatible(*refFit, *fitWNoSw2, valTol, errTol, scale);
+   }
 }
 
+// Test the SumW2Error correction in an extended fit, in both the full range
+// and a subrange. The defining property of SumW2Error is the same as in the
+// non-extended case (it should reproduce the unweighted-fit errors), but for
+// extended fits the yield parameters scale linearly with the uniform weight
+// w under reweighting, and so do their errors.
 TEST(SumW2Error, ExtendedFit)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
@@ -116,60 +147,77 @@ TEST(SumW2Error, ExtendedFit)
    auto *shp = ws.pdf("shp");
    std::unique_ptr<RooDataSet> dataNoWeights{shp->generate(RooArgSet(*x))};
 
-   // For this test, use a uniform non-unity weight of 1.5. It was set to 0.1
-   // in the past, but then there were fourth-digit differences between the
-   // scalar mode and the batch mode. However, this is most likeliy not
-   // pointing towards a flaw in the batch mode, which is why a value was
-   // handpicked for which the differences disappear. Any residual problems are
-   // most likely caused by the unnecessarily complicated implementation of the
-   // RooAddPdf extended term in the scalar mode: the coefficients are
-   // projected to the subrange by cached scale factors, while the batch mode
-   // just uses the same scaling factor as for the full likelihood.
+   const double w = 1.5;
    auto *wFunc = ws.factory("w[1.5]");
-
-   auto *w = dataNoWeights->addColumn(*wFunc);
-   RooDataSet data{dataNoWeights->GetName(),
-                   dataNoWeights->GetTitle(),
-                   *dataNoWeights->get(),
-                   RooFit::Import(*dataNoWeights),
-                   RooFit::WeightVar(w->GetName())};
-   RooDataHist datahist{"datahist", "datahist", *data.get(), data};
+   auto *wcol = dataNoWeights->addColumn(*wFunc);
+   RooDataSet dataWeighted{dataNoWeights->GetName(), dataNoWeights->GetTitle(), *dataNoWeights->get(),
+                           RooFit::Import(*dataNoWeights), RooFit::WeightVar(wcol->GetName())};
+   RooDataHist datahistUw{"datahistUw", "", *dataNoWeights->get(), *dataNoWeights};
+   RooDataHist datahistW{"datahistW", "", *dataWeighted.get(), dataWeighted};
 
    RooArgSet params;
    RooArgSet initialParams;
-
    shp->getParameters(dataNoWeights->get(), params);
    params.snapshot(initialParams);
 
-   auto doFit = [&](RooFit::EvalBackend evalBackend, bool sumW2Error, const char *range) {
+   auto doFit = [&](RooAbsData &data, bool sumw2, const char *range) {
       params.assign(initialParams);
-      return std::unique_ptr<RooFitResult>{shp->fitTo(datahist, Extended(), Range(range), Save(),
-                                                      SumW2Error(sumW2Error), Strategy(1), PrintLevel(-1), evalBackend,
-                                                      Minimizer("Minuit2", "migrad"))};
+      return std::unique_ptr<RooFitResult>{shp->fitTo(data, Extended(), Range(range), Save(), SumW2Error(sumw2),
+                                                      Strategy(1), PrintLevel(-1), EvalBackend::Cpu())};
    };
 
-   // compare batch mode and scalar mode fit results for full range
-   {
-      auto yy = doFit(EvalBackend::Cpu(), true, nullptr);
-      auto yn = doFit(EvalBackend::Cpu(), false, nullptr);
-      auto ny = doFit(EvalBackend::Legacy(), true, nullptr);
-      auto nn = doFit(EvalBackend::Legacy(), false, nullptr);
+   // Build a "yield-scaled" reference where yield values and errors are
+   // multiplied by `factor`. Shape parameters are left unchanged. This
+   // produces the expected fit result for a uniformly weighted dataset under
+   // the SumW2 correction.
+   auto scaleYields = [&](RooFitResult const &r, double factor) {
+      auto out = std::unique_ptr<RooFitResult>(static_cast<RooFitResult *>(r.Clone()));
+      for (auto *p : out->floatParsFinal()) {
+         const std::string name = p->GetName();
+         if (name == "Nsig" || name == "Nbkg") {
+            auto *v = static_cast<RooRealVar *>(p);
+            v->setVal(v->getVal() * factor);
+            v->setError(v->getError() * factor);
+         }
+      }
+      return out;
+   };
 
-      EXPECT_TRUE(yy->isIdenticalNoCov(*ny)) << "different results for extended fit with SumW2Error in BatchMode";
-      EXPECT_TRUE(yn->isIdenticalNoCov(*nn)) << "different results for extended fit without SumW2Error in BatchMode";
-   }
+   for (const char *range : {static_cast<const char *>(nullptr), "subrange"}) {
+      // The unweighted reference fit. Yield parameters in the model are
+      // defined over the full range of x (the model integrates over the full
+      // range internally), so for both `nullptr` and `"subrange"` the yield
+      // values represent total counts in [-10, 10].
+      auto refFit = doFit(datahistUw, /*sumw2=*/false, range);
 
-   // compare batch mode and scalar mode fit results for subrange
-   {
-      auto yy = doFit(EvalBackend::Cpu(), true, "subrange");
-      auto yn = doFit(EvalBackend::Cpu(), false, "subrange");
-      auto ny = doFit(EvalBackend::Legacy(), true, "subrange");
-      auto nn = doFit(EvalBackend::Legacy(), false, "subrange");
+      // Tolerances are looser in the subrange because the fit is harder
+      // (smaller effective sample size and stronger correlations).
+      const bool isSubrange = range != nullptr;
+      const double valTol = isSubrange ? 5e-3 : 1e-3;
+      const double errTol = isSubrange ? 5e-2 : 2e-2;
 
-      EXPECT_TRUE(yy->isIdenticalNoCov(*ny))
-         << "different results for extended fit in subrange with SumW2Error in BatchMode";
-      EXPECT_TRUE(yn->isIdenticalNoCov(*nn))
-         << "different results for extended fit in subrange without SumW2Error in BatchMode";
+      // The reference scaled by w in the yield values and errors. With
+      // SumW2(true) on uniformly weighted data, this matches the actual fit:
+      //   - yield values scale by w (more weighted "counts" by factor w)
+      //   - yield errors also scale by w (fluctuations of weighted counts)
+      //   - shape parameters are invariant under uniform reweighting
+      auto refScaledByW = scaleYields(*refFit, w);
+
+      auto fitWSw2 = doFit(datahistW, /*sumw2=*/true, range);
+      expectFitsCompatible(*refScaledByW, *fitWSw2, valTol, errTol);
+
+      // Without SumW2, the yield values still scale by w, but the errors of
+      // *all* parameters get an additional factor 1/sqrt(w) relative to the
+      // yield-scaled reference. For yields this means the actual error scales
+      // as sqrt(w) (instead of w). For shape parameters this means the error
+      // scales as 1/sqrt(w) (instead of 1). This follows from the fact that
+      // the weighted-likelihood Hessian scales linearly with the weight.
+      std::map<std::string, double> scaleNoSw2;
+      for (auto *p : refFit->floatParsFinal()) {
+         scaleNoSw2[p->GetName()] = 1.0 / std::sqrt(w);
+      }
+
+      auto fitWNoSw2 = doFit(datahistW, /*sumw2=*/false, range);
+      expectFitsCompatible(*refScaledByW, *fitWNoSw2, valTol, errTol, scaleNoSw2);
    }
 }
-#endif
