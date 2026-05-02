@@ -282,6 +282,28 @@ struct IMTRAII {
    ~IMTRAII() { ROOT::DisableImplicitMT(); }
 };
 
+
+TEST_F(RNTupleDSTest, TailSchedulingWithGlobalRange)
+{
+   IMTRAII _;
+   FileRAII f("GlobalRangeSingleFileTail.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "tail", f.GetPath());
+      for(int i = 0; i < 11;i++){
+         *ptrX = i;
+         writer->Fill();
+      }
+   }
+   ROOT::RDF::Experimental::RDatasetSpec spec;
+   ROOT::RDF::Experimental::RSample sample("smpl", "tail", f.GetPath());
+   spec.AddSample(sample);
+   spec.WithGlobalRange({3, 10});
+   ROOT::RDataFrame df(spec);
+   auto s = df.Sum("x");
+   EXPECT_EQ(*s, 42);
+}
 TEST_F(RNTupleDSTest, ReadMT)
 {
    IMTRAII _;
