@@ -485,7 +485,8 @@ class TestREGRESSION:
         assert a == 'a'
         assert b == 'b'
 
-        assert type(a+b) == cppyy.gbl.std.string
+    # patched to expect str instead of cppyy.gbl.std.string, due to ROOT patch 
+        assert type(a+b) == str
         assert a+b == 'ab'
 
     def test19_std_string_hash(self):
