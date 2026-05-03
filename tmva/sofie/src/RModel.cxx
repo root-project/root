@@ -32,6 +32,19 @@ bool IsIdentifierChar(char c)
    return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
 }
 
+// Returns true if s is a valid C++ identifier (can be used as a variable name).
+// Dim::param can be either a plain name (e.g. "W") or a computed expression
+// (e.g. "((W+-3)/2+1)"); only the former can be used as a C++ variable name.
+bool IsIdentifier(const std::string &s)
+{
+   if (s.empty() || std::isdigit(static_cast<unsigned char>(s[0])))
+      return false;
+   for (char c : s)
+      if (!IsIdentifierChar(c))
+         return false;
+   return true;
+}
+
 // Get the data member name corresponding to a tensor with a given name.
 std::string TensorMember(std::string const &name)
 {
@@ -1141,14 +1154,23 @@ void RModel::GenerateOutput()
       if(!isDynamic) {
          n = std::to_string(ConvertShapeToLength(GetTensorShape(name)));
       } else {
-         n = memberNameForDimShape(ConvertDimShapeToLength(GetDynamicTensorShape(name)));
+         std::string dimLen = ConvertDimShapeToLength(GetDynamicTensorShape(name));
+         // Use the session member (fXxx) when any dim is a runtime-computed identifier
+         // (e.g. NonZero count). For expression-type dims derived from input shapes
+         // (e.g. "((W+-3)/2+1)"), use the expression directly.
+         bool hasRuntimeParam = false;
+         for (auto const &dim : GetDynamicTensorShape(name)) {
+            if (dim.isParam && IsIdentifier(dim.param) && !IsInputTensorShapeParam(dim.param))
+               hasRuntimeParam = true;
+         }
+         n = hasRuntimeParam ? memberNameForDimShape(dimLen) : dimLen;
       }
       std::string outputName = "output_tensor_" + name;
       fGC += SP + "std::vector<" + typeForOutput(GetTensorType(name)) + " > " + outputName + "(" + n + ");\n";
       doInferArgs += " " + outputName + ".data(),";
       if(isDynamic) {
          for (auto const &dim : GetDynamicTensorShape(name)) {
-            if (dim.isParam && !IsInputTensorShapeParam(dim.param)) {
+            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param)) {
                fGC += SP + "size_t " + dim.param + " = 0;\n";
                doInferArgs += " " + dim.param + ",";
             }
@@ -1223,7 +1245,7 @@ void RModel::GenerateSessionCode()
       doInferSignature += typeForOutput(GetTensorType(name)) + " *tensor_" + name + ",";
       if(isDynamic) {
          for (auto const &dim : GetDynamicTensorShape(name)) {
-            if (dim.isParam && !IsInputTensorShapeParam(dim.param))
+            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param))
                doInferSignature += " size_t &" + dim.param + "_output,";
          }
       }
@@ -1406,7 +1428,7 @@ void RModel::GenerateSessionCode()
       bool isDynamic = fDynamicTensorInfos.count(name) > 0;
       if(isDynamic) {
          for (auto const &dim : GetDynamicTensorShape(name)) {
-            if (dim.isParam && !IsInputTensorShapeParam(dim.param))
+            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param))
                fGC += "   " + dim.param + "_output = " + dim.param + ";\n";
          }
       }
