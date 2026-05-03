@@ -29,6 +29,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/ConvWithStridesPadding.ref.hxx"
 #include "input_models/references/ConvWithStridesNoPadding.ref.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
+#include "input_models/references/ConvAddRelu.ref.hxx"
 #include "input_models/references/MaxPool1d.ref.hxx"
 #include "input_models/references/MaxPool2d.ref.hxx"
 #include "input_models/references/MaxPool2d_CeilMode.ref.hxx"
@@ -762,6 +763,32 @@ TEST(ONNX, ConvWithStridesNoPadding)
    EXPECT_EQ(output.size(), std::size(ConvWithStridesNoPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithStridesNoPadding_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ConvAddRelu)
+{
+   // Regression test for the fusion of Conv and Add into a single Conv
+   // operator with bias: the parser used to mark the Add node as fused
+   // without creating the fused operator, so the type of the Add output was
+   // never registered and parsing the following Relu node failed.
+
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing a ramp input starting at -7, so that the Relu clips part of
+   // the fused Conv+Add output
+   std::vector<float> input(16);
+   std::iota(input.begin(), input.end(), -7.0f);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAddRelu", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), std::size(ConvAddRelu_ExpectedOutput::outputs));
+
+   float *correct = ConvAddRelu_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
