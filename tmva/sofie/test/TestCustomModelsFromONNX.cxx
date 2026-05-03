@@ -745,6 +745,27 @@ TEST(ONNX, ConvWithStridesNoPadding)
    }
 }
 
+TEST(ONNX, ConvWithDynShapeStride)
+{
+   // Conv1d with dynamic spatial dimension W and stride=2.
+   // Verifies fix for output dimension formula: ((W+pad-kernel)/stride+1)
+   // was incorrectly generated as ((W+pad-kernel)/stride1) before the fix.
+   //
+   // Model: kernel=3, stride=2, pad=0, weight=all-ones, input shape (1,1,W)
+   // With W=7: output shape (1,1,3), output = [0+1+2, 2+3+4, 4+5+6] = [3, 9, 15]
+
+   std::vector<float> input = {0, 1, 2, 3, 4, 5, 6}; // shape (1,1,7)
+   std::vector<float> correct_output = {3, 9, 15};
+
+   // model is dynamic in spatial dim W, use W = 7
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ConvWithDynShapeStride",
+                                       "\"ConvWithDynShapeStride_FromONNX.dat\", 7", 7, input);
+
+   EXPECT_EQ(output.size(), correct_output.size());
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
 
 // Disables test (asymmetric padding not supported)
 TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
