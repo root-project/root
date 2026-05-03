@@ -1780,7 +1780,16 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
                 Cppyy::TCppMethod_t meth = methods[0];
                 const std::string& resname = Cppyy::GetMethodReturnTypeAsString(meth);
                 bool isIterator = gIteratorTypes.find(resname) != gIteratorTypes.end();
-                if (!isIterator && Cppyy::GetScope(resname)) {
+                // skip pointer return values. GetScope template parsing strips a
+                // trailing '*' and returns the underlying class scope. Cppyy::GetType
+                // preserves pointer qualifiers, so for raw-pointer begin() returns
+                // (e.g. RVec<T>::iterator = T*), do not add STLSequenceIter.
+                // ROOT master's TCling-based GetScope returns null for
+                // pointer names and never hit this false positive.
+                Cppyy::TCppType_t restype = !resname.empty()
+                    ? Cppyy::GetType(resname, /*enable_slow_lookup=*/true) : 0;
+                if (!isIterator && restype && !Cppyy::IsPointerType(restype)
+                        && Cppyy::GetScope(resname)) {
                     if (resname.find("iterator") == std::string::npos)
                         gIteratorTypes.insert(resname);
                     isIterator = true;
