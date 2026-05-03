@@ -200,8 +200,8 @@ public:
                }
             } else { // general case (stride not 1)
                int64_t v =  pad - kernel;
-               std::string outStr = "((" + inputDim.param + "+" + std::to_string(v) + ")/"
-                                 + std::to_string(stride) + "1)";
+               std::string outStr =
+                  "((" + inputDim.param + "+" + std::to_string(v) + ")/" + std::to_string(stride) + "+1)";
                return Dim{ outStr, static_cast<size_t>(-1)};
             }
          }
