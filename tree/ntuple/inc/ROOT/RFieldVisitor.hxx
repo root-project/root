@@ -236,6 +236,7 @@ public:
    void VisitNullableField(const ROOT::RNullableField &field) final;
    void VisitEnumField(const ROOT::REnumField &field) final;
    void VisitAtomicField(const ROOT::RAtomicField &field) final;
+   void VisitSoAField(const ROOT::Experimental::RSoAField &field) final;
 };
 
 // clang-format off
