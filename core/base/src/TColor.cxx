@@ -3723,4 +3723,4 @@ TColorNumber::TColorNumber(std::string const &color)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Instantiate a color from a tuple of RGB values between 0.0 and 1.0.
-TColorNumber::TColorNumber(std::array<Float_t, 3> rgb) : fNumber{TColor::GetColor(rgb[0], rgb[1], rgb[2])} {}
+TColorNumber::TColorNumber(std::vector<Float_t> rgb) : fNumber{TColor::GetColor(rgb[0], rgb[1], rgb[2])} {}

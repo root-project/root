@@ -147,7 +147,7 @@ public:
    // TColorNumber is designed to be constructed implicitly, and C++ won't do
    // two user-defined conversions in a single implicit conversion chain.
    inline TColorNumber(const char *color) : TColorNumber{std::string{color}} {}
-   TColorNumber(std::array<Float_t, 3> rgb);
+   TColorNumber(std::vector<Float_t> rgb);
    Int_t number() const { return fNumber; }
 
 private:
