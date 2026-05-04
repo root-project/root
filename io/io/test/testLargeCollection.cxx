@@ -17,6 +17,13 @@
 #include <limits>
 #include <vector>
 #include <sys/resource.h>
+#if defined(__APPLE__)
+#include <sys/sysctl.h>
+#elif defined(__linux__)
+#include <sys/sysinfo.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#endif
 
 // Timing helper — writes to a dedicated file, not captured by the ctest driver.
 static std::ofstream &timingLog()
@@ -42,6 +49,59 @@ static double peak_rss_mb()
    return ru.ru_maxrss / 1024.0;
 #endif
 }
+// Returns the available (free) physical memory in MB.
+static double available_mem_mb()
+{
+#if defined(__APPLE__)
+   uint64_t memsize = 0;
+   size_t len = sizeof(memsize);
+   // vm.pagesize * vm_stat free pages gives available memory
+   int pagesize = 0;
+   size_t plen = sizeof(pagesize);
+   sysctlbyname("hw.pagesize", &pagesize, &plen, nullptr, 0);
+   // Use hw.memsize for total; approximate available via sysctl vm.page_free_count
+   uint64_t pagefree = 0;
+   size_t pflen = sizeof(pagefree);
+   if (sysctlbyname("vm.page_free_count", &pagefree, &pflen, nullptr, 0) == 0 && pagesize > 0)
+      return (pagefree * (double)pagesize) / (1024.0 * 1024.0);
+   // fallback: total physical memory
+   sysctlbyname("hw.memsize", &memsize, &len, nullptr, 0);
+   return memsize / (1024.0 * 1024.0);
+#elif defined(__linux__)
+   struct sysinfo si;
+   if (sysinfo(&si) == 0)
+      return (si.freeram * (double)si.mem_unit) / (1024.0 * 1024.0);
+   return -1.0;
+#else
+   return -1.0;
+#endif
+}
+
+// Returns the available (free) swap space in MB.
+static double available_swap_mb()
+{
+#if defined(__APPLE__)
+   struct xsw_usage swapinfo;
+   size_t len = sizeof(swapinfo);
+   if (sysctlbyname("vm.swapusage", &swapinfo, &len, nullptr, 0) == 0)
+      return swapinfo.xsu_avail / (1024.0 * 1024.0);
+   return -1.0;
+#elif defined(__linux__)
+   struct sysinfo si;
+   if (sysinfo(&si) == 0)
+      return (si.freeswap * (double)si.mem_unit) / (1024.0 * 1024.0);
+   return -1.0;
+#elif defined(_WIN32)
+   MEMORYSTATUSEX ms;
+   ms.dwLength = sizeof(ms);
+   if (GlobalMemoryStatusEx(&ms))
+      return ms.ullAvailPageFile / (1024.0 * 1024.0);
+   return -1.0;
+#else
+   return -1.0;
+#endif
+}
+
 #define TIME_SUBTEST(timing, label, call)                                               \
    do {                                                                                 \
       std::cerr << (label) << " ...\n";                                                \
@@ -622,9 +682,16 @@ int testMapObjectLargeOffset()
 // -----------------------------------------------------------------------
 // Entry point
 // -----------------------------------------------------------------------
-int testLargeCollection(bool timing = false)
+int testLargeCollection(bool timing = false, bool memoryCheck = false)
 {
    int errors = 0;
+
+   if (memoryCheck) {
+      std::cerr << "Available memory at start: " << available_mem_mb() << " MB\n";
+      double swap = available_swap_mb();
+      if (swap >= 0.0)
+         std::cerr << "Available swap at start:   " << swap << " MB\n";
+   }
 
    std::vector<float> sharedLargeFloats;
    TIME_SUBTEST(timing, "testDirectNumerical", testDirectNumerical(sharedLargeFloats));
