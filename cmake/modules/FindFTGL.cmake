@@ -25,3 +25,22 @@ set(FTGL_LIBRARIES ${FTGL_LIBRARY})
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FTGL DEFAULT_MSG FTGL_INCLUDE_DIR FTGL_LIBRARY)
 mark_as_advanced(FTGL_FOUND FTGL_INCLUDE_DIR FTGL_LIBRARY)
+
+if(FTGL_FOUND)
+  set(FTGL_VERSION_SRC "${CMAKE_SOURCE_DIR}/cmake/modules/get_ftgl_version.cpp")
+  set(VER_INCLUDE_DIRS ${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build})
+  try_run(RUN_RESULT COMPILE_RESULT
+      "${CMAKE_BINARY_DIR}"
+      "${FTGL_VERSION_SRC}"
+      CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${VER_INCLUDE_DIRS}"
+      LINK_LIBRARIES ${FTGL_LIBRARY}
+      COMPILE_OUTPUT_VARIABLE BUILD_LOG
+      RUN_OUTPUT_VARIABLE FTGL_VERSION
+  )
+  if(COMPILE_RESULT AND RUN_RESULT EQUAL 0)
+    message(STATUS "Detected FTGL version: ${FTGL_VERSION}")
+  else()
+    message(WARNING "Failed to detect FTGL version via compilation. ${BUILD_LOG}")
+  endif()
+  set(FTGL_VERSION  "${FTGL_VERSION}" CACHE INTERNAL "FGTL version")
+endif()
