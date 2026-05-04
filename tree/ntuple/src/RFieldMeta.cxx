@@ -910,6 +910,11 @@ const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() co
    return fSoAClass->GetTypeInfo();
 }
 
+void ROOT::Experimental::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitSoAField(*this);
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumName)
