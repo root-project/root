@@ -5719,34 +5719,32 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 
 void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, Int_t offx, Int_t  offy)
 {
-   if (!text)
-      return;
-   if (!InitImage("DrawTextOnPad"))
+   if (!text || !InitImage("DrawTextOnPad"))
       return;
 
-   TTF::Init();
+   TTFhandle ttf;
 
    // set text font
-   TTF::SetTextFont(text->GetTextFont());
+   ttf.SetTextFont(text->GetTextFont());
 
    UInt_t padw = pad ? pad->GetPadWidth() : 100;
    UInt_t padh = pad ? pad->GetPadHeight() : 100;
 
    // set text size
    Float_t ttfsize = text->GetTextSize() * TMath::Min(padw, padh);
-   TTF::SetTextSize(ttfsize*kScale);
+   ttf.SetTextSize(ttfsize*kScale);
 
    // set text angle
-   TTF::SetRotationMatrix(text->GetTextAngle());
+   ttf.SetRotationMatrix(text->GetTextAngle());
 
    // set text
    const wchar_t *wcsTitle = reinterpret_cast<const wchar_t *>(text->GetWcsTitle());
-   if (wcsTitle != NULL) {
-      TTF::PrepareString(wcsTitle);
-   } else {
-      TTF::PrepareString(text->GetTitle());
-   }
-   TTF::LayoutGlyphs();
+   if (wcsTitle)
+      ttf.PrepareString(wcsTitle);
+   else
+      ttf.PrepareString(text->GetTitle());
+
+   ttf.LayoutGlyphs();
 
    // color
    TColor *col = gROOT->GetColor(text->GetTextColor());
@@ -5809,41 +5807,39 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
 
    // vertical alignment
    if (align == 1 || align == 2 || align == 3) {
-      ftal.y = TTF::GetAscent();
+      ftal.y = ttf.GetAscent();
    } else if (align == 4 || align == 5 || align == 6) {
-      ftal.y = TTF::GetAscent()/2;
+      ftal.y = ttf.GetAscent() / 2;
    } else {
       ftal.y = 0;
    }
 
    // horizontal alignment
    if (align == 3 || align == 6 || align == 9) {
-      ftal.x = TTF::GetWidth();
+      ftal.x = ttf.GetWidth();
    } else if (align == 2 || align == 5 || align == 8) {
-      ftal.x = TTF::GetWidth()/2;
+      ftal.x = ttf.GetWidth() / 2;
    } else {
       ftal.x = 0;
    }
 
-   FT_Vector_Transform(&ftal, TTF::GetRotMatrix());
+   FT_Vector_Transform(&ftal, ttf.GetRotMatrix());
    ftal.x = (ftal.x >> 6);
    ftal.y = (ftal.y >> 6);
 
-   TTF::TTGlyph *glyph = TTF::GetGlyphs();
+   auto glyph = ttf.GetGlyphs();
 
-   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, nullptr, 1 )) continue;
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, nullptr, 1))
+         continue;
 
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      FT_Bitmap *source = &bitmap->bitmap;
+      auto bitmap = (FT_BitmapGlyph)glyph->fImage;
 
       Int_t bx = x - ftal.x + bitmap->left;
       Int_t by = y + ftal.y - bitmap->top;
 
-      DrawGlyph(source, color, bx, by, pad, offx, offy);
+      DrawGlyph(&bitmap->bitmap, color, bx, by, pad, offx, offy);
    }
-
-   TTF::CleanupGlyphs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5852,33 +5848,32 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
 void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
                            UInt_t color, const char *font_name, Float_t angle)
 {
-   if (!InitImage("DrawTextTTF"))
+   if (!text || !InitImage("DrawTextTTF"))
       return;
 
-   TTF::Init();
+   TTFhandle ttf;
 
-   TTF::SetTextFont(font_name);
-   TTF::SetTextSize(size);
-   TTF::SetRotationMatrix(angle);
-   TTF::PrepareString(text);
-   TTF::LayoutGlyphs();
-
-   TTF::TTGlyph *glyph = TTF::GetGlyphs();
+   ttf.SetTextFont(font_name);
+   ttf.SetTextSize(size);
+   ttf.SetRotationMatrix(angle);
+   ttf.PrepareString(text);
+   ttf.LayoutGlyphs();
 
    // compute the size and position  that will contain the text
-   // Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
-   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
-   Int_t h    = TTF::GetBox().yMax + Yoff;
+   // Int_t Xoff = ttf.GetBox().xMin < 0 ? -ttf.GetBox().xMin : 0;
+   Int_t Yoff = ttf.GetBox().yMin < 0 ? -ttf.GetBox().yMin : 0;
+   Int_t h    = ttf.GetBox().yMax + Yoff;
 
-   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, nullptr, 1 )) continue;
+   auto glyph = ttf.GetGlyphs();
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, nullptr, 1))
+         continue;
 
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      FT_Bitmap *source = &bitmap->bitmap;
+      auto bitmap = (FT_BitmapGlyph) glyph->fImage;
 
       Int_t bx = x + bitmap->left;
       Int_t by = y + h - bitmap->top;
-      DrawGlyph(source, color, bx, by);
+      DrawGlyph(&bitmap->bitmap, color, bx, by);
    }
 }
 
