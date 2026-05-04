@@ -104,8 +104,7 @@ public:
    /// of any user object. If the class is not polymorphic, return nullptr.
    /// TODO(jblomer): use information in unique pointer field
    const std::type_info *GetPolymorphicTypeInfo() const;
-   // TODO(jblomer)
-   // void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    TClass *GetSoAClass() const { return fSoAClass; }
 };
