@@ -64,8 +64,6 @@ private:
    float _pad_scale;
    float _pad_scale_x;
    float _pad_scale_y;
-   float _pad_scale_x_relative;
-   float _pad_scale_y_relative;
    float _current_font_size[mathtext::math_text_renderer_t::NFAMILY];
    inline size_t root_face_number(
       const unsigned int family, const bool serif = false) const
@@ -116,18 +114,17 @@ public:
       : TText(), TAttFill(0, 1001),
         _parent(parent), _font_size(0), _angle_degree(0)
    {
-      int i;
       _font_size = 0;
       _x0 = 0;
       _y0 = 0;
       _angle_degree = 0;
-      for (i = 0; i<6; i++) _pad_pixel_transform[i] = 0;
+      for (int i = 0; i<6; i++)
+         _pad_pixel_transform[i] = 0;
       _pad_scale = 0;
       _pad_scale_x = 0;
       _pad_scale_y = 0;
-      _pad_scale_x_relative = 0;
-      _pad_scale_y_relative = 0;
-      for (i = 0; i < mathtext::math_text_renderer_t::NFAMILY; i++) _current_font_size[i] = 0;
+      for (int i = 0; i < mathtext::math_text_renderer_t::NFAMILY; i++)
+         _current_font_size[i] = 0;
    }
    inline float
    font_size(const unsigned int family = FAMILY_PLAIN) const override
@@ -160,12 +157,8 @@ public:
    {
       _x0 = gPad->XtoAbsPixel(x);
       _y0 = gPad->YtoAbsPixel(y);
-      _pad_scale_x =
-         gPad->XtoPixel(gPad->GetX2()) -
-         gPad->XtoPixel(gPad->GetX1());
-      _pad_scale_y =
-         gPad->YtoPixel(gPad->GetY1()) -
-         gPad->YtoPixel(gPad->GetY2());
+      _pad_scale_x = gPad->GetPadWidth();
+      _pad_scale_y = gPad->GetPadHeight();
       _pad_scale = std::min(_pad_scale_x, _pad_scale_y);
 
       _angle_degree = angle_degree;
@@ -224,7 +217,7 @@ public:
    {
    }
    inline mathtext::bounding_box_t
-   bounding_box(const wchar_t character, float &current_x, const unsigned int family)
+   bounding_box_char(const wchar_t character, float &current_x, const unsigned int family)
    {
       auto font = TTF::GetCurFont();
 
@@ -236,6 +229,8 @@ public:
          TTF::SetTextFont((Font_t) root_face_number(family));
 
       auto font_face = TTF::GetCurFontFace();
+      if (!font_face || font_face->units_per_EM == 0)
+         return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
 
       FT_Load_Glyph(
          font_face,
@@ -270,61 +265,52 @@ public:
    inline mathtext::bounding_box_t
    bounding_box(const std::wstring string, const unsigned int family = FAMILY_PLAIN) override
    {
-      auto font_face = TTF::GetCurFontFace();
-
-      if (string.empty() || !font_face || font_face->units_per_EM == 0)
+      if (string.empty())
          return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
 
       std::wstring::const_iterator iterator = string.begin();
       float current_x = 0;
       mathtext::bounding_box_t ret =
-         bounding_box(*iterator, current_x, family);
+         bounding_box_char(*iterator, current_x, family);
 
       ++iterator;
       for (; iterator != string.end(); ++iterator) {
          const mathtext::point_t position =
             mathtext::point_t(current_x, 0);
          const mathtext::bounding_box_t glyph_bounding_box =
-            bounding_box(*iterator, current_x, family);
+            bounding_box_char(*iterator, current_x, family);
          ret = ret.merge(position + glyph_bounding_box);
       }
 
       return ret;
    }
-   inline void
-   text_raw(const float x, const float y,
-          const std::wstring string,
-          const unsigned int family = FAMILY_PLAIN) override
+   void text_raw(const float x, const float y,
+                 const std::wstring string,
+                 const unsigned int family = FAMILY_PLAIN) override
    {
-      SetTextFont((Font_t) root_face_number(family));
       SetTextSize(_current_font_size[family]);
-      TAttText::Modify();
 
       wchar_t buf[2];
-      float advance = 0;
+      float current_x = 0;
 
       buf[1] = L'\0';
-      for (std::wstring::const_iterator iterator = string.begin(); iterator != string.end(); ++iterator) {
-         buf[0] = *iterator;
-         const bool cyrillic_or_cjk = is_cyrillic_or_cjk(buf[0]);
-
-         if (cyrillic_or_cjk) {
+      for (auto character : string) {
+         buf[0] = character;
+         const bool cyrillic_or_cjk = is_cyrillic_or_cjk(character);
+         if (cyrillic_or_cjk)
             SetTextFont((Font_t) root_cjk_face_number());
-            TAttText::Modify();
-         }
-
-         const mathtext::bounding_box_t b =
-            bounding_box(buf, family);
-         double xt;
-         double yt;
-
-         transform_pad(xt, yt, x + advance, y);
-         gPad->PaintText(xt, yt, buf);
-         advance += b.advance();
-         if (cyrillic_or_cjk) {
+         else
             SetTextFont((Font_t) root_face_number(family));
-            TAttText::Modify();
-         }
+
+         double xt, yt;
+
+         transform_pad(xt, yt, x + current_x, y);
+
+         TAttText::ModifyOn(*gPad);
+         gPad->PaintText(xt, yt, buf);
+
+         // use bounding function to advance current_x
+         bounding_box_char(character, current_x, family);
       }
    }
    inline void
