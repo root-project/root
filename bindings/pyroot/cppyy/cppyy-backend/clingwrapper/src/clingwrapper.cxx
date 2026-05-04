@@ -1831,18 +1831,23 @@ Cppyy::TCppMethod_t Cppyy::GetGlobalOperator(
     Cpp::GetOperator(scope, Cpp::GetOperatorFromSpelling(opname), overloads,
                      /*kind=*/Cpp::OperatorArity::kBoth);
     
+    // Avoid pushing nullptr into arg_types which would crash
+    // BestOverloadFunctionMatch when it dereferences each entry's QualType.
+    auto resolve_arg_type = [](const std::string& name) -> Cppyy::TCppType_t {
+        if (auto s = Cppyy::GetScope(name, 0))
+            if (auto t = Cppyy::GetTypeFromScope(s))
+                return Cppyy::GetReferencedType(t);
+        return Cppyy::GetType(name, /*enable_slow_lookup=*/true);
+    };
+
     std::vector<Cpp::TemplateArgInfo> arg_types;
-    if (auto l = Cppyy::GetScope(lc_type, 0))
-        arg_types.emplace_back(Cppyy::GetReferencedType(Cppyy::GetTypeFromScope(l)));
-    else if (auto l = Cppyy::GetType(lc_type, /*enable_slow_lookup=*/true))
+    if (auto l = resolve_arg_type(lc_type))
         arg_types.emplace_back(l);
     else
         return nullptr;
 
     if (!rc_type.empty()) {
-        if (auto r = Cppyy::GetScope(rc_type, 0))
-            arg_types.emplace_back(Cppyy::GetReferencedType(Cppyy::GetTypeFromScope(r)));
-        else if (auto r = Cppyy::GetType(rc_type, /*enable_slow_lookup=*/true))
+        if (auto r = resolve_arg_type(rc_type))
             arg_types.emplace_back(r);
         else
             return nullptr;
