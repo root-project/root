@@ -1,15 +1,10 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM, has_cpp_20
 
 
 test_dct = "fragile_cxx"
 
-
-def has_cpp_20():
-    import cppyy
-
-    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
 
 def has_asserts():
     import cppyy

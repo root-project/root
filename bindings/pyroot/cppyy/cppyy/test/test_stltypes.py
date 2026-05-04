@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, maxvalue, ispypy, IS_WINDOWS
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy, IS_WINDOWS, has_cpp_20
 
 test_dct = "stltypes_cxx"
 
@@ -2183,12 +2183,6 @@ class TestSTLEXCEPTION:
 
         gc.collect()
         assert cppyy.gbl.GetMyErrorCount() == 0
-
-
-def has_cpp_20():
-    import cppyy
-
-    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
 
 
 @mark.skipif(not has_cpp_20(), reason="std::span requires C++20")

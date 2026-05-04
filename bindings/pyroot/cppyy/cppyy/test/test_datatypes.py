@@ -1,14 +1,8 @@
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS, has_cpp_20
 
 test_dct = "datatypes_cxx"
-
-
-def has_cpp_20():
-    import cppyy
-
-    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
 
 
 def is_modules_off():

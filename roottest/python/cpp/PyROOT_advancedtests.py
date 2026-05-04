@@ -648,8 +648,8 @@ class Cpp12NamespaceLazyFunctions( MyTestCase ):
       """Lazy lookup of late created functions"""
 
       import cppyy
-      cppyy.gbl.gInterpreter.ProcessLine( 'namespace PyCpp12_ns_test1 {}' )
-      cppyy.gbl.gInterpreter.ProcessLine(
+      cppyy.cppdef( 'namespace PyCpp12_ns_test1 {}' )
+      cppyy.cppdef(
          'namespace PyCpp12_ns_test1 { class PyCpp12_A {}; int PyCpp12_f() {return 32;}; }' )
 
       self.assertTrue( cppyy.gbl.PyCpp12_ns_test1.PyCpp12_A() )
@@ -659,8 +659,8 @@ class Cpp12NamespaceLazyFunctions( MyTestCase ):
       """Lazy lookup of late created overloaded functions"""
 
       import cppyy
-      cppyy.gbl.gInterpreter.ProcessLine( 'namespace PyCpp12_ns_test2 {}')
-      cppyy.gbl.gInterpreter.ProcessLine(
+      cppyy.cppdef( 'namespace PyCpp12_ns_test2 {}')
+      cppyy.cppdef(
          'namespace PyCpp12_ns_test2 { class PyCpp12_A {}; \
           int PyCpp12_f(int n) {return 32*n;} \
           int PyCpp12_f() {return 32;}; }')
@@ -669,7 +669,7 @@ class Cpp12NamespaceLazyFunctions( MyTestCase ):
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_f(2), 64 )
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_f(),  32 )
 
-      cppyy.gbl.gInterpreter.ProcessLine(
+      cppyy.cppdef(
          'namespace PyCpp12_ns_test2 { \
           int PyCpp12_g(const std::string&) {return 42;} \
           int PyCpp12_g() {return 13;}; }')
