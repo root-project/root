@@ -43,62 +43,69 @@ class _gROOTWrapper(object):
         return setattr(self._gROOT, name, value)
 
 
-class TDirectoryPythonAdapter:
-    """Class analogous to the `ROOT::Internal::TDirectoryAtomicAdapter` on the
-    C++ side, implementing the semantics that is expected from a
-    `TDirectory *&` to the global directory (which is what gDirectory was
-    originally), but in a thread-safe way.
+class LiveProxy:
+    """Generic adapter that forwards all access to a dynamically-resolved object.
 
-    On the C++ side the following trick is used in TDirectory.h to achieve this
-    We're re-implementing the expected semantics in Python, because the way how
-    it is implemented in C++ is too contrived for it to get Pythonized
-    automatically:
-
-    ```C++
-    #define gDirectory (::ROOT::Internal::TDirectoryAtomicAdapter{})
-    ```
-
-    So in C++, gDirectory is an adapter object that lazily converts to current
-    TDirectory when you use it. It's implemented as as a preprocessor macro,
-    which is then pretending to be a `TDirectory *` to the ROOT reflection system
-    in TROOT.cxx:
-
-    ```C++
-    TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
-    ```
-
-    This is quite hacky, and it is ambiguous to the the dynamic Python bindings
-    layer at which point the implicit conversion to the current directory
-    pointer should happen.
-
-    For this reason, it's better to re-implement a specific adapter for Python,
-    which skips all of that.
-
-    Note: the C++ adapter also implements an assignment operator (operator=),
-    but since this concept doesn't exist in Python outside data member
-    re-assignment, it is not implemented here.
+    Mimics the C++ gPad/gDirectory/gVirtualX macro semantics: every attribute
+    access re-evaluates the resolver to get the current underlying object.
     """
 
-    def _current_directory(self):
-        import ROOT
+    __slots__ = ("_resolve",)
 
-        return ROOT.TDirectory.CurrentDirectory().load()
+    def __init__(self, resolver):
+        # resolver: zero-arg callable returning the current underlying object
+        object.__setattr__(self, "_resolve", resolver)
 
     def __getattr__(self, name):
-        return getattr(self._current_directory(), name)
+        return getattr(self._resolve(), name)
 
-    def __str__(self):
-        return str(self._current_directory())
+    def __setattr__(self, name, value):
+        setattr(self._resolve(), name, value)
+
+    def __bool__(self):
+        import ROOT
+
+        return self._resolve() != ROOT.nullptr
 
     def __repr__(self):
-        return repr(self._current_directory())
+        return repr(self._resolve())
+
+    def __str__(self):
+        return str(self._resolve())
+
+    def __cast_cpp__(self):
+        return self._resolve()
+
+
+class TDirectoryPythonAdapter(LiveProxy):
+    """LiveProxy specialization for `gDirectory`.
+
+    Unlike `gPad` and `gVirtualX`, which on the C++ side are simple macros
+    around a static function returning a pointer, `gDirectory` is a macro that
+    constructs a `ROOT::Internal::TDirectoryAtomicAdapter`, which is itself an
+    adapter that lazily resolves to the current `TDirectory *` (see
+    TDirectory.h). That C++ adapter also defines custom equality against
+    `TDirectory *`, which we mirror here via `IsEqual` so that comparisons with
+    concrete directory pointers behave as users expect.
+
+    Note: the C++ adapter also overloads `operator=`, but Python has no
+    equivalent for non-attribute assignment, so that aspect is not reproduced.
+    """
+
+    def __init__(self):
+        def resolver():
+            import ROOT
+
+            return ROOT.TDirectory.CurrentDirectory().load()
+
+        super().__init__(resolver)
 
     def __eq__(self, other):
         import ROOT
 
         if other is self:
             return True
-        cd = self._current_directory()
+        cd = self._resolve()
         if cd == ROOT.nullptr:
             return other == ROOT.nullptr
         return cd.IsEqual(other)
@@ -108,19 +115,10 @@ class TDirectoryPythonAdapter:
 
         if other is self:
             return False
-        cd = self._current_directory()
+        cd = self._resolve()
         if cd == ROOT.nullptr:
             return other != ROOT.nullptr
         return not cd.IsEqual(other)
-
-    def __bool__(self):
-        import ROOT
-
-        return self._current_directory() != ROOT.nullptr
-
-    def __cast_cpp__(self):
-        """Casting to TDirectory for use in C++ functions."""
-        return self._current_directory()
 
 
 def _subimport(name):
@@ -151,9 +149,24 @@ class ROOTFacade(types.ModuleType):
         # Inject gROOT global
         self.gROOT = _gROOTWrapper(self)
 
-        # Inject the gDirectory adapter, mimicking the behavior of the
-        # gDirectory preprocessor macro on the C++ side
+        # Manually inject the three special global functors. On the C++ side
+        # these are preprocessor macros (gDirectory expands to a
+        # TDirectoryAtomicAdapter, gPad and gVirtualX expand to static accessor
+        # calls). We reproduce their semantics here using LiveProxy.
         self.gDirectory = TDirectoryPythonAdapter()
+
+        def _gpad_resolver():
+            import ROOT
+
+            return ROOT.TVirtualPad.Pad()
+
+        def _gvirtualx_resolver():
+            import ROOT
+
+            return ROOT.TVirtualX.Instance()
+
+        self.gPad = LiveProxy(_gpad_resolver)
+        self.gVirtualX = LiveProxy(_gvirtualx_resolver)
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
