@@ -914,11 +914,9 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
  *                                                 - precision < 0: Deactivate.
  *                                                 \see RooBinSamplingPdf
- * <tr><td> `ModularL(bool flag)`           <td>  Enable or disable modular likelihoods, which will become the default in a future release.
- *                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end. Note that this
- *                                                should be set to true for parallel minimization of likelihoods!
- *                                                Note that it is currently not recommended to use Modular likelihoods without any parallelization enabled in the minimization, since
- *                                                some features such as offsetting might not yet work in this case.
+ * <tr><td> `ModularL(bool flag)`           <td>  Enables usage of a modular likelihood class in the back-end that is required for the **experimental** parallel minimization of likelihoods.
+ *                                                Note that it is currently *not recommended* to use Modular likelihoods without any parallelization enabled in the minimization,
+ *                                                since many features do not work (for example some ranged fits, offsetting, external constraints, or conditional pdfs).
  * </table>
  */
 
