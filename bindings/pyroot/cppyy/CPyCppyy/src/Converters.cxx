@@ -2838,8 +2838,8 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
             }
         }
         // FIXME: maybe we should try BestOverloadFunctionMatch before failing
-        // FIXME: Should we fall-through, with calling through Python
-        return nullptr;
+        // fall-through, call through python
+
     }
 
     if (TemplateProxy_Check(pyobject)) {
@@ -2854,8 +2854,7 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
             void* fptr = (void*)Cppyy::GetFunctionAddress(cppmeth, false);
             if (fptr) return fptr;
         }
-        // FIXME: Should we fall-through, with calling through Python
-        return nullptr;
+        // fall-through, call through Python
     }
 
     if (PyObject_IsInstance(pyobject, (PyObject*)GetCTypesType(ct_c_funcptr))) {
