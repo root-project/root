@@ -41,8 +41,9 @@
 #include "TColor.h"
 #include "TStyle.h"
 #include "TROOT.h"
-#include "TEnv.h"
 #include "TMath.h"
+#include "TEnv.h"
+#include "TTF.h"
 
 // To scale fonts to the same size as the TTF version
 const Float_t kScale = 0.93376068;
@@ -78,15 +79,8 @@ TGQuartz::TGQuartz()
             : fUseAA(true), fUseFAAA(false)
 {
    //Default ctor.
-
-   TTF::Init();
-
-   //I do not know why TTF::Init returns void and I have to check IsInitialized() again.
-   if (!TTF::IsInitialized())
-      Error("TGQuartz", "TTF::Init() failed");
-
-   fAlign.x = 0;
-   fAlign.y = 0;
+   if (!TTFhandle::Init())
+      Error("TGQuartz", "TTFhandle::Init() failed");
 
    SetAA();
 }
@@ -98,15 +92,8 @@ TGQuartz::TGQuartz(const char *name, const char *title)
               fUseAA(true), fUseFAAA(false)
 {
    //Constructor.
-
-   TTF::Init();
-
-   //I do not know why TTF::Init returns void and I have to check IsInitialized() again.
-   if (!TTF::IsInitialized())
-      Error("TGQuartz", "TTF::Init() failed");
-
-   fAlign.x = 0;
-   fAlign.y = 0;
+   if (!TTFhandle::Init())
+      Error("TGQuartz", "TTFhandle::Init() failed");
 
    SetAA();
 }
@@ -524,23 +511,168 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t /* mgn */,
                          const wchar_t *text, ETextMode mode)
 {
-   if (!text || !text[0])
+   if (!text || !*text)
       return;
 
-   if (!TTF::IsInitialized()) {
+   if (!TTFhandle::Init()) {
       Error("DrawTextW", "wchar_t string to draw, but TTF initialization failed");
       return;
    }
 
-   TTF::SetSmoothing(kTRUE);
-   TTF::SetRotationMatrix(angle);
-   TTF::PrepareString(text);
-   TTF::LayoutGlyphs();
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
 
-   AlignTTFString(wctxt);
-   RenderTTFString(wctxt, x, y, mode);
+   if ([drawable0 isDirectDraw])
+      return;
 
-   TTF::CleanupGlyphs();
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawTextW");
+   if (!drawable)
+      return;
+
+
+   //Do not draw anything, or CoreText will create some small (but not of size 0 font).
+   auto &att = GetAttText(wctxt);
+
+   if (att.GetTextSize() < 1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+      return;
+
+   TTFhandle::SetSmoothing(kTRUE);
+
+   TTFhandle ttf;
+
+   ttf.SetTextFont(att.GetTextFont());
+   ttf.SetTextSize(att.GetTextSize());
+   ttf.SetRotationMatrix(angle);
+   ttf.PrepareString(text);
+   ttf.LayoutGlyphs();
+
+   Int_t txalh = att.GetTextAlign() / 10;
+   Int_t txalv = att.GetTextAlign() % 10;
+   FT_Vector   align_vect;                 ///< alignment vector
+
+   // const EAlign align = EAlign(fTextAlign);
+   // vertical alignment
+   if (txalv == 3) // align == kTLeft || align == kTCenter || align == kTRight)
+      align_vect.y = ttf.GetAscent();
+   else if (txalv == 2) //  if (align == kMLeft || align == kMCenter || align == kMRight) {
+      align_vect.y = ttf.GetAscent() / 2;
+   else
+      align_vect.y = 0;
+
+   // horizontal alignment
+   if (txalh == 3) // align == kTRight || align == kMRight || align == kBRight) {
+      align_vect.x = ttf.GetWidth();
+   else if (txalh == 2) // (align == kTCenter || align == kMCenter || align == kBCenter) {
+      align_vect.x = ttf.GetWidth() / 2;
+   else
+      align_vect.x = 0;
+
+   FT_Vector_Transform(&align_vect, ttf.GetRotMatrix());
+   //This shift is from the original code.
+   align_vect.x = align_vect.x >> 6;
+   align_vect.y = align_vect.y >> 6;
+
+
+   //This code is a modified (for Quartz) version of TG11TTF text drawing
+
+   QuartzPixmap *dstPixmap = nil;
+   if ([drawable isKindOfClass : [QuartzPixmap class]])
+      dstPixmap = (QuartzPixmap *)drawable;
+   else if ([drawable isKindOfClass : [QuartzView class]] || [drawable isKindOfClass : [QuartzWindow class]])
+      dstPixmap = ((NSObject<X11Window> *)drawable).fBackBuffer;
+
+   if (!dstPixmap) {
+      //I can not read pixels from a window (I can, but this is too slow and unreliable).
+      Error("DrawTextW", "fSelectedDrawable is neither QuartzPixmap nor a double buffered window");
+      return;
+   }
+
+   //Comment from TGX11TTF:
+   // compute the size and position of the XImage that will contain the text
+   const Int_t xOff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
+   const Int_t yOff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
+
+   const Int_t w = ttf.GetBox().xMax + xOff;
+   const Int_t h = ttf.GetBox().yMax + yOff;
+
+   // If w or h is 0, very likely the string is only blank characters
+   if (w <= 0 || h <= 0)
+      return;
+
+   const Int_t x1 = x - xOff - align_vect.x;
+   const Int_t y1 = y + yOff + align_vect.y - h;
+
+   UInt_t width = 0, height = 0;
+   Int_t xy = 0;
+
+   GetWindowSize((Drawable_t) drawable0.fID, xy, xy, width, height);
+
+   // If string falls outside window, there is probably no need to draw it.
+   if (x1 + w <= 0 || x1 >= (Int_t)width || y1 + h <= 0 || y1 >= (Int_t)height)
+      return;
+
+   //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : 1.f]);
+   if (!pixmap.Get()) {
+      Error("DrawTextW", "pixmap creation failed");
+      return;
+   }
+
+   const unsigned char defaultBackgroundPixel[] = {255, 255, 255, 255};
+   Util::ScopedArray<unsigned char> arrayGuard;
+   if (mode == kClear) {
+      //For this mode, TGX11TTF does some work to: a) preserve pixels under symbols
+      //b) calculate (interpolate) pixel for glyphs.
+
+      X11::Rectangle bbox(x1, y1, w, h);
+      //We already check IsVisible, so, in principle, bbox at least has intersection with
+      //the current selected drawable.
+      if (X11::AdjustCropArea(dstPixmap, bbox))
+         arrayGuard.Reset([dstPixmap readColorBits : bbox]);
+
+      if (!arrayGuard.Get()) {
+         Error("DrawTextW", "problem with reading background pixels");
+         return;
+      }
+
+      // This is copy & paste from TGX11TTF:
+      const Int_t xo = x1 < 0 ? -x1 : 0;
+      const Int_t yo = y1 < 0 ? -y1 : 0;
+
+      for (int yp = 0; yp < int(bbox.fHeight) && yo + yp < h; ++yp) {
+         const unsigned char *srcBase = arrayGuard.Get() + bbox.fWidth * yp * 4;
+         for (int xp = 0; xp < int(bbox.fWidth) && xo + xp < w; ++xp) {
+            const unsigned char * const pixel = srcBase + xp * 4;
+            [pixmap.Get() putPixel : pixel X : xo + xp Y : yo + yp];
+         }
+      }
+   } else {
+      //Find background color and set for all pixels.
+      [pixmap.Get() addPixel : defaultBackgroundPixel];
+   }
+
+   CGContextRef ctx = drawable.fContext;
+   const Quartz::CGStateGuard ctxGuard(ctx);
+
+   CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
+   // paint the glyphs in the pixmap.
+   auto glyph = ttf.GetGlyphs();
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); ++n, ++glyph) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTFhandle::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1))
+         continue;
+
+      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
+      const Int_t bx = bitmap->left + xOff;
+      const Int_t by = h - bitmap->top - yOff;
+
+      DrawFTGlyphIntoPixmap(pixmap.Get(), &bitmap->bitmap, TGCocoa::GetPixel(att.GetTextColor()),
+                            mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
+   }
+
+   const X11::Rectangle copyArea(0, 0, w, h);
+   const X11::Point dstPoint(x1, y1);
+   [dstPixmap copy : pixmap.Get() area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
 }
 
 //______________________________________________________________________________
@@ -833,16 +965,10 @@ void TGQuartz::SetTextFont(Font_t fontNumber)
 }
 
 //______________________________________________________________________________
-Int_t TGQuartz::SetTextFont(char *fontName, ETextSetMode /*mode*/)
+Int_t TGQuartz::SetTextFont(char * /* fontName */, ETextSetMode /* mode */)
 {
-   //This function is never used in gPad (in normal text rendering,
-   //so I'm not setting anything for CoreText).
-   if (!TTF::IsInitialized()) {
-      Error("SetTextFont", "TTF is not initialized");
-      return 0;
-   }
-
-   return TTF::SetTextFont(fontName);
+   Error("SetTextFont", "Direct TTF font setting not supported");
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -854,7 +980,6 @@ void TGQuartz::SetTextSize(Float_t textsize)
 
    SetAttText(GetSelectedContext(), *this);
 }
-
 
 //______________________________________________________________________________
 void TGQuartz::SetOpacity(Int_t /*percent*/)
@@ -908,14 +1033,6 @@ void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
 {
    att.Copy(GetAttText(wctxt));
 
-   if (!TTF::IsInitialized()) {
-      Error("SetAttText", "TTF is not initialized");
-      return;
-   }
-
-   TTF::SetTextSize(att.GetTextSize());
-   TTF::SetTextFont(att.GetTextFont());
-
    // TODO: remove this after transition done
    TAttText::SetTextAlign(att.GetTextAlign());
    TAttText::SetTextAngle(att.GetTextAngle());
@@ -927,195 +1044,7 @@ void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
 //TTF related part.
 
 //______________________________________________________________________________
-void TGQuartz::AlignTTFString(WinContext_t wctxt)
-{
-   //Comment from TGX11TTF:
-   // Compute alignment variables. The alignment is done on the horizontal string
-   // then the rotation is applied on the alignment variables.
-   // SetRotation and LayoutGlyphs should have been called before.
-   //End of comment.
-
-   //This code is from TGX11TTF (with my fixes).
-   //It looks like align can not be both X and Y align?
-
-   auto &atttext = GetAttText(wctxt);
-
-   Int_t txalh = atttext.GetTextAlign() / 10;
-   Int_t txalv = atttext.GetTextAlign() % 10;
-
-   // const EAlign align = EAlign(fTextAlign);
-   // vertical alignment
-   if (txalv == 3) // align == kTLeft || align == kTCenter || align == kTRight)
-      fAlign.y = TTF::GetAscent();
-   else if (txalv == 2) //  if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::GetAscent() / 2;
-   else
-      fAlign.y = 0;
-
-   // horizontal alignment
-   if (txalh == 3) // align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::GetWidth();
-   else if (txalh == 2) // (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::GetWidth() / 2;
-   else
-      fAlign.x = 0;
-
-   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
-   //This shift is from the original code.
-   fAlign.x = fAlign.x >> 6;
-   fAlign.y = fAlign.y >> 6;
-}
-
-//______________________________________________________________________________
-Bool_t TGQuartz::IsTTFStringVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
-{
-   //Comment from TGX11TTF:
-   // Test if there is really something to render.
-   //End of comment.
-
-   //This code is from TGX11TTF (with modifications).
-
-   //Comment from TGX11TTF:
-   // If w or h is 0, very likely the string is only blank characters
-   if (!w || !h || !wctxt)
-      return kFALSE;
-
-   auto drawable = (NSObject<X11Drawable> * const) wctxt;
-
-   UInt_t width = 0;
-   UInt_t height = 0;
-   Int_t xy = 0;
-
-   GetWindowSize((Drawable_t) drawable.fID, xy, xy, width, height);
-
-   // If string falls outside window, there is probably no need to draw it.
-   if (x + int(w) <= 0 || x >= int(width))
-      return kFALSE;
-
-   if (y + int(h) <= 0 || y >= int(height))
-      return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGQuartz::RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
-{
-   //Comment from TGX11TTF:
-   // Perform the string rendering in the pad.
-   // LayoutGlyphs should have been called before.
-   //End of comment.
-
-   //This code is a modified (for Quartz) version of TG11TTF::RenderString.
-
-   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
-   if (!drawable0)
-      return;
-
-   if ([drawable0 isDirectDraw])
-      return;
-
-   auto &atttext = GetAttText(wctxt);
-
-   if (!atttext.GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
-      return;
-
-   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "RenderTTFString");
-   if (!drawable)
-      return;
-
-   QuartzPixmap *dstPixmap = nil;
-   if ([drawable isKindOfClass : [QuartzPixmap class]])
-      dstPixmap = (QuartzPixmap *)drawable;
-   else if ([drawable isKindOfClass : [QuartzView class]] || [drawable isKindOfClass : [QuartzWindow class]])
-      dstPixmap = ((NSObject<X11Window> *)drawable).fBackBuffer;
-
-   if (!dstPixmap) {
-      //I can not read pixels from a window (I can, but this is too slow and unreliable).
-      Error("RenderTTFString", "fSelectedDrawable is neither QuartzPixmap nor a double buffered window");
-      return;
-   }
-
-   //Comment from TGX11TTF:
-   // compute the size and position of the XImage that will contain the text
-   const Int_t xOff = TTF::GetBox().xMin < 0 ? -TTF::GetBox().xMin : 0;
-   const Int_t yOff = TTF::GetBox().yMin < 0 ? -TTF::GetBox().yMin : 0;
-
-   const Int_t w = TTF::GetBox().xMax + xOff;
-   const Int_t h = TTF::GetBox().yMax + yOff;
-
-   const Int_t x1 = x - xOff - fAlign.x;
-   const Int_t y1 = y + yOff + fAlign.y - h;
-
-   if (!IsTTFStringVisible(wctxt, x1, y1, w, h))
-      return;
-
-   //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : 1.f]);
-   if (!pixmap.Get()) {
-      Error("RenderTTFString", "pixmap creation failed");
-      return;
-   }
-
-   const unsigned char defaultBackgroundPixel[] = {255, 255, 255, 255};
-   Util::ScopedArray<unsigned char> arrayGuard;
-   if (mode == kClear) {
-      //For this mode, TGX11TTF does some work to: a) preserve pixels under symbols
-      //b) calculate (interpolate) pixel for glyphs.
-
-      X11::Rectangle bbox(x1, y1, w, h);
-      //We already check IsVisible, so, in principle, bbox at least has intersection with
-      //the current selected drawable.
-      if (X11::AdjustCropArea(dstPixmap, bbox))
-         arrayGuard.Reset([dstPixmap readColorBits : bbox]);
-
-      if (!arrayGuard.Get()) {
-         Error("RenderTTFString", "problem with reading background pixels");
-         return;
-      }
-
-      // This is copy & paste from TGX11TTF:
-      const Int_t xo = x1 < 0 ? -x1 : 0;
-      const Int_t yo = y1 < 0 ? -y1 : 0;
-
-      for (int yp = 0; yp < int(bbox.fHeight) && yo + yp < h; ++yp) {
-         const unsigned char *srcBase = arrayGuard.Get() + bbox.fWidth * yp * 4;
-         for (int xp = 0; xp < int(bbox.fWidth) && xo + xp < w; ++xp) {
-            const unsigned char * const pixel = srcBase + xp * 4;
-            [pixmap.Get() putPixel : pixel X : xo + xp Y : yo + yp];
-         }
-      }
-   } else {
-      //Find background color and set for all pixels.
-      [pixmap.Get() addPixel : defaultBackgroundPixel];
-   }
-
-   CGContextRef ctx = drawable.fContext;
-   const Quartz::CGStateGuard ctxGuard(ctx);
-
-   CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
-   // paint the glyphs in the pixmap.
-   TTF::TTGlyph *glyph = TTF::GetGlyphs();
-   for (int n = 0; n < TTF::GetNumGlyphs(); ++n, ++glyph) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1 ))
-         continue;
-
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      FT_Bitmap *source = &bitmap->bitmap;
-      const Int_t bx = bitmap->left + xOff;
-      const Int_t by = h - bitmap->top - yOff;
-
-      DrawFTGlyphIntoPixmap(pixmap.Get(), source, TGCocoa::GetPixel(atttext.GetTextColor()),
-                            mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
-   }
-
-   const X11::Rectangle copyArea(0, 0, w, h);
-   const X11::Point dstPoint(x1, y1);
-   [dstPixmap copy : pixmap.Get() area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
-}
-
-//______________________________________________________________________________
-void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by)
+void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, void *sHack, ULong_t fore, ULong_t back, Int_t bx, Int_t by)
 {
    //This function is a "remake" of TGX11FFT::DrawImage.
 
@@ -1123,11 +1052,12 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
    //It's quite sloppy, as in original version. I tried to make it not so ugly and
    //more or less readable.
 
-   QuartzPixmap *pixmap = (QuartzPixmap *)pHack;
+   auto pixmap = (QuartzPixmap *)pHack;
+   auto source = (FT_Bitmap *) sHack;
    assert(pixmap != nil && "DrawFTGlyphIntoPixmap, pixmap parameter is nil");
-   assert(source != 0 && "DrawFTGlyphIntoPixmap, source parameter is null");
+   assert(source != nil && "DrawFTGlyphIntoPixmap, source parameter is null");
 
-   if (TTF::GetSmoothing()) {
+   if (TTFhandle::GetSmoothing()) {
       static ColorStruct_t col[5];
       // background kClear, i.e. transparent, we take as background color
       // the average of the rgb values of all pixels covered by this character

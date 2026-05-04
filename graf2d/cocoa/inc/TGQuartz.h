@@ -16,7 +16,6 @@
 
 #include "TGCocoa.h"
 #include "TPoint.h"
-#include "TTF.h"
 
 /** \class TGQuartz
 \ingroup cocoa
@@ -26,8 +25,6 @@ MacOS X, using CoreGraphics (Quartz).
 */
 
 class TGQuartz : public TGCocoa {
-private:
-   FT_Vector   fAlign; // alignment vector
 public:
    TGQuartz();
    TGQuartz(const char *name, const char *title);
@@ -111,10 +108,7 @@ private:
    bool fUseAA;
    bool fUseFAAA;
 
-   void AlignTTFString(WinContext_t wctxt);
-   Bool_t IsTTFStringVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode);
-   void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
+   void DrawFTGlyphIntoPixmap(void *pixmap, void *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();
    TAttFill &GetAttFill(WinContext_t wctxt);
