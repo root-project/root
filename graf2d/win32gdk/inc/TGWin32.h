@@ -15,8 +15,6 @@
 
 #include "TVirtualX.h"
 
-#include "TTF.h"
-
 #include <memory>
 #include <map>
 
@@ -68,12 +66,13 @@ class TExMap;
 class TGWin32 : public TVirtualX {
 
 private:
-   void    Align(WinContext_t wctxt);
-   void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
+   void    DrawImage(void *source, ULong_t fore, ULong_t back, GdkImage *xim,
                      Int_t bx, Int_t by);
-   Bool_t  IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
    GdkImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void    RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode);
+
+   template<class CharType>
+   void      DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
+                            const CharType *text, ETextMode mode);
 
    std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap          *fColors;                ///< Hash list of colors
@@ -117,7 +116,6 @@ protected:
    Handle_t    fXEvent;             ///< Current native (GDK) event
    TObject*    fRefreshTimer;       ///< TGWin32RefreshTimer for GUI thread message handler
 
-   // needed by TGWin32TTF
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
    void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
    GdkGC     *GetGC(Int_t which) const;
