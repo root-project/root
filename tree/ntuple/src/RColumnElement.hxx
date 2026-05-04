@@ -7,6 +7,7 @@
 // definitions are implementation details and should not be exposed to a public interface.
 
 #include <ROOT/RColumnElementBase.hxx>
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RConfig.hxx>
@@ -1000,36 +1001,6 @@ namespace Quantize {
 
 using Quantized_t = std::uint32_t;
 
-[[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
-{
-   if (x == 0)
-      return 32;
-
-#ifdef _MSC_VER
-   unsigned long idx = 0;
-   if (_BitScanReverse(&idx, x))
-      return static_cast<std::size_t>(31 - idx);
-   return 32;
-#else
-   return static_cast<std::size_t>(__builtin_clz(x));
-#endif
-}
-
-[[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
-{
-   if (x == 0)
-      return 32;
-
-#ifdef _MSC_VER
-   unsigned long idx = 0;
-   if (_BitScanForward(&idx, x))
-      return static_cast<std::size_t>(idx);
-   return 32;
-#else
-   return static_cast<std::size_t>(__builtin_ctz(x));
-#endif
-}
-
 /// Converts the array `src` of `count` floating point numbers into an array of their quantized representations.
 /// Each element of `src` is assumed to be in the inclusive range [min, max].
 /// The quantized representation will consist of unsigned integers of at most `nQuantBits` (with `nQuantBits <= 8 *
@@ -1065,7 +1036,7 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
       ByteSwapIfNecessary(q);
 
       // double-check we actually used at most `nQuantBits`
-      assert(outOfRange || LeadingZeroes(q) >= unusedBits);
+      assert(outOfRange || ROOT::Internal::LeadingZeroes(q) >= unusedBits);
 
       // we want to leave zeroes in the LSB, not the MSB, because we'll then drop the LSB
       // when bit packing.
@@ -1095,7 +1066,7 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
    for (std::size_t i = 0; i < count; ++i) {
       Quantized_t elem = src[i];
       // Undo the LSB-preserving shift performed by QuantizeReals
-      assert(TrailingZeroes(elem) >= unusedBits);
+      assert(ROOT::Internal::TrailingZeroes(elem) >= unusedBits);
       elem >>= unusedBits;
       ByteSwapIfNecessary(elem);
 
