@@ -227,3 +227,7 @@ target_include_directories(RGL PRIVATE
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
 endif()
+
+if(FTGL_VERSION VERSION_GREATER 2.1.2)
+  target_compile_definitions(RGL PRIVATE HAVE_UTF8)
+endif()
