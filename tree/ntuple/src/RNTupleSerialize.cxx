@@ -1762,7 +1762,9 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
    pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
    // So far we don't make use of footer feature flags
-   if (auto res = SerializeFeatureFlags(std::vector<std::uint64_t>(), *where)) {
+   // NOTE: we currently serialize all feature flags in the footer, even those that were already written in the
+   // header. This is fine, as they will be logically OR-ed together during deserialization.
+   if (auto res = SerializeFeatureFlags(desc.GetFeatureFlags(), *where)) {
       pos += res.Unwrap();
    } else {
       return R__FORWARD_ERROR(res);
@@ -1864,6 +1866,19 @@ ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const Experimental::RNT
    }
 }
 
+static ROOT::RResult<void> CheckFeatureFlags(const std::vector<std::uint64_t> &featureFlags)
+{
+   for (std::size_t i = 0; i < featureFlags.size(); ++i) {
+      if (!featureFlags[i])
+         continue;
+      unsigned int bit = 0;
+      while (!(featureFlags[i] & (static_cast<uint64_t>(1) << bit)))
+         bit++;
+      return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
+   }
+   return ROOT::RResult<void>::Success();
+}
+
 ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint64_t bufSize,
                                                                          RNTupleDescriptorBuilder &descBuilder)
 {
@@ -1885,13 +1900,8 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const v
    } else {
       return R__FORWARD_ERROR(res);
    }
-   for (std::size_t i = 0; i < featureFlags.size(); ++i) {
-      if (!featureFlags[i])
-         continue;
-      unsigned int bit = 0;
-      while (!(featureFlags[i] & (static_cast<uint64_t>(1) << bit)))
-         bit++;
-      return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
+   if (auto res = CheckFeatureFlags(featureFlags); !res) {
+      return R__FORWARD_ERROR(res);
    }
 
    std::string name;
@@ -1945,9 +1955,8 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
    } else {
       return R__FORWARD_ERROR(res);
    }
-   for (auto f : featureFlags) {
-      if (f)
-         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "Unsupported feature flag! " << f;
+   if (auto res = CheckFeatureFlags(featureFlags); !res) {
+      return R__FORWARD_ERROR(res);
    }
 
    std::uint64_t xxhash3{0};
