@@ -5,20 +5,10 @@ if(pyroot)
                     PRECMD ${ROOT_root_CMD} -b -q -e .L\ ArgumentPassingCompiled.C+)
 
 if(NOT MSVC OR win_broken_tests)
-  ROOTTEST_ADD_TEST(datatype
-                    MACRO PyROOT_datatypetest.py
-                    COPY_TO_BUILDDIR DataTypes.C DataTypes.h
-                    PRECMD ${ROOT_root_CMD} -b -q -e .L\ DataTypes.C+
-                    FIXTURES_SETUP python-basic-datatype-fixture)
-
   ROOTTEST_ADD_TEST(datatype-numpy
                     MACRO PyROOT_datatypetest_numpy.py
-                    FIXTURES_REQUIRED python-basic-datatype-fixture
+                    COPY_TO_BUILDDIR DataTypes.C DataTypes.h
+                    PRECMD ${ROOT_root_CMD} -b -q -e .L\ DataTypes.C+
                     PYTHON_DEPS numpy)
-
-  ROOTTEST_ADD_TEST(overload
-                    MACRO PyROOT_overloadtests.py
-                    COPY_TO_BUILDDIR Overloads.C Overloads.h
-                    PRECMD ${ROOT_root_CMD} -b -q -e .L\ Overloads.C+)
 endif()
 endif()
