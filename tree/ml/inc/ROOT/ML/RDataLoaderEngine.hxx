@@ -297,12 +297,9 @@ public:
             break;
          }
 
-         const std::size_t numTrainingClusters = fClusterLoader->GetNumTrainingClusters();
-         const std::size_t numValidationClusters = fClusterLoader->GetNumValidationClusters();
-
          // Helper: check if validation queue below watermark and needs the producer
          auto validationEmpty = [&] {
-            if (!fValidationEpochActive || fValidationClusterIdx >= numValidationClusters)
+            if (!fValidationEpochActive || fValidationClusterIdx >= fClusterLoader->GetNumValidationClusters())
                return false;
             if (fValidationBatchLoader->isProducerDone())
                return false;
@@ -311,6 +308,8 @@ public:
 
          // -- TRAINING --
          if (fTrainingEpochActive) {
+            const std::size_t numTrainingClusters = fClusterLoader->GetNumTrainingClusters();
+
             while (true) {
                // Stop conditions (shutdown or epoch end)
                if (!fIsActive || !fTrainingEpochActive)
@@ -397,6 +396,8 @@ public:
 
          // -- VALIDATION --
          if (fValidationEpochActive) {
+            const std::size_t numValidationClusters = fClusterLoader->GetNumValidationClusters();
+
             while (true) {
                // Stop conditions (shutdown or epoch end)
                if (!fIsActive || !fValidationEpochActive)
