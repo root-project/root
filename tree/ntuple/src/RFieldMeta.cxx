@@ -665,6 +665,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAF
    fRecordMemberDeleters.reserve(fRecordMemberFields.size());
    for (const auto f : fRecordMemberFields)
       fRecordMemberDeleters.emplace_back(GetDeleterOf(*f));
+   fLockSplitFields = std::make_unique<std::mutex>();
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string_view className)
@@ -777,6 +778,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
       fTypeAlias = renormalizedAlias;
 
    fTraits |= kTraitSoACollection | kTraitTypeChecksum;
+   fLockSplitFields = std::make_unique<std::mutex>();
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::Experimental::RSoAField::CloneImpl(std::string_view newName) const
@@ -881,10 +883,31 @@ void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool d
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue & /* value */) const
+std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue &value) const
 {
-   throw RException(R__FAIL("not yet implemented"));
-   return std::vector<RValue>();
+   const auto nSoAMembers = fSoAMemberOffsets.size();
+
+   {
+      std::lock_guard<std::mutex> lockGuard(*fLockSplitFields);
+      if (!fSplitFields) {
+         fSplitFields = std::make_unique<std::vector<std::unique_ptr<ROOT::RRVecField>>>();
+         fSplitFields->reserve(nSoAMembers);
+         for (std::size_t i = 0; i < nSoAMembers; ++i) {
+            const auto itemField = fRecordMemberFields[i];
+            fSplitFields->emplace_back(std::make_unique<RRVecField>(itemField->GetFieldName(), itemField->Clone("_0")));
+         }
+      }
+   }
+
+   auto valuePtr = value.GetPtr<void>();
+   auto soaPtr = static_cast<unsigned char *>(valuePtr.get());
+   std::vector<RValue> values;
+   values.reserve(nSoAMembers);
+   for (std::size_t i = 0; i < nSoAMembers; ++i) {
+      values.emplace_back(
+         (*fSplitFields)[i]->BindValue(std::shared_ptr<void>(valuePtr, soaPtr + fSoAMemberOffsets[i])));
+   }
+   return values;
 }
 
 size_t ROOT::Experimental::RSoAField::GetValueSize() const

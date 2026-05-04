@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <string_view>
 #include <typeinfo>
 #include <vector>
@@ -70,6 +71,13 @@ class RSoAField : public RFieldBase {
    std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
    std::size_t fMaxAlignment = 1;
    ROOT::Internal::RColumnIndex fNWritten;
+
+   /// For reading and writing, the RVecs of the SoA class do not have a dedicated field. The in-memory RVecs of the
+   /// SoA object are used directly with the subfields of the underlying record type. For splitting a SoA class object
+   /// (SplitValue()), however, we need actual RRVecFields so that we can recursively split the in-memory SoA value.
+   /// The split fields are created only when SplitField() is called.
+   mutable std::unique_ptr<std::vector<std::unique_ptr<ROOT::RRVecField>>> fSplitFields;
+   mutable std::unique_ptr<std::mutex> fLockSplitFields; ///< protects the fSplitFields member.
 
    RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
    RSoAField(std::string_view fieldName, TClass *clSoA);

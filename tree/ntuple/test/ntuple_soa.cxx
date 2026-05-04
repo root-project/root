@@ -1,6 +1,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldUtils.hxx>
+#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleView.hxx>
@@ -15,6 +16,7 @@
 #include <TVirtualStreamerInfo.h>
 
 #include <memory>
+#include <sstream>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -414,4 +416,55 @@ TEST(RNTuple, SoAFromVector)
       EXPECT_THAT(e.what(), testing::HasSubstr(
                                "in-memory field simple of type SoASimple is incompatible with on-disk field simple"));
    }
+}
+
+TEST(RNTuple, SoAShow)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_show.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
+      model->AddField(std::make_unique<RSoAField>("empty", "SoA"));
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
+      auto emptySoA = writer->GetModel().GetDefaultEntry().GetPtr<SoA>("empty");
+
+      simpleSoA->fX.push_back(1.0);
+      simpleSoA->fY.push_back(2.0);
+      simpleSoA->fX.push_back(3.0);
+      simpleSoA->fY.push_back(4.0);
+      writer->Fill();
+
+      simpleSoA->fX.clear();
+      simpleSoA->fY.clear();
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+   reader->Show(1, os);
+
+   // clang-format off
+   std::string expected{
+R"({
+  "simple": {
+    "fX": [1, 3],
+    "fY": [2, 4]
+  },
+  "empty": {  }
+}
+{
+  "simple": {
+    "fX": [],
+    "fY": []
+  },
+  "empty": {  }
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expected, os.str());
 }
