@@ -347,6 +347,16 @@ namespace Cppyy {
     CPPYY_IMPORT
     std::string GetMethodArgDefault(TCppMethod_t, TCppIndex_t iarg);
     CPPYY_IMPORT
+    bool IsFunctionType(TCppType_t typ);
+    CPPYY_IMPORT
+    TCppType_t GetFnTypeFromStdFn(TCppType_t fn_type);
+    CPPYY_IMPORT
+    void GetFnTypeSig(TCppType_t fn_type, std::vector<TCppType_t>& arg_types);
+    CPPYY_IMPORT
+    bool IsSameType(TCppType_t typ1, TCppType_t typ2);
+    CPPYY_IMPORT
+    bool IsSimilarFnTypes(TCppType_t typ1, TCppType_t typ2);
+    CPPYY_IMPORT
     std::string GetMethodSignature(TCppMethod_t, bool show_formal_args, TCppIndex_t max_args = (TCppIndex_t)-1);
     // GetMethodPrototype is unused.
     CPPYY_IMPORT
