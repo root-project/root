@@ -228,7 +228,7 @@ class TestClassOVERLOADS:
     def test11_free_function_namespace(self):
         """Free functions on a namespace"""
         import cppyy
-        cppyy.gbl.gInterpreter.Declare("""
+        cppyy.cppdef("""
           namespace Gaudi { 
             namespace Utils { 
               namespace Histos { 

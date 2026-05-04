@@ -47,3 +47,13 @@ try:
     ispypy = True
 except ImportError:
     ispypy = False
+
+def has_cpp_20():
+    import cppyy
+    cppyy.cppdef("""
+        #ifndef CPPYY_CPP_STANDARD_PROBE
+        #define CPPYY_CPP_STANDARD_PROBE
+        constexpr long cppyy_cpp_standard = __cplusplus;
+        #endif
+    """)
+    return cppyy.gbl.cppyy_cpp_standard >= 202002

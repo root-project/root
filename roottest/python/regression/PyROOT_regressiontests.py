@@ -573,7 +573,7 @@ class Regression24CppPythonInheritance(MyTestCase):
    def test01DeletedCopyConstructor(self):
       """Test that deleted base class copy constructor is not used"""
       # ROOT-10872
-      cppyy.gbl.gInterpreter.Declare('''
+      cppyy.cppdef('''
       struct NoCopy1 {
          NoCopy1() = default;
          NoCopy1(const NoCopy1&) = delete;
@@ -589,7 +589,7 @@ class Regression24CppPythonInheritance(MyTestCase):
    def test02MoveConstructor(self):
       """Test that move constructor is not mistaken for copy constructor"""
       # ROOT-10872
-      cppyy.gbl.gInterpreter.Declare('''
+      cppyy.cppdef('''
       struct NoCopy2 {
          NoCopy2() = default;
          NoCopy2(const NoCopy2&) = delete;
@@ -675,7 +675,7 @@ class Regression24CppPythonInheritance(MyTestCase):
    def test06MultiInheritance(self):
        """Test for a Python derived class in presence of multiple inheritance in C++"""
        # 6376
-       cppyy.gbl.gInterpreter.Declare("""
+       cppyy.cppdef("""
        #include <array>
        #include <iostream>
 
@@ -738,7 +738,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        """Presence of multiple protected overloads of a method and both private and protected"""
        # 6345
 
-       cppyy.gbl.gInterpreter.Declare('''
+       cppyy.cppdef('''
        class MyClass6345 {
        public:
           virtual ~MyClass6345() {}
@@ -765,7 +765,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        """Virtual call resolution in deep hierarchy (C++->Py->Py)"""
        # 6470
 
-       cppyy.gbl.gInterpreter.Declare('''
+       cppyy.cppdef('''
        class CppBase6470 {
        public:
           virtual ~CppBase6470() {}
@@ -804,7 +804,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        class PurePy2:
           def bar(self): return 2
 
-       cppyy.gbl.gInterpreter.Declare('''
+       cppyy.cppdef('''
        class MyCppClass11 {
        public:
           int foo() { return 3; }
