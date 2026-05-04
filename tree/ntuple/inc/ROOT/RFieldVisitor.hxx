@@ -90,6 +90,7 @@ public:
    virtual void VisitVectorField(const ROOT::RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const ROOT::RRVecField &field) { VisitField(field); }
+   virtual void VisitSoAField(const ROOT::Experimental::RSoAField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
 } // namespace Detail
