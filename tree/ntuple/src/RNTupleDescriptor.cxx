@@ -932,8 +932,16 @@ ROOT::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTuple
                // `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the
                // field zero excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
-                  columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
-                  columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  if (c.GetRepresentationIndex() == 0) {
+                     columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
+                     columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  } else {
+                     const auto &field = desc.GetFieldDescriptor(fieldId);
+                     const auto firstReprColumnId = field.GetLogicalColumnIds()[c.GetIndex()];
+                     const auto &firstReprColumnRange = fCluster.fColumnRanges[firstReprColumnId];
+                     columnRange.SetFirstElementIndex(firstReprColumnRange.GetFirstElementIndex());
+                     columnRange.SetNElements(firstReprColumnRange.GetNElements());
+                  }
                   if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
