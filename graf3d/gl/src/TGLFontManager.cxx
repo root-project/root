@@ -295,7 +295,7 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
 
    x=0, y=0;
    Float_t llx, lly, llz, urx, ury, urz;
-   BBox(txt, llx, lly, llz, urx, ury, urz);
+   BBox(txt.Data(), llx, lly, llz, urx, ury, urz);
 
    switch (alignH)
    {
