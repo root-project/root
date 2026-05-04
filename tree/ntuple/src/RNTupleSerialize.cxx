@@ -18,6 +18,7 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
+#include <ROOT/BitUtils.hxx>
 
 #include <RVersion.h>
 #include <TBufferFile.h>
@@ -1621,7 +1622,6 @@ ROOT::Internal::RNTupleSerializer::SerializeHeader(void *buffer, const ROOT::RNT
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += SerializeEnvelopePreamble(kEnvelopeTypeHeader, *where);
-   // So far we don't make use of feature flags
    if (auto res = SerializeFeatureFlags(desc.GetFeatureFlags(), *where)) {
       pos += res.Unwrap();
    } else {
@@ -1761,7 +1761,6 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
 
    pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
-   // So far we don't make use of footer feature flags
    // NOTE: we currently serialize all feature flags in the footer, even those that were already written in the
    // header. This is fine, as they will be logically OR-ed together during deserialization.
    if (auto res = SerializeFeatureFlags(desc.GetFeatureFlags(), *where)) {
@@ -1871,10 +1870,10 @@ static ROOT::RResult<void> CheckFeatureFlags(const std::vector<std::uint64_t> &f
    for (std::size_t i = 0; i < featureFlags.size(); ++i) {
       if (!featureFlags[i])
          continue;
-      unsigned int bit = 0;
-      while (!(featureFlags[i] & (static_cast<uint64_t>(1) << bit)))
-         bit++;
-      return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
+      // NOTE: this assumes all valid feature flags are consecutive, thus we can just check the highest one set.
+      unsigned int highestBitSet = 64 * i + (63 - ROOT::Internal::LeadingZeroes(featureFlags[i]));
+      if (highestBitSet >= ROOT::RNTupleDescriptor::kFeatureFlag_COUNT)
+         return R__FAIL("unsupported format feature: " + std::to_string(highestBitSet));
    }
    return ROOT::RResult<void>::Success();
 }

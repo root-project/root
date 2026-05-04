@@ -765,7 +765,18 @@ private:
    RNTupleDescriptor CloneSchema() const;
 
 public:
-   static constexpr unsigned int kFeatureFlagTest = 137; // Bit reserved for forward-compatibility testing
+   /// All known feature flags.
+   /// Note that the flag values represent the bit _index_, not the already-bitshifted integer.
+   enum EFeatureFlags {
+      // Insert new feature flags here, with contiguous values. If at any point a "hole" appears in the valid feature
+      // flags values, the check in RNTupleSerialize must be updated.
+
+      // End of regular feature flags
+      kFeatureFlag_COUNT,
+
+      /// Reserved for forward-compatibility testing
+      kFeatureFlag_Test = 137
+   };
 
    class RColumnDescriptorIterable;
    class RFieldDescriptorIterable;
@@ -1736,6 +1747,8 @@ public:
    void SetVersionForWriting();
 
    void SetNTuple(const std::string_view name, const std::string_view description);
+   /// Sets the `flag`-th bit of the feature flag to 1.
+   /// Note that `flag` itself is not a bitmask, just the bit index of the flag to enable.
    void SetFeature(unsigned int flag);
 
    void SetOnDiskHeaderXxHash3(std::uint64_t xxhash3) { fDescriptor.fOnDiskHeaderXxHash3 = xxhash3; }
