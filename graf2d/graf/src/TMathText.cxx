@@ -219,16 +219,11 @@ public:
    inline mathtext::bounding_box_t
    bounding_box_char(const wchar_t character, float &current_x, const unsigned int family)
    {
-      auto font = TTF::GetCurFont();
+      TTFhandle h;
+      h.SetTextFont(is_cyrillic_or_cjk(character) ? root_cjk_face_number() : root_face_number(family));
+      h.SetTextSize(_current_font_size[family] * _pad_scale);
 
-      const bool cyrillic_or_cjk = is_cyrillic_or_cjk(character);
-
-      if (cyrillic_or_cjk)
-         TTF::SetTextFont((Font_t) root_cjk_face_number());
-      else
-         TTF::SetTextFont((Font_t) root_face_number(family));
-
-      auto font_face = TTF::GetCurFontFace();
+      auto font_face = h.GetFontFace();
       if (!font_face || font_face->units_per_EM == 0)
          return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
 
@@ -257,8 +252,6 @@ public:
             advance, italic_correction) * scale;
 
       current_x += ret.advance();
-
-      TTF::SetCurFont(font);
 
       return ret;
    }
