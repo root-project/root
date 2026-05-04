@@ -374,6 +374,7 @@ jobs:
         include:
           # Temporarily only alma10 arm64 is active
           - image: alma10
+            platform_config: alma10-arm64-largetest
             is_special: true
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]
