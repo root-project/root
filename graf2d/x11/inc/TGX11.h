@@ -129,6 +129,7 @@ protected:
    Window_t  GetWindow(WinContext_t wctxt) const;
    void      *GetGCW(WinContext_t wctxt, Int_t which) const;
    EAlign     GetTextAlignW(WinContext_t wctxt) const;
+   const TAttText& GetTextAttW(WinContext_t wctxt) const;
 
    XColor_t  &GetColor(Int_t cid);
 

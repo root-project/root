@@ -28,6 +28,9 @@ is redirected to point to this class.
 #include FT_GLYPH_H
 #include "TGX11TTF.h"
 #include "TEnv.h"
+#include "TTF.h"
+#include "TMathBase.h"
+
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -156,12 +159,8 @@ TGX11TTF::TGX11TTF(TGX11 &&org) : TGX11(std::move(org))
    SetName("X11TTF");
    SetTitle("ROOT interface to X11 with TrueType fonts");
 
-   TTF::Init();
-
-   fHasTTFonts = kTRUE;
+   fHasTTFonts = TTFhandle::Init();
    fHasXft = kFALSE;
-   fAlign.x = 0;
-   fAlign.y = 0;
 
 #ifdef R__HAS_XFT
    fXftFontHash = nullptr;
@@ -197,57 +196,23 @@ Bool_t TGX11TTF::Init(void *display)
 #endif
    Bool_t r = TGX11::Init(display);
 
-   if (fDepth > 8) {
-      TTF::SetSmoothing(kTRUE);
-   } else {
-      TTF::SetSmoothing(kFALSE);
-   }
+   TTFhandle::SetSmoothing(fDepth > 8);
 
    return r;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute alignment variables. The alignment is done on the horizontal string
-/// then the rotation is applied on the alignment variables.
-/// SetRotation and LayoutGlyphs should have been called before.
-
-void TGX11TTF::Align(WinContext_t wctxt)
-{
-   auto align = GetTextAlignW(wctxt);
-
-   // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
-      fAlign.y = TTF::GetAscent();
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::GetAscent() / 2;
-   } else {
-      fAlign.y = 0;
-   }
-
-   // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::GetWidth();
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::GetWidth() / 2;
-   } else {
-      fAlign.x = 0;
-   }
-
-   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
-   fAlign.x = fAlign.x >> 6;
-   fAlign.y = fAlign.y >> 6;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
 /// foreground color.
 
-void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
+void TGX11TTF::DrawImage(void *_source, ULong_t fore, ULong_t back,
                          RXImage *xim, Int_t bx, Int_t by)
 {
+   auto source = (FT_Bitmap *) _source;
+
    UChar_t d = 0, *s = source->buffer;
 
-   if (TTF::GetSmoothing()) {
+   if (TTFhandle::GetSmoothing()) {
 
       static RXColor col[5];
       RXColor  *bcol = nullptr;
@@ -361,6 +326,148 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
    }
 }
 
+template<class CharType>
+void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                              const CharType *text, ETextMode mode)
+{
+   if (!fHasTTFonts) {
+      TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
+      return;
+   }
+
+   if (!wctxt)
+      return;
+
+   auto &att = GetTextAttW(wctxt);
+   auto align = GetTextAlignW(wctxt);
+
+   TTFhandle ttf;
+   ttf.SetTextFont(att.GetTextFont());
+   ttf.SetTextSize(att.GetTextSize());
+   ttf.SetRotationMatrix(angle);
+   ttf.PrepareString(text);
+   ttf.LayoutGlyphs();
+
+   FT_Vector   align_vect;                 ///< alignment vector
+   // vertical alignment
+   if (align == kTLeft || align == kTCenter || align == kTRight) {
+      align_vect.y = ttf.GetAscent();
+   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
+      align_vect.y = ttf.GetAscent() / 2;
+   } else {
+      align_vect.y = 0;
+   }
+
+   // horizontal alignment
+   if (align == kTRight || align == kMRight || align == kBRight) {
+      align_vect.x = ttf.GetWidth();
+   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
+      align_vect.x = ttf.GetWidth() / 2;
+   } else {
+      align_vect.x = 0;
+   }
+
+   FT_Vector_Transform(&align_vect, ttf.GetRotMatrix());
+   align_vect.x = align_vect.x >> 6;
+   align_vect.y = align_vect.y >> 6;
+
+   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
+   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
+   Int_t w    = ttf.GetBox().xMax + Xoff;
+   Int_t h    = ttf.GetBox().yMax + Yoff;
+   // If w or h is 0, very likely the string is only blank characters
+   if (w <= 0 || h <= 0)
+      return;
+
+   Int_t x1   = x - Xoff - align_vect.x;
+   Int_t y1   = y + Yoff + align_vect.y - h;
+
+   Window_t cws = GetWindow(wctxt);
+   UInt_t width, height;
+   Int_t xy;
+   GetWindowSize(cws, xy, xy, width, height);
+
+   // If string falls outside window, there is probably no need to draw it.
+   if (x + w <= 0 || x >= (Int_t)width || y + h <= 0 || y >= (Int_t)height)
+      return;
+
+   // If w or h are much larger than the window size, there is probably no need
+   // to draw it. Moreover a to large text size may produce a Seg Fault in
+   // malloc in DrawTextW.
+   if (((UInt_t) w > 10 * width) || ((UInt_t) h > 10 * height))
+      return;
+
+   // create the XImage that will contain the text
+   UInt_t depth = fDepth;
+   XImage *xim = XCreateImage((Display*)fDisplay, fVisual,
+                               depth, ZPixmap, 0, nullptr, w, h,
+                               depth <= 8 ? 8 : (depth <= 16 ? 16 : 32), 0);
+   //bitmap_pad should be 8, 16 or 32 https://www.x.org/releases/X11R7.5/doc/man/man3/XPutPixel.3.html
+   if (!xim)
+      return;
+
+   // use malloc since Xlib will use free() in XDestroyImage
+   xim->data = (char *) malloc(xim->bytes_per_line * h);
+   memset(xim->data, 0, xim->bytes_per_line * h);
+
+   ULong_t   bg;
+   XGCValues values;
+   auto gc = (GC *) GetGCW(wctxt, 3);
+   if (!gc) {
+      Error("DrawTextW", "error getting Graphics Context");
+      return;
+   }
+   XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
+
+   // get the background
+   if (mode == kClear) {
+      // if mode == kClear we need to get an image of the background
+      XImage *bim = GetBackground(wctxt, x1, y1, w, h);
+      if (!bim) {
+         Error("DrawTextW", "error getting background image");
+         return;
+      }
+
+      // and copy it into the text image
+      Int_t xo = 0, yo = 0;
+      if (x1 < 0) xo = -x1;
+      if (y1 < 0) yo = -y1;
+
+      for (int yp = 0; yp < (int) bim->height; yp++) {
+         for (int xp = 0; xp < (int) bim->width; xp++) {
+            ULong_t pixel = XGetPixel(bim, xp, yp);
+            XPutPixel(xim, xo+xp, yo+yp, pixel);
+         }
+      }
+      XDestroyImage(bim);
+      bg = (ULong_t) -1;
+   } else {
+      // if mode == kOpaque its simple, we just draw the background
+      XAddPixel(xim, values.background);
+      bg = values.background;
+   }
+
+   // paint the glyphs in the XImage
+   auto glyph = ttf.GetGlyphs();
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage,
+                             TTFhandle::GetSmoothing() ? ft_render_mode_normal
+                                                       : ft_render_mode_mono,
+                             nullptr, 1)) continue;
+      auto bitmap = (FT_BitmapGlyph)glyph->fImage;
+
+      Int_t bx = bitmap->left + Xoff;
+      Int_t by = h - bitmap->top - Yoff;
+      DrawImage(&bitmap->bitmap, values.foreground, bg, (RXImage *)xim, bx, by);
+   }
+
+   // put the Ximage on the screen
+   gc = (GC *) GetGCW(wctxt, 6);
+   if (gc)
+      XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
+   XDestroyImage(xim);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
 /// text is drawn with TGX11::DrawTextW.
@@ -368,17 +475,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
 void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                          const char *text, ETextMode mode)
 {
-   if (!fHasTTFonts) {
-      TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
-   } else {
-      TTF::Init();
-      TTF::SetRotationMatrix(angle);
-      TTF::PrepareString(text);
-      TTF::LayoutGlyphs();
-      Align(wctxt);
-      RenderString(wctxt, x, y, mode);
-      TTF::CleanupGlyphs();
-   }
+   DrawTextHelper(wctxt, x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,17 +485,7 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
 void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                          const wchar_t *text, ETextMode mode)
 {
-   if (!fHasTTFonts) {
-      TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
-   } else {
-      TTF::Init();
-      TTF::SetRotationMatrix(angle);
-      TTF::PrepareString(text);
-      TTF::LayoutGlyphs();
-      Align(wctxt);
-      RenderString(wctxt, x, y, mode);
-      TTF::CleanupGlyphs();
-   }
+   DrawTextHelper(wctxt, x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,161 +514,6 @@ RXImage *TGX11TTF::GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w,
    return (RXImage *)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Test if there is really something to render.
-
-Bool_t TGX11TTF::IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
-{
-   Window_t cws = GetWindow(wctxt);
-   UInt_t width;
-   UInt_t height;
-   Int_t xy;
-   GetWindowSize(cws, xy, xy, width, height);
-
-   // If w or h is 0, very likely the string is only blank characters
-   if ((int)w == 0 || (int)h == 0)
-      return kFALSE;
-
-   // If string falls outside window, there is probably no need to draw it.
-   if (x + (int)w <= 0 || x >= (int)width)
-      return kFALSE;
-   if (y + (int)h <= 0 || y >= (int)height)
-      return kFALSE;
-
-   // If w or h are much larger than the window size, there is probably no need
-   // to draw it. Moreover a to large text size may produce a Seg Fault in
-   // malloc in RenderString.
-   if (w > 10*width)
-      return kFALSE;
-   if (h > 10*height)
-      return kFALSE;
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Perform the string rendering in the pad.
-/// LayoutGlyphs should have been called before.
-
-void TGX11TTF::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
-{
-   // compute the size and position of the XImage that will contain the text
-   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
-   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
-   Int_t w    = TTF::GetBox().xMax + Xoff;
-   Int_t h    = TTF::GetBox().yMax + Yoff;
-   Int_t x1   = x-Xoff-fAlign.x;
-   Int_t y1   = y+Yoff+fAlign.y-h;
-
-   if (!IsVisible(wctxt, x1, y1, w, h))
-      return;
-
-   // create the XImage that will contain the text
-   UInt_t depth = fDepth;
-   XImage *xim = XCreateImage((Display*)fDisplay, fVisual,
-                               depth, ZPixmap, 0, nullptr, w, h,
-                               depth <= 8 ? 8 : (depth <= 16 ? 16 : 32), 0);
-   //bitmap_pad should be 8, 16 or 32 https://www.x.org/releases/X11R7.5/doc/man/man3/XPutPixel.3.html
-   if (!xim) return;
-
-   // use malloc since Xlib will use free() in XDestroyImage
-   xim->data = (char *) malloc(xim->bytes_per_line * h);
-   memset(xim->data, 0, xim->bytes_per_line * h);
-
-   ULong_t   bg;
-   XGCValues values;
-   auto gc = (GC *) GetGCW(wctxt, 3);
-   if (!gc) {
-      Error("RenderString", "error getting Graphics Context");
-      return;
-   }
-   XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
-
-   // get the background
-   if (mode == kClear) {
-      // if mode == kClear we need to get an image of the background
-      XImage *bim = GetBackground(wctxt, x1, y1, w, h);
-      if (!bim) {
-         Error("DrawText", "error getting background image");
-         return;
-      }
-
-      // and copy it into the text image
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
-
-      for (int yp = 0; yp < (int) bim->height; yp++) {
-         for (int xp = 0; xp < (int) bim->width; xp++) {
-            ULong_t pixel = XGetPixel(bim, xp, yp);
-            XPutPixel(xim, xo+xp, yo+yp, pixel);
-         }
-      }
-      XDestroyImage(bim);
-      bg = (ULong_t) -1;
-   } else {
-      // if mode == kOpaque its simple, we just draw the background
-      XAddPixel(xim, values.background);
-      bg = values.background;
-   }
-
-   // paint the glyphs in the XImage
-   TTF::TTGlyph *glyph = TTF::GetGlyphs();
-   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage,
-                             TTF::GetSmoothing() ? ft_render_mode_normal
-                                                 : ft_render_mode_mono,
-                             nullptr, 1 )) continue;
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      FT_Bitmap*     source = &bitmap->bitmap;
-      Int_t          bx, by;
-
-      bx = bitmap->left+Xoff;
-      by = h - bitmap->top-Yoff;
-      DrawImage(source, values.foreground, bg, (RXImage*)xim, bx, by);
-   }
-
-   // put the Ximage on the screen
-   Window_t cws = GetWindow(wctxt);
-   gc = (GC *) GetGCW(wctxt, 6);
-   if (gc)
-      XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
-   XDestroyImage(xim);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set specified font.
-
-void TGX11TTF::SetAttText(WinContext_t wctxt, const TAttText &att)
-{
-   // TODO: add to window context custom part for TTF,
-   // it can be allocated and provided via private interface
-   TGX11::SetAttText(wctxt, att);
-
-   if (fHasTTFonts) {
-      TTF::SetTextFont(att.GetTextFont());
-      TTF::SetTextSize(att.GetTextSize());
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set text font to specified name.
-/// mode       : loading flag
-/// mode=0     : search if the font exist (kCheck)
-/// mode=1     : search the font and load it if it exists (kLoad)
-/// font       : font name
-///
-/// Set text font to specified name. This function returns 0 if
-/// the specified font is found, 1 if not.
-
-Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
-{
-   if (!fHasTTFonts) {
-      return TGX11::SetTextFont(fontname, mode);
-   } else {
-      return TTF::SetTextFont(fontname);
-   }
-}
 
 #ifdef R__HAS_XFT
 

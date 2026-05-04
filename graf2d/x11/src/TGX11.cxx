@@ -1072,6 +1072,17 @@ TGX11::EAlign TGX11::GetTextAlignW(WinContext_t wctxt) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return text attributes for specified window context.
+/// Protected method used by TGX11TTF.
+
+const TAttText& TGX11::GetTextAttW(WinContext_t wctxt) const
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   return ctxt->fAttText;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Query the double buffer value for the window wid.
 
 Int_t TGX11::GetDoubleBuffer(int wid)

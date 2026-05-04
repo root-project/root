@@ -13,10 +13,7 @@
 #ifndef ROOT_TGX11TTF
 #define ROOT_TGX11TTF
 
-
 #include "TGX11.h"
-
-#include "TTF.h"
 
 #include "RConfigure.h"
 
@@ -27,18 +24,18 @@ class TXftFontHash;
 class TGX11TTF : public TGX11 {
 
 private:
-   FT_Vector   fAlign;                 ///< alignment vector
 #ifdef R__HAS_XFT
    TXftFontHash  *fXftFontHash;        ///< hash table for Xft fonts
    static Bool_t  gXftInit;            ///< does xft was initialized
 #endif
 
-   void     Align(WinContext_t wctxt);
-   void     DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, RXImage *xim,
+   void     DrawImage(void *source, ULong_t fore, ULong_t back, RXImage *xim,
                       Int_t bx, Int_t by);
-   Bool_t   IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
    RXImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void     RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode);
+
+   template<class CharType>
+   void   DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                         const CharType *text, ETextMode mode);
 
 public:
    TGX11TTF(TGX11 &&org);
@@ -50,13 +47,6 @@ public:
                    const char *text, ETextMode mode) override;
    void   DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const wchar_t *text, ETextMode mode) override;
-
-   using TGX11::SetTextFont;
-   Int_t  SetTextFont(char *fontname, ETextSetMode mode) override;
-
-   //---- Methods used for new graphics -----
-   void  SetAttText(WinContext_t wctxt, const TAttText &att) override;
-
 
 #ifdef R__HAS_XFT
    //---- Methods used text/fonts handling via Xft -----
