@@ -161,7 +161,9 @@ void TBufferIO::InitMap()
 
 void TBufferIO::MapObject(const TObject *obj, ULong64_t offset)
 {
-   R__ASSERT(offset <= kMaxUInt);
+   // This is too high, the real limit is kMaxLongRange which is
+   // currently declared inside TBufferFile.cxx.
+   R__ASSERT(offset <= kMaxULong64);
    if (IsWriting()) {
       if (!fMap)
          InitMap();
