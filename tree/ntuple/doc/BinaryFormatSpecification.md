@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.2
+# RNTuple Binary Format Specification 1.0.0.3
 
 ## Versioning Notes
 
@@ -167,7 +167,12 @@ That means that readers need to continue reading feature flags as long as their 
 
 Readers should gracefully abort reading when they encounter unknown bits set.
 
-At the moment, there are no feature flag bits defined.
+Here is the list of all currently-defined feature flags. Note that the flag name is only for informational purposes
+and is not normative.
+
+| Flag Bit | Introduced in | Name                    | Meaning                                      |
+|----------|---------------|-------------------------|----------------------------------------------|
+| 0        | 1.0.0.3       | Nested Deferred Columns | Signals that the RNTuple contains at least one deferred column that is part of a collection and was extended<br>(i.e. it appears in the footer). This can happen when merging two RNTuples that have the same collection field<br>backed by columns with different encoding, e.g. a `vector<float>` whose elements are represented by SplitReal32<br>in the first ntuple and by Real32 in the second. |
 
 
 ## Frames
