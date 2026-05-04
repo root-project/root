@@ -100,6 +100,8 @@ if(MSVC AND NOT win_broken_tests)
                           io/ntuple/ntpl013_staged.C
                           io/ntuple/ntpl014_framework.C
                           io/ntuple/ntpl017_shared_reader.C)
+  # The RNTuple SoA tutorial fails on Windows if interpreted for unknown reasons
+  list(APPEND ntuple_veto io/ntuple/ntpl020_soa.C)
 endif()
 
 # TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
