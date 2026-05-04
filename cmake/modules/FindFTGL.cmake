@@ -29,18 +29,28 @@ mark_as_advanced(FTGL_FOUND FTGL_INCLUDE_DIR FTGL_LIBRARY)
 if(FTGL_FOUND)
   set(FTGL_VERSION_SRC "${CMAKE_SOURCE_DIR}/cmake/modules/get_ftgl_version.cpp")
   set(VER_INCLUDE_DIRS ${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build})
-  try_run(RUN_RESULT COMPILE_RESULT
+  try_compile(FTGL_VERSION_API
+      SOURCES "${FTGL_VERSION_SRC}"
+      CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${VER_INCLUDE_DIRS}"
+      LINK_LIBRARIES ${FTGL_LIBRARY}
+      OUTPUT_VARIABLE FTGL_VERSION_API_LOG
+  )
+  if (FTGL_VERSION_API)
+    try_run(RUN_RESULT COMPILE_RESULT
       "${CMAKE_BINARY_DIR}"
       "${FTGL_VERSION_SRC}"
       CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${VER_INCLUDE_DIRS}"
       LINK_LIBRARIES ${FTGL_LIBRARY}
       COMPILE_OUTPUT_VARIABLE BUILD_LOG
       RUN_OUTPUT_VARIABLE FTGL_VERSION
-  )
-  if(COMPILE_RESULT AND RUN_RESULT EQUAL 0)
-    message(STATUS "Detected FTGL version: ${FTGL_VERSION}")
+    )
+    if(COMPILE_RESULT AND RUN_RESULT EQUAL 0)
+      message(STATUS "Detected FTGL version: ${FTGL_VERSION}")
+    else()
+      message(SEND_ERROR "Could not detect FTGL version: ${BUILD_LOG}")
+    endif()
   else()
-    message(STATUS "Failed to detect FTGL version via compilation (due to ancient system libftgl version). ${BUILD_LOG}")
+    message(STATUS "Failed to detect FTGL version via compilation (due to ancient system libftgl version).")
     # ie the FTGL version is before 2.2.0dev (May 23, 2010) https://github.com/frankheckenbach/ftgl/commit/b066d7826070749499011c4f37c764b1610071ad where VERSION API was introduced
     # sourceforge last version is 2.1.3.rc5  (June 12, 2008) so widely used
     # Let's attempt to know if it's 2.1.3dev or earlier by looking at commits close to May 23 2008 when UTF8 support was added: https://github.com/ulrichard/ftgl/commit/84869ec7da984493b3cd268b9e56b80e7c78ac82#diff-1462936246cba8b5e9ee1c79a1207cea8efb0658be58cd25e7d3acd817ac0ac0R374
