@@ -1105,7 +1105,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view 
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
 {
-   if (flag % 64 == 0)
+   if (flag > 0 && flag % 64 == 0)
       throw RException(R__FAIL("invalid feature flag: " + std::to_string(flag)));
    fDescriptor.fFeatureFlags.insert(flag);
 }
