@@ -56,9 +56,10 @@ void TPadPainterBase::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_
       res = gVirtualX->GetTextExtentA(font, size, w, h, mess);
 
    if (!res) {
-      TTF::SetTextFont(font);
-      TTF::SetTextSize(size);
-      TTF::GetTextExtent(w, h, mess);
+      TTFhandle ttf;
+      ttf.SetTextFont(font);
+      ttf.SetTextSize(size);
+      ttf.GetTextExtent(w, h, mess);
    }
 }
 
@@ -73,9 +74,10 @@ void TPadPainterBase::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_
       res = gVirtualX->GetTextExtentA(font, size, w, h, mess);
 
    if (!res) {
-      TTF::SetTextFont(font);
-      TTF::SetTextSize(size);
-      TTF::GetTextExtent(w, h, mess);
+      TTFhandle ttf;
+      ttf.SetTextFont(font);
+      ttf.SetTextSize(size);
+      ttf.GetTextExtent(w, h, mess);
    }
 }
 
@@ -95,10 +97,13 @@ void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a
    }
 
    if (!res) {
-      TTF::SetTextFont(font);
-      TTF::SetTextSize(size);
-      a = TTF::GetBox().yMax;
-      d = TMath::Abs(TTF::GetBox().yMin);
+      TTFhandle ttf;
+      ttf.SetTextFont(font);
+      ttf.SetTextSize(size);
+      UInt_t w, h;
+      ttf.GetTextExtent(w, h, mess);
+      a = ttf.GetBox().yMax;
+      d = TMath::Abs(ttf.GetBox().yMin);
    }
 }
 
@@ -119,10 +124,13 @@ void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a
    }
 
    if (!res) {
-      TTF::SetTextFont(font);
-      TTF::SetTextSize(size);
-      a = TTF::GetBox().yMax;
-      d = TMath::Abs(TTF::GetBox().yMin);
+      TTFhandle ttf;
+      ttf.SetTextFont(font);
+      ttf.SetTextSize(size);
+      UInt_t w, h;
+      ttf.GetTextExtent(w, h, mess);
+      a = ttf.GetBox().yMax;
+      d = TMath::Abs(ttf.GetBox().yMin);
    }
 }
 
@@ -137,12 +145,12 @@ UInt_t TPadPainterBase::GetTextAdvance(Font_t font, Double_t size, const char *m
          return a;
    }
 
-   Bool_t kernsave = TTF::GetKerning();
-   TTF::SetKerning(kern);
-   TTF::SetTextFont(font);
-   TTF::SetTextSize(size);
+   TTFhandle ttf;
+   ttf.SetTextFont(font);
+   ttf.SetTextSize(size);
+   ttf.SetKerning(kern);
+
    UInt_t a = 0;
-   TTF::GetTextAdvance(a, mess);
-   TTF::SetKerning(kernsave);
+   ttf.GetTextAdvance(a, mess);
    return a;
 }
