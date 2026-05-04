@@ -62,6 +62,8 @@ The following people have contributed to this new version:
   Secure communication should be provided by standard means, such as SSL sockets or SSH tunneling.
 * The `builtin_davix` build option has been removed.
   The Davix I/O code in ROOT remains uneffected and is built as before provided that the Davix library is found on the system.
+* `RRealField::SetQuantized` now has a new overload and the existing signature has been deprecated. The new overload enforces proper ordering of the arguments.
+  The deprecated overload will be removed in ROOT 6.42.
 
 ## Removals
 
