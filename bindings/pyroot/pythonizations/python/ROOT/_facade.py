@@ -35,7 +35,7 @@ class _gROOTWrapper(object):
         return gROOT
 
     def __getattr__(self, name):
-        if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
+        if name != "SetBatch" and self._facade.__dict__["gROOT"] is not self._gROOT:
             self._facade._finalSetup()
         return getattr(self._gROOT, name)
 
