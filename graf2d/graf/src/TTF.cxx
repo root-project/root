@@ -835,26 +835,3 @@ void TTF::Version(Int_t &major, Int_t &minor, Int_t &patch)
    Init();
    fgHandle->Version(major, minor, patch);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-TTFontHandle *TTF::GetCurFont()
-{
-   return fgHandle ? fgHandle->GetFont() : nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TTF::SetCurFont(TTFontHandle *font)
-{
-   if (fgHandle)
-      fgHandle->SetFont(font);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-FT_Face TTF::GetCurFontFace()
-{
-   Init();
-   return fgHandle->GetFontFace();
-}

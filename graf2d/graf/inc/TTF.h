@@ -106,10 +106,6 @@ public:
    static Int_t          SetTextFont(const char *fontname, Int_t italic=0);
    static void           SetTextSize(Float_t textsize);
 
-   static TTFontHandle*  GetCurFont();
-   static void           SetCurFont(TTFontHandle* font);
-   static FT_Face        GetCurFontFace();
-
    static void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
    // new temporary methods, can be removed at the end
@@ -174,9 +170,6 @@ class TTFhandle {
       void           GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
       void           GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text);
       void           GetTextAdvance(UInt_t &a, const char *text);
-
-      TTFontHandle*  GetFont() const { return fFont; }
-      void           SetFont(TTFontHandle *font) { fFont = font; }
 
       void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
