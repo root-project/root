@@ -32,6 +32,9 @@ in ROOT7 TTFhandle will be renamed into TTF class
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
+Bool_t TTFhandle::fgHinting = kFALSE;
+Bool_t TTFhandle::fgSmoothing = kTRUE;
+
 
 struct TTFontHandle {
    std::string name;
@@ -80,7 +83,6 @@ FT_Library TTFhandle::InitClose(Int_t direction)
    return _library;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Map char to unicode. Returns 0 in case no mapping exists.
 
@@ -121,7 +123,7 @@ void TTFhandle::ComputeTrailingBlanksWidth(Int_t n)
       FT_Face face = fFont->face;
       char space = ' ';
       FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fHinting) load_flags |= FT_LOAD_NO_HINTING;
+      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
       FT_Load_Char(face, space, load_flags);
 
       FT_GlyphSlot slot      = face->glyph;
@@ -191,7 +193,7 @@ void TTFhandle::LayoutGlyphs()
    fWidth  = 0;
 
    load_flags = FT_LOAD_DEFAULT;
-   if (!fHinting)
+   if (!fgHinting)
       load_flags |= FT_LOAD_NO_HINTING;
 
    fCBox.xMin = fCBox.yMin =  32000;
@@ -208,7 +210,7 @@ void TTFhandle::LayoutGlyphs()
          if (prev_index) {
             FT_Vector  kern;
             FT_Get_Kerning(face, prev_index, glyph.fIndex,
-                           fHinting ? ft_kerning_default : ft_kerning_unfitted,
+                           fgHinting ? ft_kerning_default : ft_kerning_unfitted,
                            &kern);
             fWidth += kern.x;
          }
@@ -573,12 +575,50 @@ void TTFhandle::Version(Int_t &major, Int_t &minor, Int_t &patch)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+
+Bool_t TTFhandle::Init()
+{
+   return InitClose(1) != nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+Bool_t TTFhandle::GetHinting()
+{
+   return fgHinting;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Bool_t TTFhandle::GetSmoothing()
+{
+   return fgSmoothing;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TTFhandle::SetHinting(Bool_t state)
+{
+   fgHinting = state;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TTFhandle::SetSmoothing(Bool_t state)
+{
+   fgSmoothing = state;
+}
+
+
 /** \class TTF
 \ingroup BasicGraphics
 
 Interface to the freetype 2 library.
 Implements old static API.
-Unitl ROOT7 just redirects to static TTFhandle instance
+Unitl ROOT7 just redirects to static TTFhandle instance,
+then TTFhandle will be renamed into TTF class
 */
 
 thread_local TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
@@ -589,8 +629,7 @@ thread_local std::unique_ptr<TTFhandle> fgHandle; // static handle, destroyed au
 
 TTF::~TTF()
 {
-   if (fgHandle)
-      fgHandle->InitClose(-1);
+   TTFhandle::InitClose(-1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -608,7 +647,7 @@ void TTF::Init()
 
 Bool_t TTF::GetHinting()
 {
-   return fgHandle ? fgHandle->GetHinting() : kFALSE;
+   return TTFhandle::GetHinting();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,7 +661,7 @@ Bool_t TTF::GetKerning()
 
 Bool_t TTF::GetSmoothing()
 {
-   return fgHandle ? fgHandle->GetSmoothing() : kFALSE;
+   return TTFhandle::GetSmoothing();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -634,14 +673,14 @@ Bool_t TTF::IsInitialized()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t  TTF::GetWidth()
+Int_t TTF::GetWidth()
 {
    return fgHandle ? fgHandle->GetWidth() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t  TTF::GetAscent()
+Int_t TTF::GetAscent()
 {
    return fgHandle ? fgHandle->GetAscent() : 0;
 }
@@ -705,8 +744,7 @@ void TTF::SetRotationMatrix(Float_t angle)
 
 void TTF::SetHinting(Bool_t state)
 {
-   Init();
-   fgHandle->SetHinting(state);
+   TTFhandle::SetHinting(state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,8 +761,7 @@ void TTF::SetKerning(Bool_t state)
 
 void TTF::SetSmoothing(Bool_t state)
 {
-   Init();
-   fgHandle->SetSmoothing(state);
+   TTFhandle::SetSmoothing(state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

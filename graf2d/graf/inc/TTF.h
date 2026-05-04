@@ -122,17 +122,18 @@ class TTFhandle {
       Int_t          fAscent = 0;                ///< string ascent, used to compute Y alignment
       FT_BBox        fCBox;                      ///< string control box
       std::vector<TTF::TTGlyph> fGlyphs;         ///< glyphs
-      Bool_t         fHinting = kFALSE;          ///< use hinting (true by default)
       Bool_t         fKerning = kTRUE;           ///< use kerning (true by default)
       std::unique_ptr<FT_Matrix> fRotMatrix;     ///< rotation matrix
-      Bool_t         fSmoothing = kTRUE;         ///< use anti-aliasing (true when >8 planes, false otherwise)
       Int_t          fTBlankW = 0;               ///< trailing blanks width
       Int_t          fWidth = 0;                 ///< string width, used to compute X alignment
+
+      static  Bool_t fgHinting;                   ///< use hinting (false by default)
+      static  Bool_t fgSmoothing;                 ///< use anti-aliasing (true when >8 planes, false otherwise)
 
       UInt_t         CharToUnicode(UInt_t code);
       void           ComputeTrailingBlanksWidth(Int_t n);
 
-      FT_Library     InitClose(Int_t direction = 0);
+      static FT_Library InitClose(Int_t direction = 0);
 
       Int_t          SelectFontHandle(Int_t arg, const char *name = nullptr);
 
@@ -144,19 +145,13 @@ class TTFhandle {
       UInt_t         GetNumGlyphs() const { return fGlyphs.size(); }
       FT_Face        GetFontFace() const;
       Int_t          GetAscent() const { return fAscent; }
-      Bool_t         GetHinting() const { return fHinting; }
       Bool_t         GetKerning() const { return fKerning; }
       FT_Matrix     *GetRotMatrix() const { return fRotMatrix.get(); }
-      Bool_t         GetSmoothing() const { return fSmoothing; }
       Int_t          GetTrailingBlanksWidth() const { return fTBlankW; }
       Int_t          GetWidth() const { return fWidth; }
       const FT_BBox &GetBox() const { return fCBox; }
 
-
-      void           SetHinting(Bool_t state) { fHinting = state; }
       void           SetKerning(Bool_t state) { fKerning = state; }
-      void           SetSmoothing(Bool_t state) { fSmoothing = state; }
-
       void           SetTextFont(Font_t fontnumber);
       Int_t          SetTextFont(const char *fontname, Int_t italic = 0);
       Bool_t         SetTextSize(Float_t textsize);
@@ -172,6 +167,13 @@ class TTFhandle {
       void           GetTextAdvance(UInt_t &a, const char *text);
 
       void           Version(Int_t &major, Int_t &minor, Int_t &patch);
+
+
+      static Bool_t  Init();
+      static Bool_t  GetHinting();
+      static Bool_t  GetSmoothing();
+      static void    SetHinting(Bool_t state);
+      static void    SetSmoothing(Bool_t state);
 
    ClassDef(TTFhandle, 0)  // Dynamic interface to TTF
 
