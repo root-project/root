@@ -1235,7 +1235,10 @@ class TPadPainter extends ObjectPainter {
       if (!lst)
          return;
       for (let i = 0; i < lst.arr?.length; ++i) {
-         if (this.checkSpecial(lst.arr[i])) {
+         if (lst.arr[i] === lst) {
+            lst.arr[i] = null;
+            console.error('list of primitives includes itself - endless recursion');
+         } else if (this.checkSpecial(lst.arr[i])) {
             lst.arr[i].$special = true; // mark object as special one, do not use in drawing
             if (count_specials)
                this.#num_specials++;

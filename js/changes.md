@@ -1,7 +1,7 @@
 # JSROOT changelog
 
 
-## Changes in dev
+## Changes in 7.11.0
 1. Implement new data types in `RNtuple`
    - reduced float types kFloat16, kReal32Trunc, kReal32Quant
    - `std::vector`
@@ -14,21 +14,21 @@
    - `std::atomic`
    - simple custom classes
    - streamed types
-1. Resort order of ranges in http request, fixing several long-standing problems #374
-1. Implement for `TPie` 3d, text, title drawing including interactivity
-1. Implement `TCanvas` support in `build3d` function #373
-1. Implements `TTree` branches filtering via context menu #364
-1. Let define alternative draw function #378
-1. Implement padsN draw option for `THStack` and `TMultiGraph`
-1. Support custom click handler for `TGraph` https://root-forum.cern.ch/t/64744
-1. Correctly draw axis ticks when `fNdivisions` is negative
-1. Use `resvg-js` backend for PNG support in node.js #391, thanks to https://github.com/OmarMesqq
-1. Introduce `settings.ServerTimeout` global timeout for THttpServer operations
-1. Let set custom color palette with `setColorPalette` function
-1. Upgrade three.js r180 -> r183
-1. Remove support for deprectaed `TH1K` class
-1. Fix - paint frame border mode/size from `TCanvas`
-1. Fix - interactivity for TH3 palette drawing #398
+2. Resort order of ranges in http request, fixing several long-standing problems #374
+3. Implement for `TPie` 3d, text, title drawing including interactivity
+5. Implement `TCanvas` support in `build3d` function #373
+6. Implement `TTree` branches filtering via context menu #364
+7. Let define alternative draw function #378
+8. Implement "padsN" draw option for `THStack` and `TMultiGraph`
+9. Support custom click handler for `TGraph` https://root-forum.cern.ch/t/64744
+10. Correctly draw axis ticks when `fNdivisions` is negative
+11. Use `resvg-js` backend for PNG support in node.js #391, thanks to https://github.com/OmarMesqq
+12. Introduce `settings.ServerTimeout` for `THttpServer` operations
+13. Let set custom color palette with `setColorPalette` function
+14. Upgrade three.js r180 -> r183
+15. Remove support for deprecated `TH1K` class
+16. Fix - paint frame border mode/size from `TCanvas`
+17. Fix - interactivity for `TH3` palette drawing #398
 
 
 ## Changes in 7.10.3

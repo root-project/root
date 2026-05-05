@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.10.99
+// https://root.cern/js/ v7.11.0
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -10,11 +10,11 @@ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentS
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.11.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '16/04/2026',
+version_date = '5/05/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -90693,7 +90693,10 @@ class TPadPainter extends ObjectPainter {
       if (!lst)
          return;
       for (let i = 0; i < lst.arr?.length; ++i) {
-         if (this.checkSpecial(lst.arr[i])) {
+         if (lst.arr[i] === lst) {
+            lst.arr[i] = null;
+            console.error('list of primitives includes itself - endless recursion');
+         } else if (this.checkSpecial(lst.arr[i])) {
             lst.arr[i].$special = true; // mark object as special one, do not use in drawing
             if (count_specials)
                this.#num_specials++;
