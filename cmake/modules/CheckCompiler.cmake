@@ -16,6 +16,8 @@ if(NOT GENERATOR_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
   if(NOT CMAKE_C_FLAGS AND NOT CMAKE_CXX_FLAGS AND NOT CMAKE_Fortran_FLAGS)
     set(CMAKE_BUILD_TYPE Release CACHE STRING
       "Specifies the build type on single-configuration generators" FORCE)
+  else()
+    message(WARNING "CMAKE_BUILD_TYPE is not set. Please set it or specify any relevant compilation flag, including optimization level, in CMAKE_CXX_FLAGS.")
   endif()
 endif()
 
