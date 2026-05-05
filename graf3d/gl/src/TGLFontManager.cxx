@@ -485,7 +485,8 @@ TGLFontManager::~TGLFontManager()
 
 void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mode, TGLFont &out)
 {
-   if (fgStaticInitDone == kFALSE) InitStatics();
+   if (fgStaticInitDone == kFALSE)
+      InitStatics();
 
    Int_t  size = GetFontSize(sizeIn);
    if (mode == out.GetMode() && fileID == out.GetFile() && size == out.GetSize())
@@ -494,18 +495,17 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
    FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
    if (it == fFontMap.end())
    {
-      TString ttpath, file;
-      ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
-      {
-         //For extenede we have both ttf and otf.
-         char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?
-                                   ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf" :
-                                   ((TObjString*)fgFontFileArray[fileID])->String());
-         file = fp;
-         delete [] fp;
+      TString ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
+      TString file = fgFontFileArray[fileID]->GetName();
+      if (fileID < fgExtendedFontStart)
+         file += ".ttf";
+      gSystem->FindFile(ttpath, file);
+      if (file.IsNull()) {
+         Error("RegisterFont", "File for font id %d not found", fileID);
+         return;
       }
 
-      FTFont* ftfont = 0;
+      FTFont* ftfont = nullptr;
       switch (mode)
       {
          case TGLFont::kBitmap:
@@ -528,9 +528,8 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
             ftfont = new FTGLTextureFont(file);
             break;
          default:
-            Error("TGLFontManager::RegisterFont", "invalid FTGL type");
+            Error("RegisterFont", "invalid FTGL type");
             return;
-            break;
       }
       ftfont->FaceSize(size);
       const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
