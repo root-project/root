@@ -134,9 +134,9 @@ if(PRE)
   execute_process(COMMAND ${_pre} ${_cwd} RESULT_VARIABLE _rc)
   if(_rc EQUAL 77)
     # Exit code 77 from a pre-command means "skip this test".
-    # Re-exit with 77 so CTest's SKIP_RETURN_CODE property takes effect.
-    message(STATUS "pre-command requested skip (exit 77) -- skipping test")
-    cmake_language(EXIT 77)
+    # Print a sentinel recognised by SKIP_REGULAR_EXPRESSION on the test.
+    message(STATUS "ROOTTEST_SKIP: pre-command requested skip -- skipping test")
+    return()
   elseif(_rc)
     message(FATAL_ERROR "pre-command error code : ${_rc}")
   endif()

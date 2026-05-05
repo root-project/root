@@ -113,5 +113,5 @@ if(NOT _32BIT)
                     OUTREF testLargeCollection.ref
                     FIXTURES_REQUIRED io-io-testcoll-fixture
                     PRECMD sh ${_memcheck_script}
-                    PROPERTIES "SKIP_RETURN_CODE;77")
+                    PROPERTIES "SKIP_REGULAR_EXPRESSION;ROOTTEST_SKIP")
 endif()
