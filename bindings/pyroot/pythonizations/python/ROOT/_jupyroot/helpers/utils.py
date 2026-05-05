@@ -96,7 +96,7 @@ _jsCode = """
          Core.settings.HandleKeys = false;
          {jsDrawCode}
       }}
-      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
+      const servers = ['/static/', 'https://root.cern/js/7.11.0/', 'https://jsroot.gsi.de/7.11.0/'],
             path = 'build/jsroot';
       if (typeof JSROOT !== 'undefined')
          execCode(JSROOT);
@@ -135,7 +135,7 @@ _jsFileCode = """
             bytes[i] = binaryString.charCodeAt(i);
          Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
       }}
-      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
+      const servers = ['/static/', 'https://root.cern/js/7.11.0/', 'https://jsroot.gsi.de/7.11.0/' ],
             path = 'build/jsroot';
       if (typeof JSROOT !== 'undefined')
          showFile(JSROOT);
