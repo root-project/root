@@ -1531,7 +1531,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 954) ichar = 966;
       if (ic == 922) ichar = 952;
       if (ic == 753) ichar = 965;
-      PrintStr(Form("&#%4.4d;",ichar));
+      PrintStr(TString::Format("&#%4.4d;",ichar));
    } else {
       Int_t len=strlen(chars);
       for (Int_t i=0; i<len;i++) {
