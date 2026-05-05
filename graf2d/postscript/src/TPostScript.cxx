@@ -756,7 +756,7 @@ void TPostScript::DefineMarkers()
 
 void TPostScript::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   static Double_t x[4], y[4];
+   Double_t x[4], y[4];
    Int_t ix1 = XtoPS(x1);
    Int_t ix2 = XtoPS(x2);
    Int_t iy1 = YtoPS(y1);
@@ -819,7 +819,7 @@ void TPostScript::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                             Int_t mode, Int_t border, Int_t dark, Int_t light)
 {
-   static Int_t xps[7], yps[7];
+   Int_t xps[7], yps[7];
    Int_t i, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
 
    // Draw top&left part of the box
@@ -1099,7 +1099,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
 {
    Int_t i, np, markerstyle;
    Float_t markersize;
-   static char chtemp[10];
+   char chtemp[10];
 
    if (!fMarkerSize) return;
    fMarkerStyle = TMath::Abs(fMarkerStyle);
@@ -1173,7 +1173,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
 {
    Int_t i, np, markerstyle;
    Float_t markersize;
-   static char chtemp[10];
+   char chtemp[10];
 
    if (!fMarkerSize) return;
    fMarkerStyle = TMath::Abs(fMarkerStyle);

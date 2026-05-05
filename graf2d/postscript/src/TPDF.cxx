@@ -1940,7 +1940,7 @@ void TPDF::SetAlpha(Float_t a)
       }
    }
    if (!known) fAlphas.push_back(fAlpha);
-   PrintStr(Form(" /ca%3.2f gs /CA%3.2f gs",fAlpha,fAlpha));
+   PrintStr(TString::Format(" /ca%3.2f gs /CA%3.2f gs",fAlpha,fAlpha));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
