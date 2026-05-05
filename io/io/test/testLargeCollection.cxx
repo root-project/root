@@ -682,12 +682,12 @@ int testMapObjectLargeOffset()
 // -----------------------------------------------------------------------
 // Entry point
 // -----------------------------------------------------------------------
-int testLargeCollection(bool timing = false)
+int testLargeCollection(bool timing = false, bool memoryCheck = false)
 {
    int errors = 0;
 
-   std::cerr << "Available memory at start: " << available_mem_mb() << " MB\n";
-   {
+   if (memoryCheck) {
+      std::cerr << "Available memory at start: " << available_mem_mb() << " MB\n";
       double swap = available_swap_mb();
       if (swap >= 0.0)
          std::cerr << "Available swap at start:   " << swap << " MB\n";
