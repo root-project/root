@@ -86,8 +86,15 @@ concurrency:
 
 jobs:
   build-macos:
-    # Temporarily disabled - only alma10 arm64 is active
-    if: false
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -233,8 +240,15 @@ jobs:
 
 
   build-windows:
-    # Temporarily disabled - only alma10 arm64 is active
-    if: false
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -380,7 +394,25 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          # Temporarily only alma10 arm64 is active
+          - image: fedora43
+          - image: fedora44
+          - image: alma8
+          - image: alma9
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          - image: alma10
+          - image: ubuntu22
+            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu2404
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu2604
+          - image: debian13
+            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          # Special builds
+          - image: alma9
+            platform_config: alma9-modules_off
+            is_special: true
+            property: modules_off
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - image: alma10
             platform_config: alma10-arm64-largetest
             is_special: true
