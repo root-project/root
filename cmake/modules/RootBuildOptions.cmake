@@ -106,7 +106,7 @@ ROOT_BUILD_OPTION(builtin_tiff OFF "Build libtiff internally (requires network)"
 ROOT_BUILD_OPTION(builtin_unuran OFF "Build bundled copy of unuran [GPL]")
 ROOT_BUILD_OPTION(builtin_vdt OFF "Build VDT internally (requires network)")
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Build XRootD internally (requires network)")
-ROOT_BUILD_OPTION(builtin_xxhash OFF "Build bundled copy of xxHash")
+ROOT_BUILD_OPTION(builtin_xxhash OFF "Build xxHash internally (requires network)")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build zlib internally (requires network)")
 ROOT_BUILD_OPTION(builtin_zstd OFF "Build zstd internally (requires network)")
 ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
