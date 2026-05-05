@@ -179,7 +179,7 @@ try:
 
     testFailed = abs(y_sofie - y_ort) > 0.01
     if np.any(testFailed):
-        raiseError("Result is different between SOFIE and ONNXRT")
+        raise RuntimeError("Result is different between SOFIE and ONNXRT")
     else:
         print("OK")
 
