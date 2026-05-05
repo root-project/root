@@ -130,8 +130,6 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 TPDF::~TPDF()
 {
    Close();
-
-   if (fObjPos) delete [] fObjPos;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +138,7 @@ TPDF::~TPDF()
 void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
                           Double_t)
 {
-   Warning("TPDF::CellArrayBegin", "not yet implemented");
+   Warning("CellArrayBegin", "not yet implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +146,7 @@ void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
 
 void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
 {
-   Warning("TPDF::CellArrayFill", "not yet implemented");
+   Warning("CellArrayFill", "not yet implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +154,7 @@ void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
 
 void TPDF::CellArrayEnd()
 {
-   Warning("TPDF::CellArrayEnd", "not yet implemented");
+   Warning("CellArrayEnd", "not yet implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,12 +293,12 @@ void TPDF::Close(Option_t *)
    Int_t refInd = fNByte;
    PrintStr("xref@");
    PrintStr("0");
-   WriteInteger(fNbObj+1);
+   WriteInteger(fObjPos.size() + 1);
    PrintStr("@");
    PrintStr("0000000000 65535 f @");
    char str[21];
-   for (int i = 0; i < fNbObj; i++) {
-      snprintf(str,21,"%10.10d 00000 n @",fObjPos[i]);
+   for (std::size_t i = 0; i < fObjPos.size(); ++i) {
+      snprintf(str,21,"%10.10d 00000 n @", fObjPos[i]);
       PrintStr(str);
    }
 
@@ -308,7 +306,7 @@ void TPDF::Close(Option_t *)
    PrintStr("trailer@");
    PrintStr("<<@");
    PrintStr("/Size");
-   WriteInteger(fNbObj+1);
+   WriteInteger(fObjPos.size() + 1);
    PrintStr("@");
    PrintStr("/Root");
    WriteInteger(kObjRoot);
@@ -1359,7 +1357,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 void TPDF::EndObject()
 {
    if (!fObjectIsOpen)
-      Warning("TPDF::EndObject", "No Object currently opened.");
+      Warning("EndObject", "No Object currently opened.");
    fObjectIsOpen = kFALSE;
 
    PrintStr("endobj@");
@@ -1423,21 +1421,14 @@ void TPDF::MoveTo(Double_t x, Double_t y)
 void TPDF::NewObject(Int_t n)
 {
    if (fObjectIsOpen)
-      Warning("TPDF::NewObject", "An Object is already open.");
+      Warning("NewObject", "An Object is already open.");
    fObjectIsOpen = kTRUE;
-   if (!fObjPos || n >= fObjPosSize) {
-      Int_t newN = TMath::Max(2*fObjPosSize,n+1);
-      Int_t *saveo = new Int_t [newN];
-      if (fObjPos && fObjPosSize) {
-         memcpy(saveo,fObjPos,fObjPosSize*sizeof(Int_t));
-         memset(&saveo[fObjPosSize],0,(newN-fObjPosSize)*sizeof(Int_t));
-         delete [] fObjPos;
-      }
-      fObjPos     = saveo;
-      fObjPosSize = newN;
-   }
-   fObjPos[n-1] = fNByte;
-   fNbObj       = TMath::Max(fNbObj,n);
+   if (n > (Int_t) fObjPos.size())
+      fObjPos.resize(n, 0); // filling new elements with 0
+   if (n > 0)
+      fObjPos[n-1] = fNByte;
+   else
+      Error("NewObject", "Wrong id %d is specified.", n);
    WriteInteger(n, false);
    PrintStr(" 0 obj");
    PrintStr("@");
@@ -1666,8 +1657,6 @@ void TPDF::On()
 
 void TPDF::Open(const char *fname, Int_t wtype)
 {
-   Int_t i;
-
    if (fStream) {
       Warning("Open", "PDF file already open");
       return;
@@ -1706,7 +1695,8 @@ void TPDF::Open(const char *fname, Int_t wtype)
 
    gVirtualPS = this;
 
-   for (i=0; i<fSizBuffer; i++) fBuffer[i] = ' ';
+   for (Int_t i=0; i<fSizBuffer; i++)
+      fBuffer[i] = ' ';
 
    // The page orientation is last digit of PDF workstation type
    //  orientation = 1 for portrait
@@ -1730,9 +1720,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    // Set a default range
    Range(fXsize, fYsize);
 
-   fObjPos = nullptr;
-   fObjPosSize = 0;
-   fNbObj = 0;
+   fObjPos.clear();
    fNbPage = 0;
    fUrl = kFALSE;
 
@@ -1792,7 +1780,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
 
    PrintStr("/Font@");
    PrintStr("<<@");
-   for (i=0; i<kNumberOfFonts; i++) {
+   for (Int_t i=0; i<kNumberOfFonts; i++) {
       PrintStr(" /F");
       WriteInteger(i+1,false);
       WriteInteger(kObjFont+i);
