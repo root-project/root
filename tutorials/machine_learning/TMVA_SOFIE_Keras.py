@@ -12,7 +12,10 @@
 import contextlib
 import warnings
 
+import numpy as np
 import ROOT
+from tensorflow.keras.layers import Activation, Dense, Input, Softmax
+from tensorflow.keras.models import Model
 
 # Enable ROOT in batch mode (same effect as -nodraw)
 ROOT.gROOT.SetBatch(True)
@@ -43,10 +46,6 @@ def expect_warning(category, message):
 # -----------------------------------------------------------------------------
 # Step 1: Create and train a simple Keras model (via embedded Python)
 # -----------------------------------------------------------------------------
-
-import numpy as np
-from tensorflow.keras.layers import Activation, Dense, Input, Softmax
-from tensorflow.keras.models import Model
 
 input = Input(shape=(4,), batch_size=2)
 x = Dense(32)(input)
@@ -80,8 +79,6 @@ model.summary()
 # -----------------------------------------------------------------------------
 # Step 2: Use TMVA::SOFIE to parse the ONNX model
 # -----------------------------------------------------------------------------
-
-import ROOT
 
 # Parse the ONNX model
 
