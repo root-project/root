@@ -82,14 +82,7 @@ using the file extension `.svgz`.
 
 TSVG::TSVG() : TVirtualPS()
 {
-   fType        = 0;
-   fCompact     = kFALSE;
    gVirtualPS   = this;
-   fBoundingBox = kFALSE;
-   fRange       = kFALSE;
-   fXsize       = 0.;
-   fYsize       = 0.;
-   fYsizeSVG    = 0;
    SetTitle("SVG");
 }
 
@@ -120,7 +113,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
    }
 
    fLenBuffer = 0;
-   fType      = abs(wtype);
+   fType      = std::abs(wtype);
    SetLineJoin(gStyle->GetJoinLinePS());
    SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS());

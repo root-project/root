@@ -20,18 +20,17 @@ class TPoints;
 class TTeXDump : public TVirtualPS {
 
 protected:
-   Float_t      fXsize;           ///< Page size along X
-   Float_t      fYsize;           ///< Page size along Y
-   Int_t        fType;            ///< Workstation type used to know if the Tex is open
-   Bool_t       fBoundingBox;     ///< True when the TeX header is printed
-   Bool_t       fRange;           ///< True when a range has been defined
-   Bool_t       fStandalone;      ///< True when a TeX file should be standalone
-   Float_t      fCurrentRed;      ///< Current Red component
-   Float_t      fCurrentGreen;    ///< Current Green component
-   Float_t      fCurrentBlue;     ///< Current Blue component
-   Float_t      fCurrentAlpha;    ///< Current Alpha value
-   Float_t      fLineScale;       ///< Line width scale factor
-
+   Float_t      fXsize = 0.;           ///< Page size along X
+   Float_t      fYsize = 0.;           ///< Page size along Y
+   Int_t        fType = 0;             ///< Workstation type used to know if the Tex is open
+   Bool_t       fBoundingBox = kFALSE; ///< True when the TeX header is printed
+   Bool_t       fRange = kFALSE;       ///< True when a range has been defined
+   Bool_t       fStandalone = kFALSE;  ///< True when a TeX file should be standalone
+   Float_t      fCurrentRed = -1.;     ///< Current Red component
+   Float_t      fCurrentGreen = -1.;   ///< Current Green component
+   Float_t      fCurrentBlue = -.1;    ///< Current Blue component
+   Float_t      fCurrentAlpha = 1.;    ///< Current Alpha value
+   Float_t      fLineScale = 0.;       ///< Line width scale factor
 
 public:
    TTeXDump();

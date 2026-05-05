@@ -20,13 +20,13 @@ class TPoints;
 class TSVG : public TVirtualPS {
 
 protected:
-   Float_t      fXsize;           ///< Page size along X
-   Float_t      fYsize;           ///< Page size along Y
-   Int_t        fType;            ///< Workstation type used to know if the SVG is open
-   Bool_t       fCompact;         ///< True when the SVG header is printed
-   Bool_t       fBoundingBox;     ///< True when the SVG header is printed
-   Bool_t       fRange;           ///< True when a range has been defined
-   Double_t     fYsizeSVG;        ///< Page's Y size in SVG units
+   Float_t      fXsize = 0.;           ///< Page size along X
+   Float_t      fYsize = 0.;           ///< Page size along Y
+   Int_t        fType = 0;             ///< Workstation type used to know if the SVG is open
+   Bool_t       fCompact = kFALSE;     ///< True when the SVG header is printed
+   Bool_t       fBoundingBox = kFALSE; ///< True when the SVG header is printed
+   Bool_t       fRange = kFALSE;       ///< True when a range has been defined
+   Double_t     fYsizeSVG = 0.;        ///< Page's Y size in SVG units
 
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps

@@ -51,9 +51,7 @@ TImageDump can be used in any mode (batch, interactive) as follows
 
 TImageDump::TImageDump() : TVirtualPS()
 {
-   fImage     = nullptr;
    gVirtualPS = this;
-   fType      = 0;
    SetTitle("IMG");
 }
 
