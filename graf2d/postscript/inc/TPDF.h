@@ -43,9 +43,7 @@ protected:
    Int_t fPageOrientation = 0;          ///< Page orientation (Portrait, Landscape)
    Int_t fStartStream = 0;              ///< Stream start
    Float_t fLineScale = 0.;             ///< Line width scale factor
-   Int_t *fObjPos = nullptr;            ///< Objects position
-   Int_t fObjPosSize = 0;               ///< Real size of fObjPos
-   Int_t fNbObj = 0;                    ///< Number of objects
+   std::vector<Int_t> fObjPos;          ///< Objects position
    Int_t fNbPage = 0;                   ///< Number of pages
    Int_t fCurrentPage = 0;              ///< Object number of the current page
    std::vector<int> fPageObjects;       ///< Page object numbers
