@@ -209,117 +209,87 @@ void TGX11TTF::DrawFTGlyph(void *_source, ULong_t fore, ULong_t back,
                            RXImage *xim, Int_t bx, Int_t by)
 {
    auto source = (FT_Bitmap *) _source;
+   if (!source->width)
+      return;
 
-   UChar_t d = 0, *s = source->buffer;
+   UChar_t *s = source->buffer;
 
    if (TTFhandle::GetSmoothing()) {
-
-      static RXColor col[5];
-      RXColor  *bcol = nullptr;
-      XColor  *bc;
-      Int_t    x, y;
+      RXColor col[5];
 
       // background kClear, i.e. transparent, we take as background color
       // the average of the rgb values of all pixels covered by this character
-      if (back == (ULong_t) -1 && (UInt_t)source->width) {
-         ULong_t r, g, b;
-         Int_t   dots, dotcnt;
-         const Int_t maxdots = 50000;
+      if (back == (ULong_t) -1) {
+         const UInt_t ndots = TMath::Min((UInt_t) 50000, source->width * source->rows);
 
-         dots = Int_t(source->width * source->rows);
-         dots = dots > maxdots ? maxdots : dots;
-         bcol = new RXColor[dots];
-         if (!bcol) return;
-         bc = bcol;
-         dotcnt = 0;
-         for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
+         std::vector<RXColor> bcol(ndots);
+         if (!bcol.size())
+            return;
+         UInt_t dotcnt = 0;
+         for (unsigned y = 0; y < source->rows; y++) {
+            for (unsigned x = 0; x < source->width; x++) {
 ///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::GetAscent() + y);
-               bc->pixel = XGetPixel(xim, bx + x, by + y);
-               bc->flags = DoRed | DoGreen | DoBlue;
-               if (++dotcnt >= maxdots) break;
+               auto &bc = bcol[dotcnt];
+               bc.pixel = XGetPixel(xim, bx + x, by + y);
+               bc.flags = DoRed | DoGreen | DoBlue;
+               if (++dotcnt >= bcol.size()) break;
             }
          }
-         QueryColors(fColormap, bcol, dots);
-         r = g = b = 0;
-         bc = bcol;
-         dotcnt = 0;
-         for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
-               r += bc->red;
-               g += bc->green;
-               b += bc->blue;
-               if (++dotcnt >= maxdots) break;
-            }
+         QueryColors(fColormap, bcol.data(), bcol.size());
+         ULong_t r = 0, g = 0, b = 0;
+         for (auto &entry : bcol) {
+            r += entry.red;
+            g += entry.green;
+            b += entry.blue;
          }
-         if (dots != 0) {
-            r /= dots;
-            g /= dots;
-            b /= dots;
-         }
-         bc = &col[0];
-         if (bc->red == r && bc->green == g && bc->blue == b)
-            bc->pixel = back;
-         else {
-            bc->pixel = ~back;
-            bc->red   = (UShort_t) r;
-            bc->green = (UShort_t) g;
-            bc->blue  = (UShort_t) b;
-         }
+         col[0].red = (UShort_t) (r / bcol.size());
+         col[0].green = (UShort_t) (g / bcol.size());
+         col[0].blue = (UShort_t) (b / bcol.size());
+      } else {
+         // just request rgb value for background color
+         col[0].pixel = back;
+         col[0].flags = DoRed | DoGreen | DoBlue;
+         QueryColors(fColormap, &col[0], 1);
       }
-      delete [] bcol;
 
-      // if fore or background have changed from previous character
-      // recalculate the 3 smoothing colors (interpolation between fore-
-      // and background colors)
-      if (fore != col[4].pixel || back != col[0].pixel) {
-         col[4].pixel = fore;
-         col[4].flags = DoRed|DoGreen|DoBlue;
-         if (back != (ULong_t) -1) {
-            col[3].pixel = back;
-            col[3].flags = DoRed | DoGreen | DoBlue;
-            QueryColors(fColormap, &col[3], 2);
-            col[0] = col[3];
-         } else {
-            QueryColors(fColormap, &col[4], 1);
-         }
+      // request rgb value for foreground color
+      col[4].pixel = fore;
+      col[4].flags = DoRed | DoGreen | DoBlue;
+      QueryColors(fColormap, &col[4], 1);
 
-         // interpolate between fore and background colors
-         for (x = 3; x > 0; x--) {
-            col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
-            col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
-            col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
-            if (!AllocColor(fColormap, &col[x])) {
-               Warning("DrawImage", "cannot allocate smoothing color");
-               col[x].pixel = col[x+1].pixel;
-            }
+      // recalculate the 3 smoothing colors
+      // (interpolation between fore- and background colors)
+      for (int x = 3; x > 0; x--) {
+         col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
+         col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
+         col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
+         if (!AllocColor(fColormap, &col[x])) {
+            Warning("DrawFTGlyph", "cannot allocate smoothing color");
+            col[x].pixel = col[x+1].pixel;
          }
       }
 
       // put smoothed character, character pixmap values are an index
       // into the 5 colors used for aliasing (4 = foreground, 0 = background)
-      for (y = 0; y < (int) source->rows; y++) {
-         for (x = 0; x < (int) source->width; x++) {
-            d = *s++ & 0xff;
-            d = ((d + 10) * 5) / 256;
-            if (d > 4) d = 4;
-            if (d && x < (int) source->width) {
-               ULong_t p = col[d].pixel;
-               XPutPixel(xim, bx + x, by + y, p);
-            }
+      for (unsigned y = 0; y < source->rows; y++) {
+         for (unsigned x = 0; x < source->width; x++) {
+            UChar_t d = TMath::Min((UChar_t) 4, (UChar_t)((((*s++ & 0xff) + 10) * 5) / 256));
+            if (d > 0)
+               XPutPixel(xim, bx + x, by + y, col[d].pixel);
          }
       }
    } else {
       // no smoothing, just put character using foreground color
-      UChar_t* row=s;
-      for (int y = 0; y < (int) source->rows; y++) {
-         int n = 0;
+      UChar_t *row = s;
+      for (unsigned y = 0; y < source->rows; y++) {
+         unsigned n = 0;
+         UChar_t d;
          s = row;
-         for (int x = 0; x < (int) source->width; x++) {
+         for (unsigned x = 0; x < source->width; x++) {
             if (n == 0) d = *s++;
             if (TESTBIT(d,7-n))
                XPutPixel(xim, bx + x, by + y, fore);
-            if (++n == (int) kBitsPerByte) n = 0;
+            if (++n == kBitsPerByte) n = 0;
          }
          row += source->pitch;
       }
