@@ -779,7 +779,8 @@ inline void Fill(float *output, float value, int size)
    std::fill(output, output + size, value);
 }
 
-inline void Copy(float *output, float const *input, int size)
+template <class T>
+inline void Copy(T *output, T const *input, int size)
 {
    std::copy(input, input + size, output);
 }
