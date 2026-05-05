@@ -1367,7 +1367,6 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   fDataSource->FinalizeSlot(slot);
 #else
    (void)entryRange;
    (void)slotStack;
