@@ -1114,8 +1114,8 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
 /// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
 /// foreground color.
 
-void TGWin32::DrawImage(void *_source, ULong_t fore, ULong_t back,
-                        GdkImage *xim, Int_t bx, Int_t by)
+void TGWin32::DrawFTGlyph(void *_source, ULong_t fore, ULong_t back,
+                          GdkImage *xim, Int_t bx, Int_t by)
 {
    FT_Bitmap *source = (FT_Bitmap *) _source;
 
@@ -1366,16 +1366,12 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
    }
 
    // paint the glyphs in the XImage
-   auto glyph = ttf.GetGlyphs();
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage,
-                             TTFhandle::GetSmoothing() ? ft_render_mode_normal
-                                                       : ft_render_mode_mono,
-                             0, 1)) continue;
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      Int_t bx = bitmap->left + Xoff;
-      Int_t by = h - bitmap->top - Yoff;
-      DrawImage(&bitmap->bitmap, gcvals.foreground.pixel, bg, xim, bx, by);
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
+      if (auto bitmap = ttf.GetGlyphBitmap(n)) {
+         Int_t bx = bitmap->left + Xoff;
+         Int_t by = h - bitmap->top - Yoff;
+         DrawFTGlyph(&bitmap->bitmap, gcvals.foreground.pixel, bg, xim, bx, by);
+      }
    }
 
    // put the Ximage on the screen

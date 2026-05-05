@@ -205,8 +205,8 @@ Bool_t TGX11TTF::Init(void *display)
 /// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
 /// foreground color.
 
-void TGX11TTF::DrawImage(void *_source, ULong_t fore, ULong_t back,
-                         RXImage *xim, Int_t bx, Int_t by)
+void TGX11TTF::DrawFTGlyph(void *_source, ULong_t fore, ULong_t back,
+                           RXImage *xim, Int_t bx, Int_t by)
 {
    auto source = (FT_Bitmap *) _source;
 
@@ -448,17 +448,12 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    }
 
    // paint the glyphs in the XImage
-   auto glyph = ttf.GetGlyphs();
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage,
-                             TTFhandle::GetSmoothing() ? ft_render_mode_normal
-                                                       : ft_render_mode_mono,
-                             nullptr, 1)) continue;
-      auto bitmap = (FT_BitmapGlyph)glyph->fImage;
-
-      Int_t bx = bitmap->left + Xoff;
-      Int_t by = h - bitmap->top - Yoff;
-      DrawImage(&bitmap->bitmap, values.foreground, bg, (RXImage *)xim, bx, by);
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
+      if (auto bitmap = ttf.GetGlyphBitmap(n)) {
+         Int_t bx = bitmap->left + Xoff;
+         Int_t by = h - bitmap->top - Yoff;
+         DrawFTGlyph(&bitmap->bitmap, values.foreground, bg, (RXImage *)xim, bx, by);
+      }
    }
 
    // put the Ximage on the screen

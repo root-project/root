@@ -5609,7 +5609,7 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw glyph bitmap.
 
-void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirtualPad *clippad, Int_t offx, Int_t offy)
+void TASImage::DrawFTGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirtualPad *clippad, Int_t offx, Int_t offy)
 {
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
@@ -5827,18 +5827,13 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
    ftal.x = (ftal.x >> 6);
    ftal.y = (ftal.y >> 6);
 
-   auto glyph = ttf.GetGlyphs();
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
+      if (auto bitmap = ttf.GetGlyphBitmap(n, kTRUE)) {
+         Int_t bx = x - ftal.x + bitmap->left;
+         Int_t by = y + ftal.y - bitmap->top;
 
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, nullptr, 1))
-         continue;
-
-      auto bitmap = (FT_BitmapGlyph)glyph->fImage;
-
-      Int_t bx = x - ftal.x + bitmap->left;
-      Int_t by = y + ftal.y - bitmap->top;
-
-      DrawGlyph(&bitmap->bitmap, color, bx, by, pad, offx, offy);
+         DrawFTGlyph(&bitmap->bitmap, color, bx, by, pad, offx, offy);
+      }
    }
 }
 
@@ -5860,20 +5855,16 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    ttf.LayoutGlyphs();
 
    // compute the size and position  that will contain the text
-   // Int_t Xoff = ttf.GetBox().xMin < 0 ? -ttf.GetBox().xMin : 0;
-   Int_t Yoff = ttf.GetBox().yMin < 0 ? -ttf.GetBox().yMin : 0;
+   // Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
+   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
    Int_t h    = ttf.GetBox().yMax + Yoff;
 
-   auto glyph = ttf.GetGlyphs();
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, nullptr, 1))
-         continue;
-
-      auto bitmap = (FT_BitmapGlyph) glyph->fImage;
-
-      Int_t bx = x + bitmap->left;
-      Int_t by = y + h - bitmap->top;
-      DrawGlyph(&bitmap->bitmap, color, bx, by);
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
+      if (auto bitmap = ttf.GetGlyphBitmap(n, kTRUE)) {
+         Int_t bx = x + bitmap->left;
+         Int_t by = y + h - bitmap->top;
+         DrawFTGlyph(&bitmap->bitmap, color, bx, by);
+      }
    }
 }
 

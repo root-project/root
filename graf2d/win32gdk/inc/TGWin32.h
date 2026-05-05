@@ -66,8 +66,8 @@ class TExMap;
 class TGWin32 : public TVirtualX {
 
 private:
-   void    DrawImage(void *source, ULong_t fore, ULong_t back, GdkImage *xim,
-                     Int_t bx, Int_t by);
+   void    DrawFTGlyph(void *source, ULong_t fore, ULong_t back, GdkImage *xim,
+                       Int_t bx, Int_t by);
    GdkImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
 
    template<class CharType>

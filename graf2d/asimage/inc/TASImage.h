@@ -47,7 +47,7 @@ private:
    inline Int_t Idx(Int_t idx);
    void FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height);
    void DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size, UInt_t color, const char *font_name, Float_t angle);
-   void DrawGlyph(void *bitmap, UInt_t color, Int_t x, Int_t y, TVirtualPad *clippad = nullptr, Int_t offx = 0, Int_t offy = 0);
+   void DrawFTGlyph(void *bitmap, UInt_t color, Int_t x, Int_t y, TVirtualPad *clippad = nullptr, Int_t offx = 0, Int_t offy = 0);
    void SetDefaults();
    void CreateThumbnail();
    void DestroyImage();

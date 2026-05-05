@@ -108,7 +108,7 @@ private:
    bool fUseAA;
    bool fUseFAAA;
 
-   void DrawFTGlyphIntoPixmap(void *pixmap, void *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
+   void DrawFTGlyph(void *pixmap, void *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();
    TAttFill &GetAttFill(WinContext_t wctxt);

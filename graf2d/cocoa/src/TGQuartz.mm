@@ -657,17 +657,14 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
 
    CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
    // paint the glyphs in the pixmap.
-   auto glyph = ttf.GetGlyphs();
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); ++n, ++glyph) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTFhandle::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1))
-         continue;
+   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); ++n) {
+      if (auto bitmap = ttf.GetGlyphBitmap(n)) {
+         const Int_t bx = bitmap->left + xOff;
+         const Int_t by = h - bitmap->top - yOff;
 
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      const Int_t bx = bitmap->left + xOff;
-      const Int_t by = h - bitmap->top - yOff;
-
-      DrawFTGlyphIntoPixmap(pixmap.Get(), &bitmap->bitmap, TGCocoa::GetPixel(att.GetTextColor()),
-                            mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
+         DrawFTGlyph(pixmap.Get(), &bitmap->bitmap, TGCocoa::GetPixel(att.GetTextColor()),
+                     mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
+      }
    }
 
    const X11::Rectangle copyArea(0, 0, w, h);
@@ -1044,7 +1041,7 @@ void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
 //TTF related part.
 
 //______________________________________________________________________________
-void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, void *sHack, ULong_t fore, ULong_t back, Int_t bx, Int_t by)
+void TGQuartz::DrawFTGlyph(void *pHack, void *sHack, ULong_t fore, ULong_t back, Int_t bx, Int_t by)
 {
    //This function is a "remake" of TGX11FFT::DrawImage.
 
@@ -1054,8 +1051,8 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, void *sHack, ULong_t fore, ULo
 
    auto pixmap = (QuartzPixmap *)pHack;
    auto source = (FT_Bitmap *) sHack;
-   assert(pixmap != nil && "DrawFTGlyphIntoPixmap, pixmap parameter is nil");
-   assert(source != nil && "DrawFTGlyphIntoPixmap, source parameter is null");
+   assert(pixmap != nil && "DrawFTGlyph, pixmap parameter is nil");
+   assert(source != nil && "DrawFTGlyph, source parameter is null");
 
    if (TTFhandle::GetSmoothing()) {
       static ColorStruct_t col[5];
