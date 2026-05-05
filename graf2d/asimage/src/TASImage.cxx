@@ -2633,17 +2633,17 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    fn.Strip();
 
    // This is for backward compatibility...
-   if (fn.Last('/') == 0) fn = fn(1, fn.Length() - 1);
+   if (fn.Last('/') == 0)
+      fn = fn(1, fn.Length() - 1);
 
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                        TROOT::GetTTFFontDir());
-   char *tmpstr = gSystem->Which(ttpath, fn, kReadPermission);
-   fn = tmpstr;
-   delete [] tmpstr;
 
-   if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
+   // if file will be found, fn will contain full name - otherwise empty
+   gSystem->FindFile(ttpath, fn, kReadPermission);
+
+   if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF"))
       ttfont = kTRUE;
-   }
 
    if (color) {
       parse_argb_color(color, &text_color);
@@ -2663,7 +2663,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       return;
    }
 
-   ASFont *font = get_asfont(gFontManager, fn.Data(), 0, size, ASF_GuessWho);
+   ASFont *font = fn.IsNull() ? nullptr : get_asfont(gFontManager, fn.Data(), 0, size, ASF_GuessWho);
 
    if (!font) {
       font = get_asfont(gFontManager, "fixed", 0, size, ASF_GuessWho);
