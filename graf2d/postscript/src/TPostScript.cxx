@@ -265,66 +265,9 @@ Int_t TPostScript::fgLineCap  = 0;
 
 TPostScript::TPostScript() : TVirtualPS()
 {
-   fStream          = nullptr;
-   fType            = 0;
-   fBlue            = 0.;
-   fBoundingBox     = kFALSE;
-   fClear           = kFALSE;
-   fClip            = 0;
-   fClipStatus      = kFALSE;
-   fDXC             = 0.;
-   fDYC             = 0.;
-   fFX              = 0.;
-   fFY              = 0.;
-   fGreen           = 0.;
-   fIXzone          = 0;
-   fIYzone          = 0;
-   fLastCellBlue    = 0;
-   fLastCellGreen   = 0;
-   fLastCellRed     = 0;
-   fLineScale       = 0.;
-   fMarkerSizeCur   = 0.;
-   fMaxLines        = 0;
-   fMaxsize         = 0;
-   fMode            = 0;
-   fNBSameColorCell = 0;
-   fNXzone          = 0;
-   fNYzone          = 0;
-   fNbCellLine      = 0;
-   fNbCellW         = 0;
-   fNbinCT          = 0;
-   fNpages          = 0;
-   fRange           = kFALSE;
-   fRed             = 0.;
-   fSave            = 0;
-   fWidth           = 0.;
-   fStyle           = 1;
-   fX1v             = 0.;
-   fX1w             = 0.;
-   fX2v             = 0.;
-   fX2w             = 0.;
-   fXC              = 0.;
-   fXVP1            = 0.;
-   fXVP2            = 0.;
-   fXVS1            = 0.;
-   fXVS2            = 0.;
-   fXsize           = 0.;
-   fY1v             = 0.;
-   fY1w             = 0.;
-   fY2v             = 0.;
-   fY2w             = 0.;
-   fYC              = 0.;
-   fYVP1            = 0.;
-   fYVP2            = 0.;
-   fYVS1            = 0.;
-   fYVS2            = 0.;
-   fYsize           = 0.;
-   fZone            = kFALSE;
-   fFileName        = "";
-   fFontEmbed       = kFALSE;
-   for (Int_t i=0; i<32; i++)
+   for (Int_t i = 0; i < 32; i++)
       fPatterns[i] = 0;
-   for (Int_t i=0; i<29; i++)
+   for (Int_t i = 0; i < 29; i++)
       fMustEmbed[i] = kFALSE;
    SetTitle("PS");
 
@@ -343,11 +286,11 @@ TPostScript::TPostScript() : TVirtualPS()
 ///    - 112 ps  Landscape
 ///    - 113 eps
 
-TPostScript::TPostScript(const char *fname, Int_t wtype)
-:TVirtualPS(fname, wtype)
+TPostScript::TPostScript(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream = nullptr;
-   for (Int_t i=0; i<29; i++)
+   for (Int_t i = 0; i < 32; i++)
+      fPatterns[i] = 0;
+   for (Int_t i = 0; i < 29; i++)
       fMustEmbed[i] = kFALSE;
 
    SetTitle("PS");
@@ -370,7 +313,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    fBlue          = -1;
    fLenBuffer     = 0;
    fClip          = 0;
-   fType          = abs(wtype);
+   fType          = std::abs(wtype);
    fClear         = kTRUE;
    fZone          = kFALSE;
    fSave          = 0;
@@ -409,7 +352,8 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    }
    gVirtualPS = this;
 
-   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
+   for (Int_t i = 0; i < fSizBuffer; i++)
+      fBuffer[i] = ' ';
    if( fType == 113) {
       fBoundingBox = kFALSE;
       PrintStr("%!PS-Adobe-2.0 EPSF-2.0@");
@@ -426,7 +370,8 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    Range(fXsize, fYsize);
 
    fPrinted    = kFALSE;
-   if (fType == 113) NewPage();
+   if (fType == 113)
+      NewPage();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -491,7 +436,7 @@ void TPostScript::Close(Option_t *)
          return;
       }
       char line[255];
-      while (fgets(line,255,sg)) {
+      while (fgets(line, 255, sg)) {
          if (strstr(line,"EndComments")) PrintStr("%%DocumentNeededResources: ProcSet (FontSetInit)@");
          fStream->write(line,strlen(line));
          if (!fFontEmbed && strstr(line,"m5")) {
