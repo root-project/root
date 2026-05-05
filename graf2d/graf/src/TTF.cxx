@@ -429,7 +429,7 @@ Int_t TTFhandle::SetTextFont(const char *fontname, Int_t italic)
    const char *basename = gSystem->BaseName(fontname);
 
    if (SelectFontHandle(1, TString::Format("%s%s", basename, italic ? ".italic" : ""))) {
-      Fatal("TTFhandle::SetTextFont", "Fail to create font handle for font %s", basename);
+      Fatal("SetTextFont", "Fail to create font handle for font %s", basename);
       return 1;
    }
 
@@ -439,23 +439,21 @@ Int_t TTFhandle::SetTextFont(const char *fontname, Int_t italic)
 
    auto lib = InitClose();
    if (!lib) {
-      Error("TTFhandle::SetTextFont", "no free type library initialized");
+      Error("SetTextFont", "no free type library initialized");
       return 1;
    }
 
    // try to load font (font must be in Root.TTFontPath resource)
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath", TROOT::GetTTFFontDir());
+
+   TString fname = fontname;
+   const char *ttfont = gSystem->FindFile(ttpath, fname, kReadPermission);
 
    if (!ttfont)
       return SelectFontHandle(111, TString::Format("font file %s not found in path %s", fontname, ttpath));
 
-   std::string filename = ttfont;
-   delete [] ttfont;
-
-   if (FT_New_Face(lib, filename.c_str(), 0, &fFont->face))
-      return SelectFontHandle(111, TString::Format("error loading font %s", filename.c_str()));
+   if (FT_New_Face(lib, ttfont, 0, &fFont->face))
+      return SelectFontHandle(111, TString::Format("error loading font %s", ttfont));
 
    if (italic) {
       FT_Matrix slantMat;
@@ -541,14 +539,9 @@ void TTFhandle::SetTextFont(Font_t fontnumber)
       // to see which fontset we have available
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                           TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
-      if (ttfont) {
-         delete [] ttfont;
-         thisset = 0;
-      } else {
-         // try backup free font
-         thisset = 1;
-      }
+      TString fname = gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]);
+      const char *ttfont = gSystem->FindFile(ttpath, fname, kReadPermission);
+      thisset = ttfont ? 0 : 1;
    }
    Int_t italic = fontid == 15 ? 1 : 0;
    auto ret = SetTextFont(gEnv->GetValue(fonttable[fontid][thisset], fonttable[fontid][1]), italic);
