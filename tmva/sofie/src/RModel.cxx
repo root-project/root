@@ -1304,7 +1304,7 @@ void RModel::GenerateSessionCode()
 
    // storing the parameters for future checking to avoid mismatches
    if (!fDimShapeNames.empty()) {
-      fGC += "\n\n";
+      fGC += "\n//   dynamic shape parameters\n";
       std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
       for (const auto &p : fDimShapeNames) {
          fGC += "size_t " + memberNameForDimShape(p) + ";\n";
@@ -1361,6 +1361,8 @@ void RModel::GenerateSessionCode()
             fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
          }
       }
+      // add some extra code needed for initialization of dynamic parameters
+      fGC += fExtraCodeForDimShapes;
 
       if (fUseWeightFile) {
          fGC += "\n//--- reading weights from file\n";
@@ -1759,6 +1761,42 @@ void RModel::GenerateRequiredInputTensorInfo()
 
    fGC +=
       "\nconstexpr bool hasDynamicInputTensors{" + std::string{hasDynamicInputTensors ? "true" : "false"} + "};\n\n";
+
+   fGC += "\n// Output tensor dimensions\n";
+   bool hasDynamicOutputTensors = false;
+   for (std::size_t iOutput = 0; iOutput < fOutputTensorNames.size(); ++iOutput) {
+      auto const &name = fOutputTensorNames[iOutput];
+      if (IsDynamicTensor(name)) {
+         hasDynamicOutputTensors = true;
+      }
+      std::vector<Dim> shape = GetDimTensorShape(name);
+      fGC += "constexpr std::array<SingleDim, " + std::to_string(shape.size()) + "> dim_" + name + "{";
+      for (std::size_t iDim = 0; iDim < shape.size(); ++iDim) {
+         auto const &dim = shape[iDim];
+         if (dim.isParam) {
+            fGC += "SingleDim{\"" + dim.GetVal() + "\"}";
+         } else {
+            fGC += "SingleDim{" + dim.GetVal() + "}";
+         }
+         if (iDim != shape.size() - 1) {
+            fGC += ", ";
+         }
+      }
+      fGC += "};\n";
+   }
+   fGC += "\nconstexpr std::array<TensorDims, " + std::to_string(fOutputTensorNames.size()) + "> outputTensorDims{\n";
+   for (std::size_t iOutput = 0; iOutput < fOutputTensorNames.size(); ++iOutput) {
+      auto const &name = fOutputTensorNames[iOutput];
+      fGC += SP + "makeDims(dim_" + name + ")";
+      if (iOutput == fOutputTensorNames.size() - 1) {
+         fGC += "\n";
+      } else {
+         fGC += ",\n";
+      }
+   }
+   fGC += "};\n";
+   fGC +=
+      "\nconstexpr bool hasDynamicOutputTensors{" + std::string{hasDynamicOutputTensors ? "true" : "false"} + "};\n\n";
 }
 
 void RModel::PrintRequiredInputTensors() const {
