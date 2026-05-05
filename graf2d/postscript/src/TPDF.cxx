@@ -103,33 +103,9 @@ Int_t TPDF::fgLineCap = 0;
 
 TPDF::TPDF() : TVirtualPS()
 {
-   fCompress = kFALSE;
-   fPageNotEmpty = kFALSE;
-   fObjectIsOpen = kFALSE;
-   gVirtualPS = this;
-   fRed = 0.;
-   fGreen = 0.;
-   fBlue = 0.;
-   fAlpha = 1.;
-   fXsize = 0.;
-   fYsize = 0.;
-   fType = 0;
-   fPageFormat = 0;
-   fPageOrientation = 0;
-   fStartStream = 0;
-   fLineScale = 0.;
-   fNbPage = 0;
    fCurrentPage = kObjFirstPage;
-   fRange = kFALSE;
-   fUrl = kFALSE;
-   fNbUrl = 1;
-   fA = 1.;
-   fB = 0.;
-   fC = 0.;
-   fD = 1.;
-   fE = 0.;
-   fF = 0.;
    SetTitle("PDF");
+   gVirtualPS = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,31 +119,7 @@ TPDF::TPDF() : TVirtualPS()
 
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fCompress = kFALSE;
-   fPageNotEmpty = kFALSE;
-   fObjectIsOpen = kFALSE;
-   fRed = 0.;
-   fGreen = 0.;
-   fBlue = 0.;
-   fAlpha = 1.;
-   fXsize = 0.;
-   fYsize = 0.;
-   fType = 0;
-   fPageFormat = 0;
-   fPageOrientation = 0;
-   fStartStream = 0;
-   fLineScale = 0.;
-   fNbPage = 0;
    fCurrentPage = kObjFirstPage;
-   fRange = kFALSE;
-   fUrl = kFALSE;
-   fNbUrl = 1;
-   fA = 1.;
-   fB = 0.;
-   fC = 0.;
-   fD = 1.;
-   fE = 0.;
-   fF = 0.;
    SetTitle("PDF");
    Open(fname, wtype);
 }

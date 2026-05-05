@@ -31,41 +31,41 @@ class TPoints;
 class TPDF : public TVirtualPS {
 
 protected:
-   Float_t fRed;                   ///< Per cent of red
-   Float_t fGreen;                 ///< Per cent of green
-   Float_t fBlue;                  ///< Per cent of blue
-   Float_t fAlpha;                 ///< Per cent of transparency
-   std::vector<float> fAlphas;     ///< List of alpha values used
-   Float_t fXsize;                 ///< Page size along X
-   Float_t fYsize;                 ///< Page size along Y
-   Int_t fType;                    ///< Workstation type used to know if the PDF is open
-   Int_t fPageFormat;              ///< Page format (A4, Letter etc ...)
-   Int_t fPageOrientation;         ///< Page orientation (Portrait, Landscape)
-   Int_t fStartStream;             ///< Stream start
-   Float_t fLineScale;             ///< Line width scale factor
-   Int_t *fObjPos{nullptr};        ///< Objects position
-   Int_t fObjPosSize{0};           ///< Real size of fObjPos
-   Int_t fNbObj{0};                ///< Number of objects
-   Int_t fNbPage;                  ///< Number of pages
-   Int_t fCurrentPage;             ///< Object number of the current page
-   std::vector<int> fPageObjects;  ///< Page object numbers
-   std::vector<std::string> fUrls; ///< URLs
-   std::vector<float> fRectX1;     ///< x1 /Rect coordinates for url annots
-   std::vector<float> fRectY1;     ///< y1 /Rect coordinates for url annots
-   std::vector<float> fRectX2;     ///< x2 /Rect coordinates for url annots
-   std::vector<float> fRectY2;     ///< y2 /Rect coordinates for url annots
-   Bool_t fObjectIsOpen;           ///< True if an object is opened
-   Bool_t fPageNotEmpty;           ///< True if the current page is not empty
-   Bool_t fCompress;               ///< True when fBuffer must be compressed
-   Bool_t fRange;                  ///< True when a range has been defined
-   Bool_t fUrl;                    ///< True when the text has an URL
-   Int_t fNbUrl;                   ///< Number of URLs in the current page
-   Double_t fA;                    ///< "a" value of the Current Transformation Matrix (CTM)
-   Double_t fB;                    ///< "b" value of the Current Transformation Matrix (CTM)
-   Double_t fC;                    ///< "c" value of the Current Transformation Matrix (CTM)
-   Double_t fD;                    ///< "d" value of the Current Transformation Matrix (CTM)
-   Double_t fE;                    ///< "e" value of the Current Transformation Matrix (CTM)
-   Double_t fF;                    ///< "f" value of the Current Transformation Matrix (CTM)
+   Float_t fRed = 0.;                   ///< Per cent of red
+   Float_t fGreen = 0.;                 ///< Per cent of green
+   Float_t fBlue = 0.;                  ///< Per cent of blue
+   Float_t fAlpha = 1.;                 ///< Per cent of transparency
+   std::vector<float> fAlphas;          ///< List of alpha values used
+   Float_t fXsize = 0.;                 ///< Page size along X
+   Float_t fYsize = 0.;                 ///< Page size along Y
+   Int_t fType = 0;                     ///< Workstation type used to know if the PDF is open
+   Int_t fPageFormat = 0;               ///< Page format (A4, Letter etc ...)
+   Int_t fPageOrientation = 0;          ///< Page orientation (Portrait, Landscape)
+   Int_t fStartStream = 0;              ///< Stream start
+   Float_t fLineScale = 0.;             ///< Line width scale factor
+   Int_t *fObjPos = nullptr;            ///< Objects position
+   Int_t fObjPosSize = 0;               ///< Real size of fObjPos
+   Int_t fNbObj = 0;                    ///< Number of objects
+   Int_t fNbPage = 0;                   ///< Number of pages
+   Int_t fCurrentPage = 0;              ///< Object number of the current page
+   std::vector<int> fPageObjects;       ///< Page object numbers
+   std::vector<std::string> fUrls;      ///< URLs
+   std::vector<float> fRectX1;          ///< x1 /Rect coordinates for url annots
+   std::vector<float> fRectY1;          ///< y1 /Rect coordinates for url annots
+   std::vector<float> fRectX2;          ///< x2 /Rect coordinates for url annots
+   std::vector<float> fRectY2;          ///< y2 /Rect coordinates for url annots
+   Bool_t fObjectIsOpen = kFALSE;       ///< True if an object is opened
+   Bool_t fPageNotEmpty = kFALSE;       ///< True if the current page is not empty
+   Bool_t fCompress = kFALSE;           ///< True when fBuffer must be compressed
+   Bool_t fRange = kFALSE;              ///< True when a range has been defined
+   Bool_t fUrl = kFALSE;                ///< True when the text has an URL
+   Int_t fNbUrl = 1;                    ///< Number of URLs in the current page
+   Double_t fA = 1.;                    ///< "a" value of the Current Transformation Matrix (CTM)
+   Double_t fB = 0.;                    ///< "b" value of the Current Transformation Matrix (CTM)
+   Double_t fC = 0.;                    ///< "c" value of the Current Transformation Matrix (CTM)
+   Double_t fD = 1.;                    ///< "d" value of the Current Transformation Matrix (CTM)
+   Double_t fE = 0.;                    ///< "e" value of the Current Transformation Matrix (CTM)
+   Double_t fF = 0.;                    ///< "f" value of the Current Transformation Matrix (CTM)
 
    static Int_t fgLineJoin; ///< Appearance of joining lines
    static Int_t fgLineCap;  ///< Appearance of line caps
