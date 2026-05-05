@@ -16,7 +16,7 @@ if (NOT DEFINED GIT_EXECUTABLE)
   set(GIT_EXECUTABLE "git")
 endif()
 # check if the patch has already been applied
-if(NOT EXISTS "${ROOT_UNURAN_PREFIX}/src/BUILTIN_UNURAN/CMakeLists.txt")
+if(NOT EXISTS "${ROOT_UNURAN_PREFIX}/src/BUILTIN_UNURAN/src/CMakeLists.txt")
   set(UNURAN_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_UNURAN_PATCH_FILE_1})
 endif()
 
