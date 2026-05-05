@@ -774,6 +774,7 @@ if(builtin_ftgl)
   set(FTGL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/graf3d/ftgl/inc)
   set(FTGL_CFLAGS -DBUILTIN_FTGL)
   set(FTGL_LIBRARIES FTGL)
+  set(FTGL_VERSION 2.1.2)
 endif()
 
 #---Check for R/Rcpp/RInside--------------------------------------------------------------------
