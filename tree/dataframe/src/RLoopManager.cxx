@@ -1333,8 +1333,8 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
    const auto nEntries = end - start;
    entryCount.fetch_add(nEntries);
 
-   RCallCleanUpTask cleanup(*this, slot);
    RDSRangeRAII _{*this, slot, start};
+   RCallCleanUpTask cleanup(*this, slot);
 
    fSampleInfos[slot] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, slot, fSampleMap);
 
