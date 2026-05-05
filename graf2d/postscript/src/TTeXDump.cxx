@@ -83,18 +83,7 @@ corresponding pdf file `simple.pdf`.
 
 TTeXDump::TTeXDump() : TVirtualPS()
 {
-   fStream       = nullptr;
-   fType         = 0;
    gVirtualPS    = this;
-   fBoundingBox  = kFALSE;
-   fRange        = kFALSE;
-   fXsize        = 0.;
-   fYsize        = 0.;
-   fCurrentRed   = -1.;
-   fCurrentGreen = -1.;
-   fCurrentBlue  = -1.;
-   fCurrentAlpha = 1.;
-   fLineScale    = 0.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,18 +97,7 @@ TTeXDump::TTeXDump() : TVirtualPS()
 
 TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream       = nullptr;
-   fType         = 0;
    gVirtualPS    = this;
-   fBoundingBox  = kFALSE;
-   fRange        = kFALSE;
-   fXsize        = 0.;
-   fYsize        = 0.;
-   fCurrentRed   = -1.;
-   fCurrentGreen = -1.;
-   fCurrentBlue  = -1.;
-   fCurrentAlpha = 1.;
-   fLineScale    = 0.;
 
    Open(fname, wtype);
 }
@@ -170,7 +148,8 @@ void TTeXDump::Open(const char *fname, Int_t wtype)
    // Set a default range
    Range(fXsize, fYsize);
 
-   if (strstr(GetTitle(),"Standalone")) fStandalone = kTRUE;
+   if (strstr(GetTitle(),"Standalone"))
+      fStandalone = kTRUE;
    if (fStandalone) {
       PrintStr("\\documentclass{standalone}@");
       PrintStr("\\usepackage{tikz}@");
