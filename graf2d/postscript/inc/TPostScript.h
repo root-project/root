@@ -77,6 +77,7 @@ protected:
    Int_t   fNBSameColorCell; ///< Number of boxes with the same color
    TString fFileName;        ///< PS file name
    Bool_t  fFontEmbed;       ///< True is FontEmbed has been called
+   Bool_t  fMustEmbed[29];   ///< flag to embed font
 
    static Int_t fgLineJoin;  ///< Appearance of joining lines
    static Int_t fgLineCap;   ///< Appearance of line caps
