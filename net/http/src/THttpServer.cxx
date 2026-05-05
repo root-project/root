@@ -321,8 +321,8 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 ///
 /// One could specify address like:
 ///
-/// * https://root.cern/js/7.6.0/
-/// * https://jsroot.gsi.de/7.6.0/
+/// * https://root.cern/js/7.11.0/
+/// * https://jsroot.gsi.de/7.11.0/
 ///
 /// This allows to get new JSROOT features with old server,
 /// reduce load on THttpServer instance, also startup time can be improved
