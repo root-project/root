@@ -96,7 +96,7 @@ ROOT_BUILD_OPTION(builtin_jpeg OFF "Build libjpeg internally (requires network)"
 ROOT_BUILD_OPTION(builtin_llvm ON "Build bundled copy of LLVM")
 ROOT_BUILD_OPTION(builtin_lz4 OFF "Build lz4 internally (requires network)")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build lzma internally (requires network)")
-ROOT_BUILD_OPTION(builtin_nlohmannjson OFF "Use nlohmann/json.hpp file distributed with ROOT")
+ROOT_BUILD_OPTION(builtin_nlohmannjson OFF "Build nlohmann/json internally (requires network)")
 ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally (requires network)")
 ROOT_BUILD_OPTION(builtin_openui5 ON "Use openui5 bundle distributed with ROOT")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Build bundled copy of PCRE")
