@@ -256,8 +256,6 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 const Float_t kScale = 0.93376068;
 
 // Array defining if a font must be embedded or not.
-static Bool_t MustEmbed[32];
-
 Int_t TPostScript::fgLineJoin = 0;
 Int_t TPostScript::fgLineCap  = 0;
 
@@ -269,7 +267,6 @@ TPostScript::TPostScript() : TVirtualPS()
 {
    fStream          = nullptr;
    fType            = 0;
-   gVirtualPS       = this;
    fBlue            = 0.;
    fBoundingBox     = kFALSE;
    fClear           = kFALSE;
@@ -325,10 +322,13 @@ TPostScript::TPostScript() : TVirtualPS()
    fZone            = kFALSE;
    fFileName        = "";
    fFontEmbed       = kFALSE;
-   Int_t i;
-   for (i=0; i<32; i++) fPatterns[i] = 0;
-   for (i=0; i<32; i++) MustEmbed[i] = kFALSE;
+   for (Int_t i=0; i<32; i++)
+      fPatterns[i] = 0;
+   for (Int_t i=0; i<29; i++)
+      fMustEmbed[i] = kFALSE;
    SetTitle("PS");
+
+   gVirtualPS       = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +347,9 @@ TPostScript::TPostScript(const char *fname, Int_t wtype)
 :TVirtualPS(fname, wtype)
 {
    fStream = nullptr;
+   for (Int_t i=0; i<29; i++)
+      fMustEmbed[i] = kFALSE;
+
    SetTitle("PS");
    Open(fname, wtype);
 }
@@ -1580,7 +1583,7 @@ Bool_t TPostScript::FontEmbedType42(const char *filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// Embed font in PS file.
 
-void TPostScript::FontEmbed(void)
+void TPostScript::FontEmbed()
 {
    static const char *fonttable[32][2] = {
       { "Root.TTFont.0", "FreeSansBold.otf" },
@@ -1624,27 +1627,23 @@ void TPostScript::FontEmbed(void)
                                        TROOT::GetTTFFontDir());
 
    for (Int_t fontid = 1; fontid < 30; fontid++) {
-      if (fontid != 15 && MustEmbed[fontid-1]) {
-         const char *filename = gEnv->GetValue(
-                                               fonttable[fontid][0], fonttable[fontid][1]);
-         char *ttfont = gSystem->Which(ttpath, filename, kReadPermission);
+      if (fontid != 15 && fMustEmbed[fontid-1]) {
+         TString filename = gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]);
+         const char *ttfont = gSystem->FindFile(ttpath, filename, kReadPermission);
          if (!ttfont) {
-            Error("TPostScript::FontEmbed",
-                  "font %d (filename `%s') not found in path",
-                  fontid, filename);
+            Error("FontEmbed",
+                  "font %d (filename '%s') not found in path",
+                  fontid, filename.Data());
+         } else if (FontEmbedType2(ttfont)) {
+            // nothing
+         } else if(FontEmbedType1(ttfont)) {
+            // nothing
+         } else if(FontEmbedType42(ttfont)) {
+            // nothing
          } else {
-            if (FontEmbedType2(ttfont)) {
-               // nothing
-            } else if(FontEmbedType1(ttfont)) {
-               // nothing
-            } else if(FontEmbedType42(ttfont)) {
-               // nothing
-            } else {
-               Error("TPostScript::FontEmbed",
-                     "failed to embed font %d (filename `%s')",
-                     fontid, filename);
-            }
-            delete [] ttfont;
+            Error("FontEmbed",
+                  "failed to embed font %d (filename '%s')",
+                  fontid, filename.Data());
          }
       }
    }
@@ -2885,8 +2884,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    // Compute the font size. Exit if it is 0
    // The font size is computed from the TTF size to get exactly the same
    // size on the screen and in the PostScript file.
-   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t wh = (Double_t)gPad->GetPadWidth();
+   Double_t hh = (Double_t)gPad->GetPadHeight();
    Float_t tsize, ftsize;
 
    if (wh < hh) {
@@ -2899,7 +2898,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
       ftsize        = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
    }
    Double_t fontsize = 4*(72*(ftsize)/2.54);
-   if( fontsize <= 0) return;
+   if(fontsize <= 0) return;
 
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
@@ -2955,7 +2954,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    PrintStr(TString::Format(" t %d r ", psangle));
    if(txalh == 2) PrintStr(TString::Format(" %d 0 t ", -psCharsLength/2));
    if(txalh == 3) PrintStr(TString::Format(" %d 0 t ", -psCharsLength));
-   MustEmbed[font-1] = kTRUE; // This font will be embedded in the file at EOF time.
+   fMustEmbed[font-1] = kTRUE; // This font will be embedded in the file at EOF time.
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
    PrintStr(TString::Format(" findfont %g sf 0 0 m ",fontsize));
 
