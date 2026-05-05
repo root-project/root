@@ -30,12 +30,14 @@ extern "C" {
    struct FT_GlyphRec_;
    struct FT_Matrix_;
    struct FT_Bitmap_;
+   struct FT_BitmapGlyphRec_;
    typedef struct FT_LibraryRec_* FT_Library;
    typedef struct FT_FaceRec_* FT_Face;
    typedef struct FT_CharMapRec_* FT_CharMap;
    typedef struct FT_GlyphRec_* FT_Glyph;
    typedef struct FT_Matrix_ FT_Matrix;
    typedef struct FT_Bitmap_ FT_Bitmap; // Forward declared for TGX11TTF.h's benefit
+   typedef struct FT_BitmapGlyphRec_* FT_BitmapGlyph;
    typedef signed long FT_Pos;
    #ifndef FT_FREETYPE_H
    struct FT_Vector_ { FT_Pos x, y; };
@@ -143,6 +145,7 @@ class TTFhandle {
 
       TTF::TTGlyph  *GetGlyphs() { return fGlyphs.data(); }
       UInt_t         GetNumGlyphs() const { return fGlyphs.size(); }
+      FT_BitmapGlyph GetGlyphBitmap(UInt_t n, Bool_t smooth = kFALSE);
       FT_Face        GetFontFace() const;
       Int_t          GetAscent() const { return fAscent; }
       Bool_t         GetKerning() const { return fKerning; }
@@ -167,7 +170,6 @@ class TTFhandle {
       void           GetTextAdvance(UInt_t &a, const char *text);
 
       void           Version(Int_t &major, Int_t &minor, Int_t &patch);
-
 
       static Bool_t  Init();
       static Bool_t  GetHinting();

@@ -254,6 +254,20 @@ void TTFhandle::LayoutGlyphs()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return bitmap for specified glyph
+
+FT_BitmapGlyph TTFhandle::GetGlyphBitmap(UInt_t n, Bool_t smooth)
+{
+   if (n >= fGlyphs.size())
+      return nullptr;
+
+   if (FT_Glyph_To_Bitmap(&fGlyphs[n].fImage, smooth || GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, nullptr, 1))
+      return nullptr;
+
+   return (FT_BitmapGlyph) fGlyphs[n].fImage;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Remove temporary data created by LayoutGlyphs
 
 void TTFhandle::CleanupGlyphs()
