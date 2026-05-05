@@ -16,19 +16,32 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#if !defined(_WIN32)
 #include <sys/resource.h>
+#endif
 #if defined(__APPLE__)
 #include <sys/sysctl.h>
 #elif defined(__linux__)
 #include <sys/sysinfo.h>
 #elif defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+#include <psapi.h>
 #endif
 
 // Timing helper — writes to a dedicated file, not captured by the ctest driver.
 static std::ofstream &timingLog()
 {
+#if defined(_WIN32)
+   static std::ofstream f("testLargeCollection_timing.txt");
+#else
    static std::ofstream f("/tmp/testLargeCollection_timing.txt");
+#endif
    return f;
 }
 static double now_sec()
@@ -41,12 +54,19 @@ static double now_sec()
 // ru_maxrss is bytes on macOS, kilobytes on Linux.
 static double peak_rss_mb()
 {
+#if defined(_WIN32)
+   PROCESS_MEMORY_COUNTERS pmc;
+   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+      return pmc.PeakWorkingSetSize / (1024.0 * 1024.0);
+   return -1.0;
+#else
    struct rusage ru;
    getrusage(RUSAGE_SELF, &ru);
 #if defined(__APPLE__)
    return ru.ru_maxrss / (1024.0 * 1024.0);
 #else
    return ru.ru_maxrss / 1024.0;
+#endif
 #endif
 }
 // Returns the available (free) physical memory in MB.
