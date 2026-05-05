@@ -32,6 +32,8 @@ foreach(directoryName IN ITEMS ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_I
 endforeach()
 
 set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
+    CMP0135 # Timestamps of downloaded archives are set to time of extraction
+    CMP0144 # <PACKAGENAME>_ROOT (converted to upper case) can be used to search for dependencies
     CMP0156 CMP0179 #deduplicate static libraries when linker supports it
 )
 foreach(policy ${policy_new})
@@ -40,7 +42,7 @@ foreach(policy ${policy_new})
   endif()
 endforeach()
 
-set(policy_old CMP0116 CMP0135 CMP0144)
+set(policy_old CMP0116)
 foreach(policy ${policy_old})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} OLD)
