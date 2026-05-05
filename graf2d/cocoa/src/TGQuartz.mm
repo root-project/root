@@ -1041,7 +1041,7 @@ void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
 //TTF related part.
 
 //______________________________________________________________________________
-void TGQuartz::DrawFTGlyph(void *pHack, void *sHack, ULong_t fore, ULong_t back, Int_t bx, Int_t by)
+void TGQuartz::DrawFTGlyph(void *_pixmap, void *_source, ULong_t fore, ULong_t back, Int_t bx, Int_t by)
 {
    //This function is a "remake" of TGX11FFT::DrawImage.
 
@@ -1049,85 +1049,72 @@ void TGQuartz::DrawFTGlyph(void *pHack, void *sHack, ULong_t fore, ULong_t back,
    //It's quite sloppy, as in original version. I tried to make it not so ugly and
    //more or less readable.
 
-   auto pixmap = (QuartzPixmap *)pHack;
-   auto source = (FT_Bitmap *) sHack;
+   auto pixmap = (QuartzPixmap *)_pixmap;
+   auto source = (FT_Bitmap *) _source;
    assert(pixmap != nil && "DrawFTGlyph, pixmap parameter is nil");
    assert(source != nil && "DrawFTGlyph, source parameter is null");
 
    if (TTFhandle::GetSmoothing()) {
-      static ColorStruct_t col[5];
+      ColorStruct_t col[5];
       // background kClear, i.e. transparent, we take as background color
       // the average of the rgb values of all pixels covered by this character
-      if (back == ULong_t(-1) && source->width) {
-         const int maxDots = 50000;
-         int dots = Int_t(source->width * source->rows);
-         if (dots > maxDots)
-            dots = maxDots;
+      if (back == ULong_t(-1)) {
+         const UInt_t maxDots = TMath::Min((UInt_t) 50000, source->width * source->rows);
 
          //In original code, they first have to extract
          //pixels and call XQueryColors.
          //I have only one loop here.
          ULong_t r = 0, g = 0, b = 0;
-         for (int y = 0, dotCnt = 0; y < int(source->rows); y++) {
-            for (int x = 0; x < int(source->width); x++) {
-               if (x + bx < int(pixmap.fWidth) && y + by < int(pixmap.fHeight)) {
+         UInt_t dotCnt = 0;
+         for (unsigned y = 0; y < source->rows; y++) {
+            for (unsigned x = 0; x < source->width; x++) {
+               if (x + bx < pixmap.fWidth && y + by < pixmap.fHeight) {
                   const unsigned char * const pixels = pixmap.fData + (y + by) * pixmap.fWidth * 4 + (x + bx) * 4;
                   r += UShort_t(pixels[0] / 255. * 0xffff);
                   g += UShort_t(pixels[1] / 255. * 0xffff);
                   b += UShort_t(pixels[2] / 255. * 0xffff);
+                  if (++dotCnt >= maxDots)
+                     break;
                }
-
-               if (++dotCnt >= maxDots)
-                  break;
             }
          }
 
-         if (dots) {
-            r /= dots;
-            g /= dots;
-            b /= dots;
+         if (dotCnt > 0) {
+            r /= dotCnt;
+            g /= dotCnt;
+            b /= dotCnt;
          }
 
-         if (col[0].fRed == r && col[0].fGreen == g && col[0].fBlue == b) {
-            col[0].fPixel = back;
-         } else {
-            col[0].fPixel = ~back;//???
-            col[0].fRed = (UShort_t) r;
-            col[0].fGreen = (UShort_t) g;
-            col[0].fBlue = (UShort_t) b;
-         }
+         col[0].fRed = (UShort_t) r;
+         col[0].fGreen = (UShort_t) g;
+         col[0].fBlue = (UShort_t) b;
+      } else {
+         // request background color
+         col[0].fPixel = back;
+         TGCocoa::QueryColor(kNone, col[0]);
       }
 
-      // if fore or background have changed from previous character
-      // recalculate the 3 smoothing colors (interpolation between fore-
-      // and background colors)
-      if (fore != col[4].fPixel || back != col[0].fPixel) {
-         col[4].fPixel = fore;
-         TGCocoa::QueryColor(kNone, col[4]);//calculate fRed/fGreen/fBlue triple from fPixel.
-         if (back != (ULong_t)-1) {
-            col[0].fPixel = back;
-            TGCocoa::QueryColor(kNone, col[0]);
-         }
+      // request foreground color
+      col[4].fPixel = fore;
+      TGCocoa::QueryColor(kNone, col[4]);//calculate fRed/fGreen/fBlue triple from fPixel.
 
-         // interpolate between fore and background colors
-         for (int x = 3; x > 0; --x) {
-            col[x].fRed   = (col[4].fRed   * x + col[0].fRed   * (4 - x)) / 4;
-            col[x].fGreen = (col[4].fGreen * x + col[0].fGreen * (4 - x)) / 4;
-            col[x].fBlue  = (col[4].fBlue  * x + col[0].fBlue  * (4 - x)) / 4;
-            TGCocoa::AllocColor(kNone, col[x]);//Calculate fPixel from fRed/fGreen/fBlue triplet.
-         }
+      // interpolate between fore and background colors
+      for (int x = 3; x > 0; --x) {
+         col[x].fRed   = (col[4].fRed   * x + col[0].fRed   * (4 - x)) / 4;
+         col[x].fGreen = (col[4].fGreen * x + col[0].fGreen * (4 - x)) / 4;
+         col[x].fBlue  = (col[4].fBlue  * x + col[0].fBlue  * (4 - x)) / 4;
+         TGCocoa::AllocColor(kNone, col[x]);//Calculate fPixel from fRed/fGreen/fBlue triplet.
       }
 
       // put smoothed character, character pixmap values are an index
       // into the 5 colors used for aliasing (4 = foreground, 0 = background)
       const unsigned char *s = source->buffer;
-      for (int y = 0; y < (int) source->rows; ++y) {
-         for (int x = 0; x < (int) source->width; ++x) {
-            unsigned char d = *s++ & 0xff;//???
-            d = ((d + 10) * 5) / 256;//???
+      for (unsigned y = 0; y < source->rows; ++y) {
+         for (unsigned x = 0; x < source->width; ++x) {
+            unsigned char d = (((*s++ & 0xff) + 10) * 5) / 256;
             if (d > 4)
                d = 4;
-            if (d && x < (int) source->width) {
+            if (d > 0) {
                const UChar_t pixel[] = {UChar_t(double(col[d].fRed) / 0xffff * 255),
                                         UChar_t(double(col[d].fGreen) / 0xffff * 255),
                                         UChar_t(double(col[d].fBlue) / 0xffff * 255), 255};
@@ -1143,17 +1130,17 @@ void TGQuartz::DrawFTGlyph(void *pHack, void *sHack, ULong_t fore, ULong_t back,
       unsigned char d = 0;
 
       const unsigned char *row = source->buffer;
-      for (int y = 0; y < int(source->rows); ++y) {
-         int n = 0;
+      for (unsigned y = 0; y < source->rows; ++y) {
+         unsigned n = 0;
          const unsigned char *s = row;
-         for (int x = 0; x < int(source->width); ++x) {
+         for (unsigned x = 0; x < source->width; ++x) {
             if (!n)
                d = *s++;
 
             if (TESTBIT(d,7 - n))
                [pixmap putPixel : rgba X : bx + x Y : by + y];
 
-            if (++n == int(kBitsPerByte))
+            if (++n == kBitsPerByte)
                n = 0;
          }
 
