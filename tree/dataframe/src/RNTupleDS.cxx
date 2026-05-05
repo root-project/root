@@ -195,7 +195,7 @@ public:
 };
 
 /// Every RDF column is represented by exactly one RNTuple field
-class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::RFieldBase;
    using RPageSource = ROOT::Internal::RPageSource;
 
