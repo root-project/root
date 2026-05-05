@@ -135,7 +135,7 @@ void httptextlog()
 
    // One could specify location of newer version of JSROOT
    // serv->SetJSROOT("https://root.cern/js/latest/");
-   // serv->SetJSROOT("https://jsroot.gsi.de/dev/");
+   // serv->SetJSROOT("https://jsroot.gsi.de/latest/");
 
    // Detect macro file location to specify full path to the JavaScript file
    TString jspath = "currentdir/", jsname = "httptextlog.mjs";
