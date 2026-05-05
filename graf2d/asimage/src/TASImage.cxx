@@ -5611,39 +5611,35 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 
 void TASImage::DrawFTGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirtualPad *clippad, Int_t offx, Int_t offy)
 {
-   static UInt_t col[5];
-   Int_t x, y, yy, y0, xx;
+   UInt_t col[5];
    Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
 
-   ULong_t r, g, b;
-   int idx = 0;
-   FT_Bitmap *source = (FT_Bitmap*)bitmap;
-   UChar_t d = 0, *s = source->buffer;
+   FT_Bitmap *source = (FT_Bitmap *) bitmap;
 
-   Int_t dots = Int_t(source->width * source->rows);
-   r = g = b = 0;
-   Int_t bxx, byy;
+   auto ndots = source->width * source->rows;
+   ULong_t r = 0, g = 0, b = 0;
 
-   yy = y0 = by > 0 ? by * fImage->width : 0;
-   for (y = 0; y < (int) source->rows; y++) {
-      byy = by + y;
-      if ((byy >= (int)fImage->height) || (byy <0)) continue;
+   const Int_t y0 = by > 0 ? by * fImage->width : 0;
+   Int_t yy = y0;
+   for (UInt_t y = 0; y < source->rows; y++) {
+      Int_t byy = by + y;
+      if ((byy >= (Int_t) fImage->height) || (byy < 0)) continue;
 
-      for (x = 0; x < (int) source->width; x++) {
-         bxx = bx + x;
-         if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
+      for (UInt_t x = 0; x < source->width; x++) {
+         Int_t bxx = bx + x;
+         if ((bxx >= (Int_t) fImage->width) || (bxx < 0)) continue;
 
-         idx = Idx(bxx + yy);
+         auto idx = Idx(bxx + yy);
          r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
          g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
          b += (fImage->alt.argb32[idx] & 0x0000ff);
       }
       yy += fImage->width;
    }
-   if (dots != 0) {
-      r /= dots;
-      g /= dots;
-      b /= dots;
+   if (ndots > 0) {
+      r /= ndots;
+      g /= ndots;
+      b /= ndots;
    }
 
    col[0] = (r << 16) + (g << 8) + b;
@@ -5653,16 +5649,13 @@ void TASImage::DrawFTGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirt
    Int_t col4b = (col[4] & 0x0000ff);
 
    // interpolate between fore and background colors
-   for (x = 3; x > 0; x--) {
-      xx = 4-x;
+   for (Int_t x = 3; x > 0; x--) {
+      Int_t xx = 4 - x;
       Int_t colxr = (col4r*x + r*xx) >> 2;
       Int_t colxg = (col4g*x + g*xx) >> 2;
       Int_t colxb = (col4b*x + b*xx) >> 2;
       col[x] = (colxr << 16) + (colxg << 8) + colxb;
    }
-
-   yy = y0;
-   ARGB32 acolor;
 
    Int_t clipx1 = 0, clipx2 = 0, clipy1 = 0, clipy2 = 0;
    Bool_t noClip = kTRUE;
@@ -5676,22 +5669,24 @@ void TASImage::DrawFTGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirt
       noClip = kFALSE;
    }
 
-   for (y = 0; y < (int) source->rows; y++) {
-      byy = by + y;
+   yy = y0;
+   UChar_t *s = source->buffer;
 
-      for (x = 0; x < (int) source->width; x++) {
-         bxx = bx + x;
+   for (UInt_t y = 0; y < source->rows; y++) {
+      Int_t byy = by + y;
 
-         d = *s++ & 0xff;
+      for (UInt_t x = 0; x < source->width; x++) {
+         Int_t bxx = bx + x;
+
+         UChar_t d = *s++ & 0xff;
          d = ((d + 10) * 5) >> 8;
          if (d > 4) d = 4;
 
-         if (d) {
-            if ( noClip || ((x < (int) source->width) &&
-                 (bxx <  (int)clipx2) && (bxx >= (int)clipx1) &&
-                 (byy >= (int)clipy2) && (byy <  (int)clipy1) )) {
-               idx    = Idx(bxx + yy);
-               acolor = (ARGB32)col[d];
+         if (d > 0) {
+            if (noClip || ((bxx <  clipx2) && (bxx >= clipx1) &&
+                           (byy >= clipy2) && (byy <  clipy1))) {
+               auto idx = Idx(bxx + yy);
+               auto acolor = (ARGB32) col[d];
                if (has_alpha) {
                   _alphaBlend(&fImage->alt.argb32[idx], &acolor);
                } else {
