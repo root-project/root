@@ -177,8 +177,8 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
    if (!gPad) return 9999;
    Int_t pxm, pym;
    if (TestBit(kMarkerNDC)) {
-      pxm = gPad->UtoPixel(fX);
-      pym = gPad->VtoPixel(fY);
+      pxm = gPad->UtoAbsPixel(fX);
+      pym = gPad->VtoAbsPixel(fY);
    } else {
       pxm  = gPad->XtoAbsPixel(gPad->XtoPad(fX));
       pym  = gPad->YtoAbsPixel(gPad->YtoPad(fY));
