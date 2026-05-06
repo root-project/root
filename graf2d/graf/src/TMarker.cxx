@@ -15,8 +15,8 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TMarker.h"
-#include "TVirtualX.h"
 #include "TMath.h"
 #include "TPoint.h"
 #include "TText.h"
@@ -223,70 +223,65 @@ TMarker *TMarker::DrawMarker(Double_t x, Double_t y)
 
 void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable()) return;
 
-   TPoint p;
+   auto &parent = *gPad;
+
    static Int_t pxold, pyold;
-   static Bool_t ndcsav;
-   Double_t dpx, dpy, xp1,yp1;
-   Bool_t opaque  = gPad->OpaqueMoving();
+   Bool_t opaque = parent.OpaqueMoving();
 
-   if (!gPad->IsEditable()) return;
+   auto action = [this, &parent](Bool_t paint, Int_t posx, Int_t posy) {
+      Double_t x, y;
+      if ((posx != -1111) || (posy != -1111) || !paint) {
+         x = parent.AbsPixeltoX(posx);
+         y = parent.AbsPixeltoY(posy);
+      } else if (TestBit(kMarkerNDC)) {
+         // first non-opaque paint will be performed at the original position
+         x = parent.GetX1() + GetX() * (parent.GetX2() - parent.GetX1());
+         y = parent.GetY1() + GetY() * (parent.GetY2() - parent.GetY1());
+      } else {
+         x = parent.XtoPad(GetX());
+         y = parent.YtoPad(GetY());
+      }
+      if (paint) {
+         auto pp = parent.GetPainter();
+         pp->SetAttMarker(*this);
+         pp->DrawPolyMarker(1, &x, &y);
+      } else if (TestBit(kMarkerNDC)) {
+         SetX((x - parent.GetX1()) / (parent.GetX2() - parent.GetX1()));
+         SetY((y - parent.GetY1()) / (parent.GetY2() - parent.GetY1()));
+      } else {
+         SetX(parent.PadtoX(x));
+         SetY(parent.PadtoY(y));
+      }
+   };
 
    switch (event) {
 
    case kButton1Down:
-      ndcsav = TestBit(kMarkerNDC);
-      if (!opaque) {
-         gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
-         TAttMarker::Modify();  //Change marker attributes only if necessary
-      }
-      // No break !!!
-
    case kMouseMotion:
-      pxold = px;  pyold = py;
-      gPad->SetCursor(kMove);
+      pxold = pyold = -1111;
+      parent.SetCursor(kMove);
       break;
 
    case kButton1Motion:
-      p.fX = pxold; p.fY = pyold;
-      if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
-      p.fX = px; p.fY = py;
-      if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
-      pxold = px;  pyold = py;
       if (opaque) {
-         if (ndcsav) this->SetNDC(kFALSE);
-         this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px)));
-         this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py)));
-         gPad->ShowGuidelines(this, event, 'i', true);
-         gPad->Modified(kTRUE);
-         gPad->Update();
+         action(false, px, py);
+         parent.ShowGuidelines(this, event, 'i', true);
+         parent.ModifiedUpdate();
+      } else {
+         action(true, pxold, pyold);
+         action(true, px, py);
+         pxold = px;  pyold = py;
       }
       break;
 
    case kButton1Up:
       if (opaque) {
-         if (ndcsav && !this->TestBit(kMarkerNDC)) {
-            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            this->SetNDC();
-         }
-         gPad->ShowGuidelines(this, event);
+         parent.ShowGuidelines(this, event);
       } else {
-         if (TestBit(kMarkerNDC)) {
-            dpx  = gPad->GetX2() - gPad->GetX1();
-            dpy  = gPad->GetY2() - gPad->GetY1();
-            xp1  = gPad->GetX1();
-            yp1  = gPad->GetY1();
-            fX = (gPad->AbsPixeltoX(pxold)-xp1)/dpx;
-            fY = (gPad->AbsPixeltoY(pyold)-yp1)/dpy;
-         } else {
-            fX = gPad->PadtoX(gPad->AbsPixeltoX(px));
-            fY = gPad->PadtoY(gPad->AbsPixeltoY(py));
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         gVirtualX->SetTextColor(-1);
+         action(false, px, py);
+         parent.ModifiedUpdate();
       }
       break;
    }
