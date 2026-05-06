@@ -68,6 +68,7 @@ protected:
    static Int_t fgLineJoin; ///< Appearance of joining lines
    static Int_t fgLineCap;  ///< Appearance of line caps
 
+   void EnsureBufferSize(Int_t required_size);
 
 public:
    TPDF();

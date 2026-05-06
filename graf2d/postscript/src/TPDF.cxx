@@ -1811,6 +1811,20 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fPageNotEmpty = kFALSE;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Ensure that required space in the buffer is available
+
+void TPDF::EnsureBufferSize(Int_t required_size)
+{
+   if (required_size >= fSizBuffer) {
+      // increase buffer size by integer factor, normally 2
+      Int_t mult = (required_size + 1) / fSizBuffer + 1;
+      fBuffer = TStorage::ReAllocChar(fBuffer, mult*fSizBuffer, fSizBuffer);
+      fSizBuffer = mult*fSizBuffer;
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Output the string str in the output buffer
 
@@ -1821,16 +1835,12 @@ void TPDF::PrintStr(const char *str)
    fPageNotEmpty = kTRUE;
 
    if (fCompress) {
-      if (fLenBuffer+len >= fSizBuffer) {
-         fBuffer  = TStorage::ReAllocChar(fBuffer, 2*fSizBuffer, fSizBuffer);
-         fSizBuffer = 2*fSizBuffer;
-      }
+      EnsureBufferSize(fLenBuffer + len);
       strcpy(fBuffer + fLenBuffer, str);
       fLenBuffer += len;
-      return;
+   } else {
+      TVirtualPS::PrintStr(str);
    }
-
-   TVirtualPS::PrintStr(str);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1840,16 +1850,12 @@ void TPDF::PrintFast(Int_t len, const char *str)
 {
    fPageNotEmpty = kTRUE;
    if (fCompress) {
-      if (fLenBuffer+len >= fSizBuffer) {
-         fBuffer  = TStorage::ReAllocChar(fBuffer, 2*fSizBuffer, fSizBuffer);
-         fSizBuffer = 2*fSizBuffer;
-      }
+      EnsureBufferSize(fLenBuffer + len);
       strcpy(fBuffer + fLenBuffer, str);
       fLenBuffer += len;
-      return;
+   } else {
+      TVirtualPS::PrintFast(len, str);
    }
-
-   TVirtualPS::PrintFast(len, str);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
