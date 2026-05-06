@@ -262,14 +262,10 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       auto y2 = parent.AbsPixeltoY(py2);
       if (!paint) {
          if (isBox) {
-            if (parent.GetLogx()) {
-               x1 = TMath::Power(10, x1);
-               x2 = TMath::Power(10, x2);
-            }
-            if (parent.GetLogy()) {
-               y1 = TMath::Power(10, y1);
-               y2 = TMath::Power(10, y2);
-            }
+            x1 = parent.PadtoX(x1);
+            x2 = parent.PadtoX(x2);
+            y1 = parent.PadtoY(y1);
+            y2 = parent.PadtoY(y2);
          }
          SetX1(x1);
          SetY1(y1);
@@ -464,8 +460,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             hasOld = kFALSE;
             mode = pNone;
             fResizing = kFALSE;
-            parent.Modified(kTRUE);
-            parent.Update();
+            parent.ModifiedUpdate();
          }
          break;
       }
@@ -648,16 +643,10 @@ Rectangle_t TBox::GetBBox()
       Int_t py1 = gPad->YtoPixel(fY1);
       Int_t py2 = gPad->YtoPixel(fY2);
 
-      if (px1 > px2) {
-         Int_t tmp = px1;
-         px1 = px2;
-         px2 = tmp;
-      }
-      if (py1 > py2) {
-         Int_t tmp = py1;
-         py1 = py2;
-         py2 = tmp;
-      }
+      if (px1 > px2)
+         std::swap(px1, px2);
+      if (py1 > py2)
+         std::swap(py1, py2);
 
       BBox.fX = px1;
       BBox.fY = py1;
@@ -669,60 +658,14 @@ Rectangle_t TBox::GetBBox()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the center of the Box as TPoint in pixels
-
-TPoint TBox::GetBBoxCenter()
-{
-   TPoint p(0, 0);
-   if (gPad) {
-      p.SetX(gPad->XtoPixel(TMath::Min(fX1, fX2) + 0.5 * (TMath::Max(fX1, fX2) - TMath::Min(fX1, fX2))));
-      p.SetY(gPad->YtoPixel(TMath::Min(fY1, fY2) + 0.5 * (TMath::Max(fY1, fY2) - TMath::Min(fY1, fY2))));
-   }
-   return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set center of the Box
-
-void TBox::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
-   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
-   if (fX2>fX1) {
-      this->SetX1(gPad->PixeltoX(p.GetX())-0.5*w);
-      this->SetX2(gPad->PixeltoX(p.GetX())+0.5*w);
-   }
-   else {
-      this->SetX2(gPad->PixeltoX(p.GetX())-0.5*w);
-      this->SetX1(gPad->PixeltoX(p.GetX())+0.5*w);
-   }
-   if (fY2>fY1) {
-      this->SetY1(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h);
-      this->SetY2(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h);
-   }
-   else {
-      this->SetY2(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h);
-      this->SetY1(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set X coordinate of the center of the Box
 
 void TBox::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   if (x<0) return;
-   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
-   if (fX2>fX1) {
-      this->SetX1(gPad->PixeltoX(x)-0.5*w);
-      this->SetX2(gPad->PixeltoX(x)+0.5*w);
-   }
-   else {
-      this->SetX2(gPad->PixeltoX(x)-0.5*w);
-      this->SetX1(gPad->PixeltoX(x)+0.5*w);
-   }
+   Double_t w2 = 0.5* (fX2 - fX1);
+   Double_t midx = GetXCoord(x);
+   SetX1(midx - w2);
+   SetX2(midx + w2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -730,17 +673,10 @@ void TBox::SetBBoxCenterX(const Int_t x)
 
 void TBox::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   if (y<0) return;
-   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
-   if (fY2>fY1) {
-      this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
-      this->SetY2(gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
-   }
-   else {
-      this->SetY2(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
-      this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
-   }
+   Double_t h2 = 0.5 * (fY2 - fY1);
+   Double_t midy = GetYCoord(y);
+   SetY1(midy - h2);
+   SetY2(midy + h2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -749,9 +685,7 @@ void TBox::SetBBoxCenterY(const Int_t y)
 
 void TBox::SetBBoxX1(const Int_t x)
 {
-   if (x<0) return;
-   if (!gPad) return;
-   fX1 = gPad->PixeltoX(x);
+   SetX1(GetXCoord(x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -760,9 +694,7 @@ void TBox::SetBBoxX1(const Int_t x)
 
 void TBox::SetBBoxX2(const Int_t x)
 {
-   if (x<0) return;
-   if (!gPad) return;
-   fX2 = gPad->PixeltoX(x);
+   SetX2(GetXCoord(x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -770,9 +702,7 @@ void TBox::SetBBoxX2(const Int_t x)
 
 void TBox::SetBBoxY1(const Int_t y)
 {
-   if (y<0) return;
-   if (!gPad) return;
-   fY2 = gPad->PixeltoY(y - gPad->VtoPixel(0));
+   SetY2(GetYCoord(y));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -781,7 +711,5 @@ void TBox::SetBBoxY1(const Int_t y)
 
 void TBox::SetBBoxY2(const Int_t y)
 {
-   if (y<0) return;
-   if (!gPad) return;
-   fY1 = gPad->PixeltoY(y - gPad->VtoPixel(0));
+   SetY1(GetYCoord(y));
 }
