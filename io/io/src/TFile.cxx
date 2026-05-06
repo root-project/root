@@ -4401,7 +4401,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    // the shortest garbage collector in the world - one long line of PERL - unlinks files only,
    // if there is a symbolic link with '.ROOT.cachefile' for safety ;-)
 
-   TString cmd;
+   TString cmd(4096);
 #if defined(R__WIN32)
    cmd = "echo <TFile::ShrinkCacheFileDir>: cleanup to be implemented";
 #elif defined(R__MACOSX)
