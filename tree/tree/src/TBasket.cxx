@@ -1032,17 +1032,55 @@ void TBasket::Streamer(TBuffer &b)
          flag -= 80;
       }
       if (!mustGenerateOffsets && flag && (flag % 10 != 2)) {
+         // NOTE: fNevBuf is the number of entries stored in the basket, while fNevBufSize is the capacity of the
+         // fEntryOffset and fDisplacement arrays.
+         if (fNevBuf > fNevBufSize) {
+            Error("Streamer",
+                  "Inconsistent length for the entry offset buffer (%d events for a buffer size of %d). The basket is "
+                  "corrupted and not usable.",
+                  fNevBuf, fNevBufSize);
+            MakeZombie();
+            return;
+         }
          ResetEntryOffset();
-         fEntryOffset = new Int_t[fNevBufSize];
-         if (fNevBuf) b.ReadArray(fEntryOffset);
+         if (fNevBuf) {
+            // Alas, ReadArray will read the number of elements to store into fEntryOffset from the file, but it
+            // has no way of knowing whether we're passing a large-enough array.
+            // Therefore we prevent the problem altogether by ignoring fNevBufSize and just having ReadArray allocate
+            // the buffer for us. This way we are sure that it will be of the correct size even if the file contains
+            // corrupted data.
+            fEntryOffset = nullptr;
+            auto nElemsRead = b.ReadArray(fEntryOffset);
+            if (nElemsRead != fNevBuf) {
+               Error("Streamer",
+                     "Inconsistent length for the entry offset buffer (expected %d elements, read %d). The basket is "
+                     "corrupted and not usable.",
+                     fNevBufSize, nElemsRead);
+               MakeZombie();
+               return;
+            }
+            fNevBufSize = fNevBuf;
+         } else {
+            fEntryOffset = new Int_t[fNevBufSize];
+         }
          if (20<flag && flag<40) {
             for(int i=0; i<fNevBuf; i++){
                fEntryOffset[i] &= ~kDisplacementMask;
             }
          }
          if (flag>40) {
-            fDisplacement = new Int_t[fNevBufSize];
-            b.ReadArray(fDisplacement);
+            // ReadArray will allocate this for us.
+            fDisplacement = nullptr;
+            auto nElemsRead = b.ReadArray(fDisplacement);
+            if (nElemsRead != fNevBuf) {
+               Error("Streamer",
+                     "Inconsistent length for the displacement buffer (expected %d elements, read %d). The basket is "
+                     "corrupted and not usable.",
+                     fNevBufSize, nElemsRead);
+               MakeZombie();
+               return;
+            }
+            fNevBufSize = fNevBuf;
          }
       } else if (mustGenerateOffsets) {
          // We currently believe that in all cases when offsets can be generated, then the
