@@ -3136,6 +3136,14 @@ void TBranch::Streamer(TBuffer& b)
       }
       fBasketEntry = new Long64_t[fMaxBaskets];
       b >> n;
+      if (n > fMaxBaskets) {
+         Error("Streamer",
+               "Inconsistent number of baskets. This basket cannot be read. Read %d for the actual number of baskets "
+               "while we read %d as the value of fMaxBaskets.",
+               n, fMaxBaskets);
+         MakeZombie();
+         return;
+      }
       for (i=0;i<n;i++) {b >> ijunk; fBasketEntry[i] = ijunk;}
       fBasketBytes = new Int_t[fMaxBaskets];
       if (v > 4) {
