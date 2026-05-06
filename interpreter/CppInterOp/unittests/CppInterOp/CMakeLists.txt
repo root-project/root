@@ -85,6 +85,10 @@ add_cppinterop_unittest(TracingTests
   TracingTests.cpp
   Utils.cpp
 )
+
+set_property(TEST cppinterop-TracingTests APPEND PROPERTY
+  ENVIRONMENT "GTEST_DEATH_TEST_STYLE=threadsafe")
+
 target_compile_definitions(TracingTests PRIVATE
   "CPPINTEROP_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../../\""
 )
