@@ -139,7 +139,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    gVirtualPS = this;
 
-   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
+   ClearBuffer();
 
    fBoundingBox = kFALSE;
 

@@ -1695,8 +1695,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
 
    gVirtualPS = this;
 
-   for (Int_t i=0; i<fSizBuffer; i++)
-      fBuffer[i] = ' ';
+   ClearBuffer();
 
    // The page orientation is last digit of PDF workstation type
    //  orientation = 1 for portrait
