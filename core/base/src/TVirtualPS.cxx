@@ -62,9 +62,18 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
 
 TVirtualPS::~TVirtualPS()
 {
-   if (fBuffer)
-      delete [] fBuffer;
+   delete [] fBuffer;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear content of internal buffer
+
+void TVirtualPS::ClearBuffer()
+{
+   for (Int_t i = 0; i < fSizBuffer; ++i)
+      fBuffer[i] = ' ';
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open output stream
