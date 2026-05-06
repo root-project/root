@@ -266,8 +266,22 @@ void TPython::LoadMacro(const char *name)
    // obtain a reference to look for new classes later
    PyObjectRef old{PyDict_Values(gMainDict)};
 
-// actual execution
-   Exec((std::string("__pyroot_f = open(\"") + name +
+   // escape characters in the file name that would otherwise terminate or
+   // alter the Python string literal we put the file name into below
+   std::string escapedName;
+   escapedName.reserve(std::char_traits<char>::length(name));
+   for (const char *p = name; *p; ++p) {
+      switch (*p) {
+      case '\\': escapedName += "\\\\"; break;
+      case '"':  escapedName += "\\\""; break;
+      case '\n': escapedName += "\\n";  break;
+      case '\r': escapedName += "\\r";  break;
+      default:   escapedName += *p;     break;
+      }
+   }
+
+   // actual execution
+   Exec((std::string("__pyroot_f = open(\"") + escapedName +
          "\"); "
          "exec(__pyroot_f.read()); "
          "__pyroot_f.close(); del __pyroot_f")
