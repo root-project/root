@@ -53,7 +53,7 @@ template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys);
 
 
 }
@@ -483,7 +483,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, fWinContext, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, fDoubleBuffer, n, x, y);
 }
 
 
@@ -497,7 +497,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, fWinContext, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, fDoubleBuffer, n, x, y);
 }
 
 
@@ -872,13 +872,13 @@ void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, cons
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys)
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys)
 {
    std::vector<TPoint> xy(nPoints);
 
    for (unsigned i = 0; i < nPoints; ++i) {
-      xy[i].fX = (SCoord_t)pad->XtoPixel(xs[i]);
-      xy[i].fY = (SCoord_t)pad->YtoPixel(ys[i]);
+      xy[i].fX = (SCoord_t) (double_buffer ? pad->XtoPixel(xs[i]) : pad->XtoAbsPixel(xs[i]));
+      xy[i].fY = (SCoord_t) (double_buffer ? pad->YtoPixel(ys[i]) : pad->YtoAbsPixel(ys[i]));
    }
 
    gVirtualX->DrawPolyMarkerW(cont, nPoints, &xy[0]);
