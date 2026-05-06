@@ -4377,6 +4377,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    Long64_t size;
    Long_t flags;
    Long_t modtime;
+   Int_t bufsize = 4096;
 
    TString cachetagfile = fgCacheFileDir;
    cachetagfile += ".tag.ROOT.cache";
@@ -4401,7 +4402,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    // the shortest garbage collector in the world - one long line of PERL - unlinks files only,
    // if there is a symbolic link with '.ROOT.cachefile' for safety ;-)
 
-   TString cmd(4096);
+   TString cmd(bufsize);
 #if defined(R__WIN32)
    cmd = "echo <TFile::ShrinkCacheFileDir>: cleanup to be implemented";
 #elif defined(R__MACOSX)
@@ -4410,7 +4411,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    cmd.Form("perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -c \\\"\\%%x::\\%%n::\\%%s\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) || ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
 #endif
 
-   tagfile->WriteBuffer(cmd, 4096);
+   tagfile->WriteBuffer(cmd, bufsize);
    delete tagfile;
 
    if ((gSystem->Exec(cmd)) != 0) {
