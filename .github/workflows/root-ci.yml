@@ -406,6 +406,7 @@ jobs:
             property: modules_off
             overrides: ["CMAKE_CXX_STANDARD=20"]
           - image: alma10
+            platform_config: alma10-arm64-largetest
             is_special: true
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]

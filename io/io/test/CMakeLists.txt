@@ -62,4 +62,56 @@ if(NOT _32BIT)
                     MACRO testByteCount.cxx+
                     OUTREF testByteCount.ref
                     FIXTURES_REQUIRED io-io-tobj-fixture)
+
+  ROOTTEST_COMPILE_MACRO(testLargeCollection.cxx
+                        FIXTURES_SETUP io-io-testcoll-fixture)
+
+  # Memory-check script: exits 0 when enough RAM+swap is available, 77 (skip) otherwise.
+  # RootTestDriver.cmake propagates exit code 77 from PRECMD to the test's own exit code,
+  # and SKIP_RETURN_CODE 77 on the main test turns that into a proper CTest "Skipped".
+  set(_memcheck_script "${CMAKE_CURRENT_BINARY_DIR}/check_mem_for_large_coll.sh")
+  file(WRITE ${_memcheck_script}
+    "#!/bin/sh\n"
+    "# Exit 77 (CTest SKIP via SKIP_RETURN_CODE) if total RAM+swap < 32 GB.\n"
+    "# We use TOTAL (not free) because the OS reclaims cached pages on demand.\n"
+    "THRESHOLD_KB=33554432\n"
+    "if [ -r /proc/meminfo ]; then\n"
+    "  # Linux: use MemTotal + SwapTotal (kernel will reclaim caches as needed)\n"
+    "  RAM_KB=\$(awk '/^MemTotal:/{print \$2}' /proc/meminfo)\n"
+    "  SWAP_KB=\$(awk '/^SwapTotal:/{print \$2}' /proc/meminfo)\n"
+    "  RAM_KB=\${RAM_KB:-0}\n"
+    "  SWAP_KB=\${SWAP_KB:-0}\n"
+    "  TOTAL_KB=\$(( RAM_KB + SWAP_KB ))\n"
+    "elif [ \"\$(uname)\" = \"Darwin\" ]; then\n"
+    "  # macOS: total physical RAM via sysctl hw.memsize (bytes -> kB)\n"
+    "  RAM_BYTES=\$(sysctl -n hw.memsize 2>/dev/null)\n"
+    "  RAM_KB=\$(( \${RAM_BYTES:-0} / 1024 ))\n"
+    "  # sysctl output: 'total = NNN.NNM  used = ...  free = ...'\n"
+    "  SWAP_TOTAL_MB=\$(sysctl -n vm.swapusage 2>/dev/null | sed 's/total = \\([0-9.]*\\)M.*/\\1/')\n"
+    "  if [ -n \"\$SWAP_TOTAL_MB\" ]; then\n"
+    "    SWAP_KB=\$(awk \"BEGIN{printf \\\"%d\\\", \$SWAP_TOTAL_MB * 1024}\")\n"
+    "  else\n"
+    "    SWAP_KB=0\n"
+    "  fi\n"
+    "  TOTAL_KB=\$(( RAM_KB + SWAP_KB ))\n"
+    "else\n"
+    "  echo \"testLargeCollections memory check: unsupported OS, assuming enough memory\"\n"
+    "  exit 0\n"
+    "fi\n"
+    "echo \"testLargeCollections memory check: total \${TOTAL_KB} kB (RAM \${RAM_KB} + swap \${SWAP_KB}), need \${THRESHOLD_KB} kB\"\n"
+    "if [ \"\$TOTAL_KB\" -lt \"\$THRESHOLD_KB\" ]; then\n"
+    "  echo \"Insufficient memory -- skipping testLargeCollections\"\n"
+    "  exit 77\n"
+    "fi\n"
+    "exit 0\n"
+  )
+  execute_process(COMMAND chmod +x ${_memcheck_script})
+
+  ROOTTEST_ADD_TEST(testLargeCollections
+                    TIMEOUT 1200
+                    MACRO testLargeCollection.cxx+
+                    OUTREF testLargeCollection.ref
+                    FIXTURES_REQUIRED io-io-testcoll-fixture
+                    PRECMD sh ${_memcheck_script}
+                    PROPERTIES "SKIP_REGULAR_EXPRESSION;ROOTTEST_SKIP")
 endif()

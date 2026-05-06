@@ -1062,7 +1062,7 @@ TTree::~TTree()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TTree for reading/writing baskets.
 
-TBuffer* TTree::GetTransientBuffer(Int_t size)
+TBuffer* TTree::GetTransientBuffer(ULong64_t size)
 {
    if (fTransientBuffer) {
       if (fTransientBuffer->BufferSize() < size) {
@@ -2914,6 +2914,13 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       return kInternalError;
    }
    bool isBranchElement = branch->InheritsFrom( TBranchElement::Class() );
+   if (!isBranchElement && !expectedClass && isptr) {
+      Error("SetBranchAddress",
+            "The branch \"%s\" is a leaflist branch (data type \"%s\") and requires a direct data address, "
+            "not a pointer-to-pointer to a \"%s\".  Please remove the '&' in the SetBranchAddress call.",
+            branch->GetName(), TDataType::GetTypeName(expectedType), ptrClass ? ptrClass->GetName() : TDataType::GetTypeName(datatype));
+      return kMismatch;
+   }
    if (expectedClass && datatype == kOther_t && ptrClass == nullptr) {
       if (isBranchElement) {
          TBranchElement* bEl = (TBranchElement*)branch;

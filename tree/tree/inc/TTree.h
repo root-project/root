@@ -599,7 +599,7 @@ public:
            TTreeFormula   *GetSelect()    { return GetPlayer()->GetSelect(); }
    virtual Long64_t        GetSelectedRows() { return GetPlayer()->GetSelectedRows(); }
    virtual Int_t           GetTimerInterval() const { return fTimerInterval; }
-           TBuffer*        GetTransientBuffer(Int_t size);
+           TBuffer*        GetTransientBuffer(ULong64_t size);
    virtual Long64_t        GetTotBytes() const { return fTotBytes; }
    virtual TTree          *GetTree() const { return const_cast<TTree*>(this); }
    virtual TVirtualIndex  *GetTreeIndex() const { return fTreeIndex; }

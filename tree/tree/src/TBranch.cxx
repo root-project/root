@@ -523,7 +523,7 @@ TBranch::~TBranch()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TBranch for reading/writing baskets.
 
-TBuffer* TBranch::GetTransientBuffer(Int_t size)
+TBuffer* TBranch::GetTransientBuffer(ULong64_t size)
 {
    if (fTransientBuffer) {
       if (fTransientBuffer->BufferSize() < size) {
@@ -1992,7 +1992,7 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
    // basket, just iterate backwards until the correct basket is reached. This should
    // be fast as long as the number of baskets per cluster is small
    Int_t basketToUnload = fReadBasket;
-   while (fBasketEntry[basketToUnload] != entryToUnload) {
+   while (fBasketEntry[basketToUnload] > entryToUnload) {
       basketToUnload--;
       if (basketToUnload < 0) {
          return CreateOrReuseBasket();

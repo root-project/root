@@ -13,6 +13,7 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TBufferFile.h"
+#include "TStreamerInfoCollectionUtils.h"
 #include "TClonesArray.h"
 #include "TError.h"
 #include "TRef.h"
@@ -89,7 +90,7 @@ TStreamerElement *TStreamerInfo::GetCurrentElement()
       Char_t isArray;                           \
       b >> isArray;                             \
       Int_t *l = (Int_t*)(arr[index]+imethod);  \
-      if (*l < 0 || *l > b.BufferSize()) continue;     \
+      if (*l < 0 || static_cast<ULong64_t>(*l) > b.BufferSize()) continue;     \
       name **f = (name**)(arr[index]+ioffset);  \
       int j;                                    \
       if (isArray) for(j=0;j<compinfo[i]->fLength;j++) {  \
@@ -486,7 +487,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       DOLOOP {                                                            \
          b >> isArray;                                                    \
          Int_t *l = (Int_t*)(arr[k]+imethod);                             \
-         if (*l>0 && *l < b.BufferSize()) {                               \
+         if (*l>0 && static_cast<ULong64_t>(*l) < b.BufferSize()) {       \
             readbuf = new name[*l];                                       \
             switch(newtype) {                                             \
                case TStreamerInfo::kBool:     ConvCBasicPointerTo(Bool_t,ReadArrayFunc);   \
@@ -798,7 +799,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          } else {
             if (gDebug > 1) {
                printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
-                      " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                      " %s, bufpos=%zu, arr=%p, eoffset=%d, Redirect=%p\n",
                       fClass->GetName(), aElement->GetName(), i, compinfo[i]->fType, aElement->ClassName(), b.Length(),
                       arr[0], eoffset, b.PeekDataCache()->GetObjectAt(0));
             }
@@ -811,7 +812,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
       if (gDebug > 1) {
          printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
-                " %s, bufpos=%d, arr=%p, offset=%d\n",
+                " %s, bufpos=%zu, arr=%p, offset=%d\n",
                 fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
                 aElement->ClassName(),b.Length(),arr[0], ioffset);
       }
@@ -1191,10 +1192,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                               cont = contp[j];
                            }
                            TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
-                           Int_t nobjects;
-                           b >> nobjects;
-                           env = newProxy->Allocate(nobjects,true);
-                           if (!nobjects && (vers>=7)) {
+                           ULong64_t nobjects64 = TStreamerInfoUtils::ReadCollectionSize(b, vers);
+
+                           env = newProxy->Allocate(nobjects64,true);
+                           if (!nobjects64 && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
                               // we were calling ReadBuffer for empty collection.
                            } else {
@@ -1301,10 +1302,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
                         for(; obj<end; obj+=objectSize) {
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
-                           Int_t nobjects;
-                           b >> nobjects;
-                           void* env = newProxy->Allocate(nobjects,true);
-                           if (!nobjects && (vers>=7)) {
+                           ULong64_t nobjects64 = TStreamerInfoUtils::ReadCollectionSize(b, vers);
+
+                           void* env = newProxy->Allocate(nobjects64, true);
+                           if (!nobjects64 && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
                               // we were calling ReadBuffer for empty collection.
                            } else {
