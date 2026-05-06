@@ -44,6 +44,7 @@ protected:
 
    Bool_t         OpenStream(const char *fname, Bool_t binary = kFALSE);
    void           CloseStream();
+   void           ClearBuffer();
 
 public:
    TVirtualPS();
