@@ -18,11 +18,16 @@
 class TPoint;
 class TAttBBox2D {
 
+protected:
+
+   Double_t GetXCoord(const Int_t x, Bool_t is_ndc = kFALSE);
+   Double_t GetYCoord(const Int_t y, Bool_t is_ndc = kFALSE);
+
 public:
    virtual ~TAttBBox2D();
-   virtual Rectangle_t     GetBBox()  = 0; //Get TopLeft Corner with width and height
-   virtual TPoint          GetBBoxCenter() = 0;
-   virtual void            SetBBoxCenter(const TPoint &p) = 0;
+   virtual Rectangle_t     GetBBox() = 0; //Get TopLeft Corner with width and height
+   virtual TPoint          GetBBoxCenter();
+   virtual void            SetBBoxCenter(const TPoint &p);
    virtual void            SetBBoxCenterX(const Int_t x) = 0;
    virtual void            SetBBoxCenterY(const Int_t y) = 0;
    virtual void            SetBBoxX1(const Int_t x) = 0; //set lhs of BB to value
