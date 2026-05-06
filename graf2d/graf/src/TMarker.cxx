@@ -198,7 +198,6 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 void TMarker::Draw(Option_t *option)
 {
    AppendPad(option);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,42 +385,22 @@ void TMarker::Streamer(TBuffer &R__b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the bounding Box of the Line
+/// Return the bounding Box of the marker
 
 Rectangle_t TMarker::GetBBox()
 {
-   Rectangle_t BBox{0, 0, 0, 0};
+   auto size = GetMarkerSize();
+   Rectangle_t bbox{0, 0, (UShort_t) (2*size), (UShort_t) (2*size) };
    if (gPad) {
-      Double_t size = GetMarkerSize();
-      BBox.fX = gPad->XtoPixel(fX) + (Int_t)(2 * size);
-      BBox.fY = gPad->YtoPixel(fY) - (Int_t)(2 * size);
-      BBox.fWidth = 2 * size;
-      BBox.fHeight = 2 * size;
+      if (TestBit(kMarkerNDC)) {
+         bbox.fX = gPad->UtoPixel(GetX()) - size;
+         bbox.fY = gPad->VtoPixel(GetY()) - size;
+      } else {
+         bbox.fX = gPad->XtoPixel(gPad->XtoPad(GetX())) - size;
+         bbox.fY = gPad->YtoPixel(gPad->YtoPad(GetY())) - size;
+      }
    }
-   return BBox;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the center of the BoundingBox as TPoint in pixels
-
-TPoint TMarker::GetBBoxCenter()
-{
-   TPoint p(0, 0);
-   if (gPad) {
-      p.SetX(gPad->XtoPixel(fX));
-      p.SetY(gPad->YtoPixel(fY));
-   }
-   return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set center of the BoundingBox
-
-void TMarker::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   fX = gPad->PixeltoX(p.GetX());
-   fY = gPad->PixeltoY(p.GetY() - gPad->VtoPixel(0));
+   return bbox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -429,8 +408,7 @@ void TMarker::SetBBoxCenter(const TPoint &p)
 
 void TMarker::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   fX = gPad->PixeltoX(x);
+   SetX(GetXCoord(x, TestBit(kMarkerNDC)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,8 +416,7 @@ void TMarker::SetBBoxCenterX(const Int_t x)
 
 void TMarker::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   fY = gPad->PixeltoY(y - gPad->VtoPixel(0));
+   SetY(GetYCoord(y, TestBit(kMarkerNDC)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -448,9 +425,7 @@ void TMarker::SetBBoxCenterY(const Int_t y)
 
 void TMarker::SetBBoxX1(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fX = gPad->PixeltoX(x + (Int_t)size);
+   SetBBoxCenterX(x + GetMarkerSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -459,9 +434,7 @@ void TMarker::SetBBoxX1(const Int_t x)
 
 void TMarker::SetBBoxX2(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fX = gPad->PixeltoX(x - (Int_t)size);
+   SetBBoxCenterX(x - GetMarkerSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,9 +442,7 @@ void TMarker::SetBBoxX2(const Int_t x)
 
 void TMarker::SetBBoxY1(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fY = gPad->PixeltoY(y - (Int_t)size - gPad->VtoPixel(0));
+   SetBBoxCenterY(y + GetMarkerSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,7 +451,5 @@ void TMarker::SetBBoxY1(const Int_t y)
 
 void TMarker::SetBBoxY2(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fY = gPad->PixeltoY(y + (Int_t)size - gPad->VtoPixel(0));
+   SetBBoxCenterY(y - GetMarkerSize());
 }
