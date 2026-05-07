@@ -16,6 +16,7 @@
 #include "TBuffer.h"
 #include "TEllipse.h"
 #include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TMath.h"
 #include "TPoint.h"
 #include "TVirtualX.h"
@@ -201,271 +202,167 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (!gPad || !gPad->IsEditable()) return;
 
+   auto &parent = *gPad;
+
+   auto pp = parent.GetPainter();
+
    Int_t kMaxDiff = 10;
 
-   Int_t dpx, dpy;
-   Double_t angle,dx,dy,dphi,ct,st,fTy,fBy,fLx,fRx;
-   static Int_t px1,py1,npe,r1,r2,sav1,sav2;
+   // Double_t angle,dphi,ct,st,fTy,fBy,fLx,fRx;
+   static Int_t px1,py1,r1,r2, pTy, pBy, pLx, pRx;
+
    const Int_t kMinSize = 25;
-   const Int_t np = 40;
-   static Bool_t pTop, pL, pR, pBot, pINSIDE;
-   static Int_t pTx,pTy,pLx,pLy,pRx,pRy,pBx,pBy;
-   static Int_t x[np+2], y[np+2];
+   static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
    static Int_t pxold, pyold;
-   static Int_t sig,impair;
-   static Double_t sdx, sdy;
+   static Int_t impair = 0;
+   static Int_t sdx, sdy;
    static Double_t oldX1, oldY1, oldR1, oldR2;
 
-   Bool_t opaque  = gPad->OpaqueMoving();
+   auto paint_marker = [this,&parent,pp](Int_t dx, Int_t dy) {
+      Double_t x = GetX1() + dx * GetR1();
+      Double_t y = GetY1() + dy * GetR2();
+      pp->SetAttMarker({GetLineColor(), 25, 2});
+      pp->DrawPolyMarker(1, &x, &y);
+   };
+
+   Bool_t opaque  = parent.OpaqueMoving();
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-         oldX1 = fX1;
-         oldY1 = fY1;
-         oldR1 = fR1;
-         oldR2 = fR2;
-         dphi = (fPhimax-fPhimin)*kPI/(180*np);
-         ct   = TMath::Cos(kPI*fTheta/180);
-         st   = TMath::Sin(kPI*fTheta/180);
-         for (Int_t i=0; i<np; i++) {
-            angle = fPhimin*kPI/180 + Double_t(i)*dphi;
-            dx    = fR1*TMath::Cos(angle);
-            dy    = fR2*TMath::Sin(angle);
-            x[i]  = gPad->XtoAbsPixel(fX1 + dx*ct - dy*st);
-            y[i]  = gPad->YtoAbsPixel(fY1 + dx*st + dy*ct);
-         }
-         if (fPhimax-fPhimin >= 360 ) {
-            x[np] = x[0];
-            y[np] = y[0];
-            npe = np;
-         } else {
-            x[np]   = gPad->XtoAbsPixel(fX1);
-            y[np]   = gPad->YtoAbsPixel(fY1);
-            x[np+1] = x[0];
-            y[np+1] = y[0];
-            npe = np + 1;
-         }
-         impair = 0;
-         px1 = gPad->XtoAbsPixel(fX1);
-         py1 = gPad->YtoAbsPixel(fY1);
-         pTx = pBx = px1;
-         pLy = pRy = py1;
-         pTy = gPad->YtoAbsPixel(fR2+fY1);
-         pBy = gPad->YtoAbsPixel(-fR2+fY1);
-         pLx = gPad->XtoAbsPixel(-fR1+fX1);
-         pRx = gPad->XtoAbsPixel(fR1+fX1);
-         r2 = (pBy-pTy)/2;
-         r1 = (pRx-pLx)/2;
-      if (!opaque) {
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();
-         gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
-         gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
-         gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
-         gVirtualX->DrawLine(pRx+4, py1-4, pRx+4, py1+4);
-         gVirtualX->DrawLine(pLx+4, py1+4, pLx-4, py1+4);
-         gVirtualX->DrawLine(pLx-4, py1+4, pLx-4, py1-4);
-         gVirtualX->DrawLine(pLx-4, py1-4, pLx+4, py1-4);
-         gVirtualX->DrawLine(pLx+4, py1-4, pLx+4, py1+4);
-         gVirtualX->DrawLine(px1+4, pBy+4, px1-4, pBy+4);
-         gVirtualX->DrawLine(px1-4, pBy+4, px1-4, pBy-4);
-         gVirtualX->DrawLine(px1-4, pBy-4, px1+4, pBy-4);
-         gVirtualX->DrawLine(px1+4, pBy-4, px1+4, pBy+4);
-         gVirtualX->DrawLine(px1+4, pTy+4, px1-4, pTy+4);
-         gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
-         gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
-         gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
-      }
-      else {
-         sdx = GetX1() - gPad->AbsPixeltoX(px);
-         sdy = GetY1() - gPad->AbsPixeltoY(py);
-      }
+      oldX1 = fX1;
+      oldY1 = fY1;
+      oldR1 = fR1;
+      oldR2 = fR2;
+      impair = 0;
+
+      pxold = px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
+      pyold = py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
+      sdx = px1 - px;
+      sdy = py1 - py;
+
+      paint_marker(-1,  0);
+      paint_marker( 1,  0);
+      paint_marker( 0, -1);
+      paint_marker( 0,  1);
+
       // No break !!!
 
    case kMouseMotion:
-      px1 = gPad->XtoAbsPixel(fX1);
-      py1 = gPad->YtoAbsPixel(fY1);
-      pTx = pBx = px1;
-      pLy = pRy = py1;
-      pTy = gPad->YtoAbsPixel(fR2+fY1);
-      pBy = gPad->YtoAbsPixel(-fR2+fY1);
-      pLx = gPad->XtoAbsPixel(-fR1+fX1);
-      pRx = gPad->XtoAbsPixel(fR1+fX1);
-      pTop = pL = pR = pBot = pINSIDE = kFALSE;
-      if ((TMath::Abs(px - pTx) < kMaxDiff) &&
-          (TMath::Abs(py - pTy) < kMaxDiff)) {             // top edge
-         pTop = kTRUE;
-         gPad->SetCursor(kTopSide);
+      px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
+      py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
+      pTy = parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2()));
+      pBy = parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2()));
+      pLx = parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1()));
+      pRx = parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1()));
+      r1 = (pRx - pLx) / 2;
+      r2 = (pBy - pTy) / 2;
+      mode = pNone;
+      if ((TMath::Abs(px - px1) < kMaxDiff) && (TMath::Abs(py - pTy) < kMaxDiff)) {
+         mode = pTop; // top edge
+         parent.SetCursor(kTopSide);
+      } else if ((TMath::Abs(px - px1) < kMaxDiff) && (TMath::Abs(py - pBy) < kMaxDiff)) {
+         mode = pBot; // bottom edge
+         parent.SetCursor(kBottomSide);
+      } else if ((TMath::Abs(py - py1) < kMaxDiff) && (TMath::Abs(px - pLx) < kMaxDiff)) {
+         mode = pL; // left edge
+         parent.SetCursor(kLeftSide);
+      } else if ((TMath::Abs(py - py1) < kMaxDiff) && (TMath::Abs(px - pRx) < kMaxDiff)) {
+         mode = pR; // right edge
+         parent.SetCursor(kRightSide);
+      } else {
+         mode = pINSIDE;
+         parent.SetCursor(kMove);
       }
-      else
-      if ((TMath::Abs(px - pBx) < kMaxDiff) &&
-          (TMath::Abs(py - pBy) < kMaxDiff)) {             // bottom edge
-         pBot = kTRUE;
-         gPad->SetCursor(kBottomSide);
-      }
-      else
-      if ((TMath::Abs(py - pLy) < kMaxDiff) &&
-          (TMath::Abs(px - pLx) < kMaxDiff)) {             // left edge
-         pL = kTRUE;
-         gPad->SetCursor(kLeftSide);
-      }
-      else
-      if ((TMath::Abs(py - pRy) < kMaxDiff) &&
-          (TMath::Abs(px - pRx) < kMaxDiff)) {             // right edge
-         pR = kTRUE;
-         gPad->SetCursor(kRightSide);
-      }
-      else {pINSIDE= kTRUE; gPad->SetCursor(kMove); }
-      pxold = px;  pyold = py;
+      pxold = px;
+      pyold = py;
 
       break;
 
    case kArrowKeyRelease:
    case kButton1Motion:
-      if (!opaque)
-      {
-         gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
-         gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
-         gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
-         gVirtualX->DrawLine(pRx+4, py1-4, pRx+4, py1+4);
-         gVirtualX->DrawLine(pLx+4, py1+4, pLx-4, py1+4);
-         gVirtualX->DrawLine(pLx-4, py1+4, pLx-4, py1-4);
-         gVirtualX->DrawLine(pLx-4, py1-4, pLx+4, py1-4);
-         gVirtualX->DrawLine(pLx+4, py1-4, pLx+4, py1+4);
-         gVirtualX->DrawLine(px1+4, pBy+4, px1-4, pBy+4);
-         gVirtualX->DrawLine(px1-4, pBy+4, px1-4, pBy-4);
-         gVirtualX->DrawLine(px1-4, pBy-4, px1+4, pBy-4);
-         gVirtualX->DrawLine(px1+4, pBy-4, px1+4, pBy+4);
-         gVirtualX->DrawLine(px1+4, pTy+4, px1-4, pTy+4);
-         gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
-         gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
-         gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
-         for (Int_t i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
+      if (!opaque) {
+         pp->SetAttLine(*this);
+         std::vector<Double_t> x, y;
+         FillPoints(parent, x, y, fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta);
+         pp->DrawPolyLine(x.size(), x.data(), y.data());
+
+         paint_marker(-1,  0);
+         paint_marker( 1,  0);
+         paint_marker( 0, -1);
+         paint_marker( 0,  1);
       }
-      if (pTop) {
-         sav1 = py1;
-         sav2 = r2;
+      if (mode == pTop) {
+         Int_t sav1 = py1;
+         Int_t sav2 = r2;
          py1 += (py - pyold)/2;
          r2 -= (py - pyold)/2;
          if (TMath::Abs(pyold-py)%2==1) impair++;
-         if (py-pyold>0) sig=+1;
-         else sig=-1;
+         Int_t sig = py - pyold > 0 ? 1 : -1;
          if (impair==2) { impair = 0; py1 += sig; r2 -= sig;}
          if (py1 > pBy-kMinSize) {py1 = sav1; r2 = sav2; py = pyold;}
-      }
-      if (pBot) {
-         sav1 = py1;
-         sav2 = r2;
+      } else if (mode == pBot) {
+         Int_t sav1 = py1;
+         Int_t sav2 = r2;
          py1 += (py - pyold)/2;
          r2 += (py - pyold)/2;
          if (TMath::Abs(pyold-py)%2==1) impair++;
-         if (py-pyold>0) sig=+1;
-         else sig=-1;
+         Int_t sig = py - pyold > 0 ? 1 : -1;
          if (impair==2) { impair = 0; py1 += sig; r2 += sig;}
          if (py1 < pTy+kMinSize) {py1 = sav1; r2 = sav2; py = pyold;}
-      }
-      if (pL) {
-         sav1 = px1;
-         sav2 = r1;
+      } else if (mode == pL) {
+         Int_t sav1 = px1;
+         Int_t sav2 = r1;
          px1 += (px - pxold)/2;
          r1 -= (px - pxold)/2;
          if (TMath::Abs(pxold-px)%2==1) impair++;
-         if (px-pxold>0) sig=+1;
-         else sig=-1;
+         Int_t sig = px - pxold > 0 ? 1 : -1;
          if (impair==2) { impair = 0; px1 += sig; r1 -= sig;}
          if (px1 > pRx-kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
-      }
-      if (pR) {
-         sav1 = px1;
-         sav2 = r1;
+      } else if (mode == pR) {
+         Int_t sav1 = px1;
+         Int_t sav2 = r1;
          px1 += (px - pxold)/2;
          r1 += (px - pxold)/2;
          if (TMath::Abs(pxold-px)%2==1) impair++;
-         if (px-pxold>0) sig=+1;
-         else sig=-1;
+         Int_t sig = px - pxold > 0 ? 1 : -1;
          if (impair==2) { impair = 0; px1 += sig; r1 += sig;}
          if (px1 < pLx+kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
       }
-      if (pTop || pBot || pL || pR) {
-         if (!opaque) {
-            dphi = (fPhimax-fPhimin)*kPI/(180*np);
-            ct   = TMath::Cos(kPI*fTheta/180);
-            st   = TMath::Sin(kPI*fTheta/180);
-            for (Int_t i = 0; i < np; i++) {
-               angle = fPhimin*kPI/180 + Double_t(i)*dphi;
-               dx    = r1*TMath::Cos(angle);
-               dy    = r2*TMath::Sin(angle);
-               x[i]  = px1 + Int_t(dx*ct - dy*st);
-               y[i]  = py1 + Int_t(dx*st + dy*ct);
-            }
-            if (fPhimax-fPhimin >= 360 ) {
-               x[np] = x[0];
-               y[np] = y[0];
-               npe = np;
-            } else {
-               x[np]   = px1;
-               y[np]   = py1;
-               x[np+1] = x[0];
-               y[np+1] = y[0];
-               npe = np + 1;
-            }
-            gVirtualX->SetLineColor(-1);
-            TAttLine::Modify();
-            for (Int_t i=0;i<npe;i++)
-               gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
+      if (mode == pTop || mode == pBot || mode == pL || mode == pR) {
+         SetX1(GetXCoord(px1, kFALSE, kTRUE));
+         SetY1(GetYCoord(py1, kFALSE, kTRUE));
+         SetR1(TMath::Abs(GetXCoord(px1+r1, kFALSE, kTRUE) - GetXCoord(px1-r1, kFALSE, kTRUE)) / 2);
+         SetR2(TMath::Abs(GetYCoord(py1-r2, kFALSE, kTRUE) - GetYCoord(py1+r2, kFALSE, kTRUE)) / 2);
+
+         if (opaque) {
+            if (mode == pTop) parent.ShowGuidelines(this, event, 't', true);
+            if (mode == pBot) parent.ShowGuidelines(this, event, 'b', true);
+            if (mode == pL) parent.ShowGuidelines(this, event, 'l', true);
+            if (mode == pR) parent.ShowGuidelines(this, event, 'r', true);
+            parent.ModifiedUpdate();
          }
-         else
-         {
-            SetX1(GetXCoord(px1, kFALSE, kTRUE));
-            SetY1(GetYCoord(py1, kFALSE, kTRUE));
-            SetR1(TMath::Abs(GetXCoord(px1+r1, kFALSE, kTRUE) - GetXCoord(px1-r1, kFALSE, kTRUE)) / 2);
-            SetR2(TMath::Abs(GetYCoord(py1-r2, kFALSE, kTRUE) - GetYCoord(py1+r2, kFALSE, kTRUE)) / 2);
-            if (pTop) gPad->ShowGuidelines(this, event, 't', true);
-            if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
-            if (pL) gPad->ShowGuidelines(this, event, 'l', true);
-            if (pR) gPad->ShowGuidelines(this, event, 'r', true);
-            gPad->ModifiedUpdate();
-         }
-      }
-      if (pINSIDE) {
-         if (!opaque){
-            dpx  = px-pxold;  dpy = py-pyold;
-            px1 += dpx; py1 += dpy;
-            for (Int_t i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
-            for (Int_t i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-         }
-         else {
-            SetX1(gPad->AbsPixeltoX(px)+sdx);
-            SetY1(gPad->AbsPixeltoY(py)+sdy);
-            gPad->ShowGuidelines(this, event, 'i', true);
-            gPad->ModifiedUpdate();
+      } else if (mode == pINSIDE) {
+         px1 = px + sdx;
+         py1 = py + sdy;
+         SetX1(parent.AbsPixeltoX(px1));
+         SetY1(parent.AbsPixeltoY(py1));
+         if (opaque){
+            parent.ShowGuidelines(this, event, 'i', true);
+            parent.ModifiedUpdate();
          }
       }
       if (!opaque){
-         pTx = pBx = px1;
-         pRx = px1+r1;
-         pLx = px1-r1;
-         pRy = pLy = py1;
-         pTy = py1-r2;
-         pBy = py1+r2;
-         gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
-         gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
-         gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
-         gVirtualX->DrawLine(pRx+4, py1-4, pRx+4, py1+4);
-         gVirtualX->DrawLine(pLx+4, py1+4, pLx-4, py1+4);
-         gVirtualX->DrawLine(pLx-4, py1+4, pLx-4, py1-4);
-         gVirtualX->DrawLine(pLx-4, py1-4, pLx+4, py1-4);
-         gVirtualX->DrawLine(pLx+4, py1-4, pLx+4, py1+4);
-         gVirtualX->DrawLine(px1+4, pBy+4, px1-4, pBy+4);
-         gVirtualX->DrawLine(px1-4, pBy+4, px1-4, pBy-4);
-         gVirtualX->DrawLine(px1-4, pBy-4, px1+4, pBy-4);
-         gVirtualX->DrawLine(px1+4, pBy-4, px1+4, pBy+4);
-         gVirtualX->DrawLine(px1+4, pTy+4, px1-4, pTy+4);
-         gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
-         gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
-         gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
+         pp->SetAttLine(*this);
+         std::vector<Double_t> x, y;
+         FillPoints(parent, x, y, fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta);
+         pp->DrawPolyLine(x.size(), x.data(), y.data());
+
+         paint_marker(-1,  0);
+         paint_marker( 1,  0);
+         paint_marker( 0, -1);
+         paint_marker( 0,  1);
       }
       pxold = px;
       pyold = py;
@@ -475,30 +372,21 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
         gROOT->SetEscape(kFALSE);
         if (opaque) {
-            gPad->ShowGuidelines(this, event);
+            parent.ShowGuidelines(this, event);
             SetX1(oldX1);
             SetY1(oldY1);
             SetR1(oldR1);
             SetR2(oldR2);
-            gPad->ModifiedUpdate();
+            parent.ModifiedUpdate();
          }
          break;
       }
 
-      if (opaque) {
-         gPad->ShowGuidelines(this, event);
-      } else {
-         fX1 = gPad->AbsPixeltoX(px1);
-         fY1 = gPad->AbsPixeltoY(py1);
-         fBy = gPad->AbsPixeltoY(py1+r2);
-         fTy = gPad->AbsPixeltoY(py1-r2);
-         fLx = gPad->AbsPixeltoX(px1+r1);
-         fRx = gPad->AbsPixeltoX(px1-r1);
-         fR1 = TMath::Abs(fRx-fLx)/2;
-         fR2 = TMath::Abs(fTy-fBy)/2;
-         gPad->Modified(kTRUE);
-         gVirtualX->SetLineColor(-1);
-      }
+      if (opaque)
+         parent.ShowGuidelines(this, event);
+      else
+         parent.Modified(kTRUE);
+      mode = pNone;
    }
 }
 
