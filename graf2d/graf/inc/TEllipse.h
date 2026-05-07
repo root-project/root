@@ -17,6 +17,7 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttBBox2D.h"
+#include <vector>
 
 class TPoint;
 
@@ -30,6 +31,9 @@ protected:
    Double_t    fPhimin;    ///< Minimum angle (degrees)
    Double_t    fPhimax;    ///< Maximum angle (degrees)
    Double_t    fTheta;     ///< Rotation angle (degrees)
+
+   Bool_t FillPoints(TVirtualPad &pad, std::vector<Double_t> &x, std::vector<Double_t> &y,
+                     Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, Double_t theta);
 
 public:
    // TEllipse status bits
