@@ -383,8 +383,6 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora42
-            overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: fedora43
           - image: alma8
           - image: alma9
