@@ -548,8 +548,51 @@ void TEllipse::ls(Option_t *) const
 
 void TEllipse::Paint(Option_t *option)
 {
-   PaintEllipse(fX1,fY1,fR1,fR2,fPhimin,fPhimax,fTheta,option);
+   PaintEllipse(fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta, option);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill points which can be used for the painting
+/// Return true if full 360 ellipse is created
+
+Bool_t TEllipse::FillPoints(TVirtualPad &pad, std::vector<Double_t> &x, std::vector<Double_t> &y,
+                           Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, Double_t theta)
+{
+   const Int_t np = 200;
+
+   Double_t phi1 = TMath::Min(phimin, phimax);
+   Double_t phi2 = TMath::Max(phimin, phimax);
+
+   //set number of points approximatively proportional to the ellipse circumference
+   Double_t circ = kPI*(r1+r2)*(phi2-phi1)/360;
+   Int_t n = (Int_t)(np*circ/((pad.GetX2() - pad.GetX1())+(pad.GetY2()-pad.GetY1())));
+   if (n < 8) n = 8;
+   if (n > np) n = np;
+   Bool_t full_circle = phi2-phi1 >= 360;
+
+   x.resize(n + (full_circle ? 1 : 3));
+   y.resize(n + (full_circle ? 1 : 3));
+
+   Double_t dphi = (phi2-phi1)*kPI/(180*n);
+   Double_t ct   = TMath::Cos(kPI*theta/180);
+   Double_t st   = TMath::Sin(kPI*theta/180);
+   for (Int_t i = 0; i <= n; i++) {
+      Double_t angle = phi1*kPI/180 + i*dphi;
+      Double_t dx    = r1*TMath::Cos(angle);
+      Double_t dy    = r2*TMath::Sin(angle);
+      x[i]  = pad.XtoPad(x1 + dx*ct - dy*st);
+      y[i]  = pad.YtoPad(y1 + dx*st + dy*ct);
+   }
+   if (!full_circle) {
+      x[n+1] = pad.XtoPad(x1);
+      y[n+1] = pad.YtoPad(y1);
+      x[n+2] = x[0];
+      y[n+2] = y[0];
+   }
+
+   return full_circle;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this ellipse with new coordinates.
@@ -559,45 +602,21 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                             Option_t *option)
 {
    if (!gPad) return;
-   const Int_t np = 200;
-   static Double_t x[np+3], y[np+3];
-   TAttLine::Modify();  //Change line attributes only if necessary
-   TAttFill::Modify();  //Change fill attributes only if necessary
 
-   Double_t phi1 = TMath::Min(phimin,phimax);
-   Double_t phi2 = TMath::Max(phimin,phimax);
+   std::vector<Double_t> x, y;
+   Bool_t full_circle = FillPoints(*gPad, x, y, x1, y1, r1, r2, phimin, phimax, theta);
 
-   //set number of points approximatively proportional to the ellipse circumference
-   Double_t circ = kPI*(r1+r2)*(phi2-phi1)/360;
-   Int_t n = (Int_t)(np*circ/((gPad->GetX2()-gPad->GetX1())+(gPad->GetY2()-gPad->GetY1())));
-   if (n < 8) n= 8;
-   if (n > np) n = np;
-   Double_t angle,dx,dy;
-   Double_t dphi = (phi2-phi1)*kPI/(180*n);
-   Double_t ct   = TMath::Cos(kPI*theta/180);
-   Double_t st   = TMath::Sin(kPI*theta/180);
-   for (Int_t i=0;i<=n;i++) {
-      angle = phi1*kPI/180 + Double_t(i)*dphi;
-      dx    = r1*TMath::Cos(angle);
-      dy    = r2*TMath::Sin(angle);
-      x[i]  = gPad->XtoPad(x1 + dx*ct - dy*st);
-      y[i]  = gPad->YtoPad(y1 + dx*st + dy*ct);
-   }
-   TString opt = option;
-   opt.ToLower();
-   if (phi2-phi1 >= 360 ) {
-      if (GetFillStyle()) gPad->PaintFillArea(n,x,y);
-      if (GetLineStyle()) gPad->PaintPolyLine(n+1,x,y);
-   } else {
-      x[n+1] = gPad->XtoPad(x1);
-      y[n+1] = gPad->YtoPad(y1);
-      x[n+2] = x[0];
-      y[n+2] = y[0];
-      if (GetFillStyle()) gPad->PaintFillArea(n+2,x,y);
-      if (GetLineStyle()) {
-         if (TestBit(kNoEdges) || opt.Contains("only")) gPad->PaintPolyLine(n+1,x,y);
-         else                                           gPad->PaintPolyLine(n+3,x,y);
-      }
+   TAttFill::ModifyOn(*gPad);  //Change fill attributes only if necessary
+   TAttLine::ModifyOn(*gPad);  //Change line attributes only if necessary
+
+   if (GetFillStyle() > 0)
+      gPad->PaintFillArea(x.size() - 1, x.data(), y.data());
+
+   if (GetLineStyle() > 0) {
+      TString opt = option;
+      opt.ToLower();
+      Bool_t less_points = !full_circle && (TestBit(kNoEdges) || opt.Contains("only"));
+      gPad->PaintPolyLine(x.size() - (less_points ? 2 : 0), x.data(), y.data());
    }
 }
 
