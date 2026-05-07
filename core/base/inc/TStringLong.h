@@ -27,7 +27,7 @@
 
 #include "TString.h"
 
-class TStringLong : public TString {
+class R__DEPRECATED(7, 00, "Use TString instead") TStringLong : public TString {
 
 public:
    TStringLong();                       // Null string
@@ -49,6 +49,6 @@ public:
    Int_t    Sizeof() const override;
 
    ClassDefOverride(TStringLong,1)  //Long string class (more than 255 chars)
-} R__ALWAYS_SUGGEST_ALTERNATIVE("TString");
+};
 
 #endif
