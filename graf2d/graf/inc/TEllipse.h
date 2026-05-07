@@ -69,7 +69,6 @@ public:
    virtual void         SetY1(Double_t y1) {fY1=y1;} // *MENU*
    Rectangle_t          GetBBox() override;
    TPoint               GetBBoxCenter() override;
-   void                 SetBBoxCenter(const TPoint &p) override;
    void                 SetBBoxCenterX(const Int_t x) override;
    void                 SetBBoxCenterY(const Int_t y) override;
    void                 SetBBoxX1(const Int_t x) override;
