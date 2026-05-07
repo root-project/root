@@ -8,6 +8,7 @@
 #include <RooAddPdf.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
+#include <RooDataSet.h>
 #include <RooExponential.h>
 #include <RooGenericPdf.h>
 #include <RooGaussian.h>
@@ -26,6 +27,8 @@
 #include <RooWorkspace.h>
 #include <RooFormulaVar.h>
 #include <RooFit/ModelConfig.h>
+
+#include <cmath>
 
 #include <TROOT.h>
 
@@ -638,4 +641,204 @@ TEST(RooFitHS3, RegisterExporterByClassName)
    // Cleanup for other tests, also making sure the expected number of
    // exporters is removed.
    EXPECT_EQ(RooFit::JSONIO::removeExporters("TestExporter"), 4);
+}
+
+// Round-trip an unbinned RooDataSet and verify that the observable's range
+// (min/max) is preserved through JSON. The "axes" node of an unbinned dataset
+// is read back via min/max/nbins fields, so non-constant variables must export
+// these fields directly on the variable node.
+TEST(RooFitHS3, UnbinnedDatasetAxisRange)
+{
+   constexpr double xMin = -2.5;
+   constexpr double xMax = 7.5;
+
+   RooWorkspace ws1{"ws_unbinned"};
+   {
+      RooRealVar x{"x", "x", xMin, xMax};
+      RooDataSet ds{"ds", "unbinned dataset", RooArgSet{x}};
+      for (double val : {-1.0, 0.5, 2.0, 3.5, 6.0}) {
+         x.setVal(val);
+         ds.add(RooArgSet{x});
+      }
+      ws1.import(ds, RooFit::Silence());
+   }
+
+   const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+
+   RooWorkspace ws2{"ws_unbinned_2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json1));
+
+   auto *ds2 = dynamic_cast<RooDataSet *>(ws2.data("ds"));
+   ASSERT_NE(ds2, nullptr);
+   EXPECT_EQ(ds2->numEntries(), 5);
+
+   RooRealVar *x2 = ws2.var("x");
+   ASSERT_NE(x2, nullptr);
+   EXPECT_DOUBLE_EQ(x2->getMin(), xMin);
+   EXPECT_DOUBLE_EQ(x2->getMax(), xMax);
+
+   // The exported "axes" node of an unbinned dataset must carry the
+   // observable range so the file is self-describing. Before the fix, only
+   // the variable name and current value were written there (the range was
+   // only present in the separate "domains" block).
+   const auto axesPos = json1.find("\"axes\":[{");
+   ASSERT_NE(axesPos, std::string::npos) << json1;
+   const auto axesEnd = json1.find("}]", axesPos);
+   ASSERT_NE(axesEnd, std::string::npos) << json1;
+   const std::string axesNode = json1.substr(axesPos, axesEnd - axesPos);
+   EXPECT_NE(axesNode.find("\"min\":-2.5"), std::string::npos) << axesNode;
+   EXPECT_NE(axesNode.find("\"max\":7.5"), std::string::npos) << axesNode;
+}
+
+// HistFactory channels with samples that have a zero-yield bin together with a
+// staterror modifier used to produce NaN gamma errors because the relative
+// error is computed as sqrt(sumW2)/sumW. Importing such a channel should now
+// produce a finite (zero) error for that bin.
+TEST(RooFitHS3, HistFactoryZeroYieldBin)
+{
+   const std::string jsonStr = R"({
+      "metadata": {"hs3_version": "0.1.90"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 0.0]},
+                  "modifiers": [
+                     {"name": "mu", "type": "normfactor"},
+                     {"name": "mcstat", "type": "staterror"}
+                  ]
+               }
+            ]
+         }
+      ],
+      "data": [
+         {
+            "name": "obsData_channel0",
+            "type": "binned",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "contents": [10.0, 0.0]
+         }
+      ]
+   })";
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws_zero_yield"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(jsonStr));
+
+   // The mc_stat ParamHistFunc is created with one gamma per bin. Their nominal
+   // constraint values are derived from the relative bin error. For the
+   // zero-yield bin the new behaviour avoids the 0/0 NaN and uses 0 instead.
+   bool foundFiniteNomGamma = false;
+   for (auto *arg : ws.allVars()) {
+      const std::string name = arg->GetName();
+      if (name.find("nom_gamma_stat_channel0") == std::string::npos)
+         continue;
+      auto *rrv = static_cast<RooRealVar *>(arg);
+      EXPECT_TRUE(std::isfinite(rrv->getVal())) << "Non-finite nominal gamma value for " << name;
+      foundFiniteNomGamma = true;
+   }
+   EXPECT_TRUE(foundFiniteNomGamma) << "No nominal gamma stat parameters were created";
+
+   // The gamma stat parameters themselves must be finite as well.
+   for (auto *arg : ws.allVars()) {
+      const std::string name = arg->GetName();
+      if (name.rfind("gamma_stat_channel0", 0) != 0)
+         continue;
+      auto *rrv = static_cast<RooRealVar *>(arg);
+      EXPECT_TRUE(std::isfinite(rrv->getVal())) << "Non-finite gamma value for " << name;
+      EXPECT_TRUE(std::isfinite(rrv->getMin())) << "Non-finite gamma min for " << name;
+      EXPECT_TRUE(std::isfinite(rrv->getMax())) << "Non-finite gamma max for " << name;
+   }
+}
+
+// Snapshot export must keep all variables that any pdf depends on, even when
+// the variable is not in the set of separately exported objects. Global
+// observables of HistFactory constraint pdfs (the nominal "nom_*" parameters)
+// are exactly such variables: the HistFactory exporter explicitly skips them
+// when collecting parameters to export, but pdfs still depend on them.
+TEST(RooFitHS3, SnapshotKeepsGlobalObservables)
+{
+   const std::string jsonStr = R"({
+      "metadata": {"hs3_version": "0.1.90"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
+                  "modifiers": [
+                     {"name": "mu", "type": "normfactor"},
+                     {"name": "mcstat", "type": "staterror"}
+                  ]
+               }
+            ]
+         }
+      ],
+      "data": [
+         {
+            "name": "obsData_channel0",
+            "type": "binned",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "contents": [10.0, 20.0]
+         }
+      ]
+   })";
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws1{"ws_snap"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
+
+   // Collect the "nom_*" global observables created on import. The constraint
+   // pdfs of the staterror modifier depend on them, but the HistFactory
+   // exporter does not list them as top-level exported objects.
+   RooArgSet globs;
+   for (auto *arg : ws1.allVars()) {
+      const std::string name = arg->GetName();
+      if (name.rfind("nom_", 0) == 0) {
+         globs.add(*arg);
+      }
+   }
+   ASSERT_GT(globs.size(), 0u) << "No nominal global observables found in workspace";
+
+   // Save a snapshot containing only the global observables. With the old
+   // filter (require name in exportedObjectNames AND pdf dependence), this
+   // snapshot would be dropped on export.
+   const char *snapName = "globsSnap";
+   ws1.saveSnapshot(snapName, globs, true);
+
+   const std::string exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+
+   // The exported JSON should mention the snapshot name and at least one of
+   // the global observables.
+   EXPECT_NE(exported.find(snapName), std::string::npos) << "Snapshot name missing from exported JSON";
+   EXPECT_NE(exported.find("nom_gamma"), std::string::npos) << "Global observable missing from exported snapshot block";
+
+   // Re-import and check that the snapshot survived the round-trip with all
+   // global observables included.
+   RooWorkspace ws2{"ws_snap_2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+
+   const RooArgSet *snap = ws2.getSnapshot(snapName);
+   ASSERT_NE(snap, nullptr) << "Snapshot was not preserved through JSON round-trip";
+
+   for (auto *arg : globs) {
+      EXPECT_NE(snap->find(arg->GetName()), nullptr) << "Snapshot is missing pdf-dependent variable " << arg->GetName();
+   }
 }
