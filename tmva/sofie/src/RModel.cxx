@@ -1158,6 +1158,7 @@ void RModel::GenerateOutput()
          // Use the session member (fXxx) when any dim is a runtime-computed identifier
          // (e.g. NonZero count). For expression-type dims derived from input shapes
          // (e.g. "((W+-3)/2+1)"), use the expression directly.
+         // for input shape parameters we don't need to use the session member since it is passed as argument to the infer function and it is not a runtime computed value
          bool hasRuntimeParam = false;
          for (auto const &dim : GetDynamicTensorShape(name)) {
             if (dim.isParam && IsIdentifier(dim.param) && !IsInputTensorShapeParam(dim.param))

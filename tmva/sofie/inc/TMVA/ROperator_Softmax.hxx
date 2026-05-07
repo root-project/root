@@ -62,12 +62,14 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName) override {
-      OpName = "op_" + OpName;
+   std::string Generate(std::string opName) override {
+      opName = "op_" + opName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Operator Softmax called to Generate without being initialized first");
       }
       std::stringstream out;
+       out << "///------- Softmax " << opName << " ---> " << fNY << " "
+           << ConvertDimShapeToString(fShape) << "\n" << std::endl;
       size_t size = fShape.size();
       auto length_str = ConvertDimShapeToLength(fShape);
       size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
@@ -85,7 +87,7 @@ public:
             num_rows = "(" + length_str + ") / (" + axis_size + ")";
          }
 
-         out << "\n" << SP << "//------ SOFTMAX - " << size << "  " << length_str << "  " << axis << "\n";
+         out << SP << "//-----  softmax axis is last one - " << axis << "\n";
          out << SP << "for (int i = 0; i < " << num_rows << "; ++i) {\n";
          out << SP << SP << "size_t offset = i * " << axis_size << ";\n";
          out << SP << SP << fType << " const * x_ptr = &tensor_" << fNX << "[offset];\n";
@@ -111,6 +113,7 @@ public:
          out << SP << "}\n";
 
       } else {
+         // generic case for any axis
          auto stride = UTILITY::ComputeStrideFromShape(fShape);
          size_t k = 0;
          std::vector<std::string> l(size);
@@ -118,7 +121,7 @@ public:
             if (i != axis) {
                for (size_t j = 0; j < k; j++) out << SP;
                l[i] = std::string("i") + std::to_string(i);
-               out << "for (int " << l[i] << " = 0; " << l[i] << " < " << fShape[i] << "; " << l[i] << "++) {\n";
+               out << SP << "for (int " << l[i] << " = 0; " << l[i] << " < " << fShape[i] << "; " << l[i] << "++) {\n";
                k++;
             }
          }
@@ -167,7 +170,8 @@ public:
          out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
          for (size_t j = 0; j < size; j++) out << SP;
          out << "size_t id = index + i";
-         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ");\n";
+         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+         out << ";\n";
          for (size_t j = 0; j < size; j++) out << SP;
          out << "tensor_" << fNY << "[id] /= sum;\n";
          if (fLogSoftmax) {

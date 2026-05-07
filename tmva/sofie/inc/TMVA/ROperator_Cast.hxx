@@ -66,8 +66,9 @@ public:
       if (!fIsOutputConstant)
          model.AddIntermediateTensor(fNY, fType, fShape);
       if (model.Verbose()) {
-         std::cout << "Cast : " << ConvertTypeToString(inputType) << " " << fNX << " -> " << ConvertTypeToString(fType) << " for " << fNY
-                  << " shape " << ConvertDimShapeToString(fShape);
+         std::cout << "Cast : " << ConvertTypeToString(inputType) << " " << fNX << " -> " << ConvertTypeToString(fType);
+         if (fType == ETensorType::BOOL) std::cout << " (converted from BOOL) ";
+         std::cout << " for " << fNY << " shape " << ConvertDimShapeToString(fShape);
          if (fIsOutputConstant) std::cout << " (constant) ";
          std::cout << std::endl;
       }
@@ -87,7 +88,11 @@ public:
 
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
 
-      out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< ConvertTypeToString(fType) << ">(tensor_" << fNX << "[id]);\n";
+      // need to handle bool case separatly since casting to uint8 will not give right result
+      if (fType == ETensorType::BOOL)
+         out << SP << SP << "tensor_" << fNY << "[id] = (tensor_" << fNX << "[id] != 0) ? 1 : 0;\n";
+      else
+         out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< ConvertTypeToString(fType) << ">(tensor_" << fNX << "[id]);\n";
 
       out << SP << "}\n";
       return out.str();

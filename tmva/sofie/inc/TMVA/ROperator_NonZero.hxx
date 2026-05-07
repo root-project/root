@@ -101,6 +101,7 @@ public:
          // declare the parameter for number of non zero elements, used when output is not constant
          auto inputLength = ConvertDimShapeToLength(fShapeX);
          std::string codeDecl = SP + "size_t " + fNonZeroParam + " = " + inputLength + ";\n";
+         codeDecl += SP + "fV_NonZero_" + fNX + " = " + fNonZeroParam + ";\n";
          model.AddExtraCodeForDimShapes(codeDecl);
 
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fShapeY);
@@ -108,6 +109,13 @@ public:
             std::cout << "NonZero : " << fNX << " -> " << fNY << " " << ConvertDimShapeToString(fShapeY) << std::endl;
          }
       }
+   }
+
+   std::string GenerateSessionMembersCode(std::string /*opName*/) override {
+      if (fIsOutputConstant) return "";
+      std::stringstream out;
+      out << SP << "size_t fV_NonZero_" << fNX << " = 0;\n";
+      return out.str();
    }
 
 
