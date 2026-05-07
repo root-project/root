@@ -221,7 +221,7 @@ void EnsureValidSnapshotOutput(const ROOT::RDF::RSnapshotOptions &opts, const st
       return;
 
    // output file opened in "update" mode: must check whether target object name is already present in file
-   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "update")};
+   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION")};
    if (!outFile || outFile->IsZombie())
       throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
 
@@ -338,6 +338,15 @@ auto GetSnapshotCompressionSettings(const ROOT::RDF::RSnapshotOptions &options)
       throw std::invalid_argument("RDataFrame::Snapshot: unrecognized output format");
    }
 }
+
+std::string ModeWithoutGlobalRegistration(const std::string &mode)
+{
+   if (mode.find("_WITHOUT_GLOBALREGISTRATION") != std::string::npos) {
+      return mode;
+   }
+   return mode + "_WITHOUT_GLOBALREGISTRATION";
+}
+
 } // namespace
 
 ROOT::Internal::RDF::RBranchData::RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine,
@@ -508,8 +517,8 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::SetEmptyBranches(TTree *in
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::Initialize()
 {
-   fOutputFile.reset(
-      TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"", GetSnapshotCompressionSettings(fOptions)));
+   fOutputFile.reset(TFile::Open(fFileName.c_str(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str(),
+                                 /*ftitle=*/"", GetSnapshotCompressionSettings(fOptions)));
    if (!fOutputFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
@@ -748,8 +757,8 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::SetEmptyBranches(TTree *
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Initialize()
 {
    auto outFile =
-      std::unique_ptr<TFile>{TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(),
-                                         GetSnapshotCompressionSettings(fOptions))};
+      std::unique_ptr<TFile>{TFile::Open(fFileName.c_str(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str(),
+                                         /*ftitle=*/fFileName.c_str(), GetSnapshotCompressionSettings(fOptions))};
    if (!outFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
    fOutputFile = outFile.get();
@@ -911,7 +920,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
    writeOptions.SetEnablePageChecksums(fOptions.fEnablePageChecksums);
    writeOptions.SetEnableSamePageMerging(fOptions.fEnableSamePageMerging);
 
-   fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
+   fOutputFile.reset(TFile::Open(fFileName.c_str(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str()));
    if (!fOutputFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
@@ -1125,7 +1134,8 @@ ROOT::Internal::RDF::SnapshotHelperWithVariations::SnapshotHelperWithVariations(
 
    TDirectory::TContext fileCtxt;
    fOutputHandle = std::make_shared<SnapshotOutputWriter>(
-      TFile::Open(filename.data(), fOptions.fMode.c_str(), /*ftitle=*/"", GetSnapshotCompressionSettings(fOptions)));
+      TFile::Open(filename.data(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str(), /*ftitle=*/"",
+                  GetSnapshotCompressionSettings(fOptions)));
    if (!fOutputHandle->fFile)
       throw std::runtime_error(std::string{"Snapshot: could not create output file "} + std::string{filename});
 
