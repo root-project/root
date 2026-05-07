@@ -20,8 +20,8 @@ class TAttBBox2D {
 
 protected:
 
-   Double_t GetXCoord(const Int_t x, Bool_t is_ndc = kFALSE);
-   Double_t GetYCoord(const Int_t y, Bool_t is_ndc = kFALSE);
+   Double_t GetXCoord(const Int_t x, Bool_t is_ndc = kFALSE, Bool_t is_absolute = kFALSE);
+   Double_t GetYCoord(const Int_t y, Bool_t is_ndc = kFALSE, Bool_t is_absolute = kFALSE);
 
 public:
    virtual ~TAttBBox2D();
