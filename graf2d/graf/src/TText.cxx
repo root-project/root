@@ -425,10 +425,15 @@ void TText::GetControlBox(Int_t x, Int_t y, Double_t theta,
 {
    Short_t halign = fTextAlign/10;          // horizontal alignment
    Short_t valign = fTextAlign - 10*halign; // vertical alignment
-   UInt_t cBoxW, cBoxH;                     // control box width and heigh
+   UInt_t cBoxW = 0, cBoxH = 0;                     // control box width and heigh
    UInt_t Dx = 0, Dy = 0;                   // delta along x and y to align the box
 
-   GetBoundingBox(cBoxW, cBoxH);
+   if (gPad) {
+      Double_t tsize = GetTextSizePixels(*gPad);
+      auto pp = gPad->GetPainter();
+      if (pp)
+         pp->GetTextExtent(GetTextFont(), tsize, cBoxW, cBoxH, GetTitle());
+   }
 
    // compute the translations (Dx, Dy) required by the alignments
    switch (halign) {
@@ -501,8 +506,8 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
          if (cBoxY[i] < y1) y1 = cBoxY[i];
          if (cBoxY[i] > y2) y2 = cBoxY[i];
       }
-      w = x2-x1;
-      h = y2-y1;
+      w = x2 - x1;
+      h = y2 - y1;
    } else {
       Double_t tsize = GetTextSizePixels(*gPad);
       auto pp = gPad->GetPainter();
@@ -794,7 +799,7 @@ void TText::Streamer(TBuffer &R__b)
 
 Rectangle_t TText::GetBBox()
 {
-   Rectangle_t BBox{0, 0, 0, 0};
+   Rectangle_t bbox{0, 0, 0, 0};
    if (gPad) {
       UInt_t w, h;
       Int_t Dx = 0, Dy = 0;
@@ -814,13 +819,17 @@ Rectangle_t TText::GetBBox()
       case 2: Dy = h / 2; break;
       case 3: Dy = 0; break;
       }
-
-      BBox.fX = gPad->XtoPixel(fX) - Dx;
-      BBox.fY = gPad->YtoPixel(fY) - Dy;
-      BBox.fWidth = w;
-      BBox.fHeight = h;
+      if (TestBit(kTextNDC)) {
+         bbox.fX = gPad->UtoPixel(GetX()) - Dx;
+         bbox.fY = gPad->VtoPixel(GetY()) - Dy;
+      } else {
+         bbox.fX = gPad->XtoPixel(gPad->XtoPad(GetX())) - Dx;
+         bbox.fY = gPad->YtoPixel(gPad->YtoPad(GetY())) - Dy;
+      }
+      bbox.fWidth = w;
+      bbox.fHeight = h;
    }
-   return BBox;
+   return bbox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -830,20 +839,15 @@ TPoint TText::GetBBoxCenter()
 {
    TPoint p(0, 0);
    if (gPad) {
-      p.SetX(gPad->XtoPixel(fX));
-      p.SetY(gPad->YtoPixel(fY));
+      if (TestBit(kTextNDC)) {
+         p.SetX(gPad->UtoPixel(GetX()));
+         p.SetY(gPad->VtoPixel(GetY()));
+      } else {
+         p.SetX(gPad->XtoPixel(gPad->XtoPad(GetX())));
+         p.SetY(gPad->YtoPixel(gPad->YtoPad(GetY())));
+      }
    }
    return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the point given by Alignment as 'center'
-
-void TText::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   this->SetX(gPad->PixeltoX(p.GetX()));
-   this->SetY(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -851,8 +855,7 @@ void TText::SetBBoxCenter(const TPoint &p)
 
 void TText::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   this->SetX(gPad->PixeltoX(x));
+   SetX(GetXCoord(x, TestBit(kTextNDC)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -860,41 +863,5 @@ void TText::SetBBoxCenterX(const Int_t x)
 
 void TText::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   this->SetY(gPad->PixeltoY(y - gPad->VtoPixel(0)));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set left hand side of BoundingBox to a value
-/// (resize in x direction on left)
-
-void TText::SetBBoxX1(const Int_t /*x*/)
-{
-   //NOT IMPLEMENTED
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set right hand side of BoundingBox to a value
-/// (resize in x direction on right)
-
-void TText::SetBBoxX2(const Int_t /*x*/)
-{
-   //NOT IMPLEMENTED
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set top of BoundingBox to a value (resize in y direction on top)
-
-void TText::SetBBoxY1(const Int_t /*y*/)
-{
-   //NOT IMPLEMENTED
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set bottom of BoundingBox to a value
-/// (resize in y direction on bottom)
-
-void TText::SetBBoxY2(const Int_t /*y*/)
-{
-   //NOT IMPLEMENTED
+   SetY(GetYCoord(y, TestBit(kTextNDC)));
 }
