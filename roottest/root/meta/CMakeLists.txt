@@ -62,7 +62,7 @@ ROOTTEST_ADD_AUTOMACROS(EXCLUDE runMemberComments runautoload
 
 ROOTTEST_ADD_TEST(runMemberComments
                   MACRO runMemberComments.C
-                  OUTREF MemberComments${ref_suffix})
+                  OUTREF MemberComments.ref)
 
 ROOTTEST_ADD_TEST(namespaceconflict
                   MACRO execnamespaceconflict.C+)
