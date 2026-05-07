@@ -20,7 +20,7 @@
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "ROOT/RAlignmentUtils.hxx"
+#include "ROOT/BitUtils.hxx"
 #include "TEnum.h"
 #include "TRealData.h"
 #include "ThreadLocalStorage.h"

@@ -17,7 +17,7 @@
 
 #include "TCollectionProxyInfo.h"
 
-#include "ROOT/RAlignmentUtils.hxx"
+#include "ROOT/BitUtils.hxx"
 
 #include <atomic>
 #include <string>

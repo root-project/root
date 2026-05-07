@@ -12,7 +12,7 @@
 #define ROOT_TEmulatedCollectionProxy
 
 #include "TGenCollectionProxy.h"
-#include "ROOT/RAlignmentUtils.hxx"
+#include "ROOT/BitUtils.hxx"
 
 #include <type_traits>
 #include <vector>

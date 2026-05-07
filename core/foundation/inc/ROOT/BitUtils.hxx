@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RAlignmentUtils
-#define ROOT_RAlignmentUtils
+#ifndef ROOT_BitUtils
+#define ROOT_BitUtils
 
 #include <cassert>
 #include <cstddef>
@@ -38,4 +38,4 @@ inline constexpr T AlignUp(T value, T align) noexcept
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT_RAlignmentUtils
+#endif // ROOT_BitUtils

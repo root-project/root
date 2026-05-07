@@ -74,7 +74,7 @@ element type.
 #include "TVirtualMutex.h"
 
 #include "TStreamerInfoActions.h"
-#include "ROOT/RAlignmentUtils.hxx"
+#include "ROOT/BitUtils.hxx"
 
 #include <memory>
 #include <algorithm>
