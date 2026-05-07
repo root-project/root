@@ -145,8 +145,8 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    TAttText::Modify();  // change text attributes only if necessary
 
    if (TestBit(kTextNDC)) {
-      ptx = gPad->UtoPixel(fX);
-      pty = gPad->VtoPixel(fY);
+      ptx = gPad->UtoAbsPixel(fX);
+      pty = gPad->VtoAbsPixel(fY);
    } else {
       ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
       pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
@@ -254,8 +254,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
       if (TestBit(kTextNDC)) {
-         px1 = gPad->UtoPixel(fX);
-         py1 = gPad->VtoPixel(fY);
+         px1 = gPad->UtoAbsPixel(fX);
+         py1 = gPad->VtoAbsPixel(fY);
       } else {
          px1 = gPad->XtoAbsPixel(gPad->XtoPad(fX));
          py1 = gPad->YtoAbsPixel(gPad->YtoPad(fY));
@@ -481,8 +481,8 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
       if (TestBit(kTextNDC)) {
-         ptx = gPad->UtoPixel(fX);
-         pty = gPad->VtoPixel(fY);
+         ptx = gPad->UtoAbsPixel(fX);
+         pty = gPad->VtoAbsPixel(fY);
       } else {
          ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
          pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
