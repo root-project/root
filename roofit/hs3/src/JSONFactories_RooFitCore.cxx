@@ -825,25 +825,30 @@ private:
       expr.ReplaceAll("TMath::Erf", "erf");
    }
 };
+// Write the "x" reference and the coefficient list for polynomial-like
+// pdfs/funcs, including the implicit defaults below "lowestOrder" so that the
+// output is self-documenting.
+template <class Pdf>
+void writePolynomialBody(const Pdf *pdf, JSONNode &elem)
+{
+   elem["x"] << pdf->x().GetName();
+   auto &coefs = elem["coefficients"].set_seq();
+   for (int i = 0; i < pdf->lowestOrder(); ++i) {
+      coefs.append_child() << (i == 0 ? "1.0" : "0.0");
+   }
+   for (const auto &coef : pdf->coefList()) {
+      coefs.append_child() << coef->GetName();
+   }
+}
+
 template <class RooArg_t>
 class RooPolynomialStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      auto *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
-      elem["x"] << pdf->x().GetName();
-      auto &coefs = elem["coefficients"].set_seq();
-      // Write out the default coefficient that RooFit uses for the lower
-      // orders before the order of the first coefficient. Like this, the
-      // output is more self-documenting.
-      for (int i = 0; i < pdf->lowestOrder(); ++i) {
-         coefs.append_child() << (i == 0 ? "1.0" : "0.0");
-      }
-      for (const auto &coef : pdf->coefList()) {
-         coefs.append_child() << coef->GetName();
-      }
+      writePolynomialBody(static_cast<const RooArg_t *>(func), elem);
       return true;
    }
 };
@@ -853,19 +858,8 @@ public:
    std::string const &key() const override;
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      auto *pdf = static_cast<const RooLegacyExpPoly *>(func);
       elem["type"] << key();
-      elem["x"] << pdf->x().GetName();
-      auto &coefs = elem["coefficients"].set_seq();
-      // Write out the default coefficient that RooFit uses for the lower
-      // orders before the order of the first coefficient. Like this, the
-      // output is more self-documenting.
-      for (int i = 0; i < pdf->lowestOrder(); ++i) {
-         coefs.append_child() << (i == 0 ? "1.0" : "0.0");
-      }
-      for (const auto &coef : pdf->coefList()) {
-         coefs.append_child() << coef->GetName();
-      }
+      writePolynomialBody(static_cast<const RooLegacyExpPoly *>(func), elem);
       return true;
    }
 };
@@ -1102,18 +1096,16 @@ private:
          RooJSONFactoryWSTool::testValidName(name, false);
          JSONNode &obsNode = observablesNode.append_child().set_map();
          obsNode["name"] << name;
-         if (var->getBinning().isUniform()) {
+         auto const &binning = var->getBinning();
+         if (binning.isUniform()) {
             obsNode["min"] << var->getMin();
             obsNode["max"] << var->getMax();
             obsNode["nbins"] << var->getBins();
          } else {
-            auto &edges = obsNode["edges"];
-            edges.set_seq();
-            double val = var->getBinning().binLow(0);
-            edges.append_child() << val;
-            for (int i = 0; i < var->getBinning().numBins(); ++i) {
-               val = var->getBinning().binHigh(i);
-               edges.append_child() << val;
+            auto &edges = obsNode["edges"].set_seq();
+            edges.append_child() << binning.binLow(0);
+            for (int i = 0; i < binning.numBins(); ++i) {
+               edges.append_child() << binning.binHigh(i);
             }
          }
       }
