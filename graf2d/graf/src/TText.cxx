@@ -143,8 +143,6 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    if (!gPad) return 9999;
    Int_t ptx, pty;
 
-   TAttText::Modify();  // change text attributes only if necessary
-
    if (TestBit(kTextNDC)) {
       ptx = gPad->UtoAbsPixel(fX);
       pty = gPad->VtoAbsPixel(fY);
@@ -238,12 +236,10 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    Double_t co, si, dtheta, norm;
-   static Bool_t right, ndcsav;
+   static Bool_t right;
    static Double_t theta;
-   Int_t ax, ay, bx, by, cx, cy;
-   ax = ay = 0;
+   Int_t ax = 0, ay = 0, bx, by, cx, cy;
    Double_t lambda, x2,y2;
-   Double_t dpx,dpy,xp1,yp1;
    Int_t cBoxX[4], cBoxY[4], part;
    Double_t div = 0;
    Bool_t opaque  = parent.OpaqueMoving();
@@ -252,9 +248,6 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-      ndcsav = TestBit(kTextNDC);
-      // No break !!!
-
    case kMouseMotion:
       if (TestBit(kTextNDC)) {
          px1 = parent.UtoAbsPixel(fX);
@@ -263,18 +256,20 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          px1 = parent.XtoAbsPixel(parent.XtoPad(fX));
          py1 = parent.YtoAbsPixel(parent.YtoPad(fY));
       }
-      theta  = fTextAngle;
+      theta  = GetTextAngle();
       Size   = 0;
       pxold  = px;
       pyold  = py;
-      co     = TMath::Cos(fTextAngle*0.017453293);
-      si     = TMath::Sin(fTextAngle*0.017453293);
+      co     = TMath::Cos(theta*0.017453293);
+      si     = TMath::Sin(theta*0.017453293);
       resize = kFALSE;
       turn   = kFALSE;
       GetControlBox(px1, py1, -theta, cBoxX, cBoxY);
       div    = ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si);
-      if (TMath::Abs(div) > 1e-8) part = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/ div);
-      else part = 0;
+      if (TMath::Abs(div) > 1e-8)
+         part = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/ div);
+      else
+         part = 0;
       switch (part) {
       case 0:
          if (halign == 3) {
@@ -307,7 +302,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyRelease:
    case kButton1Motion:
-      if (!opaque) PaintControlBox(px1, py1, -theta);
+      if (!opaque)
+         PaintControlBox(px1, py1, -theta);
       if (turn) {
          norm = TMath::Sqrt(Double_t((py-py1)*(py-py1)+(px-px1)*(px-px1)));
          if (norm>0) {
@@ -319,7 +315,6 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
          }
       } else if (resize) {
-
          co = TMath::Cos(fTextAngle*0.017453293);
          si = TMath::Sin(fTextAngle*0.017453293);
          if (width == 1) {
@@ -343,8 +338,13 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                case 3 : ax = px1-Int_t(co*w+si*h*3/2); ay = py1+Int_t(si*w+co*h*3/2); break;
             }
          }
-         if (height == 3) {bx = ax-Int_t(si*h); by = ay-Int_t(co*h);}
-         else {bx = ax; by = ay;}
+         if (height == 3) {
+            bx = ax-Int_t(si*h);
+            by = ay-Int_t(co*h);
+         } else {
+            bx = ax;
+            by = ay;
+         }
          cx = bx+Int_t(co*w); cy = by-Int_t(si*w);
          lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
          x2 = Double_t(px) - lambda*Double_t(cx-bx)-Double_t(bx);
@@ -353,47 +353,33 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (Size<4) Size = 4;
 
          SetTextSize(Size/sizetowin);
-         TAttText::Modify();
       } else {
          dx = px - pxold;  px1 += dx;
          dy = py - pyold;  py1 += dy;
       }
       if (opaque) {
-         if (ndcsav) this->SetNDC(kFALSE);
-         SetX(parent.PadtoX(parent.AbsPixeltoX(px1)));
-         SetY(parent.PadtoY(parent.AbsPixeltoY(py1)));
-         if (resize) parent.ShowGuidelines(this, event, 't', false);
-         if (!resize && !turn) parent.ShowGuidelines(this, event, 'i', true);
-         parent.ShowGuidelines(this, event, !resize&!turn);
+         SetX(GetXCoord(px1, TestBit(kTextNDC), kTRUE));
+         SetY(GetYCoord(py1, TestBit(kTextNDC), kTRUE));
+         if (resize)
+            parent.ShowGuidelines(this, event, 't', false);
+         if (!resize && !turn)
+            parent.ShowGuidelines(this, event, 'i', true);
+         parent.ShowGuidelines(this, event, !resize && !turn);
          SetTextAngle(theta);
-         parent.Modified(kTRUE);
-         parent.Update();
+         parent.ModifiedUpdate();
       }
-      if (!opaque) PaintControlBox(px1, py1, -theta);
+      if (!opaque)
+         PaintControlBox(px1, py1, -theta);
       pxold = px;  pyold = py;
       break;
 
    case kButton1Up:
       if (opaque) {
-         if (ndcsav && !this->TestBit(kTextNDC)) {
-            SetX((fX - parent.GetX1())/(parent.GetX2()-parent.GetX1()));
-            SetY((fY - parent.GetY1())/(parent.GetY2()-parent.GetY1()));
-            SetNDC();
-         }
-         parent.ShowGuidelines(this, event, !resize&!turn);
+         parent.ShowGuidelines(this, event, !resize && !turn);
       } else {
-         if (TestBit(kTextNDC)) {
-            dpx  = parent.GetX2() - parent.GetX1();
-            dpy  = parent.GetY2() - parent.GetY1();
-            xp1  = parent.GetX1();
-            yp1  = parent.GetY1();
-            fX = (parent.AbsPixeltoX(px1)-xp1)/dpx;
-            fY = (parent.AbsPixeltoY(py1)-yp1)/dpy;
-         } else {
-            fX = parent.PadtoX(parent.AbsPixeltoX(px1));
-            fY = parent.PadtoY(parent.AbsPixeltoY(py1));
-         }
-         fTextAngle = theta;
+         SetX(GetXCoord(px1, TestBit(kTextNDC), kTRUE));
+         SetY(GetYCoord(py1, TestBit(kTextNDC), kTRUE));
+         SetTextAngle(theta);
       }
       parent.Modified(kTRUE);
       break;
