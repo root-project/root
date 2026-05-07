@@ -1831,35 +1831,21 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
 
    auto &domainsNode = rootnode["domains"];
 
-   if (mc.GetNuisanceParameters() && mc.GetNuisanceParameters()->size() > 0) {
-      std::string npDomainName = analysisName + "_nuisance_parameters";
-      domains.append_child() << npDomainName;
-      RooFit::JSONIO::Detail::Domains::ProductDomain npDomain;
-      for (auto *np : static_range_cast<const RooRealVar *>(*mc.GetNuisanceParameters())) {
-         npDomain.readVariable(*np);
+   auto writeProductDomain = [&](const char *suffix, RooArgSet const *args) {
+      if (!args || args->empty())
+         return;
+      const std::string domainName = analysisName + suffix;
+      domains.append_child() << domainName;
+      RooFit::JSONIO::Detail::Domains::ProductDomain domain;
+      for (auto *var : static_range_cast<const RooRealVar *>(*args)) {
+         domain.readVariable(*var);
       }
-      npDomain.writeJSON(appendNamedChild(domainsNode, npDomainName));
-   }
+      domain.writeJSON(appendNamedChild(domainsNode, domainName));
+   };
 
-   if (mc.GetGlobalObservables() && mc.GetGlobalObservables()->size() > 0) {
-      std::string globDomainName = analysisName + "_global_observables";
-      domains.append_child() << globDomainName;
-      RooFit::JSONIO::Detail::Domains::ProductDomain globDomain;
-      for (auto *glob : static_range_cast<const RooRealVar *>(*mc.GetGlobalObservables())) {
-         globDomain.readVariable(*glob);
-      }
-      globDomain.writeJSON(appendNamedChild(domainsNode, globDomainName));
-   }
-
-   if (mc.GetParametersOfInterest() && mc.GetParametersOfInterest()->size() > 0) {
-      std::string poiDomainName = analysisName + "_parameters_of_interest";
-      domains.append_child() << poiDomainName;
-      RooFit::JSONIO::Detail::Domains::ProductDomain poiDomain;
-      for (auto *poi : static_range_cast<const RooRealVar *>(*mc.GetParametersOfInterest())) {
-         poiDomain.readVariable(*poi);
-      }
-      poiDomain.writeJSON(appendNamedChild(domainsNode, poiDomainName));
-   }
+   writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());
+   writeProductDomain("_global_observables", mc.GetGlobalObservables());
+   writeProductDomain("_parameters_of_interest", mc.GetParametersOfInterest());
 
    auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", analysisName);
    modelConfigAux.set_map();
@@ -2475,44 +2461,6 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
       tmpWS.import(*obj);
    }
 
-   /*
-   if (auto* mc = dynamic_cast<RooFit::ModelConfig*>(obj)) {
-         // Import the PDF
-   tmpWS.import(*mc->GetPdf());
-
-   // Import all observables
-   RooArgSet* obs = (RooArgSet*)mc->GetObservables()->snapshot();
-   tmpWS.import(*obs);
-
-   // Import global observables
-   RooArgSet* globObs = (RooArgSet*)mc->GetGlobalObservables()->snapshot();
-   tmpWS.import(*globObs);
-
-   // Import POIs
-   RooArgSet* pois = (RooArgSet*)mc->GetParametersOfInterest()->snapshot();
-   tmpWS.import(*pois);
-
-   // Import nuisance parameters
-   RooArgSet* nuis = (RooArgSet*)mc->GetNuisanceParameters()->snapshot();
-   tmpWS.import(*nuis);
-
-
-   RooFit::ModelConfig* mc_new = new RooFit::ModelConfig(mc->GetName(), mc->GetName());
-
-   mc_new->SetPdf(*tmpWS.pdf(mc->GetPdf()->GetName()));
-   mc_new->SetObservables(*tmpWS.set(obs->GetName()));
-   mc_new->SetGlobalObservables(*tmpWS.set(globObs->GetName()));
-   mc_new->SetParametersOfInterest(*tmpWS.set(pois->GetName()));
-   mc_new->SetNuisanceParameters(*tmpWS.set(nuis->GetName()));
-
-   // Import the ModelConfig into the new workspace
-   tmpWS.import(*mc_new);
-      }else {
-
-         tmpWS.import(*obj);
-         }
-   */
-
    for (auto *snsh : ws.getSnapshots()) {
       auto *snshSet = dynamic_cast<RooArgSet *>(snsh);
       if (snshSet) {
@@ -2530,32 +2478,17 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
 
    RooWorkspace tmpWS = cleanWS(ws, false);
 
-   for (auto *obj : tmpWS.allVars()) {
-      if (!isValidName(obj->GetName())) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
+   auto sanitizeIfNeeded = [](auto const &list) {
+      for (auto *obj : list) {
+         if (!isValidName(obj->GetName())) {
+            obj->SetName(sanitizeName(obj->GetName()).c_str());
+         }
       }
-   }
-
-   // Functions
-   for (auto *obj : tmpWS.allFunctions()) {
-      if (!isValidName(obj->GetName())) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
-      }
-   }
-
-   // PDFs
-   for (auto *obj : tmpWS.allPdfs()) {
-      if (!isValidName(obj->GetName())) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
-      }
-   }
-
-   // Resolution Models
-   for (auto *obj : tmpWS.allResolutionModels()) {
-      if (!isValidName(obj->GetName())) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
-      }
-   }
+   };
+   sanitizeIfNeeded(tmpWS.allVars());
+   sanitizeIfNeeded(tmpWS.allFunctions());
+   sanitizeIfNeeded(tmpWS.allPdfs());
+   sanitizeIfNeeded(tmpWS.allResolutionModels());
    // Datasets
    for (auto *data : tmpWS.allData()) {
       // Sanitize dataset name
@@ -2566,26 +2499,6 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
          obj->SetName(sanitizeName(obj->GetName()).c_str());
       }
    }
-   /*    // Sanitize dataset observables
-       const RooArgSet* obsSet = data->get();
-      if (obsSet) {
-           RooArgSet* mutableObs = const_cast<RooArgSet*>(obsSet);
-           std::string oldSetName = mutableObs->GetName();
-           std::string newSetName = sanitizeName(oldSetName);
-           if (oldSetName != newSetName) {
-               mutableObs->setName(newSetName.c_str());
-           }
-       }
-
-       for (auto* arg : *obsSet) {
-           std::string oldObsName = arg->GetName();
-           std::string newObsName = sanitizeName(oldObsName);
-           if (oldObsName != newObsName) {
-               arg->SetName(newObsName.c_str());
-               data->changeObservableName(arg->GetName(), newObsName.c_str());
-           }
-       }
-   */
    for (auto *data : tmpWS.allEmbeddedData()) {
       // Sanitize dataset name
       data->SetName(sanitizeName(data->GetName()).c_str());

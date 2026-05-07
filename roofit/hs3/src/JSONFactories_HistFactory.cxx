@@ -1140,6 +1140,16 @@ void configureStatError(Channel &channel)
 
 bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
 {
+   // Write the constraint reference (either by name or by type) for any
+   // modifier that supports an external Gaussian/Poisson/etc. constraint.
+   auto writeConstraint = [](JSONNode &mod, auto const &sys) {
+      if (sys.constraint) {
+         mod["constraint_name"] << sys.constraint->GetName();
+      } else if (sys.constraintType) {
+         mod["constraint_type"] << toString(sys.constraintType);
+      }
+   };
+
    bool observablesWritten = false;
    for (const auto &sample : channel.samples) {
 
@@ -1171,11 +1181,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          if (sys.interpolationCode != 4) {
             mod["interpolation"] << sys.interpolationCode;
          }
-         if (sys.constraint) {
-            mod["constraint_name"] << sys.constraint->GetName();
-         } else if (sys.constraintType) {
-            mod["constraint_type"] << toString(sys.constraintType);
-         }
+         writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          data["lo"] << sys.low;
          data["hi"] << sys.high;
@@ -1187,11 +1193,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "histosys";
          mod["parameter"] << sys.param->GetName();
-         if (sys.constraint) {
-            mod["constraint_name"] << sys.constraint->GetName();
-         } else if (sys.constraintType) {
-            mod["constraint_type"] << toString(sys.constraintType);
-         }
+         writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          if (channel.nBins != sys.low.size() || channel.nBins != sys.high.size()) {
             std::stringstream ss;
@@ -1209,20 +1211,12 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "shapesys";
          optionallyExportGammaParameters(mod, sys.name, sys.parameters);
-         if (sys.constraint) {
-            mod["constraint_name"] << sys.constraint->GetName();
-         } else if (sys.constraintType) {
-            mod["constraint_type"] << toString(sys.constraintType);
-         }
+         writeConstraint(mod, sys);
+         auto &vals = mod["data"].set_map()["vals"];
          if (sys.constraint || sys.constraintType) {
-            auto &vals = mod["data"].set_map()["vals"];
             vals.fill_seq(sys.constraints);
          } else {
-            auto &vals = mod["data"].set_map()["vals"];
-            vals.set_seq();
-            for (std::size_t i = 0; i < sys.parameters.size(); ++i) {
-               vals.append_child() << 0;
-            }
+            vals.fill_seq(std::vector<double>(sys.parameters.size(), 0.0));
          }
       }
 
