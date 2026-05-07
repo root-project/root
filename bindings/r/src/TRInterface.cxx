@@ -188,9 +188,64 @@ TRInterface &TRInterface::Instance()
    return  *TRInterface::InstancePtr();
 }
 
+namespace {
+
+// Per CRAN policy, an R package name starts with a letter, contains only ASCII
+// letters, digits, and dots, and does not end with a dot. Restricting to this
+// set is a helpful validation step for the user and prevents R-source
+// injection via the string concatenation done in IsInstalled / Require /
+// Install below.
+bool IsValidRPackageName(const TString &pkg)
+{
+   const Ssiz_t n = pkg.Length();
+   if (n == 0)
+      return false;
+   const char first = pkg[0];
+   if (!((first >= 'A' && first <= 'Z') || (first >= 'a' && first <= 'z')))
+      return false;
+   for (Ssiz_t i = 1; i < n; ++i) {
+      const char c = pkg[i];
+      const Bool_t ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '.';
+      if (!ok)
+         return false;
+   }
+   return pkg[n - 1] != '.';
+}
+
+// Allow only an http(s)/ftp/file URL with no characters that could break
+// out of the R single-quoted literal in Install().
+bool IsValidRReposUrl(const TString &repos)
+{
+   const Ssiz_t n = repos.Length();
+   if (n == 0)
+      return false;
+   const char *prefixes[] = {"http://", "https://", "ftp://", "file://"};
+   Bool_t prefixOk = false;
+   for (const char *s : prefixes) {
+      if (repos.BeginsWith(s)) {
+         prefixOk = true;
+         break;
+      }
+   }
+   if (!prefixOk)
+      return false;
+   for (Ssiz_t i = 0; i < n; ++i) {
+      const char c = repos[i];
+      if (c == '\'' || c == '\\' || c == '`' || c == ';' || c == '\n' || c == '\r')
+         return false;
+   }
+   return true;
+}
+
+} // namespace
+
 //______________________________________________________________________________
 Bool_t TRInterface::IsInstalled(TString pkg)
 {
+   if (!IsValidRPackageName(pkg)) {
+      Error("IsInstalled", "Invalid R package name: %s", pkg.Data());
+      return kFALSE;
+   }
    TString cmd = "is.element('" + pkg + "', installed.packages()[,1])";
    return this->Eval(cmd).As<Bool_t>();
 }
@@ -198,6 +253,10 @@ Bool_t TRInterface::IsInstalled(TString pkg)
 //______________________________________________________________________________
 Bool_t TRInterface::Require(TString pkg)
 {
+   if (!IsValidRPackageName(pkg)) {
+      Error("Require", "Invalid R package name: %s", pkg.Data());
+      return kFALSE;
+   }
    TString cmd = "require('" + pkg + "',quiet=TRUE)";
    return this->Eval(cmd).As<Bool_t>();
 }
@@ -205,6 +264,14 @@ Bool_t TRInterface::Require(TString pkg)
 //______________________________________________________________________________
 Bool_t TRInterface::Install(TString pkg, TString repos)
 {
+   if (!IsValidRPackageName(pkg)) {
+      Error("Install", "Invalid R package name: %s", pkg.Data());
+      return kFALSE;
+   }
+   if (!IsValidRReposUrl(repos)) {
+      Error("Install", "Invalid R repository URL: %s", repos.Data());
+      return kFALSE;
+   }
    TString cmd = "install.packages('" + pkg + "',repos='" + repos + "',dependencies=TRUE)";
    this->Eval(cmd);
    return IsInstalled(pkg);
