@@ -51,7 +51,7 @@ but the class metadata comes from the Clang C++ compiler, not CINT.
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "ROOT/RAlignmentUtils.hxx"
+#include "ROOT/BitUtils.hxx"
 
 #include <sstream>
 #include <string>
