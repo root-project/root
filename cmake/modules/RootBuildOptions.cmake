@@ -383,7 +383,7 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix castor c
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt builtin_cppzmq builtin_zeromq)
+foreach(opt builtin_cppzmq builtin_zeromq r)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()

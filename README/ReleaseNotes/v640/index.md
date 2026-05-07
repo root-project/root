@@ -64,6 +64,7 @@ The following people have contributed to this new version:
   The Davix I/O code in ROOT remains uneffected and is built as before provided that the Davix library is found on the system.
 * `RRealField::SetQuantized` now has a new overload and the existing signature has been deprecated. The new overload enforces proper ordering of the arguments.
   The deprecated overload will be removed in ROOT 6.42.
+* The bindings to the R programming language that are enabled with the `r=ON` build option (`TRInterface` and friends) are deprecated and will be removed in ROOT 6.42. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
 
 ## Removals
 
