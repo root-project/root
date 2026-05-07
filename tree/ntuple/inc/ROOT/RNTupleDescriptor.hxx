@@ -544,7 +544,7 @@ public:
       using pointer = const RColumnRange *;
       using reference = const RColumnRange &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -953,11 +953,9 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      /// The enclosing range's descriptor id list.
-      const std::vector<ROOT::DescriptorId_t> &fColumns;
-      std::size_t fIndex = 0;
+      /// The enclosing RColumnDescriptorIterable.
+      const RColumnDescriptorIterable *fIterable;
+      std::size_t fIndex;
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -967,8 +965,8 @@ public:
       using pointer = const RColumnDescriptor *;
       using reference = const RColumnDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, const std::vector<ROOT::DescriptorId_t> &columns, std::size_t index)
-         : fNTuple(ntuple), fColumns(columns), fIndex(index)
+      explicit RIterator(const RColumnDescriptorIterable *iterable = nullptr, std::size_t index = 0)
+         : fIterable(iterable), fIndex(index)
       {
       }
       iterator &operator++() /* prefix */
@@ -982,17 +980,26 @@ public:
          operator++();
          return old;
       }
-      reference operator*() const { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
-      pointer operator->() const { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const
+      {
+         if (fIterable)
+            return fIterable->fNTuple.GetColumnDescriptor(fIterable->fColumns.at(fIndex));
+         throw RException(R__FAIL("dereference of RNTupleDescriptor::RColumnDescriptorIterable::RIterator"
+                                  " constructed without RNTupleDescriptor::RColumnDescriptorIterable"));
+      }
+      pointer operator->() const
+      {
+         return fIterable ? &fIterable->fNTuple.GetColumnDescriptor(fIterable->fColumns.at(fIndex)) : nullptr;
+      }
+      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex || fIterable != rh.fIterable; }
+      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex && fIterable == rh.fIterable; }
    };
 
    RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &fieldDesc);
    RColumnDescriptorIterable(const RNTupleDescriptor &ntuple);
 
-   RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
-   RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
+   RIterator begin() { return RIterator(this, 0); }
+   RIterator end() { return RIterator(this, fColumns.size()); }
    size_t size() { return fColumns.size(); }
 };
 
@@ -1014,11 +1021,9 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      /// The enclosing range's descriptor id list.
-      const std::vector<ROOT::DescriptorId_t> &fFieldChildren;
-      std::size_t fIndex = 0;
+      /// The enclosing RFieldDescriptorIterable.
+      const RFieldDescriptorIterable *fIterable;
+      std::size_t fIndex;
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -1028,9 +1033,8 @@ public:
       using pointer = const RFieldDescriptor *;
       using reference = const RFieldDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, const std::vector<ROOT::DescriptorId_t> &fieldChildren,
-                std::size_t index)
-         : fNTuple(ntuple), fFieldChildren(fieldChildren), fIndex(index)
+      explicit RIterator(const RFieldDescriptorIterable *iterable = nullptr, std::size_t index = 0)
+         : fIterable(iterable), fIndex(index)
       {
       }
       iterator &operator++() /* prefix */
@@ -1044,10 +1048,19 @@ public:
          operator++();
          return old;
       }
-      reference operator*() const { return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
-      pointer operator->() const { return &fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const
+      {
+         if (fIterable)
+            return fIterable->fNTuple.GetFieldDescriptor(fIterable->fFieldChildren.at(fIndex));
+         throw RException(R__FAIL("dereference of RNTupleDescriptor::RFieldDescriptorIterable::RIterator"
+                                  " constructed without RNTupleDescriptor::RFieldDescriptorIterable"));
+      }
+      pointer operator->() const
+      {
+         return fIterable ? &fIterable->fNTuple.GetFieldDescriptor(fIterable->fFieldChildren.at(fIndex)) : nullptr;
+      }
+      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex || fIterable != rh.fIterable; }
+      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex && fIterable == rh.fIterable; }
    };
    RFieldDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
       : fNTuple(ntuple), fFieldChildren(field.GetLinkIds())
@@ -1060,8 +1073,8 @@ public:
    {
       std::sort(fFieldChildren.begin(), fFieldChildren.end(), comparator);
    }
-   RIterator begin() { return RIterator(fNTuple, fFieldChildren, 0); }
-   RIterator end() { return RIterator(fNTuple, fFieldChildren, fFieldChildren.size()); }
+   RIterator begin() { return RIterator(this, 0); }
+   RIterator end() { return RIterator(this, fFieldChildren.size()); }
 };
 
 // clang-format off
@@ -1093,7 +1106,7 @@ public:
       using pointer = const RClusterGroupDescriptor *;
       using reference = const RClusterGroupDescriptor &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1147,7 +1160,7 @@ public:
       using pointer = const RClusterDescriptor *;
       using reference = const RClusterDescriptor &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1197,7 +1210,7 @@ public:
       using pointer = const RExtraTypeInfoDescriptor *;
       using reference = const RExtraTypeInfoDescriptor &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1210,7 +1223,7 @@ public:
          return old;
       }
       reference operator*() const { return *fIter; }
-      pointer operator->() const { return &*fIter; }
+      pointer operator->() const { return fIter.operator->(); }
       bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
@@ -1249,7 +1262,7 @@ public:
       using pointer = const value_type *;
       using reference = const value_type &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1262,7 +1275,7 @@ public:
          return old;
       }
       reference operator*() const { return *fIter; }
-      pointer operator->() const { return &*fIter; }
+      pointer operator->() const { return fIter.operator->(); }
       bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
