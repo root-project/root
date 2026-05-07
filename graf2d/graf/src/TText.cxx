@@ -15,8 +15,9 @@
 #include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
-#include "TVirtualX.h"
+#include "TCanvasImp.h"
 #include "TMath.h"
+#include "TAttMarker.h"
 #include "TPoint.h"
 
 #include <cwchar>
@@ -220,14 +221,17 @@ TText *TText::DrawTextNDC(Double_t x, Double_t y, const wchar_t *text)
 
 void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
+
+   auto &parent = *gPad;
 
    static Int_t px1, py1, pxold, pyold, Size, height, width;
    static Bool_t resize,turn;
    Int_t dx, dy;
    const char *text = GetTitle();
    Int_t len = strlen(text);
-   Double_t sizetowin = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
+   Double_t sizetowin = parent.GetAbsHNDC()*Double_t(parent.GetWh());
    Double_t fh = (fTextSize*sizetowin);
    Int_t h     = Int_t(fh/2);
    Int_t w     = h*len;
@@ -242,9 +246,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t dpx,dpy,xp1,yp1;
    Int_t cBoxX[4], cBoxY[4], part;
    Double_t div = 0;
-   Bool_t opaque  = gPad->OpaqueMoving();
+   Bool_t opaque  = parent.OpaqueMoving();
 
-   if (!gPad->IsEditable()) return;
    switch (event) {
 
    case kArrowKeyPress:
@@ -254,11 +257,11 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
       if (TestBit(kTextNDC)) {
-         px1 = gPad->UtoAbsPixel(fX);
-         py1 = gPad->VtoAbsPixel(fY);
+         px1 = parent.UtoAbsPixel(fX);
+         py1 = parent.VtoAbsPixel(fY);
       } else {
-         px1 = gPad->XtoAbsPixel(gPad->XtoPad(fX));
-         py1 = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+         px1 = parent.XtoAbsPixel(parent.XtoPad(fX));
+         py1 = parent.YtoAbsPixel(parent.YtoPad(fY));
       }
       theta  = fTextAngle;
       Size   = 0;
@@ -277,27 +280,27 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (halign == 3) {
             turn  = kTRUE;
             right = kTRUE;
-            gPad->SetCursor(kRotate);
+            parent.SetCursor(kRotate);
          } else {
             resize = kTRUE;
             height = valign;
             width  = halign;
-            gPad->SetCursor(kArrowVer);
+            parent.SetCursor(kArrowVer);
          }
          break;
       case 1:
-         gPad->SetCursor(kMove);
+         parent.SetCursor(kMove);
          break;
       case 2:
          if (halign == 3) {
             resize = kTRUE;
             height = valign;
             width  = halign;
-            gPad->SetCursor(kArrowVer);
+            parent.SetCursor(kArrowVer);
          } else {
             turn  = kTRUE;
             right = kFALSE;
-            gPad->SetCursor(kRotate);
+            parent.SetCursor(kRotate);
          }
       }
       break;
@@ -357,14 +360,14 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if (opaque) {
          if (ndcsav) this->SetNDC(kFALSE);
-         this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
-         this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
-         if (resize) gPad->ShowGuidelines(this, event, 't', false);
-         if ((!resize)&&(!turn)) gPad->ShowGuidelines(this, event, 'i', true);
-         gPad->ShowGuidelines(this, event, !resize&!turn);
-         this->SetTextAngle(theta);
-         gPad->Modified(kTRUE);
-         gPad->Update();
+         SetX(parent.PadtoX(parent.AbsPixeltoX(px1)));
+         SetY(parent.PadtoY(parent.AbsPixeltoY(py1)));
+         if (resize) parent.ShowGuidelines(this, event, 't', false);
+         if (!resize && !turn) parent.ShowGuidelines(this, event, 'i', true);
+         parent.ShowGuidelines(this, event, !resize&!turn);
+         SetTextAngle(theta);
+         parent.Modified(kTRUE);
+         parent.Update();
       }
       if (!opaque) PaintControlBox(px1, py1, -theta);
       pxold = px;  pyold = py;
@@ -373,26 +376,26 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       if (opaque) {
          if (ndcsav && !this->TestBit(kTextNDC)) {
-            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            this->SetNDC();
+            SetX((fX - parent.GetX1())/(parent.GetX2()-parent.GetX1()));
+            SetY((fY - parent.GetY1())/(parent.GetY2()-parent.GetY1()));
+            SetNDC();
          }
-         gPad->ShowGuidelines(this, event, !resize&!turn);
+         parent.ShowGuidelines(this, event, !resize&!turn);
       } else {
          if (TestBit(kTextNDC)) {
-            dpx  = gPad->GetX2() - gPad->GetX1();
-            dpy  = gPad->GetY2() - gPad->GetY1();
-            xp1  = gPad->GetX1();
-            yp1  = gPad->GetY1();
-            fX = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
-            fY = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
+            dpx  = parent.GetX2() - parent.GetX1();
+            dpy  = parent.GetY2() - parent.GetY1();
+            xp1  = parent.GetX1();
+            yp1  = parent.GetY1();
+            fX = (parent.AbsPixeltoX(px1)-xp1)/dpx;
+            fY = (parent.AbsPixeltoY(py1)-yp1)/dpy;
          } else {
-            fX = gPad->PadtoX(gPad->AbsPixeltoX(px1));
-            fY = gPad->PadtoY(gPad->AbsPixeltoY(py1));
+            fX = parent.PadtoX(parent.AbsPixeltoX(px1));
+            fY = parent.PadtoY(parent.AbsPixeltoY(py1));
          }
          fTextAngle = theta;
       }
-      gPad->Modified(kTRUE);
+      parent.Modified(kTRUE);
       break;
 
    case kButton1Locate:
@@ -400,7 +403,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (1) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = parent.GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
@@ -625,14 +628,20 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
    Short_t valign = fTextAlign - 10*halign;      // vertical alignment
 
    GetControlBox(x, y, theta, cBoxX, cBoxY);
+
+   auto pp = gPad->GetPainter();
+   if (!pp)
+      return;
+
    // Draw the text control box outline
-   gVirtualX->SetLineStyle((Style_t)1);
-   gVirtualX->SetLineWidth(1);
-   gVirtualX->SetLineColor(1);
-   gVirtualX->DrawLine(cBoxX[0], cBoxY[0], cBoxX[1], cBoxY[1]);
-   gVirtualX->DrawLine(cBoxX[1], cBoxY[1], cBoxX[2], cBoxY[2]);
-   gVirtualX->DrawLine(cBoxX[2], cBoxY[2], cBoxX[3], cBoxY[3]);
-   gVirtualX->DrawLine(cBoxX[3], cBoxY[3], cBoxX[0], cBoxY[0]);
+   pp->SetAttLine({(Style_t)1, 1, 1});
+   for (int p1 = 0; p1 < 4; ++p1) {
+      int p2 = (p1 + 1) % 4;
+      pp->DrawLine(gPad->AbsPixeltoX(cBoxX[p1]),
+                   gPad->AbsPixeltoY(cBoxY[p1]),
+                   gPad->AbsPixeltoX(cBoxX[p2]),
+                   gPad->AbsPixeltoY(cBoxY[p2]));
+   }
 
    // Draw a symbol at the text starting point
    TPoint p;
@@ -660,12 +669,10 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
          }
       break;
    }
-   p.fX = (cBoxX[ix]+cBoxX[iy])/2;
-   p.fY = (cBoxY[ix]+cBoxY[iy])/2;
-   gVirtualX->SetMarkerColor(1);
-   gVirtualX->SetMarkerStyle(24);
-   gVirtualX->SetMarkerSize(0.7);
-   gVirtualX->DrawPolyMarker(1, &p);
+   Double_t mX = gPad->AbsPixeltoX((cBoxX[ix]+cBoxX[iy])/2);
+   Double_t mY = gPad->AbsPixeltoY((cBoxY[ix]+cBoxY[iy])/2);
+   pp->SetAttMarker({(Color_t)1, 24, 0.7});
+   pp->DrawPolyMarker(1, &mX, &mY);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
