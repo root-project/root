@@ -870,7 +870,6 @@ void TObject::SetDrawOption(Option_t *option)
       return;
 
    TListIter next(gPad->GetListOfPrimitives());
-   delete gPad->FindObject("TFrame");
    while (auto obj = next())
       if (obj == this) {
          next.SetOption(option);
