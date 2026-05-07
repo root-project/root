@@ -197,8 +197,6 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	GetBBox	Get TopLeft Corner with width and height : 0
       Rectangle_t TAttBBox2D::GetBBox()
  OBJ: TMethod	GetBBoxCenter	 : 0
-      TPoint TLine::GetBBoxCenter()
- OBJ: TMethod	GetBBoxCenter	 : 0
       TPoint TAttBBox2D::GetBBoxCenter()
  OBJ: TMethod	GetDefaultAngle	 : 0
       Float_t TArrow::GetDefaultAngle()
@@ -378,8 +376,6 @@ OBJ: TList	TList	Doubly linked list : 0
       void TArrow::SetAngle(Float_t angle = 60)
  OBJ: TMethod	SetArrowSize	*MENU* : 0
       void TArrow::SetArrowSize(Float_t arrowsize = 0.050000000000000003)
- OBJ: TMethod	SetBBoxCenter	 : 0
-      void TLine::SetBBoxCenter(const TPoint& p)
  OBJ: TMethod	SetBBoxCenter	 : 0
       void TAttBBox2D::SetBBoxCenter(const TPoint& p)
  OBJ: TMethod	SetBBoxCenterX	 : 0
@@ -647,11 +643,11 @@ OBJ: TList	TList	Doubly linked list : 0
       void TAttMarker::SetMarkerAttributes()
 
 childCl::Class()->GetListOfAllPublicMethods():
-childCl::childCl() //
-childCl::childCl(const childCl&) //
+childCl::childCl() // 
+childCl::childCl(const childCl&) // 
 childCl::fGetIndex(Int_t aIndex) // Title Derived
-childCl::~childCl() //
-baseCl::baseCl() //
-baseCl::baseCl(const baseCl&) //
+childCl::~childCl() // 
+baseCl::baseCl() // 
+baseCl::baseCl(const baseCl&) // 
 baseCl::fGetIndex(Int_t aIndex = 0) // Title Base
-baseCl::~baseCl() //
+baseCl::~baseCl() // 
