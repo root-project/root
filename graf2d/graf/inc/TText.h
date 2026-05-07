@@ -78,13 +78,12 @@ public:
 
    Rectangle_t      GetBBox() override;
    TPoint           GetBBoxCenter() override;
-   void             SetBBoxCenter(const TPoint &p) override;
    void             SetBBoxCenterX(const Int_t x) override;
    void             SetBBoxCenterY(const Int_t y) override;
-   void             SetBBoxX1(const Int_t) override; //Not Implemented
-   void             SetBBoxX2(const Int_t) override; //Not Implemented
-   void             SetBBoxY1(const Int_t) override; //Not Implemented
-   void             SetBBoxY2(const Int_t) override; //Not Implemented
+   void             SetBBoxX1(const Int_t) override {} //Not Implemented
+   void             SetBBoxX2(const Int_t) override {} //Not Implemented
+   void             SetBBoxY1(const Int_t) override {} //Not Implemented
+   void             SetBBoxY2(const Int_t) override {} //Not Implemented
 
    ClassDefOverride(TText,3)  //Text
 };
