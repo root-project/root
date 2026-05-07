@@ -231,8 +231,7 @@ std::string ConvertValuesToString(size_t n, const T * data, size_t maxprint = -1
       if (std::is_floating_point_v<T>)
          ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
       else
-         // cast in case of boolean (int8)
-         ret << data[i];
+         ret << std::to_string(data[i]);
 
       if (i < n-1) ret << ", ";
       if (i < n-1 && i == maxprint-1) ret << "..... ";
