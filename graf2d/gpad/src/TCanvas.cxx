@@ -2621,7 +2621,7 @@ TVirtualPadPainter *TCanvas::GetCanvasPainter()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace canvas painter
-/// For intenral use only - when creating PS images
+/// For internal use only - when creating PS images
 
 Bool_t TCanvas::EnsurePSPainter(Bool_t create, TVirtualPadPainter *&oldp)
 {

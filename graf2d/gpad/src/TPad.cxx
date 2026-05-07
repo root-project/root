@@ -406,7 +406,7 @@ TPad::~TPad()
 /// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
 ///
 /// ~~~{.cpp}
-/// auto c1 = new TCanvas("c1","Canvas with subpoads", 600, 600);
+/// auto c1 = new TCanvas("c1","Canvas with subpads", 600, 600);
 /// c1->Divide(2,2);
 ///
 /// for (Int_t n = 1; n <= 4; ++n) {
@@ -2838,7 +2838,7 @@ UInt_t TPad::GetWw() const
 UInt_t TPad::GetPadWidth() const
 {
    // Very often pad width was calculated as XtoPixel(GetX2());
-   // But if coordinate system broken such trnasformation fail.
+   // But if coordinate system broken such transformation fail.
    // Therefore use canvas width multiplied by absolute NDC width value
    // Keep fallback solution only when canvas width cannot be defined
 
@@ -2855,7 +2855,7 @@ UInt_t TPad::GetPadWidth() const
 UInt_t TPad::GetPadHeight() const
 {
    // Very often pad height was calculated as YtoPixel(GetY1())
-   // But if coordinate system broken such trnasformation fail.
+   // But if coordinate system broken such transformation fail.
    // Therefore use canvas height multiplied by absolute NDC height value
    // Keep fallback solution only when canvas height cannot be defined
 
@@ -4223,7 +4223,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          // Rotate back the hatches - first calculate y coordinate
          Double_t ytmp = sinb*xli[i] + cosb*ycur;
          xli[i] = cosb*xli[i] - sinb*ycur;
-         // Convert hatches' positions from true NDC to WC to handle cliping
+         // Convert hatches' positions from true NDC to WC to handle clipping
          xli[i] = (xli[i]/wndc)*(rwxmax-rwxmin)+rwxmin;
          ytmp   = (ytmp/hndc)*(rwymax-rwymin)+rwymin;
          yli.push_back(ytmp);
@@ -5676,7 +5676,7 @@ void TPad::ResizePad(Option_t *option)
    Double_t pyrange = -fAbsHNDC*wh;
 
    // Linear X axis
-   Double_t rounding = 0.; // was used before to adjust somehow wrong int trunctation by coordiantes transformation
+   Double_t rounding = 0.; // was used before to adjust somehow wrong int truncation by coordinates transformation
    Double_t xrange  = fX2 - fX1;
    fXtoAbsPixelk = rounding + pxlow - pxrange*fX1/xrange;      //origin at left
    fXtoPixelk = rounding +  -pxrange*fX1/xrange;
