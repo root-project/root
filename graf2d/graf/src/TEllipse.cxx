@@ -199,11 +199,11 @@ TEllipse *TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2
 
 void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable()) return;
 
    Int_t kMaxDiff = 10;
 
-   Int_t i, dpx, dpy;
+   Int_t dpx, dpy;
    Double_t angle,dx,dy,dphi,ct,st,fTy,fBy,fLx,fRx;
    static Int_t px1,py1,npe,r1,r2,sav1,sav2;
    const Int_t kMinSize = 25;
@@ -218,8 +218,6 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Bool_t opaque  = gPad->OpaqueMoving();
 
-   if (!gPad->IsEditable()) return;
-
    switch (event) {
 
    case kArrowKeyPress:
@@ -231,7 +229,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          dphi = (fPhimax-fPhimin)*kPI/(180*np);
          ct   = TMath::Cos(kPI*fTheta/180);
          st   = TMath::Sin(kPI*fTheta/180);
-         for (i=0;i<np;i++) {
+         for (Int_t i=0; i<np; i++) {
             angle = fPhimin*kPI/180 + Double_t(i)*dphi;
             dx    = fR1*TMath::Cos(angle);
             dy    = fR2*TMath::Sin(angle);
@@ -281,8 +279,8 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
       }
       else {
-         sdx = this->GetX1()-gPad->AbsPixeltoX(px);
-         sdy = this->GetY1()-gPad->AbsPixeltoY(py);
+         sdx = GetX1() - gPad->AbsPixeltoX(px);
+         sdy = GetY1() - gPad->AbsPixeltoY(py);
       }
       // No break !!!
 
@@ -344,7 +342,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gVirtualX->DrawLine(px1-4, pTy+4, px1-4, pTy-4);
          gVirtualX->DrawLine(px1-4, pTy-4, px1+4, pTy-4);
          gVirtualX->DrawLine(px1+4, pTy-4, px1+4, pTy+4);
-         for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
+         for (Int_t i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
       }
       if (pTop) {
          sav1 = py1;
@@ -395,7 +393,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             dphi = (fPhimax-fPhimin)*kPI/(180*np);
             ct   = TMath::Cos(kPI*fTheta/180);
             st   = TMath::Sin(kPI*fTheta/180);
-            for (i=0;i<np;i++) {
+            for (Int_t i = 0; i < np; i++) {
                angle = fPhimin*kPI/180 + Double_t(i)*dphi;
                dx    = r1*TMath::Cos(angle);
                dy    = r2*TMath::Sin(angle);
@@ -415,36 +413,34 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             }
             gVirtualX->SetLineColor(-1);
             TAttLine::Modify();
-            for (i=0;i<npe;i++)
+            for (Int_t i=0;i<npe;i++)
                gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          }
          else
          {
-            this->SetX1(gPad->AbsPixeltoX(px1));
-            this->SetY1(gPad->AbsPixeltoY(py1));
-            this->SetR1(TMath::Abs(gPad->AbsPixeltoX(px1-r1)-gPad->AbsPixeltoX(px1+r1))/2);
-            this->SetR2(TMath::Abs(gPad->AbsPixeltoY(py1-r2)-gPad->AbsPixeltoY(py1+r2))/2);
+            SetX1(GetXCoord(px1, kFALSE, kTRUE));
+            SetY1(GetYCoord(py1, kFALSE, kTRUE));
+            SetR1(TMath::Abs(GetXCoord(px1+r1, kFALSE, kTRUE) - GetXCoord(px1-r1, kFALSE, kTRUE)) / 2);
+            SetR2(TMath::Abs(GetYCoord(py1-r2, kFALSE, kTRUE) - GetYCoord(py1+r2, kFALSE, kTRUE)) / 2);
             if (pTop) gPad->ShowGuidelines(this, event, 't', true);
             if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
             if (pL) gPad->ShowGuidelines(this, event, 'l', true);
             if (pR) gPad->ShowGuidelines(this, event, 'r', true);
-            gPad->Modified(kTRUE);
-            gPad->Update();
+            gPad->ModifiedUpdate();
          }
       }
       if (pINSIDE) {
          if (!opaque){
             dpx  = px-pxold;  dpy = py-pyold;
             px1 += dpx; py1 += dpy;
-            for (i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
-            for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
+            for (Int_t i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
+            for (Int_t i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          }
          else {
-            this->SetX1(gPad->AbsPixeltoX(px)+sdx);
-            this->SetY1(gPad->AbsPixeltoY(py)+sdy);
+            SetX1(gPad->AbsPixeltoX(px)+sdx);
+            SetY1(gPad->AbsPixeltoY(py)+sdy);
             gPad->ShowGuidelines(this, event, 'i', true);
-            gPad->Modified(kTRUE);
-            gPad->Update();
+            gPad->ModifiedUpdate();
          }
       }
       if (!opaque){
@@ -480,12 +476,11 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
         gROOT->SetEscape(kFALSE);
         if (opaque) {
             gPad->ShowGuidelines(this, event);
-            this->SetX1(oldX1);
-            this->SetY1(oldY1);
-            this->SetR1(oldR1);
-            this->SetR2(oldR2);
-            gPad->Modified(kTRUE);
-            gPad->Update();
+            SetX1(oldX1);
+            SetY1(oldY1);
+            SetR1(oldR1);
+            SetR2(oldR2);
+            gPad->ModifiedUpdate();
          }
          break;
       }
@@ -717,22 +712,11 @@ TPoint TEllipse::GetBBoxCenter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set center of the Ellipse
-
-void TEllipse::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   fX1 = gPad->PixeltoX(p.GetX());
-   fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set X coordinate of the center of the Ellipse
 
 void TEllipse::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   fX1 = gPad->PixeltoX(x);
+   SetX1(GetXCoord(x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,8 +724,7 @@ void TEllipse::SetBBoxCenterX(const Int_t x)
 
 void TEllipse::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   fY1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
+   SetY1(GetYCoord(y));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -750,12 +733,11 @@ void TEllipse::SetBBoxCenterY(const Int_t y)
 
 void TEllipse::SetBBoxX1(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t x1 = gPad->PixeltoX(x);
-   if (x1>fX1+fR1) return;
+   Double_t x1 = GetXCoord(x);
+   if (x1 > fX1+fR1) return;
 
-   fR1 = (fX1+fR1-x1)*0.5;
-   fX1 = x1 + fR1;
+   SetR1((fX1+fR1-x1)*0.5);
+   SetX1(x1 + fR1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -764,12 +746,11 @@ void TEllipse::SetBBoxX1(const Int_t x)
 
 void TEllipse::SetBBoxX2(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t x2 = gPad->PixeltoX(x);
-   if (x2<fX1-fR1) return;
+   Double_t x2 = GetXCoord(x);
+   if (x2 < fX1-fR1) return;
 
-   fR1 = (x2-fX1+fR1)*0.5;
-   fX1 = x2-fR1;
+   SetR1((x2-fX1+fR1)*0.5);
+   SetX1(x2 - fR1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -777,12 +758,11 @@ void TEllipse::SetBBoxX2(const Int_t x)
 
 void TEllipse::SetBBoxY1(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t y1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
-   if (y1<fY1-fR2) return;
+   Double_t y1 = GetYCoord(y);
+   if (y1 < fY1-fR2) return;
 
-   fR2 = (y1-fY1+fR2)*0.5;
-   fY1 = y1-fR2;
+   SetR2((y1-fY1+fR2)*0.5);
+   SetY1(y1 - fR2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,11 +771,9 @@ void TEllipse::SetBBoxY1(const Int_t y)
 
 void TEllipse::SetBBoxY2(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t y2 = gPad->PixeltoY(y-gPad->VtoPixel(0));
+   Double_t y2 = GetYCoord(y);
+   if (y2 > fY1+fR2) return;
 
-   if (y2>fY1+fR2) return;
-
-   fR2 = (fY1+fR2-y2)*0.5;
-   fY1 = y2+fR2;
+   SetR2((fY1+fR2-y2)*0.5);
+   SetY1(y2 + fR2);
 }
