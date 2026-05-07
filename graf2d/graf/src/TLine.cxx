@@ -143,35 +143,22 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Bool_t opaque  = parent.OpaqueMoving();
 
    auto action = [this, &parent](Int_t code, Int_t _x1, Int_t _y1, Int_t _x2 = 0, Int_t _y2 = 0) {
-      Double_t x1, y1, x2, y2;
 
       Bool_t isndc = TestBit(kLineNDC);
 
-      if (isndc) {
-         x1 = (1. * _x1 / parent.GetWw() - parent.GetAbsXlowNDC()) / parent.GetAbsWNDC();
-         y1 = ((1 - 1. * _y1 / parent.GetWh()) - parent.GetAbsYlowNDC()) / parent.GetAbsHNDC();
-         x2 = (1. * _x2 / parent.GetWw() - parent.GetAbsXlowNDC()) / parent.GetAbsWNDC();
-         y2 = ((1 - 1. * _y2 / parent.GetWh()) - parent.GetAbsYlowNDC()) / parent.GetAbsHNDC();
-      } else {
-         x1 = parent.AbsPixeltoX(_x1);
-         y1 = parent.AbsPixeltoY(_y1);
-         x2 = parent.AbsPixeltoX(_x2);
-         y2 = parent.AbsPixeltoY(_y2);
-      }
+      Double_t x1 = GetXCoord(_x1, isndc, kTRUE);
+      Double_t y1 = GetYCoord(_y1, isndc, kTRUE);
+      Double_t x2 = GetXCoord(_x2, isndc, kTRUE);
+      Double_t y2 = GetYCoord(_y2, isndc, kTRUE);
+
       if (code == 0) {
          auto pp = parent.GetPainter();
          pp->SetAttLine(*this);
          if (isndc)
             pp->DrawLineNDC(x1, y1, x2, y2);
          else
-            pp->DrawLine(x1, y1, x2, y2);
+            pp->DrawLine(parent.XtoPad(x1), parent.YtoPad(y1), parent.XtoPad(x2), parent.YtoPad(y2));
       } else {
-         if (!isndc) {
-            x1 = parent.PadtoX(x1);
-            x2 = parent.PadtoX(x2);
-            y1 = parent.PadtoY(y1);
-            y2 = parent.PadtoY(y2);
-         }
 
          if (code & 1) {
             SetX1(x1);
