@@ -85,7 +85,8 @@ inline void tobuf(char *&buf, UInt_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *((UInt_t *)buf) = Rbswap_32(x);
+   x = Rbswap_32(x);
+   memcpy(buf, &x, sizeof(x));
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
    const UInt_t *intermediary = &x;
@@ -197,7 +198,8 @@ inline void tobuf(char *&buf, ULong64_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *((ULong64_t *)buf) = Rbswap_64(x);
+   x = Rbswap_64(x);
+   memcpy(buf, &x, sizeof(x));
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
    const ULong64_t *intermediary = &x;
@@ -221,22 +223,17 @@ inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   union {
-      volatile UInt_t  i;
-      volatile Float_t f;
-   } u;
-   u.f = x;
-   *((UInt_t *)buf) = Rbswap_32(u.i);
+   UInt_t i;
+   memcpy(&i, &x, sizeof(x));
+   i = Rbswap_32(i);
+   memcpy(buf, &i, sizeof(i));
 # else
-   union {
-      volatile char    c[4];
-      volatile Float_t f;
-   } u;
-   u.f = x;
-   buf[0] = u.c[3];
-   buf[1] = u.c[2];
-   buf[2] = u.c[1];
-   buf[3] = u.c[0];
+   char c[4];
+   memcpy(c, &x, sizeof(x));
+   buf[0] = c[3];
+   buf[1] = c[2];
+   buf[2] = c[1];
+   buf[3] = c[0];
 # endif
 #else
    memcpy(buf, &x, sizeof(Float_t));
@@ -248,26 +245,21 @@ inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   union {
-      volatile ULong64_t l;
-      volatile Double_t  d;
-   } u;
-   u.d = x;
-   *((ULong64_t *)buf) = Rbswap_64(u.l);
+   ULong64_t l;
+   memcpy(&l, &x, sizeof(x));
+   l = Rbswap_64(l);
+   memcpy(buf, &l, sizeof(l));
 # else
-   union {
-      volatile char     c[8];
-      volatile Double_t d;
-   } u;
-   u.d = x;
-   buf[0] = u.c[7];
-   buf[1] = u.c[6];
-   buf[2] = u.c[5];
-   buf[3] = u.c[4];
-   buf[4] = u.c[3];
-   buf[5] = u.c[2];
-   buf[6] = u.c[1];
-   buf[7] = u.c[0];
+   char c[8];
+   memcpy(c, &x, sizeof(x));
+   buf[0] = c[7];
+   buf[1] = c[6];
+   buf[2] = c[5];
+   buf[3] = c[4];
+   buf[4] = c[3];
+   buf[5] = c[2];
+   buf[6] = c[1];
+   buf[7] = c[0];
 # endif
 #else
    memcpy(buf, &x, sizeof(Double_t));
@@ -291,7 +283,9 @@ inline void frombuf(char *&buf, UShort_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *x = Rbswap_16(*((UShort_t *)buf));
+   Short_t s;
+   memcpy(&s, buf, sizeof(s));
+   *x = Rbswap_16(s);
 # else
    char *sw = (char *)x;
    sw[0] = buf[1];
@@ -307,9 +301,11 @@ inline void frombuf(char *&buf, UInt_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *x = Rbswap_32(*((UInt_t *)buf));
+   UInt_t i;
+   memcpy(&i, buf, sizeof(i));
+   *x = Rbswap_32(i);
 # else
-   char *sw = (char *)x;
+   char *sw = reinterpret_cast<char *>(x);
    sw[0] = buf[3];
    sw[1] = buf[2];
    sw[2] = buf[1];
@@ -324,7 +320,7 @@ inline void frombuf(char *&buf, UInt_t *x)
 inline void frombuf(char *&buf, ULong_t *x)
 {
 #ifdef R__BYTESWAP
-   char *sw = (char *)x;
+   char *sw = reinterpret_cast<char *>(x);
    if (sizeof(ULong_t) == 8) {
       sw[0] = buf[7];
       sw[1] = buf[6];
@@ -354,9 +350,11 @@ inline void frombuf(char *&buf, ULong64_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   *x = Rbswap_64(*((ULong64_t *)buf));
+   ULong64_t l;
+   memcpy(&l, buf, sizeof(l));
+   *x = Rbswap_64(l);
 # else
-   char *sw = (char *)x;
+   char *sw = reinterpret_cast<char *>(x);
    sw[0] = buf[7];
    sw[1] = buf[6];
    sw[2] = buf[5];
@@ -376,23 +374,17 @@ inline void frombuf(char *&buf, Float_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   // Use a union to allow strict-aliasing
-   union {
-      volatile UInt_t  i;
-      volatile Float_t f;
-   } u;
-   u.i = Rbswap_32(*((UInt_t *)buf));
-   *x = u.f;
+   UInt_t i;
+   memcpy(&i, buf, sizeof(i));
+   i = Rbswap_32(i);
+   memcpy(x, &i, sizeof(i));
 # else
-   union {
-      volatile char    c[4];
-      volatile Float_t f;
-   } u;
-   u.c[0] = buf[3];
-   u.c[1] = buf[2];
-   u.c[2] = buf[1];
-   u.c[3] = buf[0];
-   *x = u.f;
+   char c[4];
+   c[0] = buf[3];
+   c[1] = buf[2];
+   c[2] = buf[1];
+   c[3] = buf[0];
+   memcpy(x, c, sizeof(c));
 # endif
 #else
    memcpy(x, buf, sizeof(Float_t));
@@ -404,27 +396,21 @@ inline void frombuf(char *&buf, Double_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(R__USEASMSWAP)
-   // Use a union to allow strict-aliasing
-   union {
-      volatile ULong64_t l;
-      volatile Double_t  d;
-   } u;
-   u.l = Rbswap_64(*((ULong64_t *)buf));
-   *x = u.d;
+   ULong64_t l;
+   memcpy(&l, buf, sizeof(l));
+   l =  Rbswap_64(l);
+   memcpy(x, &l, sizeof(l));
 # else
-   union {
-      volatile char     c[8];
-      volatile Double_t d;
-   } u;
-   u.c[0] = buf[7];
-   u.c[1] = buf[6];
-   u.c[2] = buf[5];
-   u.c[3] = buf[4];
-   u.c[4] = buf[3];
-   u.c[5] = buf[2];
-   u.c[6] = buf[1];
-   u.c[7] = buf[0];
-   *x = u.d;
+   char c[8];
+   c[0] = buf[7];
+   c[1] = buf[6];
+   c[2] = buf[5];
+   c[3] = buf[4];
+   c[4] = buf[3];
+   c[5] = buf[2];
+   c[6] = buf[1];
+   c[7] = buf[0];
+   memcpy(x, c, sizeof(c));
 # endif
 #else
    memcpy(x, buf, sizeof(Double_t));
