@@ -89,15 +89,17 @@ if(ENV)
     # value as a single string.
     string(REPLACE ";" "\\;" pair "${pair}")
 
-    # Split KEY=VALUE into a 2-element CMake list: [KEY;VALUE]
-    string(REGEX REPLACE "^([^=]+)=(.*)$" "\\1;\\2" pair "${pair}")
+    # Split KEY=VALUE
+    string(REGEX REPLACE "^([^=]+)=(.*)$" "\\1" var "${pair}")
+    string(REGEX REPLACE "^([^=]+)=(.*)$" "\\2" val "${pair}")
 
-    list(GET pair 0 var)
-    list(GET pair 1 val)
-
-    # As before, quoting is important here so the semicolons are not
-    # interpreted as list separators.
-    set(ENV{${var}} "${val}")
+    if(val STREQUAL "")
+      unset(ENV{${var}})
+    else()
+      # As before, quoting is important here so the semicolons are not
+      # interpreted as list separators.
+      set(ENV{${var}} "${val}")
+    endif()
 
     if(DBG)
       message(STATUS "testdriver[ENV]:${var}==>${val}")
