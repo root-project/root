@@ -1355,7 +1355,73 @@ void TString::ReadBuffer(char *&buffer)
 
    char *data = Init(nchars, nchars);
 
-   for (int i = 0; i < nchars; i++) frombuf(buffer, &data[i]);
+   memcpy(data, buffer, nchars);
+   buffer += nchars;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Safer version of ReadBuffer(char *&buffer), doing bound checks on the given buffer.
+/// This overload should be preferred over the other, which should be considered unsafe.
+/// \return The amount of bytes read from the buffer, or 0 in case of errors.
+
+std::size_t TString::ReadBuffer(char *&buffer, std::size_t bufsize)
+{
+   // NOTE: this is not a lambda because we want [[nodiscard]].
+   struct {
+      TString *fOuter;
+      std::size_t fRemainingBufSize;
+
+      [[nodiscard]] bool operator()(std::size_t additionalBytesNeeded)
+      {
+         if (R__unlikely(additionalBytesNeeded > fRemainingBufSize)) {
+            Error("TString::ReadBuffer", "given buffer is too small (%zu B remaining, need at least %zu more)",
+                  fRemainingBufSize, additionalBytesNeeded);
+            fOuter->UnLink();
+            fOuter->Zero();
+            return false;
+         }
+         fRemainingBufSize -= additionalBytesNeeded;
+         return true;
+      }
+   } ConsumeBufCapacity{this, bufsize};
+
+   if (!ConsumeBufCapacity(1)) {
+      return 0;
+   }
+
+   UnLink();
+   Zero();
+
+   UChar_t strLength;
+   Int_t   nchars;
+
+   // frombuf needs a non-const buffer, although it actually doesn't modify it.
+   char *buf = const_cast<char *>(buffer);
+   frombuf(buf, &strLength);
+   if (strLength == 255) {
+      if (!ConsumeBufCapacity(sizeof(nchars))) {
+         return 0;
+      }
+      frombuf(buf, &nchars);
+   } else {
+      nchars = strLength;
+   }
+
+   if (nchars < 0) {
+      Error("TString::ReadBuffer", "found case with nwh=%d and nchars=%d", strLength, nchars);
+      return 0;
+   }
+
+   char *data = Init(nchars, nchars);
+
+   if (!ConsumeBufCapacity(nchars)) {
+      return 0;
+   }
+   memcpy(data, buf, nchars);
+
+   std::size_t nbytesRead = bufsize - ConsumeBufCapacity.fRemainingBufSize;
+   buffer += nbytesRead;
+   return nbytesRead;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
