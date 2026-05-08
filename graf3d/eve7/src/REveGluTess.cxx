@@ -178,6 +178,9 @@ void ROOT::Experimental::EveGlu::TriangleCollector::ProcessData(const std::vecto
                                     const std::vector<UInt_t>  & polys,
                                     const Int_t                  n_polys)
 {
+   if (verts.empty() || polys.empty())
+      return;
+
    const Double_t *pnts = &verts[0];
    const UInt_t   *pols = &polys[0];
 
