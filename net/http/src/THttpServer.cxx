@@ -265,6 +265,31 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns true if server accept object content in POST reequests
+
+Bool_t THttpServer::IsAllowPostObject() const
+{
+   return fSniffer ? fSniffer->IsAllowPostObject() : kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set flag to allow receive and desereilize objects in POST requests
+///
+/// When object methods are executed via exe.json request,
+/// one can supply object as binary/json/xml in the body of POST request
+/// To allow creation of such object, one need to enable this flag
+/// Use of exe.json only possible in not-readonly mode
+///
+/// CAUTION! This is sensitive functionality and therefore should be
+/// used only when server not exposed to publicaly-accessed netowork.
+
+void THttpServer::SetAllowPostObject(Bool_t allow_post_obj)
+{
+   if (fSniffer)
+      fSniffer->SetAllowPostObject(allow_post_obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// returns true if only websockets are handled by the server
 ///
 /// Typically used by WebGui
