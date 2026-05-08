@@ -2960,6 +2960,9 @@ function(ROOTTEST_ADD_OLDTEST)
                      WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                      DEPENDS roottest-root-io-event
                      FIXTURES_REQUIRED UtilsLibraryBuild
+                     # The Makefile breaks if these two variables are in the environment by accident:
+                     # If they are unset, root-config --arch --platform is invoked correctly
+                     ENVIRONMENT ARCH=;PLATFORM=
                      LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
   if(MSVC)
     ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
