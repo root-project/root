@@ -428,7 +428,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
       if (gDebug > 1)
          Info("TRootSniffer", "Crate IMAGE from object %s", obj->GetName());
 
-      Int_t width(300), height(200);
+      Int_t width = 300, height = 200;
       TString drawopt;
 
       if (!options.empty()) {
@@ -441,9 +441,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
          Int_t h = url.GetIntValueFromOptions("h");
          if (h > 10)
             height = h;
-         const char *opt = url.GetValueFromOptions("opt");
-         if (opt)
-            drawopt = opt;
+         drawopt = DecodeUrlOptionValue(url.GetValueFromOptions("opt"), kTRUE);
       }
 
       Bool_t isbatch = gROOT->IsBatch();
