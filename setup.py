@@ -86,7 +86,7 @@ class ROOTBuild(_build):
             # - thisroot_scripts: the thisroot.* scripts are broken if CMAKE_INSTALL_PYTHONDIR!=CMAKE_INSTALL_LIBDIR
             "-Dtmva-pymva=OFF -Dtpython=OFF -Dthisroot_scripts=OFF "
             "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON "  # builtins
-            "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON "  # builtins
+            "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON -Dbuiltin_tiff=ON "  # builtins
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dssl=ON -Dimt=ON "
             "-Droofit=ON -Dmathmore=ON -Dbuiltin_fftw3=ON -Dbuiltin_gsl=ON "
             f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR} "
