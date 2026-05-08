@@ -92,6 +92,10 @@ public:
 
    void SetReadOnly(Bool_t readonly = kTRUE);
 
+   Bool_t IsAllowPostObject() const;
+
+   void SetAllowPostObject(Bool_t allow_post_obj);
+
    Bool_t IsWSOnly() const;
 
    void SetWSOnly(Bool_t on = kTRUE);
