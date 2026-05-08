@@ -1301,8 +1301,10 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       return kTRUE;
    }
 
-   if (!handler)
+   if (!handler) {
+      arg->Set404();
       return kFALSE;
+   }
 
    Bool_t process = kFALSE;
 
