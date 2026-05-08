@@ -316,7 +316,7 @@ void TAttText::Copy(TAttText &atttext) const
 
 Float_t TAttText::GetTextSizePercent(Float_t size)
 {
-   if ((GetTextFont() % 2 < 3) || !gPad)
+   if ((GetTextFont() % 10 < 3) || !gPad)
       return size;
 
    auto size0 = fTextSize;
