@@ -108,8 +108,13 @@ protected:
    virtual void       *ReadObjectAny(const TClass *expectedClass);
    virtual void        ReadBuffer(char *&buffer);
            void        ReadKeyBuffer(char *&buffer);
-   virtual Bool_t      ReadFile();
-   virtual void        SetBuffer() { DeleteBuffer(); fBuffer = new char[fNbytes];}
+           bool ReadKeyBuffer(char *&buffer, std::size_t bufsize);
+           virtual Bool_t ReadFile();
+           virtual void SetBuffer()
+           {
+              DeleteBuffer();
+              fBuffer = new char[fNbytes];
+           }
    virtual void        SetParent(const TObject *parent);
            void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
            Int_t       Sizeof() const override;
