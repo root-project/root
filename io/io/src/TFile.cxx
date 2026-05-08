@@ -1396,8 +1396,8 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
    if (fSeekInfo) {
       TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
       auto key = std::make_unique<TKey>(this);
-      std::vector<char> buffer(fNbytesInfo+1);
-      auto buf = buffer.data();
+      auto buffer = std::make_unique<char[]>(fNbytesInfo+1);
+      auto buf = buffer.get();
       Seek(fSeekInfo);                         // NOLINT: silence clang-tidy warnings
       if (ReadBuffer(buf,fNbytesInfo)) {       // NOLINT: silence clang-tidy warnings
          // ReadBuffer returns kTRUE in case of failure.
@@ -1419,8 +1419,9 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
             return {nullptr, 0, hash};
          }
       }
-      key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.data()));
+      if (!key->ReadKeyBuffer(buf, fNbytesInfo))
+         return {nullptr, 1, hash};
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.get()));
       if (list) list->SetOwner();
    } else {
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
@@ -2171,8 +2172,9 @@ Int_t TFile::Recover()
       if (seekpdir == fSeekDir && tclass && !tclass->InheritsFrom(TFile::Class())
                                && strcmp(classname,"TBasket")) {
          TKey *key = new TKey(this);
-         key->ReadKeyBuffer(bufread);
-         if (!strcmp(key->GetName(),"StreamerInfo")) {
+         char *bufread = header;
+         bool keyRead = key->ReadKeyBuffer(bufread, sizeof(header));
+         if (!keyRead || !strcmp(key->GetName(), "StreamerInfo")) {
             fSeekInfo = seekkey;
             SafeDelete(fInfoCache);
             fNbytesInfo = nbytes;
