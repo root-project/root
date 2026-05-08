@@ -120,6 +120,7 @@ class TRootSniffer : public TNamed {
 protected:
    TString fObjectsPath;    ///<! default path for registered objects
    Bool_t fReadOnly{kTRUE}; ///<! indicate if sniffer allowed to change ROOT structures - like read objects from file
+   Bool_t fAllowPostObject{kFALSE};    ///<! when true allow to deserialize objects received via POST requests
    Bool_t fScanGlobalDir{kTRUE};       ///<! when enabled (default), scan gROOT for histograms, canvases, open files
    std::unique_ptr<TFolder> fTopFolder; ///<! own top TFolder object, used for registering objects
    THttpCallArg *fCurrentArg{nullptr}; ///<! current http arguments (if any)
@@ -187,6 +188,12 @@ public:
 
    /** Returns readonly mode */
    Bool_t IsReadOnly() const { return fReadOnly; }
+
+   /** Allow to deserialize object in POST requests, default off */
+   void SetAllowPostObject(Bool_t allow_post_obj) { fAllowPostObject = allow_post_obj; }
+
+   /** Is allowed to deserialize object in POST requests, default off */
+   Bool_t IsAllowPostObject() const { return fAllowPostObject; }
 
    void Restrict(const char *path, const char *options);
 
