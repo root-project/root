@@ -2101,13 +2101,6 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
 
 Int_t TFile::Recover()
 {
-   Short_t  keylen,cycle;
-   UInt_t   datime;
-   Int_t    nbytes,date,time,objlen,nwheader;
-   Long64_t seekkey,seekpdir;
-   char     header[1024];
-   char    *buffer, *bufread;
-   char     nwhc;
    Long64_t idcur = fBEGIN;
 
    Long64_t size;
@@ -2121,10 +2114,11 @@ Int_t TFile::Recover()
    if (fWritable && !fFree) fFree  = new TList;
 
    Int_t nrecov = 0;
-   nwheader = 1024;
-   Int_t nread = nwheader;
 
    while (idcur < fEND) {
+      char header[1024];
+      int nread = sizeof(header);
+
       Seek(idcur);                             // NOLINT: silence clang-tidy warnings
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
       if (ReadBuffer(header, nread)) {         // NOLINT: silence clang-tidy warnings
@@ -2133,8 +2127,8 @@ Int_t TFile::Recover()
                GetName(),idcur);
          break;
       }
-      buffer  = header;
-      bufread = header;
+      char *buffer = header;
+      Int_t nbytes;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
          Error("Recover","Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
@@ -2148,10 +2142,15 @@ Int_t TFile::Recover()
       }
       Version_t versionkey;
       frombuf(buffer, &versionkey);
+      Int_t objlen;
       frombuf(buffer, &objlen);
+      UInt_t datime;
       frombuf(buffer, &datime);
+      Short_t keylen;
       frombuf(buffer, &keylen);
+      Short_t cycle;
       frombuf(buffer, &cycle);
+      Long64_t seekkey, seekpdir;
       if (versionkey > 1000) {
          frombuf(buffer, &seekkey);
          frombuf(buffer, &seekpdir);
@@ -2160,13 +2159,15 @@ Int_t TFile::Recover()
          frombuf(buffer, &skey);  seekkey  = (Long64_t)skey;
          frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
-      frombuf(buffer, &nwhc);
-      char *classname = nullptr;
-      if (nwhc <= 0 || nwhc > 100) break;
-      classname = new char[nwhc+1];
-      int i, nwhci = nwhc;
-      for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
-      classname[nwhci] = '\0';
+      char classnameLen;
+      frombuf(buffer, &classnameLen);
+      char classname[101];
+      if (classnameLen <= 0 || classnameLen > (Int_t)sizeof(classname))
+         break;
+      memcpy(classname, buffer, classnameLen);
+      buffer += classnameLen;
+      classname[static_cast<std::size_t>(classnameLen)] = '\0';
+      Int_t date, time;
       TDatime::GetDateTime(datime, date, time);
       TClass *tclass = TClass::GetClass(classname);
       if (seekpdir == fSeekDir && tclass && !tclass->InheritsFrom(TFile::Class())
@@ -2186,7 +2187,6 @@ Int_t TFile::Recover()
             Info("Recover", "%s, recovered key %s:%s at address %lld",GetName(),key->GetClassName(),key->GetName(),idcur);
          }
       }
-      delete [] classname;
       idcur += nbytes;
    }
    if (fWritable) {
