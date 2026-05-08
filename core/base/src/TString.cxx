@@ -1412,11 +1412,19 @@ std::size_t TString::ReadBuffer(char *&buffer, std::size_t bufsize)
       return 0;
    }
 
-   char *data = Init(nchars, nchars);
-
    if (!ConsumeBufCapacity(nchars)) {
       return 0;
    }
+
+   char *data;
+   try {
+      data = Init(nchars, nchars);
+   } catch (const std::bad_alloc &ex) {
+      Error("TString::ReadBuffer", "out of memory trying to allocate a string of %d bytes.", nchars);
+      return 0;
+   }
+
+   assert(data);
    memcpy(data, buf, nchars);
 
    std::size_t nbytesRead = bufsize - ConsumeBufCapacity.fRemainingBufSize;
