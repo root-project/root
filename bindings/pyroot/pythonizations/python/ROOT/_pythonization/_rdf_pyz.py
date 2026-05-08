@@ -8,7 +8,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 import re
+import textwrap
 import typing
+import warnings
 
 from .._numbadeclare import _NumbaDeclareDecorator
 
@@ -364,6 +366,32 @@ def _handle_cpp_callables(func, original_template, *args, rdf=None, cols=None):
         return original_template[type(func)](*args)
 
 
+class _WarnOnce:
+    called = False
+
+    @classmethod
+    def warn(cls):
+        if not cls.called:
+            msg = """
+                RDataFrame is implicitly calling numba to JIT compile your Python functions. This behaviour will be in the
+                future only opt-in. You can silence this warning and achieve the same behaviour by explicitly calling the
+                ROOT.Numba.Declare decorator on your Python function and pass a string expression to RDataFrame that calls
+                the same function, for example:
+
+                ```
+                @ROOT.Numba.Declare([input_type_1, input_type_2], ret_type)
+                def foo(x, y):
+                    return x + y
+                
+                df.Define("sum", "Numba::foo(x, y)")
+                ```
+                
+                See more details at https://root.cern/doc/master/classROOT_1_1RDataFrame.html#python
+            """
+            warnings.warn(textwrap.dedent(msg), FutureWarning)
+        cls.called = True
+
+
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
     Filters the entries of RDF according to a given condition.
@@ -436,6 +464,7 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     if rdf_node is not None:
         return rdf_node
 
+    _WarnOnce.warn()
     jitter = FunctionJitter(rdf)
     func.__annotations__["return"] = (
         "bool"  # return type for Filters is bool # Note: You can keep double and Filter still works.
@@ -495,6 +524,7 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     if rdf_node is not None:
         return rdf_node
 
+    _WarnOnce.warn()
     jitter = FunctionJitter(rdf)
     func_call = jitter.jit_function(func, cols, extra_args)
     return rdf._OriginalDefine(col_name, "Numba::" + func_call)
