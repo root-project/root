@@ -636,47 +636,46 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
             return debug != nullptr;
          const char *rest_url = pos + strlen(method_name) + 7;
          if (*rest_url == '&') ++rest_url;
-         call_args.Form("\"%s\"", rest_url);
+         call_args.Append("\"");
+         call_args.Append(DecodeUrlOptionValue(rest_url, kTRUE));
+         call_args.Append("\"");
          break;
       }
 
       TString sval;
       const char *val = url.GetValueFromOptions(arg->GetName());
-      if (val) {
-         sval = DecodeUrlOptionValue(val, kFALSE);
-         val = sval.Data();
-      }
+      if (val)
+         sval = DecodeUrlOptionValue(val, kTRUE);
 
-      if ((val != nullptr) && (strcmp(val, "_this_") == 0)) {
+      Bool_t sanitize_numeric = kFALSE;
+
+      if (sval == "_this_") {
          // special case - object itself is used as argument
          sval.Form("(%s*)0x%zx", obj_cl->GetName(), (size_t)obj_ptr);
-         val = sval.Data();
-      } else if ((val != nullptr) && (fCurrentArg != nullptr) && (fCurrentArg->GetPostData() != nullptr)) {
+      } else if ((fCurrentArg != nullptr) && (fCurrentArg->GetPostData() != nullptr)) {
          // process several arguments which are specific for post requests
-         if (strcmp(val, "_post_object_xml_") == 0) {
+         if (sval == "_post_object_xml_") {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferXML::ConvertFromXML((const char *)fCurrentArg->GetPostData());
-            if (!post_obj) {
+            if (!post_obj)
                sval = "0";
-            } else {
+            else {
                sval.Form("(%s*)0x%zx", post_obj->ClassName(), (size_t)post_obj);
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
-            val = sval.Data();
-         } else if (strcmp(val, "_post_object_json_") == 0) {
+         } else if (sval == "_post_object_json_") {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferJSON::ConvertFromJSON((const char *)fCurrentArg->GetPostData());
-            if (!post_obj) {
+            if (!post_obj)
                sval = "0";
-            } else {
+            else {
                sval.Form("(%s*)0x%zx", post_obj->ClassName(), (size_t)post_obj);
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
-            val = sval.Data();
-         } else if ((strcmp(val, "_post_object_") == 0) && url.HasOption("_post_class_")) {
-            TString clname = url.GetValueFromOptions("_post_class_");
+         } else if ((sval == "_post_object_") && url.HasOption("_post_class_")) {
+            TString clname = DecodeUrlOptionValue(url.GetValueFromOptions("_post_class_"), kTRUE);
             TClass *arg_cl = gROOT->GetClass(clname, kTRUE, kTRUE);
             if ((arg_cl != nullptr) && (arg_cl->GetBaseClassOffset(TObject::Class()) == 0) && (post_obj == nullptr)) {
                post_obj = (TObject *)arg_cl->New();
@@ -693,39 +692,61 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                      garbage.Add(post_obj);
                }
             }
-            sval.Form("(%s*)0x%zx", clname.Data(), (size_t)post_obj);
-            val = sval.Data();
-         } else if (strcmp(val, "_post_data_") == 0) {
+            if (!post_obj)
+               sval = "0";
+            else
+               sval.Form("(%s*)0x%zx", clname.Data(), (size_t)post_obj);
+         } else if (sval == "_post_data_")
             sval.Form("(void*)0x%zx", (size_t)fCurrentArg->GetPostData());
-            val = sval.Data();
-         } else if (strcmp(val, "_post_length_") == 0) {
+         else if (sval == "_post_length_")
             sval.Form("%ld", (long)fCurrentArg->GetPostDataLength());
-            val = sval.Data();
-         }
-      }
+         else
+            sanitize_numeric = kTRUE;
+      } else
+         sanitize_numeric = kTRUE;
 
-      if (!val)
-         val = arg->GetDefault();
+      if (sval.IsNull() && arg->GetDefault())
+         sval = arg->GetDefault();
 
       if (debug)
-         debug->append(TString::Format("  Argument:%s Type:%s Value:%s \n", arg->GetName(), arg->GetFullTypeName(),
-                                       val ? val : "<missed>")
-                          .Data());
-      if (!val)
-         return debug != nullptr;
+         debug->append(
+            TString::Format("  Argument:%s Type:%s Value:%s \n", arg->GetName(), arg->GetFullTypeName(), sval.Data())
+               .Data());
 
       if (call_args.Length() > 0)
          call_args += ", ";
 
-      if ((strcmp(arg->GetFullTypeName(), "const char*") == 0) || (strcmp(arg->GetFullTypeName(), "Option_t*") == 0)) {
-         int len = strlen(val);
-         if ((strlen(val) < 2) || (*val != '\"') || (val[len - 1] != '\"'))
-            call_args.Append(TString::Format("\"%s\"", val));
-         else
-            call_args.Append(val);
+      Bool_t isstr = (strcmp(arg->GetFullTypeName(), "const char*") == 0) ||
+                     (strcmp(arg->GetFullTypeName(), "Option_t*") == 0) ||
+                     (strcmp(arg->GetFullTypeName(), "string") == 0);
+
+      if (isstr) {
+         // check that quotes provided for the string argument
+         // all special characters were escaped before
+         if (sval.IsNull())
+            sval = "\"\"";
+         else {
+            if (sval[0] != '"')
+               sval.Prepend("\"");
+            if (sval[sval.Length() - 1] != '"')
+               sval.Append("\"");
+         }
       } else {
-         call_args.Append(val);
+         // for numeric types keep only numeric and alphabetic characters
+         // exclude others - especially remove all escape characters
+         if (sanitize_numeric) {
+            TString sanitized;
+            for(Size_t i = 0; i < sval.Length(); ++i) {
+               if (std::isalnum(sval[i]) || std::strchr(".:+-", sval[i]))
+                  sanitized.Append(sval[i]);
+            }
+            sval = sanitized;
+         }
+         if (sval.IsNull())
+            sval = "0";
       }
+
+      call_args.Append(sval);
    }
 
    TMethodCall *call = nullptr;
