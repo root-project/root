@@ -587,7 +587,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
          sval.Form("(%s*)0x%zx", obj_cl->GetName(), (size_t)obj_ptr);
       } else if ((fCurrentArg != nullptr) && (fCurrentArg->GetPostData() != nullptr)) {
          // process several arguments which are specific for post requests
-         if (sval == "_post_object_xml_") {
+         if (fAllowPostObject && (sval == "_post_object_xml_")) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferXML::ConvertFromXML((const char *)fCurrentArg->GetPostData());
             if (!post_obj)
@@ -597,7 +597,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
-         } else if (sval == "_post_object_json_") {
+         } else if (fAllowPostObject && (sval == "_post_object_json_")) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferJSON::ConvertFromJSON((const char *)fCurrentArg->GetPostData());
             if (!post_obj)
@@ -607,7 +607,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
-         } else if ((sval == "_post_object_") && url.HasOption("_post_class_")) {
+         } else if (fAllowPostObject && (sval == "_post_object_") && url.HasOption("_post_class_")) {
             TString clname = DecodeUrlOptionValue(url.GetValueFromOptions("_post_class_"), kTRUE);
             TClass *arg_cl = gROOT->GetClass(clname, kTRUE, kTRUE);
             if ((arg_cl != nullptr) && (arg_cl->GetBaseClassOffset(TObject::Class()) == 0) && (post_obj == nullptr)) {
