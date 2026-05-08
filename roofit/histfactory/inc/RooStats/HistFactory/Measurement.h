@@ -14,6 +14,7 @@
 #include <TNamed.h>
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -699,6 +700,10 @@ public:
    const std::vector<RooStats::HistFactory::PreprocessFunction> &GetFunctionObjects() const { return fFunctionObjects; }
    std::vector<std::string> GetPreprocessFunctions() const;
 
+   using PreprocessFunctionCallback = std::function<void(RooWorkspace &)>;
+   void AddPreprocessFunctionCallback(PreprocessFunctionCallback callback);
+   void ApplyPreprocessFunctionCallbacks(RooWorkspace &ws) const;
+
    /// get vector of defined Asimov Datasets
    std::vector<RooStats::HistFactory::Asimov> &GetAsimovDatasets() { return fAsimovDatasets; }
    /// add an Asimov Dataset
@@ -771,6 +776,10 @@ private:
 
    /// List of Preprocess Function objects
    std::vector<RooStats::HistFactory::PreprocessFunction> fFunctionObjects;
+
+   /// Programmatic preprocess callbacks, executed during workspace creation.
+   /// Transient because std::function is not ROOT-streamable.
+   std::vector<PreprocessFunctionCallback> fPreprocessFunctionCallbacks; //!
 
    /// List of Asimov datasets to generate
    std::vector<RooStats::HistFactory::Asimov> fAsimovDatasets;
