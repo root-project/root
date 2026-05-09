@@ -199,6 +199,36 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
          std::runtime_error);
    }
 }
+
+// Regression test: when a deferred JIT helper fails to compile (e.g. the
+// multi-column Vary() overload was picked with a single-column expression,
+// yielding an ill-formed template instantiation), RDataFrame must throw
+// instead of dereferencing a null function pointer at event-loop time.
+//
+// Run in a forked subprocess via EXPECT_EXIT, because the failed cling
+// declaration leaves the interpreter in a state from which subsequent
+// JIT compilations cannot recover (it would crash later tests).
+TEST(RDFVaryDeathTest, JitFailureThrowsInsteadOfCrashing)
+{
+   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+   EXPECT_EXIT(
+      {
+         try {
+            auto df = ROOT::RDataFrame(10).Define("x", "1.f * rdfentry_");
+            // Multi-column overload with a single-RVec expression: the
+            // resulting RVariation<..., IsSingleColumn=false> is ill-formed.
+            auto bad = df.Vary(std::vector<std::string>{"x"}, "ROOT::RVecF{x - 0.5f, x + 0.5f}",
+                               std::vector<std::string>{"down", "up"}, "xVar");
+            bad.Count().GetValue();
+            std::exit(2); // no exception thrown: unexpected
+         } catch (const std::runtime_error &) {
+            std::exit(0); // expected path
+         } catch (...) {
+            std::exit(3); // wrong exception type
+         }
+      },
+      ::testing::ExitedWithCode(0), "");
+}
 #endif
 #endif
 
