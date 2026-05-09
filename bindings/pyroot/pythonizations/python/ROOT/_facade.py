@@ -306,6 +306,14 @@ class ROOTFacade(types.ModuleType):
         # Make sure the interpreter is initialized once gROOT has been initialized
         self._cppyy.gbl.TInterpreter.Instance()
 
+        # Release the GIL on the heavy TInterpreter functions. This lets
+        # background Python threads make progress - in particular, JupyROOT's
+        # StreamCapture polling thread can drain stdout/stderr live to the
+        # notebook frontend instead of waiting for the cell to finish.
+        TInterpreter = self._cppyy.gbl.TInterpreter
+        for name in ("ProcessLine", "ProcessLineSynch", "Declare", "LoadFile", "LoadMacro", "ExecuteMacro"):
+            getattr(TInterpreter, name).__release_gil__ = True
+
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
         if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
