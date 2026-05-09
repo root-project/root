@@ -15,13 +15,13 @@
 
 from __future__ import print_function
 
+import ctypes
 import fnmatch
 import os
 import re
 import sys
 import tempfile
 import time
-import ctypes
 from contextlib import contextmanager
 from datetime import datetime
 from hashlib import sha1
@@ -293,8 +293,12 @@ def processCppCodeImpl(code):
 
 
 def processMagicCppCodeImpl(code):
-    err = ROOT.ProcessLineWrapper(code)
-    if err == ROOT.TInterpreter.kProcessing:
+    import cppyy.ll
+
+    err = ctypes.c_int(0)
+    err_ptr = cppyy.ll.reinterpret_cast["TInterpreter::EErrorCode*"](ctypes.addressof(err))
+    ROOT.gInterpreter.ProcessLine(code, err_ptr)
+    if err.value == ROOT.TInterpreter.kProcessing:
         ROOT.gInterpreter.ProcessLine(".@")
         ROOT.gInterpreter.ProcessLine('cerr << "Unbalanced braces. This cell was not processed." << endl;')
 
@@ -408,6 +412,20 @@ class StreamCapture(object):
         self.isFirstPreExecute = True
         self.isFirstPostExecute = True
 
+    def _flushCaptured(self):
+        # Drain whatever the polling thread has captured so far to the
+        # notebook's stdout/stderr.
+        out = self.ioHandler.GetStdout()
+        err = self.ioHandler.GetStderr()
+        if out:
+            sys.stdout.write(out)
+            sys.stdout.flush()
+        if err:
+            sys.stderr.write(err)
+            sys.stderr.flush()
+        if out or err:
+            self.ioHandler.Clear()
+
     def syncCapture(self, defout=""):
         self.outString = defout
         self.errString = defout
@@ -417,6 +435,11 @@ class StreamCapture(object):
         iterIndex = 0
         while self.flag:
             self.ioHandler.Poll()
+            # Stream ouput live so long-running C++ code shows progress in the
+            # notebook as it runs. Only when transformers are registered, we
+            # keep accumulating and get the full output in post_execute.
+            if not transformers:
+                self._flushCaptured()
             if not self.flag:
                 return
             waitTime = 0.1 if iterIndex >= lenWaitTimes else waitTimes[iterIndex]
@@ -442,13 +465,14 @@ class StreamCapture(object):
         self.ioHandler.Poll()
         self.ioHandler.EndCapture()
 
-        # Print for the notebook
-        out = self.ioHandler.GetStdout()
-        err = self.ioHandler.GetStderr()
+        # Flush anything that arrived between the polling thread's last
+        # iteration and EndCapture. With transformers registered nothing has
+        # been streamed yet, so this hands them the full cell output.
         if not transformers:
-            sys.stdout.write(out)
-            sys.stderr.write(err)
+            self._flushCaptured()
         else:
+            out = self.ioHandler.GetStdout()
+            err = self.ioHandler.GetStderr()
             for t in transformers:
                 (out, err, otype) = t(out, err)
                 if otype == "html":
@@ -906,16 +930,6 @@ def loadMagicsAndCapturers():
         capture.register()
 
 
-def declareProcessLineWrapper():
-    ROOT.gInterpreter.Declare("""
-TInterpreter::EErrorCode ProcessLineWrapper(const char* line) {
-    TInterpreter::EErrorCode err;
-    gInterpreter->ProcessLine(line, &err);
-    return err;
-}
-""")
-
-
 def enhanceROOTModule():
     ROOT.enableJSVis = enableJSVis
 
@@ -930,6 +944,5 @@ def iPythonize():
     setStyle()
     initializeJSVis()
     loadMagicsAndCapturers()
-    declareProcessLineWrapper()
     # enableCppHighlighting()
     enhanceROOTModule()
