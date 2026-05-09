@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import atexit
 import builtins
 import os
 import platform
@@ -188,3 +189,28 @@ if _is_ipython:
         from . import _jupyroot  # noqa: F401  # imported the side effect of setting up JupyROOT
 
         # from . import JsMVA
+
+
+def _cleanup():
+    # Delete TBrowser instances while the GUI event loop is still alive,
+    # which fixed https://github.com/root-project/root/issues/21912.
+    #
+    # The cleanup is kept tight on purpose. A previous version called
+    # TROOT::EndOfProcessCleanups() outright (removed in commit e9d2803), which
+    # also ran gInterpreter->ResetGlobals() and ShutDown() and interfered with
+    # Python objects still alive at exit time, by cleaning up objects that
+    # might be referenced by other Python proxies outside the control of gROOT.
+    facade = sys.modules[__name__]
+
+    # Skip if the C++ runtime was never initialized (i.e. _finalSetup did
+    # not run): nothing to clean up, and we don't want to drag cppyy in.
+    if "_cppyy" not in facade.__dict__:
+        return
+
+    if not getattr(facade.PyConfig, "ShutDown", True):
+        return
+
+    facade.gROOT.GetListOfBrowsers().Delete()
+
+
+atexit.register(_cleanup)
