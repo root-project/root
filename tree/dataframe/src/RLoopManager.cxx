@@ -125,7 +125,14 @@ void DeclareAndRetrieveDeferredJitCalls(const std::string &codeToDeclare)
    // error: 'MyHelperType' is an incomplete type
    // return std::make_unique<Action_t>(Helper_t(std::move(*h)), bl, std::move(prevNode), colRegister);
    //                                   ^
-   gInterpreter->ProcessLine(codeToDeclare.c_str());
+   TInterpreter::EErrorCode interpErrorCode(TInterpreter::kNoError);
+   gInterpreter->ProcessLine(codeToDeclare.c_str(), &interpErrorCode);
+   if (interpErrorCode != TInterpreter::kNoError) {
+      throw std::runtime_error(
+         "\nAn error occurred during just-in-time compilation in RLoopManager::Run. The lines above might "
+         "indicate the cause of the error.\nAll RDF objects that have not run their event loop yet should be "
+         "considered in an invalid state.\n");
+   }
 
    // Step 2: Retrieve the declared functions as function pointers, cache them
    // for later use in RunDeferredCalls
@@ -139,9 +146,19 @@ void DeclareAndRetrieveDeferredJitCalls(const std::string &codeToDeclare)
          // fast fetch of the address via gInterpreter
          // (faster than gInterpreter->Evaluate(function name, ret), ret->GetAsPointer())
          // Retrieve the JIT helper function we registered via RegisterJitHelperCall
-         auto declid =
-            gInterpreter->GetFunction(clinfo, ("jitNodeRegistrator_" + std::to_string(codeAndId.second)).c_str());
-         assert(declid);
+         const std::string funcName = "jitNodeRegistrator_" + std::to_string(codeAndId.second);
+         auto declid = gInterpreter->GetFunction(clinfo, funcName.c_str());
+         if (!declid) {
+            // The interpreter failed to compile the helper. Without this check
+            // we would later dereference a null function pointer and crash.
+            gInterpreter->ClassInfo_Delete(clinfo);
+            throw std::runtime_error(
+               "\nAn error occurred during just-in-time compilation in RLoopManager::Run: failed to retrieve "
+               "the JIT helper function '" +
+               funcName +
+               "'. The lines above might indicate the cause of the error.\nAll RDF objects that have not run "
+               "their event loop yet should be considered in an invalid state.\n");
+         }
          auto minfo = gInterpreter->MethodInfo_Factory(declid);
          assert(gInterpreter->MethodInfo_IsValid(minfo));
          auto mname = gInterpreter->MethodInfo_GetMangledName(minfo);
