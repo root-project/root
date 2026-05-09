@@ -48,16 +48,14 @@
 TGHtmlElement *TGHtml::TokenByIndex(int N, int /*flag*/)
 {
    TGHtmlElement *p;
-   int n;
 
    if (N == 0) return fPFirst;
 
    if (N > fNToken / 2) {
       // Start at the end and work back toward the beginning
-      for (p = fPLast, n = fNToken; p; p = p->fPPrev) {
+      for (p = fPLast; p; p = p->fPPrev) {
          if (p->fType != Html_Block) {
             if (p->fElId == N) break;
-            --n;
          }
       }
    } else {

@@ -486,7 +486,7 @@ TSpline3::TSpline3(const char *title,
    // them with node information
    fPoly = new TSplinePoly3[fNp];
    for (Int_t i=0; i<fNp; ++i) {
-      Double_t xx, yy;
+      Double_t xx = 0., yy = 0.;
       g->GetPoint(i,xx,yy);
       fPoly[i].X()=xx;
       fPoly[i].Y()=yy;
@@ -1355,7 +1355,7 @@ TSpline5::TSpline5(const char *title,
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<fNp-beg; ++i) {
-      Double_t xx, yy;
+      Double_t xx = 0., yy = 0.;
       g->GetPoint(i,xx,yy);
       fPoly[i+beg].X()=xx;
       fPoly[i+beg].Y()=yy;
