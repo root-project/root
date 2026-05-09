@@ -1048,9 +1048,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             // Get a RooArgSet of the observables:
             // Names in the list fObsNameVec:
             RooArgList theObservables;
-            std::vector<std::string>::iterator itr = fObsNameVec.begin();
-            for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
-              theObservables.add( *proto.var(*itr) );
+            for (const auto &obsName : fObsNameVec) {
+              theObservables.add( *proto.var(obsName) );
             }
 
             // Create the list of terms to
