@@ -1287,7 +1287,7 @@ std::string outer_with_template(const std::string& name)
         else if (tpl_open == 0 && \
                  c == ':' && pos+1 < name.size() && name[pos+1] == ':') {
         // found the extend of the scope ... done
-            return name.substr(0, pos-1);
+            return name.substr(0, pos);
         }
     }
 
