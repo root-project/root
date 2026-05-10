@@ -26,4 +26,7 @@ endif()
   ROOTTEST_ADD_TEST(gh_16406
                     MACRO gh_16406.py
                     OUTREF gh_16406.ref)
+
+  ROOTTEST_ADD_TEST(gh_21536
+                    MACRO gh_21536.py)
 endif()
