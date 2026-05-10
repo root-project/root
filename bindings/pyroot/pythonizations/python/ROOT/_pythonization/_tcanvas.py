@@ -72,6 +72,21 @@ if __name__ == "__main__":
 from . import _run_root_event_loop, pythonization
 
 
+def _TCanvas_init_releasing_ownership(self, *args, **kwargs):
+    """
+    Forward the arguments to the C++ constructor and give up Python ownership
+    if the canvas registered itself to gROOT's list of canvases (which is
+    the case for any non-default constructor). This avoids for example double deletes when a subsequent TCanvas with the same name
+    triggers gROOT to delete the old canvas while the previous Python
+    proxy is still alive somewhere.
+    """
+    import ROOT
+
+    self._cpp_constructor(*args, **kwargs)
+    if ROOT.gROOT.GetListOfCanvases().FindObject(self):
+        ROOT.SetOwnership(self, False)
+
+
 def _TCanvas_Update(self, block=False):
     """
     Updates the canvas.
@@ -116,3 +131,6 @@ def pythonize_tcanvas(klass):
     klass._Draw = klass.Draw
     klass.Update = _TCanvas_Update
     klass.Draw = _TCanvas_Draw
+
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TCanvas_init_releasing_ownership
