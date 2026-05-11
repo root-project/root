@@ -666,7 +666,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
-///  @param fname  : Function name used for filling the histogram
+///  @param fobj   : Function name used for filling the histogram
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used to sample
 ///
