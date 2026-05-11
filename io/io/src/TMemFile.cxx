@@ -11,7 +11,7 @@
 
 /**
 \class TMemFile TMemFile.cxx
-\ingroup IO
+\ingroup io_files
 
 A TMemFile is like a normal TFile except that it reads and writes
 only from memory.

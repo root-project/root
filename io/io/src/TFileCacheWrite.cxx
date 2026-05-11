@@ -11,7 +11,7 @@
 
 /**
 \class TFileCacheWrite TFileCacheWrite.cxx
-\ingroup IO
+\ingroup io_files
 A cache when writing files over the network
 
 A caching system to speed up network I/O, i.e. when there is

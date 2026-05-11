@@ -101,7 +101,7 @@ protected:
 // ======================================================================
 /**
 \class TSQLObjectDataPool
-\ingroup IO
+\ingroup io_SQL
 XML object keeper class
 */
 

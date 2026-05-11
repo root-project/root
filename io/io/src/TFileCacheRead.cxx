@@ -11,7 +11,7 @@
 
 /**
  \class TFileCacheRead
- \ingroup IO
+ \ingroup io_files
 
  A cache when reading files over the network.
 

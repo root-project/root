@@ -24,7 +24,7 @@ namespace Internal {
 
 /**
  * \class RRawFile RRawFile.hxx
- * \ingroup IO
+ * \ingroup io_files
  *
  * The RRawFile provides read-only access to local and remote files. Data can be read either byte-wise or line-wise.
  * The RRawFile base class provides line-wise access and buffering for byte-wise access. Derived classes provide the
