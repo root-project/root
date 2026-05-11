@@ -52,6 +52,7 @@ To automate files loading and objects drawing, one can provide number of URL par
 - palette - id of default color palette, 51..121 - new ROOT6 palette  (default 57)
 - interactive - enable/disable interactive functions 0 - disable all, 1 - enable all
 - noselect - hide file-selection part in the browser (only when file name is specified)
+- info - information text displayed on the top of hierarchy browser
 - mathjax - use MathJax for latex output
 - latex - 'off', 'symbols', 'normal', 'mathjax', 'alwaysmath' control of TLatex processor
 - style - name of TStyle object to define global JSROOT style
@@ -75,9 +76,9 @@ To automate files loading and objects drawing, one can provide number of URL par
 
 For instance:
 
-- <https://root.cern/js/latest/?file=../files/hsimple.root&item=hpx;1>
-- <https://root.cern/js/latest/?file=../files/hsimple.root&nobrowser&item=hpxpy;1&opt=colz>
-- <https://root.cern/js/latest/?file=../files/hsimple.root&noselect&layout=grid2x2&item=hprof;1>
+- <https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=hpx;1>
+- <https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&nobrowser&item=hpxpy;1&opt=colz>
+- <https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&noselect&layout=grid2x2&item=hprof;1>
 
 Following layouts are supported:
 
@@ -124,7 +125,11 @@ List of supported classes and draw options:
 [e4](https://root.cern/js/latest/examples.htm#th1_e4),
 [lego](https://root.cern/js/latest/examples.htm#th1_lego),
 [text](https://root.cern/js/latest/examples.htm#th1_text),
-[X+Y+](https://root.cern/js/latest/examples.htm#th1_x+y+)
+[X+Y+](https://root.cern/js/latest/examples.htm#th1_x+y+),
+[tickxy](https://root.cern/js/latest/examples.htm#th1_tickxy),
+[xticks](https://root.cern/js/latest/examples.htm#th1_xticks),
+[logy](https://root.cern/js/latest/examples.htm#th1_logy),
+[mly](https://root.cern/js/latest/examples.htm#th1_mly)
 - TH2 : [scat](https://root.cern/js/latest/examples.htm#th2),
 [col](https://root.cern/js/latest/examples.htm#th2_col),
 [colz](https://root.cern/js/latest/examples.htm#th2_colz),
@@ -152,7 +157,8 @@ List of supported classes and draw options:
 [lego3](https://root.cern/js/latest/examples.htm#th2_lego3),
 [lego4](https://root.cern/js/latest/examples.htm#th2_lego4),
 [circ](https://root.cern/js/latest/examples.htm#th2_circ),
-[chord](https://root.cern/js/latest/examples.htm#th2_chord)
+[chord](https://root.cern/js/latest/examples.htm#th2_chord),
+[xyticks](https://root.cern/js/latest/examples.htm#th2_xyticks)
 - TH2Poly : [col](https://root.cern/js/latest/examples.htm#th2poly_honeycomb),
 [lego](https://root.cern/js/latest/examples.htm#th2poly_lego),
 [europe](https://root.cern/js/latest/examples.htm#th2poly_europe),
@@ -216,12 +222,30 @@ More examples of supported classes can be found on: <https://root.cern/js/latest
 
 One can change some histograms colors using draw options:
 
-- line_N: [line color](https://root.cern/js/latest/examples.htm#th1_line_n)
-- fill_N: [fill color](https://root.cern/js/latest/examples.htm#th1_fill_n)
-- xaxis_N: [X axis color](https://jsroot.gsi.de/dev/examples.htm#th1_xaxis_n)
-- yaxis_N: [Y axis color](https://jsroot.gsi.de/dev/examples.htm#th1_yaxis_n)
+- `line_N` [line color](https://root.cern/js/latest/examples.htm#th1_line_n)
+- `fill_N` [fill color](https://root.cern/js/latest/examples.htm#th1_fill_n)
+- `htitle:value` [histogram title](https://root.cern/js/latest/examples.htm#th1_htitle)
+- `xaxis_N` [X axis color](https://root.cern/js/latest/examples.htm#th1_xaxis_n)
+- `yaxis_N` [Y axis color](https://root.cern/js/latest/examples.htm#th1_yaxis_n)
 
-Here N can be existing ROOT color index or hex6/hex8 values like [line_ff00ff](https://jsroot.gsi.de/dev/?nobrowser&file=../files/hsimple.root&item=hpx;1&opt=line_ff00ff) or [fill_7733ff34](https://jsroot.gsi.de/dev/?nobrowser&file=../files/hsimple.root&item=hpx;1&opt=fill_7733ff34).
+One also can modify histogram axes attributes by following option:
+- `ctx` center title of X axis
+- `cty` center title of Y axis
+- `ctz` center title of Z axis
+- `otx` place X axis title in opposite to normal corner
+- `oty` place Y axis title in opposite to normal corner
+- `otz` place Z axis title in opposite to normal corner
+- `noex` no exponent for X axis labels
+- `noey` no exponent for Y axis labels
+- `noez` no exponent for Z axis labels
+- `mlx` more log labels on X axis
+- `mly` more log labels on Y axis
+- `mlz` more log labels on Y axis
+- `xtitle:value` set title for X axis
+- `ytitle:value` set title for Y axis
+- `ztitle:value` set title for Z axis
+
+Here N can be existing ROOT color index or hex6/hex8 values like [line_ff00ff](https://root.cern/js/latest/?nobrowser&file=https://root.cern/js//files/hsimple.root&item=hpx;1&opt=line_ff00ff) or [fill_7733ff34](https://root.cern/js/latest/?nobrowser&file=https://root.cern/js//files/hsimple.root&item=hpx;1&opt=fill_7733ff34).
 
 
 There are special JSROOT draw options which only can be used with for `TCanvas` or `TPad` objects:
@@ -257,39 +281,39 @@ There are special JSROOT draw options which only can be used with for `TCanvas` 
 
 In the URL string one could use "+" sign to specify objects superposition:
 
-   - [item=hpx+hprof](https://root.cern/js/latest/?file=../files/hsimple.root&item=hpx+hprof)
+   - [item=hpx+hprof](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=hpx+hprof)
 
 With similar syntax one could specify individual draw options for superimposed objects
 
-   - [item=hpx+hprof&opt=logy+hist](https://root.cern/js/latest/?file=../files/hsimple.root&item=hpx+hprof&opt=logy+hist)
+   - [item=hpx+hprof&opt=logy+hist](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=hpx+hprof&opt=logy+hist)
 
 Here "logy" option will be used for "hpx1" item and "hist" option for "hprof;1" item.
 
 While draw option can include "+" sign itself, for superposition one could specify arrays of items and draw options like:
 
-   - [item=[hpx;1,hprof;1]&opt=[logy,hist]](https://root.cern/js/latest/?file=../files/hsimple.root&item=[hpx;1,hprof;1]&opt=[logy,hist])
+   - [item=[hpx;1,hprof;1]&opt=[logy,hist]](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=[hpx;1,hprof;1]&opt=[logy,hist])
 
 
 ## TTree draw
 
 JSROOT provides possibility to display TTree data, using [TTree::Draw](https://root.cern/doc/master/classTTree.html) syntax:
 
-   - [opt=px](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple;1&opt=px)
-   - [opt=px:py](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple;1&opt=px:py)
-   - [opt=px:py:pz](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple;1&opt=px:py:pz)
+   - [opt=px](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple;1&opt=px)
+   - [opt=px:py](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple;1&opt=px:py)
+   - [opt=px:py:pz](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple;1&opt=px:py:pz)
 
 It is also possible to use branch by id number specifying name like "br_0", "br_1" and so on:
 
-   - [opt=br_0:br_1](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=br_0:br_1)
+   - [opt=br_0:br_1](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=br_0:br_1)
 
 Histogram ranges and binning defined after reading first 1000 entries from the tree.
 Like in ROOT, one could configure histogram binning and range directly:
 
-   - [opt=px:py>>h(50,-5,5,50,-5,5)](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py>>h%2850,-5,5,50,-5,5%29)
+   - [opt=px:py>>h(50,-5,5,50,-5,5)](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px:py>>h%2850,-5,5,50,-5,5%29)
 
 One and two dimensional draw expressions can be resulted into TGraph object, using ">>Graph" as output:
 
-   - [opt=px:py>>Graph](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py>>Graph)
+   - [opt=px:py>>Graph](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px:py>>Graph)
 
 For any integer value one can accumulate histogram with value bits distribution, specifying as output ">>bits(16)" or ">>bits":
 
@@ -301,34 +325,34 @@ There is special handling of TBits objects:
 
 It is allowed to use different expressions with branch values:
 
-   - [opt=px+py:px-py](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px+py:px-py)
+   - [opt=px+py:px-py](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px+py:px-py)
 
 Such expression can include arithmetical operations and all methods, provided in JavaScript [Math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) class:
 
-   - [opt=Math.abs(px+py)](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=Math.abs%28px+py%29)
+   - [opt=Math.abs(px+py)](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=Math.abs%28px+py%29)
 
 In the expression one could use "Entry$" and "Entries$" variables.
 
 One also could specify cut condition, separating it with "::" from the rest draw expression like:
 
-   - [opt=px:py::pz>5](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py::pz>5)
+   - [opt=px:py::pz>5](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px:py::pz>5)
 
 Contrary to the normal ROOT, JSROOT allows to use "(expr?res1:res2)" operator (placed into brackets):
 
-   - [opt=px:py::(pz>5?2:1)](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py::%28pz>5?2:1%29)
+   - [opt=px:py::(pz>5?2:1)](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px:py::%28pz>5?2:1%29)
 
 It is possible to "dump" content of any branch (by default - first 10 entries):
 
-   - [item=ntuple/px&opt=dump](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple/px&opt=dump)
+   - [item=ntuple/px&opt=dump](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple/px&opt=dump)
 
 Or one could dump values produced with draw expression (also first 10 entries by default):
 
-   - [opt=px:py::pz>>dump](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py::pz>>dump)
+   - [opt=px:py::pz>>dump](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px:py::pz>>dump)
 
 One also can dump list of entries which match cut expression and use these entries ids to perform other draw operations:
 
-   - [opt=::pz>5>>elist](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=::pz>5>>elist)
-   - [opt=px:py;elist:[7..12,20,35..49]](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py;elist:[7..12,20,35..49])
+   - [opt=::pz>5>>elist](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=::pz>5>>elist)
+   - [opt=px:py;elist:[7..12,20,35..49]](https://root.cern/js/latest/?file=https://root.cern/js/files/hsimple.root&item=ntuple&opt=px:py;elist:[7..12,20,35..49])
 
 Working with array indexes is supported. By default, all elements in array are used for the drawing.
 One could specify index for any array dimension (-1 means last element in the array). For instance, dump last element from `event.fTracks` array:
@@ -364,8 +388,8 @@ Example - [opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25](
 
 JSROOT implements display of TGeo objects like:
 
-  - [file=rootgeom.root&item=simple1](https://root.cern/js/latest/?file=../files/geom/rootgeom.root&item=simple1)
-  - [file=building.root&item=geom&opt=z](https://root.cern/js/latest/?nobrowser&file=../files/geom/building.root&item=geom;1&opt=z)
+  - [file=rootgeom.root&item=simple1](https://root.cern/js/latest/?file=https://root.cern/js/files/geom/rootgeom.root&item=simple1)
+  - [file=building.root&item=geom&opt=z](https://root.cern/js/latest/?nobrowser&file=https://root.cern/js/files/geom/building.root&item=geom;1&opt=z)
 
 Following classes are supported by geometry viewer:
   - TGeoVolume
@@ -420,11 +444,11 @@ In the URL string several global settings can be changed:
 
 It is possible to display only part of geometry model. For instance, one could select sub-item like:
 
-- [file=rootgeom.root&item=simple1/TOP/REPLICA_1](https://root.cern/js/latest/?file=../files/geom/rootgeom.root&item=simple1/TOP/REPLICA_1)
+- [file=rootgeom.root&item=simple1/TOP/REPLICA_1](https://root.cern/js/latest/?file=https://root.cern/js/files/geom/rootgeom.root&item=simple1/TOP/REPLICA_1)
 
 Or one can use simple selection syntax (work only with first-level volumes):
 
-- [item=simple1&opt=-bar1-bar2](https://root.cern/js/latest/?file=../files/geom/rootgeom.root&item=simple1;1&opt=-bar1-bar2)
+- [item=simple1&opt=-bar1-bar2](https://root.cern/js/latest/?file=https://root.cern/js/files/geom/rootgeom.root&item=simple1;1&opt=-bar1-bar2)
 
 Syntax uses '+' sign to enable visibility flag of specified volume and '-' sign to disable visibility.
 One could use wildcard symbol like '+TUBE1*'.
@@ -465,7 +489,7 @@ Example of major LHC detectors:
  * LHCb: [full](https://root.cern/js/latest/?file=https://root.cern/files/lhcbfull.root&item=Geometry;1&opt=all;dflt)
 
 Other detectors examples:
- * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)
+ * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt), [preselected](https://root.cern/js/latest/?json=https://root.cern/js/files/geom/hades.json.gz)
  * BABAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_all.C), [emca](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_emca.C)
  * STAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_all.C;clipxyz), [svtt](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_svtt.C)
  * D0: [full](https://root.cern/js/latest/?file=https://root.cern/files/d0.root&item=d0;1&opt=clipxyz)
@@ -476,7 +500,7 @@ Other detectors examples:
 Together with geometry one could display tracks (TEveTrack) and hits (TEvePointSet, TPolyMarker3D) objects.
 Either one do it interactively by drag and drop, or superimpose drawing with `+` sign like:
 
-- [item=simple_alice.json.gz+tracks_hits.root/tracks+tracks_hits.root/hits](https://root.cern/js/latest/?nobrowser&json=../files/geom/simple_alice.json.gz&file=../files/geom/tracks_hits.root&item=simple_alice.json.gz+tracks_hits.root/tracks+tracks_hits.root/hits)
+- [item=simple_alice.json.gz+tracks_hits.root/tracks+tracks_hits.root/hits](https://root.cern/js/latest/?nobrowser&json=https://root.cern/js/files/geom/simple_alice.json.gz&file=https://root.cern/js/files/geom/tracks_hits.root&item=simple_alice.json.gz+tracks_hits.root/tracks+tracks_hits.root/hits)
 
 
 There is a problem of correct rendering of transparent volumes. To solve problem in general is very expensive (in terms of computing power), therefore several approximation solution can be applied:
@@ -599,7 +623,7 @@ therefore there is no guarantee that the file content is not changed/replaced be
 
 If somebody still wants to use monitoring of data from ROOT files, could try link like:
 
-- <https://root.cern/js/latest/?nobrowser&file=../files/hsimple.root+&item=hpx;1&monitoring=2000>
+- <https://root.cern/js/latest/?nobrowser&file=https://root.cern/js/files/hsimple.root+&item=hpx;1&monitoring=2000>
 
 In this particular case, the histogram is not changing.
 
@@ -650,7 +674,7 @@ One also can load some special components directly like:
    h.setDisplay("simple", "myMainDiv");
 
    // open file and display element
-   await h.openRootFile('../../files/hsimple.root');
+   await h.openRootFile('https://root.cern/js/files/hsimple.root');
    await h.display('hpxpy;1","colz');
 </script>
 ```
@@ -839,7 +863,8 @@ selector.Process = function() {
 }
 
 selector.Terminate = function(res) {
-   if (!res || (cnt === 0)) return;
+   if (!res || (cnt === 0))
+      return;
    let meanpx = sumpx/cnt, meanpy = sumpy/cnt;
    console.log(`Results meanpx = ${meanpx} meanpy = ${meanpy}`);
 }
@@ -860,6 +885,32 @@ As third parameter of treeProcess() function one could provide object with argum
 let args = { numentries: 1000, firstentry: 500 };
 treeProcess(tree, selector, args);
 ```
+
+In some applications access to TTree can be optimized using 'staged' approach.
+It means that on the first stage interesting entries identified in the TTree and
+on the second stage data only for these entries are read. This can boost performance a lot.
+
+To get list of entries which match to some condition, one can use `>>elist` redirection in draw expression.
+
+```javascript
+const entries = await treeDraw(tree, '::pz>5>>elist');
+```
+
+Here only cut condition `pz>5` is specified - no any normal draw expression is configured.
+On the second stage one simply use entries for drawing. Like:
+
+```javascript
+const hist = await treeDraw(tree, `px:py;elist:[${entries}]`);
+```
+
+Such 'staged' approach directly implemented in the tree drawing:
+
+```javascript
+const hist2 = await treeDraw(tree, 'px:py::pz>5;staged');
+```
+
+In the [tree_staged.js](https://github.com/root-project/jsroot/blob/master/demo/node/tree_staged.js) macro
+one can see different possibilities to use staged approach for TTree processing
 
 
 ### TGeo API
