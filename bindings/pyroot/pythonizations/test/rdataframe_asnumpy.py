@@ -120,7 +120,7 @@ class RDataFrameAsNumpy(unittest.TestCase):
         npy = df.AsNumpy()
         self.assertEqual(npy["x"].size, 5)
         self.assertEqual(list(npy["x"][0]), [0, 0, 0])
-        self.assertIn("array<unsigned int,3>", str(type(npy["x"][0])))
+        self.assertIn("array<unsigned int, 3UL>", str(type(npy["x"][0])))
 
     def test_read_th1f(self):
         """
