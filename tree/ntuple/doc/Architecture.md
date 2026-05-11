@@ -457,7 +457,7 @@ RNTuple supports the following encodings (all mutually exclusive):
   Set by calling `RField::SetTruncated(n)`, with $10 <= n <= 31$ equal to the total number of bits used on disk.
   Note that `SetTruncated(16)` makes this effectively a `bfloat16` on disk;
 - **Real32Quant**: floating point with a normalized/quantized integer representation on disk using a user-specified number of bits.
-  Set by calling `RField::SetQuantized(min, max, nBits)`, where $1 <= nBits <= 32$.
+  Set by calling `RField::SetQuantized(nBits, {min, max})`, where $1 <= nBits <= 32$.
   This representation will map the floating point value `min` to 0, `max` to the highest representable integer with `nBits` and any
   value in between will be a linear interpolation of the two. It is up to the user to ensure that only values between `min` and `max`
   are stored in this field. The current RNTuple implementation will throw an exception if that is not the case when writing the values to disk.
@@ -473,7 +473,7 @@ auto field = std::make_unique<RField<float>>("f");
 // assuming we have an array of floats stored in `myFloats`:
 auto [minV, maxV] = std::minmax_element(myFloats.begin(), myFloats.end());
 constexpr auto nBits = 24;
-field->SetQuantized(*minV, *maxV, nBits);
+field->SetQuantized(nBits, {*minV, *maxV});
 model->AddField(std::move(field));
 auto f = model->GetDefaultEntry().GetPtr<float>("f");
 
