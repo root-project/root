@@ -870,7 +870,11 @@ TCppIndex_t GetEnumConstantValue(TCppScope_t handle) {
   auto* D = (clang::Decl*)handle;
   if (auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
-    return INTEROP_RETURN(Val.getExtValue());
+    if (Val.isRepresentableByInt64())
+      return INTEROP_RETURN(Val.getExtValue());
+    llvm::SmallString<40> StrVal;
+    Val.toString(StrVal);
+    return INTEROP_RETURN(std::stoul(StrVal.c_str()));
   }
   return INTEROP_RETURN(0);
 }
