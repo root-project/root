@@ -43,12 +43,16 @@ private:
 
    Int_t                       fVp[4];
 
-   std::vector<TPoint>         fPoly;
    Bool_t                      fIsHollowArea;
 
    Bool_t                      fLocked;
 
+   Bool_t IsInteractiveMode();
+
    void SelectGLFont(Font_t font, Float_t size);
+
+   template<class ValueType>
+   void DrawPolyMarkerHelper(Int_t n, const ValueType *x, const ValueType *y);
 
    template<class Char_t>
    void DrawTextHelper(Double_t x, Double_t y, const Char_t *text, ETextMode mode);
@@ -143,8 +147,6 @@ private:
 
    void     SaveViewport();
    void     RestoreViewport();
-
-   void     DrawPolyMarker();
 
    //Aux. functions for a gradient and solid fill:
    void DrawPolygonWithGradient(Int_t n, const Double_t *x, const Double_t *y);
