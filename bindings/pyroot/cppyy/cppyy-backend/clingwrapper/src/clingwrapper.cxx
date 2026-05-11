@@ -2178,7 +2178,7 @@ Cppyy::TCppType_t Cppyy::GetEnumConstantType(TCppScope_t scope)
   return Cpp::GetEnumConstantType(Cpp::GetUnderlyingScope(scope));
 }
 
-Cppyy::TCppIndex_t Cppyy::GetEnumDataValue(TCppScope_t scope)
+long long Cppyy::GetEnumDataValue(TCppScope_t scope)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     return Cpp::GetEnumConstantValue(scope);
