@@ -3,6 +3,7 @@
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldVisitor.hxx>
@@ -28,6 +29,20 @@ std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr
       result.emplace_back(itemField.BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * itemSize))));
    }
    return result;
+}
+
+std::size_t GetSizeOfVector()
+{
+   static_assert(sizeof(std::vector<char>) ==
+                 sizeof(std::vector<ROOT::Internal::RAlignedStorage<ROOT::RFieldBase::kMaxAlignment>>));
+   return sizeof(std::vector<char>);
+}
+
+std::size_t GetAlignOfVector()
+{
+   static_assert(alignof(std::vector<char>) ==
+                 alignof(std::vector<ROOT::Internal::RAlignedStorage<ROOT::RFieldBase::kMaxAlignment>>));
+   return alignof(std::vector<char>);
 }
 
 } // anonymous namespace
@@ -648,6 +663,16 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValu
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
 }
 
+std::size_t ROOT::RVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
+}
+
 void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
@@ -972,6 +997,16 @@ void ROOT::RArrayAsVectorField::ReconcileOnDiskField(const RNTupleDescriptor &de
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsVectorField::SplitValue(const ROOT::RFieldBase::RValue &value) const
 {
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
 }
 
 void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const

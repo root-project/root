@@ -176,8 +176,8 @@ public:
    ~RProxiedCollectionField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return fProxy->Sizeof(); }
-   size_t GetAlignment() const final { return alignof(std::max_align_t); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 

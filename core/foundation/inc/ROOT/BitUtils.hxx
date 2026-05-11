@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 #ifdef _MSC_VER
@@ -153,6 +154,11 @@ inline std::size_t TrailingZeroes(T x)
       return static_cast<std::size_t>(__builtin_ctzl(x));
    }
 #endif // _MSC_VER
+   }
+
+   inline bool IsPowerOfTwo(std::uint64_t v)
+   {
+      return (v & (v - 1)) == 0;
    }
 
 } // namespace Internal
