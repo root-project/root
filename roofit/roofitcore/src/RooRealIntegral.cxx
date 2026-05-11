@@ -288,7 +288,7 @@ RooRealIntegral::RooRealIntegral()
 /// The other integrations are performed numerically. The optional
 /// config object prescribes how these numeric integrations are configured.
 ///
-/// \Note If pdf component selection was globally overridden to always include
+/// \note If pdf component selection was globally overridden to always include
 /// all components (either with RooAbsReal::globalSelectComp(bool) or a
 /// RooAbsReal::GlobalSelectComponentRAII), then any created integral will
 /// ignore component selections during its lifetime. This is especially useful
