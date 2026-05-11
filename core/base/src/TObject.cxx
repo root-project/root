@@ -24,8 +24,7 @@ TObject's bits can be used as flags, bits 0 - 13 and 24-31 are
 reserved as  global bits while bits 14 - 23 can be used in different
 class hierarchies (watch out for overlaps).
 
-\Note
-   Class inheriting directly or indirectly from TObject should not use
+   Note: Class inheriting directly or indirectly from TObject should not use
    `= default` for any of the constructors.
    The default implementation for a constructor can sometime do 'more' than we
    expect (and still being standard compliant).  On some platforms it will reset
@@ -871,7 +870,6 @@ void TObject::SetDrawOption(Option_t *option)
       return;
 
    TListIter next(gPad->GetListOfPrimitives());
-   delete gPad->FindObject("Tframe");
    while (auto obj = next())
       if (obj == this) {
          next.SetOption(option);

@@ -288,7 +288,7 @@ RooRealIntegral::RooRealIntegral()
 /// The other integrations are performed numerically. The optional
 /// config object prescribes how these numeric integrations are configured.
 ///
-/// \Note If pdf component selection was globally overridden to always include
+/// Note: If pdf component selection was globally overridden to always include
 /// all components (either with RooAbsReal::globalSelectComp(bool) or a
 /// RooAbsReal::GlobalSelectComponentRAII), then any created integral will
 /// ignore component selections during its lifetime. This is especially useful
@@ -464,7 +464,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
 
   // Replace exclusive lvalue branch servers with lvalue branches
-  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaroes
+  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaries
   if (!exclLVServers.empty() && !function.isBinnedDistribution(exclLVBranches)) {
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;

@@ -2,7 +2,7 @@
 
 
 ## Table of contents
-- [Basic TMVA tutorials](\ref basic)
+- [Basic TMVA tutorials](\ref ml_basic)
    - [Training](\ref training)
    - [Applications](\ref application)
    - [Others](\ref other)
@@ -12,11 +12,11 @@
 - [Deep learning in TMVA](\ref deep_learing)
 - [TMVA Keras tutorials](\ref keras)
 - [TMVA PyTorch tutorials](\ref pytorch)
-- [Inference with SOFIE](\ref inference)         
+- [Inference with SOFIE](\ref inference)
 - [Data loading for training](\ref data_loading)
 
 
-\anchor basic
+\anchor ml_basic
 ## Basic TMVA tutorials
 
 
@@ -96,9 +96,9 @@
 | **Tutorial** | **Description** |
 |--------------|-----------------|
 | ApplicationClassificationKeras.py | Apply a trained model to new data. |
-| ApplicationRegressionKeras.py |  Apply a trained model to new data (regression). | 
+| ApplicationRegressionKeras.py |  Apply a trained model to new data (regression). |
 | ClassificationKeras.py |  Classification in TMVA with neural networks trained with keras. |
-| GenerateModel.py |  Define and generate a keras model for use with TMVA. | 
+| GenerateModel.py |  Define and generate a keras model for use with TMVA. |
 | MulticlassKeras.py |  Multiclass classification in TMVA with neural networks trained with keras. |
 | RegressionKeras.py | Regression in TMVA with neural networks trained with keras. |
 
