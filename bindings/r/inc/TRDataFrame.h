@@ -169,7 +169,6 @@ namespace ROOT {
       \endcode
       <h2>Users Guide </h2>
       <a href="https://oproject.org/pages/ROOT%20R%20Users%20Guide"> https://oproject.org/pages/ROOT R Users Guide</a><br>
-         @ingroup R
       */
 
 

@@ -25,7 +25,6 @@
 /**
  @namespace ROOT::R
  namespace associated R package for ROOT.
- @defgroup R R Interface for Statistical Computing
  */
 namespace ROOT {
    namespace R {
@@ -38,7 +37,6 @@ namespace ROOT {
          <h2>Users Guide </h2>
          <a href="https://oproject.org/pages/ROOT%20R%20Users%20Guide"> https://oproject.org/pages/ROOT R Users Guide</a><br>
 
-         \ingroup R
        */
 
 
@@ -131,7 +129,6 @@ namespace ROOT {
          pt->Draw();
          c1->Update();
       \endcode
-      @ingroup R
        */
       class TRInterface: public TObject {
       protected:
