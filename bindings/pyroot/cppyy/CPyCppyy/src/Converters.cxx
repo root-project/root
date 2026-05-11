@@ -2914,7 +2914,8 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
                 code << argtypes[i] << " arg" << i;
                 if (i != nArgs-1) code << ", ";
             }
-            code << ") {\n";
+            code << ") {\n"
+                << "    CPyCppyy::PythonGILRAII python_gil_raii;\n";
 
         // start function body
             Utility::ConstructCallbackPreamble(rettype, argtypes, code);
