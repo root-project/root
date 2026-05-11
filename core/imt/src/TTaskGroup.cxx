@@ -27,7 +27,6 @@
 
 /**
 \class ROOT::Experimental::TTaskGroup
-\ingroup Parallelism
 \brief A class to manage the asynchronous execution of work items.
 
 A TTaskGroup represents concurrent execution of a group of tasks.

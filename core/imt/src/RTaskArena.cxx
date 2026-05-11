@@ -19,7 +19,6 @@
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::Internal::RTaskArenaWrapper
-/// \ingroup Parallelism
 /// \brief Wrapper over tbb::task_arena
 ///
 /// This class is a wrapper over tbb::task_arena, in order to keep

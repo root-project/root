@@ -18,7 +18,6 @@
 #include <cstdlib>
 
 /** \class THttpLongPollEngine
-\ingroup http
 
 Emulation of websocket with long poll requests
 

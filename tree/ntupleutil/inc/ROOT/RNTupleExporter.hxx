@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleExporter.hxx
-/// \ingroup NTuple ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2024-12-10
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

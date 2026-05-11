@@ -58,7 +58,6 @@ public:
 
 /**
 \class THttpServer
-\ingroup http
 \brief Online http server for arbitrary ROOT application
 \note This class provides HTTP access to ROOT objects. The user is entirely responsible for the security of the server.
 It is strongly recommended to use the server only within an isolated network

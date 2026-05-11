@@ -13,7 +13,6 @@
 
 
 /** \class TRootSnifferStore
-\ingroup http
 
 Used to store different results of objects scanning by TRootSniffer
 */
@@ -34,7 +33,6 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl, TDataMember *_resm
 // =================================================================================
 
 /** \class TRootSnifferStoreXml
-\ingroup http
 
 Used to store scanned objects hierarchy in XML form
 */
@@ -98,7 +96,6 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 // ============================================================================
 
 /** \class TRootSnifferStoreJson
-\ingroup http
 
 Used to store scanned objects hierarchy in JSON form
 */

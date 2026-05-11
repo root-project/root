@@ -19,7 +19,6 @@
 #include <chrono>
 
 /** \class THttpWSHandler
-\ingroup http
 
 Class for user-side handling of websocket with THttpServer
 

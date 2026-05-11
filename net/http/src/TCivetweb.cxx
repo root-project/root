@@ -507,7 +507,6 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 }
 
 /** \class TCivetweb
-\ingroup http
 
 THttpEngine implementation, based on civetweb embedded server
 

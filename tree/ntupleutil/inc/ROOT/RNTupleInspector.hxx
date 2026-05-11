@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleInspector.hxx
-/// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2023-01-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

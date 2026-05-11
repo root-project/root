@@ -13,5 +13,3 @@ plugin handler, run-config resource processor, etc. etc.
 
 \brief Extension classes within libCore to backport or complement missing std:: features
 
-\defgroup Parallelism Parallelized classes
-\brief Classes implement parallelism within ROOT

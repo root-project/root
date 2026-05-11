@@ -271,7 +271,6 @@ void run_single_thread(TFastCgi *engine)
 
 
 /** \class TFastCgi
-\ingroup http
 
 THttpEngine implementation, based on fastcgi package
 
