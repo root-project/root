@@ -229,9 +229,8 @@ class Regression05LoKiNamespace( MyTestCase ):
       gROOT.LoadMacro( 'LoKiNamespace.C+' )
       LoKi = ROOT.LoKi
 
-      self.assertEqual( LoKi.Constant( rcp ).__name__, 'Constant<%s>' % rcp )
-      self.assertEqual(
-         LoKi.BooleanConstant( rcp ).__name__, 'BooleanConstant<%s>' % rcp )
+      self.assertTrue(LoKi.Constant( rcp ).isConstParticlePtr())
+      self.assertTrue(LoKi.BooleanConstant( rcp ).isConstParticlePtr())
 
    def test2TemplateWithNamespaceReturnValue(self):
       """Test the return value of a templated function in a namespace"""
