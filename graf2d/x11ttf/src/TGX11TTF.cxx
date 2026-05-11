@@ -283,7 +283,7 @@ void TGX11TTF::DrawFTGlyph(void *_source, ULong_t fore, ULong_t back,
       UChar_t *row = s;
       for (unsigned y = 0; y < source->rows; y++) {
          unsigned n = 0;
-         UChar_t d;
+         UChar_t d = 0;
          s = row;
          for (unsigned x = 0; x < source->width; x++) {
             if (n == 0) d = *s++;
