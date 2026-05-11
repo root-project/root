@@ -41,6 +41,13 @@ inline constexpr T AlignUp(T value, T align) noexcept
    return (value + align - 1) & ~(align - 1);
 }
 
+/// Storage type whose alignment matches \a AlignT bytes.
+/// Used to instantiate std::vector specializations with guaranteed buffer alignment.
+template <std::size_t AlignT>
+struct alignas(AlignT) RAlignedStorage {
+   char data[AlignT] = {};
+};
+
 /// Given an integer `x`, returns the number of leading 0-bits starting at the most significant bit position.
 /// If `x` is 0, it returns the size of `x` in bits.
 ///

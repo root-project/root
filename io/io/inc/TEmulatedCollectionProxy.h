@@ -23,27 +23,22 @@ class TEmulatedCollectionProxy : public TGenCollectionProxy  {
    friend class TCollectionProxy;
 
 public:
-   /// Storage type whose alignment matches \a Align bytes.
-   /// Used to instantiate std::vector specializations with guaranteed buffer alignment.
-   template <std::size_t Align>
-   struct alignas(Align) AlignedStorage {
-      char data[Align] = {};
-   };
-
    // Convenience vector aliases for each supported alignment.
-   using Cont1_t    = std::vector<AlignedStorage<   1>>;
-   using Cont2_t    = std::vector<AlignedStorage<   2>>;
-   using Cont4_t    = std::vector<AlignedStorage<   4>>;
-   using Cont8_t    = std::vector<AlignedStorage<   8>>;
-   using Cont16_t   = std::vector<AlignedStorage<  16>>;
-   using Cont32_t   = std::vector<AlignedStorage<  32>>;
-   using Cont64_t   = std::vector<AlignedStorage<  64>>;
-   using Cont128_t  = std::vector<AlignedStorage< 128>>;
-   using Cont256_t  = std::vector<AlignedStorage< 256>>;
-   using Cont512_t  = std::vector<AlignedStorage< 512>>;
-   using Cont1024_t = std::vector<AlignedStorage<1024>>;
-   using Cont2048_t = std::vector<AlignedStorage<2048>>;
-   using Cont4096_t = std::vector<AlignedStorage<4096>>;
+   // clang-format off
+   using Cont1_t    = std::vector<ROOT::Internal::RAlignedStorage<   1>>;
+   using Cont2_t    = std::vector<ROOT::Internal::RAlignedStorage<   2>>;
+   using Cont4_t    = std::vector<ROOT::Internal::RAlignedStorage<   4>>;
+   using Cont8_t    = std::vector<ROOT::Internal::RAlignedStorage<   8>>;
+   using Cont16_t   = std::vector<ROOT::Internal::RAlignedStorage<  16>>;
+   using Cont32_t   = std::vector<ROOT::Internal::RAlignedStorage<  32>>;
+   using Cont64_t   = std::vector<ROOT::Internal::RAlignedStorage<  64>>;
+   using Cont128_t  = std::vector<ROOT::Internal::RAlignedStorage< 128>>;
+   using Cont256_t  = std::vector<ROOT::Internal::RAlignedStorage< 256>>;
+   using Cont512_t  = std::vector<ROOT::Internal::RAlignedStorage< 512>>;
+   using Cont1024_t = std::vector<ROOT::Internal::RAlignedStorage<1024>>;
+   using Cont2048_t = std::vector<ROOT::Internal::RAlignedStorage<2048>>;
+   using Cont4096_t = std::vector<ROOT::Internal::RAlignedStorage<4096>>;
+   // clang-format on
 
    // Canonical container type (used for sizeof/typeid; actual alignment is
    // selected at runtime via the alignment switch in each method).
