@@ -12,6 +12,10 @@ ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeP
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Where op has invalid input size");
    }
    // condition boolean vector is input 0
+   if (!parser.IsRegisteredTensorType(nodeproto.input(0))){
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Where op has input tensor " +  nodeproto.input(0)
+                                + " but its type is not yet registered");
+   }
    if (!parser.IsRegisteredTensorType(nodeproto.input(1))){
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Where op has input tensor " +  nodeproto.input(1)
                                 + " but its type is not yet registered");
@@ -31,6 +35,7 @@ ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeP
    std::string output_name = nodeproto.output(0);
 
    switch (input_type) {
+   //note ROPeratore_WHere signature takes as first tensor the condition
    case ETensorType::FLOAT:
       op.reset(new ROperator_Where<float>(nodeproto.input(0), nodeproto.input(1), nodeproto.input(2), output_name));
       break;

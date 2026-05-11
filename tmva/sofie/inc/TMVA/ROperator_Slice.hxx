@@ -339,7 +339,7 @@ public:
          }
 
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
-         if (fIdentitySlice)  model.AddAliasTensor(fNOutput, fNData);
+         //if (fIdentitySlice)  model.AddAliasTensor(fNOutput, fNData);
 
          if (model.Verbose()) {
             std::cout << "Slice " << fNData << "  " << ConvertDimShapeToString(fShapeInput)
@@ -366,8 +366,9 @@ public:
       size_t ndim = fShapeInput.size();
 
       if (fIdentitySlice) {
-         out << "/// Slice is just an identity (copy pointers) \n";
-         out << SP << "tensor_" << fNOutput << " = tensor_" << fNData << ";\n";
+         out << "/// Slice is just an identity (copy) \n";
+         //out << SP << "tensor_" << fNOutput << " = const_cast<" << ConvertTypeToString(fOutputType) << " *>(tensor_" << fNData << ");\n";
+         out << SP << "std::copy(tensor_" << fNData << ", tensor_" << fNData << " + " << ConvertDimShapeToLength(fShapeInput) << ", tensor_" << fNOutput << ");\n";
          return out.str();
       }
 

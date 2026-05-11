@@ -68,7 +68,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Operator Softmax called to Generate without being initialized first");
       }
       std::stringstream out;
-       out << "///------- Softmax " << opName << " ---> " << fNY << " "
+       out << "///------- Softmax " << opName << " ---> "  // << fNY << " "
            << ConvertDimShapeToString(fShape) << "\n" << std::endl;
       size_t size = fShape.size();
       auto length_str = ConvertDimShapeToLength(fShape);
