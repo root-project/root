@@ -763,6 +763,7 @@ std::string GenerateConstantTensorCode(const std::pair<std::string, InitializedT
 
    // and check if all values are the same
    bool sameData = false;
+
    // for non stack allocation check if data are the same
    if (!allocateOnStack && length > 1) {
       size_t idx = 1;
@@ -797,6 +798,19 @@ void RModel::GenerateInitializedTensorInfo()
       size_t length = ConvertShapeToLength(i.second.shape());
       if (!fUseWeightFile || i.second.IsConstantTensor() || !i.second.IsWeightTensor() || i.second.type() != ETensorType::FLOAT ) {
          if (i.second.type() == ETensorType::FLOAT) {
+            // check if NaN of Inf are inside tensor data
+            bool hasInfOrNaN = false;
+            const float *data = i.second.data<float>();
+            for (size_t idx = 0; idx < length; idx++) {
+               if (std::is_floating_point<float>::value) {
+                  if (std::isinf(data[idx]) || std::isnan(data[idx])) {
+                     hasInfOrNaN = true;
+                     break;
+                  }
+               }
+            }
+            if (hasInfOrNaN)
+               AddNeededStdLib("limits");
             fGC += GenerateConstantTensorCode<float>(i);
             fConstantTensorSize += length * sizeof(float);
          } else if (i.second.type() == ETensorType::INT64) {
@@ -1306,8 +1320,9 @@ void RModel::GenerateSessionCode()
    // storing the parameters for future checking to avoid mismatches
    if (!fDimShapeNames.empty()) {
       fGC += "\n//   dynamic shape parameters\n";
-      std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
-      for (const auto &p : fDimShapeNames) {
+      auto dimShapeNames = fDimShapeNames;
+      std::sort(dimShapeNames.begin(), dimShapeNames.end());
+      for (const auto &p : dimShapeNames) {
          fGC += "size_t " + memberNameForDimShape(p) + ";\n";
       }
    }
@@ -1345,8 +1360,7 @@ void RModel::GenerateSessionCode()
       // add initialization of shape parameters
       // assume all parameters are of type size_t
       if (!fDimShapeNames.empty()) {
-         // sort first the shape parameters in alphabetical order to avoid a random order
-         std::sort(fDimShapeNames.begin(), fDimShapeNames.end() );
+         // need to use same order as in infer function not alphabetical one
          for (auto &p : fDimShapeNames) {
             fGC += ",\n";
             fGC += "        size_t " + p + " = " + fShapeParams[p];

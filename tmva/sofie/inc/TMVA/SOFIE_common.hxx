@@ -228,11 +228,18 @@ std::string ConvertValuesToString(size_t n, const T * data, size_t maxprint = -1
    std::stringstream ret;
    ret << "{ ";
    for (size_t i = 0; i < std::min(n,maxprint); i++) {
-      if (std::is_floating_point_v<T>)
-         ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
-      else
+      if (std::is_floating_point_v<T>) {
+         // special case for infinity and Nan
+         if (std::isinf(data[i]))
+            ret << (data[i] > 0 ? "std::numeric_limits<" + TensorType<T>::Name() + ">::infinity()" :
+                                  "-std::numeric_limits<" + TensorType<T>::Name() + ">::infinity()");
+         else if (std::isnan(data[i]))
+            ret << "std::numeric_limits<" + TensorType<T>::Name() + ">::quiet_NaN()";
+         else
+            ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
+      } else {
          ret << std::to_string(data[i]);
-
+      }
       if (i < n-1) ret << ", ";
       if (i < n-1 && i == maxprint-1) ret << "..... ";
    }
