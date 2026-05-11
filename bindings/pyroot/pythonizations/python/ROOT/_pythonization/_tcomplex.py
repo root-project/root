@@ -24,7 +24,7 @@ def _perform_division(self, other):
     # - self: complex number
     # - other: int, float of long (Py2) number
     TComplex = ROOT.TComplex
-    other_complex = TComplex.TComplex(other,0)
+    other_complex = TComplex(other,0)
     return other_complex/self
 
 def _rdiv(self, other):
