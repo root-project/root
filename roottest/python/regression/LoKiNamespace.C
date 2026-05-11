@@ -1,15 +1,25 @@
+#include <type_traits>
+
 namespace LHCb {
 
-   class Particle {};
+class Particle {};
 
-} // namespace Particle
+} // namespace LHCb
 
 namespace LoKi {
 
-   template< typename T > class Constant {};
-   template< typename T > class BooleanConstant{};
+template <typename T>
+class Constant {
+public:
+   static constexpr bool isConstParticlePtr() { return std::is_same_v<T, LHCb::Particle const *>; }
+};
+template <typename T>
+class BooleanConstant {
+public:
+   static constexpr bool isConstParticlePtr() { return std::is_same_v<T, LHCb::Particle const *>; }
+};
 
-} // namespace Loki
+} // namespace LoKi
 
 #ifdef __CLING__
 #pragma link C++ class LoKi::Constant< const LHCb::Particle* >;
