@@ -786,13 +786,40 @@ public:
 Cppyy::TCppScope_t Cppyy::GetActualClass(TCppScope_t klass, TCppObject_t obj) {
     std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
 
-    if (!Cpp::IsClassPolymorphic(klass))
+    if (!obj || !Cpp::IsClassPolymorphic(klass))
+        return klass;
+
+// Do not autocast iostream classes (ostream, streambuf, etc.); it is usually
+// unnecessary, and the RTTI probe below crashes on them: on MSVC they use
+// virtual inheritance, which puts the vbptr - not a vfptr - at offset 0
+// (seen with std::cout on the Windows CI); the old backend had the same
+// filter, originally for a crash on Mac ARM.
+    const std::string& clName = Cppyy::GetScopedFinalName(klass);
+    if (clName.compare(0, 5, "std::") == 0 &&
+            clName.find("stream") != std::string::npos)
         return klass;
 
     const std::type_info *typ = &typeid(*(AutoCastRTTI *)obj.data);
+    if (!typ)
+        return klass;
 
+#ifdef _WIN32
+    // MSVC's type_info::name() is already human-readable, but prefixed with
+    // the tag kind (e.g. "class TWinNTSystem"), which name lookup would trip
+    // over. Strip the prefix; template arguments keep their tags, which is
+    // harmless as templated names go through type resolution instead of
+    // plain lookup.
+    std::string demangled_name = typ->name();
+    for (const char* prefix : {"class ", "struct ", "union ", "enum "}) {
+        if (demangled_name.compare(0, strlen(prefix), prefix) == 0) {
+            demangled_name = demangled_name.substr(strlen(prefix));
+            break;
+        }
+    }
+#else
     std::string mangled_name = typ->name();
     std::string demangled_name = Cpp::Demangle(mangled_name);
+#endif
 
     if (TCppScope_t scope = Cppyy::GetScope(demangled_name))
         return scope;
