@@ -17,7 +17,8 @@ using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
 /**
- * \defgroup REve Event display with ROOT7
+ * \defgroup REve Event display (REve)
+ * \ingroup Graphics
  * \brief Modern version of "Event display" using ROOT7
  */
 

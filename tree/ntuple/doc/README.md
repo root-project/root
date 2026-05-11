@@ -1,4 +1,4 @@
-\defgroup NTuple RNTuple-related classes
+\defgroup NTuple RNTuple
 \brief Classes designed for columnar data storage in modern ROOT
 
 # RNTuple Introduction
