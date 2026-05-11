@@ -378,7 +378,7 @@ namespace Cppyy {
     RPY_EXPORTED
     TCppType_t  GetEnumConstantType(TCppScope_t scope);
     RPY_EXPORTED
-    TCppIndex_t GetEnumDataValue(TCppScope_t scope);
+    long long   GetEnumDataValue(TCppScope_t scope);
 
     RPY_EXPORTED
     TCppScope_t InstantiateTemplate(
