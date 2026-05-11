@@ -98,8 +98,10 @@ public:
    /// \return A `std::shared_ptr<T>` if the field is valid in the current entry, or a `nullptr` otherwise.
    std::shared_ptr<T> GetPtr() const
    {
-      if (fProcessorEntry->IsValidField(fFieldIndex))
-         return fProcessorEntry->GetPtr<T>(fFieldIndex);
+      if (fProcessorEntry->IsValidField(fFieldIndex)) {
+         const auto &value = fProcessorEntry->GetValue(fFieldIndex);
+         return value.template GetPtr<T>();
+      }
 
       return nullptr;
    }
@@ -181,8 +183,10 @@ public:
    /// \return A `std::shared_ptr<void>` if the field is valid in the current entry, or a `nullptr` otherwise.
    std::shared_ptr<void> GetPtr() const
    {
-      if (fProcessorEntry->IsValidField(fFieldIndex))
-         return fProcessorEntry->GetPtr<void>(fFieldIndex);
+      if (fProcessorEntry->IsValidField(fFieldIndex)) {
+         const auto &value = fProcessorEntry->GetValue(fFieldIndex);
+         return value.template GetPtr<void>();
+      }
 
       return nullptr;
    }

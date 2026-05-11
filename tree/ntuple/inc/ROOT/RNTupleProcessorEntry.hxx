@@ -16,7 +16,6 @@
 #ifndef ROOT_RNTupleProcessorEntry
 #define ROOT_RNTupleProcessorEntry
 
-#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RFieldBase.hxx>
 
 #include <cassert>
@@ -154,20 +153,7 @@ public:
    /// \param[in] fieldIdx The index of the field in the entry.
    ///
    /// \warning This function has linear complexity, only use it for more helpful error messages!
-   const std::string &FindFieldName(FieldIndex_t fieldIdx) const
-   {
-      assert(fieldIdx < fProcessorValues.size());
-
-      for (const auto &[fieldName, index] : fFieldName2Index) {
-         if (std::find(index.begin(), index.end(), fieldIdx) != index.end()) {
-            return fieldName;
-         }
-      }
-      // Should never happen, but avoid compiler warning about "returning reference to local temporary object".
-      R__ASSERT(false);
-      static const std::string empty = "";
-      return empty;
-   }
+   const std::string &FindFieldName(FieldIndex_t fieldIdx) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Find the field index of the provided field in the entry.
@@ -176,24 +162,7 @@ public:
    /// parent field names, if applicable.
    ///
    /// \return A `std::optional` containing the field index if it was found.
-   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName) const
-   {
-      auto it = fFieldName2Index.find(std::string(canonicalFieldName));
-      if (it == fFieldName2Index.end()) {
-         return std::nullopt;
-      }
-
-      const auto &fieldIdxs = it->second;
-      assert(!fieldIdxs.empty());
-
-      for (auto idx : fieldIdxs) {
-         if (fProcessorValues[idx].fField->GetTypeName() == typeName) {
-            return idx;
-         }
-      }
-
-      return std::nullopt;
-   }
+   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new field to the entry.
@@ -206,104 +175,33 @@ public:
    ///
    /// \return The field index of the newly added field.
    FieldIndex_t AddField(const std::string &qualifiedFieldName, std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
-                         const RNTupleProcessorProvenance &provenance)
-   {
-      auto fieldNameWithProcessorPrefix = qualifiedFieldName;
-      if (const auto &processorPrefix = provenance.Get(); !processorPrefix.empty())
-         fieldNameWithProcessorPrefix = processorPrefix + "." + qualifiedFieldName;
-
-      if (FindFieldIndex(fieldNameWithProcessorPrefix, field->GetTypeName()))
-         throw ROOT::RException(
-            R__FAIL("field \"" + fieldNameWithProcessorPrefix + "\" is already present in the entry"));
-
-      auto fieldIdx = fProcessorValues.size();
-      fFieldName2Index[fieldNameWithProcessorPrefix].push_back(fieldIdx);
-
-      assert(field);
-      auto value = field->CreateValue();
-      if (valuePtr)
-         value.BindRawPtr(valuePtr);
-      fProcessorValues.emplace_back(
-         RProcessorValue(std::move(field), qualifiedFieldName, std::move(value), true, provenance));
-
-      return fieldIdx;
-   }
+                         const RNTupleProcessorProvenance &provenance);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Update a field in the entry, preserving the value pointer.
    ///
    /// \param[in] fieldIdx Index of the field to update.
    /// \param[in] field The new field to use in the entry.
-   void UpdateField(FieldIndex_t fieldIdx, std::unique_ptr<ROOT::RFieldBase> field)
-   {
-      assert(fieldIdx < fProcessorValues.size());
-
-      auto &fieldInfo = fProcessorValues[fieldIdx];
-
-      if (field) {
-         auto newValue = field->CreateValue();
-         auto currValuePtr = fieldInfo.fValue.GetPtr<void>();
-         newValue.Bind(currValuePtr);
-         fieldInfo.fField = std::move(field);
-         fieldInfo.fValue = std::move(newValue);
-         fieldInfo.fIsValid = true;
-      } else {
-         fieldInfo.fIsValid = false;
-      }
-   }
+   void UpdateField(FieldIndex_t fieldIdx, std::unique_ptr<ROOT::RFieldBase> field);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Bind a new value pointer to a field in the entry.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
    /// \param[in] valuePtr Pointer to the value to bind to the field.
-   void BindRawPtr(FieldIndex_t fieldIdx, void *valuePtr)
-   {
-      assert(fieldIdx < fProcessorValues.size());
-      fProcessorValues[fieldIdx].fValue.BindRawPtr(valuePtr);
-   }
+   void BindRawPtr(FieldIndex_t fieldIdx, void *valuePtr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Read the field value corresponding to the given field index for the provided entry index.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
    /// \param[in] entryIdx The entry number to read.
-   void ReadValue(FieldIndex_t fieldIdx, ROOT::NTupleSize_t entryIdx)
+   void ReadValue(FieldIndex_t fieldIdx, ROOT::NTupleSize_t entryIdx);
+
+   const ROOT::RFieldBase::RValue &GetValue(FieldIndex_t fieldIdx) const
    {
       assert(fieldIdx < fProcessorValues.size());
-
-      if (fProcessorValues[fieldIdx].fIsValid) {
-         fProcessorValues[fieldIdx].fValue.Read(entryIdx);
-      }
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get a pointer to the value for the field represented by the provided field index.
-   ///
-   /// \tparam T The type of the pointer.
-   ///
-   /// \param[in] fieldIdx The index of the field in the entry.
-   ///
-   /// \return A shared pointer of type `T` with the field's value.
-   template <typename T>
-   std::shared_ptr<T> GetPtr(FieldIndex_t fieldIdx) const
-   {
-      assert(fieldIdx < fProcessorValues.size());
-
-      if (fProcessorValues[fieldIdx].fIsValid)
-         return fProcessorValues[fieldIdx].fValue.GetPtr<T>();
-
-      return nullptr;
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get a reference to a field in the entry.
-   ///
-   /// \param[in] fieldIdx The index of the field in the entry.
-   const ROOT::RFieldBase &GetField(FieldIndex_t fieldIdx) const
-   {
-      assert(fieldIdx < fProcessorValues.size());
-      return fProcessorValues[fieldIdx].fValue.GetField();
+      return fProcessorValues[fieldIdx].fValue;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -328,15 +226,7 @@ public:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all field indices of this entry.
-   std::unordered_set<FieldIndex_t> GetFieldIndices() const
-   {
-      // Field indices are sequentially assigned, and the entry (currently) offers no way to remove fields, so we can
-      // just generate and return a set {0, ..., |fProcessorValues| - 1}.
-      std::unordered_set<FieldIndex_t> fieldIdxs(fProcessorValues.size());
-      std::generate_n(std::inserter(fieldIdxs, fieldIdxs.begin()), fProcessorValues.size(),
-                      [i = 0]() mutable { return i++; });
-      return fieldIdxs;
-   }
+   std::unordered_set<FieldIndex_t> GetFieldIndices() const;
 };
 } // namespace Internal
 } // namespace Experimental
