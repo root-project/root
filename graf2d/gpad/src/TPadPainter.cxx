@@ -31,7 +31,7 @@ using size_type = std::vector<TPoint>::size_type;
 
 template<typename T>
 void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys,
-                   std::vector<TPoint> &dst);
+                   std::vector<TPoint> &dst, Bool_t absCoord = kFALSE);
 inline
 void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin,
                   SCoord_t yMax, SCoord_t yLast);
@@ -50,7 +50,7 @@ template<class T>
 void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
 
 template<typename T>
-void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
+void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys);
 
 template<class T>
 void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys);
@@ -365,7 +365,7 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
       return;
    }
 
-   DrawPolyLineAux(gPad, fWinContext, n, xs, ys);
+   DrawPolyLineAux(gPad, fWinContext, !fDoubleBuffer, n, xs, ys);
 }
 
 
@@ -382,7 +382,7 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
       return;
    }
 
-   DrawPolyLineAux(gPad, fWinContext, n, xs, ys);
+   DrawPolyLineAux(gPad, fWinContext, !fDoubleBuffer, n, xs, ys);
 }
 
 
@@ -628,16 +628,23 @@ namespace {
 
 template<typename T>
 void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
-                   std::vector<TPoint> &dst)
+                   std::vector<TPoint> &dst, Bool_t absCoord)
 {
    if (!nPoints)
       return;
 
    dst.resize(nPoints);
 
-   for (unsigned i = 0; i < nPoints; ++i) {
-      dst[i].fX = (SCoord_t)pad->XtoPixel(x[i]);
-      dst[i].fY = (SCoord_t)pad->YtoPixel(y[i]);
+   if (absCoord) {
+      for (unsigned i = 0; i < nPoints; ++i) {
+         dst[i].fX = (SCoord_t) pad->XtoAbsPixel(x[i]);
+         dst[i].fY = (SCoord_t) pad->YtoAbsPixel(y[i]);
+      }
+   } else {
+      for (unsigned i = 0; i < nPoints; ++i) {
+         dst[i].fX = (SCoord_t) pad->XtoPixel(x[i]);
+         dst[i].fY = (SCoord_t) pad->YtoPixel(y[i]);
+      }
    }
 }
 
@@ -846,27 +853,25 @@ void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
-void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys)
+template <typename T>
+void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys)
 {
    std::vector<TPoint> xy;
 
-   const Int_t threshold = Int_t(TMath::Min(pad->GetWw() * pad->GetAbsWNDC(),
-                                            pad->GetWh() * pad->GetAbsHNDC())) * 2;
+   const UInt_t threshold = TMath::Min(pad->GetPadWidth(), pad->GetPadHeight()) * 2;
 
-   if (threshold <= 0) {//Ooops, pad is invisible or something really bad and stupid happened.
+   if (threshold == 0) {//Ooops, pad is invisible or something really bad and stupid happened.
       ::Error("DrawPolyLineAux", "invalid pad's geometry");
       return;
    }
 
-   if (nPoints < (unsigned)threshold)
-      ConvertPoints(pad, nPoints, xs, ys, xy);
+   if (absCoord || (nPoints < threshold))
+      ConvertPoints(pad, nPoints, xs, ys, xy, absCoord);
    else
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
    if (xy.size() > 1)
       gVirtualX->DrawPolyLineW(cont, xy.size(), &xy[0]);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
