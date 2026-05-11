@@ -737,7 +737,7 @@ Int_t TApplicationServer::ReceiveFile(const char *file, Bool_t bin, Long64_t siz
    }
 
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
-   char buf[kMAXBUF], cpy[kMAXBUF];
+   char buf[kMAXBUF];
 
    Int_t    left, r;
    Long64_t filesize = 0;
