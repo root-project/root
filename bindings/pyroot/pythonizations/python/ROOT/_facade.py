@@ -155,6 +155,11 @@ class ROOTFacade(types.ModuleType):
         # calls). We reproduce their semantics here using LiveProxy.
         self.gDirectory = TDirectoryPythonAdapter()
 
+        def _gclient_resolver():
+            import ROOT
+
+            return ROOT.TGClient.Instance()
+
         def _gpad_resolver():
             import ROOT
 
@@ -165,6 +170,7 @@ class ROOTFacade(types.ModuleType):
 
             return ROOT.TVirtualX.Instance()
 
+        self.gClient = LiveProxy(_gclient_resolver)
         self.gPad = LiveProxy(_gpad_resolver)
         self.gVirtualX = LiveProxy(_gvirtualx_resolver)
 
