@@ -12,7 +12,7 @@
 /**
 \file TFile.cxx
 \class TFile
-\ingroup IO
+\ingroup io_files
 \brief A file, usually with extension .root, that stores data and code in the form of serialized objects in a
 file-system-like logical structure, possibly including subdirectory hierarchies.
 \note ROOT files contain data, and executable code, for example through TExec, TMacro, and TFormula instances. As for

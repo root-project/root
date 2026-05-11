@@ -11,7 +11,7 @@
 
 /*
 \class TGenCollectionStreamer
-\ingroup IO
+\ingroup io_other
 
 Streamer around an arbitrary container, which implements basic
 functionality and iteration.

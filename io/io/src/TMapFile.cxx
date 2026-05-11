@@ -14,7 +14,7 @@
 
 /**
 \class TMapFile
-\ingroup IO
+\ingroup io_files
 
 This class implements a shared memory region mapped to a file.
 Objects can be placed into this shared memory area using the Add()

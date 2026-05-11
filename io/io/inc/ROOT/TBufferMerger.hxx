@@ -27,7 +27,7 @@ class TBufferMergerFile;
 
 /**
  * \class TBufferMerger TBufferMerger.hxx
- * \ingroup IO
+ * \ingroup io_files
  *
  * TBufferMerger is a class to facilitate writing data in
  * parallel from multiple threads, while writing to a single
@@ -133,7 +133,7 @@ private:
 
 /**
  * \class TBufferMergerFile TBufferMerger.hxx
- * \ingroup IO
+ * \ingroup io_other
  *
  * A TBufferMergerFile is similar to a TMemFile, but when data
  * is written to it, it is appended to the TBufferMerger queue.
