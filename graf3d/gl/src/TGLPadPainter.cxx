@@ -355,11 +355,10 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
       // TODO: only here set line attributes to virtual x
-      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
+      if (IsInvertMode())
          gVirtualX->DrawLineW(fWinContext,
                              gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
-      }
 
       return;
    }
@@ -395,13 +394,11 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
    if (fLocked) {
-      // this code used when crosshair cursor is drawn
-      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
-         // TODO: only here set line attributes to virtual x
+      // this code used when crosshair cursor is drawn or interactive objects move
+      if (IsInvertMode())
          gVirtualX->DrawLineW(fWinContext,
                               gPad->UtoAbsPixel(u1), gPad->VtoAbsPixel(v1),
                               gPad->UtoAbsPixel(u2), gPad->VtoAbsPixel(v2));
-      }
       return;
    }
 
@@ -427,12 +424,11 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
       // TODO: only here set line attributes to virtual x
-      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
+      if (IsInvertMode())
          gVirtualX->DrawBoxW(fWinContext,
                              gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2),
                              (TVirtualX::EBoxMode) mode);
-      }
       return;
    }
 
@@ -521,9 +517,20 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 ////////////////////////////////////////////////////////////////////////////////
 ///Draw poly-line in user coordinates.
 
-void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
+template<class ValueType>
+void TGLPadPainter::DrawPolyLineHelper(Int_t n, const ValueType *x, const ValueType *y)
 {
-   if (fLocked) return;
+   if (fLocked) {
+      if (IsInvertMode() && (n > 1)) {
+         std::vector<TPoint> xy(n);
+         for (Int_t i = 0; i < n; ++i) {
+            xy[i].fX = (SCoord_t) gPad->XtoAbsPixel(x[i]);
+            xy[i].fY = (SCoord_t) gPad->YtoAbsPixel(y[i]);
+         }
+         gVirtualX->DrawPolyLineW(fWinContext, xy.size(), xy.data());
+      }
+      return;
+   }
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
 
@@ -556,25 +563,19 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Never called?
+/// Draw poly-line in user coordinates.
+
+void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
+{
+   DrawPolyLineHelper(n, x, y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw poly-line in user coordinates.
 
 void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
-   if (fLocked) return;
-
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
-
-   glBegin(GL_LINE_STRIP);
-
-   for (Int_t i = 0; i < n; ++i)
-      glVertex2f(x[i], y[i]);
-
-   if (fIsHollowArea) {
-      glVertex2f(x[0], y[0]);
-      fIsHollowArea = kFALSE;
-   }
-
-   glEnd();
+   DrawPolyLineHelper(n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,9 +602,9 @@ void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
 /// Returns true when invert mode is configured and painter in locked state
 /// Used when non-opaque of objects moving is involved
 
-Bool_t TGLPadPainter::IsInteractiveMode()
+Bool_t TGLPadPainter::IsInvertMode()
 {
-   return fLocked && fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert);
+   return fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,13 +616,13 @@ void TGLPadPainter::DrawPolyMarkerHelper(Int_t n, const ValueType *x, const Valu
    std::vector<TPoint> poly(n);
 
    if (fLocked) {
-      if (!IsInteractiveMode())
-         return;
-      for (Int_t i = 0; i < n; ++i) {
-         poly[i].fX = gPad->XtoAbsPixel(x[i]);
-         poly[i].fY = gPad->YtoAbsPixel(y[i]);
+      if (IsInvertMode()) {
+         for (Int_t i = 0; i < n; ++i) {
+            poly[i].fX = gPad->XtoAbsPixel(x[i]);
+            poly[i].fY = gPad->YtoAbsPixel(y[i]);
+         }
+         gVirtualX->DrawPolyMarkerW(fWinContext, poly.size(), poly.data());
       }
-      gVirtualX->DrawPolyMarkerW(fWinContext, poly.size(), poly.data());
       return;
    }
 
