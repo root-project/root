@@ -344,7 +344,9 @@ namespace SOFIE{
             //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
             // the previous result
             if (fAttrBeta != 0) {
-               throw std::runtime_error("TMVA SOFIE Gemm Op " + opName + " Bias tensor is not present but beta value in Gemm is not zero");
+               // some model don't have bias but Beta is not zero - force it to zero
+               fAttrBeta = 0;
+               std::cout << "WARNING: TMVA SOFIE Gemm Op " + opName + " Bias tensor is not present but beta value in Gemm is not zero - force it to zero";
             }
          }
 
