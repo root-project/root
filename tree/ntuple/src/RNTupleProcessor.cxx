@@ -237,8 +237,8 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
 
    if (updateFields) {
       for (const auto &fieldIdx : fFieldIdxs) {
-         auto newField =
-            CreateAndConnectField(fEntry->GetQualifiedFieldName(fieldIdx), fEntry->GetField(fieldIdx).GetTypeName());
+         const auto &currField = fEntry->GetValue(fieldIdx).GetField();
+         auto newField = CreateAndConnectField(fEntry->GetQualifiedFieldName(fieldIdx), currField.GetTypeName());
 
          fEntry->UpdateField(fieldIdx, std::move(newField));
       }
@@ -552,7 +552,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    std::vector<void *> valPtrs;
    valPtrs.reserve(fJoinFieldIdxs.size());
    for (const auto &fieldIdx : fJoinFieldIdxs) {
-      auto ptr = fEntry->GetPtr<void>(fieldIdx);
+      auto ptr = fEntry->GetValue(fieldIdx).GetPtr<void>();
       valPtrs.push_back(ptr.get());
    }
 
