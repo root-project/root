@@ -20,7 +20,6 @@
    based in Rcpp::InternalFunction
 
 
-   @ingroup R
 */
 
 
