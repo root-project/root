@@ -1,5 +1,4 @@
 /// \file ROOT/RRangeCast.hxx
-/// \ingroup Base StdExt
 /// \author Jonas Rembser <jonas.rembser@cern.ch>
 /// \date 2021-08-04
 
