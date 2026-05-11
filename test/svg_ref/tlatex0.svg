@@ -1,0 +1,198 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="554" viewBox="0 0 567 554" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tlatex0.svg
+</title>
+<rect x="0.500" y="0" width="567" height="553" fill="#f2f2f2"/>
+<path d="M0.500,553l 2.0, -2.0v -549h 563l 2.0, -2.0h -567v 553z" fill="white"/>
+<path d="M0.500,553l 2.0, -2.0h 563v -549l 2.0, -2.0v 553h -567z" fill="#a9a9a9"/>
+<path d="M199,415l -0.291, -5.6l -0.870, -5.5l -1.4, -5.4l -2.0, -5.3l -2.5, -5.0l -3.0, -4.8l -3.5, -4.4l -4.0, -4.1l -4.4, -3.7l -4.7, -3.2l -5.0, -2.7l -5.3, -2.2l -5.5, -1.7l -5.6, -1.1l -5.7, -0.567h -5.7l -5.7, 0.567l -5.6, 1.1l -5.5, 1.7l
+ -5.3, 2.2l -5.0, 2.7l -4.7, 3.2l -4.4, 3.7l -4.0, 4.1l -3.5, 4.4l -3.0, 4.8l -2.5, 5.0l -2.0, 5.3l -1.4, 5.4l -0.870, 5.5l -0.291, 5.6l 0.291, 5.6l 0.870, 5.5l 1.4, 5.4l 2.0, 5.3l 2.5, 5.0l 3.0, 4.8l 3.5, 4.4l 4.0, 4.1l 4.4, 3.7l 4.7, 3.2l 5.0, 2.7l
+ 5.3, 2.2l 5.5, 1.7l 5.6, 1.1l 5.7, 0.567h 5.7l 5.7, -0.567l 5.6, -1.1l 5.5, -1.7l 5.3, -2.2l 5.0, -2.7l 4.7, -3.2l 4.4, -3.7l 4.0, -4.1l 3.5, -4.4l 3.0, -4.8l 2.5, -5.0l 2.0, -5.3l 1.4, -5.4l 0.870, -5.5l 0.291, -5.6z" fill="none" stroke="black"
+ stroke-dasharray=" 1.000, 2.0"/>
+<text xml:space="preserve" x="125" y="419" fill="#00ff00" font-size="11" font-family="Helvetica">Font 42
+</text>
+<path d="M201,415l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M201,415l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="199" y="415" fill="black" font-size="11" font-family="Helvetica">Align 11
+</text>
+<path d="M193,387l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M193,387l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-30,176,396)">
+<text xml:space="preserve" x="176" y="396" fill="black" font-size="11" font-family="Helvetica">Align 21
+</text>
+</g>
+<path d="M172,367l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M172,367l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-60,153,398)">
+<text xml:space="preserve" x="153" y="398" fill="black" font-size="11" font-family="Helvetica">Align 31
+</text>
+</g>
+<path d="M144,360l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M144,360l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-90,146,360)">
+<text xml:space="preserve" x="146" y="360" fill="black" font-size="11" font-family="Helvetica">Align 12
+</text>
+</g>
+<path d="M116,367l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M116,367l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-120,126,381)">
+<text xml:space="preserve" x="126" y="381" fill="black" font-size="11" font-family="Helvetica">Align 22
+</text>
+</g>
+<path d="M95,387l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M95,387l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-150,127,403)">
+<text xml:space="preserve" x="127" y="403" fill="black" font-size="11" font-family="Helvetica">Align 32
+</text>
+</g>
+<path d="M87,415l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M87,415l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-180,86,407)">
+<text xml:space="preserve" x="86" y="407" fill="black" font-size="11" font-family="Helvetica">Align 13
+</text>
+</g>
+<path d="M95,443l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M95,443l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-210,105,426)">
+<text xml:space="preserve" x="105" y="426" fill="black" font-size="11" font-family="Helvetica">Align 23
+</text>
+</g>
+<path d="M116,463l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M116,463l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-240,125,427)">
+<text xml:space="preserve" x="125" y="427" fill="black" font-size="11" font-family="Helvetica">Align 33
+</text>
+</g>
+<path d="M144,470l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M144,470l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-270,142,470)">
+<text xml:space="preserve" x="142" y="470" fill="black" font-size="11" font-family="Helvetica">Align 11
+</text>
+</g>
+<path d="M172,463l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M172,463l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-300,162,448)">
+<text xml:space="preserve" x="162" y="448" fill="black" font-size="11" font-family="Helvetica">Align 21
+</text>
+</g>
+<path d="M193,443l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M193,443l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-330,161,425)">
+<text xml:space="preserve" x="161" y="425" fill="black" font-size="11" font-family="Helvetica">Align 31
+</text>
+</g>
+<path d="M482,138l -0.291, -5.6l -0.870, -5.5l -1.4, -5.4l -2.0, -5.3l -2.5, -5.0l -3.0, -4.8l -3.5, -4.4l -4.0, -4.1l -4.4, -3.7l -4.7, -3.2l -5.0, -2.7l -5.3, -2.2l -5.5, -1.7l -5.6, -1.1l -5.7, -0.567h -5.7l -5.7, 0.567l -5.6, 1.1l -5.5, 1.7l
+ -5.3, 2.2l -5.0, 2.7l -4.7, 3.2l -4.4, 3.7l -4.0, 4.1l -3.5, 4.4l -3.0, 4.8l -2.5, 5.0l -2.0, 5.3l -1.4, 5.4l -0.870, 5.5l -0.291, 5.6l 0.291, 5.6l 0.870, 5.5l 1.4, 5.4l 2.0, 5.3l 2.5, 5.0l 3.0, 4.8l 3.5, 4.4l 4.0, 4.1l 4.4, 3.7l 4.7, 3.2l 5.0, 2.7l
+ 5.3, 2.2l 5.5, 1.7l 5.6, 1.1l 5.7, 0.567h 5.7l 5.7, -0.567l 5.6, -1.1l 5.5, -1.7l 5.3, -2.2l 5.0, -2.7l 4.7, -3.2l 4.4, -3.7l 4.0, -4.1l 3.5, -4.4l 3.0, -4.8l 2.5, -5.0l 2.0, -5.3l 1.4, -5.4l 0.870, -5.5l 0.291, -5.6z" fill="none" stroke="black"
+ stroke-dasharray=" 1.000, 2.0"/>
+<text xml:space="preserve" x="410" y="142" fill="#00ff00" font-size="9.4" font-family="Helvetica">Font 43
+</text>
+<path d="M484,138l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M484,138l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="482" y="138" fill="black" font-size="9.4" font-family="Helvetica">Align 11
+</text>
+<path d="M476,111l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M476,111l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-30,461,118)">
+<text xml:space="preserve" x="461" y="118" fill="black" font-size="9.4" font-family="Helvetica">Align 21
+</text>
+</g>
+<path d="M456,90l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M456,90l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-60,438,118)">
+<text xml:space="preserve" x="438" y="118" fill="black" font-size="9.4" font-family="Helvetica">Align 31
+</text>
+</g>
+<path d="M427,83l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M427,83l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-90,429,83)">
+<text xml:space="preserve" x="429" y="83" fill="black" font-size="9.4" font-family="Helvetica">Align 12
+</text>
+</g>
+<path d="M399,90l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M399,90l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-120,408,103)">
+<text xml:space="preserve" x="408" y="103" fill="black" font-size="9.4" font-family="Helvetica">Align 22
+</text>
+</g>
+<path d="M378,111l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M378,111l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-150,407,125)">
+<text xml:space="preserve" x="407" y="125" fill="black" font-size="9.4" font-family="Helvetica">Align 32
+</text>
+</g>
+<path d="M371,138l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M371,138l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-180,369,131)">
+<text xml:space="preserve" x="369" y="131" fill="black" font-size="9.4" font-family="Helvetica">Align 13
+</text>
+</g>
+<path d="M378,166l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M378,166l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-210,387,152)">
+<text xml:space="preserve" x="387" y="152" fill="black" font-size="9.4" font-family="Helvetica">Align 23
+</text>
+</g>
+<path d="M399,186l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M399,186l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-240,408,155)">
+<text xml:space="preserve" x="408" y="155" fill="black" font-size="9.4" font-family="Helvetica">Align 33
+</text>
+</g>
+<path d="M427,194l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M427,194l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-270,426,194)">
+<text xml:space="preserve" x="426" y="194" fill="black" font-size="9.4" font-family="Helvetica">Align 11
+</text>
+</g>
+<path d="M456,186l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M456,186l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-300,446,173)">
+<text xml:space="preserve" x="446" y="173" fill="black" font-size="9.4" font-family="Helvetica">Align 21
+</text>
+</g>
+<path d="M476,166l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486z" fill="#ff0000"/>
+<path d="M476,166l -0.498, -1.2l -1.2, -0.486l -1.2, 0.486l -0.498, 1.2l 0.498, 1.2l 1.2, 0.486l 1.2, -0.486l 0.498, -1.2z" fill="none" stroke="black"/>
+<g transform="rotate(-330,448,150)">
+<text xml:space="preserve" x="448" y="150" fill="black" font-size="9.4" font-family="Helvetica">Align 31
+</text>
+</g>
+<text xml:space="preserve" x="29" y="334" fill="#ff0000" font-size="5.6" font-family="Helvetica">Size 0.01
+</text>
+<text xml:space="preserve" x="29" y="325" fill="#00ff00" font-size="11" font-family="Helvetica">Size 0.02
+</text>
+<text xml:space="preserve" x="29" y="315" fill="#0000ff" font-size="16" font-family="Helvetica">Size 0.03
+</text>
+<text xml:space="preserve" x="29" y="298" fill="#ffff00" font-size="21" font-family="Helvetica">Size 0.04
+</text>
+<text xml:space="preserve" x="29" y="276" fill="#ff00ff" font-size="26" font-family="Helvetica">Size 0.05
+</text>
+<text xml:space="preserve" x="29" y="248" fill="#00ffff" font-size="31" font-family="Helvetica">Size 0.06
+</text>
+<text xml:space="preserve" x="29" y="213" fill="#59d354" font-size="36" font-family="Helvetica">Size 0.07
+</text>
+<text xml:space="preserve" x="29" y="172" fill="#5954d8" font-size="41" font-family="Helvetica">Size 0.08
+</text>
+<text xml:space="preserve" x="29" y="126" fill="#ff0000" font-size="46" font-family="Helvetica">Size 0.09
+</text>
+<text xml:space="preserve" x="29" y="72" fill="#00ff00" font-size="51" font-family="Helvetica">Size 0.10
+</text>
+<text xml:space="preserve" x="527" y="223" fill="#ff0000" font-size="4.7" font-family="Helvetica">Size  8
+</text>
+<text xml:space="preserve" x="503" y="237" fill="#00ff00" font-size="11" font-family="Helvetica">Size 20
+</text>
+<text xml:space="preserve" x="483" y="252" fill="#0000ff" font-size="17" font-family="Helvetica">Size 32
+</text>
+<text xml:space="preserve" x="462" y="274" fill="#ffff00" font-size="23" font-family="Helvetica">Size 44
+</text>
+<text xml:space="preserve" x="441" y="304" fill="#ff00ff" font-size="30" font-family="Helvetica">Size 56
+</text>
+<text xml:space="preserve" x="421" y="341" fill="#00ffff" font-size="36" font-family="Helvetica">Size 68
+</text>
+<text xml:space="preserve" x="398" y="386" fill="#59d354" font-size="42" font-family="Helvetica">Size 80
+</text>
+<text xml:space="preserve" x="378" y="439" fill="#5954d8" font-size="49" font-family="Helvetica">Size 92
+</text>
+<text xml:space="preserve" x="326" y="499" fill="#ff0000" font-size="55" font-family="Helvetica">Size 104
+</text></svg>

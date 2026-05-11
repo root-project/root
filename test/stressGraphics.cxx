@@ -1035,7 +1035,6 @@ void ttext1()
    TestReport(C, "ttext1", "TText 1 (Text attributes)");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// 2nd TText test. A very long text string.
 
@@ -1050,6 +1049,77 @@ void ttext2()
    TestReport(C, "ttext2", "TText 2 (A very long text string)");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Primitive TLatex test. Check font, size, angle, color
+
+void tlatex0()
+{
+   auto C = StartTest(1000, 1000);
+
+   auto circle = [C](Float_t x, Float_t y, Font_t font, Float_t size) {
+      auto el = new TEllipse(x, y, 0.1, 0.1);
+      el->SetLineStyle(3);
+      el->SetFillStyle(0);
+      el->SetFillColor(0);
+      C->Add(el);
+
+      auto lbl = new TLatex(x, y, TString::Format("Font %d", font));
+      lbl->SetTextFont(font);
+      lbl->SetTextSize(size);
+      lbl->SetTextAlign(22);
+      lbl->SetTextColor(kGreen);
+      C->Add(lbl);
+
+      for (int n = 0; n < 12; n++) {
+         Float_t dx = 0.1 * TMath::Cos(n / 6. * TMath::Pi());
+         Float_t dy = 0.1 * TMath::Sin(n / 6. * TMath::Pi());
+
+         Int_t align = 10 + (n % 3) * 10 + ((n / 3) % 3 + 1);
+
+         auto p = new TEllipse(x + dx, y + dy, 0.003, 0.003);
+         p->SetFillColor(kRed);
+         C->Add(p);
+
+         auto l = new TLatex(x + dx, y + dy, TString::Format("Align %d", align));
+         l->SetTextAngle(n * 30);
+         l->SetTextFont(font);
+         l->SetTextSize(size);
+         l->SetTextAlign(align);
+         C->Add(l);
+      }
+   };
+
+   auto stair = [C](Float_t x, Float_t y, Font_t font, Float_t size0, Float_t step, Float_t sizeN) {
+      Int_t cnt = 0;
+
+      for (Float_t size = size0; size <= sizeN; size += step) {
+         TString text = (font % 10 == 3) ? TString::Format("Size %2.0f", size) : TString::Format("Size %4.2f", size);
+         auto l = new TLatex(x, y, text);
+         l->SetTextFont(font);
+         l->SetTextSize(size);
+         l->SetTextAlign(x < 0.5 ? 12 : 32);
+         l->SetTextColor(cnt++ % 8 + 2);
+         C->Add(l);
+         Float_t dy = 1.1 * ((font % 10 == 3) ? size / C->GetPadHeight() : size);
+         if (dy < 0.02)
+            dy = 0.02;
+         if (x < 0.5)
+            y += dy;
+         else
+            y -= dy;
+      }
+   };
+
+   circle(0.25, 0.25, 42, 0.02);
+
+   circle(0.75, 0.75, 43, 17);
+
+   stair(0.05, 0.4, 42, 0.01, 0.01, 0.1);
+
+   stair(0.95, 0.6, 43, 8, 12, 104);
+
+   TestReport(C, "tlatex0", "TLatex 0");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 1st TLatex test.
@@ -4519,6 +4589,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    piechart      ();
    ttext1        ();
    ttext2        ();
+   tlatex0       ();
    tlatex1       ();
    tlatex2       ();
    tlatex3       ();
