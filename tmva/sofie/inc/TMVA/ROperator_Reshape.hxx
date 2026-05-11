@@ -293,7 +293,6 @@ public:
          }
       } else if (!fAttrAxes.empty()) {
          // case fNShape is empty and axes are provided as attributes (e.g. for Unsqueeze)
-         std::cout << "attribute axes exists\n";
          fShapeOutput = ShapeInference({fShapeInput})[0];
       } else if (fOpMode == Flatten || fOpMode == Squeeze) {
          fShapeOutput = ShapeInference({fShapeInput})[0];
