@@ -1,5 +1,4 @@
 /// \file RNTupleDS.hxx
-/// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Enrico Guiraud <enrico.guiraud@cern.ch>
 /// \date 2018-10-04

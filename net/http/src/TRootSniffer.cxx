@@ -46,7 +46,6 @@ const char *item_prop_autoload = "_autoload";
 const char *item_prop_rootversion = "_root_version";
 
 /** \class TRootSnifferScanRec
-\ingroup http
 
 Structure used to scan hierarchies of ROOT objects
 
@@ -397,7 +396,6 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, c
 
 
 /** \class TRootSniffer
-\ingroup http
 
 Sniffer of ROOT objects, data provider for THttpServer
 

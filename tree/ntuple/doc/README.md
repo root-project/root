@@ -75,5 +75,3 @@ These commands work both with TTree as well as RNTuple.
 
 ## Related classes
 
-\defgroup ROOT7 ROOT7 classes
-\brief Interfaces and classes designed for future ROOT version 7

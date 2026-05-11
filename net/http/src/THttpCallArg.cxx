@@ -17,7 +17,6 @@
 #include "THttpWSEngine.h"
 
 /** \class THttpCallArg
-\ingroup http
 
 Contains arguments for single HTTP call
 

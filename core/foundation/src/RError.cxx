@@ -1,5 +1,4 @@
 /// \file RError.cxx
-/// \ingroup Base ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11
 

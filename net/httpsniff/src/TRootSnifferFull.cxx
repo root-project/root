@@ -42,7 +42,6 @@
 #include <cstring>
 
 /** \class TRootSnifferFull
-\ingroup http
 
 Extends TRootSniffer for many ROOT classes
 
