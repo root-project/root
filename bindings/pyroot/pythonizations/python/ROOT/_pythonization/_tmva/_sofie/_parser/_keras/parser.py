@@ -321,7 +321,7 @@ class PyKeras:
         gmt_time = time.gmtime(ttime)
         parsetime = time.asctime(gmt_time)
 
-        rmodel = SOFIE.RModel.RModel(filename_nodir, parsetime)
+        rmodel = SOFIE.RModel(filename_nodir, parsetime)
 
         print("PyKeras: parsing model ", filename)
 
