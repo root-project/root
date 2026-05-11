@@ -1,4 +1,4 @@
-\defgroup Geometry The Geometry Package
+\defgroup Geometry Geometry
 
 
 The %ROOT geometry package is a tool for building, browsing,

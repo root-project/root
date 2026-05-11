@@ -10,7 +10,8 @@
  *************************************************************************/
 
 /**
- * \defgroup treeplayer TreePlayer Library
+ * \defgroup treeplayer TTreePlayer
+ * \ingroup tree
  * \brief It contains utilities to plot data stored in a TTree.
  * \note See also Tree package documentation
  * \note See also Chapter about Trees and Selectors in the Users Guide

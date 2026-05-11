@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 /**
-  \defgroup tree Tree Library
+  \defgroup tree TTree
 
   RNTuple is the modern way of storing columnar datasets: please consider to use it
   before starting new projects based on TTree and related classes.

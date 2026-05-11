@@ -1,4 +1,4 @@
-\defgroup IO Input/Output Library
+\defgroup IO I/O
 
 The library collecting the ROOT classes dedicated to data input and output.
 
