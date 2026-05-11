@@ -755,18 +755,13 @@ Int_t TApplicationServer::ReceiveFile(const char *file, Bool_t bin, Long64_t siz
             Int_t w;
 
             if (!bin) {
-               Int_t k = 0, i = 0, j = 0;
-               char *q;
-               while (i < r) {
-                  if (p[i] == '\r') {
-                     i++;
-                     k++;
+               Int_t j = 0;
+               for (Int_t i = 0; i < r; ++i) {
+                  if (p[i] != '\r') {
+                     p[j++] = p[i];
                   }
-                  cpy[j++] = buf[i++];
                }
-               q = cpy;
-               r -= k;
-               w = write(fd, q, r);
+               w = write(fd, p, j);
             } else {
                w = write(fd, p, r);
             }
