@@ -18,7 +18,7 @@
 
 /**
  \class TConvertClonesArrayToProxy TContainerConverters.cxx
- \ingroup IO
+ \ingroup io_other
 
  Small helper to read a TBuffer containing a TClonesArray into any valid
  collection.

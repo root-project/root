@@ -11,7 +11,7 @@
 
 /**
 \class TLockFile
-\ingroup IO
+\ingroup io_other
 
 A scoped lock based on files.
 

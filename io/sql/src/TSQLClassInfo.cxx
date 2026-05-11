@@ -11,7 +11,7 @@
 
 /**
 \class TSQLClassInfo
-\ingroup IO
+\ingroup io_SQL
 
 Contains information about tables specific to one class and
 version. It provides names of table for that class. For each version of

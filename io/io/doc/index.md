@@ -10,3 +10,18 @@ For an overview of I/O in ROOT, see the following pages in the ROOT manual:
 - [I/O of custom classes](root.cern/manual/io_custom_classes/): how to read and write user-defined C++ objects
 
 For ROOT I/O developers, a detailed internal description of the \ref rootio is also available.
+
+\defgroup io_files Files
+\ingroup IO
+
+\defgroup io_SQL SQL
+\ingroup IO
+
+\defgroup io_xml XML
+\ingroup IO
+
+\defgroup io_ZIP ZIP
+\ingroup IO
+
+\defgroup io_other Other
+\ingroup IO

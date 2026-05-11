@@ -11,7 +11,7 @@
 
 /**
 \class TBufferText
-\ingroup IO
+\ingroup io_other
 
 Base class for text-based streamers like TBufferJSON or TBufferXML
 Special actions list will use methods, introduced in this class.

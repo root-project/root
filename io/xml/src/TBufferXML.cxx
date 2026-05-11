@@ -11,7 +11,7 @@
 
 /**
 \class TBufferXML
-\ingroup IO
+\ingroup io_xml
 
 Class for serializing/deserializing object to/from xml.
 

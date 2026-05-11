@@ -11,7 +11,7 @@
 
 /**
 \class TBufferJSON
-\ingroup IO
+\ingroup io_other
 
 Class for serializing object to and from JavaScript Object Notation (JSON) format.
 It creates such object representation, which can be directly

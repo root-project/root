@@ -11,7 +11,7 @@
 
 /**
 \class TBufferSQL2
-\ingroup IO
+\ingroup io_SQL
 
 Converts data to SQL statements or read data from SQL tables.
 

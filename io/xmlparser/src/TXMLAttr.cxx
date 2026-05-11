@@ -11,7 +11,7 @@
 
 /**
 \class TXMLAttr
-\ingroup IO
+\ingroup io_xml
 
 TXMLAttribute is the attribute of an Element. It contains the name
 and the value of the attribute.

@@ -146,7 +146,7 @@ public:
 
 /**
 \class TZIPMember
-\ingroup IO
+\ingroup io_ZIP
 A ZIP archive consists of files compressed with the popular ZLIB
 compression algorithm; this class records the information about a
 single archive member.

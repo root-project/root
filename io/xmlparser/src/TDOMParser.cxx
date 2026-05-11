@@ -11,7 +11,7 @@
 
 /**
 \class TDomParser
-\ingroup IO
+\ingroup io_xml
 
 DOM stands for the Document Object Model; this is an API for
 accessing XML or HTML structured documents.
