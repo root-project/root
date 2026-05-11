@@ -11,7 +11,7 @@
 
 /**
 \class TXMLNode
-\ingroup IO
+\ingroup io_xml
 
 TXMLNode contains a pointer to xmlNode, which is a node under the
 DOM tree. A node can be an Element, an Attribute, a Text Node

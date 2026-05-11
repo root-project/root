@@ -12,7 +12,7 @@
 /**
 \file TArchiveFile.cxx
 \class TArchiveFile
-\ingroup IO
+\ingroup io_other
 
 Class describing an archive file containing multiple sub-files, like a ZIP
 or TAR archive.

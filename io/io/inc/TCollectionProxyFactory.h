@@ -115,7 +115,7 @@ public:
 
 /**
  \class TCollectionStreamer TCollectionProxyFactory.h
- \ingroup IO
+ \ingroup io_other
 
  Class streamer object to implement TClassStreamer functionality for I/O emulation.
 
@@ -147,7 +147,7 @@ public:
 
 /**
  \class TCollectionClassStreamer TCollectionProxyFactory.h
- \ingroup IO
+ \ingroup io_other
 
  Class streamer object to implement TClassStreamer functionality
  for I/O emulation.
@@ -195,7 +195,7 @@ public:
 
 /**
  \class TCollectionMemberStreamer TCollectionProxyFactory.h
- \ingroup IO
+ \ingroup io_other
 
  Class streamer object to implement TMemberStreamer functionality
  for I/O emulation.
