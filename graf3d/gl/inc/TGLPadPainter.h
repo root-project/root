@@ -47,12 +47,15 @@ private:
 
    Bool_t                      fLocked;
 
-   Bool_t IsInteractiveMode();
+   Bool_t IsInvertMode();
 
    void SelectGLFont(Font_t font, Float_t size);
 
    template<class ValueType>
    void DrawPolyMarkerHelper(Int_t n, const ValueType *x, const ValueType *y);
+
+   template<class ValueType>
+   void DrawPolyLineHelper(Int_t n, const ValueType *x, const ValueType *y);
 
    template<class Char_t>
    void DrawTextHelper(Double_t x, Double_t y, const Char_t *text, ETextMode mode);
