@@ -208,21 +208,42 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Int_t kMaxDiff = 10;
 
-   // Double_t angle,dphi,ct,st,fTy,fBy,fLx,fRx;
-   static Int_t px1,py1,r1,r2, pTy, pBy, pLx, pRx;
-
-   const Int_t kMinSize = 25;
    static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
-   static Int_t pxold, pyold;
-   static Int_t impair = 0;
-   static Int_t sdx, sdy;
+   static Int_t sdx = 0, sdy = 0;
    static Double_t oldX1, oldY1, oldR1, oldR2;
+   static Bool_t first_move = kTRUE;
 
-   auto paint_marker = [this,&parent,pp](Int_t dx, Int_t dy) {
-      Double_t x = GetX1() + dx * GetR1();
-      Double_t y = GetY1() + dy * GetR2();
+   auto paint_hollow = [this,&parent,pp]() {
+      pp->SetAttLine(*this);
+      std::vector<Double_t> x, y;
+      FillPoints(parent, x, y, GetX1(), GetY1(), GetR1(), GetR2(), GetPhimin(), GetPhimax(), GetTheta());
+      pp->DrawPolyLine(x.size(), x.data(), y.data());
       pp->SetAttMarker({GetLineColor(), 25, 2});
-      pp->DrawPolyMarker(1, &x, &y);
+      Double_t xm[4] = { GetX1(), GetX1(), GetX1() - GetR1(), GetX1() + GetR1() };
+      Double_t ym[4] = { GetY1() + GetR2(), GetY1() - GetR2(), GetY1(), GetY1() };
+      for (Int_t i = 0; i < 4; ++i) {
+         xm[i] = parent.XtoPad(xm[i]);
+         ym[i] = parent.YtoPad(ym[i]);
+      }
+      pp->DrawPolyMarker(4, xm, ym);
+   };
+
+   auto changeX = [this](Int_t px1, Int_t px2) {
+      auto x1 = GetXCoord(px1, kFALSE, kTRUE);
+      auto x2 = GetXCoord(px2, kFALSE, kTRUE);
+      SetX1((x1 + x2) * 0.5);
+      SetR1(TMath::Abs((x2 - x1) * 0.5));
+      if (x2 < x1)
+         mode = (mode == pL) ? pR : pL;
+   };
+
+   auto changeY = [this](Int_t py1, Int_t py2) {
+      auto y1 = GetYCoord(py1, kFALSE, kTRUE);
+      auto y2 = GetYCoord(py2, kFALSE, kTRUE);
+      SetY1((y1 + y2) * 0.5);
+      SetR2(TMath::Abs((y1 - y2) * 0.5));
+      if (y1 < y2)
+         mode = (mode == pTop) ? pBot : pTop;
    };
 
    Bool_t opaque  = parent.OpaqueMoving();
@@ -231,33 +252,23 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-      oldX1 = fX1;
-      oldY1 = fY1;
-      oldR1 = fR1;
-      oldR2 = fR2;
-      impair = 0;
+      oldX1 = GetX1();
+      oldY1 = GetY1();
+      oldR1 = GetR1();
+      oldR2 = GetR2();
 
-      pxold = px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-      pyold = py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-      sdx = px1 - px;
-      sdy = py1 - py;
-
-      paint_marker(-1,  0);
-      paint_marker( 1,  0);
-      paint_marker( 0, -1);
-      paint_marker( 0,  1);
+      sdx = parent.XtoAbsPixel(parent.XtoPad(GetX1())) - px;
+      sdy = parent.YtoAbsPixel(parent.YtoPad(GetY1())) - py;
 
       // No break !!!
 
-   case kMouseMotion:
-      px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-      py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-      pTy = parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2()));
-      pBy = parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2()));
-      pLx = parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1()));
-      pRx = parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1()));
-      r1 = (pRx - pLx) / 2;
-      r2 = (pBy - pTy) / 2;
+   case kMouseMotion: {
+      Int_t px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
+      Int_t py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
+      Int_t pLx = parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1()));
+      Int_t pRx = parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1()));
+      Int_t pBy = parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2()));
+      Int_t pTy = parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2()));
       mode = pNone;
       if ((TMath::Abs(px - px1) < kMaxDiff) && (TMath::Abs(py - pTy) < kMaxDiff)) {
          mode = pTop; // top edge
@@ -275,98 +286,50 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          mode = pINSIDE;
          parent.SetCursor(kMove);
       }
-      pxold = px;
-      pyold = py;
-
+      first_move = kTRUE;
       break;
+   }
 
    case kArrowKeyRelease:
-   case kButton1Motion:
-      if (!opaque) {
-         pp->SetAttLine(*this);
-         std::vector<Double_t> x, y;
-         FillPoints(parent, x, y, fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta);
-         pp->DrawPolyLine(x.size(), x.data(), y.data());
-
-         paint_marker(-1,  0);
-         paint_marker( 1,  0);
-         paint_marker( 0, -1);
-         paint_marker( 0,  1);
+   case kButton1Motion: {
+      if (mode == pNone)
+         break;
+      if (!opaque && !first_move)
+         paint_hollow();
+      char guide = 'i';
+      switch (mode) {
+      case pNone:
+         break;
+      case pL:
+         changeX(px, parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1())));
+         guide = 'l';
+         break;
+      case pR:
+         changeX(parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1())), px);
+         guide = 'r';
+         break;
+      case pTop:
+         changeY(py, parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2())));
+         guide = 't';
+         break;
+      case pBot:
+         changeY(parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2())), py);
+         guide = 'b';
+         break;
+      case pINSIDE:
+         SetX1(GetXCoord(px + sdx, kFALSE, kTRUE));
+         SetY1(GetYCoord(py + sdy, kFALSE, kTRUE));
+         guide = 'i';
+         break;
       }
-      if (mode == pTop) {
-         Int_t sav1 = py1;
-         Int_t sav2 = r2;
-         py1 += (py - pyold)/2;
-         r2 -= (py - pyold)/2;
-         if (TMath::Abs(pyold-py)%2==1) impair++;
-         Int_t sig = py - pyold > 0 ? 1 : -1;
-         if (impair==2) { impair = 0; py1 += sig; r2 -= sig;}
-         if (py1 > pBy-kMinSize) {py1 = sav1; r2 = sav2; py = pyold;}
-      } else if (mode == pBot) {
-         Int_t sav1 = py1;
-         Int_t sav2 = r2;
-         py1 += (py - pyold)/2;
-         r2 += (py - pyold)/2;
-         if (TMath::Abs(pyold-py)%2==1) impair++;
-         Int_t sig = py - pyold > 0 ? 1 : -1;
-         if (impair==2) { impair = 0; py1 += sig; r2 += sig;}
-         if (py1 < pTy+kMinSize) {py1 = sav1; r2 = sav2; py = pyold;}
-      } else if (mode == pL) {
-         Int_t sav1 = px1;
-         Int_t sav2 = r1;
-         px1 += (px - pxold)/2;
-         r1 -= (px - pxold)/2;
-         if (TMath::Abs(pxold-px)%2==1) impair++;
-         Int_t sig = px - pxold > 0 ? 1 : -1;
-         if (impair==2) { impair = 0; px1 += sig; r1 -= sig;}
-         if (px1 > pRx-kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
-      } else if (mode == pR) {
-         Int_t sav1 = px1;
-         Int_t sav2 = r1;
-         px1 += (px - pxold)/2;
-         r1 += (px - pxold)/2;
-         if (TMath::Abs(pxold-px)%2==1) impair++;
-         Int_t sig = px - pxold > 0 ? 1 : -1;
-         if (impair==2) { impair = 0; px1 += sig; r1 += sig;}
-         if (px1 < pLx+kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
-      }
-      if (mode == pTop || mode == pBot || mode == pL || mode == pR) {
-         SetX1(GetXCoord(px1, kFALSE, kTRUE));
-         SetY1(GetYCoord(py1, kFALSE, kTRUE));
-         SetR1(TMath::Abs(GetXCoord(px1+r1, kFALSE, kTRUE) - GetXCoord(px1-r1, kFALSE, kTRUE)) / 2);
-         SetR2(TMath::Abs(GetYCoord(py1-r2, kFALSE, kTRUE) - GetYCoord(py1+r2, kFALSE, kTRUE)) / 2);
-
-         if (opaque) {
-            if (mode == pTop) parent.ShowGuidelines(this, event, 't', true);
-            if (mode == pBot) parent.ShowGuidelines(this, event, 'b', true);
-            if (mode == pL) parent.ShowGuidelines(this, event, 'l', true);
-            if (mode == pR) parent.ShowGuidelines(this, event, 'r', true);
-            parent.ModifiedUpdate();
-         }
-      } else if (mode == pINSIDE) {
-         px1 = px + sdx;
-         py1 = py + sdy;
-         SetX1(parent.AbsPixeltoX(px1));
-         SetY1(parent.AbsPixeltoY(py1));
-         if (opaque){
-            parent.ShowGuidelines(this, event, 'i', true);
-            parent.ModifiedUpdate();
-         }
-      }
-      if (!opaque){
-         pp->SetAttLine(*this);
-         std::vector<Double_t> x, y;
-         FillPoints(parent, x, y, fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta);
-         pp->DrawPolyLine(x.size(), x.data(), y.data());
-
-         paint_marker(-1,  0);
-         paint_marker( 1,  0);
-         paint_marker( 0, -1);
-         paint_marker( 0,  1);
-      }
-      pxold = px;
-      pyold = py;
+      first_move = kFALSE;
+      if (opaque) {
+         parent.ShowGuidelines(this, event, guide, true);
+         parent.ModifiedUpdate();
+      } else
+         paint_hollow();
       break;
+   }
 
    case kButton1Up:
       if (gROOT->IsEscaped()) {
@@ -454,9 +417,8 @@ Bool_t TEllipse::FillPoints(TVirtualPad &pad, std::vector<Double_t> &x, std::vec
    //set number of points approximatively proportional to the ellipse circumference
    Double_t circ = kPI*(r1+r2)*(phi2-phi1)/360;
    Int_t n = (Int_t)(np*circ/((pad.GetX2() - pad.GetX1())+(pad.GetY2()-pad.GetY1())));
-   if (n < 8) n = 8;
-   if (n > np) n = np;
    Bool_t full_circle = phi2-phi1 >= 360;
+   n = TMath::Min(np, TMath::Max(n, (Int_t) (full_circle ? 36 : 8)));
 
    x.resize(n + (full_circle ? 1 : 3));
    y.resize(n + (full_circle ? 1 : 3));
