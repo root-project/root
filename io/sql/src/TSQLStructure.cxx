@@ -11,7 +11,7 @@
 
 /**
 \class TSQLStructure
-\ingroup IO
+\ingroup io_SQL
 This is hierarchical structure, which is created when data is written
 by TBufferSQL2. It contains data all structural information such:
 version of written class, data member types of that class, value for
@@ -149,7 +149,7 @@ Long64_t sqlio::atol64(const char *value)
 
 /**
 \class TSQLColumnData
-\ingroup IO
+\ingroup io_SQL
 */
 
 

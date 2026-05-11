@@ -1,4 +1,5 @@
 \defgroup gui GUI
+\ingroup Graphics
 \brief Graphical User Interface
 
 The ROOT GUI classes support an extensive and rich set of widgets. The widget classes
@@ -8,3 +9,4 @@ fully cross-platform.
 
 \defgroup webwidgets Web Widgets
 \brief A Graphical User Interface based on WEB technology
+\ingroup webdisplay

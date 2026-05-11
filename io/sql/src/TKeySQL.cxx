@@ -11,7 +11,7 @@
 
 /**
 \class TKeySQL
-\ingroup IO
+\ingroup io_SQL
 
 TKeySQL represents meta-information about object, which was written to
 SQL database. It keeps object id, which used to locate object data

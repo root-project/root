@@ -11,7 +11,7 @@
 
 /**
 \class TSQLFile
-\ingroup IO
+\ingroup io_SQL
 
 Access an SQL db via the TFile interface.
 
