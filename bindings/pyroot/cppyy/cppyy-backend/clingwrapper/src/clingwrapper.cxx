@@ -786,10 +786,12 @@ public:
 Cppyy::TCppScope_t Cppyy::GetActualClass(TCppScope_t klass, TCppObject_t obj) {
     std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
 
-    if (!Cpp::IsClassPolymorphic(klass))
+    if (!obj || !Cpp::IsClassPolymorphic(klass))
         return klass;
 
     const std::type_info *typ = &typeid(*(AutoCastRTTI *)obj.data);
+    if (!typ)
+        return klass;
 
     std::string mangled_name = typ->name();
     std::string demangled_name = Cpp::Demangle(mangled_name);
