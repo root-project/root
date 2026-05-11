@@ -69,6 +69,13 @@ public:
 //                                                                      //
 // Online http server for arbitrary ROOT application                    //
 //                                                                      //
+// \note This class provides HTTP access to ROOT objects.               //
+// The user is entirely responsible for the security of the server.     //
+// It is strongly recommended to use the server only within an isolated //
+// network or to enable proper authentication to prevent unauthorized   //
+// remote access.                                                       //
+//                                                                      //
+//                                                                      //
 // Idea of THttpServer - provide remote http access to running          //
 // ROOT application and enable HTML/JavaScript user interface.          //
 // Any registered object can be requested and displayed in the browser. //
