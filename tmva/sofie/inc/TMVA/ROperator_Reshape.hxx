@@ -332,7 +332,7 @@ public:
    }
 
    std::string Generate(std::string opName) override {
-      if (fIsOutputConstant) return "";  //no op for constant tensors
+
 
       std::stringstream out;
       std::string opType = "Reshape";
@@ -344,6 +344,8 @@ public:
          opType = "Unsquueze";
 
       out << SP << "///--------" << opType << " operator " << opName << " --> " << ConvertDimShapeToString(fShapeOutput) << "\n";
+
+      if (fIsOutputConstant) return out.str();  //no op for constant tensors
 
       // in case of dynamic output shape we need to set the shape value from input shape tensor
       // and take case of the zero values
