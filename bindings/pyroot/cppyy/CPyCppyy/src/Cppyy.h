@@ -450,7 +450,7 @@ namespace Cppyy {
     CPPYY_IMPORT
     TCppType_t  GetEnumConstantType(TCppScope_t scope);
     CPPYY_IMPORT
-    TCppIndex_t GetEnumDataValue(TCppScope_t scope);
+    long long   GetEnumDataValue(TCppScope_t scope);
 
     CPPYY_IMPORT
     TCppScope_t InstantiateTemplate(

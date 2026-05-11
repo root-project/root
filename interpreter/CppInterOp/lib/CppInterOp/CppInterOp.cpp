@@ -851,12 +851,18 @@ TypeRef GetEnumConstantType(ConstDeclRef DRef) {
   return INTEROP_RETURN(nullptr);
 }
 
-size_t GetEnumConstantValue(ConstDeclRef DRef) {
+int64_t GetEnumConstantValue(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<clang::Decl>(DRef);
   if (const auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
-    return INTEROP_RETURN(Val.getExtValue());
+    if (Val.isRepresentableByInt64())
+      return INTEROP_RETURN(Val.getExtValue());
+    // Huge unsigned values (> INT64_MAX): return the zero-extended bit
+    // pattern as its two's complement representation. Do not round-trip
+    // through std::stoul: its unsigned long is 32 bit on LLP64 platforms
+    // (Windows), where it would throw std::out_of_range.
+    return INTEROP_RETURN((int64_t)Val.getZExtValue());
   }
   return INTEROP_RETURN(0);
 }
