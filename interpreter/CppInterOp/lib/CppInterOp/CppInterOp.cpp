@@ -851,7 +851,11 @@ size_t GetEnumConstantValue(ConstDeclRef DRef) {
   const auto* D = unwrap<clang::Decl>(DRef);
   if (const auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
-    return INTEROP_RETURN(Val.getExtValue());
+    if (Val.isRepresentableByInt64())
+      return INTEROP_RETURN(Val.getExtValue());
+    llvm::SmallString<40> StrVal;
+    Val.toString(StrVal);
+    return INTEROP_RETURN(std::stoul(StrVal.c_str()));
   }
   return INTEROP_RETURN(0);
 }
