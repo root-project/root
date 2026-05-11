@@ -380,7 +380,7 @@ public:
 
    /// Thread-safe callback for RDataFrame.
    /// It will record elapsed times and event statistics, and print a progress bar every n seconds (set by the
-   /// fPrintInterval). \param slot Ignored. \param value Ignored.
+   /// fPrintInterval). The function arguments are ignored.
    template <typename T>
    void operator()(unsigned int /*slot*/, T & /*value*/)
    {

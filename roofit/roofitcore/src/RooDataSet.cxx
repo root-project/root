@@ -748,7 +748,7 @@ void RooDataSet::weightError(double& lo, double& hi, ErrorType etype) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsData::weightError(ErrorType)
+/// \copydoc RooAbsData::weightError(RooAbsData::ErrorType)
 /// \param etype error type
 double RooDataSet::weightError(ErrorType etype) const
 {
