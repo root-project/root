@@ -8,3 +8,4 @@ fully cross-platform.
 
 \defgroup webwidgets Web Widgets
 \brief A Graphical User Interface based on WEB technology
+\ingroup webdisplay
