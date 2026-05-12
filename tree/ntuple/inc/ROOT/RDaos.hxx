@@ -1,5 +1,4 @@
 /// \file ROOT/RDaos.hxx
-/// \ingroup NTuple
 /// \author Javier Lopez-Gomez <j.lopez@cern.ch>
 /// \date 2020-11-14
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

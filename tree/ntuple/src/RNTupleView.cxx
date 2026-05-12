@@ -1,5 +1,4 @@
 /// \file RNTupleView.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-10-28
 
