@@ -1,0 +1,85 @@
+name: 'Src Tarball'
+
+on:
+  workflow_dispatch:
+    inputs:
+      major:
+        type: choice
+        description: Major
+        options: 
+        - 6
+        - 7
+        - 8
+        required: true
+        default: 6
+      minor:
+        type: choice
+        description: Minor
+        options: 
+        - 26
+        - 28
+        - 30
+        - 32
+        - 36
+        - 38
+        - 40
+        - 42
+        - 44
+        - 46
+        - 48
+        required: true
+        default: 40
+      patch:
+        type: choice
+        description: Patch
+        options: 
+        - "00"
+        - "02"
+        - "04"
+        - "06"
+        - "08"
+        - "10"
+        - "12"
+        - "14"
+        - "16"
+        - "18"
+        - "20"
+        - "22"
+        - "24"
+        - "26"
+        - "28"
+        - "30"
+        required: true
+        default: "00"
+
+jobs:
+  check-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the official ROOT repo
+        uses: actions/checkout@v6
+        with:
+          path: root
+          ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}
+      - name: Install Kerberos utilities
+        run: sudo apt-get install -y krb5-user
+      - name: Install XRootD client
+        run: sudo apt-get -y install xrootd-client
+      - name: Create a Source Tarball
+        run: sh root/cmake/unix/makedistsrc.sh ${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }} root
+      - name: Copy Source Tarball to EOS
+        env:
+          RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+          KT_FILE_NAME: /tmp/decoded.keytab
+          EOS_PATH: /eos/project/r/root-eos/website/doc
+          EOS_ENDPOINT: root://eosproject-r.cern.ch
+          KRB5CCNAME: /tmp/krb5cc
+        run: |
+          echo +++ Content
+          ls
+          echo +++ Retrieving the secret
+          echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+          echo +++ Creating the token
+          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+          echo +++ Running the copy
+          xrdcp -rf root_v${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.source.tar.gz ${EOS_ENDPOINT}/${EOS_PATH}/
