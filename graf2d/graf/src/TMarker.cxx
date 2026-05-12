@@ -300,14 +300,12 @@ void TMarker::ls(Option_t *) const
 
 void TMarker::Paint(Option_t *)
 {
-   if (!gPad) return;
-   if (TestBit(kMarkerNDC)) {
-      Double_t u = gPad->GetX1() + fX*(gPad->GetX2()-gPad->GetX1());
-      Double_t v = gPad->GetY1() + fY*(gPad->GetY2()-gPad->GetY1());
-      PaintMarker(u,v);
-   } else {
-      PaintMarker(gPad->XtoPad(fX),gPad->YtoPad(fY));
-   }
+   if (!gPad)
+      return;
+   if (TestBit(kMarkerNDC))
+      PaintMarkerNDC(GetX(), GetY());
+   else
+      PaintMarker(gPad->XtoPad(GetX()), gPad->YtoPad(GetY()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,14 +314,17 @@ void TMarker::Paint(Option_t *)
 void TMarker::PaintMarker(Double_t x, Double_t y)
 {
    TAttMarker::Modify();  //Change line attributes only if necessary
-   if (gPad) gPad->PaintPolyMarker(-1,&x,&y,"");
+   if (gPad) gPad->PaintPolyMarker(-1, &x, &y, "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates in NDC.
 
-void TMarker::PaintMarkerNDC(Double_t, Double_t)
+void TMarker::PaintMarkerNDC(Double_t u, Double_t v)
 {
+   Double_t x = gPad->GetX1() + u * (gPad->GetX2() - gPad->GetX1());
+   Double_t y = gPad->GetY1() + v * (gPad->GetY2() - gPad->GetY1());
+   PaintMarker(x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
