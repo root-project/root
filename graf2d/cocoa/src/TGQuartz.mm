@@ -433,7 +433,7 @@ void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
        CGContextSetLineCap(ctx, kCGLineCapRound);
    }
 
-   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
+   Float_t MarkerSizeReduced = attmark.GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
    Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, markerstyle);
 
    CGContextSetLineJoin(ctx, kCGLineJoinMiter);
