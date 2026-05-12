@@ -441,11 +441,12 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
 
    if (mode == kHollow) {
       const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, 0, fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
-      //
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      glRectd(x1, y1, x2, y2);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glLineWidth(1.f);
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x1, y1);
+      glVertex2d(x2, y1);
+      glVertex2d(x2, y2);
+      glVertex2d(x1, y2);
+      glEnd();
    } else {
       const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &fGlFillAtt);//Set filling parameters.
       glRectd(x1, y1, x2, y2);
