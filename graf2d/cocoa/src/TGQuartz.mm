@@ -203,8 +203,10 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
    CGContextRef ctx = drawable.fContext;
 
+   std::vector<TPoint> pnts;
+
    //Convert points to bottom-left system:
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
+   ConvertPointsROOTToCocoa(n, xy, pnts, drawable);
 
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
@@ -223,7 +225,7 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
    if (const TColorGradient * const gradient = dynamic_cast<const TColorGradient *>(fillColor)) {
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                          n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
+                                          pnts.size(), pnts.data(), kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
       if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, attfill)) {
@@ -233,7 +235,7 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
       // kFALSE - do not draw shadows.
       // last argument - fill style
-      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE, attfill);
+      Quartz::DrawFillArea(ctx, pnts.size(), pnts.data(), kFALSE, attfill);
    }
 }
 
@@ -350,13 +352,15 @@ void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
    Quartz::SetLineStyle(ctx, attline.GetLineStyle());
    Quartz::SetLineWidth(ctx, attline.GetLineWidth());
 
+   std::vector<TPoint> pnts;
+
    //Convert to bottom-left-corner system.
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
+   ConvertPointsROOTToCocoa(n, xy, pnts, drawable);
 
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   Quartz::DrawPolyLine(ctx, n, &fConvertedPoints[0]);
+   Quartz::DrawPolyLine(ctx, pnts.size(), pnts.data());
 
    // CTM (current transformation matrix) is restored by 'ctxGuard's dtor.
 }
@@ -408,14 +412,16 @@ void TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
    if (!drawable)
       return;
 
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
+   std::vector<TPoint> pnts;
+
+   ConvertPointsROOTToCocoa(n, xy, pnts, drawable);
 
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   Quartz::DrawPolyMarker(ctx, n, fConvertedPoints.data(), attmark, drawable.fScaleFactor);
+   Quartz::DrawPolyMarker(ctx, pnts.size(), pnts.data(), attmark, drawable.fScaleFactor);
 }
 
 //______________________________________________________________________________
