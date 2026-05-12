@@ -1,5 +1,4 @@
 /// \file ROOT/RFieldToken.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2025-03-19
 
