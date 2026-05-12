@@ -62,7 +62,6 @@ ROOT::RDF::RInterfaceBase::RInterfaceBase(RDFDetail::RLoopManager &lm, const RDF
 }
 
 /////////////////////////////////////////////////////////////////////////////
-/// \ingroup dataframe_operation
 /// \brief Returns the names of the available columns.
 /// \return the container of column names.
 ///
