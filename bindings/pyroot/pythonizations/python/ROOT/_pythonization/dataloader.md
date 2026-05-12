@@ -1,8 +1,8 @@
-\defgroup Py_ML ML / RDataLoader
+\defgroup Py_ML Machine Learning Training
 \ingroup Python
 \brief Feed ROOT data directly into models for machine learning training.
 
-# ML / RDataLoader
+# RDataLoader
 
 `RDataLoader` is ROOT's bridge between HEP data and machine learning frameworks.
 It lets you stream batches from any [RDataFrame](@ref Py_RDataFrame) directly into your models for training with no intermediate conversion or copies.
