@@ -34,7 +34,7 @@ void SetLineStyle(CGContextRef ctx, Int_t lstyle);
 void SetLineWidth(CGContextRef ctx, Int_t width);
 
 void DrawLine(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
-void DrawPolyLine(CGContextRef ctx, Int_t n, TPoint * xy);
+void DrawPolyLine(CGContextRef ctx, Int_t n, const TPoint *xy);
 
 }
 }
