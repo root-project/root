@@ -44,14 +44,28 @@ using namespace llvm;
 using namespace llvm::jitlink;
 using namespace llvm::orc;
 
-static LLVM_ATTRIBUTE_USED void linkComponents() {
-  errs() << "Linking in runtime functions\n"
-         << (void*)&llvm_orc_registerJITLoaderPerfStart << '\n'
-         << (void*)&llvm_orc_registerJITLoaderPerfEnd << '\n'
-         << (void*)&llvm_orc_registerJITLoaderPerfImpl << '\n';
-}
-
 namespace {
+  static SymbolMap GetListOfPerfSymbols(const LLJIT& Jit) {
+    // ORC's perf support plugin looks up these runtime entry points through the
+    // process symbol table. In ROOT, the symbols will remain hidden inside
+    // libCling.so. Explicitly inject them into the JITDylib.
+    static const std::pair<const char*, const void*> NamePtrList[] = {
+        {"llvm_orc_registerJITLoaderPerfStart",
+         (void*)&llvm_orc_registerJITLoaderPerfStart},
+        {"llvm_orc_registerJITLoaderPerfEnd",
+         (void*)&llvm_orc_registerJITLoaderPerfEnd},
+        {"llvm_orc_registerJITLoaderPerfImpl",
+         (void*)&llvm_orc_registerJITLoaderPerfImpl},
+    };
+
+    SymbolMap PerfSymbols;
+    for (const auto& NamePtr : NamePtrList) {
+      PerfSymbols[Jit.mangleAndIntern(NamePtr.first)] = {
+          orc::ExecutorAddr::fromPtr(NamePtr.second), JITSymbolFlags::Exported};
+    }
+    return PerfSymbols;
+  }
+
   // This could potentially be upstreamed, similar to enableDebuggerSupport()
   Error enablePerfSupport(LLJIT& J) {
     auto* ObjLinkingLayer =
@@ -65,6 +79,9 @@ namespace {
       return make_error<StringError>("Cannot enable LLJIT perf support: "
                                      "Process symbols are not available",
                                      inconvertibleErrorCode());
+
+    // Manually define the symbols
+    cantFail(ProcessSymsJD->define(absoluteSymbols(GetListOfPerfSymbols(J))));
 
     auto& ES = J.getExecutionSession();
     const auto& TT = J.getTargetTriple();
