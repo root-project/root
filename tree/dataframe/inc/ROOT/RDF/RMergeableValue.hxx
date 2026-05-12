@@ -53,7 +53,6 @@ void MergeValues(RMergeableVariations<T> &OutputMergeable, const RMergeableVaria
 /**
 \class ROOT::Detail::RDF::RMergeableValueBase
 \brief Base class of RMergeableValue.
-\ingroup dataframe
 Base class of the mergeable RDataFrame results family of classes. Provides a
 non-templated custom type to allow passing a `std::unique_ptr` to the mergeable
 object along the call chain. This class is never used in the public API and has
