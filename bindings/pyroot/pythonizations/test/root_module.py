@@ -150,10 +150,10 @@ class ROOTModule(unittest.TestCase):
         self.assertEqual(gDirectory_1, gDirectory_2)
         self.assertNotEqual(gDirectory_1, ROOT.gROOT)
 
-        # If we re-assign the gDirectory now, it should be considered
-        ROOT.gDirectory = ROOT.nullptr
-        self.assertEqual(gDirectory_1, ROOT.nullptr)
-        self.assertEqual(gDirectory_2, ROOT.nullptr)
+        # If we reset the global directory to nullptr now, it should be considered
+        with ROOT.TDirectory.TContext(ROOT.nullptr):
+            self.assertEqual(gDirectory_1, ROOT.nullptr)
+            self.assertEqual(gDirectory_2, ROOT.nullptr)
 
 
 if __name__ == "__main__":
