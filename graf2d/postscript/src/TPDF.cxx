@@ -89,7 +89,8 @@ const Int_t kObjPatternResourses = 23; // Pattern Resources object
 const Int_t kObjPatternList      = 24; // Pattern list object
 const Int_t kObjTransList        = 25; // List of transparencies
 const Int_t kObjPattern          = 26; // First pattern object (25 in total)
-const Int_t kObjFirstPage        = 51; // First page object
+const Int_t kObjImageList = 51;        // Image XObject name dictionary
+const Int_t kObjFirstPage = 52;        // First page object
 
 // Number of fonts
 const Int_t kNumberOfFonts = 15;
@@ -133,28 +134,128 @@ TPDF::~TPDF()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin the Cell Array painting
+/// Begin the Cell Array painting.
+///
+/// The W x H cells fill a rectangle whose top-left corner is at world
+/// coordinates (x1, y1); (x2 - x1) is the per-cell width and (y2 - y1) is
+/// the per-cell vertical step (the image extends downward from y1 by
+/// H * (y2 - y1)). The pixel data is collected via CellArrayFill in
+/// top-to-bottom, left-to-right order and emitted as a PDF image XObject
+/// in CellArrayEnd.
 
-void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
-                          Double_t)
+void TPDF::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2)
 {
-   Warning("CellArrayBegin", "not yet implemented");
+   if (W <= 0 || H <= 0) {
+      fCellArrayW = 0;
+      fCellArrayH = 0;
+      fCellArrayRGB.clear();
+      return;
+   }
+
+   fCellArrayW = W;
+   fCellArrayH = H;
+
+   Double_t xLeft = XtoPDF(x1);
+   Double_t xRight = XtoPDF(x1 + (x2 - x1) * W);
+   Double_t yTop = YtoPDF(y1);
+   Double_t yBot = YtoPDF(y1 - (y2 - y1) * H);
+
+   fCellArrayXpdf = xLeft;
+   fCellArrayYpdfBot = yBot;
+   fCellArrayWpdf = xRight - xLeft;
+   fCellArrayHpdf = yTop - yBot;
+
+   fCellArrayRGB.clear();
+   fCellArrayRGB.reserve(3 * std::size_t(W) * std::size_t(H));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint the Cell Array
+/// Paint the Cell Array: append one RGB pixel to the in-flight buffer.
 
-void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
+void TPDF::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
-   Warning("CellArrayFill", "not yet implemented");
+   if (fCellArrayW <= 0 || fCellArrayH <= 0)
+      return;
+   auto clamp = [](Int_t v) -> unsigned char {
+      if (v < 0)
+         return 0;
+      if (v > 255)
+         return 255;
+      return static_cast<unsigned char>(v);
+   };
+   fCellArrayRGB.push_back(clamp(r));
+   fCellArrayRGB.push_back(clamp(g));
+   fCellArrayRGB.push_back(clamp(b));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// End the Cell Array painting
+/// End the Cell Array painting.
+///
+/// The RGB buffer accumulated by CellArrayFill is Flate-compressed and stored
+/// as a PDF image XObject (actually emitted later, in Close). The page content
+/// stream only receives the placement matrix and a "/ImN Do" operator that
+/// paints that XObject. This is both smaller and structurally cleaner than an
+/// inline image: the pixel data is compressed once, kept out of the page
+/// content stream, and could be reused across pages.
 
 void TPDF::CellArrayEnd()
 {
-   Warning("CellArrayEnd", "not yet implemented");
+   if (fCellArrayW <= 0 || fCellArrayH <= 0 || fCellArrayRGB.empty()) {
+      fCellArrayW = 0;
+      fCellArrayH = 0;
+      fCellArrayRGB.clear();
+      return;
+   }
+
+   const std::size_t expected = 3 * std::size_t(fCellArrayW) * std::size_t(fCellArrayH);
+   if (fCellArrayRGB.size() < expected) {
+      // Pad with black if the caller delivered fewer pixels than declared.
+      fCellArrayRGB.resize(expected, 0);
+   } else if (fCellArrayRGB.size() > expected) {
+      fCellArrayRGB.resize(expected);
+   }
+
+   // Flate-compress the pixels now, so only the compressed form is buffered
+   // until Close. compress2 emits a zlib stream, exactly what the PDF
+   // /FlateDecode filter consumes.
+   PDFImage img;
+   img.fW = fCellArrayW;
+   img.fH = fCellArrayH;
+   uLongf bound = compressBound(static_cast<uLong>(fCellArrayRGB.size()));
+   img.fData.resize(bound);
+   uLongf destLen = bound;
+   int zerr = compress2(img.fData.data(), &destLen, fCellArrayRGB.data(), static_cast<uLong>(fCellArrayRGB.size()),
+                        Z_DEFAULT_COMPRESSION);
+   if (zerr == Z_OK) {
+      img.fData.resize(destLen);
+      img.fFlate = kTRUE;
+   } else {
+      // Fall back to storing the raw samples uncompressed.
+      img.fData = fCellArrayRGB;
+      img.fFlate = kFALSE;
+   }
+   fImageObjects.push_back(std::move(img));
+   const Int_t imageId = static_cast<Int_t>(fImageObjects.size()); // 1-based /ImN
+
+   // Paint the image XObject. Its unit square (0,0)-(1,1) is mapped onto the
+   // image rectangle by this cm matrix. Operator separators must be real
+   // newlines: '@' is only translated when fCompress is false, and a page
+   // content stream is written with fCompress true.
+   PrintStr("\nq ");
+   WriteReal(fCellArrayWpdf);
+   WriteReal(0.);
+   WriteReal(0.);
+   WriteReal(fCellArrayHpdf);
+   WriteReal(fCellArrayXpdf);
+   WriteReal(fCellArrayYpdfBot);
+   PrintStr(" cm /Im");
+   WriteInteger(imageId, kFALSE);
+   PrintStr(" Do Q\n");
+
+   fCellArrayW = 0;
+   fCellArrayH = 0;
+   fCellArrayRGB.clear();
+   fCellArrayRGB.shrink_to_fit();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,6 +389,57 @@ void TPDF::Close(Option_t *)
    EndObject();
    if (!fAlphas.empty())
       fAlphas.clear();
+
+   // Image XObjects. They are emitted here, once every page's content stream
+   // has been closed, because a PDF object cannot be opened while another one
+   // (the page content stream) is still open. Each page's /Resources refers to
+   // kObjImageList, the name dictionary written just after the images.
+   std::vector<Int_t> imageObjNum;
+   imageObjNum.reserve(fImageObjects.size());
+   for (const auto &img : fImageObjects) {
+      Int_t n = static_cast<Int_t>(fObjPos.size()) + 1;
+      imageObjNum.push_back(n);
+      NewObject(n);
+      PrintStr("<<@");
+      PrintStr("/Type /XObject@");
+      PrintStr("/Subtype /Image@");
+      PrintStr("/Width");
+      WriteInteger(img.fW);
+      PrintStr("@");
+      PrintStr("/Height");
+      WriteInteger(img.fH);
+      PrintStr("@");
+      PrintStr("/ColorSpace /DeviceRGB@");
+      PrintStr("/BitsPerComponent 8@");
+      if (img.fFlate)
+         PrintStr("/Filter /FlateDecode@");
+      PrintStr("/Length");
+      WriteInteger(static_cast<Int_t>(img.fData.size()));
+      PrintStr("@");
+      PrintStr(">>@");
+      PrintStr("stream@");
+      if (!img.fData.empty()) {
+         fStream->write(reinterpret_cast<const char *>(img.fData.data()), img.fData.size());
+         fNByte += img.fData.size();
+      }
+      PrintStr("@endstream@");
+      EndObject();
+   }
+
+   // Name dictionary mapping /ImN to the XObjects above. Always written, even
+   // when empty, because kObjImageList is referenced by every page's
+   // /Resources and so must exist in the cross-reference table.
+   NewObject(kObjImageList);
+   PrintStr("<<@");
+   for (std::size_t i = 0; i < imageObjNum.size(); ++i) {
+      PrintStr(" /Im");
+      WriteInteger(static_cast<Int_t>(i) + 1, kFALSE);
+      WriteInteger(imageObjNum[i]);
+      PrintStr(" 0 R");
+   }
+   PrintStr("@>>@");
+   EndObject();
+   fImageObjects.clear();
 
    // Cross-Reference Table
    Int_t refInd = fNByte;
@@ -1799,6 +1951,10 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("@");
    PrintStr("/Pattern");
    WriteInteger(kObjPatternList);
+   PrintStr(" 0 R");
+   PrintStr("@");
+   PrintStr("/XObject");
+   WriteInteger(kObjImageList);
    PrintStr(" 0 R");
    PrintStr("@");
    PrintStr(">>@");

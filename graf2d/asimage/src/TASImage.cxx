@@ -1595,9 +1595,6 @@ void TASImage::Paint(Option_t *option)
                            min, max, ndiv, "+L");
          }
          return;
-      } else if (ps->InheritsFrom("TPDF")) {
-         Warning("Paint", "PDF not implemented yet");
-         return;
       } else if (ps->InheritsFrom("TSVG")) {
          paint_as_png = kTRUE;
       }
