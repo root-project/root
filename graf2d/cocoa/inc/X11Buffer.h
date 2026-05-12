@@ -20,6 +20,7 @@
 #include "CocoaGuiTypes.h"
 #include "GuiTypes.h"
 #include "TAttMarker.h"
+#include "TAttLine.h"
 #include "TPoint.h"
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -239,6 +240,22 @@ public:
    Point start() const { return fP1; }
    Point end() const { return fP2; }
 };
+
+class DrawPolyLineXor : public Command {
+private:
+   std::vector<TPoint> fPnts;
+   TAttLine fAtt;
+   float fScaleFactor = 1.;
+
+public:
+   DrawPolyLineXor(Window_t windowID, const TAttLine &att) :
+      Command(windowID, GCValues_t()), fAtt(att) {}
+   void setPoints(Int_t n, TPoint *xy);
+
+   void Execute() const {}
+   void Execute(CGContextRef ctx) const;
+};
+
 
 class DrawMarkerXor : public Command {
 private:
