@@ -27,6 +27,8 @@ export DOXYGEN_STRIP_PATH := $(shell cd $(PWD)/../..; pwd)
 export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name dictpch -prune -o -type d -name inc)
 export DOXYGEN_PYZDOC_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/pyzdoc
 export DOXYGEN_STRIP_FROM_PATH := $(DOXYGEN_STRIP_PATH) $(DOXYGEN_OUTPUT_DIRECTORY)
+export DOXYGEN_NUM_THREADS := 1
+export DOXYGEN_INPUT_FILTER := ./filter
 
 PYZ_DIR = $(DOXYGEN_SOURCE_DIRECTORY)/bindings/pyroot/pythonizations/python/ROOT/_pythonization
 
@@ -35,6 +37,15 @@ define MkDir
 endef
 
 all: filter folders mathjax js images doxygen replaceCollaborationDiagrams notebooks rootWork
+
+preview: export DOXYGEN_OUTPUT_DIRECTORY := /tmp/doxygen_preview
+preview: export DOXYGEN_NUM_THREADS := 0
+preview: export DOXYGEN_HAVE_DOT := NO
+preview: export DOXYGEN_INPUT_FILTER :=
+preview: htmlfooter
+	echo "INPUT = ./mainpage.md ../.." > Doxyfile_INPUT
+	doxygen Doxyfile
+	echo "Your preview is in $(DOXYGEN_OUTPUT_DIRECTORY)"
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
@@ -56,12 +67,14 @@ pyzdoc:
 	$(Python3_EXECUTABLE) extract_docstrings.py $(PYZ_DIR) $(DOXYGEN_PYZDOC_PATH)
 	$(Python3_EXECUTABLE) print_roofit_pyz_doctrings.py > $(DOXYGEN_PYZDOC_PATH)/_roofit.pyzdoc
 
-doxygen: filter pyzdoc
+htmlfooter:
+	./makehtmlfooter.sh > htmlfooter.html
+
+doxygen: filter pyzdoc htmlfooter
 	rm -f tutorialWorklist_py tutorialWorklist_root
 	$(call MkDir,$(DOXYGEN_OUTPUT_DIRECTORY))
 	$(call MkDir,$(DOXYGEN_EXAMPLE_PATH))
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
-	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
 	bash ./CleanNamespaces.sh
