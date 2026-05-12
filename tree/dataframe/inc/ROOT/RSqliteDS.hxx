@@ -41,7 +41,7 @@ struct RSqliteDSDataSet;
 // clang-format off
 /**
 \class ROOT::RDF::RSqliteDS
-\ingroup dataframe
+\ingroup dataframe_classes
 \brief RSqliteDS is an RDF data source implementation for SQL result sets from sqlite3 files.
 
 The RSqliteDS is able to feed an RDataFrame with data from a SQlite SELECT query. One can use it like

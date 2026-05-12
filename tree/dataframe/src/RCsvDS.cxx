@@ -10,7 +10,7 @@
 
 // clang-format off
 /** \class ROOT::RDF::RCsvDS
-    \ingroup dataframe
+    \ingroup dataframe_classes
     \brief RDataFrame data source class for reading CSV files.
 
 The RCsvDS class implements a CSV file reader for RDataFrame.

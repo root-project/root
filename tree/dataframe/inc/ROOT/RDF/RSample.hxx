@@ -21,7 +21,7 @@ namespace RDF {
 namespace Experimental {
 
 /**
-\ingroup dataframe
+\ingroup dataframe_classes
 \brief Class representing a sample which is a grouping of trees and their fileglobs, and, optionally, the sample's
 metadata information via the RMetaData object.
 

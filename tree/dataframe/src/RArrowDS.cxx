@@ -10,7 +10,7 @@
 
 // clang-format off
 /** \class ROOT::RDF::RArrowDS
-    \ingroup dataframe
+    \ingroup dataframe_classes
     \brief RDataFrame data source class to interface with Apache Arrow.
 
 The RArrowDS implements a proxy RDataSource to be able to use Apache Arrow

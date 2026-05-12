@@ -38,7 +38,7 @@ namespace Experimental {
 
 /**
 \class ROOT::RDF::Experimental::RMetaData
-\ingroup dataframe
+\ingroup dataframe_classes
 \brief Class behaving as a heterogenuous dictionary to store the metadata of a dataset.
 
  The supported types of the metadata are: std::string, int and double. An example of creating the RMetaData object:

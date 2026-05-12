@@ -37,7 +37,7 @@ class GraphCreatorHelper;
 // clang-format off
 /**
 \class ROOT::Internal::RDF::GraphDrawing::GraphNode
-\ingroup dataframe
+\ingroup dataframe_classes
 \brief Class used to create the operation graph to be printed in the dot representation
 
  This represent a single node of the overall graph. Each node maps the real RNode keeping just
