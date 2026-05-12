@@ -1,5 +1,4 @@
 /// \file ROOT/RCreateFieldOptions.hxx
-/// \ingroup NTuple
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2024-12-17
 
