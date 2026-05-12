@@ -274,8 +274,9 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
 
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
-        if str(var_value).startswith("<class cppyy.gbl."):
-            # It's a class proxy
+        if str(var_value).startswith("<class cppyy.gbl.") and not hasattr(var_value, "__cpp_template__"):
+            # It's a class proxy. Exclude template instantiations, because they
+            # will be traversed in the next step.
             pythonize_if_match(var_name, var_value)
 
         if str(var_value).startswith("<cppyy.Template"):
