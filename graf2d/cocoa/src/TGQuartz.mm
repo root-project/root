@@ -372,57 +372,39 @@ void TGQuartz::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
 }
 
 //______________________________________________________________________________
-void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
+void TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
    auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
    if (!drawable0)
       return;
 
-   //Do some checks first.
-   if ([drawable0 isDirectDraw])
-      return;
-
    auto &attmark = GetAttMarker(wctxt);
 
+   if ([drawable0 isDirectDraw]) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
+         if (!view) {
+             ::Warning("DrawPolyMarkerW", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         [view.fQuartzWindow addXorMarker: view : n : xy : attmark ];
+      }
+
+      return;
+   }
    auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyMarkerW");
    if (!drawable)
       return;
+
+   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   if (!Quartz::SetFillColor(ctx, attmark.GetMarkerColor())) {
-      Error("DrawPolyMarker", "Could not find TColor for index %d", attmark.GetMarkerColor());
-      return;
-   }
-
-   Quartz::SetLineColor(ctx, attmark.GetMarkerColor());//Can not fail (for coverity).
-   Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle()))));
-
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
-
-   if (drawable.fScaleFactor > 1.)
-      CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
-
-   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(attmark.GetMarkerStyle());
-
-   // The fast pixel markers need to be treated separately
-   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
-       CGContextSetLineJoin(ctx, kCGLineJoinMiter);
-       CGContextSetLineCap(ctx, kCGLineCapButt);
-   } else {
-       CGContextSetLineJoin(ctx, kCGLineJoinRound);
-       CGContextSetLineCap(ctx, kCGLineCapRound);
-   }
-
-   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, markerstyle);
-
-   CGContextSetLineJoin(ctx, kCGLineJoinMiter);
-   CGContextSetLineCap(ctx, kCGLineCapButt);
+   Quartz::DrawPolyMarker(ctx, n, fConvertedPoints.data(), attmark, drawable.fScaleFactor);
 }
 
 //______________________________________________________________________________
