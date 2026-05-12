@@ -12,6 +12,9 @@
 #include "TAttMarker.h"
 
 #include "QuartzMarker.h"
+#include "QuartzLine.h"
+#include "QuartzFillArea.h"
+#include "TMath.h"
 
 namespace ROOT {
 namespace Quartz {
@@ -906,8 +909,32 @@ void DrawMarkerFourSquaresPlus(CGContextRef ctx, unsigned n, const TPoint *xy,
 
 //______________________________________________________________________________
 void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *xy,
-                    Size_t markerSize, Style_t markerStyle)
+                    const TAttMarker &attmark, float scaleFactor)
 {
+   if (!Quartz::SetFillColor(ctx, attmark.GetMarkerColor()))
+      return;
+
+   Quartz::SetLineColor(ctx, attmark.GetMarkerColor());//Can not fail (for coverity).
+   Quartz::SetLineStyle(ctx, 1);
+   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle()))));
+
+   if (scaleFactor > 1.)
+      CGContextScaleCTM(ctx, 1. / scaleFactor, 1. / scaleFactor);
+
+   Style_t markerStyle = TAttMarker::GetMarkerStyleBase(attmark.GetMarkerStyle());
+
+   // The fast pixel markers need to be treated separately
+   if (markerStyle == 1 || markerStyle == 6 || markerStyle == 7) {
+      CGContextSetLineJoin(ctx, kCGLineJoinMiter);
+      CGContextSetLineCap(ctx, kCGLineCapButt);
+   } else {
+      CGContextSetLineJoin(ctx, kCGLineJoinRound);
+      CGContextSetLineCap(ctx, kCGLineCapRound);
+   }
+
+   Float_t markerSize = attmark.GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
+   markerSize *= scaleFactor;
+
    switch (markerStyle) {
    case kDot:
       DrawMarkerDot(ctx, nPoints, xy, markerSize);
@@ -1018,15 +1045,11 @@ void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *xy,
       DrawMarkerFourSquaresPlus(ctx, nPoints, xy, markerSize);
       break;
    }
+
+   CGContextSetLineJoin(ctx, kCGLineJoinMiter);
+   CGContextSetLineCap(ctx, kCGLineCapButt);
 }
 
-
-//______________________________________________________________________________
-void DrawPolyMarker(CGContextRef ctx, const std::vector<TPoint> &xy,
-                    Size_t markerSize, Style_t markerStyle)
-{
-   DrawPolyMarker(ctx, xy.size(), &xy[0], markerSize, markerStyle);
-}
 
 }//namespace Quartz
 }//namespace ROOT

@@ -27,14 +27,13 @@
 #include "Rtypes.h"
 
 #include "TPoint.h"
+#include "TAttMarker.h"
 
 namespace ROOT {
 namespace Quartz {
 
-void DrawPolyMarker(CGContextRef ctx, const std::vector<TPoint> &marker,
-                    Size_t markerSize, Style_t markerStyle);
 void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *marker,
-                    Size_t markerSize, Style_t markerStyle);
+                    const TAttMarker &attmark, float scaleFactor);
 
 }
 }

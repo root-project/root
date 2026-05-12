@@ -19,6 +19,8 @@
 
 #include "CocoaGuiTypes.h"
 #include "GuiTypes.h"
+#include "TAttMarker.h"
+#include "TPoint.h"
 
 //////////////////////////////////////////////////////////////////////////////////
 //                                                                              //
@@ -231,12 +233,28 @@ private:
 public:
    DrawLineXor(Window_t windowID, const Point &p1, const Point &p2);
 
-   void Execute()const;
-   void Execute(CGContextRef ctx)const;
+   void Execute() const {}
+   void Execute(CGContextRef ctx) const;
 
-   Point start() const {return fP1;}
-   Point end() const {return fP2;}
+   Point start() const { return fP1; }
+   Point end() const { return fP2; }
 };
+
+class DrawMarkerXor : public Command {
+private:
+   std::vector<TPoint> fPnts;
+   TAttMarker fAtt;
+   float fScaleFactor = 1.;
+
+public:
+   DrawMarkerXor(Window_t windowID, const TAttMarker &att) :
+      Command(windowID, GCValues_t()), fAtt(att) {}
+   void setPoints(Int_t n, TPoint *xy);
+
+   void Execute() const {}
+   void Execute(CGContextRef ctx) const;
+};
+
 
 class CommandBuffer {
 private:
