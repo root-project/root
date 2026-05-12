@@ -11,7 +11,7 @@
 
 /**
  \class TDirectoryFile
- \ingroup IO
+ \ingroup io_TFile
 
  A ROOT file is structured in Directories (like a file system).
  Each Directory has a list of Keys (see TKeys) and a list of objects

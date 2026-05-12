@@ -11,7 +11,7 @@
 
 /*
 \class TMakeProject TMakeProject.cxx
-\ingroup IO
+\ingroup io_other
 
 Helper class implementing the TFile::MakeProject.
 **/
