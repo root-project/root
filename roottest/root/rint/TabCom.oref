@@ -19,6 +19,8 @@ cs.
 Simple* ps = nullptr;
 ps->	
 ps.	
+std::unique_ptr<Simple> us;
+us->	
 const Simple* pcs = nullptr;
 pcs->	
 Simple* const cps = nullptr;
@@ -79,6 +81,10 @@ SetTitleColor
 SetTitleFont
 SetTitleOffset
 SetTitleSize
+
+Simple
+operator=
+~Simple
 
 Simple
 operator=

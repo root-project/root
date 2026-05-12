@@ -50,3 +50,6 @@ ROOT_prompt_28:2:1: error: expected unqualified-id
 ROOT_prompt_30:2:1: error: expected unqualified-id
 ;
 ^
+ROOT_prompt_32:2:1: error: expected unqualified-id
+;
+^
