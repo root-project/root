@@ -165,7 +165,7 @@ ALWAYS_DETAILED_SEC    = YES
 # operators of the base classes will not be shown.
 # The default value is: NO.
 
-INLINE_INHERITED_MEMB  = NO
+INLINE_INHERITED_MEMB  = YES
 
 # If the FULL_PATH_NAMES tag is set to YES, doxygen will prepend the full path
 # before files name in the file list and in the header files. If set to NO the
@@ -359,6 +359,20 @@ EXTENSION_MAPPING      = h=C++ \
 
 MARKDOWN_SUPPORT       = YES
 
+# If the MARKDOWN_STRICT tag is enabled then doxygen treats text in comments as
+# Markdown formatted also in cases where doxygen's native markup format
+# conflicts with that of Markdown. This is only relevant in cases where
+# backticks are used. doxygen's native markup style allows a single quote to end
+# a text fragment started with a backtick and then treat it as a piece of quoted
+# text, whereas in Markdown such text fragment is treated as verbatim and only
+# ends when a second matching backtick is found. Also, doxygen's native markup
+# format requires double quotes to be escaped when they appear in a backtick
+# section, whereas this is not needed for Markdown.
+# The default value is: YES.
+# This tag requires that the tag MARKDOWN_SUPPORT is set to YES.
+
+MARKDOWN_STRICT        = YES
+
 # When the TOC_INCLUDE_HEADINGS tag is set to a non-zero value, all headings up
 # to that level are automatically included in the table of contents, even if
 # they do not have an id attribute.
@@ -488,7 +502,7 @@ TYPEDEF_HIDES_STRUCT   = NO
 # the optimal cache size from a speed point of view.
 # Minimum value: 0, maximum value: 9, default value: 0.
 
-LOOKUP_CACHE_SIZE      = 4
+LOOKUP_CACHE_SIZE      = 6
 
 # The NUM_PROC_THREADS specifies the number of threads doxygen is allowed to use
 # during processing. When set to 0 doxygen will based this on the number of
@@ -499,9 +513,9 @@ LOOKUP_CACHE_SIZE      = 4
 # which effectively disables parallel processing. Please report any issues you
 # encounter. Generating dot graphs in parallel is controlled by the
 # DOT_NUM_THREADS setting.
-# Minimum value: 0, maximum value: 32, default value: 1.
+# Minimum value: 0, maximum value: 512, default value: 1.
 
-NUM_PROC_THREADS       = 1
+NUM_PROC_THREADS       = $(DOXYGEN_NUM_THREADS)
 
 # If the TIMESTAMP tag is set different from NO then each generated page will
 # contain the date or date and time when the page was generated. Setting this to
@@ -597,6 +611,14 @@ HIDE_UNDOC_MEMBERS     = NO
 # The default value is: NO.
 
 HIDE_UNDOC_CLASSES     = NO
+
+# If the HIDE_UNDOC_NAMESPACES tag is set to YES, doxygen will hide all
+# undocumented namespaces that are normally visible in the namespace hierarchy.
+# If set to NO, these namespaces will be included in the various overviews. This
+# option has no effect if EXTRACT_ALL is enabled.
+# The default value is: YES.
+
+HIDE_UNDOC_NAMESPACES  = YES
 
 # If the HIDE_FRIEND_COMPOUNDS tag is set to YES, doxygen will hide all friend
 # declarations. If set to NO, these declarations will be included in the
@@ -713,7 +735,7 @@ SORT_MEMBERS_CTORS_1ST = YES
 # appear in their defined order.
 # The default value is: NO.
 
-SORT_GROUP_NAMES       = NO
+SORT_GROUP_NAMES       = YES
 
 # If the SORT_BY_SCOPE_NAME tag is set to YES, the class list will be sorted by
 # fully-qualified names, including namespaces. If set to NO, the class list will
@@ -892,6 +914,14 @@ WARN_NO_PARAMDOC       = NO
 
 WARN_IF_UNDOC_ENUM_VAL = NO
 
+# If WARN_LAYOUT_FILE option is set to YES, doxygen will warn about issues found
+# while parsing the user defined layout file, such as missing or wrong elements.
+# See also LAYOUT_FILE for details. If set to NO, problems with the layout file
+# will be suppressed.
+# The default value is: YES.
+
+WARN_LAYOUT_FILE       = YES
+
 # If the WARN_AS_ERROR tag is set to YES then doxygen will immediately stop when
 # a warning is encountered. If the WARN_AS_ERROR tag is set to FAIL_ON_WARNINGS
 # then doxygen will continue running as if WARN_AS_ERROR tag is set to NO, but
@@ -1044,7 +1074,23 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                =
+EXCLUDE                = ../../interpreter/ \
+    ../../roottest/ \
+    ../../README/ \
+    ../../ui5 \
+    ../../cmake \
+    ../../etc \
+    ../../js \
+    ../../core/clib/ \
+    ../../core/lzma/ \
+    ../../core/newdelete/ \
+    ../../core/textinput/ \
+    ../../graf2d/mathtext/ \
+    ../../graf3d/ftgl/ \
+    ../../graf3d/x3d/ \
+    ../../net/rootd/ \
+    ../../net/rpdutils/ \
+    ../../documentation/doxygen/html
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -1141,7 +1187,7 @@ IMAGE_PATH             = $(DOXYGEN_OUTPUT_DIRECTORY)/html
 # need to set EXTENSION_MAPPING for the extension otherwise the files are not
 # properly processed by doxygen.
 
-INPUT_FILTER           = ./filter
+INPUT_FILTER           = $(DOXYGEN_INPUT_FILTER)
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis. Doxygen will compare the file name with each pattern and apply the
@@ -1704,13 +1750,22 @@ DISABLE_INDEX          = YES
 
 GENERATE_TREEVIEW      = YES
 
-# When both GENERATE_TREEVIEW and DISABLE_INDEX are set to YES, then the
-# FULL_SIDEBAR option determines if the side bar is limited to only the treeview
-# area (value NO) or if it should extend to the full height of the window (value
-# YES). Setting this to YES gives a layout similar to
-# https://docs.readthedocs.io with more room for contents, but less room for the
-# project logo, title, and description. If either GENERATE_TREEVIEW or
-# DISABLE_INDEX is set to NO, this option has no effect.
+# When GENERATE_TREEVIEW is set to YES, the PAGE_OUTLINE_PANEL option determines
+# if an additional navigation panel is shown at the right hand side of the
+# screen, displaying an outline of the contents of the main page, similar to
+# e.g. https://developer.android.com/reference If GENERATE_TREEVIEW is set to
+# NO, this option has no effect.
+# The default value is: YES.
+# This tag requires that the tag GENERATE_HTML is set to YES.
+
+PAGE_OUTLINE_PANEL     = YES
+
+# When GENERATE_TREEVIEW is set to YES, the FULL_SIDEBAR option determines if
+# the side bar is limited to only the treeview area (value NO) or if it should
+# extend to the full height of the window (value YES). Setting this to YES gives
+# a layout similar to e.g. https://docs.readthedocs.io with more room for
+# contents, but less room for the project logo, title, and description. If
+# GENERATE_TREEVIEW is set to NO, this option has no effect.
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
@@ -1731,7 +1786,7 @@ ENUM_VALUES_PER_LINE   = 4
 # Minimum value: 0, maximum value: 1500, default value: 250.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-TREEVIEW_WIDTH         = 250
+TREEVIEW_WIDTH         = 200
 
 # If the EXT_LINKS_IN_WINDOW option is set to YES, doxygen will open links to
 # external symbols imported via tag files in a separate window.
@@ -2480,7 +2535,7 @@ HIDE_UNDOC_RELATIONS   = NO
 # set to NO
 # The default value is: NO.
 
-HAVE_DOT               = YES
+HAVE_DOT               = $(DOXYGEN_HAVE_DOT)
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is allowed
 # to run in parallel. When set to 0 doxygen will base this on the number of
