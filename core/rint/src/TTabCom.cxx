@@ -2409,8 +2409,9 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    // not found...
    if (!varName_exists) {
-      std::cerr << std::endl << "variable " << dblquote(varName) << " not defined."
-         << std::endl;
+      if (cut == 0) {
+         std::cerr << std::endl << "variable " << dblquote(varName) << " not defined." << std::endl;
+      }
       return nullptr;                 //* RETURN *//
    }
 
