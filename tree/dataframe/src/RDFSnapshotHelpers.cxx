@@ -1,6 +1,5 @@
 /**
  \file RDFSnapshotHelpers.cxx
- \ingroup dataframe
  \author Enrico Guiraud, CERN
  \author Danilo Piparo, CERN
  \date 2016-12

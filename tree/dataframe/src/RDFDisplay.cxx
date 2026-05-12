@@ -22,7 +22,6 @@ namespace RDF {
 
 /**
  * \class ROOT::Internal::RDF::RDisplayElement
- * \ingroup dataframe
  * Helper class to let Display print compact tabular representations of the events
  *
  * This class is internal and not meant to be explicitly instantiated by the user.
