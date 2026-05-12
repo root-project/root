@@ -1,4 +1,4 @@
-\defgroup Core Core ROOT classes
+\defgroup Core Core classes
 \brief The Core classes of ROOT.
 \defgroup Base Base ROOT classes
 \ingroup Core
