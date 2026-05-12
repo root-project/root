@@ -11,9 +11,12 @@
 /**
   \defgroup dataframe RDataFrame
 ROOT's RDataFrame allows to analyse data stored in TTrees with a high level interface.
-  
+
   \defgroup dataframe_classes RDataFrame classes
-  \ingroup dataframe  
+  \ingroup dataframe
+  
+  \defgroup dataframe_operation Operation
+  \ingroup dataframe
 */
 
 #ifndef ROOT_RDATAFRAME
