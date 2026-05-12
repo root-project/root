@@ -133,51 +133,38 @@ class RPrintSchemaVisitor : public Detail::RFieldVisitor {
 private:
    /// Where to write the printout to
    std::ostream &fOutput;
-   /// To render the output, use an asterix (*) by default to draw table lines and boundaries
-   char fFrameSymbol;
-   /// Indicates maximal number of allowed characters per line
-   int fWidth;
    int fDeepestLevel;
    int fNumFields;
    int fAvailableSpaceKeyString;
-   int fAvailableSpaceValueString;
    int fFieldNo = 1;
    std::string fTreePrefix;
    std::string fFieldNoPrefix;
 
 public:
-   RPrintSchemaVisitor(std::ostream &out = std::cout, char frameSymbol = '*', int width = 80, int deepestLevel = 1,
-                       int numFields = 1)
-      : fOutput{out}, fFrameSymbol{frameSymbol}, fWidth{width}, fDeepestLevel{deepestLevel}, fNumFields{numFields}
+   RPrintSchemaVisitor(std::ostream &out = std::cout, int deepestLevel = 1, int numFields = 1)
+      : fOutput{out}, fDeepestLevel{deepestLevel}, fNumFields{numFields}
    {
       SetAvailableSpaceForStrings();
    }
    /// Prints summary of Field
    void VisitField(const ROOT::RFieldBase &field) final;
    void VisitFieldZero(const ROOT::RFieldZero &fieldZero) final;
-   void SetFrameSymbol(char s) { fFrameSymbol = s; }
-   void SetWidth(int w) { fWidth = w; }
    void SetDeepestLevel(int d);
    void SetNumFields(int n);
    /// Computes how many characters should be placed between the frame symbol and ':' for left and right side of ':' for
    /// visually pleasing output.
    // E.g.
-   // * Field 1       : vpx (std::vector<float>)                                     *
-   // * |__Field 1.1  : vpx/vpx (float)                                              *
-   // int fAvailableSpaceKeyString (num characters on left side between "* " and " : ")
+   // Field 1      : vpx (std::vector<float>)
+   //   Field 1.1  : vpx/vpx (float)
+   // int fAvailableSpaceKeyString (num characters on left side before " : ")
    //    deepestlevel here is 2 (1.1 is deepest and has 2 numbers).
-   //    For every additional level an additional "|_" and ".1" (4 characters) is added, so the number of required
+   //    For every additional level an additional "  " and ".1" (4 characters) is added, so the number of required
    //    additional characters is 4 * fDeepestLevel. For level 1, 8 characters are required ("Field 1 "), so an
    //    additional + 4 is added. To account for cases where the total number of fields is not a single digit number and
-   //    more space is required to output big numbers, fNumFields is incorporated into the calculation. To make sure
-   //    that there is still enough space for the right side of " : ", an std::min comparision with fWidth - 15 is done.
-   // int fAvailableSpaceValueString(num characters on right side between " : " and '*')
-   //    The 6 subtracted characters are "* " (2) in the beginning,  " : " (3) and '*' (1) on the far right.
+   //    more space is required to output big numbers, fNumFields is incorporated into the calculation.
    void SetAvailableSpaceForStrings()
    {
-      fAvailableSpaceKeyString =
-         std::min(4 * fDeepestLevel + 4 + static_cast<int>(std::to_string(fNumFields).size()), fWidth - 15);
-      fAvailableSpaceValueString = fWidth - 6 - fAvailableSpaceKeyString;
+      fAvailableSpaceKeyString = 4 * fDeepestLevel + 4 + static_cast<int>(std::to_string(fNumFields).size());
    }
 };
 

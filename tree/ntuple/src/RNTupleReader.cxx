@@ -249,16 +249,6 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
 {
    using namespace ROOT::Internal;
 
-   // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out
-   // from the terminal.
-   char frameSymbol = '*';
-   int width = 80;
-   /*
-   if (width < 30) {
-      output << "The width is too small! Should be at least 30." << std::endl;
-      return;
-   }
-   */
    switch (what) {
    case ENTupleInfo::kSummary: {
       std::string name;
@@ -274,17 +264,9 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
          fullModel = descriptorGuard->CreateModel(opts);
       }
 
-      for (int i = 0; i < (width / 2 + width % 2 - 4); ++i)
-         output << frameSymbol;
-      output << " NTUPLE ";
-      for (int i = 0; i < (width / 2 - 4); ++i)
-         output << frameSymbol;
-      output << "\n";
       // FitString defined in RFieldVisitor.cxx
-      output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width - 13) << frameSymbol
-             << "\n"; // prints line with name of ntuple
-      output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13)
-             << frameSymbol << "\n"; // prints line with number of entries
+      output << "RNTuple : " << name << "\n";
+      output << "Entries : " << GetNEntries() << "\n\n";
 
       // Traverses through all fields to gather information needed for printing.
       RPrepareVisitor prepVisitor;
@@ -294,18 +276,11 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
       // Note that we do not need to connect the model, we are only looking at its tree of fields
       fullModel->GetConstFieldZero().AcceptVisitor(prepVisitor);
 
-      printVisitor.SetFrameSymbol(frameSymbol);
-      printVisitor.SetWidth(width);
       printVisitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
       printVisitor.SetNumFields(prepVisitor.GetNumFields());
 
-      for (int i = 0; i < width; ++i)
-         output << frameSymbol;
-      output << "\n";
       fullModel->GetConstFieldZero().AcceptVisitor(printVisitor);
-      for (int i = 0; i < width; ++i)
-         output << frameSymbol;
-      output << std::endl;
+      output << std::flush;
       break;
    }
    case ENTupleInfo::kStorageDetails: fSource->GetSharedDescriptorGuard()->PrintInfo(output); break;
