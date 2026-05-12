@@ -172,11 +172,20 @@ const std::type_info &TypeName2TypeID(const std::string &name)
    if (auto it = typeName2TypeIDMap.find(name); it != typeName2TypeIDMap.end())
       return it->second.get();
 
-   if (auto c = TClass::GetClass(name.c_str())) {
-      if (!c->GetTypeInfo()) {
-         throw std::runtime_error("Cannot extract type_info of type " + name + ".");
-      }
+   if (auto c = TClass::GetClass(name.c_str()); c && c->GetTypeInfo()) {
       return *c->GetTypeInfo();
+   }
+
+   // When the type_info cannot be retrieved with TClass, it might be that the interpreter still knows about it. This
+   // happens for example when a class has been declared to the interpreter in the same program where this
+   // RDataFrame is running, but has no dictionary. We attempt to retrieve the type_info via the interpreter before
+   // giving up.
+   std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
+   if (gInterpreter->Evaluate(("typeid(" + name + ')').c_str(), *v)) {
+      auto *typeIdAsVoidPtr = v->GetAsPointer();
+      const std::type_info *ti = reinterpret_cast<const std::type_info *>(typeIdAsVoidPtr);
+      if (ti)
+         return *ti;
    }
 
    throw std::runtime_error("Cannot extract type_info of type " + name + ".");

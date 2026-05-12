@@ -235,8 +235,6 @@ TEST(RDataFrameUtils, TypeName2TypeID)
    EXPECT_EQ(typeid(float), RDFInt::TypeName2TypeID("float"));
    EXPECT_EQ(typeid(std::vector<float>), RDFInt::TypeName2TypeID("std::vector<float>"));
    EXPECT_EQ(typeid(std::vector<std::vector<float>>), RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"));
-   EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
-   EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
 }
 
 TEST(RDataFrameUtils, GetClusterRanges)
