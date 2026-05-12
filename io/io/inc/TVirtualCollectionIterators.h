@@ -14,7 +14,7 @@
 
 /**
 \class TVirtualCollectionIterators
-\ingroup io_Virtual
+\ingroup io_other
 Small helper class to generically acquire and release iterators.
 */
 
@@ -189,7 +189,7 @@ inline TGenericCollectionIterator *TGenericCollectionIterator::New(void *collect
 
 /**
 \class TVirtualCollectionPtrIterators
-\ingroup io_Virtual
+\ingroup io_other
 */
 class TVirtualCollectionPtrIterators
 {
