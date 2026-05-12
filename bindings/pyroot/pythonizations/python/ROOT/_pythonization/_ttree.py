@@ -232,8 +232,7 @@ def _get_cpp_type_from_array_typecode(typecode):
 
 
 def _determine_data_type(addr):
-    """ Figure out data_type in case addr is a numpy.ndarray or array.array.
-    """
+    """Figure out data_type in case addr is a numpy.ndarray or array.array."""
 
     # For NumPy arrays
     if hasattr(addr, "__array_interface__"):
@@ -260,6 +259,8 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     t.SetBranchAddress("my_vector_branch", v)
     ```
     """
+    import cppyy
+
     import ROOT
 
     branch = self.GetBranch(bname)
@@ -271,10 +272,37 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     # Figure out data_type in case addr is a numpy.ndarray or array.array
     data_type = _determine_data_type(addr)
 
-    # We call the template specialization if we know the data type
-    func = self._OriginalSetBranchAddress if data_type is None else self._OriginalSetBranchAddress[data_type]
+    if data_type is None:
+        return self._OriginalSetBranchAddress(bname, addr, *args, **kwargs)
 
-    return func(bname, addr, *args, **kwargs)
+    # In the case the data_type is available, we would like to call the
+    # template overload of SetBranchAddress instantiatied for that type.
+    # However, there are two such overloads candidates:
+    #
+    #   template <class T> int TTree::SetBranchAddress(const char *bname, T **add, ...);
+    #   template <class T> int TTree::SetBranchAddress(const char *bname, T *add, ...);
+    #
+    # The cppyy bindings can't make a meaningful selection here as Python is
+    # lacking pointer semantics, so it considers both overloads as valid
+    # choices. In the past, we just happened to be lucky that it tried the T *
+    # overload first, which is the one we need. But as cppyy becomes more
+    # strict about overload resolution ambiguity errors, this won't work
+    # anymore. That's why we re-implement what happens in the template overload
+    # on the Python side.
+
+    cl = ROOT.TClass.GetClass[data_type]()
+    tp = ROOT.kOther_t
+    if not cl:
+        tp = ROOT.TDataType.GetType(cppyy.typeid(getattr(ROOT, data_type)))
+
+    # Extract the TBranch ptr argument if available
+    tbranch_ptr = ROOT.nullptr
+    if len(args) > 0:
+        tbranch_ptr = args[0]
+    elif "ptr" in kwargs:
+        tbranch_ptr = kwargs["ptr"]
+
+    return self._OriginalSetBranchAddress(bname, addr, ptr=tbranch_ptr, realClass=cl, datatype=tp, isptr=False)
 
 
 def _Branch(self, *args):
@@ -314,6 +342,7 @@ def _TTree__getattr__(self, key):
         out = ROOT._cppyy.ll.cast[cast_type](out)
     return out
 
+
 def _TTree_CloneTree(self, *args, **kwargs):
     """
     Forward the arguments to the C++ function and give up ownership if the
@@ -326,6 +355,7 @@ def _TTree_CloneTree(self, *args, **kwargs):
         ROOT.SetOwnership(out_tree, False)
 
     return out_tree
+
 
 @pythonization("TTree")
 def pythonize_ttree(klass, name):
@@ -379,6 +409,7 @@ def pythonize_tchain(klass):
     # SetBranchAddress
     klass._OriginalSetBranchAddress = klass.SetBranchAddress
     klass.SetBranchAddress = _SetBranchAddress
+
 
 @pythonization("TNtuple")
 def pythonize_tntuple(klass):
