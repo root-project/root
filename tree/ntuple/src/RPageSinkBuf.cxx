@@ -1,5 +1,4 @@
 /// \file RPageSinkBuf.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Max Orok <maxwellorok@gmail.com>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>

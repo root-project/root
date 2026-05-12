@@ -1,5 +1,4 @@
 /// \file RFieldUtils.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 

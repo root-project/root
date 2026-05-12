@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleDrawVisitor.hxx
-/// \ingroup NTuple
 /// \author Sergey Linev <S.Linev@gsi.de>, Jakob Blomer <jblomer@cern.ch>
 /// \date 2025-07-24
 

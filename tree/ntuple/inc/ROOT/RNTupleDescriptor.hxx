@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleDescriptor.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2018-07-19
