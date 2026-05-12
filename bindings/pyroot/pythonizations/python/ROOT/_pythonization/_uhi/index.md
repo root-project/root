@@ -1,5 +1,5 @@
-\defgroup uhi_docs Unified Histogram Interface (UHI)
-\ingroup Pythonizations
+\defgroup Py_UHI Unified Histogram Interface (UHI)
+\ingroup Python
 
 ROOT histograms implement the [Unified Histogram Interface (UHI)](https://uhi.readthedocs.io/en/latest/index.html), enhancing interoperability with other UHI-compatible libraries. This compliance standardizes histogram operations, making tasks like plotting, indexing, and slicing more intuitive and consistent.
 
