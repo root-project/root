@@ -13,14 +13,14 @@
 A one-page quick reference covering the full API.
 
 \htmlonly
-<object data="cheatsheets/rdataloader-cheatsheet.pdf"
+<object data="rdataloader-cheatsheet.pdf"
         type="application/pdf"
         width="100%"
         height="520px"
         style="border:1px solid #ccc;border-radius:6px;">
   <p>PDF preview not available in your browser.</p>
 </object>
-<a href="cheatsheets/rdataloader-cheatsheet.pdf"
+<a href="rdataloader-cheatsheet.pdf"
    style="display:inline-block;margin-top:8px;padding:6px 14px;background:#1a73e8;
           color:#fff;border-radius:4px;text-decoration:none;font-size:13px;">
   ⬇ Download cheat sheet (PDF)
