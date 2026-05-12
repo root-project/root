@@ -11,7 +11,7 @@
 
 /**
 \class TKeyMapFile
-\ingroup io_TFile
+\ingroup io_files
  Utility class for browsing TMapFile objects.
 
  When the browser is invoked for a TMapFile, a TKeyMapFile object

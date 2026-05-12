@@ -14,7 +14,7 @@
 
 /**
 \class TDCacheFile
-\ingroup io_other
+\ingroup io_files
 A TDCacheFile is like a normal TFile except that it may read and
 write its data via a dCache server (for more on the dCache daemon
 see http://www-dcache.desy.de/. Given a path which doesn't belong

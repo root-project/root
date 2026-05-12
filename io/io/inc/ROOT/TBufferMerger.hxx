@@ -27,7 +27,7 @@ class TBufferMergerFile;
 
 /**
  * \class TBufferMerger TBufferMerger.hxx
- * \ingroup io_other
+ * \ingroup io_files
  *
  * TBufferMerger is a class to facilitate writing data in
  * parallel from multiple threads, while writing to a single

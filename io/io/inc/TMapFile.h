@@ -121,7 +121,7 @@ public:
 
 /**
 \class TMapRec
-\ingroup io_TFile
+\ingroup io_files
 
 Keep track of an object in the mapped file.
 

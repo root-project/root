@@ -20,7 +20,7 @@
 
 /**
 \class TStreamerInfoActions::TConfiguration
-\ingroup io_TFile
+\ingroup io_files
 */
 
 namespace TStreamerInfoActions {
