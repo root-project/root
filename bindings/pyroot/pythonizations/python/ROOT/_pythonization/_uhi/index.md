@@ -4,17 +4,6 @@
 
 ROOT histograms implement the [Unified Histogram Interface (UHI)](https://uhi.readthedocs.io/en/latest/index.html), enhancing interoperability with other UHI-compatible libraries. This compliance standardizes histogram operations, making tasks like plotting, indexing, and slicing more intuitive and consistent.
 
-# Table of contents
-- [Plotting](\ref plotting)
-    - [Plotting with mplhep](\ref plotting-with-mplhep)
-    - [Additional Notes](\ref additional-notes-1)
-- [Indexing](\ref indexing)
-    - [Setup](\ref setup)
-    - [Slicing](\ref slicing)
-    - [Setting](\ref setting)
-    - [Access](\ref access)
-    - [Additional Notes](\ref additional-notes-2)
-
 
 \anchor plotting
 # Plotting
@@ -133,7 +122,7 @@ h[...] = 5
 ```
 
 \anchor access
-## Access
+### Access
 ```python
 # Accessing the bin contents using the bin number
 v = h[1, 2]

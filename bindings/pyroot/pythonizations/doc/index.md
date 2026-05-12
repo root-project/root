@@ -14,14 +14,18 @@ On top of that, a set of [pythonizations](@ref Pythonizations) adapt selected cl
 \htmlonly
 <div class="install-tabs">
   <div class="tab-buttons">
-    <button class="tab-btn active" onclick="switchTab(this, 'pip')">pip</button>
-    <button class="tab-btn" onclick="switchTab(this, 'conda')">conda</button>
+    <button class="tab-btn active" onclick="switchTab(this, 'conda')">conda</button>
+    <button class="tab-btn" onclick="switchTab(this, 'pip')">pip</button>
   </div>
-  <div id="pip" class="tab-panel active">
-    <pre><code>pip install root</code></pre>
-  </div>
-  <div id="conda" class="tab-panel" style="display:none;">
+  <div id="conda" class="tab-panel active">
     <pre><code>conda install -c conda-forge root</code></pre>
+  </div>
+  <div id="pip" class="tab-panel" style="display:none;">
+    <pre><code>pip install root</code></pre>
+    <p style="margin:6px 12px 10px;font-size:12px;color:#b45309;background:#fffbeb;
+              border:1px solid #fcd34d;border-radius:4px;padding:6px 10px;">
+      ⚠ Alpha - Linux only.
+    </p>
   </div>
 </div>
 
@@ -70,21 +74,46 @@ function switchTab(btn, id) {
 </script>
 \endhtmlonly
 
+See <a href="https://root.cern/install" style="color:#b45309;">root.cern/install</a> for all installation options.
+
 # Quickstart
 
-Open a ROOT file, apply a filter, draw a histogram:
+The entry point to ROOT in Python is one import:
 
 ~~~{.py}
 import ROOT
-
-df = ROOT.RDataFrame("events", "file.root")
-df.Filter("pt > 20").Histo1D("px").Draw()
 ~~~
 
-Read a histogram directly from a file:
+Every ROOT class and function is available under the `ROOT` module.
+
+Now let's create a histogram, fill it from a [NumPy array](https://numpy.org/devdocs/reference/generated/numpy.ndarray.html) and write it to a file:
 
 ~~~{.py}
-with ROOT.TFile.Open("file.root") as f:
-    h = f.Get("my_histogram")
-    h.Draw()
+import numpy as np
+
+# Create a 1D histogram
+h = ROOT.TH1D("h", "Gaussian distribution;x;counts", 100, -5, 5)
+
+# Fill it from a NumPy array
+data = np.random.normal(0, 1, 10000)
+h.Fill(data)
+
+# Write it to a ROOT file
+with ROOT.TFile.Open("output.root", "RECREATE") as f:
+    h.Write()
+~~~
+
+Now we create an RDataFrame from scratch, define a new column with a Python lambda and draw a histogram:
+
+~~~{.py}
+import numpy as np
+
+# Create an RDataFrame with 10000 rows
+rdf = ROOT.RDataFrame(10000)
+
+# Define a column x
+rdf = rdf.Define("x", lambda : np.random.normal(0, 1))
+
+# Draw a histogram of x
+rdf.Histo1D("x").Draw()
 ~~~
