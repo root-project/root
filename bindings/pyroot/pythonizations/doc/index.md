@@ -6,7 +6,7 @@
 ROOT is a C++ framework used across HEP for data storage, analysis and visualisation. Its full API is available directly in Python through dynamic bindings powered by [cppyy](https://cppyy.readthedocs.io/). Every ROOT class you see in the
 C++ documentation is accessible from Python under the `ROOT` module.
 
-On top of that, a set of **[**pythonizations**](@ref Pythonizations)** adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more.
+On top of that, a set of [pythonizations](@ref Pythonizations) adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more.
 
 
 # Installation
