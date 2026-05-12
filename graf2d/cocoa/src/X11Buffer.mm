@@ -276,10 +276,6 @@ DrawBoxXor::DrawBoxXor(Window_t windowID, const Point &p1, const Point &p2)
 }
 
 //______________________________________________________________________________
-void DrawBoxXor::Execute()const
-{
-   //Noop.
-}
 
 const auto rootToNs = [](Point rp) {
     return NSPoint{CGFloat(rp.fX), CGFloat(rp.fY)};

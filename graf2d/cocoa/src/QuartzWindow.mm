@@ -1578,7 +1578,7 @@ void print_mask_info(ULong_t mask)
    auto xorWindow = [self addXorWindow];
 
    try {
-      std::unique_ptr<ROOT::MacOSX::X11::DrawBoxXor> cmd(new ROOT::MacOSX::X11::DrawBoxXor(-1, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      auto cmd = std::make_unique<ROOT::MacOSX::X11::DrawBoxXor>(-1, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2));
       cmd->setView(view);
 
       auto cv = (XorDrawingView *)xorWindow.contentView;
