@@ -1,14 +1,15 @@
 \defgroup Python Python Interface
+\ingroup Python
 \brief Python bindings and utilities for ROOT.
 
-# Python Interface
 
-ROOT is a C++ framework that exposes its full API to Python through dynamic bindings generated at runtime via [cppyy](https://cppyy.readthedocs.io/). Every ROOT class is available  in Python automatically without manual wrapping.
-Additional pythonizations are layered on top of some classes to make the experience feel natively Pythonic.
+ROOT is a C++ framework used across HEP for data storage, analysis and visualisation. Its full API is available directly in Python through dynamic bindings powered by [cppyy](https://cppyy.readthedocs.io/). Every ROOT class you see in the
+C++ documentation is accessible from Python under the `ROOT` module.
 
-## Installation
+On top of that, a set of **[**pythonizations**](@ref Pythonizations)** adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more.
 
-## Installation
+
+# Installation
 
 \htmlonly
 <div class="install-tabs">
@@ -26,7 +27,7 @@ Additional pythonizations are layered on top of some classes to make the experie
 
 <style>
 .install-tabs {
-  border: 1px solid #ccc;
+  border: 1px solid var(--page-foreground-color, #ccc);
   border-radius: 6px;
   overflow: hidden;
   max-width: 420px;
@@ -34,8 +35,8 @@ Additional pythonizations are layered on top of some classes to make the experie
 }
 .tab-buttons {
   display: flex;
-  background: #f0f0f0;
-  border-bottom: 1px solid #ccc;
+  background: var(--code-background, #f0f0f0);
+  border-bottom: 1px solid var(--page-foreground-color, #ccc);
 }
 .tab-btn {
   padding: 6px 18px;
@@ -43,6 +44,7 @@ Additional pythonizations are layered on top of some classes to make the experie
   background: none;
   cursor: pointer;
   font-size: 13px;
+  color: var(--page-foreground-color, #333);
   border-bottom: 2px solid transparent;
 }
 .tab-btn.active {
@@ -53,7 +55,8 @@ Additional pythonizations are layered on top of some classes to make the experie
 .tab-panel pre {
   margin: 0;
   padding: 12px 16px;
-  background: #fff;
+  background: var(--code-background, #fff);
+  color: var(--page-foreground-color, #333);
 }
 </style>
 
@@ -67,33 +70,21 @@ function switchTab(btn, id) {
 </script>
 \endhtmlonly
 
+# Quickstart
 
-**With pip:**
-~~~{.sh}
-pip install root
-~~~
+Open a ROOT file, apply a filter, draw a histogram:
 
-**With conda:**
-~~~{.sh}
-conda install -c conda-forge root
-~~~
-
-## Quickstart
-
-~~~{.sh}
+~~~{.py}
 import ROOT
 
-df = ROOT.RDataFrame("tree", "file.root")
-df.Histo1D("px").Draw()
+df = ROOT.RDataFrame("events", "file.root")
+df.Filter("pt > 20").Histo1D("px").Draw()
 ~~~
 
-## Topics
+Read a histogram directly from a file:
 
-| Module | Description |
-|---|---|
-| @ref Py_RDataFrame "RDataFrame" | Analyse ROOT data with a high-level Python API |
-| @ref Py_IO "I/O" | Reading and writing ROOT files, TTree and RNTuple from Python |
-| @ref Py_UHI "UHI - Unified Histogram Interface" | Using ROOT histograms in Python |
-| @ref Py_ML "ML / RDataLoader" | Feed ROOT data directly into models for training |
-| @ref Py_Interop "Interoperability" | Using ROOT alongside other Python packages |
-| @ref Pythonizations "Pythonizations" | Advanced - how ROOT adapts C++ classes for idiomatic Python use |
+~~~{.py}
+with ROOT.TFile.Open("file.root") as f:
+    h = f.Get("my_histogram")
+    h.Draw()
+~~~
