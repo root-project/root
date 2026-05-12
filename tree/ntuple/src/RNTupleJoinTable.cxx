@@ -1,5 +1,4 @@
 /// \file RNTupleJoinTable.cxx
-/// \ingroup NTuple
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-04-02
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

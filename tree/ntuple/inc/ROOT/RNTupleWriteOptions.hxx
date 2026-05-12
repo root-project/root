@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleWriteOptions.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
 

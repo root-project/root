@@ -1,5 +1,4 @@
 /// \file ROOT/RField/STLMisc.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 

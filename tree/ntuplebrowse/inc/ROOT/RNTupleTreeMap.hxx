@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleTreeMap.hxx
-/// \ingroup NTuple
 /// \author Patryk Tymoteusz Pilichowski <patryk.tymoteusz.pilichowski@cern.ch>
 /// \date 2025-09-15
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

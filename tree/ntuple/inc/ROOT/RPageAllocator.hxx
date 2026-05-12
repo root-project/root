@@ -1,5 +1,4 @@
 /// \file ROOT/RPageAllocator.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-06-25
 

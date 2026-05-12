@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleAttrUtils.hxx
-/// \ingroup NTuple
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2026-03-10
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
