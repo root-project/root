@@ -26,6 +26,7 @@
 #include "QuartzPixmap.h"
 #include "QuartzUtils.h"
 #include "X11Drawable.h"
+#include "QuartzLine.h"
 #include "X11Buffer.h"
 #include "TGWindow.h"
 #include "TGClient.h"
@@ -319,6 +320,37 @@ void DrawLineXor::Execute(CGContextRef ctx) const
    CGContextMoveToPoint(ctx, line[0].x, line[0].y);
    CGContextAddLineToPoint(ctx, line[1].x, line[1].y);
    CGContextStrokePath(ctx);
+}
+
+//______________________________________________________________________________
+void DrawPolyLineXor::setPoints(Int_t n, TPoint *xy)
+{
+   fPnts.resize(n);
+   for (Int_t i = 0; i < n; ++i) {
+      auto point = NSPoint{CGFloat(xy[i].fX), CGFloat(xy[i].fY)};
+      point = [view convertPoint : point toView : nil];
+      fPnts[i].fX = (SCoord_t) point.x;
+      fPnts[i].fY = (SCoord_t) point.y;
+   }
+}
+
+//______________________________________________________________________________
+void DrawPolyLineXor::Execute(CGContextRef ctx) const
+{
+   assert(ctx && "Execute, invalid (nullptr) parameter 'ctx'");
+
+   const Quartz::CGStateGuard ctxGuard(ctx);
+
+   if (!Quartz::SetLineColor(ctx, fAtt.GetLineColor()))
+      return;
+
+   Quartz::SetLineStyle(ctx, fAtt.GetLineStyle());
+   Quartz::SetLineWidth(ctx, fAtt.GetLineWidth());
+
+   if (fScaleFactor > 1.)
+      CGContextScaleCTM(ctx, 1. / fScaleFactor, 1. / fScaleFactor);
+
+   Quartz::DrawPolyLine(ctx, fPnts.size(), fPnts.data());
 }
 
 //______________________________________________________________________________
