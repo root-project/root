@@ -1591,6 +1591,26 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void) addXorPolyLine : (QuartzView *) view : (Int_t) n : (TPoint *) pnts : (const TAttLine &) att
+{
+   auto xorWindow = [self addXorWindow];
+
+   try {
+      auto cmd = std::make_unique<ROOT::MacOSX::X11::DrawPolyLineXor>(-1, att);
+      cmd->setView(view);
+      cmd->setPoints(n, pnts);
+
+      auto cv = (XorDrawingView *)xorWindow.contentView;
+      [cv addXorCommand : cmd.get()];
+      cmd.release();
+      [cv setNeedsDisplay : YES];
+
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
 - (void) addXorMarker : (QuartzView *) view : (Int_t) n : (TPoint *) pnts : (const TAttMarker &) att
 {
    auto xorWindow = [self addXorWindow];
@@ -1608,9 +1628,7 @@ void print_mask_info(ULong_t mask)
    } catch (const std::exception &) {
       throw;
    }
-
 }
-
 
 //______________________________________________________________________________
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode

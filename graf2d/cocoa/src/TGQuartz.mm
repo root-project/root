@@ -316,11 +316,22 @@ void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
    if (!drawable0)
       return;
 
-   //Some checks first.
-   if ([drawable0 isDirectDraw])
-      return;
-
    auto &attline = GetAttLine(wctxt);
+
+   //Some checks first.
+   if ([drawable0 isDirectDraw]) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
+         if (!view) {
+             ::Warning("DrawPolyLineW", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         [view.fQuartzWindow addXorPolyLine: view : n : xy : attline ];
+      }
+
+      return;
+   }
 
    auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyLineW");
    if (!drawable)
