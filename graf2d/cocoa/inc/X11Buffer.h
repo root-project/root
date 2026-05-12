@@ -57,11 +57,11 @@ public:
    Command(Drawable_t wid, const GCValues_t &gc);
    virtual ~Command();
 
-   virtual bool HasOperand(Drawable_t drawable)const;
-   virtual bool IsGraphicsCommand()const;//By-default - false.
+   virtual bool HasOperand(Drawable_t drawable) const;
+   virtual bool IsGraphicsCommand() const;//By-default - false.
 
-   virtual void Execute()const = 0;
-   virtual void Execute(CGContextRef /*ctx*/)const;
+   virtual void Execute() const = 0;
+   virtual void Execute(CGContextRef /*ctx*/) const;
 
    void setView(NSView *v)
    {
@@ -79,8 +79,8 @@ private:
 
 public:
    DrawLine(Drawable_t wid, const GCValues_t &gc, const Point &p1, const Point &p2);
-   void Execute()const;
-   bool IsGraphicsCommand()const
+   void Execute() const override;
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
@@ -92,8 +92,8 @@ private:
 
 public:
    DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments);
-   void Execute()const;
-   bool IsGraphicsCommand()const
+   void Execute() const  override;
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
@@ -105,8 +105,8 @@ private:
 
 public:
    ClearArea(Window_t wid, const Rectangle_t &area);
-   void Execute()const;
-   bool IsGraphicsCommand()const
+   void Execute() const override;
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
@@ -121,13 +121,13 @@ private:
 public:
    CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point &dstPoint);
 
-   bool HasOperand(Drawable_t drawable)const;
-   bool IsGraphicsCommand()const
+   bool HasOperand(Drawable_t drawable) const override;
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
 
-   void Execute()const;
+   void Execute() const override;
 
 };
 
@@ -139,12 +139,12 @@ private:
 public:
    DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text);
 
-   bool IsGraphicsCommand()const
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
 
-   void Execute()const;
+   void Execute() const override;
 };
 
 class FillRectangle : public Command {
@@ -154,12 +154,12 @@ private:
 public:
    FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle);
 
-   bool IsGraphicsCommand()const
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
 
-   void Execute()const;
+   void Execute() const override;
 };
 
 class FillPolygon : public Command {
@@ -169,12 +169,12 @@ private:
 public:
    FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *points, Int_t nPoints);
 
-   bool IsGraphicsCommand()const
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
 
-   void Execute()const;
+   void Execute() const override;
 };
 
 class DrawRectangle : public Command {
@@ -184,12 +184,12 @@ private:
 public:
    DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle);
 
-   bool IsGraphicsCommand()const
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
 
-   void Execute()const;
+   void Execute() const override;
 };
 
 class UpdateWindow : public Command {
@@ -199,18 +199,18 @@ private:
 public:
    UpdateWindow(QuartzView *view);
 
-   bool IsGraphicsCommand()const
+   bool IsGraphicsCommand() const override
    {
       return true;
    }
 
-   void Execute()const;
+   void Execute() const override;
 };
 
 class DeletePixmap : public Command {
 public:
    DeletePixmap(Pixmap_t pixmap);
-   void Execute()const;
+   void Execute() const override;
 };
 
 //Set of 'xor' operations, required by TCanvas and ExecuteEvent's machinery.
@@ -222,8 +222,8 @@ private:
 public:
    DrawBoxXor(Window_t windowID, const Point &p1, const Point &p2);
 
-   void Execute()const;
-   void Execute(CGContextRef ctx)const;
+   void Execute() const override {}
+   void Execute(CGContextRef ctx) const  override;
 };
 
 class DrawLineXor : public Command {
@@ -234,8 +234,8 @@ private:
 public:
    DrawLineXor(Window_t windowID, const Point &p1, const Point &p2);
 
-   void Execute() const {}
-   void Execute(CGContextRef ctx) const;
+   void Execute() const override {}
+   void Execute(CGContextRef ctx) const override;
 
    Point start() const { return fP1; }
    Point end() const { return fP2; }
@@ -252,8 +252,8 @@ public:
       Command(windowID, GCValues_t()), fAtt(att) {}
    void setPoints(Int_t n, TPoint *xy);
 
-   void Execute() const {}
-   void Execute(CGContextRef ctx) const;
+   void Execute() const override {}
+   void Execute(CGContextRef ctx) const override;
 };
 
 
@@ -268,8 +268,8 @@ public:
       Command(windowID, GCValues_t()), fAtt(att) {}
    void setPoints(Int_t n, TPoint *xy);
 
-   void Execute() const {}
-   void Execute(CGContextRef ctx) const;
+   void Execute() const override {}
+   void Execute(CGContextRef ctx) const override;
 };
 
 
