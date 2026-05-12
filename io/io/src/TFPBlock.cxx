@@ -11,7 +11,7 @@
 
 /**
 \class TFPBlock TFPBlock.cxx
-\ingroup IO
+\ingroup io_other
 
 This class represents the encapsulation of a block request.
 It contains the chunks to be prefetched and also serves as a
