@@ -99,7 +99,7 @@ namespace TTraits = ROOT::TypeTraits;
 /// Smart pointer for the return type of actions.
 /**
 \class ROOT::RDF::RResultPtr
-\ingroup dataframe_classes
+\ingroup dataframe
 \brief A wrapper around the result of RDataFrame actions able to trigger calculations lazily.
 \tparam T Type of the action result
 
