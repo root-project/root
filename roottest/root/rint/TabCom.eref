@@ -1,13 +1,13 @@
-ROOT_prompt_1:1:10: error: no member named 'k' in 'TObject'
+ROOT_prompt_0:1:10: error: no member named 'k' in 'TObject'
 TObject::k
 ~~~~~~~~~^
-ROOT_prompt_2:1:8: error: no member named 'GetListOfT' in 'TROOT'
+ROOT_prompt_1:1:8: error: no member named 'GetListOfT' in 'TROOT'
 gROOT->GetListOfT
 ~~~~~  ^
-ROOT_prompt_8:1:10: error: no member named 'fgPrivateM' in 'MyClass'
+ROOT_prompt_7:1:10: error: no member named 'fgPrivateM' in 'MyClass'
 MyClass::fgPrivateM
 ~~~~~~~~~^
-ROOT_prompt_10:1:16: error: no member named 'SetTi' in 'TAxis'
+ROOT_prompt_9:1:16: error: no member named 'SetTi' in 'TAxis'
 h->GetXaxis()->SetTi
 ~~~~~~~~~~~~~  ^
 ROOT_prompt_12:2:1: error: expected unqualified-id
