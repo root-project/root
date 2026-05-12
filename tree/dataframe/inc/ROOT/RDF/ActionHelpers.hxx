@@ -1,6 +1,5 @@
 /**
  \file ROOT/RDF/ActionHelpers.hxx
- \ingroup dataframe
  \author Enrico Guiraud, CERN
  \author Danilo Piparo, CERN
  \date 2016-12
