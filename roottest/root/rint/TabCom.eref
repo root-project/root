@@ -21,12 +21,17 @@ ROOT_prompt_11:2:1: error: expected unqualified-id
 ROOT_prompt_14:2:1: error: expected unqualified-id
 ;
 ^
-ROOT_prompt_16:2:1: error: expected unqualified-id
+"s" is not of pointer type. Use this operator: .
+ROOT_prompt_15:2:1: error: expected unqualified-id
 ;
 ^
-ROOT_prompt_18:2:1: error: expected unqualified-id
+ROOT_prompt_17:2:1: error: expected unqualified-id
 ;
 ^
+ROOT_prompt_19:2:1: error: expected unqualified-id
+;
+^
+"ps" is of pointer type. Use this operator: ->
 ROOT_prompt_20:2:1: error: expected unqualified-id
 ;
 ^
@@ -40,5 +45,8 @@ ROOT_prompt_26:2:1: error: expected unqualified-id
 ;
 ^
 ROOT_prompt_28:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_30:2:1: error: expected unqualified-id
 ;
 ^

@@ -13,10 +13,12 @@ x->
 struct Simple {};
 Simple s;
 s.	
+s->	
 const Simple cs{};
 cs.	
 Simple* ps = nullptr;
 ps->	
+ps.	
 const Simple* pcs = nullptr;
 pcs->	
 Simple* const cps = nullptr;
