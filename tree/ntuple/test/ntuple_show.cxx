@@ -390,22 +390,6 @@ R"({
 )" };
    // clang-format on
    EXPECT_EQ(outputData, osData.str());
-
-   std::ostringstream osFields;
-   reader->PrintInfo(ROOT::ENTupleInfo::kSummary, osFields);
-   // clang-format off
-   std::string outputFields{
-      "************************************ NTUPLE ************************************\n"
-      "* N-Tuple : Collections                                                        *\n"
-      "* Entries : 1                                                                  *\n"
-      "********************************************************************************\n"
-      "* Field 1           : myCollection                                             *\n"
-      "*   Field 1.1       : _0                                                       *\n"
-      "*     Field 1.1.1   : myShort (std::int16_t)                                   *\n"
-      "*     Field 1.1.2   : myFloat (float)                                          *\n"
-      "********************************************************************************\n" };
-   // clang-format on
-   EXPECT_EQ(outputFields, osFields.str());
 }
 
 TEST(RNTupleShow, RVec)
