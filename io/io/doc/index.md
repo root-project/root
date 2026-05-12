@@ -11,7 +11,7 @@ For an overview of I/O in ROOT, see the following pages in the ROOT manual:
 
 For ROOT I/O developers, a detailed internal description of the \ref rootio is also available.
 
-\defgroup io_TFile TFile
+\defgroup io_TFile Files
 \ingroup IO
 
 \defgroup io_SQL SQL
@@ -21,9 +21,6 @@ For ROOT I/O developers, a detailed internal description of the \ref rootio is a
 \ingroup IO
 
 \defgroup io_ZIP ZIP
-\ingroup IO
-
-\defgroup io_Virtual Virtual
 \ingroup IO
 
 \defgroup io_other Other
