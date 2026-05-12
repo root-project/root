@@ -28,7 +28,7 @@
 
 /**
 \class TGenVectorProxy
-\ingroup IO
+\ingroup io_other
 Local optimization class.
 
 Collection proxies get copied. On copy we switch the type of the
@@ -78,7 +78,7 @@ public:
 
 /**
 \class TGenVectorBoolProxy
-\ingroup IO
+\ingroup io_other
 Local optimization class.
 
 Collection proxies get copied. On copy we switch the type of the
@@ -179,7 +179,7 @@ public:
 
 /*
 \class TGenListProxy
-\ingroup IO
+\ingroup io_other
 Local optimization class.
 
 Collection proxies get copied. On copy we switch the type of the
@@ -221,7 +221,7 @@ public:
 
 /**
 \class TGenSetProxy
-\ingroup IO
+\ingroup io_other
 Localoptimization class.
 
 Collection proxies get copied. On copy we switch the type of the
@@ -266,7 +266,7 @@ public:
 
 /**
 \class TGenMapProxy
-\ingroup IO
+\ingroup io_other
 Localoptimization class.
 
 Collection proxies get copied. On copy we switch the type of the
@@ -535,7 +535,7 @@ void TGenCollectionProxy::Value::DeleteItem(void* ptr)
 
 /**
  \class TGenCollectionProxy TGenCollectionProxy.cxx
- \ingroup IO
+ \ingroup io_other
 
  Proxy around an arbitrary container, which implements basic
  functionality and iteration.

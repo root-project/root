@@ -440,7 +440,7 @@ public:
 
 /**
 \class TFileOpenHandle
-\ingroup IO
+\ingroup io_TFile
 Class holding info about the file being opened
 */
 class TFileOpenHandle : public TNamed {

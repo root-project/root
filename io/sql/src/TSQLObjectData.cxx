@@ -11,7 +11,7 @@
 
 /**
 \class TSQLObjectData
-\ingroup IO
+\ingroup io_SQL
 
 TSQLObjectData is used in TBufferSQL2 class in reading procedure.
 It contains data, request from database table for one specific
@@ -34,7 +34,7 @@ will be kept in single TSQLObjectData instance.
 
 /**
 \class TSQLObjectInfo
-\ingroup IO
+\ingroup io_SQL
 Info (classname, version) about object in database
 */
 
