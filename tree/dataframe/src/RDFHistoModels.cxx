@@ -24,43 +24,43 @@
 
 /**
  * \class ROOT::RDF::TH1DModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a TH1D
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
  * \class ROOT::RDF::TH2DModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a TH2D
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
  * \class ROOT::RDF::TH3DModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a TH3D
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
  * \class ROOT::RDF::THnDModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a THnD
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
  * \class ROOT::RDF::THnSparseDModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a THnSparseD
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
  * \class ROOT::RDF::TProfile1DModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a TProfile
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
  * \class ROOT::RDF::TProfile2DModel
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a TProfile2D
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.

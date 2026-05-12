@@ -41,7 +41,7 @@ std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, co
 // clang-format off
 /**
  * \class ROOT::Internal::RDF::RAction
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A RDataFrame node that produces a result
  * \tparam Helper The action helper type, which implements the concrete action logic (e.g. FillHelper, SnapshotHelper)
  * \tparam PrevNode The type of the parent node in the computation graph

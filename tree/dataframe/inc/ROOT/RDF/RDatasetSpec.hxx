@@ -50,7 +50,7 @@ namespace Experimental {
 // clang-format off
 /**
 \class ROOT::RDF::Experimental::RDatasetSpec
-\ingroup dataframe_classes
+\ingroup dataframe
 \brief The dataset specification for RDataFrame.
 
 This class allows users to create the dataset specification for RDataFrame 

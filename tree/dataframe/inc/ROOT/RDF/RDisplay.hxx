@@ -54,7 +54,7 @@ namespace RDF {
 
 /**
  * \class ROOT::RDF::RDisplay
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * This class is the textual representation of the content of a columnar dataset.
  *
  * This class is provided to the user, and it can be used to print on screen
