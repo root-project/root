@@ -1,6 +1,5 @@
 /**
  \file ROOT/RDF/RMergeableValue.hxx
- \ingroup dataframe_classes
  \author Vincenzo Eduardo Padulano
  \author Enrico Guiraud
  \date 2020-06
