@@ -36,6 +36,10 @@ endef
 
 all: filter folders mathjax js images doxygen replaceCollaborationDiagrams notebooks rootWork
 
+preview:
+	doxygen Doxyfile_preview
+	OUTPUT_DIR="$(shell grep 'OUTPUT_DIRECTORY.*=' Doxyfile_preview)"; echo "Your preview is in $${OUTPUT_DIR##*=}"
+
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
 
