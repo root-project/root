@@ -17,11 +17,15 @@ On top of that, a set of [pythonizations](@ref Pythonizations) adapt selected cl
     <button class="tab-btn active" onclick="switchTab(this, 'conda')">conda</button>
     <button class="tab-btn" onclick="switchTab(this, 'pip')">pip</button>
   </div>
-  <div id="pip" class="tab-panel active">
-    <pre><code>pip install root</code></pre>
-  </div>
-  <div id="conda" class="tab-panel" style="display:none;">
+  <div id="conda" class="tab-panel active">
     <pre><code>conda install -c conda-forge root</code></pre>
+  </div>
+  <div id="pip" class="tab-panel" style="display:none;">
+    <pre><code>pip install root</code></pre>
+    <p style="margin:6px 12px 10px;font-size:12px;color:#b45309;background:#fffbeb;
+              border:1px solid #fcd34d;border-radius:4px;padding:6px 10px;">
+      ⚠ Alpha - Linux only.
+    </p>
   </div>
 </div>
 
@@ -69,6 +73,8 @@ function switchTab(btn, id) {
 }
 </script>
 \endhtmlonly
+
+See <a href="https://root.cern/install" style="color:#b45309;">root.cern/install</a> for all installation options.
 
 # Quickstart
 
