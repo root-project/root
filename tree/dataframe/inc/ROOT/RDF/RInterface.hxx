@@ -112,7 +112,7 @@ namespace RDF {
 // clang-format off
 /**
  * \class ROOT::RDF::RInterface
- * \ingroup dataframe
+ * \ingroup dataframe_classes
  * \brief The public interface to the RDataFrame federation of classes.
  * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
  *

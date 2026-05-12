@@ -19,7 +19,7 @@ namespace RDF {
 
 /**
 \class ROOT::Internal::RDF::RColumnReaderBase
-\ingroup dataframe
+\ingroup dataframe_classes
 \brief Pure virtual base class for all column reader types
 
 This pure virtual class provides a common base class for the different column reader types, e.g. RTreeColumnReader and

@@ -1,6 +1,6 @@
 /**
  \file ROOT/RTTreeDS.hxx
- \ingroup dataframe
+ \ingroup dataframe_classes
  \author Vincenzo Eduardo Padulano
  \date 2024-12
 */

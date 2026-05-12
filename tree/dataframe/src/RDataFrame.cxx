@@ -33,7 +33,7 @@
 // clang-format off
 /**
 * \class ROOT::RDataFrame
-* \ingroup dataframe
+* \ingroup dataframe_classes
 * \brief ROOT's RDataFrame offers a modern, high-level interface for analysis of data stored in TTree , CSV and other data formats, in C++ or Python.
 
 In addition, multi-threading and other low-level optimisations allow users to exploit all the resources available
