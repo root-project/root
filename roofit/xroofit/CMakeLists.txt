@@ -18,6 +18,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
     src/PythonInterface.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
+  LIBRARIES
+        Python3::Python
   DEPENDENCIES
     HistFactory
     RooFit
