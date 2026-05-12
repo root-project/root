@@ -11,7 +11,7 @@ For an overview of I/O in ROOT, see the following pages in the ROOT manual:
 
 For ROOT I/O developers, a detailed internal description of the \ref rootio is also available.
 
-\defgroup io_TFile Files
+\defgroup io_files Files
 \ingroup IO
 
 \defgroup io_SQL SQL
