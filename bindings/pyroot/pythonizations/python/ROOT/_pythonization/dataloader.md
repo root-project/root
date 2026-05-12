@@ -4,14 +4,13 @@
 
 # RDataLoader
 
-`RDataLoader` is ROOT's bridge between HEP data and machine learning frameworks.
-It lets you stream batches from any [RDataFrame](@ref Py_RDataFrame) directly into your models for training with no intermediate conversion or copies.
+`RDataLoader` streams ROOT data into machine learning frameworks as batches ready for training. It takes any [RDataFrame](@ref Py_RDataFrame) as input, giving you access to the full ROOT ecosystem for filtering, defining new variables and applying selections; it delivers batches of your dataset for [NumPy](https://numpy.org/devdocs/reference/generated/numpy.ndarray.html), [TensorFlow](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and [PyTorch](https://docs.pytorch.org/docs/main/tensors.html) through a simple iteration interface.
 
 \note `RDataLoader` is part of `ROOT.Experimental.ML` and is currently experimental. The API may change between ROOT releases.
 
 ## Cheat Sheet
 
-A one-page quick reference covering the API.
+A one-page quick reference covering the full API.
 
 \htmlonly
 <object data="rdataloader-cheatsheet.pdf"
@@ -28,151 +27,105 @@ A one-page quick reference covering the API.
 </a>
 \endhtmlonly
 
-## Import
+## Getting your data ready
 
-You can directly import `RDataLoader` from ROOT:
-
-~~~{.py}
-from ROOT.Experimental.ML import RDataLoader
-~~~
-
-## Pipeline
-
-~~~
-ROOT file (TTree / RNTuple)
-    → RDataFrame (Filter, Define)
-        → RDataLoader (batch, shuffle)
-            → as_torch() / as_numpy() / as_tensorflow()
-                → your model
-~~~
-
-## Quickstart
+`RDataLoader` takes an `RDataFrame` as input. This means your data preparation (selecting events, computing
+new variables, applying cuts, etc.) all happens before the loader is created, using the full power of `RDataFrame`:
 
 ~~~{.py}
+import math
 import ROOT
-from ROOT.Experimental.ML import RDataLoader
 
+# Open a ROOT file and create an RDataFrame
 rdf = ROOT.RDataFrame("events", "file.root")
 
-dl = RDataLoader(rdf,
-                 columns=["px", "py", "pz", "label"],
-                 batch_size=64,
-                 target="label",
-                 shuffle=True)
+# Define a Python callback to compute a new variable
+def invariant_mass(E: float, p: float) -> float:
+    return math.sqrt(E**2 - p**2)
 
+# Apply selections and compute derived features
+rdf = rdf.Filter("nMuons >= 2") \
+         .Define("inv_mass", invariant_mass, ["E", "p"])
+~~~
+
+Then pass your `RDataFrame` to `RDataLoader`:
+
+~~~{.py}
+from ROOT.Experimental.ML import RDataLoader
+
+dl = RDataLoader(rdf,
+                 columns=["inv_mass", "label"],
+                 batch_size=64,
+                 batches_in_memory=1000,
+                 target="label")
+
+# Iterate your batches as PyTorch tensors: X contains inv_mass, y contains label
 for X, y in dl.as_torch():
     ...
 ~~~
 
-## Two Loading Modes
+The sections below explain how to configure the loader and get the most out of it.
 
-### Lazy loading (default)
+## Configuring the RDataLoader
 
-Data is read chunk by chunk from disk. Low memory usage, suitable for any dataset size.
+### Selecting columns and target
 
-~~~{.py}
-dl = RDataLoader(rdf, batch_size=512)  # load_eager=False by default
-~~~
-
-### Eager loading
-
-The full dataset is loaded into RAM upfront. Best when the dataset fits in memory
-and you train for many epochs - eliminates per-epoch I/O overhead.
-Required for resampling.
-
-~~~{.py}
-dl = RDataLoader(rdf, batch_size=512, load_eager=True)
-~~~
-
-## Iterating Batches
-
-### as_torch()
-
-Yields `torch.Tensor` batches.
-
-~~~{.py}
-# with target - classification
-loss_fn = torch.nn.CrossEntropyLoss()
-for X, y in dl.as_torch():
-    optimizer.zero_grad()
-    loss = loss_fn(model(X), y)
-    loss.backward()
-    optimizer.step()
-
-# move directly to GPU
-for X, y in dl.as_torch(device="cuda"):
-    loss = loss_fn(model(X), y)
-
-# with event weights
-for X, y, w in dl.as_torch():
-    loss = (loss_fn(model(X), y) * w).mean()
-~~~
-
-### as_tensorflow()
-
-Returns a `tf.data.Dataset` of `tf.Tensor` batches.
-
-~~~{.py}
-ds = dl.as_tensorflow()
-model.fit(ds, epochs=10)
-
-# chain tf.data transforms
-ds = dl.as_tensorflow().prefetch(tf.data.AUTOTUNE).cache()
-~~~
-
-### as_numpy()
-Yields `np.ndarray` batches.
-
-~~~{.py}
-for X, y in dl.as_numpy():
-    print(X.shape)  # (64, 3) - np.ndarray
-    clf.partial_fit(X, y)
-
-# with event weights
-for X, y, w in dl.as_numpy():
-    clf.partial_fit(X, y, sample_weight=w)
-~~~
-
-## Train / Validation Split
-
-~~~{.py}
-train, val = dl.train_test_split(test_size=0.2)
-
-for X, y in train.as_torch(device):
-    ...  # training loop
-
-for X, y in val.as_numpy():
-    ...  # validation loop
-~~~
-
-\note Need a train / val / test three-way split? Call `train_test_split` twice:
-
-~~~{.py}
-# 20% for test
-train_val, test = dl.train_test_split(test_size=0.2)
-
-# 10% of total for val (0.125 × 0.8 = 0.10)
-train, val = train_val.train_test_split(test_size=0.125)
-~~~
-
-## Resampling
-
-Correct class imbalance by oversampling the minority or undersampling the majority.
-Requires exactly two RDataFrames (minority first) and `load_eager=True`.
+`columns` selects which branches to load. `target` names the label column, it is returned separately as `y` when you iterate, so you don't need to split it manually:
 
 ~~~{.py}
 dl = RDataLoader(
-    [rdf_signal, rdf_background],
-    load_eager=True,
-    sampling_type="oversampling",
-    sampling_ratio=1.0,
+    rdf,
+    columns=["inv_mass", "pt", "eta", "label"],
+    target="label",
+    batch_size=256,
+    batches_in_memory=1000
 )
 ~~~
 
-## RVec / Variable-length Branches
+You can also pass multiple targets:
 
-Variable-length branches are flattened into fixed-width columns.
-Declare the maximum size per branch - shorter vectors are zero-padded.
+~~~{.py}
+dl = RDataLoader(rdf,
+                 columns=["x1", "x2", "x3", "y1", "y2"],
+                 target=["y1", "y2"])
+
+for X, y in dl.as_torch():
+    # X.shape: (256, 3)
+    # y.shape: (256, 2)
+    ...
+~~~
+
+\warning `target` must appear in the `columns` list.
+
+### Batch size and memory
+
+`batch_size` controls how many events are in each batch. `batches_in_memory`
+controls how many batches are held in the shuffle buffer at any time:
+
+~~~{.py}
+dl = RDataLoader(rdf,
+                 batch_size=256,
+                 batches_in_memory=20)  # default: 10
+~~~
+
+- **`batches_in_memory` ↑** - larger shuffle buffer, better randomisation, higher memory use
+- **`batches_in_memory` ↓** - lower memory use, limited shuffle
+
+
+### Shuffling and reproducibility
+
+Shuffling is enabled by default. To make runs reproducible, fix the seed:
+
+~~~{.py}
+dl = RDataLoader(rdf, batch_size=256,
+                 shuffle=True,
+                 set_seed=42) # same order every run
+~~~
+
+
+### RVec / variable-length branches
+
+ROOT branches that store variable-length arrays must be declared with a maximum size. Shorter entries are zero-padded and the branch is expanded into numbered columns:
 
 ~~~{.py}
 dl = RDataLoader(
@@ -182,18 +135,143 @@ dl = RDataLoader(
     vec_padding=0.0,
     target="label",
 )
-# jets_pt expands to jets_pt_0 … jets_pt_9
-# jets_eta expands to jets_eta_0 … jets_eta_9
+# jets_pt expands to jets_pt_0, jets_pt_1, … jets_pt_9
+# events with fewer than 10 jets are zero-padded
 ~~~
 
-\warning Every RVec column listed in `columns` must appear in `max_vec_sizes`.
+\warning Every RVec column in `columns` must appear in `max_vec_sizes`.
 
-## Tips
+## Iterating Batches
 
-- **`batches_in_memory` ↑** - larger shuffle buffer, better randomisation across cluster boundaries, higher RAM use
-- **`batches_in_memory` ↓** - smaller memory usage, shuffle limited to within one cluster
-- **`load_eager=True`** - eliminates per-epoch I/O overhead; best when the dataset fits in RAM and you train for many epochs
-- **`set_seed`** - set to a fixed integer for reproducible train/val splits and epoch shuffling
-- **`drop_remainder=False`** - keep the last incomplete batch, useful when dataset size matters for validation metrics
-- **`shuffle=False`** - deterministic order, useful for debugging or when data order carries meaning
-- **`weights`** - requires `target` to be set, otherwise a `ValueError` is raised
+### as_torch()
+
+Yields `torch.Tensor` batches:
+
+~~~{.py}
+loss_fn   = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters())
+
+for epoch in range(num_epochs):
+    for X, y in dl.as_torch():
+        optimizer.zero_grad()
+        loss = loss_fn(model(X), y)
+        loss.backward()
+        optimizer.step()
+~~~
+
+Move tensors to GPU by passing a device:
+
+~~~{.py}
+for X, y in dl.as_torch(device="cuda"):
+    ...
+~~~
+
+### as_tensorflow()
+
+Returns a `tf.data.Dataset` of `tf.Tensor` batches:
+
+~~~{.py}
+model.fit(dl.as_tensorflow(), epochs=10)
+~~~
+
+### as_numpy()
+
+Yields `np.ndarray` batches:
+
+~~~{.py}
+from sklearn.linear_model import SGDClassifier
+
+clf = SGDClassifier()
+for X, y in dl.as_numpy():
+    clf.partial_fit(X, y, classes=[0, 1])
+~~~
+
+## Train / Validation Split
+
+Pass `test_size` to split the dataset into two loaders each representing a fraction of the original dataset (no data is duplicated):
+
+~~~{.py}
+train, val = dl.train_test_split(test_size=0.2)
+
+for epoch in range(num_epochs):
+    model.train()
+    for X, y in train.as_torch(device):
+        ...
+
+    model.eval()
+    for X, y in val.as_torch(device):
+        ...
+~~~
+
+\note Need a three-way train / val / test split? Call `train_test_split` twice:
+
+~~~{.py}
+train_val, test = dl.train_test_split(test_size=0.15)
+train, val = train_val.train_test_split(test_size=0.176)
+# 0.176 × 0.85 ≈ 15% of the total
+~~~
+
+## Advanced Features
+
+### Resampling
+
+Correct class imbalance by oversampling the minority or undersampling the majority. You can do this by passing two RDataFrames:
+
+~~~{.py}
+dl = RDataLoader(
+    [rdf_signal, rdf_background],
+    columns=["inv_mass", "label"],
+    target="label",
+    batch_size=256,
+    batches_in_memory=1000,
+    load_eager=True,
+    sampling_type="oversampling", # or "undersampling"
+    sampling_ratio=1.0,
+)
+~~~
+
+\warning This feature is only available in eager loading mode (`load_eager=True`).
+
+### Event weights
+
+If your dataset has a weight column, pass its name to `weights`. It is returned as a third value `w` alongside `X` and `y`:
+
+~~~{.py}
+dl = RDataLoader(rdf,
+                 columns=["inv_mass", "label", "weight"],
+                 target="label",
+                 weights="weight")
+
+for X, y, w in dl.as_torch():
+    loss = (loss_fn(model(X), y) * w).mean()
+~~~
+
+### Eager loading
+
+By default the loader reads data lazily, one chunk of data at a time. For small datasets that fit in memory and will be iterated many times, eager loading pays a one-time cost at construction and then serves every epoch from memory:
+
+~~~{.py}
+dl = RDataLoader(rdf, batch_size=256, load_eager=True)
+~~~
+
+## API Reference
+
+### RDataLoader(rdataframes, ...)
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `rdataframes` | `RDF \| list` | - | One or more RDataFrames to load from |
+| `batch_size` | `int` | `64` | Number of events per batch |
+| `batches_in_memory` | `int` | `10` | Shuffle buffer size in batches |
+| `columns` | `list[str]` | `None` | Branches to load - all if not given |
+| `max_vec_sizes` | `dict` | `None` | Max size per RVec column |
+| `vec_padding` | `float` | `0.0` | Pad value for short RVec entries |
+| `target` | `str \| list` | `None` | Label column(s) - returned as `y` |
+| `weights` | `str` | `""` | Event weight column - returned as `w` |
+| `shuffle` | `bool` | `True` | Randomise event order |
+| `drop_remainder` | `bool` | `True` | Drop last incomplete batch |
+| `set_seed` | `int` | `0` | RNG seed - 0 means random |
+| `load_eager` | `bool` | `False` | Load full dataset into RAM |
+| `sampling_type` | `str` | `""` | `"oversampling"` or `"undersampling"` |
+| `sampling_ratio` | `float` | `1.0` | Minority/majority ratio after resampling |
+| `replacement` | `bool` | `False` | Undersampling with replacement |
