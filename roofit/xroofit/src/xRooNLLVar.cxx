@@ -687,7 +687,8 @@ RooArgList xRooNLLVar::xRooFitResult::ranknp(const char *poi, bool up, bool pref
       auto vv = static_cast<RooRealVar *>(out.at(out.size() - 1));
       vv->setVal(v);
       vv->removeError();
-      vv->removeMin();vv->removeMax();//vv->removeRange();
+      vv->removeMin();
+      vv->removeMax(); // vv->removeRange();
    }
    return out;
 }
@@ -712,7 +713,8 @@ xRooNLLVar::xRooFitResult xRooNLLVar::minimize(const std::shared_ptr<ROOT::Fit::
       // add pgof to the fit result
       const_cast<RooArgList &>(out->constPars()).addClone(RooRealVar(".pgof", "GoF p-value", pgof()));
       // and just main term
-      const_cast<RooArgList &>(out->constPars()).addClone(RooRealVar(".mainterm_pgof", "MainTerm GoF p-value", mainTermPgof()));
+      const_cast<RooArgList &>(out->constPars())
+         .addClone(RooRealVar(".mainterm_pgof", "MainTerm GoF p-value", mainTermPgof()));
    }
 
    return xRooFitResult(std::make_shared<xRooNode>(out, fPdf), std::make_shared<xRooNLLVar>(*this));
@@ -743,7 +745,7 @@ double xRooNLLVar::getEntryVal(size_t entry) const
    *std::unique_ptr<RooAbsCollection>(_pdf->getObservables(_data)) = *_data->get(entry);
    // if (auto s = dynamic_cast<RooSimultaneous*>(_pdf.get());s) return
    // -_data->weight()*s->getPdf(s->indexCat().getLabel())->getLogVal(_data->get());
-   return -_data->weight() * _pdf->getLogVal(_data->get());
+   return (_data->weight() == 0) ? 0 : (-_data->weight() * _pdf->getLogVal(_data->get()));
 }
 
 std::set<std::string> xRooNLLVar::binnedChannels() const
@@ -1593,7 +1595,15 @@ void xRooNLLVar::xRooHypoPoint::Print(Option_t *) const
       if (!std::isnan(v->getVal()))
          any_alt = true;
    }
-   std::cout << " , pllType: " << fPllType << std::endl;
+   std::cout << " , pllType: ";
+   switch (fPllType) {
+   case 0: std::cout << "qmu"; break;
+   case 1: std::cout << "qmu or qmutilde"; break; // should check for 'physical' to decide if is latter
+   case 2: std::cout << "q0"; break;
+   case 4: std::cout << "u0"; break;
+   default: std::cout << "unknown"; break;
+   }
+   std::cout << std::endl;
 
    if (fPllType == xRooFit::Asymptotics::Unknown) {
       std::cout << " obs ts: " << obs_ts << " +/- " << obs_ts_err << std::endl;
@@ -1909,8 +1919,8 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
       return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    }
    if (auto _first_poi = dynamic_cast<RooRealVar *>(poi().first());
-       _first_poi && _first_poi->getMin("physical") > _first_poi->getMin() &&
-       mu_hat().getVal() < _first_poi->getMin("physical")) {
+       fPllType != xRooFit::Asymptotics::Uncapped && _first_poi &&
+       _first_poi->getMin("physical") > _first_poi->getMin() && mu_hat().getVal() < _first_poi->getMin("physical")) {
       // replace _ufit with fit "boundary" conditional fit
       _ufit = cfit_lbound(readOnly);
       if (!_ufit) {
@@ -2667,6 +2677,18 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
          _type = xRooFit::Asymptotics::OneSidedPositive;
       } else {
          _type = xRooFit::Asymptotics::Uncapped;
+         // for uncapped, should check min is not at physical boundary
+         for (auto b : out.poi()) {
+            if (auto r = dynamic_cast<RooRealVar *>(b)) {
+               if (r->hasRange("physical") && r->getMin() >= r->getMin("physical")) {
+                  ::Info("xRooNLLVar::hypoPoint",
+                         "fitting min of %s is at physical limit, but using uncapped test-statistic, so will set to "
+                         "-max = %g",
+                         r->GetName(), -r->getMax());
+                  r->setMin(-r->getMax());
+               }
+            }
+         }
       }
    }
 
@@ -3055,7 +3077,8 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
             dynamic_cast<RooRealVar *>(p)->setRange("physical", 0, std::numeric_limits<double>::infinity());
             Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [0,inf]", p->GetName());
          } else if (auto v = dynamic_cast<RooRealVar *>(p); v->hasRange("physical")) {
-            v->removeMin("physical"); v->removeMax("physical");//v->removeRange("physical");
+            v->removeMin("physical");
+            v->removeMax("physical"); // v->removeRange("physical");
             Info("xRooNLLVar::hypoSpace", "Removing physical range of %s", p->GetName());
          }
       }
@@ -3072,11 +3095,13 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
       if (nPoints > 0) {
          out.AddPoints(parName, nPoints, low, high);
       } else {
-         if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
-            for (auto p : out.poi()) {
-               dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+         // if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+         for (auto p : out.poi()) {
+            if (auto r = dynamic_cast<RooRealVar *>(p)) {
+               r->setRange("scan", std::isnan(low) ? r->getMin() : low, std::isnan(high) ? r->getMax() : high);
             }
          }
+         //}
       }
       return out;
    }
@@ -3085,11 +3110,13 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
    if (nPoints > 0)
       hs.AddPoints(parName, nPoints, low, high);
    else {
-      if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
-         for (auto p : hs.poi()) {
-            dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+      // if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+      for (auto p : hs.poi()) {
+         if (auto r = dynamic_cast<RooRealVar *>(p)) {
+            r->setRange("scan", std::isnan(low) ? r->getMin() : low, std::isnan(high) ? r->getMax() : high);
          }
       }
+      //}
    }
    return hs;
 }
@@ -3124,6 +3151,10 @@ xRooNLLVar::hypoSpace(const char *parName, const xRooFit::Asymptotics::PLLType &
 
    for (auto poi : s.poi()) {
       poi->setStringAttribute("altVal", std::isnan(alt_value) ? nullptr : TString::Format("%f", alt_value));
+      // default scan range to range of poi
+      if (auto r = dynamic_cast<RooRealVar *>(poi)) {
+         r->setRange("scan", r->getMin(), r->getMax());
+      }
    }
 
    return s;
@@ -3303,7 +3334,7 @@ std::string cling::printValue(const xRooNLLVar::xValueWithError *v)
 {
    if (!v)
       return "xValueWithError: nullptr\n";
-   return Form("%f +/- %f", v->first, v->second);
+   return Form("%g +/- %g", v->first, v->second);
 }
 std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m)
 {
