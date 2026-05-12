@@ -270,21 +270,23 @@ void TPolyMarker::Paint(Option_t *option)
 
 void TPolyMarker::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   if (n <= 0) return;
-   TAttMarker::Modify();  //Change marker attributes only if necessary
-   Double_t *xx = x;
-   Double_t *yy = y;
+   if ((n <= 0) || !gPad)
+      return;
+   std::vector <Double_t> xx, yy;
    if (gPad->GetLogx()) {
-      xx = new Double_t[n];
-      for (Int_t ix=0;ix<n;ix++) xx[ix] = gPad->XtoPad(x[ix]);
+      xx.resize(n);
+      for (Int_t ix = 0; ix < n; ix++)
+         xx[ix] = gPad->XtoPad(x[ix]);
+      x = xx.data();
    }
    if (gPad->GetLogy()) {
-      yy = new Double_t[n];
-      for (Int_t iy=0;iy<n;iy++) yy[iy] = gPad->YtoPad(y[iy]);
+      yy.resize(n);
+      for (Int_t iy = 0; iy < n; iy++)
+         yy[iy] = gPad->YtoPad(y[iy]);
+      y = yy.data();
    }
-   gPad->PaintPolyMarker(n,xx,yy,option);
-   if (x != xx) delete [] xx;
-   if (y != yy) delete [] yy;
+   TAttMarker::ModifyOn(*gPad);  //Change marker attributes only if necessary
+   gPad->PaintPolyMarker(n, x, y, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
