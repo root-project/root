@@ -46,7 +46,7 @@ class RVariationsWithReaders;
 
 /**
  * \class ROOT::Internal::RDF::RColumnRegister
- * \ingroup dataframe_classes
+ * \ingroup dataframe
  * \brief A binder for user-defined columns, variations and aliases.
  *
  * The storage is copy-on-write and shared between all instances of the class that have the same values.

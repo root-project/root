@@ -47,7 +47,7 @@ std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *
 // clang-format off
 /**
 \class ROOT::Internal::RDF::GraphCreatorHelper
-\ingroup dataframe_classes
+\ingroup dataframe
 \brief Helper class that provides the operation graph nodes.
 
  This class is the single point from which graph nodes can be retrieved. Every time an object is created,

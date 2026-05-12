@@ -18,7 +18,7 @@ namespace RDF {
 
 /**
 \class ROOT::RDF::RDFDescription
-\ingroup dataframe_classes
+\ingroup dataframe
 \brief A DFDescription contains useful information about a given RDataFrame computation graph.
 
  A DFDescription is returned by the Describe() RDataFrame method.
