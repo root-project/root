@@ -19,15 +19,15 @@ TEST(RNtuplePrint, FullString)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    std::ostringstream osSummary;
    reader->PrintInfo(ROOT::ENTupleInfo::kSummary, osSummary);
+   // clang-format off
    std::string reference{std::string("")
-       + "************************************ NTUPLE ************************************\n"
-       + "* N-Tuple : ntpl                                                               *\n"
-       + "* Entries : 1                                                                  *\n"
-       + "********************************************************************************\n"
-       + "* Field 1   : px (float)                                                       *\n"
-       + "* Field 2   : py (float)                                                       *\n"
-       + "* Field 3   : proj (float)                                                     *\n"
-       + "********************************************************************************\n"};
+       + "RNTuple : ntpl\n"
+       + "Entries : 1\n"
+       + "\n"
+       + "Field 1   : px (float)\n"
+       + "Field 2   : py (float)\n"
+       + "Field 3   : proj (float)\n"};
+   // clang-format on
    EXPECT_EQ(reference, osSummary.str());
 
    std::ostringstream osDetails;
@@ -82,19 +82,17 @@ TEST(RNtuplePrint, Int)
    RPrintSchemaVisitor visitor(os);
    RField<int> testField("intTest");
    testField.AcceptVisitor(visitor);
-   std::string expected{std::string("")
-       + "* Field 1   : intTest (std::int32_t)                                           *\n"};
+   std::string expected{"Field 1   : intTest (std::int32_t)\n"};
    EXPECT_EQ(expected, os.str());
 }
 
 TEST(RNtuplePrint, Float)
 {
    std::stringstream os;
-   RPrintSchemaVisitor visitor(os, 'a');
+   RPrintSchemaVisitor visitor(os);
    RField<float> testField("floatTest");
    testField.AcceptVisitor(visitor);
-   std::string expected{std::string("")
-       + "a Field 1   : floatTest (float)                                                a\n"};
+   std::string expected{"Field 1   : floatTest (float)\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -104,13 +102,15 @@ TEST(RNtuplePrint, Vector)
    RPrepareVisitor prepVisitor;
    RField<std::vector<float>> testField("floatVecTest");
    testField.AcceptVisitor(prepVisitor);
-   RPrintSchemaVisitor visitor(os, '$');
+   RPrintSchemaVisitor visitor(os);
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
    visitor.SetNumFields(prepVisitor.GetNumFields());
    testField.AcceptVisitor(visitor);
+   // clang-format off
    std::string expected{std::string("")
-       + "$ Field 1       : floatVecTest (std::vector<float>)                            $\n"
-       + "$   Field 1.1   : _0 (float)                                                   $\n"};
+       + "Field 1       : floatVecTest (std::vector<float>)\n"
+       + "  Field 1.1   : _0 (float)\n"};
+   // clang-format on
    EXPECT_EQ(expected, os.str());
 }
 
@@ -120,13 +120,15 @@ TEST(RNtuplePrint, ArrayAsRVec)
    RPrepareVisitor prepVisitor;
    ROOT::RArrayAsRVecField testField("arrayasrvecfield", std::make_unique<ROOT::RField<float>>("_0"), 0);
    testField.AcceptVisitor(prepVisitor);
-   RPrintSchemaVisitor visitor(os, '$');
+   RPrintSchemaVisitor visitor(os);
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
    visitor.SetNumFields(prepVisitor.GetNumFields());
    testField.AcceptVisitor(visitor);
-   std::string expected{std::string("") +
-                        "$ Field 1       : arrayasrvecfield (ROOT::VecOps::RVec<float>)                 $\n" +
-                        "$   Field 1.1   : _0 (float)                                                   $\n"};
+   // clang-format off
+   std::string expected{std::string("")
+       + "Field 1       : arrayasrvecfield (ROOT::VecOps::RVec<float>)\n" +
+       + "  Field 1.1   : _0 (float)\n"};
+   // clang-format on
    EXPECT_EQ(expected, os.str());
 }
 
@@ -136,47 +138,15 @@ TEST(RNtuplePrint, VectorNested)
    RPrepareVisitor prepVisitor;
    RField<std::vector<std::vector<float>>> testField("floatVecVecTest");
    testField.AcceptVisitor(prepVisitor);
-   RPrintSchemaVisitor visitor(os, 'x');
+   RPrintSchemaVisitor visitor(os);
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
    visitor.SetNumFields(prepVisitor.GetNumFields());
    testField.AcceptVisitor(visitor);
+   // clang-format off
    std::string expected{std::string("")
-       + "x Field 1           : floatVecVecTest (std::vector<std::vector<float>>)        x\n"
-       + "x   Field 1.1       : _0 (std::vector<float>)                                  x\n"
-       + "x     Field 1.1.1   : _0 (float)                                               x\n"};
+       + "Field 1           : floatVecVecTest (std::vector<std::vector<float>>)\n"
+       + "  Field 1.1       : _0 (std::vector<float>)\n"
+       + "    Field 1.1.1   : _0 (float)\n"};
+   // clang-format on
    EXPECT_EQ(expected, os.str());
 }
-
-TEST(RNtuplePrint, NarrowManyEntriesVecVecTraverse)
-{
-   std::stringstream os;
-   RPrepareVisitor prepVisitor;
-   RField<std::vector<std::vector<float>>> testField("floatVecVecTest");
-   testField.AcceptVisitor(prepVisitor);
-   RPrintSchemaVisitor visitor(os, ' ', 25);
-   visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
-   visitor.SetNumFields(prepVisitor.GetNumFields());
-   testField.AcceptVisitor(visitor);
-   std::string expected{std::string("")
-       + "  Field 1    : floatV... \n"
-       + "    Field... : _0 (st... \n"
-       + "      Fie... : _0 (fl... \n"};
-   EXPECT_EQ(expected, os.str());
-}
-
-/* Currently the width can't be set by PrintInfo(). This test will be enabled when this feature is added.
-TEST(RNTuplePrint, TooShort)
-{
-FileRaii fileGuard("test.root");
-{
-   auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt");
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", "test.root");
-}
-auto ntuple2 = RNTupleReader::Open("Staff", "test.root");
-std::ostringstream os;
-ntuple2->PrintInfo(ROOT::ENTupleInfo::kSummary, os, '+', 29);
-std::string fString{"The width is too small! Should be at least 30.\n"};
-EXPECT_EQ(fString, os.str());
-}
-*/
