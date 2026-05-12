@@ -22,7 +22,7 @@ namespace Internal {
 
 /**
  * \class RRawFileTFile RRawFileTFile.hxx
- * \ingroup io_TFile
+ * \ingroup io_files
  *
  * The RRawFileTFile wraps an open TFile, but does not take ownership.
  */

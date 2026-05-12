@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TStreamerInfo
-    \ingroup io_TFile
+    \ingroup io_files
 
 Describes a persistent version of a class.
 

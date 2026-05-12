@@ -11,7 +11,7 @@
 
 /**
 \class TFileMerger TFileMerger.cxx
-\ingroup io_TFile
+\ingroup io_files
 
 This class provides file copy and merging services.
 
