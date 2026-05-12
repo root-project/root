@@ -39,7 +39,7 @@
 // clang-format off
 /**
 * \class ROOT::RDF::RNTupleDS
-* \ingroup dataframe
+* \ingroup dataframe_classes
 * \brief The RDataSource implementation for RNTuple. It lets RDataFrame read RNTuple data.
 *
 * An RDataFrame that reads RNTuple data can be constructed using FromRNTuple().

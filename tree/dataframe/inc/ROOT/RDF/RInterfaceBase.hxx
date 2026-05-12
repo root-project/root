@@ -40,7 +40,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 // clang-format off
 /**
  * \class ROOT::RDF::RInterfaceBase
- * \ingroup dataframe
+ * \ingroup dataframe_classes
  * \brief The base public interface to the RDataFrame federation of classes.
  *
  * This class contains common methods for all RInterface instantiations.

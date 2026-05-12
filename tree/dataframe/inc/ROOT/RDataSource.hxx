@@ -107,7 +107,7 @@ namespace RDF {
 // clang-format off
 /**
 \class ROOT::RDF::RDataSource
-\ingroup dataframe
+\ingroup dataframe_classes
 \brief RDataSource defines an API that RDataFrame can use to read arbitrary data formats.
 
 A concrete RDataSource implementation (i.e. a class that inherits from RDataSource and implements all of its pure
