@@ -37,7 +37,7 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "TEnv.h"
 
-#include "./PythonInterface.h"
+#include "Python.h"
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -645,12 +645,12 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    }
    coordString.erase(coordString.end() - 1);
 
-   if (xPython::isPythonInitialized()) {
+   if (Py_IsInitialized()) {
       auto s = TString::Format("Info in <xRooHypoSpace::AddPoint>: Added new point @ %s", coordString.c_str());
-      xPython::writeStdoutLine(s.Data());
-      //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
-      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
-      //      }
+      PySys_WriteStdout("%s\n", s.Data());
+      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
+         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      }
    } else {
       ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
    }
@@ -910,8 +910,8 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          out->GetListOfFunctions()->Add(x, "F");
          x = out->Clone("down");
          x->SetBit(kCanDelete);
-         dynamic_cast<TAttFill*>(x)->SetFillColor(kBlack);
-         dynamic_cast<TAttFill*>(x)->SetFillStyle(nSigma == 2 ? 3005 : 3004);
+         // dynamic_cast<TAttFill*>(x)->SetFillColor((nSigma==2) ? kYellow : kGreen);
+         // dynamic_cast<TAttFill*>(x)->SetFillStyle(1001);
          out->GetListOfFunctions()->Add(x, "F");
       }
       if (sOpt.Contains("ts")) {
@@ -1017,20 +1017,10 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
       for (int i = 0; i < out->GetN(); i++) {
          if (i < out->GetN() - nPointsDown) {
             up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
-            //down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
-         } else {
-            //up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
-            down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
-         }
-      }
-      // now go back round in reverse
-      for (int i = out->GetN()-1; i >= 0; i--) {
-         if (i < out->GetN() - nPointsDown) {
-            up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
-            //down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
-         } else {
-            //up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
             down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+         } else {
+            up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
          }
       }
    }
@@ -1120,8 +1110,8 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          // out->GetListOfFunctions()->Add(out->GetHistogram()->Clone(".axis"),"sameaxis"); // redraw axis
 
          for (auto g : *out->GetListOfGraphs()) {
-            if (dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
-               leg->AddEntry(g, "", "F");
+            if (auto o = dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
+               leg->AddEntry(o, "", "F");
             } else {
                leg->AddEntry(g, "", "LPE");
             }
@@ -1175,8 +1165,7 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          auto gra2 = static_cast<TMultiGraph *>(out->DrawClone("A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
-            gra2->SetMinimum(1e-6);
-            gra2->SetMaximum(1);
+            gra2->GetHistogram()->SetMinimum(1e-6);
          }
          if (gPad) {
             gPad->RedrawAxis();
@@ -1290,13 +1279,11 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
          if (!gPad)
             gra->Draw(); // in 6.28 DrawClone wont make the gPad defined :( ... so Draw then clear and Draw Clone
          gPad->Clear();
-         auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone("A"));
-         gra2->SetBit(kCanDelete);
-         gra2->SetMinimum(1e-9);
-         gra2->SetMaximum(1);
+         gra->DrawClone("A")->SetBit(kCanDelete);
          gPad->RedrawAxis();
-         gPad->GetCanvas()->Paint();
-         gPad->GetCanvas()->Update();
+         gra->GetHistogram()->SetMinimum(1e-9);
+         gra->GetHistogram()->GetYaxis()->SetRangeUser(1e-9, 1);
+         gPad->Modified();
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
          gPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
 #endif
@@ -1604,8 +1591,7 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
          auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone(sOpt.Contains("same") ? "" : "A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
-            gra2->SetMinimum(1e-6);
-            gra2->SetMaximum(1);
+            gra2->GetHistogram()->SetMinimum(1e-6);
          }
          if (gPad) {
             gPad->RedrawAxis();
@@ -1694,9 +1680,9 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
       minMax.second = std::max(minMax.second, val);
    }
    if (minMax.first < std::numeric_limits<double>::infinity())
-      out->SetMinimum(minMax.first);
+      out->GetHistogram()->SetMinimum(minMax.first);
    if (minMax.second > -std::numeric_limits<double>::infinity())
-      out->SetMaximum(minMax.second);
+      out->GetHistogram()->SetMaximum(minMax.second);
 
    TGraph *badPoints = nullptr;
 

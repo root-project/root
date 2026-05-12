@@ -7067,21 +7067,8 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
       dataGraph->SetTitle(TString::Format("%s;%s;Events", dataGraph->GetTitle(), theHist->GetXaxis()->GetTitle()));
       *static_cast<TAttMarker *>(dataGraph) = *static_cast<TAttMarker *>(theHist);
       *static_cast<TAttLine *>(dataGraph) = *static_cast<TAttLine *>(theHist);
-
-      // default style based on if generated or not
-
-      if (auto w = theData->weightVar(); w && w->getStringAttribute("fitResult")) {
-         // is generated
-         dataGraph->SetLineColor(kGreen + 2);
-         if (w->getAttribute("expected")) {
-            // is asimov
-            dataGraph->SetLineColor(kBlue);
-         }
-      } else {
-         dataGraph->SetLineColor(kBlack);
-      }
       dataGraph->SetMarkerStyle(20);
-      dataGraph->SetMarkerColor(dataGraph->GetLineColor());
+      dataGraph->SetLineColor(kBlack);
       dataGraph->SetMarkerSize(gStyle->GetMarkerSize());
 
       auto _obs = obs();
@@ -8074,7 +8061,6 @@ xRooNode xRooNode::reduced(const std::function<bool(const xRooNode &)> selector)
       const_cast<xRooNode &>(*this).browse();
    }
    // build a list of children to keep
-   std::string noName = "___"; // assume this is never a name
    std::string childNames;
    for (auto &c : *this) {
       if (selector(*c)) {
@@ -8083,8 +8069,6 @@ xRooNode xRooNode::reduced(const std::function<bool(const xRooNode &)> selector)
          childNames += c->GetName();
       }
    }
-   if (childNames.empty())
-      childNames = noName;     // if childNames was blank it would return the full list;
    return reduced(childNames); // calls main method above ... this will ensure we construct a reduced version of ourself
 }
 
@@ -8181,18 +8165,26 @@ protected:
    }
 };
 
-std::vector<double> new_getPropagatedErrors(const RooAbsReal &f, const RooFitResult &fr, const RooArgSet &nset,
-                                            RooArgList **pars, bool asymHi, bool asymLo, const std::vector<int> &bins,
-                                            const std::function<void(int)> &setBin)
+double new_getPropagatedError(const RooAbsReal &f, const RooFitResult &fr, const RooArgSet &nset = {},
+                              RooArgList **pars = nullptr, bool asymHi = false, bool asymLo = false)
 {
-   const size_t nBins = bins.size();
-   std::vector<double> out(nBins, 0.);
-   if (nBins == 0)
-      return out;
+   // Calling getParameters() might be costly, but necessary to get the right
+   // parameters in the RooAbsReal. The RooFitResult only stores snapshots.
 
-   // Build the list of parameters f depends on that have a non-zero error.
-   // The result is cached in *pars so it is only computed once across repeated
-   // calls (e.g. the separate Hi and Lo passes of an asymmetric error band).
+   // handle simple case that function is a RooRealVar
+   if (auto rrv = dynamic_cast<const RooRealVar *>(&f); rrv) {
+      if (auto frrrv = dynamic_cast<RooRealVar *>(fr.floatParsFinal().find(*rrv)); frrrv) {
+         rrv = frrrv; // use value from fit result
+      }
+      if (asymHi) {
+         return rrv->getErrorHi();
+      } else if (asymLo) {
+         return rrv->getErrorLo();
+      } else {
+         return rrv->getError();
+      }
+   }
+
    RooArgList *_pars = (pars) ? *pars : nullptr;
 
    if (!_pars) {
@@ -8229,111 +8221,75 @@ std::vector<double> new_getPropagatedErrors(const RooAbsReal &f, const RooFitRes
       }
    }
 
-   const size_t nPars = _pars->size();
+   // Make std::vector of variations
+   TVectorD F(_pars->size());
 
-   // Covariance and correlation matrices depend only on the fit result and the
-   // parameter set, so build them (including the matrix reduction) once for all
-   // bins rather than once per bin.
+   // Create std::vector of plus,minus variations for each parameter
+   TMatrixDSym V(_pars->size() == fr.floatParsFinal().size() ? fr.covarianceMatrix()
+                                                             : fr.reducedCovarianceMatrix(*_pars));
+
    // TODO: if _pars includes pars not in fr, need to extend matrix with uncorrelated errors of those pars
-   // (as built above, _pars is a subset of fr.floatParsFinal(), so such pars are currently dropped silently).
-   TMatrixDSym V(nPars == fr.floatParsFinal().size() ? fr.covarianceMatrix() : fr.reducedCovarianceMatrix(*_pars));
 
-   TMatrixDSym C(nPars);
-   for (size_t i = 0; i < nPars; i++) {
-      for (size_t j = i; j < nPars; j++) {
-         C(i, j) = V(i, j) / std::sqrt(V(i, i) * V(j, j));
-         C(j, i) = C(i, j);
-      }
-   }
+   double nomVal = f.getVal(nset);
 
-   // Nominal value of each bin (only needed to symmetrize asymmetric errors).
-   std::vector<double> nomVals;
-   if (asymHi || asymLo) {
-      nomVals.resize(nBins);
-      for (size_t k = 0; k < nBins; k++) {
-         setBin(bins[k]);
-         nomVals[k] = f.getVal(nset);
-      }
-   }
-
-   // F[k] holds, for bin k, the vector of (signed) variations w.r.t. each
-   // parameter - i.e. the column of the Jacobian times the parameter error.
-   std::vector<TVectorD> F(nBins, TVectorD(nPars));
-
-   std::vector<double> plusVar(nBins), minusVar(nBins);
-
-   for (size_t ivar = 0; ivar < nPars; ivar++) {
+   for (std::size_t ivar = 0; ivar < _pars->size(); ivar++) {
 
       auto &rrv = static_cast<RooRealVar &>((*_pars)[ivar]);
       auto *frrrv = static_cast<RooRealVar *>(fr.floatParsFinal().find(rrv));
 
       double cenVal = rrv.getVal();
+      double plusVar, minusVar, errVal;
 
       if (asymHi || asymLo) {
-         double errValHi = frrrv->getErrorHi();
-         rrv.setVal(errValHi > 0 ? std::min(cenVal + errValHi, rrv.getMax())
-                                 : std::max(cenVal + errValHi, rrv.getMin()));
-         for (size_t k = 0; k < nBins; k++) {
-            setBin(bins[k]);
-            plusVar[k] = f.getVal(nset);
-         }
-         double errValLo = frrrv->getErrorLo();
-         rrv.setVal(errValLo > 0 ? std::min(cenVal + errValLo, rrv.getMax())
-                                 : std::max(cenVal + errValLo, rrv.getMin()));
-         for (size_t k = 0; k < nBins; k++) {
-            setBin(bins[k]);
-            minusVar[k] = f.getVal(nset);
-         }
-         rrv.setVal(cenVal);
-         for (size_t k = 0; k < nBins; k++) {
-            double hi = plusVar[k];
-            double lo = minusVar[k];
-            if (asymHi) {
-               // pick the one that moved result 'up' most
-               hi = std::max(plusVar[k], minusVar[k]);
-               lo = 2 * nomVals[k] - hi; // symmetrizes
-            } else {
-               // pick the one that moved result 'down' most
-               lo = std::min(plusVar[k], minusVar[k]);
-               hi = 2 * nomVals[k] - lo; // symmetrizes
-            }
-            F[k][ivar] = (hi - lo) * 0.5;
+         errVal = frrrv->getErrorHi();
+         rrv.setVal(cenVal + errVal);
+         plusVar = f.getVal(nset);
+         errVal = frrrv->getErrorLo();
+         rrv.setVal(cenVal + errVal);
+         minusVar = f.getVal(nset);
+         if (asymHi) {
+            // pick the one that moved result 'up' most
+            plusVar = std::max(plusVar, minusVar);
+            minusVar = 2 * nomVal - plusVar; // symmetrizes
+         } else {
+            // pick the one that moved result 'down' most
+            minusVar = std::min(plusVar, minusVar);
+            plusVar = 2 * nomVal - minusVar; // symmetrizes
          }
       } else {
-         double errVal = sqrt(V(ivar, ivar));
+         errVal = sqrt(V(ivar, ivar));
          // Make Plus variation
-         rrv.setVal(std::min(cenVal + errVal, rrv.getMax()));
-         for (size_t k = 0; k < nBins; k++) {
-            setBin(bins[k]);
-            plusVar[k] = f.getVal(nset);
-         }
+         rrv.setVal(cenVal + errVal);
+         plusVar = f.getVal(nset);
          // Make Minus variation
-         rrv.setVal(std::max(cenVal - errVal, rrv.getMin()));
-         for (size_t k = 0; k < nBins; k++) {
-            setBin(bins[k]);
-            minusVar[k] = f.getVal(nset);
-         }
-         rrv.setVal(cenVal);
-         for (size_t k = 0; k < nBins; k++) {
-            F[k][ivar] = (plusVar[k] - minusVar[k]) * 0.5;
-         }
+         rrv.setVal(cenVal - errVal);
+         minusVar = f.getVal(nset);
+      }
+      F[ivar] = (plusVar - minusVar) * 0.5;
+      rrv.setVal(cenVal);
+   }
+
+   // Re-evaluate this RooAbsReal with the central parameters just to be
+   // extra-safe that a call to `getPropagatedError()` doesn't change any state.
+   // It should not be necessary because thanks to the dirty flag propagation
+   // the RooAbsReal is re-evaluated anyway the next time getVal() is called.
+   // Still there are imaginable corner cases where it would not be triggered,
+   // for example if the user changes the RooFit operation more after the error
+   // propagation.
+   f.getVal(nset);
+
+   TMatrixDSym C(_pars->size());
+   std::vector<double> errVec(_pars->size());
+   for (std::size_t i = 0; i < _pars->size(); i++) {
+      errVec[i] = std::sqrt(V(i, i));
+      for (std::size_t j = i; j < _pars->size(); j++) {
+         C(i, j) = V(i, j) / std::sqrt(V(i, i) * V(j, j));
+         C(j, i) = C(i, j);
       }
    }
 
-   // Re-evaluate f with the central parameters just to be extra-safe that this
-   // call doesn't leave any state changed. It should not be necessary because
-   // thanks to the dirty flag propagation f is re-evaluated anyway the next
-   // time getVal() is called, but there are imaginable corner cases where that
-   // would not be triggered (e.g. if the caller changes the RooFit operation
-   // mode after the error propagation).
-   setBin(bins[nBins - 1]);
-   f.getVal(nset);
-
-   // Calculate error in linear approximation from variations and correlation
-   // coefficients - this is pure arithmetic (no function evaluations).
-   for (size_t k = 0; k < nBins; k++) {
-      out[k] = std::sqrt(F[k] * (C * F[k]));
-   }
+   // Calculate error in linear approximation from variations and correlation coefficient
+   double sum = F * (C * F);
 
    if (!pars) {
       delete _pars;
@@ -8341,7 +8297,7 @@ std::vector<double> new_getPropagatedErrors(const RooAbsReal &f, const RooFitRes
       *pars = _pars;
    }
 
-   return out;
+   return sqrt(sum);
 }
 
 class PdfWrapper : public RooAbsPdf {
@@ -8759,6 +8715,8 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          TDirectory::TContext ctx{nullptr}; // No self-registration to directories
          h = static_cast<TH1 *>(templateHist->Clone(rar->GetName()));
       }
+      if (h->GetListOfFunctions())
+         h->GetListOfFunctions()->Clear();
       h->SetTitle(rar->GetTitle());
       h->Reset();
    } else if (x) {
@@ -9016,9 +8974,9 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
             for (auto pdf : bins()) {
                // auto _pdf =
                // pdf->get<RooAbsPdf>()->createProjection(*pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
-               std::unique_ptr<RooArgSet> projObs{pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>())};
-               auto _pdf = new xRooProjectedPdf(TString::Format("%s_projection", pdf->GetName()), "",
-                                                *pdf->get<RooAbsPdf>(), *projObs);
+               auto _pdf =
+                  new xRooProjectedPdf(TString::Format("%s_projection", pdf->GetName()), "", *pdf->get<RooAbsPdf>(),
+                                       *pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
                if (hasRange) {
                   dynamic_cast<RooAbsPdf *>(_pdf)->setNormRange("coordRange");
                }
@@ -9155,7 +9113,6 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          empty = false; // must not be empty b.c. calculation of error relies on knowing nominal (see after loop)
    }
 
-   std::vector<int> errorBins; // bins (in-range) for which to compute the propagated error band, filled below
    for (int toy = 0; toy < (nErrorToys + 1); toy++) {
 
       TH1 *main_h = h;
@@ -9213,9 +9170,64 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
 
          if (errors) {
             static_cast<TH1 *>(h->FindObject("nominal"))->SetBinContent(i, r); // transfer nominal to nominal hist
-            // Record for which bins to compute the error later.
-            if (toy == 0) {
-               errorBins.push_back(i);
+            double res;
+            bool doAsym = (errorsHi && errorsLo);
+            if (doAsym) {
+               errorsHi = false;
+            }
+            if (p) {
+               // std::cout << "computing error of :" << h->GetBinCenter(i) << std::endl;
+               // //fr->floatParsFinal().Print(); fr->covarianceMatrix().Print();
+               //            res = PdfWrapper((oldrar) ? *rar : *p, _coefs.get<RooAbsReal>(), !v, oldrar ? p : nullptr)
+               //                     .getSimplePropagatedError(*fr, normSet);
+               res = new_getPropagatedError(
+                  PdfWrapper((oldrar) ? *rar : *p, _coefs.get<RooAbsReal>(), !v, oldrar ? p : nullptr), *fr, normSet,
+                  &errorPars, errorsHi, errorsLo);
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
+               // improved normSet invalidity checking, so assuming no longer need this in 6.28 onwards
+               p->_normSet = nullptr;
+#endif
+            } else {
+               //            res = RooProduct("errorEval", "errorEval",
+               //                             RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) :
+               //                             *_coefs.get<RooAbsReal>()))
+               //                     .getPropagatedError(
+               //                        *fr /*, normSet*/); // should be no need to pass a normSet to a non-pdf (but
+               //                        not verified this)
+               res = new_getPropagatedError(
+                  RooProduct("errorEval", "errorEval",
+                             RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>())),
+                  *fr, {}, &errorPars, errorsHi,
+                  errorsLo); // should be no need to pass a normSet to a non-pdf (but not verified this)
+               // especially important not to pass in the case we are evaluated RooRealSumPdf as a function! otherwise
+               // error will be wrong
+            }
+            if (needBinWidth) {
+               res *= h->GetBinWidth(i);
+            }
+            h->SetBinError(i, res);
+            if (doAsym) {
+               // compute Hi error
+               errorsHi = true;
+               errorsLo = false;
+               if (p) {
+                  res = new_getPropagatedError(
+                     PdfWrapper((oldrar) ? *rar : *p, _coefs.get<RooAbsReal>(), !v, oldrar ? p : nullptr), *fr, normSet,
+                     &errorPars, errorsHi, errorsLo);
+               } else {
+                  res = new_getPropagatedError(
+                     RooProduct("errorEval", "errorEval",
+                                RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>())),
+                     *fr, {}, &errorPars, errorsHi, errorsLo);
+               }
+               if (needBinWidth) {
+                  res *= h->GetBinWidth(i);
+               }
+               errorsLo = true;
+               // lowVal = content - error, highVal = content + res
+               // => band/2 = (res+error)/2 and band-mid = (2*content+res-error)/2
+               h->SetBinContent(i, h->GetBinContent(i) + (res - h->GetBinError(i)) * 0.5);
+               h->SetBinError(i, (res + h->GetBinError(i)) * 0.5);
             }
          }
          timeIt.Stop();
@@ -9247,69 +9259,6 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          h = main_h;
       }
    }
-
-   if (errors && !errorBins.empty()) {
-      // Batched linear error propagation over all (in-range) bins recorded above. By varying each parameter only
-      // once and sweeping the observable inside that variation, the normalization / expected-events integrals are
-      // reused across bins instead of being recomputed for every bin (see new_getPropagatedErrors).
-      std::unique_ptr<RooAbsReal> errFunc;
-      RooArgSet emptyNormSet;
-      if (p) {
-         errFunc =
-            std::make_unique<PdfWrapper>((oldrar) ? *rar : *p, _coefs.get<RooAbsReal>(), !v, oldrar ? p : nullptr);
-      } else {
-         // especially important not to pass a normSet in the case we are evaluating a RooRealSumPdf as a function!
-         // otherwise the error will be wrong
-         errFunc = std::make_unique<RooProduct>(
-            "errorEval", "errorEval",
-            RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()));
-      }
-      const RooArgSet &errNormSet = p ? normSet : emptyNormSet;
-
-      auto setBin = [&](int i) {
-         if (x) {
-            x->setVal(h->GetBinCenter(i));
-         } else if (cat) {
-            cat->setLabel(h->GetXaxis()->GetBinLabel(i));
-         } else if (v) {
-            v->setBin(i - 1);
-         }
-      };
-
-      bool doAsym = (errorsHi && errorsLo);
-      // For asymmetric bands we need both the Lo and Hi propagated errors; otherwise a single (possibly one-sided)
-      // pass. errorPars is reused across both passes so the parameter list is only built once.
-      std::vector<double> errLo = new_getPropagatedErrors(
-         *errFunc, *fr, errNormSet, &errorPars, doAsym ? false : errorsHi, doAsym ? true : errorsLo, errorBins, setBin);
-      std::vector<double> errHi;
-      if (doAsym) {
-         errHi = new_getPropagatedErrors(*errFunc, *fr, errNormSet, &errorPars, true, false, errorBins, setBin);
-      }
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-      if (p) {
-         // improved normSet invalidity checking, so assuming no longer need this in 6.28 onwards
-         p->_normSet = nullptr;
-      }
-#endif
-
-      for (size_t k = 0; k < errorBins.size(); k++) {
-         int i = errorBins[k];
-         double resLo = errLo[k];
-         if (needBinWidth)
-            resLo *= h->GetBinWidth(i);
-         h->SetBinError(i, resLo);
-         if (doAsym) {
-            double resHi = errHi[k];
-            if (needBinWidth)
-               resHi *= h->GetBinWidth(i);
-            // lowVal = content - resLo, highVal = content + resHi
-            // => band/2 = (resHi+resLo)/2 and band-mid = content + (resHi-resLo)/2
-            h->SetBinContent(i, h->GetBinContent(i) + (resHi - resLo) * 0.5);
-            h->SetBinError(i, (resHi + resLo) * 0.5);
-         }
-      }
-   }
-
    if (gOldHandlerr) {
       signal(SIGINT, gOldHandlerr);
       gOldHandlerr = nullptr;
@@ -11361,32 +11310,22 @@ void xRooNode::Draw(Option_t *opt)
          // drawing dataset associated to a simultaneous means must find subpads with variation names
          // may not have subpads if drawning a "Yield" plot ...
          bool doneDraw = false;
-         // in the case of hybrid datasets, the parentPdf will be a reducedPdf ...
-         // but if the dataset has been added to, then there may be additional entries
-         // in other channels ... so loop over all labels of the categorical
-         // and for ones we don't have a channel for, just draw directly on
-
-         for (auto [catName, catVal] : s->get<RooSimultaneous>()->indexCat()) {
-            auto _pad = dynamic_cast<TPad *>(gPad->GetPrimitive(
-               TString::Format("%s=%s", s->get<RooSimultaneous>()->indexCat().GetName(), catName.c_str())));
+         for (auto c : s->bins()) {
+            auto _pad = dynamic_cast<TPad *>(gPad->GetPrimitive(c->GetName()));
             if (!_pad)
                continue; // channel was hidden?
             // attach as a child before calling datasets(), so that if this dataset is external to workspace it is
             // included still attaching the dataset ensures dataset reduction for the channel is applied
+            c->push_back(std::make_shared<xRooNode>(*this));
+            auto ds = c->datasets().find(GetName());
+            c->resize(c->size() - 1); // remove the child we attached
+            if (!ds) {
+               std::cout << " no ds " << GetName() << " - this should never happen!" << std::endl;
+               continue;
+            }
             auto tmp = gPad;
             _pad->cd();
-            if (auto c = s->bins().find(catName)) {
-               c->push_back(std::make_shared<xRooNode>(*this));
-               auto ds = c->datasets().find(GetName());
-               c->resize(c->size() - 1); // remove the child we attached
-               if (!ds) {
-                  std::cout << " no ds " << GetName() << " - this should never happen!" << std::endl;
-                  continue;
-               }
-               ds->Draw(opt);
-            } else {
-               Draw(opt);
-            }
+            ds->Draw(opt);
             doneDraw = true;
             tmp->cd();
          }
@@ -12788,9 +12727,7 @@ xRooNode::GetBinErrors(int binStart, int binEnd, const xRooNode &_fr, int nToys,
    //   return out;
 }
 
-END_XROOFIT_NAMESPACE
-
-std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::xRooNode *v)
+std::string cling::printValue(const xRooNode *v)
 {
    if (!v)
       return "nullptr\n";
@@ -12822,3 +12759,5 @@ std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::xRooNode *v)
 
    return out;
 }
+
+END_XROOFIT_NAMESPACE
