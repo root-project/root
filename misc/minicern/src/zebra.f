@@ -19,8 +19,7 @@
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
-      COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +,              LQSUP,NQBIA, NQIOSV(3)
+      INCLUDE 'mzcl.inc'
       COMMON /JZUC/  LQJZ,LQUP,LQDW,LQSV,LQAN, JQLEV,JQFLAG(10)
       COMMON/RZCOUNT/RZXIO(2)
       INCLUDE 'rzclun.inc'
@@ -1400,8 +1399,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +,              LQSUP,NQBIA, NQIOSV(3)
+      INCLUDE 'mzcl.inc'
       DIMENSION    IXP(9),LP(9),LSUPP(9),JBP(9),NIOP(9),NZP(9)
       CHARACTER    CHIDH*(*)
       DIMENSION    NAMESR(2)
@@ -1443,8 +1441,7 @@
       DIMENSION    LQMST(9)
       EQUIVALENCE (LQMST(1),LQSYSS(2))
       EQUIVALENCE (LQFORM,LQSYSS(5))
-      COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +,              LQSUP,NQBIA, NQIOSV(3)
+      INCLUDE 'mzcl.inc'
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION    IXDIV(9), LP(9), LSUPP(9), NAME(9)
@@ -1806,8 +1803,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCL/ NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +, LQSUP,NQBIA, NQIOSV(3)
+      INCLUDE 'mzcl.inc'
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION IXDIV(9),LORGP(9),INCNLP(9),INCNDP(9)
