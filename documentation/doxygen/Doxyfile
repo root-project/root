@@ -1387,7 +1387,8 @@ HTML_EXTRA_STYLESHEET  = ROOT.css
 
 HTML_EXTRA_FILES       = ./rootlogo_s.gif \
                          ./notebook.gif \
-                         ./cheatsheets/rdataloader-cheatsheet.pdf
+                         ./cheatsheets/rdataloader-cheatsheet.pdf \
+                         ./cheatsheets/uhi-cheatsheet.pdf
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
 # should be rendered with a dark or light theme.
