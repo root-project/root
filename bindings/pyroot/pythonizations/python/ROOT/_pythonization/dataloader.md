@@ -1,8 +1,7 @@
-\defgroup Py_ML Machine Learning Training
+\defgroup Py_ML RDataLoader
 \ingroup Python
 \brief Feed ROOT data directly into models for machine learning training.
 
-# RDataLoader
 
 `RDataLoader` streams ROOT data into machine learning frameworks as batches ready for training. It takes any [RDataFrame](@ref Py_RDataFrame) as input, giving you access to the full ROOT ecosystem for filtering, defining new variables and applying selections; it delivers batches of your dataset for [NumPy](https://numpy.org/devdocs/reference/generated/numpy.ndarray.html), [TensorFlow](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and [PyTorch](https://docs.pytorch.org/docs/main/tensors.html) through a simple iteration interface.
 
@@ -10,7 +9,7 @@
 
 ## Cheat Sheet
 
-A one-page quick reference covering the full API.
+A one-page quick reference covering the API.
 
 \htmlonly
 <object data="rdataloader-cheatsheet.pdf"
