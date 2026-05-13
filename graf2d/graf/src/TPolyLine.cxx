@@ -15,7 +15,8 @@
 #include "TBuffer.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
+#include "TAttMarker.h"
 #include "TPolyLine.h"
 
 
@@ -243,222 +244,138 @@ TPolyLine *TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *
 
 void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable()) return;
 
-   Int_t i, d;
-   Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
-   const Int_t kMaxDiff = 10;
-   static Bool_t middle;
-   static Int_t ipoint, pxp, pyp;
-   static Int_t px1,px2,py1,py2;
-   static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
-   static Int_t dpx, dpy;
-   static std::vector<Int_t> x, y;
-   Bool_t opaque  = gPad->OpaqueMoving();
+   auto &parent = *gPad;
 
-   if (!gPad->IsEditable()) return;
+   constexpr Int_t kMaxDiff = 10;
+   Bool_t opaque  = parent.OpaqueMoving();
+   static Int_t sdx, sdy, ipoint;
+   static Bool_t first_move;
 
    Int_t np = Size();
+   Bool_t is_last_same = (np > 1) && (fX[0] == fX[np-1]) && (fY[0] == fY[np-1]);
+   if (is_last_same)
+      np--;
+
+   auto paint_hollow = [this,&parent,is_last_same] () {
+      auto pp = parent.GetPainter();
+      pp->SetAttLine({1,1,GetLineWidth()});
+      Double_t *x = fX, *y = fY;
+      if (TestBit(kPolyLineNDC)) {
+         pp->DrawPolyLineNDC(Size(), x, y);
+      } else {
+         std::vector<Double_t> xx, yy;
+         if (parent.GetLogx()) {
+            xx.resize(Size());
+            for (Int_t ix = 0; ix < Size(); ix++)
+               xx[ix] = parent.XtoPad(x[ix]);
+            x = xx.data();
+         }
+         if (parent.GetLogy()) {
+            yy.resize(Size());
+            for (Int_t iy = 0; iy < Size(); iy++)
+               yy[iy] = parent.YtoPad(y[iy]);
+            y = yy.data();
+         }
+         pp->DrawPolyLine(Size(), x, y);
+
+         pp->SetAttMarker({1,25,1});
+         pp->DrawPolyMarker(is_last_same ? Size()-1 : Size(), x, y);
+      }
+   };
+
+   auto get_point = [this, &parent](Int_t i, Int_t &pntx, Int_t &pnty) {
+      if (TestBit(kPolyLineNDC)) {
+         pntx = parent.UtoAbsPixel(fX[i]);
+         pnty = parent.VtoAbsPixel(fY[i]);
+      } else {
+         pntx = parent.XtoAbsPixel(parent.XtoPad(fX[i]));
+         pnty = parent.YtoAbsPixel(parent.YtoPad(fY[i]));
+      }
+   };
+
+   auto set_point = [this, &parent](Int_t i, Int_t pntx, Int_t pnty) {
+      if (TestBit(kPolyLineNDC)) {
+         Double_t ww = parent.GetWw();
+         Double_t wndc = parent.GetAbsWNDC();
+         Double_t wh = parent.GetWh();
+         Double_t hndc = parent.GetAbsHNDC();
+         fX[i] = ww > 0 && wndc > 0 ? (pntx / ww - parent.GetAbsXlowNDC()) / wndc : 0.;
+         fY[i] = wh > 0 && hndc > 0 ? ((1. - pnty / wh) - parent.GetAbsYlowNDC()) / hndc : 0.;
+      } else {
+         fX[i] = parent.PadtoX(parent.AbsPixeltoX(pntx));
+         fY[i] = parent.PadtoY(parent.AbsPixeltoY(pnty));
+      }
+   };
 
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
-      px1 = gPad->XtoAbsPixel(gPad->GetX1());
-      py1 = gPad->YtoAbsPixel(gPad->GetY1());
-      px2 = gPad->XtoAbsPixel(gPad->GetX2());
-      py2 = gPad->YtoAbsPixel(gPad->GetY2());
+      // No break !!!
+   case kMouseMotion: {
+
+      Int_t minDiff = kMaxDiff;
       ipoint = -1;
-
-
-      if (!x.empty() || !y.empty()) break;
-      x.resize(np+1, 0);
-      y.resize(np+1, 0);
-      for (i=0;i<np;i++) {
-         pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
-         pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
-         if (!opaque) {
-            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+      for (Int_t i = 0; i < np; i++) {
+         Int_t pxp, pyp;
+         get_point(i, pxp, pyp);
+         if (i == 0) {
+            sdx = pxp - px;
+            sdy = pyp - py;
          }
-         x[i] = pxp;
-         y[i] = pyp;
-         d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-         if (d < kMaxDiff) ipoint =i;
+         Int_t d = TMath::Abs(pxp - px) + TMath::Abs(pyp - py);
+         if (d < minDiff) {
+            ipoint = i;
+            minDiff = d;
+            sdx = pxp - px;
+            sdy = pyp - py;
+         }
       }
-      dpx = 0;
-      dpy = 0;
-      pxold = px;
-      pyold = py;
-      if (ipoint < 0) return;
-      if (ipoint == 0) {
-         px1old = 0;
-         py1old = 0;
-         px2old = gPad->XtoAbsPixel(fX[1]);
-         py2old = gPad->YtoAbsPixel(fY[1]);
-      } else if (ipoint == fN-1) {
-         px1old = gPad->XtoAbsPixel(gPad->XtoPad(fX[fN-2]));
-         py1old = gPad->YtoAbsPixel(gPad->YtoPad(fY[fN-2]));
-         px2old = 0;
-         py2old = 0;
-      } else {
-         px1old = gPad->XtoAbsPixel(gPad->XtoPad(fX[ipoint-1]));
-         py1old = gPad->YtoAbsPixel(gPad->YtoPad(fY[ipoint-1]));
-         px2old = gPad->XtoAbsPixel(gPad->XtoPad(fX[ipoint+1]));
-         py2old = gPad->YtoAbsPixel(gPad->YtoPad(fY[ipoint+1]));
-      }
-      pxold = gPad->XtoAbsPixel(gPad->XtoPad(fX[ipoint]));
-      pyold = gPad->YtoAbsPixel(gPad->YtoPad(fY[ipoint]));
-
+      first_move = kTRUE;
+      if (ipoint < 0)
+         parent.SetCursor(kMove);
+      else
+         parent.SetCursor(kHand);
       break;
-
-
-   case kMouseMotion:
-
-      middle = kTRUE;
-      for (i=0;i<np;i++) {
-         pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
-         pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
-         d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-         if (d < kMaxDiff) middle = kFALSE;
-      }
-
-
-   // check if point is close to an axis
-      if (middle) gPad->SetCursor(kMove);
-      else gPad->SetCursor(kHand);
-      break;
+   }
 
    case kButton1Motion:
-      if (!opaque) {
-         if (middle) {
-            for(i=0;i<np-1;i++) {
-               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-               pxp = x[i]+dpx;
-               pyp = y[i]+dpy;
-               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+      if (!opaque && !first_move)
+         paint_hollow();
+
+      if (ipoint < 0) {
+         Int_t pxp0, pyp0, pxp, pyp;
+         // move all points
+         for (Int_t i = 0; i < np; i++) {
+            get_point(i, pxp, pyp);
+            if (i == 0) {
+               pxp0 = pxp;
+               pyp0 = pyp;
             }
-            pxp = x[np-1]+dpx;
-            pyp = y[np-1]+dpy;
-            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-            dpx += px - pxold;
-            dpy += py - pyold;
-            pxold = px;
-            pyold = py;
-            for(i=0;i<np-1;i++) {
-               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-               pxp = x[i]+dpx;
-               pyp = y[i]+dpy;
-               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-            }
-            pxp = x[np-1]+dpx;
-            pyp = y[np-1]+dpy;
-            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         } else {
-            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
-            pxold = px;
-            pxold = TMath::Max(pxold, px1);
-            pxold = TMath::Min(pxold, px2);
-            pyold = py;
-            pyold = TMath::Max(pyold, py2);
-            pyold = TMath::Min(pyold, py1);
-            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
+            set_point(i, px + sdx + pxp - pxp0, py + sdy + pyp - pyp0);
          }
       } else {
-         if (middle) {
-            for(i=0;i<np-1;i++) {
-               pxp = x[i]+dpx;
-               pyp = y[i]+dpy;
-            }
-            pxp = x[np-1]+dpx;
-            pyp = y[np-1]+dpy;
-            dpx += px - pxold;
-            dpy += py - pyold;
-            pxold = px;
-            pyold = py;
-         } else {
-            pxold = px;
-            pxold = TMath::Max(pxold, px1);
-            pxold = TMath::Min(pxold, px2);
-            pyold = py;
-            pyold = TMath::Max(pyold, py2);
-            pyold = TMath::Min(pyold, py1);
-         }
-         if (!x.empty() && !y.empty()) {
-            if (middle) {
-               for(i=0;i<np;i++) {
-                  fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-                  fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
-               }
-            } else {
-               fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
-               fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
-            }
-         }
-         gPad->Modified(kTRUE);
+         // move only selected point
+         set_point(ipoint, px + sdx, py + sdy);
       }
+      if (is_last_same) {
+         fX[np] = fX[0];
+         fY[np] = fY[0];
+      }
+
+      first_move = kFALSE;
+      if (!opaque)
+         paint_hollow();
+      else
+         parent.ModifiedUpdate();
       break;
 
    case kButton1Up:
-
-   // Compute x,y range
-      xmin = gPad->GetUxmin();
-      xmax = gPad->GetUxmax();
-      ymin = gPad->GetUymin();
-      ymax = gPad->GetUymax();
-      dx   = xmax-xmin;
-      dy   = ymax-ymin;
-      dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
-      dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
-
-   // Range() could change the size of the pad pixmap and therefore should
-   // be called before the other paint routines
-         gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                     ymin - dyr*gPad->GetBottomMargin(),
-                     xmax + dxr*gPad->GetRightMargin(),
-                     ymax + dyr*gPad->GetTopMargin());
-         gPad->RangeAxis(xmin, ymin, xmax, ymax);
-
-      if (!x.empty() && !y.empty()) {
-         if (middle) {
-            for(i=0;i<np;i++) {
-               fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-               fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
-            }
-         } else {
-            fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
-            fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
-         }
-         x.clear();
-         y.clear();
-      }
-      gPad->Modified(kTRUE);
-      gVirtualX->SetLineColor(-1);
+      if (!opaque)
+         parent.ModifiedUpdate();
+      break;
    }
 }
 
@@ -513,13 +430,10 @@ Int_t TPolyLine::Merge(TCollection *li)
 
 void TPolyLine::Paint(Option_t *option)
 {
-   if (TestBit(kPolyLineNDC)) {
-      if (option && strlen(option)) PaintPolyLineNDC(fLastPoint+1, fX, fY, option);
-      else                          PaintPolyLineNDC(fLastPoint+1, fX, fY, fOption.Data());
-   } else {
-      if (option && strlen(option)) PaintPolyLine(fLastPoint+1, fX, fY, option);
-      else                          PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
-   }
+   if (TestBit(kPolyLineNDC))
+      PaintPolyLineNDC(fLastPoint+1, fX, fY, option && *option ? option : fOption.Data());
+   else
+      PaintPolyLine(fLastPoint+1, fX, fY, option && *option ? option : fOption.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -533,24 +447,23 @@ void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *optio
    if (!gPad || n <= 0) return;
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
-   Double_t *xx = x;
-   Double_t *yy = y;
+   std::vector<Double_t> xx, yy;
    if (gPad->GetLogx()) {
-      xx = new Double_t[n];
-      for (Int_t ix=0;ix<n;ix++) xx[ix] = gPad->XtoPad(x[ix]);
+      xx.resize(n);
+      for (Int_t ix = 0; ix < n; ix++)
+         xx[ix] = gPad->XtoPad(x[ix]);
+      x = xx.data();
    }
    if (gPad->GetLogy()) {
-      yy = new Double_t[n];
-      for (Int_t iy=0;iy<n;iy++) yy[iy] = gPad->YtoPad(y[iy]);
+      yy.resize(n);
+      for (Int_t iy = 0; iy < n; iy++)
+         yy[iy] = gPad->YtoPad(y[iy]);
+      y = yy.data();
    }
    if (option && (*option == 'f' || *option == 'F'))
-      gPad->PaintFillArea(n, xx, yy, option);
+      gPad->PaintFillArea(n, x, y, option);
    else
-      gPad->PaintPolyLine(n, xx, yy, option);
-   if (x != xx)
-      delete[] xx;
-   if (y != yy)
-      delete[] yy;
+      gPad->PaintPolyLine(n, x, y, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -558,10 +471,12 @@ void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *optio
 
 void TPolyLine::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   TAttLine::Modify();  //Change line attributes only if necessary
-   TAttFill::Modify();  //Change fill area attributes only if necessary
-   if (*option == 'f' || *option == 'F') gPad->PaintFillAreaNDC(n,x,y,option);
-   else                                  gPad->PaintPolyLineNDC(n,x,y,option);
+   TAttLine::Modify(); // Change line attributes only if necessary
+   TAttFill::Modify(); // Change fill area attributes only if necessary
+   if (option && (*option == 'f' || *option == 'F'))
+      gPad->PaintFillAreaNDC(n, x, y, option);
+   else
+      gPad->PaintPolyLineNDC(n, x, y, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
