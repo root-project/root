@@ -72,6 +72,10 @@ foreach(file ${TestSource})
   ROOT_ADD_TEST(minuit2_${testname} COMMAND ${testname})
 endforeach()
 
+if(minuit1)
+  target_compile_definitions(testMinimizer PRIVATE ROOT_MATH_MINUIT_1)
+endif()
+
 # We don't want to run the gtests if gtest is not available in Minuit2 standalone builds
 if(TARGET GTest::gtest)
   ROOT_ADD_GTEST(testMinuit2 testMinuit2.cxx LIBRARIES Minuit2)

@@ -1,4 +1,5 @@
 builtin_vdt=ON
+minuit1=OFF
 pythia8=ON
 runtime_cxxmodules=OFF
 use_gsl_cblas=ON

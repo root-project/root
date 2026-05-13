@@ -191,9 +191,8 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    if (defaultMinim != minim_newDefault )  fMinimizerOpts.SetMinimizerType(minim_newDefault.c_str());
 
    if (min == nullptr) {
-      // if creation of minimizer failed force the use by default of Minuit
-      std::string minim2 = "Minuit";
-      if (minimType == "Minuit") minim2 = "Minuit2";
+      // if creation of minimizer failed force the use by default of Minuit 2
+      std::string minim2 = "Minuit2";
       if (minimType != minim2 ) {
          std::string msg = "Could not create the " + minimType + " minimizer. Try using the minimizer " + minim2;
          MATH_WARN_MSG("FitConfig::CreateMinimizer",msg.c_str());
