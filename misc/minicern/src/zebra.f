@@ -153,8 +153,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZPAW (NWORDS,CHOPT)
-      COMMON /PAWC/  NWPAW,IXPAWC,IHBOOK,IXHIGZ,IXKU,IFENCE(5)
-     +,              LMAIN, IPAW(4000000-11)
+      INCLUDE 'pawc.inc'
       CHARACTER    *(*) CHOPT
       CALL UOPTC (CHOPT,'M',IPAW)
       IF (IPAW(1).NE.0)   CALL MZEBRA(-1)
@@ -162,7 +161,7 @@
       CALL MZSTOR (IXPAWC,'/PAWC/',' ',IFENCE,LMAIN,IPAW(1),IPAW(1),
      +            IPAW(5000),IPAW(NW-11))
       NWPAW  = NW
-      IHBOOK = 0
+      IHDIV  = 0
       IXHIGZ = 0
       IXKU   = 0
       END
