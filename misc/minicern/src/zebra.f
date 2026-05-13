@@ -380,7 +380,7 @@
       INCLUDE 'rzckey.inc'
       INCLUDE 'rzclun.inc'
       INCLUDE 'quest.inc'
-      COMMON /RZBUFF/ ITEST(8704)
+      INCLUDE 'rzbuff.inc'
       INCLUDE 'rzpars.inc'
       integer cfstat,statf,info(12)
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
@@ -615,7 +615,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
-      COMMON /RZBUFF/ ITEST(8704)
+      INCLUDE 'rzbuff.inc'
       INCLUDE 'rzcount.inc'
       INCLUDE 'rzpars.inc'
       DIMENSION IBUF(JREC)
@@ -2262,7 +2262,7 @@
       INCLUDE 'zkpars.inc'
       INCLUDE 'rzckey.inc'
       INCLUDE 'rzcycle.inc'
-      COMMON /RZBUFF/ ITEST(8704)
+      INCLUDE 'rzbuff.inc'
       CHARACTER CHOPT*(*),CHDIR*(*)
       CHARACTER*16 CHTOP
       DIMENSION IOPTV(10)
