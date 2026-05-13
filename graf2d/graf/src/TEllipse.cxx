@@ -204,16 +204,15 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   auto pp = parent.GetPainter();
-
-   Int_t kMaxDiff = 10;
+   constexpr Int_t kMaxDiff = 10;
 
    static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
    static Int_t sdx = 0, sdy = 0;
    static Double_t oldX1, oldY1, oldR1, oldR2;
    static Bool_t first_move = kTRUE;
 
-   auto paint_hollow = [this,&parent,pp]() {
+   auto paint_hollow = [this,&parent]() {
+      auto pp = parent.GetPainter();
       pp->SetAttLine(*this);
       std::vector<Double_t> x, y;
       FillPoints(parent, x, y, GetX1(), GetY1(), GetR1(), GetR2(), GetPhimin(), GetPhimax(), GetTheta());
@@ -247,6 +246,12 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    };
 
    Bool_t opaque  = parent.OpaqueMoving();
+   Int_t px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
+   Int_t py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
+   Int_t pLx = parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1()));
+   Int_t pRx = parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1()));
+   Int_t pBy = parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2()));
+   Int_t pTy = parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2()));
 
    switch (event) {
 
@@ -257,18 +262,12 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       oldR1 = GetR1();
       oldR2 = GetR2();
 
-      sdx = parent.XtoAbsPixel(parent.XtoPad(GetX1())) - px;
-      sdy = parent.YtoAbsPixel(parent.YtoPad(GetY1())) - py;
+      sdx = px1 - px;
+      sdy = py1 - py;
 
       // No break !!!
 
    case kMouseMotion: {
-      Int_t px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-      Int_t py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-      Int_t pLx = parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1()));
-      Int_t pRx = parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1()));
-      Int_t pBy = parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2()));
-      Int_t pTy = parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2()));
       mode = pNone;
       if ((TMath::Abs(px - px1) < kMaxDiff) && (TMath::Abs(py - pTy) < kMaxDiff)) {
          mode = pTop; // top edge
@@ -301,19 +300,19 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case pNone:
          break;
       case pL:
-         changeX(px, parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1())));
+         changeX(px, pRx);
          guide = 'l';
          break;
       case pR:
-         changeX(parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1())), px);
+         changeX(pLx, px);
          guide = 'r';
          break;
       case pTop:
-         changeY(py, parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2())));
+         changeY(py, pBy);
          guide = 't';
          break;
       case pBot:
-         changeY(parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2())), py);
+         changeY(pTy, py);
          guide = 'b';
          break;
       case pINSIDE:
