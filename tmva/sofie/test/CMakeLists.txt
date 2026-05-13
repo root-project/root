@@ -36,6 +36,11 @@ ROOTTEST_GENERATE_EXECUTABLE(emitFromONNX EmitFromONNX_all.cxx
                              LIBRARIES protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser
                              FIXTURES_SETUP sofie-compile-models-onnx-build)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/input_models/ConvAddReluFuseBug.onnx
+               ${CMAKE_CURRENT_BINARY_DIR}/ConvAddReluFuseBug.onnx COPYONLY)
+ROOT_ADD_GTEST(TestParseConvAddFusion TestParseConvAddFusion.cxx
+               LIBRARIES Core ROOTTMVASofie ROOTTMVASofieParser)
+
 # silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
