@@ -1,6 +1,5 @@
 // @(#)root/metautils:$Id$
 /// \file TClassEdit.cxx
-/// \ingroup Base
 /// \author Victor Perev
 /// \author Philippe Canal
 /// \date 04/10/2003
