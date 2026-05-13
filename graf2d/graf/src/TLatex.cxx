@@ -586,7 +586,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                  "vee","Leftrightarrow","Leftarrow","Uparrow","Rightarrow",
                  "Downarrow","diamond","LT","void1","copyright","void3","sum",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
-                 "ltbar","AA","aa","void06","GT","int","forall","exists" };
+                 "ltbar","AA","aa","void06","GT","int","forall","exists", "textendash", "textemdash" };
 
    const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
@@ -1378,6 +1378,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          letter = '\042'; // #forall
       else if (opSpec == 81)
          letter = '\044'; // #exists
+      else if (opSpec == 82)
+         letter = '\055'; // #textendash
+      else if (opSpec == 83)
+         letter = '\276'; // #textemdash
 
       Double_t props, propi;
       props = 1.8 ; // scale factor for #sum(66)
