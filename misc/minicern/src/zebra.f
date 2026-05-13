@@ -16,8 +16,7 @@
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -79,8 +78,7 @@
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       INCLUDE 'quest.inc'
@@ -202,8 +200,7 @@
       PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -1763,8 +1760,7 @@
       PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -2050,8 +2046,7 @@
 
       SUBROUTINE MZLINK (IXSTOR,CHNAME,LAREA,LREF,LREFL)
       INCLUDE 'zbcd.inc'
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -2180,8 +2175,7 @@
 
       SUBROUTINE MZPUSH (IXDIV,LORGP,INCNLP,INCNDP,CHOPT)
       INCLUDE 'zbcd.inc'
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -2730,8 +2724,7 @@
 
       SUBROUTINE RZFILE(LUNIN,CHDIR,CHOPT)
       INCLUDE 'zunit.inc'
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
@@ -4189,8 +4182,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZDROP (IXSTOR,LHEADP,CHOPT)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -4271,8 +4263,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION MZDVAC (IXDIVP)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -4341,8 +4332,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZGARB (IXGP,IXWP)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -4430,8 +4420,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZGAR1
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -4702,8 +4691,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZFGAP
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -4940,8 +4928,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABF
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -5056,8 +5043,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABH
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -5146,8 +5132,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABM
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -5248,8 +5233,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABR
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -5479,8 +5463,7 @@
 
       SUBROUTINE MZIOCH (IODVEC,NWIOMP,CHFORM)
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       INCLUDE 'quest.inc'
       COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
@@ -5774,8 +5757,7 @@
 
       SUBROUTINE MZFLAG (IXSTOR,LHEADP,KBITP,CHOPT)
       COMMON /ZLIMIT/LQLIML,LQLIMH
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -6196,8 +6178,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZMOVE
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -6341,8 +6322,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRELB
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -6533,8 +6513,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRELL (MDESV)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -6675,8 +6654,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRELX
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -6727,8 +6705,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZSDIV (IXDIVP,IFLAGP)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
@@ -7107,8 +7084,7 @@
 
       SUBROUTINE RZEND(CHDIR)
       INCLUDE 'zunit.inc'
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      INCLUDE 'zstate.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
