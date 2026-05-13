@@ -21,7 +21,7 @@
 //
 //  The ReadRef case is also used as a benchmark
 //  The ROOTMARKS reported are relative to a Linux/P IV 2.8 GHz gcc3.2.3 machine
-//  normalized at 800 ROOTMARKS when running with CINT.
+//  normalized at 800 ROOTMARKS when running with historical CINT.
 //
 // To run this script, do
 //   stressGeometry
