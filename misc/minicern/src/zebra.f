@@ -380,7 +380,7 @@
 
       SUBROUTINE RZOPEN(LUNIN,CHDIR,CFNAME,CHOPTT,LRECL,ISTAT)
       INCLUDE 'zunit.inc'
-      COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
+      INCLUDE 'rzckey.inc'
       INCLUDE 'rzclun.inc'
       INCLUDE 'quest.inc'
       COMMON /RZBUFF/ ITEST(8704)
@@ -2263,7 +2263,7 @@
       PARAMETER (NLPATM=100)
       INCLUDE 'rzdir.inc'
       INCLUDE 'zkpars.inc'
-      COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
+      INCLUDE 'rzckey.inc'
       INCLUDE 'rzcycle.inc'
       COMMON /RZBUFF/ ITEST(8704)
       CHARACTER CHOPT*(*),CHDIR*(*)
@@ -2903,7 +2903,7 @@
       INCLUDE 'rzcls.inc'
       COMMON /RZCOUT/IP1,IR1,IR2,IROUT,IRLOUT,IOPTRR
       INCLUDE 'zkpars.inc'
-      COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
+      INCLUDE 'rzckey.inc'
       INCLUDE 'rzcycle.inc'
       CHARACTER*(*) CHOPT
       DIMENSION KEYU(*)
