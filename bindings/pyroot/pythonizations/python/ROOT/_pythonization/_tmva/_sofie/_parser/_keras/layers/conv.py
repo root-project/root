@@ -56,8 +56,10 @@ def MakeKerasConv(layer):
             inputWidth = fInputShape[3]
         outputHeight = math.ceil(float(inputHeight) / float(fAttrStrides[0]))
         outputWidth = math.ceil(float(inputWidth) / float(fAttrStrides[1]))
-        padding_height = max((outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight, 0)
-        padding_width = max((outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth, 0)
+        effective_kH = fAttrDilations[0] * (fAttrKernelShape[0] - 1) + 1
+        effective_kW = fAttrDilations[1] * (fAttrKernelShape[1] - 1) + 1
+        padding_height = max((outputHeight - 1) * fAttrStrides[0] + effective_kH - inputHeight, 0)
+        padding_width = max((outputWidth - 1) * fAttrStrides[1] + effective_kW - inputWidth, 0)
         padding_top = math.floor(padding_height / 2)
         padding_bottom = padding_height - padding_top
         padding_left = math.floor(padding_width / 2)

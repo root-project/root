@@ -88,6 +88,13 @@ def generate_keras_sequential(dst_dir):
     ])
     train_and_save(model, "Conv2D_padding_same")
 
+    # Conv2D padding_same with dilation_rate=2
+    model = models.Sequential([
+        layers.Input(shape=(8, 8, 3)),
+        layers.Conv2D(4, (3, 3), padding='same', dilation_rate=2, data_format='channels_last', activation='relu')
+    ])
+    train_and_save(model, "Conv2D_padding_same_dilation")
+
     # Conv2D padding_valid
     model = models.Sequential([
         layers.Input(shape=(8, 8, 3)),

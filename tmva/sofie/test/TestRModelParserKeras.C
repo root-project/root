@@ -283,6 +283,53 @@ TEST(DISABLED_RModelParser_Keras, CONV_SAME)
     }
 }
 
+#if PY_MAJOR_VERSION >= 3
+TEST(RModelParser_Keras, CONV_SAME_DILATED)
+#else
+TEST(DISABLED_RModelParser_Keras, CONV_SAME_DILATED)
+#endif
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+   std::vector<float> inputConv2D_SameDilated(64, 1.0f);
+
+   Py_Initialize();
+   if (gSystem->AccessPathName("KerasModelConv2D_SameDilated.keras", kFileExists))
+      GenerateModels();
+
+   TMVA::Experimental::RSofieReader r("KerasModelConv2D_SameDilated.keras");
+   std::vector<float> outputConv2D_SameDilated = r.Compute(inputConv2D_SameDilated);
+
+   PyObject *main = PyImport_AddModule("__main__");
+   PyObject *fGlobalNS = PyModule_GetDict(main);
+   PyObject *fLocalNS = PyDict_New();
+   if (!fGlobalNS) {
+      throw std::runtime_error("Can't init global namespace for Python");
+   }
+   if (!fLocalNS) {
+      throw std::runtime_error("Can't init local namespace for Python");
+   }
+   PyRun_String("import os", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("from tensorflow.keras.models import load_model", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("import numpy", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("model=load_model('KerasModelConv2D_SameDilated.keras')", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("input=numpy.ones((1,8,8,1))", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("output=model(input).numpy()", Py_single_input, fGlobalNS, fLocalNS);
+   PyRun_String("outputSize=output.size", Py_single_input, fGlobalNS, fLocalNS);
+   std::size_t pOutputConv2DSameDilatedSize = (std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS, "outputSize"));
+
+   // Testing the actual and expected output tensor sizes
+   EXPECT_EQ(outputConv2D_SameDilated.size(), pOutputConv2DSameDilatedSize);
+
+   PyArrayObject *pConv2DSameDilatedValues = (PyArrayObject *)PyDict_GetItemString(fLocalNS, "output");
+   float *pOutputConv2DSameDilated = (float *)PyArray_DATA(pConv2DSameDilatedValues);
+
+   // Testing the actual and expected output tensor values
+   for (size_t i = 0; i < outputConv2D_SameDilated.size(); ++i) {
+      EXPECT_LE(std::abs(outputConv2D_SameDilated[i] - pOutputConv2DSameDilated[i]), TOLERANCE);
+   }
+}
+
 TEST(RModelParser_Keras, RESHAPE)
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
