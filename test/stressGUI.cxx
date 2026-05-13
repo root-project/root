@@ -90,6 +90,7 @@ Int_t    gTestNum = 0;
 Bool_t   gOptionRef  = kFALSE;
 Bool_t   gOptionKeep = kFALSE;
 Bool_t   gOptionFull = kFALSE;
+Bool_t   gOptionDebug = kFALSE;
 char     gLine[80];
 Int_t    sizes[100];
 TString  gTmpfilename;
@@ -2485,6 +2486,9 @@ void stressGUI()
       fclose(sgref);
    }
    gSystem->Unlink(gTmpfilename.Data());
+   if (gOptionDebug) {
+      gClient->GetPicturePool()->Print();
+   }
 #ifdef WIN32
    gSystem->Exec("erase /q /s TxtEdit* >nul 2>&1");
    gSystem->Exec("erase /q /s TxtView* >nul 2>&1");
@@ -2508,6 +2512,7 @@ int main(int argc, char *argv[])
    gOptionRef  = kFALSE;
    gOptionKeep = kFALSE;
    gOptionFull = kFALSE;
+   gOptionDebug = kFALSE;
    gTmpfilename = "stress-gui";
    FILE *f = gSystem->TempFileName(gTmpfilename);
    fclose(f);
@@ -2515,6 +2520,7 @@ int main(int argc, char *argv[])
       if (!strcmp(argv[i], "-ref")) gOptionRef = kTRUE;
       if (!strcmp(argv[i], "-keep")) gOptionKeep = kTRUE;
       if (!strcmp(argv[i], "-full")) gOptionFull = kTRUE;
+      if (!strcmp(argv[i], "-debug")) gOptionDebug = kTRUE;
       if (!strcmp(argv[i], "-help") || !strcmp(argv[i], "-?")) {
          printf("Usage: stressGUI [-ref] [-keep] [-full] [-help] [-?] \n");
          printf("Options:\n");
@@ -2523,6 +2529,9 @@ int main(int argc, char *argv[])
          printf("\n");
          printf("  -keep: Keep the png files even for passed tests\n");
          printf("        (by default the png files are deleted)\n");
+         printf("\n");
+         printf("  -debug: print debug information like for example\n");
+         printf("          picture refcount\n");
          printf("\n");
          printf("  -full: Full test: replay also recorder sessions\n");
          printf("        (guitest, drag and drop, fitpanel, ...)\n");
