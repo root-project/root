@@ -20,20 +20,7 @@
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+      INCLUDE 'mzabq.inc'
       COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
      +,              LQSUP,NQBIA, NQIOSV(3)
       COMMON /JZUC/  LQJZ,LQUP,LQDW,LQSV,LQAN, JQLEV,JQFLAG(10)
@@ -204,30 +191,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       PARAMETER            (NQWKTT=2560)
       COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
 *
@@ -667,30 +632,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +, LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -770,30 +713,8 @@
       SUBROUTINE RZVCYC(LTAD)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +,              LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -838,30 +759,8 @@
       SUBROUTINE RZIN(IXDIV,LSUP,JBIAS,KEYU,ICYCLE,CHOPT)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +,              LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -935,30 +834,8 @@
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/  MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +,              MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +,              IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -1123,30 +1000,8 @@
       SUBROUTINE MZRESV
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       JQDIVR = JQDIVI
@@ -1204,30 +1059,8 @@
       SUBROUTINE RZSAVE
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +,              LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -1439,30 +1272,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
                    EQUIVALENCE (LQFS,LQSYSS(4)), (LQFF,LQSYSR(4))
      +,                        (LQFI,LQSYSR(5)), (LQFX,LQSYSR(6))
       COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
@@ -1572,30 +1383,8 @@
       SUBROUTINE FZILIN
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       COMMON /MZCT/  MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +,              MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
@@ -1640,30 +1429,8 @@
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       DIMENSION    IXST(9), LP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
@@ -1701,30 +1468,8 @@
       INCLUDE 'zbcd.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
      +,              LQSUP,NQBIA, NQIOSV(3)
       DIMENSION    IXP(9),LP(9),LSUPP(9),JBP(9),NIOP(9),NZP(9)
@@ -1765,30 +1510,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION    LQMST(9)
       EQUIVALENCE (LQMST(1),LQSYSS(2))
       EQUIVALENCE (LQFORM,LQSYSS(5))
@@ -2051,30 +1774,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION    LAREA(9),LREF(9),LREFL(9),NAME(2)
       CHARACTER    *(*) CHNAME
       DIMENSION    NAMESR(2)
@@ -2180,30 +1881,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCL/ NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
      +, LQSUP,NQBIA, NQIOSV(3)
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
@@ -2458,30 +2137,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -2570,30 +2227,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +, LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -2727,30 +2362,8 @@
       INCLUDE 'zstate.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +, LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -2956,30 +2569,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +, LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -3131,30 +2722,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
                    EQUIVALENCE (LQFS,LQSYSS(4)), (LQFF,LQSYSR(4))
      +, (LQFI,LQSYSR(5)), (LQFX,LQSYSR(6))
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
@@ -3468,30 +3037,8 @@
       SUBROUTINE RZINK(KEYU,ICYCLE,CHOPT)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +, LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -3863,30 +3410,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +, LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -4066,30 +3591,8 @@
      +, NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       DIMENSION IXST(9), LP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
@@ -4138,30 +3641,8 @@
       SUBROUTINE MZCHNB (LIX)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION LIX(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZCH, 4HNB  /
@@ -4187,30 +3668,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       DIMENSION LHEADP(9)
       CHARACTER *(*) CHOPT
@@ -4267,30 +3726,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION IXDIVP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZDV, 4HAC  /
@@ -4337,30 +3774,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -4425,30 +3840,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
@@ -4550,30 +3943,8 @@
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       EQUIVALENCE (LQFORM,LQSYSS(5))
       EQUIVALENCE (NW,IQUEST(1))
       DIMENSION IXIOP(99)
@@ -4639,30 +4010,8 @@
       FUNCTION MZFDIV (IXST,LIXP)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION IXST(9), LIXP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXSTOR = IXST(1)
@@ -4695,30 +4044,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -4835,30 +4162,8 @@
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -4932,30 +4237,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -5047,30 +4330,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -5136,30 +4397,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -5237,30 +4476,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -5360,30 +4577,8 @@
       SUBROUTINE MZTABS
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -5409,30 +4604,8 @@
       SUBROUTINE MZTABX
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -5762,30 +4935,8 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       PARAMETER (NQWKTT=2560)
       COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
@@ -5894,30 +5045,8 @@
       SUBROUTINE MZGSTA (IGARB)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -6089,30 +5218,8 @@
       FUNCTION MZIXCO (IXAA,IXBB,IXCC,IXDD)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION IXAA(9), IXBB(9), IXCC(9), IXDD(9), IXV(4)
       EQUIVALENCE (IXV(1),IQUEST(11))
       DIMENSION NAMESR(2)
@@ -6182,30 +5289,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -6282,20 +5367,7 @@
       INCLUDE 'zbcd.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+      INCLUDE 'mzabq.inc'
       DIMENSION LP(9),NWP(9)
       MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
       MSBYT (MZ,IZW,IZP,NZB) = IOR (
@@ -6326,30 +5398,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
@@ -6517,30 +5567,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
@@ -6658,30 +5686,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
      +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
      +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
@@ -6708,30 +5714,8 @@
       INCLUDE 'zstate.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       DIMENSION IXDIVP(9), IFLAGP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZSD, 4HIV  /
@@ -6798,30 +5782,8 @@
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       DIMENSION LSHP(9),LSUPP(9),JBIASP(9),IFLAGP(9)
       DIMENSION NAMESR(2)
@@ -6964,30 +5926,8 @@
       SUBROUTINE RZSCAN(CHPATH,UROUT)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +,              LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
@@ -7057,20 +5997,7 @@
       SUBROUTINE MZWIPE (IXWP)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+      INCLUDE 'mzabq.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       DIMENSION    IXWP(9)
       DIMENSION    NAMESR(2)
@@ -7087,30 +6014,8 @@
       INCLUDE 'zstate.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      INCLUDE 'mzabq.inc'
+      INCLUDE 'mzcc.inc'
       COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
      +,              LTEMP,LCORD,LFROM
       EQUIVALENCE (LQRS,LQSYSS(7))
