@@ -223,7 +223,7 @@ jobs:
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
-        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        if:   ${{ !cancelled() && !matrix.is_special && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v6
         with:
           name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
@@ -576,7 +576,7 @@ jobs:
           path: /github/home/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
-        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        if:   ${{ !cancelled() && !matrix.is_special && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v6
         with:
           name: Binaries ${{ matrix.image }} ${{ matrix.property }}
@@ -588,14 +588,17 @@ jobs:
           ccache -s || true
 
       - name: Install
+        if: ${{ !cancelled() && !matrix.is_special }}
         run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
 
       - name: Build post-install test project
+        if: ${{ !cancelled() && !matrix.is_special }}
         run: |
           cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
           cmake --build ${{ env.POST_INSTALL_DIR }};
 
       - name: CTest in post-install test project
+        if: ${{ !cancelled() && !matrix.is_special }}
         working-directory: ${{ env.POST_INSTALL_DIR }}
         run: ctest --output-on-failure -j $(nproc)
 
