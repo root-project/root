@@ -224,6 +224,9 @@ void latex5()
    y -= step;
    l.DrawLatex(x1, y, "#perp");
    l.DrawText(x2, y, "#perp");
+   y -= step;
+   l.DrawLatex(x1, y, "#textendash");
+   l.DrawText(x2, y, "#textendash");
 
    // Draw Fourth Column
    y = 0.96;
@@ -289,6 +292,9 @@ void latex5()
    y -= step;
    l.DrawLatex(x1, y, "#odot");
    l.DrawText(x2, y, "#odot");
+   y -= step;
+   l.DrawLatex(x1, y, "#textemdash");
+   l.DrawText(x2, y, "#textemdash");
 
    // Save the picture in various formats
    c1->Print("mathsymb.ps");
