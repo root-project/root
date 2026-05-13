@@ -821,8 +821,7 @@
       INCLUDE 'hcflag.inc'
       INCLUDE 'zbits.inc'
       INCLUDE 'hcnt.inc'
-      LOGICAL         NRECOV
-      COMMON /HCRECV/ NRECOV
+      INCLUDE 'hcrecv.inc'
       CHARACTER*(*) VAR1(*)
       INTEGER       IVOFF(*)
       CHARACTER*32  VAR
@@ -1474,8 +1473,7 @@
       INCLUDE 'hcprin.inc'
       INCLUDE 'hcnt.inc'
       COMMON /HCSET/ IBSIZE
-      LOGICAL         NRECOV
-      COMMON /HCRECV/ NRECOV
+      INCLUDE 'hcrecv.inc'
       PARAMETER (MBIT=32,MBITCH=8,MOUT=6,HMBIGP=1.E+30)
       CHARACTER*1 IDGTDA(42)
       CHARACTER*4 IPROJ(9)
@@ -2120,8 +2118,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'zbits.inc'
-      LOGICAL         NRECOV
-      COMMON /HCRECV/ NRECOV
+      INCLUDE 'hcrecv.inc'
       INCLUDE 'quest.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
