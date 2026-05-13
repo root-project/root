@@ -820,7 +820,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
       INCLUDE 'zbits.inc'
-      COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
+      INCLUDE 'hcnt.inc'
       LOGICAL         NRECOV
       COMMON /HCRECV/ NRECOV
       CHARACTER*(*) VAR1(*)
@@ -1472,7 +1472,7 @@
       INCLUDE 'hcbits.inc'
       INCLUDE 'hcunit.inc'
       INCLUDE 'hcprin.inc'
-      COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
+      INCLUDE 'hcnt.inc'
       COMMON /HCSET/ IBSIZE
       LOGICAL         NRECOV
       COMMON /HCRECV/ NRECOV
@@ -1714,7 +1714,7 @@
       SUBROUTINE HNMADR(VAR1, IADD, ISCHAR)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
+      INCLUDE 'hcnt.inc'
       INCLUDE 'zbits.inc'
       CHARACTER*(*) VAR1
       CHARACTER*32  NAME, VAR
@@ -1917,7 +1917,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'zbits.inc'
-      COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
+      INCLUDE 'hcnt.inc'
       LOGICAL INDVAR
       NSUB  = JBYT(IQ(LNAME+IOFF+ZDESC), 18, 3)
       ITYPE = JBYT(IQ(LNAME+IOFF+ZDESC), 14, 4)
