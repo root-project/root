@@ -9,8 +9,7 @@
       SUBROUTINE MZEBRA (LIST)
       INCLUDE 'zbcd.inc'
       INCLUDE 'zbcdh.inc'
-      PARAMETER     (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
+      INCLUDE 'zceta.inc'
       COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
       INCLUDE 'zmach.inc'
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
@@ -50,8 +49,7 @@
       SUBROUTINE MZINCO (LIST)
       INCLUDE 'zbcd.inc'
       INCLUDE 'zbcdh.inc'
-      PARAMETER     (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
+      INCLUDE 'zceta.inc'
       COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
       INCLUDE 'zmach.inc'
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
@@ -2856,8 +2854,7 @@
 
       SUBROUTINE IZBCDT (NP,ITABT)
       INCLUDE 'quest.inc'
-      PARAMETER (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
+      INCLUDE 'zceta.inc'
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
       DIMENSION NP(9), ITABT(99)
       N = NP(1)
@@ -5660,8 +5657,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE ZHTOI (HOLL,INTV,NP)
-      PARAMETER (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
+      INCLUDE 'zceta.inc'
       INTEGER INTV(99), HOLL(99)
       DO 39 JWH=1,NP
       MWH = HOLL(JWH)
