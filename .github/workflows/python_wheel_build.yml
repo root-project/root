@@ -3,11 +3,11 @@ name: 'ROOT Python wheels'
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'The branch for which the Python wheel has to be generated'
+      ref:
+        description: 'The git ref to build the wheel from (branch, tag, or commit SHA).'
         type: string
         required: true
-        default: "master"
+        default: ''
   schedule:
     - cron: '01 1 * * *'
   pull_request:
@@ -32,6 +32,8 @@ jobs:
     name: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.ref }}
       - uses: ./.github/workflows/cibuildwheel-impl
         with:
           build-tag: ${{ matrix.target }}
@@ -46,7 +48,8 @@ jobs:
     name: test-wheel-cp${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v6
-
+        with:
+          ref: ${{ github.event.inputs.ref }}
       - name: Download produced wheels
         uses: actions/download-artifact@v4
         with:
@@ -121,3 +124,23 @@ jobs:
           kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
           xrdcp --parallel ${NFILES} -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
+
+  publish-to-pypi:
+      if: github.event_name == 'workflow_dispatch'
+      needs: build-wheels
+      runs-on: ubuntu-latest
+      name: >-
+        Publish Python distribution to PyPI
+      environment:
+        name: pypi
+        url: https://pypi.org/p/root
+      permissions:
+        id-token: write
+      steps:
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
