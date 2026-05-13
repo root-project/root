@@ -8,11 +8,7 @@
 
       SUBROUTINE MZEBRA (LIST)
       INCLUDE 'zbcd.inc'
-      CHARACTER  CQALLC*96
-      COMMON /ZBCDCH/ CQALLC
-                      CHARACTER*1  CQLETT(96), CQNUM(10)
-                      EQUIVALENCE (CQLETT(1),CQALLC(1:1))
-                      EQUIVALENCE (CQNUM(1), CQALLC(27:27))
+      INCLUDE 'zbcdh.inc'
       PARAMETER     (NQTCET=256)
       COMMON /ZCETA/ IQCETA(256),IQTCET(256)
       COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
@@ -76,11 +72,7 @@
 
       SUBROUTINE MZINCO (LIST)
       INCLUDE 'zbcd.inc'
-      CHARACTER  CQALLC*96
-      COMMON /ZBCDCH/ CQALLC
-                      CHARACTER*1  CQLETT(96), CQNUM(10)
-                      EQUIVALENCE (CQLETT(1),CQALLC(1:1))
-                      EQUIVALENCE (CQNUM(1), CQALLC(27:27))
+      INCLUDE 'zbcdh.inc'
       PARAMETER     (NQTCET=256)
       COMMON /ZCETA/ IQCETA(256),IQTCET(256)
       COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
@@ -3751,11 +3743,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZPATH(CHPATH)
-      CHARACTER  CQALLC*96
-      COMMON /ZBCDCH/ CQALLC
-                      CHARACTER*1  CQLETT(96), CQNUM(10)
-                      EQUIVALENCE (CQLETT(1),CQALLC(1:1))
-                      EQUIVALENCE (CQNUM(1), CQALLC(27:27))
+      INCLUDE 'zbcdh.inc'
       CHARACTER*1  BSLASH,KTILDE
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
