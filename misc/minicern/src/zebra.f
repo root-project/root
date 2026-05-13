@@ -2136,7 +2136,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
-      PARAMETER (NLPATM=100)
+      INCLUDE 'nlpatm.inc'
       INCLUDE 'rzdir.inc'
       INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
@@ -2260,7 +2260,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
-      PARAMETER (NLPATM=100)
+      INCLUDE 'nlpatm.inc'
       INCLUDE 'rzdir.inc'
       INCLUDE 'zkpars.inc'
       INCLUDE 'rzckey.inc'
@@ -2454,7 +2454,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
-      PARAMETER (NLPATM=100)
+      INCLUDE 'nlpatm.inc'
       INCLUDE 'rzdir.inc'
       INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
@@ -3122,7 +3122,7 @@
       INCLUDE 'zbcdh.inc'
       CHARACTER*1  BSLASH,KTILDE
       INCLUDE 'zunit.inc'
-      PARAMETER (NLPATM=100)
+      INCLUDE 'nlpatm.inc'
       INCLUDE 'rzdir.inc'
       CHARACTER*(*) CHPATH
       CHARACTER*1 CH1
@@ -5686,7 +5686,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcl.inc'
-      PARAMETER (NLPATM=100)
+      INCLUDE 'nlpatm.inc'
       INCLUDE 'rzdir.inc'
       INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
