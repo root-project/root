@@ -8,17 +8,7 @@
 
       SUBROUTINE HNTVAR2(ID1,IVAR,CHTAG,CHFULL,BLOCK,NSUB,ITYPE,ISIZE
      +                  ,NBITS,IELEM)
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       COMMON/BIGBUF/BIGB(4000000)
       character BIGB
@@ -338,17 +328,7 @@
      +              ,CHTOP(NLPATM)
       CHARACTER*(LENHFN) HFNAME
       COMMON /HCFILE/HFNAME(MXFILES)
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       COMMON /HNTCUR/ NTCUR
       INCLUDE 'quest.inc'
       INCLUDE 'hcflag.inc'
@@ -583,17 +563,7 @@
       SUBROUTINE HGIVE(IDD,CHTITL,NCX,XMIN,XMAX,NCY,YMIN,YMAX,NWT,IDB)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
@@ -654,17 +624,7 @@
       SUBROUTINE HGIVEN( ID1, CHTITL, NVAR, TAGS, RLOW, RHIGH )
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
@@ -855,17 +815,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       COMMON /HNTCUR/ NTCUR
       CHARACTER*(*) BLKNA1, VAR(*)
       CHARACTER*8   BLKNAM, BLKSAV
@@ -935,17 +885,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
       LOGICAL         NRECOV
       COMMON /HCRECV/ NRECOV
@@ -1295,17 +1235,7 @@
       SUBROUTINE HDELET(ID1)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       IF(LCDIR.LE.0)GO TO 999
       IF(ID1.EQ.0)GO TO 120
@@ -1366,17 +1296,7 @@
       INCLUDE 'hparam1.inc'
       COMMON/HCFORM/IODIR,IOH1,IOH2,IOHN,IOCF1,IOCF2,IOCB1,IOCB2,
      +              IOCF4,IOFIT,IONT,IOBL,IOCC
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       INTEGER        IDD, ADDRES, HNBPTR
       CHARACTER*(*)  BLKNA1, FORM1
@@ -1932,17 +1852,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       CHARACTER*(*) VAR1
       CHARACTER*32  NAME, VAR
       INTEGER       IADD
@@ -2151,17 +2061,7 @@
       SUBROUTINE HNDESC(IOFF, NSUB, ITYPE, ISIZE, NBITS, INDVAR)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
       LOGICAL INDVAR
       NSUB  = JBYT(IQ(LNAME+IOFF+ZDESC), 18, 3)
@@ -2178,17 +2078,7 @@
       SUBROUTINE HPARNT(IDN, CHROUT)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       CHARACTER*(*) CHROUT
       LCID = 0
       NIDN  = LOCATI(IQ(LTAB+1),IQ(LCDIR+KNRH),IDN)
@@ -2226,17 +2116,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       NDIM = IQ(LCID+ZNDIM)
       NW   = 1 + ZNTMP*NDIM
       IF (LQ(LCDIR-5) .EQ. 0) THEN
@@ -2285,17 +2165,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'quest.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
@@ -2394,17 +2264,7 @@
       SUBROUTINE HNTRD(INDX, IOFF, IBANK, IERROR)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       LOGICAL         NRECOV
       COMMON /HCRECV/ NRECOV
       INCLUDE 'quest.inc'
@@ -2595,17 +2455,7 @@
       SUBROUTINE HNTVAR(ID1,IVAR,CHTAG,BLOCK,NSUB,ITYPE,ISIZE,IELEM)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
@@ -2688,17 +2538,7 @@
       SUBROUTINE HNMSET(IDD, ITEM, IVAL)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       ID    = IDD
       IDPOS = LOCATI(IQ(LTAB+1),IQ(LCDIR+KNRH),ID)
@@ -2727,17 +2567,7 @@
       INTEGER FUNCTION HNBPTR(BLKNA1)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       CHARACTER*(*) BLKNA1
       CHARACTER*8   BLKNAM
       INTEGER       IBLKN(2)
@@ -2791,17 +2621,7 @@
       SUBROUTINE HNBFWR(IDD)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
@@ -2859,17 +2679,7 @@
       SUBROUTINE HNHDWR(IDD)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
@@ -3001,17 +2811,7 @@
       INCLUDE 'hcflag.inc'
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
-      INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
-     +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
-     +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
-     +          ZIBLOK, ZNBLOK, ZLCONT, ZIFBIT, ZIBANK, ZIFTMP, ZITMP,
-     +          ZID,    ZNTMP,  ZNTMP1, ZLINK
-      PARAMETER(ZBITS=1,   ZNDIM=2,   ZNOENT=3,  ZNPRIM=4,  ZLCONT=6,
-     +          ZNRZB=5,   ZIFCON=7,  ZIFNAM=4,  ZIFCHA=5,  ZIFINT=6,
-     +          ZIFREA=7,  ZNWTIT=8,  ZITIT1=9,  ZNCHRZ=13, ZIFBIT=8,
-     +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
-     +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
-     +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
+      INCLUDE 'zbits.inc'
       CHARACTER*(*) CHDIR
       INCLUDE 'quest.inc'
       CHARACTER*1 HTYPE
