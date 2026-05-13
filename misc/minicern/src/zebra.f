@@ -19,7 +19,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcl.inc'
-      COMMON /JZUC/  LQJZ,LQUP,LQDW,LQSV,LQAN, JQLEV,JQFLAG(10)
+      INCLUDE 'jzuc.inc'
       INCLUDE 'rzcount.inc'
       INCLUDE 'rzclun.inc'
       INCLUDE 'rzpars.inc'
@@ -916,7 +916,7 @@
 
       SUBROUTINE ZITOH (INTV,IHOLL,NP)
       INCLUDE 'zbcd.inc'
-      COMMON /SLATE/ DUMMY(8), MM(4), DUMB(28)
+      INCLUDE 'slate.inc'
       DIMENSION    INTV(99), IHOLL(99), NP(9)
       DIMENSION    MPAK(2)
       DATA  MPAK   /6,4/
@@ -4679,7 +4679,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZFLAG (IXSTOR,LHEADP,KBITP,CHOPT)
-      COMMON /ZLIMIT/LQLIML,LQLIMH
+      INCLUDE 'zlimit.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       INCLUDE 'zvfaut.inc'
