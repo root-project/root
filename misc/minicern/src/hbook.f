@@ -127,8 +127,7 @@
       SUBROUTINE HLIMIT (LIMIT)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      COMMON/HCFORM/IODIR,IOH1,IOH2,IOHN,IOCF1,IOCF2,IOCB1,IOCB2,
-     +              IOCF4,IOFIT,IONT,IOBL,IOCC
+      INCLUDE 'hcform.inc'
       INCLUDE 'hcdirn.inc'
       CALL HMACHI
       NHBOOK = IABS(LIMIT)
@@ -1252,8 +1251,7 @@
       SUBROUTINE HBNAM(IDD, BLKNA1, ADDRES, FORM1, ISCHAR)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      COMMON/HCFORM/IODIR,IOH1,IOH2,IOHN,IOCF1,IOCF2,IOCB1,IOCB2,
-     +              IOCF4,IOFIT,IONT,IOBL,IOCC
+      INCLUDE 'hcform.inc'
       INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
       INTEGER        IDD, ADDRES, HNBPTR
