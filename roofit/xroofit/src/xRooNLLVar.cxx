@@ -1919,8 +1919,8 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
       return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    }
    if (auto _first_poi = dynamic_cast<RooRealVar *>(poi().first());
-       fPllType != xRooFit::Asymptotics::Uncapped && _first_poi &&
-       _first_poi->getMin("physical") > _first_poi->getMin() && mu_hat().getVal() < _first_poi->getMin("physical")) {
+       _first_poi && _first_poi->getMin("physical") > _first_poi->getMin() &&
+       mu_hat().getVal() < _first_poi->getMin("physical")) {
       // replace _ufit with fit "boundary" conditional fit
       _ufit = cfit_lbound(readOnly);
       if (!_ufit) {
@@ -2645,14 +2645,7 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
    if (poiNames == "") {
       throw std::runtime_error("No poi");
    }
-   if (!std::isnan(alt_value)) {
-      std::unique_ptr<RooAbsCollection> thePoi(fFuncVars->selectByName(poiNames));
-      for (auto b : *thePoi) {
-         if (!static_cast<RooRealVar *>(b)->hasRange("physical")) {
-            static_cast<RooRealVar *>(b)->setRange("physical", 0, std::numeric_limits<double>::infinity());
-         }
-      }
-   }
+
    auto _snap = std::unique_ptr<RooAbsCollection>(fFuncVars->selectByAttrib("Constant", true))->snapshot();
    _snap->setAttribAll("poi", false);
    std::unique_ptr<RooAbsCollection> _poi(_snap->selectByName(poiNames));
@@ -2681,10 +2674,11 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
          for (auto b : out.poi()) {
             if (auto r = dynamic_cast<RooRealVar *>(b)) {
                if (r->hasRange("physical") && r->getMin() >= r->getMin("physical")) {
-                  ::Info("xRooNLLVar::hypoPoint",
-                         "fitting min of %s is at physical limit, but using uncapped test-statistic, so will set to "
-                         "-max = %g",
-                         r->GetName(), -r->getMax());
+                  ::Info(
+                     "xRooNLLVar::hypoPoint",
+                     "fitting min of %s is >= physical limit (%g), but using uncapped test-statistic, so will set to "
+                     "-max = %g",
+                     r->GetName(), r->getMin("physical"), -r->getMax());
                   r->setMin(-r->getMax());
                }
             }
@@ -2693,6 +2687,16 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
    }
 
    out.fPllType = _type;
+
+   // if doing onesidedpositive with an alt value, will assume we need a physical boundary
+   if (!std::isnan(alt_value) && out.fPllType == xRooFit::Asymptotics::OneSidedPositive) {
+      std::unique_ptr<RooAbsCollection> thePoi(fFuncVars->selectByName(poiNames));
+      for (auto b : *thePoi) {
+         if (!static_cast<RooRealVar *>(b)->hasRange("physical")) {
+            static_cast<RooRealVar *>(b)->setRange("physical", 0, std::numeric_limits<double>::infinity());
+         }
+      }
+   }
 
    return out;
 }
@@ -3338,7 +3342,7 @@ std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWi
       return "xValueWithError: nullptr\n";
    return Form("%g +/- %g", v->first, v->second);
 }
-std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::std::map<std::string, xRooNLLVar::xValueWithError> *m)
+std::string cling::printValue(const std::map<std::string, XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError> *m)
 {
    if (!m)
       return "nullptr\n";

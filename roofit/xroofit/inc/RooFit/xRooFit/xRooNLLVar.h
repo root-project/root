@@ -522,7 +522,7 @@ END_XROOFIT_NAMESPACE
 #endif
 namespace cling {
 std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError *val);
-std::string printValue(const XROOFIT_NAMESPACE_NAME::std::map<std::string, xRooNLLVar::xValueWithError> *m);
+std::string printValue(const std::map<std::string, XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError> *m);
 } // namespace cling
 
 #endif // include guard
