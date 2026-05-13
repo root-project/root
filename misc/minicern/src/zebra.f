@@ -793,7 +793,7 @@
       INCLUDE 'mzioc.inc'
       INCLUDE 'mzcn.inc'
       INCLUDE 'fzci.inc'
-      PARAMETER      (JAUIOC=50, JAUSEG=68, JAUEAR=130)
+      INCLUDE 'jauioc.inc'
       COMMON /FZCSEG/NQSEG,IQSEGH(2,20),IQSEGD(20),IQSGLU,IQSGWK
       COMMON /FZCOCC/NQOCC,IQOCDV(20),IQOCSP(20)
       INCLUDE 'rzclun.inc'
@@ -1205,7 +1205,7 @@
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       INCLUDE 'fzci.inc'
-      PARAMETER      (JAUIOC=50, JAUSEG=68, JAUEAR=130)
+      INCLUDE 'jauioc.inc'
       DIMENSION    LADESV(6)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HFZIR, 4HEL   /
@@ -2574,7 +2574,7 @@
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       INCLUDE 'fzci.inc'
-      PARAMETER (JAUIOC=50, JAUSEG=68, JAUEAR=130)
+      INCLUDE 'jauioc.inc'
       COMMON /FZCSEG/NQSEG,IQSEGH(2,20),IQSEGD(20),IQSGLU,IQSGWK
       COMMON /FZCOCC/NQOCC,IQOCDV(20),IQOCSP(20)
       DIMENSION ITOSOR(20), ISORDV(20), ISORSP(20)
