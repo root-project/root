@@ -2315,33 +2315,34 @@ TObjArray *TString::Tokenize(const TString &delim) const
 
 void TString::FormImp(const char *fmt, va_list ap)
 {
-   Ssiz_t buflen = 20 + 20 * strlen(fmt);    // pick a number, any strictly positive number
-   buflen = Clobber(buflen); // Update buflen, as Clobber clamps length to MaxSize (if Fatal does not abort)
+   va_list ap_len;
+   R__VA_COPY(ap_len, ap);
 
-   va_list sap;
-   R__VA_COPY(sap, ap);
+   // First pass: determine required size (excluding '\0')
+   int n = vsnprintf(nullptr, 0, fmt, ap_len);
+   va_end(ap_len);
 
-   int n, vc = 0;
-again:
-   n = vsnprintf(GetPointer(), buflen, fmt, ap);
-   // old vsnprintf's return -1 if string is truncated new ones return
-   // total number of characters that would have been written
-   if (n == -1 || n >= buflen) {
-      if (n == -1)
-         buflen *= 2;
-      else
-         buflen = n+1;
-      buflen = Clobber(buflen);
-      va_end(ap);
-      R__VA_COPY(ap, sap);
-      vc = 1;
-      goto again;
+   if (n < 0) {
+      // Formatting error
+      Clear();
+      return;
    }
-   va_end(sap);
-   if (vc)
-      va_end(ap);
 
-   SetSize(strlen(Data()));
+   // Request enough space (including null terminator)
+   Ssiz_t needed = Clobber(n + 1);
+
+   // Safety: Clobber may clamp to MaxSize
+   if (needed <= 0 || needed <= n) {
+      Clear();
+      return;
+   }
+
+   va_list ap_out;
+   R__VA_COPY(ap_out, ap);
+   vsnprintf(GetPointer(), needed, fmt, ap_out);
+   va_end(ap_out);
+
+   SetSize(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
