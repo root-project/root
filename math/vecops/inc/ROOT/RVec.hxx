@@ -1130,8 +1130,9 @@ namespace VecOps {
 // Note that we open here with @{ the Doxygen group vecops and it is
 // closed again at the end of the C++ namespace VecOps
 /**
-  * \defgroup vecops VecOps
-  * A "std::vector"-like collection of values implementing handy operation to analyse them
+  * \defgroup vecops RVec and VecOps
+  * RVec is a "std::vector"-like collection of values that can adopt memory for fast data manipulation.
+  * This page lists functions to perform operations on RVecs to manipulate and analyse them.
   * @{
 */
 
