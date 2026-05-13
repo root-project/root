@@ -20,12 +20,9 @@
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
       INCLUDE 'hcflag.inc'
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
       COMMON/BIGBUF/BIGB(4000000)
       character BIGB
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -159,10 +156,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HLIMIT (LIMIT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -376,10 +370,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HRIN(IDD,ICYCLE,KOFSET)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -606,10 +597,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HRZIN(IXDIV,LBANK,JBIAS,KEYS,ICYCLE,CHOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -658,10 +646,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNOENT(IDD,NUMB)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -701,10 +686,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGIVE(IDD,CHTITL,NCX,XMIN,XMAX,NCY,YMIN,YMAX,NWT,IDB)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -796,10 +778,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGIVEN( ID1, CHTITL, NVAR, TAGS, RLOW, RHIGH )
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -902,10 +881,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNPAR(IDN,CHROUT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -980,10 +956,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNF(IDN,IDNEVT,X,IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1068,10 +1041,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNT1(IDD,BLKNA1,VAR,IOFFST,NVAR,IDNEVT,IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1172,10 +1142,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNT2(VAR1,IVOFF,NVAR1,IDNEVT,IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1532,10 +1499,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HDCOFL
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1581,10 +1545,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HDELET(ID1)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1674,10 +1635,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HBNAM(IDD, BLKNA1, ADDRES, FORM1, ISCHAR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1790,10 +1748,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION HIE(IDD,I)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1842,10 +1797,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HIX(IDD,I,X)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1890,10 +1842,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HIJXY(IDD,I,J,X,Y)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1933,10 +1882,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HCDIR(CHPATH,CHOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2068,10 +2014,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HMACHI
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2189,10 +2132,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION HCX(ICX,IOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2301,10 +2241,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION HCXY(ICX,ICY,IOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2361,10 +2298,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HFIND(IDD,CHROUT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2457,10 +2391,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNMADR(VAR1, IADD, ISCHAR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2701,10 +2632,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNDESC(IOFF, NSUB, ITYPE, ISIZE, NBITS, INDVAR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2752,10 +2680,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HPARNT(IDN, CHROUT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2823,10 +2748,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTMP(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2906,10 +2828,7 @@
 
 *-------------------------------------------------------------------------------
       SUBROUTINE HNBUFR(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3040,10 +2959,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTRD(INDX, IOFF, IBANK, IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3195,10 +3111,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HSPACE (N,CHROUT,IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3240,10 +3153,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTMPD(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3288,10 +3198,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBUFD(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3337,10 +3244,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTVAR(ID1,IVAR,CHTAG,BLOCK,NSUB,ITYPE,ISIZE,IELEM)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3454,10 +3358,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNMSET(IDD, ITEM, IVAL)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3517,10 +3418,7 @@
 *-------------------------------------------------------------------------------
 
       INTEGER FUNCTION HNBPTR(BLKNA1)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3574,10 +3472,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBUFF(IDD, FATAL)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3629,10 +3524,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBFWR(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3721,10 +3613,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNHDWR(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3791,10 +3680,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HLDIR(CHPATH,CHOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3908,10 +3794,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HLDIRT(CHDIR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
