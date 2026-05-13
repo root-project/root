@@ -292,7 +292,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcdirn.inc'
       INCLUDE 'zbits.inc'
-      COMMON /HNTCUR/ NTCUR
+      INCLUDE 'hntcur.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'hcflag.inc'
       CHARACTER*128 CHWOLD
@@ -750,7 +750,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
       INCLUDE 'zbits.inc'
-      COMMON /HNTCUR/ NTCUR
+      INCLUDE 'hntcur.inc'
       CHARACTER*(*) BLKNA1, VAR(*)
       CHARACTER*8   BLKNAM, BLKSAV
       INTEGER       HNBPTR, IOFFST(*)
