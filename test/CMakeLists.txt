@@ -102,10 +102,12 @@ ROOT_SET_OUTPUT_DIRECTORIES(Aclock)
 set_target_properties(Aclock PROPERTIES PREFIX "")
 
 #--tetris------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__Tetris ${CMAKE_CURRENT_SOURCE_DIR}/Tetris.h MODULE Tetris DEPENDENCIES Graf Gpad Gui MathCore)
-ROOT_LINKER_LIBRARY(Tetris Tetris.cxx G__Tetris.cxx LIBRARIES Core Graf Gui MathCore)
-ROOT_SET_OUTPUT_DIRECTORIES(Tetris)
-set_target_properties(Tetris PROPERTIES PREFIX "")
+if(TARGET Gui)
+  ROOT_GENERATE_DICTIONARY(G__Tetris ${CMAKE_CURRENT_SOURCE_DIR}/Tetris.h MODULE Tetris DEPENDENCIES Graf Gpad Gui MathCore)
+  ROOT_LINKER_LIBRARY(Tetris Tetris.cxx G__Tetris.cxx LIBRARIES Core Graf Gui MathCore)
+  ROOT_SET_OUTPUT_DIRECTORIES(Tetris)
+  set_target_properties(Tetris PROPERTIES PREFIX "")
+endif()
 
 #--bench------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(G__TBench ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h DEPENDENCIES MathCore Tree)
