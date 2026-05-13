@@ -179,8 +179,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      PARAMETER            (NQWKTT=2560)
-      COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
+      INCLUDE 'mzcwk.inc'
 *
       DIMENSION    IXSTOR(9),IFENCE(9)
       DIMENSION    LV(9),LLR(9),LLD(9),LIMIT(9),LAST(9)
@@ -4718,8 +4717,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
-      PARAMETER (NQWKTT=2560)
-      COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
+      INCLUDE 'mzcwk.inc'
       DIMENSION KBITP(9),LHEADP(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
