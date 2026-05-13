@@ -56,6 +56,7 @@ namespace cling {
     ///\brief DynamicLibraries loaded by this Interpreter.
     ///
     DyLibs m_DyLibs;
+    std::vector<DyLibHandle> m_OpenDyLibs;
     llvm::StringSet<> m_LoadedLibraries;
 
     ///\brief System's include path, get initialized at construction time.
