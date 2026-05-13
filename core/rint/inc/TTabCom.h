@@ -126,10 +126,9 @@ public: // enums
       kCINT_stderr,  // stderr
       kCINT_stdin,   // stdin
 
-      // CINT "." instructions
+      // Cling "." instructions
       // the position of these guys is irrelevant since each of
       // these commands will always be the only command on the line.
-      kCINT_Edit,  // .E
       kCINT_Load,  // .L
       kCINT_Exec,  // .x
       kCINT_EXec,  // .X

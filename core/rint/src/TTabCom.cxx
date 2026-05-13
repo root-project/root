@@ -47,7 +47,7 @@
 //  2. nothing is guaranteed to work on windows                           //
 //     (for one thing, /bin/env and /etc/passwd are hardcoded)            //
 //                                                                        //
-//  3. CINT shortcut #2 is deliberately not supported.                    //
+//  3. CINT shortcut #2 is deliberately not supported. TODO: check Cling  //
 //     (using "operator.()" instead of "operator->()")                    //
 //                                                                        //
 //  4. most identifiers (including C++ identifiers, usernames,            //
@@ -63,7 +63,7 @@
 //     use whitespace (~ whatever[TAB]) if you want to complete a global  //
 //     identifier.                                                        //
 //                                                                        //
-//  6. CINT shortcut #3 is not supported when trying to complete          //
+//  6. CINT (TODO Cling) shortcut #3 is not supported when trying to complete //
 //     the name of a global object.  (it is supported when trying to      //
 //     complete a member of a global object)                              //
 //                                                                        //
@@ -84,7 +84,7 @@
 //     this won't work... looks for a file in pwd starting with TDict     //
 //                                                                        //
 // 11. the prototypes tend to omit the word "const" a lot.                //
-//     this is a problem with ROOT or CINT.                               //
+//     this is a problem with ROOT or CINT. TODO: Cling recheck           //
 //                                                                        //
 // 12. when listing ambiguous matches, only one column is used,           //
 //     even if there are many completions.                                //
@@ -775,7 +775,7 @@ void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
       pList->Add(new TObjString(dirName + fileName.Prepend("/")));
    }
    // NOTE:
-   // with a path like "/usr/include:/usr/include/CC:$ROOTDIR/include:$ROOTDIR/cint/include:..."
+   // with a path like "/usr/include:/usr/include/CC:$ROOTDIR/include:..."
    // the above loop could get traversed 700 times or more.
    // ==> keep it minimal or it could cost whole seconds on slower machines.
    // also: TClonesArray doesn't help.
@@ -801,7 +801,7 @@ TString TTabCom::DetermineClass(const char varName[])
    ///////////////////////////////////
    //
    //  note that because of the strange way this function works,
-   //  CINT will print
+   //  Cling will print
    //
    //     Error: No symbol asdf in current scope  FILE:/var/tmp/gaaa001HR LINE:1
    //
@@ -924,7 +924,7 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
 ///[static utility function]/////////////////////////////
 ///
 ///  returns a colon-separated string of directories
-///  that CINT will search when you call `#include<...>`
+///  that Cling will search when you call `#include<...>`
 ///
 ///  returns empty string on failure.
 ///
@@ -941,20 +941,13 @@ TString TTabCom::GetSysIncludePath()
    // Right now, there is no easy command to tell you about it.  Instead, I can
    // describe it here.
    //
-   // 1) CINT first searches current working directory for #include "xxx"
+   // 1) Cling first searches current working directory for #include "xxx"
    //   (#include <xxx> does not)
    //
-   // 2) CINT searches include path directories given by -I option
+   // 2) Cling searches include path directories given by -I option
    //
-   // 3) CINT searches following standard include directories.
-   //    $CINTSYSDIR/include
-   //    $CINTSYSDIR/stl
-   //    $CINTSYSDIR/msdev/include   if VC++4.0
-   //    $CINTSYSDIR/sc/include      if Symantec C++
+   // 3) Cling searches following standard include directories.
    //    /usr/include
-   //    /usr/include/g++            if gcc,g++
-   //    /usr/include/CC             if HP-UX
-   //    /usr/include/codelibs       if HP-UX
    //
    // .include command only displays 2).
    //
@@ -1006,19 +999,8 @@ TString TTabCom::GetSysIncludePath()
    // 3) standard directories
    // ----------------------------------------------
 
-#ifndef CINTINCDIR
-   TString sCINTSYSDIR("$ROOTSYS/cint");
-#else
-   TString sCINTSYSDIR(CINTINCDIR);
-#endif
-   path.Append(":" + sCINTSYSDIR + "/include");
-//   path.Append(":"+CINTSYSDIR+"/stl");
-//   path.Append(":"+CINTSYSDIR+"/msdev/include");
-//   path.Append(":"+CINTSYSDIR+"/sc/include");
+
    path.Append(":/usr/include");
-//   path.Append(":/usr/include/g++");
-//   path.Append(":/usr/include/CC");
-//   path.Append(":/usr/include/codelibs");
 
    return path;
 }
@@ -1627,7 +1609,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
       }
       break;
 
-   case kCINT_Edit:
    case kCINT_Load:
    case kCINT_Exec:
    case kCINT_EXec:
@@ -2165,7 +2146,6 @@ void TTabCom::InitPatterns()
    SetPattern(kCINT_stderr, "; *2>>?.*$"); // stderr
    SetPattern(kCINT_stdin, "; *<.*$");     // stdin
 
-   SetPattern(kCINT_Edit, "^ *\\.E .*$");
    SetPattern(kCINT_Load, "^ *\\.L .*$");
    SetPattern(kCINT_Exec, "^ *\\.x +[-0-9_a-zA-Z~$./]*$");
    SetPattern(kCINT_EXec, "^ *\\.X +[-0-9_a-zA-Z~$./]*$");

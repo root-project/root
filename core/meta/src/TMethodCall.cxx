@@ -11,7 +11,7 @@
 
 /** \class TMethodCall
 Method or function calling interface. Objects of this class contain
-the (CINT) environment to call a global function or a method for an
+the (Cling) environment to call a global function or a method for an
 object of a specific class with the desired arguments. This class is
 especially useful when a method has to be called more times for
 different objects and/or with different arguments. If a function or
@@ -290,7 +290,7 @@ void TMethodCall::Init(const char *function, const char *params)
 /// This function implements Init and InitWithPrototype.
 ///
 /// 'methodname' should NOT have any scope information in it.  The scope
-/// information should be passed via the TClass or CINT ClassInfo.
+/// information should be passed via the TClass or Cling ClassInfo.
 
 void TMethodCall::InitImplementation(const char *methodname, const char *params,
                                      const char *proto,
