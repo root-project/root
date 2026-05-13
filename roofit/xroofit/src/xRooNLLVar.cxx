@@ -3330,13 +3330,15 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
    return out;
 }
 
-std::string cling::printValue(const xRooNLLVar::xValueWithError *v)
+END_XROOFIT_NAMESPACE
+
+std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError *v)
 {
    if (!v)
       return "xValueWithError: nullptr\n";
    return Form("%g +/- %g", v->first, v->second);
 }
-std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m)
+std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::std::map<std::string, xRooNLLVar::xValueWithError> *m)
 {
    if (!m)
       return "nullptr\n";
@@ -3347,5 +3349,3 @@ std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWith
    out += "}\n";
    return out;
 }
-
-END_XROOFIT_NAMESPACE

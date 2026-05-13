@@ -557,10 +557,17 @@ public:
    ClassDefOverride(xRooNode, 0)
 };
 
-namespace cling {
-std::string printValue(const xRooNode *val);
-}
-
 END_XROOFIT_NAMESPACE
+
+#ifndef XROOFIT_NAMESPACE_NAME
+#ifdef XROOFIT_NAMESPACE
+#define XROOFIT_NAMESPACE_NAME XROOFIT_NAMESPACE
+#else
+#define XROOFIT_NAMESPACE_NAME
+#endif
+#endif
+namespace cling {
+std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNode *val);
+}
 
 #endif // include guard

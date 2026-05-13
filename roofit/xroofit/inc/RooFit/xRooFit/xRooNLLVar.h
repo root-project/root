@@ -511,11 +511,18 @@ public:
    bool kReuseNLL = true;
 };
 
-namespace cling {
-std::string printValue(const xRooNLLVar::xValueWithError *val);
-std::string printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m);
-} // namespace cling
-
 END_XROOFIT_NAMESPACE
+
+#ifndef XROOFIT_NAMESPACE_NAME
+#ifdef XROOFIT_NAMESPACE
+#define XROOFIT_NAMESPACE_NAME XROOFIT_NAMESPACE
+#else
+#define XROOFIT_NAMESPACE_NAME
+#endif
+#endif
+namespace cling {
+std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError *val);
+std::string printValue(const XROOFIT_NAMESPACE_NAME::std::map<std::string, xRooNLLVar::xValueWithError> *m);
+} // namespace cling
 
 #endif // include guard
