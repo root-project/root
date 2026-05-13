@@ -27,6 +27,7 @@ The following people have contributed to this new version:
  Sergey Linev, GSI Darmstadt,\
  Lorenzo Moneta, CERN/EP-SFT,\
  Christian Ng, https://laserbear.org,\
+ Offset, https://offset.md,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Giacomo Parolini, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
