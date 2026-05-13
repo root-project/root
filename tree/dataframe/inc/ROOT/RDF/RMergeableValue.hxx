@@ -187,7 +187,6 @@ public:
 
 /**
 \class ROOT::Detail::RDF::RMergeableCount
-\ingroup dataframe
 \brief Specialization of RMergeableValue for the
 [Count](classROOT_1_1RDF_1_1RInterface.html#a9678150c9c18cddd7b599690ba854734)
 action.
@@ -237,7 +236,6 @@ public:
 
 /**
 \class ROOT::Detail::RDF::RMergeableFill
-\ingroup dataframe
 \brief Specialization of RMergeableValue for histograms and statistics.
 
 This subclass is responsible for merging results coming from the following
@@ -349,7 +347,6 @@ public:
 
 /**
 \class ROOT::Detail::RDF::RMergeableMean
-\ingroup dataframe
 \brief Specialization of RMergeableValue for the
 [Mean](classROOT_1_1RDF_1_1RInterface.html#ade6b020284f2f4fe9d3b09246b5f376a)
 action.
@@ -445,7 +442,6 @@ public:
 
 /**
 \class ROOT::Detail::RDF::RMergeableStdDev
-\ingroup dataframe
 \brief Specialization of RMergeableValue for the
 [StdDev](classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572)
 action.
@@ -559,7 +555,6 @@ public:
 };
 
 /**
-\ingroup dataframe
 \brief Specialization of RMergeableValue for the
 [Report](https://root.cern/doc/master/classROOT_1_1RDF_1_1RCutFlowReport.html)
 action.
@@ -617,7 +612,6 @@ public:
 
 /**
 \class ROOT::Detail::RDF::RMergeableVariationsBase
-\ingroup dataframe
 \brief A container for variation names and variation results.
 
 The class stores two vectors: one with the variation names, the other with
@@ -675,7 +669,6 @@ public:
 
 /**
 \class ROOT::Detail::RDF::RMergeableVariations
-\ingroup dataframe
 \brief A container for variation names and variation results that knows how to
        merge with others of the same type.
 \tparam T Type of the action result.
