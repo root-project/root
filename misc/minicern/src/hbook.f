@@ -10,8 +10,7 @@
      +                  ,NBITS,IELEM)
       INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
-      COMMON/BIGBUF/BIGB(4000000)
-      character BIGB
+      INCLUDE 'bigbuf.inc'
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcbits.inc'
@@ -89,9 +88,7 @@
 *-------------------------------------------------------------------------------
 
       subroutine hntvar3(id,last,chvar)
-      character *80 allvars
-      common/callvars/allvars(100)
-      common/calloff/ioffset(100)
+      INCLUDE 'allvars.inc'
       character *(*) chvar
       integer id,ivar,last
       save ivar
@@ -1472,7 +1469,7 @@
       INCLUDE 'hcunit.inc'
       INCLUDE 'hcprin.inc'
       INCLUDE 'hcnt.inc'
-      COMMON /HCSET/ IBSIZE
+      INCLUDE 'hcset.inc'
       INCLUDE 'hcrecv.inc'
       PARAMETER (MBIT=32,MBITCH=8,MOUT=6,HMBIGP=1.E+30)
       CHARACTER*1 IDGTDA(42)
