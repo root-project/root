@@ -798,7 +798,7 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzct.inc'
       INCLUDE 'mzioc.inc'
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       COMMON /FZCI/  LUNI,LUNNI,IXDIVI,LTEMPI,IEVFLI
      +,              MSTATI,MEDIUI,IFIFOI,IDAFOI,IACMOI,IUPAKI
      +,              IADOPI,IACTVI,INCBPI,LOGLVI,MAXREI,  ISTENI
@@ -1218,7 +1218,7 @@
       INCLUDE 'mzcc.inc'
                    EQUIVALENCE (LQFS,LQSYSS(4)), (LQFF,LQSYSR(4))
      +,                        (LQFI,LQSYSR(5)), (LQFX,LQSYSR(6))
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       COMMON /FZCI/  LUNI,LUNNI,IXDIVI,LTEMPI,IEVFLI
      +,              MSTATI,MEDIUI,IFIFOI,IDAFOI,IACMOI,IUPAKI
@@ -1322,7 +1322,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       IQFOUL = 0
       LENTRI = 0
@@ -1361,7 +1361,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       DIMENSION    IXST(9), LP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXSTOR = IXST(1)
@@ -1445,7 +1445,7 @@
       EQUIVALENCE (LQFORM,LQSYSS(5))
       COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
      +,              LQSUP,NQBIA, NQIOSV(3)
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION    IXDIV(9), LP(9), LSUPP(9), NAME(9)
       DIMENSION    NAMESR(2)
@@ -1808,7 +1808,7 @@
       INCLUDE 'mzcc.inc'
       COMMON /MZCL/ NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
      +, LQSUP,NQBIA, NQIOSV(3)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION IXDIV(9),LORGP(9),INCNLP(9),INCNDP(9)
       CHARACTER *(*) CHOPT
@@ -2613,7 +2613,7 @@
       INCLUDE 'mzcc.inc'
                    EQUIVALENCE (LQFS,LQSYSS(4)), (LQFF,LQSYSR(4))
      +, (LQFI,LQSYSR(5)), (LQFX,LQSYSR(6))
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       COMMON /FZCI/ LUNI,LUNNI,IXDIVI,LTEMPI,IEVFLI
      +, MSTATI,MEDIUI,IFIFOI,IDAFOI,IACMOI,IUPAKI
@@ -3456,7 +3456,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       DIMENSION IXST(9), LP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXSTOR = IXST(1)
@@ -3533,7 +3533,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       DIMENSION LHEADP(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
@@ -3700,7 +3700,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZGA, 4HR1  /
@@ -4007,7 +4007,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABC
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -4746,7 +4746,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       PARAMETER (NQWKTT=2560)
       COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
       DIMENSION KBITP(9),LHEADP(9)
@@ -5198,7 +5198,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZRE, 4HLB  /
@@ -5362,7 +5362,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION MDESV(99)
       DIMENSION NAMESR(2)
@@ -5567,7 +5567,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+      INCLUDE 'mzcn.inc'
       DIMENSION LSHP(9),LSUPP(9),JBIASP(9),IFLAGP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HZSHU, 4HNT  /
