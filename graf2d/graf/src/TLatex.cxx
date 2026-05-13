@@ -956,13 +956,15 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          }
          UInt_t lastsize = 0;
          if (!opFound)
-         for(k=0;k<82;k++) {
-            if ((opSpec==-1 || strlen(tab2[k])>lastsize) && UInt_t(length)>i+strlen(tab2[k])) {
-               if (strncmp(&text[i+1],tab2[k],strlen(tab2[k]))==0) {
-                  lastsize = strlen(tab2[k]);
-                  opSpec=k;
-                  opFound = kTRUE;
-                  if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+            for (k = 0; k < 82; k++) {
+               if ((opSpec == -1 || strlen(tab2[k]) > lastsize) && UInt_t(length) > i + strlen(tab2[k])) {
+                  if (strncmp(&text[i + 1], tab2[k], strlen(tab2[k])) == 0) {
+                     lastsize = strlen(tab2[k]);
+                     opSpec = k;
+                     opFound = kTRUE;
+                     if (i > 0 && opCloseCurly == -2)
+                        opCloseCurly = i - 1;
+                  }
                }
             }
          }
