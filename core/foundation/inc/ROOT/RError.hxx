@@ -1,5 +1,4 @@
 /// \file ROOT/RError.hxx
-/// \ingroup Base
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11
 
