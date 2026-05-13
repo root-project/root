@@ -2138,8 +2138,7 @@
       INCLUDE 'rzcls.inc'
       PARAMETER (NLPATM=100)
       INCLUDE 'rzdir.inc'
-      COMMON /RZCH/ CHWOLD,CHL
-      CHARACTER*255 CHWOLD,CHL
+      INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
       DIMENSION IOPTV(5)
       EQUIVALENCE (IOPTR,IOPTV(1)), (IOPTP,IOPTV(2)), (IOPTU,IOPTV(3))
@@ -2457,8 +2456,7 @@
       INCLUDE 'rzcls.inc'
       PARAMETER (NLPATM=100)
       INCLUDE 'rzdir.inc'
-      COMMON /RZCH/ CHWOLD,CHL
-      CHARACTER*255 CHWOLD,CHL
+      INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
       INCLUDE 'rzcycle.inc'
       CHARACTER*(*) CHROUT
@@ -5690,8 +5688,7 @@
       INCLUDE 'rzcl.inc'
       PARAMETER (NLPATM=100)
       INCLUDE 'rzdir.inc'
-      COMMON /RZCH/  CHWOLD,CHL
-      CHARACTER*255  CHWOLD,CHL
+      INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
       CHARACTER *(*) CHPATH
       EXTERNAL UROUT
