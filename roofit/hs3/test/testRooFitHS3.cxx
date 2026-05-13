@@ -259,6 +259,38 @@ TEST(RooFitHS3, RooGaussian)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
+{
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooRealVar mean{"mean", "mean", 0.0};
+   mean.setConstant(true);
+
+   RooConstVar sigmaConst{"sigma_const", "sigma_const", 1.0};
+   RooGaussian gaussConst{"gauss_const", "gauss_const", x, mean, sigmaConst};
+
+   RooRealVar sigmaReal{"sigma_real", "sigma_real", 1.0, 0.1, 10.0};
+   sigmaReal.setConstant(true);
+   RooGaussian gaussReal{"gauss_real", "gauss_real", x, mean, sigmaReal};
+
+   RooWorkspace ws;
+   ws.import(gaussConst, RooFit::Silence());
+   ws.import(gaussReal, RooFit::RecycleConflictNodes(), RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+
+   EXPECT_EQ(json.find("\"sigma\":\"sigma_const\""), std::string::npos);
+   EXPECT_EQ(json.find("\"name\":\"sigma_const\""), std::string::npos);
+   EXPECT_NE(json.find("\"sigma\":1.0"), std::string::npos);
+
+   EXPECT_NE(json.find("\"sigma\":\"sigma_real\""), std::string::npos);
+   EXPECT_NE(json.find("\"name\":\"sigma_real\""), std::string::npos);
+
+   RooWorkspace imported;
+   RooJSONFactoryWSTool{imported}.importJSONfromString(json);
+   EXPECT_EQ(imported.obj("sigma_const"), nullptr);
+   EXPECT_NE(dynamic_cast<RooRealVar *>(imported.obj("sigma_real")), nullptr);
+}
+
 TEST(RooFitHS3, RooBernstein)
 {
    int status = validate({"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"});
