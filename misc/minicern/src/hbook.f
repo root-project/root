@@ -207,8 +207,7 @@
 
       SUBROUTINE HRFILE(LUN,CHDIR,CHOPT)
       INCLUDE 'hcdirn.inc'
-      CHARACTER*128  CHMAIL
-      COMMON /HCMAIL/CHMAIL
+      INCLUDE 'hcmail.inc'
       INCLUDE 'quest.inc'
       CHARACTER*(*) CHDIR,CHOPT
       CHARACTER*8   TAGS(2),CHOPTT
@@ -481,8 +480,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcdirn.inc'
-      CHARACTER*128  CHMAIL
-      COMMON /HCMAIL/CHMAIL
+      INCLUDE 'hcmail.inc'
       INCLUDE 'quest.inc'
       DIMENSION LBANK(1),JBIAS(1)
       INTEGER      KEYS(2)
@@ -1372,8 +1370,7 @@
       INCLUDE 'hcflag.inc'
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
-      CHARACTER*128  CHMAIL
-      COMMON /HCMAIL/CHMAIL
+      INCLUDE 'hcmail.inc'
       INCLUDE 'quest.inc'
       CHARACTER*2   NODIR
       PARAMETER    (NODIR = '@#')
@@ -2199,8 +2196,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HPAFF(CH,NL,CHPATH)
-      CHARACTER*128  CHMAIL
-      COMMON /HCMAIL/CHMAIL
+      INCLUDE 'hcmail.inc'
       CHARACTER*(*) CHPATH,CH(*)
       CHARACTER*16 CHL
       MAXLEN=LEN(CHPATH)
@@ -2572,8 +2568,7 @@
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
       INCLUDE 'hcdirn.inc'
-      CHARACTER*128  CHMAIL
-      COMMON /HCMAIL/CHMAIL
+      INCLUDE 'hcmail.inc'
       DIMENSION IPAWC(99)
       EQUIVALENCE (NWPAW,IPAWC(1))
       INCLUDE 'quest.inc'
