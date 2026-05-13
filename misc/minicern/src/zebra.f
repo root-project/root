@@ -16,7 +16,7 @@
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
@@ -183,7 +183,7 @@
       INCLUDE 'zmach.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -624,7 +624,7 @@
 
       SUBROUTINE RZIODO(LUNRZ,JREC,IREC1,IBUF,IRW)
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -705,7 +705,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZVCYC(LTAD)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -751,7 +751,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZIN(IXDIV,LSUP,JBIAS,KEYU,ICYCLE,CHOPT)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -824,7 +824,7 @@
 
       SUBROUTINE RZINS(IXDIVP,LSUPP,JBIASP,LBANK)
       INCLUDE 'zmach.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -990,7 +990,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRESV
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1049,7 +1049,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZSAVE
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1260,7 +1260,7 @@
       INCLUDE 'zbcd.inc'
       INCLUDE 'zmach.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1371,7 +1371,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE FZILIN
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1415,7 +1415,7 @@
 
       SUBROUTINE MZCHLS (IXST,LP)
       INCLUDE 'zmach.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1454,7 +1454,7 @@
 
       SUBROUTINE MZBOOK (IXP,LP,LSUPP,JBP, CHIDH,NL,NS,ND,NIOP,NZP)
       INCLUDE 'zbcd.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1494,7 +1494,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1758,7 +1758,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -1865,7 +1865,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -2121,7 +2121,7 @@
       SUBROUTINE MZNEED (IXDIV,NEEDP,CHOPT)
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -2211,7 +2211,7 @@
 
       SUBROUTINE RZCDIR(CHPATH,CHOPT)
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -2346,7 +2346,7 @@
       SUBROUTINE RZFILE(LUNIN,CHDIR,CHOPT)
       INCLUDE 'zunit.inc'
       INCLUDE 'zstate.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -2553,7 +2553,7 @@
 
       SUBROUTINE RZFDIR(CHROUT,LT,LDIR,CHOPT)
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -2704,7 +2704,7 @@
       INCLUDE 'zbcd.inc'
       INCLUDE 'zmach.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3019,7 +3019,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZINK(KEYU,ICYCLE,CHOPT)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3392,7 +3392,7 @@
 
       SUBROUTINE RZREAD(IV,N,IPC,IFORM)
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3571,7 +3571,7 @@
 
       SUBROUTINE MZCHLN (IXST,LP)
       INCLUDE 'zmach.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3621,7 +3621,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZCHNB (LIX)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3648,7 +3648,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3706,7 +3706,7 @@
       FUNCTION MZDVAC (IXDIVP)
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3754,7 +3754,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3820,7 +3820,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3923,7 +3923,7 @@
       SUBROUTINE MZFORM (CHID,CHFORM,IXIOP)
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -3990,7 +3990,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION MZFDIV (IXST,LIXP)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4024,7 +4024,7 @@
       SUBROUTINE MZFGAP
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4142,7 +4142,7 @@
 
       SUBROUTINE MZTABC
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4217,7 +4217,7 @@
       SUBROUTINE MZTABF
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4310,7 +4310,7 @@
       SUBROUTINE MZTABH
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4377,7 +4377,7 @@
       SUBROUTINE MZTABM
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4456,7 +4456,7 @@
       SUBROUTINE MZTABR
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4557,7 +4557,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABS
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4584,7 +4584,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABX
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -4915,7 +4915,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5025,7 +5025,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZGSTA (IGARB)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5198,7 +5198,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION MZIXCO (IXAA,IXBB,IXCC,IXDD)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5269,7 +5269,7 @@
       SUBROUTINE MZMOVE
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5347,7 +5347,7 @@
 
       SUBROUTINE MZPUDX (LP,NWP)
       INCLUDE 'zbcd.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       DIMENSION LP(9),NWP(9)
@@ -5378,7 +5378,7 @@
       SUBROUTINE MZRELB
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5547,7 +5547,7 @@
       SUBROUTINE MZRELL (MDESV)
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5666,7 +5666,7 @@
       SUBROUTINE MZRELX
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5694,7 +5694,7 @@
 
       SUBROUTINE MZSDIV (IXDIVP,IFLAGP)
       INCLUDE 'zstate.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5762,7 +5762,7 @@
 
       SUBROUTINE ZSHUNT (IXSTOR,LSHP,LSUPP,JBIASP,IFLAGP)
       INCLUDE 'zunit.inc'
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5906,7 +5906,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZSCAN(CHPATH,UROUT)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
@@ -5977,7 +5977,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZWIPE (IXWP)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
@@ -5994,7 +5994,7 @@
       SUBROUTINE RZEND(CHDIR)
       INCLUDE 'zunit.inc'
       INCLUDE 'zstate.inc'
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
