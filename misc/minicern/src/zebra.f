@@ -2868,7 +2868,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
-      COMMON /RZCOUT/IP1,IR1,IR2,IROUT,IRLOUT,IOPTRR
+      INCLUDE 'rzcout.inc'
       INCLUDE 'zkpars.inc'
       INCLUDE 'rzckey.inc'
       INCLUDE 'rzcycle.inc'
@@ -3228,7 +3228,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
-      COMMON /RZCOUT/IP1,IR1,IR2,IROUT,IRLOUT,IOPTRR
+      INCLUDE 'rzcout.inc'
       INCLUDE 'zkpars.inc'
       INCLUDE 'mzioc.inc'
       DIMENSION IV(*)
