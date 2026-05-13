@@ -71,7 +71,7 @@ jobs:
         env:
           RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
           KT_FILE_NAME: /tmp/decoded.keytab
-          EOS_PATH: /eos/project/r/root-eos/website/doc
+          EOS_PATH: /eos/project/r/root-eos/website/download
           EOS_ENDPOINT: root://eosproject-r.cern.ch
           KRB5CCNAME: /tmp/krb5cc
         run: |
