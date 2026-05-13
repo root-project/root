@@ -40055,12 +40055,12 @@ waves.svg
 </text>
 <text xml:space="preserve" x="570" y="56" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">350
 </text>
-<path d="M293,176l -0.638, -3.7l -1.8, -3.2l -2.8, -2.3l -3.3, -1.0l -0.872, 0.089" fill="none" stroke="#ffff00" stroke-width="2.0"/>
-<path d="M284,186l 0.872, 0.089" fill="none" stroke="#ffff00" stroke-width="2.0"/>
-<path d="M285,186l 3.3, -1.0l 2.8, -2.3l 1.8, -3.2l 0.638, -3.7" fill="none" stroke="#ffff00" stroke-width="2.0"/>
-<path d="M293,238l -0.638, -3.7l -1.8, -3.2l -2.8, -2.3l -3.3, -1.0l -0.872, 0.089" fill="none" stroke="#ffff00" stroke-width="2.0"/>
-<path d="M284,249l 0.872, 0.089" fill="none" stroke="#ffff00" stroke-width="2.0"/>
-<path d="M285,249l 3.3, -1.0l 2.8, -2.3l 1.8, -3.2l 0.638, -3.7" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<path d="M293,176l -0.144, -1.8l -0.426, -1.7l -0.696, -1.6l -0.945, -1.5l -1.2, -1.3l -1.3, -1.0l -1.5, -0.763l -1.6, -0.467l -1.6, -0.157" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<path d="M284,186z" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<path d="M284,186l 1.6, -0.157l 1.6, -0.467l 1.5, -0.763l 1.3, -1.0l 1.2, -1.3l 0.945, -1.5l 0.696, -1.6l 0.426, -1.7l 0.144, -1.8" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<path d="M293,238l -0.144, -1.8l -0.426, -1.7l -0.696, -1.6l -0.945, -1.5l -1.2, -1.3l -1.3, -1.0l -1.5, -0.763l -1.6, -0.467l -1.6, -0.157" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<path d="M284,249z" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<path d="M284,249l 1.6, -0.157l 1.6, -0.467l 1.5, -0.763l 1.3, -1.0l 1.2, -1.3l 0.945, -1.5l 0.696, -1.6l 0.426, -1.7l 0.144, -1.8" fill="none" stroke="#ffff00" stroke-width="2.0"/>
 <path d="M312,176l -0.199, -3.7l -0.594, -3.6l -0.981, -3.5l -1.4, -3.4l -1.7, -3.2l -2.0, -2.9l -2.3, -2.6l -2.6, -2.3l -2.8, -2.0l -3.0, -1.6l -3.2, -1.2l -3.3, -0.759l -3.3, -0.327l -0.840, 0.027" fill="none" stroke="#ffff00" stroke-width="2.0"/>
 <path d="M284,207l 0.840, 0.027" fill="none" stroke="#ffff00" stroke-width="2.0"/>
 <path d="M285,207l 3.3, -0.327l 3.3, -0.759l 3.2, -1.2l 3.0, -1.6l 2.8, -2.0l 2.6, -2.3l 2.3, -2.6l 2.0, -2.9l 1.7, -3.2l 1.4, -3.4l 0.981, -3.5l 0.594, -3.6l 0.199, -3.7" fill="none" stroke="#ffff00" stroke-width="2.0"/>
