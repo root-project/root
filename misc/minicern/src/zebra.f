@@ -2825,7 +2825,7 @@
       SUBROUTINE IZBCDT (NP,ITABT)
       INCLUDE 'quest.inc'
       INCLUDE 'zceta.inc'
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
+      INCLUDE 'zkrakc.inc'
       DIMENSION NP(9), ITABT(99)
       N = NP(1)
       LIM = ITABT(1)
@@ -3734,7 +3734,7 @@
 
       SUBROUTINE MZFORM (CHID,CHFORM,IXIOP)
       INCLUDE 'zvfaut.inc'
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
+      INCLUDE 'zkrakc.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -4389,7 +4389,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZIOCH (IODVEC,NWIOMP,CHFORM)
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
+      INCLUDE 'zkrakc.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       INCLUDE 'quest.inc'
@@ -4813,7 +4813,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZIOCF (JUP,MXVAL)
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
+      INCLUDE 'zkrakc.inc'
       INCLUDE 'quest.inc'
       DIMENSION MU(99)
       EQUIVALENCE (MU(1),IQHOLK(1))
