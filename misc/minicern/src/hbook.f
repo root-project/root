@@ -1368,8 +1368,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcdirn.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER       LOUT,LERR,LINFIT
-      COMMON/HCUNIT/LOUT,LERR,LINFIT
+      INCLUDE 'hcunit.inc'
       INCLUDE 'hcmail.inc'
       INCLUDE 'quest.inc'
       CHARACTER*2   NODIR
@@ -1471,8 +1470,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
       INCLUDE 'hcbits.inc'
-      INTEGER       LOUT,LERR,LINFIT
-      COMMON/HCUNIT/LOUT,LERR,LINFIT
+      INCLUDE 'hcunit.inc'
       INCLUDE 'hcprin.inc'
       COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
       COMMON /HCSET/ IBSIZE
@@ -1791,8 +1789,7 @@
 
       SUBROUTINE HPATH(CHPATH)
       INCLUDE 'hcdirn.inc'
-      INTEGER       LOUT,LERR,LINFIT
-      COMMON/HCUNIT/LOUT,LERR,LINFIT
+      INCLUDE 'hcunit.inc'
       CHARACTER*(*) CHPATH
       CHARACTER*1 CH1,BSLASH
       CHARACTER*2 CH2
@@ -2565,8 +2562,7 @@
       SUBROUTINE HLDIR(CHPATH,CHOPT)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER       LOUT,LERR,LINFIT
-      COMMON/HCUNIT/LOUT,LERR,LINFIT
+      INCLUDE 'hcunit.inc'
       INCLUDE 'hcdirn.inc'
       INCLUDE 'hcmail.inc'
       DIMENSION IPAWC(99)
@@ -2651,8 +2647,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER       LOUT,LERR,LINFIT
-      COMMON/HCUNIT/LOUT,LERR,LINFIT
+      INCLUDE 'hcunit.inc'
       INCLUDE 'zbits.inc'
       CHARACTER*(*) CHDIR
       INCLUDE 'quest.inc'
