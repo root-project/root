@@ -12,7 +12,7 @@
       INCLUDE 'zceta.inc'
       INCLUDE 'zheadp.inc'
       INCLUDE 'zmach.inc'
-      COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
+      INCLUDE 'znatur.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       INCLUDE 'ziq.inc'
@@ -52,7 +52,7 @@
       INCLUDE 'zceta.inc'
       INCLUDE 'zheadp.inc'
       INCLUDE 'zmach.inc'
-      COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
+      INCLUDE 'znatur.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
