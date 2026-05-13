@@ -3709,6 +3709,10 @@ static llvm::cl::list<std::string>
 gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
           llvm::cl::desc("Specify compiler diagnostics options."),
           llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptDepFile("MF",
+            llvm::cl::desc("Write dependency output to the specified file."),
+            llvm::cl::cat(gRootclingOptions));
 // Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
@@ -4994,6 +4998,71 @@ int RootClingMain(int argc,
 
    // make sure the file is closed before committing
    fileout.close();
+
+   // Write dependency file if requested
+   if (!gOptDepFile.empty() && rootclingRetCode == 0) {
+      std::ofstream depFile(gOptDepFile.c_str());
+      if (!depFile) {
+         ROOT::TMetaUtils::Error(nullptr,
+                                 "rootcling: failed to open dependency file %s\n",
+                                 gOptDepFile.c_str());
+         rootclingRetCode = 1;
+      } else {
+         // Write in Makefile format: target: dependencies
+         // The target is the dictionary source file
+         if (!gOptDictionaryFileName.empty()) {
+            // Normalize the target path (using forward slashes for Makefile compatibility)
+            std::string targetPath = gOptDictionaryFileName.getValue();
+            // On Windows, convert backslashes to forward slashes for Makefile format
+            std::replace(targetPath.begin(), targetPath.end(), '\\', '/');
+            depFile << targetPath << ":";
+
+            // Collect all files that were read by clang during dictionary generation
+            // This includes all headers that were #included (directly or indirectly)
+            clang::SourceManager &SM = CI->getSourceManager();
+            clang::FileManager &FM = SM.getFileManager();
+
+            // Get all file entries that were loaded during compilation
+            llvm::SmallVector<clang::OptionalFileEntryRef, 64> files;
+            FM.GetUniqueIDMapping(files);
+
+            std::set<std::string> includedFiles;
+            for (const auto &FEOpt : files) {
+               if (FEOpt) {
+                  llvm::StringRef filename = FEOpt->getName();
+                  if (!filename.empty()) {
+                     std::string filenameStr = filename.str();
+                     // Skip the output dictionary file itself
+                     if (filenameStr != gOptDictionaryFileName.getValue()) {
+                        includedFiles.insert(filenameStr);
+                     }
+                  }
+               }
+            }
+
+            // Write all dependencies in Makefile format
+            // Each line except the last ends with a backslash for continuation
+            for (const auto &file : includedFiles) {
+               // Normalize path separators for Makefile compatibility
+               std::string normalizedFile = file;
+               std::replace(normalizedFile.begin(), normalizedFile.end(), '\\',
+                            '/');
+               depFile << " \\\n  " << normalizedFile;
+            }
+            if (!includedFiles.empty()) {
+               depFile << "\n";
+            }
+         }
+         depFile.close();
+         if (!depFile.good()) {
+            ROOT::TMetaUtils::Error(
+                nullptr,
+                "rootcling: failed to write dependency file %s\n",
+                gOptDepFile.c_str());
+            rootclingRetCode = 1;
+         }
+      }
+   }
 
    // Before returning, rename the files if no errors occurred
    // otherwise clean them to avoid remnants (see ROOT-10015)
