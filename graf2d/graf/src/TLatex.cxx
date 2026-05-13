@@ -1368,16 +1368,17 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          newSpec.fFont = GetTextFont();
          if (gPad->GetPainter()->IsCocoa()) {
             if (opSpec == 75) letter = '\201'; // AA Angstroem
-            if (opSpec == 76) letter = '\214'; // aa Angstroem
+            else if (opSpec == 76) letter = '\214'; // aa Angstroem
          } else {
             if (opSpec == 75) letter = '\305'; // AA Angstroem
-            if (opSpec == 76) letter = '\345'; // aa Angstroem
+            else if (opSpec == 76) letter = '\345'; // aa Angstroem
          }
       }
-      if(opSpec == 80 || opSpec == 81) {
-         if (opSpec == 80) letter = '\042'; // #forall
-         if (opSpec == 81) letter = '\044'; // #exists
-      }
+      if(opSpec == 80)
+         letter = '\042'; // #forall
+      else if (opSpec == 81)
+         letter = '\044'; // #exists
+
       Double_t props, propi;
       props = 1.8 ; // scale factor for #sum(66)
       propi = 2.3 ; // scale factor for  #int(79)
