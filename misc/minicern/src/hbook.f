@@ -14,14 +14,7 @@
       character BIGB
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       CHARACTER*(*)  CHTAG, CHFULL, BLOCK
       CHARACTER*80 VAR
       CHARACTER*32   NAME, SUBS
@@ -528,14 +521,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'zbits.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       CHARACTER*(*) CHTITL
       NARG=10
       NCX=0
@@ -590,14 +576,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       CHARACTER*(*) CHTITL, TAGS(*)
       INTEGER       ID1, NVAR
       REAL          RLOW(*), RHIGH(*)
@@ -1167,14 +1146,7 @@
       SUBROUTINE HDCOFL
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       DIMENSION IFLAG(37)
       EQUIVALENCE       (IFLAG(1),I1)
       IF(IQ(LCID-2).NE.0)THEN
@@ -1360,14 +1332,7 @@
       SUBROUTINE HIX(IDD,I,X)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       CALL HFIND(IDD,'HIX   ')
       CALL HDCOFL
       IF(I6.EQ.0)THEN
@@ -1508,14 +1473,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
       INCLUDE 'hcprin.inc'
@@ -2360,14 +2318,7 @@
       INCLUDE 'hparam1.inc'
       INCLUDE 'zbits.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      COMMON / HCBITS  / I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
-     +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
-     +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
-     +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
+      INCLUDE 'hcbits.inc'
       CHARACTER*(*)  CHTAG, BLOCK
       CHARACTER*32   NAME
       LOGICAL        NEWTUP, LDUM
