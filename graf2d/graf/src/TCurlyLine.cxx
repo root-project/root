@@ -183,7 +183,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad || !gPad->IsEditable()) return;
 
    constexpr Int_t kMaxDiff = 20;
-   static Int_t pxold, pyold, selectPoint;
+   static Int_t sdx = 0, sdy = 0, selectPoint;
 
    auto &parent = *gPad;
 
@@ -228,8 +228,8 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          parent.SetCursor(kPointer);
       } else {
          selectPoint = 3;
-         pxold = px;
-         pyold = py;
+         sdx = px1 - px;
+         sdy = py1 - py;
          parent.SetCursor(kMove);
       }
 
@@ -243,12 +243,8 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          set_coord(px, py, 0, 0);
       } else if (selectPoint == 2) {
          set_coord(0, 0, px, py);
-         fX2 = GetXCoord(px, kFALSE, kTRUE);
-         fY2 = GetYCoord(py, kFALSE, kTRUE);
       } else if (selectPoint == 3) {
-         set_coord(px1 + px - pxold, py1 + py - pyold, px2 + px - pxold, py2 + py - pyold);
-         pxold = px;
-         pyold = py;
+         set_coord(px + sdx, py + sdy, px + sdx + px2 - px1, py + sdy + py2 - py1);
       }
       if (!opaque)
          paint();
@@ -467,7 +463,7 @@ void TCurlyLine::SetBBoxX1(const Int_t x)
 
 void TCurlyLine::SetBBoxX2(const Int_t x)
 {
-   if (fX2>fX1)
+   if (fX2 > fX1)
       SetEndPoint(GetXCoord(x), fY2);
    else
       SetStartPoint(GetXCoord(x), fY1);
