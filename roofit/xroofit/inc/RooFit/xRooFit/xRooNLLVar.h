@@ -63,7 +63,6 @@ public:
       xValueWithError(const std::pair<double, double> &in = {0, 0}) : std::pair<double, double>(in) {}
       double value() const { return std::pair<double, double>::first; }
       double error() const { return std::pair<double, double>::second; }
-      std::string __repr__() const { return Form("%g +/- %g", value(), error()); }
    };
 
    void Print(Option_t *opt = "");
@@ -523,7 +522,7 @@ END_XROOFIT_NAMESPACE
 #endif
 namespace cling {
 std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError *val);
-std::string printValue(const std::map<std::string, XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError> *m);
+std::string printValue(const XROOFIT_NAMESPACE_NAME::std::map<std::string, xRooNLLVar::xValueWithError> *m);
 } // namespace cling
 
 #endif // include guard

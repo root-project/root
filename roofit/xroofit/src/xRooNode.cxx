@@ -12727,7 +12727,9 @@ xRooNode::GetBinErrors(int binStart, int binEnd, const xRooNode &_fr, int nToys,
    //   return out;
 }
 
-std::string cling::printValue(const xRooNode *v)
+END_XROOFIT_NAMESPACE
+
+std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::xRooNode *v)
 {
    if (!v)
       return "nullptr\n";
@@ -12759,5 +12761,3 @@ std::string cling::printValue(const xRooNode *v)
 
    return out;
 }
-
-END_XROOFIT_NAMESPACE
