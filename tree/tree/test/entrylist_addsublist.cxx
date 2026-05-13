@@ -4,6 +4,7 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TChain.h"
 
 #include "gtest/gtest.h"
 
@@ -65,4 +66,62 @@ TEST(TEntryList, addSubList) {
 
    gSystem->Unlink(filename1);
    gSystem->Unlink(filename2);
+}
+
+TEST(TEntryList, copySubList)
+{
+   auto filename1{"entrylist_copysublist_tree1.root"};
+   auto filename2{"entrylist_copysublist_tree2.root"};
+   auto treename{"t"};
+   int x = 0;
+   for (auto filename : {filename1, filename2}) {
+      TFile f(filename, "RECREATE");
+      TTree t(treename, treename);
+      t.Branch("x", &x);
+      t.Fill();
+      ++x;
+      t.Fill();
+      ++x;
+      f.Write();
+      f.Close();
+   }
+   {
+      TEntryList l1("l1", "l1", treename, filename1);
+      l1.Enter(0);
+      l1.Enter(1);
+      TEntryList l2("l2", "l2", treename, filename2);
+      l2.Enter(1);
+      TEntryList l;
+      l.Add(&l1);
+      l.Add(&l2);
+      TChain c(treename);
+      for (auto filename : {filename1, filename2})
+         c.Add(filename);
+      c.SetEntryList(&l);
+
+      int treenum;
+      auto value = l.GetEntryAndTree(0, treenum);
+      EXPECT_EQ(value, 0);
+      EXPECT_EQ(treenum, 0);
+      value = l.GetEntryAndTree(1, treenum);
+      EXPECT_EQ(value, 1);
+      EXPECT_EQ(treenum, 0);
+      value = l.GetEntryAndTree(2, treenum);
+      EXPECT_EQ(value, 1);
+      EXPECT_EQ(treenum, 1);
+
+      TEntryList lcopy(l);
+      value = lcopy.GetEntryAndTree(0, treenum);
+      EXPECT_EQ(value, 0);
+      EXPECT_EQ(treenum, 0);
+      value = lcopy.GetEntryAndTree(1, treenum);
+      EXPECT_EQ(value, 1);
+      EXPECT_EQ(treenum, 0);
+      value = lcopy.GetEntryAndTree(2, treenum);
+      EXPECT_EQ(value, 1);
+      EXPECT_EQ(treenum, 1);
+   }
+
+   for (auto filename : {filename1, filename2})
+      gSystem->Unlink(filename);
 }
