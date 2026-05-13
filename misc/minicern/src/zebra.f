@@ -20,7 +20,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcl.inc'
       COMMON /JZUC/  LQJZ,LQUP,LQDW,LQSV,LQAN, JQLEV,JQFLAG(10)
-      COMMON/RZCOUNT/RZXIO(2)
+      INCLUDE 'rzcount.inc'
       INCLUDE 'rzclun.inc'
       INCLUDE 'rzpars.inc'
       CHARACTER*4 CVERSN
@@ -617,7 +617,7 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcls.inc'
       COMMON /RZBUFF/ ITEST(8704)
-      COMMON/RZCOUNT/RZXIO(2)
+      INCLUDE 'rzcount.inc'
       INCLUDE 'rzpars.inc'
       DIMENSION IBUF(JREC)
       PARAMETER (MEDIUM=0)
