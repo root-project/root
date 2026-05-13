@@ -26,7 +26,7 @@ void latex5()
    l.SetTextAlign(12);
    float y, step, x1, x2;
    y = 0.96;
-   step = 0.0465;
+   step = 0.044;
    x1 = 0.02;
    x2 = x1 + 0.04;
    l.DrawLatex(x1, y, "#club");
@@ -91,10 +91,12 @@ void latex5()
    y -= step;
    l.DrawLatex(x1, y, "#hbar");
    l.DrawText(x2, y, "#hbar");
+   y -= step;
+   l.DrawLatex(x1, y, "#forall");
+   l.DrawText(x2, y, "#forall");
 
    // Draw Second Column
    y = 0.96;
-   step = 0.0465;
    x1 = 0.27;
    x2 = x1 + 0.04;
    l.DrawLatex(x1, y, "#diamond");
@@ -159,10 +161,12 @@ void latex5()
    y -= step;
    l.DrawLatex(x1, y, "#parallel");
    l.DrawText(x2, y, "#parallel");
+   y -= step;
+   l.DrawLatex(x1, y, "#exists");
+   l.DrawText(x2, y, "#exists");
 
    // Draw Third Column
    y = 0.96;
-   step = 0.0465;
    x1 = 0.52;
    x2 = x1 + 0.04;
    l.DrawLatex(x1, y, "#heart");
@@ -230,7 +234,6 @@ void latex5()
 
    // Draw Fourth Column
    y = 0.96;
-   step = 0.0465;
    x1 = 0.77;
    x2 = x1 + 0.04;
    l.DrawLatex(x1, y, "#spade");
