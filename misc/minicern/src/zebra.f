@@ -4621,11 +4621,7 @@
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       INCLUDE 'quest.inc'
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
+      INCLUDE 'mza.inc'
       INCLUDE 'zbcd.inc'
       DIMENSION IODVEC(99), NWIOMP(9)
       CHARACTER CHFORM*(*)

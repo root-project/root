@@ -2,11 +2,7 @@ C=== mzabq.inc =================================================
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
+      INCLUDE 'mza.inc'
       COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
      +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
      +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
