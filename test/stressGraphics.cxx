@@ -1271,7 +1271,7 @@ void tlatex5()
    l.SetTextSize(0.03);
    l.SetTextAlign(12);
    float y, step, x1, x2;
-   y = 0.96; step = 0.0465; x1 = 0.02; x2 = x1+0.04;
+   y = 0.96; step = 0.044; x1 = 0.02; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#club")           ; l.DrawText(x2, y, "#club");
    y -= step ; l.DrawLatex(x1, y, "#voidn")          ; l.DrawText(x2, y, "#voidn");
    y -= step ; l.DrawLatex(x1, y, "#leq")            ; l.DrawText(x2, y, "#leq");
@@ -1293,7 +1293,8 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#Leftrightarrow") ; l.DrawText(x2, y, "#Leftrightarrow");
    y -= step ; l.DrawLatex(x1, y, "#void8")          ; l.DrawText(x2, y, "#void8");
    y -= step ; l.DrawLatex(x1, y, "#hbar")           ; l.DrawText(x2, y, "#hbar");
-   y = 0.96; step = 0.0465; x1 = 0.27; x2 = x1+0.04;
+   y -= step ; l.DrawLatex(x1, y, "#forall")         ; l.DrawText(x2, y, "#forall");
+   y = 0.96; x1 = 0.27; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#diamond")        ; l.DrawText(x2, y, "#diamond");
    y -= step ; l.DrawLatex(x1, y, "#aleph")          ; l.DrawText(x2, y, "#aleph");
    y -= step ; l.DrawLatex(x1, y, "#geq")            ; l.DrawText(x2, y, "#geq");
@@ -1315,7 +1316,8 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#prod")           ; l.DrawText(x2, y, "#prod");
    y -= step ; l.DrawLatex(x1, y, "#Box")            ; l.DrawText(x2, y, "#Box");
    y -= step ; l.DrawLatex(x1, y, "#parallel")       ; l.DrawText(x2, y, "#parallel");
-   y = 0.96; step = 0.0465; x1 = 0.52; x2 = x1+0.04;
+   y -= step ; l.DrawLatex(x1, y, "#exists")         ; l.DrawText(x2, y, "#exists");
+   y = 0.96; x1 = 0.52; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#heart")          ; l.DrawText(x2, y, "#heart");
    y -= step ; l.DrawLatex(x1, y, "#Jgothic")        ; l.DrawText(x2, y, "#Jgothic");
    y -= step ; l.DrawLatex(x1, y, "#LT")             ; l.DrawText(x2, y, "#LT");
@@ -1336,7 +1338,8 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#Uparrow")        ; l.DrawText(x2, y, "#Uparrow");
    y -= step ; l.DrawLatex(x1, y-0.01, "#sum")       ; l.DrawText(x2, y, "#sum");
    y -= step ; l.DrawLatex(x1, y, "#perp")           ; l.DrawText(x2, y, "#perp");
-   y = 0.96; step = 0.0465; x1 = 0.77; x2 = x1+0.04;
+   y -= step ; l.DrawLatex(x1, y, "#textendash")     ; l.DrawText(x2, y, "#textendash");
+   y = 0.96; x1 = 0.77; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#spade")          ; l.DrawText(x2, y, "#spade");
    y -= step ; l.DrawLatex(x1, y, "#Rgothic")        ; l.DrawText(x2, y, "#Rgothic");
    y -= step ; l.DrawLatex(x1, y, "#GT")             ; l.DrawText(x2, y, "#GT");
@@ -1357,6 +1360,7 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#Rightarrow")     ; l.DrawText(x2, y, "#Rightarrow");
    y -= step ; l.DrawLatex(x1, y-0.015, "#int")      ; l.DrawText(x2, y, "#int");
    y -= step ; l.DrawLatex(x1, y, "#odot")           ; l.DrawText(x2, y, "#odot");
+   y -= step ; l.DrawLatex(x1, y, "#textemdash")     ; l.DrawText(x2, y, "#textemdash");
 
    TestReport(C, "tlatex5", "TLatex 5 (Mathematical Symbols)");
 }
