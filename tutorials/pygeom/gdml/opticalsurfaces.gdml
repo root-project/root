@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<gdml xmlns:gdml="http://cern.ch/2001/Schemas/GDML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd" >
+
+ <define>
+  <position name="detinWorldp" unit="mm" x="0" y="0" z="0" />
+  <position name="pos2" unit="mm" x="2000" y="0" z="0" /> 
+
+  <matrix name="prop1" coldim="2" values="1.0 7.0 
+                                          2.0 9.4"/>
+
+  <matrix name="prop2" coldim="2" values="3.0 -1.0 
+                                          4.0 -9.4
+                                          5.0 -11.1"/>
+
+  <matrix name="RINDEX" coldim="2" values="1.65*eV 1.58" />
+  <matrix name="REFLECTIVITY" coldim="2" values="1.65*eV 0.8" />
+ </define>
+
+ <materials>
+  <element Z="7" formula="N" name="Nitrogen" >
+   <atom value="14.01" />
+  </element>
+  <element Z="8" formula="O" name="Oxygen" >
+   <atom value="16" />
+  </element>
+
+  <material formula=" " name="Air" >
+   <property name="myproperty1" ref="prop1"/>
+   <property name="myproperty2" ref="prop2"/>
+   <property name="RINDEX" ref="RINDEX"/>  
+   <D value="0.00129" />
+   <fraction n="0.7" ref="Nitrogen" />
+   <fraction n="0.3" ref="Oxygen" />
+  </material>
+ </materials>
+
+ <solids>
+  <box aunit="radian" lunit="mm" name="world" x="10000" y="10000" z="10000" />
+  <box aunit="radian" lunit="mm" name="det" x="2000" y="2000" z="2000" />
+  <opticalsurface name="surf1" model="glisur" finish="polished" type="dielectric_dielectric" value="1.0"/>
+  <opticalsurface name="surf2" model="glisur" finish="polished" type="dielectric_metal" value="1.0">
+    <property name="REFLECTIVITY" ref="REFLECTIVITY" />
+  </opticalsurface>
+ </solids>
+
+ <structure>
+  <volume name="Detector" >
+   <materialref ref="Air" />
+   <solidref ref="det" />
+  </volume>
+  <volume name="World" >
+   <materialref ref="Air" />
+   <solidref ref="world" />
+   <physvol name="pv1">
+    <volumeref ref="Detector" />
+    <positionref ref="detinWorldp" />
+   </physvol>
+   <physvol name="pv2">
+    <volumeref ref="Detector" />
+    <positionref ref="pos2" />
+   </physvol>
+  </volume>
+
+  <skinsurface name="skinsrf1" surfaceproperty="surf1" >
+    <volumeref ref="Detector"/>
+  </skinsurface> 
+
+  <bordersurface name="bordersrf1" surfaceproperty="surf2" >
+    <physvolref ref="pv1"/>
+    <physvolref ref="pv2"/>
+  </bordersurface> 
+
+ </structure>
+
+ <setup name="Default" version="1.0" >
+  <world ref="World" />
+ </setup>
+</gdml>
