@@ -956,7 +956,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          }
          UInt_t lastsize = 0;
          constexpr Int_t lenTab2 = sizeof(tab2) / sizeof(const char *);
-         if (!opFound)
+         if (!opFound) {
             for (k = 0; k < lenTab2; k++) {
                if ((opSpec == -1 || strlen(tab2[k]) > lastsize) && UInt_t(length) > i + strlen(tab2[k])) {
                   if (strncmp(&text[i + 1], tab2[k], strlen(tab2[k])) == 0) {
