@@ -229,6 +229,11 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
   static bool hasPtrCheckDisabledInContext(Sema *S, const Decl* D) {
     if (isa<TranslationUnitDecl>(D))
       return false;
+    if (auto *NS = dyn_cast<NamespaceDecl>(D)) {
+      if (NS->getName() == "Experimental") {
+        return true;
+      }
+    }
     for (const auto *Ann : D->specific_attrs<clang::AnnotateAttr>()) {
       if (Ann->getAnnotation() == "__cling__ptrcheck(off)")
         return true;
