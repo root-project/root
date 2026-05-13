@@ -12,9 +12,7 @@
       PARAMETER     (NQTCET=256)
       COMMON /ZCETA/ IQCETA(256),IQTCET(256)
       COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
@@ -61,9 +59,7 @@
       PARAMETER     (NQTCET=256)
       COMMON /ZCETA/ IQCETA(256),IQTCET(256)
       COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
@@ -184,9 +180,7 @@
       SUBROUTINE MZSTOR (IXSTOR,CHNAME,CHOPT
      +,                  IFENCE,LV,LLR,LLD,LIMIT,LAST)
       INCLUDE 'zbcd.inc'
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
@@ -829,9 +823,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZINS(IXDIVP,LSUPP,JBIASP,LBANK)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -1266,9 +1258,7 @@
 
       SUBROUTINE FZIREL
       INCLUDE 'zbcd.inc'
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       INCLUDE 'zunit.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -1424,9 +1414,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZCHLS (IXST,LP)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -1502,9 +1490,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZLIFT (IXDIV,LP,LSUPP,JBIAS,NAME,NZERO)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
@@ -2716,9 +2702,7 @@
 
       SUBROUTINE FZIMTB
       INCLUDE 'zbcd.inc'
-      PARAMETER (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +, NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       INCLUDE 'zunit.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
@@ -3586,9 +3570,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZCHLN (IXST,LP)
-      PARAMETER (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +, NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
+      INCLUDE 'zmach.inc'
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
