@@ -6,17 +6,19 @@
 #include "bvh/v2/bbox.h"
 #include "bvh/v2/split_heuristic.h"
 #include <stack>
-#if __has_include(<span>)
-#include <span>
-#else
-// Falling back to ROOT span
+// #if __has_include(<span>)
+//  A.G The dictionary generation expects c++20 span even when compiled with lower standard
+// #include <span>
+// #else
+//  Falling back to ROOT span
 #include "ROOT/span.hxx"
-#endif
+// #endif
 #include <algorithm>
 #include <optional>
 #include <numeric>
 #include <cassert>
 
+// clang-format off
 namespace bvh::v2 {
 
 /// Base class for all SAH-based, top-down builders.
@@ -144,5 +146,5 @@ protected:
 };
 
 } // namespace bvh::v2
-
+// clang-format on
 #endif

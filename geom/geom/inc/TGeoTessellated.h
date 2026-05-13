@@ -13,10 +13,19 @@
 #define ROOT_TGeoTessellated
 
 #include <map>
+#include <limits.h>
 #include "TGeoVector3.h"
 #include "TGeoTypedefs.h"
 #include "TGeoBBox.h"
 
+namespace bvh {
+namespace v2 {
+template <typename T, size_t Dim, size_t IndexBits /* = sizeof(T) * CHAR_BIT*/, size_t PrimCountBits /* = 4*/>
+class Node;
+template <typename T>
+struct Bvh;
+} // namespace v2
+} // namespace bvh
 class TGeoFacet {
 public:
    using Vertex_t = Tessellated::Vertex_t;
@@ -58,6 +67,8 @@ class TGeoTessellated : public TGeoBBox {
 
 public:
    using Vertex_t = Tessellated::Vertex_t;
+   using Node_t = bvh::v2::Node<float, 3, sizeof(float) * CHAR_BIT, 4>;
+   static Bool_t fgStreamOptimization;
 
 private:
    int fNfacets = 0;                      // Number of facets
@@ -70,8 +81,8 @@ private:
    std::multimap<long, int> fVerticesMap; ///<! Temporary map used to deduplicate vertices
    std::vector<Vertex_t> fOutwardNormals; // Vector of outward-facing normals (to be streamed !)
 
-   bool fIsClosed = false; //! to know if shape still needs closure/initialization
-   void *fBVH = nullptr;   //! BVH acceleration structure for safety and navigation
+   bool fIsClosed = false;               //! to know if shape still needs closure/initialization
+   bvh::v2::Bvh<Node_t> *fBVH = nullptr; // BVH acceleration structure for safety and navigation
 
    TGeoTessellated(const TGeoTessellated &) = delete;
    TGeoTessellated &operator=(const TGeoTessellated &) = delete;
@@ -154,7 +165,7 @@ private:
    template <bool closest_facet = false>
    Double_t SafetyKernel(const Double_t *point, bool in, int *closest_facet_id = nullptr) const;
 
-   ClassDefOverride(TGeoTessellated, 2) // tessellated shape class
+   ClassDefOverride(TGeoTessellated, 3) // tessellated shape class
 };
 
 #endif

@@ -118,12 +118,17 @@ auto-parsing during `TClass::GetClass`, you can either set the shell environment
 ## Geometry
 
 * The list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
-* `TGeoTessellated` now has efficient, BVH accelerated, navigation function implementations. This makes it possible to use `TGeoTessellated` in applications using `TGeoNavigator` (such as detector simulation).
+
+### Navigation implementation for tessellations
+`TGeoTessellated` now has efficient, BVH accelerated, navigation function implementations. This makes it possible to use `TGeoTessellated` in applications using `TGeoNavigator` (such as detector simulation).
+
+* The persistence of the acceleration structure is possible. This increases the file size in the order of 30-40%, speeding-up geometry loading by a factor 2x-3x, but in absolute terms loading a 1 million facets solid takes ~1 second. So persistence is disabled by default and can be enabled using:
+`TGeoTessellated::fgStreamOptimization = true`
 
 ### Extensible color schemes for geometry visualization
-ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` strategy class, used by `TGeoManager::DefaultColors()`.
+ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` policy class, used by `TGeoManager::DefaultColors()`.
 
-This improves the readability of geometries imported from formats such as GDML that do not store volume colors. The default behavior now uses a name-based material classification (e.g. metals, polymers, composites, gases) with a Z-binned fallback. Three predefined color sets are provided:
+This improves the readability of geometries imported from formats such as GDML that do not store volume colors. The default behavior now uses a name-based material classification (e.g. metals, polymers, composites, gases) with an effective Z-binned fallback. Three predefined color sets are provided:
 * `EGeoColorSet::kNatural` (default): material-inspired colors
 * `EGeoColorSet::kFlashy`: high-contrast, presentation-friendly colors
 * `EGeoColorSet::kHighContrast`: darker, saturated colors suited for light backgrounds
