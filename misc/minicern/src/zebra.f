@@ -55,7 +55,7 @@
       INCLUDE 'znatur.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'quest.inc'
       DIMENSION LIST(9)
       JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
@@ -1428,7 +1428,7 @@
       INCLUDE 'zmach.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -1686,7 +1686,7 @@
       INCLUDE 'zbcd.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -1793,7 +1793,7 @@
       INCLUDE 'zbcd.inc'
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -2043,7 +2043,7 @@
 
       SUBROUTINE MZNEED (IXDIV,NEEDP,CHOPT)
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -3499,7 +3499,7 @@
       SUBROUTINE MZDROP (IXSTOR,LHEADP,CHOPT)
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -3605,7 +3605,7 @@
       SUBROUTINE MZGARB (IXGP,IXWP)
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -3666,7 +3666,7 @@
       SUBROUTINE MZGAR1
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -3763,7 +3763,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZFORM (CHID,CHFORM,IXIOP)
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
@@ -4712,7 +4712,7 @@
       COMMON /ZLIMIT/LQLIML,LQLIMH
       INCLUDE 'zstate.inc'
       INCLUDE 'zunit.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
@@ -5742,7 +5742,7 @@
       INCLUDE 'ziq.inc'
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      INCLUDE 'zvfaut.inc'
       DIMENSION    IXWP(9)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZWI, 4HPE   /
