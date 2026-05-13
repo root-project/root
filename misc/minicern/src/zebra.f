@@ -31,7 +31,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -105,7 +105,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       DIMENSION LIST(9)
       JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
       CALL VZEROI (IQUEST,100)
@@ -235,7 +235,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -463,7 +463,7 @@
       COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
       COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
      +,              IZRECL,IMODEC,IMODEH
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /RZBUFF/ ITEST(8704)
       PARAMETER     (MAXFILES=128, MAXSTRIP=21)
       CHARACTER*128  RZNAMES(MAXFILES),RZSFILE(MAXSTRIP)
@@ -700,7 +700,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -803,7 +803,7 @@
 
       SUBROUTINE RZVCYC(LTAD)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -871,7 +871,7 @@
 
       SUBROUTINE RZIN(IXDIV,LSUP,JBIAS,KEYU,ICYCLE,CHOPT)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -968,7 +968,7 @@
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1162,7 +1162,7 @@
 
       SUBROUTINE MZRESV
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1243,7 +1243,7 @@
 
       SUBROUTINE RZSAVE
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1370,7 +1370,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE FZICV (MS,IRMT)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /MZIOC/ NWFOAV,NWFOTT,NWFODN,NWFORE,IFOCON(3)
      +,              MFOSAV(2),  JFOEND,JFOREP,JFOCUR,MFO(200)
       DIMENSION    MS(99), IRMT(99)
@@ -1485,7 +1485,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1618,7 +1618,7 @@
 
       SUBROUTINE FZILIN
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1686,7 +1686,7 @@
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1753,7 +1753,7 @@
      +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
      +,              NQHOL0,NQHOLL(95)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -1819,7 +1819,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -2113,7 +2113,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -2250,7 +2250,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -2529,7 +2529,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -2642,7 +2642,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -2801,7 +2801,7 @@
       COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
      +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -3031,7 +3031,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -3213,7 +3213,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -3508,7 +3508,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE IZBCDT (NP,ITABT)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       PARAMETER (NQTCET=256)
       COMMON /ZCETA/ IQCETA(256),IQTCET(256)
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
@@ -3550,7 +3550,7 @@
 
       SUBROUTINE RZINK(KEYU,ICYCLE,CHOPT)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -3772,7 +3772,7 @@
       CHARACTER*(*) CHPATH,CH(*)
       CHARACTER*255 CHTEMP
       CHARACTER*16  CHL
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       MAXLEN=LEN(CHPATH)
       IF(MAXLEN.GT.255)MAXLEN=255
       IQUEST(1) = 0
@@ -3951,7 +3951,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4154,7 +4154,7 @@
       COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
      +, NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4226,7 +4226,7 @@
 
       SUBROUTINE MZCHNB (LIX)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4277,7 +4277,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4359,7 +4359,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4431,7 +4431,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4521,7 +4521,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4646,7 +4646,7 @@
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4735,7 +4735,7 @@
 
       FUNCTION MZFDIV (IXST,LIXP)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4793,7 +4793,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -4933,7 +4933,7 @@
       SUBROUTINE MZTABC
       COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5032,7 +5032,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5149,7 +5149,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5240,7 +5240,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5343,7 +5343,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5466,7 +5466,7 @@
 
       SUBROUTINE MZTABS
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5515,7 +5515,7 @@
 
       SUBROUTINE MZTABX
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -5574,7 +5574,7 @@
      +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
      +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
      +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
@@ -5878,7 +5878,7 @@
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6010,7 +6010,7 @@
 
       SUBROUTINE MZGSTA (IGARB)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6058,7 +6058,7 @@
 
       SUBROUTINE MZIOCF (JUP,MXVAL)
       COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       DIMENSION MU(99)
       EQUIVALENCE (MU(1),IQHOLK(1))
       EQUIVALENCE (NGR,IQUEST(1)), (NGRU,IQUEST(2))
@@ -6078,7 +6078,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZIOCR (IOW)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /MZIOC/ NWFOAV,NWFOTT,NWFODN,NWFORE,IFOCON(3)
      +, MFOSAV(2), JFOEND,JFOREP,JFOCUR,MFO(200)
       EQUIVALENCE (JIO,IQUEST(1))
@@ -6205,7 +6205,7 @@
 
       FUNCTION MZIXCO (IXAA,IXBB,IXCC,IXDD)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6300,7 +6300,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6406,7 +6406,7 @@
      +, IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV, IQILEG
      +, NQHOL0,NQHOLL(95)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6452,7 +6452,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6645,7 +6645,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6788,7 +6788,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6839,7 +6839,7 @@
       COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
      +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -6930,7 +6930,7 @@
       COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
       COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
       PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/ IQFENC(4), LQ(100)
                               DIMENSION IQ(92), Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -7096,7 +7096,7 @@
 
       SUBROUTINE RZSCAN(CHPATH,UROUT)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -7189,7 +7189,7 @@
 
       SUBROUTINE MZWIPE (IXWP)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
@@ -7221,7 +7221,7 @@
       COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
      +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       COMMON /ZEBQ/  IQFENC(4), LQ(100)
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
