@@ -10,7 +10,7 @@
       INCLUDE 'zbcd.inc'
       INCLUDE 'zbcdh.inc'
       INCLUDE 'zceta.inc'
-      COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
+      INCLUDE 'zheadp.inc'
       INCLUDE 'zmach.inc'
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
       INCLUDE 'zstate.inc'
@@ -50,7 +50,7 @@
       INCLUDE 'zbcd.inc'
       INCLUDE 'zbcdh.inc'
       INCLUDE 'zceta.inc'
-      COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
+      INCLUDE 'zheadp.inc'
       INCLUDE 'zmach.inc'
       COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
       INCLUDE 'zstate.inc'
