@@ -1569,15 +1569,7 @@
      +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
-      INTEGER       IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,       ICBLAC,ICSTAR,ICFUNC,
-     +       IDG(42),MAXBIT(30),IDENT(9)
-      REAL BIGP
-      COMMON/HCPRIN/IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,BIGP  ,ICBLAC,ICSTAR,ICFUNC,
-     +       IDG   ,MAXBIT,IDENT
+      INCLUDE 'hcprin.inc'
       COMMON /HCNT/ IBIPW, IBIPB, IBYPW, ISHBIT
       COMMON /HCSET/ IBSIZE
       LOGICAL         NRECOV
@@ -1655,15 +1647,7 @@
       FUNCTION HCX(ICX,IOPT)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER       IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,       ICBLAC,ICSTAR,ICFUNC,
-     +       IDG(42),MAXBIT(30),IDENT(9)
-      REAL BIGP
-      COMMON/HCPRIN/IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,BIGP  ,ICBLAC,ICSTAR,ICFUNC,
-     +       IDG   ,MAXBIT,IDENT
+      INCLUDE 'hcprin.inc'
       DOUBLE PRECISION CONT,ERR2,SUM,EPRIM
       HCX = 0.0
       LW = LQ(LCONT)
@@ -1743,15 +1727,7 @@
       FUNCTION HCXY(ICX,ICY,IOPT)
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
-      INTEGER       IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,       ICBLAC,ICSTAR,ICFUNC,
-     +       IDG(42),MAXBIT(30),IDENT(9)
-      REAL BIGP
-      COMMON/HCPRIN/IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,BIGP  ,ICBLAC,ICSTAR,ICFUNC,
-     +       IDG   ,MAXBIT,IDENT
+      INCLUDE 'hcprin.inc'
       NW=32/NB
       J=(IQ(LCID+KNCY)-ICY+1)*(IQ(LCID+KNCX)+2)
       L2=ICX+J
@@ -1780,15 +1756,7 @@
       INCLUDE 'pawc.inc'
       INCLUDE 'hparam1.inc'
       INCLUDE 'hcflag.inc'
-      INTEGER       IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,       ICBLAC,ICSTAR,ICFUNC,
-     +       IDG(42),MAXBIT(30),IDENT(9)
-      REAL BIGP
-      COMMON/HCPRIN/IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
-     +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
-     +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,BIGP  ,ICBLAC,ICSTAR,ICFUNC,
-     +       IDG   ,MAXBIT,IDENT
+      INCLUDE 'hcprin.inc'
       INCLUDE 'quest.inc'
       CHARACTER*(*) CHROUT
       IF(LFIX.NE.0)GO TO 99
