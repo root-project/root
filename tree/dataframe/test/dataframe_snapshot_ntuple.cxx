@@ -684,7 +684,8 @@ protected:
 
       auto &descriptor = reader->GetDescriptor();
 
-      int nTopLevelFields = std::distance(descriptor.GetTopLevelFields().begin(), descriptor.GetTopLevelFields().end());
+      auto topLevelFieldsIterable = descriptor.GetTopLevelFields();
+      int nTopLevelFields = std::distance(topLevelFieldsIterable.begin(), topLevelFieldsIterable.end());
       EXPECT_EQ(9, nTopLevelFields);
       EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("x")).GetTypeName());
       EXPECT_EQ("float", descriptor.GetFieldDescriptor(descriptor.FindFieldId("pt")).GetTypeName());
