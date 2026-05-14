@@ -548,9 +548,9 @@ void printCerr(const char *msg)
 {
    if (Py_IsInitialized()) {
       PySys_WriteStderr("%s\n", msg);
-      if (PyObject *sys_stdout = PySys_GetObject("stderr"); sys_stdout != nullptr) {
-         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
-      }
+      //      if (PyObject *sys_stdout = PySys_GetObject("stderr"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
    } else {
       std::cerr << msg << std::endl;
    }
@@ -559,9 +559,9 @@ void printCout(const char *msg)
 {
    if (Py_IsInitialized()) {
       PySys_WriteStdout("%s\n", msg);
-      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
-         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
-      }
+      //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
    } else {
       std::cout << msg << std::endl;
    }
@@ -975,7 +975,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
    if (!out) {
       int strategy = fitConfig.MinimizerOptions().Strategy();
       // Note: AsymptoticCalculator enforces not less than 1 on tolerance - should we do so too?
-      if (_progress && printLevel>=-1) {
+      if (_progress && printLevel >= -2) {
          _nll = new ProgressMonitor(*_nll, _progress);
          ProgressMonitor::fInterrupt = false;
       }
@@ -1271,10 +1271,6 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                             .Data());
             }
 
-            if (sIdx >= m_hessestrategy.Length() - 1) {
-               break; // run out of strategies to try, stop
-            }
-
             if (_status == 0 && _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() == 3) {
                // covariance is valid!
                break;
@@ -1282,6 +1278,11 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                // set the statusHistory to the cov status, since that's more informative
                statusHistory.back().second = _minimizer.fitter()->GetMinimizer()->CovMatrixStatus();
             }
+
+            if (sIdx >= m_hessestrategy.Length() - 1) {
+               break; // run out of strategies to try, stop
+            }
+
             sIdx++;
          } // end of hesse attempt loop
       }
@@ -1317,7 +1318,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }
       }
 
-      if (printLevel>=-1 && miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse &&
+      if (printLevel >= -2 && miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse &&
           out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3 && out->status() != 3) {
          // hesse may have updated edm by using a better strategy than used in the minimization
          // so print a warning about this
@@ -1434,7 +1435,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          fitConfig.MinimizerOptions().SetMinimizerType(actualFirstMinimizer);
       }
 
-      if (_progress && printLevel>=-1) {
+      if (_progress && printLevel >= -2) {
          delete _nll;
       }
    }

@@ -648,9 +648,9 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    if (Py_IsInitialized()) {
       auto s = TString::Format("Info in <xRooHypoSpace::AddPoint>: Added new point @ %s", coordString.c_str());
       PySys_WriteStdout("%s\n", s.Data());
-      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
-         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
-      }
+      //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
    } else {
       ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
    }
