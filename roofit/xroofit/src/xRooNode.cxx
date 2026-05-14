@@ -110,7 +110,7 @@ auto &GETWSSNAPSHOTS(RooWorkspace *w)
 }
 auto GETACTBROWSER(TRootBrowser *b)
 {
-   return b->GetActBrowser();
+   return b ? b->GetActBrowser() : nullptr;
 }
 auto GETROOTDIR(TGFileBrowser *b)
 {
