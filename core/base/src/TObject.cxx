@@ -70,8 +70,10 @@ Bool_t    TObject::fgObjectStat = kTRUE;
 
 #if defined(__clang__) || defined(__GNUC__)
 #define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#define ATTRIBUTE_NO_SANITIZE_THREAD __attribute__((no_sanitize_thread))
 #else
 #define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#define ATTRIBUTE_NO_SANITIZE_THREAD
 #endif
 
 namespace ROOT {
@@ -85,6 +87,7 @@ namespace Internal {
 // delete, we can still use it to detect the cases where the destructor was called.
 
 ATTRIBUTE_NO_SANITIZE_ADDRESS
+ATTRIBUTE_NO_SANITIZE_THREAD
 bool DeleteChangesMemoryImpl()
 {
    static constexpr UInt_t kGoldenUUID = 0x00000021;
