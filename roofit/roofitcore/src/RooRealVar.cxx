@@ -520,7 +520,7 @@ void RooRealVar::setMin(const char* name, double value, bool shared)
   RooAbsBinning& binning = getBinning(name,true,true,shared) ;
 
   // Check if new limit is consistent
-  if (value >= getMax()) {
+  if (value > getMax()) {
     coutW(InputArguments) << "RooRealVar::setMin(" << GetName()
            << "): Proposed new fit min. larger than max., setting min. to max." << std::endl ;
     binning.setMin(getMax()) ;
