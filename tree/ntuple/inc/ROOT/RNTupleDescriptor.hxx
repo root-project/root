@@ -544,7 +544,8 @@ public:
       using pointer = const RColumnRange *;
       using reference = const RColumnRange &;
 
-      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -960,7 +961,7 @@ public:
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
-      using value_type = RFieldDescriptor;
+      using value_type = RColumnDescriptor;
       using difference_type = std::ptrdiff_t;
       using pointer = const RColumnDescriptor *;
       using reference = const RColumnDescriptor &;
@@ -1106,7 +1107,8 @@ public:
       using pointer = const RClusterGroupDescriptor *;
       using reference = const RClusterGroupDescriptor &;
 
-      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1160,7 +1162,8 @@ public:
       using pointer = const RClusterDescriptor *;
       using reference = const RClusterDescriptor &;
 
-      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1210,7 +1213,8 @@ public:
       using pointer = const RExtraTypeInfoDescriptor *;
       using reference = const RExtraTypeInfoDescriptor &;
 
-      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1262,7 +1266,8 @@ public:
       using pointer = const value_type *;
       using reference = const value_type &;
 
-      explicit RIterator(Iter_t iter = Iter_t{}) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
