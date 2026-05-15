@@ -166,9 +166,6 @@ public:
    {
    }
 
-   /// \name Transformation
-   /// \{
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Cast any RDataFrame node to a common type ROOT::RDF::RNode.
    /// Different RDataFrame methods return different C++ types. All nodes, however,
@@ -191,6 +188,14 @@ public:
    {
       return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fColRegister);
    }
+
+   /// \name Transformations
+   /// These functions transform the columns of the dataframe, such as filtering events or defining columns.
+   /// Transformations can be chained, for example
+   /// ~~~{.cpp}
+   /// auto filtered = rdf.Filter(...).Define(...).Define(...);
+   /// ~~~
+   /// \{
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
@@ -1314,6 +1319,55 @@ public:
       return newInterface;
    }
 
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range: [begin, end).
+   /// \param[in] begin Initial entry number considered for this range.
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+   /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
+   /// \return the first node of the computation graph for which the event loop is limited to a certain range of entries.
+   ///
+   /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
+   /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto d_0_30 = d.Range(0, 30); // Pick the first 30 entries
+   /// auto d_15_end = d.Range(15, 0); // Pick all entries from 15 onwards
+   /// auto d_15_end_3 = d.Range(15, 0, 3); // Stride: from event 15, pick an event every 3
+   /// ~~~
+   // clang-format on
+   RInterface<RDFDetail::RRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
+   {
+      // check invariants
+      if (stride == 0 || (end != 0 && end < begin))
+         throw std::runtime_error("Range: stride must be strictly greater than 0 and end must be greater than begin.");
+      CheckIMTDisabled("Range");
+
+      using Range_t = RDFDetail::RRange<Proxied>;
+      auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
+      RInterface<RDFDetail::RRange<Proxied>> newInterface(std::move(rangePtr), *fLoopManager, fColRegister);
+      return newInterface;
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range.
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+   /// \return a node of the computation graph for which the range is defined.
+   ///
+   /// See the other Range overload for a detailed description.
+   // clang-format on
+   RInterface<RDFDetail::RRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
+
+   /// \}
+   // ---------------------------------------------------------------------------------
+   // End of the doxygen group for Transformations
+
+   /// \name Immediate Actions
+   /// Immediate Actions start the event loop and generate a type of result.
+   /// \{
+
    template <typename... ColumnTypes>
    [[deprecated("Snapshot is not any more a template. You can safely remove the template parameters.")]]
    RResultPtr<RInterface<RLoopManager>>
@@ -1723,46 +1777,6 @@ public:
       return Cache(selectedColumns);
    }
 
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range: [begin, end).
-   /// \param[in] begin Initial entry number considered for this range.
-   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
-   /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
-   /// \return the first node of the computation graph for which the event loop is limited to a certain range of entries.
-   ///
-   /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
-   /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto d_0_30 = d.Range(0, 30); // Pick the first 30 entries
-   /// auto d_15_end = d.Range(15, 0); // Pick all entries from 15 onwards
-   /// auto d_15_end_3 = d.Range(15, 0, 3); // Stride: from event 15, pick an event every 3
-   /// ~~~
-   // clang-format on
-   RInterface<RDFDetail::RRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
-   {
-      // check invariants
-      if (stride == 0 || (end != 0 && end < begin))
-         throw std::runtime_error("Range: stride must be strictly greater than 0 and end must be greater than begin.");
-      CheckIMTDisabled("Range");
-
-      using Range_t = RDFDetail::RRange<Proxied>;
-      auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      RInterface<RDFDetail::RRange<Proxied>> newInterface(std::move(rangePtr), *fLoopManager, fColRegister);
-      return newInterface;
-   }
-
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range.
-   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
-   /// \return a node of the computation graph for which the range is defined.
-   ///
-   /// See the other Range overload for a detailed description.
-   // clang-format on
-   RInterface<RDFDetail::RRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -1828,64 +1842,13 @@ public:
       fLoopManager->Run();
    }
 
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of a column.
-   /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
-   /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \return the reduced quantity wrapped in a ROOT::RDF:RResultPtr.
-   ///
-   /// A reduction takes two values of a column and merges them into one (e.g.
-   /// by summing them, taking the maximum, etc). This action performs the
-   /// specified reduction operation on all processed column values, returning
-   /// a single value of the same type. The callable f must satisfy the general
-   /// requirements of a *processing function* besides having signature `T(T,T)`
-   /// where `T` is the type of column columnName.
-   ///
-   /// The returned reduced value of each thread (e.g. the initial value of a sum) is initialized to a
-   /// default-constructed T object. This is commonly expected to be the neutral/identity element for the specific
-   /// reduction operation `f` (e.g. 0 for a sum, 1 for a product). If a default-constructed T does not satisfy this
-   /// requirement, users should explicitly specify an initialization value for T by calling the appropriate `Reduce`
-   /// overload.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto sumOfIntCol = d.Reduce([](int x, int y) { return x + y; }, "intCol");
-   /// ~~~
-   ///
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. Also see RResultPtr.
-   // clang-format on
-   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   RResultPtr<T> Reduce(F f, std::string_view columnName = "")
-   {
-      static_assert(
-         std::is_default_constructible<T>::value,
-         "reduce object cannot be default-constructed. Please provide an initialisation value (redIdentity)");
-      return Reduce(std::move(f), columnName, T());
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of a column.
-   /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
-   /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \param[in] redIdentity The reduced object of each thread is initialized to this value.
-   /// \return the reduced quantity wrapped in a RResultPtr.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto sumOfIntColWithOffset = d.Reduce([](int x, int y) { return x + y; }, "intCol", 42);
-   /// ~~~
-   /// See the description of the first Reduce overload for more information.
-   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   RResultPtr<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
-   {
-      return Aggregate(f, f, columnName, redIdentity);
-   }
+   /// \}
+   // End of doxygen group for immediate actions
+   // ----------------------------------------------------------------------------------------
+   /// \name Actions
+   /// Actions declare a type of result to be produced, for example histograms or summary statistics.
+   /// Actions are lazy, i.e. they are only executed once a result is requested.
+   /// \{
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*).
@@ -3449,6 +3412,105 @@ public:
       return MakeResultPtr(rep, *fLoopManager, std::move(action));
    }
 
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the columns in the dataset.
+   /// \tparam ColumnTypes variadic list of branch/column types.
+   /// \param[in] columnList Names of the columns to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
+   ///
+   /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
+   /// form. RDisplay will either print on the standard output a summarized version through `RDisplay::Print()` or will
+   /// return a complete version through `RDisplay::AsString()`.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see
+   /// RResultPtr.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// // Preparing the RResultPtr<RDisplay> object with all columns and default number of entries
+   /// auto d1 = rdf.Display("");
+   /// // Preparing the RResultPtr<RDisplay> object with two columns and 128 entries
+   /// auto d2 = d.Display({"x", "y"}, 128);
+   /// // Printing the short representations, the event loop will run
+   /// d1->Print();
+   /// d2->Print();
+   /// ~~~
+   template <typename... ColumnTypes>
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
+   {
+      CheckIMTDisabled("Display");
+      auto newCols = columnList;
+      newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
+      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
+      // Need to add ULong64_t type corresponding to the first column rdfentry_
+      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(
+         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), fProxiedPtr);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the columns in the dataset.
+   /// \param[in] columnList Names of the columns to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements  Maximum number of collection elements to display per row.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
+   ///
+   /// This overload automatically infers the column types.
+   /// See the previous overloads for further details.
+   ///
+   /// Invoked when no types are specified to Display
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
+   {
+      CheckIMTDisabled("Display");
+      auto newCols = columnList;
+      newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
+      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(
+         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), fProxiedPtr,
+         columnList.size() + 1);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the columns in the dataset.
+   /// \param[in] columnNameRegexp A regular expression to select the columns.
+   /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
+   ///
+   /// The existing columns are matched against the regular expression. If the string provided
+   /// is empty, all columns are selected.
+   /// See the previous overloads for further details.
+   RResultPtr<RDisplay>
+   Display(std::string_view columnNameRegexp = "", size_t nRows = 5, size_t nMaxCollectionElements = 10)
+   {
+      const auto columnNames = GetColumnNames();
+      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
+      return Display(selectedColumns, nRows, nMaxCollectionElements);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the columns in the dataset.
+   /// \param[in] columnList Names of the columns to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Number of maximum elements in collection.
+   /// \return the `RDisplay` instance wrapped in a RResultPtr.
+   ///
+   /// See the previous overloads for further details.
+   RResultPtr<RDisplay>
+   Display(std::initializer_list<std::string> columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
+   {
+      ColumnNames_t selectedColumns(columnList);
+      return Display(selectedColumns, nRows, nMaxCollectionElements);
+   }
+
+   /// \}
+   // End of the doxygen group for actions
+   // ----------------------------------------------------------------------------------------
+
    /// \brief Returns the names of the filters created.
    /// \return the container of filters names.
    ///
@@ -3464,6 +3526,11 @@ public:
    /// ~~~
    ///
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
+
+   /// \name User-defined Actions (lazy)
+   /// Pass user-defined functions to be applied to the data and create results.
+   /// These actions are lazy, i.e., they only run once a result is actually requested.
+   /// \{
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -3640,101 +3707,68 @@ public:
       }
    }
 
+
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset.
-   /// \tparam ColumnTypes variadic list of branch/column types.
-   /// \param[in] columnList Names of the columns to be displayed.
-   /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
-   /// \return the `RDisplay` instance wrapped in a RResultPtr.
+   /// \brief Execute a user-defined reduce operation on the values of a column.
+   /// \tparam F The type of the reduce callable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] f A callable with signature `T(T,T)`
+   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
+   /// \return the reduced quantity wrapped in a ROOT::RDF:RResultPtr.
    ///
-   /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
-   /// form. RDisplay will either print on the standard output a summarized version through `RDisplay::Print()` or will
-   /// return a complete version through `RDisplay::AsString()`.
+   /// A reduction takes two values of a column and merges them into one (e.g.
+   /// by summing them, taking the maximum, etc). This action performs the
+   /// specified reduction operation on all processed column values, returning
+   /// a single value of the same type. The callable f must satisfy the general
+   /// requirements of a *processing function* besides having signature `T(T,T)`
+   /// where `T` is the type of column columnName.
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see
-   /// RResultPtr.
+   /// The returned reduced value of each thread (e.g. the initial value of a sum) is initialized to a
+   /// default-constructed T object. This is commonly expected to be the neutral/identity element for the specific
+   /// reduction operation `f` (e.g. 0 for a sum, 1 for a product). If a default-constructed T does not satisfy this
+   /// requirement, users should explicitly specify an initialization value for T by calling the appropriate `Reduce`
+   /// overload.
    ///
-   /// Example usage:
+   /// ### Example usage:
    /// ~~~{.cpp}
-   /// // Preparing the RResultPtr<RDisplay> object with all columns and default number of entries
-   /// auto d1 = rdf.Display("");
-   /// // Preparing the RResultPtr<RDisplay> object with two columns and 128 entries
-   /// auto d2 = d.Display({"x", "y"}, 128);
-   /// // Printing the short representations, the event loop will run
-   /// d1->Print();
-   /// d2->Print();
+   /// auto sumOfIntCol = d.Reduce([](int x, int y) { return x + y; }, "intCol");
    /// ~~~
-   template <typename... ColumnTypes>
-   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   // clang-format on
+   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
+   RResultPtr<T> Reduce(F f, std::string_view columnName = "")
    {
-      CheckIMTDisabled("Display");
-      auto newCols = columnList;
-      newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
-      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
-      // Need to add ULong64_t type corresponding to the first column rdfentry_
-      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(
-         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), fProxiedPtr);
+      static_assert(
+         std::is_default_constructible<T>::value,
+         "reduce object cannot be default-constructed. Please provide an initialisation value (redIdentity)");
+      return Reduce(std::move(f), columnName, T());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset.
-   /// \param[in] columnList Names of the columns to be displayed.
-   /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements  Maximum number of collection elements to display per row.
-   /// \return the `RDisplay` instance wrapped in a RResultPtr.
+   /// \brief Execute a user-defined reduce operation on the values of a column.
+   /// \tparam F The type of the reduce callable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] f A callable with signature `T(T,T)`
+   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
+   /// \param[in] redIdentity The reduced object of each thread is initialized to this value.
+   /// \return the reduced quantity wrapped in a RResultPtr.
    ///
-   /// This overload automatically infers the column types.
-   /// See the previous overloads for further details.
-   ///
-   /// Invoked when no types are specified to Display
-   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto sumOfIntColWithOffset = d.Reduce([](int x, int y) { return x + y; }, "intCol", 42);
+   /// ~~~
+   /// See the description of the first Reduce overload for more information.
+   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
+   RResultPtr<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
    {
-      CheckIMTDisabled("Display");
-      auto newCols = columnList;
-      newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
-      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
-      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(
-         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), fProxiedPtr,
-         columnList.size() + 1);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset.
-   /// \param[in] columnNameRegexp A regular expression to select the columns.
-   /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
-   /// \return the `RDisplay` instance wrapped in a RResultPtr.
-   ///
-   /// The existing columns are matched against the regular expression. If the string provided
-   /// is empty, all columns are selected.
-   /// See the previous overloads for further details.
-   RResultPtr<RDisplay>
-   Display(std::string_view columnNameRegexp = "", size_t nRows = 5, size_t nMaxCollectionElements = 10)
-   {
-      const auto columnNames = GetColumnNames();
-      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
-      return Display(selectedColumns, nRows, nMaxCollectionElements);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the columns in the dataset.
-   /// \param[in] columnList Names of the columns to be displayed.
-   /// \param[in] nRows Number of events for each column to be displayed.
-   /// \param[in] nMaxCollectionElements Number of maximum elements in collection.
-   /// \return the `RDisplay` instance wrapped in a RResultPtr.
-   ///
-   /// See the previous overloads for further details.
-   RResultPtr<RDisplay>
-   Display(std::initializer_list<std::string> columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
-   {
-      ColumnNames_t selectedColumns(columnList);
-      return Display(selectedColumns, nRows, nMaxCollectionElements);
+      return Aggregate(f, f, columnName, redIdentity);
    }
 
    /// \}
+   // End of the doxygen group for user-defined actions
 
 private:
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
