@@ -493,7 +493,7 @@ struct alignas(64) OverAligned {
 };
 
 struct AlignmentEnvelope {
-   ROOT::RVec<OverAligned> fVec;
+   std::vector<OverAligned> fVec;
    std::array<OverAligned, 2> fArr;
 };
 

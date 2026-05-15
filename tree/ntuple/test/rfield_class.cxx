@@ -518,6 +518,28 @@ TEST(RNTuple, AlignmentCornerCases)
    auto f = RFieldBase::Create("", "AlignmentEnvelope").Unwrap();
    EXPECT_GT(alignof(AlignmentEnvelope), sizeof(std::max_align_t));
    EXPECT_EQ(alignof(AlignmentEnvelope), f->GetAlignment());
-   EXPECT_EQ(alignof(ROOT::RVec<OverAligned>),
-             RFieldBase::Create("", "ROOT::RVec<OverAligned>").Unwrap()->GetAlignment());
+   auto res = RFieldBase::Create("", "ROOT::RVec<OverAligned>");
+   EXPECT_FALSE(res);
+   EXPECT_THAT(res.GetError()->GetReport(), ::testing::HasSubstr("RVec does not support over-aligned types"));
+
+   std::unique_ptr<AlignmentEnvelope> ptr(f->CreateObject<AlignmentEnvelope>().release());
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(ptr.get()) % alignof(AlignmentEnvelope));
+
+   FileRaii fileGuard("test_ntuple_alignment_corner_cases.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto p = model->MakeField<AlignmentEnvelope>("f");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      p->fVec.push_back(OverAligned{1});
+      writer->Fill();
+   }
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto bulk = reader->GetModel().CreateBulk("f");
+   auto bulkPtr = bulk.ReadBulk(ROOT::RNTupleLocalRange(0, 0, 1));
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(bulkPtr) % alignof(AlignmentEnvelope));
+
+   auto view = reader->GetView<AlignmentEnvelope>("f");
+   EXPECT_EQ(1u, view(0).fVec.size());
+   // TODO(jblomer): FIXME
+   // EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(view(0).fVec.data()) % alignof(OverAligned));
 }

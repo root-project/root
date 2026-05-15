@@ -58,8 +58,9 @@ class RRecordField : public RFieldBase {
       std::vector<std::size_t> fOffsets;
 
    public:
-      RRecordDeleter(std::vector<std::unique_ptr<RDeleter>> itemDeleters, const std::vector<std::size_t> &offsets)
-         : fItemDeleters(std::move(itemDeleters)), fOffsets(offsets)
+      RRecordDeleter(std::vector<std::unique_ptr<RDeleter>> itemDeleters, const std::vector<std::size_t> &offsets,
+                     std::size_t alignment)
+         : RDeleter(alignment), fItemDeleters(std::move(itemDeleters)), fOffsets(offsets)
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;

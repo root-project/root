@@ -117,10 +117,10 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
-void EnsureValidAlignment(std::size_t align)
+void EnsureValidAlignment(std::size_t alignment)
 {
-   if (align == 0 || align > ROOT::RFieldBase::kMaxAlignment || !ROOT::Internal::IsPowerOfTwo(align))
-      throw ROOT::RException(R__FAIL(std::string("invalid alignment: ") + std::to_string(align)));
+   if (!ROOT::Internal::IsValidAlignment(alignment))
+      throw ROOT::RException(R__FAIL(std::string("invalid alignment: ") + std::to_string(alignment)));
 }
 
 /// Create a comma-separated list of type names from the given fields. Uses either the real type names or the
@@ -608,6 +608,8 @@ void ROOT::RClassField::ConstructValue(void *where) const
    fClass->New(where);
 }
 
+ROOT::RClassField::RClassDeleter::RClassDeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fClass(cl) {}
+
 void ROOT::RClassField::RClassDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
@@ -884,6 +886,10 @@ void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
 {
    fSoAClass->New(where);
+}
+
+ROOT::Experimental::RSoAField::RSoADeleter::RSoADeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fSoAClass(cl)
+{
 }
 
 void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool dtorOnly)
@@ -1242,6 +1248,22 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RProxiedCollectionField::GetDe
    return std::make_unique<RProxiedCollectionDeleter>(fProxy);
 }
 
+ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::RProxiedCollectionDeleter(
+   std::shared_ptr<TVirtualCollectionProxy> proxy)
+   : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()), fProxy(proxy)
+{
+}
+
+ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::RProxiedCollectionDeleter(
+   std::shared_ptr<TVirtualCollectionProxy> proxy, std::unique_ptr<RDeleter> itemDeleter, size_t itemSize)
+   : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()),
+     fProxy(proxy),
+     fItemDeleter(std::move(itemDeleter)),
+     fItemSize(itemSize)
+{
+   fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
+}
+
 void ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    if (fItemDeleter) {
@@ -1465,6 +1487,11 @@ void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 void ROOT::RStreamerField::ConstructValue(void *where) const
 {
    fClass->New(where);
+}
+
+ROOT::RStreamerField::RStreamerFieldDeleter::RStreamerFieldDeleter(TClass *cl)
+   : RDeleter(cl->GetClassAlignment()), fClass(cl)
+{
 }
 
 void ROOT::RStreamerField::RStreamerFieldDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -1868,7 +1895,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVariantField::GetDeleter() co
    for (const auto &f : fSubfields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, std::move(itemDeleters));
+   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, GetAlignment(), std::move(itemDeleters));
 }
 
 size_t ROOT::RVariantField::GetAlignment() const

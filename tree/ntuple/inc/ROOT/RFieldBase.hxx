@@ -13,6 +13,7 @@
 #ifndef ROOT_RFieldBase
 #define ROOT_RFieldBase
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RCreateFieldOptions.hxx>
 #include <ROOT/RError.hxx>
@@ -21,6 +22,7 @@
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -107,12 +109,22 @@ protected:
    /// The deleter is operational without the field object and thus can be used to destruct/release a value after
    /// the field has been destructed.
    class RDeleter {
+      std::size_t fAlignment;
+
    public:
+      explicit RDeleter(std::size_t align) : fAlignment(align) { assert(Internal::IsValidAlignment(align)); }
       virtual ~RDeleter() = default;
       virtual void operator()(void *objPtr, bool dtorOnly)
       {
-         if (!dtorOnly)
+         if (dtorOnly)
+            return;
+
+         // Match operator new in RFieldBase::CreateObjectRawPtr()
+         if (fAlignment <= sizeof(std::max_align_t)) {
             operator delete(objPtr);
+         } else {
+            operator delete(objPtr, std::align_val_t(fAlignment));
+         }
       }
    };
 
@@ -120,6 +132,7 @@ protected:
    template <typename T>
    class RTypedDeleter : public RDeleter {
    public:
+      RTypedDeleter() : RDeleter(alignof(T)) {}
       void operator()(void *objPtr, bool dtorOnly) final
       {
          std::destroy_at(static_cast<T *>(objPtr));
@@ -421,7 +434,7 @@ protected:
 
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' CreateValue().
    virtual void ConstructValue(void *where) const = 0;
-   virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(); }
+   virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(GetAlignment()); }
    /// Allow derived classes to call ConstructValue(void *) and GetDeleter() on other (sub)fields.
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
@@ -555,9 +568,6 @@ protected:
           const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
-   /// Maximum supported alignment for field types, i.e. maximum returned by GetAlignment()
-   static constexpr std::size_t kMaxAlignment = 4096;
-
    template <bool IsConstT>
    class RSchemaIteratorTemplate;
    using RSchemaIterator = RSchemaIteratorTemplate<false>;
@@ -607,6 +617,8 @@ public:
    ///    auto ptr = field->CreateObject();
    ///    delete ptr.release();
    /// ~~~
+   /// Over-aligned types need to delete the returned pointer using the delete operator overload that specifies the
+   /// type's alignment.
    ///
    /// Note that CreateObject<void>() is supported. The returned `unique_ptr` has a custom deleter that reports an error
    /// if it is called. The intended use of the returned `unique_ptr<void>` is to call `release()`. In this way, the

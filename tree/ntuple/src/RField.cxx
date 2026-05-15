@@ -750,7 +750,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RRecordField::GetDeleter() con
    for (const auto &f : fSubfields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RRecordDeleter>(std::move(itemDeleters), fOffsets);
+   return std::make_unique<RRecordDeleter>(std::move(itemDeleters), fOffsets, GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RRecordField::SplitValue(const RValue &value) const
@@ -1188,7 +1188,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::ROptionalField::GetDeleter() c
 {
    return std::make_unique<ROptionalDeleter>(
       (fSubfields[0]->GetTraits() & kTraitTriviallyDestructible) ? nullptr : GetDeleterOf(*fSubfields[0]),
-      fSubfields[0]->GetValueSize());
+      fSubfields[0]->GetValueSize(), GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::ROptionalField::SplitValue(const RValue &value) const
