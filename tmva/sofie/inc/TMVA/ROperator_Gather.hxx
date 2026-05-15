@@ -17,7 +17,6 @@ class ROperator_Gather final : public ROperator
 {
 private:
 
-   bool fIsOutputParamShape = false; // for shape outputs
    int64_t fAttrAxis = 0;
 
    std::string fNX;
@@ -74,18 +73,18 @@ public:
       if (model.IsInitializedTensor(fNIndices)) {
           // empty shape Indices is a scalar value for the indices
          size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
-         int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+         int64_t* data = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+         // copy in a vector since we may need to update the values in case of negative indices
+         fIndices =std::vector<int64_t>(data, data + indicesLength);
          // update indices data in case of negative dim values
          for (size_t i = 0; i < indicesLength; i++) {
             // move this at generation time?
             if (!fShapeX[fAttrAxis].isParam) {
-               if (indicesData[i] < 0) {
-                  indicesData[i] += fShapeX[fAttrAxis].dim;
+               if (fIndices[i] < 0) {
+                  fIndices[i] += fShapeX[fAttrAxis].dim;
                }
             }
          }
-         // Save in a vector gather Indices of size q
-         fIndices = std::vector<int64_t>(indicesData, indicesData + indicesLength);
       }
       // Output shape
       if (model.Verbose())
