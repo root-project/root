@@ -649,3 +649,17 @@ jobs:
         kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         echo +++ Running the copy
         xrdcp -rf Binaries*/root_v* ${EOS_ENDPOINT}/${EOS_PATH}/
+
+
+  invoke_rn_creation:
+    # Create release notes
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.binaries}}
+    name: "Invoke the creation of the Release Notes"
+    needs: publish_binaries
+    uses: ./.github/workflows/root-rn-ci.yml
+    secrets:
+      RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+      KRB5REALM: ${{ secrets.KRB5REALM }}
+      KRB5USER: ${{ secrets.KRB5USER }}
+    with:
+      branch: ${{ github.head_ref || github.ref_name }}
