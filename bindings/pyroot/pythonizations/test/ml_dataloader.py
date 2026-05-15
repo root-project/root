@@ -4570,6 +4570,44 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             self.teardown_file(self.file_name5)
             raise
 
+    def test17_shuffled_split_varies_with_seed(self):
+        self.create_file1()
+        self.create_file2()
+
+        try:
+            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
+            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+
+            dl1 = ROOT.Experimental.ML.RDataLoader(
+                [df1, df2],
+                batch_size=3,
+                target="b2",
+                shuffle=True,
+                drop_remainder=False,
+                set_seed=42,
+            )
+
+            dl2 = ROOT.Experimental.ML.RDataLoader(
+                [df1, df2],
+                batch_size=3,
+                target="b2",
+                shuffle=True,
+                drop_remainder=False,
+                set_seed=43,
+            )
+
+            _, gen_val1 = dl1.train_test_split(0.4)
+            _, gen_val2 = dl2.train_test_split(0.4)
+
+            val_1_collected = sorted([v for x, y in gen_val1.as_numpy() for v in x.flatten().tolist()])
+            val_2_collected = sorted([v for x, y in gen_val2.as_numpy() for v in x.flatten().tolist()])
+
+            self.assertNotEqual(val_1_collected, val_2_collected)
+
+        finally:
+            self.teardown_file(self.file_name1)
+            self.teardown_file(self.file_name2)
+
 
 class DataLoaderRandomUndersampling(unittest.TestCase):
     file_name1 = "major.root"
