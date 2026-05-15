@@ -8,7 +8,19 @@ on:
         type: string
         required: true
         default: "master"
-
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: true
+    secrets:
+      RWEBEOS_KT:
+        required: true
+      KRB5REALM:
+        required: true
+      KRB5USER:
+        required: true
+      
 jobs:
   create_release_notes:
     runs-on: ubuntu-latest
