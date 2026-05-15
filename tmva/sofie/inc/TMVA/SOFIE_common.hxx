@@ -250,6 +250,16 @@ inline std::string ConvertValToString<double>(double value) {
    }
    return ret.str();
 }
+// int64_t specialization for INT64_MIN
+template<>
+inline std::string ConvertValToString<int64_t>(int64_t value) {
+   std::stringstream ret;
+   if (value == INT64_MIN)
+      ret << "INT64_MIN";
+   else
+      ret << std::to_string(value);
+   return ret.str();
+}
 
 
 // convert list of values in a string taking into account the precision

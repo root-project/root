@@ -213,8 +213,6 @@ public:
          }
          // check case of constant  output (if all inputs are defined)
          if (model.IsInitializedTensor(fNC)) {
-
-            std::cout << "Where op: " << fNC << " is initialized\n";
             std::string nameC = fNBroadcastedC.empty() ? fNC : fNBroadcastedC;
             auto dataC = static_cast<bool *>(model.GetInitializedTensorData(nameC).get());
             model.SetNotWritableInitializedTensor(nameC);
@@ -223,22 +221,18 @@ public:
             std::vector<Dim> shapeDataX;
             std::vector<Dim> shapeDataY;
             if (model.IsInitializedTensor(fNX)) {
-               std::cout << "Where op: " << fNX << " is initialized\n";
                std::string nameX = fNBroadcastedX.empty() ? fNX : fNBroadcastedX;
                dataX = static_cast<T *>(model.GetInitializedTensorData(nameX).get());
                // flag tensors to not be written in a file
                model.SetNotWritableInitializedTensor(nameX);
             } else if (model.IsShapeTensor(fNX)) {
-               std::cout << "Where op: " << fNX << " is a shape tensor\n";
                shapeDataX = model.GetShapeTensorValues(fNX);
             }
             if (model.IsInitializedTensor(fNY)) {
-               std::cout << "Where op: " << fNY << " is initialized\n";
                std::string nameY = fNBroadcastedY.empty() ? fNY : fNBroadcastedY;
                dataY = static_cast<T *>(model.GetInitializedTensorData(nameY).get());
                model.SetNotWritableInitializedTensor(nameY);
             } else if (model.IsShapeTensor(fNY)) {
-               std::cout << "Where op: " << fNY << " is a shape tensor\n";
                shapeDataY = model.GetShapeTensorValues(fNY);
             }
             std::vector<T> dataZ;        // used in case output is constant tensor
@@ -252,14 +246,16 @@ public:
                dataZ.resize(ConvertShapeToLength(fShapeZ));
                for (size_t i = 0; i < dataZ.size(); i++)
                   dataZ[i] = (dataC[i]) ? dataX[i] : dataY[i];
-               std::cout << "data A and B : dataZ constant: " << ConvertValuesToString(dataZ) << std::endl;
+               if (model.Verbose())
+                  std::cout << "data A and B : dataZ constant: " << ConvertValuesToString(dataZ) << std::endl;
             } else if (dataX && shapeDataY.size() > 0) {
                shapeDataZ.resize(ConvertShapeToLength(fShapeZ));
                for (size_t i = 0; i < shapeDataZ.size(); i++) {
                   shapeDataZ[i] = (dataC[i]) ? Dim{size_t(dataX[i])} : shapeDataY[i];
                   isOutputConstantTensor &= !shapeDataZ[i].isParam;
                }
-               std::cout << "data A but shapeB " << ConvertDimShapeToString(shapeDataY) << "  "
+               if (model.Verbose())
+                  std::cout << "data A but shapeB " << ConvertDimShapeToString(shapeDataY) << "  "
                          << isOutputConstantTensor << std::endl;
             } else if (dataY && shapeDataX.size() > 0) {
                shapeDataZ.resize(ConvertShapeToLength(fShapeZ));
@@ -267,7 +263,8 @@ public:
                   shapeDataZ[i] = (dataC[i]) ? shapeDataY[i] : Dim{size_t(dataY[i])};
                   isOutputConstantTensor &= !shapeDataZ[i].isParam;
                }
-               std::cout << "data B but shapeA " << ConvertDimShapeToString(shapeDataX) << "  "
+               if (model.Verbose())
+                  std::cout << "data B but shapeA " << ConvertDimShapeToString(shapeDataX) << "  "
                          << isOutputConstantTensor << std::endl;
             } else if (shapeDataY.size() > 0 && shapeDataX.size() > 0) {
                shapeDataZ.resize(ConvertShapeToLength(fShapeZ));
@@ -275,7 +272,8 @@ public:
                   shapeDataZ[i] = (dataC[i]) ? shapeDataX[i] : shapeDataY[i];
                   isOutputConstantTensor &= !shapeDataZ[i].isParam;
                }
-               std::cout << " shapeA and B " << ConvertDimShapeToString(shapeDataX) << " shapeB "
+               if (model.Verbose())
+                  std::cout << " shapeA and B " << ConvertDimShapeToString(shapeDataX) << " shapeB "
                          << ConvertDimShapeToString(shapeDataY) << "  " << isOutputConstantTensor << std::endl;
             }
             fIsOutputConstant = true;
@@ -427,7 +425,6 @@ public:
             return "0";
          std::string expr;
          size_t offset = rankZ - dimShape.size();
-         std::cout << rankZ << "  " << dimShape.size() << "  " << offset << std::endl;
          for (size_t i = 0; i < dimShape.size(); ++i) {
             if (dimShape[i].dim == 1 || dimShape[i].GetVal() == "1") continue;
             expr += "idx_" + std::to_string(i + offset);
