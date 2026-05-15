@@ -520,4 +520,19 @@ TEST(RNTuple, AlignmentCornerCases)
    EXPECT_EQ(alignof(AlignmentEnvelope), f->GetAlignment());
    EXPECT_EQ(alignof(ROOT::RVec<OverAligned>),
              RFieldBase::Create("", "ROOT::RVec<OverAligned>").Unwrap()->GetAlignment());
+
+   std::unique_ptr<AlignmentEnvelope> ptr(f->CreateObject<AlignmentEnvelope>().release());
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(ptr.get()) % alignof(AlignmentEnvelope));
+
+   FileRaii fileGuard("test_ntuple_alignment_corner_cases.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->MakeField<AlignmentEnvelope>("f");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto bulk = reader->GetModel().CreateBulk("f");
+   auto bulkPtr = bulk.ReadBulk(ROOT::RNTupleLocalRange(0, 0, 1));
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(bulkPtr) % alignof(AlignmentEnvelope));
 }

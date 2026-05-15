@@ -158,7 +158,7 @@ private:
       TClass *fClass;
 
    public:
-      explicit RClassDeleter(TClass *cl) : fClass(cl) {}
+      explicit RClassDeleter(TClass *cl);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -239,7 +239,7 @@ private:
       TClass *fClass;
 
    public:
-      explicit RStreamerFieldDeleter(TClass *cl) : fClass(cl) {}
+      explicit RStreamerFieldDeleter(TClass *cl);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 

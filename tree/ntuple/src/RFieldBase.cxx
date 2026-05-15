@@ -3,6 +3,7 @@
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
@@ -168,7 +169,7 @@ void ROOT::RFieldBase::RBulkValues::ReleaseValues()
       }
    }
 
-   operator delete(fValues);
+   operator delete(fValues, fField->GetAlignment());
 }
 
 void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::size_t size)
@@ -178,7 +179,7 @@ void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::siz
          throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
       }
       ReleaseValues();
-      fValues = operator new(size * fValueSize);
+      fValues = operator new(size * fValueSize, std::align_val_t(fField->GetAlignment()));
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
@@ -633,7 +634,7 @@ std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
 
 void *ROOT::RFieldBase::CreateObjectRawPtr() const
 {
-   void *where = operator new(GetValueSize());
+   void *where = operator new(GetValueSize(), std::align_val_t(GetAlignment()));
    R__ASSERT(where != nullptr);
    ConstructValue(where);
    return where;
@@ -643,6 +644,12 @@ ROOT::RFieldBase::RValue ROOT::RFieldBase::CreateValue()
 {
    void *obj = CreateObjectRawPtr();
    return RValue(this, std::shared_ptr<void>(obj, RSharedPtrDeleter(GetDeleter())));
+}
+
+void ROOT::RFieldBase::EnsureValidAlignment(std::size_t alignment)
+{
+   if (alignment == 0 || alignment > ROOT::RFieldBase::kMaxAlignment || !ROOT::Internal::IsPowerOfTwo(alignment))
+      throw ROOT::RException(R__FAIL(std::string("invalid alignment: ") + std::to_string(alignment)));
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RFieldBase::SplitValue(const RValue & /*value*/) const

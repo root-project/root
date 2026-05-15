@@ -151,8 +151,8 @@ void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayField::GetDeleter() const
 {
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
-      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RDeleter>();
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetAlignment(), GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RDeleter>(GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue &value) const
@@ -634,6 +634,13 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::BeforeConnectPageSource(In
 void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    EnsureMatchingOnDiskCollection(desc).ThrowOnError();
+}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter() : RDeleter(GetAlignOfVector()) {}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
+   : RDeleter(GetAlignOfVector()), fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
+{
 }
 
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)

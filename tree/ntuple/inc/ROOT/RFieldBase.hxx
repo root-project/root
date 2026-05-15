@@ -102,18 +102,25 @@ class RFieldBase {
 
    using ReadCallback_t = std::function<void(void *)>;
 
+public:
+   /// Maximum supported alignment for field types, i.e. maximum returned by GetAlignment()
+   static constexpr std::size_t kMaxAlignment = 4096;
+
 protected:
    /// A functor to release the memory acquired by CreateValue() (memory and constructor).
    /// This implementation works for types with a trivial destructor. More complex fields implement a derived deleter.
    /// The deleter is operational without the field object and thus can be used to destruct/release a value after
    /// the field has been destructed.
    class RDeleter {
+      std::size_t fAlignment;
+
    public:
+      explicit RDeleter(std::size_t alignment) : fAlignment(alignment) { EnsureValidAlignment(alignment); }
       virtual ~RDeleter() = default;
       virtual void operator()(void *objPtr, bool dtorOnly)
       {
          if (!dtorOnly)
-            operator delete(objPtr);
+            operator delete(objPtr, fAlignment);
       }
    };
 
@@ -121,6 +128,7 @@ protected:
    template <typename T>
    class RTypedDeleter : public RDeleter {
    public:
+      RTypedDeleter() : RDeleter(alignof(T)) {}
       void operator()(void *objPtr, bool dtorOnly) final
       {
          std::destroy_at(static_cast<T *>(objPtr));
@@ -422,10 +430,12 @@ protected:
 
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' CreateValue().
    virtual void ConstructValue(void *where) const = 0;
-   virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(); }
+   virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(GetAlignment()); }
    /// Allow derived classes to call ConstructValue(void *) and GetDeleter() on other (sub)fields.
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
+   /// Throws if alignment is not a power of two between 1 and kMaxAlignment.
+   static void EnsureValidAlignment(std::size_t alignment);
 
    /// Allow parents to mark their childs as artificial fields (used in class and record fields)
    static void CallSetArtificialOn(RFieldBase &other) { other.SetArtificial(); }
@@ -556,9 +566,6 @@ protected:
           const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
-   /// Maximum supported alignment for field types, i.e. maximum returned by GetAlignment()
-   static constexpr std::size_t kMaxAlignment = 4096;
-
    template <bool IsConstT>
    class RSchemaIteratorTemplate;
    using RSchemaIterator = RSchemaIteratorTemplate<false>;
