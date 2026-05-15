@@ -232,8 +232,10 @@ class ROptionalField : public RNullableField {
       std::size_t fEngagementPtrOffset = 0;
 
    public:
-      ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter, std::size_t engagementPtrOffset)
-         : fItemDeleter(std::move(itemDeleter)), fEngagementPtrOffset(engagementPtrOffset) {}
+      ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter, std::size_t engagementPtrOffset, std::size_t alignment)
+         : RDeleter(alignment), fItemDeleter(std::move(itemDeleter)), fEngagementPtrOffset(engagementPtrOffset)
+      {
+      }
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -283,7 +285,10 @@ class RUniquePtrField : public RNullableField {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      explicit RUniquePtrDeleter(std::unique_ptr<RDeleter> itemDeleter) : fItemDeleter(std::move(itemDeleter)) {}
+      explicit RUniquePtrDeleter(std::unique_ptr<RDeleter> itemDeleter)
+         : RDeleter(alignof(std::unique_ptr<char>)), fItemDeleter(std::move(itemDeleter))
+      {
+      }
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -387,9 +392,12 @@ private:
       std::vector<std::unique_ptr<RDeleter>> fItemDeleters;
 
    public:
-      RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset,
+      RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset, std::size_t alignment,
                       std::vector<std::unique_ptr<RDeleter>> itemDeleters)
-         : fTagOffset(tagOffset), fVariantOffset(variantOffset), fItemDeleters(std::move(itemDeleters))
+         : RDeleter(alignment),
+           fTagOffset(tagOffset),
+           fVariantOffset(variantOffset),
+           fItemDeleters(std::move(itemDeleters))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;

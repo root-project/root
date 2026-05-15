@@ -54,8 +54,9 @@ private:
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RArrayDeleter(std::size_t itemSize, std::size_t arrayLength, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemSize(itemSize), fArrayLength(arrayLength), fItemDeleter(std::move(itemDeleter))
+      RArrayDeleter(std::size_t itemSize, std::size_t arrayLength, std::size_t alignment,
+                    std::unique_ptr<RDeleter> itemDeleter)
+         : RDeleter(alignment), fItemSize(itemSize), fArrayLength(arrayLength), fItemDeleter(std::move(itemDeleter))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -130,9 +131,15 @@ class RRVecField : public RFieldBase {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      explicit RRVecDeleter(std::size_t itemAlignment) : fItemAlignment(itemAlignment) {}
+      explicit RRVecDeleter(std::size_t itemAlignment)
+         : RDeleter(ROOT::Internal::EvalRVecAlignment(itemAlignment)), fItemAlignment(itemAlignment)
+      {
+      }
       RRVecDeleter(std::size_t itemAlignment, std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemAlignment(itemAlignment), fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
+         : RDeleter(ROOT::Internal::EvalRVecAlignment(itemAlignment)),
+           fItemAlignment(itemAlignment),
+           fItemSize(itemSize),
+           fItemDeleter(std::move(itemDeleter))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -215,11 +222,8 @@ class RVectorField : public RFieldBase {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RVectorDeleter() = default;
-      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
-      {
-      }
+      RVectorDeleter();
+      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
