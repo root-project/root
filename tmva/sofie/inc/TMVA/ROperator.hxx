@@ -45,7 +45,7 @@ protected:
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
    bool fIsOutputConstant = false;  ///< flag to identify if operator has a constant output (no need to generate code)
-   bool fIsOutputParamShape = false;     ///< flag to identify of the output represents a parametric shape (can be knwon at compile time)
+   bool fIsOutputParamShape = false;     ///< flag to identify of the output represents a parametric shape (can be known at compile time)
 
    mutable std::vector<std::string_view> fInputTensorNames;
    mutable std::vector<std::string_view> fOutputTensorNames;
