@@ -58,7 +58,7 @@ class RSoAField : public RFieldBase {
       TClass *fSoAClass;
 
    public:
-      explicit RSoADeleter(TClass *cl) : fSoAClass(cl) {}
+      explicit RSoADeleter(TClass *cl);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 

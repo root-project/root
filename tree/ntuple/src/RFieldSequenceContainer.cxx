@@ -146,8 +146,8 @@ void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayField::GetDeleter() const
 {
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
-      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RDeleter>();
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetAlignment(), GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RDeleter>(GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue &value) const
@@ -175,6 +175,11 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
+   if (itemField->GetAlignment() > sizeof(std::max_align_t)) {
+      // RVec uses malloc() and free()
+      throw RException(R__FAIL("RVec does not support over-aligned types"));
+   }
+
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
    if (!itemField->GetTypeAlias().empty())
@@ -549,9 +554,11 @@ void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t
    auto typedValue = static_cast<std::vector<char> *>(vec);
 
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
-   R__ASSERT(itemSize > 0);
+   assert(itemSize > 0);
    const auto oldNItems = typedValue->size() / itemSize;
    const auto availNItems = typedValue->capacity() / itemSize;
+   assert((typedValue->size() % itemSize == 0) && (typedValue->capacity() % itemSize == 0));
+
    const bool canRealloc = availNItems < nItems;
    bool allDeallocated = false;
    if (itemDeleter) {
@@ -629,6 +636,13 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::BeforeConnectPageSource(In
 void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    EnsureMatchingOnDiskCollection(desc).ThrowOnError();
+}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter() : RDeleter(GetAlignOfVector()) {}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
+   : RDeleter(GetAlignOfVector()), fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
+{
 }
 
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)

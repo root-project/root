@@ -127,13 +127,9 @@ protected:
       RCollectionIterableOnce::RIteratorFuncs fIFuncsWrite;
 
    public:
-      explicit RProxiedCollectionDeleter(std::shared_ptr<TVirtualCollectionProxy> proxy) : fProxy(proxy) {}
+      explicit RProxiedCollectionDeleter(std::shared_ptr<TVirtualCollectionProxy> proxy);
       RProxiedCollectionDeleter(std::shared_ptr<TVirtualCollectionProxy> proxy, std::unique_ptr<RDeleter> itemDeleter,
-                                size_t itemSize)
-         : fProxy(proxy), fItemDeleter(std::move(itemDeleter)), fItemSize(itemSize)
-      {
-         fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
-      }
+                                size_t itemSize);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
