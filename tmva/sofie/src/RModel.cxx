@@ -188,30 +188,34 @@ void RModel::AddInputTensorName(std::string input_name) {
     fInputTensorNames.emplace_back(UTILITY::Clean_name(input_name));
 }
 
-void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
-    AddBlasRoutines(op->GetBlasRoutines());
-    auto libs = op->GetStdLibs();
-    auto op_input_tensors = op->GetOpInputTensors();
-    for (auto& stdlib : libs) {
-        AddNeededStdLib(stdlib);
-    }
-    if (order_execution >= 0) {
-        fOperators.insert(fOperators.begin() + order_execution, std::move(op));
-    } else {
-        fOperators.push_back(std::move(op));
-        order_execution = fOperators.size()-1;
-    }
+void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution)
+{
+   AddBlasRoutines(op->GetBlasRoutines());
+   auto libs = op->GetStdLibs();
+   auto op_input_tensors = op->GetOpInputTensors();
+   for (auto &stdlib : libs) {
+      AddNeededStdLib(stdlib);
+   }
+   if (order_execution >= 0) {
+      fOperators.insert(fOperators.begin() + order_execution, std::move(op));
+   } else {
+      fOperators.push_back(std::move(op));
+      order_execution = fOperators.size() - 1;
+   }
 
-    // storing the last usage of tensors which are input to the operator
-    // (excluding tensors which are inputs to the model or the initialized (weights) tensors)
-    // We call this function during parsing so we don't have yet initialized the operators
-   for(size_t index = 0; index<op_input_tensors.size() &&
-            fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() &&
-            std::find(fInputTensorNames.begin(), fInputTensorNames.end(),
-                      UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end();
-            ++index)
-   {
-      fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = order_execution;
+   // storing the last usage of tensors which are input to the operator
+   // (excluding tensors which are inputs to the model or the initialized (weights) tensors)
+   // We call this function during parsing so we don't have yet initialized the operators
+   for (size_t index = 0; index < op_input_tensors.size(); index++) {
+      if (!IsInitializedTensor(UTILITY::Clean_name(std::string(op_input_tensors[index]))) &&
+          std::find(fInputTensorNames.begin(), fInputTensorNames.end(),
+                    UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end()) {
+
+         fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = order_execution;
+         if (Verbose())
+            std::cout << "adding order execution for " << op_input_tensors[index] << " order " << order_execution
+                      << std::endl;
+      }
    }
 }
 
