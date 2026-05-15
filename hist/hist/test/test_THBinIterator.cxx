@@ -187,7 +187,7 @@ TH1 *createTH3()
    return h1;
 }
 
-// create a TH2Poly using teh TKDTree binning class
+// create a TH2Poly using the TKDTree binning class
 TH1 * createTH2Poly() {
    // generate multidim data
    const int n = nEvents;

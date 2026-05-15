@@ -65,7 +65,7 @@ void XMLReader::PopulateMap(){
 }
 
 /*
- This function Gets the next tag from teh input file stream
+ This function Gets the next tag from the input file stream
  file - the open input stream
  out - we return the tag through that parameter
  lineCount - we are counting the line numbers here in order to print error messages in case of an error
