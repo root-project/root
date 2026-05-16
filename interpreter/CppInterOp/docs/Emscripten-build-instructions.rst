@@ -16,7 +16,7 @@ experimental and subject to change. Try a Jupyter Lite demo of xeus-cpp by click
 This document first starts with the instructions on how to build a wasm
 build of CppInterOp. Before we start it should be noted that unlike the
 non wasm version of CppInterOp we currently only support the Clang-REPL
-backend using llvm>19. We will first make folder to
+backend using llvm>20. We will first make folder to
 build our wasm build of CppInterOp. This can be done by executing the
 following command
 
@@ -57,7 +57,7 @@ and on Windows execute in Powershell
    $env:PWD_DIR= $PWD.Path
    $env:SYSROOT_PATH="$env:EMSDK/upstream/emscripten/cache/sysroot"
 
-Now clone the 21.x release of the LLVM project repository and CppInterOp
+Now clone the 22.x release of the LLVM project repository and CppInterOp
 (the building of the emscripten version of llvm can be avoided by
 executing micromamba install llvm -c
 <https://repo.mamba.pm/emscripten-forge> and setting the LLVM_BUILD_DIR/$env:LLVM_BUILD_DIR
@@ -65,7 +65,7 @@ appropriately)
 
 .. code:: bash
 
-   git clone --depth=1 --branch release/21.x https://github.com/llvm/llvm-project.git
+   git clone --depth=1 --branch release/22.x https://github.com/llvm/llvm-project.git
    git clone --depth=1 https://github.com/compiler-research/CppInterOp.git
 
 Now move into the cloned llvm-project folder and apply the required patches. On Linux and osx this
@@ -74,17 +74,16 @@ executing
 .. code:: bash
 
    cd ./llvm-project/
-   git apply -v ../CppInterOp/patches/llvm/emscripten-clang21-*.patch
+   git apply -v ../CppInterOp/patches/llvm/emscripten-clang22-*.patch
 
 On Windows execute the following
 
 .. code:: powershell
 
    cd .\llvm-project\
-   cp -r ..\patches\llvm\emscripten-clang21*
-   git apply -v emscripten-clang21-1-shift-temporary-files-to-tmp-dir.patch
-   git apply -v emscripten-clang21-2-enable_exception_handling.patch
-   git apply -v emscripten-clang21-3-webassembly_target_machine_reordering.patch
+   cp -r ..\patches\llvm\emscripten-clang22*
+   git apply -v emscripten-clang22-1-enable_exception_handling.patch
+   git apply -v emscripten-clang22-2-webassembly_target_machine_reordering.patch
 
 We are now in a position to build an emscripten build of llvm by executing the following on Linux
 and osx
@@ -95,7 +94,8 @@ and osx
    cd native_build
    cmake -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=host -DCMAKE_BUILD_TYPE=Release ../llvm/
    cmake --build . --target llvm-tblgen clang-tblgen --parallel $(nproc --all)
-   export NATIVE_DIR=$PWD/bin/
+   export NATIVE_LLVM_BUILD_DIR==$PWD
+   export NATIVE_LLVM_BIN_DIR=$PWD/bin/
    cd ..
    mkdir build
    cd build
@@ -117,7 +117,7 @@ and osx
                  -DLLVM_BUILD_TOOLS=OFF                          \
                  -DLLVM_ENABLE_LIBPFM=OFF                        \
                  -DCLANG_BUILD_TOOLS=OFF                         \
-                 -DLLVM_NATIVE_TOOL_DIR=$NATIVE_DIR 		\
+                 -DLLVM_NATIVE_TOOL_DIR=$NATIVE_LLVM_BIN_DIR 		\
                  -DCMAKE_C_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" \
                  -DCMAKE_CXX_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" \
                  -DLLVM_ENABLE_LTO=Full \
@@ -133,7 +133,8 @@ or executing
    cmake -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=host -DCMAKE_BUILD_TYPE=Release -G Ninja ../llvm/
    cmake --build . --target llvm-tblgen clang-tblgen --parallel $(nproc --all)
    $env:PWD_DIR= $PWD.Path
-   $env:NATIVE_DIR="$env:PWD_DIR/bin/"
+   $env:NATIVE_LLVM_BUILD_DIR=="$env:PWD_DIR"
+   $env:NATIVE_LLVM_BIN_DIR=="$env:PWD_DIR/bin/"
    cd ..
    mkdir build
    cd build
@@ -155,7 +156,7 @@ or executing
                         -DLLVM_BUILD_TOOLS=OFF                          `
                         -DLLVM_ENABLE_LIBPFM=OFF                        `
                         -DCLANG_BUILD_TOOLS=OFF                         `
-                        -DLLVM_NATIVE_TOOL_DIR="$env:NATIVE_DIR" 		    `
+                        -DLLVM_NATIVE_TOOL_DIR="$env:NATIVE_BIN_DIR" 		    `
                         -G Ninja `
                         -DCMAKE_C_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" `
                         -DCMAKE_CXX_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" `
@@ -208,7 +209,42 @@ and
    $env:CMAKE_PREFIX_PATH=$env:PREFIX
    $env:CMAKE_SYSTEM_PREFIX_PATH=$env:PREFIX
 
-on Windows. Now to build and test your Emscripten build of CppInterOp on Linux and osx execute the following
+on Windows. Before building the Emscripten version of CppInterOp, we need
+to build ``cppinterop-tblgen`` natively. This tool generates ``.inc`` files
+from ``.td`` definitions and must run on the host (not under Emscripten).
+We use the native LLVM build from the earlier step since it has the required
+``libLLVMTableGen`` library.
+
+On Linux and osx:
+
+.. code:: bash
+
+   mkdir -p native_cppinterop_build && cd native_cppinterop_build
+   cmake -DCMAKE_BUILD_TYPE=Release \
+         -DLLVM_DIR=$NATIVE_LLVM_BUILD_DIR/lib/cmake/llvm \
+	     -DCMAKE_CXX_STANDARD=17 \
+         -DCPPINTEROP_BUILD_TABLEGEN_ONLY=ON \
+         ../
+   cmake --build . --target cppinterop-tblgen -j $(nproc --all)
+   export CPPINTEROP_TBLGEN_EXE=$(find $PWD -name cppinterop-tblgen -type f | head -1)
+   cd ..
+
+On Windows:
+
+.. code:: powershell
+
+   mkdir native_cppinterop_build
+   cd native_cppinterop_build
+   cmake -DCMAKE_BUILD_TYPE=Release `
+         -DLLVM_DIR="$env:NATIVE_LLVM_BUILD_DIR\lib\cmake\llvm" `
+	     -DCMAKE_CXX_STANDARD=17 `
+         -DCPPINTEROP_BUILD_TABLEGEN_ONLY=ON `
+         ..\
+   cmake --build . --target cppinterop-tblgen -j $(nproc --all)
+   $env:CPPINTEROP_TBLGEN_EXE = (Get-ChildItem -Recurse -Filter "cppinterop-tblgen.exe" | Select-Object -First 1).FullName
+   cd ..
+
+Now to build and test your Emscripten build of CppInterOp on Linux and osx execute the following
 (BUILD_SHARED_LIBS=ON is only needed if building xeus-cpp, as CppInterOp can be built as an Emscripten static library)
 
 .. code:: bash
@@ -223,6 +259,7 @@ on Windows. Now to build and test your Emscripten build of CppInterOp on Linux a
                  -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON            \
                  -DCMAKE_INSTALL_PREFIX=$PREFIX         \
                  -DSYSROOT_PATH=$SYSROOT_PATH                                   \
+                 -DCPPINTEROP_TABLEGEN_EXE=$CPPINTEROP_TBLGEN_EXE \
                  ../
    emmake make -j $(nproc --all) check-cppinterop
 
@@ -241,6 +278,7 @@ To build and test your Emscripten build of CppInterOp on Windows execute the fol
                 -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON            `
                 -DLLVM_ENABLE_WERROR=On                      `
                 -DSYSROOT_PATH="$env:SYSROOT_PATH"                     `
+                -DCPPINTEROP_TABLEGEN_EXE="$env:CPPINTEROP_TBLGEN_EXE" `
                 ..\
    emmake make -j $(nproc --all) check-cppinterop
 
@@ -366,7 +404,7 @@ by executing (replace LLVM_VERSION with the version of llvm you are building aga
 
    cd ../..
    git clone --depth=1 https://github.com/compiler-research/xeus-cpp.git
-   export LLVM_VERSION=21
+   export LLVM_VERSION=22
    cd ./xeus-cpp
    mkdir build
    cd build
@@ -387,7 +425,7 @@ and on Windows by executing
 
    cd ..\..
    git clone --depth=1 https://github.com/compiler-research/xeus-cpp.git
-   $env:LLVM_VERSION=21
+   $env:LLVM_VERSION=22
    cd .\xeus-cpp
    mkdir build
    cd build

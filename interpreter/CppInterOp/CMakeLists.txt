@@ -12,6 +12,11 @@ set(CMAKE_CXX_EXTENSIONS NO)
 option(CPPINTEROP_USE_CLING "Use Cling as backend" OFF)
 option(CPPINTEROP_USE_REPL "Use clang-repl as backend" ON)
 option(CPPINTEROP_ENABLE_TESTING "Enable the CppInterOp testing infrastructure." ON)
+option(CPPINTEROP_BUILD_TABLEGEN_ONLY "Only build cppinterop-tblgen (for cross-compilation)" OFF)
+
+#=Set OFF to suppress install() rules and route clangCppInterOp through
+# add_llvm_library(... BUILDTREE_ONLY)
+option(CPPINTEROP_INSTALL "Generate install rules for CppInterOp" ON)
 if(EMSCRIPTEN)
   set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm")
 endif()
@@ -23,6 +28,19 @@ endif()
 # project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   project(CppInterOp)
+
+  # When only building cppinterop-tblgen for cross-compilation, skip
+  # all find_package calls and library/test subdirectories. Only needs
+  # LLVM_DIR pointing to a native LLVM build with libLLVMTableGen.
+  if(CPPINTEROP_BUILD_TABLEGEN_ONLY)
+    find_package(LLVM REQUIRED CONFIG)
+    include_directories(${LLVM_INCLUDE_DIRS})
+    include(AddLLVM)
+    include(HandleLLVMOptions)
+    include(TableGen)
+    add_subdirectory(utils/TableGen)
+    return()
+  endif()
 
   if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(WARNING "No build type selected. Defaulted CMAKE_BUILD_TYPE=Release.\n"
@@ -300,9 +318,17 @@ endif()
 
   include(AddLLVM)
   include(HandleLLVMOptions)
+  include(TableGen)
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Generated .inc files from cppinterop-tblgen live under our own build
+# subtree. Use CMAKE_CURRENT_BINARY_DIR so consumers embedding CppInterOP
+# via add_subdirectory() (e.g. ROOT) don't write CppInterOp artifacts into
+# top-level build/include
+set(CPPINTEROP_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/include/CppInterOp)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # In rare cases we might want to have clang installed in a different place
 # than llvm and the header files should be found first (even though the
@@ -321,16 +347,53 @@ include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
-string(REGEX REPLACE "/lib/cmake/llvm$" "" LLVM_BINARY_LIB_DIR "${LLVM_DIR}")
-add_definitions(-DLLVM_BINARY_LIB_DIR="${LLVM_BINARY_LIB_DIR}")
+# Bundle the ORC runtime + executor inside CppInterOp's distribution
+# so the OOP-JIT path is self-contained: no extra package to install,
+# no resource-dir scan in the host's clang tree at runtime. Paths are
+# baked at build time (CPPINTEROP_RUNTIME_{BUILD,INSTALL}_DIR in
+# Compatibility.h) and probed via fs::exists.
+set(CPPINTEROP_RUNTIME_SUBDIR "cppinterop-rt")
+set(CPPINTEROP_RUNTIME_BUILDTREE_DIR
+    "${CMAKE_BINARY_DIR}/lib/${CPPINTEROP_RUNTIME_SUBDIR}")
 
-if(LLVM_BUILT_WITH_OOP_JIT)
-  if((CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_SYSTEM_PROCESSOR MATCHES "arm64") OR
-     (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64"))
-    add_definitions(-DLLVM_BUILT_WITH_OOP_JIT)
-  else()
-    message(FATAL_ERROR "LLVM_BUILT_WITH_OOP_JIT is only supported on MacOS arm64 or Linux x86_64. Build aborted.")
+if(LLVM_VERSION_MAJOR GREATER 21)
+  find_package(LLVMOrcRuntime QUIET MODULE)
+endif()
+
+if(LLVMOrcRuntime_FOUND)
+  message(STATUS "CppInterOp OOP-JIT runtime:")
+  message(STATUS "  orc_rt:   ${LLVMOrcRuntime_LIBRARY}")
+  message(STATUS "  executor: ${LLVMOrcRuntime_EXECUTOR}")
+
+  file(MAKE_DIRECTORY "${CPPINTEROP_RUNTIME_BUILDTREE_DIR}")
+  configure_file("${LLVMOrcRuntime_LIBRARY}"
+                 "${CPPINTEROP_RUNTIME_BUILDTREE_DIR}/liborc_rt.a"
+                 COPYONLY)
+  configure_file("${LLVMOrcRuntime_EXECUTOR}"
+                 "${CPPINTEROP_RUNTIME_BUILDTREE_DIR}/llvm-jitlink-executor"
+                 COPYONLY)
+  if(CPPINTEROP_INSTALL)
+    install(FILES "${LLVMOrcRuntime_LIBRARY}"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/${CPPINTEROP_RUNTIME_SUBDIR}"
+            RENAME liborc_rt.a)
+    install(PROGRAMS "${LLVMOrcRuntime_EXECUTOR}"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/${CPPINTEROP_RUNTIME_SUBDIR}"
+            RENAME llvm-jitlink-executor)
   endif()
+
+  # Bake build-tree and install-tree runtime locations into the library
+  # so it can locate the bundled parts at runtime without dladdr or any
+  # platform-specific self-DSO discovery.
+  add_definitions(
+    "-DCPPINTEROP_RUNTIME_BUILD_DIR=\"${CPPINTEROP_RUNTIME_BUILDTREE_DIR}\""
+    "-DCPPINTEROP_RUNTIME_INSTALL_DIR=\"${CMAKE_INSTALL_FULL_LIBDIR}/${CPPINTEROP_RUNTIME_SUBDIR}\"")
+elseif(LLVM_VERSION_MAJOR GREATER 21)
+  message(STATUS
+    "CppInterOp: OOP-JIT runtime (liborc_rt + llvm-jitlink-executor) "
+    "not found in ${LLVM_LIBRARY_DIR}. Out-of-process JIT support will "
+    "be unavailable. To enable it, build LLVM with compiler-rt and "
+    "ninja the llvm-jitlink-executor + orc_rt* targets, or install a "
+    "compiler-rt package that ships them.")
 endif()
 
 # If the llvm sources are present add them with higher priority.
@@ -432,6 +495,35 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/CppInterOp/CppInterOpConfigVersion.cmake
   @ONLY)
 
+if(CPPINTEROP_INSTALL)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/CppInterOp/
+    DESTINATION lib/cmake/CppInterOp
+    FILES_MATCHING
+    PATTERN "*.cmake"
+    )
+
+  install(DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.def"
+    PATTERN "*.h"
+    PATTERN "*.inc"
+    PATTERN ".svn" EXCLUDE
+    )
+
+  install(DIRECTORY tools/
+    DESTINATION include/CppInterOp/tools
+    FILES_MATCHING
+    PATTERN "*.h"
+  )
+
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "CMakeFiles" EXCLUDE
+    PATTERN "*.inc"
+    )
+endif()
 add_definitions( -D_GNU_SOURCE )
 
 # Add deps if we build together with clang.
@@ -521,6 +613,9 @@ if (CPPINTEROP_INCLUDE_DOCS)
   add_subdirectory(docs)
 endif()
 
+if(NOT EMSCRIPTEN AND NOT CPPINTEROP_TABLEGEN_EXE)
+  add_subdirectory(utils/TableGen)
+endif()
 add_subdirectory(lib)
 if (CPPINTEROP_ENABLE_TESTING)
   add_subdirectory(unittests)

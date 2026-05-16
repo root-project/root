@@ -13,6 +13,22 @@
 #include "Sins.h" // for access to private members
 #include "Tracing.h"
 
+// MSan workaround for clang-repl <= 22: __clang_Interpreter_SetValueNoAlloc
+// receives JIT-emitted values through varargs, and MSan cannot track shadow
+// across that JIT/native boundary -- the returned Value carries correct bits
+// but an uninit shadow, which trips downstream reads (convertTo, ~Value).
+// Fixed upstream in llvm/llvm-project#196894; unpoison locally for older LLVM.
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer) && LLVM_VERSION_MAJOR <= 22
+#include <sanitizer/msan_interface.h>
+#define CPPINTEROP_MSAN_UNPOISON_VALUE(v) __msan_unpoison(&(v), sizeof(v))
+#else
+#define CPPINTEROP_MSAN_UNPOISON_VALUE(v) ((void)0)
+#endif
+#else
+#define CPPINTEROP_MSAN_UNPOISON_VALUE(v) ((void)0)
+#endif
+
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Comment.h"
@@ -109,6 +125,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #endif // WIN32
+#include <vector>
 
 //  Runtime symbols required if the library using JIT (Cpp::Evaluate) does
 //  not link to llvm
@@ -187,18 +204,33 @@ struct InterpreterInfo {
 };
 
 static void DefaultProcessCrashHandler(void*);
+
+/// Set by UseExternalInterpreter to suppress llvm_shutdown at process exit
+/// -- the client owns LLVM in that case.
+static bool SkipShutDown = false;
+
+/// RAII guard whose dtor calls llvm_shutdown for the owned-interpreter case.
+/// Constructed as a function-local static AFTER sInterpreters, so its dtor
+/// fires FIRST (reverse-of-construction); llvm_shutdown then drains the
+/// ManagedStatic registry, including sInterpreters, deterministically.
+/// The llvm_shutdown call itself is gated on LLVM 23+, where
+/// Platform::lookupResolvedInitSymbols (llvm/llvm-project#196874) makes
+/// ~Interpreter's JIT deinit skip lazy materialization. On older LLVM
+/// the same chain SEGFAULTs in cleanUp against destroyed function-local
+/// statics, so the dtor is a no-op and sInterpreters leaks instead.
+struct InterpreterShutdown {
+  ~InterpreterShutdown() {
+    if (!SkipShutDown) {
+#if LLVM_VERSION_MAJOR > 22
+      llvm::llvm_shutdown();
+#endif
+    }
+  }
+};
+
 // Function-static storage for interpreters
 static std::deque<InterpreterInfo>&
 GetInterpreters(bool SetCrashHandler = true) {
-  // static int FakeArgc = 1;
-  // static const std::string VersionStr = GetVersion();
-  // static const char* ArgvBuffer[] = {VersionStr.c_str(), nullptr};
-  // static const char** FakeArgv = ArgvBuffer;
-  // static llvm::InitLLVM X(FakeArgc, FakeArgv);
-  // Cannot be a llvm::ManagedStatic because X will call shutdown which will
-  // trigger destruction on llvm::ManagedStatics and the destruction of the
-  // InterpreterInfos require to have llvm around.
-  // FIXME: Currently we never call llvm::llvm_shutdown and sInterpreters leaks.
   static llvm::ManagedStatic<std::deque<InterpreterInfo>> sInterpreters;
   static std::once_flag ProcessInitialized;
   std::call_once(ProcessInitialized, [SetCrashHandler]() {
@@ -215,12 +247,20 @@ GetInterpreters(bool SetCrashHandler = true) {
     llvm::InitializeAllAsmParsers();
     llvm::InitializeAllAsmPrinters();
 
-    if (SetCrashHandler)
+    // Pipe / OOM / crash handlers replicate what InitLLVM did before it was
+    // dropped. Skipped when the host owns LLVM -- they're its decision.
+    if (SetCrashHandler) {
+      llvm::sys::SetOneShotPipeSignalFunction(
+          llvm::sys::DefaultOneShotPipeSignalHandler);
       llvm::sys::AddSignalHandler(DefaultProcessCrashHandler,
                                   /*Cookie=*/nullptr);
-
-    // std::atexit(llvm::llvm_shutdown);
+      llvm::install_out_of_memory_new_handler();
+    }
   });
+
+  // Constructed after sInterpreters above, so its dtor fires first at
+  // process exit; see InterpreterShutdown.
+  static InterpreterShutdown Shutdown;
 
   return *sInterpreters;
 }
@@ -232,9 +272,8 @@ static void DefaultProcessCrashHandler(void*) {
 
   llvm::errs() << "\n**************************************************\n";
   llvm::errs() << "  CppInterOp CRASH DETECTED\n";
-  if (CppInterOp::Tracing::TraceInfo::TheTraceInfo) {
-    std::string Path =
-        CppInterOp::Tracing::TraceInfo::TheTraceInfo->writeToFile();
+  if (CppInterOp::Tracing::TheTraceInfo) {
+    std::string Path = CppInterOp::Tracing::TheTraceInfo->writeToFile();
     if (!Path.empty())
       llvm::errs() << "  Reproducer saved to: " << Path << "\n";
     else
@@ -299,6 +338,7 @@ TInterp_t GetInterpreter() {
 void UseExternalInterpreter(TInterp_t I) {
   INTEROP_TRACE(I);
   assert(GetInterpreters(false).empty() && "sInterpreter already in use!");
+  SkipShutDown = true;
   RegisterInterpreter(static_cast<compat::Interpreter*>(I), /*Owned=*/false);
   return INTEROP_VOID_RETURN();
 }
@@ -424,44 +464,67 @@ bool JitCall::AreArgumentsValid(void* result, ArgList args, void* self,
   return Valid;
 }
 
-void JitCall::ReportInvokeStart(void* result, ArgList args, void* self) const {
+// Trace-hook impls reached via DispatchRaw from JitCall's inline body.
+// Off-trace the slot is nullptr and these never run.
+void CppInterOpTraceJitCallInvokeImpl(const JitCall* JC, void* result,
+                                      void** args, std::size_t nargs,
+                                      void* self) {
+  auto* TI = CppInterOp::Tracing::TheTraceInfo;
+  if (!TI)
+    return;
   std::string Name;
   llvm::raw_string_ostream OS(Name);
-  auto* FD = (const FunctionDecl*)m_FD;
+  const auto* FD = static_cast<const FunctionDecl*>(JC->m_FD);
   FD->getNameForDiagnostic(OS, FD->getASTContext().getPrintingPolicy(),
                            /*Qualified=*/true);
   LLVM_DEBUG(dbgs() << "Run '" << Name << "', compiled at: "
-                    << (void*)m_GenericCall << " with result at: " << result
-                    << " , args at: " << args.m_Args << " , arg count: "
-                    << args.m_ArgSize << " , self at: " << self << "\n";);
-
-  if (auto* TI = CppInterOp::Tracing::TraceInfo::TheTraceInfo) {
-    std::string SelfPart = self ? TI->lookupHandle(self) : "";
-    std::string Entry =
-        llvm::formatv("  // JitCall::Invoke {0}(nargs={1}, self={2})", Name,
-                      args.m_ArgSize, SelfPart.empty() ? "nullptr" : SelfPart);
-    TI->appendToLog(Entry);
-  }
+                    << (void*)JC->m_GenericCall << " with result at: " << result
+                    << " , args at: " << args << " , arg count: " << nargs
+                    << " , self at: " << self << "\n";);
+  std::string SelfPart = self ? TI->lookupHandle(self) : "";
+  TI->appendToLog(llvm::formatv("  // JitCall::Invoke {0}(nargs={1}, self={2})",
+                                Name, nargs,
+                                SelfPart.empty() ? "nullptr" : SelfPart));
 }
 
-void JitCall::ReportInvokeStart(void* object, unsigned long nary,
-                                int withFree) const {
+void CppInterOpTraceJitCallInvokeDestructorImpl(const JitCall* JC, void* object,
+                                                unsigned long nary,
+                                                int withFree) {
+  auto* TI = CppInterOp::Tracing::TheTraceInfo;
+  if (!TI)
+    return;
   std::string Name;
   llvm::raw_string_ostream OS(Name);
-  auto* FD = (const FunctionDecl*)m_FD;
+  const auto* FD = static_cast<const FunctionDecl*>(JC->m_FD);
   FD->getNameForDiagnostic(OS, FD->getASTContext().getPrintingPolicy(),
                            /*Qualified=*/true);
   LLVM_DEBUG(dbgs() << "Finish '" << Name
-                    << "', compiled at: " << (void*)m_DestructorCall);
+                    << "', compiled at: " << (void*)JC->m_DestructorCall);
+  std::string ObjPart = object ? TI->lookupHandle(object) : "nullptr";
+  TI->appendToLog(
+      llvm::formatv("  // JitCall::InvokeDestructor {0}(object={1}, nary={2}, "
+                    "withFree={3})",
+                    Name, ObjPart, nary, withFree));
+}
 
-  if (auto* TI = CppInterOp::Tracing::TraceInfo::TheTraceInfo) {
-    std::string ObjPart = object ? TI->lookupHandle(object) : "nullptr";
-    std::string Entry = llvm::formatv(
-        "  // JitCall::InvokeDestructor {0}(object={1}, nary={2}, "
-        "withFree={3})",
-        Name, ObjPart, nary, withFree);
-    TI->appendToLog(Entry);
+// Post-invoke trace hook reached via DispatchRaw. Constructors and
+// pointer/reference returns deposit a fresh T* at *result; registering
+// it as vN lets later trace lines render the name instead of
+// `nullptr /*unknown*/`. No-op for value or void returns.
+void CppInterOpTraceJitCallInvokeReturnImpl(const JitCall* JC, void* result) {
+  auto* TI = CppInterOp::Tracing::TheTraceInfo;
+  if (!TI || !result)
+    return;
+  const auto* FD = static_cast<const FunctionDecl*>(JC->m_FD);
+  bool RegisterPtr = isa<CXXConstructorDecl>(FD);
+  if (!RegisterPtr) {
+    QualType RT = FD->getReturnType();
+    RegisterPtr = RT->isPointerType() || RT->isReferenceType();
   }
+  if (!RegisterPtr)
+    return;
+  if (void* p = *static_cast<void* const*>(result))
+    TI->getOrRegisterHandle(p);
 }
 
 #undef DEBUG_TYPE
@@ -479,6 +542,19 @@ std::string GetVersion() {
 #endif // CPPINTEROP_USE_CLING
   return INTEROP_RETURN(fullVersion + "[" + clang::getClangFullVersion() +
                         "])\n");
+}
+
+std::string GetBuildInfo() {
+  INTEROP_TRACE();
+  // The right-hand side is a raw-string literal expression generated from
+  // BuildInfo.inc.in via configure_file at CMake-configure time; it carries
+  // the filtered CACHE_VARIABLES snapshot. Kept out of the INTEROP_RETURN
+  // macro call so the preprocessor is not asked to expand a directive
+  // inside macro arguments.
+  std::string Info =
+#include "CppInterOp/BuildInfo.inc"
+      ;
+  return INTEROP_RETURN(Info);
 }
 
 std::string Demangle(const std::string& mangled_name) {
@@ -1015,6 +1091,112 @@ TCppScope_t GetScopeFromCompleteName(const std::string& name) {
   return INTEROP_RETURN(GetScope(name.substr(start, end), curr_scope));
 }
 
+// Sema::CurScope is private, but we need to reseat it briefly to drive
+// Sema::LookupName at a synthesized point inside `Within`. The
+// ALLOW_ACCESS/ACCESS pair from Sins.h gets us there without patching
+// clang.
+ALLOW_ACCESS(clang::Sema, CurScope, clang::Scope*);
+
+namespace {
+// Mirror DC's enclosing namespace nesting as a chain of clang::Scope*
+// rooted at S.TUScope, each Scope's entity set to the matching
+// DeclContext. Sema::CppLookupName walks this chain via getParent() and
+// reads using-directives off each entity's NamespaceDecl, so this is
+// enough to make unqualified lookup honour `using namespace ...;`
+// declared inside DC.
+clang::Scope* BuildSyntheticScopeChain(clang::Sema& S, clang::DeclContext* DC) {
+  if (!DC || DC->isTranslationUnit())
+    return S.TUScope;
+  auto* Parent = BuildSyntheticScopeChain(S, DC->getParent());
+  auto* Mine = new clang::Scope(Parent, clang::Scope::DeclScope, S.Diags);
+  Mine->setEntity(DC);
+  return Mine;
+}
+
+// RAII: build a synthetic scope chain for `Within`, install it as
+// Sema::CurScope, restore + delete on destruction. CppLookupName is
+// read-only on Scope/Sema state (only getParent/getEntity/
+// getLookupEntity/isDeclScope reads, plus a stack-local
+// UnqualUsingDirectiveSet); freeing the synthetic scopes is the
+// entire teardown — no ActOnPopScope needed because we never pushed
+// any decl onto these scopes.
+class SyntheticScopeChain {
+public:
+  SyntheticScopeChain(clang::Sema& Sema, clang::DeclContext* Within)
+      : S(Sema), Innermost(BuildSyntheticScopeChain(Sema, Within)),
+        Saved(ACCESS(Sema, CurScope)) {
+    ACCESS(S, CurScope) = Innermost;
+  }
+  ~SyntheticScopeChain() {
+    ACCESS(S, CurScope) = Saved;
+    while (Innermost && Innermost != S.TUScope) {
+      auto* Next = Innermost->getParent();
+      delete Innermost;
+      Innermost = Next;
+    }
+  }
+  SyntheticScopeChain(const SyntheticScopeChain&) = delete;
+  SyntheticScopeChain& operator=(const SyntheticScopeChain&) = delete;
+
+  clang::Scope* get() const { return Innermost; }
+
+private:
+  clang::Sema& S;
+  clang::Scope* Innermost;
+  clang::Scope* Saved;
+};
+
+// Unqualified lookup of `Name` from a synthesized point inside `Within`
+// ([basic.lookup.unqual]). Honours using-directives reachable from
+// Within, which Sema::LookupQualifiedName does not.
+//
+// FIXME: longer-term we want two distinct routes — one wrapping
+// LookupQualifiedName and one this — exposed as separate operations so
+// callers can pick the C++ semantics they actually want. For now
+// GetNamed gates this behind a qualified-lookup-miss + reachable
+// using-directive check, so the common case stays on the cheap path.
+clang::NamedDecl* LookupUnqualified(clang::Sema& S,
+                                    const clang::DeclarationName& Name,
+                                    clang::DeclContext* Within) {
+  SyntheticScopeChain Chain(S, Within);
+  // NotForRedeclaration: ForVisibleRedeclaration causes Sema::CppLookupName
+  // to return as soon as the innermost namespace doesn't directly contain
+  // the name (SemaLookup.cpp:1545), which prevents using-directives from
+  // an enclosing common-ancestor namespace from firing. We're doing
+  // ordinary name lookup, not collecting redeclarations.
+  clang::LookupResult R(S, Name, clang::SourceLocation(),
+                        clang::Sema::LookupOrdinaryName,
+                        RedeclarationKind::NotForRedeclaration);
+  R.suppressDiagnostics();
+  S.LookupName(R, Chain.get());
+  // Match LookupResult2Decl from CppInterOpInterpreter.h (clang-repl-only
+  // header, not included in CPPINTEROP_USE_CLING builds). Empty -> null;
+  // single -> found decl; multi -> (D*)-1 sentinel that GetNamed treats
+  // as "ambiguous, give up".
+  if (R.empty())
+    return nullptr;
+  R.resolveKind();
+  if (R.isSingleResult())
+    return llvm::dyn_cast<clang::NamedDecl>(R.getFoundDecl());
+  return (clang::NamedDecl*)-1;
+}
+
+// Cheap probe: does any namespace from `DC` up to TU carry at least
+// one using-directive? Gates the synthetic-scope-chain build below so
+// the common case (no using-directives anywhere on the path) doesn't
+// pay the heap-allocation tax.
+bool HasReachableUsingDirective(const clang::DeclContext* DC) {
+  for (; DC && !DC->isTranslationUnit(); DC = DC->getParent()) {
+    if (const auto* NS = llvm::dyn_cast<clang::NamespaceDecl>(DC)) {
+      auto UDs = NS->using_directives();
+      if (UDs.begin() != UDs.end())
+        return true;
+    }
+  }
+  return false;
+}
+} // namespace
+
 TCppScope_t GetNamed(const std::string& name,
                      TCppScope_t parent /*= nullptr*/) {
   INTEROP_TRACE(name, parent);
@@ -1029,10 +1211,26 @@ TCppScope_t GetNamed(const std::string& name,
     Within->getPrimaryContext()->buildLookup();
 #endif
   compat::SynthesizingCodeRAII RAII(&getInterp());
+
+  // Fast path: qualified lookup. Cheap, no scope-chain allocation, and
+  // resolves every name not brought into `Within` via a using-directive.
+  // Lookup::Named falls back to LookupName(R, TUScope) when Within is
+  // null, so TU-level using-directives are already handled there.
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
-  if (ND && ND != (clang::NamedDecl*)-1) {
+  if (ND && ND != (clang::NamedDecl*)-1)
     return INTEROP_RETURN((TCppScope_t)(ND->getCanonicalDecl()));
-  }
+
+  // Slow path: only when qualified lookup missed AND `Within` is a
+  // namespace whose enclosing chain carries at least one using-directive
+  // (the only reason qualified-vs-unqualified disagree at namespace
+  // scope per [basic.lookup.unqual] vs [basic.lookup.qual]).
+  if (!Within || !llvm::isa<clang::NamespaceDecl>(Within) ||
+      !HasReachableUsingDirective(Within))
+    return INTEROP_RETURN(nullptr);
+  clang::DeclarationName DName = &getSema().Context.Idents.get(name);
+  ND = LookupUnqualified(getSema(), DName, Within);
+  if (ND && ND != (clang::NamedDecl*)-1)
+    return INTEROP_RETURN((TCppScope_t)(ND->getCanonicalDecl()));
 
   return INTEROP_RETURN(nullptr);
 }
@@ -1358,6 +1556,25 @@ TCppType_t GetFunctionReturnType(TCppFunction_t func) {
   return INTEROP_RETURN(nullptr);
 }
 
+bool IsFunctionProtoType(TCppType_t typ) {
+  INTEROP_TRACE(typ);
+  QualType QT = QualType::getFromOpaquePtr(typ);
+  const auto* T = QT.getTypePtr();
+  return llvm::isa_and_nonnull<clang::FunctionProtoType>(T);
+}
+
+void GetFnTypeSignature(TCppType_t fn_type, std::vector<TCppType_t>& sig) {
+  INTEROP_TRACE(fn_type, INTEROP_OUT(sig));
+  QualType QT = QualType::getFromOpaquePtr(fn_type);
+  const auto* FPT = QT->getAs<clang::FunctionProtoType>();
+  if (!FPT)
+    return INTEROP_VOID_RETURN();
+  sig.push_back(FPT->getReturnType().getAsOpaquePtr());
+  for (size_t i = 0; i < FPT->getNumParams(); i++)
+    sig.push_back(FPT->getParamType(i).getAsOpaquePtr());
+  return INTEROP_VOID_RETURN();
+}
+
 TCppIndex_t GetFunctionNumArgs(TCppFunction_t func) {
   INTEROP_TRACE(func);
   auto* D = (clang::Decl*)func;
@@ -1680,6 +1897,9 @@ bool IsDestructor(TCppConstFunction_t method) {
 bool IsStaticMethod(TCppConstFunction_t method) {
   INTEROP_TRACE(method);
   const auto* D = static_cast<const Decl*>(method);
+  if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+
   if (auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return INTEROP_RETURN(CXXMD->isStatic());
   }
@@ -2382,13 +2602,13 @@ static std::optional<QualType> GetTypeInternal(Decl* D) {
   return {};
 }
 
-TCppType_t GetType(const std::string& name) {
-  INTEROP_TRACE(name);
+TCppType_t GetType(const std::string& name, TCppScope_t parent /*= nullptr*/) {
+  INTEROP_TRACE(name, parent);
   QualType builtin = findBuiltinType(name, getASTContext());
   if (!builtin.isNull())
     return INTEROP_RETURN(builtin.getAsOpaquePtr());
 
-  return INTEROP_RETURN(GetTypeFromScope(GetNamed(name, /*parent=*/nullptr)));
+  return INTEROP_RETURN(GetTypeFromScope(GetNamed(name, parent)));
 }
 
 TCppType_t GetComplexType(TCppType_t type) {
@@ -2795,14 +3015,16 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
       // so check for the most common case: the trivial one, but not uniquely
       // available, while there is a move constructor.
 
-      // include utility header if not already included for std::move
-      DeclarationName DMove = &getASTContext().Idents.get("move");
-      auto result = getSema().getStdNamespace()->lookup(DMove);
-      if (result.empty())
-        Cpp::Declare("#include <utility>");
-
-      // move construction as needed for classes (note that this is implicit)
-      callbuf << "std::move(*(" << type_name.c_str() << "*)args[" << i << "])";
+      // Move construction as needed for classes (note that this is
+      // implicit). Emit `std::move`'s expansion directly rather than the
+      // name: a cast to T&& is the definition of std::move for
+      // non-reference T ([utility.swap]), and this avoids pulling
+      // <utility> into the user's TU just to obtain the name. It also
+      // sidesteps the `getSema().getStdNamespace()->lookup(...)` call,
+      // which dereferences a nullptr when no `std::` has been parsed
+      // yet in this interpreter's TU.
+      callbuf << "static_cast<" << type_name.c_str() << "&&>(*("
+              << type_name.c_str() << "*)args[" << i << "])";
     } else {
       // pointer falls back to non-pointer case; the argument preserves
       // the "pointerness" (i.e. doesn't reference the value).
@@ -2884,6 +3106,13 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
     indent(callbuf, --indent_level);
     if (CD->isDefaultConstructor())
       callbuf << "}\n";
+#if __has_feature(memory_sanitizer)
+    // Outside the if/else so the array-new (nary > 1) and single-new
+    // branches are both covered.
+    indent(callbuf, indent_level);
+    callbuf << "__msan_unpoison(*(void**)ret, sizeof(" << class_name
+            << ") * (nary > 1 ? nary : 1));\n";
+#endif
 
     //
     //  Output the whole new expression and return statement.
@@ -2976,6 +3205,10 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
       //  End the placement new.
       //
       callbuf << ");\n";
+#if __has_feature(memory_sanitizer)
+      indent(callbuf, indent_level);
+      callbuf << "__msan_unpoison(ret, sizeof(" << type_name << "));\n";
+#endif
       indent(callbuf, indent_level);
       callbuf << "return;\n";
       //
@@ -3389,8 +3622,14 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
   int indent_level = 0;
   std::ostringstream buf;
   buf << "#pragma clang diagnostic push\n"
-         "#pragma clang diagnostic ignored \"-Wformat-security\"\n"
-         "__attribute__((used)) "
+         "#pragma clang diagnostic ignored \"-Wformat-security\"\n";
+#if __has_feature(memory_sanitizer)
+  // Declared (not #include'd) so the wrapper compiles with no need
+  // for sanitizer headers in the JIT search path.
+  buf << "extern \"C\" void __msan_unpoison(const volatile void*, "
+         "unsigned long);\n";
+#endif
+  buf << "__attribute__((used)) "
          "__attribute__((annotate(\"__cling__ptrcheck(off)\")))\n"
          "extern \"C\" void ";
   buf << wrapper_name;
@@ -3442,7 +3681,7 @@ JitCall::GenericCall make_wrapper(compat::Interpreter& I,
     return 0;
 
   // Log the wrapper source for the crash reproducer.
-  if (auto* TI = CppInterOp::Tracing::TraceInfo::TheTraceInfo) {
+  if (auto* TI = CppInterOp::Tracing::TheTraceInfo) {
     std::string FuncName;
     llvm::raw_string_ostream FNS(FuncName);
     FD->getNameForDiagnostic(FNS, FD->getASTContext().getPrintingPolicy(),
@@ -3714,17 +3953,21 @@ CPPINTEROP_API JitCall MakeFunctionCallable(TCppConstFunction_t func) {
 
 namespace {
 #if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)
-bool DefineAbsoluteSymbol(compat::Interpreter& I,
-                          const char* linker_mangled_name, uint64_t address) {
+bool DefineAbsoluteSymbol(compat::Interpreter& I, const char* unmangled_name,
+                          uint64_t address) {
   using namespace llvm;
   using namespace llvm::orc;
 
   llvm::orc::LLJIT& Jit = *compat::getExecutionEngine(I);
-  llvm::orc::ExecutionSession& ES = Jit.getExecutionSession();
   JITDylib& DyLib = *Jit.getProcessSymbolsJITDylib().get();
 
+  // mangleAndIntern applies the target DataLayout's symbol prefix
+  // (leading `_` on Mach-O, no-op on ELF) so the registered key
+  // matches what the JIT computes when it lowers an IR symbol
+  // reference for lookup. Plain ES.intern() bypasses the prefix and
+  // silently breaks lookup on Mach-O.
   llvm::orc::SymbolMap InjectedSymbols{
-      {ES.intern(linker_mangled_name),
+      {Jit.mangleAndIntern(unmangled_name),
        ExecutorSymbolDef(ExecutorAddr(address), JITSymbolFlags::Exported)}};
 
   if (Error Err = DyLib.define(absoluteSymbols(InjectedSymbols))) {
@@ -3816,6 +4059,33 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
 #ifdef _WIN32
   // FIXME : Workaround Sema::PushDeclContext assert on windows
   ClingArgv.push_back("-fno-delayed-template-parsing");
+#endif
+#if __has_feature(memory_sanitizer)
+  // Match the host stdlib (msan setup is libc++ end to end; the
+  // in-process clang otherwise defaults to libstdc++ on Linux and
+  // JIT'd `std::__cxx11::*` won't resolve against the host's
+  // `std::__1::*`). User Args appended below can override.
+  ClingArgv.push_back("-stdlib=libc++");
+  // -stdlib=libc++ alone misses <install>/include/c++/v1: in-process
+  // clang derives Driver::Dir from /proc/self/exe (= host binary),
+  // not argv[0], so the force-include of `<new>` SIGSEGVs in
+  // GenModule. Derive the include from -resource-dir, which IS the
+  // cell. Gating on memory_sanitizer (not _LIBCPP_VERSION) keeps
+  // this away from generic libc++ builds where the cell-derived
+  // path may not be the libc++ the host actually uses.
+  std::string LibcxxIncDir;
+  if (!ResourceDir.empty()) {
+    SmallString<256> P(ResourceDir);
+    sys::path::remove_filename(P);
+    sys::path::remove_filename(P);
+    sys::path::remove_filename(P);
+    sys::path::append(P, "include", "c++", "v1");
+    if (sys::fs::is_directory(P)) {
+      LibcxxIncDir = P.str().str();
+      ClingArgv.push_back("-cxx-isystem");
+      ClingArgv.push_back(LibcxxIncDir.c_str());
+    }
+  }
 #endif
   ClingArgv.insert(ClingArgv.end(), Args.begin(), Args.end());
   // To keep the Interpreter creation interface between cling and clang-repl
@@ -4046,7 +4316,6 @@ void GetIncludePaths(std::vector<std::string>& IncludePaths, bool withSystem,
 }
 
 namespace {
-
 class clangSilent {
 public:
   clangSilent(clang::DiagnosticsEngine& diag) : fDiagEngine(diag) {
@@ -4063,17 +4332,22 @@ protected:
 } // namespace
 
 int Declare(compat::Interpreter& I, const char* code, bool silent) {
+  // Trap diagnostics on both paths: I.declare's rc is 0 even when
+  // Parse recovered from emitted errors, so callers need the trap to
+  // distinguish "parsed cleanly" from "parsed with errors".
+  clang::DiagnosticsEngine& Diag = I.getSema().getDiagnostics();
+  clang::DiagnosticErrorTrap Trap(Diag);
   if (silent) {
-    clang::DiagnosticsEngine& Diag = I.getSema().getDiagnostics();
     clangSilent diagSuppr(Diag);
-    clang::DiagnosticErrorTrap Trap(Diag);
     auto result = I.declare(code);
     if (Trap.hasErrorOccurred())
       return 1;
     return result;
   }
-
-  return I.declare(code);
+  auto result = I.declare(code);
+  if (Trap.hasErrorOccurred())
+    return 1;
+  return result;
 }
 
 int Declare(const char* code, bool silent) {
@@ -4086,17 +4360,19 @@ int Process(const char* code) {
   return INTEROP_RETURN(getInterp().process(code));
 }
 
-intptr_t Evaluate(const char* code, bool* HadError /*=nullptr*/) {
-  INTEROP_TRACE(code, HadError);
+intptr_t Evaluate(const char* code, bool* IsValueInvalid /*=nullptr*/) {
+  INTEROP_TRACE(code, INTEROP_OUT(IsValueInvalid));
   compat::Value V;
 
-  if (HadError)
-    *HadError = false;
+  if (IsValueInvalid)
+    *IsValueInvalid = false;
 
   auto res = getInterp().evaluate(code, V);
-  if (res != 0) { // 0 is success
-    if (HadError)
-      *HadError = true;
+  CPPINTEROP_MSAN_UNPOISON_VALUE(V);
+  // 0 is success; an unset V on success means convertTo would assert.
+  if (res != 0 || !V.hasValue()) {
+    if (IsValueInvalid)
+      *IsValueInvalid = true;
     // FIXME: Make this return llvm::Expected
     return INTEROP_RETURN(~0UL);
   }
@@ -4331,6 +4607,29 @@ TCppScope_t InstantiateTemplate(TCppScope_t tmpl,
   INTEROP_TRACE(tmpl, template_args, template_args_size, instantiate_body);
   return INTEROP_RETURN(InstantiateTemplate(
       getInterp(), tmpl, template_args, template_args_size, instantiate_body));
+}
+
+TCppScope_t
+InstantiateTemplate(TCppScope_t tmpl,
+                    const std::vector<TemplateArgInfo>& template_args,
+                    bool instantiate_body) {
+  INTEROP_TRACE(tmpl, template_args, instantiate_body);
+  // Forward to the static helper directly (not the deprecated public
+  // overload) to avoid a nested INTEROP_TRACE.
+  return INTEROP_RETURN(
+      InstantiateTemplate(getInterp(), tmpl, template_args.data(),
+                          template_args.size(), instantiate_body));
+}
+
+void GetClassTemplateArgs(TCppScope_t templ_instance,
+                          std::vector<TemplateArgInfo>& args) {
+  INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
+  auto* CTSD = static_cast<ClassTemplateSpecializationDecl*>(templ_instance);
+  for (const auto& TA : CTSD->getTemplateArgs().asArray()) {
+    // FIXME: Support cases with m_IntegralValue.
+    args.push_back({TA.getAsType().getAsOpaquePtr()});
+  }
+  return INTEROP_VOID_RETURN();
 }
 
 void GetClassTemplateInstantiationArgs(TCppScope_t templ_instance,
@@ -4831,17 +5130,5 @@ int Undo(unsigned N) {
   return INTEROP_RETURN(getInterp().undo(N));
 #endif
 }
-
-#ifndef _WIN32
-pid_t GetExecutorPID() {
-  INTEROP_TRACE();
-#ifdef LLVM_BUILT_WITH_OOP_JIT
-  auto& I = getInterp();
-  return INTEROP_RETURN(I.getOutOfProcessExecutorPID());
-#endif
-  return INTEROP_RETURN(getpid());
-}
-
-#endif
 
 } // namespace CppImpl

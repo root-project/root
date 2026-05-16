@@ -104,11 +104,115 @@ if (LLVM_LINK_LLVM_DYLIB)
     )
 endif(LLVM_LINK_LLVM_DYLIB)
 
-add_llvm_library(clangCppInterOp BUILDTREE_ONLY
+# Generate .inc files from CppInterOp.td using cppinterop-tblgen.
+# The .td source lives here; generated output goes to the build tree's
+# include/CppInterOp/ so that CppInterOp.h can #include them.
+#
+# For cross-compilation (Emscripten), set CPPINTEROP_TABLEGEN_EXE to a
+# pre-built native cppinterop-tblgen binary, or build one in a native
+# build directory first.
+set(CPPINTEROP_TD_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(CPPINTEROP_TD_FILE ${CPPINTEROP_TD_DIR}/CppInterOp.td)
+set(CPPINTEROP_TD_DEPS ${CPPINTEROP_TD_FILE}
+                        ${CPPINTEROP_TD_DIR}/CppInterOpAPI.td)
+
+if(CPPINTEROP_TABLEGEN_EXE)
+  # Cross-compilation: use the provided native binary.
+  set(CPPINTEROP_TBLGEN_CMD ${CPPINTEROP_TABLEGEN_EXE})
+  set(CPPINTEROP_TBLGEN_DEPS ${CPPINTEROP_TD_DEPS})
+elseif(NOT EMSCRIPTEN)
+  # Native build: use the just-built target.
+  set(CPPINTEROP_TBLGEN_CMD $<TARGET_FILE:cppinterop-tblgen>)
+  set(CPPINTEROP_TBLGEN_DEPS cppinterop-tblgen ${CPPINTEROP_TD_DEPS})
+endif()
+
+if(CPPINTEROP_TBLGEN_CMD)
+  file(MAKE_DIRECTORY ${CPPINTEROP_GEN_DIR})
+
+  add_custom_command(
+    OUTPUT ${CPPINTEROP_GEN_DIR}/CppInterOpAPI.inc
+    COMMAND ${CPPINTEROP_TBLGEN_CMD}
+      -I${CPPINTEROP_TD_DIR} -gen-cppinterop-api
+      ${CPPINTEROP_TD_FILE} -o ${CPPINTEROP_GEN_DIR}/CppInterOpAPI.inc
+    DEPENDS ${CPPINTEROP_TBLGEN_DEPS}
+    COMMENT "Generating CppInterOpAPI.inc...")
+
+  add_custom_command(
+    OUTPUT ${CPPINTEROP_GEN_DIR}/CppInterOpDecl.inc
+    COMMAND ${CPPINTEROP_TBLGEN_CMD}
+      -I${CPPINTEROP_TD_DIR} -gen-cppinterop-decl
+      ${CPPINTEROP_TD_FILE} -o ${CPPINTEROP_GEN_DIR}/CppInterOpDecl.inc
+    DEPENDS ${CPPINTEROP_TBLGEN_DEPS}
+    COMMENT "Generating CppInterOpDecl.inc...")
+
+  add_custom_command(
+    OUTPUT ${CPPINTEROP_GEN_DIR}/CXCppInterOpDecl.inc
+    COMMAND ${CPPINTEROP_TBLGEN_CMD}
+      -I${CPPINTEROP_TD_DIR} -gen-cx-cppinterop-decl
+      ${CPPINTEROP_TD_FILE} -o ${CPPINTEROP_GEN_DIR}/CXCppInterOpDecl.inc
+    DEPENDS ${CPPINTEROP_TBLGEN_DEPS}
+    COMMENT "Generating CXCppInterOpDecl.inc...")
+
+  add_custom_command(
+    OUTPUT ${CPPINTEROP_GEN_DIR}/CXCppInterOpImpl.inc
+    COMMAND ${CPPINTEROP_TBLGEN_CMD}
+      -I${CPPINTEROP_TD_DIR} -gen-cx-cppinterop-impl
+      ${CPPINTEROP_TD_FILE} -o ${CPPINTEROP_GEN_DIR}/CXCppInterOpImpl.inc
+    DEPENDS ${CPPINTEROP_TBLGEN_DEPS}
+    COMMENT "Generating CXCppInterOpImpl.inc...")
+
+  add_custom_target(CppInterOpTableGen DEPENDS
+    ${CPPINTEROP_GEN_DIR}/CppInterOpAPI.inc
+    ${CPPINTEROP_GEN_DIR}/CppInterOpDecl.inc
+    ${CPPINTEROP_GEN_DIR}/CXCppInterOpDecl.inc
+    ${CPPINTEROP_GEN_DIR}/CXCppInterOpImpl.inc)
+else()
+  message(FATAL_ERROR
+    "Cannot generate .inc files: set CPPINTEROP_TABLEGEN_EXE to a native "
+    "cppinterop-tblgen binary when cross-compiling.")
+endif()
+
+# Filter cache entries to those CMake marks with HELPSTRING="No help,
+# variable specified on the command line." -- the property is left on
+# -D vars the project never reclaimed via set(... CACHE), so what
+# survives is the user's extra args.
+# See https://gitlab.kitware.com/cmake/cmake/-/work_items/19622
+get_cmake_property(_cppinterop_cache_vars CACHE_VARIABLES)
+set(CPPINTEROP_CMAKE_INVOCATION "")
+foreach(_v ${_cppinterop_cache_vars})
+  get_property(_help CACHE ${_v} PROPERTY HELPSTRING)
+  if(NOT _help STREQUAL
+     "No help, variable specified on the command line.")
+    continue()
+  endif()
+  get_property(_type CACHE ${_v} PROPERTY TYPE)
+  if(_type STREQUAL "UNINITIALIZED")
+    set(_type "")
+  else()
+    set(_type ":${_type}")
+  endif()
+  string(APPEND CPPINTEROP_CMAKE_INVOCATION
+         " -D${_v}${_type}=\"${${_v}}\"")
+endforeach()
+string(STRIP "${CPPINTEROP_CMAKE_INVOCATION}" CPPINTEROP_CMAKE_INVOCATION)
+configure_file(BuildInfo.inc.in
+               ${CPPINTEROP_GEN_DIR}/BuildInfo.inc
+               @ONLY)
+
+# If an embedding project opts out of CppInterOp's installs rules, route the
+# library through LLVM's BUILDTREE_ONLY path so add_llvm_library() does not
+# register it in LLVMExports or call install(TARGETS) for it.
+set(_cppinterop_lib_install_args)
+if(NOT CPPINTEROP_INSTALL)
+  list(APPEND _cppinterop_lib_install_args BUILDTREE_ONLY)
+endif()
+add_llvm_library(clangCppInterOp
+  ${_cppinterop_lib_install_args}
   DISABLE_LLVM_LINK_LLVM_DYLIB
   CppInterOp.cpp
-  Dispatch.cpp
+  CppInterOpDispatch.cpp
   CXCppInterOp.cpp
+  CXCppInterOpGenerated.cpp
   Tracing.cpp
   ${DLM}
   LINK_LIBS
@@ -156,6 +260,9 @@ if(EMSCRIPTEN)
   endif(CPPINTEROP_ENABLE_TESTING)
 endif(EMSCRIPTEN)
 
+if(TARGET CppInterOpTableGen)
+  add_dependencies(clangCppInterOp CppInterOpTableGen)
+endif()
 target_compile_definitions(clangCppInterOp PUBLIC "_CINDEX_LIB_") # workaround for the use of `CINDEX_LINKAGE`
 
 string(REPLACE ";" "\;" _VER CPPINTEROP_VERSION)

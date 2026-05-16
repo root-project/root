@@ -15,8 +15,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Jit_InsertOrReplaceJitSymbol) {
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
@@ -79,8 +77,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Jit_StreamRedirectJIT) {
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif

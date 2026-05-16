@@ -235,11 +235,17 @@ inline void codeComplete(std::vector<std::string>& Results,
 #include "llvm/Support/Error.h"
 #include "llvm/TargetParser/Host.h"
 
-#ifdef LLVM_BUILT_WITH_OOP_JIT
+#if LLVM_VERSION_MAJOR > 21
 #include "clang/Basic/Version.h"
+#include "clang/Interpreter/IncrementalExecutor.h"
 
 #include "llvm/ExecutionEngine/Orc/Debugging/DebuggerSupport.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
+#endif
 
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
+#include <dlfcn.h>
 #include <unistd.h>
 #endif
 
@@ -365,6 +371,73 @@ inline bool detectNVPTXArch(std::string& Arch) {
   return true;
 }
 
+#if LLVM_VERSION_MAJOR > 21
+/// Directory containing libclangCppInterOp itself, derived via
+/// `dladdr` of an in-library function pointer. Returns empty when the
+/// platform has no self-DSO discovery (Windows -- a `GetModuleHandleEx`
+/// port can be added when Windows OOP support arrives).
+inline std::string findOwnLibraryDir() {
+#if !defined(_WIN32)
+  Dl_info info{};
+  if (!dladdr(reinterpret_cast<const void*>(&findOwnLibraryDir), &info) ||
+      !info.dli_fname || !*info.dli_fname)
+    return {};
+  llvm::SmallString<256> P(info.dli_fname);
+  llvm::sys::path::remove_filename(P);
+  return std::string(P.str());
+#else
+  return {};
+#endif
+}
+
+/// Wire CppInterOp's bundled OOP runtime parts into `B`. Probes a
+/// layered list of candidate directories, in priority order:
+///   1. `$CPPINTEROP_RUNTIME_DIR` -- sysadmin override.
+///   2. `<dir of libclangCppInterOp>/cppinterop-rt` -- relocatable, follows
+///      the .so wherever a package manager moved it.
+///   3. `CPPINTEROP_RUNTIME_BUILD_DIR` -- in-tree test runs.
+///   4. `CPPINTEROP_RUNTIME_INSTALL_DIR` -- baked install path; last
+///      resort when self-DSO discovery isn't available (e.g. static
+///      link of CppInterOp into a host binary).
+/// `UpdateOrcRuntimePathCB` is replaced with a no-op so the upstream
+/// resource-dir prefix check inside
+/// `IncrementalExecutorBuilder::UpdateOrcRuntimePath`
+/// (`clang/lib/Interpreter/IncrementalExecutor.cpp`, the
+/// `consume_front(parent_path(D.Dir))` guard) doesn't run -- our
+/// runtime lives outside the host's clang resource tree.
+inline bool configureBundledOOPRuntime(clang::IncrementalExecutorBuilder& B) {
+  llvm::SmallVector<std::string, 4> Candidates;
+  if (const char* Env = std::getenv("CPPINTEROP_RUNTIME_DIR"))
+    Candidates.emplace_back(Env);
+  if (std::string OwnDir = findOwnLibraryDir(); !OwnDir.empty()) {
+    llvm::SmallString<256> P(OwnDir);
+    llvm::sys::path::append(P, "cppinterop-rt");
+    Candidates.emplace_back(P.str());
+  }
+#if defined(CPPINTEROP_RUNTIME_BUILD_DIR)
+  Candidates.emplace_back(CPPINTEROP_RUNTIME_BUILD_DIR);
+#endif
+#if defined(CPPINTEROP_RUNTIME_INSTALL_DIR)
+  Candidates.emplace_back(CPPINTEROP_RUNTIME_INSTALL_DIR);
+#endif
+  for (const std::string& Dir : Candidates) {
+    llvm::SmallString<256> OrcRT(Dir);
+    llvm::sys::path::append(OrcRT, "liborc_rt.a");
+    llvm::SmallString<256> Exec(Dir);
+    llvm::sys::path::append(Exec, "llvm-jitlink-executor");
+    if (!llvm::sys::fs::exists(OrcRT) || !llvm::sys::fs::exists(Exec))
+      continue;
+    B.OrcRuntimePath = std::string(OrcRT.str());
+    B.OOPExecutor = std::string(Exec.str());
+    B.UpdateOrcRuntimePathCB = [](const clang::driver::Compilation&) {
+      return llvm::Error::success();
+    };
+    return true;
+  }
+  return false;
+}
+#endif // LLVM_VERSION_MAJOR > 21
+
 inline std::unique_ptr<clang::Interpreter>
 createClangInterpreter(std::vector<const char*>& args, int stdin_fd = -1,
                        int stdout_fd = -1, int stderr_fd = -1) {
@@ -391,6 +464,34 @@ createClangInterpreter(std::vector<const char*>& args, int stdin_fd = -1,
 
   clang::IncrementalCompilerBuilder CB;
   CB.SetCompilerArgs(CompilerArgs);
+
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
+  bool outOfProcess = false;
+  const bool oopRequested =
+      std::any_of(args.begin(), args.end(), [](const char* arg) {
+        return llvm::StringRef(arg).trim() == "--use-oop-jit";
+      });
+  // The IncrementalExecutorBuilder must outlive the IncrementalCompiler
+  // it gets attached to, so it's a unique_ptr at function scope.
+  std::unique_ptr<clang::IncrementalExecutorBuilder> OutOfProcessConfig;
+  if (oopRequested) {
+    OutOfProcessConfig = std::make_unique<clang::IncrementalExecutorBuilder>();
+    OutOfProcessConfig->IsOutOfProcess = true;
+    if (configureBundledOOPRuntime(*OutOfProcessConfig)) {
+      outOfProcess = true;
+      CB.SetDriverCompilationCallback(
+          OutOfProcessConfig->UpdateOrcRuntimePathCB);
+    } else {
+      llvm::errs()
+          << "[CreateClangInterpreter]: --use-oop-jit requested but the "
+             "bundled OOP runtime "
+             "(<libdir>/cppinterop-rt/{liborc_rt.a,llvm-jitlink-executor}) "
+             "is missing from CppInterOp's build/install tree. Falling "
+             "back to in-process JIT.\n";
+      OutOfProcessConfig.reset();
+    }
+  }
+#endif
 
   std::unique_ptr<clang::CompilerInstance> DeviceCI;
   if (CudaEnabled) {
@@ -421,56 +522,29 @@ createClangInterpreter(std::vector<const char*>& args, int stdin_fd = -1,
   if (CudaEnabled)
     DeviceCI->LoadRequestedPlugins();
 
-  bool outOfProcess;
-#if defined(_WIN32) || !defined(LLVM_BUILT_WITH_OOP_JIT)
-  outOfProcess = false;
-#else
-  outOfProcess = std::any_of(args.begin(), args.end(), [](const char* arg) {
-    return llvm::StringRef(arg).trim() == "--use-oop-jit";
-  });
-#endif
-
-#ifdef LLVM_BUILT_WITH_OOP_JIT
-
-  clang::Interpreter::JITConfig OutOfProcessConfig;
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
   if (outOfProcess) {
-    OutOfProcessConfig.IsOutOfProcess = true;
-    OutOfProcessConfig.OOPExecutor =
-        LLVM_BINARY_LIB_DIR "/bin/llvm-jitlink-executor";
-    OutOfProcessConfig.UseSharedMemory = false;
-    OutOfProcessConfig.SlabAllocateSize = 0;
-    OutOfProcessConfig.CustomizeFork = [stdin_fd, stdout_fd,
-                                        stderr_fd]() { // Lambda defined inline
+    // OrcRuntimePath and OOPExecutor were populated by
+    // configureBundledOOPRuntime() above; UpdateOrcRuntimePathCB was
+    // replaced with a no-op there too, so the upstream auto-discovery
+    // safety check doesn't run.
+    OutOfProcessConfig->UseSharedMemory = false;
+    OutOfProcessConfig->SlabAllocateSize = 0;
+    OutOfProcessConfig->CustomizeFork = [stdin_fd, stdout_fd, stderr_fd]() {
       dup2(stdin_fd, STDIN_FILENO);
       dup2(stdout_fd, STDOUT_FILENO);
       dup2(stderr_fd, STDERR_FILENO);
-
       setvbuf(fdopen(stdout_fd, "w+"), nullptr, _IONBF, 0);
       setvbuf(fdopen(stderr_fd, "w+"), nullptr, _IONBF, 0);
     };
-
-#ifdef __APPLE__
-    std::string OrcRuntimePath = LLVM_BINARY_LIB_DIR "/lib/clang/" STRINGIFY(
-        LLVM_VERSION_MAJOR) "/lib/darwin/liborc_rt_osx.a";
-#else
-    std::string OrcRuntimePath = LLVM_BINARY_LIB_DIR "/lib/clang/" STRINGIFY(
-        LLVM_VERSION_MAJOR) "/lib/x86_64-unknown-linux-gnu/liborc_rt.a";
-#endif
-    OutOfProcessConfig.OrcRuntimePath = OrcRuntimePath;
   }
   auto innerOrErr =
-      CudaEnabled
-          ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
-                                               std::move(DeviceCI))
-          : clang::Interpreter::create(std::move(*ciOrErr), OutOfProcessConfig);
+      CudaEnabled ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
+                                                       std::move(DeviceCI))
+                  : clang::Interpreter::create(
+                        std::move(*ciOrErr),
+                        outOfProcess ? std::move(OutOfProcessConfig) : nullptr);
 #else
-  if (outOfProcess) {
-    llvm::errs()
-        << "[CreateClangInterpreter]: No compatibility with out-of-process "
-           "JIT. Running in-process JIT execution."
-        << "(To enable recompile CppInterOp with -DLLVM_BUILT_WITH_OOP_JIT=ON)"
-        << "\n";
-  }
   auto innerOrErr =
       CudaEnabled ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
                                                        std::move(DeviceCI))

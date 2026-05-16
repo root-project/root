@@ -18,32 +18,6 @@
 using namespace clang;
 using namespace llvm;
 
-#if defined(ENABLE_DISPATCH_TESTS)
-#define DISPATCH_API(name, type) CppAPIType::name Cpp::name = nullptr;
-CPPINTEROP_API_TABLE
-#undef DISPATCH_API
-namespace {
-struct DispatchInitializer {
-  DispatchInitializer() {
-    if (!Cpp::LoadDispatchAPI(CPPINTEROP_LIB_PATH)) {
-      std::abort();
-    }
-  }
-  ~DispatchInitializer() = default;
-  DispatchInitializer(const DispatchInitializer&) = delete;
-  DispatchInitializer& operator=(const DispatchInitializer&) = delete;
-  DispatchInitializer(DispatchInitializer&&) noexcept = default;
-  DispatchInitializer& operator=(DispatchInitializer&&) noexcept = default;
-};
-// Thread-safe initialization using function-local static
-DispatchInitializer& GetDispatchInitializer() {
-  static DispatchInitializer instance;
-  return instance;
-}
-const DispatchInitializer& g_dispatch_init = GetDispatchInitializer();
-} // namespace
-#endif
-
 namespace TestUtils {
 TestConfig current_config;
 std::vector<const char*> GetInterpreterArgs(
@@ -104,17 +78,4 @@ bool IsTargetX86() {
   llvm::Triple triple(Interp->getCI()->getTargetOpts().Triple);
 #endif
   return triple.isX86();
-}
-
-const char* get_c_string(CXString string) {
-  return static_cast<const char*>(string.data);
-}
-
-void dispose_string(CXString string) {
-  if (string.private_flags == 1 && string.data)
-    free(const_cast<void*>(string.data));
-}
-
-CXScope make_scope(const clang::Decl* D, const CXInterpreter I) {
-  return {CXCursor_UnexposedDecl, 0, {D, nullptr, I}};
 }

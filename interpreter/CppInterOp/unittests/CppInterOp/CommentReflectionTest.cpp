@@ -1,8 +1,6 @@
 #include "Utils.h"
 
 #include "CppInterOp/CppInterOp.h"
-#include "clang-c/CXCppInterOp.h"
-#include "clang-c/CXString.h"
 #include "gtest/gtest.h"
 
 #include <string>
@@ -39,21 +37,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, CommentReflection_DoxygenBlockAndLine) {
 
   const std::string sDoc = Cpp::GetDoxygenComment(Decls[1], /*strip=*/true);
   EXPECT_EQ(sDoc, "A simple struct.");
-
-  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
-  CXScope S = make_scope(Decls[1], I);
-  CXString Doc = clang_getDoxygenComment(S, /*strip_comment_markers=*/true);
-  EXPECT_STREQ(get_c_string(Doc), sDoc.c_str());
-  dispose_string(Doc);
-  clang_Interpreter_takeInterpreterAsPtr(I);
-  clang_Interpreter_dispose(I);
-}
-
-TYPED_TEST(CPPINTEROP_TEST_MODE, CommentReflection_DoxygenNullScope) {
-  CXScope NullS{};
-  CXString Doc = clang_getDoxygenComment(NullS, /*strip_comment_markers=*/true);
-  EXPECT_STREQ(get_c_string(Doc), "");
-  dispose_string(Doc);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, CommentReflection_DoxygenNullPtr) {
