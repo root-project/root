@@ -3,9 +3,11 @@
 //          Jonas Rembser, CERN 05/2025
 
 #include <RooAbsReal.h>
+#include <RooAddPdf.h>
 #include <RooArgList.h>
 #include <RooBreitWigner.h>
 #include <RooConstVar.h>
+#include <RooExponential.h>
 #include <RooFFTConvPdf.h>
 #include <RooFit/ModelConfig.h>
 #include <RooGaussian.h>
@@ -408,4 +410,140 @@ TEST(RooWorkspace, Issue_10577)
    const double afterPlot = doIntegral();
 
    EXPECT_DOUBLE_EQ(afterPlot, expected);
+}
+
+namespace {
+
+/// Small composition model used by the import tests below.
+struct ImportTestModel {
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar mean{"mean", "mean", 5, 0, 10};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 5.0};
+   RooRealVar c{"c", "c", -0.1, -1.0, 0.0};
+   RooRealVar f{"f", "f", 0.4, 0.0, 1.0};
+   RooGaussian gauss{"gauss", "gaussian", x, mean, sigma};
+   RooExponential expo{"expo", "exponential", x, c};
+   RooAddPdf model{"model", "model", RooArgList{gauss, expo}, f};
+};
+
+bool hasServer(RooAbsArg const &node, RooAbsArg const &server)
+{
+   for (RooAbsArg *s : node.servers()) {
+      if (s == &server) {
+         return true;
+      }
+   }
+   return false;
+}
+
+/// The imported graph must be fully self-contained: every server of every node
+/// in the workspace has to be owned by that same workspace. If the renaming
+/// bookkeeping in import() is wrong, nodes end up still pointing at the
+/// original objects outside the workspace.
+void expectSelfContained(RooWorkspace &ws)
+{
+   for (RooAbsArg *node : ws.components()) {
+      EXPECT_EQ(node->workspace(), &ws) << "node " << node->GetName() << " is not owned by the workspace";
+      for (RooAbsArg *server : node->servers()) {
+         EXPECT_TRUE(ws.components().containsInstance(*server))
+            << "server " << server->GetName() << " of " << node->GetName() << " is not owned by the workspace";
+      }
+   }
+}
+
+} // namespace
+
+/// Importing a computation graph clones it, and clones it a second time to make
+/// any renaming effective. Check that each renaming mode results in a correctly
+/// named and correctly wired workspace, and that the values are preserved.
+TEST(RooWorkspace, ImportRenamingModes)
+{
+   // The pdfs are deliberately evaluated without a normalization set, which is
+   // fine here because only the imported and the original value are compared.
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::ERROR};
+
+   // No renaming at all
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.model, RooFit::Silence());
+
+      ASSERT_NE(ws.pdf("model"), nullptr);
+      EXPECT_DOUBLE_EQ(ws.pdf("model")->getVal(), m.model.getVal());
+      expectSelfContained(ws);
+   }
+
+   // Name conflict resolved by renaming the incoming nodes
+   {
+      ImportTestModel m1;
+      ImportTestModel m2;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m1.model, RooFit::Silence());
+      ws.import(m2.model, RooFit::RenameConflictNodes("v2"), RooFit::Silence());
+
+      ASSERT_NE(ws.pdf("model_v2"), nullptr);
+      EXPECT_NE(ws.pdf("gauss_v2"), nullptr);
+      EXPECT_NE(ws.pdf("expo_v2"), nullptr);
+      // The renamed top node must be wired to the renamed components
+      EXPECT_TRUE(hasServer(*ws.pdf("model_v2"), *ws.pdf("gauss_v2")));
+      EXPECT_TRUE(hasServer(*ws.pdf("model_v2"), *ws.pdf("expo_v2")));
+      EXPECT_STREQ(ws.pdf("model_v2")->getStringAttribute("origName"), "model");
+      EXPECT_DOUBLE_EQ(ws.pdf("model_v2")->getVal(), m2.model.getVal());
+      expectSelfContained(ws);
+   }
+
+   // Name conflict resolved by renaming the nodes already in the workspace
+   {
+      ImportTestModel m1;
+      ImportTestModel m2;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m1.model, RooFit::Silence());
+      ws.import(m2.model, RooFit::RenameConflictNodes("old", true), RooFit::Silence());
+
+      ASSERT_NE(ws.pdf("model"), nullptr);
+      EXPECT_NE(ws.pdf("model_old"), nullptr);
+      EXPECT_DOUBLE_EQ(ws.pdf("model")->getVal(), m2.model.getVal());
+      expectSelfContained(ws);
+   }
+
+   // Rename every node, not just the conflicting ones
+   {
+      ImportTestModel m1;
+      ImportTestModel m2;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m1.model, RooFit::Silence());
+      ws.import(m2.model, RooFit::RenameAllNodes("all"), RooFit::Silence());
+
+      ASSERT_NE(ws.pdf("model_all"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("model_all"), *ws.pdf("gauss_all")));
+      EXPECT_DOUBLE_EQ(ws.pdf("model_all")->getVal(), m2.model.getVal());
+      expectSelfContained(ws);
+   }
+
+   // Rename a single variable
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.model, RooFit::RenameVariable("x", "obs"), RooFit::Silence());
+
+      ASSERT_NE(ws.var("obs"), nullptr);
+      EXPECT_EQ(ws.var("x"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("gauss"), *ws.var("obs")));
+      EXPECT_DOUBLE_EQ(ws.pdf("model")->getVal(), m.model.getVal());
+      expectSelfContained(ws);
+   }
+
+   // Rename all variables at once
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.model, RooFit::RenameAllVariables("sfx"), RooFit::Silence());
+
+      ASSERT_NE(ws.var("x_sfx"), nullptr);
+      EXPECT_EQ(ws.var("x"), nullptr);
+      EXPECT_NE(ws.var("mean_sfx"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("gauss"), *ws.var("x_sfx")));
+      EXPECT_DOUBLE_EQ(ws.pdf("model")->getVal(), m.model.getVal());
+      expectSelfContained(ws);
+   }
 }
