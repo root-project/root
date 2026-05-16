@@ -213,9 +213,11 @@ cmake -DBUILD_SHARED_LIBS=ON -DLLVM_DIR=$LLVM_DIR/build/lib/cmake/llvm -DClang_D
 cmake --build . --target install --parallel $(nproc --all)
 ```
 
-and
-
-> Do make sure to pass ``DLLVM_BUILT_WITH_OOP_JIT=ON``, if you want to have out-of-process JIT execution feature enabled.
+> Out-of-process JIT auto-enables when CppInterOp is built against
+> LLVM 22+ with compiler-rt's ORC runtime available
+> (`liborc_rt*.a` and `llvm-jitlink-executor`). When detected, the
+> two artifacts are bundled under `<libdir>/cppinterop-rt/` so the
+> distribution is self-contained.
 
 #### Testing CppInterOp
 

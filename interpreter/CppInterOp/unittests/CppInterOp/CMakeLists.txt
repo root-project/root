@@ -43,7 +43,7 @@ if (EMSCRIPTEN)
 endif()
 
 add_cppinterop_unittest(CppInterOpTests
-  ENABLE_DISPATCH
+  CAPITest.cpp
   CommentReflectionTest.cpp
   EnumReflectionTest.cpp
   FunctionReflectionTest.cpp
@@ -65,6 +65,20 @@ if(NOT WIN32)
   )
 endif()
 
+# CAPITestC.c is a pure C compilation test. Build it as a separate object
+# library so it does not inherit C++-only flags (-Wno-deprecated-copy,
+# -fno-rtti) that GCC's C frontend rejects under -Werror.
+add_library(CAPITestC OBJECT CAPITestC.c)
+target_compile_options(CAPITestC PRIVATE
+  $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Werror -Wall -Wno-unused-command-line-argument>
+  $<$<C_COMPILER_ID:MSVC>:/WX /W3>)
+target_include_directories(CAPITestC PRIVATE
+  ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include)
+if(TARGET CppInterOpTableGen)
+  add_dependencies(CAPITestC CppInterOpTableGen)
+endif()
+target_link_libraries(CppInterOpTests PRIVATE CAPITestC)
+
 set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
 )
@@ -85,12 +99,9 @@ add_cppinterop_unittest(TracingTests
   TracingTests.cpp
   Utils.cpp
 )
-
-set_property(TEST cppinterop-TracingTests APPEND PROPERTY
-  ENVIRONMENT "GTEST_DEATH_TEST_STYLE=threadsafe")
-
 target_compile_definitions(TracingTests PRIVATE
   "CPPINTEROP_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../../\""
+  "CPPINTEROP_BINARY_DIR=\"${CMAKE_CURRENT_BINARY_DIR}/../../\""
 )
 # GCC 12 and (less often) 13/14 emit a -Wmaybe-uninitialized false positive
 # inside libstdc++'s <regex> headers when the std::function subobject of
@@ -105,3 +116,72 @@ endif()
 
 add_subdirectory(TestSharedLib)
 add_dependencies(DynamicLibraryManagerTests TestSharedLib)
+
+# Downstream-DSO dlopen check that mirrors libcppyy-backend's contract:
+# a SHARED lib using <CppInterOp/Dispatch.h> without linking against
+# clangCppInterOp, dlopen'd by a standalone exec that also doesn't link.
+# Any inline-header UND ref that the host lib can't satisfy at runtime
+# trips here before the cppyy integration job.
+if(NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
+  add_subdirectory(TestDownstreamLib)
+
+  set(_downstream_lib_path
+    "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/${CMAKE_SHARED_LIBRARY_PREFIX}TestDownstreamLib${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
+  add_executable(TestDownstreamLoader EXCLUDE_FROM_ALL TestDownstreamLoader.cpp)
+  add_dependencies(CppInterOpUnitTests TestDownstreamLoader TestDownstreamLib)
+  target_compile_definitions(TestDownstreamLoader PRIVATE
+    TEST_DOWNSTREAM_LIB_PATH="${_downstream_lib_path}")
+  if(UNIX AND NOT APPLE)
+    target_link_libraries(TestDownstreamLoader PRIVATE dl)
+  endif()
+  set_output_directory(TestDownstreamLoader
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+    LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+  )
+  add_test(NAME cppinterop-DownstreamLoaderTest
+    COMMAND TestDownstreamLoader $<TARGET_FILE:clangCppInterOp>)
+  set_tests_properties(cppinterop-DownstreamLoaderTest PROPERTIES
+    TIMEOUT "${TIMEOUT_VALUE}")
+endif()
+
+# Dispatch Tests.
+# Load libclangCppInterOp via dlopen(RTLD_LOCAL) and must NOT link against it
+# directly, to verify true symbol isolation.
+if(NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
+  add_executable(DispatchTests EXCLUDE_FROM_ALL
+    DispatchInit.cpp
+    DispatchTest.cpp
+    DispatchSmokeTest.cpp
+  )
+  add_dependencies(CppInterOpUnitTests DispatchTests)
+  if(TARGET CppInterOpTableGen)
+    add_dependencies(DispatchTests CppInterOpTableGen)
+  endif()
+  target_include_directories(DispatchTests PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR})
+  target_link_libraries(DispatchTests PRIVATE ${gtest_libs} ${link_pthreads_lib})
+  # Deliberately no target_link_libraries(... clangCppInterOp).
+  target_compile_definitions(DispatchTests PRIVATE
+    CPPINTEROP_LIB_PATH="${CMAKE_BINARY_DIR}/lib/libclangCppInterOp${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  )
+  set_output_directory(DispatchTests
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+    LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+  )
+  add_test(NAME cppinterop-DispatchTests COMMAND DispatchTests)
+  set_tests_properties(cppinterop-DispatchTests PROPERTIES
+    TIMEOUT "${TIMEOUT_VALUE}"
+    ENVIRONMENT "CPLUS_INCLUDE_PATH=${CMAKE_BINARY_DIR}/etc")
+  # Verify the binary is NOT linked against libclangCppInterOp. If this
+  # check fails, the dispatch tests are not truly testing RTLD_LOCAL.
+  if(UNIX AND NOT APPLE)
+    add_test(NAME cppinterop-DispatchTests-isolation
+      COMMAND sh -c "! ldd $<TARGET_FILE:DispatchTests> | grep -q $<TARGET_FILE_NAME:clangCppInterOp>"
+    )
+  elseif(APPLE)
+    add_test(NAME cppinterop-DispatchTests-isolation
+      COMMAND sh -c "! otool -L $<TARGET_FILE:DispatchTests> | grep -q $<TARGET_FILE_NAME:clangCppInterOp>"
+    )
+  endif()
+endif()

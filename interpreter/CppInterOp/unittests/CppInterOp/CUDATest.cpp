@@ -26,12 +26,12 @@ protected:
     if (!I)
       return;
     if (Cpp::Declare("__global__ void test_func() {}"
-                     "test_func<<<1,1>>>();" DFLT_FALSE) != 0)
+                     "test_func<<<1,1>>>();") != 0)
       return;
 
     HasSDK = true;
 
-    if (Cpp::Declare("cudaDeviceSynchronize();" DFLT_FALSE) != 0) {
+    if (Cpp::Declare("cudaDeviceSynchronize();") != 0) {
       Cpp::DeleteInterpreter(I);
       return;
     }
@@ -102,7 +102,7 @@ TEST_F(CUDATest, CUDAH) {
   SKIP_IF_NO_SDK;
 
   Cpp::CreateInterpreter({}, {"--cuda"});
-  EXPECT_EQ(0, Cpp::Declare("#include <cuda_runtime.h>" DFLT_FALSE));
+  EXPECT_EQ(0, Cpp::Declare("#include <cuda_runtime.h>"));
 }
 
 TEST_F(CUDATest, CUDARuntime) {
@@ -112,7 +112,7 @@ TEST_F(CUDATest, CUDARuntime) {
   EXPECT_EQ(0, Cpp::Declare(R"(
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
-  )" DFLT_FALSE));
+  )"));
   bool err = false;
   intptr_t count = Cpp::Evaluate("deviceCount", &err);
   EXPECT_FALSE(err);
@@ -138,8 +138,7 @@ TEST_F(CUDATest, SimpleKernelExecution) {
     addOne<<<1,1>>>(d);
     cudaDeviceSynchronize();
     int kernelErr = (int)cudaGetLastError();
-  )" DFLT_FALSE))
-      << "Failed to declare/launch kernel";
+  )")) << "Failed to declare/launch kernel";
 
   bool err = false;
   int cudaErr = (int)Cpp::Evaluate("kernelErr", &err);
@@ -152,7 +151,7 @@ TEST_F(CUDATest, SimpleKernelExecution) {
     EXPECT_EQ((int)result, 42);
   }
 
-  Cpp::Declare("cudaFree(d);" DFLT_FALSE);
+  Cpp::Declare("cudaFree(d);");
 }
 
 // demonstrate incremental CUDA compilation with CUB BlockReduce
@@ -180,8 +179,7 @@ TEST_F(CUDATest, CUB_BlockReduceWithDeviceFunction) {
       if (threadIdx.x == 0)
         atomicAdd(output, block_sum);
     }
-  )" DFLT_FALSE))
-      << "Failed to declare kernel";
+  )")) << "Failed to declare kernel";
 
   EXPECT_EQ(0, Cpp::Declare(R"(
     const int N = 256;
@@ -195,8 +193,7 @@ TEST_F(CUDATest, CUB_BlockReduceWithDeviceFunction) {
     sumOfSquaresKernel<<<numBlocks, BLOCK_SIZE>>>(d_in, d_out, N);
     cudaError_t syncErr = cudaDeviceSynchronize();
     cudaError_t lastErr = cudaGetLastError();
-  )" DFLT_FALSE))
-      << "Failed to launch kernel";
+  )")) << "Failed to launch kernel";
 
   bool err = false;
   EXPECT_EQ((int)Cpp::Evaluate("(int)syncErr", &err), 0);
@@ -209,5 +206,5 @@ TEST_F(CUDATest, CUB_BlockReduceWithDeviceFunction) {
   EXPECT_FALSE(err);
   EXPECT_EQ((int)result, 5625216);
 
-  Cpp::Declare("cudaFree(d_in); cudaFree(d_out);" DFLT_FALSE);
+  Cpp::Declare("cudaFree(d_in); cudaFree(d_out);");
 }

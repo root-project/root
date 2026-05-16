@@ -1,0 +1,219 @@
+# Upstream LLVM write(buf) uninit-bytes via the EPC transport, still
+# present in release/22.x. No llvm/llvm-project issue filed yet; if you
+# touch this file, please file one and add a reference here.
+{
+   Clang 22 Out of Process: uninitialised bytes in FDSimpleRemoteEPCTransport::sendMessage
+   Memcheck:Param
+   write(buf)
+   fun:__libc_write
+   fun:write
+   fun:_ZN4llvm3orc26FDSimpleRemoteEPCTransport11sendMessageENS0_21SimpleRemoteEPCOpcodeEmNS0_12ExecutorAddrENS_8ArrayRefIcEE
+   ...
+}
+
+# llvm/llvm-project#194147: clang-22 reads uninitialised bytes in many
+# AST/Sema/CodeGen paths (regression vs clang-20). Was x86_64-only at
+# first; aarch64 caught up after a release/22.x advance and now trips
+# its own set (TreeTransform, SemaCUDA, AsmPrinter, ValueEnumerator).
+# Drop the whole #194147 family of blocks once the upstream issue lands.
+
+{
+   llvm/llvm-project#194147: InitListExpr::isTransparent
+   Memcheck:Cond
+   fun:_ZNK5clang12InitListExpr13isTransparentEv
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::getInit
+   Memcheck:Cond
+   fun:_ZN5clang12InitListExpr7getInitEj
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::getInit const
+   Memcheck:Cond
+   fun:_ZNK5clang12InitListExpr7getInitEj
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::setInit
+   Memcheck:Cond
+   fun:_ZN5clang12InitListExpr7setInitEjPNS_4ExprE
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::resizeInits
+   Memcheck:Cond
+   fun:_ZN5clang12InitListExpr11resizeInitsERKNS_10ASTContextEj
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::resizeInits via memset
+   Memcheck:Cond
+   fun:memset
+   fun:_ZN5clang12InitListExpr11resizeInitsERKNS_10ASTContextEj
+   ...
+}
+
+{
+   llvm/llvm-project#194147: Sema::CheckForIntOverflow Cond
+   Memcheck:Cond
+   fun:_ZN5clang4Sema19CheckForIntOverflowEPKNS_4ExprE
+   ...
+}
+{
+   llvm/llvm-project#194147: Sema::CheckForIntOverflow Value8
+   Memcheck:Value8
+   fun:_ZN5clang4Sema19CheckForIntOverflowEPKNS_4ExprE
+   ...
+}
+{
+   llvm/llvm-project#194147: SequenceChecker::SequenceExpressionsInOrder
+   Memcheck:Cond
+   fun:*SequenceChecker*SequenceExpressionsInOrder*
+   ...
+}
+
+{
+   llvm/llvm-project#194147: Stmt::children via AnalyzeImplicitConversions
+   Memcheck:Cond
+   fun:_ZN5clang4Stmt8childrenEv
+   fun:*AnalyzeImplicitConversions*
+   ...
+}
+{
+   llvm/llvm-project#194147: AnalyzeImplicitConversions leaf
+   Memcheck:Cond
+   fun:*AnalyzeImplicitConversions*
+   ...
+}
+{
+   llvm/llvm-project#194147: CFGBuilder::Visit Cond
+   Memcheck:Cond
+   fun:*CFGBuilder*Visit*
+   ...
+}
+{
+   llvm/llvm-project#194147: CFGBuilder::Visit Value8
+   Memcheck:Value8
+   fun:*CFGBuilder*Visit*
+   ...
+}
+
+{
+   llvm/llvm-project#194147: RecordExprEvaluator::VisitCXXParenListOrInitListExpr
+   Memcheck:Cond
+   fun:*RecordExprEvaluator*VisitCXXParenListOrInitListExpr*
+   ...
+}
+{
+   llvm/llvm-project#194147: AggExprEmitter init-list visits
+   Memcheck:Cond
+   fun:*AggExprEmitter*Visit*InitListExpr*
+   ...
+}
+
+{
+   llvm/llvm-project#194147: InitListChecker::FillInEmptyInitForField
+   Memcheck:Cond
+   fun:*InitListChecker*FillInEmptyInitForField*
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListChecker::FillInEmptyInitializations
+   Memcheck:Cond
+   fun:*InitListChecker*FillInEmptyInitializations*
+   ...
+}
+
+# llvm/llvm-project#194147 (continued): symbols newly tripped after
+# release/22.x advanced and the llvm-release recipe republished. The
+# FunctionProtoType ctor is the dominant top frame on x86_64; the
+# CodeGen + EHScope entries cover the lower-frequency paths.
+#
+# Earlier iterations of this file carried ~17 more blocks targeting
+# symbols extracted from "Uninitialised value was created by"
+# allocation-origin frames; valgrind's matcher only considers the
+# read-site top frame, so every one of those blocks was dead.
+# Removed. (See the matching comment in clang21-valgrind.supp for
+# why the over-broad `*FunctionProtoType*` is the only pattern that
+# matches the constructor in valgrind's wildcard matcher.)
+{
+   llvm/llvm-project#194147: FunctionProtoType (any method, see comment)
+   Memcheck:Cond
+   fun:*FunctionProtoType*
+   ...
+}
+{
+   llvm/llvm-project#194147: CodeGenFunction::EmitCall
+   Memcheck:Cond
+   fun:*CodeGenFunction*EmitCall*
+   ...
+}
+{
+   llvm/llvm-project#194147: EHScopeStack::requiresLandingPad
+   Memcheck:Cond
+   fun:*EHScopeStack*requiresLandingPad*
+   ...
+}
+{
+   # Top frame for every unsuppressed error in the llvm22-vg
+   # x86_64 row after FunctionProtoType started being silenced --
+   # 21->173 errors all surfaced here, across 3->5 contexts
+   # depending on which CppInterOpTests' OutOfProcessJIT subtests
+   # ran. Origin frame is llvm::Module::setDataLayout (stack
+   # allocation) but valgrind matches read-site, so suppress
+   # by the read-site symbol.
+   llvm/llvm-project#194147: CodeGenModule::SetLLVMFunctionAttributesForDefinition
+   Memcheck:Cond
+   fun:*CodeGenModule*SetLLVMFunctionAttributesForDefinition*
+   ...
+}
+
+# llvm/llvm-project#194147 (continued): symbols newly tripped on
+# the arm64 cell after recipe republish. The aarch64 cell was
+# previously documented as clean for #194147 (per the existing
+# top-of-file note); that's now stale. Different code paths than
+# x86_64 trips, mainly TreeTransform / SemaCUDA / AsmPrinter /
+# bitcode writer.
+{
+   llvm/llvm-project#194147: TreeTransform::TransformIfStmt
+   Memcheck:Cond
+   fun:*TreeTransform*TransformIfStmt*
+   ...
+}
+{
+   llvm/llvm-project#194147: SemaCUDA::inferTargetForImplicitSpecialMember
+   Memcheck:Cond
+   fun:*SemaCUDA*inferTargetForImplicitSpecialMember*
+   ...
+}
+{
+   llvm/llvm-project#194147: AsmPrinter::emitPatchableFunctionEntries
+   Memcheck:Cond
+   fun:*AsmPrinter*emitPatchableFunctionEntries*
+   ...
+}
+{
+   llvm/llvm-project#194147: ValueEnumerator::getAttributeGroupID Cond
+   Memcheck:Cond
+   fun:*ValueEnumerator*getAttributeGroupID*
+   ...
+}
+{
+   # Same symbol, different error class: BitcodeWriter reads an
+   # 8-byte uninit field (AttributeSet pointer pair) when the
+   # ModuleBitcodeWriter::write() path serializes the module. Cond
+   # alone doesn't catch Memcheck:Value8 — value-load errors are
+   # tracked separately by valgrind.
+   llvm/llvm-project#194147: ValueEnumerator::getAttributeGroupID Value8
+   Memcheck:Value8
+   fun:*ValueEnumerator*getAttributeGroupID*
+   ...
+}
+{
+   llvm/llvm-project#194147: TargetLowering::LowerCallTo
+   Memcheck:Cond
+   fun:*TargetLowering*LowerCallTo*
+   ...
+}

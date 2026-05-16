@@ -13,11 +13,9 @@
 
 #include "clang/Basic/Version.h"
 
-#include <clang-c/CXErrorCode.h>
-#include "clang-c/CXCppInterOp.h"
-
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Config/llvm-config.h"
+#include "llvm/Support/BuryPointer.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 
@@ -26,11 +24,23 @@
 
 #include <algorithm>
 #include <csignal>
+#include <cstdlib>
 
 using ::testing::StartsWith;
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Version) {
   EXPECT_THAT(Cpp::GetVersion(), StartsWith("CppInterOp version"));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_BuildInfo) {
+  // Pin the headline labels so a future template edit cannot silently
+  // drop a field.
+  std::string Info = Cpp::GetBuildInfo();
+  EXPECT_THAT(Info, ::testing::HasSubstr("build type:"));
+  EXPECT_THAT(Info, ::testing::HasSubstr("compiler:"));
+  EXPECT_THAT(Info, ::testing::HasSubstr("llvm:"));
+  EXPECT_THAT(Info, ::testing::HasSubstr("target:"));
+  EXPECT_THAT(Info, ::testing::HasSubstr("cmake-line:"));
 }
 
 #ifndef LLVM_ENABLE_ASSERTIONS
@@ -67,8 +77,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
   //  EXPECT_TRUE(Cpp::Evaluate(I, "") == 0);
@@ -99,6 +107,26 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate) {
   EXPECT_FALSE(HadError);
 }
 
+// Regression (cppyy test12): no-Value-after-success used to abort in
+// convertTo. A pure class decl is no-Value across all clang-repl
+// versions; `int x = 5;` is bound on newer ones.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate_NonValueStatement) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  TestFixture::CreateInterpreter();
+
+  bool HadError = false;
+  EXPECT_EQ(Cpp::Evaluate("class EvalRegression_NoValue {};", &HadError),
+            (intptr_t)~0UL);
+  EXPECT_TRUE(HadError);
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeleteInterpreter) {
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
@@ -119,6 +147,74 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeleteInterpreter) {
   EXPECT_EQ(I2, Cpp::GetInterpreter()) << "I2 is not active";
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_StaticDtorsRunOnDelete) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  auto* I = TestFixture::CreateInterpreter();
+  ASSERT_NE(I, nullptr);
+
+  // Host-side flag the JIT writes to; survives the interpreter deletion
+  // that frees JIT memory. Reset explicitly for --gtest_repeat.
+  static int HostFlag;
+  HostFlag = 0;
+  std::string Inject = "extern \"C\" void* dtor_sink = (void*)" +
+                       std::to_string(reinterpret_cast<uintptr_t>(&HostFlag)) +
+                       ";";
+  Cpp::Declare(Inject.c_str(), I);
+  Cpp::Declare(R"(
+    struct DtorNotify { ~DtorNotify() { *static_cast<int*>(dtor_sink) = 1; } };
+  )",
+               I);
+  Cpp::Process("static DtorNotify notify;");
+
+  EXPECT_EQ(HostFlag, 0);
+  Cpp::DeleteInterpreter(I);
+  EXPECT_EQ(HostFlag, 1) << "JIT static dtor did not run on DeleteInterpreter";
+}
+
+// Mirrors clang/unittests/Interpreter/InterpreterTest.cpp's
+// ShutdownDoesNotMaterializeAgainstDestroyedGlobals at the CppInterOp
+// wrapper level: two interpreters each register a static with a
+// non-trivial dtor, then std::exit drives the C++ static-dtor phase.
+// On LLVM 23+ our InterpreterShutdown calls llvm_shutdown which fires
+// ~InterpreterInfo -> ~Interpreter -> JIT deinit; the deinit lookup
+// skips lazy materialization (Platform::lookupResolvedInitSymbols,
+// llvm/llvm-project#196874) and the process exits cleanly.
+//
+// Skipped on older LLVM: InterpreterShutdown's llvm_shutdown call is
+// gated out (we leak instead of risking the JIT cleanUp crash), and
+// driving the chain manually from the test deadlocks rather than
+// crashing cleanly through the compat layer. The crash contract is
+// pinned upstream by clang's
+// ShutdownDoesNotMaterializeAgainstDestroyedGlobals test.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           Interpreter_ShutdownDoesNotMaterializeAgainstDestroyedGlobals) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+#if LLVM_VERSION_MAJOR <= 22
+  GTEST_SKIP() << "Requires LLVM 23+ (lookupResolvedInitSymbols)";
+#else
+  EXPECT_EXIT(
+      {
+        auto* I1 = TestFixture::CreateInterpreter();
+        auto* I2 = TestFixture::CreateInterpreter();
+        Cpp::ActivateInterpreter(I1);
+        Cpp::Process("struct S1 { S1() {} ~S1() {} }; static S1 s1;");
+        Cpp::ActivateInterpreter(I2);
+        Cpp::Process("struct S2 { S2() {} ~S2() {} }; static S2 s2;");
+        std::exit(0);
+      },
+      ::testing::ExitedWithCode(0), "");
+#endif
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ActivateInterpreter) {
 #ifdef EMSCRIPTEN_STATIC_LIBRARY
   GTEST_SKIP() << "Test fails for Emscipten static library build";
@@ -131,20 +227,20 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ActivateInterpreter) {
   auto* Cpp20 = TestFixture::CreateInterpreter({"-std=c++20"});
 
   EXPECT_TRUE(Cpp14 && Cpp17 && Cpp20);
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus" DFLT_NULLPTR) == 202002L)
+  EXPECT_TRUE(Cpp::Evaluate("__cplusplus") == 202002L)
       << "Failed to activate C++20";
 
   auto* UntrackedI = reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U));
   EXPECT_FALSE(Cpp::ActivateInterpreter(UntrackedI));
 
   EXPECT_TRUE(Cpp::ActivateInterpreter(Cpp14));
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus" DFLT_NULLPTR) == 201402L);
+  EXPECT_TRUE(Cpp::Evaluate("__cplusplus") == 201402L);
 
   Cpp::DeleteInterpreter(Cpp14);
   EXPECT_EQ(Cpp::GetInterpreter(), Cpp20);
 
   EXPECT_TRUE(Cpp::ActivateInterpreter(Cpp17));
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus" DFLT_NULLPTR) == 201703L);
+  EXPECT_TRUE(Cpp::Evaluate("__cplusplus") == 201703L);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Process) {
@@ -156,25 +252,13 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Process) {
 #endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
   std::vector<const char*> interpreter_args = { "-include", "new", "-Xclang", "-iwithsysroot/include/compat" };
-  auto* I = TestFixture::CreateInterpreter(interpreter_args);
+  TestFixture::CreateInterpreter(interpreter_args);
   EXPECT_TRUE(Cpp::Process("") == 0);
   EXPECT_TRUE(Cpp::Process("int a = 12;") == 0);
   EXPECT_FALSE(Cpp::Process("error_here;") == 0);
   // Linker/JIT error.
   EXPECT_FALSE(Cpp::Process("int f(); int res = f();") == 0);
-
-  // C API
-  auto* CXI = clang_createInterpreterFromRawPtr(I);
-  clang_Interpreter_declare(CXI, "#include <iostream>", false);
-  clang_Interpreter_process(CXI, "int c = 42;");
-  auto* CXV = clang_createValue();
-  auto Res = clang_Interpreter_evaluate(CXI, "c", CXV);
-  EXPECT_EQ(Res, CXError_Success);
-  clang_Value_dispose(CXV);
-  clang_Interpreter_dispose(CXI);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeclareSilent) {
@@ -191,6 +275,31 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeclareSilent) {
 
   // The interpreter should remain usable after a silent failure.
   EXPECT_EQ(0, Cpp::Declare("int y = 123;", /*silent=*/false));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeclareReportsParseErrors) {
+#ifdef _WIN32
+  // The non-silent parse-error case emits an `error: expected expression`
+  // diagnostic to stderr, which MSBuild's check-cppinterop custom-build
+  // rule scans and treats as a build failure regardless of the gtest
+  // result.
+  GTEST_SKIP()
+      << "non-silent diagnostic trips MSBuild error scanning on Windows";
+#endif
+#if CLANG_VERSION_MAJOR > 21
+  GTEST_SKIP() << "Test crashes gtest for llvm 22 based build";
+#endif
+  TestFixture::CreateInterpreter();
+
+  // Valid input still returns 0.
+  EXPECT_EQ(0, Cpp::Declare("int z = 7;", /*silent=*/false));
+
+  // Parse error -> rc != 0 (Parse-recovered case the trap catches).
+  EXPECT_NE(0, Cpp::Declare("int err = ;", /*silent=*/false));
+
+  // Warning-only diagnostics must not trip the trap.
+  EXPECT_EQ(0, Cpp::Declare("int __attribute__((deprecated)) v = 0;",
+                            /*silent=*/false));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_EmscriptenExceptionHandling) {
@@ -226,48 +335,21 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CreateInterpreter) {
                "int cpp14() { return 2014; }\n"
                "#else\n"
                "void cppUnknown() {}\n"
-               "#endif" DFLT_FALSE);
-  EXPECT_TRUE(Cpp::GetNamed("cpp14" DFLT_NULLPTR));
-  EXPECT_FALSE(Cpp::GetNamed("cppUnknown" DFLT_NULLPTR));
+               "#endif");
+  EXPECT_TRUE(Cpp::GetNamed("cpp14"));
+  EXPECT_FALSE(Cpp::GetNamed("cppUnknown"));
 
   I = TestFixture::CreateInterpreter({"-std=c++17"});
   Cpp::Declare("#if __cplusplus==201703L\n"
                "int cpp17() { return 2017; }\n"
                "#else\n"
                "void cppUnknown() {}\n"
-               "#endif" DFLT_FALSE);
-  EXPECT_TRUE(Cpp::GetNamed("cpp17" DFLT_NULLPTR));
-  EXPECT_FALSE(Cpp::GetNamed("cppUnknown" DFLT_NULLPTR));
-
-#ifndef CPPINTEROP_USE_CLING
-  // C API
-  auto* CXI = clang_createInterpreterFromRawPtr(I);
-  auto CLI = clang_Interpreter_getClangInterpreter(CXI);
-  EXPECT_TRUE(CLI);
-
-  auto I2 = clang_Interpreter_takeInterpreterAsPtr(CXI);
-  EXPECT_EQ(I, I2);
-  clang_Interpreter_dispose(CXI);
-#endif
+               "#endif");
+  EXPECT_TRUE(Cpp::GetNamed("cpp17"));
+  EXPECT_FALSE(Cpp::GetNamed("cppUnknown"));
 }
 
 #ifndef CPPINTEROP_USE_CLING
-TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CreateInterpreterCAPI) {
-  const char* argv[] = {"-std=c++17"};
-  auto *CXI = clang_createInterpreter(argv, 1);
-  auto CLI = clang_Interpreter_getClangInterpreter(CXI);
-  EXPECT_TRUE(CLI);
-  clang_Interpreter_dispose(CXI);
-}
-
-TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CreateInterpreterCAPIFailure) {
-#ifdef _WIN32
-  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
-#endif
-  const char* argv[] = {"-fsyntax-only", "-Xclang", "-invalid-plugin"};
-  auto *CXI = clang_createInterpreter(argv, 3);
-  EXPECT_EQ(CXI, nullptr);
-}
 #endif
 
 #ifdef LLVM_BINARY_DIR
@@ -342,7 +424,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CodeCompletion) {
 #endif
   TestFixture::CreateInterpreter();
   std::vector<std::string> cc;
-  Cpp::Declare("int foo = 12;" DFLT_FALSE);
+  Cpp::Declare("int foo = 12;");
   Cpp::CodeComplete(cc, "f", 1, 2);
   // We check only for 'float' and 'foo', because they
   // must be present in the result. Other hints may appear
@@ -378,16 +460,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageStandardCpp) {
   TestFixture::CreateInterpreter({"-std=c++23"});
   EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
             Cpp::InterpreterLanguageStandard::cxx23);
-}
-
-TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageCAPI) {
-  auto* I = TestFixture::CreateInterpreter();
-  auto* CXI = clang_createInterpreterFromRawPtr(I);
-  EXPECT_EQ(clang_Interpreter_getLanguage(CXI),
-            CXInterpreterLanguage_CPlusPlus);
-  EXPECT_EQ(clang_Interpreter_getLanguageStandard(CXI),
-            CXInterpreterLanguageStandard_cxx14);
-  clang_Interpreter_dispose(CXI);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageC) {
@@ -426,8 +498,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageStandardGNU) {
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ExternalInterpreter) {
 
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 
 #ifndef CPPINTEROP_USE_CLING
   llvm::ExitOnError ExitOnErr;
@@ -466,7 +536,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ExternalInterpreter) {
   EXPECT_TRUE(Cpp::GetInterpreter()) << "External Interpreter not set";
 
 #ifndef CPPINTEROP_USE_CLING
-  I.release();
+  // Skip Interpreter destruction: the teardown-order bug tracked in
+  // CppInterOp#887 makes it unsafe. BuryPointer is used instead of
+  // release() so LSan sees the graph as reachable rather than leaked.
+  llvm::BuryPointer(std::move(I));
 #endif
 
 #ifdef CPPINTEROP_USE_CLING
@@ -534,11 +607,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
   auto* I1 = TestFixture::CreateInterpreter();
   ASSERT_NE(I1, nullptr);
   Cpp::ActivateInterpreter(I1);
-  Cpp::Declare("int add(int a, int b) { return a + b; }" DFLT_FALSE);
-  auto* AddDecl1 = Cpp::GetNamed("add" DFLT_NULLPTR);
+  Cpp::Declare("int add(int a, int b) { return a + b; }");
+  auto* AddDecl1 = Cpp::GetNamed("add");
   ASSERT_NE(AddDecl1, nullptr);
 
-  Cpp::Declare("#include <new>" DFLT_FALSE); // Needed by JitCall
+  Cpp::Declare("#include <new>"); // Needed by JitCall
   auto JC1 = Cpp::MakeFunctionCallable(AddDecl1);
   ASSERT_TRUE(JC1.isValid());
 
@@ -551,11 +624,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
   auto* I2 = TestFixture::CreateInterpreter();
   ASSERT_NE(I2, nullptr);
   Cpp::ActivateInterpreter(I2);
-  Cpp::Declare("int add(int a, int b) { return a * b; }" DFLT_FALSE);
-  auto* AddDecl2 = Cpp::GetNamed("add" DFLT_NULLPTR);
+  Cpp::Declare("int add(int a, int b) { return a * b; }");
+  auto* AddDecl2 = Cpp::GetNamed("add");
   ASSERT_NE(AddDecl2, nullptr);
 
-  Cpp::Declare("#include <new>" DFLT_FALSE); // Needed by JitCall
+  Cpp::Declare("#include <new>"); // Needed by JitCall
   auto JC2 = Cpp::MakeFunctionCallable(AddDecl2);
   ASSERT_TRUE(JC2.isValid());
 
@@ -569,5 +642,45 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
   JC2.Invoke(&r2, {args2, 2});
   EXPECT_EQ(r2, 12) << "Wrapper should use I2's implementation (multiply), "
                        "not a stale cache from deleted I1";
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DLMIsPerInterpreter) {
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows: DLM symbol-table walk crashes "
+                  "(RVA 0x0 in export table).";
+#endif
+
+#ifdef __APPLE__
+  static constexpr const char* kSym = "_ret_zero";
+#else
+  static constexpr const char* kSym = "ret_zero";
+#endif
+
+  std::string BinaryPath =
+      llvm::sys::fs::getMainExecutable(/*Argv0=*/nullptr, /*MainAddr=*/nullptr);
+  ASSERT_FALSE(BinaryPath.empty());
+  llvm::StringRef BinDir = llvm::sys::path::parent_path(BinaryPath);
+
+  auto* I1 = TestFixture::CreateInterpreter();
+  ASSERT_NE(I1, nullptr);
+  Cpp::ActivateInterpreter(I1);
+  Cpp::AddSearchPath(BinDir.str().c_str());
+
+  std::string R1 = Cpp::SearchLibrariesForSymbol(kSym, /*system_search=*/false);
+  if (R1.empty())
+    GTEST_SKIP() << "TestSharedLib not found — cannot test DLM isolation";
+
+  // With a single function-local-static DLM, the path added on I1
+  // would reach I2 and the lookup below would succeed; the per-
+  // interpreter DLM means I2 starts with a fresh path set.
+  auto* I2 = TestFixture::CreateInterpreter();
+  ASSERT_NE(I2, nullptr);
+  Cpp::ActivateInterpreter(I2);
+
+  std::string R2 = Cpp::SearchLibrariesForSymbol(kSym, /*system_search=*/false);
+  EXPECT_TRUE(R2.empty()) << "I2 must not see search paths added on I1; found: "
+                          << R2;
 }
 #endif // !EMSCRIPTEN

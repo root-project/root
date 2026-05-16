@@ -4,11 +4,7 @@ enable_testing()
 
 # LLVM builds (not installed llvm) provides gtest.
 if (NOT TARGET GTest::gtest AND NOT TARGET gtest)
-  find_package(GTest)
-  if (NOT GTest_FOUND)
-    message(WARNING "CppInterOp could not find GTest. Provide the package or set CPPINTEROP_ENABLE_TESTING=OFF to disable this warning.")
-    return()
-  endif()
+  include(GoogleTest)
 endif()
 
 if(EMSCRIPTEN)
@@ -34,18 +30,10 @@ add_dependencies(CppInterOpUnitTests clangCppInterOp)
 
 set (TIMEOUT_VALUE 2400)
 function(add_cppinterop_unittest name)
-  cmake_parse_arguments(ARG
-    "ENABLE_DISPATCH"
-    ""
-    ""
-    ${ARGN}
-  )
-  # gtest_main is dropped from the Emscripten link set, so every Emscripten
-  # test binary needs its own main.cpp entry point.
   if(EMSCRIPTEN)
-    add_executable(${name} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS} main.cpp)
+    add_executable(${name} EXCLUDE_FROM_ALL ${ARGN} main.cpp)
   else()
-    add_executable(${name} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
+    add_executable(${name} EXCLUDE_FROM_ALL ${ARGN})
   endif()
   if(NOT LLVM_ENABLE_RTTI)
     if(MSVC)
@@ -55,6 +43,10 @@ function(add_cppinterop_unittest name)
     endif()
   endif()
   add_dependencies(CppInterOpUnitTests ${name})
+  # Ensure .inc files are generated before test compilation starts.
+  if(TARGET CppInterOpTableGen)
+    add_dependencies(${name} CppInterOpTableGen)
+  endif()
   target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR})
   set_property(TARGET ${name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   export_executable_symbols(${name})
@@ -89,16 +81,6 @@ function(add_cppinterop_unittest name)
   set_tests_properties(cppinterop-${name} PROPERTIES
                         TIMEOUT "${TIMEOUT_VALUE}"
                         ENVIRONMENT "CPLUS_INCLUDE_PATH=${CMAKE_BINARY_DIR}/etc")
-  # Auto-generate the dispatch version if shared libs are built by recursively calling
-  # add_cppinterop_unittest with the necessary compile definitions
-  # FIXME: Enable for WASM builds
-  if (NOT EMSCRIPTEN AND ARG_ENABLE_DISPATCH AND BUILD_SHARED_LIBS)
-    add_cppinterop_unittest(${name}Dispatch ${ARG_UNPARSED_ARGUMENTS} DispatchTest.cpp)
-    target_compile_definitions(${name}Dispatch PRIVATE
-      ENABLE_DISPATCH_TESTS
-      CPPINTEROP_LIB_PATH="${CMAKE_BINARY_DIR}/lib/libclangCppInterOp${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    )
-  endif()
 endfunction()
 
 add_subdirectory(CppInterOp)
