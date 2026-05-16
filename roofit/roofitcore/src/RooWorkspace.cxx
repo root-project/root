@@ -87,6 +87,7 @@ and try reading again.
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <unordered_map>
 
 namespace {
 
@@ -428,7 +429,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   const char* suffix = suffixA ? suffixA : suffixC ;
 
   // Process any change in variable names
-  std::map<string,string> varMap ;
+  std::unordered_map<string,string> varMap ;
   if (strlen(varChangeIn)>0) {
 
     // Parse comma separated lists into map<string,string>
@@ -524,6 +525,9 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Mark nodes that are to be renamed with special attribute
+  // Track whether any node in cloneSet actually gets renamed below: only then
+  // does the working copy have to be cloned a second time (see there).
+  bool nodesRenamed = false ;
   string topName2 = cloneTop->GetName() ;
   if (!renameConflictOrig) {
     // Mark all nodes to be imported for renaming following conflict resolution protocol
@@ -532,6 +536,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
+      nodesRenamed = true ;
       string tag = "ORIGNAME:" + origName;
       cnode2->setAttribute(tag.c_str()) ;
       if (!cnode2->getStringAttribute("origName")) {
@@ -598,6 +603,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
         cnode->SetName(varMap[cnode->GetName()].c_str()) ;
+        nodesRenamed = true ;
         string tag = "ORIGNAME:" + origName;
         cnode->setAttribute(tag.c_str()) ;
         if (!cnode->getStringAttribute("origName")) {
@@ -617,10 +623,18 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     }
   }
 
-  // Now clone again with renaming effective
-  RooArgSet cloneSet2;
-  cloneSet2.useHashMapForFind(true); // Faster finding
-  RooArgSet(*cloneTop).snapshot(cloneSet2, !noRecursion);
+  // Now clone again with renaming effective. Cloning re-resolves all server
+  // links by name, which is what makes the renaming above take effect. If
+  // nothing was renamed, the first working copy is already in its final state
+  // and cloning the whole computation graph a second time would only cost time
+  // and memory, so it is reused as-is. This is the common case: renaming only
+  // happens with an explicit Rename*() command argument or a name conflict.
+  RooArgSet renamedCloneSet;
+  if (nodesRenamed) {
+    renamedCloneSet.useHashMapForFind(true); // Faster finding
+    RooArgSet(*cloneTop).snapshot(renamedCloneSet, !noRecursion);
+  }
+  RooArgSet &cloneSet2 = nodesRenamed ? renamedCloneSet : cloneSet;
   RooAbsArg* cloneTop2 = cloneSet2.find(topName2.c_str()) ;
 
   // Perform any auxiliary imports at this point
