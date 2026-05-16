@@ -117,8 +117,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_DatamembersWithAnonymousStru
 #if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
   GTEST_SKIP() << "Test fails with Cling on Windows";
 #endif
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 
   std::vector<Decl*> Decls;
 #define Stringify(s) Stringifyx(s)
@@ -139,27 +137,27 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_DatamembersWithAnonymousStru
   EXPECT_EQ(datamembers_klass1.size(), 3);
   EXPECT_EQ(datamembers_klass2.size(), 3);
 
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass1[0] DFLT_0), 0);
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass1[0]), 0);
   // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass1[1] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass1[1]),
             ((intptr_t) & (k1.a)) - ((intptr_t) & (k1.num)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass1[2] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass1[2]),
             ((intptr_t) & (k1.b)) - ((intptr_t) & (k1.num)));
 
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass2[0] DFLT_0), 0);
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass2[1] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass2[0]), 0);
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass2[1]),
             ((intptr_t) & (k2.a)) - ((intptr_t) & (k2.num)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass2[2] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass2[2]),
             ((intptr_t) & (k2.b)) - ((intptr_t) & (k2.num)));
 
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[0] DFLT_0), 0);
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[1] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[0]), 0);
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[1]),
             ((intptr_t) & (k3.a)) - ((intptr_t) & (k3.num)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[2] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[2]),
             ((intptr_t) & (k3.b)) - ((intptr_t) & (k3.num)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[3] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[3]),
             ((intptr_t) & (k3.c)) - ((intptr_t) & (k3.num)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[4] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers_klass3[4]),
             ((intptr_t) & (k3.num2)) - ((intptr_t) & (k3.num)));
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 #ifdef _WIN32
@@ -168,8 +166,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_DatamembersWithAnonymousStru
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetTypeAsString) {
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 
   std::string code = R"(
   namespace my_namespace {
@@ -186,7 +182,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetTypeAsString) {
   )";
 
   TestFixture::CreateInterpreter();
-  EXPECT_EQ(Cpp::Declare(code.c_str() DFLT_FALSE), 0);
+  EXPECT_EQ(Cpp::Declare(code.c_str()), 0);
 
   Cpp::TCppScope_t wrapper =
       Cpp::GetScopeFromCompleteName("my_namespace::Wrapper");
@@ -287,62 +283,62 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
   std::vector<Cpp::TCppScope_t> datamembers;
   Cpp::GetDatamembers(Decls[4], datamembers);
 
-  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[0] DFLT_0)); // a
-  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[1] DFLT_0)); // N
-  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[2] DFLT_0)); // S
-  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[3] DFLT_0)); // SN
+  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[0])); // a
+  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[1])); // N
+  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[2])); // S
+  EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[3])); // SN
 
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[0] DFLT_0), 0);
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[0]), 0);
 
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[1] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[1]),
             ((intptr_t) & (c.b)) - ((intptr_t) & (c.a)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[2] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[2]),
             ((intptr_t) & (c.c)) - ((intptr_t) & (c.a)));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[3] DFLT_0),
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[3]),
             ((intptr_t) & (c.d)) - ((intptr_t) & (c.a)));
 
   auto* VD_C_s_a = Cpp::GetNamed("s_a", Decls[4]); // C::s_a
-  EXPECT_TRUE((bool)Cpp::GetVariableOffset(VD_C_s_a DFLT_0));
+  EXPECT_TRUE((bool)Cpp::GetVariableOffset(VD_C_s_a));
 
   struct K {
     int x;
     int y;
     int z;
   };
-  Cpp::Declare("struct K;" DFLT_FALSE);
-  Cpp::TCppScope_t k = Cpp::GetNamed("K" DFLT_NULLPTR);
+  Cpp::Declare("struct K;");
+  Cpp::TCppScope_t k = Cpp::GetNamed("K");
   EXPECT_TRUE(k);
 
-  Cpp::Declare("struct K { int x; int y; int z; };" DFLT_FALSE);
+  Cpp::Declare("struct K { int x; int y; int z; };");
   datamembers.clear();
   Cpp::GetDatamembers(k, datamembers);
   EXPECT_EQ(datamembers.size(), 3);
 
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[0] DFLT_0), offsetof(K, x));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[1] DFLT_0), offsetof(K, y));
-  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[2] DFLT_0), offsetof(K, z));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[0]), offsetof(K, x));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[1]), offsetof(K, y));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[2]), offsetof(K, z));
 
   Cpp::Declare(R"(
     template <typename T> struct ClassWithStatic {
       static T const ref_value;
     };
     template <typename T> T constexpr ClassWithStatic<T>::ref_value = 42;
-  )" DFLT_FALSE);
+  )");
 
-  Cpp::TCppScope_t klass = Cpp::GetNamed("ClassWithStatic" DFLT_NULLPTR);
+  Cpp::TCppScope_t klass = Cpp::GetNamed("ClassWithStatic");
   EXPECT_TRUE(klass);
 
   ASTContext& C = Interp->getCI()->getASTContext();
   std::vector<Cpp::TemplateArgInfo> template_args = {
       {C.IntTy.getAsOpaquePtr()}};
-  Cpp::TCppScope_t klass_instantiated = Cpp::InstantiateTemplate(
-      klass, template_args.data(), template_args.size() DFLT_FALSE);
+  Cpp::TCppScope_t klass_instantiated =
+      Cpp::InstantiateTemplate(klass, template_args);
   EXPECT_TRUE(klass_instantiated);
 
   Cpp::TCppScope_t var = Cpp::GetNamed("ref_value", klass_instantiated);
   EXPECT_TRUE(var);
 
-  EXPECT_TRUE(Cpp::GetVariableOffset(var DFLT_0));
+  EXPECT_TRUE(Cpp::GetVariableOffset(var));
 }
 
 #define CODE                                                                   \
@@ -385,22 +381,20 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_VariableOffsetsWithInheritan
 #if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
   GTEST_SKIP() << "Test fails with Cling on Windows";
 #endif
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 
   std::vector<const char*> interpreter_args = {"-include", "new"};
   TestFixture::CreateInterpreter(interpreter_args);
 
-  Cpp::Declare("#include<string>" DFLT_FALSE);
+  Cpp::Declare("#include<string>");
 
 #define Stringify(s) Stringifyx(s)
 #define Stringifyx(...) #__VA_ARGS__
-  Cpp::Declare(Stringify(CODE) DFLT_FALSE);
+  Cpp::Declare(Stringify(CODE));
 #undef Stringifyx
 #undef Stringify
 #undef CODE
 
-  Cpp::TCppScope_t myklass = Cpp::GetNamed("MyKlass" DFLT_NULLPTR);
+  Cpp::TCppScope_t myklass = Cpp::GetNamed("MyKlass");
   EXPECT_TRUE(myklass);
 
   size_t num_bases = Cpp::GetNumBases(myklass);
@@ -560,8 +554,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
@@ -590,16 +582,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
   template<typename... Eles>
   struct Elements
   : public integral_constant<int, sizeof...(Eles)> {};
-  )" DFLT_FALSE);
+  )");
 
-  Cpp::TCppScope_t MyClass = Cpp::GetNamed("MyClass" DFLT_NULLPTR);
+  Cpp::TCppScope_t MyClass = Cpp::GetNamed("MyClass");
   EXPECT_TRUE(MyClass);
 
   std::vector<Cpp::TCppScope_t> datamembers;
   Cpp::GetStaticDatamembers(MyClass, datamembers);
   EXPECT_EQ(datamembers.size(), 1);
 
-  intptr_t offset = Cpp::GetVariableOffset(datamembers[0] DFLT_0);
+  intptr_t offset = Cpp::GetVariableOffset(datamembers[0]);
   EXPECT_EQ(3, *(size_t*)offset);
 
   ASTContext& C = Interp->getCI()->getASTContext();
@@ -607,23 +599,21 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
       {C.IntTy.getAsOpaquePtr(), "5"}};
 
   Cpp::TCppFunction_t MyTemplatedClass = Cpp::InstantiateTemplate(
-      Cpp::GetNamed("MyTemplatedClass" DFLT_NULLPTR), template_args.data(),
-      template_args.size() DFLT_FALSE);
+      Cpp::GetNamed("MyTemplatedClass"), template_args);
   EXPECT_TRUE(MyTemplatedClass);
 
   datamembers.clear();
   Cpp::GetStaticDatamembers(MyTemplatedClass, datamembers);
   EXPECT_EQ(datamembers.size(), 1);
 
-  offset = Cpp::GetVariableOffset(datamembers[0] DFLT_0);
+  offset = Cpp::GetVariableOffset(datamembers[0]);
   EXPECT_EQ(5, *(size_t*)offset);
 
   std::vector<Cpp::TemplateArgInfo> ele_template_args = {
       {C.IntTy.getAsOpaquePtr()}, {C.FloatTy.getAsOpaquePtr()}};
 
-  Cpp::TCppFunction_t Elements = Cpp::InstantiateTemplate(
-      Cpp::GetNamed("Elements" DFLT_NULLPTR), ele_template_args.data(),
-      ele_template_args.size() DFLT_FALSE);
+  Cpp::TCppFunction_t Elements =
+      Cpp::InstantiateTemplate(Cpp::GetNamed("Elements"), ele_template_args);
   EXPECT_TRUE(Elements);
 
   EXPECT_EQ(1, Cpp::GetNumBases(Elements));
@@ -634,7 +624,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
   Cpp::GetStaticDatamembers(IC, datamembers);
   EXPECT_EQ(datamembers.size(), 1);
 
-  offset = Cpp::GetVariableOffset(datamembers[0] DFLT_0);
+  offset = Cpp::GetVariableOffset(datamembers[0]);
   EXPECT_EQ(2, *(size_t*)offset);
 }
 
@@ -648,13 +638,13 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
     enum A { ONE, TWO, THREE };
     enum class B { SEVEN, EIGHT, NINE };
   };
-  )" DFLT_FALSE);
+  )");
 
-  Cpp::TCppScope_t MyEnumClass = Cpp::GetNamed("MyEnumClass" DFLT_NULLPTR);
+  Cpp::TCppScope_t MyEnumClass = Cpp::GetNamed("MyEnumClass");
   EXPECT_TRUE(MyEnumClass);
 
   std::vector<Cpp::TCppScope_t> datamembers;
-  Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers DFLT_TRUE);
+  Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers);
   EXPECT_EQ(datamembers.size(), 9);
   EXPECT_TRUE(Cpp::IsEnumType(Cpp::GetVariableType(datamembers[0])));
 
@@ -728,7 +718,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_Is_Get_Reference) {
 
   EXPECT_EQ(Cpp::GetValueKind(Cpp::GetVariableType(Decls[2])),
             Cpp::ValueKind::LValue);
-  EXPECT_EQ(Cpp::GetReferencedType(Cpp::GetVariableType(Decls[1]) DFLT_FALSE),
+  EXPECT_EQ(Cpp::GetReferencedType(Cpp::GetVariableType(Decls[1])),
             Cpp::GetVariableType(Decls[2]));
   EXPECT_EQ(Cpp::GetValueKind(
                 Cpp::GetReferencedType(Cpp::GetVariableType(Decls[1]), true)),

@@ -7,8 +7,6 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
-#include "clang-c/CXCppInterOp.h"
-
 #include "gtest/gtest.h"
 
 #include <cstdint>
@@ -131,6 +129,52 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_GetType) {
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("signed long")),"long");
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("signed long long")),"long long");
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("struct")),"NULL TYPE");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_GetTypeWithParent) {
+  TestFixture::CreateInterpreter();
+
+  Interp->declare(R"(
+    namespace NS {
+      struct Test {};
+      using testptr = Test*;       // alias whose target is Test*, not Test
+      using testref = Test&;       // alias whose target is a reference
+      typedef Test testtd;         // classic typedef to a class
+      class Member {};
+    }
+  )");
+
+  Cpp::TCppScope_t ns = Cpp::GetNamed("NS");
+  ASSERT_TRUE(ns);
+
+  // Builtin fast-path is independent of parent: `int` resolves
+  // identically with and without a scope.
+  EXPECT_EQ(Cpp::GetType("int"), Cpp::GetType("int", ns));
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("int", ns)), "int");
+
+  // Direct-member lookup via parent.
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("Test", ns)), "NS::Test");
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("Member", ns)), "NS::Member");
+
+  // The motivating case: a type alias whose underlying QualType carries
+  // a pointer must round-trip with the pointer intact. GetTypeFromScope
+  // routes TypeAliasDecl through TND->getUnderlyingType(), preserving
+  // pointer / reference / cv qualifiers.
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("testptr", ns)), "NS::Test *");
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("testref", ns)), "NS::Test &");
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetType("testtd", ns)), "NS::Test");
+
+  // TU-only lookup (no parent) does NOT see members of NS.
+  EXPECT_EQ(Cpp::GetType("testptr"), nullptr)
+      << "GetType(name) without a parent must not reach NS members";
+
+  // Negative: name not declared in the parent scope returns nullptr.
+  EXPECT_EQ(Cpp::GetType("nope", ns), nullptr);
+
+  // parent==nullptr is the historical behavior: TU-scope lookup,
+  // builtins still resolved.
+  EXPECT_EQ(Cpp::GetType("int", nullptr), Cpp::GetType("int"));
+  EXPECT_EQ(Cpp::GetType("testptr", nullptr), nullptr);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsRecordType) {
@@ -357,26 +401,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_GetComplexType) {
   EXPECT_EQ(get_complex_type_as_string("int"), "_Complex int");
   EXPECT_EQ(get_complex_type_as_string("float"), "_Complex float");
   EXPECT_EQ(get_complex_type_as_string("double"), "_Complex double");
-
-  // C API
-  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
-  auto C_API_SHIM = [&](const std::string& element_type) {
-    auto ElementQT = Cpp::GetType(element_type);
-    CXQualType EQT = {CXType_Unexposed, {ElementQT, I}};
-    CXQualType ComplexQT = clang_getComplexType(EQT);
-    auto Str = clang_getTypeAsString(ComplexQT);
-    auto Res = std::string(get_c_string(Str));
-    dispose_string(Str);
-    return Res;
-  };
-
-  EXPECT_EQ(C_API_SHIM("int"), "_Complex int");
-  EXPECT_EQ(C_API_SHIM("float"), "_Complex float");
-  EXPECT_EQ(C_API_SHIM("double"), "_Complex double");
-
-  // Clean up resources
-  clang_Interpreter_takeInterpreterAsPtr(I);
-  clang_Interpreter_dispose(I);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_GetTypeFromScope) {
@@ -558,8 +582,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsSmartPtrType) {
 #if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
   GTEST_SKIP() << "Test fails with Cling on Windows";
 #endif
-  if (llvm::sys::RunningOnValgrind())
-    GTEST_SKIP() << "XFAIL due to Valgrind report";
 
   std::vector<const char*> interpreter_args = {"-include", "new"};
   TestFixture::CreateInterpreter(interpreter_args);
@@ -586,7 +608,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsSmartPtrType) {
   )");
 
   auto get_type_from_varname = [&](const std::string& varname) {
-    return Cpp::GetVariableType(Cpp::GetNamed(varname DFLT_NULLPTR));
+    return Cpp::GetVariableType(Cpp::GetNamed(varname));
   };
 
   //EXPECT_TRUE(Cpp::IsSmartPtrType(get_type_from_varname("smart_ptr1")));
@@ -610,10 +632,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsFunctionPointerType) {
     int i = 2;
   )");
 
-  EXPECT_TRUE(Cpp::IsFunctionPointerType(
-      Cpp::GetVariableType(Cpp::GetNamed("f" DFLT_NULLPTR))));
-  EXPECT_FALSE(Cpp::IsFunctionPointerType(
-      Cpp::GetVariableType(Cpp::GetNamed("i" DFLT_NULLPTR))));
+  EXPECT_TRUE(
+      Cpp::IsFunctionPointerType(Cpp::GetVariableType(Cpp::GetNamed("f"))));
+  EXPECT_FALSE(
+      Cpp::IsFunctionPointerType(Cpp::GetVariableType(Cpp::GetNamed("i"))));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_OperatorSpelling) {
@@ -635,16 +657,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_TypeQualifiers) {
     int *__restrict__ const f = nullptr;
     int *__restrict__ volatile g;
     int *__restrict__ const volatile h = nullptr;
-  )" DFLT_FALSE);
+  )");
 
-  Cpp::TCppType_t a = Cpp::GetVariableType(Cpp::GetNamed("a" DFLT_NULLPTR));
-  Cpp::TCppType_t b = Cpp::GetVariableType(Cpp::GetNamed("b" DFLT_NULLPTR));
-  Cpp::TCppType_t c = Cpp::GetVariableType(Cpp::GetNamed("c" DFLT_NULLPTR));
-  Cpp::TCppType_t d = Cpp::GetVariableType(Cpp::GetNamed("d" DFLT_NULLPTR));
-  Cpp::TCppType_t e = Cpp::GetVariableType(Cpp::GetNamed("e" DFLT_NULLPTR));
-  Cpp::TCppType_t f = Cpp::GetVariableType(Cpp::GetNamed("f" DFLT_NULLPTR));
-  Cpp::TCppType_t g = Cpp::GetVariableType(Cpp::GetNamed("g" DFLT_NULLPTR));
-  Cpp::TCppType_t h = Cpp::GetVariableType(Cpp::GetNamed("h" DFLT_NULLPTR));
+  Cpp::TCppType_t a = Cpp::GetVariableType(Cpp::GetNamed("a"));
+  Cpp::TCppType_t b = Cpp::GetVariableType(Cpp::GetNamed("b"));
+  Cpp::TCppType_t c = Cpp::GetVariableType(Cpp::GetNamed("c"));
+  Cpp::TCppType_t d = Cpp::GetVariableType(Cpp::GetNamed("d"));
+  Cpp::TCppType_t e = Cpp::GetVariableType(Cpp::GetNamed("e"));
+  Cpp::TCppType_t f = Cpp::GetVariableType(Cpp::GetNamed("f"));
+  Cpp::TCppType_t g = Cpp::GetVariableType(Cpp::GetNamed("g"));
+  Cpp::TCppType_t h = Cpp::GetVariableType(Cpp::GetNamed("h"));
 
   EXPECT_FALSE(Cpp::HasTypeQualifier(nullptr, Cpp::QualKind::Const));
   EXPECT_FALSE(Cpp::RemoveTypeQualifier(nullptr, Cpp::QualKind::Const));
@@ -714,12 +736,12 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsIntegerType) {
   GetAllTopLevelDecls(code, Decls);
 
   Cpp::Signedness sign;
-  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[0]) DFLT_NULLPTR));
-  EXPECT_FALSE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[1]) DFLT_NULLPTR));
-  EXPECT_FALSE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[2]) DFLT_NULLPTR));
-  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[4]) DFLT_NULLPTR));
-  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[5]) DFLT_NULLPTR));
-  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[6]) DFLT_NULLPTR));
+  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[0])));
+  EXPECT_FALSE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[1])));
+  EXPECT_FALSE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[2])));
+  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[4])));
+  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[5])));
+  EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[6])));
 
   // Check signedness via out parameter
   EXPECT_TRUE(Cpp::IsIntegerType(Cpp::GetVariableType(Decls[0]), &sign));

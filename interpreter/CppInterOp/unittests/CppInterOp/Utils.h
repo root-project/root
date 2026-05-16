@@ -3,32 +3,8 @@
 
 #include "../../lib/CppInterOp/Compatibility.h"
 
-#include "clang-c/CXCppInterOp.h"
-#include "clang-c/CXString.h"
-
-#if defined(ENABLE_DISPATCH_TESTS)
-#include "CppInterOp/Dispatch.h"
-#define CPPINTEROP_TEST_MODE CppInterOpDispatchTest
-// Helper macros that conditionally pass default arguments in dispatch mode
-// tests
-#define DFLT_OP_ARITY , Cpp::OperatorArity::kBoth
-#define DFLT_NULLPTR , nullptr
-#define DFLT_FALSE , false
-#define DFLT_TRUE , true
-#define DFLT_0 , 0
-#define DFLT_1 , 1
-#else
 #include "CppInterOp/CppInterOp.h"
 #define CPPINTEROP_TEST_MODE CppInterOpTest
-#define DFLT_OP_ARITY
-#define DFLT_NULLPTR
-#define DFLT_FALSE
-#define DFLT_TRUE
-#define DFLT_0
-#define DFLT_1
-#endif
-
-#include "llvm/Support/Valgrind.h"
 
 #include <memory>
 #include <string>
@@ -70,13 +46,33 @@ void GetAllSubDecls(clang::Decl* D, std::vector<clang::Decl*>& SubDecls,
                     bool filter_implicitGenerated = false);
 } // end namespace TestUtils
 
-const char* get_c_string(CXString string);
-
-void dispose_string(CXString string);
-
-CXScope make_scope(const clang::Decl* D, const CXInterpreter I);
-
 bool IsTargetX86();
+
+// OOP-JIT is incompatible with two configurations and is excluded
+// from the typed-test matrix wholesale (rather than per-test) when
+// either applies:
+//   * Any sanitizer (ASan/MSan/TSan): upstream LLVM ORC trips
+//     `Resolving symbol with incorrect flags`
+//     (`llvm/lib/ExecutionEngine/Orc/Core.cpp`, the JITSymbolFlags
+//     compare under `OL_notifyResolved`) because
+//     sanitizer-instrumented common symbols carry flags the host
+//     process didn't declare; the EPC boundary surfaces the
+//     mismatch. In-process JIT is unaffected.
+//   * Emscripten: the OOP path requires fork/exec + a separate
+//     executor binary, which the wasm runtime doesn't provide.
+#if defined(__has_feature)
+#  if __has_feature(address_sanitizer) ||                                      \
+      __has_feature(memory_sanitizer) ||                                       \
+      __has_feature(thread_sanitizer)
+#    define CPPINTEROP_OOP_DISABLED 1
+#  endif
+#endif
+#if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_THREAD__)
+#  define CPPINTEROP_OOP_DISABLED 1
+#endif
+#if defined(__EMSCRIPTEN__)
+#  define CPPINTEROP_OOP_DISABLED 1
+#endif
 
 // Define type tags for each configuration
 struct InProcessJITConfig {
@@ -84,7 +80,8 @@ struct InProcessJITConfig {
   static constexpr const char* name = "InProcessJIT";
 };
 
-#ifdef LLVM_BUILT_WITH_OOP_JIT
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32) &&                             \
+    !defined(CPPINTEROP_OOP_DISABLED)
 struct OutOfProcessJITConfig {
   static constexpr bool isOutOfProcess = true;
   static constexpr const char* name = "OutOfProcessJIT";
@@ -100,8 +97,9 @@ protected:
   }
 
 public:
-  static TInterp_t CreateInterpreter(const std::vector<const char*>& Args = {},
-                              const std::vector<const char*>& GpuArgs = {}) {
+  static Cpp::TInterp_t
+  CreateInterpreter(const std::vector<const char*>& Args = {},
+                    const std::vector<const char*>& GpuArgs = {}) {
     auto mergedArgs = TestUtils::GetInterpreterArgs(Args);
     return Cpp::CreateInterpreter(mergedArgs, GpuArgs);
   }
@@ -118,7 +116,8 @@ struct JITConfigNameGenerator {
   }
 };
 
-#ifdef LLVM_BUILT_WITH_OOP_JIT
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32) &&                             \
+    !defined(CPPINTEROP_OOP_DISABLED)
 using CppInterOpTestTypes = ::testing::Types<InProcessJITConfig, OutOfProcessJITConfig>;
 #else
 using CppInterOpTestTypes = ::testing::Types<InProcessJITConfig>;
