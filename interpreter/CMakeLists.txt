@@ -553,20 +553,58 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 
-##################### LIBINTEROP ###########################
+##################### CPPINTEROP ###########################
 
-#---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
+# Set InterOp to build with Cling, can be toggled to use Clang-REPL
 set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
 set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
 
-#---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
+# Suppress CppInterOps install rules: ROOT ships CppInterOps public headers
+# under $ROOTSYS/etc/cppinterop and does not install any build artifacts.
+# This option adds clangCppInterOp with BUILDTREE_ONLY (add_llvm_library)
+set(CPPINTEROP_INSTALL OFF CACHE BOOL "" FORCE)
+
+# Disable testing on InterOp if ROOT's testing is OFF (enabled by default)
 if(testing)
-  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "Enable gtest in CppInterOp")
+  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "Enable gtest in CppInterOp" FORCE)
 else()
-  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "Enable gtest in CppInterOp")
+  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "Enable gtest in CppInterOp" FORCE)
 endif()
+
 
 add_subdirectory(CppInterOp)
 if(TARGET CppInterOpUnitTests)
   set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()
+
+# Stage CppInterOp's public headers + tblgen-generated .inc files into
+# ${CMAKE_BINARY_DIR}/etc/cppinterop/CppInterOp/. Based on how
+# core/clingutils ships Cling runtime headers into etc/cling/
+set(cppinterop_etcdir ${CMAKE_BINARY_DIR}/etc/cppinterop/CppInterOp)
+set(cppinterop_gen_dir ${CMAKE_BINARY_DIR}/interpreter/CppInterOp/include/CppInterOp)
+set(cppinterop_src_files
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/CppInterOp.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/CppInterOpTypes.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/Dispatch.h
+  ${cppinterop_gen_dir}/BuildInfo.inc
+  ${cppinterop_gen_dir}/CppInterOpAPI.inc
+  ${cppinterop_gen_dir}/CppInterOpDecl.inc
+)
+set(cppinterop_staged_files)
+foreach(src ${cppinterop_src_files})
+  get_filename_component(name ${src} NAME)
+  list(APPEND cppinterop_staged_files ${cppinterop_etcdir}/${name})
+endforeach()
+
+add_custom_command(
+  OUTPUT ${cppinterop_staged_files}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${cppinterop_etcdir}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${cppinterop_src_files} ${cppinterop_etcdir}/
+  DEPENDS ${cppinterop_src_files} CppInterOpTableGen
+  COMMENT "Staging CppInterOp headers into etc/cppinterop/CppInterOp/")
+add_custom_target(CppInterOpEtc DEPENDS ${cppinterop_staged_files})
+add_dependencies(clangCppInterOp CppInterOpEtc)
+
+install(FILES ${cppinterop_staged_files}
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cppinterop/CppInterOp)
