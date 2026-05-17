@@ -242,7 +242,6 @@ public:
    bool UseVDT() const { return fUseVDT;}
 
    // Use the ClassDef macro to allow definition of custom streaming
-   // Use Version 0 since we don't support for time being ROOT I/O streaming of RModel objects
    ClassDefNV(RModel, 4);
 };
 
