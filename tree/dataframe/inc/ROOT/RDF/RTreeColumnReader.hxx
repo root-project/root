@@ -38,7 +38,8 @@ namespace RDF {
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
 
-   void *GetImpl(Long64_t) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(Long64_t, bool) override;
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
@@ -57,7 +58,8 @@ public:
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
 
-   void *GetImpl(Long64_t) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(Long64_t, bool) override;
 
 public:
    RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName);
@@ -111,11 +113,14 @@ private:
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t entry) override;
+   void *fValuePtr{nullptr};
 
-   void *ReadStdArray(Long64_t entry);
-   void *ReadStdVector(Long64_t entry);
-   void *ReadRVec(Long64_t entry);
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(Long64_t, bool) override;
+
+   void *LoadStdArray(Long64_t entry);
+   void *LoadStdVector(Long64_t entry);
+   void *LoadRVec(Long64_t entry);
 };
 
 class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
@@ -123,7 +128,9 @@ class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RCo
    std::unique_ptr<TTreeReaderValue<uint64_t>> fTreeValueMask;
    unsigned int fMaskIndex = 0;
 
-   void *GetImpl(Long64_t) override;
+   void *fValuePtr{nullptr};
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(Long64_t, bool) override;
 
 public:
    RMaskedColumnReader(TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader,

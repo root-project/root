@@ -166,27 +166,27 @@ public:
       fHelper.InitTask(r, slot);
    }
 
-   void *GetValue(unsigned int slot, std::size_t readerIdx, Long64_t entry)
+   void *GetValue(unsigned int slot, std::size_t readerIdx, std::size_t idx)
    {
       assert(slot < fValues.size());
       assert(readerIdx < fValues[slot].size());
-      if (auto *val = fValues[slot][readerIdx]->template TryGet<void>(entry))
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<void>(idx))
          return val;
 
       throw std::out_of_range{"RDataFrame: Action (" + fHelper.GetActionName() +
                               ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
-                              std::to_string(entry) +
+                              std::to_string(idx) +
                               ". You can use the DefaultValueFor operation to provide a default value, or "
                               "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
    }
 
-   void CallExec(unsigned int slot, Long64_t entry)
+   void CallExec(unsigned int slot, std::size_t idx)
    {
       std::vector<void *> untypedValues;
       auto nReaders = fValues[slot].size();
       untypedValues.reserve(nReaders);
       for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-         untypedValues.push_back(GetValue(slot, readerIdx, entry));
+         untypedValues.push_back(GetValue(slot, readerIdx, idx));
 
       fHelper.Exec(slot, untypedValues);
    }
@@ -207,14 +207,17 @@ public:
             std::vector<void *> untypedValues;
             auto nReaders = fValues[slot].size();
             untypedValues.reserve(nReaders);
+            std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry](auto *v) { v->Load(entry, true); });
             for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-               untypedValues.push_back(GetValue(slot, readerIdx, entry));
+               untypedValues.push_back(GetValue(slot, readerIdx, /*idx=*/0u));
 
             fHelper.Exec(slot, untypedValues, filterPassed);
          }
       } else {
-         if (fPrevNodes.front()->CheckFilters(slot, entry))
-            CallExec(slot, entry);
+         const auto mask = fPrevNodes.front()->CheckFilters(slot, entry);
+         std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
+         if (mask)
+            CallExec(slot, /*idx=*/0u);
       }
    }
 
