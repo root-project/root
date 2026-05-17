@@ -131,6 +131,14 @@ namespace Minuit2 {
       the case of high stats) and the forward finite difference (default)
       behaviour leads incorrectly to a non-positive-definite covariance
       matrix.
+
+      The strategy level only sets the defaults: when Minuit2 is used through
+      ROOT::Minuit2::Minuit2Minimizer, the tunables listed below can also be overridden
+      individually, by name, through the "Minuit2" extra options of
+      ROOT::Math::MinimizerOptions. That is the way to pick up a single behaviour of a
+      higher strategy (most usefully **HessianCentralFDMixedDerivatives**) without
+      paying for all the others.
+
        </td>
      </tr>
      <tr>

@@ -443,6 +443,11 @@ ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::M
    st.SetHessianStepTolerance(customize("HessianStepTolerance", st.HessianStepTolerance()));
    st.SetHessianG2Tolerance(customize("HessianG2Tolerance", st.HessianG2Tolerance()));
 
+   // These two are the parts of strategy 3 that matter most for ill-conditioned problems
+   st.SetHessianCentralFDMixedDerivatives(
+      customize("HessianCentralFDMixedDerivatives", int(st.HessianCentralFDMixedDerivatives())));
+   st.SetHessianForcePosDef(customize("HessianForcePosDef", int(st.HessianForcePosDef())));
+
    return st;
 }
 
