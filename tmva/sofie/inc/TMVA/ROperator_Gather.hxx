@@ -72,6 +72,7 @@ public:
       // case indices tensor is initialized
       if (model.IsInitializedTensor(fNIndices)) {
           // empty shape Indices is a scalar value for the indices
+         bool hasNegativeIndex = false;
          size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
          int64_t* data = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
          // copy in a vector since we may need to update the values in case of negative indices
@@ -81,9 +82,16 @@ public:
             // move this at generation time?
             if (!fShapeX[fAttrAxis].isParam) {
                if (fIndices[i] < 0) {
+                  hasNegativeIndex = true;
                   fIndices[i] += fShapeX[fAttrAxis].dim;
                }
             }
+         }
+         // for negative indices we need to add an extra constant tensor
+         if (hasNegativeIndex) {
+            std::string nameIndicesUpdated = fNIndices + "_updated";
+            model.AddConstantTensor(nameIndicesUpdated, model.GetTensorShape(fNIndices), fIndices.data());
+            fNIndices = nameIndicesUpdated;
          }
       }
       // Output shape
