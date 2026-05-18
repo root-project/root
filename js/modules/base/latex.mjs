@@ -145,6 +145,8 @@ const symbols_map = {
    '#int': '\u222B',
    '#forall': '\u2200',
    '#exists': '\u2203',
+   '#textendash': '\u2013',
+   '#textemdash': '\u2014',
    // here ends second set from symbols.ttf
 
    // more greek symbols
@@ -320,13 +322,15 @@ function remapSymbolTtfCode(code) {
                   case 76: letter = 0o345; break; // aa Angstroem
                   case 80: letter = 0o42; break; // #forall
                   case 81: letter = 0o44; break; // #exists
+                  case 82: letter = 0o55; break; // #textendash
+                  case 83: letter = 0o276; break; // #textemdash
                }
             }
             const scode = symbol.charCodeAt(0);
             if (scode > 0x80)
                symbolsPdfMap[scode] = letter;
          }
-         if (++cnt > 54 + 82)
+         if (++cnt > 54 + 84)
             break;
       }
       for (let k = 0; k < symbolsMap.length; ++k) {

@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.11.0
+// https://root.cern/js/ v7.11.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -10,11 +10,11 @@ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentS
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.11.0',
+const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/05/2026',
+version_date = '18/05/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -10189,6 +10189,8 @@ const symbols_map = {
    '#int': '\u222B',
    '#forall': '\u2200',
    '#exists': '\u2203',
+   '#textendash': '\u2013',
+   '#textemdash': '\u2014',
    // here ends second set from symbols.ttf
 
    // more greek symbols
@@ -10364,13 +10366,15 @@ function remapSymbolTtfCode(code) {
                   case 76: letter = 0o345; break; // aa Angstroem
                   case 80: letter = 0o42; break; // #forall
                   case 81: letter = 0o44; break; // #exists
+                  case 82: letter = 0o55; break; // #textendash
+                  case 83: letter = 0o276; break; // #textemdash
                }
             }
             const scode = symbol.charCodeAt(0);
             if (scode > 0x80)
                symbolsPdfMap[scode] = letter;
          }
-         if (++cnt > 54 + 82)
+         if (++cnt > 54 + 84)
             break;
       }
       for (let k = 0; k < symbolsMap.length; ++k) {
