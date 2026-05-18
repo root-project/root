@@ -26,15 +26,15 @@ not limited to, the management of the connections to said sockets.
 #include "strlcpy.h"
 
 // Static properties
-char TSSLSocket::fgSSLCAFile[FILENAME_MAX] = "";
-char TSSLSocket::fgSSLCAPath[FILENAME_MAX] = "";
-char TSSLSocket::fgSSLUCert[FILENAME_MAX]  = "";
-char TSSLSocket::fgSSLUKey[FILENAME_MAX]   = "";
+char ROOT::Deprecated::TSSLSocket::fgSSLCAFile[FILENAME_MAX] = "";
+char ROOT::Deprecated::TSSLSocket::fgSSLCAPath[FILENAME_MAX] = "";
+char ROOT::Deprecated::TSSLSocket::fgSSLUCert[FILENAME_MAX] = "";
+char ROOT::Deprecated::TSSLSocket::fgSSLUKey[FILENAME_MAX] = "";
 
 ////////////////////////////////////////////////////////////////////////////////
 // SSL debugging
 
-void ssl_info_callback(const SSL* ssl, int where, int ret)
+static void ssl_info_callback(const SSL *ssl, int where, int ret)
 {
    if (ret == 0) {
       std::cout << "-- ssl_info_callback: error occurred.\n";
@@ -50,7 +50,7 @@ void ssl_info_callback(const SSL* ssl, int where, int ret)
 ////////////////////////////////////////////////////////////////////////////////
 /// Wraps the socket with OpenSSL.
 
-void TSSLSocket::WrapWithSSL(void)
+void ROOT::Deprecated::TSSLSocket::WrapWithSSL(void)
 {
    SSL_library_init();
 
@@ -108,7 +108,7 @@ wrapFailed:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    : TSocket(addr, service, tcpwindowsize)
 {
    WrapWithSSL();
@@ -116,7 +116,7 @@ TSSLSocket::TSSLSocket(TInetAddress addr, const char *service, Int_t tcpwindowsi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    : TSocket(addr, port, tcpwindowsize)
 {
    WrapWithSSL();
@@ -124,7 +124,7 @@ TSSLSocket::TSSLSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(const char *host, const char *service, Int_t tcpwindowsize)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(const char *host, const char *service, Int_t tcpwindowsize)
    : TSocket(host, service, tcpwindowsize)
 {
    WrapWithSSL();
@@ -132,7 +132,7 @@ TSSLSocket::TSSLSocket(const char *host, const char *service, Int_t tcpwindowsiz
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(const char *url, Int_t port, Int_t tcpwindowsize)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    : TSocket(url, port, tcpwindowsize)
 {
    WrapWithSSL();
@@ -140,28 +140,28 @@ TSSLSocket::TSSLSocket(const char *url, Int_t port, Int_t tcpwindowsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(const char *sockpath) : TSocket(sockpath)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(const char *sockpath) : TSocket(sockpath)
 {
    WrapWithSSL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(Int_t desc) : TSocket(desc)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(Int_t desc) : TSocket(desc)
 {
    WrapWithSSL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(Int_t desc, const char *sockpath) : TSocket(desc, sockpath)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(Int_t desc, const char *sockpath) : TSocket(desc, sockpath)
 {
    WrapWithSSL();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSSLSocket::TSSLSocket(const TSSLSocket &s) : TSocket(s)
+ROOT::Deprecated::TSSLSocket::TSSLSocket(const TSSLSocket &s) : TSocket(s)
 {
    WrapWithSSL();
 }
@@ -169,7 +169,7 @@ TSSLSocket::TSSLSocket(const TSSLSocket &s) : TSocket(s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Close gracefully the connection, and free SSL structures.
 
-TSSLSocket::~TSSLSocket()
+ROOT::Deprecated::TSSLSocket::~TSSLSocket()
 {
    Close();
    if (fSSL)
@@ -181,7 +181,7 @@ TSSLSocket::~TSSLSocket()
 ////////////////////////////////////////////////////////////////////////////////
 /// Close the SSL connection.
 
-void TSSLSocket::Close(Option_t *option)
+void ROOT::Deprecated::TSSLSocket::Close(Option_t *option)
 {
    if (fSSL)
       SSL_shutdown(fSSL);
@@ -191,8 +191,7 @@ void TSSLSocket::Close(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set up the static configuration variables.
 
-void TSSLSocket::SetUpSSL(const char *cafile, const char *capath,
-                          const char *ucert,  const char *ukey)
+void ROOT::Deprecated::TSSLSocket::SetUpSSL(const char *cafile, const char *capath, const char *ucert, const char *ukey)
 {
    if (cafile)
       strlcpy(fgSSLCAFile, cafile, FILENAME_MAX);
@@ -206,7 +205,7 @@ void TSSLSocket::SetUpSSL(const char *cafile, const char *capath,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t TSSLSocket::Recv(TMessage *& /*mess */)
+Int_t ROOT::Deprecated::TSSLSocket::Recv(TMessage *& /*mess */)
 {
    Error("Recv", "not implemented");
    return -1;
@@ -215,7 +214,7 @@ Int_t TSSLSocket::Recv(TMessage *& /*mess */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Receive a raw buffer of specified length bytes.
 
-Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
+Int_t ROOT::Deprecated::TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
    TSystem::ResetErrno();
 
@@ -271,7 +270,7 @@ Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t TSSLSocket::Send(const TMessage & /* mess */)
+Int_t ROOT::Deprecated::TSSLSocket::Send(const TMessage & /* mess */)
 {
    Error("Send", "not implemented");
    return -1;
@@ -280,7 +279,7 @@ Int_t TSSLSocket::Send(const TMessage & /* mess */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Send a raw buffer of specified length.
 
-Int_t TSSLSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions /* opt */)
+Int_t ROOT::Deprecated::TSSLSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions /* opt */)
 {
    TSystem::ResetErrno();
 
