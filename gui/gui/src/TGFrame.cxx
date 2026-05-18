@@ -133,6 +133,7 @@ TGLayoutHints *TGCompositeFrame::fgDefaultHints = nullptr;
 
 static const char *gSaveMacroTypes[] = {
    "ROOT macros", "*.C",
+   "BMP",         "*.bmp",
    "GIF",         "*.gif",
    "PNG",         "*.png",
    "JPEG",        "*.jpg",
@@ -1573,6 +1574,8 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
          gtype = TImage::kTiff;
       } else if (fname.EndsWith(".xpm")) {
          gtype = TImage::kXpm;
+      } else if (fname.EndsWith(".bmp")) {
+         gtype = TImage::kBmp;
       }
       if (gtype != TImage::kUnknown) {
          Int_t saver = gErrorIgnoreLevel;
