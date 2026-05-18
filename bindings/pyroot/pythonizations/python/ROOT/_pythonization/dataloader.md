@@ -3,7 +3,7 @@
 \brief Feed ROOT data directly into models for machine learning training.
 
 
-`RDataLoader` streams ROOT data into machine learning frameworks as batches ready for training. It takes any [RDataFrame](@ref Py_RDataFrame) as input, giving you access to the full ROOT ecosystem for filtering, defining new variables and applying selections; it delivers batches of your dataset for [NumPy](https://numpy.org/devdocs/reference/generated/numpy.ndarray.html), [TensorFlow](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and [PyTorch](https://docs.pytorch.org/docs/main/tensors.html) through a simple iteration interface.
+`RDataLoader` streams ROOT data into machine learning frameworks as batches ready for training. It takes any @ref dataframe as input, giving you access to the full ROOT ecosystem for filtering, defining new variables and applying selections; it delivers batches of your dataset for [NumPy](https://numpy.org/devdocs/reference/generated/numpy.ndarray.html), [TensorFlow](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and [PyTorch](https://docs.pytorch.org/docs/main/tensors.html) through a simple iteration interface.
 
 \note `RDataLoader` is part of `ROOT.Experimental.ML` and is currently experimental. The API may change between ROOT releases.
 
@@ -28,7 +28,7 @@ A one-page quick reference covering the API.
 
 ## Getting your data ready
 
-`RDataLoader` takes an `RDataFrame` as input. This means your data preparation (selecting events, computing
+`RDataLoader` takes an @ref dataframe as input. This means your data preparation (selecting events, computing
 new variables, applying cuts, etc.) all happens before the loader is created, using the full power of `RDataFrame`:
 
 ~~~{.py}
@@ -38,13 +38,9 @@ import ROOT
 # Open a ROOT file and create an RDataFrame
 rdf = ROOT.RDataFrame("events", "file.root")
 
-# Define a Python callback to compute a new variable
-def invariant_mass(E: float, p: float) -> float:
-    return math.sqrt(E**2 - p**2)
-
 # Apply selections and compute derived features
 rdf = rdf.Filter("nMuons >= 2") \
-         .Define("inv_mass", invariant_mass, ["E", "p"])
+         .Define("inv_mass", "sqrt(E*E - p*p)")
 ~~~
 
 Then pass your `RDataFrame` to `RDataLoader`:
@@ -138,7 +134,7 @@ dl = RDataLoader(
 # events with fewer than 10 jets are zero-padded
 ~~~
 
-\warning Every RVec column in `columns` must appear in `max_vec_sizes`.
+\warning Every vector column in `columns` must appear in `max_vec_sizes`.
 
 ## Iterating Batches
 
@@ -212,6 +208,14 @@ train, val = train_val.train_test_split(test_size=0.176)
 
 ## Advanced Features
 
+### Eager loading
+
+By default the loader reads data lazily, one chunk of data at a time. For small datasets that fit in memory and will be iterated many times, eager loading pays a one-time cost at construction and then serves batches every epoch from memory:
+
+~~~{.py}
+dl = RDataLoader(rdf, batch_size=256, load_eager=True)
+~~~
+
 ### Resampling
 
 Correct class imbalance by oversampling the minority or undersampling the majority. You can do this by passing two RDataFrames:
@@ -244,33 +248,3 @@ dl = RDataLoader(rdf,
 for X, y, w in dl.as_torch():
     loss = (loss_fn(model(X), y) * w).mean()
 ~~~
-
-### Eager loading
-
-By default the loader reads data lazily, one chunk of data at a time. For small datasets that fit in memory and will be iterated many times, eager loading pays a one-time cost at construction and then serves every epoch from memory:
-
-~~~{.py}
-dl = RDataLoader(rdf, batch_size=256, load_eager=True)
-~~~
-
-## API Reference
-
-### RDataLoader(rdataframes, ...)
-
-| Argument | Type | Default | Description |
-|---|---|---|---|
-| `rdataframes` | `RDF \| list` | - | One or more RDataFrames to load from |
-| `batch_size` | `int` | `64` | Number of events per batch |
-| `batches_in_memory` | `int` | `10` | Shuffle buffer size in batches |
-| `columns` | `list[str]` | `None` | Branches to load - all if not given |
-| `max_vec_sizes` | `dict` | `None` | Max size per RVec column |
-| `vec_padding` | `float` | `0.0` | Pad value for short RVec entries |
-| `target` | `str \| list` | `None` | Label column(s) - returned as `y` |
-| `weights` | `str` | `""` | Event weight column - returned as `w` |
-| `shuffle` | `bool` | `True` | Randomise event order |
-| `drop_remainder` | `bool` | `True` | Drop last incomplete batch |
-| `set_seed` | `int` | `0` | RNG seed - 0 means random |
-| `load_eager` | `bool` | `False` | Load full dataset into RAM |
-| `sampling_type` | `str` | `""` | `"oversampling"` or `"undersampling"` |
-| `sampling_ratio` | `float` | `1.0` | Minority/majority ratio after resampling |
-| `replacement` | `bool` | `False` | Undersampling with replacement |

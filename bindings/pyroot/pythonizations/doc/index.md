@@ -6,7 +6,7 @@
 ROOT is a C++ framework used across HEP for data storage, analysis and visualisation. Its full API is available directly in Python through dynamic bindings powered by [cppyy](https://cppyy.readthedocs.io/). Every ROOT class you see in the
 C++ documentation is accessible from Python under the `ROOT` module.
 
-On top of that, a set of [pythonizations](@ref Pythonizations) adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more.
+On top of that, a set of @ref Pythonizations adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more.
 
 
 # Installation
@@ -100,10 +100,10 @@ h.Fill(data)
 
 # Write it to a ROOT file
 with ROOT.TFile.Open("output.root", "RECREATE") as f:
-    h.Write()
+    f.WriteObject(h, "my_histogram")
 ~~~
 
-Now we create an RDataFrame from scratch, define a new column with a Python lambda and draw a histogram:
+Now we create an @ref dataframe  - ROOT's high-level interface for columnar data analysis - from scratch, define a new column and draw a histogram:
 
 ~~~{.py}
 import numpy as np
@@ -111,8 +111,8 @@ import numpy as np
 # Create an RDataFrame with 10000 rows
 rdf = ROOT.RDataFrame(10000)
 
-# Define a column x
-rdf = rdf.Define("x", lambda : np.random.normal(0, 1))
+# Define a column x representing a normal distribution
+rdf = rdf.Define("x", "gRandom->Gaus(0, 1)")
 
 # Draw a histogram of x
 rdf.Histo1D("x").Draw()
