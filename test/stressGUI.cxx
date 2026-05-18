@@ -75,7 +75,6 @@
 #include <TGSplitFrame.h>
 #include <TGTextEditor.h>
 #include <TRootHelpDialog.h>
-#include <TGHtmlBrowser.h>
 #include <HelpText.h>
 #include <TSystemDirectory.h>
 #include <TInterpreter.h>
@@ -178,7 +177,7 @@ void ProcessFrame(TGFrame *f, const char *title)
    img->WriteImage(outfile);
 
    if (!gOptionRef) {
-      if (!strstr(title, "Pack Frames") && !strstr(title, "HTML Browser")) {
+      if (!strstr(title, "Pack Frames")) {
          gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
          TString macrofile = TString::Format("sgui_%02d.C", gTestNum);
          ((TGMainFrame *)f)->SaveSource(macrofile);
