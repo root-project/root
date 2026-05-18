@@ -33,19 +33,21 @@ jobs:
       - x64
 
     env:
-      PLATFORM: alma9
+      PLATFORM: alma10
       DOC_DIR: master
       DOC_LOCATION: /github/home
       BASE_REF: master
       WEB_DIR_NAME: master
-      TAR_NAME: htmlmaster.tar
+      TAR_FILE: htmlmaster.tar.gz
 
     permissions:
       contents: read
 
     container:
-      image: registry.cern.ch/root-ci/alma9:buildready
+      image: registry.cern.ch/root-ci/alma10:buildready
       options: '--security-opt label=disable --rm'
+      volumes:
+        - alma10_ccache_volume:/github/home/.cache/ccache
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -57,6 +59,12 @@ jobs:
         PYTHONUNBUFFERED: true
 
     steps:
+    - name: Prepare qhelpgenerator
+      # Qt6's libexec executables are not in the PATH by default
+      run: |
+        QHELPGENERATOR=$(which qhelpgenerator) && echo "QHELPGENERATOR=${QHELPGENERATOR}" >> "${GITHUB_ENV}"
+        PATH=/usr/lib64/qt6/libexec/:${PATH} QHELPGENERATOR=$(which qhelpgenerator) && echo "QHELPGENERATOR=${QHELPGENERATOR}" >> "${GITHUB_ENV}"
+
     - name: Checkout
       uses: actions/checkout@v6
       with:
@@ -67,69 +75,9 @@ jobs:
       # if the `if` expr is false, `if` still has exit code 0.
       # if the `if` block is entered, the block's exit code becomes the exit
       # code of the `if`.
-      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo ${PATH%:*} >> "${GITHUB_PATH}"; fi'
 
-    - name: Set up directory name and tar filenames
-      run: |
-        echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
-        echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
-
-    # TODO: install latest versions in image on root-ci-images
-    - name: Install Doxygen 1.10.0
-      run : |
-        mkdir -p ${{ github.workspace }}/doxygen
-        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
-        echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
-#         git clone --branch Release_1_12_0 https://github.com/doxygen/doxygen.git
-#         cd doxygen
-#         mkdir build
-#         cd build
-#         cmake ..
-#         make -j$(nproc)
-#         echo PATH=$PATH:${{ github.workspace }}/doxygen/build/bin >> $GITHUB_ENV
-#         cd ${{ github.workspace }}
-#         doxygen --version
-
-    - name: Install qhelpgenerator-qt5
-      run: |
-        dnf upgrade -y
-        dnf install -y qt5-doctools
-        which qhelpgenerator-qt5
-
-    - name: Apply option overrides
-      env:
-        OVERRIDES: "testing=Off roottest=Off"
-        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
-      shell: bash
-      run: |
-        set -x
-        echo '' >> "$CONFIGFILE"
-        for ENTRY in $OVERRIDES; do
-            KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-            # Add entry to file if not exists, otherwise replace
-            if grep -q "$KEY=" "$CONFIGFILE"; then
-                sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-            else
-                echo "$ENTRY" >> "$CONFIGFILE"
-            fi
-        done
-        cat "$CONFIGFILE" || true
-
-    - name: Build ROOT - Workflow Dispatch
-      if:   github.event_name == 'workflow_dispatch'
-      env:
-          INCREMENTAL: ${{ inputs.incremental == 'true' }}
-      run: ".github/workflows/root-ci-config/build_root.py
-                  --buildtype      Release
-                  --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ env.INCREMENTAL }}
-                  --base_ref       ${BASE_REF}
-                  --head_ref       ${BASE_REF}
-                  --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}"
-
-    - name: Build ROOT - Schedule
-      if:   github.event_name == 'schedule'
+    - name: Build ROOT
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
@@ -137,7 +85,8 @@ jobs:
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}"
+                  --repository     ${{ github.server_url }}/${{ github.repository }}
+                  --overrides      testing=Off roottest=Off"
 
     - name: Run Doxygen
       working-directory: ${{ env.DOC_LOCATION }}
@@ -154,11 +103,8 @@ jobs:
       run: |
         pwd
         ls -l
-        echo ${DOC_DIR}
-        echo ${TAR_NAME}
         ls -l ${DOC_DIR}
-        tar cf ${TAR_NAME} ${DOC_DIR}
-        gzip ${TAR_NAME}
+        tar -caf ${TAR_FILE} ${DOC_DIR}
         ls -l
 
     #Upload to GitHub as an artifact
@@ -166,15 +112,9 @@ jobs:
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v6
       with:
-        name: ${{env.TAR_NAME}}.gz
-        path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
+        name: ${{env.TAR_FILE}}
+        path: ${{env.DOC_LOCATION}}/${{env.TAR_FILE}}
         if-no-files-found: error
-
-    - name: Install Kerberos utilities
-      run: dnf -y install krb5-workstation
-
-    - name: Install XRootD client
-      run: dnf -y install xrootd-client
 
     - name: Sync documentation to EOS
       env:
@@ -206,5 +146,5 @@ jobs:
         rm -r html
         xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         cd ..
-        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
+        xrdcp -rf ${TAR_FILE} ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
         exit $failure
