@@ -19,6 +19,7 @@
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
+#include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
 #include <RooDerivative.h>
@@ -29,6 +30,7 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
 #include <RooGenericPdf.h>
+#include <RooGaussian.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooLegacyExpPoly.h>
@@ -878,6 +880,32 @@ public:
    }
 };
 
+class RooGaussianStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool autoExportDependants() const override { return false; }
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooGaussian *>(func);
+      elem["type"] << key();
+      writeArg(tool, elem["x"], pdf->getX());
+      writeArg(tool, elem["mean"], pdf->getMean());
+      writeArg(tool, elem["sigma"], pdf->getSigma());
+      return true;
+   }
+
+private:
+   static void writeArg(RooJSONFactoryWSTool *tool, JSONNode &node, RooAbsReal const &arg)
+   {
+      if (auto const *constant = dynamic_cast<RooConstVar const *>(&arg)) {
+         node << constant->getVal();
+      } else {
+         node << arg.GetName();
+         tool->queueExport(arg);
+      }
+   }
+};
+
 class RooDecayStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
@@ -1171,6 +1199,7 @@ DEFINE_EXPORTER_KEY(RooHistPdfStreamer, "histogram_dist");
 DEFINE_EXPORTER_KEY(RooLogNormalStreamer, "lognormal_dist");
 DEFINE_EXPORTER_KEY(RooMultiVarGaussianStreamer, "multivariate_normal_dist");
 DEFINE_EXPORTER_KEY(RooPoissonStreamer, "poisson_dist");
+DEFINE_EXPORTER_KEY(RooGaussianStreamer, "gaussian_dist");
 DEFINE_EXPORTER_KEY(RooDecayStreamer, "decay_dist");
 DEFINE_EXPORTER_KEY(RooTruthModelStreamer, "truth_model_function");
 DEFINE_EXPORTER_KEY(RooGaussModelStreamer, "gauss_model_function");
@@ -1235,6 +1264,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooLogNormalStreamer>(RooLognormal::Class(), false);
    registerExporter<RooMultiVarGaussianStreamer>(RooMultiVarGaussian::Class(), false);
    registerExporter<RooPoissonStreamer>(RooPoisson::Class(), false);
+   registerExporter<RooGaussianStreamer>(RooGaussian::Class(), false);
    registerExporter<RooDecayStreamer>(RooDecay::Class(), false);
    registerExporter<RooTruthModelStreamer>(RooTruthModel::Class(), false);
    registerExporter<RooGaussModelStreamer>(RooGaussModel::Class(), false);
