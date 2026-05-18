@@ -93,9 +93,9 @@ jobs:
       shell: bash
       run: |
         source ROOT-CI/build/bin/thisroot.sh
-        export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
+        export DOXYGEN_OUTPUT_DIRECTORY="/github/home/${DOC_DIR}"
         cd ROOT-CI/src/documentation/doxygen
-        make -j `nproc --all`
+        make -j "$(nproc --all)"
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
@@ -133,19 +133,19 @@ jobs:
       # instead.
       run: |
         failure=0
-        echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
-        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-        cd ${DOC_DIR}/html/
-        rm -rf *.map # Intermediate files to create dot graphs
-        rm -rf *.md5 # As above
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        echo "${RWEBEOS_KT}" | base64 -d > "${KT_FILE_NAME}"
+        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt "${KT_FILE_NAME}"
+        cd "${DOC_DIR}/html/"
+        rm -f *.map # Intermediate files to create dot graphs
+        rm -f *.md5 # As above
+        xrdcp --parallel 64 -rf ./*.html "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}" || failure=1
         rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./*.svg "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}" || failure=1
         rm -rf *.svg
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}" || failure=1
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}" || failure=1
         cd ..
-        xrdcp -rf ${TAR_FILE} ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
+        xrdcp -rf "${TAR_FILE}" "${EOS_ENDPOINT}/${EOS_BASE_PATH}/download" || failure=1
         exit $failure
