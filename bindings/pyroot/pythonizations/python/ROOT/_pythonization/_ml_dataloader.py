@@ -519,6 +519,7 @@ class _ValidationEpochContext:
 # formatted iterator (returned by as_torch / as_numpy / as_tensorflow)
 class FormattedLoader:
     """
+    \ingroup Py_ML
     Iterable that converts each batch to the requested format.
     Returned by the as_torch / as_numpy / as_tensorflow methods on RDataLoader.
     """
@@ -550,6 +551,7 @@ class FormattedLoader:
 
 class RDataLoader:
     """
+    \ingroup Py_ML
     Entry point for ML batch loading from a ROOT RDataFrame.
 
     Usage without a validation split::
@@ -587,6 +589,8 @@ class RDataLoader:
         replacement: bool = False,
     ) -> None:
         """
+        \ingroup Py_ML
+
         Args:
             rdataframes:
                 RDataFrame or list of RDataFrames to load from.
@@ -699,6 +703,7 @@ class RDataLoader:
 
     def as_numpy(self) -> FormattedLoader:
         """
+        \ingroup Py_ML
         Return an iterable that yields batches as NumPy arrays.
         """
         self._ensure_created()
@@ -706,6 +711,7 @@ class RDataLoader:
 
     def as_torch(self, device: str | torch.device | None = None) -> FormattedLoader:
         """
+        \ingroup Py_ML
         Return an iterable that yields batches as PyTorch tensors.
 
         Args:
@@ -717,6 +723,7 @@ class RDataLoader:
 
     def as_tensorflow(self) -> tf.data.Dataset:
         """
+        \ingroup Py_ML
         Return a tf.data.Dataset over batches as TensorFlow tensors.
         """
         import tensorflow as tf
@@ -751,14 +758,20 @@ class RDataLoader:
 
     @property
     def columns(self) -> list[str]:
-        """All column names as they appear in each batch tensor."""
+        """
+        \ingroup Py_ML
+        All column names as they appear in each batch tensor.
+        """
         if self._internal is None:
             return self._params["columns"]
         return self._internal.all_columns
 
     @property
     def train_columns(self) -> list[str]:
-        """Feature column names (columns minus target and weights)."""
+        """
+        \ingroup Py_ML
+        Feature column names (columns minus target and weights).
+        """
         if self._internal is None:
             target = self._params["target"] if self._params["target"] is not None else []
             weights = self._params["weights"] if self._params["weights"] is not None else []
@@ -767,21 +780,30 @@ class RDataLoader:
 
     @property
     def target_columns(self) -> list[str]:
-        """Target column names."""
+        """
+        \ingroup Py_ML
+        Target column names.
+        """
         if self._internal is None:
             return self._params["target"] if self._params["target"] is not None else []
         return self._internal.target_columns
 
     @property
     def weights_column(self) -> str:
-        """Weights column name, or empty string if not set."""
+        """
+        \ingroup Py_ML
+        Weights column name, or empty string if not set.
+        """
         if self._internal is None:
             return self._params["weights"] if self._params["weights"] is not None else ""
         return self._internal.weights_column
 
     @property
     def num_batches(self) -> int:
-        """Total number of batches in this split for one epoch."""
+        """
+        \ingroup Py_ML
+        Total number of batches in this split for one epoch.
+        """
         if self._internal is None:
             raise RuntimeError(
                 "num_batches is available after the first call to "
@@ -793,7 +815,10 @@ class RDataLoader:
 
     @property
     def last_batch_no_of_rows(self) -> int:
-        """Number of rows in the last (remainder) batch, 0 if no remainder."""
+        """
+        \ingroup Py_ML
+        Number of rows in the last (remainder) batch, 0 if no remainder.
+        """
         if self._internal is None:
             raise RuntimeError(
                 "last_batch_no_of_rows is available after the first call to "
