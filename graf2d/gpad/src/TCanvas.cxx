@@ -129,8 +129,7 @@ Or if always in batch mode, simply do:
       c->SetCanvasSize(w,h);
 ~~~
 
-If canvas was created with default size, you can use instead, both
-for interactive/batch mode, to ensure compatible size in either mode:
+To ensure similar painting size for the canvas created with default size for both interactive and batch mode:
 ~~~ {.cpp}
    {
       auto c = new TCanvas("c", "c");
