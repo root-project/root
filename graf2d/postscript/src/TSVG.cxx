@@ -1488,6 +1488,11 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 786) ichar =  8476;
       if (ic == 785) ichar =  8465;
       if (ic == 787) ichar =  8472;
+      if (ic == 882) ichar =  8704; // FOR ALL
+      if (ic == 884) ichar =  8707; // THERE EXISTS
+      if (ic == 815) ichar =  8659; // DOWNWARDS DOUBLE ARROW
+      if (ic == 811) ichar =  8660; // LEFT RIGHT DOUBLE ARROW
+      if (ic == 826) ichar =  124;  // Vertical bar
 
       // Greek characters
       if (ic == 918) ichar = 934;
