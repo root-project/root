@@ -6,22 +6,28 @@ on:
   # providing the relevant branch as "default" value here:
   workflow_call:
     inputs:
-      incremental:
-        type: boolean
-        default: true
+      input_branch:
+        description: 'Which branch to build documentation for'
+        type: string
+        required: true
+      eos_upload_directory:
+        description: 'Make documentation available at <root-website>/doc/<directory>. Leave empty for skipping the upload to eos.'
+        type: string
+        required: false
+        default: ''
 
   workflow_dispatch:
     inputs:
-      incremental:
-        description: 'Do full build'
-        type: boolean
+      input_branch:
+        description: 'Which branch to build documentation for'
+        type: string
         required: false
-        default: false
-      # docu_input: # opportunity: overwrite makeinput.sh with these args
-      #   description: Folders to build documentation for. All folders are built if empty.
-      #   type: string
-      #   default: ""
-      #   required: false
+        default: 'master'
+      eos_upload_directory:
+        description: 'Make documentation available at <root-website>/doc/<directory>. Leave empty for skipping the upload to eos.'
+        type: string
+        required: false
+        default: 'master'
 
 jobs:
   build-docs:
@@ -36,8 +42,8 @@ jobs:
       PLATFORM: alma10
       DOC_DIR: master
       DOC_LOCATION: /github/home
-      BASE_REF: master
-      WEB_DIR_NAME: master
+      BASE_REF: ${{ inputs.input_branch == null && 'master' || inputs.input_branch }}
+      WEB_DIR_NAME: ${{ inputs.eos_upload_directory == null && '' || inputs.eos_upload_directory }}
       TAR_FILE: htmlmaster.tar.gz
 
     permissions:
@@ -75,7 +81,7 @@ jobs:
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ inputs.incremental }}
+                  --incremental    false
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
@@ -111,6 +117,7 @@ jobs:
         if-no-files-found: error
 
     - name: Sync documentation to EOS
+      if: ${{ env.WEB_DIR_NAME != null && env.WEB_DIR_NAME != '' }}
       env:
         RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
         KRB5USER: ${{ secrets.KRB5USER }}
