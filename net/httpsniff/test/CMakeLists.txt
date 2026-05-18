@@ -5,24 +5,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT net/httpsniff package
+# CMakeLists.txt file for building ROOT net/http package
 # @author Sergey Linev, GSI
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(RHTTPSniff
-  HEADERS
-    TRootSnifferFull.h
-  SOURCES
-    src/TRootSnifferFull.cxx
-  DEPENDENCIES
-    Gpad
-    Graf
-    Hist
-    RHTTP
-    RIO
-    Thread
-    Tree
-    XMLIO
-)
-
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_GTEST(testRootSniffer test_sniffer.cxx LIBRARIES RHTTPSniff)
