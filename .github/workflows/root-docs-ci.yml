@@ -38,7 +38,7 @@ jobs:
       DOC_LOCATION: /github/home
       BASE_REF: master
       WEB_DIR_NAME: master
-      TAR_NAME: htmlmaster.tar
+      TAR_FILE: htmlmaster.tar.gz
 
     permissions:
       contents: read
@@ -71,45 +71,7 @@ jobs:
       # code of the `if`.
       run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
-    - name: Set up directory name and tar filenames
-      run: |
-        echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
-        echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
-
-    - name: Apply option overrides
-      env:
-        OVERRIDES: "testing=Off roottest=Off"
-        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma10.txt'
-      shell: bash
-      run: |
-        set -x
-        echo '' >> "$CONFIGFILE"
-        for ENTRY in $OVERRIDES; do
-            KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-            # Add entry to file if not exists, otherwise replace
-            if grep -q "$KEY=" "$CONFIGFILE"; then
-                sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-            else
-                echo "$ENTRY" >> "$CONFIGFILE"
-            fi
-        done
-        cat "$CONFIGFILE" || true
-
-    - name: Build ROOT - Workflow Dispatch
-      if:   github.event_name == 'workflow_dispatch'
-      env:
-          INCREMENTAL: ${{ inputs.incremental == 'true' }}
-      run: ".github/workflows/root-ci-config/build_root.py
-                  --buildtype      Release
-                  --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ env.INCREMENTAL }}
-                  --base_ref       ${BASE_REF}
-                  --head_ref       ${BASE_REF}
-                  --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}"
-
-    - name: Build ROOT - Schedule
-      if:   github.event_name == 'schedule'
+    - name: Build ROOT
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
@@ -117,7 +79,8 @@ jobs:
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}"
+                  --repository     ${{ github.server_url }}/${{ github.repository }}
+                  --overrides      testing=Off roottest=Off"
 
     - name: Run Doxygen
       working-directory: ${{ env.DOC_LOCATION }}
@@ -134,11 +97,8 @@ jobs:
       run: |
         pwd
         ls -l
-        echo ${DOC_DIR}
-        echo ${TAR_NAME}
         ls -l ${DOC_DIR}
-        tar cf ${TAR_NAME} ${DOC_DIR}
-        gzip ${TAR_NAME}
+        tar -caf ${TAR_FILE} ${DOC_DIR}
         ls -l
 
     #Upload to GitHub as an artifact
@@ -146,8 +106,8 @@ jobs:
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v6
       with:
-        name: ${{env.TAR_NAME}}.gz
-        path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
+        name: ${{env.TAR_FILE}}
+        path: ${{env.DOC_LOCATION}}/${{env.TAR_FILE}}
         if-no-files-found: error
 
     - name: Sync documentation to EOS
@@ -181,4 +141,4 @@ jobs:
         rm -r html
         xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         cd ..
-        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
+        xrdcp -rf ${TAR_FILE} ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
