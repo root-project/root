@@ -22,6 +22,8 @@
 
 #include "TSocket.h"
 
+namespace ROOT::Deprecated {
+
 typedef struct ssl_st     SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 
@@ -77,5 +79,11 @@ public:
 
    ClassDefOverride(TSSLSocket,0)  // SSL wrapped socket
 };
+
+} // namespace ROOT::Deprecated
+
+using TSSLSocket R__DEPRECATED(6, 42,
+                               "ROOT is not providing an SSL socket API anymore. "
+                               "Consider using SSH tunneling for secure channels.") = ROOT::Deprecated::TSSLSocket;
 
 #endif
