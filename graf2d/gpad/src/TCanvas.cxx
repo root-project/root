@@ -124,10 +124,6 @@ be used:
       c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
    }
 ~~~
-Or if always in batch mode, simply do:
-~~~ {.cpp}
-      c->SetCanvasSize(w,h);
-~~~
 
 To ensure similar painting size for the canvas created with default size for both interactive and batch mode:
 ~~~ {.cpp}
@@ -135,6 +131,11 @@ To ensure similar painting size for the canvas created with default size for bot
       auto c = new TCanvas("c", "c");
       c->SetWindowSize(c->GetWindowWidth() + (c->GetWindowWidth() - c->GetWw()), c->GetWindowHeight() + (c->GetWindowHeight() - c->GetWh())); 
    }
+~~~
+
+If you are in batch mode, you can also specify the fixed painting area as follows:
+~~~ {.cpp}
+      c->SetCanvasSize(w, h);
 ~~~
 
 If the canvas size exceeds the window size, scroll bars will be added to the canvas
