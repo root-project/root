@@ -227,7 +227,7 @@ jobs:
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
-        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        if:   ${{ !cancelled() && !matrix.is_special && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v4
         with:
           name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
@@ -580,7 +580,7 @@ jobs:
           path: /github/home/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
-        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        if:   ${{ !cancelled() && !matrix.is_special && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v4
         with:
           name: Binaries ${{ matrix.image }} ${{ matrix.property }}
@@ -618,3 +618,35 @@ jobs:
       with:
         name: Event File
         path: ${{ github.event_path }}
+
+
+  publish_binaries:
+    # Publish the binary tarballs to the website
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.binaries}}
+    name: "Publish binaries on the web"
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v8
+    - name: Install Kerberos utilities
+      run: sudo apt-get install -y krb5-user
+    - name: Install XRootD client
+      run: sudo apt-get -y install xrootd-client
+    - name: Copy Binaries to EOS
+      env:
+        RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+        KT_FILE_NAME: /tmp/decoded.keytab
+        EOS_PATH: /eos/project/r/root-eos/website/download
+        EOS_ENDPOINT: root://eosproject-r.cern.ch
+        KRB5CCNAME: /tmp/krb5cc
+      working-directory: ${{ env.WORKDIR }}
+      run: |
+        echo +++ Content
+        ls
+        echo +++ Retrieving the secret
+        echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+        echo +++ Creating the token
+        kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+        echo +++ Running the copy
+        xrdcp -rf Binaries*/root_v* ${EOS_ENDPOINT}/${EOS_PATH}/
