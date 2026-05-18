@@ -325,11 +325,11 @@ std::list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double x
   return RooHistPdf::plotSamplingHint(*_dataHist, _depList, _histObsList, _intOrder, obs, xlo, xhi);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Return sampling hint for making curves of (projections) of this function
-/// as the recursive division strategy of RooCurve cannot deal efficiently
-/// with the vertical lines that occur in a non-interpolated histogram
+/// Return the histogram bin boundaries mapped into the plot-observable
+/// coordinate. Handles the case where the function observable is a
+/// transformation (shift, scale, ...) of the plot observable so that the
+/// returned boundaries are placed at the correct positions in the plot.
 
 std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
@@ -338,86 +338,21 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
     return nullptr ;
   }
 
-  // Find histogram observable corresponding to pdf observable
-  RooAbsArg* hobs(nullptr) ;
-  for (auto i = 0u; i < _histObsList.size(); ++i) {
-    const auto harg = _histObsList[i];
-    const auto parg = _depList[i];
-    if (std::string(parg->GetName())==obs.GetName()) {
-      hobs=harg ;
-    }
+  const std::vector<double> boundaries =
+     RooHistPdf::histogramBoundariesInPlotObs(*_dataHist, _depList, _histObsList, obs, xlo, xhi);
+  if (boundaries.empty()) {
+     return nullptr;
   }
 
-  // std::cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << std::endl ;
-  // std::cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << std::endl ;
-
-  RooAbsRealLValue* transform = nullptr;
-  if (!hobs) {
-
-    // Considering alternate: input observable is histogram observable and pdf observable is transformation in terms of it
-    RooAbsArg* pobs = nullptr;
-    for (auto i = 0u; i < _histObsList.size(); ++i) {
-      const auto harg = _histObsList[i];
-      const auto parg = _depList[i];
-      if (std::string(harg->GetName())==obs.GetName()) {
-        pobs=parg ;
-        hobs=harg ;
-      }
-    }
-
-    // Not found, or check that matching pdf observable is an l-value dependent on histogram observable fails
-    if (!hobs || !(pobs->dependsOn(obs) && dynamic_cast<RooAbsRealLValue*>(pobs))) {
-      std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << std::endl ;
-      return nullptr ;
-    }
-
-    // Now we are in business - we are in a situation where the pdf observable LV(x), mapping to a histogram observable x
-    // We can return bin boundaries by mapping the histogram boundaties through the inverse of the LV(x) transformation
-    transform = dynamic_cast<RooAbsRealLValue*>(pobs) ;
+  auto hint = new std::list<double>;
+  const double delta = (xhi - xlo) * 1e-8;
+  for (double b : boundaries) {
+     if (b > xlo - delta && b < xhi + delta) {
+        hint->push_back(b);
+     }
   }
 
-
-  // std::cout << "hobs = " << hobs->GetName() << std::endl ;
-  // std::cout << "transform = " << (transform?transform->GetName():"<none>") << std::endl ;
-
-  // Check that observable is in dataset, if not no hint is generated
-  RooAbsArg* xtmp = _dataHist->get()->find(hobs->GetName()) ;
-  if (!xtmp) {
-    std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " is not found in dataset?" << std::endl ;
-    _dataHist->get()->Print("v") ;
-    return nullptr ;
-  }
-  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
-  if (!lvarg) {
-    std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " but is not an LV, returning null" << std::endl ;
-    return nullptr ;
-  }
-
-  // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
-  double* boundaries = binning->array() ;
-
-  auto hint = new std::list<double> ;
-
-  double delta = (xhi-xlo)*1e-8 ;
-
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>xlo-delta && boundaries[i]<xhi+delta) {
-
-      double boundary = boundaries[i] ;
-      if (transform) {
-   transform->setVal(boundary) ;
-   //cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << std::endl ;
-   hint->push_back(obs.getVal()) ;
-      } else {
-   hint->push_back(boundary) ;
-      }
-    }
-  }
-
-  return hint ;
+  return hint;
 }
 
 
