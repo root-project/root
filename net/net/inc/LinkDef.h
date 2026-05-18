@@ -54,7 +54,7 @@
 #ifdef R__SSL
 #pragma link C++ class ROOT::Deprecated::TS3HTTPRequest+;
 #pragma link C++ class ROOT::Deprecated::TS3WebFile+;
-#pragma link C++ class TSSLSocket;
+#pragma link C++ class ROOT::Deprecated::TSSLSocket;
 #endif
 
 #pragma read sourceClass="TGridCollection" version="[-1]" targetClass="ROOT::Deprecated::TGridCollection"

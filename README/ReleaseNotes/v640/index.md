@@ -60,7 +60,8 @@ The following people have contributed to this new version:
 * The `TFTP`, `TNetFile`, `TNetFileStager`, and `TNetSystem` classes are deprecated and will be removed in ROOT 6.42. These classes rely on **rootd**, which was removed in release 6.16.
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are deprecated and will be remove in ROOT 6.42.
   The security assumtions in the current socket authentication implementation is not up to date anymore.
-  Secure communication should be provided by standard means, such as SSL sockets or SSH tunneling.
+  Secure communication should be provided by external means, such as SSH tunneling.
+* The `TSSLSocket` class is deprecated and should not be used in user code anymore. Secure communication should be provided by externals means, such as SSH tunneling.
 * The `builtin_davix` build option has been removed.
   The Davix I/O code in ROOT remains uneffected and is built as before provided that the Davix library is found on the system.
 * `RRealField::SetQuantized` now has a new overload and the existing signature has been deprecated. The new overload enforces proper ordering of the arguments.
@@ -803,4 +804,3 @@ More than 130 items were addressed for this release:
   * [[ROOT-7499](https://its.cern.ch/jira/browse/ROOT-7499)] - ExpectedData generated from RooSimultaneous does not have non-integer weights
   * [[ROOT-5306](https://its.cern.ch/jira/browse/ROOT-5306)] - Read a file with a versioned class layout fails if the current class layout is unversioned
   * [[ROOT-5174](https://its.cern.ch/jira/browse/ROOT-5174)] - rootcling without linkdef
-

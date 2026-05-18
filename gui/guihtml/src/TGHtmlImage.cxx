@@ -236,7 +236,7 @@ static TImage *ReadRemoteImage(const char *url)
    TSocket *s;
    if (uri.BeginsWith("https://")) {
 #ifdef R__SSL
-      s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
+      s = new ROOT::Deprecated::TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
 #else
       ::Error("ReadRemoteImage", "library compiled without SSL, https not supported");
       return 0;
