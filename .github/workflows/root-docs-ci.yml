@@ -33,7 +33,7 @@ jobs:
       - x64
 
     env:
-      PLATFORM: alma9
+      PLATFORM: alma10
       DOC_DIR: master
       DOC_LOCATION: /github/home
       BASE_REF: master
@@ -44,7 +44,7 @@ jobs:
       contents: read
 
     container:
-      image: registry.cern.ch/root-ci/alma9:buildready
+      image: registry.cern.ch/root-ci/alma10:buildready
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
@@ -74,32 +74,10 @@ jobs:
         echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
         echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
 
-    # TODO: install latest versions in image on root-ci-images
-    - name: Install Doxygen 1.10.0
-      run : |
-        mkdir -p ${{ github.workspace }}/doxygen
-        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
-        echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
-#         git clone --branch Release_1_12_0 https://github.com/doxygen/doxygen.git
-#         cd doxygen
-#         mkdir build
-#         cd build
-#         cmake ..
-#         make -j$(nproc)
-#         echo PATH=$PATH:${{ github.workspace }}/doxygen/build/bin >> $GITHUB_ENV
-#         cd ${{ github.workspace }}
-#         doxygen --version
-
-    - name: Install qhelpgenerator-qt5
-      run: |
-        dnf upgrade -y
-        dnf install -y qt5-doctools
-        which qhelpgenerator-qt5
-
     - name: Apply option overrides
       env:
         OVERRIDES: "testing=Off roottest=Off"
-        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
+        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma10.txt'
       shell: bash
       run: |
         set -x
@@ -169,12 +147,6 @@ jobs:
         name: ${{env.TAR_NAME}}.gz
         path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
         if-no-files-found: error
-
-    - name: Install Kerberos utilities
-      run: dnf -y install krb5-workstation
-
-    - name: Install XRootD client
-      run: dnf -y install xrootd-client
 
     - name: Sync documentation to EOS
       env:
