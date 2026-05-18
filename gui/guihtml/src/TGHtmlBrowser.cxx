@@ -268,7 +268,7 @@ Ssiz_t ReadSize(const char *url)
       return 0;
    if (uri.BeginsWith("https://")) {
 #ifdef R__SSL
-      s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
+      s = new ROOT::Deprecated::TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
 #else
       ::Error("ReadSize", "library compiled without SSL, https not supported");
       return 0;
@@ -328,7 +328,7 @@ static char *ReadRemote(const char *url)
       return 0;
    if (uri.BeginsWith("https://")) {
 #ifdef R__SSL
-      s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
+      s = new ROOT::Deprecated::TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
 #else
       ::Error("ReadRemote", "library compiled without SSL, https not supported");
      return 0;
@@ -699,4 +699,3 @@ Bool_t TGHtmlBrowser::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
    }
    return kTRUE;
 }
-
