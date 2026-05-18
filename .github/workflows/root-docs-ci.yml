@@ -1,27 +1,35 @@
 name: 'ROOT Docs CI'
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/root-docs-ci.yml'
+      - 'documentation/doxygen/**'
+    branches:
+      - 'master'
 
-  # Allows nightly builds to trigger one run for each branch easily, by
-  # providing the relevant branch as "default" value here:
   workflow_call:
-    inputs:
-      incremental:
-        type: boolean
-        default: true
 
   workflow_dispatch:
     inputs:
-      incremental:
-        description: 'Do full build'
-        type: boolean
+      eos_upload_directory:
+        description: 'Make documentation available at <root-website>/doc/<directory>. Leave empty for skipping the upload to eos.'
+        type: string
         required: false
-        default: false
-      # docu_input: # opportunity: overwrite makeinput.sh with these args
-      #   description: Folders to build documentation for. All folders are built if empty.
-      #   type: string
-      #   default: ""
-      #   required: false
+        default: 'master'
+
+env:
+  PLATFORM: alma10
+  DOC_DIR: ${{ case(github.base_ref == null, github.ref_name, 'PullRequest') }}
+  DOC_LOCATION: /github/home
+  EOS_DIR_NAME: |-
+    ${{ case(
+      inputs.eos_upload_directory != null, inputs.eos_upload_directory,
+      github.base_ref != null, 'PR',
+      github.ref_name
+      )
+    }}
+  TAR_FILE: html${{ case(github.base_ref == null, github.ref_name, '_PullRequest') }}.tar.gz
 
 jobs:
   build-docs:
@@ -31,14 +39,6 @@ jobs:
       - self-hosted
       - linux
       - x64
-
-    env:
-      PLATFORM: alma10
-      DOC_DIR: master
-      DOC_LOCATION: /github/home
-      BASE_REF: master
-      WEB_DIR_NAME: master
-      TAR_FILE: htmlmaster.tar.gz
 
     permissions:
       contents: read
@@ -68,7 +68,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
       with:
-        ref: ${{ env.BASE_REF }}
         fetch-depth: 0
 
     - name: Set up Python Virtual Env
@@ -81,21 +80,20 @@ jobs:
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ inputs.incremental }}
-                  --base_ref       ${BASE_REF}
-                  --head_ref       ${BASE_REF}
-                  --binaries       false
+                  --incremental    false
+                  --source_dir     ${GITHUB_WORKSPACE}
                   --repository     ${{ github.server_url }}/${{ github.repository }}
-                  --overrides      testing=Off roottest=Off"
+                  --overrides      testing=Off roottest=Off
+                  --upload_artifacts false
+                  --binaries         false"
 
     - name: Run Doxygen
-      working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
-        source ROOT-CI/build/bin/thisroot.sh
-        export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
-        cd ROOT-CI/src/documentation/doxygen
-        make -j `nproc --all`
+        source ${HOME}/ROOT-CI/build/bin/thisroot.sh
+        export DOXYGEN_OUTPUT_DIRECTORY="/github/home/${DOC_DIR}"
+        cd documentation/doxygen
+        make -j "$(nproc --all)"
 
     - name: Clean temporary files
       # These files are used when doxygen runs incrementally
@@ -115,8 +113,7 @@ jobs:
         tar -caf ${TAR_FILE} ${DOC_DIR}
         ls -l
 
-    #Upload to GitHub as an artifact
-    - name: Upload tar file for GH
+    - name: Upload tar file to github
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v6
       with:
@@ -133,24 +130,29 @@ jobs:
         EOS_BASE_PATH: /eos/project/r/root-eos/website/
         EOS_ENDPOINT: root://eosproject-r.cern.ch
         KRB5CCNAME: /tmp/krb5cc
+      if: ${{ env.KRB5REALM != '' && env.EOS_DIR_NAME != null && env.EOS_DIR_NAME != '' }}
       working-directory: ${{ env.DOC_LOCATION }}
       # Because of https://github.com/xrootd/xrootd/issues/2235 , the xrd client can copy
       # only at most 65536 in one go. For this reason, we copy files in batches, dividing
       # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
+        echo "Input eos directory: ${EOS_DIR_NAME}"
+        EOS_DIR_NAME="${EOS_DIR_NAME%-00-patches}"
+        EOS_DIR_NAME="${EOS_DIR_NAME/-/}"
+        echo "Uploading to the directory: ${EOS_DIR_NAME}"
         failure=0
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
         rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
         rm -rf *.svg
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
         cd ..
         xrdcp -rf ${TAR_FILE} ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
         exit $failure
