@@ -1,5 +1,8 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Add textendash and textemdash `TLatex` symbols #407
+
 
 ## Changes in 7.11.0
 1. Implement new data types in `RNtuple`
