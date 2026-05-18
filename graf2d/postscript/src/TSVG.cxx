@@ -1492,7 +1492,10 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 884) ichar =  8707; // THERE EXISTS
       if (ic == 815) ichar =  8659; // DOWNWARDS DOUBLE ARROW
       if (ic == 811) ichar =  8660; // LEFT RIGHT DOUBLE ARROW
-      if (ic == 826) ichar =  124;  // Vertical bar
+      if (ic == 826) ichar =  124;  // VERTICAL LINE
+      if (ic == 818) ichar =  9145; // CIRCLED LATIN CAPITAL LETTER R
+      if (ic == 820) ichar =  8482; // TRADEMARK SIGN
+        
 
       // Greek characters
       if (ic == 918) ichar = 934;
