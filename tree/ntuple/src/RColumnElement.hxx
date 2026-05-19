@@ -924,16 +924,7 @@ public:
 
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
-#if R__LITTLE_ENDIAN == 0
-      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
-      // directly in the Pack/UnpackBits functions.
-      auto bswapped = MakeUninitArray<float>(count);
-      CopyBswap<sizeof(float)>(bswapped.get(), src, count);
-      const auto *srcLe = bswapped.get();
-#else
-      const auto *srcLe = reinterpret_cast<const float *>(src);
-#endif
-      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+      PackBits(dst, src, count, sizeof(float), fBitsOnStorage);
    }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
@@ -943,9 +934,6 @@ public:
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
       UnpackBits(dst, src, count, sizeof(float), fBitsOnStorage);
-#if R__LITTLE_ENDIAN == 0
-      InPlaceBswap<sizeof(float)>(dst, count);
-#endif
    }
 };
 
@@ -965,16 +953,7 @@ public:
       for (std::size_t i = 0; i < count; ++i)
          srcFloat[i] = static_cast<float>(srcDouble[i]);
 
-#if R__LITTLE_ENDIAN == 0
-      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
-      // directly in the Pack/UnpackBits functions.
-      auto bswapped = MakeUninitArray<float>(count);
-      CopyBswap<sizeof(float)>(bswapped.get(), srcFloat.get(), count);
-      const float *srcLe = bswapped.get();
-#else
-      const float *srcLe = reinterpret_cast<const float *>(srcFloat.get());
-#endif
-      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+      PackBits(dst, reinterpret_cast<const float *>(srcFloat.get()), count, sizeof(float), fBitsOnStorage);
    }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
@@ -986,9 +965,6 @@ public:
       // TODO(gparolini): avoid this allocation
       auto dstFloat = MakeUninitArray<float>(count);
       UnpackBits(dstFloat.get(), src, count, sizeof(float), fBitsOnStorage);
-#if R__LITTLE_ENDIAN == 0
-      InPlaceBswap<sizeof(float)>(dstFloat.get(), count);
-#endif
 
       double *dstDouble = reinterpret_cast<double *>(dst);
       for (std::size_t i = 0; i < count; ++i)
@@ -1062,7 +1038,6 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
 
       const double e = 0.5 + (elem - min) * scale;
       Quantized_t q = static_cast<Quantized_t>(e);
-      ByteSwapIfNecessary(q);
 
       // double-check we actually used at most `nQuantBits`
       assert(outOfRange || LeadingZeroes(q) >= unusedBits);
@@ -1097,7 +1072,6 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
       // Undo the LSB-preserving shift performed by QuantizeReals
       assert(TrailingZeroes(elem) >= unusedBits);
       elem >>= unusedBits;
-      ByteSwapIfNecessary(elem);
 
       const double fq = static_cast<double>(elem);
       double e = fq * scale + min;
