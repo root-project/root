@@ -305,6 +305,8 @@ public:
    virtual void     ReadBuffer(char *&buffer);
    virtual Int_t    Sizeof() const;
 
+   std::size_t ReadBuffer(char *&buffer, std::size_t bufsize);
+
    static TString  *ReadString(TBuffer &b, const TClass *clReq);
    static void      WriteString(TBuffer &b, const TString *a);
 

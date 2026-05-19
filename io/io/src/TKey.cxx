@@ -1285,6 +1285,132 @@ void TKey::ReadKeyBuffer(char *&buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Decode input buffer.
+/// \return true if decoding was successful.
+
+bool TKey::ReadKeyBuffer(char *&buffer, std::size_t bufsize)
+{
+   // NOTE: this is not a lambda because we want [[nodiscard]].
+   struct {
+      TKey *fOuter;
+      std::size_t fRemainingBufSize;
+      [[nodiscard]] bool operator()(std::size_t additionalBytesNeeded) {
+         if (R__unlikely(additionalBytesNeeded > fRemainingBufSize)) {
+            fOuter->Error("ReadKeyBuffer", "The given buffer is too small to fit this TKey.");
+            fOuter->MakeZombie();
+            return false;
+         }
+         fRemainingBufSize -= additionalBytesNeeded;
+         return true;
+      }
+   } RequireAdditionalBufCapacity{this, bufsize};
+
+   // Min size of the buffer for reading the common key header data
+   constexpr std::size_t kMinBufSize =
+      sizeof(fNbytes) + sizeof(Version_t) + sizeof(fObjlen) + sizeof(fKeylen) + sizeof(fCycle);
+   if (!RequireAdditionalBufCapacity(kMinBufSize))
+      return false;
+
+   frombuf(buffer, &fNbytes);
+   if (fNbytes < 0) {
+      Error("ReadKeyBuffer", "The value of fNbytes is negative (%d): cannot continue to read the key buffer.", fNbytes);
+      MakeZombie();
+      fNbytes = 0;
+      return false;
+   }
+   Version_t version;
+   frombuf(buffer,&version);
+   fVersion = (Int_t)version;
+   frombuf(buffer, &fObjlen);
+   if (fObjlen < 0) {
+      Error("ReadKeyBuffer", "The value of fObjlen is negative (%d): cannot continue to read the key buffer.", fObjlen);
+      MakeZombie();
+      fObjlen = 0;
+      return false;
+   }
+   fDatime.ReadBuffer(buffer);
+   frombuf(buffer, &fKeylen);
+   if (fKeylen < 0) {
+      Error("ReadKeyBuffer", "The value of fKeylen is negative (%d): cannot continue to read the key buffer.", fKeylen);
+      MakeZombie();
+      fKeylen = 0;
+      return false;
+   }
+
+   if (fNbytes < fKeylen) {
+      Error("ReadKeyBuffer", "fNbytes (%d) < fKeylen (%d): cannot continue to read the key buffer.", fNbytes, fKeylen);
+      MakeZombie();
+      return false;
+   }
+
+   constexpr auto maxInt_t = std::numeric_limits<Int_t>::max();
+   if (fKeylen > (maxInt_t - fObjlen)) {
+      Error("ReadKeyBuffer", "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.", fObjlen, fKeylen, maxInt_t);
+      MakeZombie();
+      return false;
+   }
+
+   frombuf(buffer, &fCycle);
+   // The initial bufsize check guarantees that we could read up to here.
+   // From now on we need to be careful.
+
+   if (fVersion > 1000) {
+      if (!RequireAdditionalBufCapacity(sizeof(fSeekKey) + sizeof(Long64_t)))
+         return false;
+
+      frombuf(buffer, &fSeekKey);
+
+      // We currently store in the 16 highest bit of fSeekPdir the value of
+      // fPidOffset.  This offset is used when a key (or basket) is transferred from one
+      // file to the other.  In this case the TRef and TObject might have stored a
+      // pid index (to retrieve TProcessIDs) which refered to their order on the original
+      // file, the fPidOffset is to be added to those values to correctly find the
+      // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+      // and need to be zero for new key/basket.
+      Long64_t pdir;
+      frombuf(buffer, &pdir);
+      fPidOffset = pdir >> kPidOffsetShift;
+      fSeekPdir = pdir & kPidOffsetMask;
+   } else {
+      if (!RequireAdditionalBufCapacity(2 * sizeof(UInt_t)))
+         return false;
+
+      UInt_t seekkey,seekdir;
+      frombuf(buffer, &seekkey);
+      fSeekKey = (Long64_t)seekkey;
+      frombuf(buffer, &seekdir);
+      fSeekPdir = (Long64_t)seekdir;
+   }
+
+   auto nRead = fClassName.ReadBuffer(buffer, RequireAdditionalBufCapacity.fRemainingBufSize);
+   if (!nRead) {
+      MakeZombie();
+      return false;
+   }
+   RequireAdditionalBufCapacity.fRemainingBufSize -= nRead;
+
+   //the following test required for forward and backward compatibility
+   if (fClassName == "TDirectory") {
+      fClassName = "TDirectoryFile";
+      SetBit(kIsDirectoryFile);
+   }
+
+   nRead = fName.ReadBuffer(buffer, RequireAdditionalBufCapacity.fRemainingBufSize);
+   if (!nRead) {
+      MakeZombie();
+      return false;
+   }
+   RequireAdditionalBufCapacity.fRemainingBufSize -= nRead;
+
+   nRead = fTitle.ReadBuffer(buffer, RequireAdditionalBufCapacity.fRemainingBufSize);
+   if (!nRead) {
+      MakeZombie();
+      return false;
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read the key structure from the file
 
 Bool_t TKey::ReadFile()
