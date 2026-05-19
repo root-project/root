@@ -1433,144 +1433,19 @@ namespace {
 
     // Build the virtual file, Give it a name that's likely not to ever
     // be #included (so we won't get a clash in clang's cache).
-    // const char* Filename = "<<< cling interactive line includer >>>";
-    // FileEntryRef FE = FM.getVirtualFileRef(Filename, 1U << 15U, time(0));
+    const char* Filename = "<<< cling interactive line includer >>>";
 
-    // // Tell ASTReader to create a FileID even if this file does not exist:
-    // SM->setFileIsTransient(FE);
-    // FileID MainFileID = SM->createFileID(FE, SourceLocation(), SrcMgr::C_User);
-    // SM->setMainFileID(MainFileID);
     if (!Buffer)
       Buffer = llvm::MemoryBuffer::getMemBuffer("/*CLING DEFAULT MEMBUF*/;\n");
 
-    //   SM->overrideFileContents(FE, std::move(Buffer));
     // Adapted from upstream clang/lib/Interpreter/Interpreter.cpp
     // FIXME: Merge with CompilerInstance::ExecuteAction.
     llvm::MemoryBuffer* MB = Buffer.release();
-    if (MB) {
-      CI->getFrontendOpts().Inputs.clear();
-      // CI->getFrontendOpts().Inputs.emplace_back(Filename,
-      //                                           InputKind(Language::CXX));//, true,
-      //                                           // 1U << 15U,
-      //                                           // MB->getMemBufferRef());
-      CI->getFrontendOpts().Inputs.emplace_back(MB->getMemBufferRef(),
-                                                InputKind(Language::CXX));//, true,
-                                                // 1U << 15U,
-                                                // MB->getMemBufferRef());
-    }
 
-    CI->setIncrementalSourceMgrInitializer([&](CompilerInstance& CI, const FrontendInputFile &Input) {
-      const char* Filename = "<<< cling interactive line includer >>>";
-      auto& FM = CI.getFileManager();
-      auto& SM = CI.getSourceManager();
-      FileEntryRef FE = FM.getVirtualFileRef(Filename, 1U << 15U, time(0));
-
-      // Tell ASTReader to create a FileID even if this file does not exist:
-      SM.setFileIsTransient(FE);
-      FileID MainFileID = SM.createFileID(FE, SourceLocation(), SrcMgr::C_User);
-      SM.setMainFileID(MainFileID);
-
-      std::unique_ptr<llvm::MemoryBuffer> Buffer = nullptr;
-      if (Input.isBuffer())
-        Buffer = llvm::MemoryBuffer::getMemBuffer(Input.getBuffer());
-      else
-        Buffer = llvm::MemoryBuffer::getMemBuffer("");
-      SM.overrideFileContents(FE, std::move(Buffer));
-      return true;
-    });
-
-    // CI->getFrontendOpts().Inputs.clear();
-    // CI->getFrontendOpts().Inputs.emplace_back(Filename, InputKind(Language::CXX));
-    // CI->getPreprocessorOpts().addRemappedFile(Filename, MB);
-    // Create TargetInfo for the other side of CUDA and OpenMP compilation.
-    // if ((CI->getLangOpts().CUDA || CI->getLangOpts().OpenMPIsTargetDevice) &&
-    //     !CI->getFrontendOpts().AuxTriple.empty()) {
-    //   auto TO = std::make_shared<TargetOptions>();
-    //   TO->Triple = CI->getFrontendOpts().AuxTriple;
-    //   TO->HostTriple = CI->getTarget().getTriple().str();
-    //   CI->setAuxTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(), TO));
-    // }
-
-    // Set up the preprocessor
-    // auto TUKind = COpts.ModuleName.empty() ? TU_Complete : TU_ClangModule;
-    // CI->createPreprocessor(TUKind);
-
-    // With modules, we now start adding prebuilt module paths to the CI.
-    // Modules from those paths are treated like they are never out of date
-    // and we don't update them on demand.
-    // This mostly helps ROOT where we can't just recompile any out of date
-    // modules because we would miss the annotations that rootcling creates.
-    // if (COpts.CxxModules) {
-    //   setupCxxModules(*CI);
-    // }
-
-    // Preprocessor& PP = CI->getPreprocessor();
-
-    // PP.getBuiltinInfo().initializeBuiltins(PP.getIdentifierTable(),
-    //                                        PP.getLangOpts());
-
-    // // Set up the ASTContext
-    // CI->createASTContext();
-
-    // std::vector<std::unique_ptr<ASTConsumer>> Consumers;
-
-    // if (!OnlyLex && !AutoComplete) {
-    //   assert(customConsumer && "Need to specify a custom consumer"
-    //                            " when not in OnlyLex mode");
-    //   Consumers.push_back(std::move(customConsumer));
-    // }
-
-    // With C++ modules, we now attach the consumers that will handle the
-    // generation of the PCM file itself in case we want to generate
-    // a C++ module with the current interpreter instance.
-    // if (COpts.CxxModules && !COpts.ModuleName.empty()) {
-    //   // Code below from the (private) code in the GenerateModuleAction class.
-    //   llvm::SmallVector<char, 256> Output;
-    //   llvm::sys::path::append(Output, COpts.CachePath,
-    //                           COpts.ModuleName + ".pcm");
-    //   StringRef ModuleOutputFile = StringRef(Output.data(), Output.size());
-
-    //   std::unique_ptr<raw_pwrite_stream> OS =
-    //       CI->createOutputFile(ModuleOutputFile, /*Binary=*/true,
-    //                            /*RemoveFileOnSignal=*/false,
-    //                            /*useTemporary=*/true,
-    //                            /*CreateMissingDirectories=*/true);
-    //   assert(OS);
-
-    //   std::string Sysroot;
-
-    //   auto PCHBuff = std::make_shared<PCHBuffer>();
-
-    //   Consumers.push_back(std::make_unique<PCHGenerator>(
-    //       CI->getPreprocessor(), CI->getModuleCache(), ModuleOutputFile,
-    //       Sysroot, PCHBuff, CI->getFrontendOpts().ModuleFileExtensions,
-    //       /*AllowASTWithErrors=*/false,
-    //       /*IncludeTimestamps=*/
-    //       +CI->getFrontendOpts().BuildingImplicitModule));
-    //   Consumers.push_back(
-    //       CI->getPCHContainerWriter().CreatePCHContainerGenerator(
-    //                   *CI, "", ModuleOutputFile.str(), std::move(OS), PCHBuff));
-
-    //   // Set the current module name for clang. With that clang doesn't start
-    //   // to build the current module on demand when we include a header
-    //   // from the current module.
-      // CI->getLangOpts().CurrentModule = COpts.ModuleName;
-      // CI->getLangOpts().setCompilingModule(LangOptions::CMK_ModuleMap);
-
-      // // Push the current module to the build stack so that clang knows when
-      // // we have a cyclic dependency.
-      // SM->pushModuleBuildStack(COpts.ModuleName,
-      //                          FullSourceLoc(SourceLocation(), *SM));
-    // }
-
-    // std::unique_ptr<clang::MultiplexConsumer> multiConsumer(
-    //     new clang::MultiplexConsumer(std::move(Consumers)));
-    // CI->setASTConsumer(std::move(multiConsumer));
-
-    // Set up Sema
-    // CodeCompleteConsumer* CCC = 0;
-    // Make sure we inform Sema we compile a Module.
-    // CI->createSema(TUKind, CCC);
+    CI->getFrontendOpts().Inputs.clear();
+    CI->getFrontendOpts().Inputs.emplace_back(Filename,
+                                              InputKind(Language::CXX));
+    CI->getPreprocessorOpts().addRemappedFile(Filename, MB);
 
     // Set CodeGen options.
     CodeGenOptions& CGOpts = CI->getCodeGenOpts();
@@ -1612,36 +1487,7 @@ namespace {
       // Write a marker to know the rest of the output is from clang
       if (COpts.Verbose)
         cling::log() << "Setting up system headers with clang:\n";
-
-      // ### FIXME:
-      // Want to update LLVM to 3.9 realease and better testing first, but
-      // ApplyHeaderSearchOptions shouldn't even be called here:
-      //   1. It's already been called via CI->createPreprocessor(TU_Complete)
-      //   2. It could corrupt clang's directory cache
-      // HeaderSearchOptions.::AddSearchPath is a better alternative
-
-      // clang::ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), HOpts,
-      //                                 PP.getLangOpts(),
-      //                                 PP.getTargetInfo().getTriple());
     }
-
-    // Tell the diagnostic client that we are entering file parsing mode as the
-    // handling of modulemap files may issue diagnostics.
-    // FIXME: Consider moving in SetupDiagnostics.
-    // DiagnosticConsumer& DClient = CI->getDiagnosticClient();
-    // DClient.BeginSourceFile(CI->getLangOpts(), &PP);
-
-    // for (const auto& ModuleMapFile : FrontendOpts.ModuleMapFiles) {
-      // auto File = FM.getFileRef(ModuleMapFile);
-    //   if (!File) {
-    //     CI->getDiagnostics().Report(diag::err_module_map_not_found)
-    //        << ModuleMapFile;
-    //     continue;
-    //   }
-    //   PP.getHeaderSearchInfo().loadModuleMapFile(*File, /*IsSystem*/ false);
-    // }
-
-    // HandleProgramActions(*CI);
 
     return CI.release(); // Passes over the ownership to the caller.
   }

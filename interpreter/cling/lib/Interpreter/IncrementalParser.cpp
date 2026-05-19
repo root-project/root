@@ -278,7 +278,20 @@ namespace cling {
         // m_Interpreter(m_Interp), 
         COpts(COpts) {}
 
-  std::vector<std::unique_ptr<ASTConsumer>>
+  class PCHGeneratorWrapper : public MultiplexConsumer {
+  public:
+    using MultiplexConsumer::MultiplexConsumer;
+
+    void HandleTranslationUnit(ASTContext&) override {
+      // Delay until Finalize().
+    }
+
+    void Finalize(ASTContext& Ctx) {
+      MultiplexConsumer::HandleTranslationUnit(Ctx);
+    }
+  };
+
+  std::unique_ptr<ASTConsumer>
   IncrementalAction::CreateMultiplexConsumer(CompilerInstance& CI,
                                              StringRef InFile) {
     std::vector<std::unique_ptr<ASTConsumer>> Consumers;
@@ -312,32 +325,35 @@ namespace cling {
       Consumers.push_back(
           CI.getPCHContainerWriter().CreatePCHContainerGenerator(
               CI, "", ModuleOutputFile.str(), std::move(OS), PCHBuff));
+      std::unique_ptr<PCHGeneratorWrapper> PCHGenW =
+          std::make_unique<PCHGeneratorWrapper>(std::move(Consumers));
+      PCHGenWrapper = PCHGenW.get();
+      return PCHGenW;
     }
 
-    return Consumers;
+    return nullptr;
   }
 
   std::unique_ptr<ASTConsumer>
   IncrementalAction::CreateASTConsumer(CompilerInstance& CI,
                                        StringRef InFile) {
-    auto C = WrapperFrontendAction::CreateASTConsumer(CI, InFile);
+    std::unique_ptr<ASTConsumer> C =
+        WrapperFrontendAction::CreateASTConsumer(CI, InFile);
     auto DC = std::make_unique<cling::DeclCollector>();
     DeclCollectorConsumer = DC.get();
     DC->Setup(std::move(C), CI.getPreprocessor());
-    std::vector<std::unique_ptr<ASTConsumer>> Cs =
-        CreateMultiplexConsumer(CI, InFile);
-    if (!Cs.empty()) {
-      Cs.insert(Cs.begin(), std::move(DC));
-      // Cs.push_back(std::move(DC));
+    std::unique_ptr<ASTConsumer> MC = CreateMultiplexConsumer(CI, InFile);
+    if (MC) {
+      std::vector<std::unique_ptr<ASTConsumer>> Cs;
+      Cs.push_back(std::move(DC));
+      Cs.push_back(std::move(MC));
       return std::make_unique<MultiplexConsumer>(std::move(Cs));
     }
-    return std::move(DC);
+    // DC->Setup(std::move(C), CI.getPreprocessor());
+    return DC;
   }
 
   void IncrementalAction::ExecuteAction() {
-    // Interpreter::PushTransactionRAII PushedT(&m_Interpreter);
-    // WrapperFrontendAction::ExecuteAction();
-    // getCompilerInstance().getSema().CurContext = nullptr;
     CompilerInstance& CI = getCompilerInstance();
     if (!CI.hasPreprocessor())
       return;
@@ -355,11 +371,6 @@ namespace cling {
 
     if (!CI.hasSema())
       CI.createSema(getTranslationUnitKind(), CompletionConsumer);
-
-    // Interpreter::PushTransactionRAII PushedT(&m_Interpreter);
-    // ParseAST(CI.getSema(), CI.getFrontendOpts().ShowStats,
-    //          CI.getFrontendOpts().SkipFunctionBodies);
-    // getCompilerInstance().getSema().CurContext = nullptr;
   }
 
   bool IncrementalAction::BeginSourceFileAction(CompilerInstance& CI) {
@@ -409,6 +420,15 @@ namespace cling {
     return nullptr;
   }
 
+  void IncrementalAction::GenPCH(ASTContext &Ctx) {
+    static bool PCHGenerated = false;
+    assert(!IsTerminating && "Already finalized!");
+    assert(!PCHGenerated && "Already generated!");
+    if (PCHGenWrapper && !PCHGenerated)
+      PCHGenWrapper->Finalize(Ctx);
+    PCHGenerated = true;
+  }
+
   CodeGenerator* IncrementalAction::getCodeGen() {
     FrontendAction* WrappedAct = getWrapped();
     return static_cast<CodeGenAction*>(WrappedAct)->getCodeGenerator();
@@ -454,31 +474,9 @@ namespace cling {
     if (m_CI->getPreprocessor().TUKind != TU_Incremental)
       return true; // This a one-time, non-incremental action.
 
-    if (hasCodeGenerator())
-      getCodeGenerator()->Initialize(getCI()->getASTContext());
-
     Preprocessor& PP = m_CI->getPreprocessor();
     CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     Transaction* CurT = beginTransaction(CO);
-    // DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
-
-    // Pull in PCH.
-    // const std::string& PCHFileName
-      // = m_CI->getInvocation().getPreprocessorOpts().ImplicitPCHInclude;
-    // if (!PCHFileName.empty()) {
-    //   Transaction* PchT = beginTransaction(CO);
-    //   DiagnosticErrorTrap Trap(Diags);
-    //   m_CI->createPCHExternalASTSource(PCHFileName,
-    //                                    DisableValidationForModuleKind::All,
-    //                                    true /*AllowPCHWithCompilerErrors*/,
-    //                                    nullptr /*DeserializationListener*/,
-    //                                    true /*OwnsDeserializationListener*/);
-    //   result.push_back(endTransaction(PchT));
-    //   if (Trap.hasErrorOccurred()) {
-    //     result.push_back(endTransaction(CurT));
-    //     return false;
-    //   }
-  // }
 
     addClingPragmas(*m_Interpreter);
 
@@ -809,7 +807,7 @@ namespace cling {
 
   void IncrementalParser::emitTransaction(Transaction* T) {
     for (auto DI = T->decls_begin(), DE = T->decls_end(); DI != DE; ++DI)
-      m_Consumer->HandleTopLevelDecl(DI->m_DGR);
+      m_CI->getSema().getASTConsumer().HandleTopLevelDecl(DI->m_DGR);
   }
 
   void IncrementalParser::codeGenTransaction(Transaction* T) {
@@ -937,8 +935,26 @@ namespace cling {
   // +---------------------+
   //
   void IncrementalParser::initializeVirtualFile() {
-    SourceManager& SM = getCI()->getSourceManager();
-    m_VirtualFileID = SM.getMainFileID();
+    SourceManager& SM = m_CI->getSourceManager();
+    FileManager& FM = m_CI->getFileManager();
+    // Build the virtual file, Give it a name that's likely not to ever
+    // be #included (so we won't get a clash in clang's cache).
+    const char* Filename = "<<< includer >>>";
+    FileEntryRef FE = FM.getVirtualFileRef(Filename, 1U << 15U, time(0));
+
+    // Tell ASTReader to create a FileID even if this file does not exist:
+    SM.setFileIsTransient(FE);
+
+    SourceLocation Result = SM.getLocForStartOfFile(SM.getMainFileID());
+    m_VirtualFileID = SM.createFileID(FE, Result, SrcMgr::C_User);
+
+    auto Buffer =
+        llvm::MemoryBuffer::getMemBufferCopy("/*CLING DEFAULT MEMBUF*/;\n");
+
+    SM.overrideFileContents(FE, std::move(Buffer));
+
+    // SourceManager& SM = getCI()->getSourceManager();
+    // m_VirtualFileID = SM.getMainFileID();
     if (m_VirtualFileID.isInvalid())
       cling::errs() << "VirtualFileID could not be created.\n";
   }
@@ -1069,7 +1085,7 @@ namespace cling {
     Sema::ModuleImportState ImportState;
     for (bool AtEOF = m_Parser->ParseFirstTopLevelDecl(ADecl, ImportState);
          !AtEOF; AtEOF = m_Parser->ParseTopLevelDecl(ADecl, ImportState)) {
-      if (ADecl && !m_Consumer->HandleTopLevelDecl(ADecl.get())) {
+      if (ADecl && !S.getASTConsumer().HandleTopLevelDecl(ADecl.get())) {
         m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
         return llvm::make_error<llvm::StringError>(
             "Parsing failed. "
@@ -1090,7 +1106,7 @@ namespace cling {
     // Process any TopLevelDecls generated by #pragma weak.
     for (Decl* D : S.WeakTopLevelDecls()) {
       DeclGroupRef DGR(D);
-      m_Consumer->HandleTopLevelDecl(DGR);
+      S.getASTConsumer().HandleTopLevelDecl(DGR);
     }
 
     LocalInstantiations.perform();

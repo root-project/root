@@ -422,6 +422,12 @@ namespace cling {
     // explicitly, before the implicit destruction (through the unique_ptr) of
     // the callbacks.
     m_IncrParser.reset(nullptr);
+    m_Act->FinalizeAction();
+    m_Act.reset(nullptr);
+  }
+
+  void Interpreter::GeneratePCH() {
+    m_Act->GenPCH(m_CI->getASTContext());
   }
 
   Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly) {
