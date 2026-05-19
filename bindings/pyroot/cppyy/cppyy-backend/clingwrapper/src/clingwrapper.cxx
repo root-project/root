@@ -248,7 +248,7 @@ public:
         Cpp::AddIncludePath((ClingSrc + "/tools/cling/include").c_str());
         Cpp::AddIncludePath((ClingSrc + "/include").c_str());
         Cpp::AddIncludePath((ClingBuildDir + "/include").c_str());
-        Cpp::AddIncludePath((std::string(CPPINTEROP_DIR) + "/include").c_str());
+        Cpp::AddIncludePath(CPPINTEROP_DIR);
         Cpp::LoadLibrary("libstdc++", /* lookup= */ true);
 
         // load frequently used headers
