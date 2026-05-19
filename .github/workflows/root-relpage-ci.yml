@@ -56,7 +56,7 @@ jobs:
   make-release-page:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the official ROOT repo
+      - name: Checkout the ROOT Website repo
         uses: actions/checkout@v6
         with:
           repository: root-project/web
