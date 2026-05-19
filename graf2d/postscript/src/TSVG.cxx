@@ -1488,6 +1488,13 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 786) ichar =  8476;
       if (ic == 785) ichar =  8465;
       if (ic == 787) ichar =  8472;
+      if (ic == 882) ichar =  8704; // FOR ALL
+      if (ic == 884) ichar =  8707; // THERE EXISTS
+      if (ic == 815) ichar =  8659; // DOWNWARDS DOUBLE ARROW
+      if (ic == 811) ichar =  8660; // LEFT RIGHT DOUBLE ARROW
+      if (ic == 826) ichar =  124;  // VERTICAL LINE
+      if (ic == 818) ichar =  9415; // CIRCLED LATIN CAPITAL LETTER R
+      if (ic == 820) ichar =  8482; // TRADEMARK SIGN
 
       // Greek characters
       if (ic == 918) ichar = 934;
@@ -1505,7 +1512,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 935) ichar = 937;
       if (ic == 938) ichar = 918;
       if (ic == 951) ichar = 947;
-      if (ic == 798) ichar = 949;
+      if (ic == 798) ichar = 8712; // ELEMENT OF, TeX traditionally assigns \epsilon to GREEK LUNATE EPSILON SYMBOL (ϵ), compared to the curly \varepsilon to the GREEK SMALL LETTER EPSILON (Ɛ)
       if (ic == 970) ichar = 950;
       if (ic == 952) ichar = 951;
       if (ic == 961) ichar = 952;
