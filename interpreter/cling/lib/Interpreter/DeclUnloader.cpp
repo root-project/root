@@ -493,6 +493,20 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
+    // LLVM22 introduced UnsubstitutedConstraintSatisfactionCache:
+    // https://github.com/llvm/llvm-project/commit/e9972de
+    //
+    // This causes some stale results to persist across transactions
+    // For example, evaluating is_default_constructible_v<Inner<int>> for an
+    // incomplete Inner<int> caches the 'false' value here.
+    // Completing Inner<int> in the next transaction will see the cached 'false'
+    // instead of re-evaluating.
+    //
+    // Assuming rollback of this is a rare event.
+    // There is a TODO in clang to make this a private member, so this solution
+    // is not ideal.
+    // TODO: Look for a better solution.
+    m_Sema->UnsubstitutedConstraintSatisfactionCache.clear();
     SourceManager& SM = m_Sema->getSourceManager();
     for (FileIDs::iterator I = m_FilesToUncache.begin(),
            E = m_FilesToUncache.end(); I != E; ++I) {
