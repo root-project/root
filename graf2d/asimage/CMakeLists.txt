@@ -26,9 +26,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     -writeEmptyRootPCM
   LIBRARIES
     libAfterImage
-    ${ASEXTRA_LIBRARIES}
-    ${FREETYPE_LIBRARIES}
-    ${X11_LIBRARIES}
+    JPEG::JPEG
+    PNG::PNG
+    GIF::GIF
+    libAfterImage
+    Freetype::Freetype
     ZLIB::ZLIB
   DEPENDENCIES
     Core
@@ -36,7 +38,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     Postscript
 )
 
-target_link_libraries(ASImage PRIVATE JPEG::JPEG PNG::PNG GIF::GIF libAfterImage Freetype::Freetype)
 if (x11)
   target_link_libraries(ASImage PRIVATE X11::X11)
 endif()
