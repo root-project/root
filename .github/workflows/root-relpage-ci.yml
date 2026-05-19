@@ -63,6 +63,6 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v4
       - name: Create release page
         run: | 
-            cd web/_releases
+            cd _releases
             python3 make-release-page.py --force release-${{ inputs.major }}${{ inputs.minor }}${{ inputs.patch }}.md
             cat release-${{ inputs.major }}${{ inputs.minor }}${{ inputs.patch }}.md
