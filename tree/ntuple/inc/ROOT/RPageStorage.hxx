@@ -544,6 +544,21 @@ public:
    [[nodiscard]] std::unique_ptr<RNTupleModel>
    InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
 
+   struct RColumnReprElement {
+      ENTupleColumnType fType = ENTupleColumnType::kUnknown;
+      // 0 means "use default". Only valid for fixed-bitwidth column types.
+      std::uint16_t fBitWidth = 0;
+      std::optional<RColumnDescriptor::RValueRange> fValueRange;
+   };
+   /// Adds a new column representation to the given field.
+   /// \return The physical id of the first newly added column.
+   ROOT::DescriptorId_t
+   AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const RColumnReprElement> newRepresentation);
+
+   /// Adds a new alias column pointing to an existing column with the given physical id to the given field.
+   void AddAliasColumn(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &field,
+                       ROOT::DescriptorId_t physicalId);
+
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;

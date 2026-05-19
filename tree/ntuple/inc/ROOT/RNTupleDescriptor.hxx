@@ -515,6 +515,12 @@ public:
    ROOT::NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    const RColumnRange &GetColumnRange(ROOT::DescriptorId_t physicalId) const { return fColumnRanges.at(physicalId); }
+   const RColumnRange *TryGetColumnRange(ROOT::DescriptorId_t physicalId) const
+   {
+      if (auto it = fColumnRanges.find(physicalId); it != fColumnRanges.end())
+         return &it->second;
+      return nullptr;
+   }
    const RPageRange &GetPageRange(ROOT::DescriptorId_t physicalId) const { return fPageRanges.at(physicalId); }
    /// Returns an iterator over pairs { columnId, columnRange }. The iteration order is unspecified.
    RColumnRangeIterable GetColumnRangeIterable() const;
@@ -769,6 +775,12 @@ public:
    /// All known feature flags.
    /// Note that the flag values represent the bit _index_, not the already-bitshifted integer.
    enum EFeatureFlags {
+      /// Signals that the RNTuple contains at least one deferred column that is part of a collection and was extended
+      /// (i.e. it appears in the footer). This can happen when merging two RNTuples that have the same collection field
+      /// backed by columns with different encoding, e.g. a vector<float> whose elements are represented by SplitReal32
+      /// in the first ntuple and by Real32 in the second.
+      /// Added in version 1.1.0.0 of the binary format.
+      kFeatureFlag_NestedDeferredColumns = 0,
       // Insert new feature flags here, with contiguous values. If at any point a "hole" appears in the valid feature
       // flags values, the check in RNTupleSerialize must be updated.
 

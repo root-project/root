@@ -932,8 +932,16 @@ ROOT::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTuple
                // `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the
                // field zero excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
-                  columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
-                  columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  if (c.GetRepresentationIndex() == 0) {
+                     columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
+                     columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  } else {
+                     const auto &field = desc.GetFieldDescriptor(fieldId);
+                     const auto firstReprColumnId = field.GetLogicalColumnIds()[c.GetIndex()];
+                     const auto &firstReprColumnRange = fCluster.fColumnRanges[firstReprColumnId];
+                     columnRange.SetFirstElementIndex(firstReprColumnRange.GetFirstElementIndex());
+                     columnRange.SetNElements(firstReprColumnRange.GetNElements());
+                  }
                   if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
@@ -1350,6 +1358,14 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t o
       c.fLogicalColumnId += offset;
       R__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
       fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
+   }
+
+   // Patch up column ids in the header extension
+   if (auto &xHeader = fDescriptor.fHeaderExtension) {
+      for (auto &columnId : xHeader->fExtendedColumnRepresentations) {
+         if (columnId >= fDescriptor.GetNPhysicalColumns())
+            columnId += offset;
+      }
    }
 }
 
