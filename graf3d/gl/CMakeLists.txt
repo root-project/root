@@ -17,9 +17,6 @@ if(x11)
   set(RGL_EXTRA_SOURCES TX11GL.cxx)
 endif()
 
-set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
-set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   HEADERS
     TArcBall.h
@@ -202,7 +199,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   LIBRARIES
     OpenGL::GL
     OpenGL::GLU
-    ${FTGL_LIBRARIES}
+    FTGL::FTGL
     gl2ps::gl2ps
     Freetype::Freetype
     ZLIB::ZLIB
@@ -221,7 +218,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
 
 target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
-     ${FTGL_INCLUDE_DIR}
 )
 
 if(MACOSX_GLU_DEPRECATED)

@@ -69,4 +69,11 @@ if(FTGL_FOUND)
     endif()
   endif()
   set(FTGL_VERSION "${FTGL_VERSION}" CACHE INTERNAL "FTGL version")
+
+  if(NOT TARGET FTGL::FTGL)
+    add_library(FTGL::FTGL UNKNOWN IMPORTED)
+    set_target_properties(FTGL::FTGL PROPERTIES
+      IMPORTED_LOCATION "${FTGL_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${FTGL_INCLUDE_DIRS}")
+  endif()
 endif()

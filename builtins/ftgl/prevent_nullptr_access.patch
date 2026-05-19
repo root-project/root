@@ -1,0 +1,35 @@
+diff --git a/src/FTGlyphContainer.cpp b/src/FTGlyphContainer.cpp
+index 6a47291..a8847bb 100644
+--- a/src/FTGlyphContainer.cpp
++++ b/src/FTGlyphContainer.cpp
+@@ -78,6 +78,7 @@ void FTGlyphContainer::Add(FTGlyph* tempGlyph, const unsigned int charCode)
+ 
+ const FTGlyph* FTGlyphContainer::Glyph(const unsigned int charCode) const
+ {
++    if (!charMap) return NULL;
+     unsigned int index = charMap->GlyphListIndex(charCode);
+ 
+     return (index < glyphs.size()) ? glyphs[index] : NULL;
+@@ -86,7 +87,7 @@ const FTGlyph* FTGlyphContainer::Glyph(const unsigned int charCode) const
+ 
+ FTBBox FTGlyphContainer::BBox(const unsigned int charCode) const
+ {
+-    return Glyph(charCode)->BBox();
++    return Glyph(charCode) ? Glyph(charCode)->BBox() : FTBBox();
+ }
+ 
+ 
+@@ -113,11 +114,11 @@ FTPoint FTGlyphContainer::Render(const unsigned int charCode,
+ 
+     FTPoint kernAdvance = face->KernAdvance(left, right);
+ 
+-    if(!face->Error())
++    if(!face->Error() && charMap)
+     {
+         unsigned int index = charMap->GlyphListIndex(charCode);
+         if (index < glyphs.size())
+-            kernAdvance += glyphs[index]->Render(penPosition, renderMode);
++            if (glyphs[index]) kernAdvance += glyphs[index]->Render(penPosition, renderMode);
+     }
+ 
+     return kernAdvance;

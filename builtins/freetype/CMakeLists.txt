@@ -6,8 +6,8 @@
 
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
 # 22 Mar 2026, https://github.com/freetype/freetype/releases/tag/VER-2-14-3
-set(FREETYPE_VERSION 2.14.3)
-set(FREETYPE_HASH "e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c899a1")
+set(ROOT_FREETYPE_VERSION 2.14.3)
+set(ROOT_FREETYPE_HASH "e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c899a1")
 
 set(FREETYPE_PREFIX ${CMAKE_BINARY_DIR}/builtins/FREETYPE-prefix)
 
@@ -34,8 +34,8 @@ set(FREETYPE_LIBRARY ${FREETYPE_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freety
 
 ExternalProject_Add(
     BUILTIN_FREETYPE
-    URL ${lcgpackages}/freetype-${FREETYPE_VERSION}.tar.gz
-    URL_HASH SHA256=${FREETYPE_HASH}
+    URL ${lcgpackages}/freetype-${ROOT_FREETYPE_VERSION}.tar.gz
+    URL_HASH SHA256=${ROOT_FREETYPE_HASH}
     PREFIX ${FREETYPE_PREFIX}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
@@ -75,9 +75,8 @@ if(builtin_zlib)
     add_dependencies(BUILTIN_FREETYPE BUILTIN_ZLIB)
 endif()
 
-# Set the canonical output of find_package according to
-# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+# Following https://cmake.org/cmake/help/latest/module/FindFreetype.html
 set(FREETYPE_INCLUDE_DIRS ${incdir} PARENT_SCOPE)
 set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY} PARENT_SCOPE)
 set(Freetype_FOUND TRUE PARENT_SCOPE)
-set(Freetype_VERSION ${FREETYPE_VERSION} PARENT_SCOPE)
+set(Freetype_VERSION ${ROOT_FREETYPE_VERSION} PARENT_SCOPE)
