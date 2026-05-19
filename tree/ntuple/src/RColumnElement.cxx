@@ -212,7 +212,12 @@ void ROOT::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_
    std::size_t dstIdx = 0;
    for (std::size_t i = 0; i < count; ++i) {
       Word_t packedWord = 0;
+#if R__LITTLE_ENDIAN == 0
+      memcpy(reinterpret_cast<unsigned char *>(&packedWord) + (sizeof(Word_t) - sizeofSrc), srcArray + i * sizeofSrc,
+             sizeofSrc);
+#else
       memcpy(&packedWord, srcArray + i * sizeofSrc, sizeofSrc);
+#endif
       // truncate the LSB of the item
       packedWord >>= sizeofSrc * 8 - nDstBits;
 
@@ -231,6 +236,7 @@ void ROOT::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_
             accum |= (packedWordLsb << bitsUsed);
          }
 
+         ByteSwapIfNecessary(accum);
          memcpy(&dstArray[dstIdx++], &accum, sizeof(accum));
          accum = 0;
          bitsUsed = 0;
@@ -248,8 +254,10 @@ void ROOT::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_
       }
    }
 
-   if (bitsUsed)
+   if (bitsUsed) {
+      ByteSwapIfNecessary(accum);
       memcpy(&dstArray[dstIdx++], &accum, (bitsUsed + 7) / 8);
+   }
 
    [[maybe_unused]] auto expDstCount = (count * nDstBits + kBitsPerWord - 1) / kBitsPerWord;
    assert(dstIdx == expDstCount);
@@ -277,6 +285,7 @@ void ROOT::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::siz
       Word_t packedBytes = 0;
       std::size_t bytesLoaded = std::min(remBytesToLoad, sizeof(Word_t));
       memcpy(&packedBytes, &srcArray[i], bytesLoaded);
+      ByteSwapIfNecessary(packedBytes);
 
       assert(remBytesToLoad >= bytesLoaded);
       remBytesToLoad -= bytesLoaded;
@@ -288,7 +297,12 @@ void ROOT::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::siz
          std::uint32_t msb = packedBytes << (8 * sizeofDst - nMsb);
          Word_t packedWord = msb | prevWordLsb;
          prevWordLsb = 0;
+#if R__LITTLE_ENDIAN == 0
+         memcpy(dstArray + dstIdx * sizeofDst,
+                reinterpret_cast<unsigned char *>(&packedWord) + sizeof(Word_t) - sizeofDst, sizeofDst);
+#else
          memcpy(dstArray + dstIdx * sizeofDst, &packedWord, sizeofDst);
+#endif
          ++dstIdx;
          offInWord = nMsb;
       }
@@ -310,7 +324,12 @@ void ROOT::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::siz
          assert(nSrcBits + offInWord <= kBitsPerWord);
          packedWord >>= offInWord;
          packedWord <<= 8 * sizeofDst - nSrcBits;
+#if R__LITTLE_ENDIAN == 0
+         memcpy(dstArray + dstIdx * sizeofDst,
+                reinterpret_cast<unsigned char *>(&packedWord) + sizeof(Word_t) - sizeofDst, sizeofDst);
+#else
          memcpy(dstArray + dstIdx * sizeofDst, &packedWord, sizeofDst);
+#endif
          ++dstIdx;
          offInWord += nSrcBits;
       }
