@@ -97,6 +97,14 @@ jobs:
         cd ROOT-CI/src/documentation/doxygen
         make -j `nproc --all`
 
+    - name: Clean temporary files
+      # These files are used when doxygen runs incrementally
+      shell: bash
+      run: |
+        cd "/github/home/${DOC_DIR}"
+        rm html/*.md5
+        rm html/*.map
+
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
@@ -135,8 +143,6 @@ jobs:
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         cd ${DOC_DIR}/html/
-        rm -rf *.map # Intermediate files to create dot graphs
-        rm -rf *.md5 # As above
         xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.html
         xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
