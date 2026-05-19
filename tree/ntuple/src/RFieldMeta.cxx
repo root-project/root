@@ -663,6 +663,9 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAF
    fTraits = source.GetTraits();
    Attach(source.fSubfields[0]->Clone(source.fSubfields[0]->GetFieldName()));
    fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
+   for (const auto f : fRecordMemberFields)
+      fRecordMemberDeleters.emplace_back(GetDeleterOf(*f));
+   fLockSplitFields = std::make_unique<std::mutex>();
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string_view className)
@@ -708,6 +711,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
          throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
       }
       recordFieldNameToIdx[f->GetFieldName()] = i;
+      fRecordMemberDeleters.emplace_back(GetDeleterOf(*f));
    }
 
    const auto *bases = fSoAClass->GetListOfBases();
@@ -772,6 +776,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
       fTypeAlias = renormalizedAlias;
 
    fTraits |= kTraitSoACollection | kTraitTypeChecksum;
+   fLockSplitFields = std::make_unique<std::mutex>();
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::Experimental::RSoAField::CloneImpl(std::string_view newName) const
@@ -841,9 +846,28 @@ std::size_t ROOT::Experimental::RSoAField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t /* globalIndex */, void * /* to */)
+void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   throw RException(R__FAIL("not yet implemented"));
+   // Read collection info for this entry
+   ROOT::NTupleSize_t N;
+   RNTupleLocalIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &N);
+
+   const auto nSoAMembers = fSoAMemberOffsets.size();
+   for (std::size_t i = 0; i < nSoAMembers; ++i) {
+      RFieldBase *memberField = fRecordMemberFields[i];
+      const auto memberSize = memberField->GetValueSize();
+      void *rvecPtr = static_cast<unsigned char *>(to) + fSoAMemberOffsets[i];
+      auto begin = ROOT::RRVecField::ResizeRVec(rvecPtr, N, memberSize, memberField, fRecordMemberDeleters[i].get());
+
+      if (memberField->IsSimple() && N) {
+         GetPrincipalColumnOf(*memberField)->ReadV(collectionStart, N, begin);
+      } else {
+         for (std::size_t j = 0; j < N; ++j) {
+            CallReadOn(*memberField, collectionStart + j, begin + (j * memberSize));
+         }
+      }
+   }
 }
 
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
@@ -857,10 +881,31 @@ void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool d
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue & /* value */) const
+std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue &value) const
 {
-   throw RException(R__FAIL("not yet implemented"));
-   return std::vector<RValue>();
+   const auto nSoAMembers = fSoAMemberOffsets.size();
+
+   {
+      std::lock_guard<std::mutex> lockGuard(*fLockSplitFields);
+      if (!fSplitFields) {
+         fSplitFields = std::make_unique<std::vector<std::unique_ptr<ROOT::RRVecField>>>();
+         fSplitFields->reserve(nSoAMembers);
+         for (std::size_t i = 0; i < nSoAMembers; ++i) {
+            const auto itemField = fRecordMemberFields[i];
+            fSplitFields->emplace_back(std::make_unique<RRVecField>(itemField->GetFieldName(), itemField->Clone("_0")));
+         }
+      }
+   }
+
+   auto valuePtr = value.GetPtr<void>();
+   auto soaPtr = static_cast<unsigned char *>(valuePtr.get());
+   std::vector<RValue> values;
+   values.reserve(nSoAMembers);
+   for (std::size_t i = 0; i < nSoAMembers; ++i) {
+      values.emplace_back(
+         (*fSplitFields)[i]->BindValue(std::shared_ptr<void>(valuePtr, soaPtr + fSoAMemberOffsets[i])));
+   }
+   return values;
 }
 
 size_t ROOT::Experimental::RSoAField::GetValueSize() const
@@ -886,6 +931,11 @@ const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() co
       return nullptr;
    }
    return fSoAClass->GetTypeInfo();
+}
+
+void ROOT::Experimental::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitSoAField(*this);
 }
 
 //------------------------------------------------------------------------------

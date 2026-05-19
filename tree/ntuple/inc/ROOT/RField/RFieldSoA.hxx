@@ -23,6 +23,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <string_view>
 #include <typeinfo>
 #include <vector>
@@ -67,8 +68,17 @@ class RSoAField : public RFieldBase {
    /// The offset of the RVec members in the SoA type in the order of subfields of the underlying record type.
    /// In particular, the order is not necessarily the same then the order of RVec members in the SoA class.
    std::vector<std::size_t> fSoAMemberOffsets;
+   ///< A deleter returned by each record members GetDeleter()
+   std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
    std::size_t fMaxAlignment = 1;
    ROOT::Internal::RColumnIndex fNWritten;
+
+   /// For reading and writing, the RVecs of the SoA class do not have a dedicated field. The in-memory RVecs of the
+   /// SoA object are used directly with the subfields of the underlying record type. For splitting a SoA class object
+   /// (SplitValue()), however, we need actual RRVecFields so that we can recursilvely split the in-memory SoA value.
+   /// The split fields are created only when SplitField() is called.
+   mutable std::unique_ptr<std::vector<std::unique_ptr<ROOT::RRVecField>>> fSplitFields;
+   mutable std::unique_ptr<std::mutex> fLockSplitFields; ///< protects the fSplitFields member.
 
    RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
    RSoAField(std::string_view fieldName, TClass *clSoA);
@@ -85,8 +95,6 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
-
-   void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -105,8 +113,7 @@ public:
    /// of any user object. If the class is not polymorphic, return nullptr.
    /// TODO(jblomer): use information in unique pointer field
    const std::type_info *GetPolymorphicTypeInfo() const;
-   // TODO(jblomer)
-   // void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    TClass *GetSoAClass() const { return fSoAClass; }
 };

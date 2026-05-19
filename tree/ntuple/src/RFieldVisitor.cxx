@@ -409,6 +409,11 @@ void ROOT::Internal::RPrintValueVisitor::VisitRVecField(const ROOT::RRVecField &
    PrintCollection(field);
 }
 
+void ROOT::Internal::RPrintValueVisitor::VisitSoAField(const ROOT::Experimental::RSoAField &field)
+{
+   PrintRecord(field);
+}
+
 //---------------------------- RNTupleFormatter --------------------------------
 
 std::string ROOT::Internal::RNTupleFormatter::FitString(const std::string &str, int availableSpace)
