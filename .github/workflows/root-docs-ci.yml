@@ -1,9 +1,13 @@
 name: 'ROOT Docs CI'
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/root-docs-ci.yml'
+      - 'documentation/doxygen/**'
+    branches:
+      - 'master'
 
-  # Allows nightly builds to trigger one run for each branch easily, by
-  # providing the relevant branch as "default" value here:
   workflow_call:
     inputs:
       input_branch:
@@ -84,9 +88,10 @@ jobs:
                   --incremental    false
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
-                  --binaries       false
                   --repository     ${{ github.server_url }}/${{ github.repository }}
-                  --overrides      testing=Off roottest=Off"
+                  --overrides      testing=Off roottest=Off
+                  --upload_artifacts false
+                  --binaries         false"
 
     - name: Run Doxygen
       working-directory: ${{ env.DOC_LOCATION }}
