@@ -1112,6 +1112,8 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
 
    pragmaCI->ExecuteAction(Act);
    clang::Preprocessor &PP = pragmaCI->getPreprocessor();
+   clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();
+   DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
 
    // Start parsing the specified input file.
    PP.EnterMainSourceFile();

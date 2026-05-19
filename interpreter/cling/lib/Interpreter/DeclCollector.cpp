@@ -103,6 +103,10 @@ namespace cling {
     }
   };
 
+  void DeclCollector::Initialize(clang::ASTContext& Context) {
+    m_Consumer->Initialize(Context);
+  }
+
   void DeclCollector::Setup(//IncrementalParser* IncrParser,
                             std::unique_ptr<ASTConsumer> Consumer,
                             clang::Preprocessor& PP) {
