@@ -37,6 +37,8 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "TEnv.h"
 
+#include "Python.h"
+
 BEGIN_XROOFIT_NAMESPACE
 
 xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char *name, const char *title)
@@ -316,15 +318,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    }
 
    if (/*high < low ||*/ (high == low && nPoints != 1)) {
-      // take from parameter
+      // take from parameter (will be either the defaults from the construction of the hypoSpace or whatever last scan
+      // was
       low = p->getMin("scan");
       high = p->getMax("scan");
    }
    if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
       p->setRange("scan", std::min(low, high), std::max(low, high));
-   }
-   if (p->hasRange("scan")) {
-      ::Info("xRooHypoSpace::scan", "Using %s scan range: %g - %g", p->GetName(), p->getMin("scan"), p->getMax("scan"));
    }
 
    bool doObs = false;
@@ -403,6 +403,10 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    if (nPoints == 0) {
       // automatic scan
       if (sType.Contains("cls")) {
+         if (p->hasRange("scan")) {
+            ::Info("xRooHypoSpace::scan", "Using %s scan range: %g - %g", p->GetName(), p->getMin("scan"),
+                   p->getMax("scan"));
+         }
          for (double nSigma : nSigmas) {
             xValueWithError res(std::make_pair(0., 0.));
             if (std::isnan(nSigma)) {
@@ -428,8 +432,8 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
             out += 1;
          } else {
             // fit was ok, so use the values to determine an appropriate range
-            low = std::max(low, back().mu_hat().getVal()-back().mu_hat().getError()*3);
-            high = std::min(high, back().mu_hat().getVal()+back().mu_hat().getError()*3);
+            low = std::max(low, back().mu_hat().getVal() - back().mu_hat().getError() * 3);
+            high = std::min(high, back().mu_hat().getVal() + back().mu_hat().getError() * 3);
             nPoints = 20;
             double step = (high - low) / (nPoints - 1);
             for (size_t i = 0; i < nPoints; i++) {
@@ -438,7 +442,6 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
                if (back().status() != 0)
                   out += 1;
             }
-
          }
       } else {
          throw std::runtime_error(TString::Format("Automatic scanning not yet supported for %s", type));
@@ -642,7 +645,15 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    }
    coordString.erase(coordString.end() - 1);
 
-   ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
+   if (Py_IsInitialized()) {
+      auto s = TString::Format("Info in <xRooHypoSpace::AddPoint>: Added new point @ %s", coordString.c_str());
+      PySys_WriteStdout("%s\n", s.Data());
+      //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
+   } else {
+      ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
+   }
    return emplace_back(out);
 }
 
@@ -1298,7 +1309,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
       if (!gr || gr->GetN() < 1) {
          if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), muMin)).getVal(sOpt).first)) {
             // first point failed ... give up
-            ::Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
+            ::Error("findlimit", "Problem evaluating First Point %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
             return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
          }
          gr.reset();
@@ -1334,7 +1345,8 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
 
       if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
          // second point failed ... give up
-         ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
+         ::Error("xRooHypoSpace::findlimit", "Problem evaluating Second Point %s @ %s=%g", sOpt.Data(), v->GetName(),
+                 nextPoint);
          return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
       }
       gr.reset();
@@ -1396,14 +1408,15 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
    // got here need a new point .... evaluate the estimated lim location +/- the relUncert (signed error takes care of
    // direction)
 
+   if (maxTries == 0) {
+      ::Warning("xRooHypoSpace::findlimit", "Reached max number of point evaluations");
+      return lim;
+   }
+
    ::Info("xRooHypoSpace::findlimit", "%s -- Testing new point @ %s=%g (delta=%g)", sOpt.Data(), v->GetName(),
           nextPoint, lim.second);
-   if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
-      if (maxTries == 0) {
-         ::Warning("xRooHypoSpace::findlimit", "Reached max number of point evaluations");
-      } else {
-         ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
-      }
+   if (std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
+      ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
       return lim;
    }
    gr.reset();

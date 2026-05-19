@@ -64,6 +64,8 @@
 #include "TROOT.h"
 #include "TBrowser.h"
 
+#include "Python.h"
+
 BEGIN_XROOFIT_NAMESPACE
 
 std::shared_ptr<RooLinkedList> xRooFit::sDefaultNLLOptions = nullptr;
@@ -222,9 +224,8 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                          !(cClass && strcmp(cClass->GetName(), "SimpleGaussianConstraint") == 0)) {
                         TString className = (cClass) ? cClass->GetName() : "undefined";
                         oocoutW((TObject *)nullptr, Generation)
-                           << "xRooFit::generateFrom : constraint term " << thePdf->GetName()
-                           << " of type " << className << " is a non-supported type - result might be not correct "
-                           << std::endl;
+                           << "xRooFit::generateFrom : constraint term " << thePdf->GetName() << " of type "
+                           << className << " is a non-supported type - result might be not correct " << std::endl;
                      }
 
                      // in case of a Poisson constraint make sure the rounding is not set
@@ -514,7 +515,9 @@ std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::defaultFitConfig()
    extraOpts->SetValue("OptimizeConst", 2); // if 0 will disable constant term optimization and cache-and-track of the
                                             // NLL. 1 = just caching, 2 = cache and track
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 29, 00)
-   extraOpts->SetValue("StrategySequence", "0s01s12s2s3m");
+   extraOpts->SetValue(
+      "StrategySequence",
+      "0s01s12s2s3"); // 'm' would indicate use migradImproved from minuit v1. Dropped from default for 6.40
    extraOpts->SetValue("HesseStrategySequence", "23");
 #else
    extraOpts->SetValue("StrategySequence", "0s01s12s2m");
@@ -541,6 +544,29 @@ ROOT::Math::IOptions *xRooFit::defaultFitConfigOptions()
    return const_cast<ROOT::Math::IOptions *>(defaultFitConfig()->MinimizerOptions().ExtraOptions());
 }
 
+void printCerr(const char *msg)
+{
+   if (Py_IsInitialized()) {
+      PySys_WriteStderr("%s\n", msg);
+      //      if (PyObject *sys_stdout = PySys_GetObject("stderr"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
+   } else {
+      std::cerr << msg << std::endl;
+   }
+}
+void printCout(const char *msg)
+{
+   if (Py_IsInitialized()) {
+      PySys_WriteStdout("%s\n", msg);
+      //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
+   } else {
+      std::cout << msg << std::endl;
+   }
+}
+
 class ProgressMonitor : public RooAbsReal {
 public:
    void (*oldHandlerr)(int) = nullptr;
@@ -549,7 +575,7 @@ public:
    static void interruptHandler(int signum)
    {
       if (signum == SIGINT) {
-         std::cout << "Minimization interrupted ... will exit as soon as possible" << std::endl;
+         printCout("Minimization interrupted ... will exit as soon as possible");
          // TODO: create a global mutex for this
          fInterrupt = true;
       } else {
@@ -625,14 +651,14 @@ public:
          s.Reset();
          std::stringstream sout;
 
-         sout << (counter) << ") (" << evalRate << "Hz) " << TDatime().AsString();
+         sout << TDatime().AsString() << ":(" << (counter) << "|" << evalRate << "Hz)";
          if (!fState.empty())
             sout << " : " << fState;
          if (counter2) {
             // doing a hesse step, estimate progress based on evaluations
             int nRequired = prevPars.size();
             if (nRequired > 1) {
-               nRequired *= (nRequired-1);
+               nRequired *= (nRequired - 1);
                nRequired /= 2; // since only need to do the a 'triangle' of the hessian matrix
                if (fState == "Hesse3") {
                   nRequired *= 4;
@@ -640,7 +666,7 @@ public:
                sout << " (~" << int(100.0 * (counter - counter2) / nRequired) << "%)";
             }
          }
-         sout << " : " << minVal << " Delta = " << (minVal - prevMin);
+         sout << " : " << minVal << " Delta=" << (minVal - prevMin);
          if (minVal < prevMin) {
             sout << " : ";
             // compare minPars and prevPars, print biggest deltas
@@ -685,7 +711,7 @@ public:
             }
             gSystem->ProcessEvents();
          }
-         std::cerr << sout.str() << std::endl;
+         printCerr(sout.str().c_str()); // std::cerr << sout.str() << std::endl;
 
          prevMin = minVal;
          prevCounter = counter;
@@ -699,10 +725,11 @@ public:
    mutable int counter = 0;
    int counter2 = 0; // used to estimate progress of a Hesse calculation
 
-private:
-   RooRealProxy fFunc;
    mutable double minVal = std::numeric_limits<double>::infinity();
    mutable double prevMin = std::numeric_limits<double>::infinity();
+
+private:
+   RooRealProxy fFunc;
    mutable RooArgList minPars;
    mutable RooArgList prevPars;
    mutable int prevCounter = 0;
@@ -948,7 +975,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
    if (!out) {
       int strategy = fitConfig.MinimizerOptions().Strategy();
       // Note: AsymptoticCalculator enforces not less than 1 on tolerance - should we do so too?
-      if (_progress) {
+      if (_progress && printLevel >= -2) {
          _nll = new ProgressMonitor(*_nll, _progress);
          ProgressMonitor::fInterrupt = false;
       }
@@ -1094,11 +1121,13 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          // specified Also note that if fits are failing because of edm over max, it can be a good idea to activate the
          // Offset option when building nll
          if (printLevel >= -1) {
-            Warning("fitTo", "%s %s%s Status=%d (edm=%f, tol=%f, strat=%d), tries=#%d...", fitName.Data(),
-                    _minimizer.fitter()->Config().MinimizerType().c_str(),
-                    _minimizer.fitter()->Config().MinimizerAlgoType().c_str(), status,
-                    _minimizer.fitter()->Result().Edm(), _minimizer.fitter()->Config().MinimizerOptions().Tolerance(),
-                    _minimizer.fitter()->Config().MinimizerOptions().Strategy(), tries);
+            printCerr(TString::Format("Warning: %s %s%s Status=%d (edm=%f, tol=%f, strat=%d), tries=#%d...",
+                                      fitName.Data(), _minimizer.fitter()->Config().MinimizerType().c_str(),
+                                      _minimizer.fitter()->Config().MinimizerAlgoType().c_str(), status,
+                                      _minimizer.fitter()->Result().Edm(),
+                                      _minimizer.fitter()->Config().MinimizerOptions().Tolerance(),
+                                      _minimizer.fitter()->Config().MinimizerOptions().Strategy(), tries)
+                         .Data());
          }
 
          // decide what to do next based on strategy sequence
@@ -1196,6 +1225,8 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
                fff->fState = TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy());
                fff->counter2 = fff->counter;
+               fff->prevMin =
+                  fff->minVal; // reset minimum when change to hesse. Helps see if hesse eval gives new lower values
             }
 
             //_nll->getVal(); // for reasons I dont understand, if nll evaluated before hesse call the edm is smaller? -
@@ -1235,12 +1266,9 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             }
             if ((_status != 0 || _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() != 3) && status == 0 &&
                 printLevel >= -1) {
-               Warning("fitTo", "%s hesse status is %d, covQual=%d", fitName.Data(), _status,
-                       _minimizer.fitter()->GetMinimizer()->CovMatrixStatus());
-            }
-
-            if (sIdx >= m_hessestrategy.Length() - 1) {
-               break; // run out of strategies to try, stop
+               printCerr(TString::Format("Warning: %s hesse status is %d, covQual=%d", fitName.Data(), _status,
+                                         _minimizer.fitter()->GetMinimizer()->CovMatrixStatus())
+                            .Data());
             }
 
             if (_status == 0 && _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() == 3) {
@@ -1250,6 +1278,11 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                // set the statusHistory to the cov status, since that's more informative
                statusHistory.back().second = _minimizer.fitter()->GetMinimizer()->CovMatrixStatus();
             }
+
+            if (sIdx >= m_hessestrategy.Length() - 1) {
+               break; // run out of strategies to try, stop
+            }
+
             sIdx++;
          } // end of hesse attempt loop
       }
@@ -1260,6 +1293,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
                fff->fState = "Minos";
                fff->counter2 = 0;
+               fff->prevMin = fff->minVal;
             }
             auto _status = _minimizer.minos(*mpars);
             statusHistory.push_back(std::pair("Minos", _status));
@@ -1284,13 +1318,15 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }
       }
 
-      if (miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse &&
+      if (printLevel >= -2 && miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse &&
           out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3 && out->status() != 3) {
          // hesse may have updated edm by using a better strategy than used in the minimization
          // so print a warning about this
-         std::cerr << "Warning: post-Hesse edm " << out->edm() << " greater than allowed by tolerance "
-                   << _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3
-                   << ", consider increasing minimization strategy" << std::endl;
+         std::stringstream ss;
+         ss << "Warning: post-Hesse edm " << out->edm()
+            << " > tolerance max edm:" << _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3
+            << ". Consider increasing your minimization strategy";
+         printCerr(ss.str().c_str());
          // Dec24: As this is a new warning, will not update status code for now, so edm will be large
          // but in the future we should probably update the code to 3 so that users don't miss this warning.
          // out->setStatus(3); // edm above max
@@ -1399,7 +1435,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          fitConfig.MinimizerOptions().SetMinimizerType(actualFirstMinimizer);
       }
 
-      if (_progress) {
+      if (_progress && printLevel >= -2) {
          delete _nll;
       }
    }
