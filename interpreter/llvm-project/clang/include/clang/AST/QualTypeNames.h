@@ -64,6 +64,41 @@
 
 namespace clang {
 namespace TypeName {
+bool getFullyQualifiedTemplateName(const ASTContext &Ctx,
+                                          TemplateName &TName,
+                                          bool WithGlobalNsPrefix);
+bool getFullyQualifiedTemplateArgument(const ASTContext &Ctx,
+                                              TemplateArgument &Arg,
+                                              bool WithGlobalNsPrefix);
+const Type *getFullyQualifiedTemplateType(const ASTContext &Ctx,
+                                                 const TagType *TSTRecord,
+                                                 ElaboratedTypeKeyword Keyword,
+                                                 NestedNameSpecifier Qualifier,
+                                                 bool WithGlobalNsPrefix);
+const Type *
+getFullyQualifiedTemplateType(const ASTContext &Ctx,
+                              const TemplateSpecializationType *TST,
+                              bool WithGlobalNsPrefix);
+NestedNameSpecifier createOuterNNS(const ASTContext &Ctx, const Decl *D,
+                                          bool FullyQualify,
+                                          bool WithGlobalNsPrefix);
+NestedNameSpecifier getFullyQualifiedNestedNameSpecifier(
+    const ASTContext &Ctx, NestedNameSpecifier Scope, bool WithGlobalNsPrefix);
+NestedNameSpecifier
+createNestedNameSpecifierForScopeOf(const ASTContext &Ctx, const Decl *Decl,
+                                    bool FullyQualified,
+                                    bool WithGlobalNsPrefix);
+NestedNameSpecifier
+createNestedNameSpecifierForScopeOf(const ASTContext &Ctx, const Type *TypePtr,
+                                    bool FullyQualified,
+                                    bool WithGlobalNsPrefix);
+NestedNameSpecifier
+createNestedNameSpecifier(const ASTContext &Ctx, const NamespaceDecl *Namespace,
+                          bool WithGlobalNsPrefix);
+NestedNameSpecifier createNestedNameSpecifier(const ASTContext &Ctx,
+                                              const TypeDecl *TD,
+                                              bool FullyQualify,
+                                              bool WithGlobalNsPrefix);
 /// Get the fully qualified name for a type. This includes full
 /// qualification of all template parameters etc.
 ///
@@ -87,6 +122,16 @@ std::string getFullyQualifiedName(QualType QT, const ASTContext &Ctx,
 /// specifier "::" should be prepended or not.
 QualType getFullyQualifiedType(QualType QT, const ASTContext &Ctx,
                                bool WithGlobalNsPrefix = false);
+
+/// Get the fully qualified name for the declared context of a declaration.
+///
+/// \param[in] Ctx - the ASTContext to be used.
+/// \param[in] Decl - the declaration for which to get the fully qualified name.
+/// \param[in] WithGlobalNsPrefix - If true, then the global namespace
+/// specifier "::" will be prepended to the fully qualified name.
+NestedNameSpecifier
+getFullyQualifiedDeclaredContext(const ASTContext &Ctx, const Decl *Decl,
+                                 bool WithGlobalNsPrefix = false);
 } // end namespace TypeName
 } // end namespace clang
 #endif // LLVM_CLANG_AST_QUALTYPENAMES_H

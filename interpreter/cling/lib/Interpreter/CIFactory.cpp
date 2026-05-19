@@ -38,6 +38,7 @@
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/ASTWriter.h"
 #include "clang/Serialization/SerializationDiagnostic.h"
+#include "clang/Options/OptionUtils.h"
 
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
@@ -211,7 +212,7 @@ namespace {
       // Note: On FreeBSD it uses getprogpath().
       // Note: Otherwise it uses dladdr().
       //
-      return CompilerInvocation::GetResourcesPath(
+      return GetResourcesPath(
           "cling", (void*)intptr_t(GetExecutablePath));
     } else {
       std::string resourcePath;
@@ -959,12 +960,12 @@ namespace {
     llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagIDs(new DiagnosticIDs());
 
     std::unique_ptr<TextDiagnosticPrinter>
-      DiagnosticPrinter(new TextDiagnosticPrinter(cling::errs(), &DiagOpts));
+      DiagnosticPrinter(new TextDiagnosticPrinter(cling::errs(), DiagOpts));
 
     DiagnosticPrinter->setPrefix(ExeName);
 
     llvm::IntrusiveRefCntPtr<DiagnosticsEngine>
-      Diags(new DiagnosticsEngine(DiagIDs, &DiagOpts,
+      Diags(new DiagnosticsEngine(DiagIDs, DiagOpts,
                                   DiagnosticPrinter.get(), /*Owns it*/ true));
     DiagnosticPrinter.release();
 
@@ -1010,13 +1011,13 @@ namespace {
     }
 
     CI->setTarget(TargetInfo::CreateTargetInfo(Diags,
-                                               CI->getInvocation().TargetOpts));
+                                               CI->getInvocation().getTargetOpts()));
     if (!CI->hasTarget()) {
       cling::errs() << "Could not determine compiler target.\n";
       return false;
     }
 
-    CI->getTarget().adjust(Diags, LangOpts);
+    CI->getTarget().adjust(Diags, LangOpts, CI->getAuxTarget());
 
     // This may have already been done via a precompiled header
     if (Targ)
@@ -1093,15 +1094,20 @@ namespace {
                                  StringRef ModuleFilename, bool /*Complain*/,
                                  bool /*AllowCompatibleDifferences*/) override {
           Out.indent(2) << "Language options:\n";
-#define LANGOPT(Name, Bits, Default, Description)                       \
-          DUMP_BOOLEAN(LangOpts.Name, Description);
-#define ENUM_LANGOPT(Name, Type, Bits, Default, Description)            \
-          Out.indent(4) << Description << ": "                          \
-                    << static_cast<unsigned>(LangOpts.get##Name()) << "\n";
-#define VALUE_LANGOPT(Name, Bits, Default, Description) \
-          Out.indent(4) << Description << ": " << LangOpts.Name << "\n";
-#define BENIGN_LANGOPT(Name, Bits, Default, Description)
-#define BENIGN_ENUM_LANGOPT(Name, Type, Bits, Default, Description)
+
+          // FIXME: Replace with C++20 `using enum
+          // LangOptions::CompatibilityKind`.
+          using CK = clang::LangOptions::CompatibilityKind;
+#define LANGOPT(Name, Bits, Default, Compatibility, Description)               \
+  if constexpr (CK::Compatibility != CK::Benign)                               \
+    DUMP_BOOLEAN(LangOpts.Name, Description);
+#define ENUM_LANGOPT(Name, Type, Bits, Default, Compatibility, Description)    \
+  if constexpr (CK::Compatibility != CK::Benign)                               \
+    Out.indent(4) << Description << ": "                                       \
+                  << static_cast<unsigned>(LangOpts.get##Name()) << "\n";
+#define VALUE_LANGOPT(Name, Bits, Default, Compatibility, Description)         \
+  if constexpr (CK::Compatibility != CK::Benign)                               \
+    Out.indent(4) << Description << ": " << LangOpts.Name << "\n";
 #include "clang/Basic/LangOptions.def"
 
           if (!LangOpts.ModuleFeatures.empty()) {
@@ -1133,21 +1139,21 @@ namespace {
           return false;
         }
 
-        bool ReadDiagnosticOptions(IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts,
+        bool ReadDiagnosticOptions(DiagnosticOptions &DiagOpts,
                                    StringRef ModuleFilename,
                                    bool /*Complain*/) override {
           Out.indent(2) << "Diagnostic options:\n";
-#define DIAGOPT(Name, Bits, Default) DUMP_BOOLEAN(DiagOpts->Name, #Name);
+#define DIAGOPT(Name, Bits, Default) DUMP_BOOLEAN(DiagOpts.Name, #Name);
 #define ENUM_DIAGOPT(Name, Type, Bits, Default)                         \
-          Out.indent(4) << #Name << ": " << DiagOpts->get##Name() << "\n";
+          Out.indent(4) << #Name << ": " << DiagOpts.get##Name() << "\n";
 #define VALUE_DIAGOPT(Name, Bits, Default)                              \
-      Out.indent(4) << #Name << ": " << DiagOpts->Name << "\n";
+      Out.indent(4) << #Name << ": " << DiagOpts.Name << "\n";
 #include "clang/Basic/DiagnosticOptions.def"
 
           Out.indent(4) << "Diagnostic flags:\n";
-          for (const std::string &Warning : DiagOpts->Warnings)
+          for (const std::string &Warning : DiagOpts.Warnings)
             Out.indent(6) << "-W" << Warning << "\n";
-          for (const std::string &Remark : DiagOpts->Remarks)
+          for (const std::string &Remark : DiagOpts.Remarks)
             Out.indent(6) << "-R" << Remark << "\n";
 
           return false;
@@ -1276,7 +1282,7 @@ namespace {
       Out << "  Module format: " << (IsRaw ? "raw" : "obj") << "\n";
       Preprocessor &PP = CI.getPreprocessor();
       DumpModuleInfoListener Listener(Out);
-      HeaderSearchOptions &HSOpts =
+      const HeaderSearchOptions &HSOpts =
         PP.getHeaderSearchInfo().getHeaderSearchOpts();
       ASTReader::readASTFileControlBlock(CurInput, FileMgr, CI.getModuleCache(),
                                          CI.getPCHContainerReader(),
@@ -1502,8 +1508,7 @@ namespace {
     Diags->Reset();
 
     // Create and setup a compiler instance.
-    std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
-    CI->setInvocation(InvocationPtr);
+    std::unique_ptr<CompilerInstance> CI(new CompilerInstance(std::move(InvocationPtr)));
     CI->setDiagnostics(Diags.get()); // Diags is ref-counted
     if (!OnlyLex)
       CI->getDiagnosticOpts().ShowColors =
@@ -1521,8 +1526,9 @@ namespace {
 
     IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay =
         new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
-    auto FileMgr = CI->createFileManager(Overlay);
-    llvm::vfs::FileSystem &VFS = FileMgr->getVirtualFileSystem();
+    CI->createVirtualFileSystem(Overlay);
+    CI->createFileManager();
+    llvm::vfs::FileSystem &VFS = CI->getVirtualFileSystem();
     // Configure our handling of diagnostics.
     ProcessWarningOptions(*Diags, DiagOpts, VFS);
 
@@ -1674,7 +1680,7 @@ namespace {
       auto TO = std::make_shared<TargetOptions>();
       TO->Triple = CI->getFrontendOpts().AuxTriple;
       TO->HostTriple = CI->getTarget().getTriple().str();
-      CI->setAuxTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(), TO));
+      CI->setAuxTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(), *TO));
     }
 
     // Set up the preprocessor
@@ -1729,7 +1735,7 @@ namespace {
 
       Consumers.push_back(std::make_unique<PCHGenerator>(
           CI->getPreprocessor(), CI->getModuleCache(), ModuleOutputFile,
-          Sysroot, PCHBuff, CI->getFrontendOpts().ModuleFileExtensions,
+          Sysroot, PCHBuff, CI->getCodeGenOpts(), CI->getFrontendOpts().ModuleFileExtensions,
           /*AllowASTWithErrors=*/false,
           /*IncludeTimestamps=*/
           +CI->getFrontendOpts().BuildingImplicitModule));
@@ -1822,7 +1828,7 @@ namespace {
            << ModuleMapFile;
         continue;
       }
-      PP.getHeaderSearchInfo().loadModuleMapFile(*File, /*IsSystem*/ false);
+      PP.getHeaderSearchInfo().parseAndLoadModuleMapFile(*File, /*IsSystem*/ false);
     }
 
     HandleProgramActions(*CI);

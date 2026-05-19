@@ -6,8 +6,9 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: clang -shared -DCLING_EXPORT=%dllexport %S/call_lib.c -o%T/libcall_lib2%shlibext
-// RUN: cat %s | %cling -L%T | FileCheck %s
+// RUN: rm -rf %t.dir && mkdir -p %t.dir
+// RUN: clang -shared -DCLING_EXPORT=%dllexport %S/call_lib.c -o%t.dir/libcall_lib2%shlibext
+// RUN: cat %s | %cling -L%t.dir | FileCheck %s
 
 .L libcall_lib2
 extern "C" int cling_testlibrary_function();

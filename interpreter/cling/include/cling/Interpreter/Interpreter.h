@@ -174,15 +174,15 @@ namespace cling {
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
 
+    ///\brief Thread-safe llvm library state.
+    ///
+    std::unique_ptr<llvm::orc::ThreadSafeContext> TSCtx;
+
   private:
 
     ///\brief Interpreter invocation options.
     ///
     InvocationOptions m_Opts;
-
-    ///\brief Thread-safe llvm library state.
-    ///
-    std::unique_ptr<llvm::orc::ThreadSafeContext> TSCtx;
 
     ///\brief Cling's execution engine - a well wrapped llvm execution engine.
     ///
@@ -393,12 +393,6 @@ namespace cling {
 
     const cling::runtime::RuntimeOptions& getRuntimeOptions() const { return m_RuntimeOptions; }
     cling::runtime::RuntimeOptions& getRuntimeOptions() { return m_RuntimeOptions; }
-
-    const llvm::LLVMContext* getLLVMContext() const {
-      return TSCtx->getContext();
-    }
-
-    llvm::LLVMContext* getLLVMContext() { return TSCtx->getContext(); }
 
     LookupHelper& getLookupHelper() const { return *m_LookupHelper; }
 

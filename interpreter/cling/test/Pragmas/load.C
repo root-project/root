@@ -6,11 +6,12 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: clang -shared -DCLING_EXPORT=%dllexport %S/call_lib.c -o%T/libcall_lib%shlibext
-// RUN: cat %s | %cling -L %T -Xclang -verify 2>&1 | FileCheck %s
+// RUN: rm -rf %t.dir && mkdir -p %t.dir
+// RUN: clang -shared -DCLING_EXPORT=%dllexport %S/call_lib.c -o%t.dir/libcall_lib%shlibext
+// RUN: cat %s | %cling -L %t.dir -Xclang -verify 2>&1 | FileCheck %s
 
 #pragma cling load("DoesNotExistPleaseRecover")
-// expected-error@input_line_12:1{{'DoesNotExistPleaseRecover' file not found}}
+// expected-error@input_line_13:1{{'DoesNotExistPleaseRecover' file not found}}
 
 #pragma cling load("libcall_lib")
 extern "C" int cling_testlibrary_function();

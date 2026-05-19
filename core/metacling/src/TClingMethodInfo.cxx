@@ -200,7 +200,7 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    auto *FTD = const_cast<clang::FunctionTemplateDecl *>(llvm::dyn_cast<clang::FunctionTemplateDecl>(TD));
    Sema::InstantiatingTemplate Inst(
       S, Info.getLocation(), FTD,
-      defaultTemplateArgs, Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution, Info);
+      defaultTemplateArgs, Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution, SourceRange());
 
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
@@ -580,7 +580,7 @@ TClingTypeInfo *TClingMethodInfo::Type() const
       if (!ctorClass) {
          Error("TClingMethodInfo::Type", "Cannot find DeclContext for constructor!");
       } else {
-         clang::QualType qt(ctorClass->getTypeForDecl(), 0);
+         clang::QualType qt = ctorClass->getASTContext().getTypeDeclType(ctorClass);
          ti.Init(qt);
       }
    } else {
@@ -632,7 +632,7 @@ const char *TClingMethodInfo::GetPrototype()
    R__LOCKGUARD(gInterpreterMutex);
    if (const clang::TypeDecl *td = llvm::dyn_cast<clang::TypeDecl>(GetDecl()->getDeclContext())) {
       std::string name;
-      clang::QualType qualType(td->getTypeForDecl(),0);
+      clang::QualType qualType = td->getASTContext().getTypeDeclType(td);
       ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,qualType,*fInterp);
       buf += name;
       buf += "::";

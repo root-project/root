@@ -214,12 +214,12 @@ Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str()
 // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
 clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
 Policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-Policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
+Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
 Policy.SplitTemplateClosers = true; // Print a<b<c> >' rather than 'a<b<c>>'.
 std::string name;
 Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsStringInternal(name,Policy);
 name.c_str()
-// CHECK: ({{[^)]+}}) "InsideAnonymous"
+// CHECK: ({{[^)]+}}) "(anonymous namespace)::InsideAnonymous"
 
 // Test desugaring pointers types:
 QT = lookup.findType("Int_t*", diags);
@@ -471,7 +471,7 @@ decl = lookup.findScope("cmap<volatile int,volatile int>", diags,&t);
 QT = clang::QualType(t, 0);
 std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
 if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(decl)) {
-  QT = clang::QualType(rdecl->getTypeForDecl(), 0);
+  QT = Ctx.getCanonicalTagType(rdecl);
   std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
   clang::RecordDecl::field_iterator field_iter = rdecl->field_begin();
   // For some reason we can not call field_end:
