@@ -86,6 +86,8 @@ namespace cling {
         WT->SetConsumer(this);
     }
 
+    void Initialize(clang::ASTContext &Context) override;
+
     void Setup(//IncrementalParser* IncrParser,
                std::unique_ptr<ASTConsumer> Consumer,
                clang::Preprocessor& PP);

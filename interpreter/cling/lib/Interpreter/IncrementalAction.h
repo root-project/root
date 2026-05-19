@@ -26,6 +26,7 @@ namespace llvm {
 }
 
 namespace clang {
+  class ASTContext;
   class ASTConsumer;
   class CodeGenerator;
   class CompilerInstance;
@@ -34,14 +35,14 @@ namespace clang {
 namespace cling {
   class DeclCollector;
   class Interpreter;
-
+  class PCHGeneratorWrapper;
   class IncrementalAction : public clang::WrapperFrontendAction {
   private:
     bool IsTerminating = false;
     clang::CompilerInstance& CI;
     CompilerOptions COpts;
-    cling::DeclCollector* DeclCollectorConsumer;
-
+    cling::DeclCollector *DeclCollectorConsumer = nullptr;
+    PCHGeneratorWrapper *PCHGenWrapper = nullptr;
     /// When CodeGen is created the first llvm::Module gets cached in many
     /// places and we must keep it alive.
     std::unique_ptr<llvm::Module> CachedInCodeGenModule;
@@ -61,7 +62,7 @@ namespace cling {
       return DeclCollectorConsumer;
     }
 
-    std::vector<std::unique_ptr<clang::ASTConsumer>>
+    std::unique_ptr<clang::ASTConsumer>
     CreateMultiplexConsumer(clang::CompilerInstance& CI,
                             llvm::StringRef InFile);
 
@@ -83,6 +84,8 @@ namespace cling {
       IsTerminating = true;
       EndSourceFile();
     }
+
+    void GenPCH(clang::ASTContext &Ctx);
 
     std::unique_ptr<llvm::Module> GenModule();
 

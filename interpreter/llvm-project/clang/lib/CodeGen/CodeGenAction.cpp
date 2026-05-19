@@ -158,9 +158,9 @@ void BackendConsumer::Initialize(ASTContext &Ctx) {
 }
 
 bool BackendConsumer::HandleTopLevelDecl(DeclGroupRef D) {
-  // PrettyStackTraceDecl CrashInfo(*D.begin(), SourceLocation(),
-  //                                Context->getSourceManager(),
-  //                                "LLVM IR generation of declaration");
+  PrettyStackTraceDecl CrashInfo(*D.begin(), SourceLocation(),
+                                 Context->getSourceManager(),
+                                 "LLVM IR generation of declaration");
 
   // Recurse.
   if (TimerIsEnabled && !LLVMIRGenerationRefCount++)
@@ -318,9 +318,9 @@ void BackendConsumer::HandleTranslationUnit(ASTContext &C) {
 }
 
 void BackendConsumer::HandleTagDeclDefinition(TagDecl *D) {
-  // PrettyStackTraceDecl CrashInfo(D, SourceLocation(),
-  //                                Context->getSourceManager(),
-  //                                "LLVM IR generation of declaration");
+  PrettyStackTraceDecl CrashInfo(D, SourceLocation(),
+                                 Context->getSourceManager(),
+                                 "LLVM IR generation of declaration");
   Gen->HandleTagDeclDefinition(D);
 }
 

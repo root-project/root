@@ -397,6 +397,9 @@ namespace cling {
     ///
     bool isValid() const;
 
+    /// Generate PCH file.
+    void GeneratePCH();
+
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
 
