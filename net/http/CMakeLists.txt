@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -117,3 +117,5 @@ if(FASTCGI_FOUND)
 else()
   target_compile_definitions(RHTTP PUBLIC -DHTTP_WITHOUT_FASTCGI)
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
