@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 #ifdef _MSC_VER
@@ -40,6 +41,13 @@ inline constexpr T AlignUp(T value, T align) noexcept
    assert(IsValidAlignment(static_cast<std::size_t>(align))); // must be a power of two
    return (value + align - 1) & ~(align - 1);
 }
+
+/// Storage type whose alignment matches \a Align bytes.
+/// Used to instantiate std::vector specializations with guaranteed buffer alignment.
+template <std::size_t AlignT>
+struct alignas(AlignT) RAlignedStorage {
+   char data[AlignT] = {};
+};
 
 /// Given an integer `x`, returns the number of leading 0-bits starting at the most significant bit position.
 /// If `x` is 0, it returns the size of `x` in bits.
@@ -146,6 +154,11 @@ inline std::size_t TrailingZeroes(T x)
       return static_cast<std::size_t>(__builtin_ctzl(x));
    }
 #endif // _MSC_VER
+   }
+
+   inline bool IsPowerOfTwo(std::uint64_t v)
+   {
+      return (v & (v - 1)) == 0;
    }
 
 } // namespace Internal

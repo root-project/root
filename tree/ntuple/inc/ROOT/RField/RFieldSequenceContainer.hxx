@@ -51,8 +51,9 @@ private:
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RArrayDeleter(std::size_t itemSize, std::size_t arrayLength, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemSize(itemSize), fArrayLength(arrayLength), fItemDeleter(std::move(itemDeleter))
+      RArrayDeleter(std::size_t itemSize, std::size_t arrayLength, std::size_t alignment,
+                    std::unique_ptr<RDeleter> itemDeleter)
+         : RDeleter(alignment), fItemSize(itemSize), fArrayLength(arrayLength), fItemDeleter(std::move(itemDeleter))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -126,9 +127,15 @@ class RRVecField : public RFieldBase {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      explicit RRVecDeleter(std::size_t itemAlignment) : fItemAlignment(itemAlignment) {}
+      explicit RRVecDeleter(std::size_t itemAlignment)
+         : RDeleter(ROOT::Internal::EvalRVecAlignment(itemAlignment)), fItemAlignment(itemAlignment)
+      {
+      }
       RRVecDeleter(std::size_t itemAlignment, std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemAlignment(itemAlignment), fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
+         : RDeleter(ROOT::Internal::EvalRVecAlignment(itemAlignment)),
+           fItemAlignment(itemAlignment),
+           fItemSize(itemSize),
+           fItemDeleter(std::move(itemDeleter))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -211,11 +218,8 @@ class RVectorField : public RFieldBase {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RVectorDeleter() = default;
-      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
-      {
-      }
+      RVectorDeleter();
+      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -261,8 +265,8 @@ public:
    CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -315,8 +319,8 @@ public:
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
 
-   size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
+   std::size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
+   std::size_t GetAlignment() const final { return alignof(std::vector<bool>); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -410,8 +414,8 @@ public:
    RArrayAsVectorField &operator=(RArrayAsVectorField &&other) = default;
    ~RArrayAsVectorField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;

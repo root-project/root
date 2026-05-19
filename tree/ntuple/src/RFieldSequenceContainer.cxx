@@ -3,6 +3,7 @@
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldVisitor.hxx>
@@ -28,6 +29,20 @@ std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr
       result.emplace_back(itemField.BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * itemSize))));
    }
    return result;
+}
+
+std::size_t GetSizeOfVector()
+{
+   static_assert(sizeof(std::vector<char>) ==
+                 sizeof(std::vector<ROOT::Internal::RAlignedStorage<ROOT::RFieldBase::kMaxAlignment>>));
+   return sizeof(std::vector<char>);
+}
+
+std::size_t GetAlignOfVector()
+{
+   static_assert(alignof(std::vector<char>) ==
+                 alignof(std::vector<ROOT::Internal::RAlignedStorage<ROOT::RFieldBase::kMaxAlignment>>));
+   return alignof(std::vector<char>);
 }
 
 } // anonymous namespace
@@ -136,8 +151,8 @@ void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayField::GetDeleter() const
 {
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
-      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RDeleter>();
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetAlignment(), GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RDeleter>(GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue &value) const
@@ -621,6 +636,13 @@ void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 }
 
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter() : RDeleter(GetAlignOfVector()) {}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
+   : RDeleter(GetAlignOfVector()), fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
+{
+}
+
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
@@ -646,6 +668,16 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVectorField::GetDeleter() con
 std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValue &value) const
 {
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+std::size_t ROOT::RVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
 }
 
 void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -972,6 +1004,16 @@ void ROOT::RArrayAsVectorField::ReconcileOnDiskField(const RNTupleDescriptor &de
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsVectorField::SplitValue(const ROOT::RFieldBase::RValue &value) const
 {
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
 }
 
 void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
