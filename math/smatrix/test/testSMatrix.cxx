@@ -33,6 +33,7 @@ template <typename T>
 typename std::enable_if<!std::is_floating_point<T>::value, int>::type compare(T a, T b, const std::string &s = "",
                                                                               int ulps = 10)
 {
+   (void)ulps; // silence unused variable warning
    if (a != b) compare_fail(a, b, T(0), T(0), s);
    return a == b ? 0 : 1;
 }
@@ -1072,9 +1073,9 @@ int test19()
    for (int i = 0; i < 7; ++i) {
       for (int j = 0; j <= i; ++j) {
          if (i == j)
-            S(i, j) = 10 * float(std::rand()) / (RAND_MAX); // generate between 0,10
+            S(i, j) = 10.f * float(std::rand()) / float(RAND_MAX); // generate between 0,10
          else
-            S(i, j) = 2 * float(std::rand()) / (RAND_MAX)-1; // generate between -1,1
+            S(i, j) = 2.f * float(std::rand()) / float(RAND_MAX)-1.f; // generate between -1,1
       }
    }
    int ifail = 0;
@@ -1095,9 +1096,9 @@ int test19()
    for (int i = 0; i < 7; ++i) {
       for (int j = 0; j < 7; ++j) {
          if (i == j)
-            M(i, j) = 10 * float(std::rand()) / (RAND_MAX); // generate between 0,10
+            M(i, j) = 10.f * float(std::rand()) / float(RAND_MAX); // generate between 0,10
          else
-            M(i, j) = 2 * float(std::rand()) / (RAND_MAX)-1; // generate between -1,1
+            M(i, j) = 2.f * float(std::rand()) / float(RAND_MAX)-1.f; // generate between -1,1
       }
    }
    ifail = 0;
