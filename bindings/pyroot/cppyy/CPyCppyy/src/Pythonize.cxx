@@ -5,6 +5,7 @@
 #include "CPPInstance.h"
 #include "CPPFunction.h"
 #include "CPPOverload.h"
+#include "Cppyy.h"
 #include "CustomPyTypes.h"
 #include "LowLevelViews.h"
 #include "ProxyWrappers.h"
@@ -52,19 +53,6 @@ bool HasAttrDirect(PyObject* pyclass, PyObject* pyname, bool mustBeCPyCppyy = fa
     return false;
 }
 
-bool HasAttrInMRO(PyObject *pyclass, PyObject *pyname)
-{
-   // Check base classes in the MRO (skipping the class itself) for a CPyCppyy overload.
-   PyObject *mro = ((PyTypeObject *)pyclass)->tp_mro;
-   if (mro && PyTuple_Check(mro)) {
-      for (Py_ssize_t i = 1; i < PyTuple_GET_SIZE(mro); ++i) {
-         if (HasAttrDirect(PyTuple_GET_ITEM(mro, i), pyname, /*mustBeCPyCppyy=*/true))
-            return true;
-      }
-   }
-   return false;
-}
-
 PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
 // get an attribute without causing getattr lookups
     PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
@@ -80,7 +68,7 @@ PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
 inline bool IsTemplatedSTLClass(const std::string& name, const std::string& klass) {
 // Scan the name of the class and determine whether it is a template instantiation.
     auto pos = name.find(klass);
-    return (pos == 0 || pos == 5) && name.find("::", name.rfind(">")) == std::string::npos;
+    return pos == 5 && name.rfind("std::", 0, 5) == 0  && name.find("::", name.rfind(">")) == std::string::npos;
 }
 
 // to prevent compiler warnings about const char* -> char*
@@ -199,7 +187,6 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
         PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
         return nullptr;
     }
-
 
     return smart_follow(self, name, PyStrings::gDeref);
 }
@@ -389,7 +376,7 @@ PyObject *spanBegin()
    static PyObject *pyFunc = nullptr;
    if (!pyFunc) {
       compileSpanHelpers();
-      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::gGlobalScope);
+      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::GetGlobalScope());
       pyFunc = PyObject_GetAttrString(py_ns, "__cppyy_internal_begin");
       if (!pyFunc) {
          PyErr_Format(PyExc_RuntimeError, "cppyy internal error: failed to locate helper "
@@ -404,7 +391,7 @@ PyObject *spanEnd()
    static PyObject *pyFunc = nullptr;
    if (!pyFunc) {
       compileSpanHelpers();
-      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::gGlobalScope);
+      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::GetGlobalScope());
       pyFunc = PyObject_GetAttrString(py_ns, "__cppyy_internal_end");
       if (!pyFunc) {
          PyErr_Format(PyExc_RuntimeError, "cppyy internal error: failed to locate helper "
@@ -454,11 +441,11 @@ static bool FillVector(PyObject* vecin, PyObject* args, ItemGetter* getter)
     if (fi && (PyTuple_CheckExact(fi) || PyList_CheckExact(fi))) {
     // use emplace_back to construct the vector entries one by one
         PyObject* eb_call = PyObject_GetAttrString(vecin, (char*)"emplace_back");
-        PyObject* vtype = GetAttrDirect((PyObject*)Py_TYPE(vecin), PyStrings::gValueType);
+        PyObject* vtype = GetAttrDirect((PyObject*)Py_TYPE(vecin), PyStrings::gValueTypePtr);
         bool value_is_vector = false;
-        if (vtype && CPyCppyy_PyText_Check(vtype)) {
+        if (vtype && PyLong_Check(vtype)) {
         // if the value_type is a vector, then allow for initialization from sequences
-            if (std::string(CPyCppyy_PyText_AsString(vtype)).rfind("std::vector", 0) != std::string::npos)
+            if (Cppyy::GetTypeAsString(PyLong_AsVoidPtr(vtype)).rfind("std::vector", 0) != std::string::npos)
                 value_is_vector = true;
         } else
             PyErr_Clear();
@@ -655,10 +642,6 @@ PyObject* VectorData(PyObject* self, PyObject*)
 
 // This function implements __array__, added to std::vector python proxies and causes
 // a bug (see explanation at Utility::AddToClass(pyclass, "__array__"...) in CPyCppyy::Pythonize)
-// The recursive nature of this function, passes each subarray (pydata) to the next call and only
-// the final buffer is cast to a lowlevel view and resized (in VectorData), resulting in only the
-// first 1D array to be returned. See https://github.com/root-project/root/issues/17729
-// It is temporarily removed to prevent errors due to -Wunused-function, since it is no longer added.
 #if 0
 //---------------------------------------------------------------------------
 PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -672,11 +655,13 @@ PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 #endif
 
+
 //-----------------------------------------------------------------------------
 static PyObject* vector_iter(PyObject* v) {
     vectoriterobject* vi = PyObject_GC_New(vectoriterobject, &VectorIter_Type);
     if (!vi) return nullptr;
 
+    Py_INCREF(v);
     vi->ii_container = v;
 
 // tell the iterator code to set a life line if this container is a temporary
@@ -690,7 +675,7 @@ static PyObject* vector_iter(PyObject* v) {
 
     Py_INCREF(v);
 
-    PyObject* pyvalue_type = PyObject_GetAttr((PyObject*)Py_TYPE(v), PyStrings::gValueType);
+    PyObject* pyvalue_type = PyObject_GetAttr((PyObject*)Py_TYPE(v), PyStrings::gValueTypePtr);
     if (pyvalue_type) {
         PyObject* pyvalue_size = GetAttrDirect((PyObject*)Py_TYPE(v), PyStrings::gValueSize);
         if (pyvalue_size) {
@@ -701,29 +686,32 @@ static PyObject* vector_iter(PyObject* v) {
             vi->vi_stride = 0;
         }
 
-        if (CPyCppyy_PyText_Check(pyvalue_type)) {
-            std::string value_type = CPyCppyy_PyText_AsString(pyvalue_type);
-            value_type = Cppyy::ResolveName(value_type);
-            vi->vi_klass = Cppyy::GetScope(value_type);
+        if (PyLong_Check(pyvalue_type)) {
+            Cppyy::TCppType_t value_type = PyLong_AsVoidPtr(pyvalue_type);
+            value_type = Cppyy::ResolveType(value_type);
+            vi->vi_klass = Cppyy::GetScopeFromType(value_type);
             if (!vi->vi_klass) {
             // look for a special case of pointer to a class type (which is a builtin, but it
             // is more useful to treat it polymorphically by allowing auto-downcasts)
-                const std::string& clean_type = TypeManip::clean_type(value_type, false, false);
+                const std::string& clean_type = TypeManip::clean_type(Cppyy::GetTypeAsString(value_type), false, false);
                 Cppyy::TCppScope_t c = Cppyy::GetScope(clean_type);
-                if (c && TypeManip::compound(value_type) == "*") {
+                if (c && TypeManip::compound(Cppyy::GetTypeAsString(value_type)) == "*") {
                     vi->vi_klass = c;
                     vi->vi_flags = vectoriterobject::kIsPolymorphic;
                 }
             }
+            if (Cppyy::IsPointerType(value_type))
+                vi->vi_flags = vectoriterobject::kIsPolymorphic;
             if (vi->vi_klass) {
                 vi->vi_converter = nullptr;
                 if (!vi->vi_flags) {
-                    if (value_type.back() != '*')     // meaning, object stored by-value
+                    value_type = Cppyy::ResolveType(value_type);
+                    if (Cppyy::GetTypeAsString(value_type).back() != '*')     // meaning, object stored by-value
                         vi->vi_flags = vectoriterobject::kNeedLifeLine;
                 }
             } else
                 vi->vi_converter = CPyCppyy::CreateConverter(value_type);
-            if (!vi->vi_stride) vi->vi_stride = Cppyy::SizeOf(value_type);
+            if (!vi->vi_stride) vi->vi_stride = Cppyy::SizeOfType(value_type);
 
         } else if (CPPScope_Check(pyvalue_type)) {
             vi->vi_klass = ((CPPClass*)pyvalue_type)->fCppType;
@@ -1481,7 +1469,6 @@ PyObject* STLStringGetAttr(CPPInstance* self, PyObject* attr_name)
     return attr;
 }
 
-
 #if 0
 PyObject* UTF8Repr(PyObject* self)
 {
@@ -1493,6 +1480,7 @@ PyObject* UTF8Repr(PyObject* self)
     Py_DECREF(res);
     return str_res;
 }
+#endif
 
 PyObject* UTF8Str(PyObject* self)
 {
@@ -1504,7 +1492,6 @@ PyObject* UTF8Str(PyObject* self)
     Py_DECREF(res);
     return str_res;
 }
-#endif
 
 Py_hash_t STLStringHash(PyObject* self)
 {
@@ -1738,8 +1725,10 @@ bool run_pythonizors(PyObject* pyclass, PyObject* pyname, const std::vector<PyOb
     return pstatus;
 }
 
-bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
 {
+    const std::string& name = Cppyy::GetScopedFinalName(scope);
+    
 // Add pre-defined pythonizations (for STL and ROOT) to classes based on their
 // signature and/or class name.
     if (!pyclass)
@@ -1768,36 +1757,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, pybool_name, (PyCFunction)NullCheckBool, METH_NOARGS);
     }
 
-    // for STL containers, and user classes modeled after them. Guard the alias to
-    // __len__ by verifying that size() returns an integer type and the class has
-    // begin()/end() or operator[] (i.e. is container-like). This prevents bool()
-    // returning False for valid objects whose size() returns non-integer types like
-    // std::optional<std::size_t>. Skip if size() has multiple overloads, as that
-    // indicates it is not the simple container-style size() one would map to __len__.
-    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/true) || HasAttrInMRO(pyclass, PyStrings::gSize)) {
-       bool sizeIsInteger = false;
-       PyObject *pySizeMethod = PyObject_GetAttr(pyclass, PyStrings::gSize);
-       if (pySizeMethod && CPPOverload_Check(pySizeMethod)) {
-          auto *ol = (CPPOverload *)pySizeMethod;
-          if (ol->HasMethods() && ol->fMethodInfo->fMethods.size() == 1) {
-             PyObject *pyrestype =
-                ol->fMethodInfo->fMethods[0]->Reflex(Cppyy::Reflex::RETURN_TYPE, Cppyy::Reflex::AS_STRING);
-             if (pyrestype) {
-                sizeIsInteger = Cppyy::IsIntegerType(CPyCppyy_PyText_AsString(pyrestype));
-                Py_DECREF(pyrestype);
-             }
-          }
-       }
-       Py_XDECREF(pySizeMethod);
-
-       if (sizeIsInteger) {
-          bool hasIterators = (HasAttrDirect(pyclass, PyStrings::gBegin) || HasAttrInMRO(pyclass, PyStrings::gBegin)) &&
-                              (HasAttrDirect(pyclass, PyStrings::gEnd) || HasAttrInMRO(pyclass, PyStrings::gEnd));
-          bool hasSubscript = HasAttrDirect(pyclass, PyStrings::gGetItem) || HasAttrInMRO(pyclass, PyStrings::gGetItem);
-          if (hasIterators || hasSubscript) {
-             Utility::AddToClass(pyclass, "__len__", "size");
-          }
-       }
+// for STL containers, and user classes modeled after them
+// the attribute must be a CPyCppyy overload, otherwise the check gives false
+// positives in the case where the class has a non-function attribute that is
+// called "size".
+    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true)) {
+        Utility::AddToClass(pyclass, "__len__", "size");
     }
 
     if (HasAttrDirect(pyclass, PyStrings::gContains)) {
@@ -1808,14 +1773,23 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
            !((PyTypeObject*)pyclass)->tp_iter) {
         if (HasAttrDirect(pyclass, PyStrings::gBegin) && HasAttrDirect(pyclass, PyStrings::gEnd)) {
         // obtain the name of the return type
-            const auto& v = Cppyy::GetMethodIndicesFromName(klass->fCppType, "begin");
-            if (!v.empty()) {
+            const auto& methods = Cppyy::GetMethodsFromName(klass->fCppType, "begin");
+            if (!methods.empty()) {
             // check return type; if not explicitly an iterator, add it to the "known" return
             // types to add the "next" method on use
-                Cppyy::TCppMethod_t meth = Cppyy::GetMethod(klass->fCppType, v[0]);
-                const std::string& resname = Cppyy::GetMethodResultType(meth);
+                Cppyy::TCppMethod_t meth = methods[0];
+                const std::string& resname = Cppyy::GetMethodReturnTypeAsString(meth);
                 bool isIterator = gIteratorTypes.find(resname) != gIteratorTypes.end();
-                if (!isIterator && Cppyy::GetScope(resname)) {
+                // skip pointer return values. GetScope template parsing strips a
+                // trailing '*' and returns the underlying class scope. Cppyy::GetType
+                // preserves pointer qualifiers, so for raw-pointer begin() returns
+                // (e.g. RVec<T>::iterator = T*), do not add STLSequenceIter.
+                // ROOT master's TCling-based GetScope returns null for
+                // pointer names and never hit this false positive.
+                Cppyy::TCppType_t restype = !resname.empty()
+                    ? Cppyy::GetType(resname, /*enable_slow_lookup=*/true) : 0;
+                if (!isIterator && restype && !Cppyy::IsPointerType(restype)
+                        && Cppyy::GetScope(resname)) {
                     if (resname.find("iterator") == std::string::npos)
                         gIteratorTypes.insert(resname);
                     isIterator = true;
@@ -1851,7 +1825,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 // comparisons to None; if no operator is available, a hook is installed for lazy
 // lookups in the global and/or class namespace
     if (HasAttrDirect(pyclass, PyStrings::gEq, true) && \
-            Cppyy::GetMethodIndicesFromName(klass->fCppType, "__eq__").empty()) {
+            Cppyy::GetMethodsFromName(klass->fCppType, "__eq__").empty()) {
         PyObject* cppol = PyObject_GetAttr(pyclass, PyStrings::gEq);
         if (!klass->fOperators) klass->fOperators = new Utility::PyOperators();
         klass->fOperators->fEq = cppol;
@@ -1868,7 +1842,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 
     if (HasAttrDirect(pyclass, PyStrings::gNe, true) && \
-            Cppyy::GetMethodIndicesFromName(klass->fCppType, "__ne__").empty()) {
+            Cppyy::GetMethodsFromName(klass->fCppType, "__ne__").empty()) {
         PyObject* cppol = PyObject_GetAttr(pyclass, PyStrings::gNe);
         if (!klass->fOperators) klass->fOperators = new Utility::PyOperators();
         klass->fOperators->fNe = cppol;
@@ -1897,12 +1871,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 #endif
 
-    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0 &&
-        name.compare(0, 6, "tuple<", 6) != 0) {
+    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
     // create a pseudo-constructor to allow initializer-style object creation
         Cppyy::TCppType_t kls = ((CPPClass*)pyclass)->fCppType;
-        Cppyy::TCppIndex_t ndata = Cppyy::GetNumDatamembers(kls);
-        if (ndata) {
+        std::vector<Cppyy::TCppScope_t> datamems;
+        Cppyy::GetDatamembers(kls, datamems);
+        if (!datamems.empty()) {
             std::string rname = name;
             TypeManip::cppscope_to_legalname(rname);
 
@@ -1911,23 +1885,30 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
                     << "void init_" << rname << "(" << name << "** self";
             bool codegen_ok = true;
             std::vector<std::string> arg_types, arg_names, arg_defaults;
+            const int ndata = datamems.size();
             arg_types.reserve(ndata); arg_names.reserve(ndata); arg_defaults.reserve(ndata);
-            for (Cppyy::TCppIndex_t i = 0; i < ndata; ++i) {
-                if (Cppyy::IsStaticData(kls, i) || !Cppyy::IsPublicData(kls, i))
+            for (auto data : datamems) {
+                if (Cppyy::IsStaticDatamember(data) || !Cppyy::IsPublicData(data))
                     continue;
 
-                const std::string& txt = Cppyy::GetDatamemberType(kls, i);
-                const std::string& res = Cppyy::IsEnum(txt) ? txt : Cppyy::ResolveName(txt);
+                Cppyy::TCppType_t datammember_type =
+                    Cppyy::GetDatamemberType(data);
+                const std::string &res =
+                    Cppyy::IsEnumType(datammember_type)
+                        ? Cppyy::GetScopedFinalName(
+                              Cppyy::GetScopeFromType(datammember_type))
+                        : Cppyy::GetTypeAsString(
+                              Cppyy::ResolveType(datammember_type));
                 const std::string& cpd = TypeManip::compound(res);
                 std::string res_clean = TypeManip::clean_type(res, false, true);
 
                 if (res_clean == "internal_enum_type_t")
-                    res_clean = txt;        // restore (properly scoped name)
+                  res_clean = res; // restore (properly scoped name)
 
                 if (res.rfind(']') == std::string::npos && res.rfind(')') == std::string::npos) {
                     if (!cpd.empty()) arg_types.push_back(res_clean+cpd);
                     else arg_types.push_back("const "+res_clean+"&");
-                    arg_names.push_back(Cppyy::GetDatamemberName(kls, i));
+                    arg_names.push_back(Cppyy::GetFinalName(data));
                     if ((!cpd.empty() && cpd.back() == '*') || Cppyy::IsBuiltin(res_clean))
                         arg_defaults.push_back("0");
                     else {
@@ -1955,10 +1936,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
                 if (Cppyy::Compile(initdef.str(), true /* silent */)) {
                     Cppyy::TCppScope_t cis = Cppyy::GetScope("__cppyy_internal");
-                    const auto& mix = Cppyy::GetMethodIndicesFromName(cis, "init_"+rname);
-                    if (mix.size()) {
+                    const auto& methods = Cppyy::GetMethodsFromName(cis, "init_" + rname);
+                    if (methods.size()) {
                         if (!Utility::AddToClass(pyclass, "__init__",
-                                new CPPFunction(cis, Cppyy::GetMethod(cis, mix[0]))))
+                                new CPPFunction(cis, methods[0])))
                             PyErr_Clear();
                     }
                 }
@@ -1976,10 +1957,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     // violating access rules).
     //
     // To preserve correct Python iteration semantics, we replace begin()/end()
-    // for std::span to return a custom pointer-based iterator instead. This
-    // avoids relying on std::span::iterator while still providing a real C++
-    // iterator object that CPyCppyy can also wrap and expose via
-    // __iter__/__next__.
+    // for std::span to return a custom pointer-based iterator instead.
         Utility::AddToClass(pyclass, "begin", (PyCFunction)SpanBegin, METH_NOARGS);
         Utility::AddToClass(pyclass, "end", (PyCFunction)SpanEnd, METH_NOARGS);
     }
@@ -1998,18 +1976,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
         // data with size
             Utility::AddToClass(pyclass, "__real_data", "data");
-            PyErr_Clear(); // AddToClass might have failed for data
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
-        // The addition of the __array__ utility to std::vector Python proxies causes a
-        // bug where the resulting array is a single dimension, causing loss of data when
-        // converting to numpy arrays, for >1dim vectors. Since this C++ pythonization
-        // was added with the upgrade in 6.32, and is only defined and used recursively,
-        // the safe option is to disable this function and no longer add it.
-#if 0
-        // numpy array conversion
-            Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
-#endif
+        // numpy array conversion (disabled: buggy for multi-dim vectors)
+        //    Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
 
         // checked getitem
             if (HasAttrDirect(pyclass, PyStrings::gLen)) {
@@ -2024,14 +1994,18 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
             Utility::AddToClass(pyclass, "__iadd__", (PyCFunction)VectorIAdd, METH_VARARGS | METH_KEYWORDS);
 
         // helpers for iteration
-            const std::string& vtype = Cppyy::ResolveName(name+"::value_type");
-            if (vtype.rfind("value_type") == std::string::npos) {    // actually resolved?
-                PyObject* pyvalue_type = CPyCppyy_PyText_FromString(vtype.c_str());
+            Cppyy::TCppType_t value_type = Cppyy::GetTypeFromScope(Cppyy::GetNamed("value_type", scope));
+            Cppyy::TCppType_t vtype = Cppyy::ResolveType(value_type);
+            if (vtype) {    // actually resolved?
+                PyObject* pyvalue_type = PyLong_FromVoidPtr(vtype);
+                PyObject_SetAttr(pyclass, PyStrings::gValueTypePtr, pyvalue_type);
+                Py_DECREF(pyvalue_type);
+                pyvalue_type = PyUnicode_FromString(Cppyy::GetTypeAsString(vtype).c_str());
                 PyObject_SetAttr(pyclass, PyStrings::gValueType, pyvalue_type);
                 Py_DECREF(pyvalue_type);
             }
 
-            size_t typesz = Cppyy::SizeOf(name+"::value_type");
+            size_t typesz = Cppyy::SizeOfType(vtype);
             if (typesz) {
                 PyObject* pyvalue_size = PyLong_FromSsize_t(typesz);
                 PyObject_SetAttr(pyclass, PyStrings::gValueSize, pyvalue_size);
@@ -2060,7 +2034,6 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     // constructor that takes python associative collections
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__", (PyCFunction)SetInit, METH_VARARGS | METH_KEYWORDS);
-
 #if __cplusplus <= 202002L
     // From C++20, std::set already implements a contains() method.
         Utility::AddToClass(pyclass, "__contains__", (PyCFunction)STLContainsWithFind, METH_O);
@@ -2085,7 +2058,13 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__iter__", (PyCFunction)PyObject_SelfIter, METH_NOARGS);
     }
 
-    else if (name == "string" || name == "std::string") { // TODO: ask backend as well
+// CPyCppyy upstream only checks the typedef-collapsed shape. Master ROOT's TClass
+// reflection produced that shape for free; with CppInterOp's GetQualifiedCompleteName
+// the canonical class name (with default template args, with spaces) is returned, so
+// we additionally recognise that shape here.
+    else if (name == "std::basic_string<char>"
+          || name == "std::basic_string<char, std::char_traits<char>, std::allocator<char> >"
+    ) { // TODO: ask backend as well
         Utility::AddToClass(pyclass, "__repr__",      (PyCFunction)STLStringRepr,       METH_NOARGS);
         Utility::AddToClass(pyclass, "__str__",       (PyCFunction)STLStringStr,        METH_NOARGS);
         Utility::AddToClass(pyclass, "__bytes__",     (PyCFunction)STLStringBytes,      METH_NOARGS);
@@ -2093,7 +2072,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__eq__",        (PyCFunction)STLStringIsEqual,    METH_O);
         Utility::AddToClass(pyclass, "__ne__",        (PyCFunction)STLStringIsNotEqual, METH_O);
 #if __cplusplus <= 202302L
-    // From C++23, std::sting already implements a contains() method.
+    // From C++23, std::string already implements a contains() method.
         Utility::AddToClass(pyclass, "__contains__",  (PyCFunction)STLStringContains,   METH_O);
 #endif
         Utility::AddToClass(pyclass, "decode",        (PyCFunction)STLStringDecode,     METH_VARARGS | METH_KEYWORDS);
@@ -2109,7 +2088,9 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)STLStringHash;
     }
 
-    else if (name == "basic_string_view<char,char_traits<char> >" || name == "std::basic_string_view<char>") {
+    else if (name == "std::basic_string_view<char>"
+          || name == "std::basic_string_view<char, std::char_traits<char> >"
+    ) {
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__",  (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
         Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLViewStringBytes,      METH_NOARGS);
@@ -2125,6 +2106,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 // the "std::" namespace. On some platforms, that applies only to the template
 // arguments, and on others also to the "basic_string".
     else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >"
+          || name == "std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >"
           || name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
           || name == "std::basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
     ) {

@@ -1123,7 +1123,6 @@ class TestTALKEXAMPLES:
 
         assert v.back().add(17) == 4+42+2*17
 
-    @mark.xfail(strict=True)
     def test_fallbacks(self):
         """Template instantation switches based on value sizes"""
 
@@ -1168,7 +1167,6 @@ class TestTALKEXAMPLES:
         assert CC.callPtr(lambda i: 5*i, 4) == 20
         assert CC.callFun(lambda i: 6*i, 4) == 24
 
-    @mark.xfail(strict=True)
     def test_templated_callback(self):
         """Templated callback example"""
 

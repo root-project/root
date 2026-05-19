@@ -227,7 +227,6 @@ class TestOPERATORS:
             assert m[1]    == 74
             assert m(1,2)  == 74
 
-    @mark.xfail(strict=True, reason="Compilation of unused call wrappers emits errors")
     def test09_templated_operator(self, capfd):
         """Templated operator<()"""
 

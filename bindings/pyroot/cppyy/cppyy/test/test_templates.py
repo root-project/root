@@ -148,7 +148,6 @@ class TestTEMPLATES:
         assert cppyy.gbl.isSomeInt()           == False
         assert cppyy.gbl.isSomeInt(1, 2, 3)    == False
 
-    @mark.xfail(strict=True, reason="This test causes the interpreter to raises errors")
     def test06_variadic_sfinae(self, capfd):
         """Attribute testing through SFINAE"""
 
@@ -327,7 +326,6 @@ class TestTEMPLATES:
         assert nsup.Foo
         assert nsup.Bar.Foo        # used to fail
 
-    @mark.xfail(strict=True)
     def test13_using_templated_method(self):
         """Access to base class templated methods through 'using'"""
 
@@ -351,7 +349,6 @@ class TestTEMPLATES:
         assert type(d.get3()) == int
         assert d.get3() == 5
 
-    @mark.xfail(strict=True)
     def test14_templated_return_type(self):
         """Use of a templated return type"""
 
@@ -592,7 +589,6 @@ class TestTEMPLATES:
         v = MyVec["float"](2)
         v[0] = 1        # used to throw TypeError
 
-    @mark.xfail(strict=True)
     def test24_stdfunction_templated_arguments(self):
         """Use of std::function with templated arguments"""
 
@@ -619,7 +615,6 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.std.function['double(std::vector<double>)']
 
-    @mark.xfail(strict=True)
     def test25_stdfunction_ref_and_ptr_args(self):
         """Use of std::function with reference or pointer args"""
 
@@ -916,7 +911,6 @@ class TestTEMPLATES:
 
         ns.Templated()       # used to crash
 
-    @mark.xfail(strict=True)
     def test31_ltlt_in_template_name(self):
         """Verify lookup of template names with << in the name"""
 
@@ -982,7 +976,6 @@ class TestTEMPLATES:
         assert len(cppyy.gbl.gLutData6) == (1<<3)+1
         assert len(cppyy.gbl.gLutData8) == 14<<2
 
-    @mark.xfail(strict=True)
     def test32_template_of_function_with_templated_args(self):
         """Lookup of templates of function with templated args used to fail"""
 
@@ -1142,7 +1135,6 @@ class TestTEMPLATES:
         assert ns.testptr
         assert cppyy.gbl.std.vector[ns.testptr]
 
-    @mark.xfail(strict=True)
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
 
@@ -1160,7 +1152,8 @@ class TestTEMPLATES:
 
         ns = cppyy.gbl.CStringTemplateArg
 
-        assert type(ns.stringify("Alice")) == cppyy.gbl.std.string
+    # patched expect str instead of cppyy.gbl.std.string, due to ROOT patch 
+        assert type(ns.stringify("Alice")) == str
         assert ns.stringify("Alice", "Bob")                          == "Alice Bob "
         assert ns.stringify(1, 2, 3)                                 == "1 2 3 "
         assert ns.stringify["const char*"]("Aap")                    == "Aap "
@@ -1300,7 +1293,6 @@ class TestTEMPLATED_TYPEDEFS:
         assert tct['long double', dum, 4] is tct[in_type, dum, 4]
         assert tct['double', dum, 4] is not tct[in_type, dum, 4]
 
-    @mark.xfail(strict=True)
     def test04_type_deduction(self):
         """Usage of type reducer"""
 
@@ -1379,7 +1371,6 @@ class TestTEMPLATE_TYPE_REDUCTION:
         import cppyy
         cls.templates = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail(strict=True)
     def test01_reduce_binary(self):
         """Squash template expressions for binary operations (like in gmpxx)"""
 

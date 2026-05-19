@@ -133,14 +133,14 @@ def add_overload(match_class, match_method, overload):
             if not self.match_class.match(name):
                 return
             for k in dir(obj): #.__dict__:
-                try:
-                    tmp = getattr(obj, k)
-                except AttributeError:
-                    continue
-                if self.match_method.match(k):
-                    try:
-                        tmp.__add_overload__(overload)
-                    except AttributeError: pass
+               try:
+                   tmp = getattr(obj, k)
+               except:
+                   continue
+               if self.match_method.match(k):
+                   try:
+                       tmp.__add_overload__(overload)
+                   except AttributeError: pass
     return method_pythonizor(match_class, match_method, overload)
 
 
@@ -160,7 +160,7 @@ def compose_method(match_class, match_method, g):
                     continue
                 try:
                     f = getattr(obj, k)
-                except AttributeError:
+                except:
                     continue
                 def make_fun(f, g):
                     def h(self, *args, **kwargs):
@@ -185,7 +185,7 @@ def set_method_property(match_class, match_method, prop, value):
             for k in dir(obj): #.__dict__:
                 try:
                     tmp = getattr(obj, k)
-                except AttributeError:
+                except:
                     continue
                 if self.match_method.match(k):
                     setattr(tmp, self.prop, self.value)
@@ -218,14 +218,10 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
 
             self.match_many = match_many_getters
             if not (self.match_many or prop_name):
-                raise ValueError(
-                    "If not matching properties by regex, "
-                    "need a property name with exactly one substitution field")
+                raise ValueError("If not matching properties by regex, need a property name with exactly one substitution field")
             if self.match_many and prop_name:
                 if prop_name.format(').!:(') == prop_name:
-                    raise ValueError(
-                        "If matching properties by regex and providing a property name, "
-                        "the name needs exactly one substitution field")
+                    raise ValueError("If matching properties by regex and providing a property name, the name needs exactly one substitution field")
 
             self.prop_name = prop_name
 
@@ -263,7 +259,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                 match = self.match_get.match(k)
                 try:
                     tmp = getattr(obj, k)
-                except AttributeError:
+                except:
                     continue
                 if match and hasattr(tmp, '__call__'):
                     if self.match_many:
@@ -278,7 +274,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                     match = self.match_set.match(k)
                     try:
                         tmp = getattr(obj, k)
-                    except AttributeError:
+                    except:
                         continue
                     if match and hasattr(tmp, '__call__'):
                         if self.match_many:
@@ -293,7 +289,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                     match = self.match_del.match(k)
                     try:
                         tmp = getattr(obj, k)
-                    except AttributeError:
+                    except:
                         continue
                     if match and hasattr(tmp, '__call__'):
                         if self.match_many:
@@ -313,6 +309,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
             names += list(named_deleters.keys())
             names = set(names)
 
+            properties = []
             for name in names:
                 if name in named_getters:
                     fget = self.make_get_del_proxy(named_getters[name])
