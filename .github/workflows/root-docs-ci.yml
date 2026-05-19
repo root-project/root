@@ -1,27 +1,37 @@
 name: 'ROOT Docs CI'
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/root-docs-ci.yml'
+      - 'documentation/doxygen/**'
+    branches:
+      - 'master'
 
-  # Allows nightly builds to trigger one run for each branch easily, by
-  # providing the relevant branch as "default" value here:
   workflow_call:
     inputs:
-      incremental:
-        type: boolean
-        default: true
+      input_branch:
+        description: 'Which branch to build documentation for'
+        type: string
+        required: true
+      eos_upload_directory:
+        description: 'Make documentation available at <root-website>/doc/<directory>. Leave empty for skipping the upload to eos.'
+        type: string
+        required: false
+        default: ''
 
   workflow_dispatch:
     inputs:
-      incremental:
-        description: 'Do full build'
-        type: boolean
+      input_branch:
+        description: 'Which branch to build documentation for'
+        type: string
         required: false
-        default: false
-      # docu_input: # opportunity: overwrite makeinput.sh with these args
-      #   description: Folders to build documentation for. All folders are built if empty.
-      #   type: string
-      #   default: ""
-      #   required: false
+        default: 'master'
+      eos_upload_directory:
+        description: 'Make documentation available at <root-website>/doc/<directory>. Leave empty for skipping the upload to eos.'
+        type: string
+        required: false
+        default: 'master'
 
 jobs:
   build-docs:
@@ -33,19 +43,21 @@ jobs:
       - x64
 
     env:
-      PLATFORM: alma9
+      PLATFORM: alma10
       DOC_DIR: master
       DOC_LOCATION: /github/home
-      BASE_REF: master
-      WEB_DIR_NAME: master
-      TAR_NAME: htmlmaster.tar
+      BASE_REF: ${{ inputs.input_branch == null && 'master' || inputs.input_branch }}
+      WEB_DIR_NAME: ${{ inputs.eos_upload_directory == null && '' || inputs.eos_upload_directory }}
+      TAR_FILE: htmlmaster.tar.gz
 
     permissions:
       contents: read
 
     container:
-      image: registry.cern.ch/root-ci/alma9:buildready
+      image: registry.cern.ch/root-ci/alma10:buildready
       options: '--security-opt label=disable --rm'
+      volumes:
+        - alma10_ccache_volume:/github/home/.cache/ccache
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -69,84 +81,33 @@ jobs:
       # code of the `if`.
       run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
-    - name: Set up directory name and tar filenames
-      run: |
-        echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
-        echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
-
-    # TODO: install latest versions in image on root-ci-images
-    - name: Install Doxygen 1.10.0
-      run : |
-        mkdir -p ${{ github.workspace }}/doxygen
-        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
-        echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
-#         git clone --branch Release_1_12_0 https://github.com/doxygen/doxygen.git
-#         cd doxygen
-#         mkdir build
-#         cd build
-#         cmake ..
-#         make -j$(nproc)
-#         echo PATH=$PATH:${{ github.workspace }}/doxygen/build/bin >> $GITHUB_ENV
-#         cd ${{ github.workspace }}
-#         doxygen --version
-
-    - name: Install qhelpgenerator-qt5
-      run: |
-        dnf upgrade -y
-        dnf install -y qt5-doctools
-        which qhelpgenerator-qt5
-
-    - name: Apply option overrides
-      env:
-        OVERRIDES: "testing=Off roottest=Off"
-        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
-      shell: bash
-      run: |
-        set -x
-        echo '' >> "$CONFIGFILE"
-        for ENTRY in $OVERRIDES; do
-            KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-            # Add entry to file if not exists, otherwise replace
-            if grep -q "$KEY=" "$CONFIGFILE"; then
-                sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-            else
-                echo "$ENTRY" >> "$CONFIGFILE"
-            fi
-        done
-        cat "$CONFIGFILE" || true
-
-    - name: Build ROOT - Workflow Dispatch
-      if:   github.event_name == 'workflow_dispatch'
-      env:
-          INCREMENTAL: ${{ inputs.incremental == 'true' }}
+    - name: Build ROOT
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ env.INCREMENTAL }}
+                  --incremental    false
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
-                  --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}"
-
-    - name: Build ROOT - Schedule
-      if:   github.event_name == 'schedule'
-      run: ".github/workflows/root-ci-config/build_root.py
-                  --buildtype      Release
-                  --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ inputs.incremental }}
-                  --base_ref       ${BASE_REF}
-                  --head_ref       ${BASE_REF}
-                  --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}"
+                  --repository     ${{ github.server_url }}/${{ github.repository }}
+                  --overrides      testing=Off roottest=Off
+                  --upload_artifacts false
+                  --binaries         false"
 
     - name: Run Doxygen
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
         source ROOT-CI/build/bin/thisroot.sh
-        export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
+        export DOXYGEN_OUTPUT_DIRECTORY="/github/home/${DOC_DIR}"
         cd ROOT-CI/src/documentation/doxygen
-        make -j `nproc --all`
+        make -j "$(nproc --all)"
+
+    - name: Clean temporary files
+      shell: bash
+      run: |
+        cd "/github/home/${DOC_DIR}"
+        rm html/*.md5
+        rm html/*.map
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
@@ -154,11 +115,8 @@ jobs:
       run: |
         pwd
         ls -l
-        echo ${DOC_DIR}
-        echo ${TAR_NAME}
         ls -l ${DOC_DIR}
-        tar cf ${TAR_NAME} ${DOC_DIR}
-        gzip ${TAR_NAME}
+        tar -caf ${TAR_FILE} ${DOC_DIR}
         ls -l
 
     #Upload to GitHub as an artifact
@@ -166,17 +124,12 @@ jobs:
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v6
       with:
-        name: ${{env.TAR_NAME}}.gz
-        path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
+        name: ${{env.TAR_FILE}}
+        path: ${{env.DOC_LOCATION}}/${{env.TAR_FILE}}
         if-no-files-found: error
 
-    - name: Install Kerberos utilities
-      run: dnf -y install krb5-workstation
-
-    - name: Install XRootD client
-      run: dnf -y install xrootd-client
-
     - name: Sync documentation to EOS
+      if: ${{ env.WEB_DIR_NAME != null && env.WEB_DIR_NAME != '' }}
       env:
         RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
         KRB5USER: ${{ secrets.KRB5USER }}
@@ -191,20 +144,20 @@ jobs:
       # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
-        echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
-        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-        cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-        rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-        rm -rf *.svg
-        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-        rm -rf *.map
-        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-        rm -rf *.md5
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        echo "${RWEBEOS_KT}" | base64 -d > "${KT_FILE_NAME}"
+        kinit -p "${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }}" -kt "${KT_FILE_NAME}"
+        cd "${DOC_DIR}/html/"
+        xrdcp --parallel 64 -rf ./*.html "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}"
+        rm -rf ./*.html
+        xrdcp --parallel 64 -rf ./*.svg "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}"
+        rm -rf ./*.svg
+        xrdcp --parallel 64 -rf ./*.map "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}"
+        rm -rf ./*.map
+        xrdcp --parallel 64 -rf ./*.md5 "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}"
+        rm -rf ./*.md5
+        xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}"
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}"
         cd ..
-        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
+        xrdcp -rf "${TAR_FILE}" "${EOS_ENDPOINT}/${EOS_BASE_PATH}/download"
