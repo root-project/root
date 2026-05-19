@@ -22,7 +22,7 @@ tlatex5.svg
 </text>
 <text xml:space="preserve" x="35" y="101" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#approx
 </text>
-<text xml:space="preserve" x="12" y="122" fill="black" font-size="15" font-family="Times">&#0949;
+<text xml:space="preserve" x="12" y="122" fill="black" font-size="15" font-family="Times">&#8712;
 </text>
 <text xml:space="preserve" x="35" y="125" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#in
 </text>
@@ -74,15 +74,15 @@ tlatex5.svg
 </text>
 <text xml:space="preserve" x="35" y="413" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#leftrightarrow
 </text>
-<text xml:space="preserve" x="12" y="437" fill="black" font-size="15" font-family="Times">&#0815;
+<text xml:space="preserve" x="12" y="437" fill="black" font-size="15" font-family="Times">&#8659;
 </text>
 <text xml:space="preserve" x="35" y="436" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#Downarrow
 </text>
-<text xml:space="preserve" x="12" y="457" fill="black" font-size="15" font-family="Times">&#0811;
+<text xml:space="preserve" x="12" y="457" fill="black" font-size="15" font-family="Times">&#8660;
 </text>
 <text xml:space="preserve" x="35" y="460" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#Leftrightarrow
 </text>
-<text xml:space="preserve" x="12" y="484" fill="black" font-size="15" font-family="Times">&#0826;
+<text xml:space="preserve" x="12" y="484" fill="black" font-size="15" font-family="Times">&#0124;
 </text>
 <text xml:space="preserve" x="35" y="484" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#void8
 </text>
@@ -91,7 +91,7 @@ tlatex5.svg
 <path d="M12,499l 6.1, -1.6" fill="none" stroke="black" stroke-width="2.0"/>
 <text xml:space="preserve" x="35" y="508" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#hbar
 </text>
-<text xml:space="preserve" x="12" y="531" fill="black" font-size="15" font-family="Times">&#0882;
+<text xml:space="preserve" x="12" y="531" fill="black" font-size="15" font-family="Times">&#8704;
 </text>
 <text xml:space="preserve" x="35" y="532" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#forall
 </text>
@@ -127,7 +127,7 @@ tlatex5.svg
 </text>
 <text xml:space="preserve" x="176" y="197" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#copyright
 </text>
-<text xml:space="preserve" x="154" y="218" fill="black" font-size="15" font-family="Times">&#0820;
+<text xml:space="preserve" x="154" y="218" fill="black" font-size="15" font-family="Times">&#8482;
 </text>
 <text xml:space="preserve" x="176" y="221" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#void3
 </text>
@@ -181,7 +181,7 @@ tlatex5.svg
 <path d="M159,511v -15" fill="none" stroke="black" stroke-width="2.0"/>
 <text xml:space="preserve" x="176" y="508" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#parallel
 </text>
-<text xml:space="preserve" x="154" y="531" fill="black" font-size="15" font-family="Times">&#0884;
+<text xml:space="preserve" x="154" y="531" fill="black" font-size="15" font-family="Times">&#8707;
 </text>
 <text xml:space="preserve" x="176" y="532" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#exists
 </text>
@@ -297,7 +297,7 @@ tlatex5.svg
 </text>
 <text xml:space="preserve" x="460" y="173" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#vee
 </text>
-<text xml:space="preserve" x="437" y="195" fill="black" font-size="15" font-family="Times">&#0818;
+<text xml:space="preserve" x="437" y="195" fill="black" font-size="15" font-family="Times">&#9415;
 </text>
 <text xml:space="preserve" x="460" y="197" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">#void1
 </text>

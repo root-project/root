@@ -51,7 +51,7 @@ tefficiency.svg
 <text xml:space="preserve" x="27" y="66" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">1
 </text>
 <g transform="rotate(-90,20,44)">
-<text xml:space="preserve" x="20" y="44" fill="black" font-size="10" font-family="Times">&#0949;
+<text xml:space="preserve" x="20" y="44" fill="black" font-size="10" font-family="Times">&#8712;
 </text>
 </g>
 <rect x="8.9" y="5.3" width="161" height="17" fill="#f2f2f2"/>
@@ -192,7 +192,7 @@ tefficiency.svg
 <text xml:space="preserve" x="311" y="66" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">1
 </text>
 <g transform="rotate(-90,303,44)">
-<text xml:space="preserve" x="303" y="44" fill="black" font-size="10" font-family="Times">&#0949;
+<text xml:space="preserve" x="303" y="44" fill="black" font-size="10" font-family="Times">&#8712;
 </text>
 </g>
 <rect x="292" y="5.3" width="153" height="17" fill="#f2f2f2"/>

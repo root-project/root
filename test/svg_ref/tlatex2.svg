@@ -76,7 +76,7 @@ tlatex2.svg
 <path d="M350,208v 17" fill="none" stroke="black" stroke-width="2.0"/>
 <text xml:space="preserve" x="337" y="225" fill="black" font-size="36" font-family="Helvetica" font-weight="bold">(
 </text>
-<text xml:space="preserve" x="299" y="225" fill="black" font-size="36" font-family="Times">&#0811;
+<text xml:space="preserve" x="299" y="225" fill="black" font-size="36" font-family="Times">&#8660;
 </text>
 <text xml:space="preserve" x="247" y="225" fill="black" font-size="36" font-family="Helvetica" font-weight="bold">)=0
 </text>
