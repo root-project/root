@@ -355,11 +355,10 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
       // TODO: only here set line attributes to virtual x
-      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
+      if (IsInvertMode())
          gVirtualX->DrawLineW(fWinContext,
                              gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
-      }
 
       return;
    }
@@ -395,13 +394,11 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
    if (fLocked) {
-      // this code used when crosshair cursor is drawn
-      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
-         // TODO: only here set line attributes to virtual x
+      // this code used when crosshair cursor is drawn or interactive objects move
+      if (IsInvertMode())
          gVirtualX->DrawLineW(fWinContext,
                               gPad->UtoAbsPixel(u1), gPad->VtoAbsPixel(v1),
                               gPad->UtoAbsPixel(u2), gPad->VtoAbsPixel(v2));
-      }
       return;
    }
 
@@ -427,12 +424,11 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
       // TODO: only here set line attributes to virtual x
-      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
+      if (IsInvertMode())
          gVirtualX->DrawBoxW(fWinContext,
                              gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2),
                              (TVirtualX::EBoxMode) mode);
-      }
       return;
    }
 
@@ -445,11 +441,12 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
 
    if (mode == kHollow) {
       const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, 0, fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
-      //
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      glRectd(x1, y1, x2, y2);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glLineWidth(1.f);
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x1, y1);
+      glVertex2d(x2, y1);
+      glVertex2d(x2, y2);
+      glVertex2d(x1, y2);
+      glEnd();
    } else {
       const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &fGlFillAtt);//Set filling parameters.
       glRectd(x1, y1, x2, y2);
@@ -521,9 +518,20 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 ////////////////////////////////////////////////////////////////////////////////
 ///Draw poly-line in user coordinates.
 
-void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
+template<class ValueType>
+void TGLPadPainter::DrawPolyLineHelper(Int_t n, const ValueType *x, const ValueType *y)
 {
-   if (fLocked) return;
+   if (fLocked) {
+      if (IsInvertMode() && (n > 1)) {
+         std::vector<TPoint> xy(n);
+         for (Int_t i = 0; i < n; ++i) {
+            xy[i].fX = (SCoord_t) gPad->XtoAbsPixel(x[i]);
+            xy[i].fY = (SCoord_t) gPad->YtoAbsPixel(y[i]);
+         }
+         gVirtualX->DrawPolyLineW(fWinContext, xy.size(), xy.data());
+      }
+      return;
+   }
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
 
@@ -556,25 +564,19 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Never called?
+/// Draw poly-line in user coordinates.
+
+void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
+{
+   DrawPolyLineHelper(n, x, y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw poly-line in user coordinates.
 
 void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
-   if (fLocked) return;
-
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
-
-   glBegin(GL_LINE_STRIP);
-
-   for (Int_t i = 0; i < n; ++i)
-      glVertex2f(x[i], y[i]);
-
-   if (fIsHollowArea) {
-      glVertex2f(x[0], y[0]);
-      fIsHollowArea = kFALSE;
-   }
-
-   glEnd();
+   DrawPolyLineHelper(n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -597,47 +599,45 @@ void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
    glEnd();
 }
 
-namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true when invert mode is configured and painter in locked state
+/// Used when non-opaque of objects moving is involved
 
-//Aux. function.
+Bool_t TGLPadPainter::IsInvertMode()
+{
+   return fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///Poly-marker drawing
+
 template<class ValueType>
-void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::vector<TPoint> & dst);
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Poly-marker.
-
-void TGLPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
+void TGLPadPainter::DrawPolyMarkerHelper(Int_t n, const ValueType *x, const ValueType *y)
 {
-   if (fLocked) return;
+   std::vector<TPoint> poly(n);
 
-   ConvertMarkerPoints(n, x, y, fPoly);
-   DrawPolyMarker();
-}
+   if (fLocked) {
+      if (IsInvertMode()) {
+         for (Int_t i = 0; i < n; ++i) {
+            poly[i].fX = gPad->XtoAbsPixel(x[i]);
+            poly[i].fY = gPad->YtoAbsPixel(y[i]);
+         }
+         gVirtualX->DrawPolyMarkerW(fWinContext, poly.size(), poly.data());
+      }
+      return;
+   }
 
-////////////////////////////////////////////////////////////////////////////////
-///Poly-marker.
+   const UInt_t padH = gPad->GetPadHeight();
 
-void TGLPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
-{
-   if (fLocked) return;
-
-   ConvertMarkerPoints(n, x, y, fPoly);
-   DrawPolyMarker();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Poly-marker.
-
-void TGLPadPainter::DrawPolyMarker()
-{
-   if (fLocked) return;
+   for (Int_t i = 0; i < n; ++i) {
+      poly[i].fX = gPad->XtoPixel(x[i]);
+      poly[i].fY = padH - gPad->YtoPixel(y[i]);
+   }
 
    SaveProjectionMatrix();
    glLoadIdentity();
    //
-   glOrtho(0, gPad->GetAbsWNDC() * gPad->GetWw(), 0, gPad->GetAbsHNDC() * gPad->GetWh(), -10., 10.);
+   glOrtho(0, gPad->GetPadWidth(), 0, gPad->GetPadHeight(), -10., 10.);
    //
    glMatrixMode(GL_MODELVIEW);
    //
@@ -648,133 +648,146 @@ void TGLPadPainter::DrawPolyMarker()
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glColor4fv(rgba);
 
-
    const Width_t w = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetAttMarker().GetMarkerStyle())));
    glLineWidth(w > fLimits.GetMaxLineWidth() ? fLimits.GetMaxLineWidth() : !w ? 1.f : w);
 
    fMarker.SetMarkerSizeWidth(GetAttMarker().GetMarkerSize(), w);
 
-   const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = TAttMarker::GetMarkerStyleBase(GetAttMarker().GetMarkerStyle());
-   const UInt_t n = UInt_t(fPoly.size());
    switch (markerStyle) {
    case kDot:
-      fMarker.DrawDot(n, xy);
+      fMarker.DrawDot(n, poly.data());
       break;
    case kPlus:
-      fMarker.DrawPlus(n, xy);
+      fMarker.DrawPlus(n, poly.data());
       break;
    case kStar:
    case 31:
-      fMarker.DrawStar(n, xy);
+      fMarker.DrawStar(n, poly.data());
       break;
    case kCircle:
    case kOpenCircle:
-      fMarker.DrawCircle(n, xy);
+      fMarker.DrawCircle(n, poly.data());
       break;
    case kMultiply:
-      fMarker.DrawX(n, xy);
+      fMarker.DrawX(n, poly.data());
       break;
    case kFullDotSmall://"Full dot small"
-      fMarker.DrawFullDotSmall(n, xy);
+      fMarker.DrawFullDotSmall(n, poly.data());
       break;
    case kFullDotMedium:
-      fMarker.DrawFullDotMedium(n, xy);
+      fMarker.DrawFullDotMedium(n, poly.data());
       break;
    case kFullDotLarge:
    case kFullCircle:
-      fMarker.DrawFullDotLarge(n, xy);
+      fMarker.DrawFullDotLarge(n, poly.data());
       break;
    case kFullSquare:
-      fMarker.DrawFullSquare(n, xy);
+      fMarker.DrawFullSquare(n, poly.data());
       break;
    case kFullTriangleUp:
-      fMarker.DrawFullTrianlgeUp(n, xy);
+      fMarker.DrawFullTrianlgeUp(n, poly.data());
       break;
    case kFullTriangleDown:
-      fMarker.DrawFullTrianlgeDown(n, xy);
+      fMarker.DrawFullTrianlgeDown(n, poly.data());
       break;
    case kOpenSquare:
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      fMarker.DrawFullSquare(n, xy);
+      fMarker.DrawFullSquare(n, poly.data());
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       break;
    case kOpenTriangleUp:
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      fMarker.DrawFullTrianlgeUp(n, xy);
+      fMarker.DrawFullTrianlgeUp(n, poly.data());
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       break;
    case kOpenDiamond:
-      fMarker.DrawDiamond(n, xy);
+      fMarker.DrawDiamond(n, poly.data());
       break;
    case kOpenCross:
-      fMarker.DrawOpenCross(n, xy);
+      fMarker.DrawOpenCross(n, poly.data());
       break;
    case kFullStar:
-      fMarker.DrawFullStar(n, xy);
+      fMarker.DrawFullStar(n, poly.data());
       break;
    case kOpenStar:
-      fMarker.DrawOpenStar(n, xy);
+      fMarker.DrawOpenStar(n, poly.data());
       break;
    case kOpenTriangleDown:
-      fMarker.DrawOpenTrianlgeDown(n, xy);
+      fMarker.DrawOpenTrianlgeDown(n, poly.data());
       break;
    case kFullDiamond:
-      fMarker.DrawFullDiamond(n, xy);
+      fMarker.DrawFullDiamond(n, poly.data());
       break;
    case kFullCross:
-      fMarker.DrawFullCross(n, xy);
+      fMarker.DrawFullCross(n, poly.data());
       break;
    case kOpenDiamondCross:
-      fMarker.DrawOpenDiamondCross(n, xy);
+      fMarker.DrawOpenDiamondCross(n, poly.data());
       break;
    case kOpenSquareDiagonal:
-      fMarker.DrawOpenSquareDiagonal(n, xy);
+      fMarker.DrawOpenSquareDiagonal(n, poly.data());
       break;
    case kOpenThreeTriangles:
-      fMarker.DrawOpenThreeTriangles(n, xy);
+      fMarker.DrawOpenThreeTriangles(n, poly.data());
       break;
    case kOctagonCross:
-      fMarker.DrawOctagonCross(n, xy);
+      fMarker.DrawOctagonCross(n, poly.data());
       break;
    case kFullThreeTriangles:
-      fMarker.DrawFullThreeTriangles(n, xy);
+      fMarker.DrawFullThreeTriangles(n, poly.data());
       break;
    case kOpenFourTrianglesX:
-      fMarker.DrawOpenFourTrianglesX(n, xy);
+      fMarker.DrawOpenFourTrianglesX(n, poly.data());
       break;
    case kFullFourTrianglesX:
-      fMarker.DrawFullFourTrianglesX(n, xy);
+      fMarker.DrawFullFourTrianglesX(n, poly.data());
       break;
    case kOpenDoubleDiamond:
-      fMarker.DrawOpenDoubleDiamond(n, xy);
+      fMarker.DrawOpenDoubleDiamond(n, poly.data());
       break;
    case kFullDoubleDiamond:
-      fMarker.DrawFullDoubleDiamond(n, xy);
+      fMarker.DrawFullDoubleDiamond(n, poly.data());
       break;
    case kOpenFourTrianglesPlus:
-      fMarker.DrawOpenFourTrianglesPlus(n, xy);
+      fMarker.DrawOpenFourTrianglesPlus(n, poly.data());
       break;
    case kFullFourTrianglesPlus:
-      fMarker.DrawFullFourTrianglesPlus(n, xy);
+      fMarker.DrawFullFourTrianglesPlus(n, poly.data());
       break;
    case kOpenCrossX:
-      fMarker.DrawOpenCrossX(n, xy);
+      fMarker.DrawOpenCrossX(n, poly.data());
       break;
    case kFullCrossX:
-      fMarker.DrawFullCrossX(n, xy);
+      fMarker.DrawFullCrossX(n, poly.data());
       break;
    case kFourSquaresX:
-      fMarker.DrawFourSquaresX(n, xy);
+      fMarker.DrawFourSquaresX(n, poly.data());
       break;
    case kFourSquaresPlus:
-      fMarker.DrawFourSquaresPlus(n, xy);
+      fMarker.DrawFourSquaresPlus(n, poly.data());
       break;
    }
 
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
    glLineWidth(1.f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///Poly-marker.
+
+void TGLPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
+{
+   DrawPolyMarkerHelper(n, x, y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///Poly-marker.
+
+void TGLPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
+{
+   DrawPolyMarkerHelper(n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1538,23 +1551,5 @@ void TGLPadPainter::DrawTesselation(Int_t n, const Double_t *x, const Double_t *
       gluTessVertex(t, &fVs[i * 3], &fVs[i * 3]);
 
    gluEndPolygon(t);
-}
-
-
-//Aux. functions.
-namespace {
-
-template<class ValueType>
-void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::vector<TPoint> & dst)
-{
-   const UInt_t padH = UInt_t(gPad->GetAbsHNDC() * gPad->GetWh());
-
-   dst.resize(n);
-   for (Int_t i = 0; i < n; ++i) {
-      dst[i].fX = gPad->XtoPixel(x[i]);
-      dst[i].fY = padH - gPad->YtoPixel(y[i]);
-   }
-}
-
 }
 
