@@ -489,6 +489,7 @@ endif()
 
 if(fftw3)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
+  target_link_libraries(RooFitCore PRIVATE FFTW::Double)
 endif()
 
 target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
