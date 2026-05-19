@@ -9,12 +9,11 @@ add_library(cppyy_backend STATIC
     clingwrapper/src/cppinterop_dispatch.cxx)
 
 target_include_directories(cppyy_backend PRIVATE
-    ${CMAKE_SOURCE_DIR}/interpreter/CppInterOp/include
+    ${CMAKE_BINARY_DIR}/etc/cppinterop
 )
 
 target_compile_definitions(cppyy_backend PRIVATE
-  # FIXME: These headers need to be installed and the location must be provided to clingwrapper in a robust way
-  CPPINTEROP_DIR="${CMAKE_SOURCE_DIR}/interpreter/CppInterOp"
+  CPPINTEROP_DIR="${CMAKE_BINARY_DIR}/etc/cppinterop"
   CMAKE_SHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
   # The CppInterOp JitCall debug assertions (AreArgumentsValid,
   # ReportInvokeStart) use Clang AST internals and cannot be resolved
@@ -22,8 +21,10 @@ target_compile_definitions(cppyy_backend PRIVATE
   NDEBUG
 )
 
-
 target_link_libraries(cppyy_backend Core)
+# Ensure CppInterOpEtc responsible for staging the tablegen-generated .inc files is built before cppyy_backend. 
+add_dependencies(cppyy_backend CppInterOpEtc)
+
 if(NOT MSVC)
   target_compile_options(cppyy_backend PRIVATE -fPIC)
 endif()
