@@ -215,9 +215,49 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape);
 template<class T>
 std::string ConvertValToString(T value) {
    std::stringstream ret;
-   if (std::is_floating_point_v<T>)
-      ret << std::setprecision(std::numeric_limits<T>::max_digits10);
-   ret << value;
+   ret << std::to_string(value);
+   return ret.str();
+}
+// float specialization
+template<>
+inline std::string ConvertValToString<float>(float value) {
+   std::stringstream ret;
+   // special case for infinity and Nan
+   if (std::isinf(value))
+         ret << (value > 0 ? "std::numeric_limits<float>::infinity()" :
+                                  "-std::numeric_limits<float>::infinity()");
+   else if (std::isnan(value))
+         ret << "std::numeric_limits<float>::quiet_NaN()";
+   else {
+      ret << std::setprecision(std::numeric_limits<float>::max_digits10);
+      ret << value;
+   }
+   return ret.str();
+}
+// double specialization
+template<>
+inline std::string ConvertValToString<double>(double value) {
+   std::stringstream ret;
+   // special case for infinity and Nan
+   if (std::isinf(value))
+         ret << (value > 0 ? "std::numeric_limits<double>::infinity()" :
+                                  "-std::numeric_limits<double>::infinity()");
+   else if (std::isnan(value))
+         ret << "std::numeric_limits<double>::quiet_NaN()";
+   else {
+      ret << std::setprecision(std::numeric_limits<double>::max_digits10);
+      ret << value;
+   }
+   return ret.str();
+}
+// int64_t specialization for INT64_MIN
+template<>
+inline std::string ConvertValToString<int64_t>(int64_t value) {
+   std::stringstream ret;
+   if (value == INT64_MIN)
+      ret << "INT64_MIN";
+   else
+      ret << std::to_string(value);
    return ret.str();
 }
 
@@ -228,12 +268,7 @@ std::string ConvertValuesToString(size_t n, const T * data, size_t maxprint = -1
    std::stringstream ret;
    ret << "{ ";
    for (size_t i = 0; i < std::min(n,maxprint); i++) {
-      if (std::is_floating_point_v<T>)
-         ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
-      else
-         // cast in case of boolean (int8)
-         ret << data[i];
-
+      ret << ConvertValToString(data[i]);
       if (i < n-1) ret << ", ";
       if (i < n-1 && i == maxprint-1) ret << "..... ";
    }
@@ -779,7 +814,8 @@ inline void Fill(float *output, float value, int size)
    std::fill(output, output + size, value);
 }
 
-inline void Copy(float *output, float const *input, int size)
+template <class T>
+inline void Copy(T *output, T const *input, int size)
 {
    std::copy(input, input + size, output);
 }

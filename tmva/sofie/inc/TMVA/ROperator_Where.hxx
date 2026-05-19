@@ -7,32 +7,36 @@
 
 #include <sstream>
 
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
+namespace TMVA{
+namespace Experimental{
+namespace SOFIE{
 
-template <typename T>
-class ROperator_Where final : public ROperator {
+
+
+template<typename T>
+class ROperator_Where final : public ROperator{
 private:
 
    bool fIsInputBoolTensor = false;
 
-   // Tensor names: C = condition, X = true branch, Y = false branch, Z = output
-   std::string fNC;            // condition (bool)
-   std::string fNX;            // true-branch values
-   std::string fNY;            // false-branch values
-   std::string fNZ;            // output
-   std::string fNBroadcastedC;
+
+   std::string fNX;
+   std::string fNY;
+   std::string fNC;
    std::string fNBroadcastedX;
    std::string fNBroadcastedY;
+   std::string fNBroadcastedC;
+   std::string fNZ;
 
-   // Static shapes (used when all inputs are non-dynamic)
-   std::vector<size_t> fShapeC;
+
+
+   // static shapes (used when tensors are not dynamic) )
    std::vector<size_t> fShapeX;
    std::vector<size_t> fShapeY;
+   std::vector<size_t> fShapeC;
    std::vector<size_t> fShapeZ;
 
-   // Dynamic shapes (Dim-aware, used when any input is dynamic)
+   // Dynamic generic shapes
    std::vector<Dim> fDimShapeC;
    std::vector<Dim> fDimShapeX;
    std::vector<Dim> fDimShapeY;
@@ -46,47 +50,37 @@ private:
    int fBroadcastFlag = 0;
 
 public:
-   ROperator_Where() {}
-   ROperator_Where(const std::string &nameC,
-                   const std::string &nameX,
-                   const std::string &nameY,
-                   const std::string &nameZ)
-      : fNC(UTILITY::Clean_name(nameC)),
-        fNX(UTILITY::Clean_name(nameX)),
-        fNY(UTILITY::Clean_name(nameY)),
-        fNZ(UTILITY::Clean_name(nameZ))
-   {
-      fInputTensorNames  = { fNC, fNX, fNY };
-      fOutputTensorNames = { fNZ };
-   }
+   ROperator_Where(){}
+   ROperator_Where(const std::string & nameC, const std::string & nameX, const std::string & nameY, const std::string & nameZ):
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)), fNC(UTILITY::Clean_name(nameC)), fNZ(UTILITY::Clean_name(nameZ)){
+         fInputTensorNames = { fNX, fNY, fNC };
+         fOutputTensorNames = { fNZ };
+      }
 
    // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override
-   {
-      // output type follows X (and Y), not C (which is bool)
-      return { input[1] };
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
+      return input;
    }
 
    // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override
-   {
-      // conservative: assume same shape (broadcasting resolved in Initialize)
-      return { input[1] };
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
+      // assume now inputs have same shape (no broadcasting)
+      auto ret = std::vector<std::vector<size_t>>(1, input[0]); // return vector size 1 with first input
+      return ret;
    }
 
-   void Initialize(RModel &model) override
-   {
-      // ---------------------------------------------------------------- //
-      //  Check all inputs exist
-      // ---------------------------------------------------------------- //
-      if (!model.CheckIfTensorAlreadyExist(fNC))
-         throw std::runtime_error(std::string("TMVA SOFIE Where Op: condition tensor ") + fNC + " not found in model");
-      if (!model.CheckIfTensorAlreadyExist(fNX))
-         throw std::runtime_error(std::string("TMVA SOFIE Where Op: X tensor ") + fNX + " not found in model");
-      if (!model.CheckIfTensorAlreadyExist(fNY))
-         throw std::runtime_error(std::string("TMVA SOFIE Where Op: Y tensor ") + fNY + " not found in model");
-
-      // condition tensor is bool (uint8) - mark if it is a live input tensor
+   void Initialize(RModel& model) override {
+      // input must be a graph input, or already initialized intermediate tensor
+      if (!model.CheckIfTensorAlreadyExist(fNX)){
+         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNX + "is not found in model");
+      }
+      if (!model.CheckIfTensorAlreadyExist(fNY)) {
+         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNY + "is not found in model");
+      }
+      if (!model.CheckIfTensorAlreadyExist(fNC)) {
+         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNC + "is not found in model");
+      }
+      // check if fNC input tensor is boolean
       if (model.IsReadyInputTensor(fNC))
          fIsInputBoolTensor = true;
 
@@ -117,13 +111,14 @@ public:
          fDimShapeY = ConvertShapeToDim(fShapeY);
       }
 
+
       if (model.Verbose()) {
          if (dynamicInputs & 1)
             std::cout << "Where : condition " << fNC << " is dynamic " << ConvertDimShapeToString(fDimShapeC) << "\n";
          if (dynamicInputs & 2)
-            std::cout << "Where : X " << fNX << " is dynamic " << ConvertDimShapeToString(fDimShapeX) << "\n";
+            std::cout << "Where :  " << fNX << " is dynamic " << ConvertDimShapeToString(fDimShapeX) << "\n";
          if (dynamicInputs & 4)
-            std::cout << "Where : Y " << fNY << " is dynamic " << ConvertDimShapeToString(fDimShapeY) << "\n";
+            std::cout << "Where : Y " << fNZ << " is dynamic " << ConvertDimShapeToString(fDimShapeZ) << "\n";
       }
 
       // ---------------------------------------------------------------- //
@@ -131,79 +126,184 @@ public:
       // ---------------------------------------------------------------- //
       if (dynamicInputs == 0) {
 
-         // Multidirectional broadcast over all three tensors
-         auto retXY = UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeY);
-         fBroadcastFlag = retXY.first;
-         fShapeZ = retXY.second;
-         // also factor in C
-         auto retCZ = UTILITY::MultidirectionalBroadcastShape(fShapeC, fShapeZ);
-         fBroadcastFlag |= retCZ.first;
-         fShapeZ = retCZ.second;
+         bool broadcast = !UTILITY::AreSameShape(fShapeX, fShapeY) || !UTILITY::AreSameShape(fShapeX, fShapeC);
+         if (broadcast) {
+            // find shape to broadcast between X,Y,C looking for max length
+            size_t lengthX = ConvertShapeToLength(fShapeX);
+            size_t lengthY = ConvertShapeToLength(fShapeY);
+            size_t lengthC = ConvertShapeToLength(fShapeC);
+            bool broadcastX = false, broadcastY = false, broadcastC = false;
+            if (lengthX >= lengthY && lengthX >= lengthC) {
+               fShapeZ = fShapeX;
+               // broadcast Y and C if different than X
+               broadcastY = (lengthY != lengthX);
+               broadcastC = (lengthC != lengthX);
+            } else if (lengthY >= lengthX && lengthY >= lengthC) {
+               fShapeZ = fShapeY;
+               // broadcast X and C if different than Y
+               broadcastX = (lengthX != lengthY);
+               broadcastC = (lengthC != lengthY);
+            } else if (lengthC >= lengthX && lengthC >= lengthY) {
+               fShapeZ = fShapeC;
+               // broadcast X and Y if different than C
+               broadcastX = (lengthX != lengthC);
+               broadcastY = (lengthY != lengthC);
+            }
 
-         bool allConstant = model.IsInitializedTensor(fNC) &&
-                            model.IsInitializedTensor(fNX) &&
-                            model.IsInitializedTensor(fNY);
-
-         if (allConstant) {
-            // ----------------------------------------------------------
-            //  Constant folding: evaluate Where at model initialisation
-            // ----------------------------------------------------------
-            auto broadcastIfNeeded = [&](const std::string &name,
-                                         const std::vector<size_t> &shape,
-                                         std::string &bcName,
-                                         const std::string &prefix) {
-               if (shape != fShapeZ) {
-                  bcName = prefix + name + "to" + fNZ;
-                  auto data = model.GetInitializedTensorData(name);
-                  std::shared_ptr<void> bcData(
-                     UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), shape, fShapeZ),
+            // Broadcast X to Z
+            if (broadcastX) {
+               fNBroadcastedX = "BC_" + fNX + "_to_" + fNZ;
+               if (model.IsInitializedTensor(fNX)) {
+                  auto data = model.GetInitializedTensorData(fNX);
+                  std::shared_ptr<void> broadcastedData(
+                     UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeX, fShapeZ),
                      std::default_delete<T[]>());
-                  model.AddConstantTensor(bcName, model.GetTensorType(name), fShapeZ, bcData);
+                  // Update the data and the shape of X
+                  model.AddConstantTensor(fNBroadcastedX, model.GetTensorType(fNX), fShapeZ, broadcastedData);
+                  fShapeX = fShapeZ;
+               } else {
+                  // I need to prepend to shape of X the extra dimensions added for broadcasting to Z
+                  if (fShapeX.size() < fShapeZ.size()) {
+                     size_t nPrepend = fShapeZ.size() - fShapeX.size();
+                     fShapeX.insert(fShapeX.begin(), nPrepend, 1);
+                  }
                }
-            };
+            }
+            // Broadcast Y to Z
+            if (broadcastY) {
+               fNBroadcastedY = "BC_" + fNY + "_to_" + fNZ;
+               if (model.IsInitializedTensor(fNY)) {
+                  auto data = model.GetInitializedTensorData(fNY);
+                  std::shared_ptr<void> broadcastedData(
+                     UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeY, fShapeZ),
+                     std::default_delete<T[]>());
+                  // do not update tensor B but add broadcasted one (since it can be input to some other operators)
+                  model.AddConstantTensor(fNBroadcastedY, model.GetTensorType(fNY), fShapeZ, broadcastedData);
+                  fShapeY = fShapeZ;
+               } else {
+                  // I need to prepend to shape of Y the extra dimensions added for broadcasting to Z
+                  if (fShapeY.size() < fShapeZ.size()) {
+                     size_t nPrepend = fShapeZ.size() - fShapeY.size();
+                     fShapeY.insert(fShapeY.begin(), nPrepend, 1);
+                  }
 
-            broadcastIfNeeded(fNX, fShapeX, fNBroadcastedX, "BC_");
-            broadcastIfNeeded(fNY, fShapeY, fNBroadcastedY, "BC_");
-            broadcastIfNeeded(fNC, fShapeC, fNBroadcastedC, "BC_");
-
-            const std::string &nameC = fNBroadcastedC.empty() ? fNC : fNBroadcastedC;
-            const std::string &nameX = fNBroadcastedX.empty() ? fNX : fNBroadcastedX;
-            const std::string &nameY = fNBroadcastedY.empty() ? fNY : fNBroadcastedY;
-
-            auto dataC = static_cast<bool *>(model.GetInitializedTensorData(nameC).get());
-            auto dataX = static_cast<T *>   (model.GetInitializedTensorData(nameX).get());
-            auto dataY = static_cast<T *>   (model.GetInitializedTensorData(nameY).get());
-
-            size_t len = ConvertShapeToLength(fShapeZ);
-            std::vector<T> dataZ(len);
-            for (size_t i = 0; i < len; ++i)
-               dataZ[i] = dataC[i] ? dataX[i] : dataY[i];
-
-            model.AddConstantTensor<T>(fNZ, fShapeZ, dataZ.data());
-            model.SetNotWritableInitializedTensor(nameC);
-            model.SetNotWritableInitializedTensor(nameX);
-            model.SetNotWritableInitializedTensor(nameY);
-            fIsOutputConstant = true;
-            fOutputTensorNames.pop_back();
-
-            if (model.Verbose())
-               std::cout << "Where --> " << fNZ << " " << ConvertShapeToString(fShapeZ)
-                         << " : " << ConvertValuesToString(dataZ) << " (constant)\n";
+               }
+            }
+            // Broadcast C to Z
+            if (broadcastC) {
+               fNBroadcastedC = "BC_" + fNC + "_to_" + fNZ;
+               if (model.IsInitializedTensor(fNC)) {
+                  auto data = model.GetInitializedTensorData(fNC);
+                  std::shared_ptr<void> broadcastedData(
+                     UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeC, fShapeZ),
+                     std::default_delete<T[]>());
+                  // do not update tensor C but add broadcasted one (since it can be input to some other operators)
+                  model.AddConstantTensor(fNBroadcastedC, model.GetTensorType(fNC), fShapeZ, broadcastedData);
+                  fShapeC = fShapeZ;
+               } else {
+                  // I need to prepend to shape of C the extra dimensions added for broadcasting to Z
+                  if (fShapeC.size() < fShapeZ.size()) {
+                     size_t nPrepend = fShapeZ.size() - fShapeC.size();
+                     fShapeC.insert(fShapeC.begin(), nPrepend, 1);
+                  }
+               }
+            }
          } else {
-            // ----------------------------------------------------------
-            //  Non-constant static tensors - we don't need to broadcast tensors
-            // ----------------------------------------------------------
+            fShapeZ = fShapeX;
+         }
+         // check case of constant  output (if all inputs are defined)
+         if (model.IsInitializedTensor(fNC)) {
+            std::string nameC = fNBroadcastedC.empty() ? fNC : fNBroadcastedC;
+            auto dataC = static_cast<bool *>(model.GetInitializedTensorData(nameC).get());
+            model.SetNotWritableInitializedTensor(nameC);
+            T *dataX = nullptr;
+            T *dataY = nullptr;
+            std::vector<Dim> shapeDataX;
+            std::vector<Dim> shapeDataY;
+            if (model.IsInitializedTensor(fNX)) {
+               std::string nameX = fNBroadcastedX.empty() ? fNX : fNBroadcastedX;
+               dataX = static_cast<T *>(model.GetInitializedTensorData(nameX).get());
+               // flag tensors to not be written in a file
+               model.SetNotWritableInitializedTensor(nameX);
+            } else if (model.IsShapeTensor(fNX)) {
+               shapeDataX = model.GetShapeTensorValues(fNX);
+            }
+            if (model.IsInitializedTensor(fNY)) {
+               std::string nameY = fNBroadcastedY.empty() ? fNY : fNBroadcastedY;
+               dataY = static_cast<T *>(model.GetInitializedTensorData(nameY).get());
+               model.SetNotWritableInitializedTensor(nameY);
+            } else if (model.IsShapeTensor(fNY)) {
+               shapeDataY = model.GetShapeTensorValues(fNY);
+            }
+            std::vector<T> dataZ;        // used in case output is constant tensor
+            std::vector<Dim> shapeDataZ; // used in case output is a shape tensor (can be also constant if all
+                                         // dimensions are not parametric)
+            // if fNC (condition) is initialized we know the output is a shape or a constant tensor,
+            // so we can compute it at initialization and add it as a constant tensor to the model
+            // (and not add the operator output as intermediate tensor to the model)
+            bool isOutputConstantTensor = true;
+            if (dataX && dataY) {
+               dataZ.resize(ConvertShapeToLength(fShapeZ));
+               for (size_t i = 0; i < dataZ.size(); i++)
+                  dataZ[i] = (dataC[i]) ? dataX[i] : dataY[i];
+               if (model.Verbose())
+                  std::cout << "data A and B : dataZ constant: " << ConvertValuesToString(dataZ) << std::endl;
+            } else if (dataX && shapeDataY.size() > 0) {
+               shapeDataZ.resize(ConvertShapeToLength(fShapeZ));
+               for (size_t i = 0; i < shapeDataZ.size(); i++) {
+                  shapeDataZ[i] = (dataC[i]) ? Dim{size_t(dataX[i])} : shapeDataY[i];
+                  isOutputConstantTensor &= !shapeDataZ[i].isParam;
+               }
+               if (model.Verbose())
+                  std::cout << "data A but shapeB " << ConvertDimShapeToString(shapeDataY) << "  "
+                         << isOutputConstantTensor << std::endl;
+            } else if (dataY && shapeDataX.size() > 0) {
+               shapeDataZ.resize(ConvertShapeToLength(fShapeZ));
+               for (size_t i = 0; i < shapeDataZ.size(); i++) {
+                  shapeDataZ[i] = (dataC[i]) ? shapeDataY[i] : Dim{size_t(dataY[i])};
+                  isOutputConstantTensor &= !shapeDataZ[i].isParam;
+               }
+               if (model.Verbose())
+                  std::cout << "data B but shapeA " << ConvertDimShapeToString(shapeDataX) << "  "
+                         << isOutputConstantTensor << std::endl;
+            } else if (shapeDataY.size() > 0 && shapeDataX.size() > 0) {
+               shapeDataZ.resize(ConvertShapeToLength(fShapeZ));
+               for (size_t i = 0; i < shapeDataZ.size(); i++) {
+                  shapeDataZ[i] = (dataC[i]) ? shapeDataX[i] : shapeDataY[i];
+                  isOutputConstantTensor &= !shapeDataZ[i].isParam;
+               }
+               if (model.Verbose())
+                  std::cout << " shapeA and B " << ConvertDimShapeToString(shapeDataX) << " shapeB "
+                         << ConvertDimShapeToString(shapeDataY) << "  " << isOutputConstantTensor << std::endl;
+            }
+            fIsOutputConstant = true;
+            // add as constant or shape tensor depending on the case
+            if (dataZ.size() > 0)
+               model.AddConstantTensor<T>(fNZ, fShapeZ, dataZ.data());
+            else if (shapeDataZ.size() > 0)
+               model.AddShapeTensor(fNZ, shapeDataZ, fShapeZ.size() == 0);
+            else {
+               fIsOutputConstant = false;
+            }
+            if (fIsOutputConstant && model.Verbose())
+               std::cout << "Where op ---> " << fNZ << "  " << ConvertShapeToString(fShapeZ) << " : "
+                         << ((dataZ.size() > 0) ? ConvertValuesToString(dataZ) : ConvertDimShapeToString(shapeDataZ))
+                         << ((dataZ.size() > 0) ? " (constant)" : " (shape)") << std::endl;
+
+            // output is a constant tensor
+            if (fIsOutputConstant)
+               fOutputTensorNames.pop_back();
+         }
+         if (!fIsOutputConstant) {
 
             fDimShapeZ = ConvertShapeToDim(fShapeZ);
             model.AddIntermediateTensor(fNZ, model.GetTensorType(fNX), fShapeZ);
-
             if (model.Verbose())
-               std::cout << "Where : C=" << fNC << " " << ConvertShapeToString(fShapeC)
-                         << "  X=" << fNX << " " << ConvertShapeToString(fShapeX)
-                         << "  Y=" << fNY << " " << ConvertShapeToString(fShapeY)
-                         << " --> Z=" << fNZ << " " << ConvertShapeToString(fShapeZ) << "\n";
+               std::cout << "Where : condition : " << fNC << "  " << ConvertShapeToString(fShapeC) << " X "
+                         << fNX << "  " << ConvertShapeToString(fShapeX) << " Y " << fNY << "  "
+                         << ConvertShapeToString(fShapeY) << " ---> " << fNZ << "  " << ConvertShapeToString(fShapeZ)
+                         << std::endl;
          }
-
       } else {
          // ---------------------------------------------------------------- //
          //  Dynamic path: at least one input has a parametric shape
@@ -227,7 +327,7 @@ public:
             for (size_t i = 0; i < fDimShapeZ.size(); i++) {
                auto &s = fDimShapeZ[i];
                if (s.isParam && s.param.find("std::max") != std::string::npos) {
-                  // prefer X dim over Y dim
+                  // prefer A dim over B dim
                   if (i < fDimShapeX.size() && IsInputDimParam(fDimShapeX[i].param)) {
                      s = (fDimShapeX[i].dim != 1) ? fDimShapeX[i] : fDimShapeY[i];
                   } else if (i < fDimShapeY.size() && IsInputDimParam(fDimShapeY[i].param)) {
@@ -236,35 +336,42 @@ public:
                }
             }
          }
+         // I need to prepend to shape of X,Y,C the extra dimensions added for broadcasting to Z
+         if (fDimShapeX.size() < fDimShapeZ.size()) {
+            size_t nPrepend = fDimShapeZ.size() - fDimShapeX.size();
+            fDimShapeX.insert(fDimShapeX.begin(), nPrepend, Dim{1});
+         }
+         if (fDimShapeY.size() < fDimShapeZ.size()) {
+            size_t nPrepend = fDimShapeZ.size() - fDimShapeY.size();
+            fDimShapeY.insert(fDimShapeY.begin(), nPrepend, Dim{1});
+         }
+         if (fDimShapeC.size() < fDimShapeZ.size()) {
+            size_t nPrepend = fDimShapeZ.size() - fDimShapeC.size();
+            fDimShapeC.insert(fDimShapeC.begin(), nPrepend, Dim{1});
+         }
 
          model.AddIntermediateTensor(fNZ, model.GetTensorType(fNX), fDimShapeZ);
 
          if (model.Verbose())
             std::cout << "Where (dynamic) : C=" << ConvertDimShapeToString(fDimShapeC)
-                      << "  X=" << ConvertDimShapeToString(fDimShapeX)
-                      << "  Y=" << ConvertDimShapeToString(fDimShapeY)
-                      << " --> Z=" << ConvertDimShapeToString(fDimShapeZ) << "\n";
+                      << "  A=" << ConvertDimShapeToString(fDimShapeX)
+                      << "  B=" << ConvertDimShapeToString(fDimShapeY)
+                      << " --> Y=" << ConvertDimShapeToString(fDimShapeZ) << "\n";
       }
    }
 
-   std::string GenerateInitCode() override
-   {
+   std::string GenerateInitCode() override {
       std::stringstream out;
       return out.str();
    }
 
-   std::string Generate(std::string opName) override
-   {
-      if (fIsOutputConstant) return "";
+   std::string Generate(std::string opName) override {
 
       opName = "op_" + opName;
-
-      if (fDimShapeZ.empty()) {
-         throw std::runtime_error("TMVA SOFIE Where Op called to Generate without being initialized first");
-      }
-
       std::stringstream out;
       out << SP << "\n//------ WHERE " << opName << " --> " << ConvertDimShapeToString(fDimShapeZ) << "\n";
+      if (fIsOutputConstant) return out.str();
+
 
       // ---------------------------------------------------------------- //
       //  Runtime broadcast validation (dynamic shapes, flag bit 4)
@@ -281,14 +388,14 @@ public:
                out << SP << SP << "if (" << fDimShapeX[i] << " != 1 && "
                    << fDimShapeX[i] << " != " << fDimShapeZ[i] << ")\n";
                out << SP << SP << SP
-                   << "throw std::runtime_error(\"SOFIE Where: cannot broadcast X dim " << i << " in " << opName << "\");\n";
+                   << "throw std::runtime_error(\"SOFIE Where: cannot broadcast A dim " << i << " in " << opName << "\");\n";
             }
             // validate Y vs Z
             if (i < fDimShapeY.size() && fDimShapeY[i].isParam) {
                out << SP << SP << "if (" << fDimShapeY[i] << " != 1 && "
                    << fDimShapeY[i] << " != " << fDimShapeZ[i] << ")\n";
                out << SP << SP << SP
-                   << "throw std::runtime_error(\"SOFIE Where: cannot broadcast Y dim " << i << " in " << opName << "\");\n";
+                   << "throw std::runtime_error(\"SOFIE Where: cannot broadcast B dim " << i << " in " << opName << "\");\n";
             }
             // validate C vs Z
             if (i < fDimShapeC.size() && fDimShapeC[i].isParam) {
@@ -300,10 +407,8 @@ public:
          }
          out << SP << "}\n";
       }
-
+      // implement now where using teh strides and looping on the different dimensions
       // ---------------------------------------------------------------- //
-      //  Runtime for non-constant, non-initialised tensors
-      //
       //  Generate loop(s) with per-dimension stride-based index arithmetic
       // ---------------------------------------------------------------- //
       auto stridesX = UTILITY::ComputeStrideFromShape(fDimShapeX);
@@ -336,9 +441,10 @@ public:
       std::string idxY = buildIdxExpr(fDimShapeY, stridesY, fDimShapeZ.size());
       std::string idxC = buildIdxExpr(fDimShapeC, stridesC, fDimShapeZ.size());
 
-      // Emit nested loops over output shape
+       // Emit nested loops over output shape
       int nloop = 0;
       std::string idxZ;
+      // case Z is a scalar (all dimensions are 1) or Z has no dimension
       if (fDimShapeZ.empty() ||
           std::all_of(fDimShapeZ.begin(), fDimShapeZ.end(),
                       [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
@@ -375,10 +481,13 @@ public:
 
       return out.str();
    }
+
+
 };
 
-} // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
+}//SOFIE
+}//Experimental
+}//TMVA
 
-#endif // TMVA_SOFIE_ROperator_Where
+
+#endif //TMVA_SOFIE_ROperator_Where

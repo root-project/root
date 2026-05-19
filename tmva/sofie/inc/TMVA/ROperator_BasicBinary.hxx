@@ -209,8 +209,8 @@ public:
                          << ConvertShapeToString(fShapeY) << " : " << ConvertValuesToString(dataY) << std::endl;
             }
          } else if (((model.IsShapeTensor(fNA) && model.IsShapeTensor(fNB)) ||
-                    (model.IsShapeTensor(fNA) && model.IsConstantTensor(fNB)) ||
-                    (model.IsShapeTensor(fNB) && model.IsConstantTensor(fNA)))
+                    (model.IsShapeTensor(fNA) && model.IsInitializedTensor(fNB)) ||
+                    (model.IsShapeTensor(fNB) && model.IsInitializedTensor(fNA)))
                      && (fShapeA.size() <=1 && fShapeB.size() <=1 &&  model.GetTensorType(fNA) == ETensorType::INT64)) {
             // case of shape tensors ( tensors are of rank 0 or 1  )
             std::vector<Dim> dimValA;
@@ -235,9 +235,9 @@ public:
                      dimValues[i] = Dim{ static_cast<size_t>(data[0])};
                }
             };
-            if (model.IsConstantTensor(fNA)) {
+            if (model.IsInitializedTensor(fNA)) {
                convertDataToDim(fNA,fShapeA,dimValA);
-            } else if (model.IsConstantTensor(fNB)) {
+            } else if (model.IsInitializedTensor(fNB)) {
                convertDataToDim(fNB,fShapeB,dimValB);
             }
 

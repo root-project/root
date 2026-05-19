@@ -19,6 +19,7 @@ private:
 
    std::string fNX;
    std::string fNY;
+   std::string fNonZeroParam; // name of the parameter used to store the number of non zero elements when output is not constant
    std::vector<Dim> fShapeX;
    std::vector<Dim> fShapeY;
 
@@ -93,7 +94,15 @@ public:
          fShapeY[0] = fShapeX.size();
 
          // identify as -1 since we will declare maximum as size of input
-         fShapeY[1] = Dim{std::string("v_NonZero_") + fNX, static_cast<size_t>(-1)};
+         // we will compute at run time the actual number of non zero and rearrange the output vector accordingly
+         fNonZeroParam = "v_NonZero_" + fNX;
+         fShapeY[1] = Dim{fNonZeroParam, static_cast<size_t>(-1)};
+
+         // declare the parameter for number of non zero elements, used when output is not constant
+         auto inputLength = ConvertDimShapeToLength(fShapeX);
+         std::string codeDecl = SP + "size_t " + fNonZeroParam + " = " + inputLength + ";\n";
+         codeDecl += SP + "fV_NonZero_" + fNX + " = " + fNonZeroParam + ";\n";
+         model.AddExtraCodeForDimShapes(codeDecl);
 
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fShapeY);
          if (model.Verbose()) {
@@ -104,12 +113,11 @@ public:
 
    std::string GenerateSessionMembersCode(std::string /*opName*/) override {
       if (fIsOutputConstant) return "";
-      // define output value used as max non zero with max size = input shape * N
-      auto inputLength = ConvertDimShapeToLength(fShapeX);
       std::stringstream out;
-      out << SP << "size_t fV_NonZero_" << fNX << " = " << inputLength << ";\n";
+      out << SP << "size_t fV_NonZero_" << fNX << " = 0;\n";
       return out.str();
    }
+
 
    std::string Generate(std::string opName) override {
       if (fIsOutputConstant) {
@@ -127,9 +135,9 @@ public:
          inputLength = ConvertShapeToLength(intShapeX);
 
       size_t dims = fShapeX.size();
-      out << "\n//------ NonZero\n";
+      out << "\n//------ NonZero  -> " << ConvertDimShapeToString(fShapeY) << "\n";
 
-      std::string vnonzero = "v_NonZero_" + fNX;
+      std::string vnonzero = fNonZeroParam;
 
       // loop on input indices
       out << SP << "size_t offset_" << opName << " = 0;\n";

@@ -26,6 +26,7 @@ enum class Options {
    kRootBinaryWeightFile = 0x4,
    kGNN = 0x8,
    kGNNComponent = 0x10,
+   kProfile = 0x20,
 };
 
 // Optimization levels inspired by ONNXRuntime.
@@ -82,10 +83,8 @@ public:
    }
    void AddNeededStdLib(std::string libname)
    {
-      static const std::unordered_set<std::string> allowedStdLib = {"vector", "algorithm", "cmath", "memory", "span"};
-      if (allowedStdLib.find(libname) != allowedStdLib.end()) {
-         fNeededStdLib.insert(libname);
-      }
+      // if the library is already in the set, insert does nothing, so we don't need to check before inserting
+      fNeededStdLib.insert(libname);
    }
    void AddNeededCustomHeader(std::string filename)
    {

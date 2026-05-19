@@ -26,10 +26,12 @@ private:
    std::vector<Dim> fShapeX;
    std::vector<Dim> fShapeIndices;
    std::vector<Dim> fShapeY;
+   std::vector<Dim> fOutputShapeData;
 
    std::vector<int64_t> fIndices;  // indices vector in case they are known at initialization
 
    std::string fType;
+
 
 public:
    ROperator_Gather(){}
@@ -70,19 +72,27 @@ public:
       // case indices tensor is initialized
       if (model.IsInitializedTensor(fNIndices)) {
           // empty shape Indices is a scalar value for the indices
+         bool hasNegativeIndex = false;
          size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
-         int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+         int64_t* data = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+         // copy in a vector since we may need to update the values in case of negative indices
+         fIndices =std::vector<int64_t>(data, data + indicesLength);
          // update indices data in case of negative dim values
          for (size_t i = 0; i < indicesLength; i++) {
             // move this at generation time?
             if (!fShapeX[fAttrAxis].isParam) {
-               if (indicesData[i] < 0) {
-                  indicesData[i] += fShapeX[fAttrAxis].dim;
+               if (fIndices[i] < 0) {
+                  hasNegativeIndex = true;
+                  fIndices[i] += fShapeX[fAttrAxis].dim;
                }
             }
          }
-         // Save in a vector gather Indices of size q
-         fIndices = std::vector<int64_t>(indicesData, indicesData + indicesLength);
+         // for negative indices we need to add an extra constant tensor
+         if (hasNegativeIndex) {
+            std::string nameIndicesUpdated = fNIndices + "_updated";
+            model.AddConstantTensor(nameIndicesUpdated, model.GetTensorShape(fNIndices), fIndices.data());
+            fNIndices = nameIndicesUpdated;
+         }
       }
       // Output shape
       if (model.Verbose())
@@ -121,17 +131,17 @@ public:
       else if (model.IsShapeTensor(fNX) && q <=1  && fIndices.size() > 0) {
          auto inputData = model.GetShapeTensorValues(fNX);
          // if r == 1 and q<=1 then output length is 1 (is a scalar or tensor of size1)
-         std::vector<Dim> outputData(1);
-         outputData[0] = inputData[fIndices[0]];
-         if (outputData[0].isParam) {
-            fIsOutputConstant = true;
+         fOutputShapeData.resize(1);
+         fOutputShapeData[0] = inputData[fIndices[0]];
+         if (fOutputShapeData[0].isParam) {
+            fIsOutputParamShape = true;
             // shapeY can be scalar or vector of size1
-            model.AddShapeTensor(fNY, outputData, fShapeY.size() == 0);
+            model.AddShapeTensor(fNY, fOutputShapeData, fShapeY.size() == 0);
             if (model.Verbose())
                std::cout << "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
-                   << " and values " << ConvertDimShapeToString(outputData) << " (shape) " << std::endl;
+                   << " and values " << ConvertDimShapeToString(fOutputShapeData) << " (shape) " << std::endl;
          } else {
-            int64_t value = static_cast<int64_t>(outputData[0].dim);
+            int64_t value = static_cast<int64_t>(fOutputShapeData[0].dim);
             auto shapeY = ConvertShapeToInt(fShapeY);
             model.AddConstantTensor(fNY, shapeY, &value);
             fIsOutputConstant = true;
@@ -140,7 +150,7 @@ public:
                    << " and values {" << value <<  "} (constant) " << std::endl;
          }
       }
-      if (!fIsOutputConstant) {
+      if (!fIsOutputConstant && !fIsOutputParamShape) {
          // Add output tensor
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
@@ -157,6 +167,14 @@ public:
       if (fIsOutputConstant) {
          // no code to generate here for constant output. Tensor output is defined in Session constructor
          out << "//--------------------(constant)----------\n";
+         return out.str();
+      }
+      if (fIsOutputParamShape) {
+         // no code to generate here for param shape output. Tensor output is defined in Session constructor
+         out << "//--------------------(shape)----------\n";
+         for (int i = 0; i < static_cast<int>(fOutputShapeData.size()); i++) {
+            out << SP << "tensor_" << fNY << "[" << i << " ] = " << fOutputShapeData[i].GetVal() << ";\n";
+         }
          return out.str();
       }
       // The shape of the output is q + r - 1
