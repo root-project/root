@@ -102,6 +102,14 @@ jobs:
         cd ROOT-CI/src/documentation/doxygen
         make -j "$(nproc --all)"
 
+    - name: Clean temporary files
+      # These files are used when doxygen runs incrementally
+      shell: bash
+      run: |
+        cd "/github/home/${DOC_DIR}"
+        rm html/*.md5
+        rm html/*.map
+
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
