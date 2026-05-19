@@ -612,8 +612,8 @@ void TCanvas::Build()
 
    if (IsBatch()) {
       // Make sure that batch interactive canvas sizes are the same
-      fCw -= 4;
-      fCh -= 28;
+      fCw -= 2;
+      fCh -= 24;
    } else if (IsWeb()) {
       // mark canvas as batch - avoid gVirtualX in many places
       SetBatch(kTRUE);
