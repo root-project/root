@@ -11,7 +11,7 @@
 
 /**
 \class TXMLParser
-\ingroup IO
+\ingroup io_xml
 
 TXMLParser is an abstract class which interfaces with Libxml2.
 Libxml2 is the XML C parser and toolkit developed for the Gnome

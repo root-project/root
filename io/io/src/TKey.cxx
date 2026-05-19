@@ -11,7 +11,7 @@
 
 /**
 \class TKey
-\ingroup IO
+\ingroup io_files
 
  Book space in a file, create I/O buffers, to fill them, (un)compress them.
 

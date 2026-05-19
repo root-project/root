@@ -11,7 +11,7 @@
 
 /**
 \class TSAXParser
-\ingroup IO
+\ingroup io_xml
 
 TSAXParser is a subclass of TXMLParser, it is a wraper class to
 libxml library.

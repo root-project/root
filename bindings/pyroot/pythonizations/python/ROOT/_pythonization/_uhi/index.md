@@ -1,18 +1,34 @@
-\defgroup uhi_docs Unified Histogram Interface (UHI)
-\ingroup Pythonizations
+\defgroup Py_UHI Unified Histogram Interface (UHI)
+\ingroup Python
+\brief Using ROOT histograms in Python
 
-ROOT histograms implement the [Unified Histogram Interface (UHI)](https://uhi.readthedocs.io/en/latest/index.html), enhancing interoperability with other UHI-compatible libraries. This compliance standardizes histogram operations, making tasks like plotting, indexing, and slicing more intuitive and consistent.
+# ROOT Histograms & UHI
 
-# Table of contents
-- [Plotting](\ref plotting)
-    - [Plotting with mplhep](\ref plotting-with-mplhep)
-    - [Additional Notes](\ref additional-notes-1)
-- [Indexing](\ref indexing)
-    - [Setup](\ref setup)
-    - [Slicing](\ref slicing)
-    - [Setting](\ref setting)
-    - [Access](\ref access)
-    - [Additional Notes](\ref additional-notes-2)
+ROOT histograms implement the [Unified Histogram Interface (UHI)](https://uhi.readthedocs.io/en/latest/index.html), a standard protocol that makes ROOT histograms interoperable with the broader Python
+scientific ecosystem. This compliance standardizes histogram operations, making tasks like plotting, indexing, and slicing more intuitive and consistent.
+
+\note UHI support is available for all [`TH1`](https://root.cern.ch/doc/master/classTH1.html)-derived
+classes, including [`TH2`](https://root.cern.ch/doc/master/classTH2.html) and
+[`TH3`](https://root.cern.ch/doc/master/classTH3.html).
+
+## Cheat Sheet
+
+A one-page quick reference covering the API.
+
+\htmlonly
+<object data="uhi-cheatsheet.pdf"
+        type="application/pdf"
+        width="100%"
+        height="520px"
+        style="border:1px solid #ccc;border-radius:6px;">
+  <p>PDF preview not available in your browser.</p>
+</object>
+<a href="uhi-cheatsheet.pdf"
+   style="display:inline-block;margin-top:8px;padding:6px 14px;background:#1a73e8;
+          color:#fff;border-radius:4px;text-decoration:none;font-size:13px;">
+  ⬇ Download cheat sheet (PDF)
+</a>
+\endhtmlonly
 
 
 \anchor plotting
@@ -28,10 +44,12 @@ You can read more about the protocol on the [UHI plotting](https://uhi.readthedo
 import ROOT
 import matplotlib.pyplot as plt
 import mplhep as hep
+import numpy as np
 
 # Create and fill a 1D histogram 
 h1 = ROOT.TH1D("h1", "MyHist", 10, -1, 1)
-h1.FillRandom("gaus", 1000)
+arr = np.random.normal(0, 1, 1000)
+h1.Fill(arr)
 
 # Load a style sheet and plot the histogram
 hep.style.use("LHCb2")
@@ -40,38 +58,15 @@ plt.title("MyHist")
 plt.show()
 ```
 
-\image html uhi_th1_plot.png width=600px
+For 2D histograms, use `hep.hist2dplot`:
 
-\anchor additional-notes-1
-## Additional Notes
-
-- UHI plotting related pythonizations are added to all [`TH1`](https://root.cern.ch/doc/master/classTH1.html)-derived classes (that includes [`TH2`](https://root.cern.ch/doc/master/classTH2.html) and [`TH3`](https://root.cern.ch/doc/master/classTH3.html)).
-- While some libraries such as [mplhep](https://github.com/scikit-hep/mplhep) may not yet support multidimensional `PlottableHistogram` objects, you can call `.values()` on your histogram to retrieve a [`numpy.ndarray`](https://numpy.org/doc/2.2/reference/generated/numpy.ndarray.html) and pass it to appropriate plotting functions.
-        - Example plotting a 2D ROOT histogram with [`matplotlib.pyplot.imshow`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html#matplotlib-pyplot-imshow) and [`seaborn.heatmap`](https://seaborn.pydata.org/generated/seaborn.heatmap.html#seaborn-heatmap):
 ```python
-import ROOT
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-
 h2 = ROOT.TH2D("h2", "h2", 10, -1, 1, 10, -1, 1)
-h2[...] = np.random.rand(10, 10)
+h2.FillRandom("gaus", 10000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-
-# First subplot with imshow
-ax1.imshow(h2.values(), cmap='hot', interpolation='nearest')
-ax1.set_title("imshow")
-
-# Second subplot with seaborn heatmap
-sns.heatmap(h2.values(), linewidth=0.5, ax=ax2)
-ax2.set_title("heatmap")
-
-plt.tight_layout()
+hep.hist2dplot(h2)
 plt.show()
 ```
-
-\image html uhi_th2_plot.png width=800px
 
 \anchor indexing
 # Indexing
@@ -132,7 +127,7 @@ h[...] = 5
 ```
 
 \anchor access
-## Access
+### Access
 ```python
 # Accessing the bin contents using the bin number
 v = h[1, 2]
@@ -165,3 +160,20 @@ v = h[underflow, underflow]
 - **Setting operations**
         - Setting with a scalar does not set the flow bins.
         - Setting with an array checks whether the array matches the shape of the histogram with flow bins or the size without flow bins.
+
+
+# Serialization
+
+ROOT histograms can be serialized to a [shared UHI format](https://uhi.readthedocs.io/en/latest/serialization.html)
+and deserialized into any UHI-compatible library, enabling histogram exchange between ROOT, boost-histogram, hist and others without manual conversion.
+
+```python
+import json, uhi.io.json, hist
+
+# ROOT histogram → JSON
+ob = json.dumps(h_root, default=uhi.io.json.default)
+
+# JSON → any UHI-compatible library
+ir     = json.loads(ob, object_hook=uhi.io.json.object_hook)
+h_hist = hist.Hist(ir)
+```

@@ -12,7 +12,7 @@
 /**
 \file TBufferFile.cxx
 \class TBufferFile
-\ingroup IO
+\ingroup io_other
 
 The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 */

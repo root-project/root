@@ -1,5 +1,4 @@
 /// \file ROOT/RField/RFieldSoA.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2026-03-03
 

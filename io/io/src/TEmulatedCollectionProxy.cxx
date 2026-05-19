@@ -11,7 +11,7 @@
 
 /**
  \class TEmulatedCollectionProxy
- \ingroup IO
+ \ingroup io_other
 
 Streamer around an arbitrary STL like container, which implements basic
 container functionality.

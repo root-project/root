@@ -166,6 +166,9 @@ public:
    {
    }
 
+   /// \name Transformation
+   /// \{
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Cast any RDataFrame node to a common type ROOT::RDF::RNode.
    /// Different RDataFrame methods return different C++ types. All nodes, however,
@@ -3730,6 +3733,8 @@ public:
       ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows, nMaxCollectionElements);
    }
+
+   /// \}
 
 private:
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>

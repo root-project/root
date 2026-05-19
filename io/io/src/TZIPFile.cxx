@@ -11,7 +11,7 @@
 
 /**
 \class TZIPFile
-\ingroup IO
+\ingroup io_ZIP
 
 Describes a ZIP archive file containing multiple sub-files.
 
