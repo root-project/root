@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /**
- * \defgroup treeplayer TTreePlayer
+ * \defgroup treeplayer TreePlayer
  * \ingroup tree
  * \brief It contains utilities to plot data stored in a TTree.
  * \note See also Tree package documentation

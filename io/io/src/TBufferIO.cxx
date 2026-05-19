@@ -12,7 +12,7 @@
 /**
 \file TBufferIO.cxx
 \class TBufferIO
-\ingroup IO
+\ingroup io_other
 
 Direct subclass of TBuffer, implements common methods for TBufferFile and TBufferText classes
 */

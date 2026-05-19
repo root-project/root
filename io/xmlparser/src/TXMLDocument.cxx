@@ -11,7 +11,7 @@
 
 /**
 \class TXMLDocument
-\ingroup IO
+\ingroup io_xml
 
 TXMLDocument contains a pointer to an xmlDoc structure, after the
 parser returns a tree built during the document analysis.

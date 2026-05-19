@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleMerger.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>
 /// \date 2020-07-08
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

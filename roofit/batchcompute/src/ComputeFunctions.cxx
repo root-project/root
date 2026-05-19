@@ -12,7 +12,6 @@
 
 /**
 \file ComputeFunctions.cxx
-\ingroup roofit_dev_docs_batchcompute
 
 This file contains vectorizable computation functions for PDFs and other Roofit objects.
 The same source file can also be compiled with nvcc. All functions have a single `Batches`

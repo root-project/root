@@ -1,5 +1,4 @@
 /// \file ROOT/RMiniFile.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-22
 

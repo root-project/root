@@ -1,5 +1,4 @@
 /// \file ROOT/RFieldVisitor.hxx
-/// \ingroup NTuple
 /// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
 /// \date 2019-06-11
 

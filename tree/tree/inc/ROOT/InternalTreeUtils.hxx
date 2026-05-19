@@ -8,7 +8,6 @@
 
 /**
  \file ROOT/InternalTreeUtils.hxx
- \ingroup tree
  \author Enric Tejedor Saavedra
  \author Enrico Guiraud
  \author Vincenzo Eduardo Padulano

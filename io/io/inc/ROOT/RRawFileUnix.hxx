@@ -23,7 +23,7 @@ namespace Internal {
 
 /**
  * \class RRawFileUnix RRawFileUnix.hxx
- * \ingroup IO
+ * \ingroup io_files
  *
  * The RRawFileUnix class uses POSIX calls to read from a mounted file system. Thus the path name can refer,
  * for instance, to a named pipe instead of a regular file.

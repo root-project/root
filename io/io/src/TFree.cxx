@@ -18,7 +18,7 @@
 
 /**
 \class TFree
-\ingroup IO
+\ingroup io_other
 Service class for TFile.
 
 Each file has a linked list of free segments. Each free segment is described
