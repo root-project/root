@@ -511,7 +511,9 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 THttpEngine implementation, based on civetweb embedded server
 
 It is default kind of engine, created for THttpServer
-Currently v1.15 from https://github.com/civetweb/civetweb is used
+When `builtin_civetweb=ON` (default), the release is grabbed from https://github.com/civetweb/civetweb corresponding
+to the version defined in https://github.com/root-project/root/blob/master/builtins/civetweb/CMakeLists.txt
+Switching to `builtin_civetweb=OFF` in order to use system-packages instead might lead to instabilities on some platforms.
 
 Additional options can be specified:
 
