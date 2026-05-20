@@ -132,25 +132,27 @@ Bool_t VerifySize(const char *filename, const char *title)
          success = kFALSE;
       else
          success = kTRUE;
-
-      snprintf(gLine,80,"Test %2d: %s", gTestNum, title);
-      const Int_t nch = strlen(gLine);
-      if (success) {
-         std::cout << gLine;
-         for (Int_t i = nch; i < 67; i++) std::cout << ".";
-         std::cout << " OK" << std::endl;
-      } else {
-         std::cout << gLine;
-         for (Int_t i = nch; i < 63; i++) std::cout << ".";
-         std::cout << " FAILED" << std::endl;
-         std::cout << "         File Size = "  << fsize << std::endl;
-         std::cout << "          Ref Size = "  << sizes[gTestNum] << std::endl;
-      }
    } else {
       fprintf(sgref, "%5d%10d\n", gTestNum, fsize);
       success = kTRUE;
    }
-   if (!gOptionKeep && success) gSystem->Unlink(filename);
+
+   snprintf(gLine,80,"Test %2d: %s", gTestNum, title);
+   const Int_t nch = strlen(gLine);
+   if (success) {
+      std::cout << gLine;
+      for (Int_t i = nch; i < 67; i++) std::cout << ".";
+      std::cout << (gOptionRef ? " REF" : " OK") << std::endl;
+   } else {
+      std::cout << gLine;
+      for (Int_t i = nch; i < 63; i++) std::cout << ".";
+      std::cout << " FAILED" << std::endl;
+      std::cout << "         File Size = "  << fsize << std::endl;
+      std::cout << "          Ref Size = "  << sizes[gTestNum] << std::endl;
+   }
+
+   if (!gOptionKeep && success)
+      gSystem->Unlink(filename);
    return success;
 }
 
