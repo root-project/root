@@ -648,7 +648,7 @@ jobs:
         echo +++ Creating the token
         kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         echo +++ Running the copy
-        xrdcp -rf Binaries*/root_v* ${EOS_ENDPOINT}/${EOS_PATH}/
+        xrdcp --parallel 64 -rf Binaries*/root_v* ${EOS_ENDPOINT}/${EOS_PATH}/
 
 
   invoke_rn_creation:
