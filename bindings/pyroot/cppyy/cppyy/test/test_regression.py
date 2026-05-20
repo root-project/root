@@ -1414,14 +1414,11 @@ class TestREGRESSION:
         assert out == ""
         assert err == ""
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM or IS_WINDOWS == 64, reason="LLVM JIT fails to catch exceptions")
+    @mark.xfail(run=False, condition=IS_WINDOWS == 64, reason="LLVM JIT fails to catch exceptions")
     def test49_overloads_with_runtime_errors(self):
         """Regression test for https://github.com/root-project/root/issues/17497
 
-        See https://github.com/root-project/root/issues/7541 and
-        https://bugs.llvm.org/show_bug.cgi?id=49692 :
-        llvm JIT fails to catch exceptions on MacOS ARM, so we disable their testing
-        Also fails on Windows 64bit for the same reason
+        LLVM JIT failes to catch exceptions on Windows 64bit, so we disable their testing
         """
         import cppyy
 

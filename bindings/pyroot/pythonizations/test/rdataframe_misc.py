@@ -51,11 +51,8 @@ class RDataFrameMisc(unittest.TestCase):
         """
         An empty list of filenames should be detected and the user should be informed
         """
-        # See https://github.com/root-project/root/issues/7541 and
-        # https://bugs.llvm.org/show_bug.cgi?id=49692 :
-        # llvm JIT fails to catch exceptions on MacOS ARM, so we disable their testing
-        # Also fails on Windows for the same reason
-        if (platform.processor() != "arm" or platform.mac_ver()[0] == "") and not platform.system() == "Windows":
+        # LLVM JIT fails to catch exceptions on Windows, so we disable their testing
+        if not platform.system() == "Windows":
             # With implicit conversions, cppyy also needs to try dispatching to the various
             # constructor overloads. The C++ exception will be thrown, but will be incapsulated
             # in a more generic TypeError telling the user that none of the overloads worked
