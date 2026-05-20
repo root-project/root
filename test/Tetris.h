@@ -16,6 +16,21 @@
 #ifndef TETRIS_H
 #define TETRIS_H
 
+#ifdef __ROOTCLING__
+#pragma link C++ class Tetris+;
+#pragma link C++ class TetrisBox+;
+#pragma link C++ class TetrisPiece+;
+#pragma link C++ class CurrentPiece+;
+#pragma link C++ class TetrisBoard+;
+#pragma link C++ class NextPiecePad+;
+#pragma link C++ class InfoPad+;
+#pragma link C++ class NewGameButton+;
+#pragma link C++ class QuitButton+;
+#pragma link C++ class PauseButton+;
+#pragma link C++ class KeyHandler+;
+#pragma link C++ class UpdateLevelTimer+;
+#endif
+
 #include <TTimer.h>
 #include <TCanvas.h>
 #include <TGFrame.h>
