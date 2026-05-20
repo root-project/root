@@ -1,3 +1,4 @@
+import math
 import os
 import unittest
 from random import randrange, uniform
@@ -5779,7 +5780,7 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
         min_allowed_sampling_ratio = entries_in_rdf_minor / entries_in_rdf_major
-        sampling_ratio = round(uniform(min_allowed_sampling_ratio, 2), 2)
+        sampling_ratio = math.ceil(uniform(min_allowed_sampling_ratio, 2) * 100) / 100
 
         error_message = f"\n Batch size: {batch_size}\
             Number of major entries: {entries_in_rdf_major} \
