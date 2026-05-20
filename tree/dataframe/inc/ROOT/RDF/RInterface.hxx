@@ -1364,487 +1364,6 @@ public:
    // ---------------------------------------------------------------------------------
    // End of the doxygen group for Transformations
 
-   /// \name Immediate Actions
-   /// Immediate Actions start the event loop and generate a type of result.
-   /// \{
-
-   template <typename... ColumnTypes>
-   [[deprecated("Snapshot is not any more a template. You can safely remove the template parameters.")]]
-   RResultPtr<RInterface<RLoopManager>>
-   Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
-            const RSnapshotOptions &options = RSnapshotOptions())
-   {
-      return Snapshot(treename, filename, columnList, options);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree or RNTuple.
-   /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
-   /// \return a `RDataFrame` that wraps the snapshotted dataset.
-   ///
-   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
-   /// The types of the columns are automatically inferred and do not need to be specified.
-   ///
-   /// Support for writing of nested branches/fields is limited (although RDataFrame is able to read them) and dot ('.')
-   /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
-   /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
-   /// written out and it appears before the array in the columnList.
-   ///
-   /// By default, in case of TTree, TChain or RNTuple inputs, Snapshot will try to write out all top-level branches.
-   /// For other types of inputs, all columns returned by GetColumnNames() will be written out. Systematic variations of
-   /// columns will be included if the corresponding flag is set in RSnapshotOptions. See \ref snapshot-with-variations
-   /// "Snapshot with Variations" for more details. If friend trees or chains are present, by default all friend
-   /// top-level branches that have names that do not collide with names of branches in the main TTree/TChain will be
-   /// written out. Since v6.24, Snapshot will also write out friend branches with the same names of branches in the
-   /// main TTree/TChain with names of the form
-   /// `<friendname>_<branchname>` in order to differentiate them from the branches in the main tree/chain.
-   ///
-   /// ### Writing to a sub-directory
-   ///
-   /// Snapshot supports writing the TTree or RNTuple in a sub-directory inside the TFile. It is sufficient to specify
-   /// the directory path as part of the TTree or RNTuple name, e.g. `df.Snapshot("subdir/t", "f.root")` writes TTree
-   /// `t` in the sub-directory `subdir` of file `f.root` (creating file and sub-directory as needed).
-   ///
-   /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
-   /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled
-   /// with respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in
-   /// wrong associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
-   /// error out if such a "shuffled" TTree is used in a friendship.
-   ///
-   /// \note In case no events are written out (e.g. because no event passes all filters), Snapshot will still write the
-   /// requested output TTree or RNTuple to the file, with all the branches requested to preserve the dataset schema.
-   ///
-   /// \note Snapshot will refuse to process columns with names of the form `#columnname`. These are special columns
-   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
-   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
-   /// Alias(): `df.Alias("nbar", "#bar").Snapshot(..., {"nbar"})`.
-   ///
-   /// ### Example invocations:
-   ///
-   /// ~~~{.cpp}
-   /// // No need to specify column types, they are automatically deduced thanks
-   /// // to information coming from the data source
-   /// df.Snapshot("outputTree", "outputFile.root", {"x", "y"});
-   /// ~~~
-   ///
-   /// To book a Snapshot without triggering the event loop, one needs to set the appropriate flag in
-   /// `RSnapshotOptions`:
-   /// ~~~{.cpp}
-   /// RSnapshotOptions opts;
-   /// opts.fLazy = true;
-   /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
-   /// ~~~
-   ///
-   /// To snapshot to the RNTuple data format, the `fOutputFormat` option in `RSnapshotOptions` needs to be set
-   /// accordingly:
-   /// ~~~{.cpp}
-   /// RSnapshotOptions opts;
-   /// opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-   /// df.Snapshot("outputNTuple", "outputFile.root", {"x"}, opts);
-   /// ~~~
-   ///
-   /// Snapshot systematic variations resulting from a Vary() call (see details \ref snapshot-with-variations "here"):
-   /// ~~~{.cpp}
-   /// RSnapshotOptions opts;
-   /// opts.fIncludeVariations = true;
-   /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
-   /// ~~~
-   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
-                                                 const ColumnNames_t &columnList,
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
-   {
-      // like columnList but with `#var` columns removed
-      auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
-      // like columnListWithoutSizeColumns but with aliases resolved
-      auto colListNoAliases = GetValidatedColumnNames(colListNoPoundSizes.size(), colListNoPoundSizes);
-      RDFInternal::CheckForDuplicateSnapshotColumns(colListNoAliases);
-      // like validCols but with missing size branches required by array branches added in the right positions
-      const auto pairOfColumnLists =
-         RDFInternal::AddSizeBranches(GetDataSource(), std::move(colListNoAliases), std::move(colListNoPoundSizes));
-      const auto &colListNoAliasesWithSizeBranches = pairOfColumnLists.first;
-      const auto &colListWithAliasesAndSizeBranches = pairOfColumnLists.second;
-
-      const auto fullTreeName = treename;
-      const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
-      treename = parsedTreePath.fTreeName;
-      const auto &dirname = parsedTreePath.fDirName;
-
-      ::TDirectory::TContext ctxt;
-
-      RResultPtr<RInterface<RLoopManager>> resPtr;
-
-      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName,
-                               bool isRNTuple = false) -> const std::type_info * {
-         try {
-            return &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
-         } catch (const std::runtime_error &err) {
-            if (isRNTuple)
-               return &typeid(ROOT::Internal::RDF::UseNativeDataType);
-
-            if (std::string(err.what()).find("Cannot extract type_info of type") != std::string::npos) {
-               // We could not find RTTI for this column, thus we cannot write it out at the moment.
-               std::string trueTypeName{colTypeName};
-               if (colTypeName.rfind("CLING_UNKNOWN_TYPE", 0) == 0)
-                  trueTypeName = colTypeName.substr(19);
-               std::string msg{"No runtime type information is available for column \"" + colName +
-                               "\" with type name \"" + trueTypeName +
-                               "\". Thus, it cannot be written to disk with Snapshot. Make sure to generate and load "
-                               "ROOT dictionaries for the type of this column."};
-
-               throw std::runtime_error(msg);
-            } else {
-               throw;
-            }
-         }
-      };
-
-      RDFInternal::CheckSnapshotOptionsFormatCompatibility(options);
-
-      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
-         // The data source of the RNTuple resulting from the Snapshot action does not exist yet here, so we create one
-         // without a data source for now, and set it once the actual data source can be created (i.e., after
-         // writing the RNTuple).
-         auto newRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(colListNoPoundSizes));
-
-         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-            std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
-            options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */, /*fIncludeVariations=*/false});
-
-         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
-         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
-
-         const auto nSlots = fLoopManager->GetNSlots();
-         std::vector<const std::type_info *> colTypeIDs;
-         colTypeIDs.reserve(nColumns);
-         for (decltype(nColumns) i{}; i < nColumns; i++) {
-            const auto &colName = validColumnNames[i];
-            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
-               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
-            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName, /*isRNTuple*/ true);
-            colTypeIDs.push_back(colTypeID);
-         }
-         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
-         // source
-         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
-
-         auto action =
-            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
-         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
-      } else {
-         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
-             options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
-            Warning("Snapshot",
-                    "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
-                    "want to Snapshot to RNTuple or suppress this warning, set the appropriate fOutputFormat option in "
-                    "RSnapshotOptions. Note that this current default behaviour might change in the future.");
-         }
-
-         // We create an RLoopManager without a data source. This needs to be initialised when the output TTree dataset
-         // has actually been created and written to TFile, i.e. at the end of the Snapshot execution.
-         auto newRDF = std::make_shared<RInterface<RLoopManager>>(
-            std::make_shared<RLoopManager>(colListNoAliasesWithSizeBranches));
-
-         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-            std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
-            options, newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */, options.fIncludeVariations});
-
-         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
-         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
-
-         const auto nSlots = fLoopManager->GetNSlots();
-         std::vector<const std::type_info *> colTypeIDs;
-         colTypeIDs.reserve(nColumns);
-         for (decltype(nColumns) i{}; i < nColumns; i++) {
-            const auto &colName = validColumnNames[i];
-            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
-               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
-            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName);
-            colTypeIDs.push_back(colTypeID);
-         }
-         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
-         // source
-         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
-
-         auto action =
-            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
-         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
-      }
-
-      if (!options.fLazy)
-         *resPtr;
-      return resPtr;
-   }
-
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree or RNTuple.
-   /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple
-   /// \return a `RDataFrame` that wraps the snapshotted dataset.
-   ///
-   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
-   /// The types of the columns are automatically inferred and do not need to be specified.
-   ///
-   /// See Snapshot(std::string_view, std::string_view, const ColumnNames_t&, const RSnapshotOptions &) for a more complete description and example usages.
-   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
-                                                 std::string_view columnNameRegexp = "",
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
-   {
-      const auto definedColumns = fColRegister.GenerateColumnNames();
-
-      const auto dsColumns = GetDataSource() ? ROOT::Internal::RDF::GetTopLevelFieldNames(*GetDataSource()) : ColumnNames_t{};
-      // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
-      ColumnNames_t dsColumnsWithoutSizeColumns;
-      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
-                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
-      ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + dsColumnsWithoutSizeColumns.size());
-      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
-      columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
-
-      // The only way we can get duplicate entries is if a column coming from a tree or data-source is Redefine'd.
-      // RemoveDuplicates should preserve ordering of the columns: it might be meaningful.
-      RDFInternal::RemoveDuplicates(columnNames);
-
-      std::vector<std::string> selectedColumns;
-      try {
-         selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
-      }
-      catch (const std::runtime_error &e){
-         // No columns were found, try again but consider all input data source columns
-         if (auto ds = GetDataSource())
-            selectedColumns = RDFInternal::ConvertRegexToColumns(ds->GetColumnNames(), columnNameRegexp, "Snapshot");
-         else
-            throw e;
-      }
-
-      if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
-         RDFInternal::RemoveRNTupleSubfields(selectedColumns);
-      }
-
-      return Snapshot(treename, filename, selectedColumns, options);
-   }
-   // clang-format on
-
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree or RNTuple.
-   /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnList The list of names of the columns/branches to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
-   /// \return a `RDataFrame` that wraps the snapshotted dataset.
-   ///
-   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
-   /// The types of the columns are automatically inferred and do not need to be specified.
-   ///
-   /// See Snapshot(std::string_view, std::string_view, const ColumnNames_t&, const RSnapshotOptions &) for a more complete description and example usages.
-   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
-                                                 std::initializer_list<std::string> columnList,
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
-   {
-      ColumnNames_t selectedColumns(columnList);
-      return Snapshot(treename, filename, selectedColumns, options);
-   }
-   // clang-format on
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory.
-   /// \tparam ColumnTypes variadic list of branch/column types.
-   /// \param[in] columnList columns to be cached in memory.
-   /// \return a `RDataFrame` that wraps the cached dataset.
-   ///
-   /// This action returns a new `RDataFrame` object, completely detached from
-   /// the originating `RDataFrame`. The new dataframe only contains the cached
-   /// columns and stores their content in memory for fast, zero-copy subsequent access.
-   ///
-   /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
-   /// fits in memory and that will be accessed many times.
-   ///
-   /// \note Cache will refuse to process columns with names of the form `#columnname`. These are special columns
-   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
-   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
-   /// Alias(): `df.Alias("nbar", "#bar").Cache<std::size_t>(..., {"nbar"})`.
-   ///
-   /// ### Example usage:
-   ///
-   /// **Types and columns specified:**
-   /// ~~~{.cpp}
-   /// auto cache_some_cols_df = df.Cache<double, MyClass, int>({"col0", "col1", "col2"});
-   /// ~~~
-   ///
-   /// **Types inferred and columns specified (this invocation relies on jitting):**
-   /// ~~~{.cpp}
-   /// auto cache_some_cols_df = df.Cache({"col0", "col1", "col2"});
-   /// ~~~
-   ///
-   /// **Types inferred and columns selected with a regexp (this invocation relies on jitting):**
-   /// ~~~{.cpp}
-   /// auto cache_all_cols_df = df.Cache(myRegexp);
-   /// ~~~
-   template <typename... ColumnTypes>
-   RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
-   {
-      auto staticSeq = std::make_index_sequence<sizeof...(ColumnTypes)>();
-      return CacheImpl<ColumnTypes...>(columnList, staticSeq);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory.
-   /// \param[in] columnList columns to be cached in memory
-   /// \return a `RDataFrame` that wraps the cached dataset.
-   ///
-   /// See the previous overloads for more information.
-   RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
-   {
-      // Early return: if the list of columns is empty, just return an empty RDF
-      // If we proceed, the jitted call will not compile!
-      if (columnList.empty()) {
-         auto nEntries = *this->Count();
-         RInterface<RLoopManager> emptyRDF(std::make_shared<RLoopManager>(nEntries));
-         return emptyRDF;
-      }
-
-      std::stringstream cacheCall;
-      auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
-      RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
-                                                                                      fColRegister);
-      // build a string equivalent to
-      // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
-      RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
-      cacheCall << "*reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>*>("
-                << RDFInternal::PrettyPrintAddr(&resRDF)
-                << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
-                << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
-
-      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Cache");
-
-      const auto validColumnNames =
-         GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
-      const auto colTypes =
-         GetValidatedArgTypes(validColumnNames, fColRegister, nullptr, GetDataSource(), "Cache", /*vector2RVec=*/false);
-      for (const auto &colType : colTypes)
-         cacheCall << colType << ", ";
-      if (!columnListWithoutSizeColumns.empty())
-         cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
-      cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-                << RDFInternal::PrettyPrintAddr(&columnListWithoutSizeColumns) << "));";
-
-      // book the code to jit with the RLoopManager and trigger the event loop
-      fLoopManager->ToJitExec(cacheCall.str());
-      fLoopManager->Jit();
-
-      return resRDF;
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory.
-   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
-   /// \return a `RDataFrame` that wraps the cached dataset.
-   ///
-   /// The existing columns are matched against the regular expression. If the string provided
-   /// is empty, all columns are selected. See the previous overloads for more information.
-   RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
-   {
-      const auto definedColumns = fColRegister.GenerateColumnNames();
-      const auto dsColumns = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
-      // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
-      ColumnNames_t dsColumnsWithoutSizeColumns;
-      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
-                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
-      ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + dsColumns.size());
-      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
-      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
-      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Cache");
-      return Cache(selectedColumns);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns in memory.
-   /// \param[in] columnList columns to be cached in memory.
-   /// \return a `RDataFrame` that wraps the cached dataset.
-   ///
-   /// See the previous overloads for more information.
-   RInterface<RLoopManager> Cache(std::initializer_list<std::string> columnList)
-   {
-      ColumnNames_t selectedColumns(columnList);
-      return Cache(selectedColumns);
-   }
-
-
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined function on each entry (*instant action*).
-   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
-   /// \param[in] columns Names of the columns/branches in input to the user function.
-   ///
-   /// The callable `f` is invoked once per entry. This is an *instant action*:
-   /// upon invocation, an event loop as well as execution of all scheduled actions
-   /// is triggered.
-   /// Users are responsible for the thread-safety of this callable when executing
-   /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// myDf.Foreach([](int i){ std::cout << i << std::endl;}, {"myIntColumn"});
-   /// ~~~
-   // clang-format on
-   template <typename F>
-   void Foreach(F f, const ColumnNames_t &columns = {})
-   {
-      using arg_types = typename TTraits::CallableTraits<decltype(f)>::arg_types_nodecay;
-      using ret_type = typename TTraits::CallableTraits<decltype(f)>::ret_type;
-      ForeachSlot(RDFInternal::AddSlotParameter<ret_type>(f, arg_types()), columns);
-   }
-
-   // clang-format off
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*).
-   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
-   /// \param[in] columns Names of the columns/branches in input to the user function.
-   ///
-   /// Same as `Foreach`, but the user-defined function takes an extra
-   /// `unsigned int` as its first parameter, the *processing slot index*.
-   /// This *slot index* will be assigned a different value, `0` to `poolSize - 1`,
-   /// for each thread of execution.
-   /// This is meant as a helper in writing thread-safe `Foreach`
-   /// actions when using `RDataFrame` after `ROOT::EnableImplicitMT()`.
-   /// The user-defined processing callable is able to follow different
-   /// *streams of processing* indexed by the first parameter.
-   /// `ForeachSlot` works just as well with single-thread execution: in that
-   /// case `slot` will always be `0`.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// myDf.ForeachSlot([](unsigned int s, int i){ std::cout << "Slot " << s << ": "<< i << std::endl;}, {"myIntColumn"});
-   /// ~~~
-   // clang-format on
-   template <typename F>
-   void ForeachSlot(F f, const ColumnNames_t &columns = {})
-   {
-      using ColTypes_t = TypeTraits::RemoveFirstParameter_t<typename TTraits::CallableTraits<F>::arg_types>;
-      constexpr auto nColumns = ColTypes_t::list_size;
-
-      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-      CheckAndFillDSColumns(validColumnNames, ColTypes_t());
-
-      using Helper_t = RDFInternal::ForeachSlotHelper<F>;
-      using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-
-      auto action = std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr, fColRegister);
-
-      fLoopManager->Run();
-   }
-
-   /// \}
-   // End of doxygen group for immediate actions
-   // ----------------------------------------------------------------------------------------
    /// \name Actions
    /// Actions declare a type of result to be produced, for example histograms or summary statistics.
    /// Actions are lazy, i.e. they are only executed once a result is requested.
@@ -3509,6 +3028,488 @@ public:
 
    /// \}
    // End of the doxygen group for actions
+   // ----------------------------------------------------------------------------------------
+
+   /// \name Immediate Actions
+   /// Immediate Actions eagerly start the event loop and produce a result.
+   /// \{
+
+   template <typename... ColumnTypes>
+   [[deprecated("Snapshot is not any more a template. You can safely remove the template parameters.")]]
+   RResultPtr<RInterface<RLoopManager>>
+   Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
+            const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      return Snapshot(treename, filename, columnList, options);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
+   ///
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
+   /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
+   /// Support for writing of nested branches/fields is limited (although RDataFrame is able to read them) and dot ('.')
+   /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
+   /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
+   /// written out and it appears before the array in the columnList.
+   ///
+   /// By default, in case of TTree, TChain or RNTuple inputs, Snapshot will try to write out all top-level branches.
+   /// For other types of inputs, all columns returned by GetColumnNames() will be written out. Systematic variations of
+   /// columns will be included if the corresponding flag is set in RSnapshotOptions. See \ref snapshot-with-variations
+   /// "Snapshot with Variations" for more details. If friend trees or chains are present, by default all friend
+   /// top-level branches that have names that do not collide with names of branches in the main TTree/TChain will be
+   /// written out. Since v6.24, Snapshot will also write out friend branches with the same names of branches in the
+   /// main TTree/TChain with names of the form
+   /// `<friendname>_<branchname>` in order to differentiate them from the branches in the main tree/chain.
+   ///
+   /// ### Writing to a sub-directory
+   ///
+   /// Snapshot supports writing the TTree or RNTuple in a sub-directory inside the TFile. It is sufficient to specify
+   /// the directory path as part of the TTree or RNTuple name, e.g. `df.Snapshot("subdir/t", "f.root")` writes TTree
+   /// `t` in the sub-directory `subdir` of file `f.root` (creating file and sub-directory as needed).
+   ///
+   /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
+   /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled
+   /// with respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in
+   /// wrong associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
+   /// error out if such a "shuffled" TTree is used in a friendship.
+   ///
+   /// \note In case no events are written out (e.g. because no event passes all filters), Snapshot will still write the
+   /// requested output TTree or RNTuple to the file, with all the branches requested to preserve the dataset schema.
+   ///
+   /// \note Snapshot will refuse to process columns with names of the form `#columnname`. These are special columns
+   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
+   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
+   /// Alias(): `df.Alias("nbar", "#bar").Snapshot(..., {"nbar"})`.
+   ///
+   /// ### Example invocations:
+   ///
+   /// ~~~{.cpp}
+   /// // No need to specify column types, they are automatically deduced thanks
+   /// // to information coming from the data source
+   /// df.Snapshot("outputTree", "outputFile.root", {"x", "y"});
+   /// ~~~
+   ///
+   /// To book a Snapshot without triggering the event loop, one needs to set the appropriate flag in
+   /// `RSnapshotOptions`:
+   /// ~~~{.cpp}
+   /// RSnapshotOptions opts;
+   /// opts.fLazy = true;
+   /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
+   /// ~~~
+   ///
+   /// To snapshot to the RNTuple data format, the `fOutputFormat` option in `RSnapshotOptions` needs to be set
+   /// accordingly:
+   /// ~~~{.cpp}
+   /// RSnapshotOptions opts;
+   /// opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   /// df.Snapshot("outputNTuple", "outputFile.root", {"x"}, opts);
+   /// ~~~
+   ///
+   /// Snapshot systematic variations resulting from a Vary() call (see details \ref snapshot-with-variations "here"):
+   /// ~~~{.cpp}
+   /// RSnapshotOptions opts;
+   /// opts.fIncludeVariations = true;
+   /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
+   /// ~~~
+   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 const ColumnNames_t &columnList,
+                                                 const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      // like columnList but with `#var` columns removed
+      auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+      // like columnListWithoutSizeColumns but with aliases resolved
+      auto colListNoAliases = GetValidatedColumnNames(colListNoPoundSizes.size(), colListNoPoundSizes);
+      RDFInternal::CheckForDuplicateSnapshotColumns(colListNoAliases);
+      // like validCols but with missing size branches required by array branches added in the right positions
+      const auto pairOfColumnLists =
+         RDFInternal::AddSizeBranches(GetDataSource(), std::move(colListNoAliases), std::move(colListNoPoundSizes));
+      const auto &colListNoAliasesWithSizeBranches = pairOfColumnLists.first;
+      const auto &colListWithAliasesAndSizeBranches = pairOfColumnLists.second;
+
+      const auto fullTreeName = treename;
+      const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
+      treename = parsedTreePath.fTreeName;
+      const auto &dirname = parsedTreePath.fDirName;
+
+      ::TDirectory::TContext ctxt;
+
+      RResultPtr<RInterface<RLoopManager>> resPtr;
+
+      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName,
+                               bool isRNTuple = false) -> const std::type_info * {
+         try {
+            return &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
+         } catch (const std::runtime_error &err) {
+            if (isRNTuple)
+               return &typeid(ROOT::Internal::RDF::UseNativeDataType);
+
+            if (std::string(err.what()).find("Cannot extract type_info of type") != std::string::npos) {
+               // We could not find RTTI for this column, thus we cannot write it out at the moment.
+               std::string trueTypeName{colTypeName};
+               if (colTypeName.rfind("CLING_UNKNOWN_TYPE", 0) == 0)
+                  trueTypeName = colTypeName.substr(19);
+               std::string msg{"No runtime type information is available for column \"" + colName +
+                               "\" with type name \"" + trueTypeName +
+                               "\". Thus, it cannot be written to disk with Snapshot. Make sure to generate and load "
+                               "ROOT dictionaries for the type of this column."};
+
+               throw std::runtime_error(msg);
+            } else {
+               throw;
+            }
+         }
+      };
+
+      RDFInternal::CheckSnapshotOptionsFormatCompatibility(options);
+
+      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
+         // The data source of the RNTuple resulting from the Snapshot action does not exist yet here, so we create one
+         // without a data source for now, and set it once the actual data source can be created (i.e., after
+         // writing the RNTuple).
+         auto newRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(colListNoPoundSizes));
+
+         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+            std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
+            options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */, /*fIncludeVariations=*/false});
+
+         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
+         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
+
+         const auto nSlots = fLoopManager->GetNSlots();
+         std::vector<const std::type_info *> colTypeIDs;
+         colTypeIDs.reserve(nColumns);
+         for (decltype(nColumns) i{}; i < nColumns; i++) {
+            const auto &colName = validColumnNames[i];
+            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
+            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName, /*isRNTuple*/ true);
+            colTypeIDs.push_back(colTypeID);
+         }
+         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+         // source
+         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+         auto action =
+            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
+         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
+      } else {
+         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
+             options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
+            Warning("Snapshot",
+                    "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
+                    "want to Snapshot to RNTuple or suppress this warning, set the appropriate fOutputFormat option in "
+                    "RSnapshotOptions. Note that this current default behaviour might change in the future.");
+         }
+
+         // We create an RLoopManager without a data source. This needs to be initialised when the output TTree dataset
+         // has actually been created and written to TFile, i.e. at the end of the Snapshot execution.
+         auto newRDF = std::make_shared<RInterface<RLoopManager>>(
+            std::make_shared<RLoopManager>(colListNoAliasesWithSizeBranches));
+
+         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+            std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
+            options, newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */, options.fIncludeVariations});
+
+         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
+         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
+
+         const auto nSlots = fLoopManager->GetNSlots();
+         std::vector<const std::type_info *> colTypeIDs;
+         colTypeIDs.reserve(nColumns);
+         for (decltype(nColumns) i{}; i < nColumns; i++) {
+            const auto &colName = validColumnNames[i];
+            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
+            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName);
+            colTypeIDs.push_back(colTypeID);
+         }
+         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+         // source
+         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+         auto action =
+            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
+         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
+      }
+
+      if (!options.fLazy)
+         *resPtr;
+      return resPtr;
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
+   ///
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
+   /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
+   /// See Snapshot(std::string_view, std::string_view, const ColumnNames_t&, const RSnapshotOptions &) for a more complete description and example usages.
+   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 std::string_view columnNameRegexp = "",
+                                                 const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      const auto definedColumns = fColRegister.GenerateColumnNames();
+
+      const auto dsColumns = GetDataSource() ? ROOT::Internal::RDF::GetTopLevelFieldNames(*GetDataSource()) : ColumnNames_t{};
+      // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      ColumnNames_t dsColumnsWithoutSizeColumns;
+      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
+      ColumnNames_t columnNames;
+      columnNames.reserve(definedColumns.size() + dsColumnsWithoutSizeColumns.size());
+      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
+      columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
+
+      // The only way we can get duplicate entries is if a column coming from a tree or data-source is Redefine'd.
+      // RemoveDuplicates should preserve ordering of the columns: it might be meaningful.
+      RDFInternal::RemoveDuplicates(columnNames);
+
+      std::vector<std::string> selectedColumns;
+      try {
+         selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
+      }
+      catch (const std::runtime_error &e){
+         // No columns were found, try again but consider all input data source columns
+         if (auto ds = GetDataSource())
+            selectedColumns = RDFInternal::ConvertRegexToColumns(ds->GetColumnNames(), columnNameRegexp, "Snapshot");
+         else
+            throw e;
+      }
+
+      if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
+         RDFInternal::RemoveRNTupleSubfields(selectedColumns);
+      }
+
+      return Snapshot(treename, filename, selectedColumns, options);
+   }
+   // clang-format on
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnList The list of names of the columns/branches to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
+   ///
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
+   /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
+   /// See Snapshot(std::string_view, std::string_view, const ColumnNames_t&, const RSnapshotOptions &) for a more complete description and example usages.
+   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 std::initializer_list<std::string> columnList,
+                                                 const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      ColumnNames_t selectedColumns(columnList);
+      return Snapshot(treename, filename, selectedColumns, options);
+   }
+   // clang-format on
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory.
+   /// \tparam ColumnTypes variadic list of branch/column types.
+   /// \param[in] columnList columns to be cached in memory.
+   /// \return a `RDataFrame` that wraps the cached dataset.
+   ///
+   /// This action returns a new `RDataFrame` object, completely detached from
+   /// the originating `RDataFrame`. The new dataframe only contains the cached
+   /// columns and stores their content in memory for fast, zero-copy subsequent access.
+   ///
+   /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
+   /// fits in memory and that will be accessed many times.
+   ///
+   /// \note Cache will refuse to process columns with names of the form `#columnname`. These are special columns
+   /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
+   /// not meant to be written out with that name (which is not a valid C++ variable name). Instead, go through an
+   /// Alias(): `df.Alias("nbar", "#bar").Cache<std::size_t>(..., {"nbar"})`.
+   ///
+   /// ### Example usage:
+   ///
+   /// **Types and columns specified:**
+   /// ~~~{.cpp}
+   /// auto cache_some_cols_df = df.Cache<double, MyClass, int>({"col0", "col1", "col2"});
+   /// ~~~
+   ///
+   /// **Types inferred and columns specified (this invocation relies on jitting):**
+   /// ~~~{.cpp}
+   /// auto cache_some_cols_df = df.Cache({"col0", "col1", "col2"});
+   /// ~~~
+   ///
+   /// **Types inferred and columns selected with a regexp (this invocation relies on jitting):**
+   /// ~~~{.cpp}
+   /// auto cache_all_cols_df = df.Cache(myRegexp);
+   /// ~~~
+   template <typename... ColumnTypes>
+   RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
+   {
+      auto staticSeq = std::make_index_sequence<sizeof...(ColumnTypes)>();
+      return CacheImpl<ColumnTypes...>(columnList, staticSeq);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory.
+   /// \param[in] columnList columns to be cached in memory
+   /// \return a `RDataFrame` that wraps the cached dataset.
+   ///
+   /// See the previous overloads for more information.
+   RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
+   {
+      // Early return: if the list of columns is empty, just return an empty RDF
+      // If we proceed, the jitted call will not compile!
+      if (columnList.empty()) {
+         auto nEntries = *this->Count();
+         RInterface<RLoopManager> emptyRDF(std::make_shared<RLoopManager>(nEntries));
+         return emptyRDF;
+      }
+
+      std::stringstream cacheCall;
+      auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
+      RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
+                                                                                      fColRegister);
+      // build a string equivalent to
+      // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
+      RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
+      cacheCall << "*reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>*>("
+                << RDFInternal::PrettyPrintAddr(&resRDF)
+                << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
+                << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
+
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Cache");
+
+      const auto validColumnNames =
+         GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
+      const auto colTypes =
+         GetValidatedArgTypes(validColumnNames, fColRegister, nullptr, GetDataSource(), "Cache", /*vector2RVec=*/false);
+      for (const auto &colType : colTypes)
+         cacheCall << colType << ", ";
+      if (!columnListWithoutSizeColumns.empty())
+         cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
+      cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+                << RDFInternal::PrettyPrintAddr(&columnListWithoutSizeColumns) << "));";
+
+      // book the code to jit with the RLoopManager and trigger the event loop
+      fLoopManager->ToJitExec(cacheCall.str());
+      fLoopManager->Jit();
+
+      return resRDF;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory.
+   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
+   /// \return a `RDataFrame` that wraps the cached dataset.
+   ///
+   /// The existing columns are matched against the regular expression. If the string provided
+   /// is empty, all columns are selected. See the previous overloads for more information.
+   RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
+   {
+      const auto definedColumns = fColRegister.GenerateColumnNames();
+      const auto dsColumns = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
+      // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
+      ColumnNames_t dsColumnsWithoutSizeColumns;
+      std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
+                   [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
+      ColumnNames_t columnNames;
+      columnNames.reserve(definedColumns.size() + dsColumns.size());
+      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
+      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Cache");
+      return Cache(selectedColumns);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory.
+   /// \param[in] columnList columns to be cached in memory.
+   /// \return a `RDataFrame` that wraps the cached dataset.
+   ///
+   /// See the previous overloads for more information.
+   RInterface<RLoopManager> Cache(std::initializer_list<std::string> columnList)
+   {
+      ColumnNames_t selectedColumns(columnList);
+      return Cache(selectedColumns);
+   }
+
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined function on each entry (*instant action*).
+   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
+   /// \param[in] columns Names of the columns/branches in input to the user function.
+   ///
+   /// The callable `f` is invoked once per entry. This is an *instant action*:
+   /// upon invocation, an event loop as well as execution of all scheduled actions
+   /// is triggered.
+   /// Users are responsible for the thread-safety of this callable when executing
+   /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// myDf.Foreach([](int i){ std::cout << i << std::endl;}, {"myIntColumn"});
+   /// ~~~
+   // clang-format on
+   template <typename F>
+   void Foreach(F f, const ColumnNames_t &columns = {})
+   {
+      using arg_types = typename TTraits::CallableTraits<decltype(f)>::arg_types_nodecay;
+      using ret_type = typename TTraits::CallableTraits<decltype(f)>::ret_type;
+      ForeachSlot(RDFInternal::AddSlotParameter<ret_type>(f, arg_types()), columns);
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*).
+   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
+   /// \param[in] columns Names of the columns/branches in input to the user function.
+   ///
+   /// Same as `Foreach`, but the user-defined function takes an extra
+   /// `unsigned int` as its first parameter, the *processing slot index*.
+   /// This *slot index* will be assigned a different value, `0` to `poolSize - 1`,
+   /// for each thread of execution.
+   /// This is meant as a helper in writing thread-safe `Foreach`
+   /// actions when using `RDataFrame` after `ROOT::EnableImplicitMT()`.
+   /// The user-defined processing callable is able to follow different
+   /// *streams of processing* indexed by the first parameter.
+   /// `ForeachSlot` works just as well with single-thread execution: in that
+   /// case `slot` will always be `0`.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// myDf.ForeachSlot([](unsigned int s, int i){ std::cout << "Slot " << s << ": "<< i << std::endl;}, {"myIntColumn"});
+   /// ~~~
+   // clang-format on
+   template <typename F>
+   void ForeachSlot(F f, const ColumnNames_t &columns = {})
+   {
+      using ColTypes_t = TypeTraits::RemoveFirstParameter_t<typename TTraits::CallableTraits<F>::arg_types>;
+      constexpr auto nColumns = ColTypes_t::list_size;
+
+      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
+      CheckAndFillDSColumns(validColumnNames, ColTypes_t());
+
+      using Helper_t = RDFInternal::ForeachSlotHelper<F>;
+      using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
+
+      auto action = std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr, fColRegister);
+
+      fLoopManager->Run();
+   }
+
+   /// \}
+   // End of doxygen group for immediate actions
    // ----------------------------------------------------------------------------------------
 
    /// \brief Returns the names of the filters created.
