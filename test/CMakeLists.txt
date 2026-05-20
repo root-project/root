@@ -92,10 +92,22 @@ ROOT_ADD_TEST(test-vlazy COMMAND vlazy)
 #--helloso------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(G__Hello ${CMAKE_CURRENT_SOURCE_DIR}/Hello.h MODULE Hello DEPENDENCIES Gpad Graf Hist MathCore Matrix)
 ROOT_LINKER_LIBRARY(Hello Hello.cxx G__Hello.cxx LIBRARIES Graf Gpad)
+ROOT_SET_OUTPUT_DIRECTORIES(Hello)
+set_target_properties(Hello PROPERTIES PREFIX "")
 
 #--Aclockso------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(G__Aclock ${CMAKE_CURRENT_SOURCE_DIR}/Aclock.h MODULE Aclock DEPENDENCIES Graf Gpad MathCore)
 ROOT_LINKER_LIBRARY(Aclock Aclock.cxx G__Aclock.cxx LIBRARIES Graf Gpad)
+ROOT_SET_OUTPUT_DIRECTORIES(Aclock)
+set_target_properties(Aclock PROPERTIES PREFIX "")
+
+#--tetris------------------------------------------------------------------------------------
+if(TARGET Gui)
+  ROOT_GENERATE_DICTIONARY(G__Tetris ${CMAKE_CURRENT_SOURCE_DIR}/Tetris.h MODULE Tetris DEPENDENCIES Graf Gpad Gui MathCore)
+  ROOT_LINKER_LIBRARY(Tetris Tetris.cxx G__Tetris.cxx LIBRARIES Core Graf Gui MathCore)
+  ROOT_SET_OUTPUT_DIRECTORIES(Tetris)
+  set_target_properties(Tetris PROPERTIES PREFIX "")
+endif()
 
 #--bench------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(G__TBench ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h DEPENDENCIES MathCore Tree)
