@@ -1184,7 +1184,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
    if (fDirectory && fBaskets.GetEntriesFast()) {
       TBasket *basket = (TBasket*)fBaskets.UncheckedAt(ibasket);
 
-      if (basket) {
+      if (basket && !basket->IsZombie()) {
          if (basket->GetNevBuf()
              && fBasketSeek[ibasket]==0) {
             // If the basket already contains entry we need to close it out.
