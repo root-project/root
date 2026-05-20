@@ -115,11 +115,13 @@ jobs:
 
     - name: Upload tar file to github
       if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{env.TAR_FILE}}
         path: ${{env.DOC_LOCATION}}/${{env.TAR_FILE}}
         if-no-files-found: error
+        archive: false
+        retention-days: 8
 
     - name: Sync documentation to EOS
       env:
