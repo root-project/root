@@ -128,6 +128,8 @@ jobs:
         name: ${{env.TAR_FILE}}
         path: ${{env.DOC_LOCATION}}/${{env.TAR_FILE}}
         if-no-files-found: error
+        archive: false
+        retention-days: 8
 
     - name: Sync documentation to EOS
       if: ${{ env.WEB_DIR_NAME != null && env.WEB_DIR_NAME != '' }}
@@ -161,4 +163,4 @@ jobs:
         xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}" || failure=1
         cd ..
         xrdcp -rf "${TAR_FILE}" "${EOS_ENDPOINT}/${EOS_BASE_PATH}/download" || failure=1
-        exit $failure
+        exit "$failure"
