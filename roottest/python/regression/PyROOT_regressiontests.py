@@ -70,19 +70,15 @@ class Regression01TwiceImportStar( MyTestCase ):
 class Regression02PyException(MyTestCase):
    def test1RaiseAndTrapPyException(self):
       """Test thrown TPyException object processing"""
-      # See https://github.com/root-project/root/issues/7541 and
-      # https://bugs.llvm.org/show_bug.cgi?id=49692 :
-      # llvm JIT fails to catch exceptions on M1, so we disable their testing
-      if platform.processor() != "arm" or platform.mac_ver()[0] == '':
-         gROOT.LoadMacro("ScottCppyy.C+")
+      gROOT.LoadMacro("ScottCppyy.C+")
 
-         # test of not overloaded global function
-         with self.assertRaisesRegex(SyntaxError, "test error message"):
-            ROOT.ThrowPyException()
+      # test of not overloaded global function
+      with self.assertRaisesRegex(SyntaxError, "test error message"):
+         ROOT.ThrowPyException()
 
-         # test of overloaded function
-         with self.assertRaisesRegex(SyntaxError, "overloaded int test error message"):
-            ROOT.MyThrowingClass.ThrowPyException(1)
+      # test of overloaded function
+      with self.assertRaisesRegex(SyntaxError, "overloaded int test error message"):
+         ROOT.MyThrowingClass.ThrowPyException(1)
 
 
 ### Several tests that used to cause crashes =================================

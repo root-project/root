@@ -99,13 +99,9 @@ class DataFrameConstructorTests(unittest.TestCase):
             x[0] = i
             tree.Fill()
 
-        # See https://github.com/root-project/root/issues/7541 and
-        # https://bugs.llvm.org/show_bug.cgi?id=49692 :
-        # llvm JIT fails to catch exceptions on M1, so we disable their testing
-        if platform.processor() != "arm" or platform.mac_ver()[0] == '':
-            with self.assertRaises(ROOT.std.runtime_error):
-                # Trees with no associated files are not supported
-                create_dummy_headnode(tree)
+        with self.assertRaises(ROOT.std.runtime_error):
+            # Trees with no associated files are not supported
+            create_dummy_headnode(tree)
 
     def assertArgs(self, args_list1, args_list2):
         """
@@ -231,31 +227,27 @@ class DataFrameConstructorTests(unittest.TestCase):
 
     def test_tree_with_friends_and_treeindex(self):
         """TTreeIndex is not supported in distributed mode."""
-        # See https://github.com/root-project/root/issues/7541 and
-        # https://bugs.llvm.org/show_bug.cgi?id=49692 :
-        # llvm JIT fails to catch exceptions on M1, so we disable their testing
-        if platform.processor() != "arm" or platform.mac_ver()[0] == '':
-            main_file = "distrdf_indexed_friend_main.root"
-            aux_file = "distrdf_indexed_friend_aux.root"
-            fill_main_tree_and_indexed_friend(main_file, aux_file)
+        main_file = "distrdf_indexed_friend_main.root"
+        aux_file = "distrdf_indexed_friend_aux.root"
+        fill_main_tree_and_indexed_friend(main_file, aux_file)
 
-            main_chain = ROOT.TChain("mainTree", "mainTree")
-            main_chain.Add(main_file)
-            aux_chain = ROOT.TChain("auxTree", "auxTree")
-            aux_chain.Add(aux_file)
+        main_chain = ROOT.TChain("mainTree", "mainTree")
+        main_chain.Add(main_file)
+        aux_chain = ROOT.TChain("auxTree", "auxTree")
+        aux_chain.Add(aux_file)
 
-            aux_chain.BuildIndex("idx")
-            main_chain.AddFriend(aux_chain)
+        aux_chain.BuildIndex("idx")
+        main_chain.AddFriend(aux_chain)
 
-            with self.assertRaises(ValueError) as context:
-                create_dummy_headnode(main_chain)
+        with self.assertRaises(ValueError) as context:
+            create_dummy_headnode(main_chain)
 
-            self.assertEqual(str(context.exception),
-                             "Friend tree 'auxTree' has a TTreeIndex. This is not supported in distributed mode.")
+        self.assertEqual(str(context.exception),
+                         "Friend tree 'auxTree' has a TTreeIndex. This is not supported in distributed mode.")
 
-            # Remove unnecessary .root files
-            os.remove(main_file)
-            os.remove(aux_file)
+        # Remove unnecessary .root files
+        os.remove(main_file)
+        os.remove(aux_file)
 
 
 class NumEntriesTest(unittest.TestCase):
