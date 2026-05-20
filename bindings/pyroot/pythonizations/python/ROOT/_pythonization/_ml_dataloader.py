@@ -518,7 +518,7 @@ class _ValidationEpochContext:
 
 # formatted iterator (returned by as_torch / as_numpy / as_tensorflow)
 class FormattedLoader:
-    """
+    r"""
     \ingroup Py_ML
     Iterable that converts each batch to the requested format.
     Returned by the as_torch / as_numpy / as_tensorflow methods on RDataLoader.
@@ -550,7 +550,7 @@ class FormattedLoader:
 
 
 class RDataLoader:
-    """
+    r"""
     \ingroup Py_ML
     Entry point for ML batch loading from a ROOT RDataFrame.
 
@@ -588,7 +588,7 @@ class RDataLoader:
         sampling_ratio: float = 1.0,
         replacement: bool = False,
     ) -> None:
-        """
+        r"""
         \ingroup Py_ML
 
         Args:
@@ -702,7 +702,7 @@ class RDataLoader:
         )
 
     def as_numpy(self) -> FormattedLoader:
-        """
+        r"""
         \ingroup Py_ML
         Return an iterable that yields batches as NumPy arrays.
         """
@@ -710,7 +710,7 @@ class RDataLoader:
         return FormattedLoader(self._internal, self._internal.ConvertBatchToNumpy, self._is_training)
 
     def as_torch(self, device: str | torch.device | None = None) -> FormattedLoader:
-        """
+        r"""
         \ingroup Py_ML
         Return an iterable that yields batches as PyTorch tensors.
 
@@ -722,7 +722,7 @@ class RDataLoader:
         return FormattedLoader(self._internal, conversion_fn, self._is_training)
 
     def as_tensorflow(self) -> tf.data.Dataset:
-        """
+        r"""
         \ingroup Py_ML
         Return a tf.data.Dataset over batches as TensorFlow tensors.
         """
@@ -758,7 +758,7 @@ class RDataLoader:
 
     @property
     def columns(self) -> list[str]:
-        """
+        r"""
         \ingroup Py_ML
         All column names as they appear in each batch tensor.
         """
@@ -768,7 +768,7 @@ class RDataLoader:
 
     @property
     def train_columns(self) -> list[str]:
-        """
+        r"""
         \ingroup Py_ML
         Feature column names (columns minus target and weights).
         """
@@ -780,7 +780,7 @@ class RDataLoader:
 
     @property
     def target_columns(self) -> list[str]:
-        """
+        r"""
         \ingroup Py_ML
         Target column names.
         """
@@ -790,7 +790,7 @@ class RDataLoader:
 
     @property
     def weights_column(self) -> str:
-        """
+        r"""
         \ingroup Py_ML
         Weights column name, or empty string if not set.
         """
@@ -800,7 +800,7 @@ class RDataLoader:
 
     @property
     def num_batches(self) -> int:
-        """
+        r"""
         \ingroup Py_ML
         Total number of batches in this split for one epoch.
         """
@@ -815,7 +815,7 @@ class RDataLoader:
 
     @property
     def last_batch_no_of_rows(self) -> int:
-        """
+        r"""
         \ingroup Py_ML
         Number of rows in the last (remainder) batch, 0 if no remainder.
         """
