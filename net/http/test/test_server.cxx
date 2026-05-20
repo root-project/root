@@ -15,6 +15,7 @@
 Int_t httpport = 0;
 TString server_url;
 
+
 // main http server
 std::string execute_request(const char *url, const char *post = nullptr)
 {
@@ -25,10 +26,12 @@ std::string execute_request(const char *url, const char *post = nullptr)
       pname = TString::Format("http_server_%d.post", httpport);
       std::ofstream f(pname.Data());
       f << post;
-      exec = TString::Format("curl -sS -X POST '%s%s' --data-binary @%s -o %s", server_url.Data(), url, pname.Data(), fname.Data());
-   } else {
-      exec = TString::Format("curl -sS '%s%s' -o %s", server_url.Data(), url, fname.Data());
    }
+
+   if (post)
+      exec = TString::Format("curl -sS -X POST '%s%s' --data-binary @%s -o %s", server_url.Data(), url, pname.Data(), fname.Data());
+   else
+      exec = TString::Format("curl -sS '%s%s' -o %s", server_url.Data(), url, fname.Data());
 
    printf("Execute %s\n", exec.Data());
 
@@ -56,7 +59,7 @@ TEST(THttpServer, main)
    for(int ntry = 0; ntry < 100; ++ntry) {
       Int_t port = (Int_t) (25000 + gRandom->Rndm() * 1000);
       // only two threads, bind to loopback address only
-      TString arg = TString::Format("http:%d?loopback&thrds=2", port);
+      TString arg = TString::Format("http:%d?loopback&thrds=3", port);
       if (serv.CreateEngine(arg)) {
          httpport = port;
          break;
