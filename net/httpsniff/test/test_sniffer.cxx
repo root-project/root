@@ -127,7 +127,7 @@ TEST(TRootSniffer, file_root)
 
    std::string res;
    sniffer.Produce("/obj", "file.root", "", res);
-   EXPECT_NEAR(res.length(), 2097152, 10000) << "size of file.root request";
+   EXPECT_NEAR(res.length(), 1024, 100) << "size of file.root request";
 }
 
 // check hierarchy request

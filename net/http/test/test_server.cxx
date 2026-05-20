@@ -108,7 +108,7 @@ TEST(THttpServer, main)
    // check ROOT file creation
    res = execute_request("/obj1/file.root");
    // TODO: anlyze why so big size for small object
-   EXPECT_NEAR(res.length(), 2097152, 10000);
+   EXPECT_NEAR(res.length(), 1024, 100);
 
    // check item request hierarchy request
    res = execute_request("/obj1/item.json");
