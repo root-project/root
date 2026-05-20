@@ -196,6 +196,21 @@ ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${root_exe} -b -q ${CMAKE
 #--stressGUI---------------------------------------------------------------------------------------
 if(asimage)
   ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
+
+  find_program(XVFB_RUN_EXECUTABLE NAMES xvfb-run)
+
+  if(XVFB_RUN_EXECUTABLE)
+    ROOT_ADD_TEST(test-stressgui-ref
+                  COMMAND ${XVFB_RUN_EXECUTABLE} -a -s "-ac -screen 0 1024x768x24" ./stressGUI -ref
+                  FIXTURES_SETUP fixtures-test-stressgui
+                  FAILREGEX "FAILED|Error in"
+                  LABELS longtest)
+    ROOT_ADD_TEST(test-stressgui-xvfb
+                  COMMAND ${XVFB_RUN_EXECUTABLE} -a -s "-ac -screen 0 1024x768x24" ./stressGUI
+                  FIXTURES_REQUIRED fixtures-test-stressgui
+                  FAILREGEX "FAILED|Error in"
+                  LABELS longtest)
+  endif()
 endif()
 
 #--stressSpectrum----------------------------------------------------------------------------------
