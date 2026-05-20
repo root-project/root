@@ -528,7 +528,7 @@ if(http AND NOT builtin_civetweb)
     endif()
   endif()
   if(civetweb_FOUND)
-    get_target_property(CIVETWEB_DEFS civetweb::civetweb-c INTERFACE_COMPILE_DEFINITIONS)
+    get_target_property(CIVETWEB_DEFS civetweb::civetweb INTERFACE_COMPILE_DEFINITIONS)
     if(NOT "USE_WEBSOCKET" IN_LIST CIVETWEB_DEFS)
       # Clear cache vars by find_package system-civetweb
       foreach(var CIVETWEB_LIBRARIES CIVETWEB_LIBRARY CIVETWEB_LIBRARY_DEBUG CIVETWEB_LIBRARY_RELEASE CIVETWEB_FOUND CIVETWEB_VERSION CIVETWEB_INCLUDE_DIR CIVETWEB_LIBRARY CIVETWEB_LIBRARIES)
