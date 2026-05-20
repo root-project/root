@@ -347,7 +347,7 @@ Bool_t TRootSnifferFull::ProduceRootFile(const std::string &path, const std::str
    } restoreGFile;
 
    {
-      TMemFile memfile("dummy.file", "RECREATE");
+      TMemFile memfile("dummy.file", "RECREATE", "", ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault, 1024);
       gROOT->GetListOfFiles()->Remove(&memfile);
 
       memfile.WriteObjectAny(obj_ptr, obj_cl, store_name);
