@@ -524,12 +524,37 @@ if(http AND NOT builtin_civetweb)
       message(STATUS "Found civetweb version ${civetweb_VERSION}")
     else()
       message(STATUS "civetweb not found. Switching on builtin_civetweb option")
-      set(builtin_civetweb ON CACHE BOOL "Enabled because civetweb not found" FORCE)
+      set(builtin_civetweb ON CACHE BOOL "Enabled because civetweb not found" FORCE) # TODO replace with ROOT_FIND_REQUIRED_DEP
     endif()
   endif()
   if(civetweb_FOUND)
-    get_target_property(CIVETWEB_DEFS civetweb::civetweb INTERFACE_COMPILE_DEFINITIONS)
-    if(NOT "USE_WEBSOCKET" IN_LIST CIVETWEB_DEFS)
+    get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_NONE)
+    try_compile(CIVETWEB_FEATURE_API
+      SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
+      CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
+      LINK_LIBRARIES ${CIVETWEB_IMPORTED_LOCATION}
+      OUTPUT_VARIABLE CIVETWEB_FEATURE_API_LOG
+    )
+    if (CIVETWEB_FEATURE_API)
+      try_run(RUN_RESULT COMPILE_RESULT
+        SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
+        CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
+        LINK_LIBRARIES ${CIVETWEB_IMPORTED_LOCATION}
+        COMPILE_OUTPUT_VARIABLE BUILD_LOG
+        RUN_OUTPUT_VARIABLE CIVETWEB_FEATURES
+      )
+      if(COMPILE_RESULT)
+        message(STATUS "Detected civetweb feature mask: ${CIVETWEB_FEATURES}")
+      else()
+        message(FATAL_ERROR "Could not run civetweb features: ${BUILD_LOG}")
+      endif()
+      math(EXPR CIVETWEB_HAS_WEBSOCKET "(${CIVETWEB_FEATURES} >> 4) & 0x1")
+      message(STATUS "civetweb websocket support: ${CIVETWEB_HAS_WEBSOCKET}")
+    else()
+      message(FATAL_ERROR "Could not check for civetweb features: ${CIVETWEB_FEATURE_API_LOG}")
+    endif()
+
+    if(NOT "${CIVETWEB_HAS_WEBSOCKET}" STREQUAL "1")
       # Clear cache vars by find_package system-civetweb
       foreach(var CIVETWEB_LIBRARIES CIVETWEB_LIBRARY CIVETWEB_LIBRARY_DEBUG CIVETWEB_LIBRARY_RELEASE CIVETWEB_FOUND CIVETWEB_VERSION CIVETWEB_INCLUDE_DIR CIVETWEB_LIBRARY CIVETWEB_LIBRARIES)
         unset(${var})
