@@ -565,7 +565,7 @@ if(http AND NOT builtin_civetweb)
     endif()
   endif()
   if (NOT builtin_civetweb)
-    target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civetweb one gets failure R__memcompress
+    target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civetweb one gets failure R__memcompress # TODO can be probably changed to checking bit 9 of CIVETWEB_FEATURES, rather than an external hardcoded flag that might actually depend on an OS
   endif()
 endif()
 if(http AND builtin_civetweb)
