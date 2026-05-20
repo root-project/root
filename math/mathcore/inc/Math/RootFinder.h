@@ -55,6 +55,7 @@ namespace ROOT {
          <li>RootFinder::kGSL_BISECTION
          <li>RootFinder::kGSL_FALSE_POS
          <li>RootFinder::kGSL_BRENT
+         <li>RootFinder::kMODAB
          </ol>
          <li>Root Finding Algorithms using Derivatives
          <ol>
@@ -74,9 +75,10 @@ namespace ROOT {
 
       public:
 
-         enum EType { kBRENT,                                   // Methods from MathCore
+         enum EType {kBRENT,                                     // Methods from MathCore
                      kGSL_BISECTION, kGSL_FALSE_POS, kGSL_BRENT, // GSL Normal
-                     kGSL_NEWTON, kGSL_SECANT, kGSL_STEFFENSON   // GSL Derivatives
+                     kGSL_NEWTON, kGSL_SECANT, kGSL_STEFFENSON,  // GSL Derivatives
+                     kMODAB                                      // Modified A&B method added in MathCore
          };
 
          /**

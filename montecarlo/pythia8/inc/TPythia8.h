@@ -78,9 +78,9 @@ class TPythia8 : public TGenerator
 private:
    void                    AddParticlesToPdgDataBase();
 protected:
-   static  TPythia8       *fgInstance;             //! singleton instance
-   Pythia8::Pythia        *fPythia;                //! The pythia8 instance
-   Int_t                   fNumberOfParticles;     //! Number of particles
+   static  TPythia8       *fgInstance;             ///<! singleton instance
+   Pythia8::Pythia        *fPythia;                ///<! The pythia8 instance
+   Int_t                   fNumberOfParticles;     ///<! Number of particles
 public:
    TPythia8(bool printBanner = true);
    TPythia8(const char *xmlDir, bool printBanner = true);

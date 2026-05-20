@@ -39,6 +39,7 @@ namespace Quartz = ROOT::Quartz;
    if (self = [super init]) {
       fWidth = 0;
       fHeight = 0;
+      fDirectDraw = NO;
 
       if (![self resizeW : width H : height scaleFactor : scaleFactor]) {
          [self release];
@@ -185,6 +186,42 @@ namespace Quartz = ROOT::Quartz;
    assert(fContext.Get() != 0 && "fHeight, called for bad pixmap");
 
    return fHeight;
+}
+
+//______________________________________________________________________________
+- (TAttLine *) attLine
+{
+   return &fAttLine;
+}
+
+//______________________________________________________________________________
+- (TAttFill *) attFill
+{
+   return &fAttFill;
+}
+
+//______________________________________________________________________________
+- (TAttMarker *) attMarker
+{
+   return &fAttMarker;
+}
+
+//______________________________________________________________________________
+- (TAttText *) attText
+{
+   return &fAttText;
+}
+
+//______________________________________________________________________________
+- (void) setDirectDraw : (BOOL) mode
+{
+   fDirectDraw = mode;
+}
+
+//______________________________________________________________________________
+- (BOOL) isDirectDraw
+{
+   return fDirectDraw;
 }
 
 //______________________________________________________________________________
@@ -409,6 +446,7 @@ namespace Quartz = ROOT::Quartz;
 }
 
 @end
+
 
 @implementation QuartzImage
 
@@ -756,6 +794,30 @@ namespace Quartz = ROOT::Quartz;
 - (unsigned) fHeight
 {
    return fHeight;
+}
+
+//______________________________________________________________________________
+- (TAttLine *) attLine
+{
+   return &fAttLine;
+}
+
+//______________________________________________________________________________
+- (TAttFill *) attFill
+{
+   return &fAttFill;
+}
+
+//______________________________________________________________________________
+- (TAttMarker *) attMarker
+{
+   return &fAttMarker;
+}
+
+//______________________________________________________________________________
+- (TAttText *) attText
+{
+   return &fAttText;
 }
 
 //______________________________________________________________________________

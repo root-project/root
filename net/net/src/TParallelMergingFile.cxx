@@ -34,7 +34,7 @@
 
 TParallelMergingFile::TParallelMergingFile(const char *filename, Option_t *option /* = "" */,
                                            const char *ftitle /* = "" */, Int_t compress /* = 1 */) :
-   TMemFile(filename,option,ftitle,compress),fSocket(0),fServerIdx(-1),fServerVersion(0),fClassSent(0),fMessage(kMESS_OBJECT)
+   TMemFile(filename,option,ftitle,compress)
 {
    TString serverurl = strstr(fUrl.GetOptions(),"pmerge=");
    if (serverurl.Length()) {
@@ -51,7 +51,6 @@ TParallelMergingFile::~TParallelMergingFile()
    // We need to call Close, right here so that it is executed _before_
    // the data member of TParallelMergingFile are destructed.
    Close();
-   delete fClassSent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,9 +63,65 @@ void TParallelMergingFile::Close(Option_t *option)
          Warning("Close","Failed to send the finishing message to the server %s:%d",fServerLocation.GetHost(),fServerLocation.GetPort());
       }
       fSocket->Close();
-      delete fSocket;
+      fSocket.reset();
    }
-   fSocket = 0;
+}
+
+/// Attempts to connect to the server. Has no effect if the file is already connected.
+/// Returns true if the file is connected after calling this function (including if it was connected already).
+/// Note: normally it's not necessary to explicitly call this as it will be called automatically by Write().
+Bool_t TParallelMergingFile::OpenConnection()
+{
+   if (fSocket)
+      return kTRUE;
+
+   const char *path = fServerLocation.GetFile();
+   if (path && strlen(path) > 0 && path[0] == '/') {
+      // UNIX domain socket
+      fSocket.reset(new TSocket(path));
+      if (!fSocket->IsValid()) {
+         Error("UploadAndReset", "Could not contact the server %s\n", path);
+         fSocket.reset();
+         return kFALSE;
+      }
+   } else {
+      // TCP socket
+      const char *host = fServerLocation.GetHost();
+      Int_t port = fServerLocation.GetPort();
+      if (host == 0 || host[0] == '\0') {
+         host = "localhost";
+      }
+      if (port <= 0) {
+         port = 1095;
+      }
+      fSocket.reset(new TSocket(host, port));
+      if (!fSocket->IsValid()) {
+         Error("UploadAndReset", "Could not contact the server %s:%d\n", host, port);
+         fSocket.reset();
+         return kFALSE;
+      }
+   }
+   // Wait till we get the start message
+   // server tells us who we are
+   Int_t kind;
+   Int_t n = fSocket->Recv(fServerIdx, kind);
+
+   if (n < 0 && kind != 0 /* kStartConnection */)
+   {
+      Error("UploadAndReset","Unexpected server message: kind=%d idx=%d\n",kind,fServerIdx);
+      fSocket.reset();
+      return kTRUE;
+   }
+   n = fSocket->Recv(fServerVersion, kind);
+   if (n < 0 && kind != 1 /* kProtocol */)
+   {
+      Fatal("UploadAndReset","Unexpected server message: kind=%d status=%d\n",kind,fServerVersion);
+   } else {
+      Info("UploadAndReset","Connected to fastMergeServer version %d with index %d\n",fServerVersion,fServerIdx);
+   }
+   TMessage::EnableSchemaEvolutionForAll(kTRUE);
+
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,57 +130,7 @@ void TParallelMergingFile::Close(Option_t *option)
 
 Bool_t TParallelMergingFile::UploadAndReset()
 {
-   // Open connection to server
-   if (fSocket == 0) {
-      const char *path = fServerLocation.GetFile();
-      if (path && strlen(path) > 0 && path[0] == '/') {
-         // UNIX domain socket
-         fSocket = new TSocket(path);
-         if (!fSocket->IsValid()) {
-            Error("UploadAndReset", "Could not contact the server %s\n", path);
-            delete fSocket;
-            fSocket = 0;
-            return kFALSE;
-         }
-      } else {
-         // TCP socket
-         const char *host = fServerLocation.GetHost();
-         Int_t port = fServerLocation.GetPort();
-         if (host == 0 || host[0] == '\0') {
-            host = "localhost";
-         }
-         if (port <= 0) {
-            port = 1095;
-         }
-         fSocket = new TSocket(host, port);
-         if (!fSocket->IsValid()) {
-            Error("UploadAndReset", "Could not contact the server %s:%d\n", host, port);
-            delete fSocket;
-            fSocket = 0;
-            return kFALSE;
-         }
-      }
-      // Wait till we get the start message
-      // server tells us who we are
-      Int_t kind;
-      Int_t n = fSocket->Recv(fServerIdx, kind);
-
-      if (n < 0 && kind != 0 /* kStartConnection */)
-      {
-         Error("UploadAndReset","Unexpected server message: kind=%d idx=%d\n",kind,fServerIdx);
-         delete fSocket;
-         fSocket = 0;
-         return kTRUE;
-      }
-      n = fSocket->Recv(fServerVersion, kind);
-      if (n < 0 && kind != 1 /* kProtocol */)
-      {
-         Fatal("UploadAndReset","Unexpected server message: kind=%d status=%d\n",kind,fServerVersion);
-      } else {
-         Info("UploadAndReset","Connected to fastMergeServer version %d with index %d\n",fServerVersion,fServerIdx);
-      }
-      TMessage::EnableSchemaEvolutionForAll(kTRUE);
-   }
+   OpenConnection();
 
    fMessage.Reset(kMESS_ANY); // re-use TMessage object
    fMessage.WriteInt(fServerIdx);
@@ -133,19 +138,16 @@ Bool_t TParallelMergingFile::UploadAndReset()
    fMessage.WriteLong64(GetEND());
    CopyTo(fMessage);
 
-   // FIXME: CXX17: Use init-statement in if to declare `error` variable
-   int error;
-   if ((error = fSocket->Send(fMessage)) <= 0) {
+   if (int error = fSocket->Send(fMessage); error <= 0) {
       Error("UploadAndReset","Upload to the merging server failed with %d\n",error);
-      delete fSocket;
-      fSocket = 0;
+      fSocket.reset();
       return kFALSE;
    }
 
    // Record the StreamerInfo we sent over.
    Int_t isize = fClassIndex->GetSize();
    if (!fClassSent) {
-      fClassSent = new TArrayC(isize);
+      fClassSent.reset(new TArrayC(isize));
    } else {
       if (isize > fClassSent->GetSize()) {
          fClassSent->Set(isize);
@@ -177,8 +179,12 @@ Bool_t TParallelMergingFile::UploadAndReset()
 
 Int_t TParallelMergingFile::Write(const char *, Int_t opt, Int_t bufsize)
 {
-   Int_t nbytes = TMemFile::Write(0,opt,bufsize);
-   if (nbytes) {
+   std::size_t prevSize = GetBytesWritten();
+   auto nbytes = TMemFile::Write(0,opt,bufsize);
+   std::size_t newSize = GetBytesWritten();
+   // NOTE: we don't rely on nbytes > 0 to do UploadAndReset() because nbytes may be 0 if the file
+   // only contains non-TObject objects (as they are not written by TMemFile::Write).
+   if (newSize > prevSize) {
       UploadAndReset();
    }
    return nbytes;

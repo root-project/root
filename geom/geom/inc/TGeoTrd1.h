@@ -65,6 +65,7 @@ public:
    void GetVisibleCorner(const Double_t *point, Double_t *vertex, Double_t *normals) const;
    void GetOppositeCorner(const Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const;
    void InspectShape() const override;
+   Bool_t IsConvex() const final { return kTRUE; }
    Bool_t IsCylType() const override { return kFALSE; }
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;

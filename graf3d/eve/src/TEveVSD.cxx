@@ -17,7 +17,6 @@ Visualization Summary Data - a collection of trees holding standard
 event data in experiment independent format.
 */
 
-ClassImp(TEveVSD);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -70,7 +69,7 @@ void TEveVSD::SetDirectory(TDirectory* dir)
 
 void TEveVSD::CreateTrees()
 {
-   fDirectory->cd();
+   TDirectory::TContext ctx{fDirectory};
    fTreeK  = new TTree("Kinematics", "Simulated tracks.");
    fTreeH  = new TTree("Hits",       "Combined detector hits.");
    fTreeC  = new TTree("Clusters",   "Reconstructed clusters.");

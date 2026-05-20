@@ -12,14 +12,6 @@ import inspect
 import pkgutil
 import traceback
 
-import cppyy
-
-from ._generic import pythonize_generic
-
-# \cond INTERNALS
-gbl_namespace = cppyy.gbl
-# \endcond
-
 
 def pythonization(class_name, ns="::", is_prefix=False):
     r"""
@@ -70,6 +62,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
 
         def passes_filter(class_name):
             return any(class_name.startswith(prefix) for prefix in target)
+
     else:
 
         def passes_filter(class_name):
@@ -93,6 +86,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
             function: the user function, after being registered as a
                 pythonizor.
         """
+        import ROOT
 
         npars = _check_num_pars(user_pythonizor)
 
@@ -114,6 +108,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
                 name (string): name of the class that is the current candidate
                     to be pythonized.
             """
+            from ._generic import pythonize_generic
 
             fqn = klass.__cpp_name__
 
@@ -124,7 +119,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
                 _invoke(user_pythonizor, npars, klass, fqn)
 
         # Register pythonizor in its namespace
-        cppyy.py.add_pythonization(cppyy_pythonizor, ns)
+        ROOT._cppyy.py.add_pythonization(cppyy_pythonizor, ns)
 
         # Return the original user function.
         # We don't want to modify the user function, we just use the decorator
@@ -310,11 +305,12 @@ def _find_namespace(ns):
         namespace proxy object, if the namespace has already been accessed,
             otherwise None.
     """
+    import ROOT
 
     if ns == "":
-        return gbl_namespace
+        return ROOT._cppyy.gbl
 
-    ns_obj = gbl_namespace
+    ns_obj = ROOT._cppyy.gbl
     # Get all namespaces in a list
     every_ns = ns.split("::")
     for ns in every_ns:
@@ -337,4 +333,69 @@ def _register_pythonizations():
             importlib.import_module(__name__ + "." + module_name)
 
 
+def _wait_press_windows():
+   import msvcrt
+   import time
+
+   from ROOT import gSystem
+
+   while not gSystem.ProcessEvents():
+      if msvcrt.kbhit():
+         k = msvcrt.getch()
+         if k[0] == 32:
+            break
+      else:
+         time.sleep(0.01)
+
+
+def _wait_press_posix():
+   import select
+   import sys
+   import termios
+   import time
+   import tty
+
+   from ROOT import gSystem
+
+   old_settings = termios.tcgetattr(sys.stdin)
+
+   tty.setcbreak(sys.stdin.fileno())
+
+   try:
+
+      while not gSystem.ProcessEvents():
+         c = ''
+         if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+            c = sys.stdin.read(1)
+         if (c == '\x20'):
+            break
+         time.sleep(0.01)
+
+   finally:
+      termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+
+
+def _run_root_event_loop():
+   import os
+   import sys
+
+   from ROOT import gROOT
+
+   # no special handling in batch mode
+   if gROOT.IsBatch():
+      return
+
+   # no special handling in case of notebooks
+   if 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
+      return
+
+   print("Press <space> key to continue")
+
+   if os.name == 'nt':
+      _wait_press_windows()
+   else:
+      _wait_press_posix()
+
+
 # \endcond
+

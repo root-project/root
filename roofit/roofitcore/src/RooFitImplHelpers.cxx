@@ -288,8 +288,7 @@ RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const
 
 } // namespace RooHelpers
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 /// Transform a string into a valid C++ variable name by replacing forbidden
 /// characters with underscores.
@@ -335,7 +334,31 @@ std::string makeSliceCutString(RooArgSet const &sliceDataSet)
    return cutString.str();
 }
 
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail
+
+namespace {
+
+double stringToDoubleImpl(std::stringstream &ss)
+{
+   double output;
+   if (!(ss >> output)) {
+      throw std::invalid_argument("Conversion to floating point failed");
+   }
+   return output;
+}
+
+} // namespace
+
+double toDouble(const char *s)
+{
+   std::stringstream ss(s);
+   return stringToDoubleImpl(ss);
+}
+
+double toDouble(const std::string &s)
+{
+   std::stringstream ss(s);
+   return stringToDoubleImpl(ss);
+}
 
 /// \endcond

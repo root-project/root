@@ -12,12 +12,12 @@ public:
     using CPPMethod::CPPMethod;
 
 public:
-    virtual PyObject* GetTypeName();
+    PyObject* GetTypeName() override;
 
 public:
-    virtual PyCallable* Clone() { return new CPPClassMethod(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPClassMethod(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 };
 
 } // namespace CPyCppyy

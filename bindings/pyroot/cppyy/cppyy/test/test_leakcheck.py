@@ -1,6 +1,6 @@
-import py, os, sys
+import py, os, sys, pytest
 from pytest import mark, skip
-from .support import setup_make, pylong, pyunicode
+from support import setup_make, pylong, pyunicode
 
 nopsutil = False
 try:
@@ -73,6 +73,7 @@ class TestLEAKCHECK:
 
         assert fail < M
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test01_free_functions(self):
         """Leak test of free functions"""
 
@@ -98,7 +99,7 @@ class TestLEAKCHECK:
         self.check_func(ns, 'free_f_ret1')
         self.check_func(ns, 'free_f_ret1')
 
-    @mark.xfail()
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test02_test_static_methods(self):
         """Leak test of static methods"""
 
@@ -125,6 +126,7 @@ class TestLEAKCHECK:
             self.check_func(m, 'static_method_ol', 42., tmpl_args='float')
             self.check_func(m, 'static_method_ret')
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test03_test_methods(self):
         """Leak test of methods"""
 
@@ -151,6 +153,7 @@ class TestLEAKCHECK:
         self.check_func(m, 'method_ol', 42., tmpl_args='float')
         self.check_func(m, 'method_ret')
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test04_default_arguments(self):
         """Leak test for functions with default arguments"""
 
@@ -192,6 +195,7 @@ class TestLEAKCHECK:
         self.check_func(m, 'method_default', b=-99)
         self.check_func(m, 'method_default', c=-99)
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test05_aggregates(self):
         """Leak test of aggregate creation"""
 
@@ -223,6 +227,7 @@ class TestLEAKCHECK:
         self.check_func(ns, 'SomeBuf')
         self.check_func(ns, 'SomeBuf', val=10, name="aap", buf_type=ns.SHAPE)
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test06_dir(self):
         """Global function uploads used to cause more function generation"""
 
@@ -233,6 +238,7 @@ class TestLEAKCHECK:
 
         self.check_func(cppyy.gbl, '__dir__', cppyy.gbl)
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test07_string_handling(self):
         """Leak check of returning an std::string by value"""
 
@@ -254,6 +260,7 @@ class TestLEAKCHECK:
         obj = ns.Leaker()
         self.check_func(obj, 'leak_string', 2048)
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test08_list_creation(self):
         """Leak check of creating a python list from an std::list"""
 
@@ -273,3 +280,6 @@ class TestLEAKCHECK:
 
         self.check_func(ns, 'leak_list')
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

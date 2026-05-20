@@ -492,7 +492,7 @@ p3.Draw()
 c.SaveAs("zbi.pdf")
 
 # -----------------------------------------
-# OUTPUT W/O PROOF (2.66 GHz Intel Core i7)
+# OUTPUT (2.66 GHz Intel Core i7)
 # =========================================
 
 # -----------------------------------------
@@ -544,36 +544,6 @@ c.SaveAs("zbi.pdf")
 # - CL_s+b: 0.511 +/- 0.0158076
 # - CL_s: 0.511341 +/- 0.0158183
 # Real time 0:05:06, CP time 306.330
-
-# ---------------------------------------------------------
-# OUTPUT w/ PROOF (2.66 GHz Intel Core i7, 4 virtual cores)
-# =========================================================
-
-# -----------------------------------------
-# Part 5
-# Results HybridCalculator_result:
-# - Null p-value = 0.00075 +/- 0.000173124
-# - Significance = 3.17468 sigma
-# - Number of S+B toys: 1000
-# - Number of B toys: 20000
-# - Test statistic evaluated on data: 10.8198
-# - CL_b: 0.99925 +/- 0.000193577
-# - CL_s+b: 0.454 +/- 0.0157443
-# - CL_s: 0.454341 +/- 0.0157564
-# Real time 0:00:16, CP time 0.990
-
-# -----------------------------------------
-# Part 6
-# Results HybridCalculator_result:
-# - Null p-value = 0.0007 +/- 0.000152699
-# - Significance = 3.19465 sigma
-# - Number of S+B toys: 1000
-# - Number of B toys: 30000
-# - Test statistic evaluated on data: 5.03388
-# - CL_b: 0.9993 +/- 0.000152699
-# - CL_s+b: 0.518 +/- 0.0158011
-# - CL_s: 0.518363 +/- 0.0158124
-# Real time 0:01:25, CP time 0.580
 
 # ----------------------------------
 # Comparison

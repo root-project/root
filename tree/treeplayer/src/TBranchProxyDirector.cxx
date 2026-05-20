@@ -27,7 +27,6 @@ which will hold the directory and its associate
 
 #include <algorithm>
 
-ClassImp(ROOT::Internal::TBranchProxyDirector);
 
 namespace ROOT {
 namespace Internal {
@@ -58,7 +57,7 @@ namespace Internal {
    /// Simple constructor
 
    TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Int_t i) :
-      // cint has a problem casting int to long long
+      // Historical: CINT had a problem casting int to long long
       fTree(tree),
       fEntry(i)
    {

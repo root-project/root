@@ -40,7 +40,7 @@ protected:
    XMLDocPointer_t ParseStream(TXMLInputStream *input);
    static Bool_t VerifyFilePath(const char *fname);
 
-   Bool_t fSkipComments; //! if true, do not create comments nodes in document during parsing
+   Bool_t fSkipComments; ///<! if true, do not create comments nodes in document during parsing
 
 public:
    TXMLEngine();

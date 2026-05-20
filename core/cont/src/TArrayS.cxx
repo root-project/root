@@ -18,7 +18,6 @@ Array of shorts (16 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayS);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayS ctor.

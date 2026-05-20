@@ -32,7 +32,6 @@ TUnixSystem or TWinNTSystem).
 #include "TString.h"
 #include "TSystem.h"
 #include "TUrl.h"
-#include "TVirtualAuth.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
 
@@ -42,7 +41,6 @@ ULong64_t TUDPSocket::fgBytesSent = 0;
 ULong64_t TUDPSocket::fgBytesRecv = 0;
 
 
-ClassImp(TUDPSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a socket. Connect to the named service at address addr.
@@ -66,8 +64,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
@@ -112,8 +108,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = port;
    SetTitle(fService);
@@ -155,8 +149,6 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = gSystem->GetServiceByName(service);
    SetName(fAddress.GetHostName());
@@ -203,8 +195,6 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
       fServType = kROOTD;
-   if (fUrl.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = port;
    SetName(fAddress.GetHostName());
@@ -404,7 +394,7 @@ Int_t TUDPSocket::GetLocalPort()
 /// The argument 'timeout' specifies a maximum time to wait in millisec.
 /// Default no timeout.
 /// Returns 1 if a change of status of interest has been detected within
-/// timeout; 0 in case of timeout; < 0 if an error occured.
+/// timeout; 0 in case of timeout; < 0 if an error occurred.
 
 Int_t TUDPSocket::Select(Int_t interest, Long_t timeout)
 {

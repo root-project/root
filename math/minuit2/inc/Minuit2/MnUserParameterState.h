@@ -37,8 +37,11 @@ class MnUserParameterState {
 public:
    /// default constructor (invalid state)
    MnUserParameterState()
-      : fValid(false), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0), fEDM(0), fNFcn(0),
-        fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), fIntParameters(std::vector<double>()),
+      : fValid(false),
+        fCovStatus(-1),
+        fParameters(MnUserParameters()),
+        fCovariance(MnUserCovariance()),
+        fIntParameters(std::vector<double>()),
         fIntCovariance(MnUserCovariance())
    {
    }
@@ -61,7 +64,7 @@ public:
    // user external representation
    const MnUserParameters &Parameters() const { return fParameters; }
    const MnUserCovariance &Covariance() const { return fCovariance; }
-   const MnGlobalCorrelationCoeff &GlobalCC() const { return fGlobalCC; }
+   MnGlobalCorrelationCoeff GlobalCC() const;
 
    // hessian (inverse of covariance matrix)
    MnUserCovariance Hessian() const;
@@ -78,7 +81,6 @@ public:
 
    bool IsValid() const { return fValid; }
    bool HasCovariance() const { return fCovarianceValid; }
-   bool HasGlobalCC() const { return fGCCValid; }
 
    double Fval() const { return fFVal; }
    double Edm() const { return fEDM; }
@@ -151,16 +153,14 @@ public:
 
 private:
    bool fValid;
-   bool fCovarianceValid;
-   bool fGCCValid;
+   bool fCovarianceValid = false;
    int fCovStatus; // covariance matrix status
-   double fFVal;
-   double fEDM;
-   unsigned int fNFcn;
+   double fFVal = 0.;
+   double fEDM = 0.;
+   unsigned int fNFcn = 0;
 
    MnUserParameters fParameters;
    MnUserCovariance fCovariance;
-   MnGlobalCorrelationCoeff fGlobalCC;
 
    std::vector<double> fIntParameters;
    MnUserCovariance fIntCovariance;

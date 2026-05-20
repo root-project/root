@@ -30,12 +30,12 @@ Explore the examples below or go to the [Fitting user guide](https://root.cern/m
 | fitNormSum.C | fitNormSum.py | Tutorial for normalized sum of two functions Here: a background exponential and a crystalball function. | expo + crystalball |
 | FittingDemo.C | | Example for fitting signal/background. | quadratic + Lorenzian |
 | fithist.C | | Example of fit where the model is histogram + function. | histogram + function |
-| fitExclude.C | | Illustrates how to fit excluding points in a given range. | mulitple linear |
+| fitExclude.C | | Illustrates how to fit excluding points in a given range. | multiple linear |
 | multifit.C | multifit.py | Fitting multiple functions to different ranges of a 1-D histogram. | multiple gaus |
 | fitConvolution.C | fitConvolution.py | Tutorial for convolution of two functions. | expo * gaus |
-| langaus.C | | Convoluted Landau and Gaussian Fitting Function (using ROOT's Landau and Gauss functions). | Langdau * gaus |
-| minuit2FitBench.C | | Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits. | Langdau * gaus |
-
+| langaus.C | | Convoluted Landau and Gaussian Fitting Function (using ROOT's Landau and Gauss functions). | Landau * gaus |
+| minuit2FitBench.C | | Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits. | Landau * gaus |
+| fitFraction.C | | Fit accounting for data and Monte Carlo statistical uncertainties. | cos, user defined |
 
 
 \anchor histo_2D

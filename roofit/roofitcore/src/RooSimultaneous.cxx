@@ -87,6 +87,15 @@ std::map<std::string, RooAbsPdf *> createPdfMap(const RooArgList &inPdfList, Roo
    return pdfMap;
 }
 
+void replaceOrAdd(RooLinkedList &lst, TObject &obj)
+{
+   TObject *old = lst.FindObject(obj.GetName());
+   if (old)
+      lst.Replace(old, &obj);
+   else
+      lst.Add(&obj);
+}
+
 } // namespace
 
 RooSimultaneous::InitializationOutput::~InitializationOutput() = default;
@@ -768,15 +777,16 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
        projDataTmp(projData->reduce(RooFit::SelectVars(projDataVars), RooFit::Cut(cutString.c_str())));
 
     // Override normalization and projection dataset
-    RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*wTable->getFrac(idxCatClone->getCurrentLabel()),stype) ;
+    RooCmdArg tmp1 =
+       RooFit::Normalization(scaleFactor * wTable->get(idxCatClone->getCurrentLabel()), RooAbsReal::NumEvent);
     RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
 
     // WVE -- do not adjust normalization for asymmetry plots
     RooLinkedList cmdList2(cmdList) ;
     if (!cmdList.find("Asymmetry")) {
-      cmdList2.Add(&tmp1) ;
+      replaceOrAdd(cmdList2, tmp1);
     }
-    cmdList2.Add(&tmp2) ;
+    replaceOrAdd(cmdList2, tmp2);
 
     // Plot single component
     RooPlot* retFrame = getPdf(idxCatClone->getCurrentLabel())->plotOn(frame,cmdList2);
@@ -810,8 +820,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
     if (skip) continue ;
 
-    // Instantiate a RRV holding this pdfs weight fraction
-    wgtCompList.addOwned(std::make_unique<RooRealVar>(proxy->name(),"coef",wTable->getFrac(proxy->name())));
+    // Instantiate a RRV holding this pdfs weight
+    wgtCompList.addOwned(std::make_unique<RooRealVar>(proxy->name(),"coef",wTable->get(proxy->name())));
     sumWeight += wTable->getFrac(proxy->name()) ;
 
     // Add the PDF to list list
@@ -875,15 +885,15 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
   // WVE -- do not adjust normalization for asymmetry plots
   if (!cmdList.find("Asymmetry")) {
-    cmdList2.Add(&tmp1) ;
+    replaceOrAdd(cmdList2, tmp1);
   }
-  cmdList2.Add(&tmp2) ;
+  replaceOrAdd(cmdList2, tmp2);
 
   RooPlot* frame2 ;
   if (!projSetTmp.empty()) {
     // Plot temporary function
     RooCmdArg tmp3 = RooFit::Project(projSetTmp) ;
-    cmdList2.Add(&tmp3) ;
+    replaceOrAdd(cmdList2, tmp3);
     frame2 = plotVar.plotOn(frame,cmdList2) ;
   } else {
     // Plot temporary function
@@ -1220,6 +1230,10 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       std::unique_ptr<RooArgSet> pdfNormSet{
          std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)};
+      std::unique_ptr<RooArgSet> condVarSet{
+         std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__conditional__", true)};
+
+      pdfNormSet->remove(*condVarSet, true, true);
 
       if (rangeName) {
          pdfClone->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());

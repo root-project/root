@@ -27,7 +27,6 @@
 
 #include <iostream>
 
-ClassImp(THStack);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -371,6 +370,7 @@ void THStack::Add(TH1 *h1, Option_t *option)
    }
    if (!fHists) fHists = new TList();
    fHists->Add(h1,option);
+   h1->SetBit(kMustCleanup); // The histogram is likely in multiple lists now
    Modified(); //invalidate stack
 }
 
@@ -394,8 +394,8 @@ void THStack::BuildStack()
    Int_t nhists = fHists->GetSize();
    if (!nhists) return;
    fStack = new TObjArray(nhists);
-   Bool_t add = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
    TH1 *h = (TH1*)fHists->At(0)->Clone();
    fStack->Add(h);
    for (Int_t i=1;i<nhists;i++) {
@@ -406,7 +406,6 @@ void THStack::BuildStack()
       h->Add((TH1*)fStack->At(i-1));
       fStack->AddAt(h,i);
    }
-   TH1::AddDirectory(add);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -760,9 +759,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
       lclear = kFALSE;
       opt.ReplaceAll("noclear","");
    }
-   if (opt.Contains("pads")) {
+   auto l = strstr(opt.Data(), "pads");
+   if (l) {
       if (!paint)
          return;
+
+      Int_t fnx = 0;
+      if (sscanf(&l[4], "%d", &fnx) > 0) {
+         opt.ReplaceAll(TString::Format("pads%d", fnx), "");
+      } else {
+         opt.ReplaceAll("pads", "");
+      }
 
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
@@ -774,12 +781,21 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
             nps++;
       }
       if (nps < npads) {
-         padsav->Clear();
-         Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
-         if (nx*nx < npads) nx++;
-         Int_t ny = nx;
-         if (((nx*ny)-nx) >= npads) ny--;
-         padsav->Divide(nx,ny);
+         if (fnx <= 0) {
+            padsav->Clear();
+            Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
+            if (nx * nx < npads)
+               nx++;
+            Int_t ny = nx;
+            if (((nx * ny) - nx) >= npads)
+               ny--;
+            padsav->Divide(nx, ny);
+         } else {
+            Int_t ny = (Int_t)((Double_t)npads / fnx);
+            if (fnx * ny < npads)
+               ny++;
+            padsav->Divide(fnx, ny);
+         }
       }
 
       Int_t i = 1;
@@ -847,8 +863,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
    }
    else                   themin = fMinimum;
    if (!fHistogram) {
-      Bool_t add = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
+      TDirectory::TContext ctx{nullptr}; // No self-registration to directories
       h = (TH1*)fHists->At(0);
       TAxis *xaxis = h->GetXaxis();
       TAxis *yaxis = h->GetYaxis();
@@ -883,7 +898,6 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
       }
       fHistogram->SetStats(false);
       fHistogram->Sumw2(kFALSE);
-      TH1::AddDirectory(add);
    } else {
       fHistogram->SetTitle(GetTitle());
    }
@@ -1035,8 +1049,11 @@ void THStack::RecursiveRemove(TObject *obj)
 void THStack::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString name = gInterpreter->MapCppName(GetName());
+   if (name.IsNull())
+      name = "hstack";
 
-   SavePrimitiveConstructor(out, Class(), name);
+   out << "   " << ClassName() << " *" << name << " = new " << ClassName() << "();\n";
+
    SavePrimitiveNameTitle(out, name);
 
    if (fMinimum != -1111)

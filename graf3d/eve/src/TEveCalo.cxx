@@ -32,7 +32,6 @@ Base class for calorimeter data visualization.
 See TEveCalo2D and TEveCalo3D for concrete implementations.
 */
 
-ClassImp(TEveCaloViz);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -434,7 +433,6 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
 Visualization of a calorimeter event data in 3D.
 */
 
-ClassImp(TEveCalo3D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -487,7 +485,6 @@ void TEveCalo3D::ComputeBBox()
 Visualization of a calorimeter event data in 2D.
 */
 
-ClassImp(TEveCalo2D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -773,7 +770,6 @@ void TEveCalo2D::ComputeBBox()
 Visualization of calorimeter data as eta/phi histogram.
 */
 
-ClassImp(TEveCaloLego);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -20,6 +20,7 @@
 #include <RooBernstein.h>
 #include <RooBifurGauss.h>
 #include <RooCBShape.h>
+#include <RooCategory.h>
 #include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooConstraintSum.h>
@@ -30,6 +31,8 @@
 #include <RooFit/Detail/RooNLLVarNew.h>
 #include <RooFit/Detail/RooNormalizedPdf.h>
 #include <RooFormulaVar.h>
+#include <RooFunctor1DBinding.h>
+#include <RooFunctorBinding.h>
 #include <RooGamma.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
@@ -37,7 +40,9 @@
 #include <RooHistPdf.h>
 #include <RooLandau.h>
 #include <RooLognormal.h>
+#include <RooMultiPdf.h>
 #include <RooMultiVarGaussian.h>
+#include <RooONNXFunc.h>
 #include <RooParamHistFunc.h>
 #include <RooPoisson.h>
 #include <RooPolyVar.h>
@@ -60,10 +65,19 @@
 
 #include <TInterpreter.h>
 
-namespace RooFit {
-namespace Experimental {
+#include <unordered_set>
+
+namespace RooFit::Experimental {
 
 namespace {
+
+// Return a stringy-field version of the value, formatted to maximum precision.
+std::string doubleToString(double val)
+{
+   std::stringstream ss;
+   ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
+   return ss.str();
+}
 
 std::string mathFunc(std::string const &name)
 {
@@ -89,7 +103,7 @@ void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrde
    }
    std::string const &offset = dataHist.calculateTreeIndexForCodeSquash(ctx, obs);
    std::string weightArr = dataHist.declWeightArrayForCodeSquash(ctx, correctForBinSize);
-   ctx.addResult(&arg, "*(" + weightArr + " + " + offset + ")");
+   ctx.addResult(&arg, "(" + weightArr + ")[" + offset + "]");
 }
 
 std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, RooArgList const &funcList,
@@ -241,6 +255,56 @@ void codegenImpl(RooMultiVarGaussian &arg, CodegenContext &ctx)
                  ctx.buildCall(mathFunc("multiVarGaussian"), arg.xVec().size(), arg.xVec(), arg.muVec(), covISpan));
 }
 
+void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx)
+{
+   int numPdfs = arg.getNumPdfs();
+
+   // MathFunc call
+
+   // The value of this number should be discussed. Beyound a certain number of
+   // indices MathFunc call becomes more efficient.
+   if (numPdfs > 2) {
+      ctx.addResult(&arg, ctx.buildCall(mathFunc("multipdf"), arg.indexCategory(), arg.getPdfList()));
+
+      std::cout << "MathFunc call used\n";
+
+   } else {
+
+      // Ternary nested expression
+      std::string indexExpr = ctx.getResult(arg.indexCategory());
+
+      // int numPdfs = arg.getNumPdfs();
+      std::string expr;
+
+      for (int i = 0; i < numPdfs; ++i) {
+         RooAbsPdf *pdf = arg.getPdf(i);
+         std::string pdfExpr = ctx.getResult(*pdf);
+
+         expr += "(" + indexExpr + " == " + std::to_string(i) + " ? (" + pdfExpr + ") : ";
+      }
+
+      expr += "0.0";
+      expr += std::string(numPdfs, ')'); // Close all ternary operators
+
+      ctx.addResult(&arg, expr);
+      std::cout << "Ternary expression call used \n";
+   }
+}
+
+// RooCategory index added.
+void codegenImpl(RooCategory &arg, CodegenContext &ctx)
+{
+   int idx = ctx.observableIndexOf(arg);
+   if (idx < 0) {
+
+      idx = 1;
+      ctx.addVecObs(arg.GetName(), idx);
+   }
+
+   std::string result = std::to_string(arg.getCurrentIndex());
+   ctx.addResult(&arg, result);
+}
+
 void codegenImpl(RooAddition &arg, CodegenContext &ctx)
 {
    if (arg.list().empty()) {
@@ -260,7 +324,7 @@ void codegenImpl(RooAddition &arg, CodegenContext &ctx)
             result += '+';
          continue;
       }
-      result += ctx.buildFunction(*component, ctx.outputSizes()) + "(params, obs, xlArr)";
+      result += ctx.buildFunction(*component, ctx.dependsOnData()) + "(params, obs, xlArr)";
       ++i;
       if (i < arg.list().size())
          result += '+';
@@ -303,20 +367,98 @@ void codegenImpl(RooChebychev &arg, CodegenContext &ctx)
 
 void codegenImpl(RooConstVar &arg, CodegenContext &ctx)
 {
-   // Just return a stringy-field version of the const value.
-   // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
-   std::stringstream ss;
-   ss.precision(max_precision);
-   // Just use toString to make sure we do not output 'inf'.
-   // This is really ugly for large numbers...
-   ss << std::fixed << RooNumber::toString(arg.getVal());
-   ctx.addResult(&arg, ss.str());
+   ctx.addResult(&arg, doubleToString(arg.getVal()));
 }
 
 void codegenImpl(RooConstraintSum &arg, CodegenContext &ctx)
 {
    ctx.addResult(&arg, ctx.buildCall(mathFunc("constraintSum"), arg.list(), arg.list().size()));
+}
+
+// Generate RooFit codegen wrappers for RooFunctorBinding and similar objects,
+// emitting both the primal function call and its gradient pullback for
+// Clad-based AD.
+template <class RooArg_t>
+void functorCodegenImpl(RooArg_t &arg, RooArgList const &variables, CodegenContext &ctx)
+{
+   if (!arg.function()->HasGradient()) {
+      std::stringstream errorMsg;
+      errorMsg << "Functor wrapped by \"" << arg.GetName() << "\" doesn't provide a gradient function."
+               << " RooFit codegen is therefore not supported.";
+      oocoutE(&arg, InputArguments) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+
+   std::string funcAddrStr = TString::Format("0x%zx", reinterpret_cast<std::size_t>(arg.function())).Data();
+   std::string wrapperName = "roo_functor_" + funcAddrStr;
+
+   static std::unordered_set<std::string> wrapperNames;
+
+   if (wrapperNames.find(wrapperName) == wrapperNames.end()) {
+
+      wrapperNames.insert(wrapperName);
+
+      std::string pullbackName = wrapperName + "_pullback";
+      std::string nStr = std::to_string(std::size(variables));
+
+      std::string type;
+      if constexpr (std::is_same_v<RooArg_t, RooFunctor1DBinding> || std::is_same_v<RooArg_t, RooFunctor1DPdfBinding>)
+         type = "::ROOT::Math::IGradientFunctionOneDim";
+      else
+         type = "::ROOT::Math::IGradientFunctionMultiDim";
+
+      std::string funcAddrCasted = "reinterpret_cast<" + type + " const *>(" + funcAddrStr + ")";
+
+      std::string code;
+
+      code += "double " + wrapperName +
+              "(double const *x) {\n"
+              "   return " +
+              funcAddrCasted +
+              "->operator()(x);\n"
+              "}\n\n"
+              "namespace clad::custom_derivatives {\n\n"
+              "void " +
+              pullbackName +
+              "(double const* x, double d_y, double *d_x) {\n"
+              "   double output[" +
+              nStr +
+              "]{};\n"
+              "   " +
+              funcAddrCasted +
+              "->Gradient(x, output);\n"
+              "   for (int i = 0; i < " +
+              nStr +
+              "; ++i) {\n"
+              "      d_x[i] += output[i] * d_y;\n"
+              "   }\n"
+              "}\n"
+              "} // namespace clad::custom_derivatives\n";
+
+      gInterpreter->Declare(code.c_str());
+   }
+
+   ctx.addResult(&arg, ctx.buildCall(wrapperName, variables));
+}
+
+void codegenImpl(RooFunctor1DBinding &arg, CodegenContext &ctx)
+{
+   functorCodegenImpl(arg, arg.variable(), ctx);
+}
+
+void codegenImpl(RooFunctor1DPdfBinding &arg, CodegenContext &ctx)
+{
+   functorCodegenImpl(arg, arg.variable(), ctx);
+}
+
+void codegenImpl(RooFunctorBinding &arg, CodegenContext &ctx)
+{
+   functorCodegenImpl(arg, arg.variables(), ctx);
+}
+
+void codegenImpl(RooFunctorPdfBinding &arg, CodegenContext &ctx)
+{
+   functorCodegenImpl(arg, arg.variables(), ctx);
 }
 
 void codegenImpl(RooGamma &arg, CodegenContext &ctx)
@@ -329,7 +471,10 @@ void codegenImpl(RooFormulaVar &arg, CodegenContext &ctx)
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
-   ctx.addResult(&arg, ctx.buildCall(funcName, arg.dependents()));
+   // We have to force the array type to be "double" because that's what the
+   // declared function wrapped by the TFormula expects.
+   auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
+   ctx.addResult(&arg, funcName + "(" + inputVar + ")");
 }
 
 void codegenImpl(RooEffProd &arg, CodegenContext &ctx)
@@ -372,7 +517,10 @@ void codegenImpl(RooGenericPdf &arg, CodegenContext &ctx)
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
-   ctx.addResult(&arg, ctx.buildCall(funcName, arg.dependents()));
+   // We have to force the array type to be "double" because that's what the
+   // declared function wrapped by the TFormula expects.
+   auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
+   ctx.addResult(&arg, funcName + "(" + inputVar + ")");
 }
 
 void codegenImpl(RooHistFunc &arg, CodegenContext &ctx)
@@ -398,9 +546,65 @@ void codegenImpl(RooLognormal &arg, CodegenContext &ctx)
    ctx.addResult(&arg, ctx.buildCall(mathFunc(funcName), arg.getX(), arg.getShapeK(), arg.getMedian()));
 }
 
+namespace {
+
+void codegenChi2(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
+{
+   using FuncMode = RooFit::Detail::RooNLLVarNew::FuncMode;
+
+   std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
+   ctx.addResult(&arg, resName);
+   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
+
+   // DataError::None means "no errors": every bin contributes zero.
+   if (arg.chi2ErrorType() == RooDataHist::None) {
+      return;
+   }
+
+   // Compute the per-bin normalization factor (constant with respect to the
+   // loop).
+   std::string normFactor;
+   if (arg.funcMode() == FuncMode::Function) {
+      normFactor = "1.0";
+   } else if (arg.funcMode() == FuncMode::ExtendedPdf) {
+      normFactor = ctx.getResult(*arg.expectedEvents());
+   } else { // Pdf
+      std::string weightSumName = RooFit::Detail::makeValidVarName(arg.GetName()) + "WeightSum";
+      ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
+      {
+         auto scope = ctx.beginLoop(&arg);
+         ctx.addToCodeBody(weightSumName + " += " + ctx.getResult(arg.weightVar()) + ";\n");
+      }
+      normFactor = weightSumName;
+   }
+
+   auto scope = ctx.beginLoop(&arg);
+   const std::string mu =
+      "(" + ctx.getResult(arg.func()) + " * " + ctx.getResult(*arg.binVolumes()) + " * " + normFactor + ")";
+
+   std::string term;
+   switch (arg.chi2ErrorType()) {
+   case RooDataHist::Expected: term = ctx.buildCall(mathFunc("chi2Expected"), mu, arg.weightVar()); break;
+   case RooDataHist::SumW2:
+      term = ctx.buildCall(mathFunc("chi2Symmetric"), mu, arg.weightVar(), arg.weightSquaredVar());
+      break;
+   case RooDataHist::Poisson:
+      term = ctx.buildCall(mathFunc("chi2Asymmetric"), mu, arg.weightVar(), *arg.weightErrLo(), *arg.weightErrHi());
+      break;
+   default: break;
+   }
+   ctx.addToCodeBody(&arg, resName + " += " + term + ";");
+}
+
+} // namespace
+
 void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
 {
-   if (arg.binnedL() && !arg.pdf().getAttribute("BinnedLikelihoodActiveYields")) {
+   if (arg.statistic() == RooFit::Detail::RooNLLVarNew::Statistic::Chi2) {
+      return codegenChi2(arg, ctx);
+   }
+
+   if (arg.binnedL() && !arg.func().getAttribute("BinnedLikelihoodActiveYields")) {
       std::stringstream errorMsg;
       errorMsg << "codegen: binned likelihood optimization is only supported when raw pdf "
                   "values can be interpreted as yields."
@@ -431,7 +635,7 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(&arg);
-      std::string term = ctx.buildCall(mathFunc("nll"), arg.pdf(), arg.weightVar(), arg.binnedL(), 0);
+      std::string term = ctx.buildCall(mathFunc("nll"), arg.func(), arg.weightVar(), arg.binnedL(), 0);
       ctx.addToCodeBody(&arg, resName + " += " + term + ";");
    }
    if (arg.expectedEvents()) {
@@ -450,15 +654,16 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
    std::string arrName = ctx.buildArg(arg.paramList());
-   std::string result = arrName + "[" + idx + "]";
+   std::stringstream result;
+   result << arrName << "[" << idx << "]";
    if (arg.relParam()) {
       // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
       // be binned uniformly.
       double binV = arg.dataHist().binVolume(0);
       std::string weightArr = arg.dataHist().declWeightArrayForCodeSquash(ctx, false);
-      result += " * *(" + weightArr + " + " + idx + ") * " + std::to_string(binV);
+      result << " * *(" << weightArr << " + " << idx + ") * " << doubleToString(binV);
    }
-   ctx.addResult(&arg, result);
+   ctx.addResult(&arg, result.str());
 }
 
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx)
@@ -570,6 +775,7 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
       << "   const int n = 1000; // number of sampling points\n"
       << "   double d = " << intVar.getMax(arg.intRange()) << " - " << intVar.getMin(arg.intRange()) << ";\n"
       << "   double eps = d / n;\n"
+      << "   #pragma clad checkpoint loop\n"
       << "   for (int i = 0; i < n; ++i) {\n"
       << "      " << obsName << "[0] = " << intVar.getMin(arg.intRange()) << " + eps * i;\n"
       << "      double tmpA = " << funcName << "(params, " << obsName << ", xlArr);\n"
@@ -599,15 +805,7 @@ void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
    if (!arg.isConstant()) {
       ctx.addResult(&arg, arg.GetName());
    }
-   // Just return a formatted version of the const value.
-   // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
-   std::stringstream ss;
-   ss.precision(max_precision);
-   // Just use toString to make sure we do not output 'inf'.
-   // This is really ugly for large numbers...
-   ss << std::fixed << RooNumber::toString(arg.getVal());
-   ctx.addResult(&arg, ss.str());
+   ctx.addResult(&arg, doubleToString(arg.getVal()));
 }
 
 void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx)
@@ -761,7 +959,7 @@ std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const &arg, RooData
                                     << std::endl;
       return "";
    }
-   return std::to_string(dataHist.sum(histFuncMode));
+   return doubleToString(dataHist.sum(histFuncMode));
 }
 
 } // namespace
@@ -802,7 +1000,22 @@ std::string codegenIntegralImpl(RooMultiVarGaussian &arg, int code, const char *
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   return std::to_string(arg.analyticalIntegral(code, rangeName));
+   return doubleToString(arg.analyticalIntegral(code, rangeName));
+}
+
+void codegenImpl(RooONNXFunc &arg, CodegenContext &ctx)
+{
+   std::stringstream ss;
+   ss << arg.outerWrapperName() << "(";
+   for (std::size_t i = 0; i < arg.nInputTensors(); ++i) {
+      ss << ctx.buildArg(arg.inputTensorList(i)) << std::endl;
+      if (i != arg.nInputTensors() - 1) {
+         ss << ", ";
+      }
+   }
+   ss << ")";
+
+   ctx.addResult(&arg, ss.str());
 }
 
 std::string codegenIntegralImpl(RooPoisson &arg, int code, const char *rangeName, CodegenContext &ctx)
@@ -854,8 +1067,7 @@ std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName
 {
    // The integral of a uniform distribution is static, so we can just hardcode
    // the result in a string.
-   return std::to_string(arg.analyticalIntegral(code, rangeName));
+   return doubleToString(arg.analyticalIntegral(code, rangeName));
 }
 
-} // namespace Experimental
-} // namespace RooFit
+} // namespace RooFit::Experimental

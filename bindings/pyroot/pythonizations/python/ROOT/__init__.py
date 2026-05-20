@@ -8,12 +8,19 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from os import environ
+from __future__ import annotations
+
+import atexit
+import builtins
+import os
 import platform
+import sys
+import types
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
 
-# Prevent cppyy's check for the PCH
-environ["CLING_STANDARD_PCH"] = "none"
-
+from . import _asan  # noqa: F401  # imported for side effects for setup specific to AddressSanitizer environments
+from ._facade import ROOTFacade
 from ._python_version import _root_python_version
 
 _runtime_version = platform.python_version()
@@ -34,19 +41,21 @@ if _major_minor(_runtime_version) != _major_minor(_root_python_version):
     """
     raise ImportError(textwrap.dedent(message))
 
-
 # Prevent cppyy's check for extra header directory
-environ["CPPYY_API_PATH"] = "none"
+os.environ["CPPYY_API_PATH"] = "none"
 
 # Prevent cppyy from filtering ROOT libraries
-environ["CPPYY_NO_ROOT_FILTER"] = "1"
+os.environ["CPPYY_NO_ROOT_FILTER"] = "1"
 
-# Do setup specific to AddressSanitizer environments
-from . import _asan
-
-import cppyy
-import sys, importlib
-import libROOTPythonizations
+# The libROOTPythonizations CPython extension is in the same directory as the
+# ROOT Python module, but to find the other ROOT libraries we need to also add
+# the path of the ROOT library directory (only needed on Windows). For example,
+# if the ROOT Python module is in $ROOTSYS/bin/ROOT/__init__.py, the libraries
+# are usually in $ROOTSYS/bin.
+if "win32" in sys.platform:
+    root_module_path = os.path.dirname(__file__)  # expected to be ${CMAKE_INSTALL_PYTHONDIR}/ROOT
+    root_install_pythondir = os.path.dirname(root_module_path)  # expected to be ${CMAKE_INSTALL_PYTHONDIR}
+    os.add_dll_directory(root_install_pythondir)
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).
@@ -55,14 +64,7 @@ _cached_strings = []
 for s in ["Branch", "FitFCN", "ROOT", "SetBranchAddress", "SetFCN", "_TClass__DynamicCast", "__class__"]:
     _cached_strings.append(sys.intern(s))
 
-# Trigger the addition of the pythonizations
-from ._pythonization import _register_pythonizations
-
-_register_pythonizations()
-
 # Check if we are in the IPython shell
-import builtins
-
 _is_ipython = hasattr(builtins, "__IPYTHON__")
 
 
@@ -86,9 +88,6 @@ class _PoisonedDunderAll:
 __all__ = _PoisonedDunderAll()
 
 # Configure ROOT facade module
-import sys
-from ._facade import ROOTFacade
-
 _root_facade = ROOTFacade(sys.modules[__name__], _is_ipython)
 sys.modules[__name__] = _root_facade
 
@@ -98,9 +97,6 @@ sys.modules[__name__] = _root_facade
 #   * https://docs.python.org/3/library/importlib.html#module-importlib.abc
 #
 #   * https://python.plainenglish.io/metapathfinders-or-how-to-change-python-import-behavior-a1cf3b5a13ec
-from importlib.abc import Loader, MetaPathFinder
-from importlib.machinery import ModuleSpec
-from importlib.util import spec_from_loader
 
 
 def _can_be_module(obj) -> bool:
@@ -122,11 +118,7 @@ def _can_be_module(obj) -> bool:
     return False
 
 
-from typing import Optional, Union
-import types
-
-
-def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy._backend.CPPScope]]:
+def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy.types.Scope]]:  # noqa: F821
     """
     Recursively looks up attributes of the ROOT facade, using a full module
     name, and return it if it can be used as a ROOT submodule. This is the case
@@ -174,6 +166,8 @@ class _RootNamespaceFinder(MetaPathFinder):
     """
 
     def find_spec(self, fullname: str, path, target=None) -> ModuleSpec:
+        from importlib.util import spec_from_loader
+
         if not fullname.startswith("ROOT."):
             # This finder only finds ROOT.*
             return None
@@ -192,18 +186,31 @@ if _is_ipython:
 
     ip = get_ipython()
     if hasattr(ip, "kernel"):
-        import JupyROOT
-        from . import JsMVA
+        from . import _jupyroot  # noqa: F401  # imported the side effect of setting up JupyROOT
 
-# Register cleanup
-import atexit
+        # from . import JsMVA
 
 
-def cleanup():
-    # If spawned, stop thread which processes ROOT events
+def _cleanup():
+    # Delete TBrowser instances while the GUI event loop is still alive,
+    # which fixed https://github.com/root-project/root/issues/21912.
+    #
+    # The cleanup is kept tight on purpose. A previous version called
+    # TROOT::EndOfProcessCleanups() outright (removed in commit e9d2803), which
+    # also ran gInterpreter->ResetGlobals() and ShutDown() and interfered with
+    # Python objects still alive at exit time, by cleaning up objects that
+    # might be referenced by other Python proxies outside the control of gROOT.
     facade = sys.modules[__name__]
-    if "app" in facade.__dict__ and hasattr(facade.__dict__["app"], "process_root_events"):
-        facade.__dict__["app"].keep_polling = False
-        facade.__dict__["app"].process_root_events.join()
 
-atexit.register(cleanup)
+    # Skip if the C++ runtime was never initialized (i.e. _finalSetup did
+    # not run): nothing to clean up, and we don't want to drag cppyy in.
+    if "_cppyy" not in facade.__dict__:
+        return
+
+    if not getattr(facade.PyConfig, "ShutDown", True):
+        return
+
+    facade.gROOT.GetListOfBrowsers().Delete()
+
+
+atexit.register(_cleanup)

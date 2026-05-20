@@ -6,8 +6,6 @@
 #include <ROOT/REveGeoTopNode.hxx>
 #include <ROOT/REveManager.hxx>
 
-namespace REX = ROOT::Experimental;
-
 void setDetColors()
 {
    gGeoManager->DefaultColors();
@@ -40,45 +38,24 @@ TGeoNode *getNodeFromPath(TGeoNode *top, std::string path)
 
 void geoTopNode()
 {
-   auto eveMng = REX::REveManager::Create();
-   // eveMng->AllowMultipleRemoteConnections(false, false);
+   using namespace ROOT::Experimental;
+   auto eveMng = REveManager::Create();
+   eveMng->AllowMultipleRemoteConnections(false, false);
 
    TFile::SetCacheFileDir(".");
 
-   TGeoManager::Import("https://root.cern/files/cms.root");
-   TGeoNode *top = gGeoManager->GetTopVolume()->FindNode("CMSE_1");
-   setDetColors();
-
    // tracker barrel
-   {
-      // Init RGeomDescription object
-      auto data = new REX::REveGeoTopNodeData("TRACK GeoNode-Data ");
-      data->SetTNode(getNodeFromPath(top, "TRAK_1/SVTX_1"));
-      data->RefDescription().SetVisLevel(2);
-      eveMng->GetWorld()->AddElement(data); // data can be added to any scene
+   auto data = new REveGeoTopNodeData("https://root.cern/files/cms.root");
+   setDetColors();
+   data->InitPath("/CMSE_1/TRAK_1/SVTX_1");
+   data->RefDescription().SetVisLevel(2);
+   eveMng->GetWorld()->AddElement(data);
 
-      // 3D GL representation
-      auto geoViz = new REX::REveGeoTopNodeViz("CaloTopNode");
-      geoViz->SetGeoData(data);
-      geoViz->SetPickable(true);
-      data->AddNiece(geoViz);
-      eveMng->GetEventScene()->AddElement(geoViz);
-   }
-
-   // muon barrel
-   {
-      // Init RGeomDescription object
-      auto data = new REX::REveGeoTopNodeData("MUON GeoNode-Data");
-      data->SetTNode(getNodeFromPath(top, "MUON_1/MB_1"));
-      data->RefDescription().SetVisLevel(2);
-      eveMng->GetWorld()->AddElement(data);
-
-      // 3D GL representation
-      auto geoViz = new REX::REveGeoTopNodeViz("MUON TopNode");
-      geoViz->SetGeoData(data);
-      geoViz->SetPickable(true);
-      data->AddNiece(geoViz);
-      eveMng->GetEventScene()->AddElement(geoViz);
-   }
+   // 3D GL representation
+   auto geoViz = new REveGeoTopNodeViz();
+   geoViz->SetGeoData(data);
+   data->AddNiece(geoViz);
+   eveMng->GetEventScene()->AddElement(geoViz);
+   geoViz->SetPickable(true);
    eveMng->Show();
 }

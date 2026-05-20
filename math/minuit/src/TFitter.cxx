@@ -31,7 +31,6 @@
 extern void F2Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void F3Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
-ClassImp(TFitter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

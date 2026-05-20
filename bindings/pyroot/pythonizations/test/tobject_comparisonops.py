@@ -39,6 +39,22 @@ class TObjectComparisonOps(unittest.TestCase):
         # Test comparison with None
         self.assertTrue(o != None)
 
+    def test_nullptr_eq_none_raises(self):
+        import cppyy
+
+        x = cppyy.bind_object(cppyy.nullptr, "TObject")
+
+        # Comparing a nullptr to None must raise TypeError in ROOT >= 6.40
+        # This is important to check, because if we don't raise an error, the
+        # result might not be equivalent to the confusing behavior in previous
+        # ROOT versions, which would be a silent behavior change.
+        # See https://github.com/root-project/root/issues/20283
+        with self.assertRaises(TypeError):
+            _ = x == None
+
+        with self.assertRaises(TypeError):
+            _ = x != None
+
     def test_lt(self):
         a = TUrl("a")
         b = TUrl("b")
@@ -93,12 +109,14 @@ class TObjectComparisonOps(unittest.TestCase):
         l1 = [ ROOT.TUrl(str(i)) for i in range(self.num_elems) ]
         l2 = list(reversed(l1))
 
-        self.assertNotEqual(l1, l2)
+        for i in range(self.num_elems):
+            self.assertIs(l1[i], l2[self.num_elems - 1 - i])
 
         # Test that comparison operators enable list sorting
         l2.sort()
 
-        self.assertEqual(l1, l2)
+        for e1, e2 in zip(l1, l2):
+            self.assertIs(e1, e2)
 
 
 if __name__ == '__main__':

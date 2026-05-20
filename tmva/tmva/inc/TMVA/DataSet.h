@@ -172,7 +172,7 @@ namespace TMVA {
       void  ApplyTrainingSetDivision();
    public:
 
-       ClassDef(DataSet,1);
+       ClassDefOverride(DataSet,1);
    };
 }
 

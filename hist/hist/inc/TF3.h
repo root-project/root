@@ -35,8 +35,11 @@ protected:
    Double_t  fClipBox[3];        ///<! Coordinates of clipbox
 public:
    TF3();
-   TF3(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
-       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Option_t * opt = nullptr);
+   TF3(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0,
+       Double_t ymax = 1, Double_t zmin = 0, Double_t zmax = 1, EAddToList addToGlobList = EAddToList::kDefault,
+       bool vectorize = false);
+   TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin,
+       Double_t zmax, Option_t *opt); // same as above but using a string for option
    TF3(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0, Int_t ndim = 3, EAddToList addToGlobList = EAddToList::kDefault);
    TF3(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
@@ -53,27 +56,11 @@ public:
       fZmin(zmin), fZmax(zmax), fNpz(30)
    {   }
 
-   /// Backward compatible ctor
-   template <class PtrObj, typename MemFn>
-   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
-       const char * , const char *  ) :
-      TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,3),
-      fZmin(zmin), fZmax(zmax), fNpz(30)
-   {   }
-
    /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
        Int_t ndim = 3, EAddToList addToGlobList = EAddToList::kDefault) :
       TF2(name,f,xmin,xmax,ymin,ymax,npar,ndim,addToGlobList),
-      fZmin(zmin), fZmax(zmax), fNpz(30)
-   { }
-
-   /// Backward compatible ctor
-   template <typename Func>
-   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
-       const char *  ) :
-      TF2(name,f,xmin,xmax,ymin,ymax,npar,3),
       fZmin(zmin), fZmax(zmax), fNpz(30)
    { }
 
@@ -97,6 +84,7 @@ public:
    Double_t GetSave(const Double_t *x) override;
    virtual Double_t GetZmin() const {return fZmin;}
    virtual Double_t GetZmax() const {return fZmax;}
+   static void InitStandardFunctions();
    using TF2::Integral;
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsrel=1.e-6);
    Bool_t   IsInside(const Double_t *x) const override;

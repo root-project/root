@@ -33,12 +33,12 @@ private:
    TGLLightSet& operator=(const TGLLightSet&) = delete;
 
 protected:
-   UInt_t        fLightState;   //! light states (on/off) mask
-   Bool_t        fUseSpecular;  //!
+   UInt_t        fLightState;   ///<! light states (on/off) mask
+   Bool_t        fUseSpecular;  ///<!
 
-   Float_t       fFrontPower;    //! power of the front lamp
-   Float_t       fSidePower;     //! power of the side lamps
-   Float_t       fSpecularPower; //! power of specular lamp
+   Float_t       fFrontPower;    ///<! power of the front lamp
+   Float_t       fSidePower;     ///<! power of the side lamps
+   Float_t       fSpecularPower; ///<! power of specular lamp
 
 public:
    TGLLightSet();

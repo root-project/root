@@ -17,9 +17,7 @@
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
 
-#include <RooFit/TestStatistics/RooAbsL.h>
-#include <RooFit/TestStatistics/LikelihoodWrapper.h>
-#include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
+#include <RooAbsReal.h>
 
 #include <TStopwatch.h>
 #include <TMatrixDSymfwd.h>
@@ -27,13 +25,13 @@
 #include <Fit/FitConfig.h>
 
 #include <fstream>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 class RooAbsMinimizerFcn;
-class RooAbsReal;
 class RooFitResult;
 class RooArgList;
 class RooRealVar;
@@ -84,6 +82,7 @@ public:
       Config() {}
 
       bool useGradient = true; // Use the gradient provided by the RooAbsReal, if there is one.
+      bool useHessian = false; // Use the Hessian provided by the RooAbsReal, if there is one.
 
       double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
       int printEvalErrors = 10;    // RooAbsMinimizerFcn config
@@ -146,7 +145,11 @@ public:
    void setPrintLevel(int newLevel);
 
    // Setters on _fcn
-   void optimizeConst(int flag);
+   void optimizeConst(int flag)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "Please use the default \"cpu\" likelihood evaluation backend if you want all optimizations.")
+#endif
+   ;
    void setEvalErrorWall(bool flag) { _cfg.doEEWall = flag; }
    void setRecoverFromNaNStrength(double strength);
    void setOffsetting(bool flag);
@@ -188,8 +191,6 @@ public:
    /// Return underlying ROOT fitter object
    inline auto fitter() { return std::make_unique<FitterInterface>(&_config, _minimizer.get(), _result.get()); }
 
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() const;
-
    int getNPar() const;
 
    void applyCovarianceMatrix(TMatrixDSym const &V);
@@ -218,7 +219,7 @@ private:
 
    int exec(std::string const &algoName, std::string const &statusName);
 
-   bool fitFCN(const ROOT::Math::IMultiGenFunction &fcn);
+   bool fitFCN();
 
    bool calculateHessErrors();
    bool calculateMinosErrors();
@@ -233,6 +234,7 @@ private:
    void fillCorrMatrix(RooFitResult &fitRes);
    void updateErrors();
 
+   RooAbsReal &_function;
    ROOT::Fit::FitConfig _config;                      ///< fitter configuration (options and parameter settings)
    std::unique_ptr<FitResult> _result;                ///<! pointer to the object containing the result of the fit
    std::unique_ptr<ROOT::Math::Minimizer> _minimizer; ///<! pointer to used minimizer

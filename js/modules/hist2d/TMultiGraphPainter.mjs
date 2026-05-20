@@ -17,20 +17,36 @@ const kResetHisto = BIT(17);
 
 class TMultiGraphPainter extends ObjectPainter {
 
+   #firstpainter; // first painter
+   #painters; // array of sub-painters
+   #funcs_handler; // special instance for functions drawing
+   #restopt; // remaining part of draw options
+   #auto; // extra options for auto colors
+   #is3d; // if 3d drawing
+   #pads;  // pads draw option
+   #pads_columns; // number pads columns
+
    /** @summary Create painter
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} obj - TMultiGraph object to draw */
    constructor(dom, mgraph) {
       super(dom, mgraph);
-      this.firstpainter = null;
-      this.painters = []; // keep painters to be able update objects
+      this.#firstpainter = null;
+      this.#painters = []; // keep painters to be able update objects
    }
 
    /** @summary Cleanup TMultiGraph painter */
    cleanup() {
-      this.painters = [];
+      this.#painters = [];
+      this.#is3d = undefined;
+      this.#pads = undefined;
+      this.#auto = undefined;
+      this.#restopt = undefined;
       super.cleanup();
    }
+
+   /** @summary Return true if 3D drawing is used */
+   is3d() { return this.#is3d; }
 
    /** @summary Update TMultiGraph object */
    updateObject(obj) {
@@ -44,21 +60,21 @@ class TMultiGraphPainter extends ObjectPainter {
       mgraph.fTitle = obj.fTitle;
 
       let isany = false;
-      if (this.firstpainter) {
+      if (this.#firstpainter) {
          const histo = this.scanGraphsRange(graphs, obj.fHistogram, pp?.getRootPad(true), true);
-         if (this.firstpainter.updateObject(histo))
+         if (this.#firstpainter.updateObject(histo))
             isany = true;
       }
 
-      const ngr = Math.min(graphs.arr.length, this.painters.length);
+      const ngr = Math.min(graphs.arr.length, this.#painters.length);
 
       // TODO: handle changing number of graphs
       for (let i = 0; i < ngr; ++i) {
-         if (this.painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this._restopt) + this._auto))
+         if (this.#painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this.#restopt) + this.#auto))
             isany = true;
       }
 
-      this._funcHandler = new FunctionsHandler(this, pp, obj.fFunctions);
+      this.#funcs_handler = new FunctionsHandler(this, pp, obj.fFunctions);
 
       return isany;
    }
@@ -66,27 +82,27 @@ class TMultiGraphPainter extends ObjectPainter {
    /** @summary Redraw TMultiGraph
      * @desc may redraw histogram which was used to draw axes
      * @return {Promise} for ready */
-    async redraw(reason) {
-       const promise = this.firstpainter?.redraw(reason) ?? Promise.resolve(true),
-             redrawNext = async indx => {
-                if (indx >= this.painters.length)
-                   return this;
-                return this.painters[indx].redraw(reason).then(() => redrawNext(indx + 1));
-             };
+   async redraw(reason) {
+      const promise = this.#firstpainter?.redraw(reason) ?? Promise.resolve(true),
+            redrawNext = async indx => {
+               if (indx >= this.#painters.length)
+                  return this;
+               return this.#painters[indx].redraw(reason).then(() => redrawNext(indx + 1));
+            };
 
-       return promise.then(() => redrawNext(0)).then(() => {
-          const res = this._funcHandler?.drawNext(0) ?? this;
-          delete this._funcHandler;
-          return res;
-       });
-    }
+      return promise.then(() => redrawNext(0)).then(() => {
+         const res = this.#funcs_handler?.drawNext(0) ?? this;
+         this.#funcs_handler = undefined;
+         return res;
+      });
+   }
 
    /** @summary Scan graphs range
      * @return {object} histogram for axes drawing */
    scanGraphsRange(graphs, histo, pad, reset_histo) {
       const mgraph = this.getObject(),
             rw = { xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true },
-            test = (v1, v2) => { return Math.abs(v2-v1) < 1e-6; };
+            test = (v1, v2) => { return Math.abs(v2 - v1) < 1e-6; };
       let maximum, minimum, logx = false, logy = false,
           src_hist, dummy_histo = false;
 
@@ -96,7 +112,7 @@ class TMultiGraphPainter extends ObjectPainter {
       }
 
       // ignore existing histogram in 3d case
-      if (this._3d && histo && !histo.fXaxis.fLabels)
+      if (this.is3d() && histo && !histo.fXaxis.fLabels)
          histo = null;
 
       if (!histo)
@@ -153,7 +169,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (uxmin < 0 && rw.xmin >= 0)
          uxmin = logx ? 0.9 * rw.xmin : 0;
       if (uxmax > 0 && rw.xmax <= 0)
-         uxmax = logx? 1.1 * rw.xmax : 0;
+         uxmax = logx ? 1.1 * rw.xmax : 0;
 
       if (mgraph.fMinimum !== kNoZoom)
          rw.ymin = minimum = mgraph.fMinimum;
@@ -166,7 +182,7 @@ class TMultiGraphPainter extends ObjectPainter {
          maximum = 1.1 * rw.ymax;
       if (minimum <= 0 && logy)
          minimum = 0.001 * maximum;
-      if (!logy && minimum > 0 && minimum < 0.05*maximum)
+      if (!logy && minimum > 0 && minimum < 0.05 * maximum)
          minimum = 0;
       if (uxmin <= 0 && logx)
          uxmin = (uxmax > 1000) ? 1 : 0.001 * uxmax;
@@ -174,7 +190,7 @@ class TMultiGraphPainter extends ObjectPainter {
       // Create a temporary histogram to draw the axis (if necessary)
       if (!histo || reset_histo || dummy_histo) {
          let xaxis, yaxis;
-         if (this._3d) {
+         if (this.is3d()) {
             histo = createHistogram(clTH2F, graphs.arr.length, 10);
             xaxis = histo.fXaxis;
             xaxis.fXmin = 0;
@@ -203,8 +219,10 @@ class TMultiGraphPainter extends ObjectPainter {
          if (histo.fTitle.indexOf(';') >= 0) {
             const t = histo.fTitle.split(';');
             histo.fTitle = t[0];
-            if (t[1]) xaxis.fTitle = t[1];
-            if (t[2]) yaxis.fTitle = t[2];
+            if (t[1])
+               xaxis.fTitle = t[1];
+            if (t[2])
+               yaxis.fTitle = t[2];
          }
          if (!xaxis.fLabels) {
             xaxis.fXmin = uxmin;
@@ -212,7 +230,7 @@ class TMultiGraphPainter extends ObjectPainter {
          }
       }
 
-      const axis = this._3d ? histo.fZaxis : histo.fYaxis;
+      const axis = this.is3d() ? histo.fZaxis : histo.fYaxis;
       axis.fXmin = Math.min(minimum, glob_minimum);
       axis.fXmax = Math.max(maximum, glob_maximum);
       if (histo.fMinimum === kNoZoom)
@@ -244,13 +262,13 @@ class TMultiGraphPainter extends ObjectPainter {
          return this;
 
       const gr = graphs.arr[indx],
-            draw_opt = (graphs.opt[indx] || this._restopt) + this._auto,
+            draw_opt = (graphs.opt[indx] || this.#restopt) + this.#auto,
             pos3d = graphs.arr.length - indx,
             subid = `graphs_${indx}`;
 
       // handling of 'pads' draw option
       if (pad_painter) {
-         const subpad_painter = pad_painter.getSubPadPainter(indx+1);
+         const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
          if (!subpad_painter)
             return this;
 
@@ -259,23 +277,22 @@ class TMultiGraphPainter extends ObjectPainter {
          return this.drawGraph(subpad_painter, gr, draw_opt, pos3d).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
-               this.painters.push(subp);
+               this.#painters.push(subp);
             }
-            return this.drawNextGraph(indx+1, pad_painter);
+            return this.drawNextGraph(indx + 1, pad_painter);
          });
       }
 
       // used in automatic colors numbering
-      if (this._auto)
+      if (this.#auto)
          gr.$num_graphs = graphs.arr.length;
 
       return this.drawGraph(this.getPadPainter(), gr, draw_opt, pos3d).then(subp => {
          if (subp) {
             subp.setSecondaryId(this, subid);
-            this.painters.push(subp);
+            this.#painters.push(subp);
          }
-
-         return this.drawNextGraph(indx+1);
+         return this.drawNextGraph(indx + 1);
       });
    }
 
@@ -288,40 +305,53 @@ class TMultiGraphPainter extends ObjectPainter {
      * @private */
    async redrawWith(opt, skip_cleanup) {
       if (!skip_cleanup) {
-         this.firstpainter = null;
-         this.painters = [];
+         this.#firstpainter = null;
+         this.#painters = [];
          const pp = this.getPadPainter();
          pp?.removePrimitive(this, true);
-         if (this._pads)
+         if (this.#pads)
             pp?.divide(0, 0);
       }
 
       const d = new DrawOptions(opt),
             mgraph = this.getObject();
 
-      this._3d = d.check('3D');
-      this._auto = ''; // extra options for auto colors
-      this._pads = d.check('PADS');
-      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this._auto += ' ' + f; });
+      this.#is3d = d.check('3D');
+      this.#auto = '';
+      this.#pads = d.check('PADS', true);
+      if (this.#pads)
+         this.#pads_columns = d.partAsInt();
+      ['PFC', 'PLC', 'PMC'].forEach(f => {
+         if (d.check(f))
+            this.#auto += ' ' + f;
+      });
 
       let hopt = '', pad_painter = null;
-      if (d.check('FB') && this._3d) hopt += 'FB'; // will be directly combined with LEGO
-      PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+      if (d.check('FB') && this.is3d())
+         hopt += 'FB'; // will be directly combined with LEGO
+      PadDrawOptions.forEach(name => {
+         if (d.check(name))
+            hopt += ';' + name;
+      });
 
-      this._restopt = d.remain();
+      this.#restopt = d.remain();
 
       let promise = Promise.resolve(true);
-      if (this._pads) {
+      if (this.#pads) {
          promise = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(mgraph.fGraphs.arr.length, 0, true);
+            let nx = mgraph.fGraphs.arr.length, ny = 0;
+            if (this.#pads_columns) {
+               ny = Math.ceil(nx / this.#pads_columns);
+               nx = this.#pads_columns;
+            }
+            return pad_painter.divide(nx, ny, true);
          });
       } else if (d.check('A') || !this.getMainPainter()) {
          const histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.getPadPainter()?.getRootPad(true));
-
          promise = this.drawAxisHist(histo, hopt).then(ap => {
             ap.setSecondaryId(this, 'hist'); // mark that axis painter generated from mg
-            this.firstpainter = ap;
+            this.#firstpainter = ap;
          });
       }
 
@@ -329,7 +359,7 @@ class TMultiGraphPainter extends ObjectPainter {
          this.addToPadPrimitives();
          return this.drawNextGraph(0, pad_painter);
       }).then(() => {
-         if (this._pads)
+         if (this.#pads)
             return this;
          const handler = new FunctionsHandler(this, this.getPadPainter(), this.getObject().fFunctions, true);
          return handler.drawNext(0); // returns painter

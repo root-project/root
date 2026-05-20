@@ -39,7 +39,6 @@ Two signals are available:
 #include <numeric>
 
 
-ClassImp(TGSpeedo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGSpeedo widget constructor.

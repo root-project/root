@@ -39,7 +39,8 @@ namespace RDF {
 class RVariationBase {
 protected:
    std::vector<std::string> fColNames;       ///< The names of the varied columns.
-   std::vector<std::string> fVariationNames; ///< The names of the systematic variation.
+   std::vector<std::string> fVariationNames; ///< The tags of the systematic variation.
+   std::string fVariationName;               ///< The name of the systematic variation.
    std::string fType;                        ///< The type of the custom column as a text string.
    std::vector<Long64_t> fLastCheckedEntry;
    RColumnRegister fColumnRegister;
@@ -66,6 +67,7 @@ public:
    virtual const std::type_info &GetTypeId() const = 0;
    const std::vector<std::string> &GetColumnNames() const;
    const std::vector<std::string> &GetVariationNames() const;
+   const std::string &GetVariationName() const;
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    virtual void Update(unsigned int slot, Long64_t entry) = 0;

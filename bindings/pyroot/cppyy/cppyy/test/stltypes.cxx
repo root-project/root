@@ -54,7 +54,6 @@ std::wstring UnicodeAndSTL::get_string_wcr(const std::wstring& s) { return s; }
 
 
 // helpers for string_view testing
-#if __cplusplus > 201402L
 std::string_view::size_type StringViewTest::count(const std::string_view arg) {
     return arg.size();
 }
@@ -62,7 +61,6 @@ std::string_view::size_type StringViewTest::count(const std::string_view arg) {
 std::string_view::size_type StringViewTest::count_cr(const std::string_view& arg) {
     return arg.size();
 }
-#endif // __cplusplus > 201402L
 
 // helper for exception base class testing
 int MyError::s_count = 0;

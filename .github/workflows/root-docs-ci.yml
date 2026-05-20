@@ -34,11 +34,11 @@ jobs:
 
     env:
       PLATFORM: alma9
-      DOC_DIR: v6-36-00-patches
+      DOC_DIR: v6-40-00-patches
       DOC_LOCATION: /github/home
-      BASE_REF: v6-36-00-patches
-      WEB_DIR_NAME: v636
-      TAR_NAME: html636.tar
+      BASE_REF: v6-40-00-patches
+      WEB_DIR_NAME: v640
+      TAR_NAME: htmlv6-40-00-patches.tar
 
     permissions:
       contents: read
@@ -58,7 +58,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ env.BASE_REF }}
         fetch-depth: 0
@@ -164,7 +164,7 @@ jobs:
     #Upload to GitHub as an artifact
     - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{env.TAR_NAME}}.gz
         path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
@@ -188,7 +188,7 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       # Because of https://github.com/xrootd/xrootd/issues/2235 , the xrd client can copy
       # only at most 65536 in one go. For this reason, we copy files in batches, dividing
-      # them by extension. Once that is fixed in XRootD, a single command can be used 
+      # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}

@@ -112,7 +112,6 @@ int main(int argc, char** argv) {
 
   //Switch off ROOT histogram memory management
   gROOT->SetMustClean(false);
-  TDirectory::AddDirectory(false);
   cxcoutIHF << "hist2workspace is less verbose now. Use -v and -vv for more details." << std::endl;
   RooMsgService::instance().getStream(1).minLevel = RooFit::PROGRESS;
   RooMsgService::instance().getStream(2).minLevel = RooFit::PROGRESS;

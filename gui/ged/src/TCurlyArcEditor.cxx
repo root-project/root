@@ -24,7 +24,6 @@ Implements GUI for editing CurlyArc attributes: radius, phi1, phi2.
 #include "TCurlyArc.h"
 #include <iostream>
 
-ClassImp(TCurlyArcEditor);
 
 enum ECurlyArcWid {
    kCRLA_RAD,

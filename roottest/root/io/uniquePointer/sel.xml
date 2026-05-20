@@ -1,0 +1,7 @@
+<rootdict>
+   <class name="Aconst" />
+   <class name="A" />
+<!--    <class name="std::vector<A*>" /> -->
+<!--    <class name="vector<unique_ptr<TH1F>>" /> -->
+   <class name="list<unique_ptr<TH1F>>" />
+</rootdict>

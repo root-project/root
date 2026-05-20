@@ -5,6 +5,7 @@
 #include <typeinfo>
 
 #include <TMath.h>
+#include <TError.h>
 
 using std::cout, std::endl, std::vector, std::sort;
 using namespace TMath;
@@ -181,6 +182,68 @@ void testBreitWignerRelativistic()
   }
 }
 
+void testHalfSampleMode()
+{
+   // Let's compare the results with a completely independent implementation in MATLAB, see:
+   // https://es.mathworks.com/matlabcentral/fileexchange/65579-ivim-model-fitting#functions_tab
+
+   const long testdata_n = 50;
+   double testdata[testdata_n] =
+     {-1.8626292050574662, -1.2588261580948075, -1.2148747383283962, -0.88052174765194313, -0.85819166488158083,
+      -0.70330273835955692,-0.62581680819121988, -0.60199237302865982, -0.056104207433014919, -0.048469532592846587,
+      -0.045160899289979461, 0.00090904300338501276, 0.07801333189364168, 0.13270976192391337, 0.16400228933346139,
+      0.20005259782423812, 0.63978982255456396, 0.67136185490980282, 0.68026440980784897, 0.7130887489094474,
+      0.71656371678168229, 0.72363941257687625, 0.75056685823912761, 0.75558971232198124, 0.79884984432253403,
+      0.8188843130575223, 0.83576827230628292, 0.84235396751558722, 0.85809047760873358, 0.89413700981004551,
+      0.9040856696277757, 0.91910499099412069, 0.20717036575551762, 0.2161088542792593, 0.24097449144042737,
+      0.24416261486911417, 0.36874321835120116, 0.37189144575412991, 0.3890935935298675, 0.40520928475289097,
+      0.42184335741753576, 0.45308183033935723, 0.47769262360841214, 0.48905822724024939, 0.48979853918045224,
+      0.53563861071255214, 0.61398403826022885, 0.62855905995409977, 0.92055153154640645, 0.9373728168229567};
+   R__ASSERT(TMath::Abs(TMath::ModeHalfSample(testdata_n, testdata, nullptr) - 0.9198) < 1e-4);
+   // Check equal weights is the same as no weights
+   double testw[testdata_n]{}; // all equal zero weights
+   R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) ==
+             TMath::ModeHalfSample(testdata_n, testdata, testw));
+
+   const long testdata1_n = 5;
+   unsigned short testdata1[testdata1_n] = {0, 2, 2, 1, 1};
+   R__ASSERT(TMath::ModeHalfSample(testdata1_n, testdata1) == 1.);
+
+   const long testdata2_n = 16;
+   unsigned short testdata2[testdata2_n] = {0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2};
+   R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 0.);
+
+   const long testdata3_n = 4;
+   double testdata3[testdata3_n] = {1, 2, 3, 3.25};
+   R__ASSERT(TMath::ModeHalfSample(testdata3_n, testdata3) == (3 + 3.25) / 2.0);
+   // Check that the low-n cases work as expected.
+   R__ASSERT(TMath::ModeHalfSample(1, testdata3) == 1.);
+   R__ASSERT(TMath::ModeHalfSample(2, testdata3) == 1.5);
+   R__ASSERT(TMath::ModeHalfSample(3, testdata3) == 2.);
+   R__ASSERT(TMath::ModeHalfSample(3, testdata3 + 1) == (3 + 3.25) / 2.0);
+
+   const long testdata4_n = 10;
+   unsigned short testdata4[testdata4_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2};
+   R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4) == 0.);
+
+   const long testdata5_n = 18;
+   unsigned short testdata5[testdata5_n] = {1, 1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2};
+   R__ASSERT(TMath::ModeHalfSample(testdata5_n, testdata5) == 2.);
+
+   // Test now with real weights
+   const long testdata6_n = 4;
+   short testdata6[testdata6_n] = {-1, 2, 3, 5};
+   double weightdata6[testdata6_n] = {2, 3, 1, 6};
+   R__ASSERT(TMath::ModeHalfSample(testdata6_n, testdata6, weightdata6) == 5);
+   R__ASSERT(TMath::ModeHalfSample(2, testdata6, weightdata6) == TMath::Mean(2, testdata6, weightdata6));
+
+   // Test now with real weights and duplicates
+   const long testdata7_n = 5;
+   short testdata7[testdata7_n] = {-1, 2, 3, 5, -1};
+   double weightdata7[testdata7_n] = {2, 3, 1, 6, 5};
+   R__ASSERT(TMath::ModeHalfSample(testdata7_n, testdata7, weightdata7) == -1);
+}
+
 void testTMath()
 {
    cout << "Starting tests on TMath..." << endl;
@@ -232,6 +295,9 @@ void testTMath()
    cout << "\nBreitWignerRelativistic tests: " << endl;
 
    testBreitWignerRelativistic();
+
+   cout << "\nHalfSampleMode tests: " << endl;
+   testHalfSampleMode();
 }
 
 int main()

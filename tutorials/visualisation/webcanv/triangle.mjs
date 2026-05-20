@@ -17,7 +17,7 @@ class TTrianglePainter extends ObjectPainter {
          this.x[n] += dx;
          this.y[n] += dy;
       }
-      this.draw_g.select('path').attr('d', this.createPath());
+      this.getG().select('path').attr('d', this.createPath());
    }
 
    /** @summary Finish interactive moving */
@@ -39,9 +39,9 @@ class TTrianglePainter extends ObjectPainter {
 
    /** @summary Redraw triangle */
    redraw() {
-      this.createG();
-
       const tr = this.getObject();
+
+      this.createG();
 
       this.isndc = true;
 
@@ -56,10 +56,9 @@ class TTrianglePainter extends ObjectPainter {
 
       this.fillatt.enable(this.fill);
 
-      this.draw_g.append('svg:path')
-                 .attr('d', this.createPath())
-                 .call(this.lineatt.func)
-                 .call(this.fillatt.func);
+      this.appendPath(this.createPath())
+          .call(this.lineatt.func)
+          .call(this.fillatt.func);
 
       addMoveHandler(this);
 

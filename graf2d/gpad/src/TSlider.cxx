@@ -16,7 +16,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TSlider);
 
 /** \class TSlider
 \ingroup gpad
@@ -164,7 +163,7 @@ void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
                       gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * (GetYlowNDC() + GetHNDC()),
                       sbox ? sbox->GetFillColor() : GetFillColor(), GetBorderSize(), GetBorderMode()));
 
-   SaveFillAttributes(out, "slider", 16, 1001);
+   SaveFillAttributes(out, "slider", -1, -1);
    SaveLineAttributes(out, "slider", 1, 1, 1);
 
    out << "   slider->SetRange(" << fMinimum << ", " << fMaximum << ");\n";

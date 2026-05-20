@@ -20,8 +20,15 @@ endif()
 
 include(ExternalProject)
 if (EMSCRIPTEN)
-  set(config_cmd emcmake cmake)
-  set(build_cmd emmake make)
+  # FIXME: -sSUPPORT_LONGJMP=wasm in the default option causes a warning in the Emscripten build of Googletest
+  # and as we treat warnings as errors in the ci, it causes the ci to fail.
+  string(REPLACE "-sSUPPORT_LONGJMP=wasm" "" GOOGLETEST_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  set(config_cmd emcmake${EMCC_SUFFIX} cmake)
+  if(CMAKE_GENERATOR STREQUAL "Ninja")
+    set(build_cmd emmake${EMCC_SUFFIX} ninja)
+  else()
+    set(build_cmd emmake${EMCC_SUFFIX} make)
+  endif()
 else()
   set(config_cmd ${CMAKE_COMMAND})
   set(build_cmd ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest-build/ --config $<CONFIG>)
@@ -30,8 +37,8 @@ endif()
 ExternalProject_Add(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_SHALLOW 1
-  GIT_TAG v1.15.2
+  GIT_SHALLOW FALSE
+  GIT_TAG fa8438ae6b70c57010177de47a9f13d7041a6328
   UPDATE_COMMAND ""
   # # Force separate output paths for debug and release builds to allow easy
   # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
@@ -45,7 +52,7 @@ ExternalProject_Add(
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                -DCMAKE_CXX_FLAGS=${GOOGLETEST_CMAKE_CXX_FLAGS}
                 -DCMAKE_AR=${CMAKE_AR}
                 -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                 ${EXTRA_GTEST_OPTS}
@@ -76,7 +83,7 @@ else()
 endif()
 
 # Use gmock_main instead of gtest_main because it initializes gtest as well.
-# Note: The libraries are listed in reverse order of their dependancies.
+# Note: The libraries are listed in reverse order of their dependencies.
 foreach(lib gtest gtest_main gmock gmock_main)
   add_library(${lib} IMPORTED STATIC GLOBAL)
   set_target_properties(${lib} PROPERTIES

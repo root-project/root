@@ -92,7 +92,6 @@ weighted histograms (because the likelihood computation will be incorrect).
 
 const Double_t kDefaultEpsilon = 1E-12;
 
-ClassImp(TBinomialEfficiencyFitter);
 
 
 ////////////////////////////////////////////////////////////////////////////////

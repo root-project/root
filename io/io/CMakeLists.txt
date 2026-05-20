@@ -21,6 +21,8 @@ if (uring)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
+  src/RConcurrentHashColl.cxx
+  src/RFile.cxx
   src/RRawFile.cxx
   ${rawfile_local_sources}
   src/TArchiveFile.cxx
@@ -65,19 +67,20 @@ ROOT_LINKER_LIBRARY(RIO
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 target_link_libraries(RIO PUBLIC ${ROOT_ATOMIC_LIBS})
-
-if(builtin_nlohmannjson)
-   target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-else()
-   target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
-endif()
+target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
 
 if(uring)
   target_link_libraries(RIO PUBLIC ${LIBURING_LIBRARY})
   target_include_directories(RIO PRIVATE ${LIBURING_INCLUDE_DIR})
 endif()
 
+# keep include directory for ROOT/RSha256.hxx private
+set_source_files_properties(src/RConcurrentHashColl.cxx
+  PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
+
 ROOT_GENERATE_DICTIONARY(G__RIO
+  ROOT/RConcurrentHashColl.hxx
+  ROOT/RFile.hxx
   ROOT/RRawFile.hxx
   ROOT/RRawFileTFile.hxx
   ${rawfile_local_headers}

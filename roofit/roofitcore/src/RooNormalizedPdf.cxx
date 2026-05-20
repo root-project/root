@@ -13,9 +13,9 @@
 #include "RooFit/Detail/RooNormalizedPdf.h"
 
 #include "RooBatchCompute.h"
+#include "RooFitImplHelpers.h"
 
 #include <array>
-
 
 /**
  * \class RooNormalizedPdf
@@ -24,8 +24,7 @@
  * normalization set into a new self-normalized pdf.
  */
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
 {
@@ -53,5 +52,9 @@ void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
    }
 }
 
-} // namespace Detail
-} // namespace RooFit
+double RooNormalizedPdf::getValV(const RooArgSet * /*normSet*/) const
+{
+   return normalizeWithNaNPacking(*_pdf, _pdf->getVal(), _normIntegral->getVal());
+}
+
+} // namespace RooFit::Detail

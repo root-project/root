@@ -76,15 +76,18 @@ public:
 
   void setBins(Int_t nBins);
   void setBinning(const RooAbsBinning& binning, const char* name=nullptr) ;
-  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const override ;
-  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) override ;
+  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) const override ;
+  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) override ;
   bool hasBinning(const char* name) const override ;
   std::list<std::string> getBinningNames() const override ;
 
   // Set infinite fit range limits
   void removeMin(const char* name=nullptr);
   void removeMax(const char* name=nullptr);
-  void removeRange(const char* name=nullptr);
+  void removeRange(const char *name = nullptr)
+     R__DEPRECATED(6, 42,
+                   "\"removeRange\" was a misleading name."
+                   " Please use \"removeMin()\" and \"removeMax()\" instead, for the same effect.");
 
   using RooAbsRealLValue::operator= ;
   using RooAbsRealLValue::setVal ;

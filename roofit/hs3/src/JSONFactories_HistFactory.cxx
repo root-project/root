@@ -31,6 +31,7 @@
 #include <RooGaussian.h>
 #include <RooProduct.h>
 #include <RooWorkspace.h>
+#include <RooFitImplHelpers.h>
 
 #include <regex>
 
@@ -197,24 +198,31 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
 {
    RooWorkspace &ws = *tool.workspace();
 
+   size_t n = std::max(vals.size(), parnames.size());
    RooArgList gammas;
-   for (std::size_t i = 0; i < vals.size(); ++i) {
+   for (std::size_t i = 0; i < n; ++i) {
       const std::string name = parnames.empty() ? defaultGammaName(sysname, i) : parnames[i];
-      gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
+      auto *e = dynamic_cast<RooAbsReal *>(ws.obj(name.c_str()));
+      if (e)
+         gammas.add(*e);
+      else
+         gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
    }
 
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
 
-   if (constraintType != "Const") {
-      auto constraintsInfo = createGammaConstraints(
-         gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
-      for (auto const &term : constraintsInfo.constraints) {
-         ws.import(*term, RooFit::RecycleConflictNodes());
-         constraints.add(*ws.pdf(term->GetName()));
-      }
-   } else {
-      for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
-         gamma->setConstant(true);
+   if (vals.size() > 0) {
+      if (constraintType != "Const") {
+         auto constraintsInfo = createGammaConstraints(
+            gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
+         for (auto const &term : constraintsInfo.constraints) {
+            ws.import(*term, RooFit::RecycleConflictNodes());
+            constraints.add(*ws.pdf(term->GetName()));
+         }
+      } else {
+         for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
+            gamma->setConstant(true);
+         }
       }
    }
 
@@ -262,7 +270,6 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
       }
       return *constraint;
    } else {
-      std::cout << "creating new constraint for " << param << std::endl;
       std::string constraint_type = "Gauss";
       if (auto constrType = mod.find("constraint_type")) {
          constraint_type = constrType->val();
@@ -374,19 +381,22 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                sysname + "High_" + prefixedName, varlist,
                RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
             constraints.add(getOrCreateConstraint(tool, mod, par, sampleName));
-         } else if (modtype == "shapesys") {
+         } else if (modtype == "shapesys" || modtype == "shapefactor") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
             // funcName should be "<channel_name>_<sysname>_ShapeSys"
             std::vector<double> vals;
-            for (const auto &v : mod["data"]["vals"].children()) {
-               vals.push_back(v.val_double());
+            if (mod["data"].has_child("vals")) {
+               for (const auto &v : mod["data"]["vals"].children()) {
+                  vals.push_back(v.val_double());
+               }
             }
             std::vector<std::string> parnames;
             for (const auto &v : mod["parameters"].children()) {
                parnames.push_back(v.val());
             }
-            if (vals.empty()) {
-               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname + "' with 0 values!");
+            if (vals.empty() && parnames.empty()) {
+               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname +
+                                           "' with neither values nor parameters!");
             }
             std::string constraint(mod.has_child("constraint_type") ? mod["constraint_type"].val()
                                    : mod.has_child("constraint")    ? mod["constraint"].val()
@@ -492,6 +502,10 @@ public:
 
          std::vector<double> errs(sumW.size());
          for (size_t i = 0; i < sumW.size(); ++i) {
+            if (sumW[i] == 0.) {
+               errs[i] = 0.;
+               continue;
+            }
             errs[i] = std::sqrt(sumW2[i]) / sumW[i];
             // avoid negative sigma. This NP will be set constant anyway later
             errs[i] = std::max(errs[i], 0.);
@@ -785,13 +799,13 @@ NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula
       if (constr2 && !p3) {
          sys.name = p2->GetName();
          sys.param = p2;
-         sys.high = sign * std::stod(token3);
-         sys.low = -sign * std::stod(token3);
+         sys.high = sign * toDouble(token3);
+         sys.low = -sign * toDouble(token3);
       } else if (!p2 && constr3) {
          sys.name = p3->GetName();
          sys.param = p3;
-         sys.high = sign * std::stod(token2);
-         sys.low = -sign * std::stod(token2);
+         sys.high = sign * toDouble(token2);
+         sys.low = -sign * toDouble(token2);
       } else if (constr2 && p3 && !constr3) {
          sys.name = v2->GetName();
          sys.param = v2;
@@ -821,6 +835,16 @@ void collectElements(RooArgSet &elems, RooAbsArg *arg)
    } else {
       elems.add(*arg);
    }
+}
+
+bool allRooRealVar(const RooAbsCollection &list)
+{
+   for (auto *var : list) {
+      if (!dynamic_cast<RooRealVar *>(var)) {
+         return false;
+      }
+   }
+   return true;
 }
 
 struct Sample {
@@ -920,7 +944,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                addNormFactor(par, sample, ws);
             } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
                updateObservables(hf->dataHist());
-            } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
+            } else if (ParamHistFunc *phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
                phfs.push_back(phf);
             } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
                // some (modified) histfactory models have several instances of FlexibleInterpVar
@@ -1116,6 +1140,16 @@ void configureStatError(Channel &channel)
 
 bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
 {
+   // Write the constraint reference (either by name or by type) for any
+   // modifier that supports an external Gaussian/Poisson/etc. constraint.
+   auto writeConstraint = [](JSONNode &mod, auto const &sys) {
+      if (sys.constraint) {
+         mod["constraint_name"] << sys.constraint->GetName();
+      } else if (sys.constraintType) {
+         mod["constraint_type"] << toString(sys.constraintType);
+      }
+   };
+
    bool observablesWritten = false;
    for (const auto &sample : channel.samples) {
 
@@ -1147,11 +1181,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          if (sys.interpolationCode != 4) {
             mod["interpolation"] << sys.interpolationCode;
          }
-         if (sys.constraint) {
-            mod["constraint_name"] << sys.constraint->GetName();
-         } else if (sys.constraintType) {
-            mod["constraint_type"] << toString(sys.constraintType);
-         }
+         writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          data["lo"] << sys.low;
          data["hi"] << sys.high;
@@ -1163,11 +1193,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "histosys";
          mod["parameter"] << sys.param->GetName();
-         if (sys.constraint) {
-            mod["constraint_name"] << sys.constraint->GetName();
-         } else if (sys.constraintType) {
-            mod["constraint_type"] << toString(sys.constraintType);
-         }
+         writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          if (channel.nBins != sys.low.size() || channel.nBins != sys.high.size()) {
             std::stringstream ss;
@@ -1185,20 +1211,12 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "shapesys";
          optionallyExportGammaParameters(mod, sys.name, sys.parameters);
-         if (sys.constraint) {
-            mod["constraint_name"] << sys.constraint->GetName();
-         } else if (sys.constraintType) {
-            mod["constraint_type"] << toString(sys.constraintType);
-         }
+         writeConstraint(mod, sys);
+         auto &vals = mod["data"].set_map()["vals"];
          if (sys.constraint || sys.constraintType) {
-            auto &vals = mod["data"].set_map()["vals"];
             vals.fill_seq(sys.constraints);
          } else {
-            auto &vals = mod["data"].set_map()["vals"];
-            vals.set_seq();
-            for (std::size_t i = 0; i < sys.parameters.size(); ++i) {
-               vals.append_child() << 0;
-            }
+            vals.fill_seq(std::vector<double>(sys.parameters.size(), 0.0));
          }
       }
 

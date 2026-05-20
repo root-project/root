@@ -1,0 +1,6 @@
+they are several problems.
+
+If I add a field name 'f' inside the foo, now I can not get to
+f.i; it looks like ... again ... the branch "f" is not recognized :(
+
+The original problem was f[].i is not known.

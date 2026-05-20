@@ -9,11 +9,7 @@
 #include <stdint.h>
 
 // import/export (after precommondefs.h from PyPy)
-#ifdef _MSC_VER
-#define CPPYY_IMPORT extern __declspec(dllimport)
-#else
 #define CPPYY_IMPORT extern
-#endif
 
 // some more types; assumes Cppyy.h follows Python.h
 #ifndef PY_LONG_LONG
@@ -230,6 +226,8 @@ namespace Cppyy {
     bool        IsTemplatedConstructor(TCppScope_t scope, TCppIndex_t imeth);
     CPPYY_IMPORT
     bool        ExistsMethodTemplate(TCppScope_t scope, const std::string& name);
+    CPPYY_IMPORT
+    bool        IsStaticTemplate(TCppScope_t scope, const std::string& name);
     CPPYY_IMPORT
     bool        IsMethodTemplate(TCppScope_t scope, TCppIndex_t imeth);
     CPPYY_IMPORT

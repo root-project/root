@@ -27,10 +27,10 @@
 #include "snprintf.h"
 
 #include <iostream>
+#include <cmath>
 #include <ctime>
 #include <cassert>
 
-ClassImp(TAxis);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TAxis
@@ -289,9 +289,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 /// whereas the overflow bin (`nbins+1`) is for any `x` greater or equal than `fXmax`,
 /// as well as for `NaN`. The first regular bin (`1`) is for any `x`
 /// greater or equal than `fXmin` and strictly smaller than `fXmin + binwidth`, and so on.
-/// @note The bin assignment equation uses doubles, thus rounding errors are
-/// expected to appear at the edges. For example: `TAxis(1, -1., 0.).FindBin(-1e-17)`
-/// returns the overflow bin (`2`) rather than the theoretically correct bin (`1`).
 
 Int_t TAxis::FindBin(Double_t x)
 {
@@ -314,7 +311,9 @@ Int_t TAxis::FindBin(Double_t x)
       return FindFixBin(x);
    } else {
       if (!fXbins.fN) {        //*-* fix bins
-         bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
+         const double width = (fXmax-fXmin)/fNbins;
+         const int approxBin = (x-fXmin) / width; // Might be one unit too small/large due to limited precision of subtraction
+         bin = 1 + approxBin - (x < fXmin + width*approxBin) + (fXmin + width*(approxBin+1) <= x);
       } else {                  //*-* variable bin sizes
          //for (bin =1; x >= fXbins.fArray[bin]; bin++);
          bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
@@ -429,9 +428,10 @@ Int_t TAxis::FindFixBin(Double_t x) const
       bin = fNbins+1;
    } else {
       if (!fXbins.fN) {        //*-* fix bins
-         bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
+         const double width = (fXmax-fXmin)/fNbins;
+         const int approxBin = (x-fXmin) / width; // Might be one unit too small/large due to limited precision of subtraction
+         bin = 1 + approxBin - (x < fXmin + width*approxBin) + (fXmin + width*(approxBin+1) <= x);
       } else {                  //*-* variable bin sizes
-//         for (bin =1; x >= fXbins.fArray[bin]; bin++);
          bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
       }
    }
@@ -484,7 +484,7 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
    Double_t binwidth;
    if (!fXbins.fN || bin<1 || bin>fNbins) {
       binwidth = (fXmax - fXmin) / Double_t(fNbins);
-      return fXmin + (bin-1) * binwidth + 0.5*binwidth;
+      return fXmin + (bin - 0.5) * binwidth;
    } else {
       binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
       return fXbins.fArray[bin-1] + 0.5*binwidth;
@@ -780,10 +780,18 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize axis with fix bins
+///
+/// An error is printed if xup or xlow are infinite/nan
+/// (due to resulting undefined fixed bin width)
+///
+/// Set xup <= xlow to force the axis range and number of bins to be automatically
+/// deduced after buffer is full or BufferEmpty is called
 
 void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 {
    fNbins   = nbins;
+   if (!std::isfinite(xlow) || !std::isfinite(xup))
+      Error("TAxis::Set", "Axis limits need to be finite numbers");
    fXmin    = xlow;
    fXmax    = xup;
    if (!fParent) SetDefaults();
@@ -792,17 +800,24 @@ void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize axis with variable bins
+///
+/// An error is printed if bin edges are not in strictly increasing order
+/// or if any of them is infinite or nan
 
 void TAxis::Set(Int_t nbins, const Float_t *xbins)
 {
    Int_t bin;
    fNbins  = nbins;
    fXbins.Set(fNbins+1);
-   for (bin=0; bin<= fNbins; bin++)
+   for (bin = 0; bin <= fNbins; bin++) {
+      if (!std::isfinite(xbins[bin])) {
+         Error("TAxis::Set", "Bin edges need to be finite numbers. Use a large number instead.");
+      }
       fXbins.fArray[bin] = xbins[bin];
+   }
    for (bin=1; bin<= fNbins; bin++)
-      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
-         Error("TAxis::Set", "bins must be in increasing order");
+      if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
+         Error("TAxis::Set", "bin edges must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
    if (!fParent) SetDefaults();
@@ -819,8 +834,8 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
    for (bin=0; bin<= fNbins; bin++)
       fXbins.fArray[bin] = xbins[bin];
    for (bin=1; bin<= fNbins; bin++)
-      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
-         Error("TAxis::Set", "bins must be in increasing order");
+      if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
+         Error("TAxis::Set", "bin edges must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
    if (!fParent) SetDefaults();
@@ -1269,7 +1284,7 @@ void TAxis::UnZoom()
 
    //unzoom object owning this axis
    SetRange(0,0);
-   TH1 *hobj1 = (TH1*)GetParent();
+   TH1 *hobj1 = dynamic_cast<TH1 *>(GetParent());
    if (!strstr(GetName(),"xaxis")) {
       if (!hobj1) return;
       if (hobj1->GetDimension() == 2) {
@@ -1284,7 +1299,7 @@ void TAxis::UnZoom()
          hobj1->SetMinimum(fXmin);
          hobj1->SetMaximum(fXmax);
       } else {
-         if (fXmin==hobj1->GetMinimum() && fXmax==hobj1->GetMaximum()) {
+         if (fXmin == hobj1->GetMinimumStored() && fXmax == hobj1->GetMaximumStored()) {
             hobj1->SetMinimum(fXmin);
             hobj1->SetMaximum(fXmax);
          } else {

@@ -27,13 +27,16 @@
 #include "TSystem.h"
 
 class TSocket;
-class TWebSocket;
 
+namespace ROOT::Deprecated {
+
+class TWebSocket;
+class TWebSystem;
 
 class TWebFile : public TFile {
 
-friend class TWebSocket;
-friend class TWebSystem;
+friend class ROOT::Deprecated::TWebSocket;
+friend class ROOT::Deprecated::TWebSystem;
 
 private:
    TWebFile() : fSocket(nullptr) {}
@@ -51,8 +54,8 @@ protected:
    TString           fBasicUrl;         // basic url without authentication and options
    TUrl              fUrlOrg;           // save original url in case of temp redirection
    TString           fBasicUrlOrg;      // save original url in case of temp redirection
-   void             *fFullCache;        //! complete content of the file, some http server may return complete content
-   Long64_t          fFullCacheSize;    //! size of the cached content
+   void             *fFullCache;        ///<! complete content of the file, some http server may return complete content
+   Long64_t          fFullCacheSize;    ///<! size of the cached content
 
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
@@ -117,5 +120,10 @@ public:
 
    ClassDefOverride(TWebSystem,0)  // Directory handler for HTTP (TWebFiles)
 };
+
+} // namespace ROOT::Deprecated
+
+using TWebFile R__DEPRECATED(6, 42, "TWebFile is deprecated") = ROOT::Deprecated::TWebFile;
+using TWebSystem R__DEPRECATED(6, 42, "TWebSystem is deprecated") = ROOT::Deprecated::TWebSystem;
 
 #endif

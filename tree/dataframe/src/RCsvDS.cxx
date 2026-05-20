@@ -243,36 +243,9 @@ void RCsvDS::GenerateHeaders(size_t size)
    }
 }
 
-std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const std::type_info &ti)
+std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view, const std::type_info &)
 {
-   const auto colType = GetType(colName);
-
-   if ((colType == 'D' && typeid(double) != ti) || (colType == 'L' && typeid(Long64_t) != ti) ||
-       (colType == 'T' && typeid(std::string) != ti) || (colType == 'O' && typeid(bool) != ti)) {
-      std::string err = "The type selected for column \"";
-      err += colName;
-      err += "\" does not correspond to column type, which is ";
-      err += fgColTypeMap.at(colType);
-      throw std::runtime_error(err);
-   }
-
-   const auto &colNames = GetColumnNames();
-   const auto index = std::distance(colNames.begin(), std::find(colNames.begin(), colNames.end(), colName));
-   std::vector<void *> ret(fNSlots);
-   for (auto slot : ROOT::TSeqU(fNSlots)) {
-      auto &val = fColAddresses[index][slot];
-      if (ti == typeid(double)) {
-         val = &fDoubleEvtValues[index][slot];
-      } else if (ti == typeid(Long64_t)) {
-         val = &fLong64EvtValues[index][slot];
-      } else if (ti == typeid(std::string)) {
-         val = &fStringEvtValues[index][slot];
-      } else {
-         val = &fBoolEvtValues[index][slot];
-      }
-      ret[slot] = &val;
-   }
-   return ret;
+   return {};
 }
 
 void RCsvDS::ValidateColTypes(std::vector<std::string> &columns) const
@@ -685,3 +658,34 @@ RDataFrame FromCSV(std::string_view fileName, bool readHeaders, char delimiter, 
 } // namespace RDF
 
 } // namespace ROOT
+
+std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+ROOT::RDF::RCsvDS::GetColumnReaders(unsigned int slot, std::string_view colName, const std::type_info &tid)
+{
+   const auto colType = GetType(colName);
+
+   if ((colType == 'D' && typeid(double) != tid) || (colType == 'L' && typeid(Long64_t) != tid) ||
+       (colType == 'T' && typeid(std::string) != tid) || (colType == 'O' && typeid(bool) != tid)) {
+      std::string err = "The type selected for column \"";
+      err += colName;
+      err += "\" does not correspond to column type, which is ";
+      err += fgColTypeMap.at(colType);
+      throw std::runtime_error(err);
+   }
+
+   const auto &colNames = GetColumnNames();
+   const auto index = std::distance(colNames.begin(), std::find(colNames.begin(), colNames.end(), colName));
+   auto &val = fColAddresses[index][slot];
+
+   if (tid == typeid(double)) {
+      val = &fDoubleEvtValues[index][slot];
+   } else if (tid == typeid(Long64_t)) {
+      val = &fLong64EvtValues[index][slot];
+   } else if (tid == typeid(std::string)) {
+      val = &fStringEvtValues[index][slot];
+   } else {
+      val = &fBoolEvtValues[index][slot];
+   }
+
+   return std::make_unique<ROOT::Internal::RDF::RCsvDSColumnReader>(val);
+}

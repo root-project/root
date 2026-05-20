@@ -52,9 +52,12 @@ namespace cling {
 
     // Suppress some unfixable warnings.
     // TODO: Find proper fix for these issues
-    Out() << "#pragma clang diagnostic ignored \"-Wkeyword-compat\"" << "\n";
-    Out() << "#pragma clang diagnostic ignored \"-Wignored-attributes\"" <<"\n";
-    Out() << "#pragma clang diagnostic ignored \"-Wreturn-type-c-linkage\"" <<"\n";
+    Out() << R"(
+#pragma diagnostic push
+#pragma clang diagnostic ignored "-Wkeyword-compat"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+)";
     // Inject a special marker:
     Out() << "extern int __Cling_AutoLoading_Map;\n";
 
@@ -110,6 +113,7 @@ namespace cling {
         Out() << "#undef " << m << "\n";
       }
     }
+    Out() << "#pragma diagnostic pop\n";
   }
 
   void ForwardDeclPrinter::Visit(clang::QualType QT) {
@@ -380,7 +384,7 @@ namespace cling {
       closeBraces = PrintEnclosingDeclContexts(Out(), D->getDeclContext());
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
-    Out() << D->getKindName();
+    Out() << D->getKindName() << ' ';
     prettyPrintAttributes(D);
     if (D->getIdentifier())
       Out() << ' ' << *D << ';' << closeBraces << '\n';
@@ -888,7 +892,7 @@ namespace cling {
                                                          D->getDeclContext());
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
-    Out() << D->getKindName();
+    Out() << D->getKindName() << ' ';
 
 //    if (D->isCompleteDefinition())
       prettyPrintAttributes(D);
@@ -934,7 +938,7 @@ namespace cling {
            ArgQT = Args->get(i).getAsType();
         }
         else if (TTP->hasDefaultArgument()) {
-           ArgQT = TTP->getDefaultArgument();
+           ArgQT = TTP->getDefaultArgument().getArgument().getAsType();
         }
         if (!ArgQT.isNull()) {
           QualType ArgFQQT
@@ -960,7 +964,7 @@ namespace cling {
           Args->get(i).print(m_Policy, Stream, /*IncludeType=*/true);
         }
         else if (NTTP->hasDefaultArgument()) {
-          Expr* DefArg = NTTP->getDefaultArgument()->IgnoreImpCasts();
+          Expr* DefArg = NTTP->getDefaultArgument().getArgument().getAsExpr()->IgnoreImpCasts();
           if (DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(DefArg)) {
             Visit(DRE->getFoundDecl());
             if (m_SkipFlag) {

@@ -1,0 +1,38 @@
+#ifdef __ROOTCLING__
+
+#endif
+
+namespace edm {
+
+   template <class T> class RCPtr;
+   
+   template <class T>
+   bool
+   operator< (const RCPtr<T>& p1, const RCPtr<T>& p2);
+
+   template <class T>
+   class RCPtr {
+   public:
+      
+      friend bool operator< <> (const RCPtr<T>& p1, const RCPtr<T>& p2);
+   };
+   
+   template <class T> 
+   class sub {
+
+   };
+
+   class THandle
+   {
+   public:
+      typedef RCPtr<double > rcptr_type;     
+   };
+   
+   
+} // namespace edm
+
+#ifdef __ROOTCLING__
+#pragma link C++ namespace edm; 
+#endif
+
+

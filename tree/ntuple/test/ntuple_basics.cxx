@@ -217,6 +217,26 @@ TEST(RNTuple, WriteReadSubdir)
    EXPECT_FLOAT_EQ(137.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
 
+TEST(RNTuple, AppendReadOnly)
+{
+   FileRaii fileGuard("test_ntuple_append_readonly.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("a");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+   }
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+   try {
+      RNTupleWriter::Append(std::move(model), "A", *file);
+      FAIL() << "appending to a read-only TFile should throw.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("is not writable"));
+   }
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");
@@ -734,7 +754,12 @@ TEST(RNTuple, FillBytesWritten)
    *fieldStr = "abc";
    // A 32bit integer + "abc" literal + one 64bit integer for each index column
    EXPECT_EQ(7U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
-   *fieldBoolVec = {true, false, true};
+   // For the bool vector, we can't assign an initializer list. It would lead
+   // to memory copy routines trying to operate on the packed bits that are
+   // particular to vector<bool> - resulting in invalid offset warnings.
+   for (bool b : {true, false, true}) {
+      fieldBoolVec->push_back(b);
+   }
    *fieldFloatVec = {42.0f, 1.1f};
    // A 32bit integer + "abc" literal + one 64bit integer for each index column + 3 bools + 2 floats
    EXPECT_EQ(18U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
@@ -753,6 +778,14 @@ TEST(RNTuple, RValue)
    v3.EmplaceNew();
    EXPECT_NE(p.get(), v3.GetPtr<void>().get());
 
+   // The templated API checks the type.
+   EXPECT_THROW(v1.GetPtr<float>(), ROOT::RException);
+   EXPECT_THROW(v1.GetRef<float>(), ROOT::RException);
+   EXPECT_THROW(v2.GetPtr<std::vector<char>>(), ROOT::RException);
+   EXPECT_THROW(v2.GetRef<std::vector<char>>(), ROOT::RException);
+   EXPECT_THROW(v3.GetPtr<std::variant<float>>(), ROOT::RException);
+   EXPECT_THROW(v3.GetRef<std::variant<float>>(), ROOT::RException);
+
    // Destruct fields to check if the deleters work without the fields
    f1 = nullptr;
    f2 = nullptr;
@@ -769,6 +802,8 @@ TEST(REntry, Basics)
    model->Freeze();
 
    auto e = model->CreateEntry();
+   EXPECT_TRUE(e->HasField("pt"));
+   EXPECT_FALSE(e->HasField("PT"));
    EXPECT_EQ(e->GetModelId(), model->GetModelId());
    EXPECT_EQ(e->GetSchemaId(), model->GetSchemaId());
    for (const auto &v : *e) {

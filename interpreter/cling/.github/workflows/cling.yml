@@ -1,0 +1,57 @@
+name: Cling Build and Test
+
+on:
+  push:
+    paths:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # Remove macos-latest until exceptions are not supported by JITed code on Apple Silicon
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libedit-dev
+
+      - name: Checkout LLVM
+        uses: actions/checkout@v6
+        with:
+          repository: root-project/llvm-project
+          path: llvm
+          ref: cling-latest
+          fetch-depth: 1
+
+      - name: Checkout Cling
+        uses: actions/checkout@v6
+        with:
+          repository: root-project/cling
+          path: cling
+          fetch-depth: 1
+
+      - name: Prepare build directory
+        run: |
+          mkdir build
+
+      - name: Configure
+        working-directory: build
+        run: |
+          cmake ../llvm/llvm/ \
+            -DLLVM_EXTERNAL_PROJECTS=cling \
+            -DLLVM_EXTERNAL_CLING_SOURCE_DIR=../cling/ \
+            -DLLVM_ENABLE_PROJECTS="clang" \
+            -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DLLVM_ENABLE_ASSERTIONS=ON
+
+      - name: Build
+        working-directory: build
+        run: cmake --build . --parallel 4 --target cling
+
+      - name: Test
+        working-directory: build
+        run: cmake --build . --target check-cling

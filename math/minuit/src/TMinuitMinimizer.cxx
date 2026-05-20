@@ -51,7 +51,6 @@ TMinuit * TMinuitMinimizer::fgMinuit = nullptr;
 bool TMinuitMinimizer::fgUsed = false;
 bool TMinuitMinimizer::fgUseStaticMinuit = true;   // default case use static Minuit instance
 
-ClassImp(TMinuitMinimizer);
 
 
 TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type, unsigned int ndim ) :
@@ -731,16 +730,26 @@ int TMinuitMinimizer::CovMatrixStatus() const {
    return fMinuit->fISW[1];
 }
 
-double TMinuitMinimizer::GlobalCC(unsigned int i) const {
-   // global correlation coefficient for parameter i
-   if (!fMinuit) return 0;
-   if (!fMinuit->fGlobcc) return 0;
-   if (int(i) >= fMinuit->fNu) return 0;
-   // get internal number in Minuit
-   int iin = fMinuit->fNiofex[i];
-   // index in TMinuit starts from 1
-   if (iin < 1) return 0;
-   return fMinuit->fGlobcc[iin-1];
+std::vector<double> TMinuitMinimizer::GlobalCC() const
+{
+   std::vector<double> out;
+   // global correlation coefficients
+   if (!fMinuit)
+      return out;
+   if (!fMinuit->fGlobcc)
+      return out;
+   out.resize(fMinuit->fNu);
+   for (int i = 0; i < fMinuit->fNu; ++i) {
+      // get internal number in Minuit
+      int iin = fMinuit->fNiofex[i];
+      // index in TMinuit starts from 1
+      if (iin < 1) {
+         out.clear();
+         break;
+      }
+      out[i] = fMinuit->fGlobcc[iin - 1];
+   }
+   return out;
 }
 
 bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & errUp, int ) {

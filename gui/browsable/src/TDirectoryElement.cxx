@@ -43,7 +43,6 @@ class TDirectoryLevelIter : public RLevelIter {
    TDirectory *fDir{nullptr};         ///<! current directory handle
    std::unique_ptr<TIterator> fIter;  ///<! created iterator
    bool fKeysIter{true};              ///<! iterating over keys list (default)
-   bool fOnlyLastCycle{false};        ///<! show only last cycle in list of keys
    TKey *fKey{nullptr};               ///<! currently selected key
    TObject *fObj{nullptr};            ///<! currently selected object
    std::string fCurrentName;          ///<! current key name
@@ -110,7 +109,8 @@ class TDirectoryLevelIter : public RLevelIter {
             return false;
          }
 
-         if (!fOnlyLastCycle) break;
+         if (!RElement::IsLastKeyCycle())
+            break;
 
          TIter iter(fDir->GetListOfKeys());
          TKey *key = nullptr;
@@ -137,20 +137,6 @@ class TDirectoryLevelIter : public RLevelIter {
 public:
    explicit TDirectoryLevelIter(TDirectory *dir) : fDir(dir)
    {
-      const char *undef = "<undefined>";
-      const char *value = gEnv->GetValue("WebGui.LastCycle", undef);
-      if (value) {
-         std::string svalue = value;
-         if (svalue != undef) {
-            if (svalue == "yes")
-               fOnlyLastCycle = true;
-            else if (svalue == "no")
-               fOnlyLastCycle = false;
-            else
-               R__LOG_ERROR(ROOT::BrowsableLog()) << "WebGui.LastCycle must be yes or no";
-         }
-      }
-
       CreateIter();
    }
 

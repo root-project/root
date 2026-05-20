@@ -42,7 +42,6 @@
 Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 */
 
-ClassImp(TEveGeoNode);
 
 Int_t                 TEveGeoNode::fgCSGExportNSeg = 64;
 std::list<TGeoShape*> TEveGeoNode::fgTemporaryStore;
@@ -71,7 +70,7 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
    TObject(),
    fNode(node)
 {
-   // Hack!! Should use cint to retrieve TAttLine::fLineColor offset.
+   // Hack!! Should use Cling to retrieve TAttLine::fLineColor offset.
    char* l = (char*) dynamic_cast<TAttLine*>(node->GetVolume());
    SetMainColorPtr((Color_t*)(l + sizeof(void*)));
    SetMainTransparency(fNode->GetVolume()->GetTransparency());
@@ -460,7 +459,6 @@ TGeoPainter, fVisOption, fVisLevel and fMaxVisNodes. They have the
 same meaning as in TGeoManager/TGeoPainter.
 */
 
-ClassImp(TEveGeoTopNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

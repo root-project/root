@@ -47,9 +47,9 @@ protected:
    Double_t *fX0;      //[fNz] array of X offsets (for each Z)
    Double_t *fY0;      //[fNz] array of Y offsets (for each Z)
 
-   mutable std::vector<ThreadData_t *> fThreadData; //! Navigation data per thread
-   mutable Int_t fThreadSize;                       //! size of thread-specific array
-   mutable std::mutex fMutex;                       //! mutex for thread data
+   mutable std::vector<ThreadData_t *> fThreadData; ///<! Navigation data per thread
+   mutable Int_t fThreadSize;                       ///<! size of thread-specific array
+   mutable std::mutex fMutex;                       ///<! mutex for thread data
 
    TGeoXtru(const TGeoXtru &) = delete;
    TGeoXtru &operator=(const TGeoXtru &) = delete;
@@ -105,6 +105,7 @@ public:
    void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
    Int_t GetNmeshVertices() const override;
    void InspectShape() const override;
+   Bool_t IsConvex() const final;
    TBuffer3D *MakeBuffer3D() const override;
    Double_t &Z(Int_t ipl) { return fZ[ipl]; }
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;

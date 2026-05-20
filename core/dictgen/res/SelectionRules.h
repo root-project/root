@@ -36,19 +36,36 @@ namespace ROOT{
 #include <iostream>
 namespace SelectionRulesUtils {
 
-   template<class ASSOCIATIVECONTAINER>
-   inline bool areEqualAttributes(const ASSOCIATIVECONTAINER& c1, const ASSOCIATIVECONTAINER& c2, bool moduloNameOrPattern){
-      if (c1.size() != c2.size()) return false;
-      if (moduloNameOrPattern) {
-         for (auto&& keyValPairC1 : c1){
-            auto keyC1 = keyValPairC1.first;
-            if ("pattern" == keyC1 || "name" == keyC1) continue;
-            auto valC1 = keyValPairC1.second;
-            auto C2It = c2.find(keyC1);
-            if (C2It == c2.end() || valC1 != C2It->second) return false;
+   template <class ASSOCIATIVECONTAINER>
+   inline bool areEqualAttributes(const ASSOCIATIVECONTAINER &c1, const ASSOCIATIVECONTAINER &c2, bool moduloNameOrPattern)
+   {
+      auto skipAttr = [](const std::string &s) {
+         return "pattern" == s || "name" == s || "file_name" == s;
+      };
+      if (c1.size() != c2.size()) {
+         // We check if the attributes are pattern, name or filename
+         auto skipSizeCheck = true;
+         for (auto &&coll : {c1, c2})
+            {
+               for (auto &&keyValPair : coll) {
+                  skipSizeCheck = skipSizeCheck && skipAttr(keyValPair.first);
+               }
+            }
+         if (!skipSizeCheck) {
+            return false;
          }
       }
-      else {
+      if (moduloNameOrPattern) {
+         for (auto &&keyValPairC1 : c1) {
+            auto keyC1 = keyValPairC1.first;
+            if (skipAttr(keyC1))
+               continue;
+            auto valC1 = keyValPairC1.second;
+            auto C2It = c2.find(keyC1);
+            if (C2It == c2.end() || valC1 != C2It->second)
+               return false;
+         }
+      } else {
          return !(c1 != c2);
       }
       return true;

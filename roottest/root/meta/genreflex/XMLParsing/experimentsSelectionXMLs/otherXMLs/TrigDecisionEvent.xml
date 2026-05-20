@@ -1,0 +1,11 @@
+<lcgdict>
+
+ <class name="TrigDec::TrigDecision">
+   <field name="m_l2_result_ptr" transient="true"/>
+   <field name="m_ef_result_ptr" transient="true"/>
+   <field name="m_l2_result" transient="true"/>
+   <field name="m_ef_result" transient="true"/>
+ </class>
+
+ <enum pattern="TrigDec::*"/>
+</lcgdict>

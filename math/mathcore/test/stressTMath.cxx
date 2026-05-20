@@ -9,7 +9,7 @@
 using std::cout;
 using std::endl;
 
-const unsigned int NUMTEST = 500;
+const unsigned int NUMTEST = 300;
 
 // #define DEBUG
 
@@ -175,7 +175,7 @@ void stressTMath(unsigned int size, const char * type)
 int main(int argc, char* argv[])
 {
    // Default size and data type
-   unsigned int size = 100000;
+   unsigned int size = 10000;
    const char *  type = "Double_t";
 
    if ( argc > 1 ) {

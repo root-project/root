@@ -201,10 +201,12 @@ namespace cling {
     clang::FileManager& FM = m_Interpreter.getSema().getSourceManager().getFileManager();
 
     std::string pathname(m_Interpreter.lookupFileOrLibrary(file));
-    const auto FE = FM.getFile(pathname, /*OpenFile=*/false,
-                               /*CacheFailure=*/false);
-    if (!FE)
+    auto FE = FM.getFileRef(pathname, /*OpenFile=*/false,
+                            /*CacheFailure=*/false);
+    if (!FE) {
+      llvm::consumeError(FE.takeError());
       return AR_Failure;
+    }
 
     auto TI = m_FEToTransaction.find(*FE);
     if (TI == m_FEToTransaction.end())
@@ -338,7 +340,9 @@ namespace cling {
       "   " << metaString << "U <filename>\t\t- Unloads the given file\n"
       "\n"
       "   " << metaString << "(I|include) [path]\t\t- Shows all include paths. If a path is given,"
-                             "\n\t\t\t\t  adds the path to the include paths.\n"
+                             "\n\t\t\t\t  adds the path to the include paths. Paths with double\n"
+                             "\n\t\t\t\t  slashes // are not supported since they are treated as\n"
+                             "\n\t\t\t\t  C++ comments; use AddIncludePath instead in that case.\n"
       "\n"
       "   " << metaString << "O <level>\t\t\t- Sets the optimization level (0-3)"
                              "\n\t\t\t\t  If no level is given, prints the current setting.\n"
@@ -484,9 +488,12 @@ namespace cling {
       pathname = filename.str();
 
     clang::FileManager& FM = m_Interpreter.getSema().getSourceManager().getFileManager();
-    auto FE = FM.getFile(pathname, /*OpenFile=*/false, /*CacheFailure=*/false);
-    if (!FE)
+    auto FE =
+        FM.getFileRef(pathname, /*OpenFile=*/false, /*CacheFailure=*/false);
+    if (!FE) {
+      llvm::consumeError(FE.takeError());
       return;
+    }
 
     if (*FE && !m_FEToTransaction[*FE]) {
       m_FEToTransaction[*FE] = unloadPoint;

@@ -18,7 +18,6 @@ Standalone GL Viewer GUI main frame. Is aggregated in TGLSAViewer -
 top level standalone viewer object.
 */
 
-ClassImp(TGLSAFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct GUI frame, bound to passed 'viewer'

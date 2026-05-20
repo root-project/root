@@ -109,8 +109,6 @@ Redo is Undo for undo action. Use TQUndoManager::Redo method for that
 #include "ThreadLocalStorage.h"
 #include "TVirtualRWMutex.h"
 
-ClassImp(TQCommand);
-ClassImp(TQUndoManager);
 
 static TQCommand *gActiveCommand = nullptr;
 

@@ -27,7 +27,6 @@
 Encapsulation of format / contents of an OpenGL buffer.
 */
 
-ClassImp(TGLFormat);
 
 std::vector<Int_t> TGLFormat::fgAvailableSamples;
 
@@ -275,7 +274,7 @@ void TGLFormat::InitAvailableSamples()
    TGLWidget *widget = TGLWidget::CreateDummy();
    widget->MakeCurrent();
 
-   if (GLXEW_ARB_multisample)
+   if (GLAD_GLX_ARB_multisample)
    {
       Display *dpy  = (Display*) gVirtualX->GetDisplay();
       XVisualInfo tmpl; tmpl.screen = gVirtualX->GetScreen();

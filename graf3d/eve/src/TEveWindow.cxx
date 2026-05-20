@@ -51,7 +51,6 @@ Menus of embedded windows could also be managed - hidden or transposed
 to a top-level menubar.
 */
 
-ClassImp(TEveCompositeFrame);
 
 TEveContextMenu* TEveCompositeFrame::fgCtxMenu = nullptr;
 
@@ -353,7 +352,6 @@ void TEveCompositeFrame::TitleBarClicked()
 An EVE window-slot contained within a TGMainFrame.
 */
 
-ClassImp(TEveCompositeFrameInMainFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -499,7 +497,6 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
 An EVE window-slot contained within one frame of a TGPack.
 */
 
-ClassImp(TEveCompositeFrameInPack);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -541,7 +538,6 @@ void TEveCompositeFrameInPack::Destroy()
 An EVE window-slot contained within one tab of a TGTab.
 */
 
-ClassImp(TEveCompositeFrameInTab);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -641,7 +637,6 @@ Abstract base-class for representing eve-windows.
 Sub-classes define a particular GUI frame that gets showin the window.
 */
 
-ClassImp(TEveWindow);
 
 UInt_t      TEveWindow::fgMainFrameDefWidth  = 640;
 UInt_t      TEveWindow::fgMainFrameDefHeight = 480;
@@ -1129,7 +1124,6 @@ void TEveWindow::SetMiniBarBackgroundColor(Pixel_t p)
 Description of TEveWindowSlot
 */
 
-ClassImp(TEveWindowSlot);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1295,7 +1289,6 @@ Encapsulates TGFrame into an eve-window.
 The frame is owned by the eve-window.
 */
 
-ClassImp(TEveWindowFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1343,7 +1336,6 @@ Encapsulates TGPack into an eve-window.
 The pack is owned by the eve-window.
 */
 
-ClassImp(TEveWindowPack);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1428,7 +1420,6 @@ Encapsulates TGTab into an eve-window.
 The tab is owned by the eve-window.
 */
 
-ClassImp(TEveWindowTab);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1470,7 +1461,6 @@ Specialization of TContext menu.
 Provide a window manager hint that ensures proper placement of popup on Cocoa.
 */
 
-ClassImp(TEveContextMenu);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

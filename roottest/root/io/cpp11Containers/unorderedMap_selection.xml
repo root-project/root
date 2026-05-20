@@ -1,0 +1,107 @@
+<rootdict>
+   <class name="std::map<int,double>" />
+   <class name="std::map<int,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<map<int,TH1F>>" />
+   <class name="std::map<int,vector<TH1F>>" />
+
+   <class name="std::multimap<int,double>" />
+   <class name="std::multimap<int,TH1F>" />
+   <class name="std::multimap<int,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<multimap<int,TH1F>>" />
+   <class name="std::multimap<int,vector<TH1F>>" />
+
+   <class name="std::unordered_map<int,double>" />
+   <class name="std::unordered_map<int,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_map<int,TH1F>>" />
+   <class name="std::unordered_map<int,vector<TH1F>>" />
+
+   <class name="std::unordered_multimap<int,double>" />
+   <class name="std::unordered_multimap<int,TH1F>" />
+   <class name="std::unordered_multimap<int,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_multimap<int,TH1F>>" />
+   <class name="std::unordered_multimap<int,vector<TH1F>>" />
+
+
+   <class name="std::map<Long64_t,double>" />
+   <class name="std::map<Long64_t,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<map<Long64_t,TH1F>>" />
+   <class name="std::map<Long64_t,vector<TH1F>>" />
+
+   <class name="std::multimap<Long64_t,double>" />
+   <class name="std::multimap<Long64_t,TH1F>" />
+   <class name="std::multimap<Long64_t,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<multimap<Long64_t,TH1F>>" />
+   <class name="std::multimap<Long64_t,vector<TH1F>>" />
+
+   <class name="std::unordered_map<Long64_t,double>" />
+   <class name="std::unordered_map<Long64_t,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_map<Long64_t,TH1F>>" />
+   <class name="std::unordered_map<Long64_t,vector<TH1F>>" />
+
+   <class name="std::unordered_multimap<Long64_t,double>" />
+   <class name="std::unordered_multimap<Long64_t,TH1F>" />
+   <class name="std::unordered_multimap<Long64_t,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_multimap<Long64_t,TH1F>>" />
+   <class name="std::unordered_multimap<Long64_t,vector<TH1F>>" />
+
+   <class name="std::map<float,double>" />
+   <class name="std::map<float,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<map<float,TH1F>>" />
+   <class name="std::map<float,vector<TH1F>>" />
+
+   <class name="std::multimap<float,double>" />
+   <class name="std::multimap<float,TH1F>" />
+   <class name="std::multimap<float,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<multimap<float,TH1F>>" />
+   <class name="std::multimap<float,vector<TH1F>>" />
+
+   <class name="std::unordered_map<float,double>" />
+   <class name="std::unordered_map<float,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_map<float,TH1F>>" />
+   <class name="std::unordered_map<float,vector<TH1F>>" />
+
+   <class name="std::unordered_multimap<float,double>" />
+   <class name="std::unordered_multimap<float,TH1F>" />
+   <class name="std::unordered_multimap<float,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_multimap<float,TH1F>>" />
+   <class name="std::unordered_multimap<float,vector<TH1F>>" />
+
+   <class name="std::map<double,double>" />
+   <class name="std::map<double,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<map<double,TH1F>>" />
+   <class name="std::map<double,vector<TH1F>>" />
+
+   <class name="std::multimap<double,double>" />
+   <class name="std::multimap<double,TH1F>" />
+   <class name="std::multimap<double,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<multimap<double,TH1F>>" />
+   <class name="std::multimap<double,vector<TH1F>>" />
+
+   <class name="std::unordered_map<double,double>" />
+   <class name="std::unordered_map<double,TH1F>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_map<double,TH1F>>" />
+   <class name="std::unordered_map<double,vector<TH1F>>" />
+
+   <class name="std::unordered_multimap<double,double>" />
+   <class name="std::unordered_multimap<double,TH1F>" />
+   <class name="std::unordered_multimap<double,double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_multimap<double,TH1F>>" />
+   <class name="std::unordered_multimap<double,vector<TH1F>>" />
+
+</rootdict>

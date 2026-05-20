@@ -222,13 +222,12 @@
 /// is defined strictly to return new memory `mem` that must be released with
 /// `delete [] (unsigned char *) mem` by the caller.
 /// Older uses of this API (such as those of oracle, mysql, odbc) that relied on
-/// internal buffer management (owning pointers) are deprecated/no longer supported.
+/// internal buffer management (owning pointers) were removed in ROOT 6.38.
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TSQLStatement.h"
 
-ClassImp(TSQLStatement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns error code of last operation

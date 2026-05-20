@@ -42,7 +42,6 @@ static const Int_t UNINITIALIZED = -1;
 
 using std::vector;
 
-ClassImp(TMVA::TNeuron);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
@@ -342,6 +341,6 @@ void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 
 TMVA::MsgLogger& TMVA::TNeuron::Log() const
 {
-   TTHREAD_TLS_DECL_ARG2(MsgLogger,logger,"TNeuron",kDEBUG);    //! message logger, static to save resources
+   TTHREAD_TLS_DECL_ARG2(MsgLogger,logger,"TNeuron",kDEBUG);    // message logger, static to save resources
    return logger;
 }

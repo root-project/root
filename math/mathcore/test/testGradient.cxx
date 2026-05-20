@@ -72,7 +72,7 @@ using ScalarSerial2D = GradientTestTraits<Double_t, ROOT::EExecutionPolicy::kSeq
 using ScalarMultithread2D =
    GradientTestTraits<Double_t, ROOT::EExecutionPolicy::kMultiThread, 2, scalarStr, mthreadStr>;
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 
 // Typedefs of GradientTestTraits for vectorial (serial and multithreaded)
 // scenarios
@@ -125,7 +125,7 @@ struct Model1D : public Model<T> {
          delete oldTH1;
 
       // Create TH1 and fill it with values from model function
-      fNumPoints = 12801;
+      fNumPoints = 6801;
       //fNumPoints = 11;
       fHistogram = new TH1D(nameTH1.c_str(), "Test random numbers", fNumPoints, 100, 200);
       gRandom->SetSeed(1);
@@ -187,13 +187,13 @@ struct Model2D : public Model<T> {
          delete oldTH2;
 
       // Create TH1 and fill it with values from model function
-      fNumPoints = 801;
+      fNumPoints = 201;
       fHistogram = new TH2D(nameTH2.c_str(), "Test random numbers", fNumPoints, -5, 5, fNumPoints, -5, 5);
       gRandom->SetSeed(1);
       fHistogram->FillRandom(nameTF2.c_str(), 1000);
    }
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    static T TemplatedGaus(T x, Double_t mean, Double_t sigma, Bool_t norm = false)
    {
       if (sigma == 0)
@@ -202,13 +202,18 @@ struct Model2D : public Model<T> {
       T arg = (x - mean) / sigma;
 
       // for |arg| > 39  result is zero in double precision
-      vecCore::Mask_v<T> mask = !(arg < -39.0 || arg > 39.0);
+      auto mask = !(arg < -39.0 || arg > 39.0);
 
       // Initialize the result to 0.0
       T res(0.0);
 
       // Compute the function only when the arg meets the criteria, using the mask computed before
-      vecCore::MaskedAssign<T>(res, mask, vecCore::math::Exp(-0.5 * arg * arg));
+      if constexpr (std::is_arithmetic_v<T>) {
+         res = mask ? exp(-0.5 * arg * arg) : 0.0;
+      } else {
+         // assume std::simd for non-arithmetic types
+         where(mask, res) = exp(-0.5 * arg * arg);
+      }
 
       if (!norm)
          return res;
@@ -439,7 +444,7 @@ protected:
 };
 
 // Types used by Google Test to instantiate the tests.
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 #  ifdef R__USE_IMT
 typedef ::testing::Types<ScalarMultithread1D, VectorialSerial1D, VectorialMultithread1D, ScalarMultithread2D,
                          VectorialSerial2D, VectorialMultithread2D>

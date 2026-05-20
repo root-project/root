@@ -60,7 +60,15 @@ class TTreeCloner {
    TFileCacheRead *fPrevCache;   ///< Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
 
    enum ECloneMethod {
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kDefault             = 0,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
       kSortBasketsByBranch = 1,
       kSortBasketsByOffset = 2,
       kSortBasketsByEntry  = 3
@@ -88,6 +96,22 @@ class TTreeCloner {
    UInt_t FillCache(UInt_t from);
    void RestoreCache();
 
+public:
+   enum EClonerOptions {
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kNone       = 0,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kNoWarnings = BIT(1),
+      kIgnoreMissingTopLevel = BIT(2),
+      kNoFileCache = BIT(3)
+   };
+
 private:
    TTreeCloner(const TTreeCloner&) = delete;
    TTreeCloner &operator=(const TTreeCloner&) = delete;
@@ -95,12 +119,6 @@ private:
    TTreeCloner(TTree *from, TTree *to, TDirectory *newdirectory, Option_t *method, UInt_t options = kNone);
 
 public:
-   enum EClonerOptions {
-      kNone       = 0,
-      kNoWarnings = BIT(1),
-      kIgnoreMissingTopLevel = BIT(2),
-      kNoFileCache = BIT(3)
-   };
 
    TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = kNone);
    TTreeCloner(TTree *from, TDirectory *newdirectory, Option_t *method, UInt_t options = kNone);

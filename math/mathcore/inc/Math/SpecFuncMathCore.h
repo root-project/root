@@ -8,8 +8,6 @@
  *                                                                    *
  **********************************************************************/
 
-
-
 /**
 
 Special mathematical functions.
@@ -23,7 +21,6 @@ N1687=04-0127, September 10, 2004</A>
 
 @defgroup SpecFunc Special functions
 @ingroup MathCore
-@ingroup MathMore
 
 */
 

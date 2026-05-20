@@ -23,7 +23,6 @@
 #include "TGedPatternSelect.h"
 #include "TColor.h"
 
-ClassImp(TSpiderEditor);
 
 /** \class TSpiderEditor
 The TSpider editor class.

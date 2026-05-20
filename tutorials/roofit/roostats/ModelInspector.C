@@ -127,7 +127,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    : TGMainFrame(gClient->GetRoot(), 100, 100)
 {
 
-   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
+   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumericIntegration);
    fWS = w;
    fMC = mc;
    fData = data;

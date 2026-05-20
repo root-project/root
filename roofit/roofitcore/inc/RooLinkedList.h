@@ -95,6 +95,9 @@ public:
     return _first ? _first->_arg : nullptr ;
   }
 
+  // For checking if the list contains an element with a given name from Python.
+  bool contains(const char* name) const { return find(name); }
+
   void RecursiveRemove(TObject *obj) override;
 
   void Print(const char* opt) const override ;
@@ -145,7 +148,7 @@ private:
   /// memory pool for quick allocation of RooLinkedListElems
   typedef RooLinkedListImplDetails::Pool Pool;
   /// shared memory pool for allocation of RooLinkedListElems
-  static Pool* _pool; //!
+  static Pool* _pool; ///<!
 
   std::vector<RooLinkedListElem *> _at; ///<! index list for quick index through ::At
 

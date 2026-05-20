@@ -51,9 +51,7 @@ TEST_F(RPageStorageDaos, Basics)
    auto wrPt = model->MakeField<float>("pt");
 
    {
-      RNTupleWriteOptionsDaos options;
-      options.SetMaxCageSize(0); // Disable caging mechanism.
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri);
 
       *wrPt = 42.0;
       ntuple->Fill();
@@ -93,9 +91,7 @@ TEST_F(RPageStorageDaos, Extended)
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      RNTupleWriteOptionsDaos options;
-      options.SetMaxCageSize(0);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri);
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
@@ -147,7 +143,6 @@ TEST_F(RPageStorageDaos, Options)
       model->MakeField<float>("pt");
 
       RNTupleWriteOptionsDaos options;
-      options.SetMaxCageSize(0);
       options.SetObjectClass("RP_XSF");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
       ntuple->Fill();
@@ -168,13 +163,10 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
    std::string daosUri = RegisterLabel("ntuple-test-multiple");
    const std::string_view ntupleName1("ntuple1"), ntupleName2("ntuple2");
 
-   RNTupleWriteOptionsDaos options;
-   options.SetMaxCageSize(0);
-
    {
       auto model1 = RNTupleModel::Create();
       auto wrPt = model1->MakeField<float>("pt");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model1), ntupleName1, daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model1), ntupleName1, daosUri);
       *wrPt = 34.0;
       ntuple->Fill();
       *wrPt = 160.0;
@@ -183,7 +175,7 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
    {
       auto model2 = RNTupleModel::Create();
       auto wrPt = model2->MakeField<float>("pt");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model2), ntupleName2, daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model2), ntupleName2, daosUri);
       *wrPt = 81.0;
       ntuple->Fill();
       *wrPt = 96.0;
@@ -249,88 +241,6 @@ TEST_F(RPageStorageDaos, DisabledSamePageMerging)
 }
 
 #ifdef R__USE_IMT
-// This feature depends on RPageSinkBuf and the ability to issue a single `CommitSealedPageV()` call; thus, disable if
-// ROOT was built with `-Dimt=OFF`
-TEST_F(RPageStorageDaos, CagedPages)
-{
-   std::string daosUri = RegisterLabel("ntuple-test-caged");
-   const std::string_view ntupleName("ntuple");
-   ROOT::EnableImplicitMT();
-
-   auto model = RNTupleModel::Create();
-   auto wrVector = model->MakeField<std::vector<double>>("vector");
-   auto wrCnt = model->MakeField<std::uint32_t>("cnt");
-
-   TRandom3 rnd(42);
-   double chksumWrite = 0.0;
-   {
-      RNTupleWriteOptionsDaos options;
-      options.SetMaxCageSize(4 * 64 * 1024);
-      options.SetUseBufferedWrite(true);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
-      constexpr unsigned int nEvents = 180000;
-      for (unsigned int i = 0; i < nEvents; ++i) {
-         *wrCnt = i;
-         auto nVec = 1 + floor(rnd.Rndm() * 1000.);
-         wrVector->resize(nVec);
-         for (unsigned int n = 0; n < nVec; ++n) {
-            auto val = 1 + rnd.Rndm() * 1000. - 500.;
-            (*wrVector)[n] = val;
-            chksumWrite += val;
-         }
-         ntuple->Fill();
-      }
-   }
-
-   // Attempt to read all the entries written above as caged pages, with cluster cache turned on.
-   {
-      RNTupleReadOptions options;
-      options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
-      ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(options, 5);
-      auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
-      auto rdVector = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<double>>("vector");
-
-      double chksumRead = 0.0;
-      for (auto entryId : *ntuple) {
-         ntuple->LoadEntry(entryId);
-         for (auto v : *rdVector)
-            chksumRead += v;
-      }
-      EXPECT_EQ(chksumRead, chksumWrite);
-   }
-
-   {
-      RNTupleReadOptions options;
-      options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
-      auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
-      // Attempt to read a caged page data when cluster cache is disabled.
-      EXPECT_THROW(ntuple->LoadEntry(1), ROOT::RException);
-
-      // However, loading a single sealed page should work
-      auto pageSource = RPageSource::Create(ntupleName, daosUri, options);
-      pageSource->Attach();
-      const auto &desc = pageSource->GetSharedDescriptorGuard()->Clone();
-      const auto colId = desc.FindPhysicalColumnId(desc.FindFieldId("cnt"), 0, 0);
-      const auto clusterId = desc.FindClusterId(colId, 0);
-
-      RPageStorage::RSealedPage sealedPage;
-      pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
-      EXPECT_GT(sealedPage.GetNElements(), 0);
-      auto pageBuf = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
-      sealedPage.SetBuffer(pageBuf.get());
-      pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
-
-      auto colType = desc.GetColumnDescriptor(colId).GetType();
-      auto elem = ROOT::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
-      auto page = pageSource->UnsealPage(sealedPage, *elem).Unwrap();
-      EXPECT_GT(page.GetNElements(), 0);
-      auto ptrData = static_cast<std::uint32_t *>(page.GetBuffer());
-      for (std::uint32_t i = 0; i < page.GetNElements(); ++i) {
-         EXPECT_EQ(i, *(ptrData + i));
-      }
-   }
-}
-
 TEST_F(RPageStorageDaos, Checksum)
 {
    std::string daosUri = RegisterLabel("ntuple-test-checksum");

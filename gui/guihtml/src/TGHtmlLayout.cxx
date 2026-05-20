@@ -26,8 +26,8 @@
 // This file contains the code used to position elements of the
 // HTML file on the screen.
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "TGHtml.h"
 

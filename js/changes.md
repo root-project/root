@@ -1,5 +1,83 @@
 # JSROOT changelog
 
+
+## Changes in 7.11.0
+1. Implement new data types in `RNtuple`
+   - reduced float types kFloat16, kReal32Trunc, kReal32Quant
+   - `std::vector`
+   - `std::map`, `std::unordered_map`, `std::multimap`, `std::unordered_multimap` with `std::pair`
+   - `std::set`, `std::unordered_set`, `std::multiset`, `std::unordered_multiset`
+   - `std::array`
+   - `std::variant`
+   - `std::tuple`
+   - `std::bitset`
+   - `std::atomic`
+   - simple custom classes
+   - streamed types
+2. Resort order of ranges in http request, fixing several long-standing problems #374
+3. Implement for `TPie` 3d, text, title drawing including interactivity
+5. Implement `TCanvas` support in `build3d` function #373
+6. Implement `TTree` branches filtering via context menu #364
+7. Let define alternative draw function #378
+8. Implement "padsN" draw option for `THStack` and `TMultiGraph`
+9. Support custom click handler for `TGraph` https://root-forum.cern.ch/t/64744
+10. Correctly draw axis ticks when `fNdivisions` is negative
+11. Use `resvg-js` backend for PNG support in node.js #391, thanks to https://github.com/OmarMesqq
+12. Introduce `settings.ServerTimeout` for `THttpServer` operations
+13. Let set custom color palette with `setColorPalette` function
+14. Upgrade three.js r180 -> r183
+15. Remove support for deprecated `TH1K` class
+16. Fix - paint frame border mode/size from `TCanvas`
+17. Fix - interactivity for `TH3` palette drawing #398
+
+
+## Changes in 7.10.3
+1. Fix - add `TLeafG` support in `TTree` #397
+2. Fix - reset contour while drawing `TH3`
+3. Fix - fix kFloat16/kDouble32 processing in `TTree`
+
+
+## Changes in 7.10.2
+1. Fix - correctly process `TLeafB` arrays in tree draw #384
+2. Fix - better detect default ranges in `TGraph` histogram
+3. Fix - convert BigInt before `RNtuple` drawing
+4. Fix - pages and clusters processing in `RNtuple` #390
+5. Fix - extra row for legend header, proper horizontal align https://github.com/root-project/root/issues/21173
+
+
+## Changes in 7.10.1
+1. Fix - proper paint axis labels on both sides when pad.fTickx/y = 2
+2. Fix - recover io after bad http response
+
+
+## Changes in 7.10.0
+1. `RNtuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
+2. Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
+3. Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes #368
+4. Draw `TAnnotation3D` in real 3D with handling scene rotation
+5. Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
+6. Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
+7. Support gStyle.fBarOffset for `TGraph` bar drawing
+8. Support "fill_<id>" and "line_<id>" draw options for `TGraph`
+9. Support dark mode when store images
+10. With 'Shift' key pressed whole graph is moved by dragging action
+11. Support `Xall` and `Yall` as projections width #340
+12. Implement `unzipJSON()` function for data embeding in jupyter
+13. Support reading `TBranch` from very old ROOT files with custom streamers
+14. Upgrade three.js r174 -> r180
+15. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+16. Upgrade svg2pdf.js 2.3.0 -> 2.6.0
+17. Upgrade jsPDF 2.5.2 -> 3.0.3, exclude gif, bmp, jpeg support
+18. Use ES6 modules to implement geoworker, enable node.js usage
+19. Remove countGeometryFaces function - use numGeometryFaces instead
+20. Remove experimental RHist classes, deprecated in ROOT 6.38
+21. Internal - ws members are private, new methods has to be used
+22. Fix - ticks size and labels with kMoreLogLabels axis bit
+23. Fix - first color in palette drawing #365
+24. Fix - latex parsing error of `#delta_{0}_suffix` string
+25. Fix - reduce plain HTML usage to minimize danger of JS code injection
+
+
 ## Changes in 7.9.3
 1. Fix - store large PDF with 3D drawing inside
 2. Fix - prevent JS code injection via `TObjString` drawing
@@ -1433,11 +1511,11 @@
 8. Fix several problems with markers drawing; implement plus, asterisk, mult symbols.
 9. Implement custom layout, which allows to configure user-defined layout for displayed objects
 10. Fix errors with scaling of axis labels.
-11. Support also Y axis with custom labels like: http://jsroot.gsi.de/dev/?nobrowser&file=../files/atlas.root&item=LEDShapeHeightCorr_Gain0;1&opt=col
+11. Support also Y axis with custom labels like: https://jsroot.gsi.de/dev/?nobrowser&file=https://jsroot.gsi.de/files/atlas.root&item=LEDShapeHeightCorr_Gain0;1&opt=col
 
 
 ## Changes in 3.7
-1. Support of X axis with custom labels like: http://jsroot.gsi.de/dev/?nobrowser&json=../files/hist_xlabels.json
+1. Support of X axis with custom labels like: https://jsroot.gsi.de/dev/?nobrowser&json=https://jsroot.gsi.de/files/hist_xlabels.json
 2. Extend functionality of JSROOT.addDrawFunc() function. One could register type-specific
    `make_request` and `after_request` functions; `icon`, `prereq`, `script`, `monitor` properties.
    This let add more custom elements to the generic gui, implemented with JSROOT.HierarchyPainter
@@ -1624,7 +1702,7 @@
 13. Provide example fileitem.htm how read and display item from ROOT file.
 14. In default index.htm page one could specify 'file', 'layout',
     'item' and 'items' parameters like:
-      <http://root.cern.ch/js/3.0/index.htm?file=../files/hsimple.root&layout=grid3x2&item=hpx;1>
+      <https://root.cern/js/3.0/index.htm?file=https://root.cern/js/files/hsimple.root&layout=grid3x2&item=hpx;1>
 15. Support direct reading of objects from sub-sub-directories.
 16. Introduce demo.htm, which demonstrates online usage of JSROOT.
 17. One could use demo.htm directly with THttpServer providing address like:

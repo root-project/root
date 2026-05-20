@@ -39,8 +39,6 @@ A split frame tool tip.
 */
 
 
-ClassImp(TGSplitTool);
-ClassImp(TGSplitFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a split frame tool tip. P is the tool tips parent window (normally

@@ -17,7 +17,28 @@
 #  include <time.h>
 # endif
 #endif
-   
+
+/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+#ifndef __CHAR_UNSIGNED__
+/* # undef __CHAR_UNSIGNED__ */
+#endif
+
+#ifdef _WIN32
+typedef unsigned char boolean;
+/* Define as `__inline' if that's what the C compiler calls it, or to nothing
+    if it is not supported. */
+#define inline
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
+#else
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+/* #undef inline */
+#endif
+/* Define to empty if `const' does not conform to ANSI C. */
+/* #undef const */
+#endif
 
 /* our own version of X Wrapper : */
 #include "xwrap.h"
@@ -158,7 +179,7 @@ void asim_nonGNUC_debugout_stub( const char *format, ...);
 #define LOCAL_DEBUG_CALLER_OUT(format,args...) \
     do{ fprintf( stderr, "%s:%s:%s:> called from [%s] with args(" format ")\n", get_application_name(), __FILE__, __FUNCTION__, get_caller_func(), ## args );}while(0)
 #else
-#define LOCAL_DEBUG_OUT(format,args...)
+#define LOCAL_DEBUG_OUT(format, args...)
 #define LOCAL_DEBUG_CALLER_OUT(format,args...)
 #endif /* LOCAL_DEBUG */
 
@@ -212,8 +233,8 @@ void asim_nonGNUC_debugout_stub( const char *format, ...);
 #define START_TIME(started)  time_t started = clock()
 #define SHOW_TIME(s,started) fprintf (stderr, "%s " s " time (clocks): %lu mlsec\n", __FUNCTION__, ((clock () - (started))*100)/CLOCKS_PER_SEC)
 #else
-#define START_TIME(started)  unsigned long started = 0
-#define SHOW_TIME(s,started) started = 0
+#define START_TIME(started)
+#define SHOW_TIME(s, started)
 #endif
 
 /* from libAfterBase/safemalloc.h : */

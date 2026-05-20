@@ -11,6 +11,7 @@ set(LIBS
   clangCodeGen
   clangDriver
   clangFrontend
+  clangInterpreter
   clangParse
   clangSema
   clangAnalysis
@@ -22,6 +23,18 @@ set(LIBS
   clangBasic
   clangLex
 )
+
+if(experimental_adaptivecpp)
+  list(APPEND LIBS AdaptiveCpp acpp-rt)
+
+  set(ACPP_EXPORTS acpp-rt acpp-common)
+
+  foreach(target IN LISTS ACPP_EXPORTS)
+    install(TARGETS ${target} EXPORT ClingTargets)
+  endforeach()
+
+  set_property(GLOBAL APPEND PROPERTY CLING_EXPORTS ${ACPP_EXPORTS})
+endif()
 
 set(LLVM_LINK_COMPONENTS
   analysis
@@ -36,6 +49,7 @@ set(LLVM_LINK_COMPONENTS
   object
   option
   orcjit
+  orcdebugging
   runtimedyld
   scalaropts
   support
@@ -44,10 +58,6 @@ set(LLVM_LINK_COMPONENTS
   binaryformat
   ${LLVM_TARGETS_TO_BUILD}
 )
-
-if (vc)
-  set(cling_vc_support ON)
-endif()
 
 # clingInterpreter depends on Options.inc to be tablegen-ed
 # (target ClangDriverOptions) from in-tree builds.
@@ -69,7 +79,6 @@ add_cling_library(clingInterpreter OBJECT
   CheckEmptyTransactionTransformer.cpp
   CIFactory.cpp
   ClangInternalState.cpp
-  ClingCodeCompleteConsumer.cpp
   ClingPragmas.cpp
   DeclCollector.cpp
   DeclExtractor.cpp
@@ -197,13 +206,22 @@ if (UNIX)
         set(_path "__THISREALLYBETTERNOTBEINPATH_THANKS__")
       endif()
     else()
-      # FIXME: In some ccache setups we can have a soft link pointing to ccache
-      # binary. Eg. /usr/local/gcc -> /usr/bin/ccache. Resolving the realpath
-      # we will get to the ccache and not the intended compiler binary. This
-      # could be fixed if we run 'gcc -###' which will give us the correct info.
       get_filename_component(_realpath ${CMAKE_CXX_COMPILER} REALPATH)
-      get_filename_component(_name ${_realpath} NAME)
-      get_filename_component(_path ${_realpath} PATH)
+      if(${_realpath} MATCHES "ccache" OR ${_realpath} MATCHES "distcc")
+        # In some setups we can have a soft link pointing to ccache binary.
+        # Eg. /usr/local/gcc -> /usr/bin/ccache where /usr/local comes first
+        # in the PATH env variable than /usr/bin. Resolving the realpath
+        # got us to the ccache and not the intended compiler binary, i.e.
+        # CLING_CXX_RLTV will be wrong. As a fallback / best-effort basis,
+        # try to rescue the compiler binary name by looking at the
+        # link name rather than at the the link destination.
+        get_filename_component(_realpath ${CMAKE_CXX_COMPILER} PATH)
+        get_filename_component(_name ${CMAKE_CXX_COMPILER} NAME)
+        get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
+      else()
+        get_filename_component(_name ${_realpath} NAME)
+        get_filename_component(_path ${_realpath} PATH)
+      endif()
     endif()
 
     # Test if path compiler is on PATH.
@@ -340,7 +358,7 @@ else()
     ")
 endif()
 
-# Make sure this goes last so so we can pick up any changes that occured
+# Make sure this goes last so so we can pick up any changes that occurred
 # Also means cling-compiledata.h.in should be edited never cling-compiledata.h
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h
@@ -353,10 +371,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/CIFactory.cpp
              APPEND PROPERTY OBJECT_DEPENDS
              ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h)
-if(cling_vc_support)
-  set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/CIFactory.cpp
-               APPEND PROPERTY COMPILE_DEFINITIONS "CLING_SUPPORT_VC")
-endif()
 
 # If LLVM is external, but Clang is builtin, we must use some files
 # from patched (builtin) version of LLVM

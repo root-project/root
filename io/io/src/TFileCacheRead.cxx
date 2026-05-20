@@ -33,7 +33,6 @@
 #include "TMathBase.h"
 #include <limits>
 
-ClassImp(TFileCacheRead);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
@@ -797,7 +796,7 @@ void TFileCacheRead::SetEnablePrefetchingImpl(Bool_t setPrefetching)
       }
    } else if (fPrefetch && !fEnablePrefetching) {
        SafeDelete(fPrefetch);
-       fPrefetch = NULL;
+       fPrefetch = nullptr;
    }
 
    //environment variable used to switch to the new method of reading asynchronously

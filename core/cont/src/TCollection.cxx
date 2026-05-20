@@ -75,6 +75,8 @@ for (auto br : TRangeDynCast<TBranch>( tree->GetListOfBranches() )) {
 #include "TError.h"
 #include "TSystem.h"
 #include "TObjArray.h"
+#include "TMathBase.h"
+
 #include <iostream>
 #include <sstream>
 
@@ -87,8 +89,6 @@ TObjectTable  *TCollection::fgGarbageCollection = nullptr;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
 Int_t          TCollection::fgGarbageStack      = 0;
 
-ClassImp(TCollection);
-ClassImp(TIter);
 
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
 

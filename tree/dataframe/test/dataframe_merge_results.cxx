@@ -161,6 +161,33 @@ TEST(RDataFrameMergeResults, MergeHistoND)
    EXPECT_EQ(mh.GetEntries(), 200);
 }
 
+TEST(RDataFrameMergeResults, MergeHistoNSparseD)
+{
+   ROOT::RDataFrame df{100};
+
+   auto col1 = df.Define("x0", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = col1.Define("x1", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col3 = col2.Define("x2", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col4 = col3.Define("x3", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+
+   int nbins[4] = {10, 10, 10, 10};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {100., 100., 100., 100.};
+   auto hist1 = col4.HistoNSparseD<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax},
+                                                                   {"x0", "x1", "x2", "x3"});
+   auto hist2 = col4.HistoNSparseD<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax},
+                                                                   {"x0", "x1", "x2", "x3"});
+
+   auto mh1 = GetMergeableValue(hist1);
+   auto mh2 = GetMergeableValue(hist2);
+
+   auto mergedptr = MergeValues(std::move(mh1), std::move(mh2));
+
+   const auto &mh = mergedptr->GetValue();
+
+   EXPECT_EQ(mh.GetEntries(), 200);
+}
+
 TEST(RDataFrameMergeResults, MergeProfile1D)
 {
    ROOT::RDataFrame df{100};
@@ -400,4 +427,35 @@ TEST(RDataFrameMergeResults, MergeVariedHisto)
       EXPECT_EQ(histo.GetMean(), expectedmeans[i]);
       EXPECT_EQ(histo.GetEntries(), 20);
    }
+}
+
+TEST(RDataFrameMergeResults, MergeReport)
+{
+   ROOT::RDataFrame dfmerge1{100};
+   ROOT::RDataFrame dfmerge2{100};
+
+   auto col1 = dfmerge1.Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = dfmerge2.Define("x", [](ULong64_t e) { return double(2 * e); }, {"rdfentry_"});
+
+   auto filtered1 = col1.Filter("x>25.", "Cut1");
+   auto filtered2 = filtered1.Filter("x>50.", "Cut2");
+
+   auto filtered3 = col2.Filter("x>25.", "Cut1");
+   auto filtered4 = filtered3.Filter("x>50.", "Cut2");
+
+   auto report1 = filtered2.Report();
+   auto report2 = filtered4.Report();
+
+   auto md1 = GetMergeableValue(report1);
+   auto md2 = GetMergeableValue(report2);
+
+   auto mergedptr = MergeValues(std::move(md1), std::move(md2));
+
+   const auto &ms = mergedptr->GetValue();
+
+   std::string expected =
+      "Cut1                : pass=161        all=200        -- eff=80.50 % cumulative eff=80.50 %\n"
+      "Cut2                : pass=123        all=161        -- eff=76.40 % cumulative eff=61.50 %\n";
+
+   EXPECT_EQ(ms.AsString(), expected);
 }

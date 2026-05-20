@@ -16,7 +16,8 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <RVersion.h>
 #include <TBufferFile.h>
@@ -72,6 +73,8 @@ ROOT::RResult<std::uint32_t> SerializeField(const ROOT::RFieldDescriptor &fieldD
       flags |= RNTupleSerializer::kFlagProjectedField;
    if (fieldDesc.GetTypeChecksum().has_value())
       flags |= RNTupleSerializer::kFlagHasTypeChecksum;
+   if (fieldDesc.IsSoACollection())
+      flags |= RNTupleSerializer::kFlagIsSoACollection;
    pos += RNTupleSerializer::SerializeUInt16(flags, *where);
 
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
@@ -148,7 +151,7 @@ DeserializeField(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RFie
    std::uint32_t typeVersion;
    std::uint32_t parentId;
    // initialize properly for call to SerializeFieldStructure()
-   ENTupleStructure structure{ENTupleStructure::kLeaf};
+   ENTupleStructure structure{ENTupleStructure::kPlain};
    std::uint16_t flags;
    std::uint32_t result;
    if (auto res = RNTupleSerializer::SerializeFieldStructure(structure, nullptr)) {
@@ -218,6 +221,10 @@ DeserializeField(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RFie
       std::uint32_t typeChecksum;
       bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeChecksum);
       fieldDesc.TypeChecksum(typeChecksum);
+   }
+
+   if (flags & RNTupleSerializer::kFlagIsSoACollection) {
+      fieldDesc.IsSoACollection(true);
    }
 
    return frameSize;
@@ -810,7 +817,7 @@ ROOT::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::ENTupleStructur
 {
    using ENTupleStructure = ROOT::ENTupleStructure;
    switch (structure) {
-   case ENTupleStructure::kLeaf: return SerializeUInt16(0x00, buffer);
+   case ENTupleStructure::kPlain: return SerializeUInt16(0x00, buffer);
    case ENTupleStructure::kCollection: return SerializeUInt16(0x01, buffer);
    case ENTupleStructure::kRecord: return SerializeUInt16(0x02, buffer);
    case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
@@ -829,7 +836,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeFieldStructure(const void *buffer,
    std::uint16_t onDiskValue;
    auto result = DeserializeUInt16(buffer, onDiskValue);
    switch (onDiskValue) {
-   case 0x00: structure = ENTupleStructure::kLeaf; break;
+   case 0x00: structure = ENTupleStructure::kPlain; break;
    case 0x01: structure = ENTupleStructure::kCollection; break;
    case 0x02: structure = ENTupleStructure::kRecord; break;
    case 0x03: structure = ENTupleStructure::kVariant; break;
@@ -1085,8 +1092,10 @@ ROOT::Internal::RNTupleSerializer::SerializeLocator(const RNTupleLocator &locato
       break;
    default:
       if (locator.GetType() == ROOT::Internal::kTestLocatorType) {
-         // For the testing locator, use the same payload as Object64. We're not gonna really read it back anyway.
-         size += SerializeLocatorPayloadObject64(locator, payloadp);
+         // For the testing locator, use the same payload format as Object64. We won't read it back anyway.
+         RNTupleLocator dummy;
+         dummy.SetType(RNTupleLocator::kTypeDAOS);
+         size += SerializeLocatorPayloadObject64(dummy, payloadp);
          locatorType = 0x7e;
       } else {
          return R__FAIL("locator has unknown type");
@@ -1316,7 +1325,7 @@ void ROOT::Internal::RNTupleSerializer::RContext::MapSchema(const ROOT::RNTupleD
    if (!forHeaderExtension) {
       fieldTrees.emplace_back(fieldZeroId);
    } else if (auto xHeader = desc.GetHeaderExtension()) {
-      fieldTrees = xHeader->GetTopLevelFields(desc);
+      fieldTrees = xHeader->GetTopMostFields(desc);
    }
    depthFirstTraversal(fieldTrees, [&](ROOT::DescriptorId_t fieldId) { MapFieldId(fieldId); });
    depthFirstTraversal(fieldTrees, [&](ROOT::DescriptorId_t fieldId) {
@@ -1753,7 +1762,9 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
    pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
    // So far we don't make use of footer feature flags
-   if (auto res = SerializeFeatureFlags(std::vector<std::uint64_t>(), *where)) {
+   // NOTE: we currently serialize all feature flags in the footer, even those that were already written in the
+   // header. This is fine, as they will be logically OR-ed together during deserialization.
+   if (auto res = SerializeFeatureFlags(desc.GetFeatureFlags(), *where)) {
       pos += res.Unwrap();
    } else {
       return R__FORWARD_ERROR(res);
@@ -1798,6 +1809,27 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       return R__FORWARD_ERROR(res);
    }
 
+   // Attributes
+   frame = pos;
+   const auto nAttributeSets = desc.GetNAttributeSets();
+   if (nAttributeSets > 0) {
+      R__LOG_WARNING(NTupleLog()) << "RNTuple Attributes are experimental. They are not guaranteed to be readable "
+                                     "back in the future (but your main data is)";
+   }
+   pos += SerializeListFramePreamble(nAttributeSets, *where);
+   for (const auto &attrSet : desc.GetAttrSetIterable()) {
+      if (auto res = SerializeAttributeSet(attrSet, *where)) {
+         pos += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
+      }
+   }
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, pos - frame)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+
    std::uint32_t size = pos - base;
    if (auto res = SerializeEnvelopePostscript(base, size)) {
       size += res.Unwrap();
@@ -1805,6 +1837,46 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       return R__FORWARD_ERROR(res);
    }
    return size;
+}
+
+ROOT::RResult<std::uint32_t>
+ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const Experimental::RNTupleAttrSetDescriptor &attrDesc,
+                                                         void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   auto frame = pos;
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+   pos += SerializeUInt16(attrDesc.GetSchemaVersionMajor(), *where);
+   pos += SerializeUInt16(attrDesc.GetSchemaVersionMinor(), *where);
+   pos += SerializeUInt32(attrDesc.GetAnchorLength(), *where);
+   if (auto res = SerializeLocator(attrDesc.GetAnchorLocator(), *where)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   pos += SerializeString(attrDesc.GetName(), *where);
+   auto size = pos - frame;
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, size)) {
+      return size;
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+}
+
+static ROOT::RResult<void> CheckFeatureFlags(const std::vector<std::uint64_t> &featureFlags)
+{
+   for (std::size_t i = 0; i < featureFlags.size(); ++i) {
+      if (!featureFlags[i])
+         continue;
+      unsigned int bit = 0;
+      while (!(featureFlags[i] & (static_cast<uint64_t>(1) << bit)))
+         bit++;
+      return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
+   }
+   return ROOT::RResult<void>::Success();
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint64_t bufSize,
@@ -1828,13 +1900,8 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const v
    } else {
       return R__FORWARD_ERROR(res);
    }
-   for (std::size_t i = 0; i < featureFlags.size(); ++i) {
-      if (!featureFlags[i])
-         continue;
-      unsigned int bit = 0;
-      while (!(featureFlags[i] & (static_cast<uint64_t>(1) << bit)))
-         bit++;
-      return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
+   if (auto res = CheckFeatureFlags(featureFlags); !res) {
+      return R__FORWARD_ERROR(res);
    }
 
    std::string name;
@@ -1888,9 +1955,8 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
    } else {
       return R__FORWARD_ERROR(res);
    }
-   for (auto f : featureFlags) {
-      if (f)
-         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "Unsupported feature flag! " << f;
+   if (auto res = CheckFeatureFlags(featureFlags); !res) {
+      return R__FORWARD_ERROR(res);
    }
 
    std::uint64_t xxhash3{0};
@@ -1917,34 +1983,100 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
    }
    bytes = frame + frameSize;
 
-   std::uint32_t nClusterGroups;
-   frame = bytes;
-   if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nClusterGroups)) {
-      bytes += res.Unwrap();
-   } else {
-      return R__FORWARD_ERROR(res);
-   }
-   for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
-      RClusterGroup clusterGroup;
-      if (auto res = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup)) {
+   {
+      std::uint32_t nClusterGroups;
+      frame = bytes;
+      if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nClusterGroups)) {
          bytes += res.Unwrap();
       } else {
          return R__FORWARD_ERROR(res);
       }
+      for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
+         RClusterGroup clusterGroup;
+         if (auto res = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup)) {
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
 
-      descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.GetNBytesOnStorage());
-      RClusterGroupDescriptorBuilder clusterGroupBuilder;
-      clusterGroupBuilder.ClusterGroupId(groupId)
-         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength)
-         .MinEntry(clusterGroup.fMinEntry)
-         .EntrySpan(clusterGroup.fEntrySpan)
-         .NClusters(clusterGroup.fNClusters);
-      descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+         descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.GetNBytesOnStorage());
+         RClusterGroupDescriptorBuilder clusterGroupBuilder;
+         clusterGroupBuilder.ClusterGroupId(groupId)
+            .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
+            .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength)
+            .MinEntry(clusterGroup.fMinEntry)
+            .EntrySpan(clusterGroup.fEntrySpan)
+            .NClusters(clusterGroup.fNClusters);
+         descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+      }
+      bytes = frame + frameSize;
    }
-   bytes = frame + frameSize;
+
+   // NOTE: Attributes were introduced in v1.0.1.0, so this section may be missing.
+   // Testing for > 8 because bufSize includes the checksum.
+   if (fnBufSizeLeft() > 8) {
+      std::uint32_t nAttributeSets;
+      frame = bytes;
+      if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAttributeSets)) {
+         bytes += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
+      }
+      if (nAttributeSets > 0) {
+         R__LOG_WARNING(NTupleLog()) << "RNTuple Attributes are experimental. They are not guaranteed to be readable "
+                                        "back in the future (but your main data is)";
+      }
+      for (std::uint32_t attrSetId = 0; attrSetId < nAttributeSets; ++attrSetId) {
+         Experimental::Internal::RNTupleAttrSetDescriptorBuilder attrSetDescBld;
+         if (auto res = DeserializeAttributeSet(bytes, fnBufSizeLeft(), attrSetDescBld)) {
+            descBuilder.AddAttributeSet(attrSetDescBld.MoveDescriptor().Unwrap());
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
+      }
+      bytes = frame + frameSize;
+   }
 
    return RResult<void>::Success();
+}
+
+ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::DeserializeAttributeSet(
+   const void *buffer, std::uint64_t bufSize, Experimental::Internal::RNTupleAttrSetDescriptorBuilder &attrSetDescBld)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
+
+   std::uint64_t frameSize;
+   if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint64_t)))
+      return R__FAIL("record frame too short");
+   std::uint16_t vMajor, vMinor;
+   bytes += DeserializeUInt16(bytes, vMajor);
+   bytes += DeserializeUInt16(bytes, vMinor);
+   std::uint32_t anchorLen;
+   bytes += DeserializeUInt32(bytes, anchorLen);
+   RNTupleLocator anchorLoc;
+   if (auto res = DeserializeLocator(bytes, fnBufSizeLeft(), anchorLoc)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   std::string name;
+   if (auto res = DeserializeString(bytes, fnBufSizeLeft(), name)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+
+   attrSetDescBld.SchemaVersion(vMajor, vMinor).AnchorLength(anchorLen).AnchorLocator(anchorLoc).Name(name);
+
+   return frameSize;
 }
 
 ROOT::RResult<std::vector<ROOT::Internal::RClusterDescriptorBuilder>>

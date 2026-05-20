@@ -51,7 +51,6 @@ the vectors x, y, z and s.
 #include <iostream>
 #include "TQpVar.h"
 
-ClassImp(TQpVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

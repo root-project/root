@@ -85,17 +85,18 @@ protected:
    TObjArray  fFunctions;       //Array of function calls to make
    TObjArray  fLinearParts;     //Linear parts if the formula is linear (contains '|' or "++")
 
-   TBits      fAlreadyFound;    //! cache for information
+   TBits      fAlreadyFound;    ///<! cache for information
 
    // Optimized expression
-   Int_t                fNOperOptimized; //!Number of operators after optimization
-   TString             *fExprOptimized;  //![fNOperOptimized] List of expressions
-   Int_t               *fOperOptimized;  //![fNOperOptimized] List of operators. (See documentation for changes made at version 7)
-   TOperOffset         *fOperOffset;     //![fNOperOptimized]         Offsets of operrands
-   TFormulaPrimitive  **fPredefined;      //![fNPar] predefined function
-   TFuncG               fOptimal; //!pointer to optimal function
+   Int_t                fNOperOptimized; ///<!Number of operators after optimization
+   TString             *fExprOptimized;  ///<![fNOperOptimized] List of expressions
+   Int_t               *fOperOptimized;  ///<![fNOperOptimized] List of operators. (See documentation for changes made at version 7)
+   TOperOffset         *fOperOffset;     ///<![fNOperOptimized]         Offsets of operrands
+   TFormulaPrimitive  **fPredefined;      ///<![fNPar] predefined function
+   TFuncG               fOptimal; ///<!pointer to optimal function
 
    Int_t             PreCompile();
+   virtual Bool_t    AnalyzePrimitive(TString &chain, TObjArray &args, Int_t &err, Int_t offset);
    virtual Bool_t    CheckOperands(Int_t operation, Int_t &err);
    virtual Bool_t    CheckOperands(Int_t leftoperand, Int_t rightoperartion, Int_t &err);
    virtual Bool_t    StringToNumber(Int_t code);
@@ -221,7 +222,7 @@ public:
       ~TFormula() override;
 
  public:
-   void                Optimize();
+   virtual void        Optimize();
    virtual void        Analyze(const char *schain, Int_t &err, Int_t offset=0);
    virtual Bool_t      AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset=0);
    virtual Int_t       Compile(const char *expression="");

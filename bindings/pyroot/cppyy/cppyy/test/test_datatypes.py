@@ -1,12 +1,21 @@
-import py, sys
+import sys, pytest, os
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("datatypesDict"))
+test_dct = "datatypes_cxx"
 
-def setup_module(mod):
-    setup_make("datatypes")
+
+def has_cpp_20():
+    import cppyy
+
+    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
+
+
+def is_modules_off():
+    import cppyy
+
+    return "runtime_cxxmodules" not in cppyy.gbl.gROOT.GetConfigFeatures()
+
 
 class TestDATATYPES:
     def setup_class(cls):
@@ -16,11 +25,7 @@ class TestDATATYPES:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
 
-        at_least_17 = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-        cls.has_byte     = at_least_17
-        cls.has_optional = at_least_17
-
-    @mark.skip()
+    @mark.xfail(strict=True)
     def test01_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 
@@ -48,8 +53,7 @@ class TestDATATYPES:
         # reading integer types
         assert c.m_int8    == - 9; assert c.get_int8_cr()    == - 9; assert c.get_int8_r()    == - 9
         assert c.m_uint8   ==   9; assert c.get_uint8_cr()   ==   9; assert c.get_uint8_r()   ==   9
-        if self.has_byte:
-            assert c.m_byte == ord('d'); assert c.get_byte_cr() == ord('d'); assert c.get_byte_r() == ord('d')
+        assert c.m_byte == ord('d'); assert c.get_byte_cr() == ord('d'); assert c.get_byte_r() == ord('d')
         assert c.m_short   == -11; assert c.get_short_cr()   == -11; assert c.get_short_r()   == -11
         assert c.m_ushort  ==  11; assert c.get_ushort_cr()  ==  11; assert c.get_ushort_r()  ==  11
         assert c.m_int     == -22; assert c.get_int_cr()     == -22; assert c.get_int_r()     == -22
@@ -152,9 +156,8 @@ class TestDATATYPES:
             assert c.get_bool_array2()[i]   ==   bool((i+1)%2)
 
         # reading of integer array types
-        names = ['schar', 'uchar',   'int8', 'uint8',  'short', 'ushort',     'int',   'uint',     'long',  'ulong']
-        alpha = [ (1, 2),  (1, 2), (-1, -2),  (3, 4), (-5, -6),   (7, 8), (-9, -10), (11, 12), (-13, -14), (15, 16)]
-        if self.has_byte: names.append('byte'); alpha.append((3,4))
+        names = ["schar", "uchar", "int8", "uint8", "short", "ushort", "int", "uint", "long", "ulong", "byte"]
+        alpha = [(1, 2), (1, 2), (-1, -2), (3, 4), (-5, -6), (7, 8), (-9, -10), (11, 12), (-13, -14), (15, 16), (3, 4)]
 
         for j in range(self.N):
             assert getattr(c, 'm_%s_array'    % names[i])[i]   == alpha[i][0]*i
@@ -172,8 +175,7 @@ class TestDATATYPES:
         # out-of-bounds checks
         raises(IndexError, c.m_schar_array.__getitem__,  self.N)
         raises(IndexError, c.m_uchar_array.__getitem__,  self.N)
-        if self.has_byte:
-            raises(IndexError, c.m_byte_array.__getitem__,   self.N)
+        raises(IndexError, c.m_byte_array.__getitem__,   self.N)
         raises(IndexError, c.m_int8_array.__getitem__,   self.N)
         raises(IndexError, c.m_uint8_array.__getitem__,  self.N)
         raises(IndexError, c.m_short_array.__getitem__,  self.N)
@@ -194,7 +196,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test02_instance_data_write_access(self):
         """Test write access to instance public data and verify values"""
 
@@ -248,8 +250,7 @@ class TestDATATYPES:
         raises(ValueError, c.set_char32, "string")
 
         # integer types
-        names = ['int8', 'uint8', 'short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong']
-        if self.has_byte: names.append('byte')
+        names = ["int8", "uint8", "short", "ushort", "int", "uint", "long", "ulong", "llong", "ullong", "byte"]
 
         for i in range(len(names)):
             setattr(c, 'm_'+names[i], i)
@@ -315,13 +316,11 @@ class TestDATATYPES:
         c.destroy_arrays()
 
         # integer arrays (skip int8_t and uint8_t as these are presented as (unsigned) char still)
-        names = ['uchar', 'short', 'ushort', 'int', 'uint', 'long', 'ulong']
-        if self.has_byte: names.append('byte')
+        names = ["uchar", "short", "ushort", "int", "uint", "long", "ulong", "byte"]
 
         import array
         a = range(self.N)
-        atypes = ['B', 'h', 'H', 'i', 'I', 'l', 'L']
-        if self.has_byte: atypes.append('B')
+        atypes = ['B', 'h', 'H', 'i', 'I', 'l', 'L', 'B']
         for j in range(len(names)):
             b = array.array(atypes[j], a)
             setattr(c, 'm_'+names[j]+'_array', b)     # buffer copies
@@ -379,7 +378,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
     def test04_class_read_access(self):
         """Test read access to class public data and verify values"""
 
@@ -409,9 +407,8 @@ class TestDATATYPES:
         assert type(CppyyTestData.s_char32) == pyunicode
 
         # integer types
-        if self.has_byte:
-            assert CppyyTestData.s_byte == ord('b')
-            assert c.s_byte             == ord('b')
+        assert CppyyTestData.s_byte == ord('b')
+        assert c.s_byte             == ord('b')
         assert CppyyTestData.s_int8     == - 87
         assert c.s_int8                 == - 87
         assert CppyyTestData.s_uint8    ==   87
@@ -477,11 +474,10 @@ class TestDATATYPES:
         assert CppyyTestData.s_char32   == u'\u00ef'
 
         # integer types
-        if self.has_byte:
-            c.s_byte                     =   66
-            assert CppyyTestData.s_byte ==   66
-            CppyyTestData.s_byte         =   66
-            assert c.s_byte             ==   66
+        c.s_byte                         =   66
+        assert CppyyTestData.s_byte     ==   66
+        CppyyTestData.s_byte             =   66
+        assert c.s_byte                 ==   66
         c.s_short                        = -102
         assert CppyyTestData.s_short    == -102
         CppyyTestData.s_short            = -203
@@ -544,7 +540,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
     def test07_type_conversions(self):
         """Test conversions between builtin types"""
 
@@ -649,7 +644,7 @@ class TestDATATYPES:
 
         d = gbl.get_global_pod()
         assert gbl.is_global_pod(d)
-        assert c == d
+        assert c is d
         assert id(c) == id(d)
 
         e = gbl.CppyyTestPod()
@@ -738,7 +733,7 @@ class TestDATATYPES:
         assert gbl.EnumSpace.AA == 1
         assert gbl.EnumSpace.BB == 2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test11_typed_enums(self):
         """Determine correct types of enums"""
 
@@ -781,7 +776,7 @@ class TestDATATYPES:
         assert type(sc.vraioufaux.faux) == bool  # no bool as base class
         assert isinstance(sc.vraioufaux.faux, bool)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_enum_scopes(self):
         """Enum accessibility and scopes"""
 
@@ -1003,8 +998,7 @@ class TestDATATYPES:
         gbl = cppyy.gbl
 
         c1 = cppyy.bind_object(0, gbl.CppyyTestData)
-        assert c1 == None
-        assert None == c1
+        assert not c1
 
         c2 = cppyy.bind_object(0, gbl.CppyyTestData)
         assert c1 == c2
@@ -1012,8 +1006,7 @@ class TestDATATYPES:
 
         # FourVector overrides operator==
         l1 = cppyy.bind_object(0, gbl.FourVector)
-        assert l1 == None
-        assert None == l1
+        assert not l1
 
         assert c1 != l1
         assert l1 != c1
@@ -1028,10 +1021,9 @@ class TestDATATYPES:
         assert l3 == l4
         assert l4 == l3
 
-        assert l3 != None                 # like this to ensure __ne__ is called
-        assert None != l3                 # id.
-        assert l3 != l5
-        assert l5 != l3
+        assert l3
+        assert l3 != l5                   # like this to ensure __ne__ is called
+        assert l5 != l3                   # id.
 
     def test20_object_comparisons_with_cpp__eq__(self):
         """Comparisons with C++ providing __eq__/__ne__"""
@@ -1110,7 +1102,7 @@ class TestDATATYPES:
 
         assert not d2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test22_buffer_shapes(self):
         """Correctness of declared buffer shapes"""
 
@@ -1147,9 +1139,6 @@ class TestDATATYPES:
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
-        byte_array_names = []
-        if self.has_byte:
-            byte_array_names = ['get_byte_array', 'get_byte_array2']
         for func in ['get_bool_array',   'get_bool_array2',
                      'get_uchar_array',  'get_uchar_array2',
                      'get_int8_array',   'get_int8_array2',
@@ -1159,8 +1148,8 @@ class TestDATATYPES:
                      'get_int_array',    'get_int_array2',
                      'get_uint_array',   'get_uint_array2',
                      'get_long_array',   'get_long_array2',
-                     'get_ulong_array',  'get_ulong_array2']+\
-                     byte_array_names:
+                     'get_ulong_array',  'get_ulong_array2',
+                     'get_byte_array', 'get_byte_array2']:
             arr = getattr(c, func)()
             arr.reshape((self.N,))
             assert len(arr) == self.N
@@ -1243,7 +1232,7 @@ class TestDATATYPES:
                 for k in range(7):
                     assert int(ns.vvv[i,j,k]) == i+j+k
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="segmentation violation")
     def test25_byte_arrays(self):
         """Usage of unsigned char* as byte array and std::byte*"""
 
@@ -1275,11 +1264,10 @@ class TestDATATYPES:
             assert f(pbuf, len(buf)) == total
 
         run(self, cppyy.gbl.sum_uc_data, buf, total)
+        run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-        if self.has_byte:
-            run(self, cppyy.gbl.sum_byte_data, buf, total)
-
-    @mark.xfail
+    @mark.xfail(strict=True, run=not IS_MAC and not IS_WINDOWS, reason="Fails on all platforms; crashes on macOS with " \
+    "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
 
@@ -1380,7 +1368,7 @@ class TestDATATYPES:
             retval = i
 
         assert retval is None
-        assert fv(voidf, 5) == None
+        assert not fv(voidf, 5)
         assert retval == 5
 
         # call of function with reference argument
@@ -1452,7 +1440,7 @@ class TestDATATYPES:
             retval = i
 
         assert retval is None
-        assert fv(voidf, 5) == None
+        assert not fv(voidf, 5)
         assert retval == 5
 
         # call of function with reference argument
@@ -1557,7 +1545,7 @@ class TestDATATYPES:
                 p = (ctype * len(buf)).from_buffer(buf)
                 assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_anonymous_union(self):
         """Anonymous unions place there fields in the parent scope"""
 
@@ -1651,7 +1639,7 @@ class TestDATATYPES:
         assert type(p.data_c[0]) == float
         assert p.intensity == 5.
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test32_anonymous_struct(self):
         """Anonymous struct creates an unnamed type"""
 
@@ -1700,7 +1688,7 @@ class TestDATATYPES:
 
         assert 'foo' in dir(ns.libuntitled1_ExportedSymbols().kotlin.root.com.justamouse.kmmdemo)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test33_pointer_to_array(self):
         """Usability of pointer to array"""
 
@@ -1966,6 +1954,7 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Test doesn't work on Windows")
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
@@ -2018,8 +2007,8 @@ class TestDATATYPES:
         assert b.name     == "aap"
         assert b.buf_type == ns.SHAPE
 
-    @mark.skip()
-    def test40_more_aggregates(self):
+    @mark.xfail(run=False, reason="error code: Subprocess aborted")
+    def test40_more_aggregates(self, capfd):
         """More aggregate testings (used to fail/report errors)"""
 
         import cppyy
@@ -2042,22 +2031,26 @@ class TestDATATYPES:
         r1 = ns.make_R1()
         assert r1.e == ns.E.A
 
-        if self.has_optional:
-            cppyy.cppdef("""\
-            namespace AggregateTest {
-            struct R2 {
-                std::optional<S> s = {};
-            };
+        cppyy.cppdef("""\
+        namespace AggregateTest {
+        struct R2 {
+            std::optional<S> s = {};
+        };
 
-            R2 make_R2() {
-                return {1};
-            } }""")
+        R2 make_R2() {
+            return {1};
+        } }""")
 
-            r2 = ns.make_R2()
-            assert r2.s.x == 1
+        r2 = ns.make_R2()
+        assert r2.s.x == 1
 
-    @mark.xfail()
-    def test41_complex_numpy_arrays(self):
+        # Fail if there was an interpreter error
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
+
+    @mark.xfail(strict=True)
+    def test41_complex_numpy_arrays(self, capfd):
         """Usage of complex numpy arrays"""
 
         import cppyy
@@ -2104,7 +2097,13 @@ class TestDATATYPES:
             Ccl = func(Acl, Bcl, 2)
             assert complex(Ccl) == pyCcl
 
-    @mark.xfail()
+        # Fail if there was an interpreter error about calling an
+        # implicitly-deleted copy constructor
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "call to implicitly-deleted copy constructor" not in output
+
+    @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="Argument conversion error on macOS and Windows")
     def test42_mixed_complex_arithmetic(self):
         """Mixin of Python and C++ std::complex in arithmetic"""
 
@@ -2118,7 +2117,6 @@ class TestDATATYPES:
         assert c*(c*c) == p*(p*p)
         assert (c*c)*c == (p*p)*p
 
-    @mark.xfail()
     def test43_ccharp_memory_handling(self):
         """cppyy side handled memory of C strings"""
 
@@ -2235,7 +2233,7 @@ class TestDATATYPES:
         b = ns.B()
         assert b.body1.name == b.body2.name
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test46_small_int_enums(self):
         """Proper typing of small int enums"""
 
@@ -2290,7 +2288,7 @@ class TestDATATYPES:
         assert ns.func_int8()  == -1
         assert ns.func_uint8() == 255
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test47_hidden_name_enum(self):
         """Usage of hidden name enum"""
 
@@ -2353,6 +2351,8 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
+    @mark.xfail(strict=True, run=not IS_WINDOWS, condition=IS_MAC_ARM or (not has_cpp_20() and is_modules_off()), reason="Crashes on mac-beta ARM64 and fails on Windows \
+            assertion error for runtime_cxxmodules=OFF build that is explained in GitHub issue #21005")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
@@ -2468,3 +2468,6 @@ class TestDATATYPES:
 
         for i, v in enumerate(a2):
             assert v == a2[i]
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-v', '-ra', __file__]))

@@ -1,12 +1,9 @@
-import py, sys
+import sys, pytest, os
 from pytest import mark, raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("doc_helperDict"))
 
-def setup_module(mod):
-    setup_make("doc_helper")
+test_dct = "doc_helper_cxx"
 
 
 class TestDOCFEATURES:
@@ -430,7 +427,6 @@ namespace Namespace {
         pc = PyConcrete4()
         assert call_abstract_method(pc) == "Hello, Python World! (4)"
 
-    @mark.skip
     def test_multi_x_inheritance(self):
         """Multiple cross-inheritance"""
 
@@ -448,6 +444,7 @@ namespace Namespace {
         assert cppyy.gbl.call_abstract_method1(pc) == "first message"
         assert cppyy.gbl.call_abstract_method2(pc) == "second message"
 
+    @mark.xfail(run=False, condition=IS_WINDOWS == 64, reason = "Crashes on Windows 64 bit")
     def test_exceptions(self):
         """Exception throwing and catching"""
 
@@ -784,6 +781,7 @@ class TestADVERTISED:
         Advert02.Picam_OpenFirstCamera(cam)
         assert Advert02.Picam_CloseCamera(cam)
 
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
     def test03_use_of_ctypes_and_enum(self):
         """Use of (opaque) enum through ctypes.c_void_p"""
 
@@ -1125,7 +1123,7 @@ class TestTALKEXAMPLES:
 
         assert v.back().add(17) == 4+42+2*17
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test_fallbacks(self):
         """Template instantation switches based on value sizes"""
 
@@ -1170,7 +1168,7 @@ class TestTALKEXAMPLES:
         assert CC.callPtr(lambda i: 5*i, 4) == 20
         assert CC.callFun(lambda i: 6*i, 4) == 24
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test_templated_callback(self):
         """Templated callback example"""
 
@@ -1223,6 +1221,7 @@ class TestTALKEXAMPLES:
         assert type(b) == CC.Derived
         assert d is b
 
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason = "Crashes on Windows")
     def test_exceptions(self):
         """Exceptions example"""
 
@@ -1247,7 +1246,7 @@ class TestTALKEXAMPLES:
         with raises(CC.MyException):
             CC.throw_error()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test_unicode(self):
         """Unicode non-UTF-8 example"""
 
@@ -1280,3 +1279,7 @@ class TestTALKEXAMPLES:
             assert CC.utf8_chinese() == u'\u4e2d\u6587'
         else:
             assert CC.utf8_chinese() == b'\xe4\xb8\xad\xe6\x96\x87'
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

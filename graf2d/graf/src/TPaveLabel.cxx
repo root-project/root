@@ -16,7 +16,6 @@
 #include "TLatex.h"
 #include "TVirtualPad.h"
 
-ClassImp(TPaveLabel);
 
 /** \class TPaveLabel
 \ingroup BasicGraphics
@@ -151,9 +150,9 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    if (GetTextFont()%10 > 2) {  // fixed size font specified in pixels
       labelsize = GetTextSize();
    } else {
-      if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
+      if (std::abs(textsize -0.99) < 0.001) automat = 1;
       if (textsize == 0)   { textsize = 0.99; automat = 1;}
-      Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
+      Int_t ypixel      = std::abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
       labelsize = textsize*ypixel/hh;
       if (wh < hh) labelsize *= hh/wh;
    }
@@ -168,7 +167,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
       latex.GetTextExtent(w,h,GetTitle());
       if (!w) return;
       labelsize = h/hh;
-      Double_t wxlabel   = TMath::Abs(gPad->XtoPixel(x2) - gPad->XtoPixel(x1));
+      Double_t wxlabel   = std::abs(gPad->XtoPixel(x2) - gPad->XtoPixel(x1));
       latex.GetTextExtent(w1,h,GetTitle());
       while (w > 0.99*wxlabel) {
          labelsize *= 0.99*wxlabel/w;
@@ -207,7 +206,7 @@ void TPaveLabel::SavePrimitive(std::ostream &out, Option_t *option)
    if (fBorderSize != 3)
       out << "   pavelabel->SetBorderSize(" << fBorderSize << ");\n";
 
-   SaveFillAttributes(out, "pavelabel", 19, 1001);
+   SaveFillAttributes(out, "pavelabel", -1, -1);
    SaveLineAttributes(out, "pavelabel", 1, 1, 1);
    SaveTextAttributes(out, "pavelabel", 22, 0, 1, 62, 0);
 

@@ -12,6 +12,7 @@
 #define ROOT_TVirtualGeoConverter
 
 #include "TObject.h"
+#include "TGeoShape.h"
 
 class TGeoManager;
 
@@ -25,6 +26,8 @@ public:
    ~TVirtualGeoConverter() override;
 
    virtual void ConvertGeometry() {}
+   virtual void SelectShapeType(TGeoShape::EShapeType) {}
+   virtual void ExcludeShapeType(TGeoShape::EShapeType) {}
    static TVirtualGeoConverter *Instance(TGeoManager *geom = nullptr);
    static void SetConverter(const TVirtualGeoConverter *conv);
    void SetGeometry(TGeoManager *geom) { fGeom = geom; }

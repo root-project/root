@@ -11,6 +11,19 @@
 r"""
 \pythondoc TH1
 
+## Drawing histograms in Python
+
+Drawing histograms is done via TH1::Draw(). Note that in interactive scripts,TCanvas::Draw() can be
+made blocking to interactively show it on the screen before continuing execution.
+\code{.py}
+c = ROOT.TCanvas()
+h = ROOT.TH1D("h1", "h1", 100, -5, 5)
+h.FillRandom("gaus", 10000)
+h.Draw("")
+
+c.Draw(block=True)
+\endcode
+
 ## Fitting histograms in Python
 
 One-dimensional histograms can be fit in [Python](https://root.cern/manual/python) with a similar syntax as in C++.
@@ -51,7 +64,7 @@ myResult = myTH1D.Fit("gaus", "s")
 myResult.Parameters()
 
 # Get the error of the first parameter
-myResult.ParError(0) 
+myResult.ParError(0)
 \endcode
 
 
@@ -80,10 +93,10 @@ def myGaussian(x, pars):
     '''
     Defines a Gaussian function
     '''
-    return pars[0]*np.exp(-0.5* pow(x[0] - pars[1], 2)) 
+    return pars[0]*np.exp(-0.5* pow(x[0] - pars[1], 2))
 
 # Initialize from the Python function with the range -5 to +5, with two parameters to fit, and a one-dimensional input x
-myTF1 = ROOT.TF1("myFunction", myGaussian, -5, 5, npar=2, ndim=1) 
+myTF1 = ROOT.TF1("myFunction", myGaussian, -5, 5, npar=2, ndim=1)
 
 # Create a 1D histogram and initialize it with the built-in ROOT Gaussian "gaus"
 myTH1D = ROOT.TH1D("th1d", "Test", 200, -5, 5)
@@ -166,15 +179,16 @@ Further examples can be found in the tutorials:
 \endpythondoc
 """
 
-from ROOT._pythonization._memory_utils import (
+from . import pythonization
+from ._memory_utils import (
     _SetDirectory_SetOwnership,
     inject_clone_releasing_ownership,
     inject_constructor_releasing_ownership,
 )
-
-from . import pythonization
+from ._uhi import _add_plotting_features, _add_serialization_features
 
 # Multiplication by constant
+
 
 def _imul(self, c):
     # Parameters:
@@ -185,44 +199,45 @@ def _imul(self, c):
     self.Scale(c)
     return self
 
-# Fill with numpy array
 
-def _FillWithNumpyArray(self, *args):
+# Fill with array-like data
+def _FillWithArrayTH1(self, *args):
     """
-    Fill histogram with numpy array.
+    Fill a histogram using array-like input.
     Parameters:
     - self: histogram
     - args: arguments to FillN
-            If the first argument is numpy.ndarray:
+            If the first argument is array-like:
+            - converts it to a numpy array
             - fills the histogram with this array
             - optional second argument is weights array,
               if not provided, weights of 1 are used
             Otherwise:
             - Arguments are passed directly to the original FillN method
     Returns:
-    - Result of FillN if numpy case is detected, otherwise result of Fill
+    - Result of FillN if array case is detected, otherwise result of Fill
     Raises:
     - ValueError: If weights length doesn't match data length
     """
-    import collections.abc
-
-    # If the first argument has no len() method, we don't even need to consider
-    # the array code path.
-    if not isinstance(args[0], collections.abc.Sized):
-        return self._Fill(*args)
-
     import numpy as np
 
-    if args and isinstance(args[0], np.ndarray):
-        data = args[0]
-        weights = np.ones(len(data)) if len(args) < 2 or args[1] is None else args[1]
-        if len(weights) != len(data):
-            raise ValueError(
-                f"Length mismatch: data length ({len(data)}) != weights length ({len(weights)})"
-            )
-        return self.FillN(len(data), data, weights)
-    else:
+    # Try to convert the first argument to a numpy array
+    # if it fails, we call the original Fill
+    try:
+        data = np.asanyarray(args[0], dtype=np.float64)
+        n = len(data)
+    except Exception:
+        # Not convertible
         return self._Fill(*args)
+
+    if len(args) >= 2 and args[1] is not None:
+        weights = np.asanyarray(args[1], dtype=np.float64)
+        if len(weights) != n:
+            raise ValueError(f"Length mismatch: data length ({n}) != weights length ({len(weights)})")
+    else:
+        weights = np.ones(n)
+
+    return self.FillN(n, data, weights)
 
 
 # The constructors need to be pythonized for each derived class separately:
@@ -233,31 +248,33 @@ _th1_derived_classes_to_pythonize = [
     "TH1L",
     "TH1F",
     "TH1D",
-    "TH1K",
     "TProfile",
 ]
 
 for klass in _th1_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
-    from ROOT._pythonization._uhi import _add_plotting_features
-
     # Add UHI plotting features
     pythonization(klass)(_add_plotting_features)
 
+    # Support vectorized Fill
+    @pythonization(klass)
+    def _enable_numpy_fill(klass):
+        klass._Fill = klass.Fill
+        klass.Fill = _FillWithArrayTH1
 
-@pythonization('TH1')
+    # Add serialization features
+    pythonization(klass)(_add_serialization_features)
+
+
+@pythonization("TH1")
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
-    from ROOT._pythonization._uhi import _add_indexing_features
+    from ._uhi import _add_indexing_features
 
     # Support hist *= scalar
     klass.__imul__ = _imul
-
-    # Support hist.Fill(numpy_array) and hist.Fill(numpy_array, numpy_array)
-    klass._Fill = klass.Fill
-    klass.Fill = _FillWithNumpyArray
 
     klass._Original_SetDirectory = klass.SetDirectory
     klass.SetDirectory = _SetDirectory_SetOwnership
@@ -266,3 +283,4 @@ def pythonize_th1(klass):
     _add_indexing_features(klass)
 
     inject_clone_releasing_ownership(klass)
+    klass.Fit.__release_gil__ = True

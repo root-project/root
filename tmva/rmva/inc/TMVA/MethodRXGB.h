@@ -45,36 +45,36 @@ namespace TMVA {
 
 
       ~MethodRXGB(void);
-      void     Train();
+      void Train() override;
       // options treatment
-      void     Init();
-      void     DeclareOptions();
-      void     ProcessOptions();
+      void Init() override;
+      void DeclareOptions() override;
+      void ProcessOptions() override;
       // create ranking
-      const Ranking *CreateRanking()
+      const Ranking *CreateRanking() override
       {
          return nullptr;  // = 0;
       }
 
 
-      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
+      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) override;
 
       // performs classifier testing
-      virtual void     TestClassification();
+      void TestClassification() override;
 
 
-      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr);
-      virtual void     MakeClass(const TString &classFileName = TString("")) const;  //required for model persistence
+      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) override;
+      void MakeClass(const TString &classFileName = TString("")) const override;  //required for model persistence
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void * /*parent*/) const {}  // = 0;
-      virtual void ReadWeightsFromXML(void * /*wghtnode*/) {} // = 0;
-      virtual void ReadWeightsFromStream(std::istream &) {} //= 0;       // backward compatibility
+      void AddWeightsXMLTo(void * /*parent*/) const override {}  // = 0;
+      void ReadWeightsFromXML(void * /*wghtnode*/) override {} // = 0;
+      void ReadWeightsFromStream(std::istream &) override {} //= 0;       // backward compatibility
 
       void ReadModelFromFile();
 
       // signal/background classification response for all current set of data
-      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+      std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false) override;
 
    private :
       DataSetManager    *fDataSetManager;     // DSMTEST
@@ -104,9 +104,9 @@ namespace TMVA {
 
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
-      ClassDef(MethodRXGB, 0)
+      ClassDefOverride(MethodRXGB, 0)
    };
 } // namespace TMVA
 #endif

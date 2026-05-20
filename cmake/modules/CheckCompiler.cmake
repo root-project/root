@@ -23,7 +23,7 @@ endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE_UPPER)
 
 include(CheckLanguage)
-#---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
+#---Enable FORTRAN (unfortunately is not not possible in all cases)-------------------------------
 if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
@@ -42,10 +42,13 @@ if(fortran)
       # in a separate process, the result might not be compatible with
       # the C++ compiler, so reset the variable, ...
       unset(CMAKE_Fortran_COMPILER CACHE)
-      # ..., and enable Fortran again, this time prefering compilers
+      # ..., and enable Fortran again, this time preferring compilers
       # compatible to the C++ compiler
       enable_language(Fortran)
     endif()
+  endif()
+  if(NOT CMAKE_Fortran_COMPILER AND fail-on-missing)
+    message(FATAL_ERROR "No Fortran compiler found. Please make sure it's installed, or disable ROOT's Fortran features with '-Dfortran=OFF' (or set '-Dfail-on-missing=OFF' to automatically disable features with missing requirements)")
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -62,24 +65,14 @@ endif()
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  exec_program(${CMAKE_CXX_COMPILER} ARGS "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info)
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info ERROR_VARIABLE _clang_version_info OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(REGEX REPLACE "^.*[ ]version[ ]([0-9]+)\\.[0-9]+.*" "\\1" CLANG_MAJOR "${_clang_version_info}")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
 
   if(CMAKE_GENERATOR STREQUAL "Ninja")
-    # LLVM/Clang are automatically checking if we are in interactive terminal mode.
-    # We use color output only for Ninja, because Ninja by default is buffering the output,
-    # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics")
-  endif()
-  if(ccache AND CCACHE_VERSION VERSION_LESS "3.2.0")
-    # https://bugzilla.samba.org/show_bug.cgi?id=8118
-    # Call to 'ccache clang' is triggering next warning (valid for ccache 3.1.x, fixed in 3.2):
-    # "clang: warning: argument unused during compilation: '-c"
-    # Adding -Qunused-arguments provides a workaround for the bug.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
+    # Since Ninja buffers outputs, the builtin tty colour detection fails
+    # https://github.com/ninja-build/ninja/wiki/FAQ#why-does-my-program-with-colored-output-not-have-color-under-ninja
+    set(CMAKE_COLOR_DIAGNOSTICS ON)
   endif()
 else()
   set(CLANG_MAJOR 0)
@@ -118,13 +111,52 @@ endif()
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
 
+#---AR option for deterministic libraries---------------------------------------------
+# This matches the code in HandleLLVMOptions.cmake, in order to ensure consistency,
+# it must be set before any calls to add_library (in particular the plugins and Cling)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  # RHEL7 has ar and ranlib being non-deterministic by default. The D flag forces determinism,
+  # however only GNU version of ar and ranlib (2.27) have this option.
+  # RHEL DTS7 is also affected by this, which uses GNU binutils 2.28
+  execute_process(COMMAND ${CMAKE_AR} rD t.a
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                  RESULT_VARIABLE AR_RESULT
+                  OUTPUT_QUIET
+                  ERROR_QUIET
+                  )
+  if(${AR_RESULT} EQUAL 0)
+    execute_process(COMMAND ${CMAKE_RANLIB} -D t.a
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    RESULT_VARIABLE RANLIB_RESULT
+                    OUTPUT_QUIET
+                    ERROR_QUIET
+                    )
+    if(${RANLIB_RESULT} EQUAL 0)
+      set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>"
+          CACHE STRING "archive create command")
+      set(CMAKE_C_ARCHIVE_APPEND "<CMAKE_AR> Dq  <TARGET> <LINK_FLAGS> <OBJECTS>")
+      set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -D <TARGET>" CACHE STRING "ranlib command")
+
+      set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>"
+          CACHE STRING "archive create command")
+      set(CMAKE_CXX_ARCHIVE_APPEND "<CMAKE_AR> Dq  <TARGET> <LINK_FLAGS> <OBJECTS>")
+      set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -D <TARGET>" CACHE STRING "ranlib command")
+    endif()
+    file(REMOVE ${CMAKE_BINARY_DIR}/t.a)
+  endif()
+endif()
+
 #---C++ standard----------------------------------------------------------------------
 
 # We want to set the default value of CMAKE_CXX_STANDARD to the compiler default,
 # so we check the value of __cplusplus.
 # This default value can be overridden by specifying one at the prompt.
 if (MSVC)
-   set(CXX_STANDARD_STRING "201703L")
+   if(MSVC_VERSION GREATER_EQUAL 1950)
+     set(CXX_STANDARD_STRING "202002L")
+   else()
+     set(CXX_STANDARD_STRING "201703L")
+   endif()
 else()
    execute_process(COMMAND echo __cplusplus
                    COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -
@@ -225,15 +257,3 @@ endif()
 if(gnuinstall)
   set(R__HAVE_CONFIG 1)
 endif()
-
-#---Check if we use the new libstdc++ CXX11 ABI-----------------------------------------------------
-# Necessary to compile check_cxx_source_compiles this early
-include(CheckCXXSourceCompiles)
-check_cxx_source_compiles(
-"
-#include <string>
-#if _GLIBCXX_USE_CXX11_ABI == 0
-  #error NOCXX11
-#endif
-int main() {}
-" GLIBCXX_USE_CXX11_ABI)

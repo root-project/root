@@ -51,8 +51,8 @@ class RooStepFunction : public RooAbsReal {
   RooListProxy _coefList ;
   RooListProxy _boundaryList ;
   bool       _interpolate = false;
-  mutable std::vector<double> _coefCache; //!
-  mutable std::vector<double> _boundaryCache; //!
+  mutable std::vector<double> _coefCache; ///<!
+  mutable std::vector<double> _boundaryCache; ///<!
 
   ClassDefOverride(RooStepFunction,1) //  Step Function
 };

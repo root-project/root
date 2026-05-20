@@ -40,9 +40,16 @@ int DeclareCode(std::string modelName)
    // TMacro m("testSofie"); m.AddLine("std::vector<float> testSofie(float *x) { return s.infer(x);}")
    // std::vector<float> * result = (std::vector<float> *)m.Exec(Form(float*)0x%lx , xinput.data));
    std::string code = std::string("#include \"") + modelName + ".hxx\"\n";
-   code += "TMVA_SOFIE_" + modelName + "::Session s" + std::to_string(sessionId) + ";\n";
+   std::string sessionName = "s" + std::to_string(sessionId);
+   code += "TMVA_SOFIE_" + modelName + "::Session " + sessionName + ";\n";
 
-   gInterpreter->Declare(code.c_str());
+   if(!gInterpreter->Declare(code.c_str())) {
+      return 0;
+   }
+   // Verify that the session object is available now
+   if(gInterpreter->Calc(("&" + sessionName).c_str()) == 0) {
+      return 0;
+   }
    return sessionId;
 }
 
@@ -76,6 +83,8 @@ void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayer
    ExecuteSofieParser(modelName);
 
    int id = DeclareCode(modelName);
+
+   ASSERT_NE(id, 0) << "Declareing model code to interpreter failed!";
 
    // input data
    std::vector<float> xinput(nbatches * inputSize);
@@ -152,6 +161,8 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
 
    int id = DeclareCode(modelName);
 
+   ASSERT_NE(id, 0) << "Declareing model code to interpreter failed!";
+
    // input data
    std::vector<float> xinput(nbatches*inputSize);
    for (int ib = 0; ib < nbatches; ib++) {
@@ -212,6 +223,10 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
    ExecuteSofieParser(modelName);
 
    int id = DeclareCode(modelName);
+
+   std::cout << "id " << id << std::endl;
+
+   ASSERT_NE(id, 0) << "Declareing model code to interpreter failed!";
 
    // input data
    std::vector<float> xinput(nbatches * seqSize * inputSize);
@@ -300,6 +315,8 @@ void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int 
    ExecuteSofieParser(modelName);
 
    int id = DeclareCode(modelName);
+
+   ASSERT_NE(id, 0) << "Declareing model code to interpreter failed!";
 
    // input data
    std::vector<float> xinput(nbatches*inputSize);

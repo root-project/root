@@ -19,19 +19,10 @@
  */
 
 #undef LOCAL_DEBUG
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
 
 #ifdef HAVE_PNG
 /* Include file for users of png library. */
-# ifdef HAVE_BUILTIN_PNG
-#  include "libpng/png.h"
-# else
-#  include <png.h>
-# endif
+#include <png.h>
 #else
 #include <setjmp.h>
 # ifdef HAVE_JPEG
@@ -73,18 +64,10 @@
 #include <ctype.h>
 /* <setjmp.h> is used for the optional error recovery mechanism */
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 
 #ifdef HAVE_GIF
-# ifdef HAVE_BUILTIN_UNGIF
-#  include "libungif/gif_lib.h"
-# else
-#  include <gif_lib.h>
-# endif
+# include <gif_lib.h>
 #endif
 
 #ifdef HAVE_TIFF
@@ -490,8 +473,8 @@ ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr fl
 	static const ASPngExportParams defaults = { ASIT_Png, EXPORT_ALPHA, -1 };
 
 	png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
-    if ( png_ptr != NULL )
-    	if( (info_ptr = png_create_info_struct(png_ptr)) != NULL )
+   if (png_ptr != NULL)
+      if( (info_ptr = png_create_info_struct(png_ptr)) != NULL )
 			if( setjmp(png_jmpbuf(png_ptr)) )
 			{
 				png_destroy_info_struct(png_ptr, (png_infopp) &info_ptr);
@@ -677,7 +660,8 @@ void asim_png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 	 
 void asim_png_flush_data(png_structp png_ptr)
 {
- 	/* nothing to do really, but PNG requires it */	
+   (void)png_ptr; // silence unused variable warning
+                  /* nothing to do really, but PNG requires it */
 }	 
 
 
@@ -890,8 +874,11 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 Bool
 ASImage2xcf ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	/* More stuff */
-	XcfImage  *xcf_im = NULL;
+   (void)im;
+   (void)path;
+   (void)params; // silence unused variable warning
+   /* More stuff */
+   XcfImage  *xcf_im = NULL;
 	START_TIME(started);
 
 	SHOW_PENDING_IMPLEMENTATION_NOTE("XCF");
@@ -914,7 +901,10 @@ ASImage2xcf ( ASImage *im, const char *path,  ASImageExportParams *params )
 Bool
 ASImage2ppm ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	START_TIME(started);
+   (void)im;
+   (void)path;
+   (void)params; // silence unused variable warning
+   START_TIME(started);
 	SHOW_PENDING_IMPLEMENTATION_NOTE("PPM");
 	SHOW_TIME("image export",started);
 	return False;
@@ -927,7 +917,10 @@ ASImage2ppm ( ASImage *im, const char *path,  ASImageExportParams *params )
 Bool
 ASImage2ico ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	START_TIME(started);
+   (void)im;
+   (void)path;
+   (void)params; // silence unused variable warning
+   START_TIME(started);
 	SHOW_PENDING_IMPLEMENTATION_NOTE("ICO");
 	SHOW_TIME("image export",started);
 	return False;
@@ -942,8 +935,8 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	GifFileType *gif = NULL ;
 	ColorMapObject *gif_cmap ;
 	Bool dont_save_cmap = False ;
-	static const ASGifExportParams defaultsGif = { ASIT_Gif,EXPORT_ALPHA|EXPORT_APPEND, 3, 127, 10 };
-        ASImageExportParams defaults;
+   static const ASGifExportParams defaultsGif = {ASIT_Gif, EXPORT_ALPHA | EXPORT_APPEND, 3, 127, 10, 0};
+   ASImageExportParams defaults;
 	ASColormap         cmap;
 	int *mapped_im ;
 	int y ;
@@ -1128,6 +1121,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		if (outfile)
 		{
 #if (GIFLIB_MAJOR>=5)
+			errcode=E_GIF_SUCCEEDED;
 			gif = EGifOpenFileHandle(fileno(outfile), &errcode);
 			if (errcode != E_GIF_SUCCEEDED)
 				ASIM_PrintGifError(errcode);
@@ -1229,17 +1223,17 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 	TIFF *out;
 	static const ASTiffExportParams defaultsTiff = { ASIT_Tiff, 0, (CARD32)-1, TIFF_COMPRESSION_NONE, 100, 0 };
         ASImageExportParams defaults;
-	uint16 photometric = PHOTOMETRIC_RGB;
-	tsize_t linebytes, scanline;
-	ASImageDecoder *imdec ;
-	CARD32 *r, *g, *b, *a ;
-	unsigned char* buf;
-	CARD32  row ;
-	Bool has_alpha ;
-	int nsamples = 3 ;
-	START_TIME(started);
+        uint16_t photometric = PHOTOMETRIC_RGB;
+        tsize_t linebytes, scanline;
+        ASImageDecoder *imdec;
+        CARD32 *r, *g, *b, *a;
+        unsigned char *buf;
+        CARD32 row;
+        Bool has_alpha;
+        int nsamples = 3;
+        START_TIME(started);
 
-	if( params == NULL ) {
+        if (params == NULL) {
            defaults.type = defaultsTiff.type;
            defaults.tiff = defaultsTiff;
            params = &defaults ;
@@ -1275,21 +1269,21 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 		return False;
 	}
 
-	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32) im->width);
-	TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32) im->height);
-	TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+   TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32_t)im->width);
+   TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32_t)im->height);
+   TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
 	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, nsamples);
 	if (has_alpha)
 	{
-	    uint16 v[1];
-	    v[0] = EXTRASAMPLE_UNASSALPHA;
-	    TIFFSetField(out, TIFFTAG_EXTRASAMPLES, 1, v);
+      uint16_t v[1];
+      v[0] = EXTRASAMPLE_UNASSALPHA;
+      TIFFSetField(out, TIFFTAG_EXTRASAMPLES, 1, v);
 	}
 
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,   8);
 	TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
-	if( params->tiff.compression_type == -1  )
-		params->tiff.compression_type = defaultsTiff.compression_type ;
+   if (params->tiff.compression_type == (unsigned int)-1)
+      params->tiff.compression_type = defaultsTiff.compression_type ;
 	TIFFSetField(out, TIFFTAG_COMPRESSION,  params->tiff.compression_type);
 	switch (params->tiff.compression_type )
 	{
@@ -1367,6 +1361,8 @@ Bool
 ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params )
 {
 	SHOW_UNSUPPORTED_NOTE("TIFF",path);
+	(void)im;
+	(void)params; // silence unused variable warning
 	return False ;
 }
 #endif			/* TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF */

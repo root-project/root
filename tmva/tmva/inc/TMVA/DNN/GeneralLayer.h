@@ -526,7 +526,7 @@ auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * n
    xmlengine.NewAttr(matnode,nullptr,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
    xmlengine.NewAttr(matnode,nullptr,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
    std::stringstream s;
-   s.precision( std::numeric_limits<Scalar_t>::digits10 );
+   s.precision(std::numeric_limits<Scalar_t>::max_digits10);
    size_t nrows = matrix.GetNrows();
    size_t ncols = matrix.GetNcols();
    for (size_t row = 0; row < nrows; row++) {

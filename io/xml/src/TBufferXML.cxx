@@ -48,9 +48,9 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "RZip.h"
 #include "snprintf.h"
 
+#include <limits>
 #include <memory>
 
-ClassImp(TBufferXML);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize/deserialize data to/from xml.
@@ -381,138 +381,6 @@ void TBufferXML::SetCompressionLevel(Int_t level)
 void TBufferXML::SetCompressionSettings(Int_t settings)
 {
    fCompressLevel = settings;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write binary data block from buffer to xml.
-/// This data can be produced only by direct call of TBuffer::WriteBuf() functions.
-
-void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
-{
-   if (!node || (Length() == 0))
-      return;
-
-   const char *src = Buffer();
-   int srcSize = Length();
-
-   char *fZipBuffer = nullptr;
-
-   Int_t compressionLevel = GetCompressionLevel();
-   ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm =
-      static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetCompressionAlgorithm());
-
-   if ((Length() > 512) && (compressionLevel > 0)) {
-      int zipBufferSize = Length();
-      fZipBuffer = new char[zipBufferSize + 9];
-      int dataSize = Length();
-      int compressedSize = 0;
-      R__zipMultipleAlgorithm(compressionLevel, &dataSize, Buffer(), &zipBufferSize, fZipBuffer, &compressedSize,
-                              compressionAlgorithm);
-      if (compressedSize > 0) {
-         src = fZipBuffer;
-         srcSize = compressedSize;
-      } else {
-         delete[] fZipBuffer;
-         fZipBuffer = nullptr;
-      }
-   }
-
-   TString res;
-   constexpr std::size_t sbufSize = 500;
-   char sbuf[sbufSize];
-   int block = 0;
-   char *tgt = sbuf;
-   int srcCnt = 0;
-
-   while (srcCnt++ < srcSize) {
-      tgt += snprintf(tgt, sbufSize - (tgt - sbuf), " %02x", (unsigned char)*src);
-      src++;
-      if (block++ == 100) {
-         res += sbuf;
-         block = 0;
-         tgt = sbuf;
-      }
-   }
-
-   if (block > 0)
-      res += sbuf;
-
-   XMLNodePointer_t blocknode = fXML->NewChild(node, nullptr, xmlio::XmlBlock, res);
-   fXML->NewIntAttr(blocknode, xmlio::Size, Length());
-
-   if (fZipBuffer) {
-      fXML->NewIntAttr(blocknode, xmlio::Zip, srcSize);
-      delete[] fZipBuffer;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read binary block of data from xml.
-
-void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
-{
-   if (!blocknode)
-      return;
-
-   Int_t blockSize = fXML->GetIntAttr(blocknode, xmlio::Size);
-   Bool_t blockCompressed = fXML->HasAttr(blocknode, xmlio::Zip);
-   char *fUnzipBuffer = nullptr;
-
-   if (gDebug > 2)
-      Info("XmlReadBlock", "Block size = %d, Length = %d, Compressed = %d", blockSize, Length(), blockCompressed);
-
-   if (blockSize > BufferSize())
-      Expand(blockSize);
-
-   char *tgt = Buffer();
-   Int_t readSize = blockSize;
-
-   TString content = fXML->GetNodeContent(blocknode);
-
-   if (blockCompressed) {
-      Int_t zipSize = fXML->GetIntAttr(blocknode, xmlio::Zip);
-      fUnzipBuffer = new char[zipSize];
-
-      tgt = fUnzipBuffer;
-      readSize = zipSize;
-   }
-
-   char *ptr = (char *)content.Data();
-
-   if (gDebug > 3)
-      Info("XmlReadBlock", "Content %s", ptr);
-
-   for (int i = 0; i < readSize; i++) {
-      while ((*ptr < 48) || ((*ptr > 57) && (*ptr < 97)) || (*ptr > 102))
-         ptr++;
-
-      int b_hi = (*ptr > 57) ? *ptr - 87 : *ptr - 48;
-      ptr++;
-      int b_lo = (*ptr > 57) ? *ptr - 87 : *ptr - 48;
-      ptr++;
-
-      *tgt = b_hi * 16 + b_lo;
-      tgt++;
-
-      if (gDebug > 4)
-         Info("XmlReadBlock", "    Buf[%d] = %d", i, b_hi * 16 + b_lo);
-   }
-
-   if (fUnzipBuffer) {
-
-      int srcsize(0), tgtsize(0), unzipRes(0);
-      int status = R__unzip_header(&srcsize, (UChar_t *)fUnzipBuffer, &tgtsize);
-
-      if (status == 0)
-         R__unzip(&readSize, (unsigned char *)fUnzipBuffer, &blockSize, (unsigned char *)Buffer(), &unzipRes);
-
-      if (status != 0 || unzipRes != blockSize)
-         Error("XmlReadBlock", "Decompression error %d", unzipRes);
-      else if (gDebug > 2)
-         Info("XmlReadBlock", "Unzip ok");
-
-      delete[] fUnzipBuffer;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1998,7 +1866,7 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
              ) {
-            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and desctructor
+            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and destructor
          }
       }
 
@@ -2160,16 +2028,13 @@ void TBufferXML::WriteArray(const Double_t *d, Int_t n)
 template <typename T>
 R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Long64_t n)
 {
-   constexpr Int_t dataWidth = 1; // at least 1
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (n < 0 || n > maxElements)
-   {
-      Fatal("XmlWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called
-   }
    BeforeIOoperation();
    if (n <= 0)
       return;
+   if (n > std::numeric_limits<Int_t>::max()) {
+      Fatal("XmlWriteFastArray", "Array larger than 2^31 elements cannot be stored in XML");
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
    PushStack(arrnode);
    XmlWriteArrayContent(arr, n);

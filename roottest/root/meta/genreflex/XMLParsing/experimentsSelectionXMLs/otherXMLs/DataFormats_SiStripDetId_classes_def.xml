@@ -1,0 +1,17 @@
+<lcgdict>
+  <class name="SiStripDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1454613786"/>
+  </class>
+  <class name="TIBDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="2120387717"/>
+  </class>
+  <class name="TIDDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="2378668043"/>
+  </class>
+  <class name="TOBDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="149943355"/>
+  </class>
+  <class name="TECDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="699845924"/>
+  </class>
+</lcgdict>

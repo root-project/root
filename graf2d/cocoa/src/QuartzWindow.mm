@@ -1127,9 +1127,9 @@ void print_mask_info(ULong_t mask)
     std::vector<ROOT::MacOSX::X11::Command *> xorOps;
 }
 
-- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives
+- (void) addXorCommand : (ROOT::MacOSX::X11::Command *) cmd
 {
-    xorOps = primitives;
+   xorOps.push_back(cmd);
 }
 
 - (void) drawRect : (NSRect) dirtyRect
@@ -1224,6 +1224,7 @@ void print_mask_info(ULong_t mask)
 
       fIsDeleted = NO;
       fHasFocus = NO;
+      fDrawMode = TVirtualX::kCopy;
    }
 
    return self;
@@ -1254,6 +1255,7 @@ void print_mask_info(ULong_t mask)
       fDelayedTransient = NO;
       fIsDeleted = NO;
       fHasFocus = NO;
+      fDrawMode = TVirtualX::kCopy;
    }
 
    return self;
@@ -1506,22 +1508,18 @@ void print_mask_info(ULong_t mask)
 #pragma mark - XorDrawinWindow/View
 
 //______________________________________________________________________________
-- (void) addXorWindow
+- (XorDrawingWindow *) addXorWindow
 {
-    if ([self findXorWindow])
-        return;
+   auto res = [self findXorWindow];
+   if (res)
+      return res;
 
-    XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
-    [self adjustXorWindowGeometry:special];
-    [self addChildWindow : special ordered : NSWindowAbove];
-    [special release];
-}
-
-//______________________________________________________________________________
-- (void) adjustXorWindowGeometry
-{
-    if (auto win = [self findXorWindow])
-        [self adjustXorWindowGeometry:win];
+   XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
+   res = special;
+   [self adjustXorWindowGeometry : special];
+   [self addChildWindow : special ordered : NSWindowAbove];
+   [special release];
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1536,12 +1534,12 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) removeXorWindow
 {
-    if (auto win = [self findXorWindow]) {
-        // For some reason, without ordeing out, the crosshair window's content stays
-        // in the parent's window. Thus we first have to order out the crosshair window.
-        [win orderOut:nil];
-        [self removeChildWindow : win];
-    }
+   if (auto win = [self findXorWindow]) {
+      // For some reason, without ordeing out, the crosshair window's content stays
+      // in the parent's window. Thus we first have to order out the crosshair window.
+      [win orderOut:nil];
+      [self removeChildWindow : win];
+   }
 }
 
 //______________________________________________________________________________
@@ -1553,6 +1551,59 @@ void print_mask_info(ULong_t mask)
             return (XorDrawingWindow *)child;
     }
     return nil;
+}
+
+//______________________________________________________________________________
+- (void) addXorLine : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
+{
+   auto xorWindow = [self addXorWindow];
+
+   try {
+      std::unique_ptr<ROOT::MacOSX::X11::DrawLineXor> cmd(new ROOT::MacOSX::X11::DrawLineXor(-1, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      cmd->setView(view);
+
+      auto cv = (XorDrawingView *)xorWindow.contentView;
+      [cv addXorCommand : cmd.get()];
+      cmd.release();
+      [cv setNeedsDisplay : YES];
+
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
+- (void) addXorBox : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
+{
+   auto xorWindow = [self addXorWindow];
+
+   try {
+      std::unique_ptr<ROOT::MacOSX::X11::DrawBoxXor> cmd(new ROOT::MacOSX::X11::DrawBoxXor(-1, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      cmd->setView(view);
+
+      auto cv = (XorDrawingView *)xorWindow.contentView;
+      [cv addXorCommand : cmd.get()];
+      cmd.release();
+      [cv setNeedsDisplay : YES];
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+
+//______________________________________________________________________________
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode
+{
+   if (fDrawMode == TVirtualX::kInvert && newMode != TVirtualX::kInvert)
+      [self removeXorWindow];
+
+   fDrawMode = newMode;
+}
+
+//______________________________________________________________________________
+- (TVirtualX::EDrawMode) getDrawMode
+{
+   return fDrawMode;
 }
 
 
@@ -1982,6 +2033,8 @@ void print_mask_info(ULong_t mask)
       fBackBuffer = nil;
       fID = 0;
 
+      fDirectDraw = NO;
+
       //Passive grab parameters.
       fPassiveGrabButton = -1;//0 is kAnyButton.
       fPassiveGrabEventMask = 0;
@@ -2121,6 +2174,58 @@ void print_mask_info(ULong_t mask)
    frame.size = newSize;
 
    self.frame = frame;
+}
+
+//______________________________________________________________________________
+- (TAttLine *) attLine
+{
+   return &fAttLine;
+}
+
+//______________________________________________________________________________
+- (TAttFill *) attFill
+{
+   return &fAttFill;
+}
+
+//______________________________________________________________________________
+- (TAttMarker *) attMarker
+{
+   return &fAttMarker;
+}
+
+//______________________________________________________________________________
+- (TAttText *) attText
+{
+   return &fAttText;
+}
+
+//______________________________________________________________________________
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode
+{
+   [self.fQuartzWindow setDrawMode:newMode];
+}
+
+//______________________________________________________________________________
+- (TVirtualX::EDrawMode) getDrawMode
+{
+   return [self.fQuartzWindow getDrawMode];
+}
+
+//______________________________________________________________________________
+- (void) setDirectDraw : (BOOL) mode
+{
+   fDirectDraw = mode;
+
+   // while painting operates with the pixmap, set direct flag for it too
+   if (fBackBuffer)
+      [fBackBuffer setDirectDraw : mode];
+}
+
+//______________________________________________________________________________
+- (BOOL) isDirectDraw
+{
+   return fDirectDraw;
 }
 
 //______________________________________________________________________________

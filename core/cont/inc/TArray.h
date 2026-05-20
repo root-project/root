@@ -47,6 +47,8 @@ public:
    Int_t          GetSize() const { return fN; }
    virtual void   Set(Int_t n) = 0;
 
+   inline std::size_t size() const { return GetSize(); }
+
    virtual Double_t GetAt(Int_t i) const = 0;
    virtual void   SetAt(Double_t v, Int_t i) = 0;
 

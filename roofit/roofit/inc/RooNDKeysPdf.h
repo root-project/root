@@ -135,8 +135,8 @@ protected:
 
   bool _fixedShape{false};
   bool _mirror{false};
-  bool _debug{false};   //!
-  bool _verbose{false}; //!
+  bool _debug{false};   ///<!
+  bool _verbose{false}; ///<!
 
   Int_t _nDim{0};
   Int_t _nEvents{0};
@@ -150,9 +150,9 @@ protected:
   std::vector<TVectorD> _dataPtsR;
   std::vector<std::vector<double> > _weights0;            // Plain weights
   std::vector<std::vector<double> > _weights1;            // Weights for adaptive kernels
-  std::vector<std::vector<double> >* _weights{nullptr};   //! Weights to be used. Points either to _weights0 or _weights1
+  std::vector<std::vector<double> >* _weights{nullptr};   ///<! Weights to be used. Points either to _weights0 or _weights1
 
-  std::vector<itVec> _sortTVIdcs; //!
+  std::vector<itVec> _sortTVIdcs; ///<!
 
   mutable std::vector<double> _rho;
   RooArgSet _dataVars;

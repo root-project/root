@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="reco::VZero" ClassVersion="10">
+   <version ClassVersion="10" checksum="698403775"/>
+  </class>
+  <class name="std::vector<reco::VZero>"/>
+  <class name="edm::Wrapper<std::vector<reco::VZero> >"/>
+  <class name="std::pair<Vector3DBase<float,GlobalTag>,Vector3DBase<float,GlobalTag> >"/>
+  <class name="reco::VZeroData" ClassVersion="10">
+   <version ClassVersion="10" checksum="3537029633"/>
+  </class>
+</lcgdict>
+

@@ -25,7 +25,7 @@ namespace ROOT {
 namespace RDF {
 
 /// This type represents a sample identifier, to be used in conjunction with RDataFrame features such as
-/// \ref ROOT::RDF::RInterface< Proxied, DS_t >::DefinePerSample "DefinePerSample()" and per-sample callbacks.
+/// \ref ROOT::RDF::RInterface<Proxied>::DefinePerSample "DefinePerSample()" and per-sample callbacks.
 ///
 /// When the input data comes from a TTree, the string representation of RSampleInfo (which is returned by AsString()
 /// and that can be queried e.g. with Contains()) is of the form "<filename>/<treename>".
@@ -37,6 +37,7 @@ class RSampleInfo {
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
    const ROOT::RDF::Experimental::RSample *fSample = nullptr; // non-owning
+   ULong64_t fTotalEntries = 0;                               // Number of entries in current file (if known).
 
    void ThrowIfNoSample() const
    {
@@ -48,8 +49,8 @@ class RSampleInfo {
 
 public:
    RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-               const ROOT::RDF::Experimental::RSample *sample = nullptr)
-      : fID(id), fEntryRange(entryRange), fSample(sample)
+               const ROOT::RDF::Experimental::RSample *sample = nullptr, ULong64_t totalEntries = 0)
+      : fID(id), fEntryRange(entryRange), fSample(sample), fTotalEntries{totalEntries}
    {
    }
    RSampleInfo() = default;
@@ -121,16 +122,21 @@ public:
    /// Multiple multi-threading tasks might process different entry ranges of the same sample.
    std::pair<ULong64_t, ULong64_t> EntryRange() const { return fEntryRange; }
 
-   /// @brief Return the number of entries of this sample that is being taken into consideration.
+   /// @brief Return the number of entries of this range of the sample.
    ULong64_t NEntries() const { return fEntryRange.second - fEntryRange.first; }
+
+   /// Return the total number of entries in the underlying dataset.
+   /// If the total number of entries is not known, the end of the current range is returned.
+   /// This can be larger than NEntries() if the sample is split in multiple ranges.
+   ULong64_t NEntriesTotal() const { return std::max(fTotalEntries, fEntryRange.second); }
 
    bool operator==(const RSampleInfo &other) const { return fID == other.fID; }
    bool operator!=(const RSampleInfo &other) const { return !(*this == other); }
 };
 
 /// The type of a data-block callback, registered with an RDataFrame computation graph via e.g.  \ref
-/// ROOT::RDF::RInterface< Proxied, DS_t >::DefinePerSample "DefinePerSample()" or by certain actions (e.g. \ref
-/// ROOT::RDF::RInterface<Proxied,DataSource>::Snapshot "Snapshot()").
+/// ROOT::RDF::RInterface<Proxied>::DefinePerSample "DefinePerSample()" or by certain actions (e.g. \ref
+/// ROOT::RDF::RInterface<Proxied>::Snapshot "Snapshot()").
 using SampleCallback_t = std::function<void(unsigned int, const ROOT::RDF::RSampleInfo &)>;
 
 } // namespace RDF

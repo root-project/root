@@ -277,13 +277,15 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 // Helper to report errors in a consistent format (derefs msg).
 //
 // Handles three cases:
-//   1. No Python error occured yet:
+//   1. No Python error occurred yet:
 //      Set a new TypeError with the message "msg" and the docstring of this
 //      C++ method to give some context.
-//   2. A C++ exception has occured:
+//   2. A C++ exception has occurred:
 //      Augment the exception message with the docstring of this method
-//   3. A Python exception has occured:
+//   3. A Python exception has occurred with a traceback:
 //      Do nothing, Python exceptions are already informative enough
+//   4. If the Python exception has no traceback hinting to an internally set error stack,
+//      extract its message and wrap it with C++ method docstring context.
 
 #if PY_VERSION_HEX >= 0x030c0000
     PyObject *evalue = PyErr_Occurred() ? PyErr_GetRaisedException() : nullptr;
@@ -299,16 +301,32 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 #endif
 
     const bool isCppExc = evalue && PyType_IsSubtype((PyTypeObject*)etype, &CPPExcInstance_Type);
- // If the error is not a CPPExcInstance, the error from Python itself is
- // already complete and messing with it would only make it less informative.
+    std::string details;
+
+ // If the error is not a CPPExcInstance and has a traceback, the error from
+ // Python itself is already complete and messing with it would only make it
+ // less informative.
  // Just restore and return.
      if (evalue && !isCppExc) {
 #if PY_VERSION_HEX >= 0x030c0000
-        PyErr_SetRaisedException(evalue);
+         PyObject* tb = PyException_GetTraceback(evalue);
+         if (tb) {
+             Py_DECREF(tb);
+             PyErr_SetRaisedException(evalue);
+             return;
+         }
 #else
-        PyErr_Restore(etype, evalue, etrace);
+         if (etrace) {
+             PyErr_Restore(etype, evalue, etrace);
+             return;
+         }
 #endif
-        return;
+ // no traceback, extract its message and fall through
+         PyObject* descr = PyObject_Str(evalue);
+         if (descr) {
+             details = CPyCppyy_PyText_AsString(descr);
+             Py_DECREF(descr);
+         }
      }
 
     PyObject* doc = GetDocString();
@@ -319,9 +337,15 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
     const char* cname = pyname ? CPyCppyy_PyText_AsString(pyname) : "Exception";
 
     if (!isCppExc) {
-    // this is the case where no Python error has occured yet, and we set a new
-    // error with context info
-        PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
+    // this is the case where no Python error has occured yet, or an internal
+    // one without traceback set a new error with context
+        if (details.empty()) {
+            PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
+        } else if (cmsg) {
+            PyErr_Format(errtype, "%s =>\n    %s: %s (%s)", cdoc, cname, cmsg, details.c_str());
+        } else {
+            PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, details.c_str());
+        }
     } else {
     // augment the top message with context information
         PyObject *&topMessage = ((CPPExcInstance*)evalue)->fTopMessage;
@@ -980,8 +1004,7 @@ PyObject* CPyCppyy::CPPMethod::Execute(void* self, ptrdiff_t offset, CallContext
 // call the interface method
     PyObject* result = 0;
 
-    if (CallContext::sSignalPolicy != CallContext::kProtected && \
-        !(ctxt->fFlags & CallContext::kProtected)) {
+    if (!(CallContext::GlobalPolicyFlags() & CallContext::kProtected) && !(ctxt->fFlags & CallContext::kProtected)) {
     // bypasses try block (i.e. segfaults will abort)
         result = ExecuteFast(self, offset, ctxt);
     } else {
@@ -1053,6 +1076,70 @@ PyObject* CPyCppyy::CPPMethod::GetSignature(bool fa)
 {
 // construct python string from the method's signature
     return CPyCppyy_PyText_FromString(GetSignatureString(fa).c_str());
+}
+
+/**
+ * @brief Returns a tuple with the names of the input parameters of this method.
+ *
+ * For example given a function with prototype:
+ *
+ * double foo(int a, float b, double c)
+ *
+ * this function returns:
+ *
+ * ('a', 'b', 'c')
+ */
+PyObject *CPyCppyy::CPPMethod::GetSignatureNames()
+{
+   // Build a tuple of the argument names for this signature.
+   int argcount = GetMaxArgs();
+   PyObject *signature_names = PyTuple_New(argcount);
+
+   for (int iarg = 0; iarg < argcount; ++iarg) {
+      const std::string &argname_cpp = Cppyy::GetMethodArgName(fMethod, iarg);
+      PyObject *argname_py = CPyCppyy_PyText_FromString(argname_cpp.c_str());
+      PyTuple_SET_ITEM(signature_names, iarg, argname_py);
+   }
+
+   return signature_names;
+}
+
+/**
+ * @brief Returns a dictionary with the types of the signature of this method.
+ *
+ * This dictionary will store both the return type and the input parameter
+ * types of this method, respectively with keys "return_type" and
+ * "input_types", for example given a function with prototype:
+ *
+ * double foo(int a, float b, double c)
+ *
+ * this function returns:
+ *
+ * {'input_types': ('int', 'float', 'double'), 'return_type': 'double'}
+ */
+PyObject *CPyCppyy::CPPMethod::GetSignatureTypes()
+{
+
+   PyObject *signature_types_dict = PyDict_New();
+
+   // Insert the return type first
+   std::string return_type = GetReturnTypeName();
+   PyObject *return_type_py = CPyCppyy_PyText_FromString(return_type.c_str());
+   PyDict_SetItem(signature_types_dict, CPyCppyy_PyText_FromString("return_type"), return_type_py);
+
+   // Build a tuple of the argument types for this signature.
+   int argcount = GetMaxArgs();
+   PyObject *parameter_types = PyTuple_New(argcount);
+
+   for (int iarg = 0; iarg < argcount; ++iarg) {
+      const std::string &argtype_cpp = Cppyy::GetMethodArgType(fMethod, iarg);
+      PyObject *argtype_py = CPyCppyy_PyText_FromString(argtype_cpp.c_str());
+      PyTuple_SET_ITEM(parameter_types, iarg, argtype_py);
+   }
+
+   PyDict_SetItem(signature_types_dict, CPyCppyy_PyText_FromString("input_types"), parameter_types);
+
+   return signature_types_dict;
 }
 
 //----------------------------------------------------------------------------

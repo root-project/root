@@ -53,7 +53,7 @@
 //         : filename with a url query in Add...................... OK
 // ****************************************************************************
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 #include <cstdlib>
 #include <snprintf.h>
@@ -89,9 +89,6 @@ void cleanup();
 
 int main(int argc, char **argv)
 {
-   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
-   TROOT::AddExtraInterpreterArgs({inclRootSys});
-
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    const char *proto = 0;

@@ -1,6 +1,7 @@
 // Author: Rahul Balasubramanian, CERN  12/2021
 
 #include <RooFormulaVar.h>
+#include <RooHelpers.h>
 #include <RooPolyFunc.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
@@ -45,6 +46,8 @@ using Doubles = std::initializer_list<double>;
 
 TEST(RooPolyFunc, WrappedPdfClosure)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooWorkspace ws;
    ws.factory("Polynomial::pdf(x[0., -10., 10.], {c0[1.], c1[1.], c2[1.]}, 0)");
 

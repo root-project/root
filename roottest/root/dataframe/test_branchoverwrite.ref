@@ -1,0 +1,1 @@
+Exception caught: RDataFrame::Define: cannot define column "a". A column with that name is already present in the input data source. Use Redefine to force redefinition.

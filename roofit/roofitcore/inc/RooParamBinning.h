@@ -58,9 +58,9 @@ public:
 
 protected:
 
-  mutable double* _array = nullptr; //! do not persist
-  mutable RooAbsReal* _xlo = nullptr; //!
-  mutable RooAbsReal* _xhi = nullptr; //!
+  mutable double* _array = nullptr; ///<! do not persist
+  mutable RooAbsReal* _xlo = nullptr; ///<!
+  mutable RooAbsReal* _xhi = nullptr; ///<!
   Int_t    _nbins = 100;
   double _binw = 0;
   mutable RooListProxy* _lp = nullptr; //

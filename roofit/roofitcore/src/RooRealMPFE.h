@@ -22,7 +22,7 @@
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
 #include "RooArgList.h"
-#include "TStopwatch.h"
+
 #include <vector>
 
 class RooArgSet ;

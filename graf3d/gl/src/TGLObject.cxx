@@ -30,7 +30,6 @@ TAttBBox can be used to facilitate calculation of bounding-boxes.
 See TPointSet3D and TPointSet3DGL.
 */
 
-ClassImp(TGLObject);
 
 TMap TGLObject::fgGLClassMap;
 

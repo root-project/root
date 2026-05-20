@@ -44,7 +44,7 @@ void fill_tree(const char *filename, const char *treeName)
    };
 
    ROOT::RDataFrame d(64);
-   d.Define("tracks", genTracks).Snapshot<FourVectorVec>(treeName, filename, {"tracks"});
+   d.Define("tracks", genTracks).Snapshot(treeName, filename, {"tracks"});
 }
 
 int df002_dataModel()

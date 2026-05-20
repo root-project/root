@@ -107,7 +107,7 @@ namespace Math {
          MATH_ERROR_MSG("crystalball_integral", "CrystalBall function not defined at alpha=0");
          return 0.;
       }
-      bool useLog = (n == 1.0);
+      bool useLog = (std::abs(n - 1.) < 1.0e-5);
       if (n <= 0)
          MATH_WARN_MSG("crystalball_integral", "No physical meaning when n<=0");
 
@@ -132,11 +132,13 @@ namespace Math {
          double B = r - abs_alpha;
 
          if (!useLog) {
-            intpow = A * (1 - std::pow(r / (B - z), n - 1)) / (n - 1);
+            intpow = A * (1. - std::pow(r / (B - z), n - 1.)) / (n - 1.);
          }
          else {
             // for n=1 the primitive of 1/x is log(x)
-            intpow = A * std::pow(r, n - 1) * (std::log(B - z) - std::log(r));
+            double log_B_z = std::log(B - z);
+            double log_r = std::log(r);
+            intpow = A * std::pow(r, n - 1.) * (log_B_z - log_r + 0.5 * (1. - n) * (log_B_z * log_B_z - log_r * log_r));
          }
          intgaus = sqrtpiover2 * (1. + ROOT::Math::erf(abs_alpha * oneoversqrt2));
       }

@@ -1,0 +1,7 @@
+<lcgdict>
+
+  <class name="AANTEventSelector" />
+  <class name="AANTTreeGate" />
+  <class name="IAnalysisTools" />
+
+</lcgdict>

@@ -57,7 +57,7 @@ public:
    static Int_t CheckForDuplicateLabels(const TH1 * hist);
 
     // function to check if histogram bin is empty
-   static Bool_t IsBinEmpty(const TH1 *hist, Int_t bin);
+   static Bool_t IsBinEmpty(const TH1 *hist, Int_t bin, Int_t profileDim = 0);
 
 
 
@@ -136,8 +136,8 @@ private:
    Bool_t fIsProfile1D = kFALSE;
    Bool_t fIsProfile2D = kFALSE;
    Bool_t fIsProfile3D = kFALSE;
-   TH1 *fH0;                      //! histogram on which the list is merged
-   TH1 *fHClone;                  //! copy of fH0 - managed by this class
+   TH1 *fH0;                      ///<! histogram on which the list is merged
+   TH1 *fHClone;                  ///<! copy of fH0 - managed by this class
    TList fInputList;              // input histogram List
    TAxis fNewXAxis;
    TAxis fNewYAxis;

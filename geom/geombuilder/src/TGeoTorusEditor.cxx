@@ -32,7 +32,6 @@ Editor for a TGeoTorus.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTorusEditor);
 
 enum ETGeoTorusWid {
    kTORUS_NAME,

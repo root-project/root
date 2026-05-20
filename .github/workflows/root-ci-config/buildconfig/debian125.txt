@@ -1,3 +1,0 @@
-mysql=OFF
-pythia8=OFF
-ccache=ON

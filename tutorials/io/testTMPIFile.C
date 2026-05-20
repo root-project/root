@@ -7,7 +7,7 @@
 ///
 /// To run this macro do the following:
 /// ~~~{.bash}
-/// mpirun -np 4 root -b -l -q testTMPIFile.C
+/// mpirun -np 4 root -b -q testTMPIFile.C
 /// ~~~
 ///
 /// \macro_code

@@ -61,7 +61,7 @@ std::pair<std::uint16_t, std::uint16_t> ROOT::Internal::RColumnElementBase::GetV
    default:
       if (type == kTestFutureColumnType)
          return std::make_pair(32, 32);
-      assert(false);
+      R__ASSERT(false);
    }
    // never here
    return std::make_pair(0, 0);
@@ -145,7 +145,7 @@ ROOT::Internal::RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType)
    default:
       if (onDiskType == kTestFutureColumnType)
          return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureColumnType>>();
-      assert(false);
+      R__ASSERT(false);
    }
    //clang-format on
    // never here

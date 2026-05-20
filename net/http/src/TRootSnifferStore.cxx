@@ -18,7 +18,6 @@
 Used to store different results of objects scanning by TRootSniffer
 */
 
-ClassImp(TRootSnifferStore);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set pointer on found element, class and number of childs
@@ -40,7 +39,6 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl, TDataMember *_resm
 Used to store scanned objects hierarchy in XML form
 */
 
-ClassImp(TRootSnifferStoreXml);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// starts new xml node, will be closed by CloseNode
@@ -105,7 +103,6 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 Used to store scanned objects hierarchy in JSON form
 */
 
-ClassImp(TRootSnifferStoreJson);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// starts new json object, will be closed by CloseNode

@@ -29,7 +29,6 @@ it converges faster, but is more time consuming.
 #include "TSpectrum2Fit.h"
 #include "TMath.h"
 
-ClassImp(TSpectrum2Fit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

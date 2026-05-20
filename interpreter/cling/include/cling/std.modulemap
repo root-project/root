@@ -19,10 +19,6 @@ module "std" [system] {
     header "bitset"
   }
   // no module for cassert to stay consistent with the OS X modulemap
-  module "ccomplex" {
-    export *
-    header "ccomplex"
-  }
   module "cctype" {
     export *
     header "cctype"
@@ -48,6 +44,7 @@ module "std" [system] {
     header "cinttypes"
   }
   module "ciso646" {
+    requires !cplusplus20
     export *
     header "ciso646"
   }
@@ -93,17 +90,9 @@ module "std" [system] {
     export *
     header "csignal"
   }
-  module "cstdalign" {
-    export *
-    header "cstdalign"
-  }
   module "cstdarg" {
     export *
     header "cstdarg"
-  }
-  module "cstdbool" {
-    export *
-    header "cstdbool"
   }
   module "cstddef" {
     export *
@@ -131,10 +120,6 @@ module "std" [system] {
   module "cstring" {
     export *
     header "cstring"
-  }
-  module "ctgmath" {
-    export *
-    header "ctgmath"
   }
   module "ctime" {
     export *
@@ -175,6 +160,11 @@ module "std" [system] {
   module "fstream" {
     export *
     header "fstream"
+  }
+  module "format" {
+    requires cplusplus20
+    export *
+    header "format"
   }
   module "functional" {
     export *

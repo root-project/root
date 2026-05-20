@@ -15,7 +15,11 @@ if(davix)
    add_subdirectory(davix)
 endif()
 
-if(netxng)
+if(curl)
+   add_subdirectory(curl)
+endif()
+
+if(xrootd)
    add_subdirectory(netxng)
 endif()
 

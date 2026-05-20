@@ -11,14 +11,18 @@
 #ifndef ROOT_RDF_RDATASETSPEC
 #define ROOT_RDF_RDATASETSPEC
 
+#include <any>
 #include <limits>
 #include <string>
 #include <utility> // std::pair
 #include <vector>
 
 #include <ROOT/RDF/RSample.hxx>
-#include <ROOT/RFriendInfo.hxx>
 #include <RtypesCore.h> // Long64_t
+
+namespace ROOT::TreeUtils {
+struct RFriendInfo;
+}
 
 namespace ROOT {
 namespace Detail {
@@ -75,12 +79,13 @@ public:
 
 private:
    std::vector<RSample> fSamples;             ///< List of samples
-   ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
+   std::any fFriendInfo;  ///< List of friends
    REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
    std::vector<RSample> MoveOutSamples();
+   ROOT::TreeUtils::RFriendInfo &GetFriendInfo();
 
 public:
-   RDatasetSpec() = default;
+   RDatasetSpec() noexcept;
 
    const std::vector<std::string> GetSampleNames() const;
    const std::vector<std::string> GetTreeNames() const;

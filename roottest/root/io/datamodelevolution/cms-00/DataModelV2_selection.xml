@@ -1,0 +1,68 @@
+<lcgdict>
+  <class name="ClassAIns" ClassVersion="3">
+     <field name="m_cache" transient="TRUE" />
+  </class>
+  <class name="ClassAIns::Transient" ClassVersion="2" />
+  <class name="ClassABase" ClassVersion="2" />
+  <class name="ClassA" ClassVersion="3">
+     <field name="m_md_set" transient="TRUE" />
+  </class>
+  <class name="ClassB" ClassVersion="3" />
+  <class name="ClassC" ClassVersion="3" />
+  <class name="ClassD" ClassVersion="3" />
+  <class name="std::vector<float>" />
+  <class name="std::pair<int,float>" />
+  <class name="std::vector<std::pair<int,float> >" />
+  <class name="std::vector<ClassA*>" />
+  <class name="std::vector<double>" />
+  <class name="std::pair<int,double>" />
+  <class name="std::vector<std::pair<int,double> >" />
+  <class name="std::vector<ClassB>" />
+  <class name="std::vector<ClassB*>" />
+  <class name="std::vector<ClassC>" />
+  <class name="std::vector<ClassC*>" />
+  <class name="std::vector<ClassD>" />
+  <class name="std::vector<ClassD*>" />
+  <class name="std::vector<ClassA>" />
+  <read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit;" target="m_unit" >
+  <![CDATA[ { m_unit = 10*onfile.m_unit; } ]]>
+  </read>
+
+  <!-- read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit; ClassAIns m_d;" target="m_d.m_punit">
+  <![CDATA[ { newObj->SetMdPUnit( 10*onfile.m_unit ); } ]]>
+  </read -->
+
+  <ioread sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_md_set">
+  <![CDATA[ { newObj->SetMdUnit( 10*onfile.m_unit ); m_md_set = true; /* newObj->Print(); */ } ]]>
+  </ioread>
+
+  <ioread sourceClass="ClassA" version="[2]" targetClass="ClassA" source="unsigned int m_e" target="m_e">
+  <![CDATA[ {  m_e = onfile.m_e * 10.0; } ]]>
+  </ioread>
+
+  <ioread sourceClass="ClassAIns" version="[1-]" targetClass="ClassAIns" source="" target="m_cache">
+  <![CDATA[ {  m_cache.fCached = true; } ]]>
+  </ioread>
+
+  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000" ClassVersion="2">
+     <field name="m_measurements" transient="true"/>
+     <field name="m_projections" transient="true"/>
+     <field name="m_nothing" transient="true"/>
+     <field name="m_nodes" transient="true"/>
+  </class>
+  <class name="LHCb::Node"/>
+  <class name="LHCb::RefRight" ClassVersion="2"  />
+  <class name="LHCb::RefLeft" ClassVersion="2" />
+  <class name="LHCb::Ref" ClassVersion="2"  />
+  <class name="std::vector<LHCb::Node*>"/>
+
+  <ioread sourceClass=" LHCb::Track" version="[2]" targetClass="LHCb::Track" source="LHCb::RefLeft fLeft; LHCb::RefRight fRight;" target="fRef">
+  <![CDATA[ { fRef.SetLeft(onfile.fLeft.GetValue()); fRef.SetRight(onfile.fRight.GetValue()); } ]]>
+  </ioread>
+
+  <ioread sourceClass=" LHCb::Track" version="[1]" targetClass="LHCb::Track" source="" target="m_Array">
+  <![CDATA[ { m_Array[0] = 1.0; m_Array[1] = 2.0; m_Array[2] = 3.0; } ]]>
+  </ioread>
+
+
+</lcgdict>

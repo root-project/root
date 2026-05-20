@@ -18,7 +18,6 @@ It is used in context menu "selectors" for picking up a value.
 
 #include "TToggleGroup.h"
 
-ClassImp(TToggleGroup);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

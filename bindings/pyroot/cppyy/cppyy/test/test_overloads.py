@@ -1,12 +1,9 @@
-import py
-from pytest import raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+import pytest, os
+from pytest import raises, skip, mark
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("overloadsDict"))
 
-def setup_module(mod):
-    setup_make("overloads")
+test_dct = "overloads_cxx"
 
 
 class TestOVERLOADS:
@@ -376,3 +373,99 @@ class TestOVERLOADS:
         # though implicit construction of the test class is forbidden.
         assert cppyy.gbl.test12_foo(1) == cppyy.gbl.call_test12_foo()
         assert cppyy.gbl.test12_bar(1) == cppyy.gbl.call_test12_bar()
+
+
+    def test13_static_call_from_derived_instance(self):
+        """Test calling a static member function via a derived instance."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            class Base {
+            public:
+                static int StaticMethod() {
+                    return 42;
+                }
+            };
+
+            class Derived : public Base {
+            };
+        """)
+
+        d = cppyy.gbl.Derived()
+
+        # Call static method through base class directly
+        result_direct = cppyy.gbl.Base.StaticMethod()
+
+        # Call static method through instance
+        result_instance = d.StaticMethod()
+
+        assert result_instance == result_direct
+
+
+    def test14_disallow_functor_to_function_pointer(self):
+        """Make sure we're no allowing to convert C++ functors to function
+        pointers, extending the C++ language in an unnatural way that can lead
+        to wrong overload resolutions."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        class Test14Functor {
+        public:
+            double operator () (double* args, double*) {
+                return 4.0 * args[0];
+            }
+        };
+
+        int test14_foo(double (*fcn)(double*, double*)) {
+            return 0;
+        }
+
+        template<class T>
+        int test14_foo(T fcn) {
+            return 1;
+        }
+
+        int test14_bar(double (*fcn)(double*, double*)) {
+            return 0;
+        }
+
+        int test14_baz(double (*fcn)(double*, double*)) {
+            return 0;
+        }
+
+        int test14_baz(std::function<double(double*, double*)> const &fcn) {
+            return 2;
+        }
+        """)
+
+        functor = cppyy.gbl.Test14Functor()
+        assert cppyy.gbl.test14_foo(functor) == 1 # should resolve to foo(T fcn)
+        # not allowed, because there is only an overload taking a function pointer
+        raises(TypeError, cppyy.gbl.test14_bar, functor)
+        # The "baz" function has a std::function overload, which should be selected
+        assert cppyy.gbl.test14_baz(functor) == 2 # should resolve to baz(std::function)
+
+
+    def test15_disallow_mutable_pointer_references(self):
+        """Verify that mutable pointer references (T*&) are not allowed as arguments.
+        """
+
+        import cppyy
+
+        cppyy.cppdef("""
+        struct MyClass {
+           int val = 0;
+        };
+
+        void changePtr(MyClass *& ptr) {}
+        """)
+
+        ptr = cppyy.gbl.MyClass()
+
+        raises(TypeError, cppyy.gbl.changePtr, ptr)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

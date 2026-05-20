@@ -204,6 +204,13 @@ public:
     static_assert(N > 0, "Zero-length array is not permitted in ISO C++.");
   }
 
+  // Note:
+  // This constructor needs to be disabled if T is not a const type, because we
+  // don't want to create span<T> from vector<T> const&.
+  // The explicit disabling via SFINAE is necessary to this overload is not
+  // accidentally taken by cppyy, resulting in the failure of constructor
+  // wrapper code compilation.
+  template <class U = T, class = typename std::enable_if<std::is_const<U>::value>::type>
   /*implicit*/ span(std::vector<typename std::remove_cv<T>::type> const& v) noexcept
      : length_(v.size()), data_(v.empty() ? nullptr : v.data())
   {}

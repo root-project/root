@@ -8,7 +8,7 @@ if(NOT testsupport)
   return()
 endif()
 
-set(libname TestSupport)
+set(libname ${libprefix}TestSupport)
 set(header_dir ROOT/)
 
 add_library(${libname} OBJECT src/TestSupport.cxx)
@@ -16,7 +16,7 @@ target_include_directories(${libname} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/>
   $<INSTALL_INTERFACE:./>
   )
-target_link_libraries(${libname} PUBLIC Core gtest)
+target_link_libraries(${libname} PRIVATE Core GTest::gtest)
 
 # Installation of header and library:
 set_target_properties(${libname} PROPERTIES PUBLIC_HEADER inc/${header_dir}/TestSupport.hxx)
@@ -27,5 +27,5 @@ install(TARGETS ${libname}
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
 # Make it usable inside and outside of ROOT under a single name if somebody writes their own tests using ROOT_ADD_GTEST
-add_library(ROOT::${libname} ALIAS ${libname})
+add_library(ROOT::TestSupport ALIAS ${libname})
 

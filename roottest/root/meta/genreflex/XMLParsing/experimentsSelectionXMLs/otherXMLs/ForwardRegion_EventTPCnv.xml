@@ -1,0 +1,5 @@
+<lcgdict>
+	<class name="SimulationHit_p1" />
+	<class name="std::vector<SimulationHit_p1>" />
+	<class name="SimulationHitCollection_p1" id="DD6CF87F-4D7E-4BF6-9FAC-156DB34C08C7" />
+</lcgdict>

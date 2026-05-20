@@ -36,6 +36,26 @@
 # include "FTGLBitmapFont.h"
 #endif
 
+namespace {
+#ifdef HAVE_UTF8
+// https://github.com/root-project/root/issues/22076#issuecomment-4342764706
+TString AsUTF8(const char *txt)
+{
+   TString utxt;
+   const auto len = strlen(txt);
+   for (auto i = 0UL; i < len; ++i) {
+      if (static_cast<unsigned char>(txt[i]) >= static_cast<unsigned char>(192)) {
+         utxt.Append(static_cast<unsigned char>(0xc3));
+         utxt.Append(static_cast<unsigned char>(0x80) +
+                     (static_cast<unsigned char>(txt[i]) - static_cast<unsigned char>(192)));
+      } else {
+         utxt.Append(txt[i]);
+      }
+   }
+   return utxt;
+}
+#endif
+} // namespace
 
 /** \class TGLFont
 \ingroup opengl
@@ -44,7 +64,6 @@ Holds pointer to FTFont object and its description: face size, font file
 and class ID. It  wraps Render and BBox functions.
 */
 
-ClassImp(TGLFont);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -141,6 +160,10 @@ Float_t TGLFont::GetLineHeight() const
 void TGLFont::MeasureBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height,
                                     const char* txt) const
 {
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   txt = utxt.Data();
+#endif
    Float_t dum, lly, ury;
    const_cast<FTFont*>(fFont)->BBox(txt, dum, lly, dum, dum, ury, dum);
    ascent      =  ury;
@@ -155,6 +178,7 @@ void TGLFont::BBox(const char* txt,
                    Float_t& llx, Float_t& lly, Float_t& llz,
                    Float_t& urx, Float_t& ury, Float_t& urz) const
 {
+   // HAVE_UTF8 was already called by functions above BBox so no need to transform here
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
 }
@@ -166,6 +190,7 @@ void TGLFont::BBox(const wchar_t* txt,
                    Float_t& llx, Float_t& lly, Float_t& llz,
                    Float_t& urx, Float_t& ury, Float_t& urz) const
 {
+   // HAVE_UTF8 was already called by functions above BBox so no need to transform here
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
 }
@@ -177,6 +202,8 @@ void TGLFont::BBox(const wchar_t* txt,
 template<class Char>
 void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t angle, Double_t /*mgn*/) const
 {
+   // no need to check HAVE_UTF8 here, since it was called by functions above it
+
    glPushMatrix();
    //glLoadIdentity();
 
@@ -195,69 +222,37 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
    */
    const Double_t dx = urx - llx, dy = ury - lly;
    Double_t xc = 0., yc = 0.;
-   const UInt_t align = gVirtualX->GetTextAlign();
 
-   //Here's the nice X11 bullshido: you call gVirtualX->SetTextAlign(11),
+   // if align was not set before - use value from gVirtualX
+   const UInt_t align = fTextAlign ? fTextAlign : gVirtualX->GetTextAlign();
+
+   //Timur: Here's the nice X11 bullshido: you call gVirtualX->SetTextAlign(11),
    //later gVirtualX->GetTextAling() will give you 7. Brilliant!
    //But with Cocoa you'll have 11. As it should be, of course.
+   //Sergey: problem with gVirtualX solved, now all platforms works same way
 
-   if (gVirtualX->InheritsFrom("TGCocoa")) {
-      const UInt_t hAlign = UInt_t(align / 10);
-      switch (hAlign) {
-      case 1:
-         xc = 0.5 * dx;
-         break;
-      case 2:
-         break;
-      case 3:
-         xc = -0.5 * dy;
-         break;
-      }
+   const UInt_t hAlign = UInt_t(align / 10);
+   const UInt_t vAlign = UInt_t(align % 10);
+   switch (hAlign) {
+   case 1:
+      xc = 0.5 * dx;
+      break;
+   case 2:
+      break;
+   case 3:
+      xc = -0.5 * dy;
+      break;
+   }
 
-      const UInt_t vAlign = UInt_t(align % 10);
-      switch (vAlign) {
-      case 1:
-         yc = 0.5 * dy;
-         break;
-      case 2:
-         break;
-      case 3:
-         yc = -0.5 * dy;
-         break;
-      }
-   } else {
-      switch (align) {
-      case 7:
-         xc += 0.5 * dx;
-         yc += 0.5 * dy;
-         break;
-      case 8:
-         yc += 0.5 * dy;
-         break;
-      case 9:
-         xc -= 0.5 * dx;
-         yc += 0.5 * dy;
-         break;
-      case 4:
-         xc += 0.5 * dx;
-         break;
-      case 5:
-         break;
-      case 6:
-         xc = -0.5 * dx;
-         break;
-      case 1:
-         xc += 0.5 * dx;
-         yc -= 0.5 * dy;
-         break;
-      case 2:
-         yc -= 0.5 * dy;
-         break;
-      case 3:
-         xc -= 0.5 * dx;
-         yc -= 0.5 * dy;
-         break;
-      }
+   switch (vAlign) {
+   case 1:
+      yc = 0.5 * dy;
+      break;
+   case 2:
+      break;
+   case 3:
+      yc = -0.5 * dy;
+      break;
    }
 
    glTranslated(x, y, 0.);
@@ -275,6 +270,7 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
 
 void TGLFont::Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const
 {
+   // TODO handle UTF8
    RenderHelper(txt, x, y, angle, mgn);
 }
 
@@ -282,6 +278,10 @@ void TGLFont::Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle,
 
 void TGLFont::Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const
 {
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   txt = utxt.Data();
+#endif
    RenderHelper(txt, x, y, angle, mgn);
 }
 
@@ -299,8 +299,14 @@ void TGLFont::Render(const TString &txt) const
       glScalef(1.0f, 1.0f, fDepth);
    }
 
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
    // FTGL is not const correct.
-   const_cast<FTFont*>(fFont)->Render(txt);
+   const_cast<FTFont *>(fFont)->Render(utxt.Data());
+#else
+   // FTGL is not const correct.
+   const_cast<FTFont *>(fFont)->Render(txt.Data());
+#endif
 
    if (scaleDepth) {
       glPopMatrix();
@@ -310,8 +316,8 @@ void TGLFont::Render(const TString &txt) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Render text with given alignmentrepl and at given position.
 
-void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
-             ETextAlignH_e alignH, ETextAlignV_e alignV) const
+void TGLFont::Render(const TString &txt, Float_t x, Float_t y, Float_t z, ETextAlignH_e alignH,
+                     ETextAlignV_e alignV) const
 {
    glPushMatrix();
 
@@ -319,7 +325,13 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
 
    x=0, y=0;
    Float_t llx, lly, llz, urx, ury, urz;
-   BBox(txt, llx, lly, llz, urx, ury, urz);
+
+#ifdef HAVE_UTF8
+   TString utxt = AsUTF8(txt);
+   BBox(utxt.Data(), llx, lly, llz, urx, ury, urz);
+#else
+   BBox(txt.Data(), llx, lly, llz, urx, ury, urz);
+#endif
 
    switch (alignH)
    {
@@ -355,7 +367,27 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
    {
       glTranslatef(x, y, 0);
    }
-   Render(txt);
+
+   Bool_t scaleDepth = (fMode == kExtrude && fDepth != 1.0f);
+
+   if (scaleDepth) {
+      glPushMatrix();
+      // !!! 0.2*fSize is hard-coded in TGLFontManager::GetFont(), too.
+      glTranslatef(0.0f, 0.0f, 0.5f * fDepth * 0.2f * fSize);
+      glScalef(1.0f, 1.0f, fDepth);
+   }
+
+#ifdef HAVE_UTF8
+   // FTGL is not const correct.
+   const_cast<FTFont *>(fFont)->Render(utxt.Data());
+#else
+   // FTGL is not const correct.
+   const_cast<FTFont *>(fFont)->Render(txt.Data());
+#endif
+
+   if (scaleDepth) {
+      glPopMatrix();
+   }
    glPopMatrix();
 }
 
@@ -416,7 +448,6 @@ Each GL rendering context has an instance of FTGLManager.
 This enables FTGL fonts to be shared same way as textures and display lists.
 */
 
-ClassImp(TGLFontManager);
 
 TObjArray   TGLFontManager::fgFontFileArray;
 Int_t TGLFontManager::fgExtendedFontStart;

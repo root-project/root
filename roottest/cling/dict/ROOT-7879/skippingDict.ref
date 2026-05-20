@@ -1,0 +1,1 @@
+class __attribute__((annotate("$clingAutoload$skippingHeader.h")))  MyClass;

@@ -83,10 +83,10 @@ namespace TMVA {
 
       virtual ~MethodPDEFoam( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training methods
-      void Train( void );
+      void Train( void ) override;
       void TrainMonoTargetRegression( void );    // Regression output: one value
       void TrainMultiTargetRegression( void );   // Regression output: any number of values
       void TrainSeparatedClassification( void ); // Classification: one foam for Sig, one for Bg
@@ -96,11 +96,11 @@ namespace TMVA {
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to stream
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from stream
-      void ReadWeightsFromStream( std::istream & i );
-      void ReadWeightsFromXML   ( void* wghtnode );
+      void ReadWeightsFromStream( std::istream & i ) override;
+      void ReadWeightsFromXML   ( void* wghtnode ) override;
 
       // write/read pure foams to/from file
       void WriteFoamsToFile() const;
@@ -108,19 +108,19 @@ namespace TMVA {
       PDEFoam* ReadClonedFoamFromFile(TFile*, const TString&);
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // calculate multiclass MVA values
-      const std::vector<Float_t>& GetMulticlassValues();
+      const std::vector<Float_t>& GetMulticlassValues() override;
 
       // regression procedure
-      virtual const std::vector<Float_t>& GetRegressionValues();
+      const std::vector<Float_t>& GetRegressionValues() override;
 
       // reset the method
-      virtual void Reset();
+      void Reset() override;
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       // get number of cuts in every dimension, starting at cell
       void GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts);
@@ -135,10 +135,10 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
       // calculate the error on the Mva value
       Double_t CalculateMVAError();
@@ -164,9 +164,9 @@ namespace TMVA {
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void DeclareCompatibilityOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void DeclareCompatibilityOptions() override;
+      void ProcessOptions() override;
 
       // nice output
       void PrintCoefficients( void );
@@ -207,9 +207,9 @@ namespace TMVA {
       std::vector<PDEFoam*> fFoam;    ///< grown PDEFoams
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init( void ) override;
 
-      ClassDef(MethodPDEFoam,0); // Multi-dimensional probability density estimator using TFoam (PDE-Foam)
+      ClassDefOverride(MethodPDEFoam,0); // Multi-dimensional probability density estimator using TFoam (PDE-Foam)
    };
 
 } // namespace TMVA

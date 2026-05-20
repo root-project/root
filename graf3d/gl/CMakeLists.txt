@@ -17,11 +17,6 @@ if(x11)
   set(RGL_EXTRA_SOURCES TX11GL.cxx)
 endif()
 
-
-if(builtin_gl2ps)
-  set(RGL_EXTRA_SOURCES ${RGL_EXTRA_SOURCES} src/gl2ps.cxx)
-endif()
-
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 
@@ -194,6 +189,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     src/TGLViewerEditor.cxx
     src/TGLVoxelPainter.cxx
     src/TGLWidget.cxx
+    src/TGLWSIncludes.h
     src/TH2GL.cxx
     src/TH3GL.cxx
     src/TKDEAdapter.cxx
@@ -207,9 +203,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     OpenGL::GL
     OpenGL::GLU
     ${FTGL_LIBRARIES}
-    ${GL2PS_LIBRARIES}
+    gl2ps::gl2ps
+    Freetype::Freetype
+    ZLIB::ZLIB
     ${X11_LIBRARIES}
-    RGlew
+    ROOTGlad
   DEPENDENCIES
     Hist
     Gui
@@ -220,23 +218,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     ${installoptions}
 )
 
+
 target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
      ${FTGL_INCLUDE_DIR}
-     ${FREETYPE_INCLUDE_DIRS}
 )
-
-if(builtin_gl2ps)
-  target_include_directories(RGL PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gl2ps)
-else()
-  target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
-endif()
-
-
-if(MSVC)
-  target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
-endif()
 
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
+endif()
+
+if(FTGL_VERSION VERSION_GREATER 2.1.2)
+  target_compile_definitions(RGL PRIVATE HAVE_UTF8)
 endif()

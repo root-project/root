@@ -26,7 +26,6 @@
 #include "TStyle.h"
 #include "TMath.h"
 
-ClassImp(TTeXDump);
 
 /** \class TTeXDump
 \ingroup PS
@@ -850,6 +849,15 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    PrintFast(2,"]{");
    PrintStr(t.Data());
    PrintFast(2,"};");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL. Same as Text.
+///
+
+void TTeXDump::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+{
+   Text(x, y, chars);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

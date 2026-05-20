@@ -18,7 +18,7 @@
 
 #include "QuartzText.h"
 #include "CocoaUtils.h"
-#include "TVirtualX.h"
+#include "TAttText.h"
 #include "TColor.h"
 #include "TError.h"
 #include "TROOT.h"
@@ -264,7 +264,7 @@ void TextLine::Init(const std::vector<UniChar> &unichars, UInt_t nAttribs, CFStr
 }
 
 //_________________________________________________________________
-void TextLine::DrawLine(CGContextRef ctx)const
+void TextLine::DrawLine(CGContextRef ctx) const
 {
    assert(ctx != 0 && "DrawLine, ctx parameter is null");
    CTLineDraw(fCTLine, ctx);
@@ -272,7 +272,7 @@ void TextLine::DrawLine(CGContextRef ctx)const
 
 
 //______________________________________________________________________________
-void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
+void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y, const TAttText &att) const
 {
    assert(ctx != 0 && "DrawLine, ctx parameter is null");
 
@@ -282,7 +282,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
    GetBounds(w, h);
 
    Double_t xc = 0., yc = 0.;
-   const UInt_t hAlign = UInt_t(gVirtualX->GetTextAlign() / 10);
+   Int_t hAlign = att.GetTextAlign() / 10;
    switch (hAlign) {
    case 1:
       xc = 0.5 * w;
@@ -294,7 +294,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
       break;
    }
 
-   const UInt_t vAlign = UInt_t(gVirtualX->GetTextAlign() % 10);
+   Int_t vAlign = att.GetTextAlign() % 10;
    switch (vAlign) {
    case 1:
       yc = 0.5 * h;
@@ -308,7 +308,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
 
    CGContextSetTextPosition(ctx, 0., 0.);
    CGContextTranslateCTM(ctx, x, y);
-   CGContextRotateCTM(ctx, gVirtualX->GetTextAngle() * TMath::DegToRad());
+   CGContextRotateCTM(ctx, att.GetTextAngle() * TMath::DegToRad());
    CGContextTranslateCTM(ctx, xc, yc);
    CGContextTranslateCTM(ctx, -0.5 * w, -0.5 * h);
 

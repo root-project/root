@@ -91,7 +91,6 @@ S. Jadach, Computer Physics Communications 152 (2003) 55.
 #include "TMath.h"
 #include "TInterpreter.h"
 
-ClassImp(TFoam);
 
 //FFFFFF  BoX-FORMATs for nice and flexible outputs
 #define BXOPE std::cout<<\
@@ -320,8 +319,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 
 void TFoam::Initialize()
 {
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
    Int_t i;
 
    if(fChat>0){
@@ -435,7 +433,6 @@ void TFoam::Initialize()
       BXCLO;
    }
    if(fChat==2) PrintCells();
-   TH1::AddDirectory(addStatus);
 } // Initialize
 
 ////////////////////////////////////////////////////////////////////////////////

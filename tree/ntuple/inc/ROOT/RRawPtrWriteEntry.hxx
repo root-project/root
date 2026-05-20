@@ -28,15 +28,13 @@ namespace ROOT {
 
 class RNTupleModel;
 
-namespace Experimental {
-
 class RNTupleFillContext;
 
 namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RRawPtrWriteEntry
+\class ROOT::Detail::RRawPtrWriteEntry
 \ingroup NTuple
 \brief A container of const raw pointers, corresponding to a row in the data set
 
@@ -46,7 +44,7 @@ provided by REntry, with safe interfaces, type checks, and shared object ownersh
 // clang-format on
 class RRawPtrWriteEntry {
    friend class ROOT::RNTupleModel;
-   friend class ROOT::Experimental::RNTupleFillContext;
+   friend class ROOT::RNTupleFillContext;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID
@@ -121,7 +119,6 @@ public:
 };
 
 } // namespace Detail
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

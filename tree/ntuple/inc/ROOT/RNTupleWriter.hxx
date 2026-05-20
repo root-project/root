@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawPtrWriteEntry.hxx>
 
@@ -37,6 +37,23 @@ namespace ROOT {
 
 class RNTupleWriteOptions;
 
+namespace Experimental {
+class RNTupleAttrSetWriterHandle;
+class RFile;
+
+/// Creates an RNTupleWriter that writes into the given `file`, appending to it. The RNTuple is written under the
+/// path `ntuplePath`.
+/// `ntuplePath` may have the form `"path/to/ntuple"`, in which case the ntuple's name will be `"ntuple"` and it will
+/// be stored under the given `ntuplePath` in the RFile.
+/// Throws an exception if the model is null.
+/// NOTE: this is a temporary, experimental API that will be replaced by an overload of RNTupleWriter::Append in the
+/// future.
+std::unique_ptr<RNTupleWriter>
+RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
+                     ROOT::Experimental::RFile &file,
+                     const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+} // namespace Experimental
+
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
@@ -49,23 +66,68 @@ CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<I
 \ingroup NTuple
 \brief An RNTuple that gets filled with entries (data) and writes them to storage
 
-An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
-is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
-writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
+RNTupleWriter is an interface for writing RNTuples to storage. It can be instantiated using the static functions
+Append() and Recreate(), providing an RNTupleModel that defines the schema of the data to be written.
+
+An RNTuple can be thought of as a table, whose columns are defined by its schema (i.e. by its associated RNTupleModel,
+whose Fields map to 0 or more columns).
+Writing into an RNTuple happens by filling *entries* into the RNTupleWriter, which make up the rows of the table.
+The simplest way to do so is by:
+
+- retrieving a (shared) pointer to each Field's value;
+- writing a value into each pointer;
+- calling `writer->Fill()` to commit the entry with all the current pointer values.
+
+~~~ {.cpp}
+#include <ROOT/RNTupleWriter.hxx>
+
+/// 1. Create the model.
+auto model = ROOT::RNTupleModel::Create();
+// Define the schema by adding Fields to the model.
+// MakeField returns a shared_ptr to the value to be written (in this case, a shared_ptr<int>)
+auto pFoo = model->MakeField<int>("foo");
+
+/// 2. Create writer from the model.
+auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
+
+/// 3. Write into it.
+for (int i = 0; i < 10; ++i) {
+   // Assign the value you want to each RNTuple Field (in this case there is only one Field "foo").
+   *pFoo = i;
+
+   // Fill() writes the entire entry to the RNTuple.
+   // After calling Fill() you can safely write another value into `pFoo` knowing that the previous one was
+   // already saved.
+   writer->Fill();
+}
+
+// On destruction, the writer will flush the written data to disk.
+~~~
+
+The caller has to make sure that the data that gets filled into an RNTuple is not modified for the time of the
+Fill() call. The Fill call serializes the C++ object into the column format and
+writes data into the corresponding column page buffers.
+
+The actual writing of the buffers to storage is deferred and can be triggered by FlushCluster() or by
+destructing the writer.
+
+On I/O errors, a ROOT::RException is thrown.
+
 */
 // clang-format on
 class RNTupleWriter {
    friend ROOT::RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
       Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
+   friend std::unique_ptr<RNTupleWriter>
+   Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
+                                      ROOT::Experimental::RFile &file, const ROOT::RNTupleWriteOptions &options);
 
 private:
-   /// The page sink's parallel page compression scheduler if IMT is on.
-   /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
-   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fZipTasks;
-   Experimental::RNTupleFillContext fFillContext;
+   RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
+   /// All the Attribute Sets created from this Writer.
+   std::vector<std::shared_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
@@ -77,25 +139,48 @@ private:
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
+   void CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet);
+
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
                                                 std::unique_ptr<Internal::RPageSink> sink,
                                                 const ROOT::RNTupleWriteOptions &options);
 
 public:
-   /// Throws an exception if the model is null.
+   /// Creates an RNTupleWriter backed by `storage`, overwriting it if one with the same URI exists.
+   /// The format of the backing storage is determined by `storage`: in the simplest case it will be a local file, but
+   /// a different backend may be selected via the URI prefix.
+   ///
+   /// The RNTupleWriter will create an RNTuple with the schema determined by `model` (which must not be null) and
+   /// with name `ntupleName`. This same name can later be used to read back the RNTuple via RNTupleReader.
+   ///
+   /// \param model The RNTupleModel describing the schema of the RNTuple written by this writer
+   /// \param ntupleName The name of the RNTuple to be written
+   /// \param storage The URI where the RNTuple will be stored (usually just a file name or path)
+   /// \param options May be passed to customize the behavior of the RNTupleWriter (see also RNTupleWriteOptions).
+   ///
+   /// Throws a ROOT::RException if the model is null.
    static std::unique_ptr<RNTupleWriter>
    Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+
+   /// Convenience function allowing to call Recreate() with an inline-defined model.
    static std::unique_ptr<RNTupleWriter>
    Recreate(std::initializer_list<std::pair<std::string_view, std::string_view>> fields, std::string_view ntupleName,
             std::string_view storage, const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
-   /// Throws an exception if the model is null.
+
+   /// Creates an RNTupleWriter that writes into an existing TFile or TDirectory, without overwriting its content.
+   /// `fileOrDirectory` may be an empty TFile and its reference **must remain valid** for the lifetime of the
+   /// RNTupleWriter (which means the TDirectory object must not be moved, destroyed or replaced during that time).
+   /// \see Recreate()
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+
    RNTupleWriter(const RNTupleWriter &) = delete;
    RNTupleWriter &operator=(const RNTupleWriter &) = delete;
+   RNTupleWriter(RNTupleWriter &&) = delete;
+   RNTupleWriter &operator=(RNTupleWriter &&) = delete;
    ~RNTupleWriter();
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used.
@@ -112,10 +197,10 @@ public:
    /// Fill an RRawPtrWriteEntry into this ntuple.  This method will check the entry's model ID to ensure it comes from
    /// the writer's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill(Experimental::Detail::RRawPtrWriteEntry &entry) { return fFillContext.Fill(entry); }
+   std::size_t Fill(ROOT::Detail::RRawPtrWriteEntry &entry) { return fFillContext.Fill(entry); }
    /// Fill an RRawPtrWriteEntry into this ntuple, but don't commit the cluster. The calling code must pass an
    /// RNTupleFillStatus and check RNTupleFillStatus::ShouldFlushCluster.
-   void FillNoFlush(Experimental::Detail::RRawPtrWriteEntry &entry, RNTupleFillStatus &status)
+   void FillNoFlush(ROOT::Detail::RRawPtrWriteEntry &entry, RNTupleFillStatus &status)
    {
       fFillContext.FillNoFlush(entry, status);
    }
@@ -138,7 +223,7 @@ public:
    void CommitDataset();
 
    std::unique_ptr<ROOT::REntry> CreateEntry() const { return fFillContext.CreateEntry(); }
-   std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
+   std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
    {
       return fFillContext.CreateRawPtrWriteEntry();
    }
@@ -160,6 +245,8 @@ public:
    /// Get a RNTupleModel::RUpdater that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
    ///
+   /// Note that a Model may not be extended with Streamer fields.
+   ///
    /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>
@@ -178,6 +265,21 @@ public:
    {
       return std::make_unique<ROOT::RNTupleModel::RUpdater>(*this);
    }
+
+   /// Creates a new Attribute Set called `name` associated to this Writer and returns a non-owning pointer to it.
+   /// The lifetime of the Attribute Set ends at the same time as the Writer's.
+   /// If `options` are passed, they will be used for the attribute set writer; otherwise, they will be derived from
+   /// the main writer.
+   /// \warning Currently this is only supported for writers created via RNTupleWriter::Append(). This limitation
+   /// will be lifted in the future.
+   ROOT::Experimental::RNTupleAttrSetWriterHandle
+   CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name,
+                      const ROOT::RNTupleWriteOptions *options = nullptr);
+
+   /// Writes the given AttributeSet to the underlying storage and closes it. This method is only useful if you
+   /// want to close the AttributeSet early: otherwise it will automatically closed when the RNTupleWriter gets
+   /// destroyed.
+   void CloseAttributeSet(ROOT::Experimental::RNTupleAttrSetWriterHandle handle);
 }; // class RNTupleWriter
 
 } // namespace ROOT

@@ -54,9 +54,9 @@ namespace TMVA
       // main function used by PDEFoam
       // returns discriminant density N_class/N_total at a given point
       // by range searching in BST
-      virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density);
+      Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density) override;
 
-      ClassDef(PDEFoamDiscriminantDensity, 1) //Class for Discriminant density
+      ClassDefOverride(PDEFoamDiscriminantDensity, 1) //Class for Discriminant density
          };  //end of PDEFoamDiscriminantDensity
 
 }  // namespace TMVA

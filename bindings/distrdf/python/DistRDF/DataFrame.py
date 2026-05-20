@@ -13,14 +13,13 @@ from __future__ import annotations
 
 import itertools
 import logging
+from typing import TYPE_CHECKING, Any, List
 
-from typing import Any, List, TYPE_CHECKING
-
-from DistRDF import Proxy
-from DistRDF.Operation import SUPPORTED_OPERATIONS
+from . import Proxy
+from .Operation import SUPPORTED_OPERATIONS
 
 if TYPE_CHECKING:
-    from DistRDF.HeadNode import HeadNode
+    from .HeadNode import HeadNode
 
 logger = logging.getLogger(__name__)
 

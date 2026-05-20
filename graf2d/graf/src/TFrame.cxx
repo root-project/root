@@ -13,7 +13,6 @@
 #include "TFrame.h"
 #include "TStyle.h"
 
-ClassImp(TFrame);
 
 /** \class TFrame
 \ingroup BasicGraphics

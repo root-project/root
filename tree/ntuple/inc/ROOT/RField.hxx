@@ -18,7 +18,7 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
 #include <ROOT/TypeTraits.hxx>
@@ -49,21 +49,46 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+class RFieldZero;
+namespace Internal {
+void SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val);
+}
+
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero final : public RFieldBase {
+   friend void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &, bool);
+
+   /// If field substitutions are allowed, upon connecting to a page source the field hierarchy will replace created
+   /// fields by fields that match the on-disk schema. This happens for
+   ///     - Vector fields (RVectorField, RRVecField) that connect to an on-disk fixed-size array
+   ///     - Streamer fields that connect to an on-disk class field
+   /// Field substitutions must not be enabled when the field hierarchy already handed out RValue objects because
+   /// they would leave dangling field pointers to the replaced fields. This is used in cases when the field/model
+   /// is created by RNTuple (not imposed), before it is made available to the user.
+   /// This flag is reset on Clone().
+   bool fAllowFieldSubstitutions = false;
+
+   std::unordered_set<std::string> fSubfieldNames; ///< Efficient detection of duplicate field names
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
 
 public:
-   RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */) {}
+   RFieldZero();
 
-   using RFieldBase::Attach;
+   /// A public version of the Attach method that allows piece-wise construction of the zero field.
+   /// Will throw on duplicate subfield names.
+   void Attach(std::unique_ptr<RFieldBase> child);
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+
+   bool GetAllowFieldSubstitutions() const { return fAllowFieldSubstitutions; }
+   /// Moves all subfields into the returned vector.
+   std::vector<std::unique_ptr<RFieldBase>> ReleaseSubfields();
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
@@ -71,7 +96,7 @@ public:
 /// future RNTuple versions (e.g. an unknown Structure)
 class RInvalidField final : public RFieldBase {
 public:
-   enum class RCategory {
+   enum class ECategory {
       /// Generic unrecoverable error
       kGeneric,
       /// The type given to RFieldBase::Create was invalid
@@ -82,9 +107,11 @@ public:
       kUnknownStructure,
    };
 
+   using RCategory R__DEPRECATED(6, 42, "enum renamed to ECategory") = ECategory;
+
 private:
    std::string fError;
-   RCategory fCategory;
+   ECategory fCategory;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -94,14 +121,14 @@ protected:
    void ConstructValue(void *) const final {}
 
 public:
-   RInvalidField(std::string_view name, std::string_view type, std::string_view error, RCategory category)
-      : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, false /* isSimple */), fError(error), fCategory(category)
+   RInvalidField(std::string_view name, std::string_view type, std::string_view error, ECategory category)
+      : RFieldBase(name, type, ROOT::ENTupleStructure::kPlain, false /* isSimple */), fError(error), fCategory(category)
    {
       fTraits |= kTraitInvalidField;
    }
 
    const std::string &GetError() const { return fError; }
-   RCategory GetCategory() const { return fCategory; }
+   ECategory GetCategory() const { return fCategory; }
 
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
@@ -110,12 +137,12 @@ public:
 /// The field for a class with dictionary
 class RClassField : public RFieldBase {
 private:
-   enum ESubFieldRole {
+   enum ESubfieldRole {
       kBaseClass,
       kDataMember,
    };
-   struct RSubFieldInfo {
-      ESubFieldRole fRole;
+   struct RSubfieldInfo {
+      ESubfieldRole fRole;
       std::size_t fOffset;
    };
    // Information to read into the staging area a field that is used as an input to an I/O customization rule
@@ -139,7 +166,7 @@ private:
 
    TClass *fClass;
    /// Additional information kept for each entry in `fSubfields`
-   std::vector<RSubFieldInfo> fSubfieldsInfo;
+   std::vector<RSubfieldInfo> fSubfieldsInfo;
    std::size_t fMaxAlignment = 1;
 
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
@@ -155,7 +182,7 @@ private:
 private:
    RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, TClass *classp);
-   void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
+   void Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info);
 
    /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
    /// member exist. Looks recursively in base classes.
@@ -184,7 +211,9 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
-   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
@@ -197,6 +226,9 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
+   /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type
+   /// of any user object. If the class is not polymorphic, return nullptr.
+   const std::type_info *GetPolymorphicTypeInfo() const;
    /// Return the TClass instance backing this field.
    const TClass *GetClass() const { return fClass; }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
@@ -216,7 +248,7 @@ private:
 
    TClass *fClass = nullptr;
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
-   ROOT::Internal::RColumnIndex fIndex;                           ///< number of bytes written in the current cluster
+   ROOT::Internal::RColumnIndex fIndex; ///< number of bytes written in the current cluster
 
 private:
    RStreamerField(std::string_view fieldName, TClass *classp);
@@ -240,7 +272,8 @@ protected:
    // Returns the list of seen streamer infos
    ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
-   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &source) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RStreamerField(std::string_view fieldName, std::string_view className);
@@ -271,6 +304,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
    REnumField(REnumField &&other) = default;
@@ -287,7 +322,7 @@ public:
 template <typename T, typename = void>
 class RField final : public RClassField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetRenormalizedDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, Internal::GetDemangledTypeName(typeid(T)))
    {
       static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
@@ -300,7 +335,7 @@ public:
 template <typename T>
 class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> final : public REnumField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
    RField(std::string_view name) : REnumField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
@@ -327,7 +362,7 @@ private:
 
 protected:
    RCardinalityField(std::string_view fieldName, std::string_view typeName)
-      : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+      : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
    {
    }
 
@@ -335,6 +370,8 @@ protected:
    // Field is only used for reading
    void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RCardinalityField(RCardinalityField &&other) = default;
@@ -349,18 +386,33 @@ public:
 
 template <typename T>
 class RSimpleField : public RFieldBase {
+   void ReconcileIntegralField(const RNTupleDescriptor &desc);
+   void ReconcileFloatingPointField(const RNTupleDescriptor &desc);
+
 protected:
    void GenerateColumns() override { GenerateColumnsImpl<T>(); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
-public:
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) override
+   {
+      if constexpr (std::is_integral_v<T>) {
+         ReconcileIntegralField(desc);
+      } else if constexpr (std::is_floating_point_v<T>) {
+         ReconcileFloatingPointField(desc);
+      } else {
+         RFieldBase::ReconcileOnDiskField(desc);
+      }
+   }
+
    RSimpleField(std::string_view name, std::string_view type)
-      : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, true /* isSimple */)
+      : RFieldBase(name, type, ROOT::ENTupleStructure::kPlain, true /* isSimple */)
    {
       fTraits |= kTraitTrivialType;
    }
+
+public:
    RSimpleField(RSimpleField &&other) = default;
    RSimpleField &operator=(RSimpleField &&other) = default;
    ~RSimpleField() override = default;
@@ -390,18 +442,21 @@ public:
 #include "RField/RFieldProxiedCollection.hxx"
 #include "RField/RFieldRecord.hxx"
 #include "RField/RFieldSequenceContainer.hxx"
+#include "RField/RFieldSoA.hxx"
 #include "RField/RFieldSTLMisc.hxx"
 
 namespace ROOT {
 
 template <typename SizeT>
 class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
+   using CardinalityType = RNTupleCardinality<SizeT>;
+
 protected:
    std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RField<RNTupleCardinality<SizeT>>>(newName);
+      return std::make_unique<RField>(newName);
    }
-   void ConstructValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
+   void ConstructValue(void *where) const final { new (where) CardinalityType(0); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final
@@ -409,7 +464,7 @@ protected:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
+      *static_cast<CardinalityType *>(to) = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -418,7 +473,7 @@ protected:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
-      *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
+      *static_cast<CardinalityType *>(to) = size;
    }
 
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
@@ -427,7 +482,7 @@ protected:
       ROOT::NTupleSize_t collectionSize;
       fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
 
-      auto typedValues = static_cast<RNTupleCardinality<SizeT> *>(bulkSpec.fValues);
+      auto typedValues = static_cast<CardinalityType *>(bulkSpec.fValues);
       typedValues[0] = collectionSize;
 
       auto lastOffset = collectionStart.GetIndexInCluster() + collectionSize;
@@ -455,8 +510,8 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
-   size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
+   size_t GetValueSize() const final { return sizeof(CardinalityType); }
+   size_t GetAlignment() const final { return alignof(CardinalityType); }
 };
 
 /// TObject requires special handling of the fBits and fUniqueID members
@@ -480,8 +535,6 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
-   void AfterConnectPageSource() final;
-
 public:
    static std::string TypeName() { return "TObject"; }
 
@@ -498,18 +551,32 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
-// Has to be implemented after the definition of all RField<T> types
-// The void type is specialized in RField.cxx
+// Have to be implemented after the definition of all RField<T> types
+
+namespace Internal {
+
+/// Helper to check if a given type name is the one expected of Field<T>. Usually, this check can be done by
+/// type renormalization of the demangled type name T. The failure case, however, needs to additionally check for
+/// ROOT-specific special cases.
+template <class T>
+bool IsMatchingFieldType(const std::string &actualTypeName)
+{
+   return IsMatchingFieldType(actualTypeName, ROOT::RField<T>::TypeName(), typeid(T));
+}
+
+} // namespace Internal
 
 template <typename T>
 std::unique_ptr<T, typename RFieldBase::RCreateObjectDeleter<T>::deleter> RFieldBase::CreateObject() const
 {
-   if (GetTypeName() != RField<T>::TypeName()) {
+   if (!Internal::IsMatchingFieldType<T>(GetTypeName())) {
       throw RException(
          R__FAIL("type mismatch for field " + GetFieldName() + ": " + GetTypeName() + " vs. " + RField<T>::TypeName()));
    }
    return std::unique_ptr<T>(static_cast<T *>(CreateObjectRawPtr()));
 }
+
+// The void type is specialized in RField.cxx
 
 template <>
 struct RFieldBase::RCreateObjectDeleter<void> {

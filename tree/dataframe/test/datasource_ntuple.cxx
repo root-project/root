@@ -1,4 +1,5 @@
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RVec.hxx>
 
@@ -14,6 +15,9 @@
 #include "ClassWithArrays.h"
 
 #include <limits>
+#include <typeinfo>
+
+#include <TFile.h>
 
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriter;
@@ -64,8 +68,10 @@ protected:
       auto fldElectron = model->MakeField<Electron>("electron");
       fldElectron->pt = 137.0;
       auto fldVecElectron = model->MakeField<std::vector<Electron>>("VecElectron");
-      fldVecElectron->push_back(*fldElectron);
-      fldVecElectron->push_back(*fldElectron);
+      for (int i = 0; i < 128; ++i)
+         fldVecElectron->push_back(*fldElectron);
+      auto fldNElectron = std::make_unique<ROOT::RField<ROOT::RNTupleCardinality<std::uint64_t>>>("nElectron");
+      model->AddProjectedField(std::move(fldNElectron), [](const std::string &) { return "VecElectron"; });
       {
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNtplName, fFileName);
          ntuple->Fill();
@@ -82,7 +88,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    RNTupleDS ds(fNtplName, fFileName);
 
    auto colNames = ds.GetColumnNames();
-   ASSERT_EQ(15, colNames.size());
+   ASSERT_EQ(16, colNames.size());
 
    EXPECT_TRUE(ds.HasColumn("pt"));
    EXPECT_TRUE(ds.HasColumn("energy"));
@@ -94,12 +100,14 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_VecElectron"));
    EXPECT_TRUE(ds.HasColumn("VecElectron.pt"));
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_VecElectron.pt"));
+   EXPECT_TRUE(ds.HasColumn("nElectron"));
    EXPECT_FALSE(ds.HasColumn("Address"));
 
    EXPECT_STREQ("std::string", ds.GetTypeName("tag").c_str());
    EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
-   EXPECT_STREQ("std::size_t", ds.GetTypeName("R_rdf_sizeof_jets").c_str());
+   EXPECT_EQ(ROOT::Internal::GetRenormalizedTypeName(typeid(std::size_t)), ds.GetTypeName("R_rdf_sizeof_jets"));
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
+   EXPECT_STREQ("std::uint64_t", ds.GetTypeName("nElectron").c_str());
 
    try {
       ds.GetTypeName("Address");
@@ -122,7 +130,7 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
 
    // Check that the special column #<collection> works without jitting...
    auto identity = [](std::size_t sz) { return sz; };
-   auto max_njets = df.Define("njets", identity, {"R_rdf_sizeof_jets"}).Max<std::size_t>("njets");
+   auto max_njets = df.Define("njets", identity, {"R_rdf_sizeof_jets"}).Max("njets");
    auto max_njets2 = df.Max<std::size_t>("#jets");
    auto max_rvec = df.Max<std::size_t>("#rvec");
    EXPECT_EQ(*max_njets, *max_njets2);
@@ -130,14 +138,35 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
    EXPECT_EQ(*max_rvec, 3);
 
    // ...and with jitting
-   auto max_njets_jitted = df.Define("njets", "R_rdf_sizeof_jets").Max<std::size_t>("njets");
-   auto max_njets_jitted2 = df.Define("njets", "#jets").Max<std::size_t>("njets");
+   auto max_njets_jitted = df.Define("njets", "R_rdf_sizeof_jets").Max("njets");
+   auto max_njets_jitted2 = df.Define("njets", "#jets").Max("njets");
    auto max_njets_jitted3 = df.Max("#jets");
    auto max_rvec2 = df.Max("#rvec");
    EXPECT_EQ(*max_njets_jitted, *max_njets_jitted2);
    EXPECT_EQ(*max_njets_jitted3, *max_njets_jitted2);
    EXPECT_EQ(2, *max_njets_jitted);
    EXPECT_EQ(3, *max_rvec2);
+}
+
+TEST_F(RNTupleDSTest, ProjectedCardinalityColumn)
+{
+   auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
+
+   EXPECT_EQ(128u, *df.Filter("nElectron == 128").Max("nElectron"));
+
+   EXPECT_EQ(128u, *df.Filter([](std::uint64_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::int32_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint32_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::int16_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint16_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint8_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](bool x) { return x; }, {"nElectron"}).Max("nElectron"));
+   try {
+      *df.Filter([](std::int8_t x) { return x == 0; }, {"nElectron"}).Count();
+      FAIL() << "integer overflow should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("integer overflow"));
+   }
 }
 
 static void ReadTest(const std::string &name, const std::string &fname)
@@ -181,7 +210,7 @@ static void ReadTest(const std::string &name, const std::string &fname)
    EXPECT_TRUE(All(rvec->at(0) == ROOT::RVecI{1, 2, 3}));
    EXPECT_TRUE(All(vectorasrvec->at(0) == ROOT::RVecF{1.f, 2.f}));
    EXPECT_FLOAT_EQ(137.0, sumElectronPt.GetValue());
-   EXPECT_FLOAT_EQ(2. * 137.0, sumVecElectronPt.GetValue());
+   EXPECT_FLOAT_EQ(128. * 137.0, sumVecElectronPt.GetValue());
 }
 
 static void ChainTest(const std::string &name, const std::string &fname)
@@ -453,7 +482,7 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
 
    auto multipleAlternativeTypes =
       df.Define("nJets", [](const std::vector<float> &jets) { return jets.size(); }, {"jets"})
-         .Define("smallestJet", [](const std::set<float> &jets) { return *(jets.begin()); }, {"jets"})
+         .Define("smallestJet", [](const std::multiset<float> &jets) { return *(jets.begin()); }, {"jets"})
          .Min<float>("smallestJet")
          .GetValue();
    EXPECT_FLOAT_EQ(1.f, multipleAlternativeTypes);
@@ -806,4 +835,35 @@ TEST(RNTupleDS, TDirectory)
    RNTupleDS ds("a/b/ntuple", fileGuard.GetPath());
    EXPECT_EQ(1ull, ds.GetNFiles());
    EXPECT_EQ(std::vector<std::string>{"x"}, ds.GetColumnNames());
+}
+
+TEST(RNTupleDS, Int8)
+{
+   FileRAII fileGuard("test_rntupleds_int8.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<std::int8_t>("x");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldX = i;
+         ntuple->Fill();
+      }
+   }
+
+   ROOT::RDataFrame df("ntuple", fileGuard.GetPath());
+   std::vector<std::int8_t> expected{0, 1, 2, 3, 4};
+   EXPECT_EQ(expected, df.Take<std::int8_t>("x").GetValue());
+}
+
+TEST_F(RNTupleDSTest, GetTopLevelFieldNames)
+{
+   ROOT::RDataFrame df{fNtplName, fFileName};
+
+   EXPECT_VEC_EQ(
+      df.GetDatasetTopLevelFieldNames(),
+      std::vector<std::string>{"VecElectron", "electron", "energy", "jets", "nElectron", "nnlo", "pt", "rvec", "tag"});
+   EXPECT_VEC_EQ(df.GetColumnNames(),
+                 std::vector<std::string>{"VecElectron", "VecElectron.pt", "electron", "electron.pt", "energy", "jets",
+                                          "nElectron", "nnlo", "pt", "rvec", "tag"});
 }

@@ -21,7 +21,6 @@ In addition to the value, the synapse can return the DeDw
 #include "TSynapse.h"
 #include "TNeuron.h"
 
-ClassImp(TSynapse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

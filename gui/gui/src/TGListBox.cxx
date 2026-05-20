@@ -87,11 +87,6 @@ A TGLBContainer is for TGListBox internal use.
 const TGFont *TGTextLBEntry::fgDefaultFont = nullptr;
 TGGC         *TGTextLBEntry::fgDefaultGC = nullptr;
 
-ClassImp(TGLBEntry);
-ClassImp(TGTextLBEntry);
-ClassImp(TGLineLBEntry);
-ClassImp(TGLBContainer);
-ClassImp(TGListBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base class entry constructor.

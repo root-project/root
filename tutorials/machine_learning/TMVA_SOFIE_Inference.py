@@ -14,24 +14,22 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
-import ROOT
+from os.path import exists
+
 import numpy as np
-
-
-ROOT.TMVA.PyMethodBase.PyInitialize()
-
+import ROOT
 
 # check if the input file exists
-modelFile = "Higgs_trained_model.h5"
-if (ROOT.gSystem.AccessPathName(modelFile)) :
-    ROOT.Info("TMVA_SOFIE_RDataFrame","You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
-    exit()
+modelFile = "HiggsModel.keras"
+
+if not exists(modelFile):
+    raise FileNotFoundError("You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
 
 
 # parse the input Keras model into RModel object
 model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
 
-generatedHeaderFile = modelFile.replace(".h5",".hxx")
+generatedHeaderFile = modelFile.replace(".keras",".hxx")
 print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
 #Generating inference code
 model.Generate()
@@ -39,12 +37,12 @@ model.OutputGenerated(generatedHeaderFile)
 model.PrintGenerated()
 
 # now compile using ROOT JIT trained model
-modelName = modelFile.replace(".h5","")
+modelName = modelFile.replace(".keras","")
 print("compiling SOFIE model ", modelName)
 ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
 
 
-generatedHeaderFile = modelFile.replace(".h5",".hxx")
+generatedHeaderFile = modelFile.replace(".keras",".hxx")
 print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
 #Generating inference
 
@@ -64,27 +62,37 @@ sigData = df1.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb'
 # stack all the 7 numpy array in a single array (nevents x nvars)
 xsig = np.column_stack(list(sigData.values()))
 dataset_size = xsig.shape[0]
-print("size of data", dataset_size)
+print("size of signal data", dataset_size)
 
 #instantiate SOFIE session class
-session = ROOT.TMVA_SOFIE_Higgs_trained_model.Session()
+#session = ROOT.TMVA_SOFIE_HiggsModel.Session()
+#get the sofie session namespace
+sofie = getattr(ROOT, 'TMVA_SOFIE_' + modelName)
+session = sofie.Session()
 
+print("Evaluating SOFIE models on signal data")
 hs = ROOT.TH1D("hs","Signal result",100,0,1)
 for i in range(0,dataset_size):
     result = session.infer(xsig[i,:])
+    if (i % dataset_size/10 == 0) :
+      print("result for signal event ",i,result[0])
     hs.Fill(result[0])
 
-
+print("using RDsataFrame to extract input data in a numpy array")
 # make SOFIE inference on background data
 df2 = ROOT.RDataFrame("bkg_tree", inputFile)
 bkgData = df2.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
 
 xbkg = np.column_stack(list(bkgData.values()))
 dataset_size = xbkg.shape[0]
+print("size of background data", dataset_size)
 
 hb = ROOT.TH1D("hb","Background result",100,0,1)
 for i in range(0,dataset_size):
     result = session.infer(xbkg[i,:])
+    if (i % dataset_size/10 == 0) :
+      print("result for background event ",i,result[0])
+
     hb.Fill(result[0])
 
 

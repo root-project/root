@@ -33,8 +33,8 @@
 ## \date July 2024
 ## \author Robin Syring
 
-import ROOT
 import numpy as np
+import ROOT
 from sklearn.neural_network import MLPClassifier
 
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
@@ -45,8 +45,7 @@ ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
 
 
 # Morphing as a baseline
-def morphing(setting):
-
+def morphing(setting, workspace):
     # Define binning for morphing
     grid = ROOT.RooMomentMorphFuncND.Grid(ROOT.RooBinning(4, 0.0, 4.0))
     x_var.setBins(50)
@@ -199,7 +198,7 @@ nllr_learned = pdf_learned.createNLL(obs_data)
 ROOT.SetOwnership(nllr_learned, True)
 
 # Compute the morphed nll
-morphing(ROOT.RooMomentMorphFuncND.Linear)
+morphing(ROOT.RooMomentMorphFuncND.Linear, workspace)
 nll_morph = workspace["morph"].createNLL(obs_data)
 ROOT.SetOwnership(nll_morph, True)
 

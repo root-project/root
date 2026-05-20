@@ -27,7 +27,6 @@
 #include <cstring>
 #include <string>
 
-ClassImp(TGraphErrors);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,6 +223,8 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 ///   - format = `"%lg %lg %lg"` read only 3 first columns into X,Y and EY
 ///   - format = `"%lg %lg %lg %lg"` read only 4 first columns into X,Y,EX,EY.
 ///
+/// If format string is empty, suitable value will be provided based on file extension
+///
 /// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
 /// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
 /// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters (`' ', '\\t', ',', ';'`)
@@ -249,18 +250,30 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
    std::string line;
    Int_t np = 0;
 
-   if (strcmp(option, "") == 0) { // No delimiters specified (standard constructor).
+   TString format_ = format;
 
-      Int_t ncol = CalculateScanfFields(format);  //count number of columns in format
+   if (!option || !*option) {  // No delimiters specified (standard constructor).
+
+      Int_t ncol = 4;
+      if (format_.IsNull()) {
+         if (fname.EndsWith(".txt", TString::kIgnoreCase))
+            format_ = "%lg %lg %lg %lg";
+         else if (fname.EndsWith(".tsv", TString::kIgnoreCase))
+            format_ = "%lg\t%lg\t%lg\t%lg";
+         else
+            format_ = "%lg,%lg,%lg,%lg";
+      } else
+         ncol = CalculateScanfFields(format);  //count number of columns in format
+
       Int_t res;
       while (std::getline(infile, line, '\n')) {
          ex = ey = 0;
          if (ncol < 3) {
-            res = sscanf(line.c_str(), format, &x, &y);
+            res = sscanf(line.c_str(), format_.Data(), &x, &y);
          } else if (ncol < 4) {
-            res = sscanf(line.c_str(), format, &x, &y, &ey);
+            res = sscanf(line.c_str(), format_.Data(), &x, &y, &ey);
          } else {
-            res = sscanf(line.c_str(), format, &x, &y, &ex, &ey);
+            res = sscanf(line.c_str(), format_.Data(), &x, &y, &ex, &ey);
          }
          if (res < 2) {
             continue; //skip empty and ill-formed lines
@@ -274,7 +287,6 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
    } else { // A delimiter has been specified in "option"
 
       // Checking format and creating its boolean equivalent
-      TString format_ = TString(format) ;
       format_.ReplaceAll(" ", "") ;
       format_.ReplaceAll("\t", "") ;
       format_.ReplaceAll("lg", "") ;
@@ -723,12 +735,12 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    auto xname  = SavePrimitiveVector(out, "gre_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveVector(out, "gre_fy", fNpoints, fY);
-   auto exname = SavePrimitiveVector(out, "gre_fex", fNpoints, fEX);
-   auto eyname = SavePrimitiveVector(out, "gre_fey", fNpoints, fEY);
+   auto exname = SavePrimitiveVector(out, "gre_fex", fNpoints, fEX, 111);
+   auto eyname = SavePrimitiveVector(out, "gre_fey", fNpoints, fEY, 111);
 
    SavePrimitiveConstructor(
       out, Class(), "gre",
-      TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
+      TString::Format("%d, %s.data(), %s.data(), %s, %s", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
 
    SaveHistogramAndFunctions(out, "gre", option);
 }

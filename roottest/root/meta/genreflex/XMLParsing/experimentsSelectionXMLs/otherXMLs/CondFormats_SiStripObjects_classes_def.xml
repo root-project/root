@@ -1,0 +1,97 @@
+<lcgdict>
+
+  <class name="SiStripFedCabling" class_version="0">
+    <field name="connections_" mapping="blob"/>
+    <field name="detected_" mapping="blob"/>
+    <field name="undetected_" mapping="blob"/>
+    <field name="feds_" mapping="blob"/>
+    <field name="registry_" mapping="blob"/>
+  </class>
+  <class name="FedChannelConnection"/>
+  <class name="std::vector<FedChannelConnection>"/>
+  <class name="std::vector< std::vector<FedChannelConnection> >"/>
+  <class name="SiStripFedCabling::Conns"/>
+
+  <class name="SiStripPedestals" class_version="0">
+    <field name="indexes" mapping="blob"/>
+    <field name="v_pedestals" mapping="blob"/>
+  </class>
+  <class name="SiStripPedestals::DetRegistry"/>
+  <class name="std::vector<SiStripPedestals::DetRegistry>"/>
+
+  <class name="SiStripNoises" class_version="0">
+    <field name="indexes" mapping="blob"/>
+    <field name="v_noises" mapping="blob"/>
+  </class>
+  <class name="SiStripNoises::DetRegistry"/>
+  <class name="std::vector<SiStripNoises::DetRegistry>"/>
+
+  <class name="SiStripThreshold" class_version="0">
+    <field name="indexes" mapping="blob"/>
+    <field name="v_threshold" mapping="blob"/>
+  </class>
+  <class name="SiStripThreshold::Data"/>
+  <class name="std::vector<SiStripThreshold::Data>"/>
+  <class name="SiStripThreshold::DetRegistry"/>
+  <class name="std::vector<SiStripThreshold::DetRegistry>"/>
+  <class name="SiStripThreshold::Container"/>
+  <class name="std::vector<SiStripThreshold::Container>"/>
+
+  <class name="SiStripApvGain" class_version="0">
+    <field name="v_detids" mapping="blob"/>
+    <field name="v_ibegin" mapping="blob"/>
+    <field name="v_iend" mapping="blob"/>
+    <field name="v_gains" mapping="blob"/>
+  </class>
+
+  <class name="SiStripLorentzAngle" class_version="0">
+    <!-- <field name="key_type" mapping="blob"/> -->
+    <!-- <field name="mapped_type" mapping="blob"/> -->
+  </class>
+
+  <class name="SiStripBackPlaneCorrection" class_version="0">
+    <!-- <field name="key_type" mapping="blob"/> -->
+    <!-- <field name="mapped_type" mapping="blob"/> -->
+  </class>
+
+
+  <class name="SiStripBadStrip" class_version="0">
+    <field name="indexes" mapping="blob"/>
+    <field name="v_badstrips" mapping="blob"/>
+  </class>
+  <class name="SiStripBadStrip::DetRegistry"/>
+  <class name="std::vector<SiStripBadStrip::DetRegistry>"/>
+
+  <class name="SiStripDetVOff" class_version="0">
+    <field name="v_Voff" mapping="blob"/>
+  </class>
+
+  <class name="SiStripLatency" class_version="0">
+    <field name="latencies_" mapping="blob"/>
+  </class>
+  <class name="SiStripLatency::Latency" class_version="0"/>
+  <class name="std::vector<SiStripLatency::Latency>"/>
+
+  <class name="SiStripBaseDelay" class_version="0">
+    <field name="delays_" mapping="blob"/>
+  </class>
+  <class name="SiStripBaseDelay::Delay" class_version="0"/>
+  <class name="std::vector<SiStripBaseDelay::Delay>"/>
+
+<class name="SiStripRunSummary" class_version="0">
+    <field name="runSummary_" mapping="blob"/>
+  </class>
+
+  <class name="SiStripSummary" class_version="0">
+    <field name="userDBContent_" mapping="blob"/>
+    <field name="indexes_" mapping="blob"/>
+    <field name="v_sum_" mapping="blob"/>
+  </class>
+  <class name="SiStripSummary::DetRegistry"/>
+  <class name="std::vector<SiStripSummary::DetRegistry>"/>
+
+  <class name="SiStripConfObject" class_version="0">
+    <!-- <field name="names_" mapping="blob"/> -->
+    <!-- <field name="values_" mapping="blob"/> -->
+  </class>
+</lcgdict>

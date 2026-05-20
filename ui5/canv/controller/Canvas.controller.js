@@ -94,7 +94,7 @@ sap.ui.define([
 
             model.setProperty('/canResize', !cp.embed_canvas && cp.online_canvas);
 
-            let ws = cp._websocket || cp._window_handle;
+            let ws = cp.getWebsocket() || cp._window_handle;
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
                ws.addReloadKeyHandler();
          }
@@ -159,7 +159,7 @@ sap.ui.define([
       getCanvasPainter(also_without_websocket) {
          let p = this.getView().byId('MainPanel')?.getController().getPainter();
 
-         return (p && (p._websocket || also_without_websocket)) ? p : null;
+         return (p && (p.getWebsocket() || also_without_websocket)) ? p : null;
       },
 
       setFixedCanvasSize(cw, ch, fixed) {
@@ -288,8 +288,8 @@ sap.ui.define([
                p.sendWebsocket('INTERRUPT');
                break;
             case 'Reload':
-               if (typeof p._websocket?.askReload == 'function')
-                  p._websocket.askReload();
+               if (typeof p.getWebsocket()?.askReload == 'function')
+                  p.getWebsocket().askReload();
                break;
             case 'Quit ROOT':
                p.sendWebsocket('QUIT');
@@ -311,7 +311,7 @@ sap.ui.define([
                   filters.push('C++ (*.cxx *.cpp *.c)');
 
                FileDialogController.SaveAs({
-                  websocket: p._websocket,
+                  websocket: p.getWebsocket(),
                   filename: canname + '.png',
                   title: 'Select file name to save canvas',
                   filter: 'Png files',
@@ -647,7 +647,7 @@ sap.ui.define([
                      this.oDivideDialog.close();
                      let cp = this.getCanvasPainter();
                      if (arg && cp)
-                        cp.sendWebsocket('DIVIDE:' + JSON.stringify([(cp.findActivePad() || cp).snapid, arg]));
+                        cp.sendWebsocket('DIVIDE:' + JSON.stringify([(cp.findActivePad() || cp).getSnapId(), arg]));
                   }
                }),
                endButton: new Button({
@@ -675,10 +675,10 @@ sap.ui.define([
                this.onDivideDialog();
                break;
             case 'Clear pad':
-               cp.sendWebsocket('CLEAR:' + (cp.findActivePad() || cp).snapid);
+               cp.sendWebsocket('CLEAR:' + (cp.findActivePad() || cp).getSnapId());
                break;
             case 'Clear canvas':
-               cp.sendWebsocket('CLEAR:' + cp.snapid);
+               cp.sendWebsocket('CLEAR:' + cp.getSnapId());
                break;
             default:
                let sz = name.split('x');

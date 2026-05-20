@@ -16,7 +16,6 @@
 Description of TEveCompound
 */
 
-ClassImp(TEveCompound);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -162,7 +161,6 @@ TClass* TEveCompound::ProjectedClass(const TEveProjection*) const
 Description of TEveCompoundProjected
 */
 
-ClassImp(TEveCompoundProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

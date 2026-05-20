@@ -1,14 +1,15 @@
 // Tests for the RooWrapperPdf
 // Author: Stephan Hageboeck, CERN  09/2019
 
-#include "RooWrapperPdf.h"
-#include "RooRealVar.h"
+#include "RooConstVar.h"
+#include "RooDataSet.h"
+#include "RooFitResult.h"
+#include "RooHelpers.h"
+#include "RooPlot.h"
 #include "RooProduct.h"
 #include "RooRealSumFunc.h"
-#include "RooConstVar.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-#include "RooDataSet.h"
+#include "RooRealVar.h"
+#include "RooWrapperPdf.h"
 
 #include "TCanvas.h"
 
@@ -16,6 +17,8 @@
 
 TEST(RooWrapperPdf, Basics)
 {
+  RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
   RooRealVar x("x", "x", -5., 5.);
 
   // Implement a poor-man's polynomial. Value ranges are chosen to keep it positive.
@@ -47,7 +50,10 @@ TEST(RooWrapperPdf, Basics)
 }
 
 
-TEST(RooWrapperPdf, GenerateAndFit) {
+TEST(RooWrapperPdf, GenerateAndFit)
+{
+  RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
   RooRealVar x("x", "x", -5., 5.);
 
   // Implement a poor-man's polynomial. Value ranges are chosen to keep it positive.

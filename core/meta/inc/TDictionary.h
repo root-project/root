@@ -169,7 +169,7 @@ class TDictionary : public TNamed {
 
 private:
    TDictAttributeMap *fAttributeMap{nullptr};    //pointer to a class attribute map
-   ULong64_t fUpdatingTransactionCount{0}; //!the Cling ID of the transaction that last updated the object
+   ULong64_t fUpdatingTransactionCount{0}; ///<!the Cling ID of the transaction that last updated the object
 
 protected:
    Bool_t              UpdateInterpreterStateMarker();

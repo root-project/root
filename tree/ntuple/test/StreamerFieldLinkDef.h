@@ -10,6 +10,7 @@
 #pragma link C++ struct CyclicMember;
 #pragma link C++ class ClassWithStreamedMember + ;
 #pragma link C++ class CustomStreamer - ;
+#pragma link C++ class CustomStreamerEvolution - ;
 #pragma link C++ options = rntupleStreamerMode(false) class CustomStreamerForceNative - ;
 #pragma link C++ options = rntupleStreamerMode(true) class CustomStreamerForceStreamed + ;
 #pragma link C++ class IgnoreUnsplitComment + ;

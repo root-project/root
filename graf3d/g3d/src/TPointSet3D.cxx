@@ -36,7 +36,6 @@ not owned and CLONES them if they are owned.
 The ids are not streamed.
 */
 
-ClassImp(TPointSet3D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.

@@ -1,0 +1,280 @@
+/// \file
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
+
+#ifndef ROOT_RRegularAxis
+#define ROOT_RRegularAxis
+
+#include "RBinIndex.hxx"
+#include "RBinIndexRange.hxx"
+#include "RLinearizedIndex.hxx"
+#include "RSliceSpec.hxx"
+
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+class TBuffer;
+
+namespace ROOT {
+namespace Experimental {
+
+/**
+A regular axis with equidistant bins in the interval \f$[fLow, fHigh)\f$.
+
+For example, the following creates a regular axis with 10 normal bins between 5 and 15:
+\code
+ROOT::Experimental::RRegularAxis axis(10, {5, 15});
+\endcode
+
+It is possible to disable underflow and overflow bins by passing `enableFlowBins = false`. In that case, arguments
+outside the axis will be silently discarded.
+
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
+*/
+class RRegularAxis final {
+public:
+   using ArgumentType = double;
+
+private:
+   /// The number of normal bins
+   std::uint64_t fNNormalBins;
+   /// The lower end of the axis interval
+   double fLow;
+   /// The upper end of the axis interval
+   double fHigh;
+   /// The cached inverse of the bin width to speed up ComputeLinearizedIndex
+   double fInvBinWidth; //!
+   /// Whether underflow and overflow bins are enabled
+   bool fEnableFlowBins;
+
+public:
+   /// Construct a regular axis object.
+   ///
+   /// \param[in] nNormalBins the number of normal bins, must be > 0
+   /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive), must be finite
+   /// \param[in] enableFlowBins whether to enable underflow and overflow bins
+   RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins = true)
+      : fNNormalBins(nNormalBins), fLow(interval.first), fHigh(interval.second), fEnableFlowBins(enableFlowBins)
+   {
+      if (nNormalBins == 0) {
+         throw std::invalid_argument("nNormalBins must be > 0");
+      }
+      if (!std::isfinite(fLow)) {
+         throw std::invalid_argument("low must be a finite value, but is " + std::to_string(fLow));
+      }
+      if (!std::isfinite(fHigh)) {
+         throw std::invalid_argument("high must be a finite value, but is " + std::to_string(fHigh));
+      }
+      if (fLow >= fHigh) {
+         std::string msg = "high must be > low, but " + std::to_string(fLow) + " >= " + std::to_string(fHigh);
+         throw std::invalid_argument(msg);
+      }
+      fInvBinWidth = nNormalBins / (fHigh - fLow);
+      assert(std::isfinite(fInvBinWidth));
+   }
+
+   std::uint64_t GetNNormalBins() const { return fNNormalBins; }
+   std::uint64_t GetTotalNBins() const { return fEnableFlowBins ? fNNormalBins + 2 : fNNormalBins; }
+   double GetLow() const { return fLow; }
+   double GetHigh() const { return fHigh; }
+   bool HasFlowBins() const { return fEnableFlowBins; }
+
+   /// Compute the low edge of a bin.
+   ///
+   /// \param[in] bin the index, must be \f$< fNNormalBins\f$
+   double ComputeLowEdge(std::uint64_t bin) const
+   {
+      if (bin >= fNNormalBins) {
+         throw std::invalid_argument("bin must be inside the axis");
+      }
+      return fLow + (fHigh - fLow) * bin / fNNormalBins;
+   }
+
+   /// Compute the high edge of a bin.
+   ///
+   /// \param[in] bin the index, must be \f$< fNNormalBins\f$
+   double ComputeHighEdge(std::uint64_t bin) const
+   {
+      if (bin >= fNNormalBins) {
+         throw std::invalid_argument("bin must be inside the axis");
+      }
+      return fLow + (fHigh - fLow) * (bin + 1) / fNNormalBins;
+   }
+
+   friend bool operator==(const RRegularAxis &lhs, const RRegularAxis &rhs)
+   {
+      return lhs.fNNormalBins == rhs.fNNormalBins && lhs.fLow == rhs.fLow && lhs.fHigh == rhs.fHigh &&
+             lhs.fEnableFlowBins == rhs.fEnableFlowBins;
+   }
+
+   /// Compute the linarized index for a single argument.
+   ///
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fNNormalBins + 1\f$. If the argument is outside the interval \f$[fLow, fHigh)\f$ and the flow bins are
+   /// disabled, the return value is invalid.
+   ///
+   /// \param[in] x the argument
+   /// \return the linearized index that may be invalid
+   RLinearizedIndex ComputeLinearizedIndex(double x) const
+   {
+      bool underflow = x < fLow;
+      // Put NaNs into overflow bin.
+      bool overflow = !(x < fHigh);
+      if (underflow) {
+         return {0, fEnableFlowBins};
+      } else if (overflow) {
+         return {fNNormalBins + 1, fEnableFlowBins};
+      }
+
+      std::uint64_t bin = (x - fLow) * fInvBinWidth;
+      if (bin >= fNNormalBins) {
+         bin = fNNormalBins - 1;
+      }
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
+      return {bin, true};
+   }
+
+   /// Get the linearized index for an RBinIndex.
+   ///
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fNNormalBins + 1\f$.
+   ///
+   /// \param[in] index the RBinIndex
+   /// \return the linearized index that may be invalid
+   RLinearizedIndex GetLinearizedIndex(RBinIndex index) const
+   {
+      if (index.IsUnderflow()) {
+         return {0, fEnableFlowBins};
+      } else if (index.IsOverflow()) {
+         return {fNNormalBins + 1, fEnableFlowBins};
+      } else if (index.IsInvalid()) {
+         return {0, false};
+      }
+      assert(index.IsNormal());
+      std::uint64_t bin = index.GetIndex();
+      if (bin >= fNNormalBins) {
+         // Index is out of range and invalid.
+         return {bin, false};
+      }
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
+      return {bin, true};
+   }
+
+   /// Get the range of all normal bins.
+   ///
+   /// \return the bin index range from the first to the last normal bin, inclusive
+   RBinIndexRange GetNormalRange() const
+   {
+      return Internal::CreateBinIndexRange(RBinIndex(0), RBinIndex(fNNormalBins), 0);
+   }
+
+   /// Get a range of normal bins.
+   ///
+   /// \param[in] begin the begin of the bin index range (inclusive), must be normal
+   /// \param[in] end the end of the bin index range (exclusive), must be normal and >= begin
+   /// \return a bin index range \f$[begin, end)\f$
+   RBinIndexRange GetNormalRange(RBinIndex begin, RBinIndex end) const
+   {
+      if (!begin.IsNormal()) {
+         throw std::invalid_argument("begin must be a normal bin");
+      }
+      if (begin.GetIndex() >= fNNormalBins) {
+         throw std::invalid_argument("begin must be inside the axis");
+      }
+      if (!end.IsNormal()) {
+         throw std::invalid_argument("end must be a normal bin");
+      }
+      if (end.GetIndex() > fNNormalBins) {
+         throw std::invalid_argument("end must be inside or past the axis");
+      }
+      if (!(end >= begin)) {
+         throw std::invalid_argument("end must be >= begin");
+      }
+      return Internal::CreateBinIndexRange(begin, end, 0);
+   }
+
+   /// Get the full range of all bins.
+   ///
+   /// This includes underflow and overflow bins, if enabled.
+   ///
+   /// \return the bin index range of all bins
+   RBinIndexRange GetFullRange() const
+   {
+      return fEnableFlowBins ? Internal::CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), fNNormalBins)
+                             : GetNormalRange();
+   }
+
+   /// Slice this axis according to the specification.
+   ///
+   /// Throws an exception if the axis cannot be sliced:
+   ///  * A sum operation makes the dimension disappear.
+   ///  * The rebin operation must divide the number of normal bins.
+   ///
+   /// \param[in] sliceSpec the slice specification
+   /// \return the sliced axis, with enabled underflow and overflow bins
+   RRegularAxis Slice(const RSliceSpec &sliceSpec) const
+   {
+      if (sliceSpec.GetOperationSum() != nullptr) {
+         throw std::runtime_error("sum operation makes dimension disappear");
+      }
+
+      // Figure out the properties of the sliced axis.
+      std::uint64_t nNormalBins = fNNormalBins;
+      double low = fLow;
+      double high = fHigh;
+
+      const auto &range = sliceSpec.GetRange();
+      if (!range.IsInvalid()) {
+         std::uint64_t begin = 0;
+         std::uint64_t end = nNormalBins;
+         if (range.GetBegin().IsNormal()) {
+            begin = range.GetBegin().GetIndex();
+            // Only compute a new lower end of the axis interval if needed.
+            if (begin > 0) {
+               low = ComputeLowEdge(begin);
+            }
+         }
+         if (range.GetEnd().IsNormal()) {
+            end = range.GetEnd().GetIndex();
+            // Only compute a new upper end of the axis interval if needed, to avoid floating-point inaccuracies.
+            if (end < nNormalBins) {
+               high = ComputeHighEdge(end - 1);
+            }
+         }
+         nNormalBins = end - begin;
+      }
+
+      if (auto *opRebin = sliceSpec.GetOperationRebin()) {
+         if (nNormalBins % opRebin->GetNGroup() != 0) {
+            throw std::runtime_error("rebin operation does not divide number of normal bins");
+         }
+         nNormalBins /= opRebin->GetNGroup();
+      }
+
+      // The sliced axis always has flow bins enabled to preserve all entries. This is the least confusing for users,
+      // even if not always strictly necessary.
+      bool enableFlowBins = true;
+      return RRegularAxis(nNormalBins, {low, high}, enableFlowBins);
+   }
+
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
+   void Streamer(TBuffer &) { throw std::runtime_error("unable to store RRegularAxis"); }
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
+#endif

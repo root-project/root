@@ -32,7 +32,6 @@ Plot-painter implementing LEGO rendering of TH2 histograms in
 cartesian, polar, cylindrical and spherical coordinates.
 */
 
-ClassImp(TGLLegoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Ctor.

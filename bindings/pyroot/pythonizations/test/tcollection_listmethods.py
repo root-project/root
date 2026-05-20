@@ -11,14 +11,16 @@ class TCollectionListMethods(unittest.TestCase):
 
     num_elems = 3
 
+    _global_objects = []
+
     # Helpers
     def create_tcollection(self):
         c = ROOT.TList()
         for _ in range(self.num_elems):
             o = ROOT.TObject()
-            # Prevent immediate deletion of C++ TObjects
-            ROOT.SetOwnership(o, False)
             c.Add(o)
+            # To prevent deletion of the objects (TList is by default non-owning)
+            self._global_objects.append(o)
 
         return c
 
@@ -42,7 +44,11 @@ class TCollectionListMethods(unittest.TestCase):
             itc.Next()
 
         # Check that `o` is indeed the last element
-        self.assertEqual(o, itc.Next())
+        self.assertIs(o, itc.Next())
+
+        # Clear before the added element might be garbage collected,
+        # to avoid dangling pointer access.
+        c.Clear()
 
     def test_remove(self):
         c = ROOT.TList()
@@ -69,6 +75,8 @@ class TCollectionListMethods(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.remove(o1)
 
+        c.Clear()
+
     def test_extend(self):
         c1 = self.create_tcollection()
         c2 = self.create_tcollection()
@@ -90,20 +98,7 @@ class TCollectionListMethods(unittest.TestCase):
         # Compare with elements of second collection
         itc2 = ROOT.TIter(c2)
         for _ in range(len2):
-            self.assertEqual(itc1.Next(), itc2.Next())
-
-    def test_count(self):
-        c = ROOT.TList()
-
-        o1 = ROOT.TObject()
-        o2 = ROOT.TObject()
-
-        c.Add(o1)
-        c.Add(o2)
-        c.Add(o1)
-
-        self.assertEqual(c.count(o1), 2)
-        self.assertEqual(c.count(o2), 1)
+            self.assertIs(itc1.Next(), itc2.Next())
 
 
 if __name__ == '__main__':

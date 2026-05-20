@@ -61,6 +61,7 @@ public:
       kGeoParaboloid = BIT(28),
       kGeoHalfSpace = BIT(29),
       kGeoHype = BIT(30),
+      kGeoScaled = BIT(31),
       kGeoSavePrimitive = BIT(20)
    };
 
@@ -97,7 +98,7 @@ public:
    static Double_t Tolerance() { return 1.E-10; }
    static Double_t ComputeEpsMch();
    static Double_t EpsMch();
-   virtual void AfterStreamer(){};
+   virtual void AfterStreamer() {};
    virtual Double_t Capacity() const = 0;
    void CheckShape(Int_t testNo, Int_t nsamples = 10000, Option_t *option = "");
    virtual void ComputeBBox() = 0;
@@ -136,6 +137,7 @@ public:
    virtual EInside Inside(const Double_t *point) const;
    virtual Bool_t IsAssembly() const { return kFALSE; }
    virtual Bool_t IsComposite() const { return kFALSE; }
+   virtual Bool_t IsConvex() const { return kFALSE; }
    virtual Bool_t IsCylType() const = 0;
    static Bool_t
    IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);

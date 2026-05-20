@@ -8,31 +8,45 @@ import { assignContextMenu } from '../gui/menu.mjs';
 
 const kLineNDC = BIT(14);
 
+/**
+ * @summary Painter for TLine class
+ * @private
+ */
+
 class TLinePainter extends ObjectPainter {
+
+   #side; // side which is interactively moved
 
    /** @summary Start interactive moving */
    moveStart(x, y) {
-      const fullsize = Math.sqrt((this.x1-this.x2)**2 + (this.y1-this.y2)**2),
-          sz1 = Math.sqrt((x-this.x1)**2 + (y-this.y1)**2)/fullsize,
-          sz2 = Math.sqrt((x-this.x2)**2 + (y-this.y2)**2)/fullsize;
+      const fullsize = Math.max(1, Math.sqrt((this.x1 - this.x2) ** 2 + (this.y1 - this.y2) ** 2)),
+            sz1 = Math.sqrt((x - this.x1) ** 2 + (y - this.y1) ** 2) / fullsize,
+            sz2 = Math.sqrt((x - this.x2) ** 2 + (y - this.y2) ** 2) / fullsize;
       if (sz1 > 0.9)
-         this.side = 1;
+         this.#side = 1;
       else if (sz2 > 0.9)
-         this.side = -1;
+         this.#side = -1;
       else
-         this.side = 0;
+         this.#side = 0;
    }
 
    /** @summary Continue interactive moving */
    moveDrag(dx, dy) {
-      if (this.side !== 1) { this.x1 += dx; this.y1 += dy; }
-      if (this.side !== -1) { this.x2 += dx; this.y2 += dy; }
-      this.draw_g.select('path').attr('d', this.createPath());
+      if (this.#side !== 1) {
+         this.x1 += dx;
+         this.y1 += dy;
+      }
+      if (this.#side !== -1) {
+         this.x2 += dx;
+         this.y2 += dy;
+      }
+      this.getG().select('path').attr('d', this.createPath());
    }
 
    /** @summary Finish interactive moving */
    moveEnd(not_changed) {
-      if (not_changed) return;
+      if (not_changed)
+         return;
       const line = this.getObject();
       let exec = '',
           fx1 = this.svgToAxis('x', this.x1, this.isndc),
@@ -45,8 +59,10 @@ class TLinePainter extends ObjectPainter {
       line.fX2 = fx2;
       line.fY1 = fy1;
       line.fY2 = fy2;
-      if (this.side !== 1) exec += `SetX1(${fx1});;SetY1(${fy1});;`;
-      if (this.side !== -1) exec += `SetX2(${fx2});;SetY2(${fy2});;`;
+      if (this.#side !== 1)
+         exec += `SetX1(${fx1});;SetY1(${fy1});;`;
+      if (this.#side !== -1)
+         exec += `SetX2(${fx2});;SetY2(${fy2});;`;
       this.submitCanvExec(exec + 'Notify();;');
    }
 
@@ -74,7 +90,7 @@ class TLinePainter extends ObjectPainter {
 
       this.createG(use_frame ? 'frame2d' : undefined);
 
-      this.swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+      this.swap_xy = use_frame && this.getFramePainter()?.swap_xy();
 
       const func = this.getAxisToSvgFunc(this.isndc, true);
 
@@ -102,8 +118,7 @@ class TLinePainter extends ObjectPainter {
    redraw() {
       this.prepareDraw();
 
-      const elem = this.draw_g.append('svg:path')
-                       .attr('d', this.createPath())
+      const elem = this.appendPath(this.createPath())
                        .call(this.lineatt.func);
 
       if (this.getObject()?.$do_not_draw)

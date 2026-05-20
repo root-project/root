@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TKey.h>
 #include <TRandom3.h>
 #include <TMemFile.h>
 #include <TVirtualStreamerInfo.h>
@@ -53,7 +54,13 @@ protected:
    RStagedCluster StageCluster(ROOT::NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final {}
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone sink"));
+   }
 
 public:
    RPageSinkMock(const ROOT::RNTupleWriteOptions &options) : RPageSink("test", options) {}
@@ -483,7 +490,7 @@ TEST(RNTuple, WritePageBudget)
    EXPECT_EQ(7u, prDD.GetPageInfos()[2].GetNElements());
 }
 
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
 TEST(RNTuple, OpenHTTP)
 {
    std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1.root"));
@@ -1127,4 +1134,116 @@ TEST(RPageSinkFile, StreamerInfo)
          return;
    }
    FAIL() << "not all streamer infos found! ";
+}
+
+TEST(RPageSourceFile, NameFromAnchor)
+{
+   FileRaii fileGuard("test_ntuple_storage_namefromanchor.root");
+   {
+      auto model = RNTupleModel::Create();
+      RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "READ");
+   auto anchor = file->Get<ROOT::RNTuple>("ntpl");
+   auto source = RPageSourceFile::CreateFromAnchor(*anchor, {});
+   // When creating a source from anchor, its name doesn't get set until we Attach it.
+   EXPECT_EQ(source->GetNTupleName(), "");
+   source->Attach();
+   EXPECT_EQ(source->GetNTupleName(), "ntpl");
+}
+
+TEST(RPageSourceFile, OpenDifferentAnchor)
+{
+   FileRaii fileGuard("test_ntuple_open_diff_anchor.root");
+
+   auto model = RNTupleModel::Create();
+   auto pF = model->MakeField<float>("f");
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   {
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl1", *file);
+      for (auto i = 0; i < 100; ++i) {
+         *pF = i;
+         writer->Fill();
+      }
+   }
+   {
+      model = RNTupleModel::Create();
+      auto pI = model->MakeField<int>("i");
+      auto pC = model->MakeField<char>("c");
+
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl2", *file);
+      for (auto i = 0; i < 20; ++i) {
+         *pI = i;
+         *pC = i;
+         writer->Fill();
+      }
+   }
+
+   auto source = std::make_unique<RPageSourceFile>("ntpl1", fileGuard.GetPath(), RNTupleReadOptions());
+   source->Attach();
+   EXPECT_EQ(source->GetNEntries(), 100);
+   {
+      auto desc = source->GetSharedDescriptorGuard();
+      EXPECT_NE(desc->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+   }
+
+   TKey *anchor2Key = file->GetKey("ntpl2");
+   ROOT::RNTupleLocator anchorLoc;
+   anchorLoc.SetPosition(anchor2Key->GetSeekKey() + anchor2Key->GetKeylen());
+   anchorLoc.SetNBytesOnStorage(anchor2Key->GetNbytes() - anchor2Key->GetKeylen());
+   ROOT::Internal::RNTupleLink anchorLink{anchorLoc, static_cast<std::uint32_t>(anchor2Key->GetObjlen())};
+   auto anchor2 = file->Get<ROOT::RNTuple>("ntpl2");
+   ASSERT_NE(anchor2, nullptr);
+   auto source2 = source->OpenWithDifferentAnchor(anchorLink);
+   source2->Attach();
+   EXPECT_EQ(source2->GetNTupleName(), "ntpl2");
+   EXPECT_EQ(source2->GetNEntries(), 20);
+   {
+      auto desc2 = source2->GetSharedDescriptorGuard();
+      EXPECT_EQ(desc2->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
+   }
+
+   source.reset();
+   // source2 should still be valid after dropping the first source.
+   EXPECT_EQ(source2->GetNEntries(), 20);
+   {
+      auto desc2 = source2->GetSharedDescriptorGuard();
+      EXPECT_EQ(desc2->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
+   }
+}
+
+TEST(RPageSinkFile, CloneAsHidden)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_file_diffname.ntuple");
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto opts = RNTupleWriteOptions();
+   auto model = RNTupleModel::Create();
+
+   {
+      auto sink1 = std::make_unique<RPageSinkFile>("ntuple1", *file, opts);
+      sink1->Init(*model);
+
+      auto sink2 = sink1->CloneAsHidden("ntuple2", opts);
+      sink2->Init(*model);
+
+      sink1->CommitDataset();
+      sink2->CommitDataset();
+   }
+
+   // We can't just use file->Get because ntuple2 is hidden.
+   bool found[2] = {false, false};
+   for (auto key : file->WalkTKeys()) {
+      found[0] |= key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fKeyName == "ntuple1";
+      found[1] |= key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fKeyName == "ntuple2";
+      if (found[0] && found[1])
+         break;
+   }
+   EXPECT_TRUE(found[0]);
+   EXPECT_TRUE(found[1]);
 }

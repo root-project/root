@@ -1,0 +1,64 @@
+
+
+<lcgdict>
+
+ <class name="ElectronContainer" id="417E86E5-CA20-4F50-A7A2-C91BF44C9125" />
+ <class name="DataVector<Analysis::Electron>" />
+ <class name="Analysis::Electron" />
+ <class name="Analysis::ElectronConstituent" />
+ <class name="Analysis::ElectronAssociation" />
+
+ <class name="PhotonContainer" id="B0DC1628-F17C-4951-BC85-55BBECF4D4D1" />
+ <class name="DataVector<Analysis::Photon>" />
+ <class name="Analysis::Photon" />
+ <class name="Analysis::PhotonAssociation" />
+
+ <class name="egDetailContainer" id="F8C02E11-E6C5-4843-A57D-3DB2EFACCC5B" />
+ <class name="DataVector<egDetail>" />
+ <class name="std::vector<egDetail*>" />
+ <class name="std::vector<std::pair<egammaParameters::ParamDef,double> >" />
+ <class name="std::pair<egammaParameters::ParamDef,double>" />  
+ <class name="std::vector<std::pair<egammaParameters::ParamDef,bool> >" />
+ <class name="std::pair<egammaParameters::ParamDef,bool>" />  
+
+ <class name="egDetail" />
+ <class name="EMShower" />
+ <class name="EMTrackMatch" />
+ <class name="EMConvert" />
+ <class name="EMBremFit" />
+ <class name="EMTrackFit" />
+ <class name="EMErrorDetail" />
+ <class name="egPID" />
+ <class name="std::vector<std::pair<egammaPID::PID,double> >" />
+ <class name="std::pair<egammaPID::PID,double>" />
+ <class name="std::vector<std::pair<egammaPID::PID,unsigned int> >" />
+ <class name="std::pair<egammaPID::PID,unsigned int>" />
+
+ <class name="EMShowerMinimalContainer" id="7CAB4FCD-1965-1CDC-1614-60EB93E5551B" />
+ <class name="EMShowerMinimal" />
+ <class name="DataVector<EMShowerMinimal>" />
+ <class name="std::vector<EMShowerMinimal*>" />
+
+ <class name="egammaContainer" id="7CAB4F67-1765-4CDC-9614-60EB93E5551B" />
+ <class name="DataVector<egamma>" />
+ <class name="egamma" />
+
+ <class name="CaloRingsContainer" id="DA20948A-A38A-11DE-BFE4-001CC0754D20" />
+ <class name="DataVector<CaloRings>" />
+ <class name="CaloRings" >
+   <field name="m_ringsets" transient="true"/>
+ </class>
+ <class name="RingSet" />
+
+
+ <class name="DataModel_detail::ElementProxy<DataVector<Analysis::Electron> >" />
+ <class name="DataModel_detail::ElementProxy<DataVector<Analysis::Photon> >" />    
+ <class name="DataModel_detail::ElementProxy<DataVector<egDetail> >" />      
+ <class name="DataModel_detail::ElementProxy<DataVector<EMShowerMinimal> >" />
+ <class name="DataModel_detail::ElementProxy<DataVector<egamma> >" />
+ <class name="DataModel_detail::ElementProxy<DataVector<CaloRings> >" />
+
+
+
+</lcgdict>
+

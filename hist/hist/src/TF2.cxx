@@ -22,7 +22,6 @@
 #include "Math/IntegratorOptions.h"
 #include "snprintf.h"
 
-ClassImp(TF2);
 
 /** \class TF2
     \ingroup Functions
@@ -84,9 +83,8 @@ TF2::TF2(): fYmin(0),fYmax(0),fNpy(100)
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a formula definition
+/// TF2 constructor using a formula definition and string option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 ///
@@ -94,8 +92,9 @@ TF2::TF2(): fYmin(0),fYmax(0),fNpy(100)
 /// the formula string is "fffffff" and "xxxx" and "yyyy" are the
 /// titles for the X and Y axis respectively.
 
-TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t * opt)
-   :TF1(name, formula, xmax, xmin, opt)
+TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         Option_t *opt)
+   : TF1(name, formula, xmax, xmin, opt) // purposely swapped xmax, xmin to signal that TFormula may be 1D or 2D
 {
    if (ymin < ymax) {
       fYmin   = ymin;
@@ -117,9 +116,43 @@ TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Do
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TF2 constructor using a formula definition and explicit option args
+///
+/// See TFormula constructor for explanation of the formula syntax.
+///
+/// If formula has the form "fffffff;xxxx;yyyy", it is assumed that
+/// the formula string is "fffffff" and "xxxx" and "yyyy" are the
+/// titles for the X and Y axis respectively.
+
+TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         EAddToList addToGlobList, bool vectorize)
+   : TF1(name, formula, xmax, xmin, addToGlobList,
+         vectorize) // purposely swapped xmax, xmin to signal that TFormula may be 1D or 2D
+{
+   if (ymin < ymax) {
+      fYmin = ymin;
+      fYmax = ymax;
+   } else {
+      fYmin = ymax;
+      fYmax = ymin;
+   }
+   fNpx = 30;
+   fNpy = 30;
+   fContour.Set(0);
+   // accept 1-d formula
+   if (GetNdim() < 2)
+      fNdim = 2;
+   // dimension is obtained by TFormula
+   // accept cases where formula dim is less than 2
+   if (GetNdim() > 2 && xmin < xmax && ymin < ymax) {
+      Error("TF2", "function: %s/%s has dimension %d instead of 2", name, formula, GetNdim());
+      MakeZombie();
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a pointer to a compiled function
+/// TF2 constructor using a pointer to a compiled function
 ///
 /// npar is the number of free parameters used by the function
 ///
@@ -148,9 +181,8 @@ TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t
    fContour.Set(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a pointer to a compiled function
+/// TF2 constructor using a pointer to a compiled function
 ///
 /// npar is the number of free parameters used by the function
 ///
@@ -171,7 +203,7 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a ParamFunctor,
+/// TF2 constructor using a ParamFunctor,
 ///          a functor class implementing operator() (double *, double *)
 ///
 /// npar is the number of free parameters used by the function
@@ -662,6 +694,27 @@ Double_t TF2::GetSave(const Double_t *xx)
    Int_t k4      = (jbin+1)*(npx+1) + ibin;
    Double_t z    = (1-t)*(1-u)*fSave[k1] +t*(1-u)*fSave[k2] +t*u*fSave[k3] + (1-t)*u*fSave[k4];
    return z;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create the basic function objects
+
+void TF2::InitStandardFunctions()
+{
+   TF2 *f2;
+   R__LOCKGUARD(gROOTMutex);
+   if (!gROOT->GetListOfFunctions()->FindObject("xygaus")) {
+      f2 = new TF2("xygaus", "xygaus", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 0, 1);
+      f2 = new TF2("bigaus", "bigaus", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 0, 1, 0);
+      f2 = new TF2("xyexpo", "xyexpo", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 1, 0, 1);
+      f2 = new TF2("xylandau", "xylandau", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 1, 0, 1);
+      f2 = new TF2("xylandaun", "xylandaun", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 1, 0, 1);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

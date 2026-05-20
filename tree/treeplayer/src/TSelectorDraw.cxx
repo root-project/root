@@ -37,7 +37,6 @@ A specialized TSelector for TTree::Draw.
 #include "TColor.h"
 #include "strlcpy.h"
 
-ClassImp(TSelectorDraw);
 
 const Int_t kCustomHistogram = BIT(17);
 
@@ -579,6 +578,7 @@ void TSelectorDraw::Begin(TTree *tree)
          } else {
             hist = new TH1D(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
          }
+         hist->SetDirectory(gDirectory);
          hist->SetLineColor(fTree->GetLineColor());
          hist->SetLineWidth(fTree->GetLineWidth());
          hist->SetLineStyle(fTree->GetLineStyle());
@@ -662,6 +662,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                hp = new TProfile(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], "");
             }
+            hp->SetDirectory(gDirectory);
             if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(nullptr);
@@ -690,6 +691,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                h2 = new TH2D(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             }
+            h2->SetDirectory(gDirectory);
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetLineWidth(fTree->GetLineWidth());
             h2->SetLineStyle(fTree->GetLineStyle());
@@ -804,6 +806,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                hp = new TProfile2D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], "");
             }
+            hp->SetDirectory(gDirectory);
             if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(nullptr);
@@ -827,6 +830,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h2 = (TH2F*)fOldHistogram;
          } else {
             h2 = new TH2F(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h2->SetDirectory(gDirectory);
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetLineWidth(fTree->GetLineWidth());
             h2->SetLineStyle(fTree->GetLineStyle());
@@ -860,6 +864,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                h3 = new TH3D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             }
+            h3->SetDirectory(gDirectory);
             h3->SetLineColor(fTree->GetLineColor());
             h3->SetLineWidth(fTree->GetLineWidth());
             h3->SetLineStyle(fTree->GetLineStyle());
@@ -1403,7 +1408,7 @@ void TSelectorDraw::TakeAction()
             if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
       }
       TGraph *pm = new TGraph(fNfill, fVal[1], fVal[0]);
       pm->SetEditable(false);
@@ -1528,7 +1533,7 @@ void TSelectorDraw::TakeAction()
    else if (fAction == 6 || fAction == 7) {
       TakeEstimate();
       bool candle = (fAction == 7);
-      // Using CINT to avoid a dependency in TParallelCoord
+      // Using Interpreter to avoid a dependency in TParallelCoord
       if (!fOption.Contains("goff"))
          gROOT->ProcessLine(TString::Format("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%zx,0x%zx)",
                                 (size_t)this, (size_t)candle));
@@ -1589,7 +1594,7 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
       }
       for (i = 0; i < fNfill; i++) h2->Fill(fVal[1][i], fVal[0][i], fW[i]);
    //__________________________Profile histogram_______________________
@@ -1615,7 +1620,7 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
          // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
          // the data set (which should be >0) to avoid data cut when plotting in log scale.
          TAxis *aX = h2->GetXaxis();
@@ -1702,7 +1707,7 @@ void TSelectorDraw::TakeEstimate()
                if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
             }
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
          // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
          // the data set (which should be >0) to avoid data cut when plotting in log scale.
          TAxis *aX = h2->GetXaxis();
@@ -1732,7 +1737,8 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
             if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0],
+                                                              fVmax[0]);
       }
       if (fAction == 3) {
          for (i = 0; i < fNfill; i++) h3->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
@@ -1784,7 +1790,7 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
             if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hp, fVmin[2], fVmax[2], fVmin[1], fVmax[1]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(hp, fVmin[2], fVmax[2], fVmin[1], fVmax[1]);
       }
       for (i = 0; i < fNfill; i++) hp->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
    //__________________________4D scatter plot_______________________
@@ -1805,7 +1811,8 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[3] > fVal[3][i]) fVmin[3] = fVal[3][i];
             if (fVmax[3] < fVal[3][i]) fVmax[3] = fVal[3][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0],
+                                                              fVmax[0]);
       } else {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[3] > fVal[3][i]) fVmin[3] = fVal[3][i];

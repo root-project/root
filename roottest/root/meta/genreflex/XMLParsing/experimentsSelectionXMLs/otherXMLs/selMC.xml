@@ -1,0 +1,442 @@
+<!-- * $Id: Rels.py,v 1.2 2008-11-02 16:44:38 ibelyaev Exp $ 
+     * ========================================================================
+     * $CVS tag:$, version $Revision: 1.2 $ 
+     * ========================================================================
+-->
+
+<!-- * @file
+     *
+     * The basic selection file to build the Reflex dictionaries
+     * @author ibelyaev 
+     * @date  2012-11-22 20:29:42.407589 
+     * ========================================================================
+--> 
+
+
+<lcgdict>
+
+
+    <class name="LHCb::Relation1D<LHCb::MCVertex,LHCb::GenCollision>" 
+           id="E8093ED0-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation1D<LHCb::Particle,LHCb::MCParticle>" 
+           id="7B880798-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation2D<HepMC::GenParticle*,LHCb::MCParticle>" 
+           id="95D1B585-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation2D<HepMC::GenParticle*,LHCb::Particle>" 
+           id="8F1005A3-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation2D<LHCb::MCParticle,HepMC::GenParticle*>" 
+           id="77B945C3-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation2D<LHCb::MCParticle,LHCb::Particle>" 
+           id="5140FF6D-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation2D<LHCb::Particle,HepMC::GenParticle*>" 
+           id="4F19042B-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation2D<LHCb::Particle,LHCb::MCParticle>" 
+           id="1A712912-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::CaloCluster,LHCb::MCParticle,float>" 
+           id="41B06333-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::CaloDigit,LHCb::MCParticle,float>" 
+           id="7DB12E44-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::MCParticle,LHCb::CaloCluster,float>" 
+           id="EE61581B-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::MCParticle,LHCb::ProtoParticle,double>" 
+           id="D01143F3-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::Particle,LHCb::MCParticle,double>" 
+           id="ED51D6FC-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::ProtoParticle,LHCb::MCParticle,double>" 
+           id="6540787E-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" 
+           id="D8806F1B-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" 
+           id="F5592134-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" 
+           id="CD69069D-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::MCParticle,LHCb::Particle,double>" 
+           id="0B29302E-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::MCParticle,LHCb::Track,double>" 
+           id="6770257A-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" 
+           id="4E61F5E2-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::Particle,LHCb::MCParticle,double>" 
+           id="4E59D8E4-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" 
+           id="CB90061F-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" 
+           id="ADD912B5-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::Track,LHCb::MCParticle,double>" 
+           id="B7E802BB-0000-0000-0000-000000000000" />
+
+ <class name="IRelation2D<HepMC::GenParticle*,LHCb::MCParticle>" /> 
+ <class name="IRelation2D<HepMC::GenParticle*,LHCb::Particle>" /> 
+ <class name="IRelation2D<LHCb::MCParticle,HepMC::GenParticle*>" /> 
+ <class name="IRelation2D<LHCb::MCParticle,LHCb::Particle>" /> 
+ <class name="IRelation2D<LHCb::Particle,HepMC::GenParticle*>" /> 
+ <class name="IRelation2D<LHCb::Particle,LHCb::MCParticle>" /> 
+ <class name="IRelation<HepMC::GenParticle*,LHCb::MCParticle>" /> 
+ <class name="IRelation<HepMC::GenParticle*,LHCb::Particle>" /> 
+ <class name="IRelation<LHCb::MCParticle,HepMC::GenParticle*>" /> 
+ <class name="IRelation<LHCb::MCParticle,LHCb::Particle>" /> 
+ <class name="IRelation<LHCb::MCVertex,LHCb::GenCollision>" /> 
+ <class name="IRelation<LHCb::Particle,HepMC::GenParticle*>" /> 
+ <class name="IRelation<LHCb::Particle,LHCb::MCParticle>" /> 
+ <class name="IRelationWeighted2D<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted2D<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" /> 
+ <class name="IRelationWeighted2D<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" /> 
+ <class name="IRelationWeighted2D<LHCb::MCParticle,LHCb::Particle,double>" /> 
+ <class name="IRelationWeighted2D<LHCb::MCParticle,LHCb::Track,double>" /> 
+ <class name="IRelationWeighted2D<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted2D<LHCb::Particle,LHCb::MCParticle,double>" /> 
+ <class name="IRelationWeighted2D<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted2D<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted2D<LHCb::Track,LHCb::MCParticle,double>" /> 
+ <class name="IRelationWeighted<LHCb::CaloCluster,LHCb::MCParticle,float>" /> 
+ <class name="IRelationWeighted<LHCb::CaloDigit,LHCb::MCParticle,float>" /> 
+ <class name="IRelationWeighted<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" /> 
+ <class name="IRelationWeighted<LHCb::MCParticle,LHCb::CaloCluster,float>" /> 
+ <class name="IRelationWeighted<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" /> 
+ <class name="IRelationWeighted<LHCb::MCParticle,LHCb::Particle,double>" /> 
+ <class name="IRelationWeighted<LHCb::MCParticle,LHCb::ProtoParticle,double>" /> 
+ <class name="IRelationWeighted<LHCb::MCParticle,LHCb::Track,double>" /> 
+ <class name="IRelationWeighted<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted<LHCb::Particle,LHCb::MCParticle,double>" /> 
+ <class name="IRelationWeighted<LHCb::ProtoParticle,LHCb::MCParticle,double>" /> 
+ <class name="IRelationWeighted<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" /> 
+ <class name="IRelationWeighted<LHCb::Track,LHCb::MCParticle,double>" /> 
+ <class name="Relations::Entry_<HepMC::GenParticle*,LHCb::MCParticle>" /> 
+ <class name="Relations::Entry_<HepMC::GenParticle*,LHCb::Particle>" /> 
+ <class name="Relations::Entry_<LHCb::MCParticle,HepMC::GenParticle*>" /> 
+ <class name="Relations::Entry_<LHCb::MCParticle,LHCb::Particle>" /> 
+ <class name="Relations::Entry_<LHCb::MCVertex,LHCb::GenCollision>" /> 
+ <class name="Relations::Entry_<LHCb::Particle,HepMC::GenParticle*>" /> 
+ <class name="Relations::Entry_<LHCb::Particle,LHCb::MCParticle>" /> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<HepMC::GenParticle*,LHCb::MCParticle> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<HepMC::GenParticle*,LHCb::Particle> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::MCParticle,HepMC::GenParticle*> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::MCParticle,LHCb::Particle> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::MCVertex,LHCb::GenCollision> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Particle,HepMC::GenParticle*> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Particle,LHCb::MCParticle> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::CaloCluster,LHCb::MCParticle,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::CaloDigit,LHCb::MCParticle,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> > > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::L0CaloCandidate,LHCb::MCParticle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::CaloCluster,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::L0CaloCandidate,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::Particle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::ProtoParticle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::Track,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> > > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::Particle,LHCb::MCParticle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::ProtoParticle,LHCb::MCParticle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> > > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> > > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::Track,LHCb::MCParticle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Relation2<HepMC::GenParticle*,LHCb::MCParticle>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2<HepMC::GenParticle*,LHCb::Particle>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2<LHCb::MCParticle,HepMC::GenParticle*>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2<LHCb::MCParticle,LHCb::Particle>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2<LHCb::Particle,HepMC::GenParticle*>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2<LHCb::Particle,LHCb::MCParticle>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::MCParticle,LHCb::Particle,double>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::MCParticle,LHCb::Track,double>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::Particle,LHCb::MCParticle,double>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::Track,LHCb::MCParticle,double>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation<HepMC::GenParticle*,LHCb::MCParticle>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<HepMC::GenParticle*,LHCb::Particle>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::MCParticle,HepMC::GenParticle*>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::MCParticle,LHCb::Particle>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::MCVertex,LHCb::GenCollision>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::Particle,HepMC::GenParticle*>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::Particle,LHCb::MCParticle>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationBase<HepMC::GenParticle*,LHCb::MCParticle>" /> 
+ <class name="Relations::RelationBase<HepMC::GenParticle*,LHCb::Particle>" /> 
+ <class name="Relations::RelationBase<LHCb::MCParticle,HepMC::GenParticle*>" /> 
+ <class name="Relations::RelationBase<LHCb::MCParticle,LHCb::Particle>" /> 
+ <class name="Relations::RelationBase<LHCb::MCVertex,LHCb::GenCollision>" /> 
+ <class name="Relations::RelationBase<LHCb::Particle,HepMC::GenParticle*>" /> 
+ <class name="Relations::RelationBase<LHCb::Particle,LHCb::MCParticle>" /> 
+ <class name="Relations::RelationWeighted<LHCb::CaloCluster,LHCb::MCParticle,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::CaloDigit,LHCb::MCParticle,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::MCParticle,LHCb::CaloCluster,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::MCParticle,LHCb::Particle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::MCParticle,LHCb::ProtoParticle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::MCParticle,LHCb::Track,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::Particle,LHCb::MCParticle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::ProtoParticle,LHCb::MCParticle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::Track,LHCb::MCParticle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeightedBase<LHCb::CaloCluster,LHCb::MCParticle,float>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::CaloDigit,LHCb::MCParticle,float>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::MCParticle,LHCb::CaloCluster,float>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::MCParticle,LHCb::Particle,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::MCParticle,LHCb::ProtoParticle,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::MCParticle,LHCb::Track,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::Particle,LHCb::MCParticle,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::ProtoParticle,LHCb::MCParticle,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::Track,LHCb::MCParticle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::CaloCluster,LHCb::MCParticle,float>" /> 
+ <class name="Relations::WEntry_<LHCb::CaloDigit,LHCb::MCParticle,float>" /> 
+ <class name="Relations::WEntry_<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::WEntry_<LHCb::L0CaloCandidate,LHCb::MCParticle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::MCParticle,LHCb::CaloCluster,float>" /> 
+ <class name="Relations::WEntry_<LHCb::MCParticle,LHCb::L0CaloCandidate,double>" /> 
+ <class name="Relations::WEntry_<LHCb::MCParticle,LHCb::Particle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::MCParticle,LHCb::ProtoParticle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::MCParticle,LHCb::Track,double>" /> 
+ <class name="Relations::WEntry_<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::WEntry_<LHCb::Particle,LHCb::MCParticle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::ProtoParticle,LHCb::MCParticle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::WEntry_<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> >" /> 
+ <class name="Relations::WEntry_<LHCb::Track,LHCb::MCParticle,double>" /> 
+ <class name="std::vector<Relations::Entry_<HepMC::GenParticle*,LHCb::MCParticle> >" /> 
+ <class name="std::vector<Relations::Entry_<HepMC::GenParticle*,LHCb::Particle> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::MCParticle,HepMC::GenParticle*> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::MCParticle,LHCb::Particle> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::MCVertex,LHCb::GenCollision> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::Particle,HepMC::GenParticle*> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::Particle,LHCb::MCParticle> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::CaloCluster,LHCb::MCParticle,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::CaloDigit,LHCb::MCParticle,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::GenCollision,LHCb::RecVertex,std::pair<unsigned int,float> > >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::L0CaloCandidate,LHCb::MCParticle,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::CaloCluster,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::L0CaloCandidate,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::Particle,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::ProtoParticle,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::MCParticle,LHCb::Track,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::MCVertex,LHCb::RecVertex,std::pair<unsigned int,float> > >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::Particle,LHCb::MCParticle,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::ProtoParticle,LHCb::MCParticle,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::RecVertex,LHCb::GenCollision,std::pair<unsigned int,float> > >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::RecVertex,LHCb::MCVertex,std::pair<unsigned int,float> > >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::Track,LHCb::MCParticle,double> >" /> 
+
+ <class pattern="Relations::Pointer<*>"   /> 
+ <class pattern="Relations::Reference<*>" /> 
+
+ <!-- * EXCLUSIONS                       * -->
+ <!-- *  1) Not needed for interactivity * -->
+ <!-- *  2) Not needed for persistency   * -->
+
+ <exclusion>
+
+ <class pattern="IRelation*">
+    <method name="="/>
+ </class>
+ <class pattern="LHCb::Relation*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Relation*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Entry_*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::WEntry_*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Range_*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Pointer*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Reference*">
+    <method name="="/>
+ </class>
+ <class pattern="std::vector&lt;Relations::*&gt;">
+    <method name="="/>
+ </class>
+
+ </exclusion>
+
+</lcgdict>
+
+<!-- * ===================================================================== -->
+<!-- * The END * =========================================================== -->
+<!-- * ===================================================================== -->
+

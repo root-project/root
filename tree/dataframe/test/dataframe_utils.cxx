@@ -1,11 +1,14 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RNTupleDS.hxx"
 #include "TTree.h"
 
 #include "gtest/gtest.h"
 
 #include <stdexcept>
 #include <vector>
+
+#include <TBranch.h>
 
 namespace RDFInt = ROOT::Internal::RDF;
 
@@ -24,10 +27,9 @@ TEST(RDataFrameUtils, DeduceAllPODsFromDefines)
                .Define("Long64_t_tmp", []() { return Long64_t(0ll); })
                .Define("ULong64_t_tmp", []() { return ULong64_t(0ull); })
                .Define("bool_tmp", []() { return bool(false); });
-   auto c = d.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
-                       ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
-                                        {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
-                                         "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
+   auto c = d.Snapshot("t", "dataframe_interfaceAndUtils_1.root",
+                       {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp", "double_tmp",
+                        "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
 }
 
 TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
@@ -136,11 +138,11 @@ TEST(RDataFrameUtils, FindUnknownColumns)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
    RDFInt::RColumnRegister defs(&lm);
    defs.AddAlias("b", "a");
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, defs, lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 2u);
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
@@ -151,12 +153,13 @@ TEST(RDataFrameUtils, FindUnknownColumnsWithDataSource)
    int i;
    TTree t("t", "t");
    t.Branch("a", &i);
+   t.Branch("c", &i);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
    RDFInt::RColumnRegister defs(&lm);
    defs.AddAlias("b", "a");
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {"c"});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, defs, lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
@@ -172,9 +175,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsNestedNames)
    DummyStruct s{1, 2};
    t.Branch("s", &s, "a/I:b/I");
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
-   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::GetBranchNames(t),
-                                                 RDFInt::RColumnRegister{&lm}, {});
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
+   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::RColumnRegister{&lm},
+                                                 lm.GetDataSource()->GetColumnNames());
    const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "_asd_"});
    EXPECT_EQ(unknownCols, trueUnknownCols);
 }
@@ -201,9 +204,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
    t1.AddFriend(&t2);
    t1.AddFriend(&t4);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
-   auto ncols =
-      RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::GetBranchNames(t1), RDFInt::RColumnRegister{&lm}, {});
+   ROOT::Detail::RDF::RLoopManager lm{&t1, {}};
+   auto ncols = RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::RColumnRegister{&lm},
+                                           lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
 }
 
@@ -231,8 +234,94 @@ TEST(RDataFrameUtils, TypeName2TypeID)
 {
    EXPECT_EQ(typeid(float), RDFInt::TypeName2TypeID("float"));
    EXPECT_EQ(typeid(std::vector<float>), RDFInt::TypeName2TypeID("std::vector<float>"));
-   EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
-   EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
-   // TODO(jblomer): Ideally, we would want the next one not to throw an exception
-   EXPECT_THROW(RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"), std::runtime_error);
+   EXPECT_EQ(typeid(std::vector<std::vector<float>>), RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"));
+}
+
+TEST(RDataFrameUtils, GetClusterRanges)
+{
+   // Helper RAII class for file cleanup
+   class FileRAII {
+   private:
+      std::string fPath;
+
+   public:
+      explicit FileRAII(const std::string &path) : fPath(path) {}
+      FileRAII(const FileRAII &) = delete;
+      FileRAII &operator=(const FileRAII &) = delete;
+      ~FileRAII() { std::remove(fPath.c_str()); }
+      auto GetPath() const { return fPath.c_str(); }
+   };
+
+   FileRAII fTTree1("dataframe_interfaceAndUtils_2_tree_1.root");
+   FileRAII fTTree2("dataframe_interfaceAndUtils_2_tree_2.root");
+   FileRAII fRNTuple1("dataframe_interfaceAndUtils_2_rntuple_1.root");
+   FileRAII fRNTuple2("dataframe_interfaceAndUtils_2_rntuple_2.root");
+
+   const int nEntries = 1000;
+   const int clusterSize = 250;
+
+   // Test TTree single file
+   {
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fAutoFlush = clusterSize;
+      auto df = ROOT::RDataFrame(nEntries).Define("i", "rdfentry_");
+      df.Snapshot("t", fTTree1.GetPath(), {"i"}, opts);
+      df.Snapshot("t", fTTree2.GetPath(), {"i"}, opts);
+   }
+   {
+      ROOT::RDataFrame dfTTree("t", fTTree1.GetPath());
+      auto rangesTTree = RDFInt::GetDatasetGlobalClusterBoundaries(dfTTree);
+
+      EXPECT_EQ(rangesTTree.size(), nEntries / clusterSize);
+      for (size_t i = 0; i < rangesTTree.size(); ++i) {
+         EXPECT_EQ(rangesTTree[i].first, i * clusterSize);
+         EXPECT_EQ(rangesTTree[i].second, (i + 1) * clusterSize);
+      }
+   }
+
+   // Test TTree multiple files (chain)
+   {
+      ROOT::RDataFrame dfTTreeChain("t", {fTTree1.GetPath(), fTTree2.GetPath()});
+      auto rangesTTreeChain = RDFInt::GetDatasetGlobalClusterBoundaries(dfTTreeChain);
+
+      EXPECT_EQ(rangesTTreeChain.size(), 2 * nEntries / clusterSize);
+      for (size_t i = 0; i < rangesTTreeChain.size(); ++i) {
+         EXPECT_EQ(rangesTTreeChain[i].first, i * clusterSize);
+         EXPECT_EQ(rangesTTreeChain[i].second, (i + 1) * clusterSize);
+      }
+   }
+
+   // Test RNTuple single file
+   {
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      auto df = ROOT::RDataFrame(nEntries).Define("i", "rdfentry_");
+      df.Snapshot("nt", fRNTuple1.GetPath(), {"i"}, opts);
+      df.Snapshot("nt", fRNTuple2.GetPath(), {"i"}, opts);
+   }
+   {
+      auto dfRNTuple = ROOT::RDF::FromRNTuple("nt", fRNTuple1.GetPath());
+      auto rangesRNTuple = RDFInt::GetDatasetGlobalClusterBoundaries(dfRNTuple);
+
+      EXPECT_FALSE(rangesRNTuple.empty());
+      EXPECT_EQ(rangesRNTuple.front().first, 0u);
+      EXPECT_EQ(rangesRNTuple.back().second, ULong64_t(nEntries));
+      for (size_t i = 1; i < rangesRNTuple.size(); ++i) {
+         EXPECT_EQ(rangesRNTuple[i].first, rangesRNTuple[i - 1].second);
+      }
+   }
+
+   // Test RNTuple multiple files
+   {
+      auto dfRNTupleChain =
+         ROOT::RDF::FromRNTuple("nt", std::vector<std::string>{fRNTuple1.GetPath(), fRNTuple2.GetPath()});
+      auto rangesRNTupleChain = RDFInt::GetDatasetGlobalClusterBoundaries(dfRNTupleChain);
+
+      EXPECT_FALSE(rangesRNTupleChain.empty());
+      EXPECT_EQ(rangesRNTupleChain.front().first, 0u);
+      EXPECT_EQ(rangesRNTupleChain.back().second, ULong64_t(2 * nEntries));
+      for (size_t i = 1; i < rangesRNTupleChain.size(); ++i) {
+         EXPECT_EQ(rangesRNTupleChain[i].first, rangesRNTupleChain[i - 1].second);
+      }
+   }
 }

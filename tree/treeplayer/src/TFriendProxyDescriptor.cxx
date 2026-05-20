@@ -20,7 +20,6 @@ fragment in the result of MakeProxy.
 #include "TBranchProxyDescriptor.h"
 #include "TList.h"
 
-ClassImp(ROOT::Internal::TFriendProxyDescriptor);
 
 namespace ROOT {
 namespace Internal {

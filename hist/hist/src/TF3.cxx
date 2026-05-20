@@ -24,11 +24,29 @@
 #include "Math/IntegratorOptions.h"
 #include <cassert>
 
-ClassImp(TF3);
 
 /** \class TF3
     \ingroup Functions
-A 3-Dim function with parameters
+TF3 defines a 3D Function with Parameters.
+
+3D implicit functions can be visualized as iso-surfaces. An implicit surface is defined 
+by the equation f(x,y,z) = 0 and is rendered in Cartesian coordinates.
+
+In the example below, the drawing options "FB" and "BB" are used to remove the 
+front box and back box of the 3D frame keeping only the three axes.
+
+Begin_Macro(source)
+{
+   auto C = new TCanvas("C","C",500,500);
+   auto f3 = new TF3("gyroid",
+      "sin(x)*cos(y) + sin(y)*cos(z) + sin(z)*cos(x)",
+      -4, 4, -4, 4, -4, 4);
+   f3->SetFillColor(50);
+   f3->SetLineColor(15);
+   f3->Draw("FBBB");
+}
+End_Macro
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,14 +59,15 @@ TF3::TF3()
    fZmax = 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a formula definition
+/// TF3 constructor using a formula definition and string option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
-TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Option_t * opt)
-   :TF2(name,formula,xmin,xmax,ymax,ymin,opt)
+TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         Double_t zmin, Double_t zmax, Option_t *opt)
+   : TF2(name, formula, xmin, xmax, ymax, ymin,
+         opt) // purposely swapped ymax, ymin to signal that TFormula may be 1D or 2D or 3D
 {
    fZmin   = zmin;
    fZmax   = zmax;
@@ -63,7 +82,30 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a pointer to real function
+/// TF3 constructor using a formula definition and explicit option args
+///
+/// See TFormula constructor for explanation of the formula syntax.
+
+TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         Double_t zmin, Double_t zmax, EAddToList addToGlobList, bool vectorize)
+   : TF2(name, formula, xmin, xmax, ymax, ymin, addToGlobList,
+         vectorize) // purposely swapped ymax, ymin to signal that TFormula may be 1D or 2D or 3D
+{
+   fZmin = zmin;
+   fZmax = zmax;
+   fNpz = 30;
+   Int_t ndim = GetNdim();
+   // accept 1-d or 2-d formula
+   if (ndim < 3)
+      fNdim = 3;
+   if (ndim > 3 && xmin < xmax && ymin < ymax && zmin < zmax) {
+      Error("TF3", "function: %s/%s has dimension %d instead of 3", name, formula, ndim);
+      MakeZombie();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TF3 constructor using a pointer to real function
 ///
 /// \param[in] name object name
 /// \param[in] fcn pointer to real function
@@ -90,7 +132,7 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a pointer to real function---
+/// TF3 constructor using a pointer to real function---
 ///
 /// \param[in] name object name
 /// \param[in] fcn pointer to real function
@@ -117,7 +159,7 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a ParamFunctor
+/// TF3 constructor using a ParamFunctor
 ///
 /// a functor class implementing operator() (double *, double *)
 ///
@@ -189,7 +231,7 @@ Int_t TF3::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this function with its current attributes
+/// Draw this function with iso-surfaces.
 
 void TF3::Draw(Option_t *option)
 {
@@ -462,6 +504,19 @@ Double_t TF3::GetSave(const Double_t *xx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create the basic function objects
+
+void TF3::InitStandardFunctions()
+{
+   TF3 *f3;
+   R__LOCKGUARD(gROOTMutex);
+   if (!gROOT->GetListOfFunctions()->FindObject("xyzgaus")) {
+      f3 = new TF3("xyzgaus", "xyzgaus", -1, 1, -1, 1, -1, 1);
+      f3->SetParameters(1, 0, 1, 0, 1, 0, 1);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
 /// with a desired relative accuracy.
 
@@ -618,7 +673,7 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << f3Name << " = new TF3(\"" << GetName() << "\", " << GetTitle() << "," << fXmin << "," << fXmax << ","
           << fYmin << "," << fYmax << "," << fZmin << "," << fZmax << "," << GetNpar() << ");\n";
 
-   SaveFillAttributes(out, f3Name, 0, 1001);
+   SaveFillAttributes(out, f3Name, -1, 0);
    SaveMarkerAttributes(out, f3Name, 1, 1, 1);
    SaveLineAttributes(out, f3Name, 1, 1, 4);
 

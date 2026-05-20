@@ -16,9 +16,6 @@ def pythonize_tstring(klass):
     # Parameters:
     # klass: class to be pythonized
 
-    # Support `len(s)` as `s.Length()`
-    klass.__len__ = klass.Length
-
     # Add string representation
     klass.__str__  = klass.Data
     klass.__repr__ = lambda self: "'{}'".format(self)

@@ -1,0 +1,17 @@
+<lcgdict>
+   <class name="myClass1<int>" />
+   <class name="myClass2<float>" />
+   <class name="myClass0<E>" />
+   <class name="myClass1<E>" />
+   <class name="myClass2<E>" />
+   <class name="myClass3<E>" />
+   <class name="myClass4<E>" />
+   <class name="myClass5<E>" />
+   <class name="myClass6<E>" />
+   <class name="myClass7<E>" />
+   <class name="myClass8<E>" />
+   <class name="myClass8<std::vector<E>>" />
+   <class name="myClass8<std::vector<std::queue<E>>>" />
+   <class name="myClass9<E>" />
+</lcgdict>
+

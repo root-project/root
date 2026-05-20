@@ -1,13 +1,26 @@
-import py, os, sys
+import os, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("fragileDict"))
+test_dct = "fragile_cxx"
 
-def setup_module(mod):
-    setup_make("fragile")
+
+def has_cpp_20():
+    import cppyy
+
+    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
+
+def has_asserts():
+    import cppyy
+
+    return "asserts" in cppyy.gbl.gROOT.GetConfigFeatures()
+
+
+def is_modules_off():
+    import cppyy
+
+    return "runtime_cxxmodules" not in cppyy.gbl.gROOT.GetConfigFeatures()
 
 
 class TestFRAGILE:
@@ -38,7 +51,8 @@ class TestFRAGILE:
         assert cppyy.gbl.fragile == cppyy.gbl.fragile
         fragile = cppyy.gbl.fragile
 
-        raises(AttributeError, getattr, fragile, "no_such_class")
+        no_such_class = fragile.no_such_class
+        raises(TypeError, no_such_class)  # cannot instantiate incomplete type
 
         assert fragile.C is fragile.C
         assert fragile.C == fragile.C
@@ -166,6 +180,7 @@ class TestFRAGILE:
         g = cppyy.gbl.fragile.gI
         assert not g
 
+    @mark.xfail(strict=True)
     def test10_documentation(self):
         """Check contents of documentation"""
 
@@ -211,7 +226,7 @@ class TestFRAGILE:
         except TypeError as e:
             assert "cannot instantiate abstract class 'fragile::O'" in str(e)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test11_dir(self):
         """Test __dir__ method"""
 
@@ -445,7 +460,7 @@ class TestFRAGILE:
         finally:
             sys.path = oldsp
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test18_overload(self):
         """Test usage of __overload__"""
 
@@ -461,6 +476,7 @@ class TestFRAGILE:
                     'double lb, double ub, double value, bool binary, bool integer, const std::string& name']:
             assert cppyy.gbl.Variable.__init__.__overload__(sig)
 
+    @mark.xfail(strict=True, run=not is_modules_off(), condition=IS_WINDOWS or is_modules_off(), reason="Fails on Windows, crashes on alma9 with modules off")
     def test19_gbl_contents(self):
         """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
 
@@ -533,7 +549,7 @@ class TestFRAGILE:
         assert "invaliddigit" in err
         assert "1aap=42;" in err
 
-    @mark.xfail()
+    @mark.xfail(strict=True, condition=not IS_WINDOWS, reason="Fails on Windows")
     def test22_cppexec(self):
         """Interactive access to the Cling global scope"""
 
@@ -545,8 +561,7 @@ class TestFRAGILE:
         with raises(SyntaxError):
             cppyy.cppexec("doesnotexist");
 
-    # This test is very verbose since it sets gDebugo to true
-    @mark.skip()
+    @mark.skip(reason="This test is very verbose since it sets gDebug to True")
     def test23_set_debug(self):
         """Setting of global gDebug variable"""
 
@@ -561,7 +576,7 @@ class TestFRAGILE:
         cppyy.set_debug(False)
         assert cppyy.gbl.CppyyLegacy.gDebug ==  0
 
-    @mark.xfail()
+    @mark.skip(reason="Not actually a cppyy test")
     def test24_asan(self):
         """Check availability of ASAN with gcc"""
 
@@ -573,7 +588,8 @@ class TestFRAGILE:
 
         cppyy.include('sanitizer/asan_interface.h')
 
-    @mark.xfail()
+    @mark.xfail(run=False, condition=has_asserts(),
+                reason="Transaction.cpp:98: void cling::Transaction::addNestedTransaction(cling::Transaction*): Assertion `!m_Unloading && \"Must not nest within unloading transaction\"' failed.")
     def test25_cppdef_error_reporting(self):
         """Check error reporting of cppyy.cppdef"""
 
@@ -588,16 +604,18 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
-        with warnings.catch_warnings(record=True) as w:
-          # missing return statement
-            cppyy.cppdef("""\
-            namespace fragile {
-                double add42d(double d) { d + 42.; return d; }
-            }""")
+      # isolate the warning configuration
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # turn warnings into errors
 
-        assert len(w) == 1
-        assert issubclass(w[-1].category, SyntaxWarning)
-        assert "return" in str(w[-1].message)
+          # missing return statement
+            with pytest.raises(SyntaxWarning) as exc:
+                cppyy.cppdef("""\
+                namespace fragile {
+                    double add42d(double d) { d + 42.; return d; }
+                }""")
+
+            assert "return" in str(exc.value)
 
       # mix of error and warning
         with raises(SyntaxError):
@@ -608,7 +626,7 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="Fatal Python error: Aborted")
     def test26_macro(self):
         """Test access to C++ pre-processor macro's"""
 
@@ -662,8 +680,8 @@ class TestFRAGILE:
         cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
         cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
 
-    @mark.skip()
-    def test30_two_nested_ambiguity(self):
+    @mark.xfail(run=False, reason="Fatal Python error: Aborted")
+    def test30_two_nested_ambiguity(self, capfd):
         """Nested class ambiguity in older Clangs"""
 
         import cppyy
@@ -692,7 +710,12 @@ class TestFRAGILE:
         p = Test.Family1.Parent()
         p.children                          # used to crash
 
-    @mark.xfail()
+        # Fail if there was an interpreter error
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
+
+    @mark.xfail(strict=True)
     def test31_template_with_class_enum(self):
         """Template instantiated with class enum"""
 
@@ -732,6 +755,11 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
+    # This test has unclear failure conditions. On the ROOT CI PR builds if
+    # passes, but it fails in the nightlies with:
+    # "Failed: DID NOT RAISE <class 'cppyy.ll.AbortSignal'>"
+    # We can therefore not use strict=True and a meaningful failure condition.
+    @mark.xfail()
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
@@ -786,19 +814,13 @@ class TestSIGNALS:
 
 
 class TestSTDNOTINGLOBAL:
-    def setup_class(cls):
-        import cppyy
-        cls.has_byte = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test01_stl_in_std(self):
         """STL classes should live in std:: only"""
 
         import cppyy
 
-        names = ['array', 'function', 'list', 'set', 'vector']
-        if self.has_byte:
-            names.append('byte')
+        names = ["array", "function", "list", "set", "vector", "byte"]
 
         for name in names:
             getattr(cppyy.gbl.std, name)
@@ -823,7 +845,7 @@ class TestSTDNOTINGLOBAL:
         assert cppyy.gbl.std.int8_t(-42) == cppyy.gbl.int8_t(-42)
         assert cppyy.gbl.std.uint8_t(42) == cppyy.gbl.uint8_t(42)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test03_clashing_using_in_global(self):
         """Redefines of std:: typedefs should be possible in global"""
 
@@ -839,7 +861,7 @@ class TestSTDNOTINGLOBAL:
         for name in ['int', 'uint', 'ushort', 'uchar', 'byte']:
             getattr(cppyy.gbl, name)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test04_no_legacy(self):
         """Test some functions that previously crashed"""
 
@@ -859,7 +881,7 @@ class TestSTDNOTINGLOBAL:
 
         assert cppyy.gbl.ELogLevel != cppyy.gbl.CppyyLegacy.ELogLevel
 
-    @mark.xfail()
+    @mark.skipif(not has_cpp_20(), reason="std::span requires C++20")
     def test05_span_compatibility(self):
         """Test compatibility of span under C++2a compilers that support it"""
 
@@ -871,3 +893,7 @@ class TestSTDNOTINGLOBAL:
         std::span<int> my_test_span1;
         #endif
         """)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-v', '-ra', __file__]))

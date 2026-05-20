@@ -26,7 +26,6 @@
 #include "Minuit2/NumericalDerivator.h"
 #include <cmath>
 #include <algorithm>
-#include <Math/IFunction.h>
 #include <iostream>
 #include <TMath.h>
 #include <cassert>
@@ -44,51 +43,52 @@ NumericalDerivator::NumericalDerivator(bool always_exactly_mimic_minuit2)
 
 NumericalDerivator::NumericalDerivator(double step_tolerance, double grad_tolerance, unsigned int ncycles,
                                        double error_level, bool always_exactly_mimic_minuit2)
-   : fStepTolerance(step_tolerance), fGradTolerance(grad_tolerance), fUp(error_level), fNCycles(ncycles),
+   : fStepTolerance(step_tolerance),
+     fGradTolerance(grad_tolerance),
+     fUp(error_level),
+     fNCycles(ncycles),
      fAlwaysExactlyMimicMinuit2(always_exactly_mimic_minuit2)
 {
 }
 
-NumericalDerivator::NumericalDerivator(const NumericalDerivator &/*other*/) = default;
-
+NumericalDerivator::NumericalDerivator(const NumericalDerivator & /*other*/) = default;
 
 /// This function sets internal state based on input parameters. This state
 /// setup is used in the actual (partial) derivative calculations.
-void NumericalDerivator::SetupDifferentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
+void NumericalDerivator::SetupDifferentiate(unsigned int nDim, const FCNBase *function, const double *cx,
                                             std::span<const ROOT::Fit::ParameterSettings> parameters)
 {
    assert(function != nullptr && "function is a nullptr");
 
-   fVx.resize(function->NDim());
-   fVxExternal.resize(function->NDim());
-   fVxFValCache.resize(function->NDim());
-   std::copy(cx, cx + function->NDim(), fVx.data());
+   fVx.resize(nDim);
+   fVxExternal.resize(nDim);
+   fVxFValCache.resize(nDim);
+   std::copy(cx, cx + nDim, fVx.data());
 
    // convert to Minuit external parameters
-   for (unsigned i = 0; i < function->NDim(); i++) {
+   for (unsigned i = 0; i < nDim; i++) {
       fVxExternal[i] = Int2ext(parameters[i], fVx[i]);
    }
 
    if (fVx != fVxFValCache) {
       fVxFValCache = fVx;
-      fVal = (*function)(fVxExternal.data()); // value of function at given points
+      fVal = (*function)(fVxExternal); // value of function at given points
    }
 
    fDfmin = 8. * fPrecision.Eps2() * (std::abs(fVal) + fUp);
    fVrysml = 8. * fPrecision.Eps() * fPrecision.Eps();
 }
 
-DerivatorElement NumericalDerivator::PartialDerivative(const ROOT::Math::IBaseFunctionMultiDim *function,
-                                                       const double *x,
+DerivatorElement NumericalDerivator::PartialDerivative(unsigned int nDim, const FCNBase *function, const double *x,
                                                        std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                        unsigned int i_component, DerivatorElement previous)
 {
-   SetupDifferentiate(function, x, parameters);
+   SetupDifferentiate(nDim, function, x, parameters);
    return FastPartialDerivative(function, parameters, i_component, previous);
 }
 
 // leaves the parameter setup to the caller
-DerivatorElement NumericalDerivator::FastPartialDerivative(const ROOT::Math::IBaseFunctionMultiDim *function,
+DerivatorElement NumericalDerivator::FastPartialDerivative(const FCNBase *function,
                                                            std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                            unsigned int i_component, const DerivatorElement &previous)
 {
@@ -121,11 +121,11 @@ DerivatorElement NumericalDerivator::FastPartialDerivative(const ROOT::Math::IBa
       step_old = step;
       fVx[i_component] = xtf + step;
       fVxExternal[i_component] = Int2ext(parameters[i_component], fVx[i_component]);
-      double fs1 = (*function)(fVxExternal.data());
+      double fs1 = (*function)(fVxExternal);
 
       fVx[i_component] = xtf - step;
       fVxExternal[i_component] = Int2ext(parameters[i_component], fVx[i_component]);
-      double fs2 = (*function)(fVxExternal.data());
+      double fs2 = (*function)(fVxExternal);
 
       fVx[i_component] = xtf;
       fVxExternal[i_component] = Int2ext(parameters[i_component], fVx[i_component]);
@@ -142,24 +142,24 @@ DerivatorElement NumericalDerivator::FastPartialDerivative(const ROOT::Math::IBa
    return deriv;
 }
 
-DerivatorElement NumericalDerivator::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+DerivatorElement NumericalDerivator::operator()(unsigned int nDim, const FCNBase *function, const double *x,
                                                 std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                 unsigned int i_component, const DerivatorElement &previous)
 {
-   return PartialDerivative(function, x, parameters, i_component, previous);
+   return PartialDerivative(nDim, function, x, parameters, i_component, previous);
 }
 
 std::vector<DerivatorElement>
-NumericalDerivator::Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
+NumericalDerivator::Differentiate(unsigned int nDim, const FCNBase *function, const double *cx,
                                   std::span<const ROOT::Fit::ParameterSettings> parameters,
                                   std::span<const DerivatorElement> previous_gradient)
 {
-   SetupDifferentiate(function, cx, parameters);
+   SetupDifferentiate(nDim, function, cx, parameters);
 
    std::vector<DerivatorElement> gradient;
-   gradient.reserve(function->NDim());
+   gradient.reserve(nDim);
 
-   for (unsigned int ix = 0; ix < function->NDim(); ++ix) {
+   for (unsigned int ix = 0; ix < nDim; ++ix) {
       gradient.emplace_back(FastPartialDerivative(function, parameters, ix, previous_gradient[ix]));
    }
 
@@ -221,8 +221,7 @@ double NumericalDerivator::DInt2Ext(const ROOT::Fit::ParameterSettings &paramete
 // MODIFIED:
 /// This function was not implemented as in Minuit2. Now it copies the behavior
 /// of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
-void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *,
-                                            std::span<const ROOT::Fit::ParameterSettings> parameters,
+void NumericalDerivator::SetInitialGradient(std::span<const ROOT::Fit::ParameterSettings> parameters,
                                             std::vector<DerivatorElement> &gradient)
 {
    // set an initial gradient using some given steps

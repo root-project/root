@@ -13,7 +13,7 @@
 //                                                                      //
 // rpdutils                                                             //
 //                                                                      //
-// Set of utilities for rootd/proofd daemon authentication.             //
+// Set of utilities for rootd daemon authentication.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -22,22 +22,22 @@
 #include <ROOT/RConfig.hxx>
 #include "strlcpy.h"
 
-#include <ctype.h>
+#include <cctype>
 #include <fcntl.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <errno.h>
+#include <cerrno>
 #include <netdb.h>
-#include <math.h>
+#include <cmath>
 #include "snprintf.h"
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
@@ -53,7 +53,7 @@
     defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
-#include <signal.h>
+#include <csignal>
 #endif
 
 #ifdef _AIX
@@ -221,15 +221,15 @@ ErrorHandler_t gErrSys   = 0;
 ErrorHandler_t gErrFatal = 0;
 ErrorHandler_t gErr      = 0;
 bool gSysLog = 0;
-std::string gServName[3] = { "sockd", "rootd", "proofd" };
+std::string gServName[3] = { "sockd", "rootd" };
 
 //
 // Local global consts
 static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
 static const int gMAXTABSIZE = 50000000;
 
-static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Unsupported",
-                                                "Unsupported", "Unsupported", "Unsupported" };
+static const std::string gAuthMeth[ROOT::Deprecated::kMAXSEC] = { "UsrPwd", "Unsupported", "Unsupported",
+                                                                  "Unsupported", "Unsupported", "Unsupported" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd
@@ -248,11 +248,11 @@ static int gClientOld = 0;              // msg sync for old client (<=3.05/07)
 static int gClientProtocol = -1;
 static int gCryptRequired = -1;
 static std::string gCryptToken;
-static int gAllowMeth[kMAXSEC];
+static int gAllowMeth[ROOT::Deprecated::kMAXSEC];
 static int gAnon = 0;
 static int gExistingAuth = 0;
 static int gAuthListSent = 0;
-static int gHaveMeth[kMAXSEC];
+static int gHaveMeth[ROOT::Deprecated::kMAXSEC];
 static EMessageTypes gKindOld;          // msg sync for old client (<=3.05/07)
 static int gMethInit = 0;
 static int gNumAllow = -1;
@@ -286,12 +286,12 @@ static int gSaltRequired = -1;
 static int gSec = -1;
 static int gServerProtocol = -1;
 static EService gService = kROOTD;
-static int gTriedMeth[kMAXSEC];
+static int gTriedMeth[ROOT::Deprecated::kMAXSEC];
 static char gUser[64] = { 0 };
-static char *gUserAllow[kMAXSEC] = { 0 };          // User access control
-static unsigned int gUserAlwLen[kMAXSEC] = { 0 };
-static unsigned int gUserIgnLen[kMAXSEC] = { 0 };
-static char *gUserIgnore[kMAXSEC] = { 0 };
+static char *gUserAllow[ROOT::Deprecated::kMAXSEC] = { 0 };          // User access control
+static unsigned int gUserAlwLen[ROOT::Deprecated::kMAXSEC] = { 0 };
+static unsigned int gUserIgnLen[ROOT::Deprecated::kMAXSEC] = { 0 };
+static char *gUserIgnore[ROOT::Deprecated::kMAXSEC] = { 0 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
@@ -492,41 +492,6 @@ void RpdSetMethInitFlag(int methinit)
    gMethInit = methinit;
    if (gDebug > 2)
       ErrorInfo("RpdSetMethInitFlag: gMethInit set to %d", gMethInit);
-}
-////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the root string for key files
-/// Used by proofd.
-
-const char *RpdGetKeyRoot()
-{
-   return (const char *)gRpdKeyRoot.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return protocol version run by the client.
-/// Used by proofd.
-
-int RpdGetClientProtocol()
-{
-   return gClientProtocol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return authentication protocol used for the handshake.
-/// Used by proofd.
-
-int RpdGetAuthProtocol()
-{
-   return gAuthProtocol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return offset in the authtab file.
-/// Used by proofd.
-
-int RpdGetOffSet()
-{
-   return gOffSet;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -796,7 +761,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       retval = lseek(itab, 0, SEEK_END);
 
       // Save first RSA public key into file for later use by the
-      // same or other rootd/proofd; we will update the tab file
+      // same or other rootd; we will update the tab file
       // only if this operation is successful
       int ntry = 10;
       int rs = 0;
@@ -1507,7 +1472,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (opt & ROOT::Deprecated::kAUTH_REUSE_MSK))) {
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -1544,8 +1509,8 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
    std::string theDaemonRc;
 
    // Check if a non-standard file has been requested
-   if (getenv("ROOTDAEMONRC"))
-      theDaemonRc = getenv("ROOTDAEMONRC");
+   if (std::getenv("ROOTDAEMONRC"))
+      theDaemonRc = std::getenv("ROOTDAEMONRC");
 
    if (theDaemonRc.length() <= 0) {
       if (getuid()) {
@@ -1555,16 +1520,16 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             theDaemonRc = std::string(pw->pw_dir).append("/");
             theDaemonRc.append(gDaemonRc);
          } else {
-            if (getenv("ROOTETCDIR")) {
-               theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
+            if (std::getenv("ROOTETCDIR")) {
+               theDaemonRc = std::string(std::getenv("ROOTETCDIR")).append("/system");
                theDaemonRc.append(gDaemonRc);
             } else
                theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
          }
       } else {
          // If running as super-user, check system file only
-         if (getenv("ROOTETCDIR")) {
-            theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
+         if (std::getenv("ROOTETCDIR")) {
+            theDaemonRc = std::string(std::getenv("ROOTETCDIR")).append("/system");
             theDaemonRc.append(gDaemonRc);
          } else
             theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
@@ -1663,7 +1628,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
             // Reset mth[kMAXSEC]
             nmet = 0;
-            for (i = 0; i < kMAXSEC; i++) {
+            for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
                mth[i] = -1;
             }
 
@@ -1698,11 +1663,11 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
             if (strlen(tmp) > 1) {
 
-               for (tmet = 0; tmet < kMAXSEC; tmet++) {
+               for (tmet = 0; tmet < ROOT::Deprecated::kMAXSEC; tmet++) {
                   if (!rpdstrcasecmp(gAuthMeth[tmet].c_str(), tmp))
                      break;
                }
-               if (tmet < kMAXSEC) {
+               if (tmet < ROOT::Deprecated::kMAXSEC) {
                   if (gDebug > 2)
                      ErrorInfo("RpdCheckAuthAllow: tmet %d", tmet);
                } else {
@@ -1718,8 +1683,8 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             jm = -1;
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found method %d (have?:%d)",
-                         tmet, (tmet >= 0 && tmet < kMAXSEC) ? gHaveMeth[tmet] : 0);
-            if (tmet >= 0 && tmet < kMAXSEC) {
+                         tmet, (tmet >= 0 && tmet < ROOT::Deprecated::kMAXSEC) ? gHaveMeth[tmet] : 0);
+            if (tmet >= 0 && tmet < ROOT::Deprecated::kMAXSEC) {
                if (gHaveMeth[tmet] == 1) {
                   int ii;
                   for (ii = 0; ii < nmet; ii++) {
@@ -1823,7 +1788,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
          found = 1;
          retval = 1;
          gNumAllow = gNumLeft = nmet;
-         for (i = 0; i < kMAXSEC; i++) {
+         for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
             gAllowMeth[i] = -1;
             gTriedMeth[i] = 0;
             if (i < gNumAllow) {
@@ -1869,13 +1834,13 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
           ("RpdCheckAuthAllow: returning: %d (gNumAllow: %d, gNumLeft:%d)",
            retval, gNumAllow, gNumLeft);
       int i, jm;
-      for (i = 0; i < kMAXSEC; i++) {
+      for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
          jm = gAllowMeth[i];
          if (gUserAlwLen[jm] > 0)
             ErrorInfo("RpdCheckAuthAllow: users allowed for method %d: %s",
                       jm, gUserAllow[jm]);
       }
-      for (i = 0; i < kMAXSEC; i++) {
+      for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
          jm = gAllowMeth[i];
          if (gUserIgnLen[jm] > 0)
             ErrorInfo("RpdCheckAuthAllow: users ignored for method %d: %s",
@@ -2401,7 +2366,7 @@ int RpdPass(const char *pass, int errheq)
 
          SPrintf(line, kMAXPATHLEN, "0 1 %d %d %s %s",
                  gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-         if (!afs_auth || gService == kPROOFD)
+         if (!afs_auth)
             offset = RpdUpdateAuthTab(1, line, &token);
          if (gDebug > 2)
             ErrorInfo("RpdPass: got offset %d", offset);
@@ -2528,7 +2493,7 @@ void RpdInitAuth()
    // Reset
    int i;
    gNumAllow = gNumLeft = 0;
-   for (i = 0; i < kMAXSEC; i++) {
+   for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
       gAllowMeth[i] = -1;
       gHaveMeth[i] = 1;
    }
@@ -2603,8 +2568,7 @@ int RpdCheckDaemon(const char *daemon)
             cmd[i++] = ch;
          } else {
             cmd[i] = '\0';
-            if (strstr(cmd, "grep") == 0 && strstr(cmd, "rootd") == 0
-                && strstr(cmd, "proofd") == 0) {
+            if (strstr(cmd, "grep") == 0 && strstr(cmd, "rootd") == 0) {
                cnt++;
             }
             i = 0;
@@ -2659,9 +2623,9 @@ int RpdUser(const char *sstr)
       user[ulen] = '\0';
       if (nw > 5)
          ruser[rulen] = '\0';
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-      gCryptRequired = (opt & kAUTH_CRYPT_MSK);
-      gSaltRequired  = (opt & kAUTH_SSALT_MSK);
+      gReUseRequired = (opt & ROOT::Deprecated::kAUTH_REUSE_MSK);
+      gCryptRequired = (opt & ROOT::Deprecated::kAUTH_CRYPT_MSK);
+      gSaltRequired  = (opt & ROOT::Deprecated::kAUTH_SSALT_MSK);
       gOffSet = ofs;
 #ifdef R__SSL
       if (gRSASSLKey) {
@@ -3196,7 +3160,7 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save RSA public key into file for later use by other rootd/proofd.
+/// Save RSA public key into file for later use by other rootd.
 /// Return: 0 if ok
 ///         1 if not ok
 ///         2 if not ok because file already exists and cannot be
@@ -3246,7 +3210,7 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
       }
    }
 
-   // Write the key if no error occured
+   // Write the key if no error occurred
    if (retval == 0) {
       while (write(ipuk, PubKey, gPubKeyLen) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -3266,7 +3230,7 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
 
 int RpdSecureSend(char *str)
 {
-   char buftmp[kMAXSECBUF];
+   char buftmp[ROOT::Deprecated::kMAXSECBUF];
    char buflen[20];
 
    int ttmp = 0;
@@ -3274,7 +3238,7 @@ int RpdSecureSend(char *str)
 
    if (gRSAKey == 1) {
       strncpy(buftmp, str, sizeof(buftmp) - 1);
-      buftmp[kMAXSECBUF - 1] = '\0';
+      buftmp[ROOT::Deprecated::kMAXSECBUF - 1] = '\0';
       ttmp = rsa_encode(buftmp, strlen(buftmp) + 1, gRSA_n, gRSA_d);
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
@@ -3311,7 +3275,7 @@ int RpdSecureSend(char *str)
 
 int RpdSecureRecv(char **str)
 {
-   char buftmp[kMAXSECBUF];
+   char buftmp[ROOT::Deprecated::kMAXSECBUF];
    char buflen[20];
 
    int nrec = -1;
@@ -3460,9 +3424,9 @@ int RpdGenRSAKeys(int setrndinit)
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
 
    int nAttempts = 0;
-   int thePrimeLen = kPRIMELENGTH;
-   int thePrimeExp = kPRIMEEXP + 5;   // Prime probability = 1-0.5^thePrimeExp
-   while (notOK && nAttempts < kMAXRSATRIES) {
+   int thePrimeLen = ROOT::Deprecated::kPRIMELENGTH;
+   int thePrimeExp = ROOT::Deprecated::kPRIMEEXP + 5;   // Prime probability = 1-0.5^thePrimeExp
+   while (notOK && nAttempts < ROOT::Deprecated::kMAXRSATRIES) {
 
       nAttempts++;
       if (gDebug > 2 && nAttempts > 1) {
@@ -3476,7 +3440,7 @@ int RpdGenRSAKeys(int setrndinit)
 
       // Retry if equal
       int nPrimes = 0;
-      while (rsa_cmp(&p1, &p2) == 0 && nPrimes < kMAXRSATRIES) {
+      while (rsa_cmp(&p1, &p2) == 0 && nPrimes < ROOT::Deprecated::kMAXRSATRIES) {
          nPrimes++;
          if (gDebug > 2)
             ErrorInfo("RpdGenRSAKeys: equal primes: regenerate (%d times)",nPrimes);
@@ -3576,7 +3540,7 @@ int RpdGenRSAKeys(int setrndinit)
 
    if (notOK) {
       ErrorInfo("RpdGenRSAKeys: unable to generate good RSA key pair"
-                " (%d attempts)- return",kMAXRSATRIES);
+                " (%d attempts)- return",ROOT::Deprecated::kMAXRSATRIES);
       return 1;
    }
 
@@ -3802,7 +3766,7 @@ int RpdAuthenticate()
          }
       }
 
-      // Guess the client procotol if not received via Rootd/ProofdProtocol
+      // Guess the client procotol if not received via Rootd
       if (gClientProtocol == 0)
          gClientProtocol = RpdGuessClientProt(buf, kind);
 
@@ -3906,7 +3870,7 @@ void RpdFreeKeys()
 ////////////////////////////////////////////////////////////////////////////////
 /// Receives client protocol and returns daemon protocol.
 /// Returns:  0 if ok
-///          -1 if any error occured
+///          -1 if any error occurred
 ///          -2 if special action (e.g. cleanup): no need to continue
 
 int RpdProtocol(int ServType)
@@ -4219,7 +4183,7 @@ int RpdInitSession(int servtype, std::string &user,
 ///   - Inquire protocol
 ///   - authenticate the client
 ///   - login the client
-/// Returns 1 for a PROOF master server, 0 otherwise
+/// Returns 0 in presence of a server.
 /// Returns logged-in user, the remote client procotol cproto, the
 /// client kind of user anon and, if anonymous user, the client passwd.
 /// If TServerSocket (servtype==kSOCKD), the protocol number is returned
@@ -4239,21 +4203,6 @@ int RpdInitSession(int servtype, std::string &user,
 
    // Get Host name
    NetGetRemoteHost(gOpenHost);
-
-   if (servtype == kPROOFD) {
-
-      // find out if we are supposed to be a master or a slave server
-      char  msg[80];
-      if (NetRecv(msg, sizeof(msg)) < 0) {
-         ErrorInfo("RpdInitSession: Cannot receive master/slave status");
-         return -1;
-      }
-
-      retval = !strcmp(msg, "master") ? 1 : 0;
-
-      if (gDebug > 0)
-         ErrorInfo("RpdInitSession: PROOF master/slave = %s", msg);
-   }
 
    // Get protocol first
    // Failure typically indicate special actions like cleanup
@@ -4284,7 +4233,7 @@ int RpdInitSession(int servtype, std::string &user,
       auth = RpdNoAuth(servtype);
    }
 
-   // Login the user (if in rootd/proofd environment)
+   // Login the user (if in rootd environment)
    if (gDoLogin > 0) {
       if (RpdLogin(servtype,auth) != 0) {
          ErrorInfo("RpdInitSession: unsuccessful login attempt");
@@ -4323,7 +4272,7 @@ int RpdInitSession(int servtype, std::string &user,
 ///   - Inquire protocol
 ///   - authenticate the client
 ///   - login the client
-/// Returns 1 for a PROOF master server, 0 otherwise
+/// Returns 0 in presence of a master server.
 /// Returns logged-in user and remote process id in rid
 /// Called just after opening the connection
 
@@ -4351,7 +4300,7 @@ int RpdNoAuth(int servtype)
    int auth = 0;
 
    // Receive target username
-   if (servtype == kROOTD || servtype == kPROOFD) {
+   if (servtype == kROOTD) {
 
       char buf[kMAXPATHLEN];
       EMessageTypes kind;

@@ -29,8 +29,9 @@
 
 ## - The third argument is a string option defining some general configuration for the TMVA session. For example all TMVA output can be suppressed by removing the "!" (not) in front of the "Silent" argument in the option string
 
-import ROOT
 import os
+
+import ROOT
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
@@ -53,7 +54,7 @@ else:
 
 if useKeras:
     try:
-        import tensorflow
+        pass
     except:
         ROOT.Warning("TMVA_Higgs_Classification", "Skip using Keras since tensorflow is not available")
         useKeras = False
@@ -315,10 +316,9 @@ if useDL:
 if useKeras:
     ROOT.Info("TMVA_Higgs_Classification", "Building Deep Learning keras model")
     # create Keras model with 4 layers of 64 units and relu activations
-    import tensorflow
+    from tensorflow.keras.layers import Dense
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.optimizers import Adam
-    from tensorflow.keras.layers import Input, Dense
 
     model = Sequential()
     model.add(Dense(64, activation="relu", input_dim=7))
@@ -327,10 +327,10 @@ if useKeras:
     model.add(Dense(64, activation="relu"))
     model.add(Dense(2, activation="sigmoid"))
     model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
-    model.save("model_higgs.h5")
+    model.save("model_higgs.keras")
     model.summary()
 
-    if not os.path.exists("model_higgs.h5"):
+    if not os.path.exists("model_higgs.keras"):
         raise FileNotFoundError("Error creating Keras model file - skip using Keras")
     else:
         # book PyKeras method only if Keras model could be created
@@ -342,8 +342,8 @@ if useKeras:
             H=True,
             V=False,
             VarTransform=None,
-            FilenameModel="model_higgs.h5",
-            FilenameTrainedModel="trained_model_higgs.h5",
+            FilenameModel="model_higgs.keras",
+            FilenameTrainedModel="trained_model_higgs.keras",
             NumEpochs=20,
             BatchSize=100,
         )

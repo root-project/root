@@ -1,0 +1,3 @@
+<rootdict>
+   <class pattern="std::vector<*" />
+</rootdict>

@@ -1,0 +1,123 @@
+<lcgdict>
+	<!-- Performance DB -->
+	<class name="PhysicsPerformancePayload"/>
+
+	<class name="PerformancePayloadFromTable"/>
+
+	<class name="PerformancePayload"/>
+	<class name="PerformanceWorkingPoint"/>
+
+        <class name="PerformanceResult"/>
+        <class name="BinningVariables"/>
+
+	<class name="std::vector&lt;PerformanceResult::ResultType&gt;"/>
+	<class name="std::vector&lt;BinningVariables::BinningVariablesType&gt;"/>
+
+	<class name="PerformancePayloadFromTFormula">
+		<field name="compiledFormulas_" transient="true"/>
+	</class>
+
+	<class name="PerformancePayloadFromBinnedTFormula">
+		<field name="compiledFormulas_" transient="true"/>
+	</class>
+
+	<class name="PhysicsTFormulaPayload"/>
+        <class name="std::vector<PhysicsTFormulaPayload>"/>
+
+
+	<!-- Histogram -->
+	<class name="PhysicsTools::Calibration::Range&lt;float&gt;"/>
+	<class name="PhysicsTools::Calibration::Histogram&lt;float,float&gt;">
+		<field name="total" transient="true"/>
+		<field name="totalValid" transient="true"/>
+	</class>
+	<class name="std::vector&lt;PhysicsTools::Calibration::HistogramF&gt;"/>
+	<class name="PhysicsTools::Calibration::Range&lt;double&gt;"/>
+	<class name="PhysicsTools::Calibration::Histogram&lt;double,double&gt;">
+		<field name="total" transient="true"/>
+		<field name="totalValid" transient="true"/>
+	</class>
+	<class name="std::vector&lt;PhysicsTools::Calibration::HistogramD&gt;"/>
+
+	<class name="PhysicsTools::Calibration::Histogram2D&lt;float,float,float&gt;">
+		<field name="total" transient="true"/>
+		<field name="totalValid" transient="true"/>
+		<field name="rowTotal" transient="true"/>
+		<field name="columnTotal" transient="true"/>
+	</class>
+	<class name="std::vector&lt;PhysicsTools::Calibration::HistogramF2D&gt;"/>
+	<class name="PhysicsTools::Calibration::Histogram2D&lt;double,double,double&gt;">
+		<field name="total" transient="true"/>
+		<field name="totalValid" transient="true"/>
+		<field name="rowTotal" transient="true"/>
+		<field name="columnTotal" transient="true"/>
+	</class>
+	<class name="std::vector&lt;PhysicsTools::Calibration::HistogramD2D&gt;"/>
+	<class name="PhysicsTools::Calibration::VHistogramD2D" class_version="0"/>
+
+	<class name="PhysicsTools::Calibration::Histogram3D&lt;float,float,float,float&gt;">
+		<field name="total" transient="true"/>
+		<field name="totalValid" transient="true"/>
+		<field name="rowTotal" transient="true"/>
+		<field name="columnTotal" transient="true"/>
+                <field name="sliceTotal" transient="true"/>
+	</class>
+	<class name="std::vector&lt;PhysicsTools::Calibration::HistogramF3D&gt;"/>
+	<class name="PhysicsTools::Calibration::Histogram3D&lt;double,double,double,double&gt;">
+		<field name="total" transient="true"/>
+		<field name="totalValid" transient="true"/>
+		<field name="rowTotal" transient="true"/>
+		<field name="columnTotal" transient="true"/>
+                <field name="sliceTotal" transient="true"/>
+	</class>
+	<class name="std::vector&lt;PhysicsTools::Calibration::HistogramD3D&gt;"/>
+
+
+	<!-- MVAComputer -->
+	<class name="PhysicsTools::Calibration::BitSet"/>
+	<class name="PhysicsTools::Calibration::Matrix"/>
+	<class name="PhysicsTools::Calibration::VarProcessor"/>
+	<class name="PhysicsTools::Calibration::Variable"/>
+
+	<class name="PhysicsTools::Calibration::ProcOptional"/>
+	<class name="PhysicsTools::Calibration::ProcCount"/>
+	<class name="PhysicsTools::Calibration::ProcClassed"/>
+	<class name="PhysicsTools::Calibration::ProcSplitter"/>
+	<class name="PhysicsTools::Calibration::ProcForeach"/>
+	<class name="PhysicsTools::Calibration::ProcSort"/>
+	<class name="PhysicsTools::Calibration::ProcCategory"/>
+	<class name="PhysicsTools::Calibration::ProcNormalize"/>
+	<class name="PhysicsTools::Calibration::ProcLikelihood::SigBkg"/>
+	<class name="std::vector&lt;PhysicsTools::Calibration::ProcLikelihood::SigBkg&gt;"/>
+	<class name="PhysicsTools::Calibration::ProcLikelihood"/>
+	<class name="PhysicsTools::Calibration::ProcLinear"/>
+
+	<!-- commented out because they resolve to std:: -> StdDictionaries -->
+	<!-- <class name="PhysicsTools::Calibration::ProcCategory::BinLimits"/> -->
+	<!-- <class name="std::vector&lt;PhysicsTools::Calibration::ProcCategory::BinLimits&gt;"/> -->
+	<!-- <class name="PhysicsTools::Calibration::ProcMultiply::Config"/> -->
+	<!-- <class name="std::vector&lt;PhysicsTools::Calibration::ProcMultiply::Config&gt;"/> -->
+	<!-- <class name="PhysicsTools::Calibration::ProcMLP::Neuron"/> -->
+	<!-- <class name="std::vector&lt;PhysicsTools::Calibration::ProcMLP::Neuron&gt;"/> -->
+	<!-- <class name="PhysicsTools::Calibration::ProcMLP::Layer"/> -->
+	<!-- <class name="std::vector&lt;PhysicsTools::Calibration::ProcMLP::Layer&gt;"/> -->
+	<!-- <class name="std::pair&lt;std::vector&lt;PhysicsTools::Calibration::ProcMLP::Neuron&gt;,bool&gt;"/> -->
+
+	<class name="PhysicsTools::Calibration::ProcMultiply"/>
+	<class name="PhysicsTools::Calibration::ProcMatrix"/>
+	<class name="PhysicsTools::Calibration::ProcMLP"/>
+	<class name="PhysicsTools::Calibration::ProcExternal"/>
+	<class name="std::vector&lt;PhysicsTools::Calibration::Variable&gt;"/>
+	<class name="std::vector&lt;PhysicsTools::Calibration::VarProcessor*&gt;"/>
+
+	<class name="PhysicsTools::Calibration::MVAComputer" class_version="0">
+		<field name="cacheId" transient="true"/>
+	</class>
+
+	<class name="PhysicsTools::Calibration::MVAComputerContainer::Entry"/>
+	<class name="std::vector&lt;PhysicsTools::Calibration::MVAComputerContainer::Entry&gt;"/>
+	<class name="PhysicsTools::Calibration::MVAComputerContainer" class_version="0">
+		<field name="entries" mapping="blob"/>
+		<field name="cacheId" transient="true"/>
+	</class>
+</lcgdict>

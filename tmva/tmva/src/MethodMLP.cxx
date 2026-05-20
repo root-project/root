@@ -80,7 +80,6 @@ Bool_t MethodMLP_UseMinuit = kTRUE;
 
 REGISTER_METHOD(MLP)
 
-ClassImp(TMVA::MethodMLP);
 
    using std::vector;
 

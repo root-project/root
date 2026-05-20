@@ -23,7 +23,6 @@ constexpr Int_t kExtraSpace    = 8;   // extra space at end of buffer (used for 
 constexpr Int_t kMaxBufferSize  = 0x7FFFFFFE;  // largest possible size.
 
 
-ClassImp(TBuffer);
 
 /// Default streamer implementation used by ClassDefInline to avoid
 /// requirement to include TBuffer.h

@@ -22,9 +22,9 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION ${CTEST_CUSTOM_WARNING_EXCEPTION}
         "note: variable tracking size limit exceeded"            # vc/tests/sse_blend.cpp
         "warning is a GCC extension"
         "bug in GCC 4.8.1"
-        "warning: please use fgets or getline instead"           # deprecated use of std functions cint/ROOT
-        "is dangerous, better use"                               # deprecated use of std functions cint/ROOT
-        "function is dangerous and should not be used"           # deprecated use of std functions cint/ROOT
+        "warning: please use fgets or getline instead"           # deprecated use of std functions Cling/ROOT
+        "is dangerous, better use"                               # deprecated use of std functions Cling/ROOT
+        "function is dangerous and should not be used"           # deprecated use of std functions Cling/ROOT
     )
 set(CTEST_CUSTOM_ERROR_EXCEPTION ${CTEST_CUSTOM_ERROR_EXCEPTION}
         "fatal error: cannot open file"

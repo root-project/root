@@ -62,7 +62,8 @@ void AnimateCamera()
       dollyStep = -dollyStep;
 
    // modify frustum
-   TGLViewer *v = (TGLViewer *)gPad->GetViewer3D();
+   TGLViewer *v = gPad ? (TGLViewer *)gPad->GetViewer3D() : nullptr;
+   if (!v) return;
    if (camera < 3) {
       fov += fovStep;
       if (fov > 130.0 || fov < 5.0)
@@ -86,7 +87,8 @@ void AnimateCamera()
 void glViewerExercise()
 {
    gROOT->ProcessLine(".x nucleus.C");
-   TGLViewer *v = (TGLViewer *)gPad->GetViewer3D();
+   TGLViewer *v = gPad ? (TGLViewer *)gPad->GetViewer3D() : nullptr;
+   if (!v) return;
 
    // Random draw style
    Int_t style = randGen.Integer(3);

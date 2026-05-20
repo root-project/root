@@ -19,7 +19,6 @@ Use TROOT::AddClassGenerator to register a concrete instance.
 
 #include "TClassGenerator.h"
 
-ClassImp(TClassGenerator);
 
 //////////////////////////////////////////////////////////////////////////
 TClass *TClassGenerator::GetClass(const char* classname, Bool_t load, Bool_t /* silent */)

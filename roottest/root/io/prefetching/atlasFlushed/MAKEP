@@ -1,0 +1,2 @@
+rootcint -f atlasFlushedProjectDict.cxx -I$ROOTSYS/include  -I"/local2/pcanal/root_working/code/root.untouched/include"  atlasFlushedProjectHeaders.h atlasFlushedLinkDef.h 
+cd . ; g++ -c -g -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -pthread -g -Wall -Wshadow -Wextra -Werror -I$ROOTSYS/include  -I"/local2/pcanal/root_working/code/root.untouched/include"  -IatlasFlushed atlasFlushedProjectSource.cxx  ; g++ atlasFlushedProjectSource.o -shared -Wl,-soname,atlasFlushed.so -m64 -g  $DepLibs -o atlasFlushed.so

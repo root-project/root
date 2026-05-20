@@ -30,7 +30,15 @@ class TTreeDrawArgsParser : public TObject {
 
 public:
    enum EOutputType {
+// clang++ <v20 (-Wshadow) complains about shadowing TQpSolverBase.h global enum ETerminationCode. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kUNKNOWN,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
       kEVENTLIST,
       kENTRYLIST,
       kPROFILE,
@@ -90,7 +98,6 @@ public:
    Double_t       GetIfSpecified(Int_t num, Double_t def) const;
    Int_t          GetNoParameters() const { return fNoParameters; }
    Double_t       GetParameter(int num) const;
-   TString        GetProofSelectorName() const;
    TString const& GetObjectName() const { return fName; }
    TString        GetObjectTitle() const;
    bool           GetOptionSame() const { return fOptionSame; }

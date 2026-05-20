@@ -5,15 +5,15 @@ numpy
 pandas
 
 # TMVA: SOFIE
-dm-sonnet # used for GNNs
-graph_nets
+dm-sonnet ; python_version < "3.14" # used for GNNs
+graph_nets ; python_version < "3.14"
 onnx
 onnxscript
 packaging
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow
+tensorflow ; python_version < "3.14"
 torch
 xgboost
 
@@ -22,8 +22,10 @@ numba
 cffi
 
 # Notebooks: ROOT C++ kernel
-notebook>=4.4.1
+IPython
+jupyter
 metakernel>=0.20.0
+notebook>=4.4.1
 
 # Distributed RDataFrame
 pyspark # Spark backend
@@ -35,3 +37,10 @@ ipywidgets
 
 # Unified Histogram Interface (UHI)
 uhi
+matplotlib
+mplhep
+
+# For testing
+nbconvert>=7.4.0
+pytest
+setuptools

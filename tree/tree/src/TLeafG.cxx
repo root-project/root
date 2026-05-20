@@ -12,7 +12,7 @@
 /** \class TLeafG
 \ingroup tree
 
-A TLeaf for a 64 bit Integer data type.
+A TLeaf for a long integer data type (Long_t, non-portable size).
 */
 
 #include "TLeafG.h"
@@ -21,10 +21,9 @@ A TLeaf for a 64 bit Integer data type.
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafG);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor for LeafL.
+/// Default constructor for LeafG.
 
 TLeafG::TLeafG(): TLeaf()
 {
@@ -142,13 +141,16 @@ bool TLeafG::IncludeRange(TLeaf *input)
 
 void TLeafG::Import(TClonesArray *list, Int_t n)
 {
-   const Int_t kIntUndefined = -9999;
+   const Long_t kIntUndefined = -9999;
    Int_t j = 0;
    char *clone;
    for (Int_t i=0;i<n;i++) {
       clone = (char*)list->UncheckedAt(i);
-      if (clone) memcpy(&fValue[j],clone + fOffset, 8*fLen);
-      else       memcpy(&fValue[j],&kIntUndefined,  8*fLen);
+      if (clone)
+         memcpy(&fValue[j],clone + fOffset, fLenType*fLen);
+      else
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kIntUndefined;
       j += fLen;
    }
 }

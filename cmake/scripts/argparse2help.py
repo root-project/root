@@ -18,6 +18,9 @@ def write_header(parser, fileName):
 	splitPath = sys.argv[2].split("/")
 	file.write("#ifndef ROOT_{}\n".format(splitPath[len(splitPath)-1].partition(".")[0]))
 	file.write("#define ROOT_{}\n".format(splitPath[len(splitPath)-1].partition(".")[0]))
+	file.write("constexpr static const char kCommandLineShortHelp[] = R\"RAW(\n")
+	file.write(parser.format_usage() + "\n")
+	file.write(")RAW\";\n\n")
 	file.write("constexpr static const char kCommandLineOptionsHelp[] = R\"RAW(\n")
 	file.write(parser.format_usage() + "\n")
 	if parser.description is not None:

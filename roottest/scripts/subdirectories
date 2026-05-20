@@ -1,0 +1,28 @@
+#!/bin/sh 
+filelist=""
+#echo `pwd`: $0 $1 >&2
+timeddirs=""
+untimeddirs=""
+for dir in `ls $1`
+do
+    if [ -e SpecialDirs ]
+    then 
+        if [ "x`grep -x $dir SpecialDirs`" = "x$dir" ]
+        then
+            continue
+        fi
+    fi
+    if [ -d $dir ] && [ -f $dir/Makefile ]
+    then
+        duration=`grep '# %ROOTTEST-duration%:' "$dir/Makefile" 2>&1 | sed 's,.*:,,'`
+        if [ "x$duration" = "x" ]
+        then
+            untimeddirs="$untimeddirs$dir "
+        else
+            timeddirs="$timeddirs$duration$dir "
+        fi
+    fi
+done
+timeddirs=`echo $timeddirs | tr ' ' '\n' | sort -n -r | sed 's,^[0-9]*,,'`
+echo $timeddirs $untimeddirs
+#echo `pwd`: $timeddirs $untimeddirs >&2

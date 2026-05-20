@@ -43,7 +43,6 @@
 #include "TPluginManager.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TSQLServer);
 
 
 const char* TSQLServer::fgFloatFmt = "%e";

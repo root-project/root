@@ -18,7 +18,7 @@
 #include "TDatabasePDG.h"
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
 /** \class TDatabasePDG
@@ -50,7 +50,6 @@ The current default pdg_table file displays lifetime 0 for some unstable particl
 
 */
 
-ClassImp(TDatabasePDG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function holding the instance.
@@ -128,7 +127,7 @@ void TDatabasePDG::BuildPdgMap() const
 {
    // It is preferrable to waste some work in presence of high contention
    // for the benefit of reducing the critical section to the bare minimum
-   auto pdgMap = new TExMap(4 * TMath::Max(600, fParticleList->GetEntries()) / 3 + 3);
+   auto pdgMap = new TExMap(4 * std::max(600, fParticleList->GetEntries()) / 3 + 3);
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG*)next())) {
@@ -166,6 +165,13 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
    if (old) {
       Warning("AddParticle", "Particle with PDGcode=%d already defined", PDGcode);
       return 0;
+   }
+
+   // Fix ROOT-6889. If the antiparticle is stable, 
+   if (PDGcode < 0 && stable) {
+      // We verify the antiparticle is stable and this is not an artifact of the PDG Table
+      auto nonAntiParticle = GetParticle(-1*PDGcode);
+      stable = nonAntiParticle->Stable();
    }
 
    TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,

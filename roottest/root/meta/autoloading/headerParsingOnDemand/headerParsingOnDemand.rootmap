@@ -1,0 +1,25 @@
+{ decls }
+
+template <typename T> class myClass1 ;
+template <typename T> class myClass2 ;
+template <typename T> class myClass0 ;
+template <typename T> class myClass3 ;
+template <typename T> class myClass4 ;
+template <typename T> class myClass5 ;
+template <typename T> class myClass6 ;
+template <typename T> class myClass7 ;
+template <typename T> class myClass8 ;
+
+[ libFullheaderParsingOnDemand_dictrflx.so ]
+# List of selected classes
+class myClass0<E>
+class myClass1<E>
+class myClass1<int>
+class myClass2<E>
+class myClass2<float>
+class myClass3<E>
+class myClass4<E>
+class myClass5<E>
+class myClass6<E>
+class myClass7<E>
+class myClass8<E>

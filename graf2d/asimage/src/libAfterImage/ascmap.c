@@ -22,12 +22,6 @@
 #undef LOCAL_DEBUG
 #undef DO_CLOCKING
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
 #include <string.h>
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -50,11 +44,7 @@
 #endif
 #include <ctype.h>
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
 # include "afterbase.h"
-#endif
 
 #include "asimage.h"
 #include "import.h"
@@ -432,25 +422,20 @@ print_asimage( im, ASFLAGS_EVERYTHING, __FUNCTION__, __LINE__ );
 
     if( max_colors == 0 )
 		max_colors = 256 ;
-	if( dither == -1 )
-		dither = 4 ;
-	else if( dither >= 8 )
-		dither = 7 ;
-	switch( dither )
-	{
-		case 0 :
-		case 1 :
-		case 2 : buckets_num = 4096 ;
-		    break ;
-		case 3 :
-		case 4 : buckets_num = 1024 ;
-		    break ;
-		case 5 :
-		case 6 : buckets_num = 64 ;
-		    break ;
-		case 7 : buckets_num = 8 ;
-		    break ;
-	}
+    if (dither == (unsigned int)-1)
+       dither = 4;
+    else if (dither >= 8)
+       dither = 7;
+    switch (dither) {
+    case 0:
+    case 1:
+    case 2: buckets_num = 4096; break;
+    case 3:
+    case 4: buckets_num = 1024; break;
+    case 5:
+    case 6: buckets_num = 64; break;
+    case 7: buckets_num = 8; break;
+    }
 
 	dst = mapped_im = safemalloc( im->width*im->height*sizeof(int));
 	memset(cmap, 0x00, sizeof(ASColormap));

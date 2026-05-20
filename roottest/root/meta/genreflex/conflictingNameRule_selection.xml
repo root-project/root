@@ -1,0 +1,14 @@
+<rootdict>
+   <class name="A" />
+   <class name="A">
+      <field name="fMember" transient = "true"/>
+   </class>
+
+<!-- Found analysing rules    -->
+   <class pattern="LongCla*" />
+   <class pattern="LongCla*">
+      <field name="fMember" transient = "true"/>
+   </class>
+
+
+</rootdict>

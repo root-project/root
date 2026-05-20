@@ -1,6 +1,9 @@
 #ifndef CPYCPPYY_DIMENSIONS_H
 #define CPYCPPYY_DIMENSIONS_H
 
+// Bindings
+#include "CPyCppyy/CommonDefs.h"
+
 // Standard
 #include <algorithm>
 #include <initializer_list>

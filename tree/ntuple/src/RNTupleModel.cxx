@@ -15,6 +15,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
 
@@ -39,12 +40,18 @@ ROOT::RFieldZero &ROOT::Internal::GetFieldZeroOfModel(ROOT::RNTupleModel &model)
    return *model.fFieldZero;
 }
 
-ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(ROOT::RNTupleModel &model)
+const ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(const ROOT::RNTupleModel &model)
 {
    if (model.IsExpired()) {
       throw RException(R__FAIL("invalid use of expired model"));
    }
    return *model.fProjectedFields;
+}
+
+ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(ROOT::RNTupleModel &model)
+{
+   const auto &constModel = const_cast<const ROOT::RNTupleModel &>(model);
+   return const_cast<ROOT::Internal::RProjectedFields &>(GetProjectedFieldsOfModel(constModel));
 }
 
 //------------------------------------------------------------------------------
@@ -72,7 +79,7 @@ ROOT::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *tar
                                         dynamic_cast<const ROOT::RCardinalityField *>(target));
    if (!hasCompatibleStructure)
       return R__FAIL("field mapping structural mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
-   if ((source->GetStructure() == ROOT::ENTupleStructure::kLeaf) ||
+   if ((source->GetStructure() == ROOT::ENTupleStructure::kPlain) ||
        (source->GetStructure() == ROOT::ENTupleStructure::kStreamer)) {
       if (target->GetTypeName() != source->GetTypeName())
          return R__FAIL("field mapping type mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
@@ -99,7 +106,7 @@ ROOT::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *tar
       auto parent = f->GetParent();
       while (parent) {
          if ((parent->GetStructure() != ROOT::ENTupleStructure::kRecord) &&
-             (parent->GetStructure() != ROOT::ENTupleStructure::kLeaf)) {
+             (parent->GetStructure() != ROOT::ENTupleStructure::kPlain)) {
             return parent;
          }
          parent = parent->GetParent();
@@ -186,6 +193,15 @@ ROOT::RNTupleModel::RUpdater::RUpdater(ROOT::RNTupleWriter &writer)
 {
 }
 
+ROOT::RNTupleModel::RUpdater::~RUpdater()
+{
+   // If we made any changes, we should commit them because the model was already altered.
+   // Otherwise, we _do not_ commit -- it may be that the referenced model is already expired if the
+   // corresponding writer is already destructed.
+   if (!fOpenChangeset.IsEmpty())
+      ROOT::RNTupleModel::RUpdater::CommitUpdate();
+}
+
 void ROOT::RNTupleModel::RUpdater::BeginUpdate()
 {
    fOpenChangeset.fModel.Unfreeze();
@@ -206,16 +222,53 @@ void ROOT::RNTupleModel::RUpdater::CommitUpdate()
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
-void ROOT::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+ROOT::RRecordField *ROOT::Internal::RNTupleModelChangeset::GetParentRecordField(std::string_view parentName) const
+{
+   if (parentName.empty())
+      return nullptr;
+
+   if (!fModel.IsBare()) {
+      throw RException(R__FAIL("invalid attempt to late-model-extend an untyped record of a non-bare model"));
+   }
+
+   auto &parentField = fModel.GetMutableField(parentName);
+   auto parentRecord = dynamic_cast<ROOT::RRecordField *>(&parentField);
+   if (!parentRecord || !parentRecord->GetTypeName().empty()) {
+      throw RException(
+         R__FAIL("invalid attempt to extend a field that is not an untyped record: " + std::string(parentName)));
+   }
+
+   auto itr = parentRecord->GetParent();
+   while (itr) {
+      if (typeid(*itr) == typeid(RFieldZero))
+         break;
+
+      if (!dynamic_cast<const ROOT::RRecordField *>(itr)) {
+         throw RException(R__FAIL("invalid attempt to extend an untyped record that has a non-record parent: " +
+                                  std::string(parentName)));
+      }
+
+      itr = itr->GetParent();
+   }
+
+   return parentRecord;
+}
+
+void ROOT::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<ROOT::RFieldBase> field,
+                                                     std::string_view parentName)
 {
    auto fieldp = field.get();
-   fModel.AddField(std::move(field));
+   if (auto parent = GetParentRecordField(parentName)) {
+      Internal::AddItemToRecord(*parent, std::move(field));
+   } else {
+      fModel.AddField(std::move(field));
+   }
    fAddedFields.emplace_back(fieldp);
 }
 
-void ROOT::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+void ROOT::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName)
 {
-   fOpenChangeset.AddField(std::move(field));
+   fOpenChangeset.AddField(std::move(field), parentName);
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
@@ -504,7 +557,7 @@ std::unique_ptr<ROOT::REntry> ROOT::RNTupleModel::CreateBareEntry() const
    return entry;
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RRawPtrWriteEntry> ROOT::RNTupleModel::CreateRawPtrWriteEntry() const
+std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> ROOT::RNTupleModel::CreateRawPtrWriteEntry() const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
@@ -512,8 +565,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RRawPtrWriteEntry> ROOT::RNTupleMode
    case EState::kFrozen: break;
    }
 
-   auto entry = std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry>(
-      new Experimental::Detail::RRawPtrWriteEntry(fModelId, fSchemaId));
+   auto entry = std::unique_ptr<Detail::RRawPtrWriteEntry>(new Detail::RRawPtrWriteEntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetMutableSubfields()) {
       entry->AddField(*f);
    }

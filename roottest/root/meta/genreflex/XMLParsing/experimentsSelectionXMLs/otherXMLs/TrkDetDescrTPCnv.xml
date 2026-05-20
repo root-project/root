@@ -1,0 +1,32 @@
+<lcgdict>
+    
+    <!-- TrkGeometry  -->
+    <class name="Trk::MaterialStep_p1" />
+    <class name="Trk::MaterialStepCollection_p1" id="DF8A7FA8-693F-44E0-A5E5-F9907B8B429E" />
+    <class name="std::vector<Trk::MaterialStepCollection_p1>" />
+    
+
+    <class name="std::vector<float>"/>
+    <class name="std::vector<unsigned char>"/>
+    <class name="Trk::LayerMaterialCollection_p1"/>
+    <class name="Trk::LayerMaterialMap_p1"/>
+    <class name="Trk::BinnedLayerMaterial_p1"/>     
+    <class name="Trk::CompressedLayerMaterial_p1"/> 
+    <class name="Trk::HomogeneousLayerMaterial_p1"/>
+    <class name="Trk::MaterialProperties_p1"/>
+    <class name="Trk::Material_p1"/>
+    <class name="std::vector<Trk::LayerMaterialCollection_p1>"/>
+    <class name="std::vector<Trk::LayerMaterialMap_p1>"/>
+    <class name="std::vector<Trk::MaterialProperties_p1>"/>
+    <class name="std::vector<Trk::BinnedLayerMaterial_p1>"/>     
+    <class name="std::vector<Trk::CompressedLayerMaterial_p1>"/> 
+    <class name="std::vector<Trk::HomogeneousLayerMaterial_p1>"/>
+    <class name="Trk::LayerMaterialCollection_tlp1" id="DFB29CDE-4618-4712-AB60-FEFEDB071415"/>
+    <class name="Trk::LayerMaterialMap_tlp1" id="3DA92DBD-DA78-43A2-BFDF-9E19E2BF1E8A"/>
+
+    <!-- TrkDetDescr  -->
+    <class name="Trk::BinUtility_p1"/>
+    <class name="std::vector<std::vector<std::pair<int,float> > >"/>
+
+
+</lcgdict>

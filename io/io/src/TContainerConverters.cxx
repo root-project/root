@@ -31,7 +31,7 @@
 #include "TError.h"
 #include "TGenCollectionStreamer.h"
 #include "TClassStreamer.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace {
    const Int_t  kMapOffset = 2;
@@ -84,7 +84,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       char *addr = (char*)pmember;
       for(Int_t k=0; k<size; ++k, addr += fOffset ) {
          if (*(void**)addr && TStreamerInfo::CanDelete()) {
-            proxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
+            proxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and destructor
          }
          //*(void**)addr = proxy->New();
          //TClonesArray *clones = (TClonesArray*)ReadObjectAny(TClonesArray::Class());
@@ -280,7 +280,7 @@ void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
       char *addr = (char*)pmember;
       for(Int_t k=0; k<size; ++k, addr += fSizeOf ) {
          if (*(void**)addr && TStreamerInfo::CanDelete()) {
-            proxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
+            proxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and destructor
          }
          //*(void**)addr = proxy->New();
          //TClonesArray *clones = (TClonesArray*)ReadObjectAny(TClonesArray::Class());

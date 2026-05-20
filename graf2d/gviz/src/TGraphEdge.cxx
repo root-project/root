@@ -17,7 +17,6 @@
 
 #include <gvc.h>
 
-ClassImp(TGraphEdge);
 
 /** \class TGraphEdge
 \ingroup gviz

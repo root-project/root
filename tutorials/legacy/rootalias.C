@@ -16,12 +16,12 @@ void edit(char *file)
 {
    char s[64], *e;
    if (!strcmp(gSystem->GetName(), "WinNT")) {
-      if ((e = getenv("EDITOR")))
+      if ((e = std::getenv("EDITOR")))
          sprintf(s, "start %s %s", e, file);
       else
          sprintf(s, "start notepad %s", file);
    } else {
-      if ((e = getenv("EDITOR")))
+      if ((e = std::getenv("EDITOR")))
          sprintf(s, "%s %s", e, file);
       else
          sprintf(s, "xterm -e vi %s &", file);

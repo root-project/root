@@ -1,0 +1,19 @@
+<!--
+   - File: RootUtils/selection.xml
+   - Author: scott snyder
+   - Date: Oct 2007
+   -
+   - Reflex selection file.
+  -->
+
+
+<lcgdict>
+    <class name="RootUtils::InitHist" />
+    <class name="RootUtils::StdHackGenerator" />
+    <class name="RootUtils::ScanForAbstract" />
+    <class name="RootUtils::ClearCINTMessageCallback" />
+    <class name="RootUtils::ILogger" />
+    <class name="RootUtils::ScatterH2" />
+    <class name="RootUtils::ScatterH2::Pair" />
+    <class name="std::vector<RootUtils::ScatterH2::Pair>" />
+</lcgdict>

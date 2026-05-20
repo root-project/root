@@ -1,0 +1,73 @@
+# This contains the workflow definitions that allow users to create
+# backports of selected PRs with a comment of the form:
+#   /backport to BR1, BR2, ..., BR N
+# where BRi is of the form MAJOR.MINOR, e.g. 6.32 or 7.02
+#
+# This file has been created after studying https://github.com/llvm/llvm-project/blob/release/22.x/.github/workflows/issue-release-workflow.yml
+#
+
+name: Backport PR
+
+permissions:
+  contents: read
+  # These two to add labels
+  issues: write
+  pull-requests: write
+
+on:
+  issue_comment:
+    types:
+      - created
+      - edited
+  issues:
+    types:
+      - opened
+
+env:
+  COMMENT_BODY: ${{ github.event.comment.body  }}
+
+jobs:
+  backport-commits:
+    name: Backport PR
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    if: >-
+      (github.event.issue.pull_request && github.event.issue.state == 'closed') &&
+      (github.event.comment.author_association == 'MEMBER') &&
+      (github.repository == 'root-project/root') &&
+      !startswith(github.event.comment.body, '<!--IGNORE-->') &&
+      contains(github.event.comment.body, '/backport to')
+    steps:
+      - name: Verify Merge Status via API
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: |
+          MERGED=$(gh pr view ${{ github.event.issue.number }} --json mergeCommit --jq '.mergeCommit.oid' --repo root-project/root)
+          if [[ -z "$MERGED" ]]; then
+            echo "PR was closed but not merged. Skipping."
+            exit 1
+          fi
+
+      - name: Checkout the official ROOT repo
+        uses: actions/checkout@v6
+        with:
+          path: root_official
+
+      - name: Checkout the bot ROOT repo
+        uses: actions/checkout@v6
+        with:
+          repository: root-project-bot/root
+          token: ${{ secrets.ROOT_BOT_GITHUB_TOKEN }}
+          path: root_bot
+
+      - name: Backport Commits
+        env:
+            GH_TOKEN: ${{ secrets.ROOT_BOT_GITHUB_TOKEN }}
+            PR_TOKEN: ${{ secrets.PROJECT_ROOT_ROOT_EDIT_PR_AND_ISSUES}}
+        run: "root_official/.github/workflows/utilities/backport_pr.py
+                        --comment \"$COMMENT_BODY\"
+                        --pull ${{ github.event.issue.number }}
+                        --requestor ${{ github.event.comment.user.login }}
+             "

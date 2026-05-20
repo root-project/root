@@ -179,7 +179,10 @@ canvas.SaveAs("tgraph_comparison.pdf")
 \endpythondoc
 '''
 
-import cppyy
+import ROOT
+
+from . import pythonization
+
 
 def set_size(self, buf):
     # Parameters:
@@ -205,11 +208,27 @@ def set_size(self, buf):
 # The pythonization consists in setting the size of the array that the getter
 # method returns, so that it is known in Python and the array is fully usable
 # (its length can be obtained, it is iterable).
-comp = cppyy.py.compose_method(
+comp = ROOT._cppyy.py.compose_method(
     '^TGraph(2D)?$|^TGraph.*Errors$',    # class to match
     'GetE?[XYZ](low|high|lowd|highd)?$', # method to match
     set_size)                            # post-process function
 
 # Add the composite to the list of pythonizors
-cppyy.py.add_pythonization(comp)
+ROOT._cppyy.py.add_pythonization(comp)
 
+def _TMultiGraph_Add(self, *args, **kwargs):
+    """
+    The TMultiGraph always takes ownership of the added graphs.
+    """
+    from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+    declare_cpp_owned_arg(0, "graph", args, kwargs)
+
+    self._Add(*args, **kwargs)
+
+
+@pythonization("TMultiGraph")
+def pythonize_tmultigraph(klass):
+    # Pythonizations for TMultiGraph::Add
+    klass._Add = klass.Add
+    klass.Add = _TMultiGraph_Add

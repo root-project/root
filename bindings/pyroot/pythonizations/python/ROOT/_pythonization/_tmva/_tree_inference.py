@@ -8,9 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from .. import pythonization
-import cppyy
-
 import json
 
 
@@ -52,6 +49,8 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
     Raises:
         Exception: If the XGBoost model has an unsupported objective.
     """
+    import ROOT
+
     # Extract objective
     objective_map = {
         "multi:softprob": "softmax",  # Naming the objective softmax is more common today
@@ -60,13 +59,13 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
         "reg:squarederror": "identity",
     }
     model_objective = xgb_model.objective
-    if not model_objective in objective_map:
+    if model_objective not in objective_map:
         raise Exception(
             'XGBoost model has unsupported objective "{}". Supported objectives are {}.'.format(
                 model_objective, objective_map.keys()
             )
         )
-    objective = cppyy.gbl.std.string(objective_map[model_objective])
+    objective = ROOT.std.string(objective_map[model_objective])
 
     # Determine number of outputs
     num_outputs = xgb_model.n_classes_ if "multi:" in model_objective else 1
@@ -74,22 +73,22 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
     # Dump XGB model as json file
     xgb_model.get_booster().dump_model(output_path, dump_format="json")
 
-    with open(output_path, "r") as json_file:
-        forest = json.load(json_file)
-
     # Dump XGB model as txt file
     xgb_model.get_booster().dump_model(output_path)
 
-    features = cppyy.gbl.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+    if xgb_model.get_booster().feature_names is None:
+        features = ROOT.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+    else:
+        features = ROOT.std.vector["std::string"](xgb_model.get_booster().feature_names)
     bs = get_basescore(xgb_model)
     logistic = objective == "logistic"
-    bdt = cppyy.gbl.TMVA.Experimental.RBDT.LoadText(
+    bdt = ROOT.TMVA.Experimental.RBDT.LoadText(
         output_path,
         features,
         num_outputs,
         logistic,
-        cppyy.gbl.std.log(bs / (1.0 - bs)) if logistic else bs,
+        ROOT.std.log(bs / (1.0 - bs)) if logistic else bs,
     )
 
-    with cppyy.gbl.TFile.Open(output_path, "RECREATE") as tFile:
+    with ROOT.TFile.Open(output_path, "RECREATE") as tFile:
         tFile.WriteObject(bdt, key_name)

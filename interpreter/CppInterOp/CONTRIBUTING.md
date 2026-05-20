@@ -42,7 +42,7 @@ projects such as CppInterOp. We have our documentation in the repository which i
 rendered in the [CppInterOp.readthedocs](https://cppinterop.readthedocs.io/en/latest/) website.
 Documentation modifications happen by proposing a pull request.
 
-## Creating a successfull pull request
+## Creating a successful pull request
 
 To propose a code modification we use the pull requests. Pull requests which
 review quickly and successfully share several common traits:
@@ -71,4 +71,4 @@ review quickly and successfully share several common traits:
 ### Developer Documentation  
 
 We have documented several useful hints that usually help when addressing issues
-as they come during developement time in our [developer documentation](https://cppinterop.readthedocs.io/en/latest/InstallationAndUsage.html).  
+as they come during development time in our [developer documentation](https://cppinterop.readthedocs.io/en/latest/InstallationAndUsage.html).  

@@ -211,7 +211,7 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(DataLoader,4);
+      ClassDefOverride(DataLoader,4);
    };
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
 } // namespace TMVA

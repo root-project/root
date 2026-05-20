@@ -87,7 +87,7 @@ namespace TMVA {
        void SetNumFolds(UInt_t folds);
        UInt_t GetNumFolds(){return fNumFolds;}
 
-       virtual void Evaluate();
+       void Evaluate() override;
        const HyperParameterOptimisationResult& GetResults() const {return fResults;}
 
 
@@ -100,7 +100,7 @@ namespace TMVA {
        std::unique_ptr<Factory>          fClassifier;  ///<!
 
    public:
-       ClassDef(HyperParameterOptimisation,0);
+       ClassDefOverride(HyperParameterOptimisation,0);
    };
 }
 

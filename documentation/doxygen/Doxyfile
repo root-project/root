@@ -184,7 +184,7 @@ FULL_PATH_NAMES        = YES
 # will be relative from the directory where doxygen is started.
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
-STRIP_FROM_PATH        = $(DOXYGEN_STRIP_PATH)
+STRIP_FROM_PATH        = $(DOXYGEN_STRIP_FROM_PATH)
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -2389,6 +2389,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = R__CLING_PTRCHECK \
+                         R__HAS_ROOT7 \
                          R__USE_IMT \
                          R__SUGGEST_ALTERNATIVE(x)= \
                          __attribute__(x)= \

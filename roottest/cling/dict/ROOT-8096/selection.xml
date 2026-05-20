@@ -1,0 +1,11 @@
+<lcgdict>
+
+  <!-- class pattern="*iterator<*pair<const*,const*"/ -->
+<class name="std::map<unsigned int, std::vector<const void*> >" />
+<class name="Packing<int,double>" />
+<class name="Packing<float,int,Packing<int, double>>" />
+
+<class name="Simple<int>" />
+<class name="Simple<Simple<int>>" />
+</lcgdict>
+

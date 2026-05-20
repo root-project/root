@@ -18,22 +18,16 @@
 #include <RooFit/EvalContext.h>
 
 #include <ROOT/RSpan.hxx>
-#include <string_view>
 
 #include <functional>
 #include <map>
-#include <memory>
 #include <stack>
 #include <vector>
 
-class RooAbsCategory;
 class RooAbsData;
 class RooSimultaneous;
 
-class TNamed;
-
-namespace RooFit {
-namespace BatchModeDataHelpers {
+namespace RooFit::BatchModeDataHelpers {
 
 std::map<RooFit::Detail::DataKey, std::span<const double>>
 getDataSpans(RooAbsData const &data, std::string const &rangeName, RooSimultaneous const *simPdf, bool skipZeroWeights,
@@ -42,8 +36,7 @@ getDataSpans(RooAbsData const &data, std::string const &rangeName, RooSimultaneo
 std::map<RooFit::Detail::DataKey, std::size_t>
 determineOutputSizes(RooAbsArg const &topNode, std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc);
 
-} // namespace BatchModeDataHelpers
-} // namespace RooFit
+} // namespace RooFit::BatchModeDataHelpers
 
 #endif
 

@@ -68,7 +68,7 @@ class TDavixFile : public TFile {
 private:
     TDavixFileInternal* d_ptr;
 
-    void Init(Bool_t init);
+    void Init(Bool_t init) override;
     Long64_t DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len);
     Long64_t DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len);
     Long64_t DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
@@ -99,14 +99,14 @@ public:
    ~TDavixFile();
 
     // TFile interface.
-    virtual Long64_t GetSize() const;
-    virtual void  Seek(Long64_t offset, ERelativeTo pos = kBeg);
-    virtual Bool_t ReadBuffer(char *buf, Int_t len);
-    virtual Bool_t ReadBuffer(char *buf, Long64_t pos, Int_t len);
-    virtual Bool_t ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-    virtual Bool_t ReadBufferAsync(Long64_t offs, Int_t len);
-    virtual Bool_t WriteBuffer(const char *buffer, Int_t bufferLength);
-    virtual TString GetNewUrl();
+    Long64_t GetSize() const override;
+    void  Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
+    Bool_t ReadBuffer(char *buf, Int_t len) override;
+    Bool_t ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+    Bool_t ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
+    Bool_t ReadBufferAsync(Long64_t offs, Int_t len) override;
+    Bool_t WriteBuffer(const char *buffer, Int_t bufferLength) override;
+    TString GetNewUrl() override;
 
     // TDavixFile options
     /// Enable or disable certificate authority check
@@ -122,7 +122,7 @@ public:
     /// and grid related extension for a grid analysis usage
     void enableGridMode();
 
-    ClassDef(TDavixFile, 0)
+    ClassDefOverride(TDavixFile, 0)
 };
 
 #endif

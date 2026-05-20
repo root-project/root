@@ -16,7 +16,6 @@
 #include "TPolyMarker.h"
 #include "TMath.h"
 
-ClassImp(TPolyMarker);
 
 
 /** \class TPolyMarker

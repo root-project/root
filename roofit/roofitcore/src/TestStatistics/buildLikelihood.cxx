@@ -223,11 +223,7 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
    TString simCatName(simCat.GetName());
    // Note: important not to use cloned dataset here (possible when this code is run in Roo[...]L ctor), use the
    // original one (which is data_ in Roo[...]L ctors, but data here)
-   std::unique_ptr<TList> dsetList{_data.split(*sim_pdf, process_empty_data_sets)};
-   if (!dsetList) {
-      throw std::logic_error(
-         "getSimultaneousComponents ERROR, index category of simultaneous pdf is missing in dataset, aborting");
-   }
+   std::vector<std::unique_ptr<RooAbsData>> dsetList{_data.split(*sim_pdf, process_empty_data_sets)};
 
    // Count number of used states
    std::size_t N_components = 0;
@@ -235,7 +231,10 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
    for (const auto &catState : simCat) {
       // Retrieve the PDF for this simCat state
       RooAbsPdf *component_pdf = sim_pdf->getPdf(catState.first.c_str());
-      auto *dset = static_cast<RooAbsData *>(dsetList->FindObject(catState.first.c_str()));
+      auto found = std::find_if(dsetList.begin(), dsetList.end(), [&](auto const &item) {
+        return catState.first == item->GetName();
+      });
+      RooAbsData *dset = found != dsetList.end() ? found->get() : nullptr;
 
       if (component_pdf && dset && (0. != dset->sumEntries() || process_empty_data_sets)) {
          ++N_components;
@@ -253,7 +252,10 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
       const std::string &catName = catState.first;
       // Retrieve the PDF for this simCat state
       RooAbsPdf *component_pdf = sim_pdf->getPdf(catName.c_str());
-      auto *dset = static_cast<RooAbsData *>(dsetList->FindObject(catName.c_str()));
+      auto found = std::find_if(dsetList.begin(), dsetList.end(), [&](auto const &item) {
+        return catName == item->GetName();
+      });
+      RooAbsData *dset = found != dsetList.end() ? found->get() : nullptr;
 
       if (component_pdf && dset && (0. != dset->sumEntries() || process_empty_data_sets)) {
          ooccoutI(nullptr, Fitting) << "getSimultaneousComponents: creating slave calculator #" << n << " for state "

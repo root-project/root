@@ -29,8 +29,8 @@ public:
     virtual int check(int, int) { return (int)'D'; }
     void overload() {}
     void overload(no_such_class*) {}
-    void overload(char, int i = 0) {}  // Reflex requires a named arg
-    void overload(int, no_such_class* p = 0) {}
+    void overload(char, [[maybe_unused]] int i = 0) {}  // Reflex requires a named arg
+    void overload(int, [[maybe_unused]] no_such_class* p = nullptr) {}
 };
 
 
@@ -122,6 +122,15 @@ public:
 class O {
 public:
    virtual int abstract() = 0;
+
+   // Abstract classes should declare a virtual destructor
+   virtual ~O() = default;
+
+   // Destructor was declared, apply rule of five
+   O(const O &) = default;
+   O &operator=(const O &) = default;
+   O(O &&) = default;
+   O &operator=(O &&) = default;
 };
 
 class OpaqueType;

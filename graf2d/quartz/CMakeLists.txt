@@ -11,6 +11,8 @@
 
 add_definitions("-ObjC++")
 
+find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+
 # Dictionary not needed.
 ROOT_LINKER_LIBRARY(GQuartz
     src/QuartzFillArea.mm
@@ -19,7 +21,7 @@ ROOT_LINKER_LIBRARY(GQuartz
     src/QuartzText.mm
     src/QuartzUtils.mm
   LIBRARIES
-    "-framework Cocoa"
+    ${COCOA_FRAMEWORK}
   DEPENDENCIES
     Core
     MathCore

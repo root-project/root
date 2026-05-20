@@ -6,6 +6,8 @@
 #ifndef ROOT_RFieldUtils
 #define ROOT_RFieldUtils
 
+#include <cassert>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <typeinfo>
@@ -15,11 +17,17 @@
 class TClass;
 
 namespace ROOT {
+
+class RFieldBase;
+class RNTupleDescriptor;
+
 namespace Internal {
 
 /// Applies RNTuple specific type name normalization rules (see specs) that help the string parsing in
 /// RFieldBase::Create(). The normalization of templated types does not include full normalization of the
 /// template arguments (hence "Prefix").
+/// Furthermore, if the type is a C-style array, rules are applied to the base type and the C style array
+/// is then mapped to an std::array.
 std::string GetCanonicalTypePrefix(const std::string &typeName);
 
 /// Given a type name normalized by ROOT meta, renormalize it for RNTuple. E.g., insert std::prefix.
@@ -27,7 +35,7 @@ std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
 
 /// Given a type info ask ROOT meta to demangle it, then renormalize the resulting type name for RNTuple. Useful to
 /// ensure that e.g. fundamental types are normalized to the type used by RNTuple (e.g. int -> std::int32_t).
-std::string GetRenormalizedDemangledTypeName(const std::type_info &ti);
+std::string GetRenormalizedTypeName(const std::type_info &ti);
 
 /// Checks if the meta normalized name is different from the RNTuple normalized name in a way that would cause
 /// the RNTuple normalized name to request different streamer info. This can happen, e.g., if the type name has
@@ -55,19 +63,52 @@ enum class ERNTupleSerializationMode {
    kUnset
 };
 
-ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
+ERNTupleSerializationMode GetRNTupleSerializationMode(const TClass *cl);
 
-/// Parse a type name of the form `T[n][m]...` and return the base type `T` and a vector that contains,
-/// in order, the declared size for each dimension, e.g. for `unsigned char[1][2][3]` it returns the tuple
-/// `{"unsigned char", {1, 2, 3}}`. Extra whitespace in `typeName` should be removed before calling this function.
-///
-/// If `typeName` is not an array type, it returns a tuple `{T, {}}`. On error, it returns a default-constructed tuple.
-std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::string &typeName);
+/// Checks if the "rntuple.SoARecord" class attribute is set in the dictionary.
+/// If so, returns its content, which is the underlying record type name.
+std::string GetRNTupleSoARecord(const TClass *cl);
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
+/// If maxArgs > 0, stop tokenizing after the given number of tokens are found. Used to strip
+/// STL allocator and other optional arguments.
 /// TODO(jblomer): Try to merge with TClassEdit::TSplitType
-std::vector<std::string> TokenizeTypeList(std::string_view templateType);
+std::vector<std::string> TokenizeTypeList(std::string_view templateType, std::size_t maxArgs = 0);
+
+/// Helper to check if a given actualTypeName matches the expectedTypeName, either from RField<T>::TypeName() or
+/// GetRenormalizedTypeName(). Usually, this check can be done with a simple string comparison. The failure case,
+/// however, needs to additionally check for ROOT-specific special cases.
+bool IsMatchingFieldType(std::string_view actualTypeName, std::string_view expectedTypeName, const std::type_info &ti);
+
+/// Prints the hierarchy of types with their field names and field IDs for the given in-memory field and the
+/// on-disk hierarchy, matching the fields on-disk ID with the information of the descriptor.
+/// Useful information when the in-memory field cannot be matched to the the on-disk information.
+std::string GetTypeTraceReport(const RFieldBase &field, const RNTupleDescriptor &desc);
+
+/// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
+/// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
+inline std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
+{
+   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
+   // int32_t fSize is the second data member (after 1 void*)
+   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
+   assert(*size >= 0);
+   // int32_t fCapacity is the third data member (1 int32_t after fSize)
+   std::int32_t *capacity = size + 1;
+   assert(*capacity >= -1);
+   return {beginPtr, size, capacity};
+}
+
+inline std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
+GetRVecDataMembers(const void *rvecPtr)
+{
+   return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
+}
+
+std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT);
+std::size_t EvalRVecAlignment(std::size_t alignOfSubfield);
+void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr);
 
 } // namespace Internal
 } // namespace ROOT

@@ -64,7 +64,6 @@ Bool_t TViewTimer::Notify()
    return kFALSE;
 }
 
-ClassImp(TGTextView);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,7 +750,7 @@ Bool_t TGTextView::HandleTimer(TTimer *)
          } else if ((Int_t)fCanvas->GetHeight() - kAutoScrollFudge <= y) {
             dy = fCanvas->GetHeight() - kAutoScrollFudge - y;
          }
-         Int_t ady = TMath::Abs(dy) >> 3;
+         Int_t ady = std::abs(dy) >> 3;
 
          if (dy) {
             if (ady > kAutoScrollFudge) ady = kAutoScrollFudge;

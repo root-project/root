@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(CFITSIO_VERSION 4.4.0)
+set(CFITSIO_VERSION 4.6.3)
 
 set(CFITSIO_PREFIX ${CMAKE_BINARY_DIR}/CFITSIO-prefix)
 set(CFITSIO_LIBRARIES ${CFITSIO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -17,15 +17,20 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if(winrtdebug)
     set(CFITSIO_BUILD_COMMAND_FLAGS "--config Debug")
   else()
-    set(CFITSIO_BUILD_COMMAND_FLAGS "--config Release")
+    set(CFITSIO_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
   endif()
+endif()
+
+# flag required only on Windows, on old alma paltforms it make troubles
+if(WIN32)
+  set(patch_args --ignore-whitespace)
 endif()
 
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
-  URL https://lcgpackages.web.cern.ch/tarFiles/sources/cfitsio-${CFITSIO_VERSION}.tar.gz
-  URL_HASH SHA256=95900cf95ae760839e7cb9678a7b2fad0858d6ac12234f934bd1cb6bfc246ba9
+  URL ${lcgpackages}/cfitsio-${CFITSIO_VERSION}.tar.gz
+  URL_HASH SHA256=fad44fff274fdda5ffcc0c0fff3bc3c596362722b9292fc8944db91187813600
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_POLICY_VERSION_MINIMUM=3.5
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -38,7 +43,7 @@ ExternalProject_Add(
              -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
              -DZLIB_LIBRARIES=$<TARGET_FILE:ZLIB::ZLIB>
   # Skip the find_package(ZLIB REQUIRED), because we feed CFITSIO our own ZLIB flags.
-  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
+  PATCH_COMMAND git apply ${patch_args}
                 ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
                 ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS}

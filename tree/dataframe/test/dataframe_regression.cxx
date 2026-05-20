@@ -10,6 +10,9 @@
 #include <algorithm>
 
 #include "gtest/gtest.h"
+#include <gmock/gmock.h>
+
+#include <TFile.h>
 
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFRegressionTests : public ::testing::TestWithParam<bool> {
@@ -77,7 +80,7 @@ TEST_P(RDFRegressionTests, MultipleTriggerRun)
    const auto treeName = "t";
    {
       ROOT::RDataFrame tdf(1);
-      tdf.Define("b1", []() { return 1U; }).Snapshot<unsigned int>(treeName, fileName, {"b1"});
+      tdf.Define("b1", []() { return 1U; }).Snapshot(treeName, fileName, {"b1"});
    }
 
    ROOT::RDataFrame d(treeName, fileName, {"b1"});
@@ -141,7 +144,7 @@ TEST_P(RDFRegressionTests, UniqueEntryNumbers)
 {
    const auto treename = "t";
    const auto fname = "df_uniqueentrynumbers.root";
-   ROOT::RDataFrame(10).Snapshot<unsigned int>(treename, fname, {"rdfslot_"}); // does not matter what column we write
+   ROOT::RDataFrame(10).Snapshot(treename, fname, {"rdfslot_"}); // does not matter what column we write
 
    ROOT::RDataFrame df(treename, {fname, fname});
    auto entries = *df.Take<ULong64_t>("rdfentry_");
@@ -181,7 +184,7 @@ TEST_P(RDFRegressionTests, ReadWriteVector3)
    EXPECT_EQ(ha->GetMean(), 4.5);
    EXPECT_EQ(ha->GetMean(), hb->GetMean());
 
-   auto out_df = rdf.Snapshot<TVector3, TVector3>("t", snap_fname, {"a", "b"});
+   auto out_df = rdf.Snapshot("t", snap_fname, {"a", "b"});
 
    auto ha_snap = out_df->Define("aval", "a.X()").Histo1D("aval");
    auto hb_snap = out_df->Define("bval", "b.X()").Histo1D("bval");
@@ -238,7 +241,7 @@ TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
    ASSERT_EQ(rdf.Count().GetValue(), 4ull);
    rdf.Foreach(checkEntries, {"o", "rdfentry_"});
 
-   auto out_df = rdf.Snapshot<TObject>("t", snap_fname, {"o"});
+   auto out_df = rdf.Snapshot("t", snap_fname, {"o"});
    out_df->Foreach(checkEntries, {"o", "rdfentry_"});
 
    TFile f(snap_fname.c_str());
@@ -292,6 +295,8 @@ struct DatasetGuard {
          x = i;
          t.Fill();
       }
+      TNamed o("tnamed","tnamed");
+      o.Write();
       f.Write();
    }
    DatasetGuard(const DatasetGuard &) = delete;
@@ -335,6 +340,21 @@ TEST_P(RDFRegressionTests, EmptyFileList)
       const std::string expected{"RDataFrame: empty list of input files."};
       EXPECT_EQ(e.what(), expected);
    }
+}
+
+TEST_P(RDFRegressionTests, NonExistingDataset)
+{
+   using ::testing::HasSubstr;
+   using ::testing::ThrowsMessage;
+   DatasetGuard dataset{"events", "NonExistingDataset.root"};
+
+   EXPECT_THAT([&dataset]() { ROOT::RDataFrame df("nonExisting", dataset.fFileName.c_str()); },
+               ThrowsMessage<std::invalid_argument>(
+                  HasSubstr("cannot find dataset \"nonExisting\" in file \"NonExistingDataset.root\"")));
+
+   EXPECT_THAT([&dataset]() { ROOT::RDataFrame df("tnamed", dataset.fFileName.c_str()); },
+               ThrowsMessage<std::invalid_argument>(HasSubstr(
+                  "unsupported data format for dataset \"tnamed\" in file \"NonExistingDataset.root\"")));
 }
 
 // run single-thread tests

@@ -35,7 +35,6 @@ Class used to redirect the command line input/output.
 #include <vector>
 #include <string>
 
-ClassImp(TGCommandPlugin);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGCommandPlugin Constructor.

@@ -1,11 +1,13 @@
-import unittest
-import ROOT
 import os
+import unittest
+
+import ROOT
 
 RDataFrame = ROOT.ROOT.RDataFrame
 RDatasetSpec = ROOT.RDF.Experimental.RDatasetSpec
 REntryRange = ROOT.RDF.Experimental.RDatasetSpec.REntryRange
 RMetaData = ROOT.RDF.Experimental.RMetaData
+
 
 class RDatasetSpecTest(unittest.TestCase):
     @classmethod
@@ -25,12 +27,12 @@ class RDatasetSpecTest(unittest.TestCase):
         # reuse the code from the C++ unit tests to create some files
         code = """ {
         auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-        dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "PYspecTestFile2.root", {"z"});
-        dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "PYspecTestFile3.root", {"z"});
-        dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "PYspecTestFile4.root", {"z"});
-        dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "PYspecTestFile5.root", {"z"});
-        dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "PYspecTestFile6.root", {"z"});
-        dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
+        dfWriter0.Range(0, 2).Snapshot("subTree", "PYspecTestFile2.root", {"z"});
+        dfWriter0.Range(2, 4).Snapshot("subTree", "PYspecTestFile3.root", {"z"});
+        dfWriter0.Range(4, 5).Snapshot("subTree", "PYspecTestFile4.root", {"z"});
+        dfWriter0.Range(0, 2).Snapshot("subTree1", "PYspecTestFile5.root", {"z"});
+        dfWriter0.Range(2, 4).Snapshot("subTree2", "PYspecTestFile6.root", {"z"});
+        dfWriter0.Snapshot("anotherTree", "PYspecTestFile7.root", {"z"});
         }"""
         ROOT.gInterpreter.Calc(code)
 

@@ -103,8 +103,6 @@ the pointer
 #include <iostream>
 #include <cstdlib>
 
-ClassImp(TGTripleVSlider);
-ClassImp(TGTripleHSlider);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a vertical slider widget.

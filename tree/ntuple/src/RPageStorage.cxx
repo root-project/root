@@ -15,10 +15,12 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTupleAttrUtils.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
@@ -49,6 +51,8 @@ using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
 using ROOT::Internal::RFieldDescriptorBuilder;
 using ROOT::Internal::RNTupleSerializer;
+
+using ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder;
 
 using ROOT::Internal::RCluster;
 using ROOT::Internal::ROnDiskPage;
@@ -161,7 +165,10 @@ bool ROOT::Internal::RPageSource::REntryRange::IntersectsWith(const ROOT::RClust
 }
 
 ROOT::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTupleReadOptions &options)
-   : RPageStorage(name), fOptions(options)
+   : RPageStorage(name),
+     fOptions(options),
+     fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(fOptions)),
+     fPagePool(*this)
 {
 }
 
@@ -361,8 +368,12 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
       GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
    auto itr = fPreloadedClusters.begin();
    while ((itr != fPreloadedClusters.end()) && (itr->first < firstEntryIndex)) {
-      fPagePool.Evict(itr->second);
-      itr = fPreloadedClusters.erase(itr);
+      if (fPinnedClusters.count(itr->second) > 0) {
+         ++itr;
+      } else {
+         fPagePool.Evict(itr->second);
+         itr = fPreloadedClusters.erase(itr);
+      }
    }
    std::size_t poolWindow = 0;
    while ((itr != fPreloadedClusters.end()) &&
@@ -371,8 +382,12 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
       ++poolWindow;
    }
    while (itr != fPreloadedClusters.end()) {
-      fPagePool.Evict(itr->second);
-      itr = fPreloadedClusters.erase(itr);
+      if (fPinnedClusters.count(itr->second) > 0) {
+         ++itr;
+      } else {
+         fPagePool.Evict(itr->second);
+         itr = fPreloadedClusters.erase(itr);
+      }
    }
 
    fLastUsedCluster = clusterId;
@@ -457,6 +472,8 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
 void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
+   fMetrics.ObserveMetrics(fClusterPool.GetMetrics());
+   fMetrics.ObserveMetrics(fPagePool.GetMetrics());
    fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter *>("nReadV", "", "number of vector read requests"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter *>("nRead", "", "number of byte ranges read"),
@@ -755,11 +772,11 @@ ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RCo
    return SealPage(config);
 }
 
-void ROOT::Internal::RPageSink::CommitDataset()
+ROOT::Internal::RNTupleLink ROOT::Internal::RPageSink::CommitDataset()
 {
    for (const auto &cb : fOnDatasetCommitCallbacks)
       cb(*this);
-   CommitDatasetImpl();
+   return CommitDatasetImpl();
 }
 
 ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
@@ -829,6 +846,14 @@ ROOT::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, RCo
 void ROOT::Internal::RPagePersistentSink::UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset,
                                                        ROOT::NTupleSize_t firstEntry)
 {
+   if (fIsInitialized) {
+      for (const auto &field : changeset.fAddedFields) {
+         if (field->GetStructure() == ENTupleStructure::kStreamer) {
+            throw ROOT::RException(R__FAIL("a Model cannot be extended with Streamer fields"));
+         }
+      }
+   }
+
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    if (descriptor.GetNLogicalColumns() > descriptor.GetNPhysicalColumns()) {
@@ -1002,6 +1027,8 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    // Create model
    auto modelOpts = ROOT::RNTupleDescriptor::RCreateModelOptions();
    modelOpts.SetReconstructProjections(true);
+   // We want to emulate unknown types to allow merging RNTuples containing types that we lack dictionaries for.
+   modelOpts.SetEmulateUnknownTypes(true);
    auto model = descriptor.CreateModel(modelOpts);
    if (!copyClusters) {
       auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*model);
@@ -1245,7 +1272,22 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
+void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view attrSetName,
+                                                             const RNTupleLink &attrAnchorInfo)
+{
+   using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+
+   RNTupleAttrSetDescriptorBuilder attrSetDescBuilder;
+   auto attrSetDesc = attrSetDescBuilder.SchemaVersion(kSchemaVersionMajor, kSchemaVersionMinor)
+                         .AnchorLength(attrAnchorInfo.fLength)
+                         .AnchorLocator(attrAnchorInfo.fLocator)
+                         .Name(attrSetName)
+                         .MoveDescriptor()
+                         .Unwrap();
+   fDescriptorBuilder.AddAttributeSet(std::move(attrSetDesc)).ThrowOnError();
+}
+
+ROOT::Internal::RNTupleLink ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
    if (!fInfosOfStreamerFields.empty()) {
       // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but
@@ -1273,7 +1315,7 @@ void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
    auto bufFooter = MakeUninitArray<unsigned char>(szFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext);
 
-   CommitDatasetImpl(bufFooter.get(), szFooter);
+   return CommitDatasetImpl(bufFooter.get(), szFooter);
 }
 
 void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string &prefix)

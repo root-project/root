@@ -1,0 +1,15 @@
+diff --git a/clang/lib/Interpreter/Wasm.cpp b/clang/lib/Interpreter/Wasm.cpp
+index aa10b160ccf8..184867e2b55f 100644
+--- a/clang/lib/Interpreter/Wasm.cpp
++++ b/clang/lib/Interpreter/Wasm.cpp
+@@ -76,8 +76,8 @@ llvm::Error WasmIncrementalExecutor::addModule(PartialTranslationUnit &PTU) {
+   llvm::TargetMachine *TargetMachine = Target->createTargetMachine(
+       PTU.TheModule->getTargetTriple(), "", "", TO, llvm::Reloc::Model::PIC_);
+   PTU.TheModule->setDataLayout(TargetMachine->createDataLayout());
+-  std::string ObjectFileName = PTU.TheModule->getName().str() + ".o";
+-  std::string BinaryFileName = PTU.TheModule->getName().str() + ".wasm";
++  std::string ObjectFileName = "/tmp/" + PTU.TheModule->getName().str() + ".o";
++  std::string BinaryFileName = "/tmp/" + PTU.TheModule->getName().str() + ".wasm";
+ 
+   std::error_code Error;
+   llvm::raw_fd_ostream ObjectFileOutput(llvm::StringRef(ObjectFileName), Error);

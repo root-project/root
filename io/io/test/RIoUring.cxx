@@ -58,7 +58,7 @@ TEST(RawUring, NopRoundTrip)
    // can make sqes
    struct io_uring_sqe *sqe;
    sqe = io_uring_get_sqe(&ring);
-   ASSERT_NE(sqe, (io_uring_sqe*) NULL);
+   ASSERT_NE(sqe, (io_uring_sqe*) nullptr);
 
    // can submit sqes to the ring
    io_uring_prep_nop(sqe);

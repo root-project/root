@@ -22,6 +22,9 @@
  */
 
 enum CustomEnum { kCustomEnumVal = 7 };
+enum RenamedCustomEnum : short int {
+   kRenamedCustomEnumVal = 7
+};
 // TODO(jblomer): use standard integer types for specifying the underlying width; requires TEnum fix.
 enum class CustomEnumBool : bool {
 };
@@ -33,6 +36,11 @@ enum class CustomEnumInt32 : int {};
 enum class CustomEnumUInt32 : unsigned int {};
 enum class CustomEnumInt64 : long int {};
 enum class CustomEnumUInt64 : unsigned long int {};
+
+// Used for std::atomic tests as an example of a class that is not lock-free.
+struct CustomAtomicNotLockFree {
+   int a[100];
+};
 
 struct CustomStruct {
    template <typename T>
@@ -80,7 +88,7 @@ struct DerivedWithTypedef : public CustomStruct {
 
 struct DerivedB : public DerivedA {
    float b_f1 = 0.0;
-   float b_f2 = 0.0; //!
+   float b_f2 = 0.0; ///<!
    std::string b_s;
 };
 
@@ -234,12 +242,14 @@ struct StructWithEnums : BaseOfStructWithEnums {
 template <typename T>
 struct StructUsingCollectionProxy {
    using ValueType = T;
-   std::vector<T> v; //! do not accidentally store via RClassField
+   std::vector<T> v; ///<! do not accidentally store via RClassField
 };
 
 /// Classes to exercise field traits
 struct TrivialTraitsBase {
    int a;
+
+   ClassDefNV(TrivialTraitsBase, 5)
 };
 
 struct TrivialTraits : TrivialTraitsBase {
@@ -247,7 +257,7 @@ struct TrivialTraits : TrivialTraitsBase {
 };
 
 struct TransientTraits : TrivialTraitsBase {
-   float b; //! transient member
+   float b; ///<! transient member
 };
 
 struct VariantTraitsBase {
@@ -271,20 +281,20 @@ struct DestructorTraits : TrivialTraitsBase {
 
 struct StructWithIORulesBase {
    float a;
-   float b; //! transient member
+   float b; ///<! transient member
 };
 
 struct StructWithTransientString {
    char chars[4];
-   std::string str; //! transient member
+   std::string str; ///<! transient member
 };
 
 struct StructWithIORules : StructWithIORulesBase {
    StructWithTransientString s;
-   float c = 0.0f; //! transient member
-   float cDerived = 0.0f;    //! should become 2*c after rules for c applied
-   float checksumA = 0.0f;   //! transient member, edited by checksum based rule
-   float checksumB = 137.0f; //! transient member, skipped by checksum based rule due to checksum mismatch
+   float c = 0.0f; ///<! transient member
+   float cDerived = 0.0f;    ///<! should become 2*c after rules for c applied
+   float checksumA = 0.0f;   ///<! transient member, edited by checksum based rule
+   float checksumB = 137.0f; ///<! transient member, skipped by checksum based rule due to checksum mismatch
 
    StructWithIORules() = default;
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
@@ -298,8 +308,8 @@ struct OldCoordinates {
 struct CoordinatesWithIORules {
    float fX;
    float fY;
-   float fR;   //!
-   float fPhi; //!
+   float fR;   ///<!
+   float fPhi; ///<!
 };
 
 struct LowPrecisionFloatWithIORules {
@@ -319,7 +329,7 @@ struct NewName {
 
 struct SourceStruct {
    int fValue;
-   int fTransient; //!
+   int fTransient; ///<!
    SourceStruct()
    {
       fValue = 17;
@@ -329,7 +339,7 @@ struct SourceStruct {
 
 struct StructWithSourceStruct {
    SourceStruct fSource;
-   int fTransient = 0; //!
+   int fTransient = 0; ///<!
 };
 
 struct Cyclic {
@@ -407,6 +417,14 @@ struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
    float d = 0.0;
 };
 
+struct PolymorphicBase {
+   virtual ~PolymorphicBase() {}
+};
+
+struct PolymorphicDerived : public PolymorphicBase {
+   ~PolymorphicDerived() override {}
+};
+
 class Left {
 public:
    float x = 1.0;
@@ -452,5 +470,12 @@ struct ExampleMC {
    float fHelicity = 0.;
 };
 } // namespace v2
+
+// Test class for runtime member streamers set via TClass::SetMemberStreamer
+struct MemberWithCustomStreamer {
+   int fNormal = 0;
+   int fCustom = 0;
+   ClassDefNV(MemberWithCustomStreamer, 2);
+};
 
 #endif

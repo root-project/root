@@ -1,0 +1,19 @@
+<lcgdict>
+  <class name="LArHit_p1" />
+  <class name="std::vector<LArHit_p1>" />
+  <class name="LArHitContainer_p2" id="1F1DE705-E0CE-4F0E-941A-C405CB2CD137" />
+  <class name="LArRawChannel_p2" />
+  <class name="LArRawChannelCollection_p2" />
+  <class name="std::vector<LArRawChannel_p2>" />
+  <class name="LArRawChannelContainer_p4" id="E3B70B7A-0D69-429A-AD43-B68941E879FB" />
+  <class name="std::vector<LArRawChannelCollection_p2>" />
+  <class name="LArDigitContainer_p1" id="F1876026-CDFE-4110-AA59-E441BAA5DE44" />
+  <class name="LArFebErrorSummary_p1" id="9448FB64-AB7E-4995-A5FC-23E9A6C1AF80" />
+  <class name="LArNoisyROSummary_p1" id="4681BC21-3C00-4540-BED6-58E37700D9B9"/>
+  <class name="LArNoisyROSummary_p2" id="C33CED2C-2101-4B0C-9BCB-739B004639F4"/>
+  <class name="LArNoisyROSummary_p3" id="7801CF21-F2F2-4E87-9B87-744F31A37D1B"/>
+  <class name="std::pair<unsigned int, std::vector<int> >" />
+  <class name="std::vector<std::pair<unsigned int, std::vector<int> > >" />
+
+
+</lcgdict>

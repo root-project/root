@@ -17,7 +17,6 @@ End_Html
 
 
 using namespace ROOT::R;
-ClassImp(TRFunctionImport);
 
 
 

@@ -126,13 +126,58 @@ def pythonize_RNTupleModel(klass):
     klass.MakeField = MethodTemplateGetter(klass.MakeField, _RNTupleModel_MakeField)
 
 
+# Wrapper class used for RNTupleReader and RNTupleWriter.
+# It deletes the underlying smart pointer on context manager exit and ensures that the inner object becomes
+# inaccessible by raising an error every time an attribute of the object is accessed.
+# It also raises an error if `with` statements using the same object are nested.
+# This is a generic class and can in principle be used with any class that needs this behavior.
+class RNTupleContextWrapper:
+    def __init__(self, inner, pretty_name, on_ctx_enter = None, on_ctx_exit = None):
+        self._inner = inner
+        self._pretty_name = pretty_name
+        self._closed = False
+        self._in_context = False
+        self._on_ctx_enter = on_ctx_enter
+        self._on_ctx_exit = on_ctx_exit
+
+    def __getattribute__(self, name):
+        if name.startswith('_'):
+            return super().__getattribute__(name)
+
+        if super().__getattribute__("_closed"):
+            raise RuntimeError(
+                f"cannot access {super().__getattribute__('_pretty_name')} after the `with` statement is exited"
+            )
+        return super().__getattribute__("_inner").__getattribute__(name)
+
+    def __enter__(self, *args):
+        if self._on_ctx_enter:
+            self._on_ctx_enter(self._inner)
+        if self._closed:
+            raise RuntimeError(f"cannot reuse {self._pretty_name} in multiple `with` statements")
+        if self._in_context:
+            raise RuntimeError(f"cannot nest `with` statements using the same {self._pretty_name}")
+
+        self._in_context = True
+        return self
+
+    def __exit__(self, *args):
+        assert self._in_context and not self._closed
+        if self._on_ctx_exit:
+            self._on_ctx_exit(self._inner)
+        self._in_context = False
+        self._closed = True
+        self._inner.__smartptr__().reset()
+        return False
+   
+
 def _RNTupleReader_Open(maybe_model, *args):
     if hasattr(type(maybe_model), "__cpp_name__") and type(maybe_model).__cpp_name__ == "ROOT::RNTupleModel":
         # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
         maybe_model = maybe_model.Clone()
     import ROOT
 
-    return ROOT.RNTupleReader._Open(maybe_model, *args)
+    return RNTupleContextWrapper(ROOT.RNTupleReader._Open(maybe_model, *args), "RNTupleReader")
 
 
 def _RNTupleReader_LoadEntry(self, *args):
@@ -155,7 +200,7 @@ def _RNTupleWriter_Append(model, *args):
     model = model.Clone()
     import ROOT
 
-    return ROOT.RNTupleWriter._Append(model, *args)
+    return RNTupleContextWrapper(ROOT.RNTupleWriter._Append(model, *args), "RNTupleWriter", on_ctx_exit = _RNTupleWriter_exit)
 
 
 def _RNTupleWriter_Recreate(model_or_fields, *args):
@@ -164,7 +209,7 @@ def _RNTupleWriter_Recreate(model_or_fields, *args):
         model_or_fields = model_or_fields.Clone()
     import ROOT
 
-    return ROOT.RNTupleWriter._Recreate(model_or_fields, *args)
+    return RNTupleContextWrapper(ROOT.RNTupleWriter._Recreate(model_or_fields, *args), "RNTupleWriter", on_ctx_exit = _RNTupleWriter_exit)
 
 
 def _RNTupleWriter_Fill(self, *args):
@@ -173,9 +218,8 @@ def _RNTupleWriter_Fill(self, *args):
     return self._Fill(*args)
 
 
-def _RNTupleWriter_exit(self, *args):
+def _RNTupleWriter_exit(self):
     self.CommitDataset()
-    return False
 
 
 @pythonization("RNTupleWriter", ns="ROOT")
@@ -187,6 +231,3 @@ def pythonize_RNTupleWriter(klass):
 
     klass._Fill = klass.Fill
     klass.Fill = _RNTupleWriter_Fill
-
-    klass.__enter__ = lambda writer: writer
-    klass.__exit__ = _RNTupleWriter_exit

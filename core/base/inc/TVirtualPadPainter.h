@@ -13,13 +13,29 @@
 #define ROOT_TVirtualPadPainter
 
 #include "Rtypes.h"
+#include "GuiTypes.h"
 
 class TVirtualPad;
+class TVirtualPS;
+class TAttFill;
+class TAttLine;
+class TAttMarker;
+class TAttText;
 
 class TVirtualPadPainter {
 public:
    enum EBoxMode  {kHollow, kFilled};
-   enum ETextMode {kClear,  kOpaque};
+   enum ETextMode {
+// clang++ <v20 (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kClear,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kOpaque};
 
    virtual ~TVirtualPadPainter();
 
@@ -56,13 +72,39 @@ public:
    virtual void     SetTextSize(Float_t tsize=1) = 0;
    virtual void     SetTextSizePixels(Int_t npixels) = 0;
 
+   //Marker attributes
+   virtual Color_t  GetMarkerColor() const { return 0; }
+   virtual Style_t  GetMarkerStyle() const { return 0; }
+   virtual Size_t   GetMarkerSize()  const { return 0; }
+
+   virtual void     SetMarkerColor(Color_t /* mcolor */ = 1) {}
+   virtual void     SetMarkerStyle(Style_t /* mstyle */ = 1) {}
+   virtual void     SetMarkerSize(Size_t /* msize */ = 1) {}
+
+   virtual void      SetAttFill(const TAttFill &att);
+   virtual void      SetAttLine(const TAttLine &att);
+   virtual void      SetAttMarker(const TAttMarker &att);
+   virtual void      SetAttText(const TAttText &att);
+
+   virtual const TAttFill &GetAttFill() const;
+   virtual const TAttLine &GetAttLine() const;
+   virtual const TAttMarker &GetAttMarker() const;
+   virtual const TAttText &GetAttText() const;
+
    //This part is an interface to X11 pixmap management and to save sub-pads off-screens for OpenGL.
    //Currently, must be implemented only for X11/GDI
    virtual Int_t    CreateDrawable(UInt_t w, UInt_t h) = 0;//gVirtualX->OpenPixmap
    virtual void     ClearDrawable() = 0;//gVirtualX->Clear()
+   virtual void     ClearWindow(Int_t /* device */) {} //gVirtualX->ClearWindowW()
+   virtual Int_t    ResizeDrawable(Int_t /* device */, UInt_t /* w */, UInt_t /* h */) { return 0; } //gVirtualX->ResizePixmap
    virtual void     CopyDrawable(Int_t device, Int_t px, Int_t py) = 0;
    virtual void     DestroyDrawable(Int_t device) = 0;//gVirtualX->CloseWindow
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
+   virtual void     UpdateDrawable(Int_t /* mode */) {}
+   virtual void     SetDrawMode(Int_t /* device */, Int_t /* mode */) {}
+   virtual void     SetDoubleBuffer(Int_t device, Int_t mode);
+   virtual void     SetCursor(Int_t win, ECursor cursor);
+
 
    //TASImage support.
    virtual void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
@@ -72,6 +114,7 @@ public:
    virtual void     InitPainter();
    virtual void     InvalidateCS();
    virtual void     LockPainter();
+   virtual void     NewPage() {}
 
    //Now, drawing primitives.
    virtual void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) = 0;
@@ -86,6 +129,9 @@ public:
    virtual void     DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y) = 0;
    virtual void     DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v) = 0;
 
+   virtual void     DrawSegments(Int_t n, Double_t *x, Double_t *y);
+   virtual void     DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v);
+
    virtual void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y) = 0;
    virtual void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) = 0;
 
@@ -94,9 +140,17 @@ public:
    virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) = 0;
    virtual void     DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) = 0;
 
+   virtual void     DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url);
+
    //gif, jpg, png, bmp output.
    virtual void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const = 0;
 
+   virtual void     OnPad(TVirtualPad *) {}
+
+   virtual Bool_t   IsNative() const { return kFALSE; }
+   virtual Bool_t   IsCocoa() const { return kFALSE; }
+   virtual TVirtualPS *GetPS() const { return nullptr; }
+   virtual Bool_t   IsSupportAlpha() const { return kFALSE; }
 
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 

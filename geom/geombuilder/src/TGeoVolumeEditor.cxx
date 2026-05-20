@@ -55,7 +55,6 @@ split vertically by a shutter:
 #include "TGeoTabManager.h"
 #include "TGedEditor.h"
 
-ClassImp(TGeoVolumeEditor);
 
 enum ETGeoVolumeWid {
    kVOL_NAME,

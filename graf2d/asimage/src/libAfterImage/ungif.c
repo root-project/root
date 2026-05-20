@@ -19,12 +19,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
 /*#define LOCAL_DEBUG */
 /*#define DO_CLOCKING */
 
@@ -50,17 +44,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 #ifdef HAVE_GIF
-# ifdef HAVE_BUILTIN_UNGIF
-#  include "libungif/gif_lib.h"
-# else
-#  include <gif_lib.h>
-# endif
+# include <gif_lib.h>
 #endif
 
 #include "asimage.h"
@@ -227,7 +213,7 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
 								      ExtCode, ExtData[0], &(ExtData[1]));
 #else
 					temp_save.Function = ExtCode;
-					status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]));
+               status = AddExtensionBlock(&temp_save, ExtData[0], (unsigned char *)&(ExtData[1]));
 #endif
 					if (status == GIF_OK)
 						status = DGifGetExtensionNext(gif, &ExtData);

@@ -1,0 +1,335 @@
+Pixmap_t
+vector<int,allocator<int> >::const_iterator
+vector<TString,allocator<TString> >::iterator::reference
+ROOT::Math::BasicFitMethodFunction<ROOT::Math::IGradientFunctionMultiDim>::BaseFunction
+vector<TString,allocator<TString> >::difference_type
+ostream
+ULong_t
+ios_base::iostate
+basic_ifstream<char,char_traits<char> >::off_type
+basic_streambuf<char,char_traits<char> >::char_type
+Colormap_t
+ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
+unsigned short
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::reference
+FontStruct_t
+vector<int,allocator<int> >::iterator::pointer
+TVirtualCollectionProxy::Next_t
+Cursor_t
+Option_t
+basic_stringstream<char,char_traits<char>,allocator<char> >::int_type
+Color_t
+basic_ostringstream<char,char_traits<char>,allocator<char> >::traits_type
+unsigned long long
+vector<double,allocator<double> >::reference
+ROOT::TSchemaRule::ReadRawFuncPtr_t
+ROOT::Math::IParametricFunctionOneDim::BaseFunc
+#wchar_t
+ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::Type_t
+vector<string,allocator<string> >::value_type
+ReAllocCFun_t
+vector<int,allocator<int> >::const_pointer
+basic_ofstream<char,char_traits<char> >::int_type
+vector<pair<int,int>,allocator<pair<int,int> > >::value_type
+size_t
+vector<int,allocator<int> >::difference_type
+unsigned int
+TOrdCollection::Iterator_t
+vector<pair<int,int>,allocator<pair<int,int> > >::pointer
+ROOT::Math::IParametricGradFunctionMultiDim::BaseGradFunc
+ROOT::Math::FitMethodFunction
+vector<int,allocator<int> >::value_type
+stringstream
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::const_pointer
+streamsize
+UChar_t
+Handle_t
+Visual_t
+stringbuf
+ROOT::DesFunc_t
+vector<int,allocator<int> >::iterator::reference
+ROOT::Math::IBaseFunctionOneDim::BaseFunc
+vector<string,allocator<string> >::const_reference
+SCoord_t
+ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>::BaseObjFunction
+Drawable_t
+basic_ofstream<char,char_traits<char> >::off_type
+time_t
+basic_filebuf<char,char_traits<char> >::traits_type
+ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::IModelFunction
+basic_ios<char,char_traits<char> >::char_type
+vector<pair<int,int>,allocator<pair<int,int> > >::reference
+ROOT::Math::IParametricGradFunctionMultiDim::BaseFunc
+vector<TString,allocator<TString> >::size_type
+ROOT::Math::TDataPoint2D
+vector<double,allocator<double> >::pointer
+tm_t
+TKDTreeID
+basic_ios<char,char_traits<char> >::traits_type
+Short_t
+TKDTreeIF
+basic_stringbuf<char,char_traits<char>,allocator<char> >::pos_type
+Version_t
+basic_ifstream<char,char_traits<char> >::char_type
+ReAllocFun_t
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::reference
+basic_streambuf<char,char_traits<char> >::off_type
+TVirtualCollectionProxy::DeleteTwoIterators_t
+ROOT::Fit::PoissonLLGradFunction
+vector<TString,allocator<TString> >::iterator::difference_type
+ROOT::DelArrFunc_t
+ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::BaseObjFunction
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::const_reference
+vector<double,allocator<double> >::const_pointer
+basic_ostream<char,char_traits<char> >::traits_type
+basic_stringbuf<char,char_traits<char>,allocator<char> >::off_type
+GContext_t
+ROOT::Math::TDataPoint3F
+vector<TString,allocator<TString> >::const_iterator
+ROOT::Math::IParametricGradFunctionOneDim::BaseFunc
+basic_istream<char,char_traits<char> >::char_type
+ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::BaseObjFunction
+ios_base::openmode
+basic_ios<char,char_traits<char> >::int_type
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::difference_type
+ROOT::Fit::DataRange::RangeIntervals
+basic_istringstream<char,char_traits<char>,allocator<char> >::traits_type
+unsigned char
+ROOT::Math::IntegratorOneDim::Type
+ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
+ROOT::Fit::Fitter::BaseFunc
+basic_ostringstream<char,char_traits<char>,allocator<char> >::off_type
+basic_stringstream<char,char_traits<char>,allocator<char> >::char_type
+streampos
+string::const_reference
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::const_iterator
+basic_istringstream<char,char_traits<char>,allocator<char> >::off_type
+vector<double,allocator<double> >::const_reference
+float
+vector<int,allocator<int> >::size_type
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::value_type
+ROOT::Math::FitMethodGradFunction
+ROOT::Math::IParametricGradFunctionOneDim::BaseGradFunc
+ios_base::fmtflags
+vector<TString,allocator<TString> >::const_reference
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::const_pointer
+basic_stringstream<char,char_traits<char>,allocator<char> >::pos_type
+vector<string,allocator<string> >::iterator::difference_type
+TMap::Iterator_t
+Stat_t
+ROOT::Fit::Fitter::IModel1DFunction
+ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::BaseFunction
+ShowMembersFunc_t
+Func_t
+vector<string,allocator<string> >::difference_type
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::difference_type
+vector<TString,allocator<TString> >::reference
+vector<double,allocator<double> >::iterator::pointer
+Double32_t
+ROOT::Math::IParamMultiGradFunction
+vector<TString,allocator<TString> >::pointer
+basic_istream<char,char_traits<char> >::traits_type
+vector<pair<int,int>,allocator<pair<int,int> > >::size_type
+ROOT::Fit::DataRange::RangeSet
+TVirtualCollectionProxy::CreateIterators_t
+timespec_t
+Float_t
+ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::BaseObjFunction
+basic_istream<char,char_traits<char> >::off_type
+TRefArray::Iterator_t
+long
+basic_istringstream<char,char_traits<char>,allocator<char> >::pos_type
+TClassTable::IdMap_t
+Window_t
+char_traits<char>::pos_type
+basic_ostream<char,char_traits<char> >::off_type
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::pointer
+ROOT::Math::TDataPoint<1,float>::value_type
+basic_ostringstream<char,char_traits<char>,allocator<char> >::pos_type
+Width_t
+vector<string,allocator<string> >::size_type
+Atom_t
+vector<pair<int,int>,allocator<pair<int,int> > >::difference_type
+ReAllocCharFun_t
+UInt_t
+Display_t
+ROOT::Math::IParametricFunctionMultiDim::BaseFunc
+char_traits<char>::char_type
+ROOT::ResetAfterMergeFunc_t
+basic_ostringstream<char,char_traits<char>,allocator<char> >::int_type
+Int_t
+ROOT::Math::IParamFunction
+ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::IModelFunction
+basic_filebuf<char,char_traits<char> >::pos_type
+basic_istringstream<char,char_traits<char>,allocator<char> >::int_type
+VoidFuncPtr_t
+ROOT::DirAutoAdd_t
+ROOT::Fit::Fitter::MinuitFCN_t
+vector<int,allocator<int> >::iterator::difference_type
+Region_t
+ROOT::Math::IGenFunction
+unsigned long
+streamoff
+double
+TAssoc
+ULong64_t
+ROOT::Math::TDataPoint3D
+vector<string,allocator<string> >::reference
+vector<TString,allocator<TString> >::const_pointer
+vector<double,allocator<double> >::const_iterator
+string::pointer
+TColorGradient::SizeType_t
+vector<string,allocator<string> >::iterator::reference
+vector<double,allocator<double> >::difference_type
+vector<double,allocator<double> >::iterator::difference_type
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::const_reference
+ROOT::Math::IParamMultiFunction
+basic_stringbuf<char,char_traits<char>,allocator<char> >::int_type
+basic_stringstream<char,char_traits<char>,allocator<char> >::off_type
+basic_istream<char,char_traits<char> >::int_type
+string::value_type
+basic_stringbuf<char,char_traits<char>,allocator<char> >::traits_type
+TTabCom::TContIter
+ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::IModelFunction
+ROOT::Fit::Chi2GradFunction
+ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>::BaseFunction
+ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::BaseObjFunction
+string::const_pointer
+ROOT::Math::IParamGradFunction
+ROOT::Math::ParamFunctor::Impl
+basic_istream<char,char_traits<char> >::pos_type
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::size_type
+Size_t
+basic_streambuf<char,char_traits<char> >::int_type
+basic_ostream<char,char_traits<char> >::int_type
+basic_filebuf<char,char_traits<char> >::off_type
+basic_stringstream<char,char_traits<char>,allocator<char> >::traits_type
+ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::BaseObjFunction
+basic_ios<char,char_traits<char> >::off_type
+basic_ofstream<char,char_traits<char> >::char_type
+ClassStreamerFunc_t
+ROOT::Fit::Fitter::BaseGradFunc
+ROOT::Math::TDataPoint1F
+basic_ostream<char,char_traits<char> >::pos_type
+short
+FreeHookFun_t
+ios_base::event_callback
+ROOT::Math::IMultiGenFunction
+ROOT::TSchemaRule::ReadFuncPtr_t
+ROOT::Fit::Fitter::IGradModel1DFunction
+ios
+Long64_t
+Time_t
+bool
+IsAGlobalFunc_t
+basic_ofstream<char,char_traits<char> >::traits_type
+ROOT::NewArrFunc_t
+TInetAddress::AliasList_t
+string::reference
+vector<string,allocator<string> >::pointer
+basic_ifstream<char,char_traits<char> >::pos_type
+char_traits<char>::off_type
+vector<double,allocator<double> >::iterator::reference
+Font_t
+Style_t
+void
+Char_t
+vector<double,allocator<double> >::size_type
+ROOT::Math::KDTree<ROOT::Math::TDataPoint<1,double> >::Bin
+string::size_type
+mbstate_t
+basic_streambuf<char,char_traits<char> >::traits_type
+basic_ostringstream<char,char_traits<char>,allocator<char> >::char_type
+long long
+ROOT::Fit::LogLikelihoodFunction
+TClass::StreamerImpl_t
+vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::size_type
+basic_istringstream<char,char_traits<char>,allocator<char> >::char_type
+ROOT::Math::IMultiGradFunction
+ostringstream
+ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
+ROOT::Math::IntegratorMultiDim::Type
+istringstream
+Double_t
+ROOT::Math::IParametricGradFunctionOneDim::BaseParamFunc
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::pointer
+basic_ios<char,char_traits<char> >::pos_type
+TInetAddress::AddressList_t
+vector<int,allocator<int> >::pointer
+ROOT::Math::IGradFunction
+Bool_t
+ROOT::NewFunc_t
+ifstream
+int
+vector<pair<int,int>,allocator<pair<int,int> > >::const_iterator
+TBtree::Iterator_t
+basic_ifstream<char,char_traits<char> >::traits_type
+FontH_t
+ROOT::Math::KDTree<ROOT::Math::TDataPoint<1,double> >::value_type
+char*
+vector<double,allocator<double> >::value_type
+istream
+TTabCom::TContainer
+Ssiz_t
+vector<int,allocator<int> >::reference
+basic_ofstream<char,char_traits<char> >::pos_type
+TList::Iterator_t
+Float16_t
+TBuffer::CacheList_t
+vector<TString,allocator<TString> >::iterator::pointer
+filebuf
+Long_t
+TVirtualCollectionProxy::DeleteIterator_t
+MemberStreamerFunc_t
+ROOT::Math::Integrator
+ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>::IModelFunction
+ROOT::Fit::Fitter::IGradModelFunction
+ROOT::Math::TDataPoint1D
+ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::BaseFunction
+ROOT::Math::ParamFunctor::FreeFunc
+char
+vector<pair<int,int>,allocator<pair<int,int> > >::const_reference
+ROOT::Fit::Fitter::IModelFunction
+ROOT::Math::KDTree<ROOT::Math::TDataPoint<1,double> >::point_type
+basic_stringbuf<char,char_traits<char>,allocator<char> >::char_type
+ROOT::TSchemaRule::RuleType_t
+vector<TString,allocator<TString> >::value_type
+UShort_t
+ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
+basic_ostream<char,char_traits<char> >::char_type
+vector<int,allocator<int> >::const_reference
+string::const_iterator
+ROOT::Fit::PoissonLLFunction
+vector<string,allocator<string> >::const_iterator
+TVirtualFitter::FCNFunc_t
+KeySym_t
+string::difference_type
+ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>::Type_t
+ROOT::Math::TDataPoint<1,double>::value_type
+basic_streambuf<char,char_traits<char> >::pos_type
+ROOT::DelFunc_t
+string::traits_type
+ROOT::Fit::Chi2Function
+basic_filebuf<char,char_traits<char> >::char_type
+vector<string,allocator<string> >::iterator::pointer
+ROOT::Math::TDataPoint2F
+ROOT::Fit::LogLikelihoodGradFunction
+char_traits<char>::state_type
+vector<pair<int,int>,allocator<pair<int,int> > >::const_pointer
+TVirtualCollectionProxy::CopyIterator_t
+ROOT::Math::IBaseFunctionMultiDim::BaseFunc
+streambuf
+ROOT::Fit::FitResult::IModelFunction
+ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::IModelFunction
+basic_ifstream<char,char_traits<char> >::int_type
+ROOT::Math::IParametricGradFunctionMultiDim::BaseParamFunc
+ROOT::MergeFunc_t
+vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::value_type
+Mask_t
+char_traits<char>::int_type
+basic_filebuf<char,char_traits<char> >::int_type
+ofstream
+TObjArray::Iterator_t
+vector<string,allocator<string> >::const_pointer
+unsigned
+fstream

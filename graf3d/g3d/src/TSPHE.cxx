@@ -17,7 +17,6 @@
 #include "TGeometry.h"
 #include "TMath.h"
 
-ClassImp(TSPHE);
 
 /** \class TSPHE
 \ingroup g3d

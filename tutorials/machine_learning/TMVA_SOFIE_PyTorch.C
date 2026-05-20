@@ -41,45 +41,45 @@ torch.jit.save(m,'PyTorchModel.pt')\n";
 
 void TMVA_SOFIE_PyTorch(){
 
-    //Running the Python script to generate PyTorch .pt file
-    TMVA::PyMethodBase::PyInitialize();
+   // Running the Python script to generate PyTorch .pt file
 
-    TMacro m;
-    m.AddLine(pythonSrc);
-    m.SaveSource("make_pytorch_model.py");
-    gSystem->Exec(TMVA::Python_Executable() + " make_pytorch_model.py");
+   TMacro m;
+   m.AddLine(pythonSrc);
+   m.SaveSource("make_pytorch_model.py");
+   gSystem->Exec("python3 make_pytorch_model.py");
 
-    //Parsing a PyTorch model requires the shape and data-type of input tensor
-    //Data-type of input tensor defaults to Float if not specified
-    std::vector<size_t> inputTensorShapeSequential{2,32};
-    std::vector<std::vector<size_t>> inputShapesSequential{inputTensorShapeSequential};
+   // Parsing a PyTorch model requires the shape and data-type of input tensor
+   // Data-type of input tensor defaults to Float if not specified
+   std::vector<size_t> inputTensorShapeSequential{2, 32};
+   std::vector<std::vector<size_t>> inputShapesSequential{inputTensorShapeSequential};
 
-    //Parsing the saved PyTorch .pt file into RModel object
-    SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt",inputShapesSequential);
+   // Parsing the saved PyTorch .pt file into RModel object
+   SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt", inputShapesSequential);
 
-    //Generating inference code
-    model.Generate();
-    model.OutputGenerated("PyTorchModel.hxx");
+   // Generating inference code
+   model.Generate();
+   model.OutputGenerated("PyTorchModel.hxx");
 
-    //Printing required input tensors
-    std::cout<<"\n\n";
-    model.PrintRequiredInputTensors();
+   // Printing required input tensors
+   std::cout << "\n\n";
+   model.PrintRequiredInputTensors();
 
-    //Printing initialized tensors (weights)
-    std::cout<<"\n\n";
-    model.PrintInitializedTensors();
+   // Printing initialized tensors (weights)
+   std::cout << "\n\n";
+   model.PrintInitializedTensors();
 
-    //Printing intermediate tensors
-    std::cout<<"\n\n";
-    model.PrintIntermediateTensors();
+   // Printing intermediate tensors
+   std::cout << "\n\n";
+   model.PrintIntermediateTensors();
 
-    //Checking if tensor already exist in model
-    std::cout<<"\n\nTensor \"0weight\" already exist: "<<std::boolalpha<<model.CheckIfTensorAlreadyExist("0weight")<<"\n\n";
-    std::vector<size_t> tensorShape = model.GetTensorShape("0weight");
-    std::cout<<"Shape of tensor \"0weight\": ";
-    for(auto& it:tensorShape){
-        std::cout<<it<<",";
-    }
+   // Checking if tensor already exist in model
+   std::cout << "\n\nTensor \"0weight\" already exist: " << std::boolalpha << model.CheckIfTensorAlreadyExist("0weight")
+             << "\n\n";
+   std::vector<size_t> tensorShape = model.GetTensorShape("0weight");
+   std::cout << "Shape of tensor \"0weight\": ";
+   for (auto &it : tensorShape) {
+      std::cout << it << ",";
+   }
     std::cout<<"\n\nData type of tensor \"0weight\": ";
     SOFIE::ETensorType tensorType = model.GetTensorType("0weight");
     std::cout<<SOFIE::ConvertTypeToString(tensorType);

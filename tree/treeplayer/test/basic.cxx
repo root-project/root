@@ -5,6 +5,7 @@
 #include "TLeaf.h"
 #include "TROOT.h"
 #include "TTree.h"
+#include "TTreePerfStats.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
@@ -473,8 +474,8 @@ TEST(TTreeReaderBasic, DisappearingBranch)
                                            "There was an error while notifying the proxies."};
 
    auto createFile = [](const char *fileName, int ncols) {
-      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});
-      // r->Define("col1",[](){return 0;}).Snapshot<int,int>("t","f0.root",{"col0","col1"});
+      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot("t","f1.root",{"col0"});
+      // r->Define("col1",[](){return 0;}).Snapshot("t","f0.root",{"col0","col1"});
       TFile f(fileName, "RECREATE");
       TTree t("t", "t");
       int i = 42;
@@ -570,3 +571,21 @@ TEST(TTreeReaderBasic, ZeroEntriesTreeCheckValueStatus)
       EXPECT_EQ(v1.GetSetupStatus(), ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMatchButEntryBeyondEnd);
    }
 }
+
+
+#ifdef R__USE_IMT
+// Check the warning emitted to address ROOT-10972
+TEST(TTreePerfStats, WarnWithIMT)
+{
+
+   auto fName = "file_ROOT-10972.root";
+   TFile f(fName, "RECREATE");
+   auto tPtr = MakeTree();
+   ROOT::EnableImplicitMT();
+   ROOT::TestSupport::CheckDiagsRAII diags{kWarning, "TTreePerfStats::TTreePerfStats",
+                                           "Results obtained with ImplicitMT enabled are not reliable."};
+   TTreePerfStats("tps", tPtr.get());
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink(fName);
+}
+#endif

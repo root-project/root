@@ -2,23 +2,26 @@
 // Authors: Stephan Hageboeck, CERN 04/2020
 //          Jonas Rembser, CERN 04/2021
 
-#include <RooAddition.h>
 #include <RooAddPdf.h>
+#include <RooAddition.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooParametricStepFunction.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
+#include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
-#include <RooRandom.h>
 
+#include <TArrayD.h>
 #include <TClass.h>
 #include <TRandom.h>
 
@@ -93,9 +96,6 @@ TEST_P(FitTest, AsymptoticallyCorrectErrors)
 // evaluated in batch mode and data size is greater than one, the batch mode
 // will inform that a batched evaluation function is missing.
 //
-// This test is disabled if the legacy backend is not available, because then
-// we don't have any reference to compare to.
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST(RooAbsPdf, ConditionalFitBatchMode)
 {
    using namespace RooFit;
@@ -129,41 +129,67 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 
    auto data = makeFakeDataXY();
 
+   // The model x range is wider than the support of the data so that the
+   // Poisson normalisation integral over x is unity to high precision for any
+   // mean value encountered. With that simplification, the conditional MLE for
+   // `factor` has a closed form (see below) and the legacy evaluation backend
+   // is no longer needed as a reference.
    RooWorkspace ws;
    ws.factory("Product::mean1({factor[1.0, 0.0, 10.0], y[1.0, 5]})");
    ws.factory("Product::mean2({factor})");
-   ws.factory("Poisson::model1(x[0, 10], mean1)");
+   ws.factory("Poisson::model1(x[0, 30], mean1)");
    ws.factory("Poisson::model2(x, mean2)");
 
    RooRealVar &factor = *ws.var("factor");
    RooRealVar &y = *ws.var("y");
 
-   std::vector<bool> expectFastEvaluationsWarnings{true, false};
+   double sumX = 0.0;
+   double sumY = 0.0;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      const RooArgSet *row = data->get(i);
+      sumX += row->getRealValue("x");
+      sumY += row->getRealValue("y");
+   }
+   const double nEntries = data->numEntries();
+
+   // For each event, the conditional log-likelihood term is
+   //    log Poisson(x_i; factor * y_i) = x_i log(factor*y_i) - factor*y_i + const
+   // (the Poisson normalisation integral over x is unity by construction of
+   // the wide x range). Setting d(NLL)/d(factor) = 0 gives:
+   //    model1: factor_MLE = sum_i x_i / sum_i y_i           (mean depends on y)
+   //    model2: factor_MLE = sum_i x_i / N                   (mean is just factor)
+   // and the standard error from the inverse Hessian is in both cases
+   //    sigma(factor) = sqrt(sum_i x_i) / (sum_i y_i  or  N).
+   const std::vector<double> expectedFactor{sumX / sumY, sumX / nEntries};
+   const std::vector<double> expectedFactorErr{std::sqrt(sumX) / sumY, std::sqrt(sumX) / nEntries};
+   const std::vector<bool> expectFastEvaluationsWarnings{true, false};
 
    int iMean = 0;
    for (RooAbsPdf *model : {ws.pdf("model1"), ws.pdf("model2")}) {
 
-      std::vector<std::unique_ptr<RooFitResult>> fitResults;
-
       RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::FastEvaluations);
 
-      for (auto evalBackend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
-         factor.setVal(1.0);
-         factor.setError(0.0);
-         fitResults.emplace_back(model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), evalBackend));
-         if (verbose) {
-            fitResults.back()->Print();
-         }
+      factor.setVal(1.0);
+      factor.setError(0.0);
+      auto fitResult = std::unique_ptr<RooFitResult>{
+         model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), EvalBackend::Cpu())};
+      if (verbose) {
+         fitResult->Print();
       }
 
-      EXPECT_TRUE(fitResults[1]->isIdentical(*fitResults[0]));
+      auto *factorFinal = static_cast<RooRealVar *>(fitResult->floatParsFinal().find("factor"));
+      ASSERT_NE(factorFinal, nullptr);
+      EXPECT_NEAR(factorFinal->getVal(), expectedFactor[iMean], 1e-4 * expectedFactor[iMean])
+         << "value mismatch for " << model->GetName();
+      EXPECT_NEAR(factorFinal->getError(), expectedFactorErr[iMean], 1e-3 * expectedFactorErr[iMean])
+         << "error mismatch for " << model->GetName();
+
       EXPECT_EQ(hijack.str().find("does not implement the faster batch") != std::string::npos,
                 expectFastEvaluationsWarnings[iMean])
          << "Stream contents: " << hijack.str();
       ++iMean;
    }
 }
-#endif
 
 // ROOT-9530: RooFit side-band fit inconsistent with fit to full range
 TEST_P(FitTest, MultiRangeFit)
@@ -223,10 +249,8 @@ TEST_P(FitTest, MultiRangeFit)
       }
    }
 
-   // If the BatchMode is off, we are doing the same cross-check also with the
-   // chi-square fit on the RooDataHist.
-   if (_evalBackend == EvalBackend::Legacy()) {
-
+   // Same cross-check, now for chi2FitTo on the RooDataHist.
+   {
       auto &dh = static_cast<RooDataHist &>(*dataHist);
 
       // loop over non-extended and extended fit
@@ -234,11 +258,13 @@ TEST_P(FitTest, MultiRangeFit)
 
          // full range
          resetValues();
-         std::unique_ptr<RooFitResult> fitResultFull{model->chi2FitTo(dh, Range("full"), Save(), PrintLevel(-1))};
+         std::unique_ptr<RooFitResult> fitResultFull{
+            model->chi2FitTo(dh, Range("full"), _evalBackend, Save(), PrintLevel(-1))};
 
          // part (side band fit, but the union of the side bands is the full range)
          resetValues();
-         std::unique_ptr<RooFitResult> fitResultPart{model->chi2FitTo(dh, Range("low,high"), Save(), PrintLevel(-1))};
+         std::unique_ptr<RooFitResult> fitResultPart{
+            model->chi2FitTo(dh, Range("low,high"), _evalBackend, Save(), PrintLevel(-1))};
 
          EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
             << "Results of fitting " << model->GetName()
@@ -373,6 +399,42 @@ TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
    std::unique_ptr<RooDataSet> data{simPdf.generate({sample, *ws.var("x"), *ws.var("y")})};
 
    simPdf.fitTo(*data, PrintLevel(-1), _evalBackend);
+}
+
+// This test covers a usecase by an ATLAS collaborator. The unnormalized shape
+// of a RooFit pdf is used as a function inside a RooFormulaVar, which is used
+// for the bins of a RooParametricStep function. This case is potentially
+// fragile, because it requires that the top-level normalization set is ignored
+// for the inner pdfs that don't depend on the observable, as normalizing over
+// a non-dependent is a corner case where the variable should be dropped.
+TEST_P(FitTest, PdfAsFunctionInFormulaVar)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", 0., 1.};
+
+   const double arg = std::sqrt(-8 * std::log(0.5));
+   RooGaussian gauss1{"gauss1", "", 10 - arg, 10, 2};
+
+   RooFormulaVar func1{"func1", "x[0]", {gauss1}};
+
+   // The parametric step function doesn't make any attempt at self
+   // normalization, so the pdf value in the first bin is just the value of the
+   // unnormalized Gaussian. And the first bin is the almost the whole domain.
+   TArrayD limits(3);
+   limits[0] = 0.;
+   limits[1] = 1 - 1e-9;
+   limits[2] = 1.;
+   RooParametricStepFunction pdf("pdf", "pdf", x, {func1}, limits, limits.size() - 1);
+
+   int nEvents = 10000;
+   std::unique_ptr<RooAbsData> data{pdf.generateBinned(x, nEvents)};
+
+   std::unique_ptr<RooAbsReal> nll{pdf.createNLL(*data, _evalBackend)};
+
+   // The test is designed to have an analytical reference value
+   double ref = nEvents * -std::log(0.5);
+   EXPECT_FLOAT_EQ(nll->getVal(), ref);
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization

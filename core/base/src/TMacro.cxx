@@ -56,7 +56,6 @@ Examples:
 #include <fstream>
 #include <sstream>
 
-ClassImp(TMacro);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an empty macro, use AddLine() or ReadFile() to fill this macro.

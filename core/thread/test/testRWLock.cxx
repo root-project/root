@@ -250,14 +250,14 @@ auto gMutex = new TMutex(kTRUE);
 auto gRWMutex = new TRWMutexImp<TMutex>();
 auto gRWMutexSpin = new TRWMutexImp<ROOT::TSpinMutex>();
 auto gRWMutexStd = new TRWMutexImp<std::mutex>();
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 auto gRWMutexStdTBB = new TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBB>();
 auto gRWMutexStdTBBUnique = new TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
 #endif
 auto gReentrantRWMutex = new ROOT::TReentrantRWLock<TMutex>();
 auto gReentrantRWMutexSM = new ROOT::TReentrantRWLock<ROOT::TSpinMutex>();
 auto gReentrantRWMutexStd = new ROOT::TReentrantRWLock<std::mutex>();
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 auto gReentrantRWMutexStdTBB = new ROOT::TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBB>();
 auto gReentrantRWMutexStdTBBUnique = new ROOT::TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
 #endif
@@ -335,7 +335,7 @@ TEST(RWLock, WriteStdDirectUnLock)
    testWriteUnLock(gReentrantRWMutexStd, gRepetition, gWriteHint);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, WriteStdTBBDirectLock)
 {
    gWriteHint = testWriteLock(gReentrantRWMutexStdTBB, gRepetition);
@@ -387,7 +387,7 @@ TEST(RWLock, ReadUnLockStdDirect)
    testReadUnLock(gReentrantRWMutexStd, gRepetition, gReadHint);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, ReadLockStdTBBDirect)
 {
    gReadHint = testReadLock(gReentrantRWMutexStdTBB, gRepetition);
@@ -494,7 +494,7 @@ TEST(RWLock, ReentrantStd)
    Reentrant(*gReentrantRWMutexStd);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, ReentrantStdTBB)
 {
    Reentrant(*gReentrantRWMutexStdTBB);
@@ -531,7 +531,7 @@ TEST(RWLock, ResetRestoreStd)
    ResetRestore(*gReentrantRWMutexStd);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, ResetRestoreStdTBB)
 {
    ResetRestore(*gReentrantRWMutexStdTBB);
@@ -579,7 +579,7 @@ TEST(RWLock, concurrentResetRestoreStd)
    concurrentResetRestore(gRWMutexStd, 2, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, concurrentResetRestoreStdTBB)
 {
    concurrentResetRestore(gRWMutexStdTBB, 2, gRepetition / 10000);
@@ -629,7 +629,7 @@ TEST(RWLock, concurrentReadsAndWritesStd)
    concurrentReadsAndWrites(gRWMutexStd, 1, 2, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, concurrentReadsAndWritesStdTBB)
 {
    concurrentReadsAndWrites(gRWMutexStdTBB, 1, 2, gRepetition / 10000);
@@ -651,7 +651,7 @@ TEST(RWLock, LargeconcurrentReadsAndWritesStd)
    concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, LargeconcurrentReadsAndWritesStdTBB)
 {
    concurrentReadsAndWrites(gRWMutexStdTBB, 10, 20, gRepetition / 10000);
@@ -678,7 +678,7 @@ TEST(RWLock, VeryLargeconcurrentReadsAndWritesStd)
    concurrentReadsAndWrites(gRWMutexStd, 10, 200, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, VeryLargeconcurrentReadsAndWritesStdTBB)
 {
    concurrentReadsAndWrites(gRWMutexStdTBB, 10, 200, gRepetition / 10000);
@@ -706,7 +706,7 @@ TEST(RWLock, VeryLargeconcurrentReadsStd)
    concurrentReadsAndWrites(gRWMutexStd, 0, 200, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 TEST(RWLock, VeryLargeconcurrentReadsStdTBB)
 {
    concurrentReadsAndWrites(gRWMutexStdTBB, 0, 200, gRepetition / 10000);

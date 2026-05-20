@@ -11,21 +11,11 @@
 
 
 #include "TROOT.h"
-#include "TBuffer.h"
 #include "TScatter.h"
-#include "TStyle.h"
-#include "TMath.h"
-#include "TVirtualPad.h"
 #include "TH2.h"
 #include "TVirtualGraphPainter.h"
-#include "strtok.h"
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <string>
-
-ClassImp(TScatter);
+ #include <iostream>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,9 +35,10 @@ End_Macro
 ### TScatter's plotting options
 TScatter can be drawn with the following options:
 
-| Option   | Description                                                       |
-|----------|-------------------------------------------------------------------|
-| "A"      | Produce a new plot with Axis around the graph |
+| Option    | Description                                                       |
+|-----------|-------------------------------------------------------------------|
+| "A"       | Produce a new plot with Axis around the graph |
+| "SKIPCOL" | Do not draw the points outside the color range. By default, such points' color is clipped to the minimum or maximum color, depending on whether the color is smaller or bigger than the color range |
 
 */
 
@@ -166,7 +157,7 @@ TH2F *TScatter::GetHistogram() const
 {
    if (!fHistogram) {
       // do not add the histogram to gDirectory
-      // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+      // use local TDirectory::TContext that will set temporarly gDirectory to a nullptr and
       // will avoid that histogram is added in the global directory
       TDirectory::TContext ctx(nullptr);
       double rwxmin, rwymin, rwxmax, rwymax;
@@ -269,7 +260,7 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option)
                             kFALSE);
 
    SavePrimitiveNameTitle(out, "scat");
-   SaveFillAttributes(out, "scat", 0, 1001);
+   SaveFillAttributes(out, "scat", -1, -1);
    SaveLineAttributes(out, "scat", 1, 1, 1);
    SaveMarkerAttributes(out, "scat", 1, 1, 1);
 

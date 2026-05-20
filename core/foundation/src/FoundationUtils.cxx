@@ -22,9 +22,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -150,7 +151,7 @@ const std::string& GetFallbackRootSys() {
 
 #ifdef ROOTPREFIX
 static bool IgnorePrefix() {
-   static bool ignorePrefix = ::getenv("ROOTIGNOREPREFIX");
+   static bool ignorePrefix = std::getenv("ROOTIGNOREPREFIX");
    return ignorePrefix;
 }
 #endif
@@ -164,32 +165,18 @@ const std::string& GetRootSys() {
 #endif
    static std::string rootsys;
    if (rootsys.empty()) {
-      if (const char* envValue = ::getenv("ROOTSYS")) {
+      if (const char* envValue = std::getenv("ROOTSYS")) {
          rootsys = envValue;
+#ifndef WIN32
          // We cannot use gSystem->UnixPathName.
          ConvertToUnixPath(rootsys);
+#endif
       }
    }
    // FIXME: Should this also call UnixPathName for consistency?
    if (rootsys.empty())
       rootsys = GetFallbackRootSys();
    return rootsys;
-}
-
-
-const std::string& GetIncludeDir() {
-#ifdef ROOTINCDIR
-   if (!IgnorePrefix()) {
-      const static std::string rootincdir = ROOTINCDIR;
-      return rootincdir;
-   }
-#endif
-   static std::string rootincdir;
-   if (rootincdir.empty()) {
-      const std::string& sep = GetPathSeparator();
-      rootincdir = GetRootSys() + sep + "include" + sep;
-   }
-   return rootincdir;
 }
 
 const std::string& GetEtcDir() {

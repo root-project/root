@@ -17,8 +17,7 @@
 //                                                                      //
 // TAuthenticate                                                        //
 //                                                                      //
-// An authentication module for ROOT based network services, like rootd //
-// and proofd.                                                          //
+// An authentication module for ROOT based network services, like rootd.//                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,39 +30,52 @@
 #endif
 #include "AuthConst.h"
 
-class TAuthenticate;
-class THostAuth;
 class TPluginHandler;
 class TSocket;
-class TRootSecContext;
 class TVirtualMutex;
 
-typedef Int_t (*CheckSecCtx_t)(const char *subj, TRootSecContext *ctx);
-typedef Int_t (*GlobusAuth_t)(TAuthenticate *auth, TString &user, TString &det);
-typedef Int_t (*Krb5Auth_t)(TAuthenticate *auth, TString &user, TString &det, Int_t version);
-typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char *passwd,
-                              const char *remote, TString &det, Int_t version);
-
-R__EXTERN TVirtualMutex *gAuthenticateMutex;
+namespace ROOT::Deprecated {
 
 struct R__rsa_KEY; // opaque replacement for rsa_KEY
 struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
 struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
 
+R__EXTERN TVirtualMutex *gAuthenticateMutex;
+
+class TAuthenticate;
+class THostAuth;
+class TRootAuth;
+class TRootSecContext;
+
+typedef Int_t (*CheckSecCtx_t)(const char *subj, ROOT::Deprecated::TRootSecContext *ctx);
+typedef Int_t (*GlobusAuth_t)(ROOT::Deprecated::TAuthenticate *auth, TString &user, TString &det);
+typedef Int_t (*Krb5Auth_t)(ROOT::Deprecated::TAuthenticate *auth, TString &user, TString &det, Int_t version);
+typedef Int_t (*SecureAuth_t)(ROOT::Deprecated::TAuthenticate *auth, const char *user, const char *passwd,
+                              const char *remote, TString &det, Int_t version);
+
 class TAuthenticate : public TObject {
 
-friend class TRootAuth;
-friend class TRootSecContext;
-friend class TSocket;
+friend class ROOT::Deprecated::TRootAuth;
+friend class ROOT::Deprecated::TRootSecContext;
 
 public:
-   enum ESecurity { kClear, kUnsupported, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
+   enum ESecurity {
+// clang++ <v20 (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kClear,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kUnsupported, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
 
 private:
    TString      fDetails;     // logon details (method dependent ...)
    THostAuth   *fHostAuth;    // pointer to relevant authentication info
    TString      fPasswd;      // user's password
-   TString      fProtocol;    // remote service (rootd, proofd)
+   TString      fProtocol;    // remote service (rootd)
    Bool_t       fPwHash;      // kTRUE if fPasswd is a passwd hash
    TString      fRemote;      // remote host to which we want to connect
    Int_t        fRSAKey;      // Type of RSA key used
@@ -85,7 +97,6 @@ private:
    Bool_t       GetUserPasswd(TString &user, TString &passwd,
                               Bool_t &pwhash, Bool_t srppwd);
    char        *GetRandString(Int_t Opt,Int_t Len);
-   Int_t        ProofAuthSetup();
    Int_t        RfioAuth(TString &user);
    void         SetEnvironment();
    Int_t        SshAuth(TString &user);
@@ -103,7 +114,6 @@ private:
    static TString         fgPasswd;
    static TPluginHandler *fgPasswdDialog;   // Passwd dialog GUI plugin
    static Bool_t          fgPromptUser;     // kTRUE if user prompt required
-   static TList          *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
    static Bool_t          fgPwHash;         // kTRUE if fgPasswd is a passwd hash
    static Bool_t          fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc
    static TString         fgRootAuthrc;     // Path to last rootauthrc-like file read
@@ -122,7 +132,6 @@ private:
    static Bool_t          CheckHost(const char *Host, const char *host);
 
    static void            FileExpand(const char *fin, FILE *ftmp);
-   static Int_t           ProofAuthSetup(TSocket *sock, Bool_t client);
    static void            RemoveSecContext(TRootSecContext *ctx);
 
 public:
@@ -149,7 +158,6 @@ public:
    void               SetSecContext(TRootSecContext *ctx) { fSecContext = ctx; }
 
    static void        AuthError(const char *where, Int_t error);
-   static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
 
    static Int_t       DecodeRSAPublic(const char *rsapubexport, R__rsa_NUMBER &n,
                                       R__rsa_NUMBER &d, char **rsassl = nullptr);
@@ -167,14 +175,13 @@ public:
    static const char *GetGlobalUser();
    static GlobusAuth_t GetGlobusAuthHook();
    static THostAuth  *GetHostAuth(const char *host, const char *user="",
-                                  Option_t *opt = "R", Int_t *Exact = nullptr);
+                                                    Option_t *opt = "R", Int_t *Exact = nullptr);
    static const char *GetKrb5Principal();
    static Bool_t      GetPromptUser();
-   static TList      *GetProofAuthInfo();
    static Int_t       GetRSAInit();
    static const char *GetRSAPubExport(Int_t key = 0);
    static THostAuth  *HasHostAuth(const char *host, const char *user,
-                                  Option_t *opt = "R");
+                                                    Option_t *opt = "R");
    static void        InitRandom();
    static void        MergeHostAuthList(TList *Std, TList *New, Option_t *Opt = "");
    static char       *PromptPasswd(const char *prompt = "Password: ");
@@ -197,7 +204,6 @@ public:
    static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        SetPromptUser(Bool_t promptuser);
    static void        SetDefaultRSAKeyType(Int_t key);
-   static void        SetReadHomeAuthrc(Bool_t readhomeauthrc); // for PROOF
    static void        SetRSAInit(Int_t init = 1);
    static Int_t       SetRSAPublic(const char *rsapubexport, Int_t klen);
    static void        SetSecureAuthHook(SecureAuth_t func);
@@ -206,5 +212,15 @@ public:
 
    ClassDefOverride(TAuthenticate,0)  // Class providing remote authentication service
 };
+
+} // namespace ROOT::Deprecated
+
+R__EXTERN TVirtualMutex *&gAuthenticateMutex R__DEPRECATED(6, 42, "the RootAuth library is deprecated");
+
+using CheckSecCtx_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::CheckSecCtx_t;
+using GlobusAuth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::GlobusAuth_t;
+using Krb5Auth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::Krb5Auth_t;
+using SecureAuth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::SecureAuth_t;
+using TAuthenticate R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::TAuthenticate;
 
 #endif

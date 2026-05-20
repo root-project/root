@@ -19,7 +19,7 @@
 #endif
 
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <TVirtualCollectionProxy.h>
 
@@ -150,14 +150,11 @@ protected:
    ROOT::Internal::RColumnIndex fNWritten;
 
    /// Constructor used when the value type of the collection is not known in advance, i.e. in the case of custom
-   /// collections.
+   /// collections. Note that this constructor requires manual initialization of the item field
+   /// (Attach() and setting fItemSize)
    RProxiedCollectionField(std::string_view fieldName, TClass *classp);
-   /// Constructor used when the value type of the collection is known in advance, e.g. in RSetField.
-   RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
-                           std::unique_ptr<RFieldBase> itemField);
 
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
@@ -167,6 +164,8 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) override;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -202,11 +201,11 @@ RProxiedCollectionField) from the RField primary template definition (RClassFiel
 ```
 auto field = std::make_unique<RField<MyClass>>("klass");
 // vs
-auto otherField = std::make_unique<RField<MyClass, ROOT::Experimental::TagIsCollectionProxy>>("klass");
+auto otherField = std::make_unique<RField<MyClass, ROOT::TagIsCollectionProxy>>("klass");
 ```
 
 That is convenient only for non-nested types, i.e. it doesn't work with, e.g. `RField<std::vector<MyClass>,
-ROOT::Experimental::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
+ROOT::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
 (that for the value type of the vector).  The following two possible solutions were considered:
 - A wrapper type that helps to differentiate both cases.
 There we would have:
@@ -241,7 +240,7 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 /// Classes behaving as a collection of elements that can be queried via the TVirtualCollectionProxy interface
 /// The use of a collection proxy for a particular class can be enabled via:
 /// ```
-/// namespace ROOT::Experimental {
+/// namespace ROOT {
 ///    template <> struct IsCollectionProxy<Classname> : std::true_type {};
 /// }
 /// ```
@@ -255,7 +254,7 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 template <typename T>
 class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> final : public RProxiedCollectionField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetRenormalizedDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
    RField(std::string_view name) : RProxiedCollectionField(name, Internal::GetDemangledTypeName(typeid(T)))
    {
       static_assert(std::is_class<T>::value, "collection proxy unsupported for fundamental types");
@@ -272,7 +271,22 @@ public:
 /// The generic field for a `std::map<KeyType, ValueType>` and `std::unordered_map<KeyType, ValueType>`
 class RMapField : public RProxiedCollectionField {
 public:
-   RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   enum class EMapType {
+      kMap,
+      kUnorderedMap,
+      kMultiMap,
+      kUnorderedMultiMap
+   };
+
+private:
+   EMapType fMapType;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
+   RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField);
    RMapField(RMapField &&other) = default;
    RMapField &operator=(RMapField &&other) = default;
    ~RMapField() override = default;
@@ -287,7 +301,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -304,7 +318,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kUnorderedMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -321,7 +335,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kMultiMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -338,7 +352,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kUnorderedMultiMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -353,7 +367,22 @@ public:
 /// The generic field for a `std::set<Type>` and `std::unordered_set<Type>`
 class RSetField : public RProxiedCollectionField {
 public:
-   RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   enum class ESetType {
+      kSet,
+      kUnorderedSet,
+      kMultiSet,
+      kUnorderedMultiSet
+   };
+
+private:
+   ESetType fSetType;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
+   RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField);
    RSetField(RSetField &&other) = default;
    RSetField &operator=(RSetField &&other) = default;
    ~RSetField() override = default;
@@ -364,7 +393,7 @@ class RField<std::set<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
 
-   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RSetField(name, ESetType::kSet, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -375,7 +404,10 @@ class RField<std::unordered_set<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::unordered_set<" + RField<ItemT>::TypeName() + ">"; }
 
-   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name)
+      : RSetField(name, ESetType::kUnorderedSet, std::make_unique<RField<ItemT>>("_0"))
+   {
+   }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -386,7 +418,9 @@ class RField<std::multiset<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::multiset<" + RField<ItemT>::TypeName() + ">"; }
 
-   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RSetField(name, ESetType::kMultiSet, std::make_unique<RField<ItemT>>("_0"))
+   {
+   }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -397,7 +431,10 @@ class RField<std::unordered_multiset<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::unordered_multiset<" + RField<ItemT>::TypeName() + ">"; }
 
-   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name)
+      : RSetField(name, ESetType::kUnorderedMultiSet, std::make_unique<RField<ItemT>>("_0"))
+   {
+   }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;

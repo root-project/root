@@ -66,7 +66,6 @@ polygons, between `phi1` and `phi1+dphi.`
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoPgon);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

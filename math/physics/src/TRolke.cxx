@@ -167,7 +167,6 @@
 #include "TMath.h"
 #include <iostream>
 
-ClassImp(TRolke);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with optional Confidence Level argument.

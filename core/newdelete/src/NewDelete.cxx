@@ -57,8 +57,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 
 #include "TObjectTable.h"
 #include "TError.h"
@@ -415,8 +415,6 @@ void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noex
    ::operator delete(ptr, al);
 }
 
-
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete(void *ptr, std::size_t) noexcept
@@ -427,7 +425,6 @@ void operator delete(void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new operator.
@@ -464,7 +461,6 @@ void operator delete[](void *ptr, std::align_val_t al) noexcept
    ::operator delete(ptr, al);
 }
 
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete[](void *ptr, std::size_t) noexcept
@@ -475,7 +471,6 @@ void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory.

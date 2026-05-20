@@ -407,9 +407,6 @@ endif()
 if(vdt OR builtin_vdt)
   target_link_libraries(TMVA PRIVATE VDT::VDT)
 endif()
-if(builtin_vdt)
-  add_dependencies(TMVA VDT)
-endif()
 
 if(tmva-cpu)
   target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
@@ -446,9 +443,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
   TMVA/RSofieReader.hxx
-  TMVA/BatchGenerator/RBatchGenerator.hxx
-  TMVA/BatchGenerator/RBatchLoader.hxx
-  TMVA/BatchGenerator/RChunkLoader.hxx
 
   SOURCES
 

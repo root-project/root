@@ -40,7 +40,7 @@ the respective cut value.
 
 #include <stdexcept>
 #include <iomanip>
-#include <assert.h>
+#include <cassert>
 #include <cstdlib>
 
 #include "TString.h"
@@ -51,7 +51,6 @@ the respective cut value.
 #include "TMVA/Node.h"
 #include "TMVA/Tools.h"
 
-ClassImp(TMVA::BinarySearchTreeNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor of a node for the search tree

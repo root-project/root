@@ -1,0 +1,26 @@
+<lcgdict>
+
+  <class name="HepLorentzVector_p1" />
+  <class name="P4EEtaPhiM_p1" /> 
+  <class name="P4EEtaPhiMFloat_p2" />
+  <class name="P4IPtCotThPhiM_p1" />
+  <class name="P4PtEtaPhiM_p1" />
+  <class name="P4PtEtaPhiMFloat_p2" />
+  <class name="P4PxPyPzE_p1" />
+
+  <class name="std::vector<P4EEtaPhiM_p1>" />
+  <class name="std::vector<P4EEtaPhiMFloat_p2>" />
+  <class name="std::vector<P4IPtCotThPhiM_p1>" />
+  <class name="std::vector<P4PtEtaPhiM_p1>" />
+  <class name="std::vector<P4PtEtaPhiMFloat_p2>" />
+  <class name="std::vector<P4PxPyPzE_p1>" />
+
+
+  <class name="INav4MomAssocs_p3" id="455AEE6B-9834-4E72-8F81-2532A52E3BE7" />
+  <class name="INav4MomAssocs_p3::Assocs_t" />
+  <class name="INav4MomAssocs_p3::AssocElem_t" />
+
+  <class name="INav4MomLinkContainer_p1" id="A7F0A4C5-F343-4724-B317-FB5A890355FA" />
+  <class name="IParticleLinkContainer_p1" id="E82C71AF-AC5C-453B-9A35-FA45A849838E" />
+
+</lcgdict>

@@ -1,0 +1,10 @@
+<lcgdict>
+ 
+   <class name="DataVector<EventBookkeeper>" />
+   <class name="DataVector<SkimDecision>" />
+   <class name="EventBookkeeperCollection" id="E7101411-5013-4ADF-8997-F3791041FB0E" />
+   <class name="EventBookkeeper" id="9230C83B-2BAC-4C42-BA2A-2AC615D4CED3" />
+   <class name="SkimDecisionCollection" id="0A66063A-D5F3-4269-8311-CD22D915F50C" />
+   <class name="SkimDecision" id="501308E3-775E-4F63-911C-80679D0875D8" />
+ 
+ </lcgdict>

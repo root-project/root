@@ -110,7 +110,11 @@ TEST_P(EvalBackendParametrizedTest, RF601)
       std::vector<double> valsRef{0.45212322018672196, 2.746677666046311};
       std::vector<double> errorsRef{0.11175880034776256, 0.31839226266447529};
       std::vector<double> globalCC{0.84401375662480127, 0.84401375662480116, 0.};
-      std::vector<double> corrsV{1.0, 0.84401326379874853, 0, 0.84401326379874853, 1., 0., 0., 0.};
+      // clang-format off
+      std::vector<double> corrsV{1., 0.84401326379874853, 0,
+                                 0.84401326379874853, 1., 0.,
+                                 0., 0., 1.};
+      // clang-format on
 
       RooArgList constParams;
       RooArgList{mean, sigma_g2}.snapshot(constParams, false);

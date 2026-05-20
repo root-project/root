@@ -23,7 +23,7 @@ class TEveGridStepper : public TObject
    friend class TEveGridStepperSubEditor;
 
 private:
-   Int_t *fLimitArr[3], *fValueArr[3]; //! Internal traversal variables.
+   Int_t *fLimitArr[3], *fValueArr[3]; ///<! Internal traversal variables.
 
    TEveGridStepper(const TEveGridStepper&);            // Not implemented
    TEveGridStepper& operator=(const TEveGridStepper&); // Not implemented

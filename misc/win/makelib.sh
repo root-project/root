@@ -73,9 +73,6 @@ if [ "$R__PLATFORM" = "win32" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
               $libdir/${name}.exp $R__EXTRA $syslibs"
       else
-         if [ "$(bin/root-config --dicttype)" != "cint" ]; then
-             needReflex="lib/libCintex.lib lib/libReflex.lib"
-         fi
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
               $libdir/${name}.exp $R__EXTRA \
               $needReflex lib/libCore.lib lib/libCint.lib \

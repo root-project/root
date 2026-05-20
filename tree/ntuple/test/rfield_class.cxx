@@ -5,6 +5,7 @@
 #include <TObject.h>
 #include <TRef.h>
 #include <TRotation.h>
+#include <TBuffer.h>
 #include <TVirtualStreamerInfo.h>
 
 #include <memory>
@@ -259,12 +260,14 @@ TEST(RNTuple, TClassReadRules)
       auto ptrOldCoord = model->MakeField<OldCoordinates>("oldCoord");
       auto ptrLowPrecisionFloat = model->MakeField<LowPrecisionFloatWithIORules>("lowPrecisionFloat");
       auto ptrOldName = model->MakeField<OldName<OldName<int>>>("rename");
+      auto ptrOldNameVersionChange = model->MakeField<OldName<float>>("renameVersionChange");
       auto ptrWithSource = model->MakeField<StructWithSourceStruct>("withSource");
       ptrCoord->fX = ptrOldCoord->fOldX = 1.0;
       ptrCoord->fY = ptrOldCoord->fOldY = 1.0;
       ptrLowPrecisionFloat->fFoo = 1.0;
       ptrLowPrecisionFloat->fLast8BitsZero = last8BitsZero;
       ptrOldName->fValue.fValue = 42;
+      ptrOldNameVersionChange->fValue = 1.0;
       // The following two members are transient and should not be stored.
       ptrWithSource->fSource.fTransient = 1;
       ptrWithSource->fTransient = 2;
@@ -321,6 +324,10 @@ TEST(RNTuple, TClassReadRules)
 
    auto viewRename = reader->GetView<NewName<OldName<int>>>("rename");
    EXPECT_EQ(42, viewRename(0).fValue.fValue);
+
+   EXPECT_NE(ROOT::RField<OldName<float>>("").GetTypeVersion(), ROOT::RField<NewName<float>>("").GetTypeVersion());
+   auto viewRenameVersionChange = reader->GetView<NewName<float>>("renameVersionChange");
+   EXPECT_FLOAT_EQ(1.0, viewRenameVersionChange(0).fValue);
 }
 
 // Adjusted from
@@ -349,6 +356,33 @@ TEST(RNTuple, TClassInnerReadRule)
    EXPECT_FLOAT_EQ(4., f->at(0).fHelicity);
    reader->LoadEntry(1);
    EXPECT_TRUE(f->empty());
+}
+
+TEST(RNTuple, PolymorphicPointer)
+{
+   FileRaii fileGuard("test_ntuple_polymorphic_pointer.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptr = model->MakeField<std::unique_ptr<PolymorphicBase>>("ptr");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptr->reset(new PolymorphicBase);
+      writer->Fill();
+      ptr->reset(new PolymorphicDerived);
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
+   }
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrField = RFieldBase::Create("ptr", "std::unique_ptr<PolymorphicBase>").Unwrap();
+      model->AddField(std::move(ptrField));
+      auto ptr = model->GetDefaultEntry().GetPtr<std::unique_ptr<PolymorphicBase>>("ptr");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptr->reset(new PolymorphicBase);
+      writer->Fill();
+      ptr->reset(new PolymorphicDerived);
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
+   }
 }
 
 TEST(RNTuple, TClassMetaName)
@@ -392,6 +426,8 @@ TEST(RNTuple, StreamerInfoRecords)
       {"std::map<int, CustomStruct>", {"CustomStruct"}, ""},
       {"DerivedA", {"DerivedA", "CustomStruct"}, ""},
       {"std::pair<CustomStruct, DerivedA>", {"DerivedA", "CustomStruct"}, ""},
+      {"std::vector<EdmWrapper<long long>>", {"EdmWrapper<Long64_t>"}, "std::vector<EdmWrapper<Long64_t>>"},
+      {"ROOT::RVec<EdmWrapper<long long>>", {"EdmWrapper<Long64_t>"}, "ROOT::VecOps::RVec<EdmWrapper<Long64_t>>"},
       {"EdmWrapper<long long>", {"EdmWrapper<Long64_t>"}, "EdmWrapper<Long64_t>"},
       {"EdmWrapper<map<int, EdmContent<float, Long64_t> > >",
        {"EdmWrapper<map<int,EdmContent<float,Long64_t> > >", "EdmContent<float,Long64_t>"},
@@ -436,4 +472,33 @@ TEST(RNTuple, StreamerInfoRecords)
          EXPECT_EQ(std::get<1>(t)[0], field->GetClass()->GetName());
       }
    }
+}
+
+// Detect custom streamers set on class members at runtime via TClass::SetMemberStreamer.
+TEST(RNTuple, MemberWithCustomStreamer)
+{
+   auto cl = TClass::GetClass("MemberWithCustomStreamer");
+   ASSERT_NE(cl, nullptr);
+
+   // CanSplit() should be true initially (it only checks compile-time properties)
+   EXPECT_TRUE(cl->CanSplit());
+
+   // Without member streamer: field creation succeeds
+   RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap();
+
+   // Set a custom streamer on the "fCustom" member at runtime
+   cl->SetMemberStreamer("fCustom", [](TBuffer &b, void *obj, Int_t) {
+      int *val = static_cast<int *>(obj);
+      if (b.IsReading()) {
+         b >> *val;
+      } else {
+         b << *val;
+      }
+   });
+
+   // CanSplit() remains true because you can still split (in TTree) even if a data member has a custom member.
+   EXPECT_TRUE(cl->CanSplit());
+
+   // After setting member streamer: field creation should throw
+   EXPECT_THROW(RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap(), ROOT::RException);
 }

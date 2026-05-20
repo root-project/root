@@ -316,3 +316,22 @@ std::string RooFormulaVar::getUniqueFuncName() const
 {
    return getFormula().getTFormula()->GetUniqueFuncName().Data();
 }
+
+std::unique_ptr<RooAbsArg>
+RooFormulaVar::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   // Some users exploit unnormalized RooAbsPdfs as inputs for RooFormulaVars,
+   // relying on what the pdf returns from RooAbsPdf::evaluate(). This is in
+   // principle not allowed because every pdf needs to be evaluated with a
+   // normalization set, but it's so common in user code that we need to
+   // support it. To make this work, we need to make sure that the no
+   // normalization over non-dependents is happening at this point, reducing
+   // the normalization set to the subset of actual dependents.
+   // See also the "PdfAsFunctionInFormulaVar" test in testRooAbsPdf.
+   RooArgSet depList;
+   getObservables(&normSet, depList);
+   auto newArg = std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(Clone())};
+   ctx.markAsCompiled(*newArg);
+   ctx.compileServers(*newArg, depList);
+   return newArg;
+}

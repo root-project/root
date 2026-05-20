@@ -2,10 +2,10 @@
 """
 
 import ctypes
+import platform
 import sys
 
 from . import _stdcpp_fix
-from cppyy_backend import loader
 
 __all__ = [
     'gbl',
@@ -19,11 +19,11 @@ __all__ = [
     '_end_capture_stderr'
     ]
 
-# first load the dependency libraries of the backend, then pull in the
-# libcppyy extension module
-c = loader.load_cpp_backend()
-import libcppyy as _backend
-_backend._cpp_backend = c
+if platform.system() == "Windows":
+    # On Windows, the library has to be searched without prefix
+    import libcppyy as _backend
+else:
+    import cppyy.libcppyy as _backend
 
 # explicitly expose APIs from libcppyy
 _w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)

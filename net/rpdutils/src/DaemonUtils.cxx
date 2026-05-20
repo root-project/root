@@ -18,17 +18,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <errno.h>
+#include <cerrno>
 
 #if defined(linux)
 #   include <features.h>
@@ -53,7 +53,6 @@
 #include "Rtypes.h"
 #include "Varargs.h"
 #include "DaemonUtils.h"
-#include "TAuthenticate.h"
 #include "TSecContext.h"
 #include "TEnv.h"
 #include "TROOT.h"
@@ -189,8 +188,8 @@ void ErrSys(int level, const char *msg, int size)
 Int_t SrvClupImpl(TSeqCollection *secls)
 {
    TIter next(secls);
-   TSecContext *nsc ;
-   while ((nsc = (TSecContext *)next())) {
+   ROOT::Deprecated::TSecContext *nsc ;
+   while ((nsc = (ROOT::Deprecated::TSecContext *)next())) {
       if (!strncmp(nsc->GetID(),"server",6)) {
          int rc = RpdCleanupAuthTab(nsc->GetToken());
          if (gDebug > 0 && rc < 0)
@@ -260,15 +259,15 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
    int clientprotocol = 0;
    rc = RpdInitSession(gService, user, clientprotocol, meth, type, ctoken);
 
-   TSecContext *seccontext = 0;
+   ROOT::Deprecated::TSecContext *seccontext = 0;
    if (rc > 0) {
       string openhost(socket->GetInetAddress().GetHostName());
 
       if (type == 1) {
          // An existing authentication has been re-used: retrieve
          // the related security context
-         TIter next(gROOT->GetListOfSecContexts());
-         while ((seccontext = (TSecContext *)next())) {
+         TIter next(ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT));
+         while ((seccontext = (ROOT::Deprecated::TSecContext *)next())) {
             if (!(strncmp(seccontext->GetID(),"server",6))) {
                if (seccontext->GetMethod() == meth) {
                   if (!strcmp(openhost.c_str(),seccontext->GetHost())) {
@@ -283,13 +282,13 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
       if (!seccontext) {
          // New authentication: Fill a SecContext for cleanup
          // in case of interrupt
-         seccontext = new TSecContext(user.c_str(), openhost.c_str(), meth, -1,
-                                      "server", ctoken.c_str());
+         seccontext = new ROOT::Deprecated::TSecContext(user.c_str(), openhost.c_str(), meth, -1,
+                                                        "server", ctoken.c_str());
          if (seccontext) {
             // Add to the list
             secctxlist->Add(seccontext);
             // Store SecContext
-            socket->SetSecContext(seccontext);
+            ROOT::Deprecated::TSocketFriend::SetSecContext(*socket, seccontext);
          } else {
             if (gDebug > 0)
                ErrorInfo("SrvAuthImpl: could not create sec context object"
@@ -573,7 +572,7 @@ namespace ROOT {
       fflush(stdout);
 
       // Actions are defined by the specific error handler (
-      // see rootd.cxx and proofd.cxx)
+      // see rootd.cxx)
       if (func) (*func)(code,(const char *)buf, sizeof(buf));
    }
 

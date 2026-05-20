@@ -29,7 +29,6 @@
 Editor for TEveTrack class.
 */
 
-ClassImp(TEveTrackEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -72,7 +71,6 @@ void TEveTrackEditor::DoEditPropagator()
 Editor for TEveTrackList class.
 */
 
-ClassImp(TEveTrackListEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

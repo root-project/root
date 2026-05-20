@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-#include <string.h>
+#include <cstring>
 
 class TBits : public TObject {
 
@@ -49,8 +49,8 @@ public:
    class TReference {
       friend class TBits;
 
-      TBits  &fBits; //!
-      UInt_t  fPos;  //!
+      TBits  &fBits; ///<!
+      UInt_t  fPos;  ///<!
 
       TReference() = delete;
 

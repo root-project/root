@@ -10,7 +10,7 @@
 //  *************************************************************************/
 
 // Bindings
-#include "Python.h"
+#include <Python.h>
 
 #include "TPyArg.h"
 
@@ -24,7 +24,6 @@
 // on implicit conversions.
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPyArg);
 
 namespace {
    class PyGILRAII {
@@ -43,7 +42,7 @@ void TPyArg::CallConstructor(PyObject *&pyself, PyObject *pyclass, const std::ve
    int nArgs = args.size();
    PyObject *pyargs = PyTuple_New(nArgs);
    for (int i = 0; i < nArgs; ++i)
-      PyTuple_SET_ITEM(pyargs, i, (PyObject *)args[i]);
+      PyTuple_SetItem(pyargs, i, (PyObject *)args[i]);
    pyself = PyObject_Call(pyclass, pyargs, NULL);
    Py_DecRef(pyargs);
 }
@@ -66,7 +65,7 @@ PyObject *TPyArg::CallMethod(PyObject *pymeth, const std::vector<TPyArg> &args)
    int nArgs = args.size();
    PyObject *pyargs = PyTuple_New(nArgs);
    for (int i = 0; i < nArgs; ++i)
-      PyTuple_SET_ITEM(pyargs, i, (PyObject *)args[i]);
+      PyTuple_SetItem(pyargs, i, (PyObject *)args[i]);
    PyObject *result = PyObject_Call(pymeth, pyargs, NULL);
    Py_DecRef(pyargs);
    return result;

@@ -44,7 +44,7 @@ protected:
    RooListProxy _coefList;
    RooListProxy _expList;
 
-   mutable std::vector<double> _wksp; //! do not persist
+   mutable std::vector<double> _wksp; ///<! do not persist
 
    // CUDA support
    void doEval(RooFit::EvalContext &) const override;

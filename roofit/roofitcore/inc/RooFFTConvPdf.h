@@ -61,8 +61,15 @@ public:
   Int_t getMaxVal(const RooArgSet& vars) const override { return _pdf1.arg().getMaxVal(vars) ; }
   double maxVal(Int_t code) const override { return _pdf1.arg().maxVal(code) ; }
 
+  RooAbsReal const &getConvVar() const { return *_x; }
 
-protected:
+  RooAbsReal const &getPdf1() const { return *_pdf1; }
+
+  RooAbsReal const &getPdf2() const { return *_pdf2; }
+
+  RooAbsReal const *getPdfConvVar() const { return dynamic_cast<RooAbsReal *>(_xprime.absArg()); }
+
+  protected:
 
   RooRealProxy _x ;      ///< Convolution observable
   RooRealProxy _xprime ; ///< Input function representing value of convolution observable
@@ -72,7 +79,7 @@ protected:
 
   void calcParams() ;
 
-  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
+  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, double normVal, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
 
   class FFTCacheElem : public PdfCacheElem {
   public:
@@ -86,6 +93,9 @@ protected:
 
     std::unique_ptr<RooAbsPdf> pdf1Clone;
     std::unique_ptr<RooAbsPdf> pdf2Clone;
+
+    double normVal1 = 0.0;
+    double normVal2 = 0.0;
 
     std::unique_ptr<RooAbsBinning> histBinning;
     std::unique_ptr<RooAbsBinning> scanBinning;
@@ -104,7 +114,7 @@ protected:
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   TString histNameSuffix() const override ;
 
-  // mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxiliary Cache information (do not persist)
+  // mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; ///<! Auxiliary Cache information (do not persist)
   double _bufFrac ; // Sampling buffer size as fraction of domain size
   BufStrat _bufStrat ; // Strategy to fill the buffer
 

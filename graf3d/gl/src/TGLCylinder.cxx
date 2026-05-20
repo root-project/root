@@ -512,7 +512,6 @@ Implements a native ROOT-GL cylinder that can be rendered at
 different levels of detail.
 */
 
-ClassImp(TGLCylinder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy out relevant parts of buffer - we create and delete mesh

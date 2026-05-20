@@ -18,9 +18,10 @@
 
 #include "RooAbsArg.h"
 
-#include <string>
-#include <map>
 #include <functional>
+#include <limits>
+#include <map>
+#include <string>
 #include <vector>
 
 class RooCatType;
@@ -221,7 +222,7 @@ protected:
   static const decltype(_stateNames)::value_type& invalidCategory();
 
 private:
-  TreeReadBuffer *_treeReadBuffer = nullptr; //! A buffer for reading values from trees
+  TreeReadBuffer *_treeReadBuffer = nullptr; ///<! A buffer for reading values from trees
 
   ClassDefOverride(RooAbsCategory, 4) // Abstract discrete variable
 };

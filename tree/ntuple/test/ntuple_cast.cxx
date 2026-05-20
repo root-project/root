@@ -194,12 +194,12 @@ TEST(RNTuple, TypeCastReal)
       auto ptrDoubleTrunc = model->GetDefaultEntry().GetPtr<double>("double_trunc");
 
       auto fieldFloatQuant = std::make_unique<RField<float>>("float_quant");
-      fieldFloatQuant->SetQuantized(-1, 1, 12);
+      fieldFloatQuant->SetQuantized(12, {-1, 1});
       model->AddField(std::move(fieldFloatQuant));
       auto ptrFloatQuant = model->GetDefaultEntry().GetPtr<float>("float_quant");
 
       auto fieldDoubleQuant = std::make_unique<RField<double>>("double_quant");
-      fieldDoubleQuant->SetQuantized(0, 1, 32);
+      fieldDoubleQuant->SetQuantized(32, {0, 1});
       model->AddField(std::move(fieldDoubleQuant));
       auto ptrDoubleQuant = model->GetDefaultEntry().GetPtr<double>("double_quant");
 
@@ -264,6 +264,30 @@ TEST(RNTuple, TypeCastReal)
    EXPECT_NEAR(*ptrFloatQuant, 0.567, 0.005);
    EXPECT_FLOAT_EQ(*ptrDoubleQuant, 0.113);
    EXPECT_FLOAT_EQ(*ptrDouble32, -11.043);
+}
+
+TEST(RNTuple, TypeCastRealFpClass)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_real_fpclass.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrDouble = model->MakeField<double>("double");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrDouble = std::numeric_limits<double>::max();
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrDouble = castModel->MakeField<float>("double");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   try {
+      reader->LoadEntry(0);
+      FAIL() << "floating point mismatch should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("floating point class mismatch"));
+   }
 }
 
 TEST(RNTuple, TypeCastChar)

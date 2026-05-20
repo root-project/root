@@ -173,7 +173,7 @@ ASStorageID store_data_tinted(ASStorage *storage, CARD8 *data, int size, ASFlagT
 
 /* data will be fetched fromthe slot identified by id and placed into buffer. 
  * Data will be fetched from offset  and will count buf_size bytes if buf_size is greater then
- * available data - data will be tiled to accomodate this size, unless NotTileable is set */
+ * available data - data will be tiled to accommodate this size, unless NotTileable is set */
 int  fetch_data(ASStorage *storage, ASStorageID id, CARD8 *buffer, int offset, int buf_size, CARD8 bitmap_value, int *original_size);
 int  fetch_data32(ASStorage *storage, ASStorageID id, CARD32 *buffer, int offset, int buf_size, CARD8 bitmap_value, int *original_size);
 int  threshold_stored_data(ASStorage *storage, ASStorageID id, unsigned int *runs, int width, unsigned int threshold);

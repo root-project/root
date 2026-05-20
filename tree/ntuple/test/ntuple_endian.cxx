@@ -11,7 +11,7 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -58,7 +58,13 @@ protected:
    RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final {}
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone sink"));
+   }
 
 public:
    RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", ROOT::RNTupleWriteOptions()), fElement(elt)
@@ -88,6 +94,13 @@ protected:
    }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
    RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
+   void LoadStreamerInfo() final {}
+
+   std::unique_ptr<ROOT::Internal::RPageSource>
+   OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
+   {
+      throw ROOT::RException(R__FAIL("method not implemented"));
+   }
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)

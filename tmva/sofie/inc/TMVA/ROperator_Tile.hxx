@@ -20,8 +20,8 @@ private:
    std::string fNRepeats;
    std::string fNInput;
    std::string fNY;
-   std::vector<size_t>fShapeInput;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim>fShapeInput;
+   std::vector<Dim> fShapeY;
 
 public:
    ROperator_Tile(){}
@@ -35,13 +35,18 @@ public:
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      std::vector<size_t> ret = input[0];
-
-      for(size_t i=0; i < input[1].size(); i++) {
-            ret[i]=ret[i]*input[1][i];
+   std::vector<Dim> DoShapeInference(const std::vector<Dim> & input, const std::vector<size_t> repeat)  {
+      std::vector<Dim> ret = input;
+      for(size_t i=0; i < repeat.size(); i++) {
+         if (repeat[i] != 1) {
+            if (ret[i].isParam) {
+               ret[i] = Dim{ std::string(ret[i].GetVal() + "*" + std::to_string(repeat[i])), static_cast<size_t>(-1) };
+            } else {
+               ret[i]=Dim { ret[i].dim *repeat[i] };
+            }
+         }
       }
-      return {ret};
+      return ret;
    }
 
    void Initialize(RModel& model) override {
@@ -52,7 +57,7 @@ public:
       if (model.CheckIfTensorAlreadyExist(fNRepeats) == false){
         throw std::runtime_error("TMVA SOFIE Tile Op Input Tensor is not found in model");
       }
-      fShapeInput=model.GetTensorShape(fNInput);
+      fShapeInput=model.GetDimTensorShape(fNInput);
 
       // if repeats vector is not initialized we cannot deduce shape of output
       // not support for time being this case
@@ -79,12 +84,12 @@ public:
       std::copy(repeats_data, repeats_data + num_elements, repeats_vector.begin());
 
 
-      fShapeY = ShapeInference({fShapeInput,repeats_vector})[0];
+      fShapeY = DoShapeInference(fShapeInput,repeats_vector);
 
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNInput), fShapeY);
 
       if (model.Verbose())
-         std::cout <<  "Tile: " << fNInput << " " << ConvertShapeToString(fShapeInput) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+         std::cout <<  "Tile: " << fNInput << " " << ConvertDimShapeToString(fShapeInput) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
             << " given repeats " << ConvertShapeToString(repeats_vector) << std::endl;
    }
 
@@ -103,9 +108,9 @@ public:
       std::string output = "tensor_" + fNY;
       out << "///-------- Tile operator\n";
       out << "{\n"; // add scope to re-use same names
-      out << "const int input_shape[" << fShapeInput.size() << "] = " << ConvertShapeToString(fShapeInput) << ";\n";
+      out << "const size_t input_shape[" << fShapeInput.size() << "] = " << ConvertDimShapeToString(fShapeInput) << ";\n";
 
-      out << "int inputLength = " << ConvertShapeToLength(fShapeInput) << ";\n";
+      out << "int inputLength = " << ConvertDimShapeToLength(fShapeInput) << ";\n";
       out << "int s = 1;\n";
       // loop from inverse dim order
       out << "for (int i = " << fShapeInput.size()-1 << "; i >=0; i--) {\n";

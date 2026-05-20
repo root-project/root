@@ -23,7 +23,6 @@
 
 #include <cassert>
 
-ClassImp(TShape);
 
 /** \class TShape
 \ingroup g3d

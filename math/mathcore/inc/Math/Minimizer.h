@@ -48,7 +48,7 @@ namespace ROOT {
 /**
    Abstract Minimizer class, defining  the interface for the various minimizer
    (like Minuit2, Minuit, GSL, etc..) in ROOT.
-   Plug-in's exist in ROOT to be able to instantiate the derived classes without linking the library
+   Plug-ins exist in ROOT to be able to instantiate the derived classes without linking the library
    using the static function ROOT::Math::Factory::CreateMinimizer.
 
    Here is the list of all possible minimizers and their respective methods (algorithms) that can be instantiated:
@@ -69,6 +69,10 @@ namespace ROOT {
      - Minimize
      - Fumili (Fumili2)
      - Scan
+
+   \note Some Minuit2 gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
+   via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
+   and later call GradientCalculator::SetParallelOMP()
 
    - Fumili (class TFumiliMinimizer)
 
@@ -94,10 +98,6 @@ namespace ROOT {
      - CG
      - and more methods, see the Details in the documentation of the function `optimix` of the [optmix R package](https://cran.r-project.org/web/packages/optimx/optimx.pdf)
 
-
-   The Minimizer class provides the interface to perform the minimization including
-
-
    In addition to provide the API for function minimization (via ROOT::Math::Minimizer::Minimize) the Minimizer class  provides:
    - the interface for setting the function to be minimized. The objective function passed to the Minimizer must  implement the multi-dimensional generic interface
    ROOT::Math::IBaseFunctionMultiDim. If the function provides gradient calculation (e.g. implementing the ROOT::Math::IGradientFunctionMultiDim interface)
@@ -114,6 +114,9 @@ namespace ROOT {
    - The interface to perform a Scan, Hesse or a Contour plot (for the minimizers that support this, i.e. Minuit and Minuit2)
 
    An example on how to use this interface is the tutorial NumericalMinimization.C in the tutorials/math directory.
+
+   To get an overview of the default minimizer, tolerance, precision, maximum number of function calls, etc., use:
+   `ROOT::Math::MinimizerOptions::PrintDefault()`
 
    @ingroup MultiMin
 */
@@ -280,7 +283,7 @@ public:
       return ( tmp < 0) ? 0 : CovMatrix(i,j) / std::sqrt( tmp );
    }
 
-   virtual double GlobalCC(unsigned int ivar) const;
+   virtual std::vector<double> GlobalCC() const;
 
    virtual bool GetMinosError(unsigned int ivar , double & errLow, double & errUp, int option = 0);
    virtual bool Hesse();

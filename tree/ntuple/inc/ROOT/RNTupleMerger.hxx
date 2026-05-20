@@ -18,7 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/TTaskGroup.hxx>
 #include <Compression.h>
@@ -33,7 +33,7 @@ class RNTuple;
 namespace Internal {
 class RPageAllocator;
 class RClusterPool;
-}
+} // namespace Internal
 
 namespace Experimental::Internal {
 
@@ -49,11 +49,27 @@ enum class ENTupleMergingMode {
    kUnion
 };
 
+inline const char *ToString(ENTupleMergingMode mode)
+{
+   static const char *const kMergingModeStr[] = {"Filter", "Strict", "Union"};
+   return kMergingModeStr[static_cast<int>(mode)];
+}
+
 enum class ENTupleMergeErrBehavior {
    /// The merger will abort merging as soon as an error is encountered
    kAbort,
    /// Upon errors, the merger will skip the current source and continue
    kSkip
+};
+
+enum class ENTupleMergeVersionBehavior {
+   /// The merger will emit a warning when merging RNTuples with higher version than the latest supported by this
+   /// ROOT version, but merging will work. Some optional features present in the source(s) may be missing from the
+   /// merged RNTuple.
+   kWarnOnHigherVersion,
+   /// The merger will refuse to merge RNTuples with higher versions than the latest supported by this ROOT version.
+   /// The merging process will abort as soon as one such source is encountered.
+   kAbortOnHigherVersion
 };
 
 struct RColumnMergeInfo;
@@ -65,6 +81,7 @@ struct RSealedPageMergeData;
 /// Here is the mapping for the TFileMerger options:
 ///   - "rntuple.MergingMode=(Filter|Union|...)" -> sets fMergingMode
 ///   - "rntuple.ErrBehavior=(Abort|Skip|...)"   -> sets fErrBehavior
+///   - "rntuple.VersionBehavior=(WarnOnHigherVersion|AbortOnHigherVersion|...)" -> sets fVersionBehavior
 ///   - "rntuple.ExtraVerbose"                   -> sets fExtraVerbose to true
 /// Rules about the string-based options:
 ///   1. there must be no space between the separators (i.e. `.` and `=`)
@@ -78,6 +95,8 @@ struct RNTupleMergeOptions {
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
    /// Determines how the Merge function behaves upon merging errors
    ENTupleMergeErrBehavior fErrBehavior = ENTupleMergeErrBehavior::kAbort;
+   /// Determines how the Merge function behaves depending on the RNTuple sources' version.
+   ENTupleMergeVersionBehavior fVersionBehavior = ENTupleMergeVersionBehavior::kWarnOnHigherVersion;
    /// If true, the merger will emit further diagnostics and information.
    bool fExtraVerbose = false;
 };
@@ -98,14 +117,18 @@ class RNTupleMerger final {
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
-   void MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
-                           std::span<const RColumnMergeInfo> commonColumns,
-                           const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
-                           std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
-                           const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc);
+   [[nodiscard]]
+   ROOT::RResult<void> MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
+                                          const ROOT::RClusterDescriptor &clusterDesc,
+                                          std::span<const RColumnMergeInfo> commonColumns,
+                                          const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
+                                          std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
+                                          const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc);
 
-   void MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
-                            std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+   [[nodiscard]]
+   ROOT::RResult<void>
+   MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+                       std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model

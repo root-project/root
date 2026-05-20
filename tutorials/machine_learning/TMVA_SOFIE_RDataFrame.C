@@ -4,15 +4,13 @@
 /// This macro provides an example of using a trained model with Keras
 /// and make inference using SOFIE and RDataFrame
 /// This macro uses as input a Keras model generated with the
-/// TMVA_Higgs_Classification.C tutorial
+/// Python tutorial TMVA_SOFIE_Keras_HiggsModel.py
 /// You need to run that macro before to generate the trained Keras model
-/// Then you need to run the macro TMVA_SOFIE_Keras_HiggsModel.C to generate the  corresponding
-/// header file using SOFIE.
+/// and also the  corresponding header file with SOFIE which can then be used for inference
 ///
 /// Execute in this order:
 /// ```
-/// root TMVA_Higgs_Classification.C
-/// root TMVA_SOFIE_Keras_HiggsModel.C
+/// python3 TMVA_SOFIE_Keras_HiggsModel.py
 /// root TMVA_SOFIE_RDataFrame.C
 /// ```
 ///
@@ -25,8 +23,7 @@ using namespace TMVA::Experimental;
 // need to add the current directory (from where we are running this macro)
 // to the include path for Cling
 R__ADD_INCLUDE_PATH($PWD)
-R__ADD_INCLUDE_PATH($ROOTSYS/runtutorials)
-#include "Higgs_trained_model.hxx"
+#include "HiggsModel.hxx"
 #include "TMVA/SOFIEHelpers.hxx"
 
 using namespace TMVA::Experimental;
@@ -41,13 +38,13 @@ void TMVA_SOFIE_RDataFrame(int nthreads = 2){
    ROOT::RDataFrame df1("sig_tree", inputFile);
    int nslots = df1.GetNSlots();
    std::cout << "Running using " << nslots << " threads" << std::endl;
-   auto h1 = df1.DefineSlot("DNN_Value", SofieFunctor<7, TMVA_SOFIE_Higgs_trained_model::Session>(nslots),
+   auto h1 = df1.DefineSlot("DNN_Value", SofieFunctor<7, TMVA_SOFIE_HiggsModel::Session>(nslots),
                             {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
                 .Histo1D({"h_sig", "", 100, 0, 1}, "DNN_Value");
 
    ROOT::RDataFrame df2("bkg_tree", inputFile);
    nslots = df2.GetNSlots();
-   auto h2 = df2.DefineSlot("DNN_Value", SofieFunctor<7, TMVA_SOFIE_Higgs_trained_model::Session>(nslots),
+   auto h2 = df2.DefineSlot("DNN_Value", SofieFunctor<7, TMVA_SOFIE_HiggsModel::Session>(nslots),
                             {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
                 .Histo1D({"h_bkg", "", 100, 0, 1}, "DNN_Value");
 

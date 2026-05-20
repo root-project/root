@@ -16,7 +16,6 @@
 #include "TBufferFile.h"
 #include "TError.h"
 
-ClassImp(TPavesText);
 
 
 /** \class TPavesText
@@ -130,7 +129,7 @@ void TPavesText::SavePrimitive(std::ostream &out, Option_t *option)
       out << "   pst->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");\n";
    if (fBorderSize != 4)
       out << "   pst->SetBorderSize(" << fBorderSize << ");\n";
-   SaveFillAttributes(out, "pst", 0, 1001);
+   SaveFillAttributes(out, "pst", -1, -1);
    SaveLineAttributes(out, "pst", 1, 1, 1);
    SaveTextAttributes(out, "pst", 22, 0, 1, 62, 0);
    SaveLines(out, "pst", kTRUE);

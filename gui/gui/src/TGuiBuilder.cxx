@@ -82,8 +82,6 @@ It is possible to select, drag any frame and drop it to any frame
 #include "TPluginManager.h"
 #include "TROOT.h"
 
-ClassImp(TGuiBuilder);
-ClassImp(TGuiBldAction);
 
 TGuiBuilder *gGuiBuilder = 0;
 static TPluginHandler *gHandler = 0;

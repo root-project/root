@@ -1,0 +1,85 @@
+<lcgdict>
+  
+  <class name="reco::PFTau" ClassVersion="11">
+    <version ClassVersion="11" checksum="2334259986"/>
+     <field name="signalPiZeroCandidates_" transient="true"/>
+     <field name="isolationPiZeroCandidates_" transient="true"/>
+    <version ClassVersion="10" checksum="2369119060"/>
+  </class>
+
+  <class name="std::vector<reco::PFTau>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFTau> >"/>
+  <class name="edm::Ref<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> >"/>
+  <class name="edm::RefProd<std::vector<reco::PFTau> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> >"/>
+          <class name="edm::Wrapper<edm::RefVector<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> > >"/>
+  <class name="edm::reftobase::Holder<reco::BaseTau, edm::Ref<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> > >" />
+
+  <class name="edm::RefToBaseProd<reco::PFTau>" >
+     <!-- <field name="view_" transient="true" /> -->
+  </class>
+  <class name="edm::RefToBase<reco::PFTau>" />
+  <class name="edm::reftobase::BaseHolder<reco::PFTau>" />
+  <class name="edm::reftobase::IndirectHolder<reco::PFTau>" />
+    <!---<class name="edm::reftobase::Holder<reco::PFTau,edm::RefToBase<reco::PFTau> > "/>-->
+  <class name="edm::RefToBaseVector<reco::PFTau>"/>
+  <class name="edm::Wrapper<edm::RefToBaseVector<reco::PFTau> >"/>
+  <class name="edm::reftobase::BaseVectorHolder<reco::PFTau>"/>
+  <class name="edm::reftobase::Holder<reco::PFTau, reco::PFTauRef>" />
+  <class name="edm::reftobase::RefHolder<reco::PFTauRef>" />
+
+
+  <class name="reco::PFTauDecayMode" ClassVersion="10">
+   <version ClassVersion="10" checksum="2108215737"/>
+  </class>
+  <class name="std::vector<reco::PFTauDecayMode>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFTauDecayMode> >"/>
+  <class name="edm::Ref<std::vector<reco::PFTauDecayMode>,reco::PFTauDecayMode,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTauDecayMode>,reco::PFTauDecayMode> >"/>
+  <class name="edm::RefProd<std::vector<reco::PFTauDecayMode> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFTauDecayMode>,reco::PFTauDecayMode,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTauDecayMode>,reco::PFTauDecayMode> >"/>
+  <class name="edm::reftobase::Holder<reco::CompositeCandidate, edm::Ref<std::vector<reco::PFTauDecayMode>,reco::PFTauDecayMode,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTauDecayMode>,reco::PFTauDecayMode> > >" />
+  <class name="edm::Association<std::vector<reco::PFTauDecayMode> >"/>
+  <class name="edm::Association<std::vector<reco::PFTau> >"/>
+  <class name="edm::Wrapper<edm::Association<std::vector<reco::PFTauDecayMode> > >"/>
+  <class name="edm::Wrapper<edm::Association<std::vector<reco::PFTau> > >"/>
+
+  <class name="reco::RecoTauPiZero" ClassVersion="10">
+   <version ClassVersion="10" checksum="465425628"/>
+  </class>
+  <class name="std::vector<reco::RecoTauPiZero>"/>
+     <class name="std::vector<std::vector<reco::RecoTauPiZero> >"/>
+  <class name="edm::Wrapper<std::vector<reco::RecoTauPiZero> >"/>
+  <class name="edm::Ref<std::vector<reco::RecoTauPiZero>,reco::RecoTauPiZero,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoTauPiZero>,reco::RecoTauPiZero> >"/>
+  <class name="edm::RefProd<std::vector<reco::RecoTauPiZero> >"/>
+  <class name="edm::RefVector<std::vector<reco::RecoTauPiZero>,reco::RecoTauPiZero,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoTauPiZero>,reco::RecoTauPiZero> >"/>
+  <class name="edm::reftobase::Holder<reco::CompositePtrCandidate, edm::Ref<std::vector<reco::RecoTauPiZero>,reco::RecoTauPiZero,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoTauPiZero>,reco::RecoTauPiZero> > >" />
+  
+  <class name="reco::CaloTauDiscriminatorByIsolationBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::CaloTauDiscriminatorByIsolation" ClassVersion="10">
+   <version ClassVersion="10" checksum="2968502385"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::CaloTauDiscriminatorByIsolationRef"/>
+  <class name="reco::CaloTauDiscriminatorByIsolationRefProd"/>
+  <class name="reco::CaloTauDiscriminatorByIsolationRefVector"/>
+  <class name="edm::Wrapper<reco::CaloTauDiscriminatorByIsolation>"/>
+
+  <class name="reco::CaloTauDiscriminatorBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::CaloTauDiscriminator" ClassVersion="10">
+   <version ClassVersion="10" checksum="1989330711"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::CaloTauDiscriminatorRef"/>
+  <class name="reco::CaloTauDiscriminatorRefProd"/>
+  <class name="reco::CaloTauDiscriminatorRefVector"/>
+  <class name="edm::Wrapper<reco::CaloTauDiscriminator>"/>
+
+</lcgdict>

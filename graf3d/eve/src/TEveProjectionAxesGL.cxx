@@ -26,7 +26,6 @@
 OpenGL renderer class for TEveProjectionAxes.
 */
 
-ClassImp(TEveProjectionAxesGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

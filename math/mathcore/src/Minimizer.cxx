@@ -167,10 +167,9 @@ bool Minimizer::GetHessianMatrix(double *hMat) const
  * other parameters which is most strongly correlated with i.
  * Minimizer must overload method if implemented
  */
-double Minimizer::GlobalCC(unsigned int ivar) const
+std::vector<double> Minimizer::GlobalCC() const
 {
-   MATH_UNUSED(ivar);
-   return -1;
+   return {};
 }
 
 /**

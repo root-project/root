@@ -131,15 +131,16 @@ public:
     return (lo+hi)/2 ;
   }
 
-  using RooAbsData::plotOn ;
-  RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;
+  RooPlot *plotOnImpl(RooPlot *frame, PlotOpt o) const override;
 
   void reset() override;
 
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override;
   void printArgs(std::ostream& os) const override;
   void printValue(std::ostream& os) const override;
-  void printDataHistogram(std::ostream& os, RooRealVar* obs) const;
+  
+  /// Print the contents of the dataset to the specified output stream.
+  void printContents(std::ostream& os = std::cout) const override;
 
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;
@@ -260,7 +261,17 @@ public:
   std::vector<std::unique_ptr<const RooAbsBinning>> _lvbins ; ///<! List of used binnings associated with lvalues
   mutable std::vector<std::vector<double> > _binbounds;     ///<! list of bin bounds per dimension
 
-  enum CacheSumState_t{kInvalid = 0, kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};
+  enum CacheSumState_t{
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kInvalid = 0,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+     kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};
   mutable Int_t _cache_sum_valid{kInvalid}; ///<! Is cache sum valid? Needs to be Int_t instead of CacheSumState_t for subclasses.
   mutable double _cache_sum{0.};          ///<! Cache for sum of entries ;
 

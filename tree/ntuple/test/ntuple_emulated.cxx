@@ -1,6 +1,6 @@
 #include "ntuple_test.hxx"
-
 #include "ntuple_fork.hxx"
+#include "TSystem.h"
 
 TEST(RNTupleEmulated, EmulatedFields_Simple)
 {
@@ -14,20 +14,20 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_Simple {
-   int fInt1 = 1;
-   int fInt2 = 2;
+         struct Inner_Simple {
+            int fInt1 = 1;
+            int fInt2 = 2;
 
-   ClassDefNV(Inner_Simple, 2);
-};
+            ClassDefNV(Inner_Simple, 2);
+         };
 
-struct Outer_Simple {
-   int fInt1 = 1;
-   Inner_Simple fInner;
+         struct Outer_Simple {
+            int fInt1 = 1;
+            Inner_Simple fInner;
 
-   ClassDefNV(Outer_Simple, 2);
-};
-)"));
+            ClassDefNV(Outer_Simple, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_Simple").Unwrap());
@@ -99,8 +99,19 @@ struct Outer_Simple {
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
    reader = RNTupleReader::Open(cmOpts, *ntpl);
+   EXPECT_EQ(reader->GetNEntries(), 2);
 
    reader->LoadEntry(0);
+
+   auto vInnerInt1 = reader->GetView<int>("f.fInner.fInt1");
+   auto vInnerInt2 = reader->GetView<int>("f.fInner.fInt2");
+   auto vOuterInt1 = reader->GetView<int>("f.fInt1");
+   EXPECT_EQ(vInnerInt1(0), 1);
+   EXPECT_EQ(vInnerInt2(0), 2);
+   EXPECT_EQ(vOuterInt1(0), 1);
+   EXPECT_EQ(vInnerInt1(1), 71);
+   EXPECT_EQ(vInnerInt2(1), 82);
+   EXPECT_EQ(vOuterInt1(1), 93);
 }
 
 TEST(RNTupleEmulated, EmulatedFields_Vecs)
@@ -115,20 +126,20 @@ TEST(RNTupleEmulated, EmulatedFields_Vecs)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_Vecs {
-   float fFlt;
+         struct Inner_Vecs {
+            float fFlt;
 
-   ClassDefNV(Inner_Vecs, 2);
-};
+            ClassDefNV(Inner_Vecs, 2);
+         };
 
-struct Outer_Vecs {
-   std::vector<Inner_Vecs> fInners;
-   Inner_Vecs fInner;
-   int f;
+         struct Outer_Vecs {
+            std::vector<Inner_Vecs> fInners;
+            Inner_Vecs fInner;
+            int f;
 
-   ClassDefNV(Outer_Vecs, 2);
-};
-)"));
+            ClassDefNV(Outer_Vecs, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("outers", "std::vector<Outer_Vecs>").Unwrap());
@@ -216,11 +227,11 @@ TEST(RNTupleEmulated, EmulatedFields_VecsTemplatedWrapper)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-template <typename T>
-struct TemplatedWrapper {
-   T fValue;
-};
-)"));
+         template <typename T>
+         struct TemplatedWrapper {
+            T fValue;
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("vec", "std::vector<TemplatedWrapper<float>>").Unwrap());
@@ -271,7 +282,7 @@ struct TemplatedWrapper {
       const auto *innerField = wrapperField->GetConstSubfields()[0];
       ASSERT_EQ(innerField->GetTypeName(), "float");
       ASSERT_EQ(innerField->GetFieldName(), "fValue");
-      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kLeaf);
+      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kPlain);
    }
 
    // Now test loading entries with a reader
@@ -292,15 +303,15 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyStruct)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_EmptyStruct {
-   ClassDefNV(Inner_EmptyStruct, 2);
-};
+         struct Inner_EmptyStruct {
+            ClassDefNV(Inner_EmptyStruct, 2);
+         };
 
-struct Outer_EmptyStruct {
-   Inner_EmptyStruct fInner;
-   ClassDefNV(Outer_EmptyStruct, 2);
-};
-)"));
+         struct Outer_EmptyStruct {
+            Inner_EmptyStruct fInner;
+            ClassDefNV(Outer_EmptyStruct, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_EmptyStruct").Unwrap());
@@ -367,10 +378,10 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyVec)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_EmptyVec {
-   ClassDefNV(Inner_EmptyVec, 2);
-};
-)"));
+         struct Inner_EmptyVec {
+            ClassDefNV(Inner_EmptyVec, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "std::vector<Inner_EmptyVec>").Unwrap());
@@ -446,18 +457,18 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_Write {
-   int fFlt = 42;
+         struct Inner_Write {
+            int fFlt = 42;
 
-   ClassDefNV(Inner_Write, 2);
-};
+            ClassDefNV(Inner_Write, 2);
+         };
 
-struct Outer_Write {
-   std::vector<Inner_Write> fInners;
+         struct Outer_Write {
+            std::vector<Inner_Write> fInners;
 
-   ClassDefNV(Outer_Write, 2);
-};
-)"));
+            ClassDefNV(Outer_Write, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_Write").Unwrap());
@@ -486,5 +497,282 @@ struct Outer_Write {
       FAIL() << "Creating a RNTupleWriter with emulated fields should fail.";
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unsupported"));
+   }
+}
+
+TEST(RNTupleEmulated, CollectionProxy)
+{
+   FileRaii fileGuard("test_ntuple_emulated_collproxy.root");
+
+   // Declare a custom type in a separate process, then write it through a custom collection proxy.
+   // In the main process we load the generated RNTuple without having its dictionary available and we verify
+   // we can read it (only) via field emulation (as an untyped VectorField).
+   ExecInFork([&] {
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         // Copypasted from StructUsingCollectionProxy in CustomStruct.hxx
+         // Using a separate type because we don't want to have its dictionary loaded in the test.
+         template <typename T>
+         struct StructWithCollectionProxyForEmuTest {
+            using ValueType = T;
+            std::vector<T> v; ///<! do not accidentally store via RClassField
+         };
+
+         // Copypasted from SimpleCollectionProxy.hxx
+         // Using a separate type because we don't want to have its dictionary loaded in the test.
+         template <typename CollectionT>
+         class SimpleCollectionProxyForEmuTest : public TVirtualCollectionProxy {
+            /// The internal representation of an iterator, which in this simple test only contains a pointer to an element
+            struct IteratorData {
+               typename CollectionT::ValueType *ptr;
+            };
+
+            static void
+            Func_CreateIterators(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy * /*proxy*/)
+            {
+               static_assert(sizeof(IteratorData) <= TVirtualCollectionProxy::fgIteratorArenaSize);
+               auto &vec = static_cast<CollectionT *>(collection)->v;
+               // An iterator on an array-backed container is just a pointer; thus, it can be directly stored in `*xyz_arena`,
+               // saving one dereference (see TVirtualCollectionProxy documentation)
+               *begin_arena = vec.data();
+               *end_arena = vec.data() + vec.size();
+            }
+
+            static void *Func_Next(void *iter, const void *end)
+            {
+               auto _iter = static_cast<IteratorData *>(iter);
+               auto _end = static_cast<const IteratorData *>(end);
+               if (_iter->ptr >= _end->ptr)
+                  return nullptr;
+               return _iter->ptr++;
+            }
+
+            static void Func_DeleteTwoIterators(void * /*begin*/, void * /*end*/) {}
+
+         private:
+            CollectionT *fObject = nullptr;
+
+         public:
+            SimpleCollectionProxyForEmuTest()
+               : TVirtualCollectionProxy(TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(CollectionT)).c_str()))
+            {
+            }
+            SimpleCollectionProxyForEmuTest(const SimpleCollectionProxyForEmuTest<CollectionT> &) : SimpleCollectionProxyForEmuTest() {}
+
+            TVirtualCollectionProxy *Generate() const override
+            {
+               return new SimpleCollectionProxyForEmuTest<CollectionT>(*this);
+            }
+            Int_t GetCollectionType() const override { return ROOT::kSTLvector; }
+            ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
+            UInt_t Sizeof() const override { return sizeof(CollectionT); }
+            bool HasPointers() const override { return false; }
+
+            TClass *GetValueClass() const override
+            {
+               if constexpr (std::is_fundamental<typename CollectionT::ValueType>::value)
+                  return nullptr;
+               return TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(typename CollectionT::ValueType)).c_str());
+            }
+            EDataType GetType() const override
+            {
+               if constexpr (std::is_same<typename CollectionT::ValueType, char>::value)
+                  return EDataType::kChar_t;
+               ;
+               if constexpr (std::is_same<typename CollectionT::ValueType, float>::value)
+                  return EDataType::kFloat_t;
+               ;
+               return EDataType::kOther_t;
+            }
+
+            void PushProxy(void *objectstart) override { fObject = static_cast<CollectionT *>(objectstart); }
+            void PopProxy() override { fObject = nullptr; }
+
+            void *At(UInt_t idx) override { return &fObject->v[idx]; }
+            void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
+            UInt_t Size() const override { return fObject->v.size(); }
+            void *Allocate(UInt_t n, bool /*forceDelete*/) override
+            {
+               fObject->v.resize(n);
+               return fObject;
+            }
+            void Commit(void *) override {}
+            void Insert(const void *data, void *container, size_t size) override
+            {
+               auto p = static_cast<const typename CollectionT::ValueType *>(data);
+               for (size_t i = 0; i < size; ++i) {
+                  static_cast<CollectionT *>(container)->v.push_back(p[i]);
+               }
+            }
+
+            TStreamerInfoActions::TActionSequence *
+            GetConversionReadMemberWiseActions(TClass * /*oldClass*/, Int_t /*version*/) override
+            {
+               return nullptr;
+            }
+            TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t /*version*/) override { return nullptr; }
+            TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override { return nullptr; }
+
+            CreateIterators_t GetFunctionCreateIterators(bool /*read*/ = true) override { return &Func_CreateIterators; }
+            CopyIterator_t GetFunctionCopyIterator(bool /*read*/ = true) override { return nullptr; }
+            Next_t GetFunctionNext(bool /*read*/ = true) override { return &Func_Next; }
+            DeleteIterator_t GetFunctionDeleteIterator(bool /*read*/ = true) override { return nullptr; }
+            DeleteTwoIterators_t GetFunctionDeleteTwoIterators(bool /*read*/ = true) override
+            {
+               return &Func_DeleteTwoIterators;
+            }
+         };
+
+         namespace ROOT {
+         template <>
+         struct IsCollectionProxy<StructWithCollectionProxyForEmuTest<char>> : std::true_type {
+         };
+         } // namespace ROOT
+
+         SimpleCollectionProxyForEmuTest<StructWithCollectionProxyForEmuTest<char>> proxyC;
+         auto klassC = TClass::GetClass("StructWithCollectionProxyForEmuTest<char>");
+         klassC->CopyCollectionProxy(proxyC);
+      )"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("proxyC", "StructWithCollectionProxyForEmuTest<char>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("proxyC").get();
+      DeclarePointer("StructWithCollectionProxyForEmuTest<char>", "pProxyC", ptr);
+      ProcessLine("for(int i = 0; i < 100; ++i) pProxyC->v.push_back(0x42);");
+      writer->Fill();
+
+      ProcessLine("pProxyC->v.clear();");
+      writer->Fill();
+
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+      writer.reset();
+   });
+
+   try {
+      auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      reader->GetModel();
+      FAIL() << "Reconstructing the model without emulating fields should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("unknown type: StructWithCollectionProxyForEmuTest<char>"));
+   }
+
+   auto opts = RNTupleDescriptor::RCreateModelOptions();
+   opts.SetEmulateUnknownTypes(true);
+   auto reader = ROOT::RNTupleReader::Open(opts, "ntpl", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 2);
+
+   const auto &model = reader->GetModel();
+   const auto &field = model.GetConstField("proxyC");
+   EXPECT_EQ(field.GetTypeName(), "StructWithCollectionProxyForEmuTest<char>");
+   EXPECT_EQ(field.GetStructure(), ROOT::ENTupleStructure::kCollection);
+   EXPECT_EQ(field.GetConstSubfields().size(), 1);
+   EXPECT_NE(field.GetTraits() & RFieldBase::kTraitEmulatedField, 0);
+   EXPECT_EQ(field.GetValueSize(), sizeof(std::vector<char>));
+
+   auto vec = std::static_pointer_cast<std::vector<char>>(reader->GetModel().GetDefaultEntry().GetPtr<void>("proxyC"));
+   reader->LoadEntry(0);
+   EXPECT_EQ(100u, vec->size());
+   EXPECT_EQ(0x42, vec->at(0));
+   EXPECT_EQ(0x42, vec->at(99));
+   reader->LoadEntry(1);
+   EXPECT_EQ(0u, vec->size());
+}
+
+TEST(RNTupleEmulated, MergeEmulated)
+{
+   FileRaii fileGuard1("test_ntuple_merge_emulated1.root");
+   FileRaii fileGuard2("test_ntuple_merge_emulated2.root");
+   FileRaii fileGuardOut("test_ntuple_merge_emulated_out.root");
+
+   ExecInFork([&] {
+      fileGuard1.PreserveFile();
+      fileGuard2.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         struct Custom {
+            int fInt1 = 1;
+            int fInt2 = 2;
+            ClassDefNV(Custom, 2);
+         };
+      )"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "Custom").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(model->Clone(), "ntuple", fileGuard1.GetPath());
+      auto writer2 = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      void *ptr2 = writer2->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("Custom", "ptr", ptr);
+      DeclarePointer("Custom", "ptr2", ptr2);
+
+      ProcessLine("ptr->fInt1 = 11;");
+      ProcessLine("ptr->fInt2 = 22;");
+      writer->Fill();
+
+      ProcessLine("ptr2->fInt1 = 22;");
+      ProcessLine("ptr2->fInt2 = 44;");
+      writer2->Fill();
+      ProcessLine("ptr2->fInt1 = 33;");
+      ProcessLine("ptr2->fInt2 = 66;");
+      writer2->Fill();
+
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+      writer.reset();
+      writer2.reset();
+   });
+
+   // Gather the input sources
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+   sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kWarning, "TClass::Init", "no dictionary", /*matchFullMessage=*/false);
+
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger{std::move(destination)};
+      auto res = merger.Merge(sourcePtrs);
+      ASSERT_TRUE(bool(res));
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      try {
+         reader->GetModel();
+         FAIL() << "reading back the merged file without fEmulateUnknownTypes should fail";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unknown type"));
+      }
+   }
+
+   auto opts = RNTupleDescriptor::RCreateModelOptions();
+   opts.SetEmulateUnknownTypes(true);
+   auto reader = RNTupleReader::Open(opts, "ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 3);
+
+   auto vInt1 = reader->GetView<int>("f.fInt1");
+   auto vInt2 = reader->GetView<int>("f.fInt2");
+   for (auto idx : reader->GetEntryRange()) {
+      EXPECT_EQ(vInt1(idx), 11 * (idx + 1));
+      EXPECT_EQ(vInt2(idx), 22 * (idx + 1));
    }
 }

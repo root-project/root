@@ -360,7 +360,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
       // In the case where we have an emulated class,
       // if the class is nested (in a class or a namespace),
       // calling G__TypeInfo ti(inside.c_str());
-      // might fail because CINT does not known the nesting
+      // might fail because Cling does not know the nesting
       // scope, so let's first look for an emulated class:
 
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent, hint_pair_offset, hint_pair_size);
@@ -1519,8 +1519,7 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
       return;
    }
    *begin_arena = vec->data();
-   *end_arena = vec->data() + vec->size();
-
+   *end_arena   = vec->data() + vec->size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1624,7 +1623,9 @@ TVirtualCollectionProxy::CreateIterators_t TGenCollectionProxy::GetFunctionCreat
 //      fprintf(stderr,"a generic iterator\n");
 
    // TODO could we do better than SlowCreateIterators for RVec?
-   if (fSTL_type==ROOT::kSTLvector || (fProperties & kIsEmulated))
+   if (fProperties & kIsEmulated)
+      return fFunctionCreateIterators = TGenCollectionProxy__VectorCreateIterators;
+   else if (fSTL_type == ROOT::kSTLvector)
       return fFunctionCreateIterators = TGenCollectionProxy__VectorCreateIterators;
    else if ( (fProperties & kIsAssociative) && read)
       return TGenCollectionProxy__StagingCreateIterators;

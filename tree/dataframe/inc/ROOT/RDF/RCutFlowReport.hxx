@@ -22,14 +22,23 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 class RFilterBase;
+class RMergeableReport;
 } // End NS RDF
 } // End NS Detail
+
+namespace Internal {
+namespace RDF {
+template <typename RNode_t>
+class ReportHelper;
+} // namespace RDF
+} // namespace Internal
 
 namespace RDF {
 
 class TCutInfo {
    friend class RCutFlowReport;
    friend class ROOT::Detail::RDF::RFilterBase;
+   friend class ROOT::Detail::RDF::RMergeableReport;
 
 private:
    std::string fName;
@@ -48,6 +57,9 @@ public:
 
 class RCutFlowReport {
    friend class ROOT::Detail::RDF::RFilterBase;
+   friend class ROOT::Detail::RDF::RMergeableReport;
+   template <typename RNode_t>
+   friend class ROOT::Internal::RDF::ReportHelper;
 
 private:
    std::vector<TCutInfo> fCutInfos;
@@ -55,7 +67,8 @@ private:
 
 public:
    using const_iterator = typename std::vector<TCutInfo>::const_iterator;
-   void Print();
+   void Print() const;
+   std::string AsString() const;
    const TCutInfo &operator[](std::string_view cutName);
    const TCutInfo &At(std::string_view cutName) { return operator[](cutName); }
    const_iterator begin() const { return fCutInfos.begin(); }

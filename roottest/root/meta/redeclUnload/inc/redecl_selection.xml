@@ -1,0 +1,4 @@
+<lcgdict>
+   <class name="RandomClass" splitLevel="0"/>
+   <class name="Wrapper1<Wrapper2<RandomClass>>" splitLevel="0"/>
+</lcgdict>

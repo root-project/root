@@ -1,0 +1,23 @@
+<lcgdict>
+  <!-- not needed
+  <class name="TrackParamConstraint"/>
+  -->
+
+  <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+  <class name="std::vector<TrackParamConstraint>" persistent="false"/>
+  <class name="edm::Wrapper<std::vector<TrackParamConstraint> >" persistent="false"/>
+
+  <!-- not needed
+  <class name="edm::RefProd<std::vector<TrackParamConstraint> >"/>
+  -->
+
+  <class name="edm::AssociationMap<edm::OneToOne<reco::TrackCollection,std::vector<TrackParamConstraint>, unsigned int> >" >
+    <field name="transientMap_" transient="true" />
+  </class>
+
+  <!-- not needed
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Track> >,edm::RefProd<std::vector<TrackParamConstraint> > >"/>
+  -->
+
+  <class pattern="edm::Wrapper<edm::AssociationMap<edm::OneToOne<reco::TrackCollection,std::vector<TrackParamConstraint> > >"  persistent="false" />
+</lcgdict>

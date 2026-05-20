@@ -107,4 +107,4 @@
 #pragma link C++ class ROOT::Math::GSLMultiRootFinder+;
 #pragma link C++ typedef ROOT::Math::MultiRootFinder;
 
-#endif //__CINT__
+#endif //__CLING__

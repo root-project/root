@@ -22,7 +22,6 @@ protocols and to pack binary data in HTTP messages.
 
 #include <ROOT/RConfig.hxx>
 
-ClassImp(TBase64);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base64 encoding of 3 bytes from in.

@@ -88,11 +88,11 @@ can be replaced with the simpler and exception safe:
 
    class TContext  {
    private:
-      std::atomic<TDirectory*> fDirectory{nullptr}; //! Pointer to the previous current directory.
-      std::atomic<bool> fActiveDestructor{false};   //! Set to true during the destructor execution
-      std::atomic<bool> fDirectoryWait{false};      //! Set to true if a TDirectory might still access this object.
-      TContext   *fPrevious{nullptr};               //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
-      TContext   *fNext{nullptr};                   //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
+      std::atomic<TDirectory*> fDirectory{nullptr}; ///<! Pointer to the previous current directory.
+      std::atomic<bool> fActiveDestructor{false};   ///<! Set to true during the destructor execution
+      std::atomic<bool> fDirectoryWait{false};      ///<! Set to true if a TDirectory might still access this object.
+      TContext   *fPrevious{nullptr};               ///<! Pointer to the next TContext in the implied list of context pointing to fPrevious.
+      TContext   *fNext{nullptr};                   ///<! Pointer to the next TContext in the implied list of context pointing to fPrevious.
 
       TContext(TContext&) = delete;
       TContext& operator=(TContext&) = delete;
@@ -148,12 +148,13 @@ protected:
 
    static SharedGDirectory_t &GetSharedLocalCurrentDirectory();
 
-   std::vector<SharedGDirectory_t> fGDirectories; //! thread local gDirectory pointing to this object.
+   std::vector<SharedGDirectory_t> fGDirectories; ///<! thread local gDirectory pointing to this object.
 
-   std::atomic<size_t> fContextPeg{0};  //! Counter delaying the TDirectory destructor from finishing.
-   mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
+   std::atomic<size_t> fContextPeg{0};  ///<! Counter delaying the TDirectory destructor from finishing.
+   mutable std::atomic_flag fSpinLock;  ///<! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
-   static Bool_t fgAddDirectory;        //!flag to add histograms, graphs,etc to the directory
+   [[deprecated]]
+   inline static Bool_t fgAddDirectory = false; ///<! \deprecated This flag has no effect in ROOT.
 
           Bool_t  cd1(const char *path);
    static Bool_t  Cd1(const char *path);
@@ -173,13 +174,13 @@ protected:
    void operator=(const TDirectory &) = delete; //Directories cannot be copied
 
 public:
-
    TDirectory();
    TDirectory(const char *name, const char *title, Option_t *option = "", TDirectory* motherDir = nullptr);
    virtual ~TDirectory();
-   static  void        AddDirectory(Bool_t add=kTRUE);
-   static  Bool_t      AddDirectoryStatus();
+   static  void        R__DEPRECATED(7,00, "This function has no effect on ROOT") AddDirectory(Bool_t add=kTRUE);
+   static  Bool_t      R__DEPRECATED(7,00, "This function has no effect on ROOT") AddDirectoryStatus();
    virtual void        Append(TObject *obj, Bool_t replace = kFALSE);
+   /// Append object to this directory. \see Append(TObject*, Bool_t)
    virtual void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
    virtual Int_t       AppendKey(TKey *) {return 0;}
            void        Browse(TBrowser *b) override;

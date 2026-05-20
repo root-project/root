@@ -587,8 +587,9 @@ TEST(RNTuple, StdMap)
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char, std::string, int>").Unwrap(), ROOT::RException);
 
    auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
-   EXPECT_THROW(std::make_unique<ROOT::RMapField>("myInvalidMap", "std::map<char, int>", std::move(invalidInnerField)),
-                ROOT::RException);
+   EXPECT_THROW(
+      std::make_unique<ROOT::RMapField>("myInvalidMap", ROOT::RMapField::EMapType::kMap, std::move(invalidInnerField)),
+      ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
    {
@@ -1668,8 +1669,7 @@ TEST(RNTuple, Casting)
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types"));
-      EXPECT_THAT(err.what(), testing::HasSubstr("cannot be matched"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk type name"));
    }
 
    auto modelC = RNTupleModel::Create();

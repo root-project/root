@@ -11,9 +11,7 @@
 ################################################################################
 
 from .. import pythonization
-
 from ._utils import _kwargs_to_roocmdargs, cpp_signature
-
 
 
 class SPlot(object):

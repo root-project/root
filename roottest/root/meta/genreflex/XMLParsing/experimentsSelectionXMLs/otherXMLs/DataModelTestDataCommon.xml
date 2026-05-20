@@ -1,0 +1,25 @@
+<!--
+  $Id: selection.xml,v 1.2 2005-12-01 19:07:55 ssnyder Exp $
+
+  File: DataModelTestDataCommon/selection.xml
+  Author: snyder@bnl.gov
+  Date: Nov 2005
+  Purpose: LCG dictionary generation selection file.
+-->
+  
+
+<lcgdict>
+
+  <class name="DMTest::B"/>
+  <class name="DMTest::D"/>
+  <class name="DMTest::BAux" id="B2751847-F5E8-456A-8C03-BCA9AEEB27DD"/>
+  <class name="DMTest::BAuxStandalone" id="6378E4BD-95AD-4D46-9860-B15779893A75"/>
+  <class name="DataVector<DMTest::BAux>" id="734BB39F-4E7C-4637-8510-6716160242D4"/>
+  <class name="DMTest::BAuxVec" id="EC09FB3D-88C8-4063-9079-D03BFFD14766"/>
+  <class name="std::vector<DMTest::B>"/>
+  <class name="DMTest::C_v1" id="CD37DA07-A986-4AB9-9221-EFC2FA9BB5A0"/>
+  <class name="DMTest::CVec_v1" id="10DE610D-5634-4D42-80D4-80B0A8C16452"/>
+  <class name="DMTest::CAuxContainer_v1" id="2A4C8577-05E9-4246-96EC-97ED64FF9C5B"/>
+  <class name="DMTest::CInfoAuxContainer_v1" id="7C9CE4FE-2AD8-4DC5-B36E-19B22994951E"/>
+
+</lcgdict>

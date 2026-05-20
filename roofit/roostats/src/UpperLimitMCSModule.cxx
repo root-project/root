@@ -39,8 +39,8 @@ UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, double CL) :
   _parName(poi->first()->GetName()),
   _plc(nullptr),_ul(nullptr),_poi(nullptr), _data(nullptr),_cl(CL), _model(nullptr)
 {
-  std::cout<<"RooUpperLimitConstructor ParName:"<<_parName<<std::endl;
-  std::cout<<"RooUpperLimitConstructor CL:"<<_cl<<std::endl;
+  coutI(InputArguments)<<"RooUpperLimitConstructor ParName:"<<_parName<<std::endl;
+  coutI(InputArguments)<<"RooUpperLimitConstructor CL:"<<_cl<<std::endl;
   // Constructor of module with parameter to be interpreted as nSignal and the value of the
   // null hypothesis for nSignal (usually zero)
 }
@@ -93,9 +93,9 @@ bool UpperLimitMCSModule::initializeInstance()
 
   //Construct the ProfileLikelihoodCalculator
   _poi=new RooArgSet(*(fitParams()->find(_parName.c_str())));
-  std::cout<<"RooUpperLimit Initialize Instance: POI Set:"<<std::endl;
+  coutI(Eval)<<"RooUpperLimit Initialize Instance: POI Set:"<<std::endl;
   _poi->Print("v");
-  std::cout<<"RooUpperLimit Initialize Instance: End:"<<std::endl;
+  coutI(Eval)<<"RooUpperLimit Initialize Instance: End:"<<std::endl;
 
 
 
@@ -131,8 +131,23 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// bool UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/)
-// {
+bool UpperLimitMCSModule::processAfterFit(bool fitOk)
+{
+   if (!fitOk)
+      return true;
+   _data->add(RooArgSet(*_ul));
+   coutI(Eval)<<"UL:"<<_ul->getVal()<<std::endl;
+//   if (_ul->getVal()<1){
+
+//   RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
+//   TCanvas c1;
+//   plotpll.Draw();
+//   c1.Print("test.ps");
+//   std::cout<<" UL<1 whats going on here?"<<std::endl;
+//   abort();
+//   }
+
+
 //   // Save likelihood from nominal fit, fix chosen parameter to its
 //   // null hypothesis value and rerun fit Save difference in likelihood
 //   // and associated Gaussian significance in auxiliary dataset
@@ -154,14 +169,13 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 //   _data->add(RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
 
 //   delete frnull ;
-//   return true ;
-
-// }
+   return true ;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
-  std::cout<<"after generation Test"<<std::endl;
+  coutI(Eval)<<"after generation Test"<<std::endl;
 
   if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return false;
 
@@ -171,7 +185,7 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   static_cast<RooRealVar*>(_poi->first())->setBins(1000);
   //fitModel()->Print("v");
 
-  std::cout<<"generated Entries:"<<genSample()->numEntries()<<std::endl;
+  coutI(Eval)<<"generated Entries:"<<genSample()->numEntries()<<std::endl;
 
   RooStats::ProfileLikelihoodCalculator plc( *(genSample()), *(fitModel()), *_poi);
 
@@ -181,9 +195,9 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
   if (!pllint) return false;
 
-  std::cout<<"poi value: "<<(static_cast<RooRealVar*>(_poi->first()))->getVal()<<std::endl;
-  std::cout<<(static_cast<RooRealVar*>((fitParams()->find(_parName.c_str()))))->getVal()<<std::endl;
-  std::cout<<(static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(_poi->first())))<<std::endl;
+  coutI(Eval)<<"poi value: "<<(static_cast<RooRealVar*>(_poi->first()))->getVal()<<std::endl;
+  coutI(Eval)<<(static_cast<RooRealVar*>((fitParams()->find(_parName.c_str()))))->getVal()<<std::endl;
+  coutI(Eval)<<(static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(_poi->first())))<<std::endl;
 
 
   //Go to the fit Value for zour POI to make sure upper limit works correct.
@@ -192,18 +206,6 @@ bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
 
   _ul->setVal((static_cast<RooStats::LikelihoodInterval*>(pllint))->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
-
-  _data->add(RooArgSet(*_ul));
-  std::cout<<"UL:"<<_ul->getVal()<<std::endl;
-//   if (_ul->getVal()<1){
-
-//   RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
-//   TCanvas c1;
-//   plotpll.Draw();
-//   c1.Print("test.ps");
-//   std::cout<<" UL<1 whats going on here?"<<std::endl;
-//   abort();
-//   }
 
   delete pllint;
 

@@ -32,14 +32,14 @@ class TDataMember;
 class TListOfDataMembers : public THashList
 {
 private:
-   TClass           *fClass = nullptr;    //! Context of this list.  Not owned.
+   TClass           *fClass = nullptr;    ///<! Context of this list.  Not owned.
 
-   TExMap           *fIds = nullptr;      //! Map from DeclId_t to TDataMember*
-   THashList        *fUnloaded = nullptr; //! Holder of TDataMember for unloaded DataMembers.
-   ULong64_t         fLastLoadMarker = 0; //! Represent interpreter state when we last did a full load.
-   std::atomic<bool> fIsLoaded{kFALSE};  //! Mark whether Load was executed.
+   TExMap           *fIds = nullptr;      ///<! Map from DeclId_t to TDataMember*
+   THashList        *fUnloaded = nullptr; ///<! Holder of TDataMember for unloaded DataMembers.
+   ULong64_t         fLastLoadMarker = 0; ///<! Represent interpreter state when we last did a full load.
+   std::atomic<bool> fIsLoaded{kFALSE};  ///<! Mark whether Load was executed.
 
-   TDictionary::EMemberSelection fSelection = TDictionary::EMemberSelection::kNoUsingDecls; //! Whether the list should contain regular data members or only using decls or both.
+   TDictionary::EMemberSelection fSelection = TDictionary::EMemberSelection::kNoUsingDecls; ///<! Whether the list should contain regular data members or only using decls or both.
 
    TListOfDataMembers(const TListOfDataMembers&) = delete;
    TListOfDataMembers& operator=(const TListOfDataMembers&) = delete;
@@ -82,10 +82,15 @@ public:
    void       AddLast(TObject *obj) override;
    void       AddLast(TObject *obj, Option_t *opt) override;
    void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAt(TObject *obj, Int_t idx, Option_t *opt) override;
    void       AddAfter(const TObject *after, TObject *obj) override;
    void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddAfter(const TObject *after, TObject *obj, Option_t *opt) override;
+   void       AddAfter(TObjLink *after, TObject *obj, Option_t *opt) override;
    void       AddBefore(const TObject *before, TObject *obj) override;
    void       AddBefore(TObjLink *before, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj, Option_t *opt) override;
+   void       AddBefore(TObjLink *before, TObject *obj, Option_t *opt) override;
 
    TClass    *GetClass() const { return fClass; }
    void       SetClass(TClass* cl) { fClass = cl; }

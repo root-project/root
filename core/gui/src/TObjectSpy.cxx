@@ -25,8 +25,6 @@ hack. The spied object must have the kMustCleanup bit set otherwise
 you will get an error.
 */
 
-ClassImp(TObjectSpy);
-ClassImp(TObjectRefSpy);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register the object that must be spied. The object must have the

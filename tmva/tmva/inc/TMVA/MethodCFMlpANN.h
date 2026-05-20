@@ -106,21 +106,21 @@ namespace TMVA {
 
       virtual ~MethodCFMlpANN( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ ) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML( void* wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML( void* wghtnode ) override;
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // data accessors for external functions
       Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
@@ -128,29 +128,29 @@ namespace TMVA {
 
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // header and auxiliary classes
-      void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
+      void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
       Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
-                           Double_t*, Int_t*, Int_t* );
+                           Double_t*, Int_t*, Int_t* ) override;
 
    private:
 
       void PrintWeights( std::ostream & o ) const;
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // LUTs
       TMatrixF       *fData;     // the (data,var) string
@@ -171,9 +171,9 @@ namespace TMVA {
       Double_t NN_fonc( Int_t, Double_t ) const;
 
       // default initialisation
-      void Init( void );
+      void Init( void ) override;
 
-      ClassDef(MethodCFMlpANN,0); // Interface for Clermond-Ferrand artificial neural network
+      ClassDefOverride(MethodCFMlpANN,0); // Interface for Clermond-Ferrand artificial neural network
    };
 
 } // namespace TMVA

@@ -121,6 +121,13 @@ TTreeReaderFast::SetEntry(Long64_t entry)
 void TTreeReaderFast::RegisterValueReader(ROOT::Experimental::Internal::TTreeReaderValueFastBase* reader)
 {
    fValues.push_back(reader);
+   if (fTree && reader) { // A subpart of Initialize() must be called if we register new readers after the constructor.
+      reader->CreateProxy();
+      if (reader->GetSetupStatus() != ROOT::Internal::TTreeReaderValueBase::kSetupMatch) {
+         //printf("Reader setup failed.  Status: %d\n", reader->GetSetupStatus());
+         fEntryStatus = TTreeReader::kEntryBadReader;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

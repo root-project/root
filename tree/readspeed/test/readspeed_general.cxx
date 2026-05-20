@@ -20,7 +20,15 @@ void RequireFile(const std::string &fname, const std::vector<std::string> &branc
    if (gSystem->AccessPathName(fname.c_str()) == false) // then the file already exists: weird return value convention
       return;                                           // nothing to do
 
+#ifdef R__HAS_ZLIB_NG
+   // Here the difference between zlib and zlib-ng would make the test fail
+   // if the compression level chosen is 1. This is not a surprise: at that level
+   // zlib-ng makes choices which favour speed, for example not compressing buffers
+   // if some criteria ar met.
+   TFile f(fname.c_str(), "recreate","",102);
+#else
    TFile f(fname.c_str(), "recreate");
+#endif
    TTree t("t", "t");
 
    int var = 42;

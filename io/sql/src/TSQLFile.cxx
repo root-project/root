@@ -53,7 +53,7 @@ Up to now following member are supported:
   -# Object as data member. In that case object is saved in normal way to data base and column
     will contain id of this object.
   -# Pointer on object. Same as before. In case if object was already stored, just its id
-    will be placed in the column. For NULL pointer 0 is used.
+    will be placed in the column. For nullptr pointer 0 is used.
   -# TString. Now column with limited width like VARCAHR(255) in MySQL is used.
     Later this will be improved to support maximum possible strings
   -# Anything else. Data will be converted to raw format and saved in _streamer_ table.
@@ -187,7 +187,6 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 #include <iostream>
 #include <fstream>
 
-ClassImp(TSQLFile);
 
 const char *mysql_BasicTypes[21] = {"VARCHAR(255)",      // kBase     =  0,  used for text
                                     "TINYINT UNSIGNED",  // kChar     =  1,

@@ -37,7 +37,7 @@
  The Reader class serves to use the MVAs in a specific analysis context.
  Within an event loop, a vector is filled that corresponds to the variables
  that were used to train the MVA(s) during the training stage. This vector
- is transfered to the Reader, who takes care of interpreting the weight
+ is transferred to the Reader, who takes care of interpreting the weight
  file of the MVA of choice, and to return the MVA's output. This is then
  used by the user for further analysis.
 

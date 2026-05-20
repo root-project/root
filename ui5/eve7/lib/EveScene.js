@@ -56,13 +56,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                obj3d.geo_object = elem.fMasterId || elem.fElementId;
                obj3d.geo_name = elem.fName; // used for highlight
 
-               obj3d.matrixAutoUpdate = false;
                if (elem.render_data.matrix) {
                   if (this.mgr.is_rcore) {
                      obj3d.setMatrixFromArray(elem.render_data.matrix);
                   } else {
                      obj3d.matrix.fromArray(elem.render_data.matrix);
                      obj3d.updateMatrixWorld(true);
+                     obj3d.matrixAutoUpdate = false;
                   }
                }
 
@@ -201,8 +201,15 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                this.update3DObjectsVisibility(p.childs, true);
                this.need_visibility_update = false;
             }
-            this.glctrl.viewer.render();
 
+            // To improve when bbox info is streamed.
+            // Recalc scene bbox -- and update viewer total bbox, from scene boxes.
+            // 1. recalc-scene-bbox from known element bboxes (streamed)
+            //    [ this could really be done on the server ]
+            // 2. tell viewer to recalc-total-bbox ONLY from scene bboxes.
+
+            // For now just refresh the gl-viewer.
+            this.glctrl.viewer.request_render(true);
          }
       }
 

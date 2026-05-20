@@ -222,7 +222,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                          !(cClass && strcmp(cClass->GetName(), "SimpleGaussianConstraint") == 0)) {
                         TString className = (cClass) ? cClass->GetName() : "undefined";
                         oocoutW((TObject *)nullptr, Generation)
-                           << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
+                           << "xRooFit::generateFrom : constraint term " << thePdf->GetName()
                            << " of type " << className << " is a non-supported type - result might be not correct "
                            << std::endl;
                      }
@@ -242,7 +242,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                         // we want to set n to the b value so in case of the Gamma ignore this test
                         if (cClass != RooGamma::Class()) {
                            oocoutE((TObject *)nullptr, Generation)
-                              << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
+                              << "xRooFit::generateFrom : constraint term " << thePdf->GetName()
                               << " has no direct dependence on global observable- cannot generate it " << std::endl;
                            continue;
                         }
@@ -263,7 +263,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                         }
                         if (thetaGamma == nullptr) {
                            oocoutI((TObject *)nullptr, Generation)
-                              << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
+                              << "xRooFit::generateFrom : constraint term " << thePdf->GetName()
                               << " is a Gamma distribution and no server named theta is found. Assume that the Gamma "
                                  "scale is  1 "
                               << std::endl;
@@ -277,7 +277,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                            // found server not depending on the gob
                            if (foundServer) {
                               oocoutE((TObject *)nullptr, Generation)
-                                 << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
+                                 << "xRooFit::generateFrom : constraint term " << thePdf->GetName()
                                  << " constraint term has more server depending on nuisance- cannot generate it "
                                  << std::endl;
                               foundServer = false;
@@ -294,9 +294,9 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
 
                      if (!foundServer) {
                         oocoutE((TObject *)nullptr, Generation)
-                           << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global "
+                           << "xRooFit::generateFrom : can't find nuisance for constraint term - global "
                               "observables will not be set to Asimov value "
-                           << thePdf->GetName() << std::endl;
+                           << thePdf->GetName() << " glob = " << rrv.GetName() << std::endl;
                         std::cerr << "Parameters: " << std::endl;
                         cpars->Print("V");
                         std::cerr << "Observables: " << std::endl;
@@ -632,7 +632,8 @@ public:
             // doing a hesse step, estimate progress based on evaluations
             int nRequired = prevPars.size();
             if (nRequired > 1) {
-               nRequired *= nRequired;
+               nRequired *= (nRequired-1);
+               nRequired /= 2; // since only need to do the a 'triangle' of the hessian matrix
                if (fState == "Hesse3") {
                   nRequired *= 4;
                }
@@ -1283,10 +1284,13 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }
       }
 
-      if(miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse && out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance()*1e-3 && out->status() != 3) {
+      if (miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse &&
+          out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3 && out->status() != 3) {
          // hesse may have updated edm by using a better strategy than used in the minimization
          // so print a warning about this
-         std::cerr << "Warning: post-Hesse edm greater than allowed by tolerance. Consider increasing minimization strategy" << std::endl;
+         std::cerr << "Warning: post-Hesse edm " << out->edm() << " greater than allowed by tolerance "
+                   << _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3
+                   << ", consider increasing minimization strategy" << std::endl;
          // Dec24: As this is a new warning, will not update status code for now, so edm will be large
          // but in the future we should probably update the code to 3 so that users don't miss this warning.
          // out->setStatus(3); // edm above max
@@ -1400,7 +1404,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       }
    }
 
-   if(out && out->status() == 0 && minos) {
+   if (out && out->status() == 0 && minos) {
       // call minos if requested on any parameters
       for (auto label : {"xminos", "xMinos"}) {
          std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));

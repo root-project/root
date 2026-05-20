@@ -1,0 +1,6 @@
+Info in <TMPIFile::RunCollector>: writing to filename: sync_rate_0.root
+Warning in <TMPIFile::ResetObjects>: Key/Object ProcessID0 is not attached to the directory sync_rate.root and can not be ResetAfterMerge correctly
+Warning in <TMPIFile::ResetObjects>: Key/Object ProcessID0 is not attached to the directory sync_rate.root and can not be ResetAfterMerge correctly
+Warning in <TMPIFile::ResetObjects>: Key/Object ProcessID0 is not attached to the directory sync_rate.root and can not be ResetAfterMerge correctly
+Warning in <TMPIFile::ResetObjects>: Key/Object ProcessID0 is not attached to the directory sync_rate.root and can not be ResetAfterMerge correctly
+Info in <Rank>: [0] [0] file should have 10 events and has 10

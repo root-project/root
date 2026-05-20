@@ -25,3 +25,14 @@ void CustomStreamerForceNative::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(CustomStreamerForceNative::Class(), this);
    }
 }
+
+void CustomStreamerEvolution::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      R__b.ReadClassBuffer(CustomStreamerEvolution::Class(), this, R__v, R__s, R__c);
+   } else {
+      R__b.WriteClassBuffer(CustomStreamerEvolution::Class(), this);
+   }
+}

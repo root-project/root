@@ -12,32 +12,7 @@
 
 
 from ._rooabsreal import RooAbsReal
-from ._utils import _kwargs_to_roocmdargs, cpp_signature
-
-
-def _pack_cmd_args(*args, **kwargs):
-    # Pack command arguments passed into a RooLinkedList.
-
-    import ROOT
-
-    # If the second argument is already a RooLinkedList, do nothing
-    if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], ROOT.RooLinkedList):
-        return args[0]
-
-    # Transform keyword arguments to RooCmdArgs
-    args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-
-    # All keyword arguments should be transformed now
-    assert len(kwargs) == 0
-
-    # Put RooCmdArgs in a RooLinkedList
-    cmdList = ROOT.RooLinkedList()
-    for cmd in args:
-        if not isinstance(cmd, ROOT.RooCmdArg):
-            raise TypeError("This function only takes RooFit command arguments.")
-        cmdList.Add(cmd)
-
-    return cmdList
+from ._utils import _kwargs_to_roocmdargs, cpp_signature, _pack_cmd_args
 
 
 class RooAbsPdf(RooAbsReal):
@@ -60,8 +35,11 @@ class RooAbsPdf(RooAbsReal):
         r"""The RooAbsPdf::fitTo() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsPdf.fitTo` for keyword arguments.
-        return self._fitTo["RooLinkedList const&"](args[0], _pack_cmd_args(*args[1:], **kwargs))
+        import ROOT
+
+        out = self._fitTo["RooLinkedList const&"](args[0], _pack_cmd_args(*args[1:], **kwargs))
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooPlot *RooAbsPdf::plotOn(RooPlot* frame,"
@@ -114,8 +92,11 @@ class RooAbsPdf(RooAbsReal):
         r"""The RooAbsPdf::createNLL() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsPdf.createNLL` for keyword arguments.
-        return self._createNLL["RooLinkedList const&"](args[0], _pack_cmd_args(*args[1:], **kwargs))
+        import ROOT
+
+        out = self._createNLL["RooLinkedList const&"](args[0], _pack_cmd_args(*args[1:], **kwargs))
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooAbsReal *RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
@@ -127,9 +108,12 @@ class RooAbsPdf(RooAbsReal):
         r"""The RooAbsPdf::createCdf() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsPdf.createCdf` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createCdf(*args, **kwargs)
+        out = self._createCdf(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars,"
@@ -141,9 +125,12 @@ class RooAbsPdf(RooAbsReal):
         r"""The RooAbsPdf::generateBinned() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsPdf.generateBinned` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._generateBinned(*args, **kwargs)
+        out = self._generateBinned(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "GenSpec *RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,"

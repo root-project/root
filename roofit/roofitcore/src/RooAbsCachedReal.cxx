@@ -131,22 +131,10 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
     arg->setOperMode(ADirty);
   }
 
-  // Check if we have contents registered already in global expensive object cache
-  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
+  fillCacheObject(*cache) ;
 
-  if (histTmp) {
-
-    cache->hist()->reset() ;
-    cache->hist()->add(*histTmp) ;
-
-  } else {
-
-    fillCacheObject(*cache) ;
-
-    RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
-    eoclone->removeSelfFromDir() ;
-    expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
-  }
+  RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
+  eoclone->removeSelfFromDir() ;
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,nullptr,((RooAbsCacheElement*)cache),nullptr) ;

@@ -41,7 +41,7 @@ namespace TMVA
    {
 
    protected:
-      mutable MsgLogger* fLogger;  //! message logger
+      mutable MsgLogger* fLogger;  ///<! message logger
 
    public:
       PDEFoamKernelBase();                 // Constructor
@@ -54,7 +54,7 @@ namespace TMVA
       // Message logger
       MsgLogger& Log() const { return *fLogger; }
 
-      ClassDef(PDEFoamKernelBase, 1) // PDEFoam kernel interface
+      ClassDefOverride(PDEFoamKernelBase, 1) // PDEFoam kernel interface
          }; // end of PDEFoamKernelBase
 }  // namespace TMVA
 

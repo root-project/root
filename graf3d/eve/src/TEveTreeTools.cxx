@@ -24,7 +24,6 @@ TSelector that stores entry numbers of matching TTree entries into
 an event-list.
 */
 
-ClassImp(TEveSelectorToEventList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -60,8 +59,6 @@ TEvePointSelectorConsumer is a virtual base for classes that can be
 filled from TTree data via the TEvePointSelector class.
 */
 
-ClassImp(TEvePointSelector);
-ClassImp(TEvePointSelectorConsumer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -24,7 +24,6 @@
 
 #include <cassert>
 
-ClassImp(TMarker3DBox);
 
 /** \class TMarker3DBox
 \ingroup g3d

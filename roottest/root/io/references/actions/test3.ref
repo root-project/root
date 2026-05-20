@@ -1,0 +1,5 @@
+Processing test3.C...
+Readback for testB->GetRef()
+Calling GetRef() from class: B
+1
+******************************************

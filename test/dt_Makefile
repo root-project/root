@@ -60,9 +60,9 @@ Streamer="Event::Streamer not available,"
 
 
 dt_RunDrawTest_C.$(DllSuf) : dt_RunDrawTest.C dt_DrawTest.C
-	@root -l -b -q dt_build.C $(OUTPUT) && \
+	@root -b -q dt_build.C $(OUTPUT) && \
 	echo "$@ made"
 
 #Windows does not like piping 
-#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | root -l -b $(OUTPUT) && \
+#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | root -b $(OUTPUT) && \
 

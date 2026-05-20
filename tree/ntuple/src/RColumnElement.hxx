@@ -7,7 +7,8 @@
 // definitions are implementation details and should not be exposed to a public interface.
 
 #include <ROOT/RColumnElementBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 #include <Byteswap.h>
@@ -161,6 +162,18 @@ inline void EnsureValidRange(SourceT val [[maybe_unused]])
    }
 }
 
+/// Currently ensures that the floating point class doesn't change in double --> float conversion
+template <typename DestT, typename SourceT>
+inline void EnsureValidConversion(DestT dst [[maybe_unused]], SourceT src [[maybe_unused]])
+{
+   if constexpr (std::is_same_v<DestT, float> && std::is_same_v<SourceT, double>) {
+      if (std::fpclassify(src) != std::fpclassify(dst)) {
+         throw ROOT::RException(R__FAIL(std::string("floating point class mismatch: ") + std::to_string(src) +
+                                        " on disk to " + std::to_string(dst) + " in memory"));
+      }
+   }
+}
+
 /// \brief Pack `count` elements into narrower (or wider) type
 ///
 /// Used to convert in-memory elements to smaller column types of comatible types
@@ -191,6 +204,7 @@ inline void CastUnpack(void *destination, const void *source, std::size_t count)
       ByteSwapIfNecessary(val);
       EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
+      EnsureValidConversion<DestT, SourceT>(dst[i], val);
    }
 }
 
@@ -229,6 +243,7 @@ inline void CastSplitUnpack(void *destination, const void *source, std::size_t c
       ByteSwapIfNecessary(val);
       EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
+      EnsureValidConversion<DestT, SourceT>(dst[i], val);
    }
 }
 
@@ -996,7 +1011,7 @@ using Quantized_t = std::uint32_t;
       return static_cast<std::size_t>(31 - idx);
    return 32;
 #else
-   return static_cast<std::size_t>(__builtin_clzl(x));
+   return static_cast<std::size_t>(__builtin_clz(x));
 #endif
 }
 
@@ -1011,7 +1026,7 @@ using Quantized_t = std::uint32_t;
       return static_cast<std::size_t>(idx);
    return 32;
 #else
-   return static_cast<std::size_t>(__builtin_ctzl(x));
+   return static_cast<std::size_t>(__builtin_ctz(x));
 #endif
 }
 
@@ -1042,14 +1057,15 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
    for (std::size_t i = 0; i < count; ++i) {
       const T elem = src[i];
 
-      nOutOfRange += !(min <= elem && elem <= max);
+      bool outOfRange = !(min <= elem && elem <= max);
+      nOutOfRange += outOfRange;
 
       const double e = 0.5 + (elem - min) * scale;
       Quantized_t q = static_cast<Quantized_t>(e);
       ByteSwapIfNecessary(q);
 
       // double-check we actually used at most `nQuantBits`
-      assert(LeadingZeroes(q) >= unusedBits);
+      assert(outOfRange || LeadingZeroes(q) >= unusedBits);
 
       // we want to leave zeroes in the LSB, not the MSB, because we'll then drop the LSB
       // when bit packing.
@@ -1514,9 +1530,9 @@ public:
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
 
-   bool IsMappable() const { return kIsMappable; }
-   void Pack(void *, const void *, std::size_t) const {}
-   void Unpack(void *, const void *, std::size_t) const {}
+   bool IsMappable() const final { return kIsMappable; }
+   void Pack(void *, const void *, std::size_t) const final {}
+   void Unpack(void *, const void *, std::size_t) const final {}
 
    RIdentifier GetIdentifier() const final
    {

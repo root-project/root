@@ -77,7 +77,6 @@ integration package TFoam included in the analysis package ROOT.
 
 REGISTER_METHOD(PDEFoam)
 
-ClassImp(TMVA::MethodPDEFoam);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// init PDEFoam objects

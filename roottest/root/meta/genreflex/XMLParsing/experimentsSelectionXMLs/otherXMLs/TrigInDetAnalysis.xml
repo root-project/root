@@ -1,0 +1,10 @@
+<lcgdict>
+	<class name="Track"/>
+	<class name="TrackChain"/>
+	<class name="TrackEvent"/>
+	<class name="TrackVertex"/>
+	<class name="TrackRoi"/>
+	<class name="RoiDescriptor"/>
+	<class name="std::vector<TrackVertex>"/>
+	<class name="std::vector<TrackChain>"/>
+</lcgdict>

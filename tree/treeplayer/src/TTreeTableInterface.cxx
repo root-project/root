@@ -16,7 +16,6 @@
 #include "TSelectorDraw.h"
 #include "TTreeFormulaManager.h"
 
-ClassImp(TTreeTableInterface);
 
 /** \class TTreeTableInterface
 

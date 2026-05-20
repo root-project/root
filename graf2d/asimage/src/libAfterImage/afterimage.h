@@ -150,20 +150,6 @@
  * AUTHOR
  * Sasha Vasko <sasha at aftercode dot net>
  *********/
-/****h* libAfterImage/Examples
- * EXAMPLE
- * ASView  - image loading from the file and displaying in window.
- * ASScale - image loading from file and scaling to arbitrary size.
- * ASTile  - image loading from file, tiling and tinting to arbitrary
- *           size and color.
- * ASMerge - imgae loading and merging with another image.
- * ASGrad  - mutlipoint gradient drawing.
- * ASFlip  - image loading from file and rotation.
- * ASText  - trexturized semitransparent antialised text drawing.
- *
- * SEE ALSO
- * API Reference
- ******/
 /****h* libAfterImage/API Reference
  * CHILDREN
  * Headers :

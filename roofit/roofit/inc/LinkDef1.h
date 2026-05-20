@@ -2,7 +2,7 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
-#pragma link C++ class Roo2DKeysPdf+ ;
+#pragma link C++ class Roo2DKeysPdf + ;
 #pragma link C++ class RooArgusBG+ ;
 #pragma link C++ class RooBCPEffDecay+ ;
 #pragma link C++ class RooBCPGenDecay+ ;
@@ -22,7 +22,9 @@
 #pragma link C++ class RooExponential+ ;
 #pragma link C++ class RooLegacyExpPoly+ ;
 #pragma link C++ class RooPowerSum+ ;
+#pragma link C++ class RooGaussExpTails+ ;
 #pragma link C++ class RooGaussian+ ;
+#pragma link C++ class RooStudentT+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;
 #pragma link C++ class RooGaussModel+ ;
@@ -54,9 +56,11 @@
 #pragma link C++ class RooMomentMorphFunc + ;
 #pragma link C++ class RooMomentMorphFuncND + ;
 #pragma link C++ class RooMomentMorphFuncND::Grid2 + ;
+#pragma link C++ class RooFit::Detail::RooMomentMorphFraction + ;
 #pragma link C++ class RooSpline+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
+
 /* #pragma link C++ class std::vector< TVector2 >; */
 /* #pragma link C++ class std::vector< TVector2 >::iterator ; */
 /* #pragma link C++ class RooPolyMorph2D+ ; */
@@ -74,6 +78,8 @@
                 _nonInterfering.back().emplace_back(arg->GetName()); \
              }                                                       \
           } }";
+#pragma link C++ class RooONNXFunc- ;
+
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;

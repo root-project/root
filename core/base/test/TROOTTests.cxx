@@ -2,8 +2,10 @@
 
 #include "TROOT.h"
 
-#include <string>
+#include <filesystem>
 #include <sstream>
+#include <string>
+#include <thread>
 
 TEST(TROOT, Version)
 {
@@ -21,4 +23,71 @@ TEST(TROOT, Version)
       EXPECT_EQ(refLength[tokCounter++], buf.size());
    }
    EXPECT_EQ(3, tokCounter);
+}
+
+// TROOT::GetSharedLibDir() is fundamental to resolve all the directories
+// relevant for ROOT, because it can be inferred without environment variables
+// like ROOTSYS by locating libCore, which is loaded by definition when using
+// ROOT. Therefore, GetSharedLibDir() serves as an anchor to resolve all other
+// directories, using the correct relative paths for either the build or
+// install tree. Given this fundamental role, we need to test that it works.
+TEST(TROOT, GetSharedLibDir)
+{
+   namespace fs = std::filesystem;
+
+   // Use std::filesystem for automatic path normalization.
+   fs::path libDir = gROOT->GetSharedLibDir().Data();
+   fs::path libDirRef = EXPECTED_SHARED_LIBRARY_DIR;
+
+   EXPECT_EQ(libDir, libDirRef);
+}
+
+TEST(TROOT, GetIncludeDir)
+{
+   namespace fs = std::filesystem;
+
+   fs::path includeDir = gROOT->GetIncludeDir().Data();
+   fs::path includeDirRef = EXPECTED_INCLUDE_DIR;
+
+   EXPECT_EQ(includeDir, includeDirRef);
+}
+
+TEST(TROOT, AutoRegistrationTLS)
+{
+   using namespace ROOT::Experimental;
+   using namespace std::chrono_literals;
+
+   const auto initialState = ObjectAutoRegistrationEnabled();
+   auto enabler = [&]() {
+      const auto innerState = ObjectAutoRegistrationEnabled();
+      EXPECT_EQ(innerState, initialState);
+      EnableObjectAutoRegistration();
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), true);
+      std::this_thread::sleep_for(10ms);
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), true);
+   };
+   auto disabler = [&]() {
+      const auto innerState = ObjectAutoRegistrationEnabled();
+      EXPECT_EQ(innerState, initialState);
+      DisableObjectAutoRegistration();
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), false);
+      std::this_thread::sleep_for(10ms);
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), false);
+   };
+
+   std::thread t1{enabler};
+   std::thread t2{disabler};
+
+   DisableObjectAutoRegistration();
+   EXPECT_EQ(ObjectAutoRegistrationEnabled(), false);
+
+   std::thread t3{enabler};
+   std::thread t4{disabler};
+
+   EnableObjectAutoRegistration();
+   EXPECT_EQ(ObjectAutoRegistrationEnabled(), true);
+
+   for (auto thread : {&t1, &t2, &t3, &t4}) {
+      thread->join();
+   }
 }

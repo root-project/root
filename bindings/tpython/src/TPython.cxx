@@ -9,6 +9,8 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
+#include <Python.h>
+
 // Bindings
 // CPyCppyy.h must be go first, since it includes Python.h, which must be
 // included before any standard header
@@ -94,28 +96,9 @@
 /// of `void*` to an CPPInstance and vice versa.
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
 namespace {
-
-class CachedPyString {
-
-public:
-   CachedPyString(const char *name) : fObj{PyUnicode_FromString(name)} {}
-
-   CachedPyString(CachedPyString const &) = delete;
-   CachedPyString(CachedPyString &&) = delete;
-   CachedPyString &operator=(CachedPyString const &) = delete;
-   CachedPyString &operator=(CachedPyString &&) = delete;
-
-   ~CachedPyString() { Py_DecRef(fObj); }
-
-   PyObject *obj() { return fObj; }
-
-private:
-   PyObject *fObj = nullptr;
-};
 
 PyThreadState *mainThreadState;
 
@@ -129,6 +112,14 @@ public:
    ~PyGILRAII() { PyGILState_Release(m_GILState); }
 };
 
+struct PyObjDeleter {
+    void operator()(PyObject* obj) const {
+        Py_DecRef(obj);
+    }
+};
+
+using PyObjectRef = std::unique_ptr<PyObject, PyObjDeleter>;
+
 } // namespace
 
 //- static public members ----------------------------------------------------
@@ -140,62 +131,13 @@ Bool_t TPython::Initialize()
    static std::mutex initMutex;
    const std::lock_guard<std::mutex> lock(initMutex);
 
-   static Bool_t isInitialized = kFALSE;
+   static Bool_t isInitialized = false;
    if (isInitialized)
-      return kTRUE;
+      return true;
 
    if (!Py_IsInitialized()) {
-// this happens if Cling comes in first
-#if PY_VERSION_HEX < 0x03020000
-      PyEval_InitThreads();
-#endif
-
-// set the command line arguments on python's sys.argv
-#if PY_VERSION_HEX < 0x03000000
-      char *argv[] = {const_cast<char *>("root")};
-#else
-      wchar_t *argv[] = {const_cast<wchar_t *>(L"root")};
-#endif
-      int argc = sizeof(argv) / sizeof(argv[0]);
-#if PY_VERSION_HEX < 0x030b0000
-      Py_Initialize();
-#else
-      PyStatus status;
-      PyConfig config;
-
-      PyConfig_InitPythonConfig(&config);
-
-      status = PyConfig_SetArgv(&config, argc, argv);
-      if (PyStatus_Exception(status)) {
-         PyConfig_Clear(&config);
-         std::cerr << "Error when setting command line arguments." << std::endl;
-         return kFALSE;
-      }
-
-      status = Py_InitializeFromConfig(&config);
-      if (PyStatus_Exception(status)) {
-         PyConfig_Clear(&config);
-         std::cerr << "Error when initializing Python." << std::endl;
-         return kFALSE;
-      }
-      PyConfig_Clear(&config);
-#endif
-#if PY_VERSION_HEX >= 0x03020000
-#if PY_VERSION_HEX < 0x03090000
-      PyEval_InitThreads();
-#endif
-#endif
-
-      // try again to see if the interpreter is initialized
-      if (!Py_IsInitialized()) {
-         // give up ...
-         std::cerr << "Error: python has not been intialized; returning." << std::endl;
-         return kFALSE;
-      }
-
-#if PY_VERSION_HEX < 0x030b0000
-      PySys_SetArgv(argc, argv);
-#endif
+      // Trigger the Python initialization indirectly via CPyCppyy
+      CPyCppyy::Scope_Check(nullptr);
 
       mainThreadState = PyEval_SaveThread();
    }
@@ -205,29 +147,48 @@ Bool_t TPython::Initialize()
       PyGILRAII gilRaii;
 
       // force loading of the ROOT module
-      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
-      if (ret != 0) {
-         std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
-         return kFALSE;
+      PyObject* rootModule = PyImport_ImportModule("ROOT");
+      if (!rootModule) {
+         PyErr_Print();
+         return false;
       }
+
+      // to trigger the lazy initialization of the C++ runtime
+      PyObject* interpreterAttr = PyObject_GetAttrString(rootModule, "gInterpreter");
+      if (!interpreterAttr) {
+         PyErr_Print();
+         Py_DecRef(rootModule);
+         return false;
+      }
+
+      Py_DecRef(interpreterAttr);
 
       if (!gMainDict) {
 
          // retrieve the main dictionary
-         gMainDict = PyModule_GetDict(PyImport_AddModule(const_cast<char *>("__main__")));
+         gMainDict = PyModule_GetDict(PyImport_AddModule("__main__"));
          // The gMainDict is borrowed, i.e. we are not calling Py_IncRef(gMainDict).
          // Like this, we avoid unexpectedly affecting how long __main__ is kept
          // alive. The gMainDict is only used in Exec(), ExecScript(), and Eval(),
          // which should not be called after __main__ is garbage collected anyway.
       }
+
+      // Inject ROOT into __main__
+      if (PyDict_SetItemString(gMainDict, "ROOT", rootModule) != 0) {
+         PyErr_Print();
+         Py_DecRef(rootModule);
+         return false;
+      }
+
+      Py_DecRef(rootModule);
    }
 
    // python side class construction, managed by ROOT
    gROOT->AddClassGenerator(new TPyClassGenerator);
 
    // declare success ...
-   isInitialized = kTRUE;
-   return kTRUE;
+   isInitialized = true;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,28 +208,30 @@ Bool_t TPython::Import(const char *mod_name)
    }
 
    // force creation of the module as a namespace
-   TClass::GetClass(mod_name, kTRUE);
+   TClass::GetClass(mod_name, true);
 
-   PyObject *modNameObj = PyUnicode_FromString(mod_name);
-   PyObject *mod = PyImport_GetModule(modNameObj);
-   PyObject *dct = PyModule_GetDict(mod);
+   PyObjectRef modNameObj{PyUnicode_FromString(mod_name)};
+   PyObjectRef mod{PyImport_GetModule(modNameObj.get())};
+   PyObject *dct = PyModule_GetDict(mod.get());
 
-   CachedPyString basesStr{"__bases__"};
-   CachedPyString cppNameStr{"__cpp_name__"};
-   CachedPyString nameStr{"__name__"};
+   PyObjectRef basesStr{PyUnicode_FromString("__bases__")};
+   PyObjectRef cppNameStr{PyUnicode_FromString("__cpp_name__")};
+   PyObjectRef nameStr{PyUnicode_FromString("__name__")};
 
    // create Cling classes for all new python classes
-   PyObject *values = PyDict_Values(dct);
-   for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
-      PyObject *value = PyList_GET_ITEM(values, i);
-      Py_IncRef(value);
+   PyObjectRef values{PyDict_Values(dct)};
+   for (int i = 0; i < PyList_Size(values.get()); ++i) {
+      PyObjectRef value{PyList_GetItem(values.get(), i)};
+      Py_IncRef(value.get());
 
       // collect classes
-      if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
+      if (PyType_Check(value.get()) || PyObject_HasAttr(value.get(), basesStr.get())) {
          // get full class name (including module)
-         PyObject *pyClName = PyObject_GetAttr(value, cppNameStr.obj());
+         PyObjectRef pyClName{PyObject_GetAttr(value.get(), cppNameStr.get())};
          if (!pyClName) {
-            pyClName = PyObject_GetAttr(value, nameStr.obj());
+            if (PyErr_Occurred())
+                PyErr_Clear();
+            pyClName = PyObjectRef{PyObject_GetAttr(value.get(), nameStr.get())};
          }
 
          if (PyErr_Occurred())
@@ -277,24 +240,14 @@ Bool_t TPython::Import(const char *mod_name)
          // build full, qualified name
          std::string fullname = mod_name;
          fullname += ".";
-         fullname += PyUnicode_AsUTF8(pyClName);
+         fullname += PyUnicode_AsUTF8AndSize(pyClName.get(), nullptr);
 
          // force class creation (this will eventually call TPyClassGenerator)
-         TClass::GetClass(fullname.c_str(), kTRUE);
-
-         Py_DecRef(pyClName);
+         TClass::GetClass(fullname.c_str(), true);
       }
-
-      Py_DecRef(value);
    }
 
-   Py_DecRef(values);
-   Py_DecRef(mod);
-   Py_DecRef(modNameObj);
-
-   if (PyErr_Occurred())
-      return kFALSE;
-   return kTRUE;
+   return !PyErr_Occurred();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,64 +264,66 @@ void TPython::LoadMacro(const char *name)
    PyGILRAII gilRaii;
 
    // obtain a reference to look for new classes later
-   PyObject *old = PyDict_Values(gMainDict);
+   PyObjectRef old{PyDict_Values(gMainDict)};
 
-// actual execution
-#if PY_VERSION_HEX < 0x03000000
-   Exec((std::string("execfile(\"") + name + "\")").c_str());
-#else
-   Exec((std::string("__pyroot_f = open(\"") + name +
+   // escape characters in the file name that would otherwise terminate or
+   // alter the Python string literal we put the file name into below
+   std::string escapedName;
+   escapedName.reserve(std::char_traits<char>::length(name));
+   for (const char *p = name; *p; ++p) {
+      switch (*p) {
+      case '\\': escapedName += "\\\\"; break;
+      case '"':  escapedName += "\\\""; break;
+      case '\n': escapedName += "\\n";  break;
+      case '\r': escapedName += "\\r";  break;
+      default:   escapedName += *p;     break;
+      }
+   }
+
+   // actual execution
+   Exec((std::string("__pyroot_f = open(\"") + escapedName +
          "\"); "
          "exec(__pyroot_f.read()); "
          "__pyroot_f.close(); del __pyroot_f")
            .c_str());
-#endif
 
    // obtain new __main__ contents
-   PyObject *current = PyDict_Values(gMainDict);
+   PyObjectRef current{PyDict_Values(gMainDict)};
 
-   CachedPyString basesStr{"__bases__"};
-   CachedPyString moduleStr{"__module__"};
-   CachedPyString nameStr{"__name__"};
+   PyObjectRef basesStr{PyUnicode_FromString("__bases__")};
+   PyObjectRef moduleStr{PyUnicode_FromString("__module__")};
+   PyObjectRef nameStr{PyUnicode_FromString("__name__")};
 
    // create Cling classes for all new python classes
-   for (int i = 0; i < PyList_GET_SIZE(current); ++i) {
-      PyObject *value = PyList_GET_ITEM(current, i);
-      Py_IncRef(value);
+   for (int i = 0; i < PyList_Size(current.get()); ++i) {
+      PyObjectRef value{PyList_GetItem(current.get(), i)};
+      Py_IncRef(value.get());
 
-      if (!PySequence_Contains(old, value)) {
+      if (!PySequence_Contains(old.get(), value.get())) {
          // collect classes
-         if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
+         if (PyType_Check(value.get()) || PyObject_HasAttr(value.get(), basesStr.get())) {
             // get full class name (including module)
-            PyObject *pyModName = PyObject_GetAttr(value, moduleStr.obj());
-            PyObject *pyClName = PyObject_GetAttr(value, nameStr.obj());
+            PyObjectRef pyModName{PyObject_GetAttr(value.get(), moduleStr.get())};
+            PyObjectRef pyClName{PyObject_GetAttr(value.get(), nameStr.get())};
 
             if (PyErr_Occurred())
                PyErr_Clear();
 
             // need to check for both exact and derived (differences exist between older and newer
             // versions of python ... bug?)
-            if ((pyModName && pyClName) && ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
-                                            (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
+            if ((pyModName && pyClName) && ((PyUnicode_CheckExact(pyModName.get()) && PyUnicode_CheckExact(pyClName.get())) ||
+                                            (PyUnicode_Check(pyModName.get()) && PyUnicode_Check(pyClName.get())))) {
                // build full, qualified name
-               std::string fullname = PyUnicode_AsUTF8(pyModName);
+               std::string fullname = PyUnicode_AsUTF8AndSize(pyModName.get(), nullptr);
                fullname += '.';
-               fullname += PyUnicode_AsUTF8(pyClName);
+               fullname += PyUnicode_AsUTF8AndSize(pyClName.get(), nullptr);
 
                // force class creation (this will eventually call TPyClassGenerator)
-               TClass::GetClass(fullname.c_str(), kTRUE);
+               TClass::GetClass(fullname.c_str(), true);
             }
-
-            Py_DecRef(pyClName);
-            Py_DecRef(pyModName);
          }
       }
-
-      Py_DecRef(value);
    }
-
-   Py_DecRef(current);
-   Py_DecRef(old);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,7 +381,7 @@ Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resul
 {
    // setup
    if (!Initialize())
-      return kFALSE;
+      return false;
 
    PyGILRAII gilRaii;
 
@@ -440,17 +395,7 @@ Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resul
    }
 
    // execute the command
-   PyObject *pyObjectResult =
-      PyRun_String(const_cast<char *>(command.str().c_str()), Py_file_input, gMainDict, gMainDict);
-
-   // test for error
-   if (pyObjectResult) {
-      Py_DecRef(pyObjectResult);
-      return kTRUE;
-   }
-
-   PyErr_Print();
-   return kFALSE;
+   return CPyCppyy::Exec(command.str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -460,24 +405,23 @@ Bool_t TPython::Bind(TObject *object, const char *label)
 {
    // check given address and setup
    if (!(object && Initialize()))
-      return kFALSE;
+      return false;
 
    PyGILRAII gilRaii;
 
    // bind object in the main namespace
    TClass *klass = object->IsA();
    if (klass != 0) {
-      PyObject *bound = CPyCppyy::Instance_FromVoidPtr((void *)object, klass->GetName());
+      PyObjectRef bound{CPyCppyy::Instance_FromVoidPtr((void *)object, klass->GetName())};
 
       if (bound) {
-         Bool_t bOk = PyDict_SetItemString(gMainDict, const_cast<char *>(label), bound) == 0;
-         Py_DecRef(bound);
+         Bool_t bOk = PyDict_SetItemString(gMainDict, label, bound.get()) == 0;
 
          return bOk;
       }
    }
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -494,7 +438,7 @@ void TPython::Prompt()
    PyGILRAII gilRaii;
 
    // enter i/o interactive mode
-   PyRun_InteractiveLoop(stdin, const_cast<char *>("\0"));
+   CPyCppyy::Prompt();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -505,7 +449,7 @@ Bool_t TPython::CPPInstance_Check(PyObject *pyobject)
 {
    // setup
    if (!Initialize())
-      return kFALSE;
+      return false;
 
    PyGILRAII gilRaii;
 
@@ -520,7 +464,7 @@ Bool_t TPython::CPPInstance_CheckExact(PyObject *pyobject)
 {
    // setup
    if (!Initialize())
-      return kFALSE;
+      return false;
 
    PyGILRAII gilRaii;
 
@@ -536,7 +480,7 @@ Bool_t TPython::CPPOverload_Check(PyObject *pyobject)
 {
    // setup
    if (!Initialize())
-      return kFALSE;
+      return false;
 
    PyGILRAII gilRaii;
 
@@ -551,7 +495,7 @@ Bool_t TPython::CPPOverload_CheckExact(PyObject *pyobject)
 {
    // setup
    if (!Initialize())
-      return kFALSE;
+      return false;
 
    PyGILRAII gilRaii;
 
@@ -566,7 +510,7 @@ void *TPython::CPPInstance_AsVoidPtr(PyObject *pyobject)
 {
    // setup
    if (!Initialize())
-      return 0;
+      return nullptr;
 
    PyGILRAII gilRaii;
 
@@ -581,7 +525,7 @@ PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bo
 {
    // setup
    if (!Initialize())
-      return 0;
+      return nullptr;
 
    PyGILRAII gilRaii;
 

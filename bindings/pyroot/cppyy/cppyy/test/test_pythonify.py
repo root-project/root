@@ -1,12 +1,9 @@
-import py
-from pytest import raises, skip
-from .support import setup_make, pylong, ispypy
+import pytest, os
+from pytest import mark, raises, skip
+from support import setup_make, pylong, ispypy
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("example01Dict"))
 
-def setup_module(mod):
-    setup_make("example01")
+test_dct = "example01_cxx"
 
 
 class TestPYTHONIFY:
@@ -200,6 +197,7 @@ class TestPYTHONIFY:
         assert cppyy.gbl.ns_example01.globalAddOneToInt(4) == 5
         assert cppyy.gbl.ns_example01.globalAddOneToInt(4) == 5
 
+    @mark.skip(reason="Garbage collection tests are fragile")
     def test09_memory(self):
         """Test proper C++ destruction by the garbage collector"""
 
@@ -590,3 +588,7 @@ class TestPYTHONIFY_UI:
         assert proxy.__get__(proxy, None) == 3
 
         cppyy.gbl.ns_example01.gMyGlobalInt = oldval
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

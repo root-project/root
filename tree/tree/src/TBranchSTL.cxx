@@ -20,7 +20,6 @@ sets and multisets) while storing them in split mode.
 
 #include "TError.h"
 
-ClassImp(TBranchSTL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

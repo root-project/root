@@ -52,7 +52,6 @@
 #include <limits>
 
 
-ClassImp(TMVA::OptimizeConfigParameters);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor which sets either "Classification or Regression"

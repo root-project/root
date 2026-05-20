@@ -45,7 +45,6 @@ TImageDump can be used in any mode (batch, interactive) as follows
 #include "TObjArray.h"
 
 
-ClassImp(TImageDump);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -891,6 +890,14 @@ void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
    fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL. Same as Text.
+///
+
+void TImageDump::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+{
+   Text(x, y, chars);
+}
 
 ////////////////////////// CellArray code ////////////////////////////////////
 static UInt_t *gCellArrayColors = nullptr;

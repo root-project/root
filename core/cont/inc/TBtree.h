@@ -78,11 +78,17 @@ public:
    TIterator  *MakeIterator(Bool_t dir = kIterForward) const override;
 
    void        Add(TObject *obj) override;
+   void        Add(TObject *obj, Option_t *) override { Add(obj); };
    void        AddFirst(TObject *obj) override { Add(obj); }
+   void        AddFirst(TObject *obj, Option_t *) override { Add(obj); }
    void        AddLast(TObject *obj) override { Add(obj); }
+   void        AddLast(TObject *obj, Option_t *) override { Add(obj); }
    void        AddAt(TObject *obj, Int_t) override { Add(obj); }
+   void        AddAt(TObject *obj, Int_t, Option_t *) override { Add(obj); }
    void        AddAfter(const TObject *, TObject *obj) override { Add(obj); }
+   void        AddAfter(const TObject *, TObject *obj, Option_t *) override { Add(obj); }
    void        AddBefore(const TObject *, TObject *obj) override { Add(obj); }
+   void        AddBefore(const TObject *, TObject *obj, Option_t *) override { Add(obj); }
    TObject    *Remove(TObject *obj) override;
 
    TObject    *At(Int_t idx) const override;
@@ -163,7 +169,7 @@ friend class  TBtInnerNode;
 private:
    Int_t      fNofKeysInTree;   // number of keys in TBtree
    TObject   *fKey;             // key
-   TBtNode   *fTree;            //! sub-tree
+   TBtNode   *fTree;            ///<! sub-tree
 
 public:
    TBtItem();

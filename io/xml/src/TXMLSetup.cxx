@@ -40,7 +40,6 @@
 #include <iostream>
 #include <cstdlib>
 
-ClassImp(TXMLSetup);
 
 namespace xmlio {
 
@@ -292,6 +291,6 @@ Int_t TXMLSetup::AtoI(const char *sbuf, Int_t def, const char *errinfo)
    if (sbuf)
       return atoi(sbuf);
    if (errinfo)
-      std::cerr << "<Error in TXMLSetup::AtoI>" << errinfo << " not valid integer: sbuf <NULL>" << std::endl;
+      std::cerr << "<Error in TXMLSetup::AtoI>" << errinfo << " not valid integer: sbuf <nullptr>" << std::endl;
    return def;
 }

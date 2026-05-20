@@ -33,7 +33,8 @@ ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t CastValuePtr(void *v
 } // anonymous namespace
 
 ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
-   ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames)
+   ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames,
+   ROOT::NTupleSize_t entryOffset)
    : fJoinFieldNames(joinFieldNames)
 {
    static const std::unordered_set<std::string> allowedTypes = {"std::int8_t",   "std::int16_t", "std::int32_t",
@@ -82,7 +83,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
          castJoinValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
       }
 
-      fMapping[RCombinedJoinFieldValue(castJoinValues)].push_back(i);
+      fMapping[RCombinedJoinFieldValue(castJoinValues)].push_back(i + entryOffset);
    }
 }
 
@@ -116,64 +117,25 @@ ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::st
 
 ROOT::Experimental::Internal::RNTupleJoinTable &
 ROOT::Experimental::Internal::RNTupleJoinTable::Add(ROOT::Internal::RPageSource &pageSource,
-                                                    PartitionKey_t partitionKey)
+                                                    PartitionKey_t partitionKey, ROOT::NTupleSize_t entryOffset)
 {
-   auto joinMapping = std::unique_ptr<REntryMapping>(new REntryMapping(pageSource, fJoinFieldNames));
+   auto joinMapping = std::unique_ptr<REntryMapping>(new REntryMapping(pageSource, fJoinFieldNames, entryOffset));
    fPartitions[partitionKey].emplace_back(std::move(joinMapping));
 
    return *this;
 }
 
-std::vector<ROOT::NTupleSize_t>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs,
-                                                                PartitionKey_t partitionKey) const
+ROOT::NTupleSize_t
+ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<void *> &valuePtrs) const
 {
-   auto partition = fPartitions.find(partitionKey);
-   if (partition == fPartitions.end())
-      return {};
-
-   std::vector<ROOT::NTupleSize_t> entryIdxs{};
-
-   for (const auto &joinMapping : partition->second) {
-      auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
-      if (entriesForMapping)
-         entryIdxs.insert(entryIdxs.end(), entriesForMapping->begin(), entriesForMapping->end());
-   }
-
-   return entryIdxs;
-}
-
-std::unordered_map<ROOT::Experimental::Internal::RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetPartitionedEntryIndexes(
-   const std::vector<void *> &valuePtrs, const std::vector<PartitionKey_t> &partitionKeys) const
-{
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>> entryIdxs{};
-
-   for (const auto &partitionKey : partitionKeys) {
-      auto entriesForPartition = GetEntryIndexes(valuePtrs, partitionKey);
-      if (!entriesForPartition.empty()) {
-         entryIdxs[partitionKey].insert(entryIdxs[partitionKey].end(), entriesForPartition.begin(),
-                                        entriesForPartition.end());
-      }
-   }
-
-   return entryIdxs;
-}
-
-std::unordered_map<ROOT::Experimental::Internal::RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs) const
-{
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>> entryIdxs{};
-
    for (const auto &partition : fPartitions) {
       for (const auto &joinMapping : partition.second) {
          auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
          if (entriesForMapping) {
-            entryIdxs[partition.first].insert(entryIdxs[partition.first].end(), entriesForMapping->begin(),
-                                              entriesForMapping->end());
+            return (*entriesForMapping)[0];
          }
       }
    }
 
-   return entryIdxs;
+   return kInvalidNTupleIndex;
 }

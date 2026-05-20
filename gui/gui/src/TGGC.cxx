@@ -30,7 +30,6 @@ TGGCPool provides a pool of graphics contexts.
 #include <cstring>
 
 
-ClassImp(TGGC);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a graphics context (only called via TGGCPool::GetGC()).
@@ -45,13 +44,12 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
          if (values->fDashLen > (Int_t)sizeof(fValues.fDashes))
             Warning("TGGC", "dash list can have only up to %ld elements",
                     (Long_t)sizeof(fValues.fDashes));
-         fValues.fDashLen = TMath::Min(values->fDashLen, (Int_t)sizeof(fValues.fDashes));
+         fValues.fDashLen = std::min(values->fDashLen, (Int_t)sizeof(fValues.fDashes));
          gVirtualX->SetDashes(fContext, fValues.fDashOffset, fValues.fDashes,
                               fValues.fDashLen);
       }
    } else {
       fValues = {};
-      fContext = 0;
    }
    SetRefCount(1);
 }
@@ -62,20 +60,14 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
 TGGC::TGGC(GCValues_t *values)
 {
    fContext = 0;
+   SetRefCount(1);
    // case of default ctor at program startup before gClient exists
-   if (!values) {
+   if (!values)
       fValues = {};
-      fContext = 0;
-      SetRefCount(1);
-      return;
-   }
-
-   if (gClient)
+   else if (gClient)
       gClient->GetGC(values, kTRUE);
-   else {
-      fContext = 0;
+   else
       Error("TGGC", "TGClient not yet initialized, should never happen");
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +211,7 @@ void TGGC::UpdateValues(GCValues_t *values)
             if (values->fDashLen > (Int_t)sizeof(fValues.fDashes))
                Warning("UpdateValues", "dash list can have only up to %ld elements",
                        (Long_t)sizeof(fValues.fDashes));
-            fValues.fDashLen = TMath::Min(values->fDashLen, (Int_t)sizeof(fValues.fDashes));
+            fValues.fDashLen = std::min(values->fDashLen, (Int_t)sizeof(fValues.fDashes));
             memcpy(fValues.fDashes, values->fDashes, fValues.fDashLen);
             break;
          case kGCArcMode:
@@ -491,7 +483,7 @@ void TGGC::SetDashList(const char v[], Int_t len)
    if (len > (Int_t)sizeof(values.fDashes))
       Warning("SetDashList", "dash list can have only up to %ld elements",
               (Long_t)sizeof(values.fDashes));
-   values.fDashLen = TMath::Min(len, (Int_t)sizeof(values.fDashes));
+   values.fDashLen = std::min(len, (Int_t)sizeof(values.fDashes));
    memcpy(values.fDashes, v, values.fDashLen);
    values.fMask    = kGCDashList;
    SetAttributes(&values);
@@ -846,7 +838,7 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
                Warning("SavePrimitive", "dash list can have only up to %ld elements",
                        (Long_t)sizeof(GetDashes()));
             out << "   " << valname << ".fDashLen = "
-                << TMath::Min(GetDashLen(),(Int_t)sizeof(GetDashes())) << ";\n";
+                << std::min(GetDashLen(),(Int_t)sizeof(GetDashes())) << ";\n";
             out << "   memcpy(GetDashes()," << valname << ".fDashes,"
                                             << valname << ".fDashLen);\n";
             break;
@@ -868,7 +860,6 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-ClassImp(TGGCPool);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create graphics context pool.

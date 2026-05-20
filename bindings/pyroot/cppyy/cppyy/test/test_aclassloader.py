@@ -1,12 +1,8 @@
-import py
-from pytest import raises
-from .support import setup_make
+import pytest, os
+from pytest import raises, mark
+from support import setup_make, IS_WINDOWS
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("example01Dict"))
-
-def setup_module(mod):
-    setup_make("example01")
+test_dct = "libexample_cxx"
 
 
 class TestACLASSLOADER:
@@ -14,6 +10,7 @@ class TestACLASSLOADER:
     def setup_class(cls):
         import cppyy
 
+    @mark.xfail(strict=True, condition=not IS_WINDOWS, reason="rootmap files are a legacy feature")
     def test01_class_autoloading(self):
         """Test whether a class can be found through .rootmap."""
         import cppyy
@@ -22,3 +19,7 @@ class TestACLASSLOADER:
         cl2 = cppyy.gbl.example01
         assert cl2
         assert example01_class is cl2
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

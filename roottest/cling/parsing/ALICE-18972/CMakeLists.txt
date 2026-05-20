@@ -1,0 +1,7 @@
+if(geom)
+  ROOTTEST_GENERATE_REFLEX_DICTIONARY(ALICE_18972 mylib.h SELECTION mylib_sel.xml)
+
+  ROOTTEST_ADD_TEST(ALICE_18972
+                    MACRO run_ALICE_18972.C
+                    DEPENDS ${GENERATE_REFLEX_TEST})
+endif()

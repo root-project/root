@@ -463,23 +463,22 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       m.AddLine("model.add(Dense(256, activation = 'relu')) ");
       m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
       m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
-      m.AddLine("model.save('model_cnn.h5')");
+      m.AddLine("model.save('model_cnn.keras')");
       m.AddLine("model.summary()");
 
       m.SaveSource("make_cnn_model.py");
       // execute
       gSystem->Exec(python_exe + " make_cnn_model.py");
 
-      if (gSystem->AccessPathName("model_cnn.h5")) {
+      if (gSystem->AccessPathName("model_cnn.keras")) {
          Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
       } else {
          // book PyKeras method only if Keras model could be created
          Info("TMVA_CNN_Classification", "Booking tf.Keras CNN model");
          factory.BookMethod(
             &loader, TMVA::Types::kPyKeras, "PyKeras",
-            "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:tf.keras:"
-            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=10:BatchSize=100:"
-            "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
+            "H:!V:VarTransform=None:FilenameModel=model_cnn.keras:tf.keras:"
+            "FilenameTrainedModel=trained_model_cnn.keras:NumEpochs=10:BatchSize=100:");
       }
    }
 

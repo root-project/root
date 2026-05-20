@@ -25,7 +25,6 @@ A TLeaf for a variable length string.
 #include <string>
 #include <iostream>
 
-ClassImp(TLeafC);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafC.

@@ -1,0 +1,6 @@
+[ fakelib.so ]
+# list the same class twice in 2 distinct libraries to trigger a warning during TCling()
+class MyFakeClass
+
+[ anotherfakelib.so ]
+class MyFakeClass

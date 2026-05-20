@@ -47,18 +47,17 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst);
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys);
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
 
 template<typename T>
-void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys);
+void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys);
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
 
 
 }
 
-ClassImp(TPadPainter);
 
 /** \class TPadPainter
 \ingroup gpad
@@ -71,6 +70,8 @@ Implement TVirtualPadPainter which abstracts painting operations.
 
 TPadPainter::TPadPainter()
 {
+   fDoubleBuffer = 1;
+   fWinContext = (WinContext_t) 0;
 }
 
 /*
@@ -86,156 +87,10 @@ gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
 ////////////////////////////////////////////////////////////////////////////////
 /// Delegate to gVirtualX.
 
-Color_t TPadPainter::GetLineColor() const
-{
-   return gVirtualX->GetLineColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Style_t TPadPainter::GetLineStyle() const
-{
-   return gVirtualX->GetLineStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Width_t TPadPainter::GetLineWidth() const
-{
-   return gVirtualX->GetLineWidth();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetLineColor(Color_t lcolor)
-{
-   gVirtualX->SetLineColor(lcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetLineStyle(Style_t lstyle)
-{
-   gVirtualX->SetLineStyle(lstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetLineWidth(Width_t lwidth)
-{
-   gVirtualX->SetLineWidth(lwidth);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Color_t TPadPainter::GetFillColor() const
-{
-   return gVirtualX->GetFillColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Style_t TPadPainter::GetFillStyle() const
-{
-   return gVirtualX->GetFillStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Bool_t TPadPainter::IsTransparent() const
-{
-   //IsTransparent is implemented as inline function in TAttFill.
-   return gVirtualX->IsTransparent();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetFillColor(Color_t fcolor)
-{
-   gVirtualX->SetFillColor(fcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetFillStyle(Style_t fstyle)
-{
-   gVirtualX->SetFillStyle(fstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
 void TPadPainter::SetOpacity(Int_t percent)
 {
-   gVirtualX->SetOpacity(percent);
+   gVirtualX->SetOpacityW(fWinContext, percent);
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Short_t TPadPainter::GetTextAlign() const
-{
-   return gVirtualX->GetTextAlign();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Float_t TPadPainter::GetTextAngle() const
-{
-   return gVirtualX->GetTextAngle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Color_t TPadPainter::GetTextColor() const
-{
-   return gVirtualX->GetTextColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Font_t TPadPainter::GetTextFont() const
-{
-   return gVirtualX->GetTextFont();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Float_t TPadPainter::GetTextSize() const
-{
-   return gVirtualX->GetTextSize();
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delegate to gVirtualX.
@@ -245,61 +100,6 @@ Float_t TPadPainter::GetTextMagnitude() const
    return gVirtualX->GetTextMagnitude();
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextAlign(Short_t align)
-{
-   gVirtualX->SetTextAlign(align);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextAngle(Float_t tangle)
-{
-   gVirtualX->SetTextAngle(tangle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextColor(Color_t tcolor)
-{
-   gVirtualX->SetTextColor(tcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextFont(Font_t tfont)
-{
-   gVirtualX->SetTextFont(tfont);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextSize(Float_t tsize)
-{
-   gVirtualX->SetTextSize(tsize);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextSizePixels(Int_t npixels)
-{
-   gVirtualX->SetTextSizePixels(npixels);
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a gVirtualX Pixmap.
 
@@ -308,24 +108,57 @@ Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)
    return gVirtualX->OpenPixmap(Int_t(w), Int_t(h));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Resize a gVirtualX Pixmap.
+
+Int_t TPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
+{
+   return gVirtualX->ResizePixmap(device, w, h);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear the current gVirtualX window.
+/// Returns true when cocoa backend is used
+
+Bool_t TPadPainter::IsCocoa() const
+{
+   return gVirtualX->InheritsFrom("TGCocoa");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if trasnparent colors are supported
+
+Bool_t TPadPainter::IsSupportAlpha() const
+{
+   return gVirtualX->InheritsFrom("TGQuartz");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the current gVirtualX window - calling gVirtualX->ClearWindowW
 
 void TPadPainter::ClearDrawable()
 {
-   gVirtualX->ClearWindow();
+   if (fWinContext)
+      gVirtualX->ClearWindowW(fWinContext);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window - calling gVirtualX->ClearWindowW
+
+void TPadPainter::ClearWindow(Int_t device)
+{
+   auto ctxt = gVirtualX->GetWindowContext(device);
+   if (ctxt)
+      gVirtualX->ClearWindowW(ctxt);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a gVirtualX pixmap.
 
 void TPadPainter::CopyDrawable(Int_t device, Int_t px, Int_t py)
 {
-   gVirtualX->CopyPixmap(device, px, py);
+   gVirtualX->CopyPixmapW(fWinContext, device, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close the current gVirtualX pixmap.
@@ -334,8 +167,8 @@ void TPadPainter::DestroyDrawable(Int_t device)
 {
    gVirtualX->SelectWindow(device);
    gVirtualX->ClosePixmap();
+   fWinContext = (WinContext_t) 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Select the window in which the graphics will go.
@@ -343,6 +176,35 @@ void TPadPainter::DestroyDrawable(Int_t device)
 void TPadPainter::SelectDrawable(Int_t device)
 {
    gVirtualX->SelectWindow(device);
+   fWinContext = gVirtualX->GetWindowContext(device);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Call low-level update of selected drawable, redirect to gVirtualX.
+
+void TPadPainter::UpdateDrawable(Int_t mode)
+{
+   gVirtualX->UpdateWindowW(fWinContext, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set drawing mode for specified device
+
+void TPadPainter::SetDrawMode(Int_t device, Int_t mode)
+{
+   gVirtualX->SetDrawModeW(gVirtualX->GetWindowContext(device), (TVirtualX::EDrawMode) mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set double buffer mode for specified device
+
+void TPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
+{
+   // important flag - when disabled canvas pixmap used directly
+   // so one need to use absolute coordinates
+   fDoubleBuffer = mode;
+
+   gVirtualX->SetDoubleBuffer(device, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -353,19 +215,61 @@ void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes
+
+void TPadPainter::SetAttFill(const TAttFill &att)
+{
+   TPadPainterBase::SetAttFill(att);
+
+   TAttFill fill = GetAttFillInternal(IsCocoa());
+
+   gVirtualX->SetAttFill(fWinContext, fill);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes
+
+void TPadPainter::SetAttLine(const TAttLine &att)
+{
+   TPadPainterBase::SetAttLine(att);
+
+   gVirtualX->SetAttLine(fWinContext, att);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker attributes
+
+void TPadPainter::SetAttMarker(const TAttMarker &att)
+{
+   TPadPainterBase::SetAttMarker(att);
+
+   gVirtualX->SetAttMarker(fWinContext, att);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set text attributes
+
+void TPadPainter::SetAttText(const TAttText &att)
+{
+   TPadPainterBase::SetAttText(att);
+
+   gVirtualX->SetAttText(fWinContext, att);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a simple line.
 
 void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (GetLineWidth()<=0) return;
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
 
-   const Int_t px1 = gPad->XtoPixel(x1);
-   const Int_t px2 = gPad->XtoPixel(x2);
-   const Int_t py1 = gPad->YtoPixel(y1);
-   const Int_t py2 = gPad->YtoPixel(y2);
-   gVirtualX->DrawLine(px1, py1, px2, py2);
+   const Int_t px1 = fDoubleBuffer ? gPad->XtoPixel(x1) : gPad->XtoAbsPixel(x1);
+   const Int_t px2 = fDoubleBuffer ? gPad->XtoPixel(x2) : gPad->XtoAbsPixel(x2);
+   const Int_t py1 = fDoubleBuffer ? gPad->YtoPixel(y1) : gPad->YtoAbsPixel(y1);
+   const Int_t py2 = fDoubleBuffer ? gPad->YtoPixel(y2) : gPad->YtoAbsPixel(y2);
+   gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
 }
 
 
@@ -374,13 +278,14 @@ void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (GetLineWidth()<=0) return;
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
 
-   const Int_t px1 = gPad->UtoPixel(u1);
-   const Int_t py1 = gPad->VtoPixel(v1);
-   const Int_t px2 = gPad->UtoPixel(u2);
-   const Int_t py2 = gPad->VtoPixel(v2);
-   gVirtualX->DrawLine(px1, py1, px2, py2);
+   const Int_t px1 = fDoubleBuffer ? gPad->UtoPixel(u1) : gPad->UtoAbsPixel(u1);
+   const Int_t py1 = fDoubleBuffer ? gPad->VtoPixel(v1) : gPad->VtoAbsPixel(v1);
+   const Int_t px2 = fDoubleBuffer ? gPad->UtoPixel(u2) : gPad->UtoAbsPixel(u2);
+   const Int_t py2 = fDoubleBuffer ? gPad->VtoPixel(v2) : gPad->VtoAbsPixel(v2);
+   gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
 }
 
 
@@ -389,12 +294,16 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
 
 void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
+   if (fAttLine.GetLineWidth() <= 0 && mode == TVirtualPadPainter::kHollow)
+      return;
 
-   Int_t px1 = gPad->XtoPixel(x1);
-   Int_t px2 = gPad->XtoPixel(x2);
-   Int_t py1 = gPad->YtoPixel(y1);
-   Int_t py2 = gPad->YtoPixel(y2);
+   if (fFullyTransparent && mode == TVirtualPadPainter::kFilled)
+      return;
+
+   Int_t px1 = fDoubleBuffer ? gPad->XtoPixel(x1) : gPad->XtoAbsPixel(x1);
+   Int_t px2 = fDoubleBuffer ? gPad->XtoPixel(x2) : gPad->XtoAbsPixel(x2);
+   Int_t py1 = fDoubleBuffer ? gPad->YtoPixel(y1) : gPad->YtoAbsPixel(y1);
+   Int_t py2 = fDoubleBuffer ? gPad->YtoPixel(y2) : gPad->YtoAbsPixel(y2);
 
    // Box width must be at least one pixel (WTF is this code???)
    if (TMath::Abs(px2 - px1) < 1)
@@ -402,7 +311,7 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
    if (TMath::Abs(py1 - py2) < 1)
       py1 = py2 + 1;
 
-   gVirtualX->DrawBox(px1, py1, px2, py2, (TVirtualX::EBoxMode)mode);
+   gVirtualX->DrawBoxW(fWinContext, px1, py1, px2, py2, (TVirtualX::EBoxMode)mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -415,7 +324,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
       return;
    }
 
-   DrawFillAreaAux(gPad, nPoints, xs, ys);
+   // if fully transparent, add first point to draw line
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
 }
 
 
@@ -429,7 +339,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
       return;
    }
 
-   DrawFillAreaAux(gPad, nPoints, xs, ys);
+   // if fully transparent, add first point to draw line
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,14 +348,15 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
 
 void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 {
-   if (GetLineWidth()<=0) return;
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
       return;
    }
 
-   DrawPolyLineAux(gPad, n, xs, ys);
+   DrawPolyLineAux(gPad, fWinContext, n, xs, ys);
 }
 
 
@@ -453,14 +365,15 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 
 void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   if (GetLineWidth()<=0) return;
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
       return;
    }
 
-   DrawPolyLineAux(gPad, n, xs, ys);
+   DrawPolyLineAux(gPad, fWinContext, n, xs, ys);
 }
 
 
@@ -469,7 +382,8 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 
 void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   if (GetLineWidth()<=0) return;
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLineNDC", "invalid number of points %d", n);
@@ -483,8 +397,71 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
       xy[i].fY = (SCoord_t)gPad->VtoPixel(v[i]);
    }
 
-   gVirtualX->DrawPolyLine(n, &xy[0]);
+   gVirtualX->DrawPolyLineW(fWinContext, n, &xy[0]);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint N segments on the pad
+
+void TPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
+{
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
+
+   if (n < 1) {
+      ::Error("TPadPainter::DrawSegments", "invalid number of segments %d", n);
+      return;
+   }
+
+   std::vector<TPoint> xy(n*2);
+   Int_t cnt = 0;
+   for (Int_t i = 0; i < n*2; ++i) {
+      if ((i % 2 == 0) && (x[i] == x[i+1]) && (y[i] == y[i+1])) {
+         // exclude empty segment
+         i++;
+         continue;
+      }
+
+      xy[cnt].fX = (SCoord_t)gPad->XtoPixel(x[i]);
+      xy[cnt].fY = (SCoord_t)gPad->YtoPixel(y[i]);
+      cnt++;
+   }
+
+   if (cnt > 1)
+      gVirtualX->DrawLinesSegmentsW(fWinContext, cnt/2, &xy[0]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint N segments in normalized coordinates on the pad
+
+void TPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
+{
+   if (fAttLine.GetLineWidth() <= 0)
+      return;
+
+   if (n < 1) {
+      ::Error("TPadPainter::DrawSegmentsNDC", "invalid number of segments %d", n);
+      return;
+   }
+
+   std::vector<TPoint> xy(n*2);
+   Int_t cnt = 0;
+   for (Int_t i = 0; i < n*2; ++i) {
+      if ((i % 2 == 0) && (u[i] == u[i+1]) && (v[i] == v[i+1])) {
+         // exclude empty segment
+         i++;
+         continue;
+      }
+
+      xy[cnt].fX = (SCoord_t)gPad->UtoPixel(u[i]);
+      xy[cnt].fY = (SCoord_t)gPad->VtoPixel(v[i]);
+      cnt++;
+   }
+
+   if (cnt > 1)
+      gVirtualX->DrawLinesSegmentsW(fWinContext, cnt/2, &xy[0]);
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,7 +474,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, n, x, y);
 }
 
 
@@ -511,7 +488,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, n, x, y);
 }
 
 
@@ -524,7 +501,7 @@ void TPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode m
    const Int_t py = gPad->YtoPixel(y);
    const Double_t angle = GetTextAngle();
    const Double_t mgn = GetTextMagnitude();
-   gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
+   gVirtualX->DrawTextW(fWinContext, px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
 
@@ -537,7 +514,7 @@ void TPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMod
    const Int_t py = gPad->YtoPixel(y);
    const Double_t angle = GetTextAngle();
    const Double_t mgn = GetTextMagnitude();
-   gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
+   gVirtualX->DrawTextW(fWinContext, px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
 
@@ -550,7 +527,7 @@ void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMod
    const Int_t py = gPad->VtoPixel(v);
    const Double_t angle = GetTextAngle();
    const Double_t mgn = GetTextMagnitude();
-   gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
+   gVirtualX->DrawTextW(fWinContext, px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
 
@@ -626,7 +603,7 @@ void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, EText
    const Int_t py = gPad->VtoPixel(v);
    const Double_t angle = GetTextAngle();
    const Double_t mgn = GetTextMagnitude();
-   gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
+   gVirtualX->DrawTextW(fWinContext, px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
 //Aux. private functions.
@@ -829,7 +806,7 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point)
 {
    std::vector<TPoint> xy;
 
@@ -843,24 +820,24 @@ void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
    }
 
    if (nPoints < threshold)
-      ConvertPoints(gPad, nPoints, xs, ys, xy);
+      ConvertPoints(pad, nPoints, xs, ys, xy);
    else
-      ConvertPointsAndMerge(gPad, threshold, nPoints, xs, ys, xy);
+      ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
-   //We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
-   if (!gVirtualX->GetFillStyle())
+   //We close the 'polygon' so it can be rendered as a polyline by gVirtualX.
+   if (add_first_point)
       xy.push_back(xy.front());
 
    if (xy.size() > 2)
-      gVirtualX->DrawFillArea(xy.size(), &xy[0]);
+      gVirtualX->DrawFillAreaW(cont, xy.size(), xy.data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
+void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys)
 {
-  std::vector<TPoint> xy;
+   std::vector<TPoint> xy;
 
    const Int_t threshold = Int_t(TMath::Min(pad->GetWw() * pad->GetAbsWNDC(),
                                             pad->GetWh() * pad->GetAbsHNDC())) * 2;
@@ -876,14 +853,14 @@ void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *y
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
    if (xy.size() > 1)
-      gVirtualX->DrawPolyLine(xy.size(), &xy[0]);
+      gVirtualX->DrawPolyLineW(cont, xy.size(), &xy[0]);
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys)
 {
    std::vector<TPoint> xy(nPoints);
 
@@ -892,7 +869,7 @@ void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T 
       xy[i].fY = (SCoord_t)pad->YtoPixel(ys[i]);
    }
 
-   gVirtualX->DrawPolyMarker(nPoints, &xy[0]);
+   gVirtualX->DrawPolyMarkerW(cont, nPoints, &xy[0]);
 }
 
 }

@@ -32,7 +32,8 @@ actions list for both are the same.
 #include "TError.h"
 #include "snprintf.h"
 
-ClassImp(TBufferText);
+#include <cmath>
+
 
 const char *TBufferText::fgFloatFmt = "%e";
 const char *TBufferText::fgDoubleFmt = "%.14e";
@@ -139,7 +140,7 @@ Int_t TBufferText::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    TVirtualStreamerInfo *info = sequence.fStreamerInfo;
    IncrementLevel(info);
 
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
+   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig.get();
    if (gDebug) {
 
       // Get the address of the first item for the PrintDebug.
@@ -223,7 +224,7 @@ Int_t TBufferText::WriteClassBuffer(const TClass *cl, void *pointer)
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer() functions in
-/// rootcint-generated dictionaries.
+/// rootcling-generated dictionaries.
 /// This function assumes that the class version and the byte count
 /// information have been read.
 ///
@@ -320,7 +321,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer()
-/// functions in rootcint-generated dictionaries.
+/// functions in rootcling-generated dictionaries.
 ///
 
 Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)

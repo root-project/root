@@ -1,0 +1,64 @@
+<lcgdict>
+  <class name="InDetRawData" />
+  <class name="Pixel1RawData" />
+  <class name="PixelRDORawData" />
+  <class name="SCT1_RawData" />
+  <class name="SCT_RDORawData" />
+  <class name="TRT_LoLumRawData" />
+  <class name="TRT_RDORawData" />
+
+  <class name="DataVector<Pixel1RawData>" />
+  <class name="DataVector<PixelRDORawData>" />
+  <class name="DataVector<SCT1_RawData>" />
+  <class name="DataVector<TRT_LoLumRawData>" />
+  <class name="DataVector<TRT_RDORawData>" />
+  <class name="std::vector<Pixel1RawData*>" />
+  <class name="std::vector<PixelRDORawData*>" />
+  <class name="std::vector<SCT1_RawData*>" />
+  <class name="std::vector<SCT_RDORawData*>" />
+  <class name="std::vector<TRT_LoLumRawData*>" />
+  <class name="std::vector<TRT_RDORawData*>" />
+
+  <class name="IdentifiableContainer<InDetRawDataCollection<PixelRDORawData> >" />
+  <class name="IdentifiableContainer<InDetRawDataCollection<SCT_RDORawData> >" />
+  <class name="IdentifiableContainer<InDetRawDataCollection<TRT_RDORawData> >" />
+
+  <class name="DataLinkVector<InDetRawDataCollection<PixelRDORawData> >" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="DataLinkVector<InDetRawDataCollection<SCT_RDORawData> >" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="DataLinkVector<InDetRawDataCollection<TRT_RDORawData> >" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+  <class name="InDetRawDataCollection< Pixel1RawData >"  />
+  <class name="InDetRawDataCollection< SCT1_RawData >"  />
+  <class name="InDetRawDataCollection< SCT_RDORawData >"  />
+  <class name="InDetRawDataCollection< TRT_LoLumRawData >" />
+  <class name="InDetRawDataCollection< TRT_RDORawData >" />
+
+  <class name="InDetRawDataContainer<InDetRawDataCollection<PixelRDORawData> >" />
+  <class name="std::vector<InDetRawDataCollection< Pixel1RawData >* >" />
+  <class name="DataVector<InDetRawDataCollection< Pixel1RawData > >" id="7F2C09B6-0B47-4957-8BBA-EDC665A290AC" />
+
+  <class name="InDetRawDataContainer<InDetRawDataCollection<SCT_RDORawData> >" />
+
+  <class name="InDetRawDataContainer<InDetRawDataCollection<TRT_RDORawData> >"  />
+  <class name="std::vector<InDetRawDataCollection< TRT_RDORawData >* >" />
+  <class name="DataVector<InDetRawDataCollection< TRT_RDORawData > >" id="CFBDB7A8-C788-4EE7-A260-3C8B680234FE" />
+
+  <!-- Need this to read old data -->
+  <class name="std::vector<InDetRawDataCollection< TRT_LoLumRawData >* >" />
+  <class name="DataVector<InDetRawDataCollection< TRT_LoLumRawData > >" id="5DB01CED-F6FD-4866-A1C6-E046641E44F5" />
+
+  <class name="std::vector<InDetRawDataCollection< SCT1_RawData >* >" />
+  <class name="DataVector<InDetRawDataCollection< SCT1_RawData > >" id="B82A1D11-3F86-4F07-B380-B61BA2DAF3A9" />
+
+
+</lcgdict>
+

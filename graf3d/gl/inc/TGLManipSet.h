@@ -21,17 +21,27 @@ class TGLManipSet : public TGLOverlayElement,
                     public TGLPShapeRef
 {
 public:
-   enum EManip { kTrans, kScale, kRotate, kEndType };
+   enum EManip { kTrans, kScale,
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global enum ECursor. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kRotate,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kEndType };
 
 private:
    TGLManipSet(const TGLManipSet&) = delete;
    TGLManipSet& operator=(const TGLManipSet&) = delete;
 
 protected:
-   TGLManip  *fManip[3]; //! manipulator store
-   EManip     fType;     //! current manipulator
+   TGLManip  *fManip[3]; ///<! manipulator store
+   EManip     fType;     ///<! current manipulator
 
-   Bool_t     fDrawBBox; //! also draw bounding-box around physical
+   Bool_t     fDrawBBox; ///<! also draw bounding-box around physical
 
 public:
    TGLManipSet();

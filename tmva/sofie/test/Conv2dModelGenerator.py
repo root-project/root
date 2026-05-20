@@ -2,12 +2,12 @@
 
 ### generate COnv2d model using Pytorch
 
-import numpy as np
 import argparse
+import sys
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 result = []
 
@@ -135,9 +135,10 @@ def main():
 
 
    if saveOnnx:
+      # dynamo export doesn't work on Python 3.14
+      dynamo_export = (sys.version_info.major, sys.version_info.minor) != (3, 14)
 
       #new ONNX exporter does not work for batchmorm
-      dynamo_export=True
       if (use_bn): dynamo_export=False
 
       #check torch version

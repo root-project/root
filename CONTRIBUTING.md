@@ -16,7 +16,7 @@ The primary branch for development is `master`.
 
 > [!IMPORTANT]
 > We require PRs to cleanly apply to master without a merge commit, i.e. through "fast-forward".
-> Please follow the [coding conventions](https://root.cern.ch/coding-conventions), as this is a simple item for
+> Please follow the [coding conventions](https://root.cern/contribute/coding_conventions/), as this is a simple item for
 > reviewers to otherwise get stuck on.
 > To make your (and our own) life easier, we provide a
 > [`clang-format` configuration file](https://github.com/root-project/root/blob/master/.clang-format) as well
@@ -77,7 +77,7 @@ The commit message should be wrapped at 72 characters.
 
 The title of your PR follows the same principle as the commit summary. If your PR only involves one commit, you can
 reuse this summary. For non-functional changes (e.g. to the documentation) or changes for which you want to
-**temporarily** prevent Jenkins from being triggered (e.g., for a draft PR), use `[skip-CI]` as the first tag.
+**temporarily** prevent the Github CI from being triggered (e.g., for a draft PR), use `[skip-CI]` as the first tag.
 Note that for functional changes this tag needs to be removed and it has to pass the CI before merging to ensure
 the change does not break anything.
 
@@ -98,13 +98,12 @@ Please ping people :wave: should you not get timely feedback, for instance with 
 As you contribute code, this code will likely fix an issue or add a feature.
 Whatever it is: this requires you to add a new test, or to extend an existing test. Depending on the size and complexity
 of this test, it exists either in the `test/` subdirectory of each part of ROOT (see for instance
-[`tree/dataframe/test`](https://github.com/root-project/root/tree/master/tree/dataframe/test)), or in
-[roottest](https://github.com/root-project/roottest.git). Tests in `test/` subdirectories are unit tests, mostly based on
+[`tree/dataframe/test`](https://github.com/root-project/root/tree/master/tree/dataframe/test)), or in the
+[roottest](https://github.com/root-project/root/tree/master/roottest) directory.
+Tests in `test/` subdirectories are unit tests, mostly based on
 [Google Test](https://github.com/google/googletest) and easily extended. Tests in
-[roottest](https://github.com/root-project/roottest.git) are more involved (e.g., tests requiring custom dictionaries or
-data files). When you create a branch in the main ROOT repository (i.e., this repository) and add a test to `roottest`,
-make sure to do this under the same branch name (and open a PR for it). Our CI infrastructure automatically picks up the
-changes defined in the `roottest` PR based on this branch name, and uses that for testing your PR here.
+[roottest](https://github.com/root-project/root/tree/master/roottest) are more involved (e.g., tests requiring custom dictionaries or
+data files).
 
 ## Continuous Integration
 
@@ -113,13 +112,12 @@ strongly encourage new developers to [run the tests](https://root.cern/for_devel
 _before_ submitting a pull request.
 
 ROOT has automated CI tests :cop: that are used for pull requests:
-- *Build and test*: a [Jenkins-based CI workflow](https://github.com/phsft-bot/build-configuration/blob/master/README.md)
-    as well as a GitHub Actions CI workflow tests PRs automatically; only a
+- *Build and test*: a GitHub Actions CI workflow tests PRs automatically; only a
     [project member](https://github.com/orgs/root-project/people) is allowed to initiate this build.
     The results are posted to the pull request.
     Compared to ROOT's nightly builds, PRs are tested with less tests, on less platforms.
 - *Linting check*: `ruff` automatically checks that a PR adheres to the project's
-    [style guide](https://github.com/root-project/root/blob/master/.ruff.toml).
+    [style guide](https://github.com/root-project/root/blob/master/ruff.toml).
     If any linting violations are found, it provides you with a detailed report that you should address in your PR.
 - *Formatting check*: 
     - `clang-format`: automatically checks that a PR

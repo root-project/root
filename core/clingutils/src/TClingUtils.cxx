@@ -19,12 +19,13 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <unordered_set>
 #include <cctype>
 
 #include "RConfigure.h"
+#include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
@@ -221,7 +222,7 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(clang::Sema &SemaR, c
    clang::DeclarationName DName = &SemaR.Context.Idents.get(what);
    clang::LookupResult R(SemaR, DName, clang::SourceLocation(),
                          clang::Sema::LookupOrdinaryName,
-                         clang::Sema::ForExternalRedeclaration);
+                         RedeclarationKind::ForExternalRedeclaration);
    SemaR.LookupInSuper(R, &const_cast<clang::CXXRecordDecl&>(cl));
    if (R.empty())
       return nullptr;
@@ -385,6 +386,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestedVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -394,7 +396,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestedVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
@@ -416,6 +419,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -426,7 +430,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // For comparison purposes.
@@ -455,6 +460,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -465,7 +471,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // For comparison purposes.
@@ -489,6 +496,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -499,7 +507,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
@@ -1978,7 +1987,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       rootflag = rootflag | TClassTable__kHasCustomStreamerMember;
    }
-   finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << ") );" << "\n";
+   finalString << "isa_proxy, " << rootflag << "," << "\n"
+               << "                  sizeof(" << csymbol << "), alignof(" << csymbol << ") );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
       if (args.size()==0 && NeedDestructor(decl, interp))
@@ -2040,6 +2050,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs since
       // they imply copies and therefore do not compile.
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
+
+      finalString << "      static_assert(alignof(" << csymbol << "::value_type) <= 4096,\n";
+      finalString << "          \"Class with alignment strictly greater than 4096 are currently not supported in "
+                     "CollectionProxy. \"\n";
+      finalString << "          \"Please report this case to the developers\");\n";
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;
@@ -2060,6 +2075,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "\n" << "      instance.AdoptAlternate(::ROOT::AddClassAlternate(\""
                   << classname << "\",\"" << cl.GetDemangledTypeInfo() << "\"));\n";
 
+   }
+
+   //---------------------------------------------------------------------------
+   // Register underlying SoA record for RNTuple SoA layouts
+   /////////////////////////////////////////////////////////////////////////////
+
+   if (!cl.RequestedRNTupleSoARecord().empty()) {
+      finalString << "      instance.SetRNTupleSoARecord(\"" << cl.RequestedRNTupleSoARecord() << "\");" << "\n";
    }
 
    //---------------------------------------------------------------------------
@@ -2827,7 +2850,7 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
       // We want to check for all headers except the list of excluded headers here.
       for (auto HK : {clang::Module::HK_Normal, clang::Module::HK_Textual, clang::Module::HK_Private,
                       clang::Module::HK_PrivateTextual}) {
-         auto &headerList = m->Headers[HK];
+         const auto &headerList = m->getHeaders(HK);
          for (const clang::Module::Header &moduleHeader : headerList) {
             closure(moduleHeader);
          }
@@ -3104,7 +3127,12 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
-      unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
+      // If we have more arguments than the TSTdecl, it is a variadic template
+      // and we want all template arguments.
+      if (template_arguments.size() > Edecl) {
+         Edecl = template_arguments.size();
+      }
+      unsigned int maxAddArg = Edecl - dropDefault;
       for (const clang::TemplateArgument *I = template_arguments.begin(), *E = template_arguments.end(); Idecl != Edecl;
            I != E ? ++I : nullptr, ++Idecl, ++Param) {
 
@@ -3735,7 +3763,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
 
    // Try the fast solution
-   QualType tParQualType = ttpdPtr->getDefaultArgument();
+   QualType tParQualType = ttpdPtr->getDefaultArgument().getArgument().getAsType();
    const QualType tArgQualType = tArg.getAsType();
 
    // Now the equality tests for non template specialisations.
@@ -3835,7 +3863,7 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
 
    // 64 bits wide and signed (non unsigned, that is why "false")
    llvm::APSInt defaultValueAPSInt(64, false);
-   if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
+   if (Expr* defArgExpr = nttpd.getDefaultArgument().getArgument().getAsExpr()) {
       const ASTContext& astCtxt = nttpdPtr->getASTContext();
       if (auto Value = defArgExpr->getIntegerConstantExpr(astCtxt))
          defaultValueAPSInt = *Value;
@@ -4041,6 +4069,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    const int nNormArgs = normArgs.size();
 
    bool mightHaveChanged = false;
+   int latestNonDefaultArg = -1;
 
    // becomes true when a parameter has a value equal to its default
    for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
@@ -4079,10 +4108,12 @@ static void KeepNParams(clang::QualType& normalizedType,
                argsToKeep.push_back(normTArg);
             }
             // Done.
+            latestNonDefaultArg = -1;
             break;
          }
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
          argsToKeep.push_back(normTArg);
+         latestNonDefaultArg = formal;
          continue;
       } else {
          if (!isStdDropDefault) {
@@ -4104,15 +4135,20 @@ static void KeepNParams(clang::QualType& normalizedType,
       } else if (argKind == clang::TemplateArgument::Integral){
          equal = areEqualValues(tArg, *tParPtr);
       }
+
+      argsToKeep.push_back(normTArg);
       if (!equal) {
+         latestNonDefaultArg = formal;
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
-         argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
       }
 
 
    } // of loop over parameters and arguments
+
+   if (latestNonDefaultArg >= 0)
+      argsToKeep.resize(latestNonDefaultArg + 1);
 
    if (!prefix_changed && !mightHaveChanged) {
       normalizedType = originalNormalizedType;
@@ -4134,7 +4170,6 @@ static void KeepNParams(clang::QualType& normalizedType,
       normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5187,7 +5222,7 @@ static void replaceEnvVars(const char* varname, std::string& txt)
          endVar = endVarName;
       }
 
-      const char* val = getenv(txt.substr(beginVarName,
+      const char* val = std::getenv(txt.substr(beginVarName,
                                           endVarName - beginVarName).c_str());
       if (!val) val = "";
 
@@ -5209,13 +5244,20 @@ static void replaceEnvVars(const char* varname, std::string& txt)
 
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
-   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
+   const char* envInclPath = std::getenv("ROOT_INCLUDE_PATH");
 
    if (!envInclPath)
       return;
+
+#ifdef _WIN32
+   constexpr char kPathSep = ';';
+#else
+   constexpr char kPathSep = ':';
+#endif
+
    std::istringstream envInclPathsStream(envInclPath);
    std::string inclPath;
-   while (std::getline(envInclPathsStream, inclPath, ':')) {
+   while (std::getline(envInclPathsStream, inclPath, kPathSep)) {
       // Can't use TSystem in here; re-implement TSystem::ExpandPathName().
       replaceEnvVars("ROOT_INCLUDE_PATH", inclPath);
       if (!inclPath.empty()) {

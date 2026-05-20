@@ -51,8 +51,8 @@ namespace Experimental {
 
  The RMetaData object is passed to an RSample object which represents a single dataset sample.
 
- A dataframe built with the RMetaData object can be accessed with the \ref ROOT::RDF::RInterface< Proxied,
-DS_t>::DefinePerSample "DefinePerSample()" method.
+ A dataframe built with the RMetaData object can be accessed with the
+ \ref ROOT::RDF::RInterface<Proxied>::DefinePerSample "DefinePerSample()" method.
 **/
 class RMetaData {
    friend void ROOT::Internal::RDF::ImportJSON(ROOT::RDF::Experimental::RMetaData &, const std::string &jsonString);

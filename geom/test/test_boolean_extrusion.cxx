@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <TGeoManager.h>
+#include <TGeoOverlap.h>
 #include <TROOT.h>
 
 /**
@@ -10,10 +11,10 @@
 */
 TEST(Geometry, NoExtrusionInUnionSpan)
 {
-   // switch web display while TGeoChecker instantiated via plain TGeoPainter
-   gROOT->SetWebDisplay("off");
-
    // import a GDML geometry with a policone inside a union of two polycones and a tube
+   TGeoManager::LockDefaultUnits(kFALSE);
+   TGeoManager::SetDefaultUnits(TGeoManager::kRootUnits);
+   TGeoManager::LockDefaultUnits(kTRUE);
    auto geom = TGeoManager::Import("no_extrusion.gdml");
    EXPECT_NE(geom, nullptr);
    if (!geom) {
@@ -22,5 +23,14 @@ TEST(Geometry, NoExtrusionInUnionSpan)
    }
    geom->CheckOverlaps(0.001);
    auto num_overlaps = gGeoManager->GetListOfOverlaps()->GetEntries();
+   if (num_overlaps > 0) {
+      // Diagnostics: print overlap details
+      auto const ovlps = gGeoManager->GetListOfOverlaps();
+      printf(" ==EEE== Found %d overlaps\n", num_overlaps);
+      TIter next(ovlps);
+      TGeoOverlap *ovlp;
+      while ((ovlp = (TGeoOverlap *)next()))
+         ovlp->Print("P");
+   }
    EXPECT_EQ(num_overlaps, 0);
 }

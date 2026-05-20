@@ -49,7 +49,6 @@ const Int_t kN3 = 3 * sizeof(Double_t);
 
 Bool_t TGeoNavigator::fgUsePWSafetyCaching = kFALSE;
 
-ClassImp(TGeoNavigator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -2737,7 +2736,6 @@ void TGeoNavigator::ResetAll()
    }
 }
 
-ClassImp(TGeoNavigatorArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new navigator to the array.

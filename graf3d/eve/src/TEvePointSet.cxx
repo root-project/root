@@ -36,7 +36,6 @@ TEvePointSet is a TEveProjectable: it can be projected by using the
 TEveProjectionManager class.
 */
 
-ClassImp(TEvePointSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -429,7 +428,6 @@ controlled with a slider to choose a sub-set of PointSets that are
 actually shown.
 */
 
-ClassImp(TEvePointSetArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -726,7 +724,6 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 \ingroup TEve
 Projected copy of a TEvePointSet.
 */
-ClassImp(TEvePointSetProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.

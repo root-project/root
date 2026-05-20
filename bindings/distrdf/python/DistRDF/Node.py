@@ -12,13 +12,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
 
 # Type hints only
 if TYPE_CHECKING:
     # Avoid circular imports
-    from DistRDF.HeadNode import HeadNode
-    from DistRDF.Operation import Operation
+    from .HeadNode import HeadNode
+    from .Operation import Operation
 
 logger = logging.getLogger(__name__)
 

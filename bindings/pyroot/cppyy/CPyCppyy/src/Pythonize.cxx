@@ -161,30 +161,20 @@ inline PyObject* CallSelfIndex(CPPInstance* self, PyObject* idx, PyObject* pymet
 }
 
 //- "smart pointer" behavior ---------------------------------------------------
-PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+static PyObject* smart_follow(PyObject* self, PyObject* name, PyObject* method)
 {
-// Follow operator*() if present (available in python as __deref__), so that
-// smart pointers behave as expected.
-    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
-    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
-    // whereas as-is, they can accidentally dereference the result of end() on some STL
-    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
-        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
-        return nullptr;
-    }
-
     if (!CPyCppyy_PyText_Check(name))
         PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
 
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gDeref);
+    PyObject* pyptr = PyObject_CallMethodNoArgs(self, method);
     if (!pyptr)
         return nullptr;
 
 // prevent a potential infinite loop
     if (Py_TYPE(pyptr) == Py_TYPE(self)) {
-        PyObject* val1 = PyObject_Str(self);
+        PyObject* val1 = PyObject_Str((PyObject*)Py_TYPE(self));
         PyObject* val2 = PyObject_Str(name);
-        PyErr_Format(PyExc_AttributeError, "%s has no attribute \'%s\'",
+        PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'",
             CPyCppyy_PyText_AsString(val1), CPyCppyy_PyText_AsString(val2));
         Py_DECREF(val2);
         Py_DECREF(val1);
@@ -198,21 +188,28 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
     return result;
 }
 
+PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+{
+// Follow operator*() if present (available in python as __deref__), so that
+// smart pointers behave as expected.
+    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
+    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
+    // whereas as-is, they can accidentally dereference the result of end() on some STL
+    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
+        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
+        return nullptr;
+    }
+
+
+    return smart_follow(self, name, PyStrings::gDeref);
+}
+
 //-----------------------------------------------------------------------------
 PyObject* FollowGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator->() if present (available in python as __follow__), so that
 // smart pointers behave as expected.
-    if (!CPyCppyy_PyText_Check(name))
-        PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
-
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gFollow);
-    if (!pyptr)
-         return nullptr;
-
-    PyObject* result = PyObject_GetAttr(pyptr, name);
-    Py_DECREF(pyptr);
-    return result;
+    return smart_follow(self, name, PyStrings::gFollow);
 }
 
 //- pointer checking bool converter -------------------------------------------
@@ -1019,6 +1016,7 @@ PyObject* MapInit(PyObject* self, PyObject* args, PyObject* /* kwds */)
     return nullptr;
 }
 
+#if __cplusplus <= 202002L
 PyObject* STLContainsWithFind(PyObject* self, PyObject* obj)
 {
 // Implement python's __contains__ for std::map/std::set
@@ -1045,6 +1043,7 @@ PyObject* STLContainsWithFind(PyObject* self, PyObject* obj)
 
     return result;
 }
+#endif
 
 
 //- set behavior as primitives ------------------------------------------------
@@ -1387,6 +1386,7 @@ PyObject* STLStringDecode(CPPInstance* self, PyObject* args, PyObject* kwds)
     return PyUnicode_Decode(obj->data(), obj->size(), encoding, errors);
 }
 
+#if __cplusplus <= 202302L
 PyObject* STLStringContains(CPPInstance* self, PyObject* pyobj)
 {
     std::string* obj = GetSTLString(self);
@@ -1403,6 +1403,7 @@ PyObject* STLStringContains(CPPInstance* self, PyObject* pyobj)
 
     Py_RETURN_FALSE;
 }
+#endif
 
 PyObject* STLStringReplace(CPPInstance* self, PyObject* args, PyObject* /*kwds*/)
 {
@@ -1799,6 +1800,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
        }
     }
 
+    if (HasAttrDirect(pyclass, PyStrings::gContains)) {
+        Utility::AddToClass(pyclass, "__contains__", "contains");
+    }
+
     if (!IsTemplatedSTLClass(name, "vector")  &&      // vector is dealt with below
            !((PyTypeObject*)pyclass)->tp_iter) {
         if (HasAttrDirect(pyclass, PyStrings::gBegin) && HasAttrDirect(pyclass, PyStrings::gEnd)) {
@@ -1903,7 +1908,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
             std::ostringstream initdef;
             initdef << "namespace __cppyy_internal {\n"
-                    << "void init_" << rname << "(" << name << "*& self";
+                    << "void init_" << rname << "(" << name << "** self";
             bool codegen_ok = true;
             std::vector<std::string> arg_types, arg_names, arg_defaults;
             arg_types.reserve(ndata); arg_names.reserve(ndata); arg_defaults.reserve(ndata);
@@ -1941,7 +1946,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
                     initdef << ", " << arg_types[i] << " " << arg_names[i];
                     if (defaults_ok) initdef << " = " << arg_defaults[i];
                 }
-                initdef << ") {\n  self = new " << name << "{";
+                initdef << ") {\n  *self = new " << name << "{";
                 for (std::vector<std::string>::size_type i = 0; i < arg_names.size(); ++i) {
                     if (i != 0) initdef << ", ";
                     initdef << arg_names[i];
@@ -1993,6 +1998,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
         // data with size
             Utility::AddToClass(pyclass, "__real_data", "data");
+            PyErr_Clear(); // AddToClass might have failed for data
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
         // The addition of the __array__ utility to std::vector Python proxies causes a
@@ -2044,8 +2050,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     // constructor that takes python associative collections
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__", (PyCFunction)MapInit, METH_VARARGS | METH_KEYWORDS);
-
+#if __cplusplus <= 202002L
+    // From C++20, std::map and std::unordered_map already implement a contains() method.
         Utility::AddToClass(pyclass, "__contains__", (PyCFunction)STLContainsWithFind, METH_O);
+#endif
     }
 
     else if (IsTemplatedSTLClass(name, "set")) {
@@ -2053,7 +2061,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__", (PyCFunction)SetInit, METH_VARARGS | METH_KEYWORDS);
 
+#if __cplusplus <= 202002L
+    // From C++20, std::set already implements a contains() method.
         Utility::AddToClass(pyclass, "__contains__", (PyCFunction)STLContainsWithFind, METH_O);
+#endif
     }
 
     else if (IsTemplatedSTLClass(name, "pair")) {
@@ -2081,7 +2092,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__cmp__",       (PyCFunction)STLStringCompare,    METH_O);
         Utility::AddToClass(pyclass, "__eq__",        (PyCFunction)STLStringIsEqual,    METH_O);
         Utility::AddToClass(pyclass, "__ne__",        (PyCFunction)STLStringIsNotEqual, METH_O);
+#if __cplusplus <= 202302L
+    // From C++23, std::sting already implements a contains() method.
         Utility::AddToClass(pyclass, "__contains__",  (PyCFunction)STLStringContains,   METH_O);
+#endif
         Utility::AddToClass(pyclass, "decode",        (PyCFunction)STLStringDecode,     METH_VARARGS | METH_KEYWORDS);
         Utility::AddToClass(pyclass, "__cpp_find",    "find");
         Utility::AddToClass(pyclass, "find",          (PyCFunction)STLStringFind,       METH_VARARGS | METH_KEYWORDS);

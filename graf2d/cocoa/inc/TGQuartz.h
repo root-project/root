@@ -27,9 +27,6 @@ MacOS X, using CoreGraphics (Quartz).
 
 class TGQuartz : public TGCocoa {
 private:
-   enum EAlign {kNone, kTLeft, kTCenter, kTRight, kMLeft,
-                kMCenter, kMRight, kBLeft, kBCenter, kBRight};
-
    FT_Vector   fAlign; // alignment vector
 public:
    TGQuartz();
@@ -78,6 +75,23 @@ public:
    Int_t     GetFontDescent(const char *text) const override;
    Float_t   GetTextMagnitude() override;
 
+   //---- Methods used for new graphics -----
+   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
+
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
+
+
 private:
 
    //Unfortunately, I have to convert from
@@ -93,14 +107,17 @@ private:
    bool fUseAA;
    bool fUseFAAA;
 
-   void AlignTTFString();
-   Bool_t IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void RenderTTFString(Int_t x, Int_t y, ETextMode mode);
-   //I have to use void * instead of QuartzPixmap * because of CINT :(
+   void AlignTTFString(WinContext_t wctxt);
+   Bool_t IsTTFStringVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode);
    void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();
-   void *GetSelectedDrawableChecked(const char *calledFrom) const;
+   TAttFill &GetAttFill(WinContext_t wctxt);
+   TAttLine &GetAttLine(WinContext_t wctxt);
+   TAttMarker &GetAttMarker(WinContext_t wctxt);
+   TAttText &GetAttText(WinContext_t wctxt);
+   void *GetPixmapDrawable(void *drawable0, const char *calledFrom) const;
 
    TGQuartz(const TGQuartz &rhs);
    TGQuartz &operator = (const TGQuartz &rhs);

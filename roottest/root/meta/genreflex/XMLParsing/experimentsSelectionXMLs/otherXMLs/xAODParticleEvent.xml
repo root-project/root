@@ -1,0 +1,105 @@
+<!-- $Id$ -->
+<lcgdict>
+
+  <!-- xAOD::IParticleLink_v1 dictionaries: -->
+  <class name="xAOD::IParticleLink_v1">
+    <!-- <field name="m_proxy" transient="true"/> -->
+    <!-- <field name="m_element" transient="true"/> -->
+  </class>
+  <!-- <read sourceClass="xAOD::IParticleLink_v1" version="[1-]"
+        targetClass="xAOD::IParticleLink_v1" source=""
+        >
+    <![CDATA[
+      // Let the object prepare for being used:
+      newObj->toTransient();
+    ]]>
+  </read> -->
+
+  <class name="xAOD::IParticleLinkContainer_v1"
+         id="E3A75D69-B84E-41DD-AB67-B5FF6ACBC243" />
+  <!-- <read sourceClass="xAOD::IParticleLink_v1" version="[1-]"
+        targetClass="xAOD::IParticleLink_v1" source="" target="" >
+    <![CDATA[
+       m_p4Cached = false;
+    ]]>
+  </read> -->
+
+  <!-- <class name="xAOD::IParticleLinkAuxContainer_v1"
+         id="3BA65D0C-E2DC-4D7A-84F6-4A1D0EA8728D" /> -->
+
+  <!-- Smart pointers to IParticleLinkContainer_v1: -->
+  <!-- <class name="DataLink<xAOD::IParticleLinkContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::IParticleLinkContainer_v1> >" />
+  <class name="ElementLink<xAOD::IParticleLinkContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::IParticleLinkContainer_v1> >" />
+  <class name="ElementLinkVector<xAOD::IParticleLinkContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::IParticleLinkContainer_v1> >" /> -->
+
+
+  <!-- Particle_v1 dictionaries: -->
+  <class name="xAOD::Particle_v1" >
+    <field name="m_p4" transient="true"/>
+    <field name="m_p4Cached" transient="true"/>
+  </class>
+  <read sourceClass="xAOD::Particle_v1" version="[1-]"
+        targetClass="xAOD::Particle_v1" source="" target="m_p4Cached" >
+	    <![CDATA[
+	      m_p4Cached = false;
+	    ]]>
+  </read>
+
+  <class name="xAOD::ParticleContainer_v1"
+         id="CE9D717A-A6DD-4BCA-A946-63A730E0EA3B" />
+
+  <class name="xAOD::ParticleAuxContainer_v1"
+         id="B53E64D2-C5EA-4B93-9B3C-F4506C823708" />
+
+  <!-- Smart pointers to Particle_v1: -->
+  <class name="DataLink<xAOD::ParticleContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::ParticleContainer_v1> >" />
+  <class name="ElementLink<xAOD::ParticleContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::ParticleContainer_v1> >" />
+  <class name="ElementLinkVector<xAOD::ParticleContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::ParticleContainer_v1> >" />
+
+
+
+  <!-- CompositeParticle_v1 dictionaries: -->
+  <class name="xAOD::CompositeParticle_v1" >
+    <field name="m_p4" transient="true"/>
+    <field name="m_p4Cached" transient="true"/>
+  </class>
+  <read sourceClass="xAOD::CompositeParticle_v1" version="[1-]"
+        targetClass="xAOD::CompositeParticle_v1" source="" target="m_p4Cached" >
+	    <![CDATA[
+	      m_p4Cached = false;
+	    ]]>
+  </read>
+
+  <class name="xAOD::CompositeParticleContainer_v1"
+         id="C65FFC20-CC41-4C6D-BEDF-B10E935EBFCC" />
+
+  <class name="xAOD::CompositeParticleAuxContainer_v1"
+         id="E43BBAC2-214D-4AFC-927D-AA0EE2C9217C" />
+
+  <!-- Smart pointers to CompositeParticle_v1: -->
+  <class name="DataLink<xAOD::CompositeParticleContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::CompositeParticleContainer_v1> >" />
+  <class name="ElementLink<xAOD::CompositeParticleContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::CompositeParticleContainer_v1> >" />
+  <class name="ElementLinkVector<xAOD::CompositeParticleContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::CompositeParticleContainer_v1> >" />
+
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <!-- <class name="ElementLink<xAOD::IParticleContainer>" /> -->
+    <!-- <class name="std::vector<ElementLink<xAOD::IParticleContainer> >" /> -->
+    <!-- <class name="std::vector<std::vector<ElementLink<xAOD::IParticleContainer> > >" /> -->
+  </exclusion>
+
+</lcgdict>

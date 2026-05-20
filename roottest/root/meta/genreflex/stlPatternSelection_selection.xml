@@ -1,0 +1,8 @@
+<rootdict>
+   <class pattern="std::map<*,bool>"/>
+   <class pattern="std::map<int,*>"/>
+   <class pattern="std::map<double,*>"/>
+   <class pattern="std::multimap<*,bool>"/>
+   <class pattern="std::multimap<int,*>"/>
+   <class pattern="std::multimap<double,*>"/>
+</rootdict>

@@ -27,7 +27,7 @@
 
 class TPad;
 class TPadWebSnapshot;
-class TWebPS;
+class TWebPainting;
 class TObjLink;
 class TExec;
 class TWebCanvasTimer;
@@ -139,7 +139,7 @@ protected:
    void AddColorsPalette(TPadWebSnapshot &master);
    void AddCustomFonts(TPadWebSnapshot &master);
 
-   void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
+   void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPainting *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
    void CheckPadModified(TPad *pad);

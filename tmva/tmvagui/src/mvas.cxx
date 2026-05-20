@@ -108,15 +108,15 @@ void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyl
          Float_t nrms = 10;
          cout << "--- Mean and RMS (S): " << sig->GetMean() << ", " << sig->GetRMS() << endl;
          cout << "--- Mean and RMS (B): " << bgd->GetMean() << ", " << bgd->GetRMS() << endl;
-         Float_t xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(),
+         Float_t xmin = std::max( std::min(sig->GetMean() - nrms*sig->GetRMS(),
                                                bgd->GetMean() - nrms*bgd->GetRMS() ),
                                     sig->GetXaxis()->GetXmin() );
-         Float_t xmax = TMath::Min( TMath::Max(sig->GetMean() + nrms*sig->GetRMS(),
+         Float_t xmax = std::min( std::max(sig->GetMean() + nrms*sig->GetRMS(),
                                                bgd->GetMean() + nrms*bgd->GetRMS() ),
                                     sig->GetXaxis()->GetXmax() );
          Float_t ymin = 0;
          Float_t maxMult = (htype == kCompareType) ? 1.3 : 1.2;
-         Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
+         Float_t ymax = std::max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
 
          // build a frame
          Int_t nb = 500;
@@ -194,7 +194,7 @@ void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyl
             bgdOv->SetLineColor( col );
             bgdOv->Draw("e1same");
 
-            ymax = TMath::Max( ymax, float(TMath::Max( sigOv->GetMaximum(), bgdOv->GetMaximum() )*maxMult ));
+            ymax = std::max( ymax, float(std::max( sigOv->GetMaximum(), bgdOv->GetMaximum() )*maxMult ));
             frame->GetYaxis()->SetLimits( 0, ymax );
 
             // for better visibility, plot thinner lines

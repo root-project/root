@@ -46,10 +46,6 @@ frame that on closure will put the frame back in the dock.
 #include <iostream>
 
 
-ClassImp(TGDockButton);
-ClassImp(TGDockHideButton);
-ClassImp(TGUndockedFrame);
-ClassImp(TGDockableFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dock button (i.e. button with two vertical bars).

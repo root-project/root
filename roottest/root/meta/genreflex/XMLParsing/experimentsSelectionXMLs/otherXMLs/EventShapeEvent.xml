@@ -1,0 +1,8 @@
+<lcgdict>      
+  <class name="EventShapeStore" id="2E0151BD-BEFE-4E43-8E67-9AC4CAAA20A3" />
+  <class name="EventShapes" />
+  <class name="std::vector<EventShapes>" />
+  <class name="EventFeatureStore" id="9879D335-0DC7-4F45-A7FA-321E1117EE42" />
+  <class name="EventFeature" />
+  <class name="DataVector<EventFeature>" />
+</lcgdict>

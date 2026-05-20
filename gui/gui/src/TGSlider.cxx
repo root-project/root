@@ -69,9 +69,6 @@ Releasing the mouse will generate the event:
 
 #include <iostream>
 
-ClassImp(TGSlider);
-ClassImp(TGVSlider);
-ClassImp(TGHSlider);
 
 
 ////////////////////////////////////////////////////////////////////////////////

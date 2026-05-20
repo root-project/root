@@ -27,7 +27,6 @@ Base frame for implementing GUI - a service class.
 #include "TGScrollBar.h"
 
 
-ClassImp(TGedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of the base GUI attribute frame.
@@ -263,8 +262,8 @@ void TGedNameFrame::SetModel(TObject* obj)
       TGVScrollBar *vsb    = canvas->GetVScrollbar();
 
       Int_t hscrollw = (vsb && vsb->IsMapped()) ? vsb->GetWidth() : 0;
-      Int_t labwidth = TMath::Min(fLabel->GetDefaultSize().fWidth,
+      Int_t labwidth = std::min(fLabel->GetDefaultSize().fWidth,
                                   canvas->GetWidth() - 10 - hscrollw);
-      f2->SetWidth(TMath::Max(labwidth, 80));
+      f2->SetWidth(std::max(labwidth, 80));
    }
 }

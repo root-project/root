@@ -83,3 +83,11 @@ TEST(TDatabasePDGMT, GetParticleByCodeAndName)
 }
 
 #endif
+
+// ROOT-6889
+TEST(TDatabasePDG, AntiParticleStability)
+{
+   auto db = TDatabasePDG::Instance();
+   // W- is unstable
+   EXPECT_FALSE(db->GetParticle(-24)->Stable());
+}

@@ -1,0 +1,4 @@
+<rootdict>
+   <class name="A" />
+   <class name="vector<unique_ptr<TH1F>>" />
+</rootdict>

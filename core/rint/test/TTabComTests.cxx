@@ -18,7 +18,11 @@
 #include <ROOT/RConfig.hxx>
 
 #include "TTabCom.h"
+#include "TSystem.h"
 
+#include "gtest/gtest.h"
+
+#include <algorithm>
 #include <string>
 
 TEST(TTabComTests, Sanity)
@@ -58,17 +62,42 @@ static std::string GetCompletions(const std::string& pattern, std::set<std::stri
    return SortCompletions(oss.str(), ignore);
 }
 
+TEST(TTabComTests, CompleteTObj)
+{
+#ifdef R__USE_CXXMODULES
+   std::string expected = "TObjArray TObjArrayIter TObjLink TObjLinkPtr_t TObjOptLink"
+                          " TObjString TObject TObjectRefSpy TObjectSpy TObjectTable";
+#else
+   std::string expected = "TObjArray TObjArrayIter TObjString TObject TObjectRefSpy TObjectSpy TObjectTable";
+#endif
+   // FIXME: See ROOT-10989
+   ASSERT_STREQ(expected.c_str(),
+                GetCompletions("TObj",
+                               /*ignore=*/{"TObjectDisplayItem", "TObjectDrawable", "TObjectHolder", "TObjectItem",
+                                           "TObjectElement", "TObject::EDeprecatedStatusBits", "TObject::EStatusBits"})
+                   .c_str());
+}
+
 TEST(TTabComTests, CompleteTH1)
 {
    // FIXME: The first call is unsuccessful due to a bug in the TTabCom::Hook
    // on some systems.
    GetCompletions("TH1");
-   std::string expected = "TH1 TH1C TH1D"
+   std::string expected = "TH1 TH1C TH1D";
 #if defined(R__USE_CXXMODULES) && defined(R__HAS_DATAFRAME)
-      // FIXME: See ROOT-10989
-      " TH1DModel"
+   // FIXME: See ROOT-10989
+   expected += " TH1DModel";
 #endif
-      " TH1Editor TH1F TH1I TH1K TH1L TH1S";
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kError, "", "libGed[.so | .dll | .dylib | .sl | .dl | .a] does not exist in", false);
+      diagRAII.optionalDiag(kWarning, "TUnixSystem::SetDisplay", "DISPLAY not set", false); // When tested over ssh
+      if (0 == gSystem->Load("libGed")) {
+         expected += " TH1Editor";
+      }
+   }
+   expected += " TH1F TH1I TH1L TH1S";
 
    ASSERT_STREQ(expected.c_str(), GetCompletions("TH1").c_str());
 }
@@ -88,14 +117,4 @@ TEST(TTabComTests, CompleteTProfile)
       " TProfile2Poly TProfile2PolyBin TProfile3D";
 
    ASSERT_STREQ(expected.c_str(), GetCompletions("TProfile").c_str());
-}
-
-TEST(TTabComTests, CompleteTObj)
-{
-   std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink TObjString"
-      " TObject TObjectRefSpy TObjectSpy TObjectTable";
-   // FIXME: See ROOT-10989
-   ASSERT_STREQ(expected.c_str(), GetCompletions("TObj",
-                                                 /*ignore=*/{"TObjectDisplayItem", "TObjectDrawable", "TObjectHolder",
-                                                             "TObjectItem", "TObjectElement", "TObject::EDeprecatedStatusBits", "TObject::EStatusBits"}).c_str());
 }

@@ -35,8 +35,8 @@
 #include "TVirtualPerfStats.h"
 #include "TDavixFileInternal.h"
 
-#include <errno.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdlib>
 #include <unistd.h>
 #include <fcntl.h>
 #include <davix.hpp>
@@ -51,7 +51,6 @@ extern const std::string gUserAgent;
 // The prefix that is used to find the variables in the gEnv
 #define ENVPFX "Davix."
 
-ClassImp(TDavixSystem);
 
 using namespace Davix;
 

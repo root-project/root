@@ -12,62 +12,44 @@
 #ifndef ROOT_TPadPainter
 #define ROOT_TPadPainter
 
-#include "TVirtualPadPainter.h"
+#include "TPadPainterBase.h"
 
 /*
-TVirtualPadPainter is an attempt to abstract
-painting operation furthermore. gVirtualX can
-be X11 or GDI, but pad painter can be gVirtualX (X11 or GDI),
+TPadPainter is implementation of TVirtualPadPainter interface for TVirtualX.
+gVirtualX can be X11 or GDI, but pad painter can be gVirtualX (X11 or GDI),
 or gl pad painter.
 */
 
 class TVirtualPad;
 
-class TPadPainter : public TVirtualPadPainter {
+class TPadPainter : public TPadPainterBase {
+   WinContext_t   fWinContext;
+   Int_t          fDoubleBuffer;
+
 public:
    TPadPainter();
-   //Final overriders for TVirtualPadPainter pure virtual functions.
-   //1. Part, which simply delegates to TVirtualX.
 
-   //Line attributes.
-   Color_t  GetLineColor() const override;
-   Style_t  GetLineStyle() const override;
-   Width_t  GetLineWidth() const override;
-
-   void     SetLineColor(Color_t lcolor) override;
-   void     SetLineStyle(Style_t lstyle) override;
-   void     SetLineWidth(Width_t lwidth) override;
-
-   //Fill attributes.
-   Color_t  GetFillColor() const override;
-   Style_t  GetFillStyle() const override;
-   Bool_t   IsTransparent() const override;
-
-   void     SetFillColor(Color_t fcolor) override;
-   void     SetFillStyle(Style_t fstyle) override;
    void     SetOpacity(Int_t percent) override;
-
-   //Text attributes.
-   Short_t  GetTextAlign() const override;
-   Float_t  GetTextAngle() const override;
-   Color_t  GetTextColor() const override;
-   Font_t   GetTextFont()  const override;
-   Float_t  GetTextSize()  const override;
    Float_t  GetTextMagnitude() const override;
 
-   void     SetTextAlign(Short_t align) override;
-   void     SetTextAngle(Float_t tangle) override;
-   void     SetTextColor(Color_t tcolor) override;
-   void     SetTextFont(Font_t tfont) override;
-   void     SetTextSize(Float_t tsize) override;
-   void     SetTextSizePixels(Int_t npixels) override;
+   //Overall attributes
+   void      SetAttFill(const TAttFill &att) override;
+   void      SetAttLine(const TAttLine &att) override;
+   void      SetAttMarker(const TAttMarker &att) override;
+   void      SetAttText(const TAttText &att) override;
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;
    void     ClearDrawable() override;
+   void     ClearWindow(Int_t device) override;
+   Int_t    ResizeDrawable(Int_t device, UInt_t w, UInt_t h) override;
    void     CopyDrawable(Int_t device, Int_t px, Int_t py) override;
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
+   void     UpdateDrawable(Int_t mode) override;
+   void     SetDrawMode(Int_t device, Int_t mode) override;
+   void     SetDoubleBuffer(Int_t device, Int_t mode) override;
+
 
    //TASImage support (noop for a non-gl pad).
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
@@ -87,6 +69,9 @@ public:
    void     DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y) override;
    void     DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v) override;
 
+   void     DrawSegments(Int_t n, Double_t *x, Double_t *y) override;
+   void     DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v) override;
+
    //TPad needs both versions.
    void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y) override;
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) override;
@@ -98,6 +83,12 @@ public:
 
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
+
+   Bool_t   IsNative() const override { return kTRUE; }
+
+   Bool_t   IsCocoa() const override;
+
+   Bool_t   IsSupportAlpha() const override;
 
 private:
    //Let's make this clear:

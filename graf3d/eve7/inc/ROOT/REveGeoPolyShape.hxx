@@ -82,6 +82,9 @@ public:
    const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const override;
    TBuffer3D *MakeBuffer3D() const override;
 
+   const std::vector<Double_t> &GetVertices() const { return fVertices; }
+   const std::vector<UInt_t>   &GetPolyDesc() const { return fPolyDesc; }
+
    static void   SetAutoEnforceTriangles(Bool_t f);
    static Bool_t GetAutoEnforceTriangles();
    static void   SetAutoCalculateNormals(Bool_t f);

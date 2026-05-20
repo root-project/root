@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import pickle
 import uuid
 import warnings
 from abc import ABC, abstractmethod
@@ -9,19 +8,18 @@ from collections import Counter, deque
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from itertools import zip_longest
 from typing import TYPE_CHECKING, Callable, Deque, Dict, Iterable, List, Optional, Union
 
 import ROOT
 
-from DistRDF import ComputationGraphGenerator, Ranges, _graph_cache
-from DistRDF.Backends import Utils
-from DistRDF.Backends.Base import distrdf_mapper, distrdf_reducer
-from DistRDF.Node import Node
-from DistRDF.Operation import Action, InstantAction, Operation
+from . import ComputationGraphGenerator, Ranges, _graph_cache
+from .Backends import Utils
+from .Backends.Base import distrdf_mapper, distrdf_reducer
+from .Node import Node
+from .Operation import Action, InstantAction, Operation
 
 if TYPE_CHECKING:
-    from DistRDF.Backends.Base import BaseBackend, TaskResult
+    from .Backends.Base import BaseBackend, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -870,7 +868,7 @@ class RNTupleHeadNode(HeadNode):
         super().__init__(backend, npartitions, localdf)
 
         self.mainntuplename = args[0]
-        self.inputfiles = args[1]
+        self.inputfiles = [args[1]] if isinstance(args[1], str) else args[1]
         # Keep this in accordance with the implementation of TTree for now
         self.subnames = [self.mainntuplename] * len(self.inputfiles)
 
@@ -883,8 +881,8 @@ class RNTupleHeadNode(HeadNode):
         # RDataFrame instance is going to process RNTuple data and the computation
         # graph needs to be recreated at every task
         self.exec_id = _graph_cache.ExecutionIdentifier("RNTuple", self.exec_id.graph_uuid)
-        return Ranges.get_ntuple_ranges(self.mainntuplename, self.inputfiles, self.npartitions, self.exec_id)
-    
+        return Ranges.get_percentage_ranges(self.subnames, self.inputfiles, self.npartitions, None, self.exec_id, None)
+
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
@@ -892,18 +890,27 @@ class RNTupleHeadNode(HeadNode):
         the RNtuple data source.
         """
 
-        def build_rdf_from_range(current_range: Ranges.get_ntuple_ranges) -> TaskObjects:
+        def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
             Builds an RDataFrame instance for a distributed mapper.
 
             The function creates a TChain from the information contained in the
             input range object. If the chain cannot be built, returns None.
             """
-            ntuplename, filenames = current_range.ntuplename, current_range.filenames            
-            if not filenames:
-                return TaskObjects(None, None)
+            clustered_range, entries_in_rntuples = Ranges.get_clustered_range_from_percs(current_range)
 
-            return TaskObjects(ROOT.RDF.FromRNTuple(ntuplename, filenames), None)
+            if clustered_range is None:
+                return TaskObjects(None, entries_in_rntuples)
+
+            return TaskObjects(
+                ROOT.Internal.RDF.FromRNTuple(
+                    clustered_range.treenames[0],  # Only one RNTuple name for the whole dataset
+                    clustered_range.filenames,
+                    (clustered_range.globalstart, clustered_range.globalend),
+                ),
+                
+                entries_in_rntuples,
+            )
 
         return build_rdf_from_range
 
@@ -914,7 +921,35 @@ class RNTupleHeadNode(HeadNode):
         the dataset were processed during distributed execution.
         """
         if values.mergeables is None:
-            raise RuntimeError("The distributed execution returned no values. "
-                               "This can happen if all files in your dataset contain empty trees.")
+            raise RuntimeError(
+                "The distributed execution returned no values. "
+                "This can happen if all files in your dataset contain empty trees."
+            )
+
+        # User could have requested to read the same file multiple times indeed
+        input_files_and_trees = [
+            f"{filename}/{ntuplename}" for filename, ntuplename in zip(self.inputfiles, self.subnames)
+        ]
+        files_counts = Counter(input_files_and_trees)
+
+        entries_in_rntuples = values.entries_in_trees
+        # Keys should be exactly the same
+        if files_counts.keys() != entries_in_rntuples.trees_with_entries.keys():
+            raise RuntimeError(
+                "The specified input files and the files that were "
+                "actually processed are not the same:\n"
+                f"Input files: {list(files_counts.keys())}\n"
+                f"Processed files: {list(entries_in_rntuples.trees_with_entries.keys())}"
+            )
+
+        # Multiply the entries of each tree by the number of times it was
+        # requested by the user
+        for fullpath in files_counts:
+            entries_in_rntuples.trees_with_entries[fullpath] *= files_counts[fullpath]
+
+        total_dataset_entries = sum(entries_in_rntuples.trees_with_entries.values())
+        if entries_in_rntuples.processed_entries != total_dataset_entries:
+            raise RuntimeError(f"The dataset has {total_dataset_entries} entries, "
+                               f"but {entries_in_rntuples.processed_entries} were processed.")
 
         return values.mergeables        

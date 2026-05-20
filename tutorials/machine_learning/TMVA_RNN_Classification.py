@@ -35,8 +35,6 @@ TMVA = ROOT.TMVA
 TFile = ROOT.TFile
 
 import os
-import importlib
-
 
 TMVA.Tools.Instance()
 TMVA.Config.Instance()
@@ -163,7 +161,7 @@ if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
 
 if useKeras:
    try:
-      import tensorflow
+      pass
    except:
       ROOT.Warning("TMVA_RNN_Classification", "Skip using Keras since tensorflow cannot be imported")
       useKeras = False
@@ -387,17 +385,23 @@ if useTMVA_DNN:
 if useKeras:
     for i in range(3):
         if use_rnn_type[i]:
-            modelName = "model_" + rnn_types[i] + ".h5"
+            modelName = "model_" + rnn_types[i] + ".keras"
             trainedModelName = "trained_" + modelName
             print("Building recurrent keras model using a", rnn_types[i], "layer")
             # create python script which can be executed
             # create 2 conv2d layer + maxpool + dense
-            from tensorflow.keras.models import Sequential
-            from tensorflow.keras.optimizers import Adam
-
             # from keras.initializers import TruncatedNormal
             # from keras import initializations
-            from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, BatchNormalization
+            from tensorflow.keras.layers import (
+                GRU,
+                LSTM,
+                Dense,
+                Flatten,
+                Reshape,
+                SimpleRNN,
+            )
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.optimizers import Adam
 
             model = Sequential()
             model.add(Reshape((10, 30), input_shape=(10 * 30,)))
@@ -433,8 +437,7 @@ if useKeras:
                     FilenameModel=modelName,
                     FilenameTrainedModel="trained_" + modelName,
                     NumEpochs=maxepochs,
-                    BatchSize=batchSize,
-                    GpuOptions="allow_growth=True",
+                    BatchSize=batchSize
                 )
 
 

@@ -15,7 +15,6 @@
 TClass *TVirtualHistPainter::fgPainter = nullptr;
 
 
-ClassImp(TVirtualHistPainter);
 
 /** \class TVirtualHistPainter
  \ingroup Histpainter

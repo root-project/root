@@ -16,7 +16,6 @@
 #include "TVirtualViewer3D.h"
 
 
-ClassImp(TAnnotation);
 
 /** \class TAnnotation
 \ingroup gpad
@@ -131,4 +130,22 @@ void TAnnotation::Print(Option_t *) const
    if (GetTextAlign() != 10) printf(" Align=%d",GetTextAlign());
    if (GetTextAngle() != 0 ) printf(" Angle=%f",GetTextAngle());
    printf("\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitives in this pad on the C++ source file out.
+
+void TAnnotation::SavePrimitive(std::ostream &out, Option_t *option)
+{
+   SavePrimitiveConstructor(
+      out, Class(), "annotation",
+      TString::Format("%g, %g, %g, \"%s\"", fX, fY, fZ, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
+
+   SaveTextAttributes(out, "annotation", 11, 0, 1, 62, 0.05);
+   SaveLineAttributes(out, "annotation", 1, 1, 1);
+
+   if (TestBit(kTextNDC))
+      out << "   annotation->SetNDC();\n";
+
+   SavePrimitiveDraw(out, "annotation", option);
 }

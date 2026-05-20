@@ -14,7 +14,7 @@
 #include <ROOT/TSeq.hxx>
 
 #include <algorithm>
-#include <functional>
+#include <any>
 #include <map>
 #include <memory>
 #include <string>
@@ -26,11 +26,15 @@
 #ifndef ROOT_RVECDS
 #define ROOT_RVECDS
 
-namespace ROOT {
+namespace ROOT::Internal::RDF {
 
-namespace Internal {
+class R__CLING_PTRCHECK(off) RVecDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   TPointerHolder *fPtrHolder;
+   void *GetImpl(Long64_t) final { return fPtrHolder->GetPointer(); }
 
-namespace RDF {
+public:
+   RVecDSColumnReader(TPointerHolder *ptrHolder) : fPtrHolder(ptrHolder) {}
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief A RDataSource implementation which takes a collection of RVecs, which
@@ -43,49 +47,21 @@ namespace RDF {
 /// so that the lifetime of the data is tied to the datasource.
 template <typename... ColumnTypes>
 class RVecDS final : public ROOT::RDF::RDataSource {
-   using PointerHolderPtrs_t = std::vector<ROOT::Internal::TDS::TPointerHolder *>;
+   using PointerHolderPtrs_t = std::vector<ROOT::Internal::RDF::TPointerHolder *>;
 
    std::tuple<ROOT::RVec<ColumnTypes>...> fColumns;
-   const std::vector<std::string> fColNames;
-   const std::map<std::string, std::string> fColTypesMap;
+   std::vector<std::string> fColNames;
+   std::unordered_map<std::string, std::string> fColTypesMap;
    // The role of the fPointerHoldersModels is to be initialised with the pack
    // of arguments in the constrcutor signature at construction time
    // Once the number of slots is known, the fPointerHolders are initialised
    // according to the models.
-   const PointerHolderPtrs_t fPointerHoldersModels;
+   PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
-   std::function<void()> fDeleteRVecs;
+   std::any fLifeline;
 
-   Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id)
-   {
-      auto colNameStr = std::string(colName);
-      // This could be optimised and done statically
-      const auto idName = ROOT::Internal::RDF::TypeID2TypeName(id);
-      auto it = fColTypesMap.find(colNameStr);
-      if (fColTypesMap.end() == it) {
-         std::string err = "The specified column name, \"" + colNameStr + "\" is not known to the data source.";
-         throw std::runtime_error(err);
-      }
-
-      const auto colIdName = it->second;
-      if (colIdName != idName) {
-         std::string err = "Column " + colNameStr + " has type " + colIdName +
-                           " while the id specified is associated to type " + idName;
-         throw std::runtime_error(err);
-      }
-
-      const auto colBegin = fColNames.begin();
-      const auto colEnd = fColNames.end();
-      const auto namesIt = std::find(colBegin, colEnd, colName);
-      const auto index = std::distance(colBegin, namesIt);
-
-      Record_t ret(fNSlots);
-      for (auto slot : ROOT::TSeqU(fNSlots)) {
-         ret[slot] = fPointerHolders[index][slot]->GetPointerAddr();
-      }
-      return ret;
-   }
+   Record_t GetColumnReadersImpl(std::string_view, const std::type_info &) { return {}; }
 
    size_t GetEntriesNumber() { return std::get<0>(fColumns).size(); }
    template <std::size_t... S>
@@ -121,12 +97,12 @@ protected:
    std::string AsString() { return "Numpy data source"; };
 
 public:
-   RVecDS(std::function<void()> deleteRVecs, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colsNameVals)
+   RVecDS(std::any lifeline, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colsNameVals)
       : fColumns(colsNameVals.second...),
         fColNames{colsNameVals.first...},
         fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
-        fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
-        fDeleteRVecs(deleteRVecs)
+        fPointerHoldersModels({new ROOT::Internal::RDF::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
+        fLifeline{std::move(lifeline)}
    {
    }
 
@@ -142,8 +118,33 @@ public:
             delete ptrHolder;
          }
       }
-      // Release the data associated to this data source
-      fDeleteRVecs();
+   }
+
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int slot, std::string_view colName, const std::type_info &id) final
+   {
+      auto colNameStr = std::string(colName);
+
+      auto it = fColTypesMap.find(colNameStr);
+      if (fColTypesMap.end() == it) {
+         std::string err = "The specified column name, \"" + colNameStr + "\" is not known to the data source.";
+         throw std::runtime_error(err);
+      }
+
+      const auto &colIdName = it->second;
+      const auto idName = ROOT::Internal::RDF::TypeID2TypeName(id);
+      if (colIdName != idName) {
+         std::string err = "Column " + colNameStr + " has type " + colIdName +
+                           " while the id specified is associated to type " + idName;
+         throw std::runtime_error(err);
+      }
+
+      if (auto colNameIt = std::find(fColNames.begin(), fColNames.end(), colNameStr); colNameIt != fColNames.end()) {
+         const auto index = std::distance(fColNames.begin(), colNameIt);
+         return std::make_unique<ROOT::Internal::RDF::RVecDSColumnReader>(fPointerHolders[index][slot]);
+      }
+
+      throw std::runtime_error("Could not find column name \"" + colNameStr + "\" in available column names.");
    }
 
    const std::vector<std::string> &GetColumnNames() const { return fColNames; }
@@ -221,14 +222,12 @@ public:
 //                the data cannot go out of scope as long as the datasource survives.
 template <typename... ColumnTypes>
 std::unique_ptr<RDataFrame>
-MakeRVecDataFrame(std::function<void()> deleteRVecs,
-                  std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colNameProxyPairs)
+MakeRVecDataFrame(std::any lifeline, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colNameProxyPairs)
 {
-   return std::make_unique<RDataFrame>(std::make_unique<RVecDS<ColumnTypes...>>(deleteRVecs, colNameProxyPairs...));
+   return std::make_unique<RDataFrame>(
+      std::make_unique<RVecDS<ColumnTypes...>>(std::move(lifeline), colNameProxyPairs...));
 }
 
-} // namespace RDF
-} // namespace Internal
-} // namespace ROOT
+} // namespace ROOT::Internal::RDF
 
 #endif // ROOT_RNUMPYDS

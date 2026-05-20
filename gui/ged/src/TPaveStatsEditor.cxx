@@ -27,7 +27,6 @@ Implements GUI for editing attributes of TPaveStats objects.
 #include "TGButton.h"
 #include "TPaveStats.h"
 
-ClassImp(TPaveStatsEditor);
 
 enum EPaveStatsWid {
    kSTAT_NAME,

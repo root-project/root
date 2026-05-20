@@ -91,7 +91,7 @@ public:
    TASImage &operator=(const TASImage &img);
    ~TASImage() override;
 
-   TObject *Clone(const char *newname) const override;
+   TObject *Clone(const char *newname = "") const override;
 
    void  SetEditable(Bool_t on = kTRUE) override { fEditable = on; }             //*TOGGLE*
    Bool_t IsEditable() const override { return fEditable; }

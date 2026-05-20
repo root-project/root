@@ -13,8 +13,6 @@
 
 #include "TGCocoa.h"
 
-#include <GL/glew.h>
-
 #include "ROOTOpenGLView.h"
 #include "CocoaConstants.h"
 #include "TMacOSXSystem.h"
@@ -41,6 +39,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
 #include <Cocoa/Cocoa.h>
 
 #include <algorithm>
@@ -423,7 +422,6 @@ void FixAscii(std::vector<UniChar> &text)
 
 }
 
-ClassImp(TGCocoa)
 
 Atom_t TGCocoa::fgDeleteWindowAtom = 0;
 
@@ -587,8 +585,12 @@ void TGCocoa::Update(Int_t mode)
       fPimpl->fX11CommandBuffer.Flush(fPimpl.get());
    }
 
-   if (fDirectDraw && mode != 2)
-      fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
+   if (fDirectDraw && mode != 2) {
+      // here was flushing of XOR operation
+      // now XOR operations collected directly by correspondent view and
+      // updated asynchronousely by calling view.setNeedsDisplay(YES)
+      // so there is no need for central instance
+   }
 }
 
 //______________________________________________________________________________
@@ -678,13 +680,42 @@ void TGCocoa::SelectWindow(Int_t windowID)
 }
 
 //______________________________________________________________________________
-void TGCocoa::ClearWindow()
+WinContext_t TGCocoa::GetWindowContext(Int_t wid)
 {
-   //Clear the selected drawable OR pixmap (the name - from TVirtualX interface - is bad).
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
-          "ClearWindow, fSelectedDrawable is invalid");
+   if (!wid)
+      return (WinContext_t) 0;
+   auto drawable = fPimpl->GetDrawable(wid);
+   return (WinContext_t) drawable;
+}
 
-   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
+//______________________________________________________________________________
+WinContext_t TGCocoa::GetSelectedContext()
+{
+   return GetWindowContext(fSelectedDrawable);
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
+{
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+
+   // here XOR window and XOR operations can be removed if necessary
+   [drawable setDrawMode : mode];
+}
+
+//______________________________________________________________________________
+TVirtualX::EDrawMode TGCocoa::GetDrawModeW(WinContext_t wctxt)
+{
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+
+   return [drawable getDrawMode];
+}
+
+//______________________________________________________________________________
+void TGCocoa::ClearWindowW(WinContext_t wctxt)
+{
+   auto drawable = (NSObject<X11Drawable> * const) wctxt;
+
    if (drawable.fIsPixmap) {
       //Pixmaps are white by default.
       //This is bad - we can not have transparent sub-pads (in TCanvas)
@@ -699,8 +730,48 @@ void TGCocoa::ClearWindow()
       CGContextClearRect(pixmapCtx, CGRectMake(0, 0, drawable.fWidth, drawable.fHeight));
    } else {
       //For a window ClearArea with w == 0 and h == 0 means the whole window.
-      ClearArea(fSelectedDrawable, 0, 0, 0, 0);
+      ClearArea(drawable.fID, 0, 0, 0, 0);
    }
+}
+
+//______________________________________________________________________________
+void TGCocoa::UpdateWindowW(WinContext_t wctxt, Int_t /* mode */)
+{
+   auto window = (NSObject<X11Window> * const) wctxt;
+
+   //Have no idea, why this can happen with ROOT - done by TGDNDManager :(
+   if (window.fIsPixmap == YES)
+      return;
+
+   if (QuartzPixmap * const pixmap = window.fBackBuffer) {
+      assert([window.fContentView isKindOfClass : [QuartzView class]] && "UpdateWindow, content view is not a QuartzView");
+      QuartzView *dstView = (QuartzView *)window.fContentView;
+
+      if (dstView.fIsOverlapped)
+         return;
+
+      if (dstView.fContext) {
+         //We can draw directly.
+         const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
+         [dstView copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
+      } else {
+         //Have to wait.
+         fPimpl->fX11CommandBuffer.AddUpdateWindow(dstView);
+         Update(1);
+      }
+   }
+}
+
+
+
+//______________________________________________________________________________
+void TGCocoa::ClearWindow()
+{
+   //Clear the selected drawable OR pixmap (the name - from TVirtualX interface - is bad).
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
+          "ClearWindow, fSelectedDrawable is invalid");
+
+   ClearWindowW((WinContext_t)fPimpl->GetDrawable(fSelectedDrawable));
 }
 
 //______________________________________________________________________________
@@ -791,7 +862,7 @@ void TGCocoa::ResizeWindow(Int_t windowID)
 }
 
 //______________________________________________________________________________
-void TGCocoa::UpdateWindow(Int_t /*mode*/)
+void TGCocoa::UpdateWindow(Int_t mode)
 {
    //This function is used by TCanvas/TPad:
    //draw "back buffer" image into the view.
@@ -808,25 +879,7 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
    if (fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == YES)
       return;
 
-   NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
-
-   if (QuartzPixmap * const pixmap = window.fBackBuffer) {
-      assert([window.fContentView isKindOfClass : [QuartzView class]] && "UpdateWindow, content view is not a QuartzView");
-      QuartzView *dstView = (QuartzView *)window.fContentView;
-
-      if (dstView.fIsOverlapped)
-         return;
-
-      if (dstView.fContext) {
-         //We can draw directly.
-         const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
-         [dstView copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
-      } else {
-         //Have to wait.
-         fPimpl->fX11CommandBuffer.AddUpdateWindow(dstView);
-         Update(1);
-      }
-   }
+   UpdateWindowW((WinContext_t) fPimpl->GetWindow(fSelectedDrawable), mode);
 }
 
 //______________________________________________________________________________
@@ -2377,27 +2430,34 @@ void TGCocoa::SelectPixmap(Int_t pixmapID)
 //______________________________________________________________________________
 void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 {
-   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
-          "CopyPixmap, parameter 'pixmapID' is not a valid id");
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
           "CopyPixmap, fSelectedDrawable is not a valid window id");
+
+   CopyPixmapW((WinContext_t) fPimpl->GetDrawable(fSelectedDrawable), pixmapID, x, y);
+}
+
+//______________________________________________________________________________
+void TGCocoa::CopyPixmapW(WinContext_t wctxt, Int_t pixmapID, Int_t x, Int_t y)
+{
+   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
+          "CopyPixmapW, parameter 'pixmapID' is not a valid id");
 
    NSObject<X11Drawable> * const source = fPimpl->GetDrawable(pixmapID);
    assert([source isKindOfClass : [QuartzPixmap class]] &&
           "CopyPixmap, source is not a pixmap");
    QuartzPixmap * const pixmap = (QuartzPixmap *)source;
 
-   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
+   auto drawable = (NSObject<X11Drawable> * const) wctxt;
    NSObject<X11Drawable> * destination = nil;
 
    if (drawable.fIsPixmap) {
       destination = drawable;
    } else {
-      NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
+      NSObject<X11Window> * const window = (NSObject<X11Window> * const) drawable;
       if (window.fBackBuffer) {
          destination = window.fBackBuffer;
       } else {
-         Warning("CopyPixmap", "Operation skipped, since destination"
+         Warning("CopyPixmapW", "Operation skipped, since destination"
                                " window is not double buffered");
          return;
       }
@@ -3456,6 +3516,17 @@ void TGCocoa::SetDoubleBuffer(Int_t windowID, Int_t mode)
 void TGCocoa::SetDoubleBufferOFF()
 {
    fDirectDraw = true;
+
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
+          "SetDoubleBufferON, called, but no correct window was selected before");
+
+   NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
+   if (!window) return;
+
+   assert(window.fIsPixmap == NO &&
+          "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
+
+   [window setDirectDraw : YES];
 }
 
 //______________________________________________________________________________
@@ -3468,11 +3539,12 @@ void TGCocoa::SetDoubleBufferON()
           "SetDoubleBufferON, called, but no correct window was selected before");
 
    NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
-
    if (!window) return;
 
    assert(window.fIsPixmap == NO &&
           "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
+
+   [window setDirectDraw : NO];
 
    const unsigned currW = window.fWidth;
    const unsigned currH = window.fHeight;
@@ -3494,17 +3566,12 @@ void TGCocoa::SetDoubleBufferON()
 //______________________________________________________________________________
 void TGCocoa::SetDrawMode(EDrawMode mode)
 {
-   // Sets the drawing mode.
+   // Sets the drawing mode for all windows.
    //
-   //EDrawMode{kCopy, kXor, kInvert};
-   if (fDrawMode == kInvert && mode != kInvert) {
-       // Remove previously added CrosshairWindow.
-       auto windows = NSApplication.sharedApplication.windows;
-       for (NSWindow *candidate : windows) {
-           if ([candidate isKindOfClass:QuartzWindow.class])
-               [(QuartzWindow *)candidate removeXorWindow];
-       }
-       fPimpl->fX11CommandBuffer.ClearXOROperations();
+   auto windows = NSApplication.sharedApplication.windows;
+   for (NSWindow *candidate : windows) {
+      if ([candidate isKindOfClass:QuartzWindow.class])
+         [(QuartzWindow *)candidate setDrawMode : mode];
    }
 
    fDrawMode = mode;

@@ -25,8 +25,11 @@
 #include "TVirtualAuth.h"
 #include "Rtypes.h"
 
-class TSecContext;
 class TSocket;
+
+namespace ROOT::Deprecated {
+
+class TSecContext;
 
 class TRootAuth : public TVirtualAuth {
 
@@ -42,5 +45,9 @@ public:
 
    ClassDefOverride(TRootAuth,0)  // client auth interface
 };
+
+} // namespace ROOT::Deprecated
+
+using TRootAuth R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::TRootAuth;
 
 #endif

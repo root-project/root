@@ -1,0 +1,14 @@
+<lcgdict>
+  <class name="std::vector<SimTrack>"/>
+  <class name="std::vector<const SimTrack*>"/>
+  <class name="CoreSimTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="3936841839"/>
+  </class>
+  <class name="SimTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="1430205451"/>
+  </class>
+  <class name="edm::Wrapper<std::vector<SimTrack> >" />
+  <class name="edm::RefProd<std::vector<SimTrack> >"/>
+  <class name="edm::Ref<std::vector<SimTrack>,SimTrack,edm::refhelper::FindUsingAdvance<std::vector<SimTrack>,SimTrack> >"/>
+  <class name="edm::RefVector<std::vector<SimTrack>,SimTrack,edm::refhelper::FindUsingAdvance<std::vector<SimTrack>,SimTrack> >"/>
+</lcgdict>

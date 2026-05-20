@@ -17,7 +17,8 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleRange.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <string_view>
 
 #include <iterator>
@@ -88,6 +89,8 @@ protected:
    static std::unique_ptr<ROOT::RFieldBase>
    CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource, std::string_view typeName = "")
    {
+      RFieldZero fieldZero;
+      Internal::SetAllowFieldSubstitutions(fieldZero, true);
       std::unique_ptr<ROOT::RFieldBase> field;
       {
          const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
@@ -102,8 +105,9 @@ protected:
          }
       }
       field->SetOnDiskId(fieldId);
-      ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
-      return field;
+      fieldZero.Attach(std::move(field));
+      ROOT::Internal::CallConnectPageSourceOnField(fieldZero, pageSource);
+      return std::move(fieldZero.ReleaseSubfields()[0]);
    }
 
    RNTupleViewBase(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range)
@@ -180,6 +184,13 @@ protected:
    {
    }
 
+   const T &GetValueRef() const
+   {
+      // We created the RValue and know its type, avoid extra checks.
+      void *ptr = RNTupleViewBase<T>::fValue.template GetPtr<void>().get();
+      return *static_cast<T *>(ptr);
+   }
+
 public:
    RNTupleView(const RNTupleView &other) = delete;
    RNTupleView(RNTupleView &&other) = default;
@@ -191,7 +202,7 @@ public:
    const T &operator()(ROOT::NTupleSize_t globalIndex)
    {
       RNTupleViewBase<T>::fValue.Read(globalIndex);
-      return RNTupleViewBase<T>::fValue.template GetRef<T>();
+      return GetValueRef();
    }
 
    /// Reads the value of this view for the entry with the provided `localIndex`.
@@ -199,7 +210,7 @@ public:
    const T &operator()(RNTupleLocalIndex localIndex)
    {
       RNTupleViewBase<T>::fValue.Read(localIndex);
-      return RNTupleViewBase<T>::fValue.template GetRef<T>();
+      return GetValueRef();
    }
 };
 
@@ -264,7 +275,7 @@ protected:
    {
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
-      if (fieldDesc.GetTypeName() != ROOT::RField<T>::TypeName()) {
+      if (!Internal::IsMatchingFieldType<T>(fieldDesc.GetTypeName())) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
                                   fieldDesc.GetTypeName() + " vs. " + ROOT::RField<T>::TypeName()));
       }
@@ -343,6 +354,13 @@ private:
                                   descGuard->GetQualifiedFieldName(fField.GetOnDiskId()) + "'"));
       }
       return fieldId;
+   }
+
+   std::uint64_t GetCardinalityValue() const
+   {
+      // We created the RValue and know its type, avoid extra checks.
+      void *ptr = fValue.GetPtr<void>().get();
+      return *static_cast<RNTupleCardinality<std::uint64_t> *>(ptr);
    }
 
 public:
@@ -424,14 +442,14 @@ public:
    std::uint64_t operator()(ROOT::NTupleSize_t globalIndex)
    {
       fValue.Read(globalIndex);
-      return fValue.GetRef<std::uint64_t>();
+      return GetCardinalityValue();
    }
 
    /// \see RNTupleView::operator()(RNTupleLocalIndex)
    std::uint64_t operator()(RNTupleLocalIndex localIndex)
    {
       fValue.Read(localIndex);
-      return fValue.GetRef<std::uint64_t>();
+      return GetCardinalityValue();
    }
 };
 

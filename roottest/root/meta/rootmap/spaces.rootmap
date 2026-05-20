@@ -1,0 +1,4 @@
+Declare.template<typename-T>-class-A;
+Library.A<int>:                              spaces_C
+Library.A<unsigned-int>:                     spaces_C
+

@@ -9,6 +9,9 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+find_library(OPENGL_FRAMEWORK OpenGL REQUIRED)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   HEADERS
     TGCocoa.h
@@ -36,16 +39,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     Gui
   LIBRARIES
     GQuartz
-    "-framework Cocoa"
-    "-framework OpenGL"
-    ${FREETYPE_LIBRARIES}
-    GLEW::GLEW
+    ${COCOA_FRAMEWORK}
+    ${OPENGL_FRAMEWORK}
+    Freetype::Freetype
 )
 
 target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
 
 # We know GL is deprecated on macOS. And our answer is WebGUI/Graphics.
 target_compile_options(GCocoa PRIVATE -ObjC++ -Wno-deprecated-declarations)
-target_include_directories(GCocoa PRIVATE ${FREETYPE_INCLUDE_DIRS})
-
 target_include_directories(GCocoa PRIVATE ${OPENGL_INCLUDE_DIR})

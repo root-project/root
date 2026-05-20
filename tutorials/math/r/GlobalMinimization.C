@@ -11,8 +11,8 @@
 
 #include<TRInterface.h>
 #include<TBenchmark.h>
-#include<math.h>
-#include<stdlib.h>
+#include<cmath>
+#include<cstdlib>
 
 // In the next function the *double pointer should be changed by a TVectorD datatype,
 // because the pointer has no meaning in R's enviroment.

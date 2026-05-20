@@ -1,56 +1,71 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+# **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
+# 22 July 2024, https://github.com/lz4/lz4/releases/tag/v1.10.0
+set(ROOT_LZ4_VERSION 1.10.0)
+set(ROOT_LZ4_HASH "537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b")
+
 project(LZ4 C)
 
-find_package(xxHash REQUIRED)
+set(ROOT_LZ4_PREFIX ${CMAKE_BINARY_DIR}/builtins/LZ4-prefix)
+set(ROOT_LZ4_LIBRARY ${ROOT_LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-set(LZ4_PUBLIC_HEADERS
-  lz4.h
-  lz4frame.h
-  lz4hc.h
+if(MSVC)
+    # In the MSVC case, we forward the default C++ configuration flags because
+    # they are changed by ROOT in SetUpWindows.cmake.
+    set(lz4_extra_cmake_args
+        -DCMAKE_CXXFLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
+        -DCMAKE_CXXFLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
+        -DCMAKE_CXXFLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG})
+    if(NOT CMAKE_GENERATOR MATCHES Ninja)
+        if(winrtdebug)
+            set(ROOT_LZ4_BUILD_COMMAND_FLAGS "--config Debug")
+        else()
+            set(ROOT_LZ4_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+        endif()
+    endif()
+endif()
+
+ExternalProject_Add(
+    BUILTIN_LZ4
+    URL ${lcgpackages}/lz4-${ROOT_LZ4_VERSION}.tar.gz
+    URL_HASH SHA256=${ROOT_LZ4_HASH}
+    PREFIX ${ROOT_LZ4_PREFIX}
+    SOURCE_SUBDIR "build/cmake"
+    CMAKE_ARGS -G ${CMAKE_GENERATOR} 
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DCMAKE_CXX_VISIBILITY_PRESET=hidden
+    -DCMAKE_C_VISIBILITY_PRESET=hidden
+    -DBUILD_SHARED_LIBS=OFF
+    -DBUILD_STATIC_LIBS=ON
+    ${lz4_extra_cmake_args}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build "<SOURCE_DIR>/<SOURCE_SUBDIR>" ${ROOT_LZ4_BUILD_COMMAND_FLAGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install  "<SOURCE_DIR>/<SOURCE_SUBDIR>" ${ROOT_LZ4_BUILD_COMMAND_FLAGS}
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+    BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${ROOT_LZ4_LIBRARY}
+    TIMEOUT 600
 )
 
-set(LZ4_PRIVATE_HEADERS
-  lz4frame_static.h
-)
 
-set(LZ4_SOURCES
-  lz4.c
-  lz4frame.c
-  lz4hc.c
-)
+set(LZ4_INCLUDE_DIR ${ROOT_LZ4_PREFIX}/include)
+file(MAKE_DIRECTORY ${LZ4_INCLUDE_DIR})
 
-unset(LZ4_FOUND CACHE)
-unset(LZ4_FOUND PARENT_SCOPE)
-set(LZ4_FOUND TRUE CACHE BOOL "" FORCE)
+add_library(LZ4::LZ4 STATIC IMPORTED GLOBAL)
+add_dependencies(LZ4::LZ4 BUILTIN_LZ4)
+target_include_directories(LZ4::LZ4 INTERFACE ${LZ4_INCLUDE_DIR})
+set_target_properties(LZ4::LZ4 PROPERTIES IMPORTED_LOCATION ${ROOT_LZ4_LIBRARY})
 
-file(STRINGS "lz4.h" LZ4_H REGEX "^#define LZ4_VERSION_[A-Z]+[ ]+[0-9]+.*$")
-string(REGEX REPLACE ".+LZ4_VERSION_MAJOR[ ]+([0-9]+).*$"   "\\1" LZ4_VERSION_MAJOR "${LZ4_H}")
-string(REGEX REPLACE ".+LZ4_VERSION_MINOR[ ]+([0-9]+).*$"   "\\1" LZ4_VERSION_MINOR "${LZ4_H}")
-string(REGEX REPLACE ".+LZ4_VERSION_RELEASE[ ]+([0-9]+).*$" "\\1" LZ4_VERSION_PATCH "${LZ4_H}")
-set(LZ4_VERSION_STRING "${LZ4_VERSION_MAJOR}.${LZ4_VERSION_MINOR}.${LZ4_VERSION_PATCH}")
-unset(LZ4_H)
-
-set(LZ4_VERSION ${LZ4_VERSION_STRING} CACHE INTERNAL "" FORCE)
-set(LZ4_VERSION_STRING ${LZ4_VERSION_STRING} CACHE INTERNAL "" FORCE)
-
-set(LZ4_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
-set(LZ4_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
-
-add_library(lz4 STATIC ${LZ4_PUBLIC_HEADERS} ${LZ4_PRIVATE_HEADERS} ${LZ4_SOURCES})
-set_target_properties(lz4 PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
-target_include_directories(lz4
-  PRIVATE ${xxHash_INCLUDE_DIR} ${LZ4_INCLUDE_DIR}
-  INTERFACE $<BUILD_INTERFACE:${LZ4_INCLUDE_DIR}>
-)
-
-add_library(LZ4::LZ4 ALIAS lz4)
-
-set(LZ4_LIBRARY $<TARGET_FILE:lz4> CACHE INTERNAL "")
-set(LZ4_LIBRARIES LZ4::LZ4 CACHE INTERNAL "")
-
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS LZ4::LZ4)
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(LZ4_INCLUDE_DIRS ${LZ4_INCLUDE_DIR} PARENT_SCOPE)
+set(LZ4_LIBRARIES ${ROOT_LZ4_LIBRARY} PARENT_SCOPE)
+set(LZ4_FOUND TRUE PARENT_SCOPE)
+set(LZ4_VERSION ${ROOT_LZ4_VERSION} PARENT_SCOPE)

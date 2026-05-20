@@ -13,20 +13,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
     set(libcxx ON CACHE BOOL "Build using libc++" FORCE)
   endif()
 
-  if(NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL "")
-    execute_process(COMMAND xcrun --sdk macosx --show-sdk-path
-      OUTPUT_VARIABLE SDK_PATH
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    if(NOT EXISTS "${SDK_PATH}")
-      message(FATAL_ERROR "Could not detect macOS SDK path")
-    endif()
-
-    set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
-  endif()
-  message(STATUS "Using SDK path: ${CMAKE_OSX_SYSROOT}")
-
   #TODO: check haveconfig and rpath -> set rpath true
   #TODO: check Thread, define link command
   #TODO: more stuff check configure script
@@ -49,7 +35,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   set(MACOSX_GLU_DEPRECATED ON)
 
   if (CMAKE_COMPILER_IS_GNUCXX)
-     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fno-common")
+     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fsized-deallocation -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
@@ -60,7 +46,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -m64")
 
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
+     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fsized-deallocation -fno-common -Qunused-arguments")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common -Qunused-arguments")
      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")

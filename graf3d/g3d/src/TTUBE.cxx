@@ -17,7 +17,6 @@
 #include "TGeometry.h"
 #include "TMath.h"
 
-ClassImp(TTUBE);
 
 /** \class TTUBE
 \ingroup g3d

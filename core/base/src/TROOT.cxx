@@ -71,8 +71,11 @@ of a main program creating an interactive version is shown below:
 #include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include <atomic>
+#include <filesystem>
 #include <string>
 #include <map>
+#include <sstream>
 #include <set>
 #include <cstdlib>
 #ifdef WIN32
@@ -109,8 +112,12 @@ FARPROC dlsym(void *library, const char *function_name)
       return ::GetProcAddress((HMODULE)library, function_name);
    }
 }
+#elif defined(__APPLE__)
+#include <dlfcn.h>
+#include <mach-o/dyld.h>
 #else
 #include <dlfcn.h>
+#include <link.h>
 #endif
 
 #include <iostream>
@@ -164,6 +171,11 @@ FARPROC dlsym(void *library, const char *function_name)
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
 #endif
+
+TSeqCollection *ROOT::Deprecated::Internal::GetListOfSecContexts(const TROOT &r)
+{
+   return r.fSecContexts;
+}
 
 extern "C" void R__SetZipMode(int);
 
@@ -287,6 +299,75 @@ namespace {
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
       static std::vector<ModuleHeaderInfo_t> moduleHeaderInfoBuffer;
       return moduleHeaderInfoBuffer;
+   }
+
+   enum class AutoReg : unsigned char {
+      kNotInitialised = 0,
+      kOn,
+      kOff,
+   };
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Test if various objects (such as TH1-derived classes) should automatically register
+   /// themselves (ROOT 6 mode) or not (ROOT 7 mode).
+   /// A default can be set in a .rootrc using e.g. "Root.ObjectAutoRegistration: 1" or setting
+   /// the environment variable "ROOT_OBJECT_AUTO_REGISTRATION=0".
+   AutoReg &ObjectAutoRegistrationEnabledImpl()
+   {
+      static constexpr auto rcName = "Root.ObjectAutoRegistration";    // Update the docs if this is changed
+      static constexpr auto envName = "ROOT_OBJECT_AUTO_REGISTRATION"; // Update the docs if this is changed
+      thread_local static AutoReg tlsState = AutoReg::kNotInitialised;
+
+      static const AutoReg defaultState = []() {
+         AutoReg autoReg = AutoReg::kOn; // ROOT 6 default
+         std::stringstream infoMessage;
+
+         if (gEnv) {
+            const auto desiredValue = gEnv->GetValue(rcName, -1);
+            if (desiredValue == 0) {
+               autoReg = AutoReg::kOff;
+               infoMessage << "disabled in " << gEnv->GetRcName();
+            } else if (desiredValue == 1) {
+               autoReg = AutoReg::kOn;
+               infoMessage << "enabled in " << gEnv->GetRcName();
+            } else if (desiredValue != -1) {
+               Error("TROOT", "%s should be 0 or 1", rcName);
+            }
+         }
+
+         if (const auto env = gSystem->Getenv(envName); env) {
+            int desiredValue = -1;
+            try {
+               desiredValue = std::stoi(env);
+            } catch (std::invalid_argument &e) {
+               Error("TROOT", "%s should be 0 or 1", envName);
+            }
+            if (desiredValue == 0) {
+               autoReg = AutoReg::kOff;
+               infoMessage << (infoMessage.str().empty() ? "" : " and ") << "disabled using the environment variable "
+                           << envName;
+            } else if (desiredValue == 1) {
+               autoReg = AutoReg::kOn;
+               infoMessage << (infoMessage.str().empty() ? "" : " and ") << "enabled using the environment variable "
+                           << envName;
+            } else {
+               Error("TROOT", "%s should be 0 or 1", envName);
+            }
+         }
+
+         if (!infoMessage.str().empty()) {
+            Info("TROOT", "Object auto registration %s\n", infoMessage.str().c_str());
+         }
+
+         return autoReg;
+      }();
+
+      if (tlsState == AutoReg::kNotInitialised) {
+         assert(defaultState != AutoReg::kNotInitialised);
+         tlsState = defaultState;
+      }
+
+      return tlsState;
    }
 }
 
@@ -465,7 +546,6 @@ namespace Internal {
       static Bool_t isImplicitMTEnabled = kFALSE;
       return isImplicitMTEnabled;
    }
-
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -611,6 +691,87 @@ namespace Internal {
       return 0;
 #endif
    }
+
+   /// Namespace for ROOT features in testing.
+   /// The API might change without notice until moved out of this namespace.
+   namespace Experimental {
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Enable automatic registration of objects for the current thread (ROOT 6 default).
+   ///
+   /// In ROOT 6 mode, ROOT will implicitly assign ownership of histograms or TTrees
+   /// to the current \ref gDirectory, for example to the last TFile that was opened.
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// TTree* tree = new TTree(...);
+   /// TH1D* histo = new TH1D(...);
+   /// file.Write(); // Both tree and histogram are in the file now
+   /// \endcode
+   ///
+   /// On the path to ROOT 7, the auto registration of most objects will be phased out, so
+   /// they are fully owned by the user. To write these to files, the user needs to do
+   /// one of the following:
+   /// - Manage the object, and write it explicitly:
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// std::unique_ptr<TH1D> histo{new TH1D(...)};
+   /// file.WriteObject(histo.get(), "HistogramName");
+   /// // histo remains valid even if the file is closed
+   /// \endcode
+   /// - Explicitly transfer ownership to the file using `SetDirectory()`:
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// TH1x* histogram = new TH1x(...);
+   /// histogram->SetDirectory(&file);
+   /// \endcode
+   ///
+   /// ### Objects covered by this mode
+   ///
+   /// |                       | Honours `DisableObjectAutoRegistration()`? | Could this be disabled previously? |
+   /// | --------------------- | ------------------------------------------ | ---------------------------------- |
+   /// | TH1 and derived       | Yes                                        | TH1::AddDirectoryStatus()          |
+   /// | TGraph2D              | Yes                                        | TH1::AddDirectoryStatus()          |
+   /// | RooPlot               | Yes                                        | RooPlot::addDirectoryStatus()      |
+   /// | TEfficiency           | Yes                                        | No                                 |
+   /// | TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
+   /// | TEntryList            | No, but planned for 6.42                   | No                                 |
+   /// | TEventList            | No, but planned for 6.42                   | No                                 |
+   /// | TFunction             | No, but work in progress                   | No                                 |
+   ///
+   /// ## Setting defaults
+   ///
+   /// A default can be set in a .rootrc using e.g. `Root.ObjectAutoRegistration: 1` or setting
+   /// the environment variable `ROOT_OBJECT_AUTO_REGISTRATION=0`. Note that this default affects
+   /// all the threads that get started.
+   /// When a default is set using one of these methods, ROOT will notify with an Info message.
+   ///
+   /// ## Difference to TH1::AddDirectoryStatus()
+   ///
+   /// For classes deriving from TH1, both ObjectAutoRegistrationEnabled() and TH1::AddDirectoryStatus()
+   /// need to be true for auto-registration to take effect. The former should be preferred over the latter, however,
+   /// because it is thread local and extends to more objects such as TGraph2D, TEfficiency, RooPlot.
+   void EnableObjectAutoRegistration()
+   {
+      ObjectAutoRegistrationEnabledImpl() = AutoReg::kOn;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Disable automatic registration of objects for the current thread (ROOT 7 default).
+   /// \copydetails ROOT::Experimental::EnableObjectAutoRegistration()
+   void DisableObjectAutoRegistration()
+   {
+      ObjectAutoRegistrationEnabledImpl() = AutoReg::kOff;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Test whether objects in this thread auto-register themselves, e.g. to the current ROOT directory.
+   /// \copydetails ROOT::Experimental::EnableObjectAutoRegistration()
+   bool ObjectAutoRegistrationEnabled()
+   {
+      const auto state = ObjectAutoRegistrationEnabledImpl();
+      assert(state != AutoReg::kNotInitialised);
+      return state == AutoReg::kOn;
+   }
+   } // namespace Experimental
 } // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
@@ -622,26 +783,11 @@ TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 Int_t gDebug;
 
 
-ClassImp(TROOT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TROOT::TROOT() : TDirectory(),
-     fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
-     fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(nullptr), fInterpreter(nullptr), fBatch(kTRUE),
-     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
-     fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
-     fPrimitive(nullptr),fSelectPad(nullptr),fClasses(nullptr),fTypes(nullptr),fGlobals(nullptr),fGlobalFunctions(nullptr),
-     fClosedObjects(nullptr),fFiles(nullptr),fMappedFiles(nullptr),fSockets(nullptr),fCanvases(nullptr),fStyles(nullptr),fFunctions(nullptr),
-     fTasks(nullptr),fColors(nullptr),fGeometries(nullptr),fBrowsers(nullptr),fSpecials(nullptr),fCleanups(nullptr),
-     fMessageHandlers(nullptr),fStreamerInfo(nullptr),fClassGenerators(nullptr),fSecContexts(nullptr),
-     fProofs(nullptr),fClipboard(nullptr),fDataSets(nullptr),fUUIDs(nullptr),fRootFolder(nullptr),fBrowsables(nullptr),
-     fPluginManager(nullptr)
-{
-}
+TROOT::TROOT() : TDirectory() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the ROOT system. The creation of the TROOT object initializes
@@ -661,19 +807,7 @@ TROOT::TROOT() : TDirectory(),
 /// extend the ROOT system without adding permanent dependencies
 /// (e.g. the graphics system is initialized via such a function).
 
-TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
-   : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
-     fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(nullptr), fInterpreter(nullptr), fBatch(kTRUE),
-     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
-     fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
-     fPrimitive(nullptr),fSelectPad(nullptr),fClasses(nullptr),fTypes(nullptr),fGlobals(nullptr),fGlobalFunctions(nullptr),
-     fClosedObjects(nullptr),fFiles(nullptr),fMappedFiles(nullptr),fSockets(nullptr),fCanvases(nullptr),fStyles(nullptr),fFunctions(nullptr),
-     fTasks(nullptr),fColors(nullptr),fGeometries(nullptr),fBrowsers(nullptr),fSpecials(nullptr),fCleanups(nullptr),
-     fMessageHandlers(nullptr),fStreamerInfo(nullptr),fClassGenerators(nullptr),fSecContexts(nullptr),
-     fProofs(nullptr),fClipboard(nullptr),fDataSets(nullptr),fUUIDs(nullptr),fRootFolder(nullptr),fBrowsables(nullptr),
-     fPluginManager(nullptr)
+TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDirectory()
 {
    if (fgRootInit || ROOT::Internal::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
@@ -708,7 +842,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    GetDocDir();
    GetMacroDir();
    GetTutorialDir();
-   GetSourceDir();
    GetIconPath();
    GetTTFFontDir();
 
@@ -778,7 +911,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups    = setNameLocked(new THashList, "Cleanups");
    fMessageHandlers = setNameLocked(new TList, "MessageHandlers");
    fSecContexts = setNameLocked(new TList, "SecContexts");
-   fProofs      = setNameLocked(new TList, "Proofs");
    fClipboard   = setNameLocked(new TList, "Clipboard");
    fDataSets    = setNameLocked(new TList, "DataSets");
    fTypes       = new TListOfTypes; fTypes->UseRWLock();
@@ -804,7 +936,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
    fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
    fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
-   fRootFolder->AddFolder("PROOF Sessions", "List of PROOF sessions",fProofs);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
@@ -851,16 +982,18 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gGXBatch         = new TVirtualX("Batch", "ROOT Interface to batch graphics");
    gVirtualX        = gGXBatch;
 
-#if defined(R__WIN32)
-   fBatch = kFALSE;
-#elif defined(R__HAS_COCOA)
-   fBatch = kFALSE;
-#else
-   if (gSystem->Getenv("DISPLAY"))
-      fBatch = kFALSE;
-   else
+   if (gSystem->Getenv("ROOT_BATCH"))
       fBatch = kTRUE;
+   else {
+#if defined(R__WIN32) || defined(R__HAS_COCOA)
+      fBatch = kFALSE;
+#else
+      if (gSystem->Getenv("DISPLAY"))
+         fBatch = kFALSE;
+      else
+         fBatch = kTRUE;
 #endif
+   }
 
    const char *webdisplay = gSystem->Getenv("ROOT_WEBDISPLAY");
    if (!webdisplay || !*webdisplay)
@@ -877,7 +1010,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
-   fBrowsables->Add(fProofs, "PROOF Sessions");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
@@ -968,7 +1100,6 @@ TROOT::~TROOT()
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
       SafeDelete(fTasks);
-      SafeDelete(fProofs);
       SafeDelete(fDataSets);
       SafeDelete(fClipboard);
 
@@ -1231,7 +1362,7 @@ void TROOT::CloseFiles()
                socket->SetBit(kMustCleanup);
                fClosedObjects->AddLast(socket);
             } else {
-               // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
+               // Crap ... this is not a socket, let's try to find a Close
                Longptr_t other_offset;
                CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
                gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA()->GetClassInfo(), "Close", "", &other_offset);
@@ -1490,7 +1621,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return path name of obj somewhere in the //root/... path.
-/// The function returns the first occurence of the object in the list
+/// The function returns the first occurrence of the object in the list
 /// of folders. The returned string points to a static char array in TROOT.
 /// If this function is called in a loop or recursively, it is the
 /// user's responsibility to copy this string in their area.
@@ -1631,7 +1762,7 @@ TObject *TROOT::GetFunction(const char *name) const
    // and restart after this thread has finished the initialization (i.e. a rare case),
    // the only penalty we pay is a spurious 2nd lookup for an unknown function.
    [[maybe_unused]] static const auto _res = []() {
-      gROOT->ProcessLine("TF1::InitStandardFunctions();");
+      gROOT->ProcessLine("TF1::InitStandardFunctions(); TF2::InitStandardFunctions(); TF3::InitStandardFunctions();");
       isInited = true;
       return true;
    }();
@@ -2018,6 +2149,8 @@ void TROOT::InitSystem()
       if (gSystem->Init())
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: can't init operating system layer\n");
 
+      gSystem->SetIncludePath(("-I" + GetIncludeDir()).Data());
+
       if (!gSystem->HomeDirectory()) {
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: HOME directory not set\n");
          fprintf(stderr, "Fix this by defining the HOME shell variable\n");
@@ -2227,6 +2360,9 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
          // TSystem::Load returns 1 when the library was already loaded, return success in this case.
          if (err == 1)
             err = 0;
+         if (err == 0)
+            // Register the Autoloading of the library
+            gCling->RegisterAutoLoadedLibrary(libname);
          return err;
       }
    } else {
@@ -2826,7 +2962,8 @@ void TROOT::SetMacroPath(const char *newpath)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set batch mode for ROOT
 /// If the argument evaluates to `true`, the session does not use interactive graphics.
-/// If web graphics runs in server mode, the web widgets are still available via URL
+/// Batch mode can also be enabled by setting the ROOT_BATCH environment variable.
+/// If web graphics runs in server mode, the web widgets are still available via URL.
 
 void TROOT::SetBatch(Bool_t batch)
 {
@@ -2842,7 +2979,7 @@ void TROOT::SetBatch(Bool_t batch)
 /// `webdisplay` parameter may contain:
 ///
 ///  - "firefox": select Mozilla Firefox browser for interactive web display
-///  - "chrome": select Google Chrome browser for interactive web display
+///  - "chrome": select Google Chrome browser for interactive web display. Can also be set to "chromium"
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
@@ -2854,6 +2991,8 @@ void TROOT::SetBatch(Bool_t batch)
 ///    interactive mode.
 ///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
+///
+/// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
@@ -3036,44 +3175,212 @@ const TString& TROOT::GetBinDir() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the library directory in the installation. Static utility function.
+///
+/// By default, this is just an alias for TROOT::GetSharedLibDir(), which
+/// returns the directory containing the ROOT shared libraries.
+///
+/// On Windows, the behavior is different. In that case, this function doesn't
+/// return the directory of the **shared libraries** (like `libCore.dll`), but
+/// the **import libraries**, which are used at link time (like `libCore.lib`).
 
-const TString& TROOT::GetLibDir() {
-#ifdef ROOTLIBDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootlibdir;
-      if (rootlibdir.IsNull()) {
-         rootlibdir = "lib";
-         gSystem->PrependPathName(GetRootSys(), rootlibdir);
-      }
+const TString &TROOT::GetLibDir()
+{
+#if defined(R__WIN32)
+   static bool initialized = false;
+   static TString rootlibdir;
+   if (initialized)
       return rootlibdir;
-#ifdef ROOTLIBDIR
-   } else {
-      const static TString rootlibdir = ROOTLIBDIR;
-      return rootlibdir;
-   }
+
+   initialized = true;
+   rootlibdir = "lib";
+   gSystem->PrependPathName(GetRootSys(), rootlibdir);
+   return rootlibdir;
+#else
+   return TROOT::GetSharedLibDir();
 #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the shared libraries directory in the installation. Static utility function.
+///
+/// This function inspects the libraries currently loaded in the process to
+/// locate the ROOT Core library. Once found, it extracts and returns the
+/// directory containing that library. If the ROOT Core library was not found,
+/// it will return an empty string.
+///
+/// The result is cached in a static variable so the lookup is only performed
+/// once per process, and the implementation is platform-specific.
+///
+/// \return The directory path (as a `TString`) containing the ROOT shared libraries.
 
-const TString& TROOT::GetSharedLibDir() {
-#if defined(R__WIN32)
-   return TROOT::GetBinDir();
+const TString &TROOT::GetSharedLibDir()
+{
+   static bool haveLooked = false;
+   static TString rootlibdir;
+   if (haveLooked)
+      return rootlibdir;
+
+   haveLooked = true;
+
+   namespace fs = std::filesystem;
+
+#if defined(__APPLE__)
+
+   uint32_t count = _dyld_image_count();
+   for (uint32_t i = 0; i < count; i++) {
+      const char *path = _dyld_get_image_name(i);
+      if (!path)
+         continue;
+
+      fs::path p(path);
+      if (p.filename() == _R_QUOTEVAL_(LIB_CORE_NAME)) {
+         rootlibdir = p.parent_path().c_str();
+         break;
+      }
+   }
+
+#elif defined(_WIN32)
+
+   HMODULE modulesStack[1024];
+   std::vector<HMODULE> modulesHeap;
+   HMODULE *modules = modulesStack;
+   DWORD needed = 0;
+
+   HANDLE process = GetCurrentProcess();
+
+   bool success = EnumProcessModules(process, modulesStack, sizeof(modulesStack), &needed);
+
+   // It is recommended in the API documentation to check if the output array
+   // was too small, and if yes, call EnumProcessModules again with an array of
+   // the required size. To avoid heap allocations, we use a heap array only
+   // when the number of modules was too large for the original stack array.
+   // See: https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumprocessmodules#remarks
+   if (needed > sizeof(modulesStack)) {
+      modulesHeap.resize(needed / sizeof(HMODULE));
+      success = EnumProcessModules(process, modulesHeap.data(), needed, &needed);
+      modules = modulesHeap.data();
+   }
+
+   if (success) {
+      const unsigned int count = needed / sizeof(HMODULE);
+
+      for (unsigned int i = 0; i < count; ++i) {
+         wchar_t wpath[MAX_PATH];
+         DWORD len = GetModuleFileNameW(modules[i], wpath, MAX_PATH);
+         if (!len)
+            continue;
+
+         // According to the Windows API documentation, there are exceptions
+         // where a path can be longer than MAX_PATH:
+         // https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+         // In case that happens here, we print an error message.
+         if (len == MAX_PATH) {
+            // Convert UTF-16 path to UTF-8 for the error message
+            int utf8len = WideCharToMultiByte(CP_UTF8, 0, wpath, -1, nullptr, 0, nullptr, nullptr);
+
+            std::string utf8path(utf8len - 1, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, wpath, -1, utf8path.data(), utf8len, nullptr, nullptr);
+
+            utf8path += "... [TRUNCATED]";
+
+            ::Error("TROOT::GetSharedLibDir",
+                    "Module path \"%s\" exceeded maximum path length of %u characters! "
+                    "ROOT might not be able to resolve its resource directories.",
+                    utf8path.c_str(), MAX_PATH);
+
+            continue;
+         }
+
+         fs::path p{wpath};
+         if (p.filename() == _R_QUOTEVAL_(LIB_CORE_NAME)) {
+
+            // Convert UTF-16 to UTF-8 explicitly
+            const std::wstring wdir = p.parent_path().wstring();
+
+            int utf8len = WideCharToMultiByte(CP_UTF8, 0, wdir.c_str(), -1, nullptr, 0, nullptr, nullptr);
+
+            std::string utf8dir(utf8len - 1, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, wdir.c_str(), -1, utf8dir.data(), utf8len, nullptr, nullptr);
+
+            rootlibdir = utf8dir.c_str();
+            break;
+         }
+      }
+   }
+
 #else
-   return TROOT::GetLibDir();
+
+   auto callback = +[](struct dl_phdr_info *info, size_t /*size*/, void *data) -> int {
+      TString &libdir = *static_cast<TString *>(data);
+      if (!info->dlpi_name)
+         return 0;
+
+      fs::path p = info->dlpi_name;
+      if (p.filename() == _R_QUOTEVAL_(LIB_CORE_NAME)) {
+         std::error_code ec;
+
+         // Resolve symlinks: critical for environments like CMSSW, where the
+         // ROOT libraries are loaded via symlinks that point to the actual
+         // install directory
+         fs::path resolved = fs::canonical(p, ec);
+         if (ec) {
+            ::Error("TROOT",
+                    "Failed to canonicalize detected ROOT shared library path:\n"
+                    "%s\n"
+                    "Error code: %d (%s)\n"
+                    "Error category: %s\n"
+                    "This is an unexpected internal error and ROOT might not work.\n"
+                    "Please report this issue on GitHub: https://github.com/root-project/root/issues",
+                    p.string().c_str(), ec.value(), ec.message().c_str(), ec.category().name());
+            // Fall back to the loader path if canonicalization fails. The path
+            // will likely be wrong, but at least not garbage
+            resolved = p;
+         }
+         libdir = resolved.parent_path().c_str();
+         return 1; // stop iteration
+      }
+      return 0; // continue
+   };
+
+   dl_iterate_phdr(callback, &rootlibdir);
+
 #endif
+
+   return rootlibdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the include directory in the installation. Static utility function.
 
-const TString& TROOT::GetIncludeDir() {
-   // Avoid returning a reference to a temporary because of the conversion
-   // between std::string and TString.
-   const static TString includedir = ROOT::FoundationUtils::GetIncludeDir();
-   return includedir;
+const TString &TROOT::GetIncludeDir()
+{
+   static TString rootincdir;
+
+   if (!rootincdir.IsNull())
+      return rootincdir;
+
+   namespace fs = std::filesystem;
+
+   // The shared library directory can be found automatically, because the
+   // libCore is loaded by definition when using TROOT. It's used as the anchor
+   // to resolve the ROOT include directory, using the correct relative path
+   // for either the build or install tree.
+   fs::path libPath = GetSharedLibDir().Data();
+
+   // Check if we are in the build tree using the build tree marker file
+   const bool isBuildTree = fs::exists(libPath / "root-build-tree-marker");
+
+   fs::path includePath = isBuildTree ? "../include" : INSTALL_LIB_TO_INCLUDE;
+
+   // The INSTALL_LIB_TO_INCLUDE might already be absolute
+   if (!includePath.is_absolute()) {
+      includePath = libPath / includePath;
+   }
+
+   // Normalize to get rid of the "../" in relative paths
+   rootincdir = includePath.lexically_normal().string();
+
+   return rootincdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

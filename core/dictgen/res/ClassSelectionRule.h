@@ -47,6 +47,8 @@ private:
    int  fRequestedVersionNumber; // Explicit request for a specific version number (default to no request with -1).
    // Explicit request for unsplit (-1) or split (=1), defaults to unset (=0)
    int  fRequestedRNTupleSerializationMode = 0;
+   // If not empty, marks the class as an RNTuple SoA layout for the underlying given record class
+   std::string fRequestedRNTupleSoARecord;
    // clang-format on
 
 public:
@@ -83,6 +85,7 @@ public:
    void SetRequestPrivate(bool val);
    void SetRequestedVersionNumber(int version);
    void SetRequestedRNTupleSerializationMode(int serializationMode);
+   void SetRequestedRNTupleSoARecord(const std::string &recordName);
 
    bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
@@ -92,6 +95,7 @@ public:
    bool RequestPrivate() const;
    int  RequestedVersionNumber() const;
    int RequestedRNTupleSerializationMode() const;
+   const std::string &RequestedRNTupleSoARecord() const;
 };
 
 #endif

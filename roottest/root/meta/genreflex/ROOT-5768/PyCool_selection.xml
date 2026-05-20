@@ -1,0 +1,76 @@
+<lcgdict>
+  <selection>
+    <!-- COOL  -->
+    <!--     typedefs -->
+    <!--     class patterns -->
+    <class pattern="*&lt;*cool::*&gt;" />
+    <class pattern="cool::*" />
+    <!--     enums -->
+    <enum name="cool::ChannelSelection::Order"/>
+    <enum name="cool::FolderVersioning::Mode"/>
+    <enum name="cool::PayloadMode::Mode"/>
+    <enum name="cool::HvsTagLock::Status"/>
+    <enum name="cool::IHvsNode::Type"/>
+    <enum name="cool::MSG::Level"/>
+    <enum name="cool::StorageType::TypeId"/>
+    <!--     variables -->
+    <variable pattern="cool::*" />
+    <!-- CORAL -->
+    <class pattern="*&lt;*coral::*&gt;" />
+    <class pattern="coral::Blob" />
+    <!-- <class pattern="coral::Date" /> -->
+    <!-- <class pattern="coral::TimeStamp" /> -->
+    <class pattern="coral::*Attribute*" />
+    <class pattern="coral::*attribute*" />
+    <class pattern="coral::ConnectionService" />
+    <class pattern="coral::IConnectionService" />
+    <class pattern="coral::IConnectionServiceConfiguration" />
+    <class pattern="coral::IWebCacheControl" />
+    <class pattern="coral::IWebCacheInfo" />
+    <!-- c++11 (replacing Boost) -->
+    <!--class name="boost::detail::shared_count" rootmap="false"/-->
+    <!--class pattern="std::iterator&lt;boost::shared_ptr&lt;cool::IObject&gt;&gt;*" /-->
+    <!-- STD -->
+    <class name="std::type_info" rootmap="false"/>
+    <class name="std::vector&lt;unsigned int&gt;" rootmap="false"/>
+    <class name="std::vector&lt;std::basic_string&lt;char&gt;&gt;" rootmap="false"/>
+    <class name="std::map&lt;unsigned int,std::string&gt;" rootmap="false"/>
+    <!-- Fix bug #99488: generate dictionaries for map iterators -->
+    <class name="std::map&lt;unsigned int,std::string&gt;::iterator" rootmap="false"/>
+    <class name="std::map&lt;unsigned int,std::string&gt;::const_iterator" rootmap="false"/>
+    <!-- Workaround for bug #43416 -->
+    <!--class pattern="std::_Tree&lt;std::_Tmap_traits&lt;unsigned int,std::string,*&gt;&gt;" rootmap="false"/-->
+    <!-- Disable the next line on Windows to remove a warning (task #5836) -->
+    <!--class name="std::vector&lt;unsigned int&gt;::iterator" rootmap="false"/-->
+    <!-- HELPERS -->
+    <function pattern="cool::PyCool::Helpers::*"/>
+  </selection>
+  <exclusion>
+    <!-- Andrea: workaround for ROOT-5757 with ROOT6 -->
+    <!--class pattern="*&lt;std::shared_ptr*"/>
+    <class pattern="*std::__shared_ptr*"/>
+    <class pattern="*__or_*"/>
+    <class pattern="*__and_*"/>
+    <class pattern="*_Sp_counted_ptr*"/-->
+    <!-- Marco: fix issues with Boost 1.53 on gcc47 (bug #102087) -->
+    <!--class pattern="boost::shared_ptr&lt;*&gt;">
+      <method name="[]" />
+    </class-->
+    <!-- These cause warnings about reference data members not supported -->
+    <!-- <class name="cool::ConstRecordAdapter"/> -->
+    <!-- <class name="cool::FieldSpecification"/> -->
+    <!-- Marco: excluded because of problems with gccxml 0.7.0 and gcc 4.1 -->
+    <class pattern="_Is_normal_iterator*"/>
+    <class pattern="__type_traits*"/>
+    <class pattern="*__copy_backward_dispatch*"/>
+    <!-- ROOT gets a bit confused by "signed char" -->
+    <variable pattern="cool::SChar*" />
+    <!-- Workaround for bug #44524 on Windows (thanks to Axel!) -->
+    <!--class pattern="boost::detail::sp*" /-->
+
+    <!-- Exclusions for GH issue #11484 -->
+    <class pattern="std::unique_ptr<*"/>
+    <class pattern="*__shared_ptr_default_*"/>
+    <class pattern="std::shared_ptr<*"/>
+  </exclusion>
+</lcgdict>

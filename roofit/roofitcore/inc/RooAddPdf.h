@@ -105,7 +105,7 @@ public:
   mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
-  mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
+  mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
   AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr) const ;
   void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, bool syncCoefValues=true) const ;
 
@@ -145,8 +145,6 @@ private:
 
   void finalizeConstruction();
   void materializeRefCoefNormFromAttribute() const;
-  inline void setRecursiveFraction(bool recursiveFraction) { _recursive = recursiveFraction; }
-  inline void setAllExtendable(bool allExtendable) { _allExtendable = allExtendable; }
 
   ClassDefOverride(RooAddPdf,5) // PDF representing a sum of PDFs
 };

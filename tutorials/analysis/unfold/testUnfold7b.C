@@ -110,8 +110,6 @@ void testUnfold7b()
 
   TUnfoldBinning *fineBinningRoot,*coarseBinningRoot;
 
-  outputFile->cd();
-
   // read binning schemes in XML format
 
   TDOMParser parser;
@@ -164,6 +162,10 @@ void testUnfold7b()
   TH1 *histDataBgrC=coarseBinning->CreateHistogram("histDataBgrC");
   TH1 *histDataGen=coarseBinning->CreateHistogram("histDataGen");
 
+  for (auto histo : {histDataRecF, histDataRecC, histDataBgrF, histDataBgrC, histDataGen}) {
+     histo->SetDirectory(outputFile);
+  }
+
   TFile *dataFile=new TFile("testUnfold7_data.root");
   TTree *dataTree=(TTree *) dataFile->Get("data");
 
@@ -213,8 +215,6 @@ void testUnfold7b()
   // Step 4: book and fill histogram of migrations
   //         it receives events from both signal MC and background MC
 
-  outputFile->cd();
-
   TH2 *histMcsigGenRecF=TUnfoldBinning::CreateHistogramOfMigrations
      (coarseBinning,fineBinning,"histMcsigGenRecF");
   TH2 *histMcsigGenRecC=TUnfoldBinning::CreateHistogramOfMigrations
@@ -222,6 +222,10 @@ void testUnfold7b()
   TH1 *histMcsigRecF=fineBinning->CreateHistogram("histMcsigRecF");
   TH1 *histMcsigRecC=coarseBinning->CreateHistogram("histMcsigRecC");
   TH1 *histMcsigGen=coarseBinning->CreateHistogram("histMcsigGen");
+  for (auto histo :
+       std::initializer_list<TH1 *>{histMcsigGenRecF, histMcsigGenRecC, histMcsigRecF, histMcsigRecC, histMcsigGen}) {
+     histo->SetDirectory(outputFile);
+  }
 
   TFile *signalFile=new TFile("testUnfold7_signal.root");
   TTree *signalTree=(TTree *) signalFile->Get("signal");
@@ -259,10 +263,10 @@ void testUnfold7b()
   delete signalTree;
   delete signalFile;
 
-  outputFile->cd();
-
   TH1 *histMcbgrRecF=fineBinning->CreateHistogram("histMcbgrRecF");
   TH1 *histMcbgrRecC=coarseBinning->CreateHistogram("histMcbgrRecC");
+  histMcbgrRecF->SetDirectory(outputFile);
+  histMcbgrRecC->SetDirectory(outputFile);
 
   TFile *bgrFile=new TFile("testUnfold7_background.root");
   TTree *bgrTree=(TTree *) bgrFile->Get("background");

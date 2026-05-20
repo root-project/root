@@ -17,7 +17,7 @@ export PYSPARK_PYTHON := $(Python3_EXECUTABLE)
 DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
 export DOXYGEN_OUTPUT_DIRECTORY
 export DOXYGEN_SOURCE_DIRECTORY := ../..
-export DOXYGEN_ROOT_VERSION := $(shell root -l -b -q -e 'printf("%s\n",gROOT->GetGitBranch());')
+export DOXYGEN_ROOT_VERSION := $(shell root -b -q -e 'printf("%s\n",gROOT->GetGitBranch());')
 export DOXYGEN_ROOT_VERSION := $(subst -00-patches,,$(DOXYGEN_ROOT_VERSION))
 export DOXYGEN_ROOT_VERSION := $(subst heads/,,$(DOXYGEN_ROOT_VERSION))
 export DOXYGEN_EXAMPLE_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/macros
@@ -26,6 +26,7 @@ export DOXYGEN_NOTEBOOK_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/notebooks
 export DOXYGEN_STRIP_PATH := $(shell cd $(PWD)/../..; pwd)
 export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name dictpch -prune -o -type d -name inc)
 export DOXYGEN_PYZDOC_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/pyzdoc
+export DOXYGEN_STRIP_FROM_PATH := $(DOXYGEN_STRIP_PATH) $(DOXYGEN_OUTPUT_DIRECTORY)
 
 PYZ_DIR = $(DOXYGEN_SOURCE_DIRECTORY)/bindings/pyroot/pythonizations/python/ROOT/_pythonization
 

@@ -32,11 +32,10 @@
 /// Invoked when dynamic loading is needed.
 /// Returns 1 on success, 0 on failure.
 
-TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
-                                     const char *user, Option_t *opts)
+ROOT::Deprecated::TSecContext *
+ROOT::Deprecated::TRootAuth::Authenticate(TSocket *s, const char *host, const char *user, Option_t */*opts*/)
 {
    TSecContext *ctx = 0;
-   Int_t rc = 0;
 
    Int_t rproto =  s->GetRemoteProtocol() % 1000;
    if (s->GetServType() == (Int_t)TSocket::kROOTD) {
@@ -52,15 +51,11 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
       }
    }
 
-   Bool_t isPROOF = (s->GetServType() == (Int_t)TSocket::kPROOFD);
-   Bool_t isPROOFserv = (opts[0] == 'P') ? kTRUE : kFALSE;
-
    // Build the protocol string for TAuthenticate
    TString proto = TUrl(s->GetUrl()).GetProtocol();
    if (proto == "") {
       proto = "root";
-   } else if (proto.Contains("sockd") || proto.Contains("rootd") ||
-              proto.Contains("proofd")) {
+   } else if (proto.Contains("sockd") || proto.Contains("rootd")) {
       proto.ReplaceAll("d",1,"",0);
    }
    proto += Form(":%d",rproto);
@@ -78,27 +73,13 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
       else
          Error("Authenticate",
                "authentication failed for %s@%s", auth->GetUser(), host);
-      // This is to terminate properly remote proofd in case of failure
-      if (isPROOF)
-         s->Send(Form("%d %s", gSystem->GetPid(), host), kROOTD_CLEANUP);
    } else {
-      // Set return flag;
-      rc = 1;
       // Search pointer to relevant TSecContext
       ctx = auth->GetSecContext();
-      s->SetSecContext(ctx);
+      ROOT::Deprecated::TSocketFriend::SetSecContext(*s, ctx);
    }
    // Cleanup
    delete auth;
-
-   // If we are talking to a recent proofd send over a buffer with the
-   // remaining authentication related stuff
-   if (rc && isPROOF && rproto > 11) {
-      Bool_t client = !isPROOFserv;
-      if (TAuthenticate::ProofAuthSetup(s, client) !=0 ) {
-         Error("Authenticate", "PROOF: failed to finalize setup");
-      }
-   }
 
    // We are done
    return ctx;
@@ -107,7 +88,7 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return client version;
 
-Int_t TRootAuth::ClientVersion()
+Int_t ROOT::Deprecated::TRootAuth::ClientVersion()
 {
    return TSocket::GetClientProtocol();
 }
@@ -115,7 +96,7 @@ Int_t TRootAuth::ClientVersion()
 ////////////////////////////////////////////////////////////////////////////////
 /// Print error string corresponding to ecode, prepending location
 
-void TRootAuth::ErrorMsg(const char *where, Int_t ecode)
+void ROOT::Deprecated::TRootAuth::ErrorMsg(const char *where, Int_t ecode)
 {
    TAuthenticate::AuthError(where, ecode);
 }

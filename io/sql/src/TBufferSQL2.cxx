@@ -38,8 +38,9 @@ few other, which can not be converted to SQL (yet).
 #include "TStreamerInfoActions.h"
 #include "snprintf.h"
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <limits>
 #include <string>
 
 #include "TSQLServer.h"
@@ -50,7 +51,6 @@ few other, which can not be converted to SQL (yet).
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"
 
-ClassImp(TBufferSQL2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor, should not be used
@@ -1341,7 +1341,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
          // delete the object or collection
          if (start[j] && TStreamerInfo::CanDelete())
-            ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and desctructor
+            ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and destructor
          start[j] = ReadObjectAny(cl);
       }
 
@@ -1376,15 +1376,12 @@ Int_t TBufferSQL2::SqlReadArraySize()
 template <typename T>
 R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Long64_t arrsize, Bool_t withsize)
 {
-   constexpr Int_t dataWidth = 1; // at least 1
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (arrsize < 0 || arrsize > maxElements)
-   {
-      Fatal("SqlWriteArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called
-   }
    if (!withsize && (arrsize <= 0))
       return;
+   if (arrsize > std::numeric_limits<Int_t>::max()) {
+      Fatal("SqlWriteArray", "Array larger than 2^31 elements cannot be stored in SQL");
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    PushStack()->SetArray(withsize ? arrsize : -1);
    Int_t indx = 0;
    if (fCompressLevel > 0) {

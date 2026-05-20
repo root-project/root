@@ -65,11 +65,11 @@ namespace TMVA {
                           Bool_t   fUseDefaultScale,
                           Bool_t   fUseDefaultTemperature );
 
-      Double_t Run( std::vector<Double_t>& pars );
+      Double_t Run( std::vector<Double_t>& pars ) override;
 
    private:
 
-      void DeclareOptions();
+      void DeclareOptions() override;
 
       Int_t              fMaxCalls;                ///< max number of FCN calls
       Double_t           fInitialTemperature;      ///< initial temperature (depends on FCN)
@@ -84,7 +84,7 @@ namespace TMVA {
       Bool_t             fUseDefaultScale;         ///< if TRUE, SA calculates its own TemperatureScale
       Bool_t             fUseDefaultTemperature;   ///< if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
 
-      ClassDef(SimulatedAnnealingFitter,0); // Fitter using a Simulated Annealing Algorithm
+      ClassDefOverride(SimulatedAnnealingFitter,0); // Fitter using a Simulated Annealing Algorithm
    };
 
 } // namespace TMVA

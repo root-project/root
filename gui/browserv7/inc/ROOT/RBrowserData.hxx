@@ -1,6 +1,5 @@
 // Author: Sergey Linev <S.Linev@gsi.de>
 // Date: 2019-10-14
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -49,7 +48,7 @@ class RBrowserData {
    std::vector<const Browsable::RItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
-   std::unique_ptr<TObject> fCleanupHandle;              ///<! cleanup handle for RecursiveRemove
+   std::unique_ptr<RBrowserDataCleanup> fCleanupHandle;  ///<! cleanup handle for RecursiveRemove
 
    void ResetLastRequestData(bool with_element);
 

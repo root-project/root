@@ -24,13 +24,12 @@
 #include "TGraphSmooth.h"
 #include "TGraphErrors.h"
 
-ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth
     \ingroup Graphs
 A helper class to smooth TGraph.
-see examples in $ROOTSYS/tutorials/visualisation/graphs/gr010_approx_smooth.C and $ROOTSYS/tutorials/visualisation/graphs/gr015_smooth.C
+see the following examples: gr010_approx_smooth.C and gr015_smooth.C.
 */
 
 TGraphSmooth::TGraphSmooth()

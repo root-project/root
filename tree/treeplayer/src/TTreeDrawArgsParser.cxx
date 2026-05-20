@@ -22,7 +22,6 @@ Int_t TTreeDrawArgsParser::fgMaxDimension = 4;
 Int_t TTreeDrawArgsParser::fgMaxParameters = 9;
 
 
-ClassImp(TTreeDrawArgsParser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor - cleans all the class variables.
@@ -306,40 +305,6 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
    if (fDimension == 4)
       return fOutputType = kLISTOFPOLYMARKERS3D;
    return kUNKNOWN;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns appropriate TSelector class name for proof for the object that is to be drawn
-/// assumes that Parse() method has been called before.
-
-TString TTreeDrawArgsParser::GetProofSelectorName() const
-{
-   switch (fOutputType) {
-      case kUNKNOWN:
-         return "";
-      case kEVENTLIST:
-         return "TProofDrawEventList";
-      case kENTRYLIST:
-         return "TProofDrawEntryList";
-      case kPROFILE:
-         return "TProofDrawProfile";
-      case kPROFILE2D:
-         return "TProofDrawProfile2D";
-      case kGRAPH:
-         return "TProofDrawGraph";
-      case kPOLYMARKER3D:
-         return "TProofDrawPolyMarker3D";
-      case kLISTOFGRAPHS:
-         return "TProofDrawListOfGraphs";
-      case kHISTOGRAM1D:
-      case kHISTOGRAM2D:
-      case kHISTOGRAM3D:
-         return "TProofDrawHist";
-      case kLISTOFPOLYMARKERS3D:
-         return "TProofDrawListOfPolyMarkers3D";
-      default:
-         return "";
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

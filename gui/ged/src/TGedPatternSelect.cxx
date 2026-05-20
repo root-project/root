@@ -79,12 +79,6 @@ is a popup window.
 
 #include <iostream>
 
-ClassImp(TGedPopup);
-ClassImp(TGedSelect);
-ClassImp(TGedPatternFrame);
-ClassImp(TGedPatternSelector);
-ClassImp(TGedPatternPopup);
-ClassImp(TGedPatternSelect);
 
 TGGC* TGedPatternFrame::fgGC = nullptr;
 

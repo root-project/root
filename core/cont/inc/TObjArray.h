@@ -34,7 +34,7 @@ friend class TObjArrayIter;
 friend class TClonesArray;
 
 protected:
-   TObject     **fCont;        //!Array contents
+   TObject     **fCont;        ///<!Array contents
    Int_t         fLowerBound;  //Lower bound of the array
    Int_t         fLast;        //Last element in array containing an object
 
@@ -66,13 +66,19 @@ public:
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
 
    void             Add(TObject *obj) override { AddLast(obj); }
+   void             Add(TObject *obj, Option_t *) override { AddLast(obj); }
    void             AddFirst(TObject *obj) override;
+   void             AddFirst(TObject *obj, Option_t *) override { AddFirst(obj); }
    void             AddLast(TObject *obj) override;
+   void             AddLast(TObject *obj, Option_t *) override { AddLast(obj); }
    void             AddAt(TObject *obj, Int_t idx) override;
+   void             AddAt(TObject *obj, Int_t idx, Option_t *) override { AddAt(obj, idx); }
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
    void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddAfter(const TObject *after, TObject *obj, Option_t *) override { AddAfter(after, obj); }
    void             AddBefore(const TObject *before, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj, Option_t *) override { AddBefore(before, obj); }
    TObject         *FindObject(const char *name) const override;
    TObject         *FindObject(const TObject *obj) const override;
    TObject         *RemoveAt(Int_t idx) override;

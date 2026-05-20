@@ -23,7 +23,6 @@
 Collection of named parameters.
 */
 
-ClassImp(TEveParamList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -97,7 +96,6 @@ Clicked() signal and if model is reset in the editor, its contents
 is removed. This results in a crash.
 */
 
-ClassImp(TEveParamListEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

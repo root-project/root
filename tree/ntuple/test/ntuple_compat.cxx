@@ -67,6 +67,46 @@ TEST(RNTupleCompat, FeatureFlag)
    }
 }
 
+TEST(RNTupleCompat, FeatureFlagInFooter)
+{
+   FileRaii fileGuard("test_ntuple_compat_feature_flag_footer.root");
+
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
+   descBuilder.SetNTuple("ntpl", "");
+   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
+
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   RNTupleSerializer serializer;
+
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+   auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
+   writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
+
+   // Write the feature flags in the footer
+   descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlagTest);
+
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
+   buffer = std::make_unique<unsigned char[]>(szFooter);
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
+   writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
+
+   writer->Commit();
+   // Call destructor to flush data to disk
+   writer = nullptr;
+
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   try {
+      pageSource->Attach();
+      FAIL() << "opening an RNTuple that uses an unsupported feature should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported format feature: 137"));
+   }
+}
+
 TEST(RNTupleCompat, FwdCompat_FutureNTupleAnchor)
 {
    using ROOT::RXTuple;
@@ -383,13 +423,11 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
 }
 
 class RPageSinkTestLocator : public RPageSinkFile {
-   ROOT::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t)
+   ROOT::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage & /* sealedPage */, std::size_t)
    {
-      auto payload = ROOT::RNTupleLocatorObject64{0x420};
       RNTupleLocator result;
-      result.SetPosition(payload);
       result.SetType(ROOT::Internal::kTestLocatorType);
-      result.SetNBytesOnStorage(sealedPage.GetDataSize());
+      // Don't set position and nbytes, we won't read it back anyway
       return result;
    }
 

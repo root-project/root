@@ -32,7 +32,6 @@ to use this class.
 Helper class to represent a bin in the TProfile2Poly histogram
 */
 
-ClassImp(TProfile2Poly);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TProfile2PolyBin constructor.

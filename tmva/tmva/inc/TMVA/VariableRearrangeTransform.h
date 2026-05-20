@@ -49,29 +49,29 @@ namespace TMVA {
       VariableRearrangeTransform( DataSetInfo& dsi );
       virtual ~VariableRearrangeTransform( void );
 
-      void   Initialize();
-      Bool_t PrepareTransformation (const std::vector<Event*>&);
+      void   Initialize() override;
+      Bool_t PrepareTransformation (const std::vector<Event*>&) override;
 
-      virtual const Event* Transform(const Event* const, Int_t cls ) const;
-      virtual const Event* InverseTransform( const Event* const, Int_t cls ) const;
+      const Event* Transform(const Event* const, Int_t cls ) const override;
+      const Event* InverseTransform( const Event* const, Int_t cls ) const override;
 
-      void WriteTransformationToStream ( std::ostream& ) const {}
-      void ReadTransformationFromStream( std::istream&, const TString& ) { SetCreated(); }
+      void WriteTransformationToStream ( std::ostream& ) const override {}
+      void ReadTransformationFromStream( std::istream&, const TString& ) override { SetCreated(); }
 
-      virtual void AttachXMLTo(void* parent);
-      virtual void ReadFromXML( void* trfnode );
+      void AttachXMLTo(void* parent) override;
+      void ReadFromXML( void* trfnode ) override;
 
-      virtual void PrintTransformation( std::ostream & o );
+      void PrintTransformation( std::ostream & o ) override;
 
       // writer of function code
-      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
+      void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls ) override;
 
       // provides string vector giving explicit transformation
-      std::vector<TString>* GetTransformationStrings( Int_t cls ) const;
+      std::vector<TString>* GetTransformationStrings( Int_t cls ) const override;
 
    private:
 
-      ClassDef(VariableRearrangeTransform,0); // Variable transformation: normalization
+      ClassDefOverride(VariableRearrangeTransform,0); // Variable transformation: normalization
    };
 
 } // namespace TMVA

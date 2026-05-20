@@ -82,12 +82,11 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Find the clone in the snapshot list
   _pdfClone = static_cast<RooAbsPdf*>(_cloneSet.find(model.GetName()));
-  _pdfClone->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Optionally fix RooAddPdf normalizations
   if (prototype&&_pdfClone->dependsOn(*prototype->get())) {
     RooArgSet fullNormSet(vars) ;
-    fullNormSet.add(*prototype->get()) ;
+    fullNormSet.add(*prototype->get(),true) ;
     _pdfClone->fixAddCoefNormalization(fullNormSet) ;
   }
 
@@ -322,10 +321,6 @@ void RooGenContext::attach(const RooArgSet& args)
 
 void RooGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  for (auto* arg : theEvent) {
-    arg->setOperMode(RooAbsArg::ADirty) ;
-  }
-
   attach(theEvent) ;
 
   // Reset the cloned model's error counters.

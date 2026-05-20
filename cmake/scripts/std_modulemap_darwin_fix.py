@@ -4,14 +4,6 @@ import re
 import subprocess
 import sys
 
-
-def get_sdk_path():
-    result = subprocess.run(["xcrun", "--show-sdk-path"], capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError("Could not resolve SDK path")
-    return os.path.realpath(result.stdout.strip())
-
-
 def remove_ctype_module(content):
     # Break cyclic module dependencies
     # See: https://github.com/root-project/root/commit/8045591a17125b49c1007787c586868dea764479
@@ -20,11 +12,11 @@ def remove_ctype_module(content):
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise ValueError("Usage: std_modulemap_darwin_fix.py <output_path>")
-    output_path = sys.argv[1]
-    sdk = get_sdk_path()
-    cpp_modulemap = os.path.join(sdk, "usr/include/c++/v1/module.modulemap")
+    if len(sys.argv) < 3:
+        raise ValueError("Usage: std_modulemap_darwin_fix.py <sdk_path> <output_path>")
+    sdk_path = sys.argv[1]
+    output_path = sys.argv[2]
+    cpp_modulemap = os.path.join(sdk_path, "usr/include/c++/v1/module.modulemap")
     if not os.path.exists(cpp_modulemap):
         # Try again if we are running a conda build. conda-forge ships the MacOS SDK stripped of libc++.
         # Instead, the standard libraries are shipped as a separate package which must be declared as a build

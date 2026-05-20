@@ -1,0 +1,12 @@
+<lcgdict>
+
+  <!-- this library is optimized by ilija@vukotic.me   size 0.168 Mb   -->
+
+  <class name="CaloClusterContainer_p7" id="A2739D1D-C338-41D1-94DD-A173B921DC43" />
+  <class name="std::vector<CaloClusterContainer_p7::CaloCluster_p>" />
+  <class name="CaloClusterContainer_p7::CaloCluster_p" />
+    
+  <class name="CaloClusterMomentContainer_p2"/>
+  <class name="CaloTowerSeg_p1" />
+
+</lcgdict>

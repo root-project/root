@@ -1,0 +1,47 @@
+<lcgdict>
+ <class name="ClusterFP420" ClassVersion="10">
+  <version ClassVersion="10" checksum="3299845112"/>
+ </class>
+ <class name="std::vector<ClusterFP420>"/>
+ <class name="std::map<unsigned int, std::vector<ClusterFP420> >"/>
+ <class name="edm::DetSet<ClusterFP420>"/>
+ <class name="edm::DetSetVector<ClusterFP420>"/>
+ <class name="std::vector<edm::DetSet<ClusterFP420> >"/>
+ <class name="edm::Wrapper<edm::DetSet<ClusterFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<ClusterFP420> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<ClusterFP420> >" splitLevel="0"/>
+ <class name="ClusterCollectionFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="1471856134"/>
+ </class>
+ <class name="edm::Wrapper<ClusterCollectionFP420>" splitLevel="0"/>
+ <class name="TrackFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="1748919695"/>
+ </class>
+ <class name="std::vector<TrackFP420>" splitLevel="0"/>
+ <class name="std::map<unsigned int, std::vector<TrackFP420> >" splitLevel="0"/>
+ <class name="edm::DetSet<TrackFP420>" splitLevel="0"/>
+ <class name="edm::DetSetVector<TrackFP420>" splitLevel="0"/>
+ <class name="std::vector<edm::DetSet<TrackFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSet<TrackFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<TrackFP420> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<TrackFP420> >" splitLevel="0"/>
+ <class name="TrackCollectionFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="2882244902"/>
+ </class>
+ <class name="edm::Wrapper<TrackCollectionFP420>" splitLevel="0"/>
+ <class name="RecoFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="719457820"/>
+ </class>
+ <class name="std::vector<RecoFP420>" splitLevel="0"/>
+ <class name="std::map<unsigned int, std::vector<RecoFP420> >" splitLevel="0"/>
+ <class name="edm::DetSet<RecoFP420>" splitLevel="0"/>
+ <class name="edm::DetSetVector<RecoFP420>" splitLevel="0"/>
+ <class name="std::vector<edm::DetSet<RecoFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSet<RecoFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<RecoFP420> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<RecoFP420> >" splitLevel="0"/>
+ <class name="RecoCollectionFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="2525484208"/>
+ </class>
+ <class name="edm::Wrapper<RecoCollectionFP420>" splitLevel="0"/>
+</lcgdict>

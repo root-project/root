@@ -31,18 +31,16 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TSecContext);
-ClassImp(TSecContextCleanup);
 
 const TDatime kROOTTZERO = 788914800;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
 
-TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
-                         Int_t offset, const char *id,
-                         const char *token, TDatime expdate, void *ctx)
-            : TObject()
+ROOT::Deprecated::TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
+                                           Int_t offset, const char *id,
+                                           const char *token, TDatime expdate, void *ctx)
+   : TObject()
 {
    R__ASSERT(gROOT);
 
@@ -67,7 +65,7 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
    // Keep official list updated with active TSecContexts
    if (fOffSet > -1) {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfSecContexts()->Add(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Add(this);
    }
 }
 
@@ -75,10 +73,10 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
 /// Ctor for SecContext object.
 /// User and host from url = `user@host` .
 
-TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
-                         const char *token, const char *id,
-                         TDatime expdate, void *ctx)
-            : TObject()
+ROOT::Deprecated::TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
+                                           const char *token, const char *id,
+                                           TDatime expdate, void *ctx)
+   : TObject()
 {
    R__ASSERT(gROOT);
 
@@ -103,14 +101,14 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
    // Keep official list updated with active TSecContexts
    if (fOffSet > -1) {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfSecContexts()->Add(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Add(this);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///copy constructor
 
-TSecContext::TSecContext(const TSecContext& sc) :
+ROOT::Deprecated::TSecContext::TSecContext(const TSecContext& sc) :
   TObject(sc),
   fContext(sc.fContext),
   fCleanup(sc.fCleanup),
@@ -128,7 +126,7 @@ TSecContext::TSecContext(const TSecContext& sc) :
 ////////////////////////////////////////////////////////////////////////////////
 ///assignement operator
 
-TSecContext& TSecContext::operator=(const TSecContext& sc)
+ROOT::Deprecated::TSecContext& ROOT::Deprecated::TSecContext::operator=(const TSecContext& sc)
 {
    if(this!=&sc) {
       TObject::operator=(sc);
@@ -150,20 +148,20 @@ TSecContext& TSecContext::operator=(const TSecContext& sc)
 /// Dtor: delete (deActivate, local/remote cleanup, list removal)
 /// all what is still active
 
-TSecContext::~TSecContext()
+ROOT::Deprecated::TSecContext::~TSecContext()
 {
    Cleanup();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup what is still active
 
-void TSecContext::Cleanup()
+void ROOT::Deprecated::TSecContext::Cleanup()
 {
    if (IsActive()) {
       CleanupSecContext(kTRUE);
       DeActivate("R");
       // All have been remotely Deactivated
-      TIter nxtl(gROOT->GetListOfSecContexts());
+      TIter nxtl(ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT));
       TSecContext *nscl;
       while ((nscl = (TSecContext *)nxtl())) {
          if (nscl != this && !strcmp(nscl->GetHost(), fHost.Data())) {
@@ -189,7 +187,7 @@ void TSecContext::Cleanup()
 /// If Opt contains "R" or "r", remove from the list
 /// Default Opt="CR"
 
-void TSecContext::DeActivate(Option_t *Opt)
+void ROOT::Deprecated::TSecContext::DeActivate(Option_t *Opt)
 {
    // Ask remote cleanup of this context
    Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
@@ -200,7 +198,7 @@ void TSecContext::DeActivate(Option_t *Opt)
    if (remove && fOffSet > -1){
       R__LOCKGUARD(gROOTMutex);
       // Remove from the global list
-      gROOT->GetListOfSecContexts()->Remove(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Remove(this);
    }
 
    // Set inactive
@@ -212,9 +210,9 @@ void TSecContext::DeActivate(Option_t *Opt)
 /// Create a new TSecContextCleanup
 /// Internally is added to the list
 
-void TSecContext::AddForCleanup(Int_t port, Int_t proto, Int_t type)
+void ROOT::Deprecated::TSecContext::AddForCleanup(Int_t port, Int_t proto, Int_t type)
 {
-   TSecContextCleanup *tscc = new TSecContextCleanup(port, proto, type);
+   auto *tscc = new ROOT::Deprecated::TSecContextCleanup(port, proto, type);
    fCleanup->Add(tscc);
 
 }
@@ -223,7 +221,7 @@ void TSecContext::AddForCleanup(Int_t port, Int_t proto, Int_t type)
 /// Checks if this security context is for method named 'methname'
 /// Case sensitive.
 
-Bool_t TSecContext::IsA(const char *methname)
+Bool_t ROOT::Deprecated::TSecContext::IsA(const char *methname)
 {
    return Bool_t(!strcmp(methname, GetMethodName()));
 }
@@ -231,7 +229,7 @@ Bool_t TSecContext::IsA(const char *methname)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check remote OffSet and expiring Date
 
-Bool_t TSecContext::IsActive() const
+Bool_t ROOT::Deprecated::TSecContext::IsActive() const
 {
    if (fOffSet > -1 && fExpDate > TDatime())
       return kTRUE;
@@ -243,10 +241,9 @@ Bool_t TSecContext::IsActive() const
 /// If opt is "F" (default) print object content.
 /// If opt is "<number>" print in special form for calls within THostAuth
 /// with cardinality "<number>"
-/// If opt is "S" prints short in-line form for calls within TFTP,
-/// TSlave, TProof ...
+/// If opt is "S" prints short in-line form for calls within TFTP and similar
 
-void TSecContext::Print(Option_t *opt) const
+void ROOT::Deprecated::TSecContext::Print(Option_t *opt) const
 {
    char aOrd[16] = {0};
    char aSpc[16] = {0};
@@ -310,7 +307,7 @@ void TSecContext::Print(Option_t *opt) const
 /// Returns short string with relevant information about this
 /// security context
 
-const char *TSecContext::AsString(TString &out)
+const char *ROOT::Deprecated::TSecContext::AsString(TString &out)
 {
    if (fOffSet > -1) {
       char expdate[32];
@@ -333,7 +330,7 @@ const char *TSecContext::AsString(TString &out)
 /// If 'all', all sec context with the same host as ctx
 /// are cleaned.
 
-Bool_t TSecContext::CleanupSecContext(Bool_t)
+Bool_t ROOT::Deprecated::TSecContext::CleanupSecContext(Bool_t)
 {
    AbstractMethod("CleanupSecContext");
    return kFALSE;

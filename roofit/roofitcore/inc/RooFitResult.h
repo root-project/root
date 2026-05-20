@@ -33,9 +33,7 @@
 class RooArgSet ;
 class RooAbsPdf ;
 class RooPlot;
-class TObject ;
-class TH2 ;
-typedef RooArgSet* pRooArgSet ;
+class TH2;
 
 class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
 public:
@@ -185,11 +183,12 @@ protected:
   RooArgList* _initPars = nullptr;     ///< List of floating parameters with initial values
   RooArgList* _finalPars = nullptr;    ///< List of floating parameters with final values
 
-  mutable RooArgList* _globalCorr = nullptr;   ///<! List of global correlation coefficients
+  mutable std::unique_ptr<RooArgList> _globalCorr; ///<! List of global correlation coefficients
   mutable TList       _corrMatrix ;   ///<! Correlation matrix (list of RooArgLists)
 
-  mutable RooArgList *_randomPars = nullptr; ///<! List of floating parameters with most recent random perturbation applied
-  mutable TMatrixF* _Lt = nullptr;           ///<! triangular matrix used for generate random perturbations
+  mutable std::unique_ptr<RooArgList>
+     _randomPars;                        ///<! List of floating parameters with most recent random perturbation applied
+  mutable std::unique_ptr<TMatrixF> _Lt; ///<! triangular matrix used for generate random perturbations
 
   TMatrixDSym* _CM = nullptr;  ///< Correlation matrix
   TMatrixDSym* _VM = nullptr;  ///< Covariance matrix

@@ -41,10 +41,15 @@ public:
    void      AddLast(TObject *obj) override { Add(obj); }
    void      AddLast(TObject *obj, Option_t *opt) override { Add(obj, opt); }
    void      AddAt(TObject *obj, Int_t) override { Add(obj); }
+   void      AddAt(TObject *obj, Int_t, Option_t* opt) override { Add(obj, opt); }
    void      AddAfter(const TObject *, TObject *obj) override { Add(obj); }
    void      AddAfter(TObjLink *, TObject *obj) override { Add(obj); }
+   void      AddAfter(const TObject *, TObject *obj, Option_t *opt) override { Add(obj, opt); }
+   void      AddAfter(TObjLink *, TObject *obj, Option_t *opt) override { Add(obj, opt); }
    void      AddBefore(const TObject *, TObject *obj) override { Add(obj); }
    void      AddBefore(TObjLink *, TObject *obj) override { Add(obj); }
+   void      AddBefore(const TObject *, TObject *obj, Option_t *opt) override { Add(obj, opt); }
+   void      AddBefore(TObjLink *, TObject *obj, Option_t *opt) override { Add(obj, opt); }
    void      Sort(Bool_t = kSortAscending) override { }
 
    ClassDefOverride(TSortedList,0)  //A sorted list

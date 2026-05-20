@@ -1,0 +1,11 @@
+<lcgdict>
+
+  <!-- Helper classes -->
+
+  <class name="ShowerLib::StepInfoCollection" id="0C827B1D-27EC-4938-ACE3-EDD45616790A" />
+
+  <class name="ShowerLib::StepInfo" />
+  <class name="DataVector<ShowerLib::StepInfo>" />
+  <class name="std::vector<ShowerLib::StepInfo*>" />
+
+</lcgdict>

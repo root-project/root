@@ -25,12 +25,16 @@ extern ParserFuncSignature ParseLog;
 extern ParserFuncSignature ParseSin;
 extern ParserFuncSignature ParseCos;
 extern ParserFuncSignature ParseAbs;
+extern ParserFuncSignature ParseSoftplus;
+extern ParserFuncSignature ParseAtan;
+extern ParserFuncSignature ParseFloor;
 // Binary operators
 extern ParserFuncSignature ParseAdd;
 extern ParserFuncSignature ParseSub;
 extern ParserFuncSignature ParseMul;
 extern ParserFuncSignature ParseDiv;
 extern ParserFuncSignature ParsePow;
+extern ParserFuncSignature ParseMod;
 // Nary operators
 extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseMin;
@@ -42,6 +46,10 @@ extern ParserFuncSignature ParseLess;
 extern ParserFuncSignature ParseLessEq;
 extern ParserFuncSignature ParseGreater;
 extern ParserFuncSignature ParseGreaterEq;
+//Is Operators
+extern ParserFuncSignature ParseIsInf;
+extern ParserFuncSignature ParseIsNaN;
+extern ParserFuncSignature ParseNot;
 // Reduce operators
 extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSum;
@@ -56,6 +64,7 @@ extern ParserFuncSignature ParseTanh;
 extern ParserFuncSignature ParseConv;
 extern ParserFuncSignature ParseConvTranspose;
 extern ParserFuncSignature ParseLeakyRelu;
+extern ParserFuncSignature ParseGelu;
 extern ParserFuncSignature ParseSelu;
 extern ParserFuncSignature ParseSigmoid;
 extern ParserFuncSignature ParseGemm;
@@ -74,6 +83,7 @@ extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
+extern ParserFuncSignature ParseGatherND;
 extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
 extern ParserFuncSignature ParseEyeLike;
@@ -87,6 +97,9 @@ extern ParserFuncSignature ParseWhere;
 extern ParserFuncSignature ParseEinsum;
 extern ParserFuncSignature ParseRandom;
 extern ParserFuncSignature ParseScatterElements;
+extern ParserFuncSignature ParseScatterND;
+extern ParserFuncSignature ParseNonZero;
+extern ParserFuncSignature ParseClip;
 // Declaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseGemmRelu;
@@ -107,49 +120,129 @@ struct ExtractDataFromTP {
 // trait function to extract data from TensorProto
 template<>
 struct ExtractDataFromTP<float> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->float_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read float initialized tensor - actual size is " + std::to_string(tensor->float_data_size()));
       tensor->mutable_float_data()->ExtractSubrange(0, tensor->float_data_size(),
                                                             static_cast<float *>(data));
    }
 };
 template<>
 struct ExtractDataFromTP<double> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->double_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read double initialized tensor - actual size is " + std::to_string(tensor->double_data_size()));
       tensor->mutable_double_data()->ExtractSubrange(0, tensor->double_data_size(),
                                                             static_cast<double *>(data));
    }
 };
 template<>
 struct ExtractDataFromTP<int32_t> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->int32_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read int32 initialized tensor - actual size is " + std::to_string(tensor->int32_data_size()));
       tensor->mutable_int32_data()->ExtractSubrange(0, tensor->int32_data_size(),
                                                             static_cast<int32_t *>(data));
    }
 };
 template<>
 struct ExtractDataFromTP<int64_t> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->int64_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read int64 initialized tensor - actual size is " + std::to_string(tensor->int64_data_size()));
       tensor->mutable_int64_data()->ExtractSubrange(0, tensor->int64_data_size(),
                                                             static_cast<int64_t *>(data));
    }
 };
-template<typename T>
-std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, size_t length) {
-   std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
 
-   if (!tensorproto->raw_data().empty()) {
+std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t tensor_size, ETensorType tensor_type)
+{
+
+   std::shared_ptr<void> data(malloc(tensor_size), free);
+
+   // check if initialized tensors are stored internally
+   if (tensorproto->data_location() != onnx::TensorProto::EXTERNAL) {
+      if (tensorproto->raw_data().size() > 0) {
+         if (tensorproto->raw_data().size() != tensor_size)
+            throw std::runtime_error("TMVA::SOFIE - Failed to read raw data of initialized tensor - actual raw size is " +
+                                 std::to_string(tensorproto->raw_data().size()));
+
 #ifdef R__BYTESWAP
-      std::memcpy(data.get(), tensorproto->raw_data().c_str(), length * sizeof(T));
+         // R__BYTESWAP is defined for little-endian architectures (most common ones)
+         std::memcpy(data.get(), tensorproto->raw_data().c_str(), tensor_size);
 #else
-      for (std::size_t k = 0; k < length; ++k)
-         (reinterpret_cast<typename RByteSwap<sizeof(T)>::value_type *>(data.get()))[k] =
-            RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(T)>::value_type *>(tensorproto->raw_data().c_str()))[k]);
+         // big-endian architectures - need to swap bytes
+         for (std::size_t k = 0; k < tensor_size; ++k)
+            (reinterpret_cast<typename RByteSwap<sizeof(uint8_t)>::value_type *>(data.get()))[k] =
+               RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(uint8_t)>::value_type *>(
+                  tensorproto->raw_data().c_str()))[k]);
 #endif
-   } else {
-      ExtractDataFromTP<T>::Copy(tensorproto, data.get());
+      } else {
+         // case tensor data are stored as specific types and now in raw_data
+         switch (tensor_type) {
+            case ETensorType::FLOAT: {
+               ExtractDataFromTP<float>::Copy(tensorproto, data.get(), tensor_size/ 4);
+               break;
+            }
+            case ETensorType::DOUBLE: {
+               ExtractDataFromTP<double>::Copy(tensorproto, data.get(), tensor_size/ 8);
+               break;
+            }
+            case ETensorType::INT32: {
+               ExtractDataFromTP<int32_t>::Copy(tensorproto, data.get(), tensor_size/ 4);
+               break;
+            }
+            case ETensorType::INT64: {
+               ExtractDataFromTP<int64_t>::Copy(tensorproto, data.get(), tensor_size/ 8);
+               break;
+            }
+            case ETensorType::BOOL: {
+               throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in BOOL not supported");
+               break;
+            }
+             case ETensorType::UINT8: {
+               throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in UINT8 not supported");
+               break;
+            }
+            default:
+               throw std::runtime_error("Data type " + ConvertTypeToString(tensor_type) + " in weight tensor is not supported!\n");
+         }
+      }
+
+   }  else {
+      // case of external data
+      if (fVerbose)
+         std::cout << "Initialized data are stored externally in file " << fDataFileName;
+
+      // read now tensor from file
+      std::string location;
+      size_t offset = 0, buffer_size = 0;
+
+      for (const auto &kv : tensorproto->external_data()) {
+         if (kv.key() == "location")  location = kv.value();
+         else if (kv.key() == "offset") offset = std::stoull(kv.value());
+         else if (kv.key() == "length") buffer_size = std::stoull(kv.value());
+      }
+      if (fVerbose)
+         std::cout << " at location " << location << " offset " << offset << " and with length " << buffer_size << std::endl;
+
+      if (buffer_size != tensor_size)
+         throw std::runtime_error("TMVA::SOFIE ONNX : invalid stored data size vs tensor size");
+
+      // open the data file if needed
+      if (!fDataFile.is_open()) {
+         fDataFile.open(fDataFileName, std::ios::binary);
+         if (!fDataFile.is_open())
+            throw std::runtime_error("TMVA::SOFIE ONNX:  error reading external weight ONNX data file " + fDataFileName);
+      }
+
+      fDataFile.seekg(offset);
+      fDataFile.read(reinterpret_cast<char *>(data.get()), buffer_size);
    }
+
    return data;
 }
+
 
 // Constructor of the parser
 RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {
@@ -163,12 +256,16 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Sin", ParseSin);
    RegisterOperator("Cos", ParseCos);
    RegisterOperator("Abs", ParseAbs);
+   RegisterOperator("Softplus", ParseSoftplus);
+   RegisterOperator("Atan", ParseAtan);
+   RegisterOperator("Floor", ParseFloor);
    // Binary operators
    RegisterOperator("Add", ParseAdd);
    RegisterOperator("Sub", ParseSub);
    RegisterOperator("Mul", ParseMul);
    RegisterOperator("Div", ParseDiv);
    RegisterOperator("Pow", ParsePow);
+   RegisterOperator("Mod", ParseMod);
    // Nary operators
    RegisterOperator("Max", ParseMax);
    RegisterOperator("Min", ParseMin);
@@ -180,6 +277,10 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("LessOrEqual", ParseLessEq);
    RegisterOperator("Greater", ParseGreater);
    RegisterOperator("GreaterOrEqual", ParseGreaterEq);
+   // Is If operators
+   RegisterOperator("IsInf", ParseIsInf);
+   RegisterOperator("IsNaN", ParseIsNaN);
+   RegisterOperator("Not", ParseNot);
    // Reduce operators
    RegisterOperator("ReduceMean", ParseReduceMean);
    RegisterOperator("ReduceSum", ParseReduceSum);
@@ -207,17 +308,20 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Squeeze", ParseReshape);
    RegisterOperator("Unsqueeze", ParseReshape);
    RegisterOperator("RNN", ParseRNN);
+   RegisterOperator("Gelu", ParseGelu);
    RegisterOperator("Selu", ParseSelu);
    RegisterOperator("Shape", ParseShape);
    RegisterOperator("Sigmoid", ParseSigmoid);
    RegisterOperator("Slice", ParseSlice);
    RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("LogSoftmax", ParseSoftmax);
    RegisterOperator("Tanh", ParseTanh);
    RegisterOperator("Transpose", ParseTranspose);
    RegisterOperator("MatMul", ParseMatMul);
    RegisterOperator("LayerNormalization", ParseLayerNormalization);
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
+   RegisterOperator("GatherND", ParseGatherND);
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
    RegisterOperator("EyeLike", ParseEyeLike);
@@ -234,6 +338,9 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("RandomUniform", ParseRandom);
    RegisterOperator("RandomUniformLike", ParseRandom);
    RegisterOperator("ScatterElements", ParseScatterElements);
+   RegisterOperator("ScatterND", ParseScatterND);
+   RegisterOperator("NonZero", ParseNonZero);
+   RegisterOperator("Clip", ParseClip);
 }
 
 // Destructor of the parser
@@ -288,47 +395,59 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    if (fVerbose)
       std::cout << "Parsing operator " << op_type << std::endl;
 
-   // skip already fused operators
-   if (fFusedOperators[idx]) return nullptr;
+   // perform the fusion of  operators
+   if (fFusedOperators.count(idx) == 1) {
+      int idx1 = fFusedOperators[idx].second;
+      if (fVerbose) {
+         std::cout << "\tFusing operators " << graphproto.node(idx1).name()
+                   << " with  " <<  graphproto.node(idx1).name() << std::endl;
+      }
+      if (fFusedOperators[idx].first == EFusedOp::kMatMulAdd) {
+         return ParseFuseMatMulAdd(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kConvAdd) {
+         return ParseFuseConvAdd(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kConvTransAdd) {
+         return ParseFuseConvTransposeAdd(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kGemmRelu) {
+         return ParseFuseGemmRelu(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kBatchnormRelu) {
+         return ParseFuseBatchnormRelu(*this, graphproto.node(idx1), graphproto.node(idx));
+      }
+   }
 
-   // try to fuse with following operator in case it is not last one
+   // try to fuse with following operator in case it is not last one and having only a single child
    if (children.size() == 1) {
       int idx2 = children.front();
       if (op_type == "MatMul") {
         // Fuse MatMul and Add
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
-         }
-         else {
-            return ParseMatMul(*this, graphproto.node(idx));
+            fFusedOperators[idx2] = {EFusedOp::kMatMulAdd, idx};
+            return nullptr;
          }
       } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
       // Fuse Conv or ConvTranspose without bias and Add
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
             if (nodeproto.op_type() == "Conv") {
-               fFusedOperators[idx2] = true;
-               return ParseFuseConvAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+               fFusedOperators[idx2] = { EFusedOp::kConvAdd, idx};
+               return nullptr;
             } else {
-               fFusedOperators[idx2] = true;
-               return ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+               fFusedOperators[idx2] = { EFusedOp::kConvTransAdd, idx};
+               return nullptr;
             }
          }
       } else if (nodeproto.op_type() == "Gemm") {
          // Fuse Gemm with activation operators
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseGemmRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+            fFusedOperators[idx2] = {EFusedOp::kGemmRelu, idx};
+            return nullptr;
          }
       } else if (nodeproto.op_type() == "BatchNormalization") {
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseBatchnormRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+            fFusedOperators[idx2] = {EFusedOp::kBatchnormRelu, idx};
+            return nullptr;
          }
       }
    }
-
-
 
    auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
@@ -342,7 +461,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
 }
 
 // Parse a model
-RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
+RModel RModelParser_ONNX::Parse(std::string const &filename, bool verbose)
 {
    fVerbose = verbose;
 
@@ -370,20 +489,51 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       filename_nodir = (filename.substr(isep + 1, filename.length() - isep));
    }
 
+   if (fDataFileName.empty() ) fDataFileName = filename + ".data";
+
    RModel rmodel(filename_nodir, parsetime);
    ParseONNXGraph(rmodel, graph, filename_nodir);
    return rmodel;
 }
 
-std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::string filename) {
+RModel RModelParser_ONNX::Parse(std::istream &input, std::string const &name, bool verbose)
+{
+   fVerbose = verbose;
 
+   fTensorTypeMap.clear();
+
+   auto model = LoadModel(input);
+   if (!model)
+      throw std::runtime_error("TMVA::SOFIE - Failed to parse ONNX model from input stream");
+
+   const onnx::GraphProto &graph = model->graph(); // not a memory leak. model freed automatically at the end.
+
+   std::time_t ttime = std::time(0);
+   std::tm *gmt_time = std::gmtime(&ttime);
+   std::string parsetime(std::asctime(gmt_time));
+
+   RModel rmodel(name, parsetime);
+   ParseONNXGraph(rmodel, graph, name);
+   return rmodel;
+}
+
+std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(const std::string &filename) {
+   std::fstream input(filename, std::ios::in | std::ios::binary);
+   if (!input) {
+      std::cerr << "TMVA::SOFIE - Failed to open onnx file " << filename << std::endl;
+      return {};
+   }
+
+   return LoadModel(input);
+}
+
+std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::istream &input) {
    GOOGLE_PROTOBUF_VERIFY_VERSION;
    auto model = std::make_unique<onnx::ModelProto>();
 
-   std::fstream input(filename, std::ios::in | std::ios::binary);
    if (!model->ParseFromIstream(&input)) {
-      std::cerr << "TMVA::SOFIE - Failed to open onnx file " <<  filename << std::endl;
-      return std::unique_ptr<onnx::ModelProto>();
+      std::cerr << "TMVA::SOFIE - Failed to parse ONNX model from input stream" << std::endl;
+      return {};
    }
 
    // ONNX version is ir_version()  - model_version() returns 0
@@ -541,56 +691,49 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    for (int i = 0; i < graph.initializer_size(); i++) {
       onnx::TensorProto *tensorproto = const_cast<onnx::TensorProto *>(&graph.initializer(i));
       std::vector<std::size_t> shape;
-      std::size_t fLength = 1;
+      std::size_t tensor_length = 1;
       for (int j = 0; j < tensorproto->dims_size(); j++) {
          shape.push_back(tensorproto->dims(j));
-         fLength *= tensorproto->dims(j);
+         tensor_length *= tensorproto->dims(j);
       }
       // in case of scalars keep an empty shape but with length =1
 
-      std::string input_name = graph.initializer(i).name();
+      std::string tensor_name = graph.initializer(i).name();
 
       if (verbose)
-         std::cout << "\t initializer " << i << " name " << input_name << " type " << graph.initializer(i).data_type()
-                   << std::endl;
+         std::cout << "\t initializer " << i << " name " << tensor_name << " type " << graph.initializer(i).data_type()
+                   << " and length " << tensor_length << std::endl;
+
 
       // register also the initialized tensors
       auto tensor_type = static_cast<ETensorType>(graph.initializer(i).data_type());
-      RegisterTensorType(input_name, tensor_type);
+      RegisterTensorType(tensor_name, tensor_type);
 
-      switch (tensor_type) {
-      case ETensorType::FLOAT: {
-         std::shared_ptr<void> data = GetInitializedTensorData<float>(tensorproto, fLength);
-         if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
+      std::shared_ptr<void> data = GetInitializedTensorData(tensorproto, tensor_length * GetTypeSize(tensor_type), tensor_type);
+      rmodel.AddInitializedTensor(tensor_name, tensor_type, shape, data);
+      allInitializedTensors[tensor_name] = i;
+
+      if (verbose) {
+         std::cout << "add initialized tensor " << tensor_name << "with shape " << ConvertShapeToString(shape) << "and  ";
+         if (tensor_type == ETensorType::FLOAT) {
+            std::cout << " float data: ";
+            for (int j = 0; j < std::min(int(tensor_length),3); j++) std::cout << static_cast<float*>(data.get())[j] << "  ";
+         }
+         else if (tensor_type == ETensorType::INT64) {
+            std::cout << " int64 data: ";
+            for (int j = 0; j < std::min(int(tensor_length),3); j++) std::cout << static_cast<int64_t*>(data.get())[j] << "  ";
+         }
+         else if (tensor_type == ETensorType::UINT8) {
+            std::cout << " uint8 data: ";
+            for (int j = 0; j < std::min(int(tensor_length),3); j++) std::cout << static_cast<uint8_t*>(data.get())[j] << "  ";
+         }
+         else if (tensor_type == ETensorType::BOOL) {
+            std::cout << " Boolean data: ";
+            for (int j = 0; j < std::min(int(tensor_length),3); j++) std::cout << static_cast<bool*>(data.get())[j] << "  ";
+         }
+         std::cout << std::endl;
       }
-      case ETensorType::DOUBLE: {
-         std::shared_ptr<void> data = GetInitializedTensorData<double>(tensorproto, fLength);
-         if (verbose) std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::DOUBLE, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
-      }
-      case ETensorType::INT32: {
-         std::shared_ptr<void> data = GetInitializedTensorData<int32_t>(tensorproto, fLength);
-         if (verbose) std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::INT32, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
-      }
-      case ETensorType::INT64: {
-         std::shared_ptr<void> data = GetInitializedTensorData<int64_t>(tensorproto, fLength);
-         if (verbose) std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::INT64, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
-      }
-      default:
-         throw std::runtime_error("Data type in weight tensor " + graph.initializer(i).name() + " not supported!\n");
-      }
-   }
+   }   // end initializer list
 
    // Initial operator order
    if (verbose) {
@@ -723,7 +866,6 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    // we have to record order of node execution separately to
    // account for fused operators
    size_t node_order_exec = 0;
-   fFusedOperators = std::vector<bool>(graph.node_size(), false);
    for (int i = 0; i < graph.node_size(); i++) {
       std::string op_type = graph.node(nodesOrder[i]).op_type();
 
@@ -731,7 +873,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          std::cout << "\t" << i << "  " << nodesOrder[i] << " parsing operator " << op_type << std::endl;
       }
 
-      std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder, nodesChildren[i]);
+      std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder, nodesChildren[nodesOrder[i]]);
       if (!op) {
          if (verbose) {
             std::cout << "\t\tskipping operator since it is fused with previous one" << std::endl;

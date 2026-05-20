@@ -107,10 +107,10 @@
  Interrupt; by clicking on the corresponding toolbar button, or by
  using Shift+F5 accelerator keys.
 
-#### Interface to CINT Interpreter
+#### Interface to Cling Interpreter
 
  Any command entered in the Command combo box will be passed to
- the CINT interpreter. This combo box will keep the commands history
+ the Cling interpreter. This combo box will keep the commands history
  and will allow you to re-execute the same commands during an editor
  session.
 
@@ -225,7 +225,6 @@ ToolBarData_t fTbData[] = {
 static char *gEPrinter      = 0;
 static char *gEPrintCommand = 0;
 
-ClassImp(TGTextEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTextEditor constructor with file name as first argument.
@@ -241,7 +240,7 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
       fToolBar->RemoveFrame(fComboCmd);
       fLabel->UnmapWindow();
       fToolBar->RemoveFrame(fLabel);
-      fToolBar->GetButton(kM_FILE_EXIT)->SetState(kButtonDisabled);
+      if (auto btn = fToolBar->GetButton(kM_FILE_EXIT); btn) btn->SetState(kButtonDisabled);
       fToolBar->Layout();
    }
    if (filename) {
@@ -413,10 +412,10 @@ void TGTextEditor::Build()
    AddFrame(new TGHorizontal3DLine(this),
             new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,2));
 
-   fToolBar->GetButton(kM_EDIT_CUT)->SetState(kButtonDisabled);
-   fToolBar->GetButton(kM_EDIT_COPY)->SetState(kButtonDisabled);
-   fToolBar->GetButton(kM_EDIT_DELETE)->SetState(kButtonDisabled);
-   fToolBar->GetButton(kM_EDIT_PASTE)->SetState(kButtonDisabled);
+   if (auto btn = fToolBar->GetButton(kM_EDIT_CUT); btn) btn->SetState(kButtonDisabled);
+   if (auto btn = fToolBar->GetButton(kM_EDIT_COPY); btn) btn->SetState(kButtonDisabled);
+   if (auto btn = fToolBar->GetButton(kM_EDIT_DELETE); btn) btn->SetState(kButtonDisabled);
+   if (auto btn = fToolBar->GetButton(kM_EDIT_PASTE); btn) btn->SetState(kButtonDisabled);
 
    fTextEdit = new TGTextEdit(this, 10, 10, 1);
    if (gClient->GetStyle() < 2) {
@@ -772,12 +771,11 @@ void TGTextEditor::CompileMacro()
       if (!SaveFileAs())
          return;
    }
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                gSystem->BaseName(fFilename.Data()));
+   TString temp = gSystem->BaseName(fFilename.Data());
+   const char *tmpfile = gSystem->PrependPathName(gSystem->TempDirectory(), temp);
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gSystem->CompileMacro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete [] tmpfile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -867,8 +865,8 @@ Bool_t TGTextEditor::HandleTimer(TTimer *t)
    }
    else {
       fMenuEdit->EnableEntry(kM_EDIT_PASTE);
-      if (fToolBar->GetButton(kM_EDIT_PASTE)->GetState() == kButtonDisabled)
-         fToolBar->GetButton(kM_EDIT_PASTE)->SetState(kButtonUp);
+      if (auto btn = fToolBar->GetButton(kM_EDIT_PASTE); btn && btn->GetState() == kButtonDisabled)
+         btn->SetState(kButtonUp);
    }
    // check if text is selected in the editor
    if (fTextEdit->IsMarked()) {
@@ -885,8 +883,8 @@ Bool_t TGTextEditor::HandleTimer(TTimer *t)
       fMenuEdit->DisableEntry(kM_EDIT_CUT);
       fMenuEdit->DisableEntry(kM_EDIT_COPY);
       fMenuEdit->DisableEntry(kM_EDIT_DELETE);
-      if (fToolBar->GetButton(kM_EDIT_CUT)->GetState() == kButtonUp) {
-         fToolBar->GetButton(kM_EDIT_CUT)->SetState(kButtonDisabled);
+      if (auto btn = fToolBar->GetButton(kM_EDIT_CUT); btn && btn->GetState() == kButtonUp) {
+         btn->SetState(kButtonDisabled);
          fToolBar->GetButton(kM_EDIT_COPY)->SetState(kButtonDisabled);
          fToolBar->GetButton(kM_EDIT_DELETE)->SetState(kButtonDisabled);
       }

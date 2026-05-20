@@ -1,0 +1,123 @@
+<lcgdict>
+  <function name = "Swimming::hashParticle" />
+  
+  <class name = "LHCb::SwimmingReport" id="00000900-0000-0000-0000-000000000000"/>
+  <class name = "LHCb::TurningPoint" id="00000901-0000-0000-0000-000000000000"/>
+
+  <class name = "LHCb::SwimmingReport::TurningPoints" />
+
+  <class name = "SmartRef<LHCb::TurningPoint>">
+      <field name="m_target" transient="true"/>
+  </class>
+  <class name = "SmartRefVector<LHCb::TurningPoint>">
+      <field name="m_contd" transient="true"/>
+      <field name="m_data" transient="true"/>
+  </class>
+
+  <class name = "std::vector<LHCb::TurningPoint>" />
+  <class name = "std::vector<SmartRef<LHCb::TurningPoint> >" />
+
+  <class name = "SmartRef<LHCb::SwimmingReport>">
+      <field name="m_target" transient="true"/>
+  </class>
+  <class name = "SmartRefVector<LHCb::SwimmingReport>">
+      <field name="m_contd" transient="true"/>
+      <field name="m_data" transient="true"/>
+  </class>
+
+  <class name = "std::vector<LHCb::SwimmingReport>" />
+  <class name = "std::vector<SmartRef<LHCb::SwimmingReport> >" />
+
+  <class name="KeyedContainer<LHCb::SwimmingReport,Containers::KeyedObjectManager<Containers::hashmap> >"
+         id="00060900-0000-0000-0000-000000000000">
+     <field name="m_cont" transient="true"/>
+     <field name="m_random" transient="true"/>
+  </class>
+  
+  <class pattern = "std::map<*,*LHCb::TurningPoint*>" />
+  <class pattern = "std::pair<std::string,*LHCb::TurningPoint*>" />
+
+  <class pattern = "std::pair<*,bool>" />
+  <class pattern = "std::map<*,bool>" />
+  <class pattern = "std::map<*,bool>*iterator" />
+  <class pattern = "std::map<*,double>*iterator" />
+  <class pattern = "std::map<*,std::map*>" />
+  <class pattern = "std::map<*,std::map*>*iterator" />
+  <class pattern = "std::pair<std::string,std::map*>" />
+
+  <class name="LHCb::Relation2D<LHCb::Particle,LHCb::SwimmingReport>" 
+         id="80E09471-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::Relation2D<LHCb::SwimmingReport,LHCb::Particle>" 
+         id="F760D3EB-0000-0000-0000-000000000000" />
+
+  <class name="IRelation2D<LHCb::Particle,LHCb::SwimmingReport>" /> 
+  <class name="IRelation2D<LHCb::SwimmingReport,LHCb::Particle>" /> 
+  <class name="IRelation<LHCb::Particle,LHCb::SwimmingReport>" /> 
+  <class name="IRelation<LHCb::SwimmingReport,LHCb::Particle>" /> 
+  <class name="Relations::Entry_<LHCb::Particle,LHCb::SwimmingReport>" /> 
+  <class name="Relations::Entry_<LHCb::SwimmingReport,LHCb::Particle>" /> 
+  <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Particle,LHCb::SwimmingReport> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+  </class> 
+  <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::SwimmingReport,LHCb::Particle> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+  </class> 
+  <class name="Relations::Relation2<LHCb::Particle,LHCb::SwimmingReport>" >
+    <field name="m_inverse" transient="true" />
+  </class> 
+  <class name="Relations::Relation2<LHCb::SwimmingReport,LHCb::Particle>" >
+    <field name="m_inverse" transient="true" />
+  </class> 
+  <class name="Relations::Relation<LHCb::Particle,LHCb::SwimmingReport>" >
+    <field name="m_inverse_aux" transient="true" />
+  </class> 
+  <class name="Relations::Relation<LHCb::SwimmingReport,LHCb::Particle>" >
+    <field name="m_inverse_aux" transient="true" />
+  </class> 
+  <class name="Relations::RelationBase<LHCb::Particle,LHCb::SwimmingReport>" /> 
+  <class name="Relations::RelationBase<LHCb::SwimmingReport,LHCb::Particle>" /> 
+  <class name="std::vector<Relations::Entry_<LHCb::Particle,LHCb::SwimmingReport> >" /> 
+  <class name="std::vector<Relations::Entry_<LHCb::SwimmingReport,LHCb::Particle> >" /> 
+
+  <class pattern="Relations::Pointer<*>"   /> 
+  <class pattern="Relations::Reference<*>" /> 
+
+  <exclusion>
+
+  <class pattern="std::pair<*,LHCb::*>" />
+  <class pattern="std::pair<__gnu_cxx::*" />
+
+  <class pattern="IRelation*">
+    <method name="="/>
+  </class>
+  <class pattern="LHCb::Relation*">
+    <method name="="/>
+  </class>
+  <class pattern="Relations::Relation*">
+    <method name="="/>
+  </class>
+  <class pattern="Relations::Entry_*">
+    <method name="="/>
+  </class>
+  <class pattern="Relations::WEntry_*">
+    <method name="="/>
+  </class>
+  <class pattern="Relations::Range_*">
+    <method name="="/>
+  </class>
+  <class pattern="Relations::Pointer*">
+    <method name="="/>
+  </class>
+  <class pattern="Relations::Reference*">
+    <method name="="/>
+  </class>
+  <class pattern="std::vector&lt;Relations::*&gt;">
+    <method name="="/>
+  </class>
+
+  </exclusion>
+
+</lcgdict>

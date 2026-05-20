@@ -1,0 +1,11 @@
+<lcgdict> 
+   <class name = "Trk::CaloClusterROI" >
+     <field name = "m_localParams" transient="false" />
+     <field name = "m_surface" transient="false" />
+     <field name = "m_globalpos" transient="true" />
+     <field name = "m_energy" transient="false" /> 
+		 <field name = "m_phiWidth" transient="false" />
+     <field name = "m_etaWidth" transient="false" />
+   </class>
+</lcgdict>
+

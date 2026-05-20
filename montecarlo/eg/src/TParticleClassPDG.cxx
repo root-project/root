@@ -19,7 +19,6 @@ Utility class used internally by TDatabasePDG
 #include "TParticlePDG.h"
 #include "TParticleClassPDG.h"
 
-ClassImp(TParticleClassPDG);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor

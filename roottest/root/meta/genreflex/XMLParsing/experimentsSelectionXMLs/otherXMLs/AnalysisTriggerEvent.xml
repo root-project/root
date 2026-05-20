@@ -1,0 +1,16 @@
+<lcgdict>
+
+  <class name="CTP_Decision" id="2A450F66-8A30-42E1-91CB-BE1CEE3C772F" />
+  <class name="LVL1_ROI" id="3E1829DE-9AA7-489C-AB81-406DF6CC544F" />
+  <class name="std::vector<Muon_ROI>" />
+  <class name="std::vector<EmTau_ROI>" />
+  <class name="std::vector<Jet_ROI>" />
+  <class name="std::vector<JetET_ROI>" />
+  <class name="std::vector<EnergySum_ROI>" />
+  <class name="Muon_ROI" />
+  <class name="EmTau_ROI" />
+  <class name="Jet_ROI" />
+  <class name="JetET_ROI" />
+  <class name="EnergySum_ROI" />
+
+</lcgdict>

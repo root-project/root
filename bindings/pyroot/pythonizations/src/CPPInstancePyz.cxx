@@ -9,17 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <Python.h>
+
 // Bindings
 #include "CPyCppyy/API.h"
 
-#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
-#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
-#include "../../cppyy/CPyCppyy/src/CustomPyTypes.h"
-
 #include "PyROOTPythonize.h"
 #include "TBufferFile.h"
-
-using namespace CPyCppyy;
 
 namespace PyROOT {
 extern PyObject *gRootModule;
@@ -40,18 +36,18 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
    PyObject *pybuf = 0, *pyname = 0;
    if (!PyArg_ParseTuple(args, "O!O!:__expand__", &PyBytes_Type, &pybuf, &PyBytes_Type, &pyname))
       return 0;
-   const char *clname = PyBytes_AS_STRING(pyname);
+   const char *clname = PyBytes_AsString(pyname);
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
    void *newObj = 0;
    if (strcmp(clname, "TBufferFile") == 0) {
       TBufferFile *buf = new TBufferFile(TBuffer::kWrite);
-      buf->WriteFastArray(PyBytes_AS_STRING(pybuf), PyBytes_GET_SIZE(pybuf));
+      buf->WriteFastArray(PyBytes_AsString(pybuf), PyBytes_Size(pybuf));
       newObj = buf;
    } else {
       // use the PyString macro's to by-pass error checking; do not adopt the buffer,
       // as the local TBufferFile can go out of scope (there is no copying)
-      TBufferFile buf(TBuffer::kRead, PyBytes_GET_SIZE(pybuf), PyBytes_AS_STRING(pybuf), kFALSE);
+      TBufferFile buf(TBuffer::kRead, PyBytes_Size(pybuf), PyBytes_AsString(pybuf), kFALSE);
       newObj = buf.ReadObjectAny(0);
    }
    PyObject *result = CPyCppyy::Instance_FromVoidPtr(newObj, clname, /*python_owns=*/true);
@@ -71,13 +67,11 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
 
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
-   static Cppyy::TCppType_t s_bfClass = Cppyy::GetScope("TBufferFile");
-   TBufferFile *buff = 0;
-   Cppyy::TCppType_t selfClass = ((CPPInstance *)self)->ObjectIsA();
-   if (selfClass == s_bfClass) {
+   TBufferFile *buff = nullptr;
+   std::string className = CPyCppyy::Instance_GetScopedFinalName(self);
+   if (className == "TBufferFile") {
       buff = (TBufferFile *)CPyCppyy::Instance_AsVoidPtr(self);
    } else {
-      auto className = Cppyy::GetScopedFinalName(selfClass);
       if (className.find("__cppyy_internal::Dispatcher") == 0) {
          PyErr_Format(PyExc_IOError,
                       "generic streaming of Python objects whose class derives from a C++ class is not supported. "
@@ -92,7 +86,7 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
       // to delete
       if (s_buff.WriteObjectAny(CPyCppyy::Instance_AsVoidPtr(self), TClass::GetClass(className.c_str())) != 1) {
          PyErr_Format(PyExc_IOError, "could not stream object of type %s",
-                      Cppyy::GetScopedFinalName(selfClass).c_str());
+                      className.c_str());
          return 0;
       }
       buff = &s_buff;
@@ -101,13 +95,13 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
    // the buffer contents; use a string for the class name, used when casting
    // on reading back in (see CPPInstanceExpand defined above)
    PyObject *res2 = PyTuple_New(2);
-   PyTuple_SET_ITEM(res2, 0, PyBytes_FromStringAndSize(buff->Buffer(), buff->Length()));
-   PyTuple_SET_ITEM(res2, 1, PyBytes_FromString(Cppyy::GetScopedFinalName(selfClass).c_str()));
+   PyTuple_SetItem(res2, 0, PyBytes_FromStringAndSize(buff->Buffer(), buff->Length()));
+   PyTuple_SetItem(res2, 1, PyBytes_FromString(className.c_str()));
 
    PyObject *result = PyTuple_New(2);
    Py_INCREF(s_expand);
-   PyTuple_SET_ITEM(result, 0, s_expand);
-   PyTuple_SET_ITEM(result, 1, res2);
+   PyTuple_SetItem(result, 0, s_expand);
+   PyTuple_SetItem(result, 1, res2);
 
    return result;
 }
@@ -120,28 +114,8 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
 ///
 /// The C++ function op_reduce defined above is wrapped in a Python method
 /// so that it can be injected in CPPInstance
-PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject *args)
+PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject * /*args*/)
 {
-   PyObject *pyclass = PyTuple_GetItem(args, 0);
-
-   const char *attr = "__reduce__";
-
-   PyMethodDef *pdef = new PyMethodDef();
-   pdef->ml_name = attr;
-   pdef->ml_meth = (PyCFunction)op_reduce;
-   pdef->ml_flags = METH_NOARGS;
-   pdef->ml_doc = nullptr;
-
-   PyObject *func = PyCFunction_New(pdef, nullptr);
-   PyObject *method = CustomInstanceMethod_New(func, nullptr, pyclass);
-
-   // here PyObject_GenericSetAttr is used because CPPInstance does not allow
-   // attribute assignment using PyObject_SetAttr
-   // for more info refer to:
-   // https://bitbucket.org/wlav/cppyy/issues/110/user-defined-classes-in-c-dont-seem-to-be
-   PyObject_GenericSetAttr(pyclass, PyUnicode_FromString(attr), method);
-   Py_DECREF(method);
-   Py_DECREF(func);
-
+   CPyCppyy::Instance_SetReduceMethod((PyCFunction)op_reduce);
    Py_RETURN_NONE;
 }

@@ -1963,7 +1963,8 @@ void TestFileList::DisplayObject(const TString &fname, const TString &name)
 {
    // Browse object located in file.
 
-   TDirectory *sav = gDirectory;
+   // Will restore the current directory after the file has been opened
+   TDirectory::TContext ctx;
 
    static TFile *file = nullptr;
    if (file)
@@ -1977,7 +1978,6 @@ void TestFileList::DisplayObject(const TString &fname, const TString &name)
       } else
          obj->Print();
    }
-   gDirectory = sav;
 }
 
 void TestFileList::OnDoubleClick(TGLVEntry *f, Int_t btn)

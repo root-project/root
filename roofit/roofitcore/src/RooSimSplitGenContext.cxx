@@ -78,12 +78,9 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
   // Initialize fraction threshold array (used only in extended mode)
   _numPdf = model._pdfProxyList.GetSize() ;
-  _fracThresh = new double[_numPdf+1] ;
-  _fracThresh[0] = 0 ;
 
   // Generate index category and all registered PDFS
   _allVarsPdf.add(allPdfVars) ;
-  Int_t i(1) ;
   for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
     auto pdf = static_cast<RooAbsPdf*>(proxy->absArg());
 
@@ -96,14 +93,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
     _gcIndex.push_back(state);
-
-    // Fill fraction threshold array
-    _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&allPdfVars) ;
-    i++ ;
-  }
-
-  for(i=0 ; i<_numPdf ; i++) {
-    _fracThresh[i] /= _fracThresh[_numPdf] ;
   }
 
   // Clone the index category
@@ -121,7 +110,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
 RooSimSplitGenContext::~RooSimSplitGenContext()
 {
-  delete[] _fracThresh ;
   for (RooAbsGenContext *item : _gcList) {
     delete item;
   }
@@ -193,39 +181,35 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
   }
 
   // Generate lookup table from expected event counts
-  std::vector<double> nGen(_numPdf) ;
-  if (extendedMode ) {
-    Int_t i(0) ;
-    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
-      RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      //nGen[i] = Int_t(pdf->expectedEvents(&_allVarsPdf)+0.5) ;
-      nGen[i] = pdf->expectedEvents(&_allVarsPdf) ;
-      i++ ;
-    }
+  std::vector<double> nGen(_numPdf);
+  std::vector<double> nExpected;
+  nExpected.reserve(_numPdf) ;
+  double nExpectedTotal = 0.;
+  for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
+    RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
+    nExpected.push_back(pdf->expectedEvents(&_allVarsPdf));
+    nExpectedTotal += nExpected.back();
+  }
 
+  // We don't randomize events in two cases:
+  //  1. When the generation is extended, each component pdf will already
+  //     randomize the expected number of events so we don't need to do it here.
+  //  2. If we want to create an expected Asimov dataset.
+  if (extendedMode || _expectedData) {
+    nGen = nExpected;
   } else {
-    Int_t i(1) ;
-    _fracThresh[0] = 0 ;
-    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
-      RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&_allVarsPdf) ;
-      i++ ;
-    }
-    for(i=0 ; i<_numPdf ; i++) {
-      _fracThresh[i] /= _fracThresh[_numPdf] ;
-    }
-
     // Determine from that total number of events to be generated for each component
     double nGenSoFar(0) ;
     while (nGenSoFar<nEvents) {
-      double rand = RooRandom::uniform() ;
-      i=0 ;
-      for (i=0 ; i<_numPdf ; i++) {
-   if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {
-     nGen[i]++ ;
-     nGenSoFar++ ;
-     break ;
-   }
+      double rand = RooRandom::uniform() * nExpectedTotal;
+      double cumsum = 0;
+      for (int i=0 ; i<_numPdf ; i++) {
+        if (rand >= cumsum && rand < cumsum + nExpected[i]) {
+          nGen[i]++ ;
+          nGenSoFar++ ;
+          break ;
+        }
+        cumsum += nExpected[i];
       }
     }
   }
@@ -257,6 +241,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 
 void RooSimSplitGenContext::setExpectedData(bool flag)
 {
+  _expectedData = flag;
   for(RooAbsGenContext *elem : _gcList) {
     elem->setExpectedData(flag) ;
   }

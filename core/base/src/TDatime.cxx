@@ -30,7 +30,7 @@ required, use TTimeStamp.
 
 #ifdef WIN32
 #include "Windows4Root.h"
-#include <string.h>
+#include <cstring>
 #endif
 
 #include "TBuffer.h"
@@ -42,7 +42,6 @@ required, use TTimeStamp.
 #include "TString.h"
 
 
-ClassImp(TDatime);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TDatime and set it to the current time.

@@ -37,7 +37,6 @@
 // #endif
 
 #ifdef R__USE_IMT
-#include "ROOT/TRWSpinLock.hxx"
 #include <mutex>
 #endif
 
@@ -101,7 +100,7 @@ public:
 
    public:
       using iterator = TIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = TKeyMapNode;
       using pointer = value_type *;
@@ -109,7 +108,7 @@ public:
 
       TIterator(TFile *file, std::uint64_t addr);
 
-      iterator operator++()
+      iterator &operator++()
       {
          Advance();
          return *this;
@@ -229,10 +228,6 @@ protected:
 
    virtual InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
 
-   // Creating projects
-           Int_t       MakeProjectParMake(const char *packname, const char *filename);
-           Int_t       MakeProjectParProofInf(const char *packname, const char *proofinfdir);
-
    // Interface to basic system I/O routines
    virtual Int_t       SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    virtual Int_t       SysClose(Int_t fd);
@@ -282,7 +277,17 @@ public:
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
    /// File type
-   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };
+   enum EFileType {
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kDefault = 0,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);

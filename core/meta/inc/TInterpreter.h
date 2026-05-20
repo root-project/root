@@ -194,6 +194,7 @@ public:
    virtual void     AddAvailableIndentifiers(TSeqCollection&) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
+   virtual void     RegisterAutoLoadedLibrary(const char *libname) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;
@@ -429,6 +430,7 @@ public:
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, void * /* arena */) const {return nullptr;}
    virtual Long_t ClassInfo_Property(ClassInfo_t * /* info */) const {return 0;}
    virtual int    ClassInfo_Size(ClassInfo_t * /* info */) const {return 0;}
+   virtual size_t ClassInfo_AlignOf(ClassInfo_t * /* info */) const {return 0;}
    virtual Longptr_t ClassInfo_Tagnum(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_FileName(ClassInfo_t * /* info */) const {return nullptr;}
    virtual const char *ClassInfo_FullName(ClassInfo_t * /* info */) const {return nullptr;}

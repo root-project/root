@@ -185,8 +185,13 @@ bool nocomp(int mode = 0)
    filename += mode;
    filename += ".root";
 
-   // create a new file
+   #ifdef R__HAS_ZLIB_NG
+   // At compression level 1, in some occasions, zlib-ng can decide not to compress
+   // a buffer if it estimates that it's not worth it.
+   TFile *f_write = TFile::Open(filename, "recreate", "", 102);
+   #else
    TFile *f_write = TFile::Open(filename, "recreate", "", 101);
+   #endif
 
    if (mode == 1)
       f_write->cd();                 // Create regular TTree.

@@ -8,6 +8,8 @@
 
 #include "gtest/gtest.h"
 
+#include <cmath>
+
 bool testTEfficiency_vs_TGA(int nexp = 1000, TEfficiency::EStatOption statOpt = TEfficiency::kBUniform,
                             bool mode = true, bool central = false)
 {

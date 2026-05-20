@@ -1,0 +1,19 @@
+set(refname "")
+
+if(ZLIB_NG)
+  set(refname testForeignDrawZLIB-NG.ref)
+else()
+  set(refname testForeignDrawZLIB.ref)
+endif()
+
+if(NOT refname STREQUAL "")
+  ROOTTEST_ADD_TEST(def
+                   MACRO def.C+
+                   FIXTURES_SETUP root-io-treeForeign-def-fixture)
+
+  ROOTTEST_ADD_TEST(testForeignDraw
+                    MACRO Run.C
+                    OUTREF ${refname}
+                    FIXTURES_REQUIRED root-io-treeForeign-def-fixture)
+endif()
+

@@ -103,6 +103,14 @@ public:
    Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override; //-"Qt ROOT".
    void      RemoveWindow(ULong_t qwid) override; //-"Qt ROOT".
 
+   //---- Methods used for new graphics -----
+   WinContext_t GetWindowContext(Int_t wid) override;
+   WinContext_t GetSelectedContext();
+   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
+   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
+   void      ClearWindowW(WinContext_t wctxt) override;
+   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
+   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
@@ -441,7 +449,7 @@ protected:
 
    Drawable_t fSelectedDrawable;
 
-   std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
+   std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; ///<!
    Int_t fCocoaDraw;
 
    EDrawMode fDrawMode;
@@ -468,10 +476,10 @@ private:
 public:
    static Atom_t fgDeleteWindowAtom;
 
-private:
-   //I'd prefer to use = delete syntax from C++0x11, but this file is processed by CINT.
-   TGCocoa(const TGCocoa &rhs);
-   TGCocoa &operator = (const TGCocoa &rhs);
+   TGCocoa(const TGCocoa &rhs) = delete;
+   TGCocoa &operator = (const TGCocoa &rhs) = delete;
+   TGCocoa(TGCocoa &&rhs) = delete;
+   TGCocoa &operator = (TGCocoa &&rhs) = delete;
 
    ClassDefOverride(TGCocoa, 0); //TVirtualX for MacOS X.
 };

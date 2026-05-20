@@ -23,6 +23,14 @@ strings (<15 on 64-bit and <11 on 32-bit) are contained in the
 TString internal data structure without the need for mallocing the
 required space.
 
+\note TString can store a maximum of MaxSize()=2147483646 characters; ie 2147483647 bytes if you include the terminating null.
+Trying to allocate larger buffers might throw std::bad_alloc or raise
+Fatal errors or lead to undefined behavior. Likewise, there is no safety
+check if you pass a Long64_t to the class functions, they will be silently
+rounded to Int_t and lead to an integer overflow (negative value).
+For future designs, consider using std::string instead, which has a larger
+maximum size.
+
 Substring operations are provided by the TSubString class, which
 holds a reference to the original string and its data, along with
 the offset and length of the substring. To retrieve the substring
@@ -36,8 +44,8 @@ as a TString, construct a TString from it, eg:
 */
 
 #include <ROOT/RConfig.hxx>
-#include <stdlib.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cctype>
 #include <list>
 #include <algorithm>
 
@@ -62,7 +70,6 @@ as a TString, construct a TString from it, eg:
 namespace std { using ::list; }
 #endif
 
-ClassImp(TString);
 
 // Amount to shift hash values to avoid clustering
 const UInt_t kHashShift = 5;
@@ -706,13 +713,13 @@ UInt_t TString::Hash(ECaseCompare cmp) const
    typedef unsigned __int64 uint64_t;
 #else // defined(_MSC_VER)
    // Other compilers
-#include <stdint.h>
+#include <cstdint>
 #endif // !defined(_MSC_VER)
 
    // From MurmurHash.cpp:
 #if defined(_MSC_VER)
    // Microsoft Visual Studio
-#include <stdlib.h>
+#include <cstdlib>
 #define ROTL64(x,y)     _rotl64(x,y)
 #define BIG_CONSTANT(x) (x)
 #else   // defined(_MSC_VER)
@@ -1033,7 +1040,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
       return *this;
    }
 
-   n1 = TMath::Min(n1, len - pos);
+   n1 = std::min(n1, len - pos);
    if (!cs) n2 = 0;
 
    Long64_t tot = static_cast<Long64_t>(len) - n1 + n2;  // Final string length, use 64-bit long instead of 32-bit int to check for overflows
@@ -1220,12 +1227,11 @@ void TString::AssertElement(Ssiz_t i) const
 Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 {
    Ssiz_t ms = MaxSize();
-   if (newCap > ms - 1) {
+   if (newCap > ms) {
       Fatal("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
             newCap, ms);
    }
-   Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
-                Recommend(TMath::Max(newCap, 2 * oldCap)) : ms - 1;
+   Ssiz_t cap = oldCap <= ms / 2 ? Recommend(std::max(newCap, 2 * oldCap)) : ms;
    return cap;
 }
 
@@ -2101,7 +2107,7 @@ TString TString::Itoa(Int_t value, Int_t base)
    Int_t quotient = value;
    // Translating number to string with base:
    do {
-      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ std::abs(quotient % base) ];
       quotient /= base;
    } while (quotient);
    // Append the negative sign
@@ -2153,7 +2159,7 @@ TString TString::LLtoa(Long64_t value, Int_t base)
    Long64_t quotient = value;
    // Translating number to string with base:
    do {
-      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ std::abs(quotient % base) ];
       quotient /= base;
    } while (quotient);
    // Append the negative sign
@@ -2309,33 +2315,34 @@ TObjArray *TString::Tokenize(const TString &delim) const
 
 void TString::FormImp(const char *fmt, va_list ap)
 {
-   Ssiz_t buflen = 20 + 20 * strlen(fmt);    // pick a number, any strictly positive number
-   buflen = Clobber(buflen); // Update buflen, as Clobber clamps length to MaxSize (if Fatal does not abort)
+   va_list ap_len;
+   R__VA_COPY(ap_len, ap);
 
-   va_list sap;
-   R__VA_COPY(sap, ap);
+   // First pass: determine required size (excluding '\0')
+   int n = vsnprintf(nullptr, 0, fmt, ap_len);
+   va_end(ap_len);
 
-   int n, vc = 0;
-again:
-   n = vsnprintf(GetPointer(), buflen, fmt, ap);
-   // old vsnprintf's return -1 if string is truncated new ones return
-   // total number of characters that would have been written
-   if (n == -1 || n >= buflen) {
-      if (n == -1)
-         buflen *= 2;
-      else
-         buflen = n+1;
-      buflen = Clobber(buflen);
-      va_end(ap);
-      R__VA_COPY(ap, sap);
-      vc = 1;
-      goto again;
+   if (n < 0) {
+      // Formatting error
+      Clear();
+      return;
    }
-   va_end(sap);
-   if (vc)
-      va_end(ap);
 
-   SetSize(strlen(Data()));
+   // Request enough space (including null terminator)
+   Ssiz_t needed = Clobber(n + 1);
+
+   // Safety: Clobber may clamp to MaxSize
+   if (needed <= 0 || needed <= n) {
+      Clear();
+      return;
+   }
+
+   va_list ap_out;
+   R__VA_COPY(ap_out, ap);
+   vsnprintf(GetPointer(), needed, fmt, ap_out);
+   va_end(ap_out);
+
+   SetSize(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

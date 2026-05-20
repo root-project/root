@@ -92,6 +92,15 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
    }
 }
 
+void ROOT::Internal::RRawFileUnix::SetDiscourageReadAheadImpl(bool value)
+{
+#ifndef __APPLE__
+   posix_fadvise(fFileDes, 0, 0, value ? POSIX_FADV_RANDOM : POSIX_FADV_SEQUENTIAL);
+#else
+   (void)value;
+#endif
+}
+
 void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING

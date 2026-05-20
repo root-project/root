@@ -113,7 +113,7 @@ namespace TMVA {
       TMVA::PDF::EInterpolateMethod GetInterpolMethod() { return fInterpolMethod;}
 
       // modified name (remove TMVA::)
-      const char* GetName() const { return fPDFName; }
+      const char* GetName() const override { return fPDFName; }
 
       // TMVA version control (for weight files)
       void   SetReadingVersion( UInt_t rv ) { fReadingVersion = rv; }
@@ -208,7 +208,7 @@ namespace TMVA {
       // external auxiliary functions
       static Double_t          IGetVal( Double_t*, Double_t* );
 
-      ClassDef(PDF,1)  // PDF wrapper for histograms
+      ClassDefOverride(PDF,1)  // PDF wrapper for histograms
          };
 
 } // namespace TMVA

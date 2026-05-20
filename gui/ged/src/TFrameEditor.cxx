@@ -29,7 +29,6 @@ Border size can be set for sunken or rized frames (1-15 pixels).
 #include "TFrame.h"
 #include "TVirtualPad.h"
 
-ClassImp(TFrameEditor);
 
 enum EFrameWid {
    kFR_BSIZE,

@@ -24,7 +24,6 @@ Related classes are TTreeRow.
 #include "TString.h"
 #include "TObjArray.h"
 
-ClassImp(TTreeResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a query result object.

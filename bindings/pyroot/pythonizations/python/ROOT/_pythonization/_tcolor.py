@@ -9,6 +9,7 @@
 ################################################################################
 from . import pythonization
 
+
 def _TColor_constructor(self, *args, **kwargs):
     """
     Forward the arguments to the C++ constructor and retain ownership. This

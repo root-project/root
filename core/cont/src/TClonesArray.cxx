@@ -135,7 +135,6 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 #include <cstdlib>
 
-ClassImp(TClonesArray);
 
 // To allow backward compatibility of TClonesArray of v5 TF1 objects
 // that were stored member-wise.
@@ -252,7 +251,7 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
    }
 
    if (tc.fSize > fSize)
-      Expand(TMath::Max(tc.fSize, GrowBy(fSize)));
+      Expand(std::max(tc.fSize, GrowBy(fSize)));
 
    Int_t i;
 
@@ -522,7 +521,7 @@ void TClonesArray::ExpandCreate(Int_t n)
       return;
    }
    if (n > fSize)
-      Expand(TMath::Max(n, GrowBy(fSize)));
+      Expand(std::max(n, GrowBy(fSize)));
 
    Int_t i;
    for (i = 0; i < n; i++) {
@@ -559,7 +558,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
 {
    Int_t oldSize = fKeep->GetSize();
    if (n > fSize)
-      Expand(TMath::Max(n, GrowBy(fSize)));
+      Expand(std::max(n, GrowBy(fSize)));
 
    Int_t i;
    for (i = 0; i < n; i++) {
@@ -731,7 +730,7 @@ void TClonesArray::Sort(Int_t upto)
          }
       }
 
-   QSort(fCont, fKeep->fCont, 0, TMath::Min(nentries, upto-fLowerBound));
+   QSort(fCont, fKeep->fCont, 0, std::min(nentries, upto-fLowerBound));
 
    fLast   = -2;
    fSorted = kTRUE;
@@ -858,7 +857,7 @@ void TClonesArray::Streamer(TBuffer &b)
             }
          }
       }
-      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = nullptr;
+      for (Int_t i = std::max(nobjects,0); i < oldLast+1; ++i) fCont[i] = nullptr;
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
@@ -928,7 +927,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
       return fCont[0];
    }
    if (idx >= fSize)
-      Expand(TMath::Max(idx+1, GrowBy(fSize)));
+      Expand(std::max(idx+1, GrowBy(fSize)));
 
    if (!fKeep->fCont[idx]) {
       fKeep->fCont[idx] = (TObject*) TStorage::ObjectAlloc(fClass->Size());
@@ -942,7 +941,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
    }
    fCont[idx] = fKeep->fCont[idx];
 
-   fLast = TMath::Max(idx, GetAbsLast());
+   fLast = std::max(idx, GetAbsLast());
    Changed();
 
    return fCont[idx];
@@ -1098,7 +1097,7 @@ void TClonesArray::MultiSort(Int_t nTCs, TClonesArray** tcs, Int_t upto)
       b[2*i+1] = tcs[i]->fKeep->fCont;
    }
    b[nBs-1] = fKeep->fCont;
-   QSort(fCont, nBs, b, 0, TMath::Min(nentries, upto-fLowerBound));
+   QSort(fCont, nBs, b, 0, std::min(nentries, upto-fLowerBound));
    delete [] b;
 
    fLast = -2;

@@ -1,13 +1,10 @@
-import py, sys
+import sys, pytest, os
 from pytest import mark, raises
-from .support import setup_make, ispypy
+from support import setup_make, ispypy, IS_MAC_ARM, IS_WINDOWS
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp11featuresDict"))
+test_dct = "cpp11features_cxx"
 
-def setup_module(mod):
-    setup_make("cpp11features")
 
 class TestCPP11FEATURES:
     def setup_class(cls):
@@ -303,7 +300,7 @@ class TestCPP11FEATURES:
         for l in (['x'], ['x', 'y', 'z']):
             assert ns.foo(l) == std.vector['std::string'](l)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test09_lambda_calls(self):
         """Call (global) lambdas"""
 
@@ -315,43 +312,41 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.gMyLambda(2)  == 42
         assert cppyy.gbl.gMyLambda(40) == 80
 
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 201402:
-            cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
-            l1 = cppyy.gbl.gime_a_lambda1()
-            assert l1
-            assert l1() == 42
+        cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
+        l1 = cppyy.gbl.gime_a_lambda1()
+        assert l1
+        assert l1() == 42
 
-            cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
-            l2 = cppyy.gbl.gime_a_lambda2()
-            assert l2
-            assert l2(2) == 48
+        cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
+        l2 = cppyy.gbl.gime_a_lambda2()
+        assert l2
+        assert l2(2) == 48
 
-            cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
-            l3 = cppyy.gbl.gime_a_lambda3(4)
-            assert l3
-            assert l3(2) == 48
+        cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
+        l3 = cppyy.gbl.gime_a_lambda3(4)
+        assert l3
+        assert l3(2) == 48
 
     def test10_optional(self):
         """Use of optional and nullopt"""
 
         import cppyy
 
-        if 201703 <= cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;"):
-            assert cppyy.gbl.std.optional
-            assert cppyy.gbl.std.nullopt
+        assert cppyy.gbl.std.optional
+        assert cppyy.gbl.std.nullopt
 
-            cppyy.cppdef("""
-            enum Enum { A = -1 };
-            bool callopt(std::optional<Enum>) { return true; }
-            """)
+        cppyy.cppdef("""
+        enum Enum { A = -1 };
+        bool callopt(std::optional<Enum>) { return true; }
+        """)
 
-            a = cppyy.gbl.std.optional[cppyy.gbl.Enum]()
-            assert cppyy.gbl.callopt(a)
+        a = cppyy.gbl.std.optional[cppyy.gbl.Enum]()
+        assert cppyy.gbl.callopt(a)
 
-            c = cppyy.gbl.std.nullopt
-            assert cppyy.gbl.callopt(c)
+        c = cppyy.gbl.std.nullopt
+        assert cppyy.gbl.callopt(c)
 
-    @mark.xfail()
+    @mark.xfail(run=False, reason = "Crashes")
     def test11_chrono(self):
         """Use of chrono and overloaded operator+"""
 
@@ -362,7 +357,7 @@ class TestCPP11FEATURES:
         # following used to fail with compilation error
         t = std.chrono.system_clock.now() + std.chrono.seconds(1)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_stdfunction(self):
         """Use of std::function with arguments in a namespace"""
 
@@ -393,6 +388,19 @@ class TestCPP11FEATURES:
         """Use of std::hash"""
 
         import cppyy
+
+        cppyy.cppdef("""
+        struct StructWithHash {};    // for std::hash<> testing
+        struct StructWithoutHash {};
+
+        namespace std {
+            template<>
+            struct hash<StructWithHash> {
+                size_t operator()(const StructWithHash&) const { return 17; }
+            };
+        } // namespace std
+        """)
+
         from cppyy.gbl import StructWithHash, StructWithoutHash
 
         for i in range(3):   # to test effect of caching
@@ -404,7 +412,7 @@ class TestCPP11FEATURES:
             assert hash(sw)  == 17
             assert hash(sw)  == 17
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test14_shared_ptr_passing(self):
         """Ability to pass normal pointers through shared_ptr by value"""
 
@@ -430,6 +438,7 @@ class TestCPP11FEATURES:
             gc.collect()
             assert TestSmartPtr.s_counter == 0
 
+    @mark.xfail(strict=True, condition=IS_WINDOWS | IS_MAC_ARM, reason='ValueError: Could not find "make_unique<int>"')
     def test15_unique_ptr_template_deduction(self):
         """Argument type deduction with std::unique_ptr"""
 
@@ -449,6 +458,7 @@ class TestCPP11FEATURES:
         with raises(ValueError):  # not an RValue
             cppyy.gbl.UniqueTempl.returnptr[int](uptr_in)
 
+    @mark.xfail(strict=True, condition=IS_WINDOWS | IS_MAC_ARM, reason='TypeError: Could not find "make_unique<int>"')
     def test16_unique_ptr_moves(self):
         """std::unique_ptr requires moves"""
 
@@ -535,7 +545,7 @@ class TestCPP11FEATURES:
         p2 = c.pget()
         assert p1 is p2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test19_smartptr_from_callback(self):
         """Return a smart pointer from a callback"""
 
@@ -565,3 +575,24 @@ class TestCPP11FEATURES:
 
         assert ns.call_creator(pyfunc)
 
+    def test20_tuple_element(self):
+        """
+        Check that std::tuple_element works.
+
+        See: https://github.com/root-project/root/issues/14232.
+        """
+
+        import cppyy
+
+        cppyy.cppdef("""
+        #include <tuple>
+        #include <string>
+        using ATuple = std::tuple<int, float, std::string, double>;
+        """)
+        from cppyy.gbl import ATuple
+
+        cppyy.gbl.std.tuple_element[1, ATuple].type
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
@@ -29,8 +29,10 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 namespace ROOT {
 class RNTuple;
@@ -65,6 +67,18 @@ std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 // clang-format on
 class RNTupleReader {
 private:
+   /// Shared data structure between the reader and all the issued active entry tokens.
+   struct RActiveEntriesControlBlock {
+      /// Points to the page source backing the associated RNTupleReader. When the reader is destructed, the
+      /// page source is reset to nullptr. At that point, operations on remaining active entry tokens become noops.
+      Internal::RPageSource *fPageSource = nullptr;
+      /// Reference counter of clusters pinned in the page source due to entries being marked as active.
+      std::unordered_map<ROOT::DescriptorId_t, std::uint64_t> fActiveClusters;
+      std::mutex fLock;
+
+      explicit RActiveEntriesControlBlock(Internal::RPageSource *pageSource) : fPageSource(pageSource) {}
+   };
+
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
    std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
@@ -82,16 +96,21 @@ private:
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
    std::optional<ROOT::RNTupleDescriptor> fCachedDescriptor;
+   /// We know that the RNTupleReader is always reading a single RNTuple, so the number of entries is fixed.
+   ROOT::NTupleSize_t fNEntries = 0;
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
+   /// Initialized when the page source is connected. It is then shared between the reader instance and all
+   /// active entry tokens. When the reader destructs, it resets the page source pointer in the control block.
+   std::shared_ptr<RActiveEntriesControlBlock> fActiveEntriesControlBlock;
 
    RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
    /// The model is generated from the RNTuple metadata on storage.
    explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
-   void ConnectModel(ROOT::RNTupleModel &model);
+   void ConnectModel(ROOT::RNTupleModel &model, bool allowFieldSubstitutions);
    RNTupleReader *GetDisplayReader();
    void InitPageSource(bool enableMetrics);
 
@@ -105,11 +124,11 @@ public:
 
    public:
       using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using value_type = ROOT::NTupleSize_t;
-      using difference_type = ROOT::NTupleSize_t;
-      using pointer = ROOT::NTupleSize_t *;
-      using reference = ROOT::NTupleSize_t &;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const ROOT::NTupleSize_t *;
+      using reference = const ROOT::NTupleSize_t &;
 
       RIterator() = default;
       explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
@@ -126,10 +145,47 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fIndex; }
-      pointer operator->() { return &fIndex; }
+      reference operator*() const { return fIndex; }
+      pointer operator->() const { return &fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+   };
+
+   /// An active entry token is a pledge for the data of a certain entry number not to be evicted from the
+   /// page cache or cluster cache. An active entry token is linked to a specific reader through a control block
+   /// shared by the reader and all tokens of that reader. Active entry tokens can be destructed before or after
+   /// their reader is destructed. Once the corresponding reader is destructed, changing the entry number has no
+   /// effect.
+   /// Only the RNTuple reader can create an active entry token.
+   class RActiveEntryToken {
+      friend class RNTupleReader;
+
+      std::shared_ptr<RActiveEntriesControlBlock> fPtrControlBlock;
+      NTupleSize_t fEntryNumber = kInvalidNTupleIndex;
+
+      void ActivateEntry(NTupleSize_t entryNumber);
+      void DeactivateEntry(NTupleSize_t entryNumber);
+
+      explicit RActiveEntryToken(std::shared_ptr<RActiveEntriesControlBlock> ptrControlBlock)
+         : fPtrControlBlock(ptrControlBlock)
+      {
+      }
+
+   public:
+      ~RActiveEntryToken() { Reset(); }
+      RActiveEntryToken(const RActiveEntryToken &other);
+      RActiveEntryToken(RActiveEntryToken &&other);
+      RActiveEntryToken &operator=(const RActiveEntryToken &other);
+      RActiveEntryToken &operator=(RActiveEntryToken &&other);
+
+      NTupleSize_t GetEntryNumber() const { return fEntryNumber; }
+      /// Set or replace the entry number. If the entry number is replaced, the cluster corresponding to the new
+      /// entry is pinned _before_ the cluster of the old entry number is unpinned.
+      /// SetEntryNumber() should be called before the corresponding entry is used (through LoadEntry() or views).
+      void SetEntryNumber(NTupleSize_t entryNumber);
+      /// Release the entry number, i.e. allow the corresponding data to be evicted from caches.
+      /// Called implicitly on destruction.
+      void Reset();
    };
 
    /// Open an RNTuple for reading.
@@ -169,9 +225,27 @@ public:
       options.SetEnableMetrics(fMetrics.IsEnabled());
       return std::unique_ptr<RNTupleReader>(new RNTupleReader(fSource->Clone(), options));
    }
+
+   RNTupleReader(const ROOT::RNTupleReader &) = delete;
+   RNTupleReader &operator=(const ROOT::RNTupleReader &) = delete;
+   RNTupleReader(ROOT::RNTupleReader &&) = delete;
+   RNTupleReader &operator=(ROOT::RNTupleReader &&) = delete;
    ~RNTupleReader();
 
-   ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
+   /// Returns the number of entries in this RNTuple.
+   /// Note that the recommended way to iterate the RNTuple is using
+   /// ~~~ {.cpp}
+   /// // RECOMMENDED way to iterate an ntuple
+   /// for (auto i : reader->GetEntryRange()) { ... }
+   /// ~~~
+   /// instead of
+   /// ~~~ {.cpp}
+   /// // DISCOURAGED way to iterate an ntuple
+   /// for (auto i = 0u; i < reader->GetNEntries(); ++i) { ... }
+   /// ~~~
+   /// The reason is that determining the number of entries, while currently cheap, may in the future be
+   /// an expensive operation.
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    const ROOT::RNTupleModel &GetModel();
    std::unique_ptr<ROOT::REntry> CreateEntry();
 
@@ -214,9 +288,8 @@ public:
    {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
-         fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
-            fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
-         ConnectModel(*fModel);
+         // Will create the fModel.
+         GetModel();
       }
       LoadEntry(index, fModel->GetDefaultEntry());
    }
@@ -228,6 +301,10 @@ public:
 
       entry.Read(index);
    }
+
+   /// Create a new active entry token, which will not be bound to any entry number initially.
+   /// In order to bind the new token, its `SetEntryNumber()` must be called subsequently.
+   RActiveEntryToken CreateActiveEntryToken() { return RActiveEntryToken(fActiveEntriesControlBlock); }
 
    /// Returns an iterator over the entry indices of the RNTuple.
    ///
@@ -324,7 +401,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(std::string_view fieldName, void *rawPtr, const std::type_info &ti)
    {
-      return GetView(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+      return GetView(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedTypeName(ti));
    }
 
    /// Provides access to an individual (sub)field from its on-disk ID.
@@ -377,7 +454,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(ROOT::DescriptorId_t fieldId, void *rawPtr, const std::type_info &ti)
    {
-      return GetView(fieldId, rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+      return GetView(fieldId, rawPtr, ROOT::Internal::GetRenormalizedTypeName(ti));
    }
 
    /// Provides direct access to the I/O buffers of a **mappable** (sub)field.
@@ -450,6 +527,12 @@ public:
    /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
    const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+
+   /// Looks for an attribute set with the given name and creates an RNTupleAttrSetReader for it, with the provided
+   /// read options.
+   /// The returned reader has an independent lifetime from this RNTupleReader.
+   std::unique_ptr<Experimental::RNTupleAttrSetReader>
+   OpenAttributeSet(std::string_view attrSetName, const ROOT::RNTupleReadOptions &options = {});
 }; // class RNTupleReader
 
 } // namespace ROOT

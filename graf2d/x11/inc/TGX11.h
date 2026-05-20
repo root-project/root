@@ -13,6 +13,8 @@
 #define ROOT_TGX11
 
 #include "TVirtualX.h"
+#include <map>
+#include <memory>
 
 #ifdef Status
 // Convert Status from a CPP macro to a typedef:
@@ -44,26 +46,6 @@ struct RXSetWindowAttributes;
 struct RXVisualInfo;
 struct RVisual;
 
-/// Description of a X11 window.
-struct XWindow_t {
-   Int_t    fOpen;                ///< 1 if the window is open, 0 if not
-   Int_t    fDoubleBuffer;        ///< 1 if the double buffer is on, 0 if not
-   Int_t    fIsPixmap;            ///< 1 if pixmap, 0 if not
-   Drawable fDrawing;             ///< drawing area, equal to window or buffer
-   Drawable fWindow;              ///< X11 window
-   Drawable fBuffer;              ///< pixmap used for double buffer
-   UInt_t   fWidth;               ///< width of the window
-   UInt_t   fHeight;              ///< height of the window
-   Int_t    fClip;                ///< 1 if the clipping is on
-   Int_t    fXclip;               ///< x coordinate of the clipping rectangle
-   Int_t    fYclip;               ///< y coordinate of the clipping rectangle
-   UInt_t   fWclip;               ///< width of the clipping rectangle
-   UInt_t   fHclip;               ///< height of the clipping rectangle
-   ULong_t *fNewColors;           ///< new image colors (after processing)
-   Int_t    fNcolors;             ///< number of different colors
-   Bool_t   fShared;              ///< notify when window is shared
-};
-
 /// Description of a X11 color.
 struct XColor_t {
    ULong_t  fPixel;               ///< color pixel value
@@ -76,33 +58,27 @@ struct XColor_t {
 
 class TExMap;
 
+struct XWindow_t;
+
 
 class TGX11 : public TVirtualX {
 
+friend struct XWindow_t;
+
 private:
-   Int_t      fMaxNumberOfWindows;    ///< Maximum number of windows
-   XWindow_t *fWindows;               ///< List of windows
+   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap    *fColors;                ///< Hash list of colors
    Cursor     fCursors[kNumCursors];  ///< List of cursors
    void      *fXEvent;                ///< Current native (X11) event
 
-   void   CloseWindow1();
-   void   ClearPixmap(Drawable *pix);
-   void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
+   Int_t  AddWindowHandle();
    void   FindBestVisual();
    void   FindUsableVisual(RXVisualInfo *vlist, Int_t nitems);
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image, Drawable_t id);
-   void   RemovePixmap(Drawable *pix);
-   void   SetColor(void *gc, Int_t ci);
-   void   SetFillStyleIndex(Int_t style, Int_t fasi);
+   void   SetColor(XWindow_t *ctxt, void *gc, Int_t ci);
    void   SetInput(Int_t inp);
-   void   SetMarkerType(Int_t type, Int_t n, RXPoint *xy);
-   void   CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
-                             Int_t &maxcolors);
-   void   MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
-   Int_t  FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
    void   ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
@@ -130,9 +106,6 @@ protected:
    ULong_t    fBlackPixel;         ///< Value of black pixel in colormap
    ULong_t    fWhitePixel;         ///< Value of white pixel in colormap
    Int_t      fScreenNumber;       ///< Screen number
-   Int_t      fTextAlignH;         ///< Text Alignment Horizontal
-   Int_t      fTextAlignV;         ///< Text Alignment Vertical
-   Int_t      fTextAlign;          ///< Text alignment (set in SetTextAlign)
    Float_t    fCharacterUpX;       ///< Character Up vector along X
    Float_t    fCharacterUpY;       ///< Character Up vector along Y
    Float_t    fTextMagnitude;      ///< Text Magnitude
@@ -147,14 +120,25 @@ protected:
    Bool_t     fHasXft;             ///< True when XftFonts are used
 
    // needed by TGX11TTF
+   enum EAlign {
+      kAlignNone,
+      kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
+      kBLeft, kBCenter, kBRight };
+
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
    void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
    void      *GetGC(Int_t which) const;
+   Window_t  GetWindow(WinContext_t wctxt) const;
+   void      *GetGCW(WinContext_t wctxt, Int_t which) const;
+   EAlign     GetTextAlignW(WinContext_t wctxt) const;
+
    XColor_t  &GetColor(Int_t cid);
+
+   TGX11(TGX11 &&org);
+   TGX11(const TGX11 &org) = delete;
 
 public:
    TGX11();
-   TGX11(const TGX11 &org);
    TGX11(const char *name, const char *title);
    ~TGX11() override;
 
@@ -163,14 +147,6 @@ public:
    void      ClosePixmap() override;
    void      CloseWindow() override;
    void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos) override;
-   void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
-   void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, Int_t *ic) override;
-   void      DrawFillArea(Int_t n, TPoint *xy) override;
-   void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
-   void      DrawPolyLine(Int_t n, TPoint *xy) override;
-   void      DrawPolyMarker(Int_t n, TPoint *xy) override;
-   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
-   void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
    void      GetCharacterUp(Float_t &chupx, Float_t &chupy) override;
    Int_t     GetDoubleBuffer(Int_t wid) override;
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
@@ -207,12 +183,25 @@ public:
    void      SetDoubleBufferOFF() override;
    void      SetDoubleBufferON() override;
    void      SetDrawMode(EDrawMode mode) override;
+   void      Sync(Int_t mode) override;
+   void      UpdateWindow(Int_t mode) override;
+   void      Warp(Int_t ix, Int_t iy, Window_t id = 0) override;
+   Int_t     WriteGIF(char *name) override;
+   void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
+   Window_t  GetCurrentWindow() const override;
+   Int_t     SupportsExtension(const char *ext) const override;
+
+   //---- Methods used for old graphics -----
    void      SetFillColor(Color_t cindex) override;
+   Color_t   GetFillColor() const override;
    void      SetFillStyle(Style_t style) override;
+   Style_t   GetFillStyle() const override;
    void      SetLineColor(Color_t cindex) override;
    void      SetLineType(Int_t n, Int_t *dash) override;
    void      SetLineStyle(Style_t linestyle) override;
+   Style_t   GetLineStyle() const override;
    void      SetLineWidth(Width_t width) override;
+   Width_t   GetLineWidth() const override;
    void      SetMarkerColor(Color_t cindex) override;
    void      SetMarkerSize(Float_t markersize) override;
    void      SetMarkerStyle(Style_t markerstyle) override;
@@ -224,13 +213,37 @@ public:
    void      SetTextFont(Font_t fontnumber) override;
    void      SetTextMagnitude(Float_t mgn=1) override { fTextMagnitude = mgn;}
    void      SetTextSize(Float_t textsize) override;
-   void      Sync(Int_t mode) override;
-   void      UpdateWindow(Int_t mode) override;
-   void      Warp(Int_t ix, Int_t iy, Window_t id = 0) override;
-   Int_t     WriteGIF(char *name) override;
-   void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
-   Window_t  GetCurrentWindow() const override;
-   Int_t     SupportsExtension(const char *ext) const override;
+   void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, Int_t *ic) override;
+   void      DrawFillArea(Int_t n, TPoint *xy) override;
+   void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLine(Int_t n, TPoint *xy) override;
+   void      DrawLinesSegments(Int_t n, TPoint *xy) override;
+   void      DrawPolyMarker(Int_t n, TPoint *xy) override;
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
+
+   //---- Methods used for new graphics -----
+   WinContext_t GetWindowContext(Int_t wid) override;
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
+   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
+   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
+   void      ClearWindowW(WinContext_t wctxt) override;
+   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
+   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
+   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
+
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
+   void      DrawTextW(WinContext_t, Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;

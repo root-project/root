@@ -1,3 +1,4 @@
+#include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 
@@ -336,6 +337,67 @@ TEST(RDataFrameHistoModels, HistoND)
    }
 }
 
+TEST(RDataFrameHistoModels, HistoNSparseD)
+{
+   ROOT::RDataFrame tdf(10);
+   auto x = 0.;
+   auto d = tdf.Define("x0", [&x]() { return x++; })
+               .Define("x1", [&x]() { return x + .1; })
+               .Define("x2", [&x]() { return x + .1; })
+               .Define("x3", [&x]() { return x + .1; });
+   int nbins[4] = {10, 5, 2, 2};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {10., 10., 10., 10.};
+   auto h1 = d.HistoNSparseD(::THnSparseD("h1", "h1", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3"});
+   auto h2 = d.HistoNSparseD({"h2", "h2", 4, nbins, xmin, xmax}, {"x0", "x1", "x2", "x3"});
+
+   std::vector<double> edges0{1, 2, 3, 4, 5, 6, 10};
+   std::vector<double> edges1{1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 10.1};
+   std::vector<double> edges2{1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 10.2};
+   std::vector<double> edges3{1.3, 2.3, 3.3, 4.3, 5.3, 6.3, 10.3};
+   std::vector<std::vector<double>> edges = {edges0, edges1, edges2, edges3};
+   int nbinse[4];
+   for (unsigned int idim = 0; idim < edges.size(); ++idim) {
+      nbinse[idim] = edges[idim].size() - 1;
+   }
+   auto h1e = d.HistoNSparseD(::THnSparseD("h1e", "h1e", 4, nbinse, edges), {"x0", "x1", "x2", "x3"});
+   auto h2e = d.HistoNSparseD({"h2e", "h2e", 4, nbinse, edges}, {"x0", "x1", "x2", "x3"});
+
+   THnSparseDModel m0("m0", "m0", 4, nbins, xmin, xmax);
+   THnSparseDModel m1(::THnSparseD("m1", "m1", 4, nbins, xmin, xmax));
+
+   auto hm0 = d.HistoNSparseD(m0, {"x0", "x1", "x2", "x3"});
+   auto hm1 = d.HistoNSparseD(m1, {"x0", "x1", "x2", "x3"});
+   auto hm0w = d.HistoNSparseD(m0, {"x0", "x1", "x2", "x3", "x3"});
+   auto hm1w = d.HistoNSparseD(m1, {"x0", "x1", "x2", "x3", "x3"});
+
+   std::vector<double> ref0({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+   std::vector<double> ref1({0., 2., 4., 6., 8., 10.});
+   std::vector<double> ref2({0., 5., 10.});
+   std::vector<double> ref3({0., 5., 10.});
+
+   std::vector<std::vector<double>> ref = {ref0, ref1, ref2, ref3};
+
+   for (unsigned int idim = 0; idim < edges.size(); ++idim) {
+      CheckBins(h1e->GetAxis(idim), edges[idim]);
+   }
+   for (unsigned int idim = 0; idim < edges.size(); ++idim) {
+      CheckBins(h2e->GetAxis(idim), edges[idim]);
+   }
+   for (unsigned int idim = 0; idim < ref.size(); ++idim) {
+      CheckBins(h1->GetAxis(idim), ref[idim]);
+   }
+   for (unsigned int idim = 0; idim < ref.size(); ++idim) {
+      CheckBins(h2->GetAxis(idim), ref[idim]);
+   }
+   for (unsigned int idim = 0; idim < ref.size(); ++idim) {
+      CheckBins(hm0->GetAxis(idim), ref[idim]);
+   }
+   for (unsigned int idim = 0; idim < ref.size(); ++idim) {
+      CheckBins(hm0w->GetAxis(idim), ref[idim]);
+   }
+}
+
 TEST(RDataFrameHisto, FillVecBool)
 {
     const auto n = 10u;
@@ -345,4 +407,91 @@ TEST(RDataFrameHisto, FillVecBool)
     EXPECT_EQ(h->GetBinContent(1), n);
     EXPECT_EQ(h->GetBinContent(2), n);
     EXPECT_EQ(h->GetBinContent(3), 0u);
+}
+
+TEST(RDataFrameHistoModels, HistoNDWeight)
+{
+   ROOT::RDataFrame tdf(10);
+   auto x = 0.;
+   auto d = tdf.Define("x0", [&x]() { return x++; })
+               .Define("x1", [&x]() { return x + .1; })
+               .Define("x2", [&x]() { return x + .1; })
+               .Define("x3", [&x]() { return x + .1; })
+               .Define("w", []() { return 0.5; });
+   int nbins[4] = {10, 5, 2, 2};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {10., 10., 10., 10.};
+
+   // Passing a list of columns with an extra name for the weights is deprecated
+   ROOT_EXPECT_WARNING(d.HistoND(::THnD("w", "w", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3", "w"}), "HistoND",
+                       "Passing the column with the weights as the last column in the list is deprecated. Instead, "
+                       "pass it as a separate argument, e.g. 'HistoND(model, cols, weightCol)'.");
+
+   // Passing both a list with the extra weight column and also the weight column as a separate argument throws
+   EXPECT_THROW(
+      try {
+         d.HistoND(::THnD("e", "e", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3", "w"}, "w");
+      } catch (const std::invalid_argument &err) {
+         EXPECT_EQ(std::string(err.what()),
+                   "The weight column was passed as an argument and at the same time the list of "
+                   "input columns contains one column more than the number of dimensions of the "
+                   "histogram. Call as 'HistoND(model, cols, weightCol)'.");
+         throw;
+      },
+      std::invalid_argument);
+
+   auto hw = d.HistoND(::THnD("hw", "hw", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3"}, "w");
+   std::vector<double> ref0({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+   std::vector<double> ref1({0., 2., 4., 6., 8., 10.});
+   std::vector<double> ref2({0., 5., 10.});
+   std::vector<double> ref3({0., 5., 10.});
+
+   std::vector<std::vector<double>> ref = {ref0, ref1, ref2, ref3};
+   for (unsigned int idim = 0; idim < ref.size(); ++idim) {
+      CheckBins(hw->GetAxis(idim), ref[idim]);
+   }
+}
+
+TEST(RDataFrameHistoModels, HistoNSparseDWeight)
+{
+   ROOT::RDataFrame tdf(10);
+   auto x = 0.;
+   auto d = tdf.Define("x0", [&x]() { return x++; })
+               .Define("x1", [&x]() { return x + .1; })
+               .Define("x2", [&x]() { return x + .1; })
+               .Define("x3", [&x]() { return x + .1; })
+               .Define("w", []() { return 0.5; });
+   int nbins[4] = {10, 5, 2, 2};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {10., 10., 10., 10.};
+
+   // Passing a list of columns with an extra name for the weights is deprecated
+   ROOT_EXPECT_WARNING(d.HistoNSparseD(::THnSparseD("w", "w", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3", "w"}),
+                       "HistoNSparseD",
+                       "Passing the column with the weights as the last column in the list is deprecated. Instead, "
+                       "pass it as a separate argument, e.g. 'HistoNSparseD(model, cols, weightCol)'.");
+
+   // Passing both a list with the extra weight column and also the weight column as a separate argument throws
+   EXPECT_THROW(
+      try {
+         d.HistoNSparseD(::THnSparseD("e", "e", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3", "w"}, "w");
+      } catch (const std::invalid_argument &err) {
+         EXPECT_EQ(std::string(err.what()),
+                   "The weight column was passed as an argument and at the same time the list of "
+                   "input columns contains one column more than the number of dimensions of the "
+                   "histogram. Call as 'HistoNSparseD(model, cols, weightCol)'.");
+         throw;
+      },
+      std::invalid_argument);
+
+   auto hw = d.HistoNSparseD(::THnSparseD("hw", "hw", 4, nbins, xmin, xmax), {"x0", "x1", "x2", "x3"}, "w");
+   std::vector<double> ref0({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+   std::vector<double> ref1({0., 2., 4., 6., 8., 10.});
+   std::vector<double> ref2({0., 5., 10.});
+   std::vector<double> ref3({0., 5., 10.});
+
+   std::vector<std::vector<double>> ref = {ref0, ref1, ref2, ref3};
+   for (unsigned int idim = 0; idim < ref.size(); ++idim) {
+      CheckBins(hw->GetAxis(idim), ref[idim]);
+   }
 }

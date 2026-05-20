@@ -69,7 +69,7 @@ public:
                            llvm::StringRef FileName, bool /*IsAngled*/, clang::CharSourceRange /*FilenameRange*/,
                            clang::OptionalFileEntryRef /*File*/, llvm::StringRef /*SearchPath*/,
                            llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
-                           clang::SrcMgr::CharacteristicKind /*FileType*/) override;
+                           bool /*ModuleImported*/, clang::SrcMgr::CharacteristicKind /*FileType*/) override;
 
    // Preprocessor callbacks used to handle special cases like for example:
    // #include "myMacro.C+"

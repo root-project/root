@@ -14,7 +14,6 @@
 #include "TClass.h"
 #include "TKey.h"
 
-ClassImp(TMPIClientInfo);
 
 TMPIClientInfo::TMPIClientInfo() : fFile(0), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
 

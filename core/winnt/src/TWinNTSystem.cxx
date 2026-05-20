@@ -47,12 +47,12 @@
 #include <process.h>
 #include <io.h>
 #include <direct.h>
-#include <ctype.h>
-#include <float.h>
+#include <cctype>
+#include <cfloat>
 #include <sys/stat.h>
-#include <signal.h>
-#include <stdio.h>
-#include <errno.h>
+#include <csignal>
+#include <cstdio>
+#include <cerrno>
 #include <lm.h>
 #include <dbghelp.h>
 #include <Tlhelp32.h>
@@ -61,11 +61,12 @@
 #include <list>
 #include <shlobj.h>
 #include <conio.h>
-#include <time.h>
+#include <ctime>
 #include <bcrypt.h>
 #include <chrono>
 #include <thread>
 #include <cstdio>
+#include <psapi.h>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -827,7 +828,7 @@ namespace {
       // determine the fileopen.C file path:
       TString fileopen = "fileopen.C";
       TString rootmacrodir = "macros";
-      sys->PrependPathName(getenv("ROOTSYS"), rootmacrodir);
+      sys->PrependPathName(std::getenv("ROOTSYS"), rootmacrodir);
       sys->PrependPathName(rootmacrodir.Data(), fileopen);
 
       if (regROOTwrite) {
@@ -956,7 +957,6 @@ namespace {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-ClassImp(TWinNTSystem);
 
 ULongptr_t gConsoleWindow = 0;
 
@@ -1272,7 +1272,7 @@ const char *TWinNTSystem::GetError()
 const char *TWinNTSystem::HostName()
 {
    if (fHostname == "")
-      fHostname = ::getenv("COMPUTERNAME");
+      fHostname = std::getenv("COMPUTERNAME");
    if (fHostname == "") {
       // This requires a DNS query - but we need it for fallback
       char hn[64];
@@ -2214,23 +2214,23 @@ std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) const
 {
    const char *h = nullptr;
-   if (!(h = ::getenv("home"))) h = ::getenv("HOME");
+   if (!(h = std::getenv("home"))) h = std::getenv("HOME");
 
    if (h) {
       strlcpy(mydir, h,kMAXPATHLEN);
    } else {
       // for Windows NT HOME might be defined as either $(HOMESHARE)/$(HOMEPATH)
       //                                         or     $(HOMEDRIVE)/$(HOMEPATH)
-      h = ::getenv("HOMESHARE");
-      if (!h)  h = ::getenv("HOMEDRIVE");
+      h = std::getenv("HOMESHARE");
+      if (!h)  h = std::getenv("HOMEDRIVE");
       if (h) {
          strlcpy(mydir, h,kMAXPATHLEN);
-         h = ::getenv("HOMEPATH");
+         h = std::getenv("HOMEPATH");
          if(h) strlcat(mydir, h,kMAXPATHLEN);
       }
       // on Windows Vista HOME is usually defined as $(USERPROFILE)
       if (!h) {
-         h = ::getenv("USERPROFILE");
+         h = std::getenv("USERPROFILE");
          if (h) strlcpy(mydir, h,kMAXPATHLEN);
       }
    }
@@ -3850,7 +3850,7 @@ void TWinNTSystem::Setenv(const char *name, const char *value)
 
 const char *TWinNTSystem::Getenv(const char *name)
 {
-   const char *env = ::getenv(name);
+   const char *env = std::getenv(name);
    if (!env) {
       if (::_stricmp(name,"home") == 0 ) {
         env = HomeDirectory();
@@ -5573,19 +5573,6 @@ typedef struct
    DWORD    dwSpare[76];
 } SYSTEM_PERFORMANCE_INFORMATION;
 
-typedef struct _PROCESS_MEMORY_COUNTERS {
-   DWORD cb;
-   DWORD PageFaultCount;
-   SIZE_T PeakWorkingSetSize;
-   SIZE_T WorkingSetSize;
-   SIZE_T QuotaPeakPagedPoolUsage;
-   SIZE_T QuotaPagedPoolUsage;
-   SIZE_T QuotaPeakNonPagedPoolUsage;
-   SIZE_T QuotaNonPagedPoolUsage;
-   SIZE_T PagefileUsage;
-   SIZE_T PeakPagefileUsage;
-} PROCESS_MEMORY_COUNTERS, *PPROCESS_MEMORY_COUNTERS;
-
 typedef LONG (WINAPI *PROCNTQSI) (UINT, PVOID, ULONG, PULONG);
 
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
@@ -5648,201 +5635,196 @@ static const char *GetWindowsVersion()
 
    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
-   if( !(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi)) )
-   {
+   if (!(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi))) {
       osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-      if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) )
+      if (!GetVersionEx((OSVERSIONINFO *) &osvi))
          return "";
    }
 
+   NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
+   OSVERSIONINFOEXW osInfo;
+   *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+
+   if (NULL != RtlGetVersion) {
+      osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+      RtlGetVersion(&osInfo);
+   }
+
    // Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
-   pGNSI = (PGNSI) GetProcAddress( GetModuleHandle("kernel32.dll"),
-                                   "GetNativeSystemInfo");
+   pGNSI = (PGNSI)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetNativeSystemInfo");
    if(NULL != pGNSI)
       pGNSI(&si);
    else GetSystemInfo(&si);
 
-   switch (osvi.dwPlatformId)
-   {
+   switch (osvi.dwPlatformId) {
       // Test for the Windows NT product family.
       case VER_PLATFORM_WIN32_NT:
-
          // Test for the specific product.
-         if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0 )
-         {
-            if( osvi.wProductType == VER_NT_WORKSTATION )
-                strlcpy(strReturn, "Microsoft Windows Vista ",2048);
-            else strlcpy(strReturn, "Windows Server \"Longhorn\" " ,2048);
+         if (osInfo.dwMajorVersion == 10 && osInfo.dwMinorVersion == 0) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                strlcpy(strReturn, "Microsoft Windows 10 ", 2048);
+            else strlcpy(strReturn, "Windows Server 2016 ", 2048);
          }
-         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2 )
-         {
-            if( GetSystemMetrics(SM_SERVERR2) )
-               strlcpy(strReturn, "Microsoft Windows Server 2003 \"R2\" ",2048);
-            else if( osvi.wProductType == VER_NT_WORKSTATION &&
-                      si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
-            {
-               strlcpy(strReturn, "Microsoft Windows XP Professional x64 Edition ",2048);
-            }
-            else strlcpy(strReturn, "Microsoft Windows Server 2003, ",2048);
+         if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 3) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                strlcpy(strReturn, "Microsoft Windows 8.1 ", 2048);
+            else strlcpy(strReturn, "Windows Server 2012 R2 ", 2048);
          }
-         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1 )
-            strlcpy(strReturn, "Microsoft Windows XP ",2048);
+         if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 2) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                strlcpy(strReturn, "Microsoft Windows 8 ", 2048);
+            else strlcpy(strReturn, "Windows Server 2012 ", 2048);
+         }
+         if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 1) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                strlcpy(strReturn, "Microsoft Windows 7 ", 2048);
+            else strlcpy(strReturn, "Windows Server 2008 R2 ", 2048);
+         }
+         if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 0) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                strlcpy(strReturn, "Microsoft Windows Vista ", 2048);
+            else strlcpy(strReturn, "Windows Server \"Longhorn\" ", 2048);
+         }
+         if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2) {
+            if (GetSystemMetrics(SM_SERVERR2))
+               strlcpy(strReturn, "Microsoft Windows Server 2003 \"R2\" ", 2048);
+            else if (osvi.wProductType == VER_NT_WORKSTATION &&
+                     si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+               strlcpy(strReturn, "Microsoft Windows XP Professional x64 Edition ", 2048);
+            } else
+               strlcpy(strReturn, "Microsoft Windows Server 2003, ", 2048);
+         }
+         if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1)
+            strlcpy(strReturn, "Microsoft Windows XP ", 2048);
 
-         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0 )
-            strlcpy(strReturn, "Microsoft Windows 2000 ",2048);
+         if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0)
+            strlcpy(strReturn, "Microsoft Windows 2000 ", 2048);
 
-         if ( osvi.dwMajorVersion <= 4 )
-            strlcpy(strReturn, "Microsoft Windows NT ",2048);
+         if (osvi.dwMajorVersion <= 4)
+            strlcpy(strReturn, "Microsoft Windows NT ", 2048);
 
          // Test for specific product on Windows NT 4.0 SP6 and later.
-         if( bOsVersionInfoEx )
-         {
+         if (bOsVersionInfoEx) {
             // Test for the workstation type.
-            if ( osvi.wProductType == VER_NT_WORKSTATION &&
-                 si.wProcessorArchitecture!=PROCESSOR_ARCHITECTURE_AMD64)
-            {
-               if( osvi.dwMajorVersion == 4 )
-                  strlcat(strReturn, "Workstation 4.0 ",2048 );
-               else if( osvi.wSuiteMask & VER_SUITE_PERSONAL )
-                  strlcat(strReturn, "Home Edition " ,2048);
-               else strlcat(strReturn, "Professional " ,2048);
+            if (osvi.wProductType == VER_NT_WORKSTATION &&
+                si.wProcessorArchitecture!=PROCESSOR_ARCHITECTURE_AMD64) {
+               if (osvi.dwMajorVersion == 4)
+                  strlcat(strReturn, "Workstation 4.0 ", 2048);
+               else if (osvi.wSuiteMask & VER_SUITE_PERSONAL)
+                  strlcat(strReturn, "Home Edition " , 2048);
+               else
+                  strlcat(strReturn, "Professional ", 2048);
             }
             // Test for the server type.
-            else if ( osvi.wProductType == VER_NT_SERVER ||
-                      osvi.wProductType == VER_NT_DOMAIN_CONTROLLER )
-            {
-               if(osvi.dwMajorVersion==5 && osvi.dwMinorVersion==2)
-               {
-                  if ( si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_IA64 )
-                  {
-                      if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
-                         strlcat(strReturn, "Datacenter Edition for Itanium-based Systems",2048 );
-                      else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
-                         strlcat(strReturn, "Enterprise Edition for Itanium-based Systems" ,2048);
+            else if (osvi.wProductType == VER_NT_SERVER ||
+                     osvi.wProductType == VER_NT_DOMAIN_CONTROLLER) {
+               if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2) {
+                  if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) {
+                      if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                         strlcat(strReturn, "Datacenter Edition for Itanium-based Systems", 2048);
+                      else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                         strlcat(strReturn, "Enterprise Edition for Itanium-based Systems", 2048);
+                  } else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+                      if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                         strlcat(strReturn, "Datacenter x64 Edition ", 2048);
+                      else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                         strlcat(strReturn, "Enterprise x64 Edition ", 2048);
+                      else
+                         strlcat(strReturn, "Standard x64 Edition ", 2048);
+                  } else {
+                      if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                         strlcat(strReturn, "Datacenter Edition ", 2048);
+                      else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                         strlcat(strReturn, "Enterprise Edition ", 2048);
+                      else if (osvi.wSuiteMask == VER_SUITE_BLADE)
+                         strlcat(strReturn, "Web Edition " , 2048);
+                      else
+                         strlcat(strReturn, "Standard Edition ", 2048);
                   }
-                  else if ( si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64 )
-                  {
-                      if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
-                         strlcat(strReturn, "Datacenter x64 Edition ",2048 );
-                      else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
-                         strlcat(strReturn, "Enterprise x64 Edition ",2048 );
-                      else strlcat(strReturn, "Standard x64 Edition ",2048 );
-                  }
+               } else if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0) {
+                  if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+                     strlcat(strReturn, "Datacenter Server ", 2048);
+                  else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                     strlcat(strReturn, "Advanced Server ", 2048);
                   else
-                  {
-                      if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
-                         strlcat(strReturn, "Datacenter Edition ",2048 );
-                      else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
-                         strlcat(strReturn, "Enterprise Edition ",2048 );
-                      else if ( osvi.wSuiteMask == VER_SUITE_BLADE )
-                         strlcat(strReturn, "Web Edition " ,2048);
-                      else strlcat(strReturn, "Standard Edition ",2048 );
-                  }
-               }
-               else if(osvi.dwMajorVersion==5 && osvi.dwMinorVersion==0)
-               {
-                  if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
-                     strlcat(strReturn, "Datacenter Server ",2048 );
-                  else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
-                     strlcat(strReturn, "Advanced Server ",2048 );
-                  else strlcat(strReturn, "Server ",2048 );
-               }
-               else  // Windows NT 4.0
-               {
-                  if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
-                     strlcat(strReturn, "Server 4.0, Enterprise Edition " ,2048);
-                  else strlcat(strReturn, "Server 4.0 ",2048 );
+                     strlcat(strReturn, "Server ", 2048);
+               } else { // Windows NT 4.0
+                  if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+                     strlcat(strReturn, "Server 4.0, Enterprise Edition " , 2048);
+                  else
+                     strlcat(strReturn, "Server 4.0 ", 2048);
                }
             }
-         }
-         // Test for specific product on Windows NT 4.0 SP5 and earlier
-         else
-         {
+         } else { // Test for specific product on Windows NT 4.0 SP5 and earlier
             HKEY hKey;
             TCHAR szProductType[BUFSIZE];
             DWORD dwBufLen=BUFSIZE*sizeof(TCHAR);
             LONG lRet;
 
-            lRet = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
-                                 "SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
-                                 0, KEY_QUERY_VALUE, &hKey );
-            if( lRet != ERROR_SUCCESS )
+            lRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                                "SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
+                                0, KEY_QUERY_VALUE, &hKey );
+            if (lRet != ERROR_SUCCESS)
                return "";
 
-            lRet = RegQueryValueEx( hKey, "ProductType", NULL, NULL,
+            lRet = RegQueryValueEx(hKey, "ProductType", NULL, NULL,
                                    (LPBYTE) szProductType, &dwBufLen);
             RegCloseKey( hKey );
 
-            if( (lRet != ERROR_SUCCESS) || (dwBufLen > BUFSIZE*sizeof(TCHAR)) )
+            if ((lRet != ERROR_SUCCESS) || (dwBufLen > BUFSIZE*sizeof(TCHAR)))
                return "";
 
-            if ( lstrcmpi( "WINNT", szProductType) == 0 )
-               strlcat(strReturn, "Workstation " ,2048);
-            if ( lstrcmpi( "LANMANNT", szProductType) == 0 )
-               strlcat(strReturn, "Server " ,2048);
-            if ( lstrcmpi( "SERVERNT", szProductType) == 0 )
-               strlcat(strReturn, "Advanced Server " ,2048);
-            snprintf(temp,512, "%d.%d ", osvi.dwMajorVersion, osvi.dwMinorVersion);
-            strlcat(strReturn, temp,2048);
+            if (lstrcmpi( "WINNT", szProductType) == 0)
+               strlcat(strReturn, "Workstation " , 2048);
+            if (lstrcmpi( "LANMANNT", szProductType) == 0)
+               strlcat(strReturn, "Server " , 2048);
+            if (lstrcmpi( "SERVERNT", szProductType) == 0)
+               strlcat(strReturn, "Advanced Server " , 2048);
+            snprintf(temp, 512, "%d.%d ", osvi.dwMajorVersion, osvi.dwMinorVersion);
+            strlcat(strReturn, temp, 2048);
          }
-
          // Display service pack (if any) and build number.
-
-         if( osvi.dwMajorVersion == 4 &&
-             lstrcmpi( osvi.szCSDVersion, "Service Pack 6" ) == 0 )
-         {
+         if ( osvi.dwMajorVersion == 4 && lstrcmpi(osvi.szCSDVersion, "Service Pack 6" ) == 0) {
             HKEY hKey;
             LONG lRet;
 
             // Test for SP6 versus SP6a.
-            lRet = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
-                                 "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Hotfix\\Q246009",
-                                 0, KEY_QUERY_VALUE, &hKey );
-            if( lRet == ERROR_SUCCESS ) {
-               snprintf(temp, 512, "Service Pack 6a (Build %d)", osvi.dwBuildNumber & 0xFFFF );
-               strlcat(strReturn, temp,2048 );
+            lRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                                "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Hotfix\\Q246009",
+                                0, KEY_QUERY_VALUE, &hKey );
+            if (lRet == ERROR_SUCCESS) {
+               snprintf(temp, 512, "Service Pack 6a (Build %d)", osvi.dwBuildNumber & 0xFFFF);
+               strlcat(strReturn, temp, 2048);
+            } else { // Windows NT 4.0 prior to SP6a
+               snprintf(temp, 512, "%s (Build %d)", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
+               strlcat(strReturn, temp, 2048);
             }
-            else // Windows NT 4.0 prior to SP6a
-            {
-               snprintf(temp,512, "%s (Build %d)", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
-               strlcat(strReturn, temp,2048 );
-            }
-
             RegCloseKey( hKey );
+         } else { // not Windows NT 4.0
+            snprintf(temp, 512, "%s (Build %d)", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
+            strlcat(strReturn, temp, 2048);
          }
-         else // not Windows NT 4.0
-         {
-            snprintf(temp, 512,"%s (Build %d)", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
-            strlcat(strReturn, temp,2048 );
-         }
-
          break;
 
       // Test for the Windows Me/98/95.
       case VER_PLATFORM_WIN32_WINDOWS:
-
-         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0)
-         {
-             strlcpy(strReturn, "Microsoft Windows 95 ",2048);
+         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0) {
+             strlcpy(strReturn, "Microsoft Windows 95 ", 2048);
              if (osvi.szCSDVersion[1]=='C' || osvi.szCSDVersion[1]=='B')
-                strlcat(strReturn, "OSR2 " ,2048);
+                strlcat(strReturn, "OSR2 " , 2048);
          }
-
-         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10)
-         {
-             strlcpy(strReturn, "Microsoft Windows 98 ",2048);
-             if ( osvi.szCSDVersion[1]=='A' || osvi.szCSDVersion[1]=='B')
-                strlcat(strReturn, "SE ",2048 );
+         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10) {
+             strlcpy(strReturn, "Microsoft Windows 98 ", 2048);
+             if (osvi.szCSDVersion[1]=='A' || osvi.szCSDVersion[1]=='B')
+                strlcat(strReturn, "SE ", 2048);
          }
-
-         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90)
-         {
-             strlcpy(strReturn, "Microsoft Windows Millennium Edition",2048);
+         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90) {
+             strlcpy(strReturn, "Microsoft Windows Millennium Edition", 2048);
          }
          break;
 
       case VER_PLATFORM_WIN32s:
-         strlcpy(strReturn, "Microsoft Win32s",2048);
+         strlcpy(strReturn, "Microsoft Win32s", 2048);
          break;
    }
    return strReturn;
@@ -6036,28 +6018,37 @@ again:
 
 static void GetWinNTMemInfo(MemInfo_t *meminfo)
 {
-   Long64_t total, used, free, swap_total, swap_used, swap_avail;
+   Long64_t total, used, free, swap_total, swap_used, swap_avail, sys_cache;
    MEMORYSTATUSEX statex;
+   PERFORMANCE_INFORMATION statex2;
    statex.dwLength = sizeof(statex);
+   statex2.cb = sizeof(statex2);
    if (!GlobalMemoryStatusEx(&statex)) {
       ::Error("GetWinNTMemInfo", "Error on GlobalMemoryStatusEx()");
       return;
    }
-   used  = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
-   free  = (Long64_t) statex.ullAvailPhys;
-   total = (Long64_t) statex.ullTotalPhys;
+   if (!GetPerformanceInfo(&statex2, statex2.cb)) {
+      ::Error("GetWinNTMemInfo", "Error on GetPerformanceInfo()");
+      return;
+   }
+   used = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
+   free = (Long64_t)statex.ullAvailPhys;
+   total = (Long64_t)statex.ullTotalPhys;
+   sys_cache = (Long64_t)(statex2.SystemCache * statex2.PageSize);
 
-   meminfo->fMemTotal  = (Int_t) (total >> 20); // divide by 1024 * 1024
-   meminfo->fMemUsed   = (Int_t) (used >> 20);
-   meminfo->fMemFree   = (Int_t) (free >> 20);
+   meminfo->fMemTotal = (Int_t)(total >> 20); // divide by 1024 * 1024
+   meminfo->fMemUsed = (Int_t)(used >> 20);
+   meminfo->fMemFree = (Int_t)(free >> 20);
+   meminfo->fMemAvailable = meminfo->fMemFree;
+   meminfo->fMemCached = (Int_t)(sys_cache >> 20);
 
    swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
    swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
-   swap_used  = swap_total - swap_avail;
+   swap_used = swap_total - swap_avail;
 
-   meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
-   meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
-   meminfo->fSwapFree  = (Int_t) (swap_avail >> 20);
+   meminfo->fSwapTotal = (Int_t)(swap_total >> 20);
+   meminfo->fSwapUsed = (Int_t)(swap_used >> 20);
+   meminfo->fSwapFree = (Int_t)(swap_avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6066,35 +6057,15 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
 static void GetWinNTProcInfo(ProcInfo_t *procinfo)
 {
    PROCESS_MEMORY_COUNTERS pmc;
-   FILETIME    starttime, exittime, kerneltime, usertime;
-   timeval     ru_stime, ru_utime;
+   FILETIME starttime, exittime, kerneltime, usertime;
+   timeval ru_stime, ru_utime;
    ULARGE_INTEGER li;
 
-   typedef BOOL (__stdcall *GetProcessMemoryInfoProc)( HANDLE Process,
-                 PPROCESS_MEMORY_COUNTERS ppsmemCounters, DWORD cb );
-   static GetProcessMemoryInfoProc pGetProcessMemoryInfo = 0;
-
-   HMODULE hModImagehlp = LoadLibrary( "Psapi.dll" );
-   if (!hModImagehlp) {
-      ::Error("GetWinNTProcInfo", "Error on LoadLibrary(Psapi.dll)");
-      return;
-   }
-
-   pGetProcessMemoryInfo = (GetProcessMemoryInfoProc) GetProcAddress(
-                            hModImagehlp, "GetProcessMemoryInfo" );
-   if (!pGetProcessMemoryInfo) {
-      ::Error("GetWinNTProcInfo",
-              "Error on GetProcAddress(GetProcessMemoryInfo)");
-      return;
-   }
-
-   if ( pGetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) ) {
+   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
       procinfo->fMemResident = pmc.WorkingSetSize / 1024;
       procinfo->fMemVirtual  = pmc.PagefileUsage / 1024;
    }
-   if ( GetProcessTimes(GetCurrentProcess(), &starttime, &exittime,
-      &kerneltime, &usertime)) {
-
+   if (GetProcessTimes(GetCurrentProcess(), &starttime, &exittime, &kerneltime, &usertime)) {
       /* Convert FILETIMEs (0.1 us) to struct timeval */
       memcpy(&li, &kerneltime, sizeof(FILETIME));
       li.QuadPart /= 10L;         /* Convert to microseconds */

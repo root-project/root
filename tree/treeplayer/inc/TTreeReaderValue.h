@@ -171,7 +171,7 @@ public:
    }
 
 protected:
-   const char *GetDerivedTypeName() const { return ""; }
+   const char *GetDerivedTypeName() const final { return ""; }
 };
 
 class R__CLING_PTRCHECK(off) TTreeReaderUntypedValue final : public TTreeReaderValueBase {

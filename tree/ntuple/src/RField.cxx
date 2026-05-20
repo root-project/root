@@ -19,21 +19,55 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <TClassEdit.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <string_view>
 #include <type_traits>
+#include <unordered_set>
+
+void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val)
+{
+   fieldZero.fAllowFieldSubstitutions = val;
+}
+
+void ROOT::RFieldZero::Attach(std::unique_ptr<RFieldBase> child)
+{
+   const std::string childName = child->GetFieldName();
+   if (fSubfieldNames.count(childName) > 0)
+      throw RException(R__FAIL("duplicate field name: " + childName));
+   RFieldBase::Attach(std::move(child), "");
+   fSubfieldNames.insert(childName);
+}
+
+ROOT::RFieldZero::RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */)
+{
+   fTraits |= kTraitExtensible;
+}
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
-   for (auto &f : fSubfields)
+   for (auto &f : fSubfields) {
       result->Attach(f->Clone(f->GetFieldName()));
+      result->fSubfieldNames.insert(f->GetFieldName());
+   }
+   return result;
+}
+
+std::vector<std::unique_ptr<ROOT::RFieldBase>> ROOT::RFieldZero::ReleaseSubfields()
+{
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> result;
+   std::swap(fSubfields, result);
+   for (auto &f : result)
+      f->fParent = nullptr;
    return result;
 }
 
@@ -59,6 +93,28 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeVersion | kDiffStructure | kDiffTypeName).ThrowOnError();
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
+      if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
+         throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
+                                  " expects an on-disk leaf field of the same type\n" +
+                                  Internal::GetTypeTraceReport(*this, desc)));
+      }
+   } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+      if (!fieldDesc.IsSoACollection() && fieldDesc.GetTypeVersion() != 0) {
+         throw RException(R__FAIL("invalid on-disk type version for RCardinalityField " + GetQualifiedFieldName() +
+                                  "\n" + Internal::GetTypeTraceReport(*this, desc)));
+      }
+   } else {
+      throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName() +
+                               "\n" + Internal::GetTypeTraceReport(*this, desc)));
+   }
+}
+
 void ROOT::RCardinalityField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
@@ -72,6 +128,41 @@ const ROOT::RField<ROOT::RNTupleCardinality<std::uint32_t>> *ROOT::RCardinalityF
 const ROOT::RField<ROOT::RNTupleCardinality<std::uint64_t>> *ROOT::RCardinalityField::As64Bit() const
 {
    return dynamic_cast<const RField<RNTupleCardinality<std::uint64_t>> *>(this);
+}
+
+//------------------------------------------------------------------------------
+
+template <typename T>
+void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName);
+
+   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (Internal::IsCustomEnumFieldDesc(desc, fieldDesc)) {
+      SetOnDiskId(desc.FindFieldId("_0", GetOnDiskId()));
+      return;
+   }
+
+   static const std::string gIntegralTypeNames[] = {"bool",         "char",          "std::int8_t",  "std::uint8_t",
+                                                    "std::int16_t", "std::uint16_t", "std::int32_t", "std::uint32_t",
+                                                    "std::int64_t", "std::uint64_t"};
+   if (std::find(std::begin(gIntegralTypeNames), std::end(gIntegralTypeNames), fieldDesc.GetTypeName()) ==
+       std::end(gIntegralTypeNames)) {
+      throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
+                               GetTypeName() + "'\n" + Internal::GetTypeTraceReport(*this, desc)));
+   }
+}
+
+template <typename T>
+void ROOT::RSimpleField<T>::ReconcileFloatingPointField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName);
+
+   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (!(fieldDesc.GetTypeName() == "float" || fieldDesc.GetTypeName() == "double")) {
+      throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
+                               GetTypeName() + "'\n" + Internal::GetTypeTraceReport(*this, desc)));
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -487,6 +578,7 @@ ROOT::RRecordField::RRecordField(std::string_view name, const RRecordField &sour
 {
    for (const auto &f : source.GetConstSubfields())
       Attach(f->Clone(f->GetFieldName()));
+   fSubfieldNames = source.fSubfieldNames;
    fTraits = source.fTraits;
 }
 
@@ -495,50 +587,63 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::string_view ty
 {
 }
 
-void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields)
+std::unique_ptr<ROOT::RFieldBase>
+ROOT::Internal::CreateEmulatedRecordField(std::string_view fieldName,
+                                          std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                          std::string_view emulatedFromType)
 {
-   fTraits |= kTraitTrivialType;
-   for (auto &item : itemFields) {
-      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
-      fTraits &= item->GetTraits();
-      Attach(std::move(item));
-   }
-   // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
-   // requirements of the type with strictest alignment
-   fSize += GetItemPadding(fSize, fMaxAlignment);
+   R__ASSERT(!emulatedFromType.empty());
+   return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), emulatedFromType));
 }
 
-std::unique_ptr<ROOT::RFieldBase>
-ROOT::Internal::CreateEmulatedField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                    std::string_view emulatedFromType)
+std::unique_ptr<ROOT::RFieldBase> ROOT::Internal::CreateEmulatedVectorField(std::string_view fieldName,
+                                                                            std::unique_ptr<RFieldBase> itemField,
+                                                                            std::string_view emulatedFromType)
 {
-   return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), emulatedFromType));
+   R__ASSERT(!emulatedFromType.empty());
+   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), emulatedFromType));
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                                  std::string_view emulatedFromType)
    : ROOT::RFieldBase(fieldName, emulatedFromType, ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
-   fTraits |= kTraitTrivialType;
-   fOffsets.reserve(itemFields.size());
-   for (auto &item : itemFields) {
-      fSize += GetItemPadding(fSize, item->GetAlignment());
-      fOffsets.push_back(fSize);
-      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += item->GetValueSize();
-      fTraits &= item->GetTraits();
-      Attach(std::move(item));
-   }
+   AttachItemFields(std::move(itemFields));
    fTraits |= !emulatedFromType.empty() * kTraitEmulatedField;
-   // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
-   // requirements of the type with strictest alignment
-   fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::RRecordField(fieldName, std::move(itemFields), "")
 {
+   fTraits |= kTraitExtensible;
+}
+
+void ROOT::RRecordField::AddItem(std::unique_ptr<RFieldBase> item)
+{
+   fSize += GetItemPadding(fSize, item->GetAlignment());
+   if (!IsPairOrTuple()) {
+      fOffsets.emplace_back(fSize);
+   }
+   fSize += item->GetValueSize();
+   fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
+   fTraits &= item->GetTraits() | (fTraits & kTraitExtensible); // may be called by AddItemToRecord()
+
+   if (IsPairOrTuple()) {
+      Attach(std::move(item), "_" + std::to_string(fSubfields.size()));
+   } else {
+      const std::string itemName = item->GetFieldName();
+      if (fSubfieldNames.count(itemName) > 0)
+         throw RException(R__FAIL("duplicate field name: " + itemName));
+      Attach(std::move(item));
+      fSubfieldNames.insert(itemName);
+   }
+}
+
+void ROOT::Internal::AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem)
+{
+   // Only supported for untyped records
+   assert(record.GetTypeName().empty());
+   record.AddItem(std::move(newItem));
 }
 
 std::size_t ROOT::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
@@ -579,6 +684,31 @@ void ROOT::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *t
    }
 }
 
+void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   if (fTraits & kTraitEmulatedField) {
+      // The field has been explicitly constructed following the on-disk information. No further reconcilation needed.
+      return;
+   }
+   // Note that the RPairField and RTupleField descendants have their own reconcilation logic
+   R__ASSERT(GetTypeName().empty());
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+
+   // The on-disk ID of subfields is matched by field name. So we inherently support reordering of fields
+   // and we will ignore extra on-disk fields.
+   // It remains to mark the extra in-memory fields as artificial.
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   std::unordered_set<std::string_view> onDiskSubfields;
+   for (const auto &subField : desc.GetFieldIterable(fieldDesc)) {
+      onDiskSubfields.insert(subField.GetFieldName());
+   }
+   for (auto &f : fSubfields) {
+      if (onDiskSubfields.count(f->GetFieldName()) == 0)
+         CallSetArtificialOn(*f);
+   }
+}
+
 void ROOT::RRecordField::ConstructValue(void *where) const
 {
    for (unsigned i = 0; i < fSubfields.size(); ++i) {
@@ -606,11 +736,12 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RRecordField::GetDeleter() con
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RRecordField::SplitValue(const RValue &value) const
 {
-   auto basePtr = value.GetPtr<unsigned char>().get();
+   auto valuePtr = value.GetPtr<void>();
+   auto charPtr = static_cast<unsigned char *>(valuePtr.get());
    std::vector<RValue> result;
    result.reserve(fSubfields.size());
    for (unsigned i = 0; i < fSubfields.size(); ++i) {
-      result.emplace_back(fSubfields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fOffsets[i])));
+      result.emplace_back(fSubfields[i]->BindValue(std::shared_ptr<void>(valuePtr, charPtr + fOffsets[i])));
    }
    return result;
 }
@@ -623,7 +754,7 @@ void ROOT::RRecordField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 //------------------------------------------------------------------------------
 
 ROOT::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
-   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */, N),
      fN(N)
 {
@@ -646,43 +777,82 @@ void ROOT::RBitsetField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<bool>(desc);
 }
 
-std::size_t ROOT::RBitsetField::AppendImpl(const void *from)
+template <typename FUlong, typename FUlonglong, typename... Args>
+void ROOT::RBitsetField::SelectWordSize(FUlong &&fUlong, FUlonglong &&fUlonglong, Args &&...args)
 {
-   const auto *asULongArray = static_cast<const Word_t *>(from);
+   if (WordSize() == sizeof(unsigned long)) {
+      fUlong(std::forward<Args>(args)..., fN, *fPrincipalColumn);
+   } else if (WordSize() == sizeof(unsigned long long)) {
+      // NOTE: this can only happen on Windows; see the comment on the RBitsetField class.
+      fUlonglong(std::forward<Args>(args)..., fN, *fPrincipalColumn);
+   } else {
+      R__ASSERT(false);
+   }
+}
+
+template <typename Word_t>
+static void BitsetAppendImpl(const void *from, size_t nBits, ROOT::Internal::RColumn &column)
+{
+   constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+
+   const auto *asWordArray = static_cast<const Word_t *>(from);
    bool elementValue;
    std::size_t i = 0;
-   for (std::size_t word = 0; word < (fN + kBitsPerWord - 1) / kBitsPerWord; ++word) {
-      for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < fN); ++mask, ++i) {
-         elementValue = (asULongArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
-         fPrincipalColumn->Append(&elementValue);
+   for (std::size_t word = 0; word < (nBits + kBitsPerWord - 1) / kBitsPerWord; ++word) {
+      for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < nBits); ++mask, ++i) {
+         elementValue = (asWordArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
+         column.Append(&elementValue);
       }
    }
+}
+
+std::size_t ROOT::RBitsetField::AppendImpl(const void *from)
+{
+   SelectWordSize(BitsetAppendImpl<unsigned long>, BitsetAppendImpl<unsigned long long>, from);
    return fN;
+}
+
+template <typename Word_t>
+static void
+BitsetReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to, size_t nBits, ROOT::Internal::RColumn &column)
+{
+   constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+
+   auto *asWordArray = static_cast<Word_t *>(to);
+   bool elementValue;
+   for (std::size_t i = 0; i < nBits; ++i) {
+      column.Read(globalIndex * nBits + i, &elementValue);
+      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
+      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
+      asWordArray[i / kBitsPerWord] = (asWordArray[i / kBitsPerWord] & ~mask) | bit;
+   }
 }
 
 void ROOT::RBitsetField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   auto *asULongArray = static_cast<Word_t *>(to);
+   SelectWordSize(BitsetReadGlobalImpl<unsigned long>, BitsetReadGlobalImpl<unsigned long long>, globalIndex, to);
+}
+
+template <typename Word_t>
+static void
+BitsetReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to, size_t nBits, ROOT::Internal::RColumn &column)
+{
+   constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+
+   auto *asWordArray = static_cast<Word_t *>(to);
    bool elementValue;
-   for (std::size_t i = 0; i < fN; ++i) {
-      fPrincipalColumn->Read(globalIndex * fN + i, &elementValue);
+   for (std::size_t i = 0; i < nBits; ++i) {
+      column.Read(ROOT::RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * nBits) + i,
+                  &elementValue);
       Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
       Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
-      asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
+      asWordArray[i / kBitsPerWord] = (asWordArray[i / kBitsPerWord] & ~mask) | bit;
    }
 }
 
 void ROOT::RBitsetField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   auto *asULongArray = static_cast<Word_t *>(to);
-   bool elementValue;
-   for (std::size_t i = 0; i < fN; ++i) {
-      fPrincipalColumn->Read(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fN) + i,
-                             &elementValue);
-      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
-      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
-      asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
-   }
+   SelectWordSize(BitsetReadInClusterImpl<unsigned long>, BitsetReadInClusterImpl<unsigned long long>, localIndex, to);
 }
 
 void ROOT::RBitsetField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -692,11 +862,15 @@ void ROOT::RBitsetField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 
 //------------------------------------------------------------------------------
 
-ROOT::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
+ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::string &typePrefix,
                                      std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kCollection, false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, typePrefix + "<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
+                      false /* isSimple */)
 {
-   Attach(std::move(itemField));
+   if (!itemField->GetTypeAlias().empty())
+      fTypeAlias = typePrefix + "<" + itemField->GetTypeAlias() + ">";
+
+   Attach(std::move(itemField), "_0");
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RNullableField::GetColumnRepresentations() const
@@ -705,18 +879,20 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::RNullableField::GetColumnR
                                                   {ENTupleColumnType::kIndex64},
                                                   {ENTupleColumnType::kSplitIndex32},
                                                   {ENTupleColumnType::kIndex32}},
-                                                 {});
+                                                 {{}});
    return representations;
 }
 
 void ROOT::RNullableField::GenerateColumns()
 {
+   R__ASSERT(!fIsEvolvedFromInnerType);
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
 void ROOT::RNullableField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+   if (!fIsEvolvedFromInnerType)
+      GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
 std::size_t ROOT::RNullableField::AppendNull()
@@ -733,11 +909,35 @@ std::size_t ROOT::RNullableField::AppendValue(const void *from)
    return sizeof(ROOT::Internal::RColumnIndex) + nbytesItem;
 }
 
+void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
+
+   auto success = EnsureMatchingOnDiskField(desc, kDiffTypeName);
+   if (!success) {
+      fIsEvolvedFromInnerType = true;
+   } else {
+      success = EnsureMatchingTypePrefix(desc, prefixes);
+      fIsEvolvedFromInnerType = !success;
+   }
+
+   if (fIsEvolvedFromInnerType)
+      fSubfields[0]->SetOnDiskId(GetOnDiskId());
+}
+
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
 {
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t collectionSize;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
+   return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
+}
+
+ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::RNTupleLocalIndex localIndex)
+{
+   RNTupleLocalIndex collectionStart;
+   ROOT::NTupleSize_t collectionSize;
+   fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &collectionSize);
    return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
 }
 
@@ -748,55 +948,102 @@ void ROOT::RNullableField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) c
 
 //------------------------------------------------------------------------------
 
-ROOT::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::string_view typeName,
-                                       std::unique_ptr<RFieldBase> itemField)
-   : RNullableField(fieldName, typeName, std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
+namespace {
+// Dummy class to determine the dynamic type of any polymorphic user object.
+struct PolymorphicClass {
+   virtual ~PolymorphicClass() = default;
+};
+} // namespace
+
+ROOT::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RNullableField(fieldName, "std::unique_ptr", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
+   if (const auto *classField = dynamic_cast<const ROOT::RClassField *>(fSubfields[0].get())) {
+      fPolymorphicTypeInfo = classField->GetPolymorphicTypeInfo();
+   }
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RUniquePtrField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<RUniquePtrField>(newName, GetTypeName(), std::move(newItemField));
+   return std::make_unique<RUniquePtrField>(newName, std::move(newItemField));
 }
 
 std::size_t ROOT::RUniquePtrField::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::unique_ptr<char> *>(from);
    if (*typedValue) {
-      return AppendValue(typedValue->get());
+      const void *obj = typedValue->get();
+      if (fPolymorphicTypeInfo != nullptr) {
+         // This cast allows getting the dynamic type of polymorphic objects. A similar strategy is employed by
+         // TIsAProxy. If one of them needs updating because of changes in C++, also check the other one.
+         const std::type_info &t = typeid(*static_cast<const PolymorphicClass *>(obj));
+         if (t != *fPolymorphicTypeInfo) {
+            std::string msg = "invalid dynamic type of object, expected " + fSubfields[0]->GetTypeName();
+            int err = 0;
+            char *demangled = TClassEdit::DemangleTypeIdName(t, err);
+            if (!err) {
+               msg = msg + " but was passed " + demangled;
+               free(demangled);
+            }
+            msg += " and upcasting of polymorphic types is not supported in RNTuple";
+            throw RException(R__FAIL(msg));
+         }
+      }
+      return AppendValue(obj);
    } else {
       return AppendNull();
    }
 }
 
-void ROOT::RUniquePtrField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+void *ROOT::RUniquePtrField::PrepareRead(void *to, bool hasOnDiskValue)
 {
    auto ptr = static_cast<std::unique_ptr<char> *>(to);
    bool isValidValue = static_cast<bool>(*ptr);
-
-   auto itemIndex = GetItemIndex(globalIndex);
-   bool isValidItem = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
 
    void *valuePtr = nullptr;
    if (isValidValue)
       valuePtr = ptr->get();
 
-   if (isValidValue && !isValidItem) {
+   if (isValidValue && !hasOnDiskValue) {
       ptr->release();
       fItemDeleter->operator()(valuePtr, false /* dtorOnly */);
-      return;
-   }
-
-   if (!isValidItem) // On-disk value missing; nothing else to do
-      return;
-
-   if (!isValidValue) {
+   } else if (!isValidValue && hasOnDiskValue) {
       valuePtr = CallCreateObjectRawPtrOn(*fSubfields[0]);
       ptr->reset(reinterpret_cast<char *>(valuePtr));
    }
 
-   CallReadOn(*fSubfields[0], itemIndex, valuePtr);
+   return valuePtr;
+}
+
+void ROOT::RUniquePtrField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType)
+      itemIndex = GetItemIndex(globalIndex);
+   const bool hasOnDiskValue = fIsEvolvedFromInnerType || itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   auto valuePtr = PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue) {
+      if (fIsEvolvedFromInnerType) {
+         CallReadOn(*fSubfields[0], globalIndex, valuePtr);
+      } else {
+         CallReadOn(*fSubfields[0], itemIndex, valuePtr);
+      }
+   }
+}
+
+void ROOT::RUniquePtrField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType) {
+      itemIndex = GetItemIndex(localIndex);
+   } else {
+      itemIndex = localIndex;
+   }
+   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   auto valuePtr = PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue)
+      CallReadOn(*fSubfields[0], itemIndex, valuePtr);
 }
 
 void ROOT::RUniquePtrField::RUniquePtrDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -817,18 +1064,18 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RUniquePtrField::GetDeleter() 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RUniquePtrField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   const auto &ptr = value.GetRef<std::unique_ptr<char>>();
-   if (ptr) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr.get())));
+   auto valuePtr = value.GetPtr<void>();
+   const auto &uniquePtr = *static_cast<std::unique_ptr<char> *>(valuePtr.get());
+   if (uniquePtr) {
+      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(valuePtr, uniquePtr.get())));
    }
    return result;
 }
 
 //------------------------------------------------------------------------------
 
-ROOT::ROptionalField::ROptionalField(std::string_view fieldName, std::string_view typeName,
-                                     std::unique_ptr<RFieldBase> itemField)
-   : RNullableField(fieldName, typeName, std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
+ROOT::ROptionalField::ROptionalField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RNullableField(fieldName, "std::optional", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
    if (fSubfields[0]->GetTraits() & kTraitTriviallyDestructible)
       fTraits |= kTraitTriviallyDestructible;
@@ -847,7 +1094,7 @@ const bool *ROOT::ROptionalField::GetEngagementPtr(const void *optionalPtr) cons
 std::unique_ptr<ROOT::RFieldBase> ROOT::ROptionalField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<ROptionalField>(newName, GetTypeName(), std::move(newItemField));
+   return std::make_unique<ROptionalField>(newName, std::move(newItemField));
 }
 
 std::size_t ROOT::ROptionalField::AppendImpl(const void *from)
@@ -859,20 +1106,48 @@ std::size_t ROOT::ROptionalField::AppendImpl(const void *from)
    }
 }
 
-void ROOT::ROptionalField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+void ROOT::ROptionalField::PrepareRead(void *to, bool hasOnDiskValue)
 {
    auto engagementPtr = GetEngagementPtr(to);
-   auto itemIndex = GetItemIndex(globalIndex);
-   if (itemIndex.GetIndexInCluster() == ROOT::kInvalidNTupleIndex) {
+   if (hasOnDiskValue) {
+      if (!(*engagementPtr) && !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible))
+         CallConstructValueOn(*fSubfields[0], to);
+      *engagementPtr = true;
+   } else {
       if (*engagementPtr && !(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
          fItemDeleter->operator()(to, true /* dtorOnly */);
       *engagementPtr = false;
-   } else {
-      if (!(*engagementPtr) && !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible))
-         CallConstructValueOn(*fSubfields[0], to);
-      CallReadOn(*fSubfields[0], itemIndex, to);
-      *engagementPtr = true;
    }
+}
+
+void ROOT::ROptionalField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType)
+      itemIndex = GetItemIndex(globalIndex);
+   const bool hasOnDiskValue = fIsEvolvedFromInnerType || itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue) {
+      if (fIsEvolvedFromInnerType) {
+         CallReadOn(*fSubfields[0], globalIndex, to);
+      } else {
+         CallReadOn(*fSubfields[0], itemIndex, to);
+      }
+   }
+}
+
+void ROOT::ROptionalField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType) {
+      itemIndex = GetItemIndex(localIndex);
+   } else {
+      itemIndex = localIndex;
+   }
+   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue)
+      CallReadOn(*fSubfields[0], itemIndex, to);
 }
 
 void ROOT::ROptionalField::ConstructValue(void *where) const
@@ -928,21 +1203,35 @@ size_t ROOT::ROptionalField::GetAlignment() const
 
 //------------------------------------------------------------------------------
 
-ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
-                                 std::unique_ptr<RFieldBase> itemField)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RFieldBase(fieldName, "std::atomic<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kPlain,
+                false /* isSimple */)
 {
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;
    if (itemField->GetTraits() & kTraitTriviallyDestructible)
       fTraits |= kTraitTriviallyDestructible;
-   Attach(std::move(itemField));
+
+   if (!itemField->GetTypeAlias().empty())
+      fTypeAlias = "std::atomic<" + itemField->GetTypeAlias() + ">";
+
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<RAtomicField>(newName, GetTypeName(), std::move(newItemField));
+   return std::make_unique<RAtomicField>(newName, std::move(newItemField));
+}
+
+void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::atomic<", 0) == 0) {
+      EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   } else {
+      fSubfields[0]->SetOnDiskId(GetOnDiskId());
+   }
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const

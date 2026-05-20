@@ -119,7 +119,6 @@ using std::vector;
 
 REGISTER_METHOD(DT)
 
-ClassImp(TMVA::MethodDT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// the standard constructor for just an ordinar "decision trees"

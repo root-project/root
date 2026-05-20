@@ -57,7 +57,6 @@ TProcessID *TProcessID::fgPID    = nullptr; //pointer to the TProcessID of the c
 std::atomic_uint TProcessID::fgNumber(0); //Current referenced object instance count
 TExMap     *TProcessID::fgObjPIDs = nullptr; //Table (pointer,pids)
 
-ClassImp(TProcessID);
 
 static std::atomic<TProcessID *> gIsValidCache;
 using PIDCacheContent_t = std::pair<Int_t, TProcessID*>;

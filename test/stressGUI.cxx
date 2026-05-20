@@ -2057,9 +2057,9 @@ const char *excluded[] = {
 Int_t bexec(TString &dir, const char *macro)
 {
 #ifdef WIN32
-   return gSystem->Exec(TString::Format("set ROOT_HIST=0 & root.exe -l -q exec_macro.C(\\\"%s/%s\\\") >nul 2>&1", dir.Data(), macro));
+   return gSystem->Exec(TString::Format("set ROOT_HIST=0 & root.exe -q exec_macro.C(\\\"%s/%s\\\") >nul 2>&1", dir.Data(), macro));
 #else
-   return gSystem->Exec(TString::Format("ROOT_HIST=0 root.exe -l -q exec_macro.C\\(\\\"%s/%s\\\"\\) >&/dev/null", dir.Data(), macro));
+   return gSystem->Exec(TString::Format("ROOT_HIST=0 root.exe -q exec_macro.C\\(\\\"%s/%s\\\"\\) >&/dev/null", dir.Data(), macro));
 #endif
 }
 
@@ -2199,7 +2199,7 @@ void guitest_playback()
    guitest_ref[10] = 68657;
    for (i=0;i<11;++i) {
       printf("guitest %02d: output............................................", i+1);
-      if (TMath::Abs(guitest_ref[i] - guitest_size[i]) <= guitest_err[i]) {
+      if (std::abs(guitest_ref[i] - guitest_size[i]) <= guitest_err[i]) {
          printf("..... OK\n");
          // delete successful tests, keep only the failing ones (for verification)
          gSystem->Unlink(TString::Format("%s/guitest%03d.C", dir.Data(), i+1));

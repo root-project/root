@@ -11,8 +11,6 @@
 // Header file for class HFitInterface
 // set of free functions used to couple the ROOT data object with the fitting classes
 
-// avoid including this file when running CINT since free functions cannot be re-defined
-
 #ifndef ROOT_HFitInterface
 #define ROOT_HFitInterface
 
@@ -171,7 +169,7 @@ namespace ROOT {
       /**
          compute the chi2 value for an histogram given a function  (see TH1::Chisquare for the documentation)
       */
-      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, EChisquareType type);
+      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, EChisquareType type, bool useIntegral = false);
 
       /**
          compute the chi2 value for a graph given a function (see TGraph::Chisquare)

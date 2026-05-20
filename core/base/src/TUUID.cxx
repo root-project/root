@@ -126,8 +126,6 @@ system clock catches up.
 #include "Bytes.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
-#include <string.h>
-#include <stdlib.h>
 #include <cassert>
 #include <cstring>
 #include <cstdlib>

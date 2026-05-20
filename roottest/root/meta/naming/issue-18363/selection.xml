@@ -1,0 +1,4 @@
+<lcgdict>
+ <class name="PFRecHitSoALayout<128>"/>
+ <class name="PFRecHitSoALayout<128>::View"/>
+</lcgdict>

@@ -5,7 +5,7 @@
 /// to run, do:
 ///
 /// ~~~{.cpp}
-///  root > .x pythia8.C
+///  root > .x evegen_000_pythia8.C
 /// ~~~
 ///
 /// \macro_code

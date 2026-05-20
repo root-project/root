@@ -11,7 +11,6 @@
 #include<vector>
 
 using namespace ROOT::R;
-ClassImp(TRObject);
 
 //______________________________________________________________________________
 TRObject::TRObject(SEXP robj): TObject(), fObj(robj), fStatus(kTRUE) { }

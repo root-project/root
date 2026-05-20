@@ -14,7 +14,6 @@
 #include "TCrown.h"
 #include "TVirtualPad.h"
 
-ClassImp(TCrown);
 
 /** \class TCrown
 \ingroup BasicGraphics

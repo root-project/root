@@ -30,6 +30,7 @@ class TPaletteAxis : public TPave {
 protected:
    TGaxis       fAxis;          ///<  Palette axis
    TH1         *fH;             ///<! Pointer to parent histogram
+   Int_t        fLog;           ///< Log option: 0 use Logz, 1 is linear, 2 is log
 
 public:
    // TPaletteAxis status bits
@@ -53,6 +54,8 @@ public:
    Int_t         GetValueColor(Double_t zc);
    void  Paint(Option_t *option="") override;
    void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   Int_t         GetLog() const;
+   void          SetLog(Int_t log) {fLog = log;}
    void          SetHistogram(TH1* h) {fH = h;}
    virtual void  SetNdivisions(Int_t ndiv=10)                 {if (fH) fH->GetZaxis()->SetNdivisions(ndiv);       else fAxis.SetNdivisions(ndiv);}     // *MENU*
    virtual void  SetLabelColor(Int_t color=1)                 {if (fH) fH->GetZaxis()->SetLabelColor(color);      else fAxis.SetLabelColor(color);}    // *MENU*
@@ -71,7 +74,7 @@ public:
 
    virtual void  UnZoom();  // *MENU*
 
-   ClassDefOverride(TPaletteAxis,4)  //class used to display a color palette axis for 2-d plots
+   ClassDefOverride(TPaletteAxis, 5)  //class used to display a color palette axis for 2-d plots
 };
 
 #endif

@@ -82,7 +82,6 @@ static const Int_t gDecayDeltaA[gMaxDecay] = {0, 0, -1, -1, -4, -99, 0, 0, -99, 
 static const Int_t gDecayDeltaZ[gMaxDecay] = {2, 1, 0, -1, -2, -99, -1, 0, -99, -99, -2, 0, -4, -6, -6};
 static const char gLevName[gMaxLevel] = " mnpqrs";
 
-ClassImp(TGeoElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -328,7 +327,6 @@ Double_t TGeoElement::GetRelativeAbundance(Int_t i) const
    return 0.0;
 }
 
-ClassImp(TGeoIsotope);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy I/O constructor
@@ -366,7 +364,6 @@ void TGeoIsotope::Print(Option_t *) const
    printf("Isotope: %s     Z=%d   N=%d   A=%f [g/mole]\n", GetName(), fZ, fN, fA);
 }
 
-ClassImp(TGeoElementRN);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -700,7 +697,6 @@ void TGeoElementRN::ResetRatio()
    }
 }
 
-ClassImp(TGeoDecayChannel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment.
@@ -823,7 +819,6 @@ void TGeoDecayChannel::DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const
    }
 }
 
-ClassImp(TGeoElemIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -972,7 +967,6 @@ void TGeoElemIter::Print(Option_t * /*option*/) const
    }
 }
 
-ClassImp(TGeoElementTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
@@ -1430,7 +1424,6 @@ void TGeoElementTable::Print(Option_t *option) const
    }
 }
 
-ClassImp(TGeoBatemanSol);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

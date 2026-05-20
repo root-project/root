@@ -66,7 +66,7 @@ namespace TMVA{
 
       void SetResultHists();
 
-      ClassDef(MethodInfo,0);
+      ClassDefOverride(MethodInfo,0);
    };
 
    class StatDialogMVAEffs {

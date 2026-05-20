@@ -1,9 +1,8 @@
 import unittest
 
-import DistRDF
 import ROOT
-from DistRDF.Backends import Base
-from DistRDF.Backends import Utils
+import ROOT._distrdf
+from ROOT._distrdf.Backends import Base, Utils
 
 
 class BackendInitTest(unittest.TestCase):
@@ -73,5 +72,5 @@ class InitializationTest(unittest.TestCase):
             ROOT.gInterpreter.ProcessLine("int %s = %s;" % (name, value))
 
         varvalue = 2
-        DistRDF.initialize(defineIntVariable, "myInt", varvalue)
+        ROOT._distrdf.initialize(defineIntVariable, "myInt", varvalue)
         self.assertEqual(ROOT.myInt, varvalue)

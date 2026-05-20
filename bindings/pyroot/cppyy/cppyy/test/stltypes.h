@@ -6,12 +6,9 @@
 #include <map>
 #include <string>
 #include <sstream>
-#if __cplusplus > 201402L
 #include <string_view>
-#endif
 #include <utility>
 #include <vector>
-
 
 //- basic example class
 class just_a_class {
@@ -81,7 +78,7 @@ protected:
     value_type fData[sz];
 
 public:
-    static const size_t size() { return sz; }
+    static size_t size() { return sz; }
     value_type& operator[](ptrdiff_t i) { return fData[i]; }
 };
 
@@ -201,12 +198,10 @@ namespace UnicodeAndSTL {
 
 
 // helpers for string_view testing
-#if __cplusplus > 201402L
 namespace StringViewTest {
     std::string_view::size_type count(const std::string_view arg);
     std::string_view::size_type count_cr(const std::string_view& arg);
 }
-#endif
 
 
 // helper for exception base class testing

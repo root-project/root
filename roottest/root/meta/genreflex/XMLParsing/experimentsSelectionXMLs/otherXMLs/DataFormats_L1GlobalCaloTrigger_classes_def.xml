@@ -1,0 +1,93 @@
+<lcgdict>
+  <class name="L1GctCand" ClassVersion="10">
+   <version ClassVersion="10" checksum="2335658328"/>
+  </class>
+  <class name="L1GctInternEmCand" ClassVersion="10">
+   <version ClassVersion="10" checksum="3816719986"/>
+  </class>
+  <class name="L1GctInternJetData" ClassVersion="10">
+   <version ClassVersion="10" checksum="3106448375"/>
+  </class>
+  <class name="L1GctInternEtSum" ClassVersion="10">
+   <version ClassVersion="10" checksum="1283596122"/>
+  </class>
+  <class name="L1GctInternHtMiss" ClassVersion="10">
+   <version ClassVersion="10" checksum="2668056860"/>
+  </class>
+  <class name="L1GctInternHFData" ClassVersion="10">
+   <version ClassVersion="10" checksum="1000233428"/>
+  </class>
+  <class name="L1GctFibreWord" ClassVersion="10">
+   <version ClassVersion="10" checksum="1795607404"/>
+  </class>
+  <class name="L1GctEmCand" ClassVersion="10">
+   <version ClassVersion="10" checksum="10695715"/>
+  </class>
+  <class name="L1GctJetCand" ClassVersion="10">
+   <version ClassVersion="10" checksum="2872109126"/>
+  </class>
+  <class name="L1GctEtTotal" ClassVersion="10">
+   <version ClassVersion="10" checksum="2260570461"/>
+  </class>
+  <class name="L1GctEtHad" ClassVersion="10">
+   <version ClassVersion="10" checksum="1609663238"/>
+  </class>
+  <class name="L1GctEtMiss" ClassVersion="10">
+   <version ClassVersion="10" checksum="1943605498"/>
+  </class>
+  <class name="L1GctHtMiss" ClassVersion="10">
+   <version ClassVersion="10" checksum="439602301"/>
+  </class>
+  <class name="L1GctJetCounts" ClassVersion="10">
+   <version ClassVersion="10" checksum="2266551673"/>
+  </class>
+  <class name="L1GctHFRingEtSums" ClassVersion="10">
+   <version ClassVersion="10" checksum="755387352"/>
+  </class>
+  <class name="L1GctHFBitCounts" ClassVersion="10">
+   <version ClassVersion="10" checksum="3079024252"/>
+  </class>
+  <class name="std::vector<L1GctInternEmCand>"/>
+  <class name="std::vector<L1GctInternJetData>"/>
+  <class name="std::vector<L1GctInternEtSum>"/>
+  <class name="std::vector<L1GctInternHtMiss>"/>
+  <class name="std::vector<L1GctInternHFData>"/>
+  <class name="std::vector<L1GctFibreWord>"/>
+  <class name="std::vector<L1GctEmCand>"/>
+  <class name="std::vector<L1GctJetCand>"/>
+  <class name="std::vector<L1GctEtHad>"/>
+  <class name="std::vector<L1GctEtMiss>"/>
+  <class name="std::vector<L1GctEtTotal>"/>
+  <class name="std::vector<L1GctHtMiss>"/>
+  <class name="std::vector<L1GctJetCounts>"/>
+  <class name="std::vector<L1GctHFRingEtSums>"/>
+  <class name="std::vector<L1GctHFBitCounts>"/>
+  <class name="edm::Ref<std::vector<L1GctEmCand>,L1GctEmCand,edm::refhelper::FindUsingAdvance<std::vector<L1GctEmCand>,L1GctEmCand>>"/>
+  <class name="edm::Ref<std::vector<L1GctJetCand>,L1GctJetCand,edm::refhelper::FindUsingAdvance<std::vector<L1GctJetCand>,L1GctJetCand>>"/>
+  <class name="edm::Ref<std::vector<L1GctEtHad>,L1GctEtHad,edm::refhelper::FindUsingAdvance<std::vector<L1GctEtHad>,L1GctEtHad>>"/>
+  <class name="edm::Ref<std::vector<L1GctEtMiss>,L1GctEtMiss,edm::refhelper::FindUsingAdvance<std::vector<L1GctEtMiss>,L1GctEtMiss>>"/>
+  <class name="edm::Ref<std::vector<L1GctEtTotal>,L1GctEtTotal,edm::refhelper::FindUsingAdvance<std::vector<L1GctEtTotal>,L1GctEtTotal>>"/>
+  <class name="edm::Ref<std::vector<L1GctHtMiss>,L1GctHtMiss,edm::refhelper::FindUsingAdvance<std::vector<L1GctHtMiss>,L1GctHtMiss>>"/>
+  <class name="edm::Ref<std::vector<L1GctHFBitCounts>,L1GctHFBitCounts,edm::refhelper::FindUsingAdvance<std::vector<L1GctHFBitCounts>,L1GctHFBitCounts>>"/>
+  <class name="edm::Ref<std::vector<L1GctHFRingEtSums>,L1GctHFRingEtSums,edm::refhelper::FindUsingAdvance<std::vector<L1GctHFRingEtSums>,L1GctHFRingEtSums>>"/>
+  <class name="edm::RefProd<L1GctEtTotal>"/>
+  <class name="edm::RefProd<L1GctEtHad>"/>
+  <class name="edm::RefProd<L1GctEtMiss>"/>
+  <class name="edm::RefProd<L1GctHtMiss>"/>
+  <class name="edm::Ref<std::vector<L1GctJetCounts>,L1GctJetCounts,edm::refhelper::FindUsingAdvance<std::vector<L1GctJetCounts>,L1GctJetCounts>>"/>
+  <class name="edm::Wrapper<std::vector<L1GctInternEmCand>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctInternJetData>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctInternEtSum>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctInternHtMiss>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctInternHFData>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctFibreWord>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctEmCand>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctJetCand>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctEtHad>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctEtMiss>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctEtTotal>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctHtMiss>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctJetCounts>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctHFRingEtSums>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1GctHFBitCounts>>" splitLevel="0"/>
+</lcgdict>

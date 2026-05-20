@@ -32,6 +32,28 @@
 
 #define ROOFIT_EVAL_BACKENDS ROOFIT_EVAL_BACKEND_LEGACY ROOFIT_EVAL_BACKEND_CUDA RooFit::EvalBackend::Cpu()
 
-#define ROOFIT_EVAL_BACKENDS_WITH_CODEGEN ROOFIT_EVAL_BACKENDS, ROOFIT_EVAL_BACKEND_CODEGEN RooFit::EvalBackend::CodegenNoGrad()
+#define ROOFIT_EVAL_BACKENDS_WITH_CODEGEN \
+   ROOFIT_EVAL_BACKENDS, ROOFIT_EVAL_BACKEND_CODEGEN RooFit::EvalBackend::CodegenNoGrad()
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include <cmath>
+
+MATCHER_P2(RelativeNear, expected, rel_tol,
+           "is within relative tolerance around ref=" + ::testing::PrintToString(expected) +
+              " (tol=" + ::testing::PrintToString(rel_tol) + ")")
+{
+   const double diff = std::fabs(arg - expected);
+   const double scale = std::fabs(expected);
+   // One could also also consider the target value as scale, or an adaptive scale:
+   // const double scale = std::max(std::fabs(arg), std::fabs(expected));
+
+   if (diff <= rel_tol * scale)
+      return true;
+
+   *result_listener << "error relative to ref = " << diff / scale << ", absolute diff = " << diff;
+   return false;
+}
 
 #endif // RooFit_gtest_wrapper_h

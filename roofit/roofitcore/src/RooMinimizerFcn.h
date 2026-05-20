@@ -35,21 +35,26 @@ class RooMinimizerFcn : public RooAbsMinimizerFcn {
 public:
    RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
 
+   void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
+
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
 
    void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
    void setOffsetting(bool flag) override;
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
 
    double operator()(const double *x) const;
    void evaluateGradient(const double *x, double *out) const;
+   bool evaluateHessian(std::span<const double> x, double *out) const;
+
+   RooArgSet freezeDisconnectedParameters() const override;
 
 private:
    RooAbsReal *_funct = nullptr;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
    mutable std::vector<double> _gradientOutput;
+   mutable std::vector<double> _hessianOutput;
 };
 
 #endif

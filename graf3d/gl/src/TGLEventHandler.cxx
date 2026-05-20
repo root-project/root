@@ -50,7 +50,6 @@ OpenGL.EventHandler.MouseWheelFactor:      -1.0
 ~~~
 */
 
-ClassImp(TGLEventHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

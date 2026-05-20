@@ -40,23 +40,29 @@ automatic PDF optimization.
 #include "RooMinimizer.h"
 
 #include "RooAbsMinimizerFcn.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
 #include "RooAbsReal.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
+#include "RooCategory.h"
 #include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooSentinel.h"
-#include "RooMsgService.h"
-#include "RooPlot.h"
-#include "RooMinimizerFcn.h"
-#include "RooFitResult.h"
-#include "TestStatistics/MinuitFcnGrad.h"
+#include "RooEvaluatorWrapper.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
+#include "RooFitResult.h"
+#include "RooHelpers.h"
+#include "RooMinimizerFcn.h"
+#include "RooMsgService.h"
+#include "RooMultiPdf.h"
+#include "RooPlot.h"
+#include "RooRealVar.h"
+#include "RooSentinel.h"
 #ifdef ROOFIT_MULTIPROCESS
+#include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
+
+#include "RooFitImplHelpers.h"
 
 #include <Fit/BasicFCN.h>
 #include <Math/Minimizer.h>
@@ -68,6 +74,72 @@ automatic PDF optimization.
 #include <iostream>
 #include <stdexcept> // logic_error
 
+namespace {
+
+class FreezeDisconnectedParametersRAII {
+public:
+   FreezeDisconnectedParametersRAII(RooMinimizer const *minimizer, RooAbsMinimizerFcn const &fcn)
+      : _minimizer{minimizer}, _frozen{fcn.freezeDisconnectedParameters()}
+   {
+      if (!_frozen.empty()) {
+         oocoutI(_minimizer, Minimization) << "Freezing disconnected parameters: " << _frozen << std::endl;
+      }
+   }
+   ~FreezeDisconnectedParametersRAII()
+   {
+      if (!_frozen.empty()) {
+         oocoutI(_minimizer, Minimization) << "Unfreezing disconnected parameters: " << _frozen << std::endl;
+      }
+      RooHelpers::setAllConstant(_frozen, false);
+   }
+
+private:
+   RooMinimizer const *_minimizer = nullptr;
+   RooArgSet _frozen;
+};
+
+std::vector<std::vector<int>> generateOrthogonalCombinations(const std::vector<int> &maxValues)
+{
+   std::vector<std::vector<int>> combos;
+   std::vector<int> base(maxValues.size(), 0);
+   combos.push_back(base);
+   for (size_t i = 0; i < maxValues.size(); ++i) {
+      for (int v = 1; v < maxValues[i]; ++v) {
+         std::vector<int> tmp = base;
+         tmp[i] = v;
+         combos.push_back(tmp);
+      }
+   }
+   return combos;
+}
+
+void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vector<int> &max,
+                         const std::vector<int> &base)
+{
+   for (auto &combo : combos) {
+      for (size_t i = 0; i < combo.size(); ++i) {
+         combo[i] = (combo[i] + base[i]) % max[i];
+      }
+   }
+}
+
+// The RooEvaluatorWrapper uses its own logic to decide what needs to be
+// re-evaluated. We can therefore disable the regular dirty state propagation
+// temporarily during minimization. However, some RooAbsArgs shared with other
+// regular RooFit computation graphs outside the minimized likelihood, so we
+// have to make sure that the operation mode is reset after the minimization.
+//
+// This should be called before running any routine via the _minimizer data
+// member. The RAII object should only be destructed after the routine is done.
+std::unique_ptr<ChangeOperModeRAII> setOperModesDirty(RooAbsReal &function)
+{
+   if (auto *wrapper = dynamic_cast<RooFit::Experimental::RooEvaluatorWrapper *>(&function)) {
+      return wrapper->setOperModes(RooAbsArg::ADirty);
+   }
+   return {};
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
@@ -82,7 +154,7 @@ automatic PDF optimization.
 /// value of the input function.
 
 /// Constructor that accepts all configuration in struct with RooAbsReal likelihood
-RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
+RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _function{function}, _cfg(cfg)
 {
    initMinimizerFirstPart();
    auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
@@ -279,6 +351,7 @@ void RooMinimizer::determineStatus(bool fitterReturnValue)
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
+
    if (_cfg.timingAnalysis) {
 #ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
@@ -297,7 +370,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
    {
       auto ctx = makeEvalErrorContext();
 
-      bool ret = fitFCN(*_fcn->getMultiGenFcn());
+      bool ret = fitFCN();
       determineStatus(ret);
    }
    profileStop();
@@ -321,6 +394,8 @@ int RooMinimizer::migrad()
 
 int RooMinimizer::exec(std::string const &algoName, std::string const &statusName)
 {
+   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+
    _fcn->Synchronize(_config.ParamsSettings());
    profileStart();
    {
@@ -337,7 +412,7 @@ int RooMinimizer::exec(std::string const &algoName, std::string const &statusNam
          ret = calculateMinosErrors();
       } else {
          _config.SetMinimizer(_cfg.minimizerType.c_str(), algoName.c_str());
-         ret = fitFCN(*_fcn->getMultiGenFcn());
+         ret = fitFCN();
       }
       determineStatus(ret);
    }
@@ -395,6 +470,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
+      FreezeDisconnectedParametersRAII freeze(this, *_fcn);
 
       _fcn->Synchronize(_config.ParamsSettings());
       profileStart();
@@ -484,6 +560,9 @@ int RooMinimizer::getPrintLevel()
 ////////////////////////////////////////////////////////////////////////////////
 /// If flag is true, perform constant term optimization on
 /// function being minimized.
+///
+/// \deprecated Will be removed in ROOT 6.42, as this functionality only affects the legacy evalution backend.
+///             The default `cpu` backend already includes this optimization unconditionally.
 
 void RooMinimizer::optimizeConst(int flag)
 {
@@ -505,9 +584,9 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
       return nullptr;
    }
 
-   TString name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str());
-   TString title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str());
-   auto fitRes = std::make_unique<RooFitResult>(name, title);
+   std::string name = userName ? std::string{userName} : _fcn->getFunctionName();
+   std::string title = userTitle ? std::string{userTitle} : _fcn->getFunctionTitle();
+   auto fitRes = std::make_unique<RooFitResult>(name.c_str(), title.c_str());
 
    fitRes->setConstParList(_fcn->constParams());
 
@@ -515,7 +594,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
 
    fitRes->setStatus(_status);
    fitRes->setCovQual(_minimizer->CovMatrixStatus());
-   fitRes->setMinNLL(_result->fVal -_fcn->getOffset());
+   fitRes->setMinNLL(_result->fVal - _fcn->getOffset());
    fitRes->setEDM(_result->fEdm);
 
    fitRes->setInitParList(_fcn->initFloatParams());
@@ -556,11 +635,11 @@ double correlation(std::vector<double> const &covMat, unsigned int i, unsigned i
 void RooMinimizer::fillCorrMatrix(RooFitResult &fitRes)
 {
    const std::size_t nParams = _fcn->getNDim();
-   std::vector<double> globalCC;
    TMatrixDSym corrs(nParams);
    TMatrixDSym covs(nParams);
+   std::vector<double> globalCC = _minimizer->GlobalCC();
+   globalCC.resize(nParams); // pad with zeros
    for (std::size_t ic = 0; ic < nParams; ic++) {
-      globalCC.push_back(_result->fGlobalCC[ic]);
       for (std::size_t ii = 0; ii < nParams; ii++) {
          corrs(ic, ii) = correlation(_result->fCovMatrix, ic, ii);
          covs(ic, ii) = covMatrix(_result->fCovMatrix, ic, ii);
@@ -632,6 +711,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    n[4] = n5;
    n[5] = n6;
 
+   auto operModeRAII = setOperModesDirty(_function);
    for (int ic = 0; ic < 6; ic++) {
       if (n[ic] > 0) {
 
@@ -651,7 +731,9 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
             ycoor[npoints] = ycoor[0];
             TGraph *graph = new TGraph(npoints + 1, xcoor.data(), ycoor.data());
 
-            graph->SetName(Form("contour_%s_n%f", _fcn->getFunctionName().c_str(), n[ic]));
+            std::stringstream name;
+            name << "contour_" << _fcn->getFunctionName() << "_n" << n[ic];
+            graph->SetName(name.str().c_str());
             graph->SetLineStyle(ic + 1);
             graph->SetLineWidth(2);
             graph->SetLineColor(kBlue);
@@ -714,11 +796,6 @@ void RooMinimizer::profileStop()
       coutI(Minimization) << "Session timer: ";
       _cumulTimer.Print();
    }
-}
-
-ROOT::Math::IMultiGenFunction *RooMinimizer::getMultiGenFcn() const
-{
-   return _fcn->getMultiGenFcn();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -844,40 +921,153 @@ std::unique_ptr<RooAbsReal::EvalErrorContext> RooMinimizer::makeEvalErrorContext
    return std::make_unique<RooAbsReal::EvalErrorContext>(m);
 }
 
-bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
+bool RooMinimizer::fitFCN()
 {
    // fit a user provided FCN function
    // create fit parameter settings
-   unsigned int npar = fcn.NDim();
+
+   auto operModeRAII = setOperModesDirty(_function);
+
+   // Check number of parameters
+   unsigned int npar = getNPar();
    if (npar == 0) {
       coutE(Minimization) << "RooMinimizer::fitFCN(): FCN function has zero parameters" << std::endl;
       return false;
    }
 
-   // init the minimizer
+   // initiate the minimizer
    initMinimizer();
-   // perform the minimization
 
-   // perform the minimization (assume we have already initialized the minimizer)
+   // Identify floating RooCategory parameters
+   RooArgSet floatingCats;
+   for (auto arg : _fcn->allParams()) {
+      if (arg->isCategory() && !arg->isConstant())
+         floatingCats.add(*arg);
+   }
 
-   bool isValid = _minimizer->Minimize();
+   std::vector<RooCategory *> pdfIndices;
+   for (auto *arg : floatingCats) {
+      if (auto *cat = dynamic_cast<RooCategory *>(arg))
+         pdfIndices.push_back(cat);
+   }
+
+   const size_t nPdfs = pdfIndices.size();
+
+   // Identify floating continuous parameters (RooRealVar)
+   RooArgSet floatReals;
+   for (auto arg : _fcn->allParams()) {
+      if (!arg->isCategory() && !arg->isConstant())
+         floatReals.add(*arg);
+   }
+
+   if (nPdfs == 0) {
+      coutI(Minimization) << "[fitFCN] No discrete parameters, performing continuous minimization only" << std::endl;
+      FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+      bool isValid = _minimizer->Minimize();
+      if (!_result)
+         _result = std::make_unique<FitResult>();
+      fillResult(isValid);
+      if (isValid)
+         updateFitConfig();
+      return isValid;
+   }
+
+   // set also new parameter values and errors in FitConfig
+   // Prepare discrete indices
+   std::vector<int> maxIndices;
+   for (auto *cat : pdfIndices)
+      maxIndices.push_back(cat->size());
+
+   std::set<std::vector<int>> tried;
+   std::map<std::vector<int>, double> nllMap;
+   std::vector<int> bestIndices(nPdfs, 0);
+   double bestNLL = 1e30;
+
+   bool improved = true;
+   while (improved) {
+      improved = false;
+      auto combos = generateOrthogonalCombinations(maxIndices);
+      reorderCombinations(combos, maxIndices, bestIndices);
+
+      for (const auto &combo : combos) {
+         if (tried.count(combo))
+            continue;
+
+         for (size_t i = 0; i < nPdfs; ++i)
+            pdfIndices[i]->setIndex(combo[i]);
+
+         // Freeze categories during continuous minimization
+         std::vector<bool> wasConst(nPdfs);
+         for (size_t i = 0; i < nPdfs; ++i) {
+            wasConst[i] = pdfIndices[i]->isConstant();
+            pdfIndices[i]->setConstant(true);
+         }
+         FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+         _minimizer->Minimize();
+
+         for (size_t i = 0; i < nPdfs; ++i)
+            pdfIndices[i]->setConstant(wasConst[i]);
+
+         double val = _minimizer->MinValue();
+         tried.insert(combo);
+         nllMap[combo] = val;
+
+         if (val < bestNLL) {
+            bestNLL = val;
+            bestIndices = combo;
+            improved = true;
+         }
+      }
+   }
+
+   for (size_t i = 0; i < nPdfs; ++i) {
+      pdfIndices[i]->setIndex(bestIndices[i]);
+   }
+
+   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+   _minimizer->Minimize();
+
+   coutI(Minimization) << "All NLL Values per Combination:" << std::endl;
+   for (const auto &entry : nllMap) {
+      const auto &combo = entry.first;
+      double val = entry.second;
+
+      std::stringstream ss;
+      ss << "Combo: [";
+      for (size_t i = 0; i < combo.size(); ++i) {
+         ss << combo[i];
+         if (i + 1 < combo.size())
+            ss << ", ";
+      }
+      ss << "], NLL: " << val;
+
+      coutI(Minimization) << ss.str() << std::endl;
+   }
+
+   std::stringstream ssBest;
+   ssBest << "DP Best Indices: [";
+   for (size_t i = 0; i < bestIndices.size(); ++i) {
+      ssBest << bestIndices[i];
+      if (i + 1 < bestIndices.size())
+         ssBest << ", ";
+   }
+   ssBest << "], NLL = " << bestNLL;
+
+   coutI(Minimization) << ssBest.str() << std::endl;
 
    if (!_result)
       _result = std::make_unique<FitResult>();
+   fillResult(true);
+   updateFitConfig();
 
-   fillResult(isValid);
-
-   // set also new parameter values and errors in FitConfig
-   if (isValid)
-      updateFitConfig();
-
-   return isValid;
+   return true;
 }
-
 bool RooMinimizer::calculateHessErrors()
 {
    // compute the Hesse errors according to configuration
    // set in the parameters and append value in fit result
+
+   auto operModeRAII = setOperModesDirty(_function);
 
    // update  minimizer (recreate if not done or if name has changed
    if (!updateMinimizerOptions()) {
@@ -912,6 +1102,8 @@ bool RooMinimizer::calculateMinosErrors()
    // normally Minos errors are computed just after the minimization
    // (in DoMinimization) aftewr minimizing if the
    //  FitConfig::MinosErrors() flag is set
+
+   auto operModeRAII = setOperModesDirty(_function);
 
    // update  minimizer (but cannot re-create in this case). Must use an existing one
    if (!updateMinimizerOptions(false)) {
@@ -965,7 +1157,7 @@ bool RooMinimizer::calculateMinosErrors()
 void RooMinimizer::initMinimizer()
 {
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
-   _minimizer->SetFunction(*getMultiGenFcn());
+   _fcn->initMinimizer(*_minimizer, this);
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
 
    if (_cfg.setInitialCovariance) {
@@ -1087,7 +1279,6 @@ void RooMinimizer::fillResult(bool isValid)
    // if minimizer provides error provides also error matrix
    // clear in case of re-filling an existing result
    _result->fCovMatrix.clear();
-   _result->fGlobalCC.clear();
 
    if (min.Errors() != nullptr) {
       updateErrors();
@@ -1143,17 +1334,6 @@ void RooMinimizer::updateErrors()
       }
    }
    // minos errors are set separately when calling Fitter::CalculateMinosErrors()
-
-   // update global CC
-   _result->fGlobalCC.resize(npar);
-   for (unsigned int i = 0; i < npar; ++i) {
-      double globcc = min.GlobalCC(i);
-      if (globcc < 0) {
-         _result->fGlobalCC.clear();
-         break; // it is not supported by that minimizer
-      }
-      _result->fGlobalCC[i] = globcc;
-   }
 }
 
 double RooMinimizer::FitResult::lowerError(unsigned int i) const

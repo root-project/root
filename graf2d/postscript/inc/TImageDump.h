@@ -49,6 +49,7 @@ public:
    void  Open(const char *filename, Int_t type = -111) override;
    void  Text(Double_t x, Double_t y, const char *string) override;
    void  Text(Double_t x, Double_t y, const wchar_t *string) override;
+   void  TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
    void  SetColor(Float_t r, Float_t g, Float_t b) override;
    void *GetStream() const override { return (void*)fImage; }
    void  SetType(Int_t type = -111) override { fType = type; }

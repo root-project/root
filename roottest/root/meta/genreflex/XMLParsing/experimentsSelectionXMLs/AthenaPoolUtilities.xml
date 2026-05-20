@@ -1,0 +1,49 @@
+<lcgdict>
+  <class name="AthenaAttributeList" id="A1E7E1EE-3E88-4689-8EE8-8D8A627564EE" />
+  <class name="TagAthenaAttributeList" id="6F6A12A0-FEEF-484B-9691-94B82B90CDBA" />
+  <class name="AthenaAttributeListSpecification" />
+  <class name="std::vector< AthenaAttributeSpecification* >" />
+  <class name="AthenaAttributeSpecification" />
+  <class name="AthenaAttributeType" />
+
+  <class name="CondMultChanCollImpl" id="1F1A18E0-CAFF-4AE4-84CC-2DC822C42AAA" >
+    <field name="m_attrListColl" transient="true" />
+    <!-- write out the IOVs
+    <field name="m_iovs" transient="true" />
+    <field name="m_minRange" transient="true" />
+    <field name="m_hasUniqueIOV" transient="true" />
+    <field name="m_checkRunEventTime" transient="true" /> -->
+  </class>
+  <class name="IOVRange" />
+  <class name="IOVTime" />
+  <class name="std::vector<IOVRange>" />
+  <class pattern="*iterator<const*IOVRange*>"/>
+  <class name="CondAttrListCollection" />
+  <class name="std::vector<CondAttrListCollection*>" />
+  <class name="std::map<unsigned int, coral::AttributeList>" />
+  <class name="std::pair<unsigned int, coral::AttributeList>" />
+  <class pattern="*iterator<*CondAttrListCollection*"/>
+  <class pattern="*iterator<const*AttributeList*"/>
+  <class pattern="*iterator<*pair<const*,const*"/>
+  <class name="std::map<unsigned int, IOVRange>" />
+  <class name="std::pair<unsigned int, IOVRange>" />
+  <class name="CondAttrListCollAddress" />
+  <class name="CondAttrListVec" />
+  <class name="CondAttrListVecAddress" />
+
+  <class name="TPObjRef" />
+  <class name="TPObjRef::typeID_t" />
+  <class name="std::vector<TPObjRef>" />
+
+  <class name="TPCnvToken_p1" />
+  <class name="std::vector<TPCnvToken_p1>" />
+  <class name="TPCnvTokenList_p1" />
+  <exclusion>
+    <class pattern="*iterator<const*AttributeList*::value_type"/>
+    <class pattern="*iterator<const*AttributeList*::iterator_category"/>
+    <class pattern="*iterator_category*"/>
+  </exclusion>
+
+  <class name="TPIntegerVectorStorage_p2" />
+
+</lcgdict>

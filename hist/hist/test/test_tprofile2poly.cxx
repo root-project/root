@@ -3,6 +3,7 @@
 #include "TProfile2D.h"
 #include "TProfile2Poly.h"
 #include "TRandom3.h"
+#include "TList.h"
 
 #include "gtest/gtest.h"
 
@@ -298,4 +299,22 @@ TEST(TProfile2Poly, BinErrorSpreadCompare) {
 }
 TEST(TProfile2Poly, BinErrorMeanCompare) {
    test_binErrorMeanStats();
+}
+
+TEST(TProfileMerge, ZeroWeightEntries) {
+   TProfile2D h("h", "h", 1, 0, 1, 1, 0, 1);
+   h.SetCanExtend(TH1::kAllAxes);
+   auto h2 = dynamic_cast<TProfile2D *>(h.Clone());
+   h.Fill(0.5,0.5,0);
+   h2->Fill(1.5,0.5,0);  
+
+   TList l;
+   l.Add(h2);
+   h.Merge(&l);
+
+   EXPECT_FLOAT_EQ(h.GetEntries(), 2);
+   double s = 0;
+   for (int i = 0; i < h.GetNumberOfBins(); ++i)
+      s += h.GetBinEntries(i);
+   EXPECT_FLOAT_EQ(s, 2);
 }

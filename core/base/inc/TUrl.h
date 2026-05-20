@@ -34,17 +34,17 @@ class TUrl : public TObject {
 
 private:
    mutable TString fUrl;    // full URL
-   TString fProtocol;       // protocol: http, ftp, news, root, proof, ...
+   TString fProtocol;       // protocol: http, ftp, news, root, ...
    TString fUser;           // user name
    TString fPasswd;         // password
    TString fHost;           // remote host
    TString fFile;           // remote object
    TString fAnchor;         // anchor in object (after #)
    TString fOptions;        // options/search (after ?)
-   mutable TString fFileOA; //!file with option and anchor
-   mutable TString fHostFQ; //!fully qualified host name
+   mutable TString fFileOA; ///<!file with option and anchor
+   mutable TString fHostFQ; ///<!fully qualified host name
    Int_t   fPort{-1};       // port through which to contact remote server
-   mutable TMap *fOptionsMap{nullptr}; //!map containing options key/value pairs
+   mutable TMap *fOptionsMap{nullptr}; ///<!map containing options key/value pairs
 
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
    static THashList  *fgHostFQDNs;         // list of resolved host FQDNs

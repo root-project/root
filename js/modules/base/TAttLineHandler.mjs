@@ -20,7 +20,8 @@ class TAttLineHandler {
    constructor(args) {
       this.func = this.apply.bind(this);
       this.used = true;
-      if (args._typename && (args.fLineStyle !== undefined)) args = { attr: args };
+      if (args._typename && (args.fLineStyle !== undefined))
+         args = { attr: args };
       this.setArgs(args);
    }
 
@@ -37,7 +38,8 @@ class TAttLineHandler {
          args.width ??= args.attr.fLineWidth;
          args.style ??= args.attr.fLineStyle;
       } else if (isStr(args.color)) {
-         if ((args.color !== 'none') && !args.width) args.width = 1;
+         if ((args.color !== 'none') && !args.width)
+            args.width = 1;
       } else if (typeof args.color === 'number') {
          this.color_index = args.color;
          args.color = args.painter?.getColor(args.color) ?? getColor(args.color);
@@ -73,7 +75,8 @@ class TAttLineHandler {
          this.excl_width = width;
       if (side !== undefined) {
          this.excl_side = side;
-         if ((this.excl_width === 0) && (this.excl_side !== 0)) this.excl_width = 20;
+         if ((this.excl_width === 0) && this.excl_side)
+            this.excl_width = 20;
       }
       this.changed = true;
    }
@@ -151,9 +154,10 @@ class TAttLineHandler {
 
    /** @summary Create sample element inside primitive SVG - used in context menu */
    createSample(svg, width, height, plain) {
-      if (plain) svg = d3_select(svg);
+      if (plain)
+         svg = d3_select(svg);
       svg.append('path')
-         .attr('d', `M0,${height/2}h${width}`)
+         .attr('d', `M0,${height / 2}h${width}`)
          .call(this.func);
    }
 
@@ -175,7 +179,8 @@ class TAttLineHandler {
 /** @summary Get svg string for specified line style
   * @private */
 function getSvgLineStyle(indx) {
-   if ((indx < 0) || (indx >= root_line_styles.length)) indx = 11;
+   if ((indx < 0) || (indx >= root_line_styles.length))
+      indx = 11;
    return root_line_styles[indx];
 }
 

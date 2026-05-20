@@ -1,0 +1,82 @@
+<lcgdict>
+  <class name="TopRec::TopOverlap" />
+  <class name="TopRec::TopOverlapTrigger" />
+
+  <class name="TopRec::TopMuonMap" id="C5A55DF9-1AF3-48F1-9DB1-17B2FFACF814" />
+  <class name="TopRec::TopMuonOverlapPair" />
+  <!--
+  <class name="std::_Rb_tree_iterator<std::pair<const TopRec::TopMuonLink,TopRec::TopOverlapTrigger> >" />
+  <class name="std::_Rb_tree_const_iterator<std::pair<const TopRec::TopMuonLink,TopRec::TopOverlapTrigger> >" />
+  <class name="std::pair<const TopRec::TopMuonLink, TopRec::TopOverlapTrigger>" />
+  <class name="std::map<TopRec::TopMuonLink, TopRec::TopOverlapTrigger>" />
+  <class name="std::vector<TopRec::TopMuonLink>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopMuonLink*,std::vector<TopRec::TopMuonLink> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopMuonLink*,std::vector<TopRec::TopMuonLink> >" />
+  -->
+
+  <class name="TopRec::TopElectronMap" id="EC3C8B52-314C-448E-80B0-070BF6169556" />
+  <class name="TopRec::TopElectronOverlapPair" />
+  <!--
+  <class name="std::_Rb_tree_iterator<std::pair<const TopRec::TopElectronLink,TopRec::TopOverlapTrigger> >" />
+  <class name="std::_Rb_tree_const_iterator<std::pair<const TopRec::TopElectronLink,TopRec::TopOverlapTrigger> >" />
+  <class name="std::pair<const TopRec::TopElectronLink, TopRec::TopOverlapTrigger>" />
+  <class name="std::map<TopRec::TopElectronLink, TopRec::TopOverlapTrigger>" />
+  <class name="std::vector<TopRec::TopElectronLink>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopElectronLink*,std::vector<TopRec::TopElectronLink> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopElectronLink*,std::vector<TopRec::TopElectronLink> >" />
+  -->
+        
+  <class name="TopRec::TopPhotonMap" id="73D5F67F-E6A7-4D5E-87CF-B8358E6D9138" />
+  <class name="TopRec::TopPhotonOverlapPair" />
+  <!--
+  <class name="std::_Rb_tree_iterator<std::pair<const TopRec::TopPhotonLink,TopRec::TopOverlap> >" />
+  <class name="std::_Rb_tree_const_iterator<std::pair<const TopRec::TopPhotonLink,TopRec::TopOverlap> >" />
+  <class name="std::pair<const TopRec::TopPhotonLink, TopRec::TopOverlap>" />
+  <class name="std::map<TopRec::TopPhotonLink, TopRec::TopOverlap>" />
+  <class name="std::vector<TopRec::TopPhotonLink>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopPhotonLink*,std::vector<TopRec::TopPhotonLink> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopPhotonLink*,std::vector<TopRec::TopPhotonLink> >" />
+  -->
+      
+  <class name="TopRec::TopJetMap" id="C6AD6E47-752F-47AC-A52D-A944140EE7CD" />
+  <class name="TopRec::TopJetOverlapPair" />
+  <!--
+  <class name="std::_Rb_tree_iterator<std::pair<const TopRec::TopJetLink,TopRec::TopOverlap> >" />
+  <class name="std::_Rb_tree_const_iterator<std::pair<const TopRec::TopJetLink,TopRec::TopOverlap> >" />
+  <class name="std::pair<const TopRec::TopJetLink, TopRec::TopOverlap>" />
+  <class name="std::map<TopRec::TopJetLink, TopRec::TopOverlap>" />
+  <class name="std::vector<TopRec::TopJetLink>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopJetLink*,std::vector<TopRec::TopJetLink> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopJetLink*,std::vector<TopRec::TopJetLink> >" />
+  -->
+  
+  <class name="TopRec::TopTauJetMap" id="859F2EB7-D5A2-441A-A514-B1A9A77BA8B0" />
+  <class name="TopRec::TopTauJetOverlapPair" />
+  <!--
+  <class name="std::_Rb_tree_iterator<std::pair<const TopRec::TopTauJetLink,TopRec::TopOverlap> >" />
+  <class name="std::_Rb_tree_const_iterator<std::pair<const TopRec::TopTauJetLink,TopRec::TopOverlap> >" />
+  <class name="std::pair<const TopRec::TopTauJetLink, TopRec::TopOverlap>" />
+  <class name="std::map<TopRec::TopTauJetLink, TopRec::TopOverlap>" />
+  <class name="std::vector<TopRec::TopTauJetLink>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopTauJetLink*,std::vector<TopRec::TopTauJetLink> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopTauJetLink*,std::vector<TopRec::TopTauJetLink> >" />
+  -->
+      
+  <class name="TopRec::TopTrackMap" id="F29CFF56-75E8-4F15-BCB6-8BAEAC26E1BB" />
+  <class name="TopRec::TopTrackOverlapPair" />
+  <!--
+  <class name="std::_Rb_tree_iterator<std::pair<const TopRec::TopTrackLink,TopRec::TopOverlap> >" />
+  <class name="std::_Rb_tree_const_iterator<std::pair<const TopRec::TopTrackLink,TopRec::TopOverlap> >" />
+  <class name="std::pair<const TopRec::TopTrackLink, TopRec::TopOverlap>" />
+  <class name="std::map<TopRec::TopTrackLink, TopRec::TopOverlap>" />
+  <class name="std::vector<TopRec::TopTrackLink>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopTrackLink*,std::vector<TopRec::TopTrackLink> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopTrackLink*,std::vector<TopRec::TopTrackLink> >" />
+  -->
+
+  <class name="TopRec::TopInputs"  id="DBF362DA-71E1-494B-A90B-B546E463C2F0" />
+
+  <class name="TopRec::TopOverlapVector" />
+  <class name="TopRec::TopOverlapTriggerVector" />
+
+</lcgdict>

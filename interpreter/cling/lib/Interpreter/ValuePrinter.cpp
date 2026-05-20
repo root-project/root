@@ -42,12 +42,6 @@
 #include "llvm/Support/Format.h"
 
 #include <locale>
-#if __cplusplus >= 202002L
-#include <version>
-#endif
-#ifdef __cpp_lib_source_location
-#include <source_location>
-#endif
 #include <string>
 
 using namespace cling;
@@ -557,16 +551,6 @@ namespace cling {
     return toUnicode(Val, 'L', 'x');
   }
 
-#ifdef __cpp_lib_source_location
-  CLING_LIB_EXPORT
-  std::string printValue(const std::source_location* location) {
-    cling::ostrstream strm;
-    strm << location->file_name() << ":" << location->line() << ":"
-         << location->function_name();
-    return strm.str().str();
-  }
-#endif
-
 } // end namespace cling
 
 namespace {
@@ -611,11 +595,12 @@ static const char* BuildAndEmitVPWrapperBody(cling::Interpreter &Interp,
   clang::Expr *OverldExpr
     = clang::UnresolvedLookupExpr::Create(Ctx, nullptr /*namingClass*/,
                                           NNSLBld.getTemporary(),
-                                  clang::DeclarationNameInfo(PVDN, noSrcLoc),
+                                          clang::DeclarationNameInfo(PVDN, noSrcLoc),
                                           /*RequiresADL*/false,
-                                          R.isOverloadedResult(),
                                           R.begin(),
-                                          R.end());
+                                          R.end(),
+                                          /*KnownDependent=*/false,
+                                          /*KnownInstantiationDependent=*/false);
 
   // For `auto foo = bar;` decls, we are interested in the deduced type, i.e.
   // AutoType 0x55e5ac848030 'int *' sugar

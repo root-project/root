@@ -4,13 +4,6 @@ import sys
 import types
 from functools import partial
 
-import cppyy
-import cppyy.ll
-
-from ._application import PyROOTApplication
-from ._numbadeclare import _NumbaDeclareDecorator
-from ._pythonization import pythonization
-
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -32,7 +25,14 @@ class _gROOTWrapper(object):
 
     def __init__(self, facade):
         self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = cppyy.gbl.ROOT.GetROOT()
+
+    @property
+    def _gROOT(self):
+        gROOT = self.__dict__.get("_gROOT")
+        if gROOT is None:
+            gROOT = self._facade._cppyy.gbl.ROOT.GetROOT()
+            self.__dict__["_gROOT"] = gROOT
+        return gROOT
 
     def __getattr__(self, name):
         if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
@@ -43,62 +43,69 @@ class _gROOTWrapper(object):
         return setattr(self._gROOT, name, value)
 
 
-class TDirectoryPythonAdapter:
-    """Class analogous to the `ROOT::Internal::TDirectoryAtomicAdapter` on the
-    C++ side, implementing the semantics that is expected from a
-    `TDirectory *&` to the global directory (which is what gDirectory was
-    originally), but in a thread-safe way.
+class LiveProxy:
+    """Generic adapter that forwards all access to a dynamically-resolved object.
 
-    On the C++ side the following trick is used in TDirectory.h to achieve this
-    We're re-implementing the expected semantics in Python, because the way how
-    it is implemented in C++ is too contrived for it to get Pythonized
-    automatically:
-
-    ```C++
-    #define gDirectory (::ROOT::Internal::TDirectoryAtomicAdapter{})
-    ```
-
-    So in C++, gDirectory is an adapter object that lazily converts to current
-    TDirectory when you use it. It's implemented as as a preprocessor macro,
-    which is then pretending to be a `TDirectory *` to the ROOT reflection system
-    in TROOT.cxx:
-
-    ```C++
-    TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
-    ```
-
-    This is quite hacky, and it is ambiguous to the the dynamic Python bindings
-    layer at which point the implicit conversion to the current directory
-    pointer should happen.
-
-    For this reason, it's better to re-implement a specific adapter for Python,
-    which skips all of that.
-
-    Note: the C++ adapter also implements an assignment operator (operator=),
-    but since this concept doesn't exist in Python outside data member
-    re-assignment, it is not implemented here.
+    Mimics the C++ gPad/gDirectory/gVirtualX macro semantics: every attribute
+    access re-evaluates the resolver to get the current underlying object.
     """
 
-    def _current_directory(self):
-        import ROOT
+    __slots__ = ("_resolve",)
 
-        return ROOT.TDirectory.CurrentDirectory().load()
+    def __init__(self, resolver):
+        # resolver: zero-arg callable returning the current underlying object
+        object.__setattr__(self, "_resolve", resolver)
 
     def __getattr__(self, name):
-        return getattr(self._current_directory(), name)
+        return getattr(self._resolve(), name)
 
-    def __str__(self):
-        return str(self._current_directory())
+    def __setattr__(self, name, value):
+        setattr(self._resolve(), name, value)
+
+    def __bool__(self):
+        import ROOT
+
+        return self._resolve() != ROOT.nullptr
 
     def __repr__(self):
-        return repr(self._current_directory())
+        return repr(self._resolve())
+
+    def __str__(self):
+        return str(self._resolve())
+
+    def __cast_cpp__(self):
+        return self._resolve()
+
+
+class TDirectoryPythonAdapter(LiveProxy):
+    """LiveProxy specialization for `gDirectory`.
+
+    Unlike `gPad` and `gVirtualX`, which on the C++ side are simple macros
+    around a static function returning a pointer, `gDirectory` is a macro that
+    constructs a `ROOT::Internal::TDirectoryAtomicAdapter`, which is itself an
+    adapter that lazily resolves to the current `TDirectory *` (see
+    TDirectory.h). That C++ adapter also defines custom equality against
+    `TDirectory *`, which we mirror here via `IsEqual` so that comparisons with
+    concrete directory pointers behave as users expect.
+
+    Note: the C++ adapter also overloads `operator=`, but Python has no
+    equivalent for non-attribute assignment, so that aspect is not reproduced.
+    """
+
+    def __init__(self):
+        def resolver():
+            import ROOT
+
+            return ROOT.TDirectory.CurrentDirectory().load()
+
+        super().__init__(resolver)
 
     def __eq__(self, other):
         import ROOT
 
         if other is self:
             return True
-        cd = self._current_directory()
+        cd = self._resolve()
         if cd == ROOT.nullptr:
             return other == ROOT.nullptr
         return cd.IsEqual(other)
@@ -108,19 +115,10 @@ class TDirectoryPythonAdapter:
 
         if other is self:
             return False
-        cd = self._current_directory()
+        cd = self._resolve()
         if cd == ROOT.nullptr:
             return other != ROOT.nullptr
         return not cd.IsEqual(other)
-
-    def __bool__(self):
-        import ROOT
-
-        return self._current_directory() != ROOT.nullptr
-
-    def __cast_cpp__(self):
-        """Casting to TDirectory for use in C++ functions."""
-        return self._current_directory()
 
 
 def _subimport(name):
@@ -139,8 +137,6 @@ class ROOTFacade(types.ModuleType):
     def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
 
-        self.module = module
-
         self.__all__ = module.__all__
         self.__name__ = module.__name__
         self.__file__ = module.__file__
@@ -153,33 +149,33 @@ class ROOTFacade(types.ModuleType):
         # Inject gROOT global
         self.gROOT = _gROOTWrapper(self)
 
-        # Inject the gDirectory adapter, mimicking the behavior of the
-        # gDirectory preprocessor macro on the C++ side
+        # Manually inject the three special global functors. On the C++ side
+        # these are preprocessor macros (gDirectory expands to a
+        # TDirectoryAtomicAdapter, gPad and gVirtualX expand to static accessor
+        # calls). We reproduce their semantics here using LiveProxy.
         self.gDirectory = TDirectoryPythonAdapter()
 
-        # Expose some functionality from CPyCppyy extension module
-        self._cppyy_exports = [
-            "nullptr",
-            "bind_object",
-            "as_cobject",
-            "addressof",
-            "SetMemoryPolicy",
-            "kMemoryHeuristics",
-            "kMemoryStrict",
-            "SetOwnership",
-        ]
-        for name in self._cppyy_exports:
-            setattr(self, name, getattr(cppyy._backend, name))
-        # For backwards compatibility
-        self.MakeNullPointer = partial(self.bind_object, 0)
-        self.BindObject = self.bind_object
-        self.AsCObject = self.as_cobject
+        def _gclient_resolver():
+            import ROOT
+
+            return ROOT.TGClient.Instance()
+
+        def _gpad_resolver():
+            import ROOT
+
+            return ROOT.TVirtualPad.Pad()
+
+        def _gvirtualx_resolver():
+            import ROOT
+
+            return ROOT.TVirtualX.Instance()
+
+        self.gClient = LiveProxy(_gclient_resolver)
+        self.gPad = LiveProxy(_gpad_resolver)
+        self.gVirtualX = LiveProxy(_gvirtualx_resolver)
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
-
-        # @pythonization decorator
-        self.pythonization = pythonization
 
         self._is_ipython = is_ipython
 
@@ -189,6 +185,18 @@ class ROOTFacade(types.ModuleType):
         # - Set options in PyConfig
         self.__class__.__getattr__ = self._getattr
         self.__class__.__setattr__ = self._setattr
+
+    def SetHeuristicMemoryPolicy(self, enabled):
+        import textwrap
+        import warnings
+
+        msg = """ROOT.SetHeuristicMemoryPolicy() is deprecated and will be removed in ROOT 6.44.
+        Since ROOT 6.40, the heuristic memory policy is disabled by default, and with
+        ROOT 6.44 it won't be possible to re-enable it with ROOT.SetHeuristicMemoryPolicy(),
+        which was only meant to be used during a transition period and will be removed.
+        """
+        warnings.warn(textwrap.dedent(msg), FutureWarning, stacklevel=0)
+        return self._cppyy._backend.SetHeuristicMemoryPolicy(enabled)
 
     def AddressOf(self, obj):
         # Return an indexable buffer of length 1, whose only element
@@ -204,7 +212,7 @@ class ROOTFacade(types.ModuleType):
         out_type = "Long64_t*" if sys.maxsize > 2**32 else "Int_t*"
 
         # Create a buffer (LowLevelView) from address
-        return cppyy.ll.cast[out_type](addr)
+        return self._cppyy.ll.cast[out_type](addr)
 
     def _fallback_getattr(self, name):
         # Try:
@@ -216,10 +224,10 @@ class ROOTFacade(types.ModuleType):
         # e.g. ROOT.ROOT.Math as ROOT.Math
 
         # Note that hasattr caches the lookup for getattr
-        if hasattr(cppyy.gbl, name):
-            return getattr(cppyy.gbl, name)
-        elif hasattr(cppyy.gbl.ROOT, name):
-            return getattr(cppyy.gbl.ROOT, name)
+        if hasattr(self._cppyy.gbl, name):
+            return getattr(self._cppyy.gbl, name)
+        elif hasattr(self._cppyy.gbl.ROOT, name):
+            return getattr(self._cppyy.gbl.ROOT, name)
         else:
             res = self.gROOT.FindObject(name)
             if res:
@@ -227,16 +235,7 @@ class ROOTFacade(types.ModuleType):
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
     def _register_converters_and_executors(self):
-
         converter_aliases = {
-            "Long64_t": "long long",
-            "Long64_t ptr": "long long ptr",
-            "Long64_t&": "long long&",
-            "const Long64_t&": "const long long&",
-            "ULong64_t": "unsigned long long",
-            "ULong64_t ptr": "unsigned long long ptr",
-            "ULong64_t&": "unsigned long long&",
-            "const ULong64_t&": "const unsigned long long&",
             "Float16_t": "float",
             "const Float16_t&": "const float&",
             "Double32_t": "double",
@@ -245,19 +244,13 @@ class ROOTFacade(types.ModuleType):
         }
 
         executor_aliases = {
-            "Long64_t": "long long",
-            "Long64_t&": "long long&",
-            "Long64_t ptr": "long long ptr",
-            "ULong64_t": "unsigned long long",
-            "ULong64_t&": "unsigned long long&",
-            "ULong64_t ptr": "unsigned long long ptr",
             "Float16_t": "float",
             "Float16_t&": "float&",
             "Double32_t": "double",
             "Double32_t&": "double&",
         }
 
-        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
+        from ROOT.libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
 
         for name, target in converter_aliases.items():
             CPyCppyyRegisterConverterAlias(name, target)
@@ -266,31 +259,87 @@ class ROOTFacade(types.ModuleType):
             CPyCppyyRegisterExecutorAlias(name, target)
 
     def _finalSetup(self):
+        """
+        Perform the final ROOT initialization.
+
+        This method is intentionally deferred and is the *only* place where
+        cppyy is imported and the C++ runtime is initialized. Delaying this
+        step avoids importing the heavy-weight cppyy machinery unless it is
+        actually required (for example, when accessing C++ ROOT symbols),
+        allowing Python-only ROOT submodules to be imported with minimal
+        overhead.
+        """
+        import cppyy
+        import cppyy.ll
+        import cppyy.types
+
+        from ._application import PyROOTApplication
+        from ._pythonization import _register_pythonizations, pythonization
+
+        # signal policy: don't abort interpreter in interactive mode
+        cppyy._backend.SetGlobalSignalPolicy(not cppyy.gbl.ROOT.GetROOT().IsBatch())
+
+        self.__dict__["_cppyy"] = cppyy
+
+        # Expose some functionality from CPyCppyy extension module
+        cppyy_exports = [
+            "nullptr",
+            "bind_object",
+            "as_cobject",
+            "addressof",
+            "SetImplicitSmartPointerConversion",
+            "SetOwnership",
+        ]
+        for name in cppyy_exports:
+            self.__dict__[name] = getattr(cppyy._backend, name)
+        # For backwards compatibility
+        self.__dict__["MakeNullPointer"] = partial(cppyy._backend.bind_object, 0)
+        self.__dict__["BindObject"] = cppyy._backend.bind_object
+        self.__dict__["AsCObject"] = cppyy._backend.as_cobject
+
+        # Trigger the addition of the pythonizations
+        _register_pythonizations()
+
         # Prevent this method from being re-entered through the gROOT wrapper
-        self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
+        self.__dict__["gROOT"] = self._cppyy.gbl.ROOT.GetROOT()
 
         # Make sure the interpreter is initialized once gROOT has been initialized
-        cppyy.gbl.TInterpreter.Instance()
+        self._cppyy.gbl.TInterpreter.Instance()
+
+        # Release the GIL on the heavy TInterpreter functions. This lets
+        # background Python threads make progress - in particular, JupyROOT's
+        # StreamCapture polling thread can drain stdout/stderr live to the
+        # notebook frontend instead of waiting for the cell to finish.
+        TInterpreter = self._cppyy.gbl.TInterpreter
+        for name in ("ProcessLine", "ProcessLineSynch", "Declare", "LoadFile", "LoadMacro", "ExecuteMacro"):
+            getattr(TInterpreter, name).__release_gil__ = True
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
         if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
-            self.app.init_graphics()
+            self.app.init_graphics(self._cppyy.gbl.gEnv, self._cppyy.gbl.gSystem)
 
-        # Set memory policy to kUseHeuristics.
-        # This restores the default in PyROOT which was changed
-        # by new Cppyy
-        self.SetMemoryPolicy(self.kMemoryHeuristics)
+        # The automatic conversion of ordinary objects to smart pointers is
+        # disabled for ROOT because it can cause trouble with overload
+        # resolution. If a function has overloads for both ordinary objects and
+        # smart pointers, then the implicit conversion to smart pointers can
+        # result in the smart pointer overload being hit, even though there
+        # would be an overload for the regular object. Since PyROOT didn't have
+        # this feature before 6.32 anyway, disabling it was the safest option.
+        self.SetImplicitSmartPointerConversion(False)
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
-        self.__class__.__setattr__ = lambda self, name, val: setattr(cppyy.gbl, name, val)
+        self.__class__.__setattr__ = lambda self, name, val: setattr(self._cppyy.gbl, name, val)
 
         # Register custom converters and executors
         self._register_converters_and_executors()
 
         # Run rootlogon if exists
         self._run_rootlogon()
+
+        # @pythonization decorator
+        self.pythonization = pythonization
 
     def _getattr(self, name):
         # Special case, to allow "from ROOT import gROOT" w/o starting the graphics
@@ -302,6 +351,16 @@ class ROOTFacade(types.ModuleType):
         return getattr(self, name)
 
     def _setattr(self, name, val):
+        # Setting attributes of ROOT will also define variables in the C++
+        # runtime, so we generally require _finalSetup() in this method.
+        #
+        # Don't setup on submodule imports like `import ROOT._distrdf`,
+        # implying a setattr(ROOT, "_distdf", <Module instance>) inside Pythons
+        # importlib.
+        if isinstance(val, types.ModuleType):
+            self.__dict__[name] = val
+            return
+
         self._finalSetup()
 
         return setattr(self, name, val)
@@ -385,12 +444,9 @@ class ROOTFacade(types.ModuleType):
     @property
     def VecOps(self):
         ns = self._fallback_getattr("VecOps")
-        try:
-            from ._pythonization._rvec import _AsRVec
+        from ._pythonization._rvec import _AsRVec
 
-            ns.AsRVec = _AsRVec
-        except Exception:
-            raise Exception("Failed to pythonize the namespace VecOps")
+        ns.AsRVec = _AsRVec
         del type(self).VecOps
         return ns
 
@@ -461,6 +517,7 @@ class ROOTFacade(types.ModuleType):
             ns.Experimental.VariationsFor = _variationsfor(ns.Distributed.VariationsFor, ns.Experimental.VariationsFor)
             ns.Experimental.FromSpec = _fromspec(ns.Distributed.FromSpec, ns.Experimental.FromSpec)
         except ImportError:
+            # _rdf_namespace submodule not available (expected for dataframe=OFF)
             pass
 
         del type(self).RDF
@@ -474,52 +531,59 @@ class ROOTFacade(types.ModuleType):
         """
         local_rdf = self.__getattr__("RDataFrame")
         try:
-            import DistRDF
+            import ROOT._distrdf
 
             from ._pythonization._rdf_namespace import _rdataframe
 
-            return _rdataframe(local_rdf, DistRDF.RDataFrame)
+            return _rdataframe(local_rdf, ROOT._distrdf.RDataFrame)
         except ImportError:
+            # _distrdf submodule not available (expected for dataframe=OFF)
             return local_rdf
 
     # Overload RooFit namespace
     @property
     def RooFit(self):
-        from ._pythonization._roofit import pythonize_roofit_namespace
-
         ns = self._fallback_getattr("RooFit")
         try:
-            pythonize_roofit_namespace(ns)
-        except Exception:
-            raise Exception("Failed to pythonize the namespace RooFit")
+            from ._pythonization._roofit import pythonize_roofit_namespace
+        except ImportError:
+            # _roofit submodule not available (expected for roofit=OFF)
+            del type(self).RooFit
+            return ns
+
+        pythonize_roofit_namespace(ns)
+
         del type(self).RooFit
         return ns
 
     # Overload TMVA namespace
     @property
     def TMVA(self):
-        # This line is needed to import the pythonizations in _tmva directory.
-        # The comment suppresses linter errors about unused imports.
-        from ._pythonization import _tmva  # noqa: F401
-
         ns = self._fallback_getattr("TMVA")
-        hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
-        if hasRDF:
-            try:
-                from ._pythonization._tmva import SaveXGBoost, _AsRTensor, inject_rbatchgenerator
+        try:
+            # This line is needed to import the pythonizations in _tmva directory.
+            # The comment suppresses linter errors about unused imports.
+            from ._pythonization import _tmva  # noqa: F401
+            from ._pythonization._tmva._rtensor import _AsRTensor
+            from ._pythonization._tmva._sofie._parser._keras.parser import PyKeras
+            from ._pythonization._tmva._tree_inference import SaveXGBoost
 
-                inject_rbatchgenerator(ns)
-                ns.Experimental.AsRTensor = _AsRTensor
-                ns.Experimental.SaveXGBoost = SaveXGBoost
-            except Exception:
-                raise Exception("Failed to pythonize the namespace TMVA")
+            setattr(ns.Experimental.SOFIE, "PyKeras", PyKeras)
+
+            ns.Experimental.AsRTensor = _AsRTensor
+            ns.Experimental.SaveXGBoost = SaveXGBoost
+        except ImportError:
+            # _tmva submodule not available (expected for tmva=OFF)
+            pass
         del type(self).TMVA
         return ns
 
     # Create and overload Numba namespace
     @property
     def Numba(self):
-        cppyy.cppdef("namespace Numba {}")
+        from ._numbadeclare import _NumbaDeclareDecorator
+
+        self._cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
@@ -541,8 +605,8 @@ class ROOTFacade(types.ModuleType):
     # Get TPyDispatcher for programming GUI callbacks
     @property
     def TPyDispatcher(self):
-        cppyy.include("ROOT/TPyDispatcher.h")
-        tpd = cppyy.gbl.TPyDispatcher
+        self._cppyy.include("ROOT/TPyDispatcher.h")
+        tpd = self._cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd
 
@@ -552,10 +616,17 @@ class ROOTFacade(types.ModuleType):
         uhi_module = types.ModuleType("uhi")
         uhi_module.__file__ = "<module ROOT>"
         uhi_module.__package__ = self
-        try:
-            from ._pythonization._uhi import _add_module_level_uhi_helpers
+        from ._pythonization._uhi import _add_module_level_uhi_helpers
 
-            _add_module_level_uhi_helpers(uhi_module)
-        except ImportError:
-            raise Exception("Failed to pythonize the namespace uhi")
+        _add_module_level_uhi_helpers(uhi_module)
         return uhi_module
+
+    @property
+    def Experimental(self):
+        ns = self._fallback_getattr("Experimental")
+
+        from ._pythonization._ml_dataloader import _inject_dataloader_api
+
+        _inject_dataloader_api(ns.ML)
+
+        return ns

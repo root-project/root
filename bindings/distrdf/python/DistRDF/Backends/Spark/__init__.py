@@ -10,6 +10,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 from __future__ import annotations
+
 import warnings
 
 
@@ -18,7 +19,8 @@ def RDataFrame(*args, **kwargs):
     Create an RDataFrame object that can run computations on a Spark cluster.
     """
 
-    from DistRDF.Backends.Spark import Backend
+    from ROOT._distrdf.Backends.Spark import Backend
+
     sparkcontext = kwargs.get("sparkcontext", None)
     executor = kwargs.get("executor", None)
     msg_warn = (

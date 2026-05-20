@@ -1,0 +1,41 @@
+<lcgdict>
+  <class name="JetCollection_tlp5" id="BEDCAE36-5EFD-4035-A402-2DC4F7A6BF75"/>
+  <class name="std::vector<JetCollection_p5>" />
+  <class name="JetCollection_p5" />
+  <class name="std::vector<Jet_p5>" />
+  <class name="Jet_p5" />
+
+  <class name="JetCollection_tlp6" id="77DFEE77-16A5-45DD-91FB-FDEEF2B65F7D"/>
+  <class name="std::vector<JetCollection_p6>" />
+  <class name="JetCollection_p6" />
+  <class name="std::vector<Jet_p6>" />
+  <class name="Jet_p6" />
+
+  <class name="JetConverterTypes::momentum" />
+  
+  <class name="JetAssociationBase_p1" />
+  <class name="std::vector<JetAssociationBase_p1>" />
+
+  <class name="JetKeyDescriptorCollection_p1" id="AD3B099D-9235-4470-82F4-FA7CD0B8DCC3" />
+  <class name="std::vector<JetKeyDescriptor_p1>" />
+  <class name="JetKeyDescriptor_p1" id="9F364413-5313-485F-9DBC-8DD8E8CA4AC4" />
+  
+  <!-- <class name="JetMomentMap_p1" id="12E5A61A-6C0B-42EF-9E1D-DF33129500F4" /> -->
+  
+  <class name="JetMomentMapCollection_p6" id="BB00C7A0-E089-42E4-B70C-2E7370138648" />
+  <class name="std::vector<JetMomentMap_p6>" />
+  <class name="JetMomentMap_p6"  id="7E53BA8F-B022-4DA7-9D8E-334262C4CE6F" /> 
+
+  <class name="JetSamplingCollection_p2" id="FB2AAFA3-90D4-4838-8889-900ACC4C2578" />
+  <class name="std::vector<JetSampling_p2>" />
+  <class name="JetSampling_p2" />
+
+  <class name="JetSamplingCollection_p1" id="E6C1B2E1-A7E7-4997-8A32-8F641BC4D741" />
+  <class name="std::vector<JetSampling_p1>" />
+  <class name="JetSampling_p1" />
+
+   <class name="ParticleJetContainer_p1" id="E97C0C61-0B3E-401C-B853-A3302168283E" />
+   <class name="std::vector<ParticleJet_p1>" />
+   <class name="ParticleJet_p1" />
+
+</lcgdict>

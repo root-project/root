@@ -1,7 +1,10 @@
-import ROOT
 import gc
 import os
 import unittest
+
+import ROOT
+
+ROOT.gROOT.SetBatch(True)
 
 
 def _leak(obj):
@@ -16,7 +19,7 @@ class MemoryStlString(unittest.TestCase):
     def test_tstyle_memory_management(self):
         """Regression test for https://github.com/root-project/root/issues/16918"""
 
-        h1 = ROOT.TH1F("h1", "", 100, 0, 10)
+        _ = ROOT.TH1F("h1", "", 100, 0, 10)
 
         style = ROOT.TStyle("NewSTYLE", "")
         groot = ROOT.ROOT.GetROOT()
@@ -27,19 +30,19 @@ class MemoryStlString(unittest.TestCase):
         """Regression test for https://github.com/root-project/root/issues/16942"""
         # The test is just that the memory regulation works correctly and the
         # application does not segfault
-        f2 = ROOT.TF2("f2", "sin(x)*sin(y)/x/y")
+        _ = ROOT.TF2("f2", "sin(x)*sin(y)/x/y")
 
     def test_tf3_memory_regulation(self):
         """Make sure TF3 is properly managed by the memory regulation logic"""
         # The test is just that the memory regulation works correctly and the
         # application does not segfault
-        f3 = ROOT.TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10)
+        _ = ROOT.TF3("f3", "[0] * sin(x) + [1] * cos(y) + [2] * z", 0, 10, 0, 10, 0, 10)
 
     def test_tcolor_memory_regulation(self):
         """Make sure TColor is properly managed by the memory regulation logic"""
         # The test is just that the memory regulation works correctly and the
         # application does not segfault
-        c = ROOT.TColor(42, 42, 42)
+        _ = ROOT.TColor(42, 42, 42)
 
     def test_ttree_clone_in_file_context(self):
         """Test that CloneTree() doesn't give the ownership to Python when
@@ -49,8 +52,8 @@ class MemoryStlString(unittest.TestCase):
 
         ttree = ROOT.TTree("tree", "tree")
 
-        with ROOT.TFile(filename, "RECREATE") as infile:
-            ttree_clone = ttree.CloneTree()
+        with ROOT.TFile(filename, "RECREATE") as _:
+            _ = ttree.CloneTree()
 
         os.remove(filename)
 
@@ -88,8 +91,6 @@ class MemoryStlString(unittest.TestCase):
             "TH1I": ("h", "h", 10, 0, 10),
             "TH1L": ("h", "h", 10, 0, 10),
             "TH1F": ("h", "h", 10, 0, 10),
-            "TH1D": ("h", "h", 10, 0, 10),
-            "TH1K": ("h", "h", 10, 0, 10),
             "TProfile": ("h", "h", 10, 0, 10),
             "TH2C": ("h", "h", 10, 0, 10, 10, 0, 10),
             "TH2S": ("h", "h", 10, 0, 10, 10, 0, 10),
@@ -124,15 +125,17 @@ class MemoryStlString(unittest.TestCase):
         Test that registering manually an object with a directory also triggers
         a release of ownership from Python to C++.
         """
-        f1 = ROOT.TMemFile(
-            "_check_object_setdirectory_in_memory_file_begin", "recreate")
+        f1 = ROOT.TMemFile("_check_object_setdirectory_in_memory_file_begin", "recreate")
 
         x = klass(*args)
-        # TEfficiency does not automatically register with the directory
-        if not classname == "TEfficiency":
-            self.assertIs(x.GetDirectory(), f1)
-            x.SetDirectory(ROOT.nullptr)
+        # Register the object to the directory in case this hasn't been done:
+        if not x.GetDirectory():
+            x.SetDirectory(f1)
+
+        self.assertIs(x.GetDirectory(), f1)
+        x.SetDirectory(ROOT.nullptr)
         self.assertFalse(x.GetDirectory())
+
         # Make sure that at this point the ownership of the object is with Python
         ROOT.SetOwnership(x, True)
 
@@ -168,5 +171,58 @@ class MemoryStlString(unittest.TestCase):
                 self._check_object_setdirectory(getattr(ROOT, classname), classname, args)
 
 
-if __name__ == '__main__':
+class TCanvasOwnership(unittest.TestCase):
+    """
+    Tests that the TCanvas pythonization releases Python ownership for canvases
+    that register themselves with gROOT's list of canvases.
+
+    This avoids a double delete when a subsequent TCanvas is constructed with
+    the same name. This triggers a cleanup of the previous canvas in gROOT
+    while the previous Python proxy can still be alive somewhere.
+
+    See https://github.com/root-project/root/issues/21942 for the original bug
+    report, describing a Jupyter kernel crash when re-executing a cell that
+    creates a TCanvas.
+    """
+
+    def test_canvas_loses_python_ownership(self):
+        c = ROOT.TCanvas("test_canvas_ownership", "title", 100, 100)
+        self.assertFalse(
+            c.__python_owns__,
+            "TCanvas Python proxy should not own the C++ object once it is registered in gROOT's list of canvases",
+        )
+        c.Close()
+
+    def test_recreate_with_same_name_does_not_crash(self):
+        canvas_name = "test_canvas_recreate"
+        canvas_title = "title"
+
+        # First proxy: create and keep an extra reference around to simulate
+        # the situation where for example the IPython user namespace holds on
+        # to the proxy after C++ has already deleted the object.
+        c_old = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)
+        held_reference = c_old  # noqa: F841
+
+        # Creating a new canvas with the same name causes the C++ constructor
+        # to delete the previous canvas. With the fix, c_old does not own the
+        # underlying object and so will not double-delete it when it is finally
+        # garbage-collected.
+        c_new = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)
+
+        # Used to cause double-deletes.
+        del c_old
+        del held_reference
+        gc.collect()
+
+        # Force another rebinding to exercise the cell re-running path that was
+        # the original reproducer, i.g. assign the new canvas to the same
+        # Python variable name.
+        c_new = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)  # noqa: F841
+
+        # Sanity check: there should be exactly one canvas with this name.
+        canvases = [c.GetName() for c in ROOT.gROOT.GetListOfCanvases() if c.GetName() == canvas_name]
+        self.assertEqual(len(canvases), 1)
+
+
+if __name__ == "__main__":
     unittest.main()

@@ -77,7 +77,7 @@
 #pragma link C++ class TGeoXtru + ;
 #pragma link C++ class ROOT::Geom::Vertex_t + ;
 #pragma link C++ class TGeoFacet + ;
-#pragma link C++ class TGeoTessellated + ;
+#pragma link C++ class TGeoTessellated - ;
 #pragma link C++ class TGeoShapeAssembly + ;
 #pragma link C++ class TGeoScaledShape + ;
 #pragma link C++ class TGeoVolume - ;
@@ -91,6 +91,7 @@
 #pragma link C++ class TGeoManager - ;
 #pragma link C++ class TGeoRegionCut + ;
 #pragma link C++ class TGeoRegion + ;
+#pragma link C++ class TVirtualGeoChecker + ;
 #pragma link C++ class TVirtualGeoPainter + ;
 #pragma link C++ class TVirtualGeoTrack + ;
 #pragma link C++ class TVirtualGeoConverter + ;

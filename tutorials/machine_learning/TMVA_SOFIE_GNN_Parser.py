@@ -6,17 +6,20 @@
 ## The tutorial also generate some  data which can serve as input for the tutorial TMVA_SOFIE_GNN_Application.C
 ##
 ## \macro_code
+##
+## \author
 
-import ROOT
+import os
 
-import numpy as np
-import graph_nets as gn
-from graph_nets import utils_tf
-import sonnet as snt
 #for getting time and memory
 import time
-import os
+
+import graph_nets as gn
+import numpy as np
 import psutil
+import ROOT
+import sonnet as snt
+from graph_nets import utils_tf
 
 # defining graph properties. Number of edges/modes are the maximum
 num_max_nodes=100

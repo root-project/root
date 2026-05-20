@@ -26,15 +26,6 @@
 
 unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
 {
-   // TTree/TChain as input
-   if (const auto *tree = fLoopManager->GetTree()) {
-      if (!dynamic_cast<const TChain *>(tree) && !tree->GetCurrentFile()) {
-         // in-memory TTree
-         return 0;
-      }
-      return ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree).size();
-   }
-   // Datasource as input
    if (auto dataSource = GetDataSource()) {
       return dataSource->GetNFiles();
    }
@@ -97,12 +88,6 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
 
    std::for_each(definedColumns.begin(), definedColumns.end(), addIfNotInternal);
 
-   auto tree = fLoopManager->GetTree();
-   if (tree) {
-      for (const auto &bName : RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false))
-         allColumns.emplace(bName);
-   }
-
    if (auto ds = GetDataSource()) {
       for (const auto &s : ROOT::Internal::RDF::GetColumnNamesNoDuplicates(*ds)) {
          if (s.rfind("R_rdf_sizeof", 0) != 0)
@@ -112,6 +97,28 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
 
    ColumnNames_t ret(allColumns.begin(), allColumns.end());
    std::sort(ret.begin(), ret.end());
+   return ret;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve the names of top-level field names
+///
+/// For data sources that support hierarchical dataset schemas, such as TTree
+/// or RNTuple, this function will retrieve the names of top-level fields. For
+/// example, if the schema contains a user class with a data member, only
+/// the name of the top-level field containing the user class object would be
+/// reported, but not the name of the data member sub-field.
+///
+/// For all other data sources, returns the list of all available dataset columns.
+ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetDatasetTopLevelFieldNames()
+{
+   ROOT::RDF::ColumnNames_t ret;
+   if (auto ds = GetDataSource()) {
+      ret = ROOT::Internal::RDF::GetTopLevelFieldNames(*ds);
+      // Sorting to be consistent with GetColumnNames
+      std::sort(ret.begin(), ret.end());
+   }
+
    return ret;
 }
 
@@ -135,8 +142,8 @@ std::string ROOT::RDF::RInterfaceBase::GetColumnType(std::string_view column)
    RDFDetail::RDefineBase *define = fColRegister.GetDefine(col);
 
    const bool convertVector2RVec = true;
-   return RDFInternal::ColumnName2ColumnTypeName(std::string(col), fLoopManager->GetTree(),
-                                                 fLoopManager->GetDataSource(), define, convertVector2RVec);
+   return RDFInternal::ColumnName2ColumnTypeName(std::string(col), nullptr, fLoopManager->GetDataSource(), define,
+                                                 convertVector2RVec);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -289,14 +296,7 @@ bool ROOT::RDF::RInterfaceBase::HasColumn(std::string_view columnName)
    if (fColRegister.IsDefineOrAlias(columnName))
       return true;
 
-   if (fLoopManager->GetTree()) {
-      const auto &branchNames = fLoopManager->GetBranchNames();
-      const auto branchNamesEnd = branchNames.end();
-      if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName))
-         return true;
-   }
-
-   if (auto ds = GetDataSource(); ds->HasColumn(columnName))
+   if (auto ds = GetDataSource(); ds && ds->HasColumn(columnName))
       return true;
 
    return false;

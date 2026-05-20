@@ -41,6 +41,8 @@ public:
 
   bool processBeforeGen(Int_t /*sampleNum*/) override ;
 
+  bool processAfterFit(bool fitOk) override;
+
 private:
 
   struct UniParam {

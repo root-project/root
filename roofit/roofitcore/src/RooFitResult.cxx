@@ -61,12 +61,7 @@ using std::ostream, std::string, std::pair, std::vector, std::setw;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
 
-RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title)
-{
-   if (name)
-      appendToDir(this, true);
-}
-
+RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -92,16 +87,15 @@ RooFitResult::RooFitResult(const RooFitResult &other)
 
   other._finalPars->snapshot(*_finalPars);
   if (other._randomPars) {
-    _randomPars = new RooArgList;
-    other._randomPars->snapshot(*_randomPars);
+     _randomPars = std::make_unique<RooArgList>();
+     other._randomPars->snapshot(*_randomPars);
   }
-  if (other._Lt) _Lt = new TMatrix(*other._Lt);
+  if (other._Lt)
+     _Lt = std::make_unique<TMatrix>(*other._Lt);
   if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
   if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
-  if (other._GC) _GC = new TVectorD(*other._GC) ;
-
-  if (GetName())
-    appendToDir(this, true);
+  if (other._GC)
+     _GC = new TVectorD(*other._GC);
 }
 
 
@@ -113,10 +107,8 @@ RooFitResult::~RooFitResult()
 {
   if (_constPars) delete _constPars ;
   if (_initPars)  delete _initPars ;
-  if (_finalPars) delete _finalPars ;
-  if (_globalCorr) delete _globalCorr;
-  if (_randomPars) delete _randomPars;
-  if (_Lt) delete _Lt;
+  if (_finalPars)
+     delete _finalPars;
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
   if (_GC) delete _GC ;
@@ -216,7 +208,7 @@ const char* RooFitResult::statusLabelHistory(UInt_t icycle) const
 /// of the following (not case sensitive):
 ///
 /// *  M - a marker at the best fit result
-/// *  E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
+/// *  E - an error ellipse calculated at 39%CL using the error matrix at the minimum
 /// *  1 - the 1-sigma error bar for parameter 1
 /// *  2 - the 1-sigma error bar for parameter 2
 /// *  B - the bounding box for the error ellipse
@@ -259,9 +251,9 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   double s2= par2->getError();
   double rho= correlation(parName1, parName2);
 
-  // add a 1-sigma error ellipse, if requested
+  // add a 39%CL error ellipse, if requested
   if(opt.Contains("E")) {
-    RooEllipse *contour= new RooEllipse("contour",x1,x2,s1,s2,rho);
+    RooEllipse *contour= new RooEllipse("contour",x1,x2,s1,s2,rho,100,1);
     contour->SetLineWidth(2) ;
     frame->addPlotable(contour);
   }
@@ -334,37 +326,36 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
 const RooArgList& RooFitResult::randomizePars() const
 {
   Int_t nPar= _finalPars->size();
-  if(nullptr == _randomPars) { // first-time initialization
-    assert(nullptr != _finalPars);
-    // create the list of random values to fill
-    _randomPars = new RooArgList;
-    _finalPars->snapshot(*_randomPars);
-    // calculate the elements of the upper-triangular matrix L that gives Lt*L = C
-    // where Lt is the transpose of L (the "square-root method")
-    TMatrix L(nPar,nPar);
-    for(Int_t iPar= 0; iPar < nPar; iPar++) {
-      // calculate the diagonal term first
-      L(iPar,iPar)= covariance(iPar,iPar);
-      for(Int_t k= 0; k < iPar; k++) {
-   double tmp= L(k,iPar);
-   L(iPar,iPar)-= tmp*tmp;
-      }
-      L(iPar,iPar)= sqrt(L(iPar,iPar));
-      // then the off-diagonal terms
-      for(Int_t jPar= iPar+1; jPar < nPar; jPar++) {
-   L(iPar,jPar)= covariance(iPar,jPar);
-   for(Int_t k= 0; k < iPar; k++) {
-     L(iPar,jPar)-= L(k,iPar)*L(k,jPar);
-   }
-   L(iPar,jPar)/= L(iPar,iPar);
-      }
-    }
-    // remember Lt
-    _Lt= new TMatrix(TMatrix::kTransposed,L);
-  }
-  else {
-    // reset to the final fit values
-    _randomPars->assign(*_finalPars);
+  if (!_randomPars) { // first-time initialization
+     assert(nullptr != _finalPars);
+     // create the list of random values to fill
+     _randomPars = std::make_unique<RooArgList>();
+     _finalPars->snapshot(*_randomPars);
+     // calculate the elements of the upper-triangular matrix L that gives Lt*L = C
+     // where Lt is the transpose of L (the "square-root method")
+     TMatrix L(nPar, nPar);
+     for (Int_t iPar = 0; iPar < nPar; iPar++) {
+        // calculate the diagonal term first
+        L(iPar, iPar) = covariance(iPar, iPar);
+        for (Int_t k = 0; k < iPar; k++) {
+           double tmp = L(k, iPar);
+           L(iPar, iPar) -= tmp * tmp;
+        }
+        L(iPar, iPar) = sqrt(L(iPar, iPar));
+        // then the off-diagonal terms
+        for (Int_t jPar = iPar + 1; jPar < nPar; jPar++) {
+           L(iPar, jPar) = covariance(iPar, jPar);
+           for (Int_t k = 0; k < iPar; k++) {
+              L(iPar, jPar) -= L(k, iPar) * L(k, jPar);
+           }
+           L(iPar, jPar) /= L(iPar, iPar);
+        }
+     }
+     // remember Lt
+     _Lt = std::make_unique<TMatrix>(TMatrix::kTransposed, L);
+  } else {
+     // reset to the final fit values
+     _randomPars->assign(*_finalPars);
   }
 
   // create a vector of unit Gaussian variables
@@ -455,7 +446,7 @@ const RooArgList* RooFitResult::globalCorr()
     fillLegacyCorrMatrix() ;
   }
 
-  return _globalCorr ;
+  return _globalCorr.get();
 }
 
 
@@ -622,39 +613,28 @@ void RooFitResult::fillLegacyCorrMatrix() const
   if (!_CM) return ;
 
   // Delete eventual previous correlation data holders
-  if (_globalCorr) delete _globalCorr ;
   _corrMatrix.Delete();
 
   // Build holding arrays for correlation coefficients
-  _globalCorr = new RooArgList("globalCorrelations") ;
+  _globalCorr = std::make_unique<RooArgList>("globalCorrelations");
 
   for(RooAbsArg* arg : *_initPars) {
     // Create global correlation value holder
-    TString gcName("GC[") ;
-    gcName.Append(arg->GetName()) ;
-    gcName.Append("]") ;
-    TString gcTitle(arg->GetTitle()) ;
-    gcTitle.Append(" Global Correlation") ;
-    _globalCorr->addOwned(std::make_unique<RooRealVar>(gcName.Data(),gcTitle.Data(),0.));
+    std::string argName = arg->GetName();
+    std::string argTitle = arg->GetTitle();
+    std::string gcName = "GC[" + argName + "]";
+    std::string gcTitle = argTitle + " Global Correlation";
+    _globalCorr->addOwned(std::make_unique<RooRealVar>(gcName.c_str(), gcTitle.c_str(), 0.));
 
     // Create array with correlation holders for this parameter
-    TString name("C[") ;
-    name.Append(arg->GetName()) ;
-    name.Append(",*]") ;
-    RooArgList* corrMatrixRow = new RooArgList(name.Data()) ;
+    RooArgList *corrMatrixRow = new RooArgList(("C[" + argName + ",*]").c_str());
     _corrMatrix.Add(corrMatrixRow) ;
     for(RooAbsArg* arg2 : *_initPars) {
 
-      TString cName("C[") ;
-      cName.Append(arg->GetName()) ;
-      cName.Append(",") ;
-      cName.Append(arg2->GetName()) ;
-      cName.Append("]") ;
-      TString cTitle("Correlation between ") ;
-      cTitle.Append(arg->GetName()) ;
-      cTitle.Append(" and ") ;
-      cTitle.Append(arg2->GetName()) ;
-      corrMatrixRow->addOwned(std::make_unique<RooRealVar>(cName.Data(),cTitle.Data(),0.));
+       std::string arg2Name = arg2->GetName();
+       std::string cName = "C[" + argName + "," + arg2Name + "]";
+       std::string cTitle = "Correlation between " + argName + " and " + arg2Name;
+       corrMatrixRow->addOwned(std::make_unique<RooRealVar>(cName.c_str(), cTitle.c_str(), 0.));
     }
   }
 
@@ -1315,7 +1295,9 @@ void RooFitResult::Streamer(TBuffer &R__b)
       R__b >> _constPars;
       R__b >> _initPars;
       R__b >> _finalPars;
-      R__b >> _globalCorr;
+      RooArgList *globalCorr;
+      R__b >> globalCorr;
+      _globalCorr.reset(globalCorr);
       _corrMatrix.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, RooFitResult::IsA());
 

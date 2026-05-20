@@ -1,0 +1,13 @@
+<lcgdict>       
+
+  <!--# theses lines create duplicates in the overall Atlas dictionary  
+  <class name="std::pair < IdentifierHash, int >" /> 
+  <class name="DataVector<std::pair<IdentifierHash, int> >" />
+  <class name="std::vector<std::pair<IdentifierHash, int>* >"/>
+  -->
+  <class name="Muon::MdtByteStreamErrorContainer" />
+  <class name="Muon::RpcByteStreamErrorContainer" />
+  <class name="Muon::CscByteStreamErrorContainer" />
+  <class name="Muon::TgcByteStreamErrorContainer" />
+
+</lcgdict>

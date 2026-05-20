@@ -26,15 +26,7 @@
 class RooArgSet ;
 class RooAbsGenContext ;
 class RooFitResult ;
-class RooExtendPdf ;
-class RooCategory ;
-class TPaveText;
-class TH1F;
-class TH2F;
-class TList ;
-class RooMinimizer ;
 class RooNumGenConfig ;
-class RooRealIntegral ;
 
 
 class RooAbsPdf : public RooAbsReal {
@@ -165,17 +157,21 @@ public:
     return RooFit::makeOwningPtr(createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
-  // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet const& /*constrainedParams*/, RooArgSet& /*pdfParams*/) const
+  // Constraint management. Interface to retrieve constraint terms on this pdf. Default implementation returns null.
+  virtual std::unique_ptr<RooArgSet> getConstraints(const RooArgSet & /*observables*/,
+                                                    RooArgSet const & /*constrainedParams*/,
+                                                    RooArgSet & /*pdfParams*/) const
   {
-    // Interface to retrieve constraint terms on this pdf. Default implementation returns null
-    return nullptr ;
+     return nullptr;
   }
-  RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                               bool stripDisconnected=true) const ;
+
+  std::unique_ptr<RooArgSet>
+  getAllConstraints(const RooArgSet &observables, RooArgSet &constrainedParams, bool stripDisconnected = true) const;
 
   // Project p.d.f into lower dimensional p.d.f
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
+
+  virtual double getCorrection() const;
 
   // Create cumulative density function from p.d.f
   RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
@@ -300,8 +296,6 @@ protected:
     return RooFit::getUniqueId(normSet).value() == _normSetId;
   }
 
-  double normalizeWithNaNPacking(double rawVal, double normVal) const;
-
   RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;
 
   friend class RooMCStudy ;
@@ -316,8 +310,8 @@ protected:
   virtual bool syncNormalization(const RooArgSet* dset, bool adjustProxies=true) const ;
 
   mutable double _rawValue = 0;
-  mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
-  mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
+  mutable RooAbsReal* _norm = nullptr; ///<! Normalization integral (owned by _normMgr)
+  mutable RooArgSet const* _normSet = nullptr; ///<! Normalization set with for above integral
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -326,7 +320,7 @@ protected:
     RooArgList containedArgs(Action) override { return RooArgList(*_norm) ; }
     std::unique_ptr<RooAbsReal> _norm;
   } ;
-  mutable RooObjCacheManager _normMgr ; //! The cache manager
+  mutable RooObjCacheManager _normMgr ; ///<! The cache manager
 
   bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
                                    bool nameChange, bool isRecursiveStep) override;

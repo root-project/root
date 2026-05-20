@@ -20,7 +20,6 @@ Basic time type with millisecond precision.
 #include "TError.h"
 
 
-ClassImp(TTime);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the time as a string.

@@ -41,6 +41,18 @@ std::string Join(const std::string &sep, StringCollection_t &&strings)
                           [&sep](auto const &a, auto const &b) { return a + sep + b; });
 }
 
+std::string Round(double value, double error, unsigned int cutoff = 1, std::string_view delim = "#pm");
+
+inline bool StartsWith(std::string_view string, std::string_view prefix)
+{
+   return string.size() >= prefix.size() && string.substr(0, prefix.size()) == prefix;
+}
+
+inline bool EndsWith(std::string_view string, std::string_view suffix)
+{
+   return string.size() >= suffix.size() && string.substr(string.size() - suffix.size(), suffix.size()) == suffix;
+}
+
 } // namespace ROOT
 
 #endif

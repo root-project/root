@@ -17,6 +17,13 @@ When required, there are following alternatives to install JSROOT on other web s
    - use [npm](https://npmjs.com/package/jsroot) package manager and invoke `npm install jsroot`
    - clone master branch from [repository](https://github.com/root-project/jsroot/)
 
+When Apache server will be used one need to add following entry to `.htaccess` file:
+```
+<FilesMatch "\.mjs">
+  ForceType text/javascript
+</FilesMatch>
+```
+
 
 ## Drawing objects in JSROOT
 
@@ -143,7 +150,9 @@ List of supported classes and draw options:
 [lego1](https://root.cern/js/latest/examples.htm#th2_lego1),
 [lego2](https://root.cern/js/latest/examples.htm#th2_lego2),
 [lego3](https://root.cern/js/latest/examples.htm#th2_lego3),
-[lego4](https://root.cern/js/latest/examples.htm#th2_lego4)
+[lego4](https://root.cern/js/latest/examples.htm#th2_lego4),
+[circ](https://root.cern/js/latest/examples.htm#th2_circ),
+[chord](https://root.cern/js/latest/examples.htm#th2_chord)
 - TH2Poly : [col](https://root.cern/js/latest/examples.htm#th2poly_honeycomb),
 [lego](https://root.cern/js/latest/examples.htm#th2poly_lego),
 [europe](https://root.cern/js/latest/examples.htm#th2poly_europe),
@@ -204,6 +213,16 @@ List of supported classes and draw options:
 - TPolyMarker3D: [dflt](https://root.cern/js/latest/examples.htm#misc_3dmark)
 
 More examples of supported classes can be found on: <https://root.cern/js/latest/examples.htm>
+
+One can change some histograms colors using draw options:
+
+- line_N: [line color](https://root.cern/js/latest/examples.htm#th1_line_n)
+- fill_N: [fill color](https://root.cern/js/latest/examples.htm#th1_fill_n)
+- xaxis_N: [X axis color](https://jsroot.gsi.de/dev/examples.htm#th1_xaxis_n)
+- yaxis_N: [Y axis color](https://jsroot.gsi.de/dev/examples.htm#th1_yaxis_n)
+
+Here N can be existing ROOT color index or hex6/hex8 values like [line_ff00ff](https://jsroot.gsi.de/dev/?nobrowser&file=../files/hsimple.root&item=hpx;1&opt=line_ff00ff) or [fill_7733ff34](https://jsroot.gsi.de/dev/?nobrowser&file=../files/hsimple.root&item=hpx;1&opt=fill_7733ff34).
+
 
 There are special JSROOT draw options which only can be used with for `TCanvas` or `TPad` objects:
 
@@ -306,6 +325,11 @@ Or one could dump values produced with draw expression (also first 10 entries by
 
    - [opt=px:py::pz>>dump](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py::pz>>dump)
 
+One also can dump list of entries which match cut expression and use these entries ids to perform other draw operations:
+
+   - [opt=::pz>5>>elist](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=::pz>5>>elist)
+   - [opt=px:py;elist:[7..12,20,35..49]](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py;elist:[7..12,20,35..49])
+
 Working with array indexes is supported. By default, all elements in array are used for the drawing.
 One could specify index for any array dimension (-1 means last element in the array). For instance, dump last element from `event.fTracks` array:
 
@@ -322,6 +346,9 @@ At the end of expression one can add several parameters with the syntax:
 Following parameters are supported:
   - "first" - id of the first entry to process
   - "entries" - number of entries to process
+  - "elist" - array of selected entries like `[7,12..25,40]`
+  - "nmatch" - abort processing after accumulated number of matched entries
+  - "staged" - first search entries with cut selection and then performed TTree::Draw
   - "monitor" - periodically show intermediate draw results (interval in milliseconds)
   - "maxrange" - maximal number of ranges in single HTTP request
   - "accum" - number of accumulated values before creating histogram
@@ -949,7 +976,7 @@ JSROOT provides `loadOpenui5` function to load supported OpenUI5:
 </script>
 ```
 
-JSROOT uses <https://openui5.hana.ondemand.com/1.128.0/> when no other source is specified.
+JSROOT uses <https://openui5.hana.ondemand.com/1.135.0/> when no other source is specified.
 
 There are small details when using OpenUI5 with THttpServer. First of all, location of JSROOT modules should be specified
 as `/jsrootsys/modules/main.mjs`. And then trying to access files from local disk, one should specify `/currentdir/` folder:
@@ -967,7 +994,7 @@ JSROOT provides [example](https://root.cern/js/latest/demo/openui5/) showing usa
    * Core functionality should be imported from `main.mjs` module like:
 
 ```javascript
-import { create, parse, createHistogram, redraw } from 'https://root.cern/js/7.0.0/modules/main.mjs';
+import { create, parse, createHistogram, redraw } from 'https://root.cern/js/7.9.0/modules/main.mjs';
 ```
 
    * It is still possible to use `JSRoot.core.js` script, which provides very similar (but not identical!) functionality as with `v6` via global `JSROOT` object
@@ -979,20 +1006,20 @@ import { create, parse, createHistogram, redraw } from 'https://root.cern/js/7.0
    * Global hierarchy painter `JSROOT.hpainter` no longer existing, one can use `getHPainter` function:
 
 ```javascript
-import { getHPainter } from 'https://root.cern/js/7.0.0/modules/main.mjs';
+import { getHPainter } from 'https://root.cern/js/7.9.0/modules/main.mjs';
 let hpainter = getHPainter();
 ```
 
    * All math functions previously available via `JSROOT.Math` should be imported from `base/math.mjs` module:
 
 ```javascript
-import * as math from 'https://root.cern/js/7.0.0/modules/base/math.mjs';
+import * as math from 'https://root.cern/js/7.9.0/modules/base/math.mjs';
 ```
 
    * Indication of batch mode `JSROOT.batch_mode` should be accessed via functions:
 
 ```javascript
-import { isBatchMode, setBatchMode } from 'https://root.cern/js/7.0.0/modules/main.mjs';
+import { isBatchMode, setBatchMode } from 'https://root.cern/js/7.9.0/modules/main.mjs';
 let was_batch = isBatchMode();
 if (!was_batch) setBatchMode(true);
 ```

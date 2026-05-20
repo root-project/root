@@ -4,9 +4,12 @@
 // We only use this header to generate the dictionary for RVec<ROOT::Math::PtEtaPhiMVector>
 #include "DummyHeader.hxx"
 
+#include <ROOT/InternalTreeUtils.hxx>
 #include <ROOT/RDataFrame.hxx>
 
 #include <thread>
+
+#include <TFile.h>
 
 class RDFManyBranchTypesTTree : public ::testing::TestWithParam<std::pair<bool, bool>> {
 protected:

@@ -18,6 +18,7 @@
 #include "TBranchSTL.h"
 #include "TBranchObject.h"
 #include "TBranchProxyDirector.h"
+#include "TEmulatedCollectionProxy.h"
 #include "TClassEdit.h"
 #include "TEnum.h"
 #include "TFriendElement.h"
@@ -49,7 +50,6 @@
 */
 // clang-format on
 
-ClassImp(ROOT::Internal::TTreeReaderValueBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a tree value reader and register it with the reader object.
@@ -64,6 +64,11 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader *reader /
      fDict(dict),
      fOpaqueRead(opaqueRead)
 {
+   auto * cl = dynamic_cast<TClass *>(dict);
+   using namespace ROOT::Internal::TEmulatedProxyHelpers;
+   if (cl && HasEmulatedProxy(cl)) {
+      PrintWriteStlWithoutProxyMsg("TTreeReaderValueBase", cl->GetName(), branchname);
+   }
    RegisterWithTreeReader();
 }
 

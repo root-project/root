@@ -38,7 +38,6 @@ This class encapsulates window-system specific information about a
 GL-context and alows their proper management in ROOT.
 */
 
-ClassImp(TGLContext);
 
 Bool_t TGLContext::fgGlewInitDone = kFALSE;
 
@@ -87,11 +86,11 @@ void TGLContext::GlewInit()
 {
    if (!fgGlewInitDone)
    {
-      GLenum status = glewInit();
-      if (status != GLEW_OK)
-         Warning("TGLContext::GlewInit", "GLEW initalization failed.");
+      int version = gladLoaderLoadGL();
+      if (version == 0)
+         Warning("TGLContext::GlewInit", "GL initalization failed.");
       else if (gDebug > 0)
-         Info("TGLContext::GlewInit", "GLEW initalization successful.");
+         Info("TGLContext::GlewInit", "GL initalization successful.");
       fgGlewInitDone = kTRUE;
    }
 }
@@ -462,7 +461,6 @@ Objects shared among GL-contexts include:
 display-list definitions, texture objects and shader programs.
 */
 
-ClassImp(TGLContextIdentity);
 
 TGLContextIdentity* TGLContextIdentity::fgDefaultIdentity = new TGLContextIdentity;
 

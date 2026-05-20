@@ -1,0 +1,26 @@
+# ROOT requirements for third-party Python packages for Python wheels tests
+
+# PyROOT: Interoperability with numpy arrays
+numpy
+pandas
+
+# PyROOT: ROOT.Numba.Declare decorator
+numba
+cffi
+
+# Distributed RDataFrame
+pyspark # Spark backend
+dask>=2022.08.1 # Dask backend
+distributed>=2022.08.1 # Dask backend
+
+# Unified Histogram Interface (UHI)
+uhi
+matplotlib
+mplhep
+
+# For testing
+pytest
+
+# Other
+scikit-learn
+xgboost

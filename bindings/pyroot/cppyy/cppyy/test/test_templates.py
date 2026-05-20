@@ -1,12 +1,9 @@
-import py
+import pytest, os
 from pytest import mark, raises
-from .support import setup_make, pylong
+from support import setup_make, pylong, IS_WINDOWS
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("templatesDict"))
 
-def setup_module(mod):
-    setup_make("templates")
+test_dct = "templates_cxx"
 
 
 class TestTEMPLATES:
@@ -14,11 +11,6 @@ class TestTEMPLATES:
         cls.test_dct = test_dct
         import cppyy
         cls.templates = cppyy.load_reflection_info(cls.test_dct)
-
-        at_least_17 = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-        cls.has_integral_v    = at_least_17
-        cls.has_disjunction_v = at_least_17
-        cls.has_pack_fold     = at_least_17
 
     def test00_template_back_reference(self):
         """Template reflection"""
@@ -156,7 +148,8 @@ class TestTEMPLATES:
         assert cppyy.gbl.isSomeInt()           == False
         assert cppyy.gbl.isSomeInt(1, 2, 3)    == False
 
-    def test06_variadic_sfinae(self):
+    @mark.xfail(strict=True, reason="This test causes the interpreter to raises errors")
+    def test06_variadic_sfinae(self, capfd):
         """Attribute testing through SFINAE"""
 
         import cppyy
@@ -172,6 +165,11 @@ class TestTEMPLATES:
         assert call_has_var1(move(Obj1())) == True
         assert call_has_var1(move(Obj2())) == False
 
+        # Fail if there were interpreter errors:
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
+
     def test07_type_deduction(self):
         """Traits/type deduction"""
 
@@ -182,7 +180,7 @@ class TestTEMPLATES:
         assert select_template_arg[0, Obj1, Obj2].argument == Obj1
         assert select_template_arg[1, Obj1, Obj2].argument == Obj2
         # TODO: the following crashes deep inside cling/clang ...
-        #raises(TypeError, getattr, select_template_arg[2, Obj1, Obj2], 'argument')
+        # raises(TypeError, getattr, select_template_arg[2, Obj1, Obj2], 'argument')
 
         # This is a bit subtle: to be able to use typedefs in templates, builtin
         # types are present as subclasses that carry __cpp_name__, hence the result
@@ -279,7 +277,7 @@ class TestTEMPLATES:
         assert round(RTTest2[int](1, 3.1).m_double - 4.1, 8) == 0.
         assert round(RTTest2[int]().m_double + 1., 8) == 0.
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_template_aliases(self):
         """Access to templates made available with 'using'"""
 
@@ -299,20 +297,37 @@ class TestTEMPLATES:
         assert iavec[5] == 5
 
       # with variadic template
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            assert nsup.matryoshka[int, 3].type
-            assert nsup.matryoshka[int, 3, 4].type
-            assert nsup.make_vector[int , 3]
-            assert nsup.make_vector[int , 3]().m_val == 3
-            assert nsup.make_vector[int , 4]().m_val == 4
+        cppyy.cppdef("""
+            namespace using_problem {
+
+            template <typename T, size_t ... sizes>
+            struct matryoshka {
+                typedef T type;
+            };
+
+            template <typename T, size_t SZ, size_t ... sizes>
+            struct matryoshka<T, SZ, sizes ... > {
+                typedef vector<typename matryoshka<T, sizes ...>::type, SZ> type;
+            };
+
+            template <typename T, size_t ... sizes>
+            using make_vector = typename matryoshka<T, sizes ...>::type;
+                typedef make_vector<int, 2, 3> iiv_t;
+            };
+        """)
+
+        assert nsup.matryoshka[int, 3].type
+        assert nsup.matryoshka[int, 3, 4].type
+        assert nsup.make_vector[int , 3]
+        assert nsup.make_vector[int , 3]().m_val == 3
+        assert nsup.make_vector[int , 4]().m_val == 4
 
       # with inner types using
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            assert cppyy.gbl.gInterpreter.CheckClassTemplate("using_problem::Bar::Foo")
-            assert nsup.Foo
-            assert nsup.Bar.Foo        # used to fail
+        assert cppyy.gbl.gInterpreter.CheckClassTemplate("using_problem::Bar::Foo")
+        assert nsup.Foo
+        assert nsup.Bar.Foo        # used to fail
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test13_using_templated_method(self):
         """Access to base class templated methods through 'using'"""
 
@@ -336,7 +351,7 @@ class TestTEMPLATES:
         assert type(d.get3()) == int
         assert d.get3() == 5
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test14_templated_return_type(self):
         """Use of a templated return type"""
 
@@ -383,7 +398,6 @@ class TestTEMPLATES:
         assert is_valid(1.)
         assert not is_valid(0.)
 
-    @mark.xfail()
     def test16_variadic(self):
         """Range of variadic templates"""
 
@@ -437,7 +451,6 @@ class TestTEMPLATES:
         b.b_T['int'](1, 1., 'a')
         assert get_tn(ns).find("int(some_variadic::B::*)(int&&,double&&,std::") == 0
 
-    @mark.xfail()
     def test17_empty_body(self):
         """Use of templated function with empty body"""
 
@@ -502,9 +515,6 @@ class TestTEMPLATES:
 
     def test20_templated_ctor_with_defaults(self):
         """Templated constructor with defaults used to be ignored"""
-
-        if not self.has_integral_v:
-            return
 
         import cppyy
 
@@ -582,7 +592,7 @@ class TestTEMPLATES:
         v = MyVec["float"](2)
         v[0] = 1        # used to throw TypeError
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test24_stdfunction_templated_arguments(self):
         """Use of std::function with templated arguments"""
 
@@ -609,7 +619,7 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.std.function['double(std::vector<double>)']
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test25_stdfunction_ref_and_ptr_args(self):
         """Use of std::function with reference or pointer args"""
 
@@ -676,7 +686,6 @@ class TestTEMPLATES:
         foo.fnc = ns.bar
         foo.fnc       # <- this access used to fail
 
-    @mark.xfail()
     def test26_partial_templates(self):
         """Deduction of types with partial templates"""
 
@@ -741,9 +750,6 @@ class TestTEMPLATES:
     def test27_variadic_constructor(self):
         """Use of variadic template function as contructor"""
 
-        if not self.has_disjunction_v:
-            return
-
         import cppyy
 
         cppyy.cppdef("""\
@@ -798,7 +804,7 @@ class TestTEMPLATES:
         assert ns.FS('i', ns.ST.I32,    ns.FS.EQ,   10)
         assert ns.FS('i', ns.ST.TI.I32, ns.FS.R.EQ, 10)
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="error code: Subprocess aborted")
     def test29_function_ptr_as_template_arg(self):
         """Function pointers as template arguments"""
 
@@ -910,7 +916,7 @@ class TestTEMPLATES:
 
         ns.Templated()       # used to crash
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_ltlt_in_template_name(self):
         """Verify lookup of template names with << in the name"""
 
@@ -976,7 +982,7 @@ class TestTEMPLATES:
         assert len(cppyy.gbl.gLutData6) == (1<<3)+1
         assert len(cppyy.gbl.gLutData8) == 14<<2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test32_template_of_function_with_templated_args(self):
         """Lookup of templates of function with templated args used to fail"""
 
@@ -1123,22 +1129,11 @@ class TestTEMPLATES:
 
         import cppyy
 
-        cppyy.cppdef("""
-        namespace UsingPtr {
-        struct Test {};
-        using testptr = Test*;
-
-        template<typename T>
-        bool testfun(T const& x) { return !(bool)x; }
-        }""")
-
         ns = cppyy.gbl.UsingPtr
 
         assert ns.testfun["testptr"](cppyy.bind_object(cppyy.nullptr, ns.Test))
 
-        # TODO: raises TypeError; the problem is that the type is resolved
-        # from UsingPtr::Test*const& to UsingPtr::Test*& (ie. `const` is lost)
-        # assert ns.testfun["UsingPtr::testptr"](cppyy.nullptr)
+        assert ns.testfun["UsingPtr::testptr"](cppyy.nullptr)
 
         assert ns.testptr.__name__     == "Test"
         assert ns.testptr.__cpp_name__ == "UsingPtr::Test*"
@@ -1147,12 +1142,9 @@ class TestTEMPLATES:
         assert ns.testptr
         assert cppyy.gbl.std.vector[ns.testptr]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
-
-        if not self.has_pack_fold:
-            return
 
         import cppyy
         import ctypes
@@ -1173,6 +1165,67 @@ class TestTEMPLATES:
         assert ns.stringify(1, 2, 3)                                 == "1 2 3 "
         assert ns.stringify["const char*"]("Aap")                    == "Aap "
         assert ns.stringify(ctypes.c_char_p(bytes("Noot", "ascii"))) == "Noot "
+
+    def test35_no_possible_cpp_name(self):
+        """Verify that we get a meaningful error if the C++ name can't be
+        constructed, e.g. because one attempts to use a Python object that
+        doens't map to a C++ type.
+        """
+
+        import cppyy
+
+        cppyy.cppdef(r"""
+        template<class T, class Y=void>
+        void test35_func () { }
+        """)
+
+        with pytest.raises(TypeError, match=r"could not construct C\+\+ name"):
+            cppyy.gbl.test35_func[set(), list()]()
+
+    def test36_constructor_implicit_conversion(self):
+        """Implicit conversion to call a templated constructor"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace ConstructorImplicitConversion {
+        struct IntWrapper {
+            IntWrapper(int i) : m_i(i) {}
+            int m_i;
+        };
+        struct S {
+            template <typename T>
+            S(IntWrapper a, T b) : m_a(a.m_i) {}
+
+            int m_a = 0;
+        }; }""")
+
+        ns = cppyy.gbl.ConstructorImplicitConversion
+
+        a = ns.S(1, 2)
+        assert a.m_a == 1
+        
+    def test37_monkey_patching_template_proxy(self):
+        """Monkey patching Template Proxy"""
+        import cppyy
+        from cppyy import gbl
+
+        cppyy.cppdef(r"""
+            struct MyMonkey {
+                template <typename... Ts>
+                bool m(std::vector<int> v) { return true; }
+        
+                template <typename T = void>
+                bool m(int i) { return false; }
+            };
+        """)
+
+        gbl.MyMonkey._m = gbl.MyMonkey.m
+        gbl.MyMonkey.m = lambda self, x: gbl.MyMonkey._m(self, x)
+        a = gbl.MyMonkey()
+        assert not a.m(42)
+        assert a.m([1, 2, 3])
+        assert not a.m(42)
 
 
 class TestTEMPLATED_TYPEDEFS:
@@ -1247,7 +1300,7 @@ class TestTEMPLATED_TYPEDEFS:
         assert tct['long double', dum, 4] is tct[in_type, dum, 4]
         assert tct['double', dum, 4] is not tct[in_type, dum, 4]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test04_type_deduction(self):
         """Usage of type reducer"""
 
@@ -1263,7 +1316,7 @@ class TestTEMPLATED_TYPEDEFS:
         three = w.whatis(3)
         assert three == 3
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test05_type_deduction_and_extern(self):
         """Usage of type reducer with extern template"""
 
@@ -1326,7 +1379,7 @@ class TestTEMPLATE_TYPE_REDUCTION:
         import cppyy
         cls.templates = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test01_reduce_binary(self):
         """Squash template expressions for binary operations (like in gmpxx)"""
 
@@ -1338,3 +1391,43 @@ class TestTEMPLATE_TYPE_REDUCTION:
         cppyy.py.add_type_reducer('TypeReduction::BinaryExpr<int>', 'TypeReduction::Expr<int>')
 
         assert type(e1+e2) == cppyy.gbl.TypeReduction.Expr[int]
+
+
+class TestTEMPLATED_CALLBACK:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.templates = cppyy.load_reflection_info(cls.test_dct)
+    
+    def test01_templated_callbacks(self):
+        import cppyy
+        from cppyy.gbl import std
+
+        cppyy.cppdef(r"""
+        bool foo() { return true; }
+
+        int bar(int a, int b) { return a + b; }
+
+        template <typename T, typename U>
+        T baz(T a, U b, std::string c) {
+            return (T)(a + b) + std::stoi(c);
+        }
+
+        template <typename F, typename R, typename... Args>
+        R returned_callback(F callable, R r, Args... args) {
+            return callable(r, std::forward<Args>(args)...);
+        }
+
+        template <typename F, typename... Args>
+        bool callback(F callable, Args&&... args) {
+            return callable(std::forward<Args>(args)...);
+        }
+        """)
+
+        assert cppyy.gbl.callback(cppyy.gbl.foo)
+        assert cppyy.gbl.returned_callback(cppyy.gbl.bar, 1, 1) == 2
+        assert cppyy.gbl.returned_callback(cppyy.gbl.baz[int, int], 1, 1, std.string("1")) == 3
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-v', '-ra', __file__]))

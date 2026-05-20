@@ -17,7 +17,8 @@
 #include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RNTupleProcessor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriteOptionsDaos.hxx>
 #include <ROOT/RNTupleWriter.hxx>
@@ -81,7 +82,7 @@ using RNTupleFillStatus = ROOT::RNTupleFillStatus;
 using RNTupleDescriptorBuilder = ROOT::Internal::RNTupleDescriptorBuilder;
 using RNTupleFileWriter = ROOT::Internal::RNTupleFileWriter;
 using RNTupleJoinTable = ROOT::Experimental::Internal::RNTupleJoinTable;
-using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;
+using RNTupleParallelWriter = ROOT::RNTupleParallelWriter;
 using RNTupleReader = ROOT::RNTupleReader;
 using RNTupleReadOptions = ROOT::RNTupleReadOptions;
 using RNTupleWriter = ROOT::RNTupleWriter;
@@ -114,33 +115,7 @@ template <typename T>
 using RNTupleView = ROOT::RNTupleView<T>;
 
 using ROOT::Internal::MakeUninitArray;
-
-/**
- * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
- * goes out of scope.
- */
-class FileRaii {
-private:
-   std::string fPath;
-   bool fPreserveFile = false;
-
-public:
-   explicit FileRaii(const std::string &path) : fPath(path) {}
-   FileRaii(FileRaii &&) = default;
-   FileRaii(const FileRaii &) = delete;
-   FileRaii &operator=(FileRaii &&) = default;
-   FileRaii &operator=(const FileRaii &) = delete;
-   ~FileRaii()
-   {
-      if (!fPreserveFile)
-         std::remove(fPath.c_str());
-   }
-   std::string GetPath() const { return fPath; }
-
-   // Useful if you want to keep a test file after the test has finished running
-   // for debugging purposes. Should only be used locally and never pushed.
-   void PreserveFile() { fPreserveFile = true; }
-};
+using ROOT::TestSupport::FileRaii;
 
 #ifdef R__USE_IMT
 struct IMTRAII {
@@ -153,5 +128,24 @@ struct IMTRAII {
 /// The page of px has a wrong checksum. The page of py has corrupted data. The page of pz is valid.
 /// The function is backend agnostic (file, DAOS, ...).
 void CreateCorruptedRNTuple(const std::string &uri);
+
+enum class EEndianness {
+   LE,
+   BE
+};
+
+/// Given the file at `filePath` containing an UNCOMPRESSED RNTuple, and given the seek/len of a section of this
+/// RNTuple, patches a byte range of this section with the given buffer `bytesToWrite`. After doing this, it recomputes
+/// and updates the section's checksum.
+/// `sectionSeek` must point to the start of the section's payload, excluding the key (and, in case of the Anchor, the
+/// first 6 bytes containing the object's version and nbytes).
+/// `sectionLen` must refer to the in-memory of the section's payload, excluding the key and the checksum.
+/// Note that this is assumed to be equal to the on-disk size since the section must be uncompressed.
+///
+/// This function does very minimal checks (e.g. it does not verify that the given section is actually correct or in
+/// the file at all), so the caller must validate these assumptions.
+void PatchRNTupleSection(std::string_view filePath, std::uint64_t sectionSeek, std::uint64_t sectionLen,
+                         std::uint64_t patchedOffsetIntoSection, const std::byte *bytesToWrite,
+                         std::size_t bytesToWriteLen, EEndianness sectionEndianness);
 
 #endif

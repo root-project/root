@@ -25,7 +25,6 @@
 #pragma link C++ class TWebPadClick+;
 
 #pragma link C++ class TWebPadPainter+;
-#pragma link C++ class TWebPS+;
 #pragma link C++ class TWebPainting+;
 #pragma link C++ class TWebSnapshot+;
 #pragma link C++ class TPadWebSnapshot+;

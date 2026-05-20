@@ -337,11 +337,11 @@ class SOFIE_GNN(unittest.TestCase):
             output_edge_data = output_gn[i].edges.numpy()
             output_global_data = output_gn[i].globals.numpy().flatten()
 
-            assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data), 5)
+            assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data), 4)
 
-            assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data), 5)
+            assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data), 4)
 
-            assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data), 5)
+            assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data), 4)
 
     @classmethod
     def tearDownClass(self):

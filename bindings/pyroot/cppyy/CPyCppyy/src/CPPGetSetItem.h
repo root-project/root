@@ -12,11 +12,11 @@ public:
     using CPPMethod::CPPMethod;
 
 public:
-    virtual PyCallable* Clone() { return new CPPSetItem(*this); }
+    PyCallable* Clone() override { return new CPPSetItem(*this); }
 
 protected:
-    virtual bool ProcessArgs(PyCallArgs& args);
-    virtual bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr);
+    bool ProcessArgs(PyCallArgs& args) override;
+    bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr) override;
 };
 
 class CPPGetItem : public CPPMethod {
@@ -24,10 +24,10 @@ public:
     using CPPMethod::CPPMethod;
 
 public:
-    virtual PyCallable* Clone() { return new CPPGetItem(*this); }
+    PyCallable* Clone() override { return new CPPGetItem(*this); }
 
 protected:
-    virtual bool ProcessArgs(PyCallArgs& args);
+    bool ProcessArgs(PyCallArgs& args) override;
 };
 
 } // namespace CPyCppyy

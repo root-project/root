@@ -17,4 +17,3 @@ ABC describing GUI independent control bar
 
 #include "TControlBarImp.h"
 
-ClassImp(TControlBarImp);

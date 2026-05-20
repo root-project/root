@@ -7,4 +7,3 @@
 Abstract class representing n-dimensional real positive integrand function
 */
 
-ClassImp(TFoamIntegrand);

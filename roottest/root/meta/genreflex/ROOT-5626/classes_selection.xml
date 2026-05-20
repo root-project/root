@@ -1,0 +1,18 @@
+<lcgdict>
+  <class name="HepMC::WeightContainer" ClassVersion="12">
+  <version ClassVersion="10" checksum="2163093401"/>
+  <version ClassVersion="11" checksum="376377869"/>
+  <version ClassVersion="12" checksum="2537869863"/>
+  </class>
+
+  <ioread sourceClass = "HepMC::WeightContainer"
+          source = "std::vector<double> m_weights"
+          version="[1-10]"
+          targetClass="HepMC::WeightContainer"
+          target="m_names"
+          include="iostream">
+   <![CDATA[hepmc_rootio::weightcontainer_set_default_names(onfile.m_weights.size(),m_names);
+   ]]>
+</ioread>       
+
+</lcgdict>

@@ -1,0 +1,52 @@
+{
+   "samples": {
+      "sample1": {
+         "trees": [
+            "tree"
+         ],
+         "files": [
+            "../data/ttree/distrdf_roottest_check_rungraphs.root",
+            "../data/ttree/distrdf_roottest_check_rungraphs.root",
+            "../data/ttree/distrdf_roottest_check_rungraphs.root"
+         ],
+         "metadata": {
+            "lum": 200.0
+         }
+      },
+      "sample2": {
+         "trees": [
+            "tree"
+         ],
+         "files": [
+            "../data/ttree/distrdf_roottest_check_fromspec.root",
+            "../data/ttree/distrdf_roottest_check_fromspec.root",
+            "../data/ttree/distrdf_roottest_check_fromspec.root"
+         ],
+         "metadata": {
+            "lum": 100.0
+         }
+      },
+      "sample3": {
+         "trees": [
+            "subTree"
+         ],
+         "files": [
+            "../data/ttree/CPPspecTestFile2.root"
+         ],
+         "metadata": {
+            "lum": 5.0
+         }
+      },
+      "sample4": {
+         "trees": [
+            "verynewTree"
+         ],
+         "files": [
+            "../data/ttree/CPPspecTestFile2.root"
+         ],
+         "metadata": {
+            "lum": 10.0
+         }
+      }
+   }
+}

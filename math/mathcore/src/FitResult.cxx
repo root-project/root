@@ -8,62 +8,33 @@
  *                                                                    *
  **********************************************************************/
 
-// Implementation file for class FitResult
-
 #include "Fit/FitResult.h"
 
-#include "Fit/FitConfig.h"
-
 #include "Fit/BinData.h"
-
-//#include "Fit/Chi2FCN.h"
-
-#include "Math/Minimizer.h"
-
+#include "Fit/FitConfig.h"
+#include "Math/Error.h"
 #include "Math/IParamFunction.h"
+#include "Math/Minimizer.h"
 #include "Math/OneDimFunctionAdapter.h"
-
 #include "Math/ProbFuncMathCore.h"
 #include "Math/QuantFuncMathCore.h"
-
-#include "TMath.h"
 #include "Math/RichardsonDerivator.h"
-#include "Math/Error.h"
+#include "TMath.h"
 
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
 
-namespace ROOT {
-
-   namespace Fit {
-
+namespace ROOT::Fit {
 
 const int gInitialResultStatus = -99; // use this special convention to flag it when printing result
 
-FitResult::FitResult() :
-   fValid(false), fNormalized(false), fNFree(0), fNdf(0), fNCalls(0),
-   fStatus(-1), fCovStatus(0), fVal(0), fEdm(-1), fChi2(-1)
-{
-   // Default constructor implementation.
-}
-
 FitResult::FitResult(const FitConfig & fconfig) :
-   fValid(false),
-   fNormalized(false),
-   fNFree(0),
-   fNdf(0),
-   fNCalls(0),
    fStatus(gInitialResultStatus),
-   fCovStatus(0),
-   fVal(0),
-   fEdm(-1),
-   fChi2(-1),
-   fFitFunc(nullptr),
-   fParams(std::vector<double>( fconfig.NPar() ) ),
-   fErrors(std::vector<double>( fconfig.NPar() ) ),
-   fParNames(std::vector<std::string> ( fconfig.NPar() ) )
+   fParams(fconfig.NPar()),
+   fErrors(fconfig.NPar()),
+   fParNames(fconfig.NPar())
 {
    // create a Fit result from a fit config (i.e. with initial parameter values
    // and errors equal to step values
@@ -79,19 +50,19 @@ FitResult::FitResult(const FitConfig & fconfig) :
 
    // get parameter values and errors (step sizes)
    unsigned int npar = fconfig.NPar();
+   fParamBounds.resize(npar);
+   fFixedParams.resize(npar);
+   fBoundParams.resize(npar);
    for (unsigned int i = 0; i < npar; ++i ) {
       const ParameterSettings & par = fconfig.ParSettings(i);
       fParams[i]   =  par.Value();
       fErrors[i]   =  par.StepSize();
       fParNames[i] =  par.Name();
-      if (par.IsFixed() ) fFixedParams[i] = true;
-      else fNFree++;
-      if (par.IsBound() ) {
-         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
-         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
-         fBoundParams[i] = fParamBounds.size();
-         fParamBounds.push_back(std::make_pair(lower,upper));
-      }
+      fFixedParams[i] = par.IsFixed();
+      if (!par.IsFixed() ) fNFree++;
+      double lower = par.HasLowerLimit() ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+      double upper = par.HasUpperLimit() ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+      fParamBounds.emplace_back(lower,upper);
    }
    std::cout << "create fit result from config - nfree " << fNFree << std::endl;
 }
@@ -129,7 +100,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
       // case minimizer does not provide minimum values (it failed) take from configuration
       fParams.resize(npar);
       for (unsigned int i = 0; i < npar; ++i ) {
-         fParams[i] = ( fconfig.ParSettings(i).Value() );
+         fParams[i] = fconfig.ParSettings(i).Value();
       }
    }
 
@@ -155,17 +126,17 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // check for fixed or limited parameters
    unsigned int nfree = 0;
-   if (!fParamBounds.empty()) fParamBounds.clear();
+   fParamBounds.resize(npar);
+   fFixedParams.resize(npar);
+   fBoundParams.resize(npar);
    for (unsigned int ipar = 0; ipar < npar; ++ipar) {
       const ParameterSettings & par = fconfig.ParSettings(ipar);
-      if (par.IsFixed() ) fFixedParams[ipar] = true;
-      else nfree++;
-      if (par.IsBound() ) {
-         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
-         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
-         fBoundParams[ipar] = fParamBounds.size();
-         fParamBounds.push_back(std::make_pair(lower,upper));
-      }
+      fFixedParams[ipar] = par.IsFixed();
+      fBoundParams[ipar] = par.IsBound();
+      if (!par.IsFixed() ) nfree++;
+      double lower = par.HasLowerLimit() ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+      double upper = par.HasUpperLimit() ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+      fParamBounds.emplace_back(lower,upper);
    }
    // check if nfree (from FitConfig) and fNFree (from minimizer) are consistent
    if (nfree != fNFree ) {
@@ -209,13 +180,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
       // minos errors are set separately when calling Fitter::CalculateMinosErrors()
 
       // globalCC
-      fGlobalCC.reserve(npar);
-      for (unsigned int i = 0; i < npar; ++i) {
-         double globcc = min->GlobalCC(i);
-         if (globcc < 0) break; // it is not supported by that minimizer
-         fGlobalCC.push_back(globcc);
-      }
-
+      fGlobalCC = min->GlobalCC();
    }
 
 }
@@ -280,16 +245,8 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const
       }
 
       // update global CC
-      if (fGlobalCC.size() != npar) fGlobalCC.resize(npar);
-      for (unsigned int i = 0; i < npar; ++i) {
-         double globcc = min->GlobalCC(i);
-         if (globcc < 0) {
-            fGlobalCC.clear();
-            break; // it is not supported by that minimizer
-         }
-         fGlobalCC[i] = globcc;
-      }
-
+      fGlobalCC = min->GlobalCC();
+      fGlobalCC.resize(npar); // pad with zeros
    }
    return true;
 }
@@ -323,23 +280,22 @@ double FitResult::Prob() const {
 
 bool FitResult::HasMinosError(unsigned int i) const {
    // query if the parameter i has the Minos error
-   std::map<unsigned int, std::pair<double,double> >::const_iterator itr = fMinosErrors.find(i);
-   return (itr !=  fMinosErrors.end() );
+   return fMinosErrors.find(i) !=  fMinosErrors.end();
 }
 
 
 double FitResult::LowerError(unsigned int i) const {
    // return lower Minos error for parameter i
    //  return the parabolic error if Minos error has not been calculated for the parameter i
-   std::map<unsigned int, std::pair<double,double> >::const_iterator itr = fMinosErrors.find(i);
-   return ( itr != fMinosErrors.end() ) ? itr->second.first : Error(i) ;
+   auto itr = fMinosErrors.find(i);
+   return itr != fMinosErrors.end() ? itr->second.first : Error(i);
 }
 
 double FitResult::UpperError(unsigned int i) const {
    // return upper Minos error for parameter i
    //  return the parabolic error if Minos error has not been calculated for the parameter i
-   std::map<unsigned int, std::pair<double,double> >::const_iterator itr = fMinosErrors.find(i);
-   return ( itr != fMinosErrors.end() ) ? itr->second.second : Error(i) ;
+   auto itr = fMinosErrors.find(i);
+   return itr != fMinosErrors.end() ? itr->second.second : Error(i);
 }
 
 void FitResult::SetMinosError(unsigned int i, double elow, double eup) {
@@ -351,31 +307,31 @@ int FitResult::Index(const std::string & name) const {
    // find index for given parameter name
    if (! fFitFunc) return -1;
    unsigned int npar = fParams.size();
-   for (unsigned int i = 0; i < npar; ++i)
+   for (unsigned int i = 0; i < npar; ++i) {
       if ( fFitFunc->ParameterName(i) == name) return i;
+   }
 
    return -1; // case name is not found
 }
 
-bool FitResult::IsParameterBound(unsigned int ipar) const {
-   return fBoundParams.find(ipar) != fBoundParams.end();
+bool FitResult::IsParameterBound(unsigned int ipar) const
+{
+   return ipar < fBoundParams.size() ? fBoundParams[ipar] : false;
 }
 
-bool FitResult::IsParameterFixed(unsigned int ipar) const {
-   return fFixedParams.find(ipar) != fFixedParams.end();
+bool FitResult::IsParameterFixed(unsigned int ipar) const
+{
+   return ipar < fFixedParams.size() ? fFixedParams[ipar] : false;
 }
 
-bool FitResult::ParameterBounds(unsigned int ipar, double & lower, double & upper) const {
-   std::map<unsigned int, unsigned int>::const_iterator itr =  fBoundParams.find(ipar);
-   if (itr ==  fBoundParams.end() ) {
-      lower =  -std::numeric_limits<Double_t>::infinity();
-      upper =  std::numeric_limits<Double_t>::infinity();
-      return false;
+bool FitResult::ParameterBounds(unsigned int ipar, double &lower, double &upper) const
+{
+   constexpr double inf = std::numeric_limits<double>::infinity();
+   if (ipar < fParamBounds.size()) {
+      lower = fParamBounds[ipar].first;
+      upper = fParamBounds[ipar].second;
    }
-   assert(itr->second < fParamBounds.size() );
-   lower = fParamBounds[itr->second].first;
-   upper = fParamBounds[itr->second].second;
-   return true;
+   return lower != -inf || upper != inf;
 }
 
 std::string FitResult::ParName(unsigned int ipar) const {
@@ -610,23 +566,6 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
     return result;
 }
 
-// const BinData * GetFitBinData() const {
-//    // return a pointer to the binned data used in the fit
-//    // works only for chi2 or binned likelihood fits
-//    // thus when the objective function stored is a Chi2Func or a PoissonLikelihood
-//    ROOT::Math::IMultiGenFunction * f = fObjFunc->get();
-//    Chi2Function * chi2func = dynamic_cast<Chi2Function*>(f);
-//    if (chi2func) return &(chi2func->Data());
-//    PoissonLLFunction * pllfunc = dynamic_cast<PoissonLLFunction*>(f);
-//    if (pllfunc) return &(pllfunc->Data());
-//    Chi2GradFunction * chi2gradfunc = dynamic_cast<Chi2GradFunction*>(f);
-//    if (chi2gradfunc) return &(chi2gradfunc->Data());
-//    PoissonLLGradFunction * pllgradfunc = dynamic_cast<PoissonLLFunction*>(f);
-//    if (pllgradfunc) return &(pllgradfunc->Data());
-//    MATH_WARN_MSG("FitResult::GetFitBinData","Cannot return fit bin data set if objective function is not of a known type");
-//    return nullptr;
-// }
-
 const BinData * FitResult::FittedBinData() const {
    return dynamic_cast<const BinData*> ( fFitData.get() );
 }
@@ -682,6 +621,4 @@ bool FitResult::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoi
    return ret;
 }
 
-   } // end namespace Fit
-
-} // end namespace ROOT
+} // namespace ROOT::Fit

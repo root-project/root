@@ -53,6 +53,18 @@
 - (unsigned) fWidth;
 - (unsigned) fHeight;
 
+//Graphical attributes
+@property (nonatomic, readonly) TAttLine *attLine;
+@property (nonatomic, readonly) TAttFill *attFill;
+@property (nonatomic, readonly) TAttMarker *attMarker;
+@property (nonatomic, readonly) TAttText *attText;
+
+// new graphics methods
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (TVirtualX::EDrawMode) getDrawMode;
+- (void) setDirectDraw : (BOOL) mode;
+- (BOOL) isDirectDraw;
+
 //Functions to copy one drawable into another.
 - (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask
          clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;

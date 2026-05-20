@@ -1,0 +1,32 @@
+<lcgdict>
+   <namespace name="LArSamples" />
+   <class name="LArSamples::Definitions" />
+   <class name="std::map<TString, unsigned int>" />
+   <class name="LArSamples::ClassCounts" />
+   <class name="LArSamples::Id" />
+   <class name="LArSamples::Geo" />
+   <class name="LArSamples::CellInfo" />
+   <class name="LArSamples::ShapeInfo" />
+   <class name="LArSamples::RunData" />
+   <class name="LArSamples::RoIPosition" />
+   <class name="std::vector<LArSamples::RoIPosition>" />
+   <class name="LArSamples::EventData"> <field name="m_runData" transient="true"/> </class>
+
+   <class name="LArSamples::DataContainer" />
+   <class name="std::vector<const LArSamples::DataContainer*>" />
+   <class name="LArSamples::HistoryContainer" id="75A91D0F-2362-4502-8CBE-D8DC1106AA80" />
+   <class name="std::vector<LArSamples::HistoryContainer*>" />
+
+   <class name="LArSamples::PersistentAccessor" />
+   <class name="std::vector<const LArSamples::PersistentAccessor*>" />
+
+   <class name="LArSamples::DataStore" />
+   <class name="LArSamples::AbsShape" />
+   <class name="LArSamples::SimpleShape" />
+
+   <enum name="LArSamples::CaloId"/>
+   <enum name="LArSamples::PartitionId"/>
+   <enum name="LArSamples::L1Item"/>
+   <enum name="CaloGain::CaloGain"/>
+
+</lcgdict>

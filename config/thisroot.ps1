@@ -7,4 +7,4 @@ $ROOTSYS = split-path -parent (get-item $scriptPath)
 $env:PATH = $ROOTSYS + '\bin;' + $env:PATH
 $env:CMAKE_PREFIX_PATH = $ROOTSYS + ';' + $env:CMAKE_PREFIX_PATH
 $env:PYTHONPATH = $ROOTSYS + '\bin;' + $env:PYTHONPATH
-$env:CLING_STANDARD_PCH = "none"
+$env:ROOT_INCLUDE_PATH = "@DEFAULT_ROOT_INCLUDE_PATH@" + ';' + $env:ROOT_INCLUDE_PATH

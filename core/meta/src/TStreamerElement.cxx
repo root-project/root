@@ -9,12 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TROOT.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
@@ -26,6 +20,7 @@
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "ROOT/RAlignmentUtils.hxx"
 #include "TEnum.h"
 #include "TRealData.h"
 #include "ThreadLocalStorage.h"
@@ -189,7 +184,6 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    if (xmin >= xmax && nbits <15) xmin = nbits+0.1;
 }
 
-ClassImp(TStreamerElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -290,7 +284,7 @@ Bool_t TStreamerElement::CannotSplit() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a pointer to the TClass of this element.
+/// Returns a pointer to the TClass of this element and updates fClassObject
 
 TClass *TStreamerElement::GetClassPointer() const
 {
@@ -308,8 +302,25 @@ TClass *TStreamerElement::GetClassPointer() const
 
 Int_t TStreamerElement::GetExecID() const
 {
-   //check if element is a TRef or TRefArray
-   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
+   TString typeName = fTypeName;
+   if (typeName != "TRef" && typeName != "TRefArray") {
+      // It's not a ROOT standard TRef or TRefArray class, but it could be a user class
+      // inheriting from it (see ROOT-7052)
+      const TString clName = ExtractClassName(fTypeName);
+      const auto cl = TClass::GetClass(clName, kFALSE, kTRUE);
+      // FIXME: The check for HasDataMemberInfo() is likely wrong because it could miss inheritance (chains) from TRef.
+      // However, it is needed to protect against non-loaded classes, previously also present in TClass::GetBaseClass.
+      if (!cl || !cl->HasDataMemberInfo())
+         return 0;
+      // Classes cannot both inherit from TRef/TRefArray and have a collection proxy.
+      if (cl->GetCollectionProxy())
+         return 0;
+      // Only classes inheriting from TObject can inherit from TRef. Do not look inside other classes.
+      if (!cl->IsTObject())
+         return 0;
+      if (!cl->InheritsFrom("TRef") && !cl->InheritsFrom("TRefArray"))
+         return 0;
+   }
 
    //if the UniqueID of this element has already been set, we assume
    //that it contains the exec id of a TRef object.
@@ -377,6 +388,24 @@ void TStreamerElement::GetSequenceType(TString &sequenceType) const
 Int_t TStreamerElement::GetSize() const
 {
    return fSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of this element in bytes.
+/// The bare underlying type (stripping kOffsetL / kOffsetP array/pointer markers)
+/// is used to determine the alignment from TDataType.
+
+std::size_t TStreamerElement::GetAlignment() const
+{
+   // Strip kOffsetL / kOffsetP markers to recover the bare type id.
+   const EDataType bareType = (EDataType)(fType % TVirtualStreamerInfo::kOffsetL);
+   if (bareType == kCounter || bareType == kBits)
+      return sizeof(UInt_t);
+   if (auto *dt = TDataType::GetDataType(bareType); dt && dt->GetAlignOf())
+      return dt->GetAlignOf();
+   Error("TStreamerElement::GetAlignment", "Cannot determine alignment for type %d (bare type %d) for element %s",
+         fType, bareType, GetName());
+   return alignof(std::max_align_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -609,7 +638,6 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -681,6 +709,21 @@ Int_t TStreamerBase::GetSize() const
       cl = GetClassPointer();
    if (cl)
       return cl->Size();
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the base class in bytes.
+
+std::size_t TStreamerBase::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   // The caller will complains if the missing alignment information
+   // causes a problem.
    return 0;
 }
 
@@ -907,7 +950,6 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBasicPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1020,7 +1062,6 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerLoop);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1046,6 +1087,24 @@ TStreamerLoop::TStreamerLoop(const char *name, const char *title, Int_t offset, 
 
 TStreamerLoop::~TStreamerLoop()
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of this element in bytes.
+/// The bare underlying type (stripping kOffsetL / kOffsetP array/pointer markers)
+/// is used to determine the alignment from TDataType.
+
+std::size_t TStreamerLoop::GetAlignment() const
+{
+   // Strip kOffsetL / kOffsetP markers to recover the bare type id.
+   const EDataType bareType = (EDataType)(fType % TVirtualStreamerInfo::kOffsetL);
+   if (bareType == kCounter || bareType == kBits)
+      return sizeof(UInt_t);
+   if (auto *dt = TDataType::GetDataType(bareType); dt && dt->GetAlignOf())
+      return dt->GetAlignOf();
+   Error("TStreamerLoop::GetAlignment", "Cannot determine alignment for type %d (bare type %d) for element %s", fType,
+         bareType, GetName());
+   return alignof(std::max_align_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1124,7 +1183,6 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBasicType);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1224,7 +1282,6 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1296,6 +1353,21 @@ Int_t TStreamerObject::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the object class in bytes.
+
+std::size_t TStreamerObject::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TStreamerObject.
 
 void TStreamerObject::Streamer(TBuffer &R__b)
@@ -1325,7 +1397,6 @@ void TStreamerObject::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectAny);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1393,6 +1464,21 @@ Int_t TStreamerObjectAny::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the object (non-TObject) class in bytes.
+
+std::size_t TStreamerObjectAny::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TStreamerObjectAny.
 
 void TStreamerObjectAny::Streamer(TBuffer &R__b)
@@ -1423,7 +1509,6 @@ void TStreamerObjectAny::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1527,7 +1612,6 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectAnyPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1622,7 +1706,6 @@ void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1692,7 +1775,6 @@ void TStreamerString::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1934,6 +2016,21 @@ Int_t TStreamerSTL::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the alignment of the STL container in bytes.
+
+std::size_t TStreamerSTL::GetAlignment() const
+{
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl && cl->GetClassAlignment())
+      return cl->GetClassAlignment();
+   // The caller will complains if the missing alignment information
+   // causes a problem.
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Print the content of the element.
 
 void TStreamerSTL::ls(Option_t *) const
@@ -2067,7 +2164,6 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTLstring);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -2153,7 +2249,6 @@ void TStreamerSTLstring::Streamer(TBuffer &R__b)
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTLstring);
 
 void TStreamerArtificial::Streamer(TBuffer& /* R__b */)
 {

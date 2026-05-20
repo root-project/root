@@ -185,8 +185,8 @@ TVector3 class:
 #include "TRotation.h"
 #include "TMath.h"
 #include "TQuaternion.h"
+#include <cmath>
 
-ClassImp(TRotation);
 
 #define TOLERANCE (1.0E-6)
 
@@ -323,7 +323,7 @@ TRotation::TRotation(const TQuaternion & Q) {
 /// Rotate along an axis.
 
 TRotation & TRotation::Rotate(Double_t a, const TVector3& axis) {
-   if (a != 0.0) {
+   if (std::fmod(a, 2 * TMath::Pi()) != 0.) {
       Double_t ll = axis.Mag();
       if (ll == 0.0) {
          Warning("Rotate(angle,axis)"," zero axis");

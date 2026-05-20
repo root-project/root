@@ -34,7 +34,6 @@ It contains information on the real remote object as:
 #include "TList.h"
 #include "TClass.h"
 
-ClassImp(TRemoteObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a remote object.

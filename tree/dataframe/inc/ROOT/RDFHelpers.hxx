@@ -222,6 +222,10 @@ namespace Experimental {
 template <typename T>
 RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 {
+   using SnapshotResult_t = ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>;
+   static_assert(!std::is_same_v<T, SnapshotResult_t>,
+                 "Snapshot with variations can only be enabled via RSnapshotOptions.");
+
    R__ASSERT(resPtr != nullptr && "Calling VariationsFor on an empty RResultPtr");
 
    // populate parts of the computation graph for which we only have "empty shells", e.g. RJittedActions and
@@ -248,7 +252,7 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
             // Get the current variation name
             std::string variationName = variations[i];
             // Replace the colon with an underscore
-            std::replace(variationName.begin(), variationName.end(), ':', '_'); 
+            std::replace(variationName.begin(), variationName.end(), ':', '_');
             // Get a pointer to the corresponding varied result
             auto &variedResult = variedResults.back();
             // Set the varied result's name to NOMINALNAME_VARIATIONAME
@@ -269,9 +273,6 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    return RDFInternal::MakeResultMap<T>(resPtr.fObjPtr, std::move(variedResults), std::move(variations),
                                         *resPtr.fLoopManager, std::move(nominalAction), std::move(variedAction));
 }
-
-using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
-SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 
 /// \brief Add ProgressBar to a ROOT::RDF::RNode
 /// \param[in] df RDataFrame node at which ProgressBar is called.
@@ -301,7 +302,13 @@ void AddProgressBar(ROOT::RDF::RNode df);
 /// For more details see ROOT::RDF::Experimental::ProgressHelper Class.
 void AddProgressBar(ROOT::RDataFrame df);
 
-class ProgressBarAction;
+/// @brief Set the number of threads sharing one TH3 in RDataFrame.
+/// When RDF runs multi-threaded, each thread typically clones every histogram in the computation graph.
+/// If this consumes too much memory, N threads can share one clone.
+/// Higher values might slow down RDF because they lead to higher contention on the TH3Ds, but save memory.
+/// Lower values run faster with less contention at the cost of higher memory usage.
+/// @param nThread Number of threads that share a TH3D.
+void ThreadsPerTH3(unsigned int nThread = 1);
 
 /// RDF progress helper.
 /// This class provides callback functions to the RDataFrame. The event statistics
@@ -324,132 +331,62 @@ class ProgressBarAction;
 /// ~~~
 class ProgressHelper {
 private:
+   std::size_t ComputeTotalEvents() const;
    double EvtPerSec() const;
+   void PrintProgressAndStats(std::ostream &stream, std::size_t currentEventCount,
+                              std::chrono::seconds totalElapsedSeconds) const;
    std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
-   void PrintStats(std::ostream &stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
-   void PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
-   void PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const;
+   void Update();
 
-   std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
-   std::chrono::time_point<std::chrono::system_clock> fLastPrintTime = fBeginTime;
-   std::chrono::seconds fPrintInterval{1};
+   bool const fIsTTY;
+   bool const fUseShellColours;
 
    std::atomic<std::size_t> fProcessedEvents{0};
    std::size_t fLastProcessedEvents{0};
-   std::size_t fIncrement;
+   std::size_t const fIncrement;
+   unsigned int const fNColumns;
+   unsigned int const fTotalFiles;
 
-   mutable std::mutex fSampleNameToEventEntriesMutex;
+   std::array<double, 10> fEventsPerSecondStatistics;
+   unsigned int fEventsPerSecondStatisticsCounter{0};
+
+   std::chrono::time_point<std::chrono::system_clock> const fBeginTime = std::chrono::system_clock::now();
+   std::chrono::time_point<std::chrono::system_clock> fLastPrintTime = fBeginTime;
+   std::chrono::seconds const fPrintInterval;
+
+   // Mutex to ensure that only one thread updates the progress bar.
+   // Lock this mutex to update any of the members above:
+   std::mutex fUpdateMutex;
+
+   mutable std::mutex fSampleNameToEventEntriesMutex;          // Mutex to protect access to the below map
    std::map<std::string, ULong64_t> fSampleNameToEventEntries; // Filename, events in the file
-
-   std::array<double, 20> fEventsPerSecondStatistics;
-   std::size_t fEventsPerSecondStatisticsIndex{0};
-
-   unsigned int fBarWidth;
-   unsigned int fTotalFiles;
-
-   std::mutex fPrintMutex;
-   bool fIsTTY;
-   bool fUseShellColours;
-
-   std::shared_ptr<TTree> fTree{nullptr};
 
 public:
    /// Create a progress helper.
    /// \param increment RDF callbacks are called every `n` events. Pass this `n` here.
-   /// \param totalFiles read total number of files in the RDF.
-   /// \param progressBarWidth Number of characters the progress bar will occupy.
-   /// \param printInterval Update every stats every `n` seconds.
+   /// \param totalFiles number of files read in the RDF.
+   /// \param printInterval Update stats every `n` seconds.
    /// \param useColors Use shell colour codes to colour the output. Automatically disabled when
    /// we are not writing to a tty.
-   ProgressHelper(std::size_t increment, unsigned int totalFiles = 1, unsigned int progressBarWidth = 40,
-                  unsigned int printInterval = 1, bool useColors = true);
-
+   ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int printInterval = 0,
+                  bool useColors = true);
+   ProgressHelper(ProgressHelper const &) = delete; // The mutexes and atomics won't allow copy/move
+   ProgressHelper(ProgressHelper &&) = delete;
    ~ProgressHelper() = default;
+   ProgressHelper &operator=(ProgressHelper const &) = delete;
+   ProgressHelper &operator=(ProgressHelper &&) = delete;
 
-   friend class ProgressBarAction;
-
-   /// Register a new sample for completion statistics.
-   /// \see ROOT::RDF::RInterface::DefinePerSample().
-   /// The *id.AsString()* refers to the name of the currently processed file.
-   /// The idea is to populate the  event entries in the *fSampleNameToEventEntries* map
-   /// by selecting the greater of the two values:
-   /// *id.EntryRange().second* which is the upper event entry range of the processed sample
-   /// and the current value of the event entries in the *fSampleNameToEventEntries* map.
-   /// In the single threaded case, the two numbers are the same as the entry range corresponds
-   /// to the number of events in an individual file (each sample is simply a single file).
-   /// In the multithreaded case, the idea is to accumulate the higher event entry value until
-   /// the total number of events in a given file is reached.
-   void registerNewSample(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &id)
-   {
-      std::lock_guard<std::mutex> lock(fSampleNameToEventEntriesMutex);
-      fSampleNameToEventEntries[id.AsString()] =
-         std::max(id.EntryRange().second, fSampleNameToEventEntries[id.AsString()]);
-   }
+   void RegisterNewSample(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &id);
 
    /// Thread-safe callback for RDataFrame.
    /// It will record elapsed times and event statistics, and print a progress bar every n seconds (set by the
    /// fPrintInterval). \param slot Ignored. \param value Ignored.
    template <typename T>
-   void operator()(unsigned int /*slot*/, T &value)
+   void operator()(unsigned int /*slot*/, T & /*value*/)
    {
-      operator()(value);
+      Update();
    }
-   // clang-format off
-   /// Thread-safe callback for RDataFrame.
-   /// It will record elapsed times and event statistics, and print a progress bar every n seconds (set by the fPrintInterval).
-   /// \param value Ignored.
-   // clang-format on
-   template <typename T>
-   void operator()(T & /*value*/)
-   {
-      using namespace std::chrono;
-      // ***************************************************
-      // Warning: Here, everything needs to be thread safe:
-      // ***************************************************
-      fProcessedEvents += fIncrement;
-
-      // We only print every n seconds.
-      if (duration_cast<seconds>(system_clock::now() - fLastPrintTime) < fPrintInterval) {
-         return;
-      }
-
-      // ***************************************************
-      // Protected by lock from here:
-      // ***************************************************
-      if (!fPrintMutex.try_lock())
-         return;
-      std::lock_guard<std::mutex> lockGuard(fPrintMutex, std::adopt_lock);
-
-      std::size_t eventCount;
-      seconds elapsedSeconds;
-      std::tie(eventCount, elapsedSeconds) = RecordEvtCountAndTime();
-
-      if (fIsTTY)
-         std::cout << "\r";
-
-      PrintProgressBar(std::cout, eventCount);
-      PrintStats(std::cout, eventCount, elapsedSeconds);
-
-      if (fIsTTY)
-         std::cout << std::flush;
-      else
-         std::cout << std::endl;
-   }
-
-   std::size_t ComputeNEventsSoFar() const
-   {
-      std::unique_lock<std::mutex> lock(fSampleNameToEventEntriesMutex);
-      std::size_t result = 0;
-      for (const auto &item : fSampleNameToEventEntries)
-         result += item.second;
-      return result;
-   }
-
-   unsigned int ComputeCurrentFileIdx() const
-   {
-      std::unique_lock<std::mutex> lock(fSampleNameToEventEntriesMutex);
-      return fSampleNameToEventEntries.size();
-   }
+   void PrintStatsFinal() const;
 };
 } // namespace Experimental
 } // namespace RDF

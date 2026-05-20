@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
@@ -309,14 +310,25 @@ void ROOT::Internal::RPageSinkBuf::CommitClusterGroup()
    fInnerSink->CommitClusterGroup();
 }
 
-void ROOT::Internal::RPageSinkBuf::CommitDatasetImpl()
+ROOT::Internal::RNTupleLink ROOT::Internal::RPageSinkBuf::CommitDatasetImpl()
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
    RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
-   fInnerSink->CommitDataset();
+   return fInnerSink->CommitDataset();
 }
 
 ROOT::Internal::RPage ROOT::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    return fInnerSink->ReservePage(columnHandle, nElements);
+}
+
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Internal::RPageSinkBuf::CloneAsHidden(std::string_view name, const RNTupleWriteOptions &opts) const
+{
+   return fInnerSink->CloneAsHidden(name, opts);
+}
+
+void ROOT::Internal::RPageSinkBuf::CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo)
+{
+   fInnerSink->CommitAttributeSet(attrSetName, attrAnchorInfo);
 }

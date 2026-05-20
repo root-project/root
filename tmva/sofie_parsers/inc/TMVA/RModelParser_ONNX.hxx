@@ -6,12 +6,14 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
+#include <fstream>
 
 // forward declaration
 namespace onnx {
 class NodeProto;
 class GraphProto;
 class ModelProto;
+class TensorProto;
 } // namespace onnx
 
 namespace TMVA {
@@ -29,6 +31,8 @@ class RModelParser_ONNX {
 public:
    struct OperatorsMapImpl;
 
+   enum EFusedOp { kMatMulAdd, kConvAdd, kConvTransAdd, kGemmRelu, kBatchnormRelu};
+
 private:
 
    bool fVerbose = false;
@@ -36,8 +40,14 @@ private:
    std::unique_ptr<OperatorsMapImpl> fOperatorsMapImpl;
    // Type of the tensors
    std::unordered_map<std::string, ETensorType> fTensorTypeMap;
-   // flag list of fused operators
-   std::vector<bool> fFusedOperators;
+
+   // List of fused operators storing as key the second operator and a value a pair of fusion type and parent operator
+   std::map<int, std::pair<EFusedOp, int>> fFusedOperators;
+
+   //  weight data file
+   std::ifstream fDataFile;
+   // filename of model
+   std::string fDataFileName;
 
 
 public:
@@ -74,16 +84,26 @@ public:
    // parse the ONNX graph
    void ParseONNXGraph(RModel & model, const onnx::GraphProto & g, std::string  name = "");
 
-   std::unique_ptr<onnx::ModelProto> LoadModel(std::string filename);
+   std::unique_ptr<onnx::ModelProto> LoadModel(const std::string &filename);
+   std::unique_ptr<onnx::ModelProto> LoadModel(std::istream &input);
+
+   std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t tensor_length, ETensorType type );
 
 public:
 
    RModelParser_ONNX() noexcept;
 
-   RModel Parse(std::string filename, bool verbose = false);
+   RModel Parse(std::string const &filename, bool verbose = false);
+   RModel Parse(std::istream &input, std::string const &name, bool verbose = false);
 
    // check the model for missing operators - return false in case some operator implementation is missing
    bool CheckModel(std::string filename, bool verbose = false);
+
+   //set external data full path (needed if external data are not stored in the default modelName.onnx.data)
+   // call this function before parsing
+   void SetExternalDataFile(const std::string & dataFileName) {
+      fDataFileName = dataFileName;
+   }
 
    ~RModelParser_ONNX();
 };

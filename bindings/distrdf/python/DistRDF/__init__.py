@@ -12,17 +12,18 @@
 from __future__ import annotations
 
 import concurrent.futures
+import importlib.util
 import logging
 import textwrap
 import types
 import warnings
 from typing import TYPE_CHECKING, Iterable
 
-from DistRDF.Backends import build_backends_submodules
-from DistRDF.LiveVisualize import LiveVisualize
+from .Backends import build_backends_submodules
+from .LiveVisualize import LiveVisualize
 
 if TYPE_CHECKING:
-    from DistRDF.Proxy import ResultMapProxy, ResultPtrProxy
+    from .Proxy import ResultMapProxy, ResultPtrProxy
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def initialize(fun, *args, **kwargs):
 
         **kwargs (dict): Keyword arguments used to execute the function.
     """
-    from DistRDF.Backends import Base
+    from .Backends import Base
 
     Base.BaseBackend.register_initialization(fun, *args, **kwargs)
 
@@ -56,7 +57,7 @@ def DistributeCppCode(code_to_declare: str) -> None:
         codeToDeclare (str): cpp code to be declared on the workers
 
     """
-    from DistRDF.Backends import Base
+    from .Backends import Base
 
     Base.BaseBackend.register_declaration(code_to_declare)
 
@@ -70,7 +71,7 @@ def DistributeHeaders(paths_to_headers: Iterable[str]):
         paths_to_headers (list): list of paths to headers to be distributed to each worker
 
     """
-    from DistRDF.Backends import Base
+    from .Backends import Base
 
     Base.BaseBackend.register_headers(paths_to_headers)
 
@@ -84,7 +85,7 @@ def DistributeFiles(paths_to_files: Iterable[str]):
         paths_to_files (list): list of paths to files to be distributed
 
     """
-    from DistRDF.Backends import Base
+    from .Backends import Base
 
     Base.BaseBackend.register_files(paths_to_files)
 
@@ -98,7 +99,7 @@ def DistributeSharedLibs(paths_to_shared_libraries: Iterable[str]) -> None:
         paths_to_shared_libraries (list): list of paths to shared libraries to be distributed
 
     """
-    from DistRDF.Backends import Base
+    from .Backends import Base
 
     Base.BaseBackend.register_shared_lib(paths_to_shared_libraries)
 
@@ -141,7 +142,7 @@ def RunGraphs(proxies: Iterable) -> int:
 
     """
     # Import here to avoid circular dependencies in main module
-    from DistRDF.Proxy import execute_graph
+    from .Proxy import execute_graph
 
     if not proxies:
         logger.warning("RunGraphs: Got an empty list of handles, now quitting.")
@@ -185,7 +186,7 @@ def FromSpec(jsonfile: str, *args, **kwargs) -> RDataFrame:
     try:
         from distributed import Client
 
-        from DistRDF.Backends.Dask import RDataFrame
+        from .Backends.Dask import RDataFrame
 
         if isinstance(executor, Client):
             return RDataFrame(spec, *args, **kwargs)
@@ -195,7 +196,7 @@ def FromSpec(jsonfile: str, *args, **kwargs) -> RDataFrame:
     try:
         from pyspark import SparkContext
 
-        from DistRDF.Backends.Spark import RDataFrame
+        from .Backends.Spark import RDataFrame
 
         if isinstance(executor, SparkContext):
             return RDataFrame(spec, *args, **kwargs)
@@ -213,8 +214,8 @@ class _DeprecatedModule(types.ModuleType):
     def __getattribute__(self, name):
         msg_warng = textwrap.dedent(
             """
-            In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. ROOT 6.38
-            will remove the 'Experimental' keyword completely, so it is suggested to move to the stable API in user 
+            In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. In the
+            future, the 'Experimental' keyword will be removed, so it is suggested to move to the stable API in user 
             code. You can now change lines such as:
             ```
             connection = ... # your distributed Dask client or SparkContext
@@ -276,25 +277,21 @@ def RDataFrame(*args, **kwargs):
         )
 
     # Try to dispatch to the correct distributed scheduler implementation
-    try:
+    if importlib.util.find_spec("distributed") is not None:
         from distributed import Client
 
-        from DistRDF.Backends.Dask import RDataFrame
+        from .Backends.Dask import RDataFrame
 
         if isinstance(executor, Client):
             return RDataFrame(*args, **kwargs)
-    except ImportError:
-        pass
 
-    try:
+    if importlib.util.find_spec("pyspark") is not None:
         from pyspark import SparkContext
 
-        from DistRDF.Backends.Spark import RDataFrame
+        from .Backends.Spark import RDataFrame
 
         if isinstance(executor, SparkContext):
             return RDataFrame(*args, **kwargs)
-    except ImportError:
-        pass
 
     raise TypeError(
         f"The client object of type '{type(executor)}' is not a supported connection type for distributed RDataFrame."

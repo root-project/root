@@ -23,6 +23,8 @@
 #include <cstddef>
 
 class TTreeReader;
+template <typename T>
+class TTreeReaderValue;
 
 namespace ROOT {
 namespace Internal {
@@ -36,7 +38,7 @@ namespace RDF {
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
 
-   void *GetImpl(Long64_t);
+   void *GetImpl(Long64_t) override;
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
@@ -55,7 +57,7 @@ public:
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
 
-   void *GetImpl(Long64_t);
+   void *GetImpl(Long64_t) override;
 
 public:
    RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName);
@@ -75,7 +77,8 @@ public:
    enum class ECollectionType {
       kRVec,
       kStdArray,
-      kRVecBool
+      kRVecBool,
+      kStdVector
    };
 
    RTreeUntypedArrayColumnReader(TTreeReader &r, std::string_view colName, std::string_view valueTypeName,
@@ -97,6 +100,9 @@ private:
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
    RVec<Byte_t> fRVec{};
 
+   /// When the user explicitly requests std::vector<T>, we use this std::vector as a stable storage.
+   std::vector<Byte_t> fStdVector{};
+
    Long64_t fLastEntry = -1;
 
    /// The size of the collection value type.
@@ -105,7 +111,28 @@ private:
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t entry);
+   void *GetImpl(Long64_t entry) override;
+
+   void *ReadStdArray(Long64_t entry);
+   void *ReadStdVector(Long64_t entry);
+   void *ReadRVec(Long64_t entry);
+};
+
+class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> fValueReader;
+   std::unique_ptr<TTreeReaderValue<uint64_t>> fTreeValueMask;
+   unsigned int fMaskIndex = 0;
+
+   void *GetImpl(Long64_t) override;
+
+public:
+   RMaskedColumnReader(TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader,
+                       std::string_view maskName, unsigned int maskIndex);
+   ~RMaskedColumnReader() override;
+   void SetColumnReader(std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> reader)
+   {
+      fValueReader = std::move(reader);
+   }
 };
 
 } // namespace RDF

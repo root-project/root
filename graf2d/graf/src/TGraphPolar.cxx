@@ -58,7 +58,6 @@ End_Macro
 #include "TGraphPolar.h"
 #include "TGraphPolargram.h"
 
-ClassImp(TGraphPolar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar default constructor.
@@ -212,4 +211,32 @@ TGraphPolargram *TGraphPolar::CreatePolargram(const char *opt)
    rwtmax += dt / theNpoints;
 
    return new TGraphPolargram("Polargram", rwrmin, rwrmax, rwtmin, rwtmax, opt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
+void TGraphPolar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+{
+   auto xname  = SavePrimitiveVector(out, "polar_fx", fNpoints, fX, kTRUE);
+   auto yname  = SavePrimitiveVector(out, "polar_fy", fNpoints, fY);
+   auto exname = SavePrimitiveVector(out, "polar_fex", fNpoints, fEX, 111);
+   auto eyname = SavePrimitiveVector(out, "polar_fey", fNpoints, fEY, 111);
+
+   SavePrimitiveConstructor(
+      out, Class(), "polar",
+      TString::Format("%d, %s.data(), %s.data(), %s, %s", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
+
+   SavePrimitiveNameTitle(out, "polar");
+
+   SaveFillAttributes(out, "polar", 0, 1001);
+   SaveLineAttributes(out, "polar", 1, 1, 1);
+   SaveMarkerAttributes(out, "polar", 1, 1, 1);
+
+   if (fPolargram) {
+      fPolargram->SavePrimitive(out, "nodraw");
+      out << "   polar->SetPolargram(polargram);\n";
+   }
+
+   SavePrimitiveDraw(out, "polar", option);
 }

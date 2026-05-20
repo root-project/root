@@ -17,7 +17,7 @@
 #include "TCanvas.h"
 #include "TRandom.h"
 
-TCanvas *hist014_TH1_cumulative()
+void hist014_TH1_cumulative()
 {
    TH1 *h = new TH1D("h", "h", 100, -5., 5.);
    gRandom->SetSeed();
@@ -37,6 +37,4 @@ TCanvas *hist014_TH1_cumulative()
    c->cd(2);
    hc->Draw();
    c->Update();
-
-   return c;
 }

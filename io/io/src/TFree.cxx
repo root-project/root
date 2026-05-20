@@ -15,7 +15,6 @@
 #include "Bytes.h"
 #include <iostream>
 
-ClassImp(TFree);
 
 /**
 \class TFree
@@ -25,7 +24,7 @@ Service class for TFile.
 Each file has a linked list of free segments. Each free segment is described
 by its firts and last address.
 When an object is written to a file, a new Key (see TKey)
-is created. The first free segment big enough to accomodate the object
+is created. The first free segment big enough to accommodate the object
 is used.
 If the object size has a length corresponding to the size of the free segment,
 the free segment is deleted from the list of free segments.

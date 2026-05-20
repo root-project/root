@@ -139,6 +139,59 @@ class PyFilter(unittest.TestCase):
 
         self.assertEqual(c, 1)
 
+    def test_cpp_free_function(self):
+        """
+        Test that a C++ free function can be passed as a callable argument of a
+        Filter operation.
+        """
+
+        ROOT.gInterpreter.Declare(
+            """
+        bool myfun(ULong64_t l) { return l == 0; }
+        """
+        )
+
+        rdf = ROOT.RDataFrame(5)
+        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+
+        self.assertEqual(c, 1)
+
+    def test_cpp_free_function_overload(self):
+        """
+        Test that an overload of a C++ free function can be passed as a callable argument of a
+        Filter operation with overloads.
+        """
+
+        ROOT.gInterpreter.Declare(
+            """
+        bool myfun(ULong64_t l) { return l == 0; }
+        bool myfun(int l) { return true; }
+        """
+        )
+
+        rdf = ROOT.RDataFrame(5)
+        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+
+        self.assertEqual(c, 1)
+
+    def test_cpp_free_function_template(self):
+        """
+        Test that a C++ free function template can be passed as a callable argument of a
+        Filter operation.
+        """
+
+        ROOT.gInterpreter.Declare(
+            """
+        template <typename T>
+        bool myfun_t(T l) { return l == 0; }
+        """
+        )
+
+        rdf2 = ROOT.RDataFrame(5)
+        c = rdf2.Define("x", "(int) rdfentry_").Filter(ROOT.myfun_t[int], ["x"]).Count().GetValue()
+
+        self.assertEqual(c, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

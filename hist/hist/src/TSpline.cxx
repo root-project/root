@@ -28,12 +28,6 @@
 #include <iostream>
 #include <fstream>
 
-ClassImp(TSplinePoly);
-ClassImp(TSplinePoly3);
-ClassImp(TSplinePoly5);
-ClassImp(TSpline3);
-ClassImp(TSpline5);
-ClassImp(TSpline);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -492,7 +486,7 @@ TSpline3::TSpline3(const char *title,
    // them with node information
    fPoly = new TSplinePoly3[fNp];
    for (Int_t i=0; i<fNp; ++i) {
-      Double_t xx, yy;
+      Double_t xx = 0., yy = 0.;
       g->GetPoint(i,xx,yy);
       fPoly[i].X()=xx;
       fPoly[i].Y()=yy;
@@ -972,7 +966,7 @@ void TSpline3::SavePrimitive(std::ostream &out, Option_t *option)
 
    out << "   spline3->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
-   SaveFillAttributes(out, "spline3", 0, 1001);
+   SaveFillAttributes(out, "spline3", 0, 1);
    SaveLineAttributes(out, "spline3", 1, 1, 1);
    SaveMarkerAttributes(out, "spline3", 1, 1, 1);
    if (fNpx != 100)
@@ -1361,7 +1355,7 @@ TSpline5::TSpline5(const char *title,
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<fNp-beg; ++i) {
-      Double_t xx, yy;
+      Double_t xx = 0., yy = 0.;
       g->GetPoint(i,xx,yy);
       fPoly[i+beg].X()=xx;
       fPoly[i+beg].Y()=yy;
@@ -1782,7 +1776,7 @@ void TSpline5::SavePrimitive(std::ostream &out, Option_t *option)
 
    out << "   spline5->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
-   SaveFillAttributes(out, "spline5", 0, 1001);
+   SaveFillAttributes(out, "spline5", 0, 1);
    SaveLineAttributes(out, "spline5", 1, 1, 1);
    SaveMarkerAttributes(out, "spline5", 1, 1, 1);
    if (fNpx != 100)

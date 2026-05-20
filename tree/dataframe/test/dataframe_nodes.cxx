@@ -118,7 +118,7 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
    std::vector<std::string> files{"f1.root", "f2.root"};
 
    for (auto &f : files)
-      d.Snapshot<int>("t1", f, {"x"});
+      d.Snapshot("t1", f, {"x"});
 
    ROOT::RDataFrame tdf("t1", files);
    *tdf.Count();
@@ -154,7 +154,7 @@ TEST(RDataFrameNodes, InheritanceOfDefines)
 
    // Read as TObject from disk a TStatistics object
    auto checkStat = [&val](TObject &o) { EXPECT_EQ(val, ((TStatistic *)&o)->GetMean()); };
-   ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
+   ROOT::RDataFrame(1).Define("x", createStat).Snapshot("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
    gSystem->Unlink(ofileName);
 }
 

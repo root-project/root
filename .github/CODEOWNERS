@@ -9,16 +9,17 @@
 
 # Coarse-grained ownership
 * @dpiparo
-/bindings/ @dpiparo @vepadulano
+/bindings/ @guitargeek @vepadulano
 /core/ @dpiparo @pcanal
-/documentation/ @couet
+/documentation/ @couet @dpiparo
 /fonts/ @bellenot
 /geom/ @agheata
 /graf2d/ @couet
 /graf3d/ @couet
 /gui/ @bellenot
-/hist/ @lmoneta
-/html/ @dpiparo
+/hist/ @hageboeck
+/hist/histv7/ @hahnjo
+/hist/histv7util/ @hahnjo
 /icons/ @bellenot
 /interpreter/ @dpiparo
 /interpreter/llvm-project/ @vgvassilev
@@ -26,22 +27,25 @@ interpreter/cling/tools/packaging @vgvassilev
 /io/ @pcanal
 /io/xml/ @pcanal @linev
 /main/ @pcanal
-/math/ @lmoneta
+/math/ @hagebeck
+/math/minuit @guitargeek
+/math/minuit2 @guitargeek
 /math/vecops @dpiparo
 /misc/ @dpiparo
 /montecarlo/ @dpiparo
-/net/ @gganis
-/proof/ @gganis
-/roofit/ @lmoneta @guitargeek
+/net/ @dpiparo
+/roofit/ @guitargeek
 /rootx/ @dpiparo
 /sql/ @pcanal @linev
 /tmva/ @lmoneta
 /tree/ @pcanal
 /tutorials/ @couet
 /tree/dataframe/ @martamaja10 @vepadulano
+/tree/ml/ @vepadulano @siliataider
 /tree/readspeed/ @martamaja10
-/tree/ntuple/v7/ @jblomer
-/tree/ntupleutil/v7/ @jblomer
+/tree/ntuple/ @jblomer
+/tree/ntuplebrowse/ @jblomer
+/tree/ntupleutil/ @jblomer
 /tutorials/sql/ @linev
 
 # Projects that span over several code modules:

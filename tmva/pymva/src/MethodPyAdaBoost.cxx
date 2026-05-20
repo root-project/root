@@ -56,7 +56,6 @@ public:
 
 REGISTER_METHOD(PyAdaBoost)
 
-ClassImp(MethodPyAdaBoost);
 
 //_______________________________________________________________________
 MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,
@@ -116,7 +115,7 @@ void MethodPyAdaBoost::DeclareOptions()
       ``learning_rate``. There is a trade-off between ``learning_rate`` and\
       ``n_estimators``.");
 
-   DeclareOptionRef(fAlgorithm, "Algorithm", "{'SAMME', 'SAMME.R'}, optional (default='SAMME')\
+   DeclareOptionRef(fAlgorithm, "Algorithm", "{'SAMME'}, optional (default='SAMME')\
       If 'SAMME.R' then use the SAMME.R real boosting algorithm.\
       ``base_estimator`` must support calculation of class probabilities.\
       If 'SAMME' then use the SAMME discrete boosting algorithm.\
@@ -157,12 +156,14 @@ void MethodPyAdaBoost::ProcessOptions()
    pLearningRate = Eval(Form("%f", fLearningRate));
    PyDict_SetItemString(fLocalNS, "learningRate", pLearningRate);
 
-   if (fAlgorithm != "SAMME" && fAlgorithm != "SAMME.R") {
-      Log() << kFATAL << Form("Algorithm = %s ... that does not work!", fAlgorithm.Data())
-            << " The options are SAMME of SAMME.R." << Endl;
+   if (fAlgorithm != "SAMME" ) {
+      if  (fAlgorithm != "SAMME.R")
+         Log() << kFATAL << Form("Algorithm = %s ... that does not work!", fAlgorithm.Data())
+            << " The only options is SAMME " << Endl;
+      else
+         Log() << kWARNING << Form("Algorithm = %s is deprecated for scikit versions > 1.5 - use SAMME", fAlgorithm.Data()) << Endl;
    }
-   pAlgorithm = Eval(Form("'%s'", fAlgorithm.Data()));
-   PyDict_SetItemString(fLocalNS, "algorithm", pAlgorithm);
+
 
    pRandomState = Eval(fRandomState);
    if (!pRandomState) {
@@ -232,7 +233,7 @@ void MethodPyAdaBoost::Train()
    }
 
    // Create classifier object
-   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, algorithm=algorithm, random_state=randomState)",
+   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, random_state=randomState)",
       "Failed to setup classifier");
 
    // Fit classifier
@@ -261,7 +262,7 @@ void MethodPyAdaBoost::TestClassification()
 }
 
 //_______________________________________________________________________
-std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t /* logProgress */)
 {
    // Load model if not already done
    if (fClassifier == 0) ReadModelFromFile();
@@ -271,15 +272,6 @@ std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
    if (firstEvt < 0) firstEvt = 0;
    nEvents = lastEvt-firstEvt;
-
-   // use timer
-   Timer timer( nEvents, GetName(), kTRUE );
-
-   if (logProgress)
-      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
-            << "Evaluation of " << GetMethodName() << " on "
-            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
-            << " sample (" << nEvents << " events)" << Endl;
 
    // Get data
    npy_intp dims[2];
@@ -309,11 +301,11 @@ std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t
    Py_DECREF(pEvent);
    Py_DECREF(result);
 
-   if (logProgress) {
-      Log() << kINFO
-            << "Elapsed time for evaluation of " << nEvents <<  " events: "
-            << timer.GetElapsedTime() << "       " << Endl;
-   }
+   // if (logProgress) {
+   //    Log() << kINFO
+   //          << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   //          << timer.GetElapsedTime() << "       " << Endl;
+   // }
 
    return mvaValues;
 }

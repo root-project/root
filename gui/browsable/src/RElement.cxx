@@ -14,6 +14,8 @@
 
 #include "TBufferJSON.h"
 
+#include <algorithm>
+
 using namespace ROOT::Browsable;
 using namespace std::string_literals;
 
@@ -183,4 +185,22 @@ int RElement::ExtractItemIndex(std::string &name)
    int indx = std::stoi(name.substr(p1+3,p2-p1-3));
    name.resize(p1);
    return indx;
+}
+
+bool gRElementLastKeyCycle = false;
+
+/////////////////////////////////////////////////////////////////////
+/// Is only last cycle from the list of keys is shown
+
+bool RElement::IsLastKeyCycle()
+{
+   return gRElementLastKeyCycle;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Set flag to show only last cycle from the list of keys
+
+void RElement::SetLastKeyCycle(bool on)
+{
+   gRElementLastKeyCycle = on;
 }

@@ -13,20 +13,17 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
+import os
+
+import numpy as np
 import ROOT
-from os.path import exists
-
-ROOT.TMVA.PyMethodBase.PyInitialize()
-
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
 
 ## generate and train Keras models with different architectures
 
-import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
-
-from sklearn.model_selection import train_test_split
 
 def CreateModel(nlayers = 4, nunits = 64):
    model = Sequential()
@@ -71,8 +68,8 @@ def PrepareData() :
    return x_train, y_train, x_test, y_test
 
 def TrainModel(model, x, y, name) :
-   model.fit(x,y,epochs=10,batch_size=50)
-   modelFile = name + '.h5'
+   model.fit(x,y,epochs=5,batch_size=50)
+   modelFile = name + '.keras'
    model.save(modelFile)
    return modelFile
 
@@ -103,11 +100,13 @@ def GenerateModelCode(modelFile, generatedHeaderFile):
 
 generatedHeaderFile = "Higgs_Model.hxx"
 #need to remove existing header file since we are appending on same one
-import os
 if (os.path.exists(generatedHeaderFile)):
-   weightFile = "Higgs_Model.root"
-   print("removing existing files", generatedHeaderFile,weightFile)
+   print("removing existing file", generatedHeaderFile)
    os.remove(generatedHeaderFile)
+
+weightFile = "Higgs_Model.root"
+if (os.path.exists(weightFile)):
+   print("removing existing file", weightFile)
    os.remove(weightFile)
 
 GenerateModelCode(model1, generatedHeaderFile)

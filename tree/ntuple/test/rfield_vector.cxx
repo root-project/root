@@ -123,7 +123,7 @@ TEST(RNTuple, InsideCollection)
    ASSERT_NE(idKlass, ROOT::kInvalidDescriptorId);
    auto idA = source->GetSharedDescriptorGuard()->FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::kInvalidDescriptorId);
-   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec_a", "float").Unwrap());
+   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("_0", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
 
    auto field = std::make_unique<ROOT::RVectorField>("klassVec", std::move(fieldInner));
@@ -145,11 +145,11 @@ TEST(RNTuple, InsideCollection)
 
    auto valueCardinality64 = fieldCardinality64->CreateValue();
    valueCardinality64.Read(0);
-   EXPECT_EQ(1U, valueCardinality64.GetRef<std::uint64_t>());
+   EXPECT_EQ(1U, valueCardinality64.GetRef<ROOT::RNTupleCardinality<std::uint64_t>>());
 
    auto valueCardinality32 = fieldCardinality32->CreateValue();
    valueCardinality32.Read(0);
-   EXPECT_EQ(1U, valueCardinality32.GetRef<std::uint32_t>());
+   EXPECT_EQ(1U, valueCardinality32.GetRef<ROOT::RNTupleCardinality<std::uint32_t>>());
 
    // TODO: test reading of "klassVec.v1"
 }
@@ -341,63 +341,14 @@ void FillComplexVector(const std::string &fname)
    ntuple->Fill();
 }
 
-// Note: RVec and std::vector differ in the number of construction/destruction calls when reading through
-// a file. The reason is that we can control the memory re-allocation prodedure for RVec, which allows
-// us to save destruction/construction calls.
-
-TEST(RNTuple, ComplexVector)
+template <template <typename> class Coll_t>
+void TestComplexVector(const std::string &fname)
 {
-   FileRaii fileGuard("test_ntuple_vec_complex.root");
-   FillComplexVector<Vector_t>(fileGuard.GetPath());
-
    ComplexStruct::SetNCallConstructor(0);
    ComplexStruct::SetNCallDestructor(0);
    {
-      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<ComplexStruct>>("v");
-
-      ntuple->LoadEntry(0);
-      EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
-      EXPECT_TRUE(rdV->empty());
-      ntuple->LoadEntry(1);
-      EXPECT_EQ(10, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(10u, rdV->size());
-      ntuple->LoadEntry(2);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(10000u, rdV->size());
-      ntuple->LoadEntry(3);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(100u, rdV->size());
-      ntuple->LoadEntry(4);
-      EXPECT_EQ(10210, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10010, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(200u, rdV->size());
-      ntuple->LoadEntry(5);
-      EXPECT_EQ(10210, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10210, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(0u, rdV->size());
-      ntuple->LoadEntry(6);
-      EXPECT_EQ(10211, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10210, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(1u, rdV->size());
-   }
-   EXPECT_EQ(10211u, ComplexStruct::GetNCallDestructor());
-}
-
-TEST(RNTuple, ComplexRVec)
-{
-   FileRaii fileGuard("test_ntuple_rvec_complex.root");
-   FillComplexVector<ROOT::RVec>(fileGuard.GetPath());
-
-   ComplexStruct::SetNCallConstructor(0);
-   ComplexStruct::SetNCallDestructor(0);
-   {
-      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<ComplexStruct>>("v");
+      auto ntuple = RNTupleReader::Open("T", fname);
+      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<Coll_t<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -429,6 +380,20 @@ TEST(RNTuple, ComplexRVec)
       EXPECT_EQ(1u, rdV->size());
    }
    EXPECT_EQ(10111u, ComplexStruct::GetNCallDestructor());
+}
+
+TEST(RNTuple, ComplexVector)
+{
+   FileRaii fileGuard("test_ntuple_vec_complex.root");
+   FillComplexVector<Vector_t>(fileGuard.GetPath());
+   TestComplexVector<Vector_t>(fileGuard.GetPath());
+}
+
+TEST(RNTuple, ComplexRVec)
+{
+   FileRaii fileGuard("test_ntuple_rvec_complex.root");
+   FillComplexVector<ROOT::RVec>(fileGuard.GetPath());
+   TestComplexVector<ROOT::RVec>(fileGuard.GetPath());
 }
 
 TEST(RNTuple, VectorOfString)
@@ -532,4 +497,55 @@ TEST(RNTuple, VectorOfTObject)
    reader->LoadEntry(1);
    ASSERT_EQ(1u, objs->size());
    EXPECT_EQ(44u, objs->at(0).GetUniqueID());
+}
+
+TEST(RNTuple, RVecAdopted)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_tobject.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto vec = model->MakeField<std::vector<float>>("vec");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *vec = {1.0, 2.0};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   float buf[] = {0.0, 0.0, 0.0};
+   ROOT::RVec<float> vec(buf, 3);
+   auto view = reader->GetView("vec", &vec);
+
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(3u, vec.size());
+
+   view(0);
+   EXPECT_NE(buf, vec.data());
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   vec = ROOT::RVec<float>(buf, 1);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(1u, vec.size());
+
+   view(0);
+   EXPECT_NE(buf, vec.data());
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   vec = ROOT::RVec<float>(buf, 2);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   view(0);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+   EXPECT_FLOAT_EQ(1.0, buf[0]);
+   EXPECT_FLOAT_EQ(2.0, buf[1]);
+   EXPECT_FLOAT_EQ(0.0, buf[2]);
 }

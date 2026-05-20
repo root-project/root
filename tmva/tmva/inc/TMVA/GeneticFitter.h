@@ -58,13 +58,13 @@ namespace TMVA {
                           Double_t SC_factor,
                           Double_t convCrit );
 
-      Double_t Run( std::vector<Double_t>& pars );
+      Double_t Run( std::vector<Double_t>& pars ) override;
 
       Double_t NewFitness( Double_t oldF, Double_t newF ) { return oldF + newF; }
 
    private:
 
-      void DeclareOptions();
+      void DeclareOptions() override;
 
       Int_t fCycles;                    ///< number of (nearly) independent calculation cycles
       Int_t fNsteps;                    ///< convergence criteria: if no improvements > fConvCrit was achieved within the last fNsteps: cycle has "converged"
@@ -78,7 +78,7 @@ namespace TMVA {
       Bool_t fTrim;                     ///< take care, that the number of individuals is less fPopSize (trimming is done after the fitness of the individuals is assessed)
       UInt_t fSeed;                     ///< Seed for the random generator (0 takes random seeds)
 
-      ClassDef(GeneticFitter,0); // Fitter using a Genetic Algorithm
+      ClassDefOverride(GeneticFitter,0); // Fitter using a Genetic Algorithm
    };
 
 } // namespace TMVA

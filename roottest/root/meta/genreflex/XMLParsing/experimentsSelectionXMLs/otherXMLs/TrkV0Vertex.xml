@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="Trk::V0Hypothesis" />
+  <class name="std::vector<Trk::V0Hypothesis*>" />
+  <class name="V0Container" id="0C363A21-1B86-4B39-8A84-A62161B13C7B" />
+  <class name="DataVector<Trk::V0Candidate>" />
+  <class name="std::vector<Trk::V0Candidate*>" />
+  <class name="Trk::V0Candidate" />
+</lcgdict>
+

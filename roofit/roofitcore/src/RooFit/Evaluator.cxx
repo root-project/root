@@ -46,6 +46,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <iomanip>
 #include <numeric>
 #include <thread>
+#include <unordered_set>
 
 namespace RooFit {
 
@@ -112,8 +113,10 @@ struct NodeInfo {
    bool isCategory = false;
    bool hasLogged = false;
    bool computeInGPU = false;
+   bool isValueServer = false; // if this node is a value server to the top node
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
+   int lastCatVal = std::numeric_limits<int>::max();
    double scalarBuffer = 0.0;
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
@@ -176,6 +179,8 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
 
       _nodes.emplace_back();
       auto &nodeInfo = _nodes.back();
+      _nodesMap[arg->namePtr()] = &nodeInfo;
+
       nodeInfo.absArg = arg;
       nodeInfo.originalOperMode = arg->operMode();
       nodeInfo.iNode = iNode;
@@ -201,6 +206,16 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
             info.serverInfos.emplace_back(serverInfo);
             serverInfo->clientInfos.emplace_back(&info);
          }
+      }
+   }
+
+   // Figure out which nodes are value servers to the top node
+   _nodes.back().isValueServer = true; // the top node itself
+   for (auto iter = _nodes.rbegin(); iter != _nodes.rend(); ++iter) {
+      if (!iter->isValueServer)
+         continue;
+      for (auto &serverInfo : iter->serverInfos) {
+         serverInfo->isValueServer = true;
       }
    }
 
@@ -243,49 +258,51 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
       throw std::runtime_error("Evaluator can only take device array as input in CUDA mode!");
    }
 
-   auto namePtr = RooNameReg::ptr(name.c_str());
+   // Check if "name" is used in the computation graph. If yes, add the span to
+   // the data map and set the node info accordingly.
 
-   // Iterate over the given data spans and add them to the data map. Check if
-   // they are used in the computation graph. If yes, add the span to the data
-   // map and set the node info accordingly.
-   std::size_t iNode = 0;
-   for (auto &info : _nodes) {
-      const bool fromArrayInput = info.absArg->namePtr() == namePtr;
-      if (fromArrayInput) {
-         info.fromArrayInput = true;
-         info.absArg->setDataToken(iNode);
-         info.outputSize = inputArray.size();
-         if (_useGPU && info.outputSize <= 1) {
-            // Empty or scalar observables from the data don't need to be
-            // copied to the GPU.
-            _evalContextCPU.set(info.absArg, inputArray);
-            _evalContextCUDA.set(info.absArg, inputArray);
-         } else if (_useGPU && info.outputSize > 1) {
-            // For simplicity, we put the data on both host and device for
-            // now. This could be optimized by inspecting the clients of the
-            // variable.
-            if (isOnDevice) {
-               _evalContextCUDA.set(info.absArg, inputArray);
-               auto gpuSpan = _evalContextCUDA.at(info.absArg);
-               info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
-               info.buffer->assignFromDevice(gpuSpan);
-               _evalContextCPU.set(info.absArg, {info.buffer->hostReadPtr(), gpuSpan.size()});
-            } else {
-               _evalContextCPU.set(info.absArg, inputArray);
-               auto cpuSpan = _evalContextCPU.at(info.absArg);
-               info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
-               info.buffer->assignFromHost(cpuSpan);
-               _evalContextCUDA.set(info.absArg, {info.buffer->deviceReadPtr(), cpuSpan.size()});
-            }
-         } else {
-            _evalContextCPU.set(info.absArg, inputArray);
-         }
-      }
-      info.isDirty = !info.fromArrayInput;
-      ++iNode;
-   }
+   auto found = _nodesMap.find(RooNameReg::ptr(name.c_str()));
+
+   if (found == _nodesMap.end())
+      return;
 
    _needToUpdateOutputSizes = true;
+
+   NodeInfo &info = *found->second;
+
+   info.fromArrayInput = true;
+   info.absArg->setDataToken(info.iNode);
+   info.outputSize = inputArray.size();
+
+   if (!_useGPU) {
+      _evalContextCPU.set(info.absArg, inputArray);
+      return;
+   }
+
+   if (info.outputSize <= 1) {
+      // Empty or scalar observables from the data don't need to be
+      // copied to the GPU.
+      _evalContextCPU.set(info.absArg, inputArray);
+      _evalContextCUDA.set(info.absArg, inputArray);
+      return;
+   }
+
+   // For simplicity, we put the data on both host and device for
+   // now. This could be optimized by inspecting the clients of the
+   // variable.
+   if (isOnDevice) {
+      _evalContextCUDA.set(info.absArg, inputArray);
+      auto gpuSpan = _evalContextCUDA.at(info.absArg);
+      info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
+      info.buffer->assignFromDevice(gpuSpan);
+      _evalContextCPU.set(info.absArg, {info.buffer->hostReadPtr(), gpuSpan.size()});
+   } else {
+      _evalContextCPU.set(info.absArg, inputArray);
+      auto cpuSpan = _evalContextCPU.at(info.absArg);
+      info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
+      info.buffer->assignFromHost(cpuSpan);
+      _evalContextCUDA.set(info.absArg, {info.buffer->deviceReadPtr(), cpuSpan.size()});
+   }
 }
 
 void Evaluator::updateOutputSizes()
@@ -308,17 +325,7 @@ void Evaluator::updateOutputSizes()
 
    for (auto &info : _nodes) {
       info.outputSize = outputSizeMap.at(info.absArg);
-
-      // In principle we don't need dirty flag propagation because the driver
-      // takes care of deciding which node needs to be re-evaluated. However,
-      // disabling it also for scalar mode results in very long fitting times
-      // for specific models (test 14 in stressRooFit), which still needs to be
-      // understood. TODO.
-      if (!info.isScalar()) {
-         setOperMode(info.absArg, RooAbsArg::ADirty);
-      } else {
-         setOperMode(info.absArg, info.originalOperMode);
-      }
+      info.isDirty = true;
    }
 
    if (_useGPU) {
@@ -406,6 +413,22 @@ void Evaluator::processVariable(NodeInfo &nodeInfo)
    }
 }
 
+/// Process a category in the computation graph. This is a separate non-inlined
+/// function such that we can see in performance profiles how long this takes.
+void Evaluator::processCategory(NodeInfo &nodeInfo)
+{
+   RooAbsArg *node = nodeInfo.absArg;
+   auto *cat = static_cast<RooAbsCategory const *>(node);
+   if (nodeInfo.lastCatVal != cat->getCurrentIndex()) {
+      nodeInfo.lastCatVal = cat->getCurrentIndex();
+      for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
+         clientInfo->isDirty = true;
+      }
+      computeCPUNode(node, nodeInfo);
+      nodeInfo.isDirty = false;
+   }
+}
+
 /// Flags all the clients of a given node dirty. This is a separate non-inlined
 /// function such that we can see in performance profiles how long this takes.
 void Evaluator::setClientsDirty(NodeInfo &nodeInfo)
@@ -431,6 +454,8 @@ std::span<const double> Evaluator::run()
       if (!nodeInfo.fromArrayInput) {
          if (nodeInfo.isVariable) {
             processVariable(nodeInfo);
+         } else if (nodeInfo.isCategory) {
+            processCategory(nodeInfo);
          } else {
             if (nodeInfo.isDirty) {
                setClientsDirty(nodeInfo);
@@ -592,9 +617,52 @@ void Evaluator::markGPUNodes()
 /// Evaluator gets deleted.
 void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 {
-   if (opMode != arg->operMode()) {
-      _changeOperModeRAIIs.emplace(std::make_unique<ChangeOperModeRAII>(arg, opMode));
+   if (!_operModeChanges)
+      _operModeChanges = std::make_unique<ChangeOperModeRAII>();
+   _operModeChanges->change(arg, opMode);
+}
+
+// Change the operation modes of all RooAbsArgs in the computation graph.
+// The changes are reset when the returned RAII object goes out of scope.
+//
+// We also walk transitively through value clients of the nodes to cover any
+// node that RooAbsReal::doEval (the fallback scalar implementation) might
+// inadvertently propagate the ADirty mode to via its recursive restore: that
+// helper sets servers temporarily to AClean and then calls
+// setOperMode(oldOperMode) to restore, which recurses to value clients when
+// oldOperMode is ADirty. If we did not protect those clients here, any node
+// outside the computation graph that shares a fundamental (e.g. a parameter
+// like a RooRealVar) would be left permanently in ADirty after the first
+// minimization, dramatically slowing down later scalar evaluations (for
+// example on pdfs held by the legacy test statistics' internal cache).
+std::unique_ptr<ChangeOperModeRAII> Evaluator::setOperModes(RooAbsArg::OperMode opMode)
+{
+   auto out = std::make_unique<ChangeOperModeRAII>();
+   std::unordered_set<RooAbsArg *> visited;
+
+   std::vector<RooAbsArg *> queue;
+   queue.reserve(_nodes.size());
+   for (auto &info : _nodes) {
+      queue.push_back(info.absArg);
    }
+
+   while (!queue.empty()) {
+      RooAbsArg *node = queue.back();
+      queue.pop_back();
+      if (!visited.insert(node).second)
+         continue;
+
+      out->change(node, opMode);
+
+      // Only follow value-client links: that is exactly the propagation path
+      // used by RooAbsArg::setOperMode with mode==ADirty.
+      if (opMode == RooAbsArg::ADirty) {
+         for (auto *client : node->valueClients()) {
+            queue.push_back(client);
+         }
+      }
+   }
+   return out;
 }
 
 void Evaluator::print(std::ostream &os)
@@ -663,7 +731,7 @@ RooArgSet Evaluator::getParameters() const
 {
    RooArgSet parameters;
    for (auto &nodeInfo : _nodes) {
-      if (nodeInfo.absArg->isFundamental()) {
+      if (nodeInfo.isValueServer && nodeInfo.absArg->isFundamental()) {
          parameters.add(*nodeInfo.absArg);
       }
    }

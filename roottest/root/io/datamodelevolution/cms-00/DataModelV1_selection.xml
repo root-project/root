@@ -1,0 +1,45 @@
+<lcgdict>
+  <class name="ClassAIns" ClassVersion="2">
+     <field name="m_cache" transient="TRUE" />
+  </class>
+  <class name="ClassAIns::Transient" ClassVersion="2" />
+  <class name="ClassABase" ClassVersion="2" />
+  <class name="ClassA" ClassVersion="2"  />
+  <class name="ClassB" ClassVersion="2" />
+  <class name="ClassC" ClassVersion="2" />
+  <class name="ClassD" ClassVersion="2" />
+  <class name="std::vector<double>" />
+  <class name="std::pair<int,double>" />
+  <class name="std::vector<std::pair<int,double> >" />
+  <class name="std::vector<ClassA>" />
+  <class name="std::vector<ClassA*>" />
+  <class name="std::vector<ClassB>" />
+  <class name="std::vector<ClassB*>" />
+  <class name="std::vector<ClassC>" />
+  <class name="std::vector<ClassC*>" />
+  <class name="std::vector<ClassD>" />
+  <class name="std::vector<ClassD*>" />
+
+  <class name="ClassAIns::Transient" ClassVersion="2" />
+  <read sourceClass="ClassAIns::Transient" version="[2]" targetClass="ClassAIns::Transient" source="" target="fCached" >
+  <![CDATA[ { fCached = false; } ]]>
+  </read>
+
+  <class name="CMS::ClassAIns" ClassVersion="2" />
+  <class name="CMS::ClassAIns::Transient" ClassVersion="2" />
+  <!-- ioread sourceClass="CMS::ClassAIns::Transient" version="[2]"  targetClass="CMS::ClassAIns::Transient" source="" target="fCached" >
+  <![CDATA[ { fCached = crap you must die; } ]]>
+  </ioread !-->
+
+  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000" ClassVersion="2">
+     <field name="m_measurements" transient="true"/>
+     <field name="m_projections" transient="true"/>
+     <field name="m_nothing" transient="true"/>
+     <field name="m_nodes" transient="true"/>
+     <field name="m_nodes" transient="true"/>
+  </class>
+  <class name="LHCb::Node"/>
+  <class name="LHCb::RefRight" ClassVersion="2"  />
+  <class name="LHCb::RefLeft" ClassVersion="2" />
+  <class name="LHCb::Ref" ClassVersion="2"  />
+</lcgdict>

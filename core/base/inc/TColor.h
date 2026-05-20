@@ -143,6 +143,10 @@ class TColorNumber {
 public:
    TColorNumber(Int_t color) : fNumber{color} {}
    TColorNumber(std::string const &color);
+   // We also require an overload for C-style strings. That's because the
+   // TColorNumber is designed to be constructed implicitly, and C++ won't do
+   // two user-defined conversions in a single implicit conversion chain.
+   inline TColorNumber(const char *color) : TColorNumber{std::string{color}} {}
    TColorNumber(std::array<Float_t, 3> rgb);
    Int_t number() const { return fNumber; }
 

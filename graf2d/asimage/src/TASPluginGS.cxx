@@ -33,14 +33,12 @@ Allows to read PS/EPS/PDF files via GhostScript
 #ifndef WIN32
 #   include <afterbase.h>
 #else
-#   include <win32/config.h>
-#   include <win32/afterbase.h>
 #   define X_DISPLAY_MISSING 1
+#   include <afterbase.h>
 #endif
 #   include <import.h>
 
 
-ClassImp(TASPluginGS);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor
@@ -110,8 +108,8 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
             int lx, ly, ux, uy;
             line = line(14, line.Length());
             sscanf(line.Data(), "%d %d %d %d", &lx, &ly, &ux, &uy);
-            width = TMath::Abs(ux - lx);
-            height = TMath::Abs(uy - ly);
+            width = std::abs(ux - lx);
+            height = std::abs(uy - ly);
             break;
          }
       } while (!feof(fd));

@@ -32,7 +32,6 @@ For quad modes the deltas are expected to be positive.
 For line modes negative deltas are ok.
 */
 
-ClassImp(TEveQuadSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

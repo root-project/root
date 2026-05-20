@@ -45,7 +45,6 @@ This file contains the TGMdiFrame class.
 
 #include <iostream>
 
-ClassImp(TGMdiFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGMdiFrame constructor.

@@ -1,0 +1,24 @@
+<lcgdict>
+
+  <class name="CscCalibData" />
+
+  <class name="std::vector<CscCalibData*>" />
+
+
+<!--   <class name="IdentifiableContainer<CscCalibDataCollection,CscCalibDataIdHash>" > -->
+<!--     <field name="m_hashFunc" transient="true" /> -->
+<!--   </class> -->
+
+  <class name="DataLinkVector<CscCalibDataCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+  <class name="CscCalibDataCollection" />
+
+  <class name="CscCalibDataContainer" />
+  <class name="std::vector<CscCalibDataCollection * >" />
+  <class name="DataVector<CscCalibDataCollection>" id="D76FF81E-31CD-5564-B7C9-1F59D47F6655" />
+
+</lcgdict>
+

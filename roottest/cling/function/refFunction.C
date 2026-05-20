@@ -1,0 +1,9 @@
+#if defined(__ROOTCLING__) || !defined(__CLING__)
+#include "refClasses.cxx"
+#endif
+
+zz refFunction(const yy& arg="def-xx")
+{
+  printf("xx -- arg='%s'\n", arg.Data());
+  return arg;
+}

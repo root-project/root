@@ -709,7 +709,6 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
       }
       rec["implied"]  = imp;
 
-
       if (i.first->RequiresExtraSelectionData()) {
          i.first->FillExtraSelectionData(rec["extra"], sec);
       }

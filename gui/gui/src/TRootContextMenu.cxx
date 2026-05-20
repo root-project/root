@@ -55,7 +55,6 @@ enum EContextMenu {
 };
 
 
-ClassImp(TRootContextMenu);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create context menu.
@@ -503,24 +502,6 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             // Find out whether we have options ...
             if (m->GetOptions()) {
                Warning("Dialog", "option menu not yet implemented");
-#if 0
-               TMotifOptionMenu *o= new TMotifOptionMenu(argname);
-               TIter nextopt(opt);
-               TOptionListItem *it = 0;
-               while ((it = (TOptionListItem*) nextopt())) {
-                  char *name  = it->fOptName;
-                  char *label = it->fOptLabel;
-                  Long_t value  = it->fValue;
-                  if (value != -9999) {
-                     char val[256];
-                     snprintf(val,256, "%li", value);
-                     o->AddItem(name, val);
-                  }else
-                     o->AddItem(name, label);
-               }
-               o->SetData(val);
-               fDialog->Add(o);
-#endif
             } else {
                // we haven't got options - textfield ...
                fDialog->Add(argname, val, type);

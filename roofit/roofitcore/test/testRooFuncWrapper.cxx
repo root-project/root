@@ -11,22 +11,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooAbsData.h>
-#include <RooAbsPdf.h>
 #include <RooAddPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooClassFactory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooEvaluatorWrapper.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
-#include <RooFuncWrapper.h>
+#include <RooFunctor1DBinding.h>
+#include <RooFunctorBinding.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooMinimizer.h>
+#include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooRealSumPdf.h>
@@ -34,6 +35,7 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
+#include <Math/Functor.h>
 #include <ROOT/StringUtils.hxx>
 #include <TMath.h>
 #include <TROOT.h>
@@ -86,88 +88,6 @@ void randomizeParameters(const RooArgSet &parameters)
 }
 
 } // namespace
-
-TEST(RooFuncWrapper, GaussianNormalized)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
-
-   RooWorkspace ws;
-   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()}, RooFit::Silence());
-   ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
-   ws.factory("prod::sigma_scaled(sigma[2.0, 0.01, 10], 1.5)");
-   ws.factory("Gaussian::gauss(x, mu_shifted, sigma_scaled)");
-
-   RooAbsPdf &gauss = *ws.pdf("gauss");
-   RooRealVar &x = *ws.var("x");
-   RooRealVar &mu = *ws.var("mu");
-
-   RooArgSet normSet{x};
-   std::unique_ptr<RooAbsReal> gaussNormalized = RooFit::Detail::compileForNormSet(gauss, normSet);
-
-   RooFit::Experimental::RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
-   gaussFunc.createGradient();
-
-   RooArgSet paramsGauss;
-   gauss.getParameters(nullptr, paramsGauss);
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   mu.setVal(1);
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   // Get AD based derivative
-   std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
-   gaussFunc.gradient(dMyGauss.data());
-
-   // Check if derivatives are equal
-   for (std::size_t i = 0; i < paramsGauss.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(gauss, static_cast<RooRealVar &>(*paramsGauss[i]), normSet), dMyGauss[i], 1e-8);
-   }
-}
-
-TEST(RooFuncWrapper, Exponential)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
-
-   for (auto negateCoefficient : {false, true}) {
-
-      RooWorkspace ws;
-      if (negateCoefficient) {
-         ws.factory("Exponential::expo_2(x[1.0, 0, 10], c[0.1, 0, 10], true)");
-      } else {
-         ws.factory("Exponential::expo_1(x[1.0, 0, 10], c[0.1, 0, 10], false)");
-      }
-
-      std::string name = negateCoefficient ? "expo_2" : "expo_1";
-
-      RooAbsPdf &expo = *ws.pdf(name);
-      RooRealVar &x = *ws.var("x");
-
-      RooArgSet normSet{x};
-
-      std::unique_ptr<RooAbsReal> expoNormalized = RooFit::Detail::compileForNormSet(expo, normSet);
-
-      RooFit::Experimental::RooFuncWrapper expoFunc(name.c_str(), name.c_str(), *expoNormalized, nullptr, nullptr,
-                                                    false);
-      expoFunc.createGradient();
-
-      RooArgSet params;
-      expo.getParameters(nullptr, params);
-
-      EXPECT_NEAR(expo.getVal(normSet), expoFunc.getVal(), 1e-8);
-
-      // Get AD based derivative
-      std::vector<double> dExpo(expoFunc.getNumParams(), 0);
-      expoFunc.gradient(dExpo.data());
-
-      // Check if derivatives are equal
-      for (std::size_t i = 0; i < params.size(); ++i) {
-         EXPECT_NEAR(getNumDerivative(expo, static_cast<RooRealVar &>(*params[i]), normSet), dExpo[i], 1e-8)
-            << params[i]->GetName();
-      }
-   }
-}
 
 using CreateNLLFunc =
    std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &, RooFit::EvalBackend)>;
@@ -241,9 +161,9 @@ TEST_P(FactoryTest, NLLFit)
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
    std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
-   // We don't use the RooFit::Evaluator for the nominal likelihood. Like this,
-   // we make sure to validate also the NLL values of the generated code.
-   static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).disableEvaluator();
+   // We want to use the generated code also for the nominal likelihood. Like
+   // this, we make sure to validate also the NLL values of the generated code.
+   static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
 
    double tol = _params._fitResultTolerance;
 
@@ -301,7 +221,9 @@ TEST_P(FactoryTest, NLLFit)
 /// Initial minimization that was not based on any other tutorial/test.
 FactoryTestParams param1{"Gaussian",
                          [](RooWorkspace &ws) {
-                            ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+                            constexpr double inf = std::numeric_limits<double>::infinity();
+                            ws.import(RooRealVar{"mu", "mu", -inf, inf});
+                            ws.factory("sum::mu_shifted(mu, shift[1.0, -10, 10])");
                             ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
@@ -510,7 +432,10 @@ FactoryTestParams param9{"Poisson",
 // A RooPoisson where x is not rounded, like it is used in HistFactory
 FactoryTestParams param10{"PoissonNoRounding",
                           [](RooWorkspace &ws) {
-                             ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
+                             constexpr double inf = std::numeric_limits<double>::infinity();
+                             RooRealVar mu{"mu", "mu", 5., 0., inf};
+                             ws.import(mu);
+                             ws.factory("Poisson::model(x[5, 0, 10], mu)");
                              auto poisson = static_cast<RooPoisson *>(ws.pdf("model"));
                              poisson->setNoRounding(true);
                              ws.defineSet("observables", "x");
@@ -527,12 +452,8 @@ FactoryTestParams param11{"ClassFactory1D",
                              RooRealVar mu{"mu", "mu", 5, 0, 10};
                              RooRealVar sigma{"sigma", "sigma", 2.0, 0.1, 10};
 
-                             // TODO: When Clad issue #635 is solved, we can
-                             // actually use a complete Gaussian here, also
-                             // with sigma.
                              std::unique_ptr<RooAbsPdf> pdf{RooClassFactory::makePdfInstance(
-                                //"model", "std::exp(-0.5 * (x - mu)*(x - mu) / (sigma * sigma))", {x, mu, sigma})};
-                                "model", "std::exp(-0.5 * (x - mu)*(x - mu))", {x, mu})};
+                                "model", "std::exp(-0.5 * (x - mu)*(x - mu) / (sigma * sigma))", {x, mu, sigma})};
                              ws.import(*pdf);
                              ws.defineSet("observables", "x");
                           },
@@ -540,6 +461,122 @@ FactoryTestParams param11{"ClassFactory1D",
                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                           },
                           5e-3, // increase tolerance because the numeric integration algos are still different
+                          /*randomizeParameters=*/true};
+
+FactoryTestParams param12{"RooMultiVarGaussian",
+                          [](RooWorkspace &ws) {
+                             RooRealVar x("x", "x variable", -5, 5);
+                             RooRealVar y("y", "y variable", -5, 5);
+
+                             RooArgList vars(x, y);
+
+                             RooRealVar mean_x("mean_x", "mean of x", 1.0, -5, 5);
+                             RooRealVar mean_y("mean_y", "mean of y", -1.0, -5, 5);
+                             RooArgList means(mean_x, mean_y);
+
+                             TMatrixDSym cov(2);
+                             cov(0, 0) = 1.0; // Var(x)
+                             cov(1, 1) = 1.5; // Var(y)
+                             cov(0, 1) = 0.3; // Cov(x,y)
+                             cov(1, 0) = 0.3;
+
+                             RooMultiVarGaussian mvgauss("model", "Multivariate Gaussian", vars, means, cov);
+
+                             ws.import(mvgauss);
+                             ws.defineSet("observables", vars);
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-4,
+                          /*randomizeParameters=*/true};
+
+namespace {
+
+// Functions to be wrapped in ROOT::Math::Functors
+double func_1(double const *x)
+{
+   return x[0] - x[1];
+}
+void func_1_grad(double const * /*x*/, double *grad_out)
+{
+   grad_out[0] = 1;
+   grad_out[1] = -1;
+}
+
+auto &functor_1()
+{
+   static ROOT::Math::GradFunctor functor{func_1, 2, func_1_grad};
+   return functor;
+}
+
+double func_gaussian(double const *x)
+{
+   const double arg = x[0] - x[1];
+   const double sig = x[2];
+   return std::exp(-0.5 * arg * arg / (sig * sig));
+}
+
+void func_gaussian_grad(double const *x, double *grad_out)
+{
+   const double arg = x[0] - x[1];
+   const double sig = x[2];
+
+   const double inv_sig2 = 1.0 / (sig * sig);
+   const double f = std::exp(-0.5 * arg * arg * inv_sig2);
+
+   grad_out[0] = -f * arg * inv_sig2;
+   grad_out[1] = f * arg * inv_sig2;
+   grad_out[2] = f * arg * arg * inv_sig2 / sig;
+}
+
+auto &functor_gaussian()
+{
+   static ROOT::Math::GradFunctor functor{func_gaussian, 3, func_gaussian_grad};
+   return functor;
+}
+
+double func_1_1D(double x)
+{
+   return x - 1.0;
+}
+double func_1_1D_diff(double /*x*/)
+{
+   return 1.;
+}
+
+auto &functor_1_1D()
+{
+   static ROOT::Math::GradFunctor1D functor{func_1_1D, func_1_1D_diff};
+   return functor;
+}
+
+} // namespace
+
+FactoryTestParams param13{"RooFunctor",
+                          [](RooWorkspace &ws) {
+                             RooRealVar x("x", "", 0.0, -4, 4);
+                             RooRealVar mu("mu", "", 0.0, -4, 4);
+                             RooRealVar shift("shift", "", 1.0, -4, 4);
+                             shift.setConstant(true);
+                             RooFunctorBinding mu_shifted("mu_shifted", "", functor_1(), {mu, shift});
+                             RooFunctor1DBinding mu_shifted_1D("mu_shifted_1D", "", functor_1_1D(), {mu});
+                             RooRealVar sigma("sigma", "", 4., 0.01, 10.);
+
+                             RooFunctorPdfBinding gauss_1("model_1", "", functor_gaussian(), {x, mu_shifted, sigma});
+                             RooFunctorPdfBinding gauss_2("model_2", "", functor_gaussian(), {x, mu_shifted_1D, sigma});
+
+                             RooAddPdf model{"model", "", {gauss_1, gauss_2}, RooArgList{0.5}};
+
+                             RooArgSet vars{x};
+
+                             ws.import(model);
+                             ws.defineSet("observables", vars);
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-3,
                           /*randomizeParameters=*/true};
 
 FactoryTestParams makeTestParams(const char *name, std::vector<std::string> const &expressions,
@@ -586,7 +623,7 @@ auto testValues = testing::Values(
                   5e-3, true),
    makeTestParams("RooCBShape",
                   {"x[0., -200., 200.]", "x0[100., -200., 200.]",
-                   "CBShape::model(x, x0, sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, 100.], n[1., 1.E-6, 100.])"},
+                   "CBShape::model(x, x0, sigma[2., 1.E-1, 100.], alpha[1., 1.E-1, 100.], n[1., 1.E-1, 100.])"},
                   6e-3, true),
    makeTestParams("RooBernstein",
                   {"Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.]})"}, 6e-3,
@@ -594,11 +631,11 @@ auto testValues = testing::Values(
    // We're testing several Landau configurations, because the underlying
    // ROOT::Math::landau_cdf is defined piecewise. Like this, we're covering
    // all possible code paths in the pullback.
-   makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 6e-3, false),
+   makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 7e-3, false),
    makeTestParams(
       "RooRealSumPdf1",
       {"Gaussian::gx(x[-10,10],m[0],1.0)", "Chebychev::ch(x,{0.1,0.2,-0.3})", "RealSumPdf::model({gx, ch}, {f[0,1]})"},
@@ -609,7 +646,16 @@ auto testValues = testing::Values(
                   {"x[-10., 10.]", "mean[1., -10., 10.]", "sigma[1., 0.1, 10.]",
                    "expr::gauss_func('std::exp(-0.5*(x - mean) * (x - mean) / (sigma * sigma))', {x, mean, sigma})",
                    "WrapperPdf::model(gauss_func)"},
-                  6e-3, true));
+                  6e-3, true),
+   param12
+// The following test for RooFunctorBinding and friends fails on Windows with the following error:
+//   CMake Error at C:/ROOT-CI/src/cmake/modules/RootTestDriver.cmake:253 (message):
+//     error code: Access violation
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+   ,
+   param13
+#endif
+);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {

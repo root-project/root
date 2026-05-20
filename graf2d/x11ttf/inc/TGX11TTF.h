@@ -27,34 +27,36 @@ class TXftFontHash;
 class TGX11TTF : public TGX11 {
 
 private:
-   enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-                        kBLeft, kBCenter, kBRight };
-
    FT_Vector   fAlign;                 ///< alignment vector
 #ifdef R__HAS_XFT
    TXftFontHash  *fXftFontHash;        ///< hash table for Xft fonts
    static Bool_t  gXftInit;            ///< does xft was initialized
 #endif
 
-   void     Align(void);
+   void     Align(WinContext_t wctxt);
    void     DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, RXImage *xim,
                       Int_t bx, Int_t by);
-   Bool_t   IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   RXImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void     RenderString(Int_t x, Int_t y, ETextMode mode);
+   Bool_t   IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   RXImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void     RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode);
 
 public:
-   TGX11TTF(const TGX11 &org);
+   TGX11TTF(TGX11 &&org);
    ~TGX11TTF() override { }
 
    Bool_t Init(void *display) override;
-   void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+
+   void   DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const char *text, ETextMode mode) override;
-   void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+   void   DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const wchar_t *text, ETextMode mode) override;
-   void   SetTextFont(Font_t fontnumber) override;
+
+   using TGX11::SetTextFont;
    Int_t  SetTextFont(char *fontname, ETextSetMode mode) override;
-   void   SetTextSize(Float_t textsize) override;
+
+   //---- Methods used for new graphics -----
+   void  SetAttText(WinContext_t wctxt, const TAttText &att) override;
+
 
 #ifdef R__HAS_XFT
    //---- Methods used text/fonts handling via Xft -----

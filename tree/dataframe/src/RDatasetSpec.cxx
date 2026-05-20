@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RDatasetSpec.hxx"
+#include <ROOT/RFriendInfo.hxx>
 #include <stdexcept> // std::logic_error
 
 namespace ROOT {
@@ -76,7 +77,12 @@ const std::vector<RMetaData> RDatasetSpec::GetMetaData() const
 /// \brief Returns the reference to the friend tree information.
 const ROOT::TreeUtils::RFriendInfo &RDatasetSpec::GetFriendInfo() const
 {
-   return fFriendInfo;
+   return *std::any_cast<ROOT::TreeUtils::RFriendInfo>(&fFriendInfo);
+}
+
+ROOT::TreeUtils::RFriendInfo &RDatasetSpec::GetFriendInfo()
+{
+   return *std::any_cast<ROOT::TreeUtils::RFriendInfo>(&fFriendInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +159,7 @@ RDatasetSpec &RDatasetSpec::AddSample(RSample sample)
 RDatasetSpec &
 RDatasetSpec::WithGlobalFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
 {
-   fFriendInfo.AddFriend(treeName, fileNameGlob, alias);
+   GetFriendInfo().AddFriend(treeName, fileNameGlob, alias);
    return *this;
 }
 
@@ -166,7 +172,7 @@ RDatasetSpec::WithGlobalFriends(const std::string &treeName, const std::string &
 RDatasetSpec &RDatasetSpec::WithGlobalFriends(const std::string &treeName,
                                               const std::vector<std::string> &fileNameGlobs, const std::string &alias)
 {
-   fFriendInfo.AddFriend(treeName, fileNameGlobs, alias);
+   GetFriendInfo().AddFriend(treeName, fileNameGlobs, alias);
    return *this;
 }
 
@@ -178,7 +184,7 @@ RDatasetSpec &
 RDatasetSpec::WithGlobalFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                                 const std::string &alias)
 {
-   fFriendInfo.AddFriend(treeAndFileNameGlobs, alias);
+   GetFriendInfo().AddFriend(treeAndFileNameGlobs, alias);
    return *this;
 }
 
@@ -196,7 +202,7 @@ RDatasetSpec &RDatasetSpec::WithGlobalFriends(const std::vector<std::string> &tr
    target.reserve(fileNameGlobs.size());
    for (auto i = 0u; i < fileNameGlobs.size(); ++i)
       target.emplace_back(std::make_pair((treeNames.size() == 1u ? treeNames[0] : treeNames[i]), fileNameGlobs[i]));
-   fFriendInfo.AddFriend(target, alias);
+   GetFriendInfo().AddFriend(target, alias);
    return *this;
 }
 
@@ -222,3 +228,8 @@ RDatasetSpec &RDatasetSpec::WithGlobalRange(const RDatasetSpec::REntryRange &ent
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
+
+ROOT::RDF::Experimental::RDatasetSpec::RDatasetSpec() noexcept
+{
+   fFriendInfo = ROOT::TreeUtils::RFriendInfo{};
+};

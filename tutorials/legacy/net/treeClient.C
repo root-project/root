@@ -7,7 +7,7 @@
 ///   - Open at least 2 windows
 ///   - Start ROOT in the first windows
 ///   - Execute in the first window: .x fastMergeServer.C
-///   - Execute in the other windows: root.exe -b -l -q .x treeClient.C
+///   - Execute in the other windows: root.exe -b -q .x treeClient.C
 ///     (You can put it in the background if wanted).
 /// If you want to run the hserv.C on a different host, just change
 /// "localhost" in the TSocket ctor below to the desired hostname.

@@ -31,6 +31,7 @@
 
 #include "Math/GenVector/3DConversions.h"
 
+#include "TMath.h"
 
 #include <algorithm>
 #include <cassert>
@@ -57,7 +58,7 @@ namespace Math {
 
      @ingroup GenVector
 
-     @sa Overview of the @ref GenVector "physics vector library"
+     @see GenVector
   */
 
 class RotationZYX {
@@ -318,7 +319,7 @@ private:
    double fTheta;    // Y' rotation angle (pitch) defined in [-PI/2,PI/2]
    double fPsi;      // X'' rotation angle (roll) defined in (-PI,PI]
 
-   static double Pi() { return M_PI; }
+   static double Pi() { return TMath::Pi(); }
 
 };  // RotationZYX
 

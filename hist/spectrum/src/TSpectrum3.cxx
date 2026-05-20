@@ -48,11 +48,11 @@
 */
 
 #include "TSpectrum3.h"
-#include "TH1.h"
+#include "TH3.h"
 #include "TMath.h"
+#include "TVirtualPad.h"
 #define PEAK_WINDOW 1024
 
-ClassImp(TSpectrum3);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -109,17 +109,92 @@ TSpectrum3::~TSpectrum3()
 ///   This function calculates background spectrum from source in h.
 ///   The result is placed in the vector pointed by spectrum pointer.
 ///
-/// Function parameters:
-///  - spectrum:  pointer to the vector of source spectrum
-///  - size:      length of spectrum and working space vectors
-///  - number_of_iterations, for details we refer to manual
+///   Function parameters:
+///   - h: input 3-d histogram
+///   - nIterX, nIterY, nIterZ, iterations for X and Y and Z axes
+///     Increasing number of iterations make the result smoother and lower.
+///   - option: may contain one of the following options
+///      - direction of change of clipping window
+///               - possible values=kBackIncreasingWindow
+///                                 kBackDecreasingWindow
+///      - filterType-determines the algorithm of the filtering
+///               - possible values=kBackSuccessiveFiltering
+///                                 kBackOneStepFiltering
+///      - "same" : if this option is specified, the resulting background
+///                 histogram is superimposed on the picture in the current pad.
+///                 Default is "goff" ie no graphics output
 
-const char *TSpectrum3::Background(const TH1 * h, Int_t number_of_iterations,
-                                   Option_t * option)
+TH1 *TSpectrum3::Background(const TH1 *h, Int_t nIterX, Int_t nIterY, Int_t nIterZ, Option_t *option)
 {
-   Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
-        , h->GetName(), number_of_iterations, option);
-   return nullptr;
+   if (h == nullptr)
+      return nullptr;
+   Int_t dimension = h->GetDimension();
+   if (dimension != 3) {
+      Error("Background", "Only implemented for 3-d histograms");
+      return nullptr;
+   }
+   TString opt = option;
+   opt.ToLower();
+
+   // set options
+   Int_t direction = kBackDecreasingWindow;
+   if (opt.Contains("backincreasingwindow"))
+      direction = kBackIncreasingWindow;
+   Int_t filterType = kBackSuccessiveFiltering;
+   if (opt.Contains("backonestepfiltering"))
+      filterType = kBackOneStepFiltering;
+   Int_t firstX = h->GetXaxis()->GetFirst();
+   Int_t lastX = h->GetXaxis()->GetLast();
+   Int_t sizeX = lastX - firstX + 1;
+   Int_t firstY = h->GetYaxis()->GetFirst();
+   Int_t lastY = h->GetYaxis()->GetLast();
+   Int_t sizeY = lastY - firstY + 1;
+   Int_t firstZ = h->GetZaxis()->GetFirst();
+   Int_t lastZ = h->GetZaxis()->GetLast();
+   Int_t sizeZ = lastZ - firstZ + 1;
+   Int_t i, j, k;
+   Double_t ***source = new Double_t **[sizeX];
+   for (i = 0; i < sizeX; i++) {
+      source[i] = new Double_t *[sizeY];
+      for (j = 0; j < sizeY; j++) {
+         source[i][j] = new Double_t[sizeZ];
+         for (k = 0; k < sizeZ; k++)
+            source[i][j][k] = h->GetBinContent(i + firstX, j + firstY, k + firstZ);
+      }
+   }
+
+   // find background (source is input and in output contains the background
+   Background(source, sizeX, sizeY, sizeZ, nIterX, nIterY, nIterZ, direction, filterType);
+
+   // create output histogram containing background
+   // only bins in the range of the input histogram are filled
+   Int_t nch = strlen(h->GetName());
+   char *hbname = new char[nch + 20];
+   snprintf(hbname, nch + 20, "%s_background", h->GetName());
+   TH3 *hb = (TH3 *)h->Clone(hbname);
+   hb->Reset();
+   hb->GetListOfFunctions()->Delete();
+   for (i = 0; i < sizeX; i++)
+      for (j = 0; j < sizeY; j++)
+         for (k = 0; k < sizeZ; k++)
+            hb->SetBinContent(i + firstX, j + firstY, k + firstZ, source[i][j][k]);
+   hb->SetEntries(sizeX * sizeY * sizeZ);
+
+   // if option "same is specified, draw the result in the pad
+   if (opt.Contains("same")) {
+      if (gPad)
+         delete gPad->GetPrimitive(hbname);
+      hb->Draw("same");
+   }
+   for (i = 0; i < sizeX; i++) {
+      for (j = 0; j < sizeY; j++) {
+         delete[] source[i][j];
+      }
+      delete[] source[i];
+   }
+   delete[] source;
+   delete[] hbname;
+   return hb;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4334,4 +4409,13 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
    delete[] working_space;
    fNPeaks = peak_index;
    return fNPeaks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// static function (called by TH3), interface to TSpectrum3::Background
+
+TH1 *TSpectrum3::StaticBackground(const TH1 *hist, Int_t nIterX, Int_t nIterY, Int_t nIterZ, Option_t *option)
+{
+   TSpectrum3 s;
+   return s.Background(hist, nIterX, nIterY, nIterZ, option);
 }

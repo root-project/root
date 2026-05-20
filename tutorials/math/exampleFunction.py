@@ -10,12 +10,14 @@
 ##
 ## \author Lorenzo Moneta
 
-import ROOT
 import array
+
+import ROOT
+
 try:
     import numpy as np
-except:
-    print("Failed to import numpy.")
+except Exception as e:
+    print("Failed to import numpy:", e)
     exit()
 
 ## example 1D function
@@ -69,25 +71,19 @@ print("\n\nUse GradFunctor1D for making a function object implementing f(x) and 
 
 def g(x): return 2 * x
 
-gradFunc = ROOT.Math.GradFunctor1D(f, g)
-
-#check if ROOT has mathmore
-prevLevel = ROOT.gErrorIgnoreLevel
-ROOT.gErrorIgnoreLevel=ROOT.kFatal
-ret = ROOT.gSystem.Load("libMathMore") 
-ROOT.gErrorIgnoreLevel=prevLevel
-if (ret < 0) :
-   print("ROOT has not Mathmore")
-   print("derivative value at x = 1", gradFunc.Derivative(1) )
-
-else :
-   rf = ROOT.Math.RootFinder(ROOT.Math.RootFinder.kGSL_NEWTON)
-   rf.SetFunction(gradFunc, 3)
-   rf.Solve()
-   value = rf.Root()
-   print("Found root value x0 : f(x0) = 0  :  ", value)
-   if (value != 1):
-      print("Error finding a ROOT of function f(x)=x^2-1")
+# GSL_Newton is part of ROOT's MathMore library, which is not always active.
+# Let's therefore run this in a try block:
+try:
+    gradFunc = ROOT.Math.GradFunctor1D(f, g)
+    rf = ROOT.Math.RootFinder(ROOT.Math.RootFinder.kGSL_NEWTON)
+    rf.SetFunction(gradFunc, 3)
+    rf.Solve()
+    value = rf.Root()
+    print("Found root value x0 : f(x0) = 0  :  ", value)
+    if value != 1:
+        print("Error finding a ROOT of function f(x)=x^2-1")
+except Exception as e:
+    print(e)
 
 
 print("\n\nUse GradFunctor for making a function object implementing f(x,y) and df(x,y)/dx and df(x,y)/dy")

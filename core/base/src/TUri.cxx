@@ -19,7 +19,7 @@ the different parts of an URI. The functionality is that of
 a validating parser.
 */
 
-#include <ctype.h>    // for tolower()
+#include <cctype>    // for tolower()
 #include "TUri.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -44,7 +44,6 @@ const char* const kURI_unreserved   = "[[:alpha:][:digit:]\\-._~]";
 //const char* const kURI_subdelims    = "[!$&'()*+,;=]";
 
 
-ClassImp(TUri);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor that calls SetUri with a complete URI.

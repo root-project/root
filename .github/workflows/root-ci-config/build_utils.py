@@ -1,22 +1,19 @@
 #!/usr/bin/env false
 
+import datetime
 import json
 import os
+import platform
 import subprocess
 import sys
 import textwrap
-import datetime
 import time
-import platform
 from functools import wraps
 from hashlib import sha1
 from http import HTTPStatus
 from shutil import which
 from typing import Callable, Dict
-from collections import namedtuple
 
-from openstack.connection import Connection
-from requests import get
 
 def is_macos():
     return 'Darwin' == platform.system()
@@ -108,6 +105,16 @@ def print_warning(*values, **kwargs):
 def print_error(*values, **kwargs):
     print_fancy("Fatal error: ", *values, sgr=31, **kwargs)
 
+def print_options_diff(new, old):
+    """Print difference between build option dicts"""
+
+    for key in sorted(new):
+        try:
+            if new[key] != old[key]:
+                print(f"\t{key: <30}{old[key]} --> {new[key]}")
+        except KeyError:
+            print(f"\t{key: <30}None --> {new[key]}")
+
 
 def subprocess_with_log(command: str) -> int:
     """Runs <command> in shell and appends <command> to log"""
@@ -161,6 +168,8 @@ def die(code: int = 1, msg: str = "") -> None:
 def load_config(filename) -> dict:
     """Loads cmake options from a file to a dictionary"""
 
+    print(f"Loading configuration from file {filename}")
+
     options = {}
 
     try:
@@ -182,9 +191,6 @@ def load_config(filename) -> dict:
                key = split_line[0]
                val = split_line[1]+'='+split_line[2]
 
-            if val.lower() in ["on", "off"]:
-                val = val.lower()
-
             options[key] = val
 
     return options
@@ -197,6 +203,7 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
        example: {"builtin_xrootd"="on", "alien"="on"}
                         ->
                  '"-Dalien=on" -Dbuiltin_xrootd=on"'
+       The key CMAKE_GENERATOR is used to set the CMake generator.
     """
 
     if not config:
@@ -204,12 +211,21 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
 
     output = []
 
+    cmake_generator = None
     for key, value in config.items():
-        output.append(f'"-D{key}={value}"')
+        if key == "CMAKE_GENERATOR":
+            cmake_generator = value
+        else:
+            value_upper = value.upper()
+            value = value_upper if value_upper in ["YES", "NO"] else value
+            output.append(f'"-D{key}={value}"')
 
     output.sort()
+    if cmake_generator:
+        output.append(f'"-G{cmake_generator}"')
+    cmake_options = ' '.join(output)
 
-    return ' '.join(output)
+    return cmake_options
 
 def calc_options_hash(options: str) -> str:
     """Calculate the hash of the options string. If "march=native" is in the
@@ -218,7 +234,7 @@ def calc_options_hash(options: str) -> str:
     """
     options_and_defines = options
     if ('march=native' in options):
-        print_info(f"A march=native build was detected.")
+        print_info("A march=native build was detected.")
         compiler_name = 'c++' if which('c++') else 'clang++'
         command = f'echo | {compiler_name} -dM -E - -march=native'
         sp_result = subprocess.run([command], shell=True, capture_output=True, text=True)
@@ -228,7 +244,7 @@ def calc_options_hash(options: str) -> str:
         options_and_defines += sp_result.stdout
     return sha1(options_and_defines.encode('utf-8')).hexdigest()
 
-def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
+def upload_file(connection, container: str, dest_object: str, src_file: str) -> None:
     print(f"Attempting to upload {src_file} to {dest_object}")
 
     if not os.path.exists(src_file):
@@ -255,12 +271,15 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
         try:
             create_object_local()
             success = True
-        except:
+        except Exception:
             success = False
             sleep_time = sleep_time_unit * attempt
-            build_utils.print_warning(f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds...""")
+            print_warning(
+                f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds..."""
+            )
             time.sleep(sleep_time)
-        if success: break
+        if success:
+            break
 
     # We try one last time
     create_object_local()
@@ -269,6 +288,8 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
 
 
 def download_file(url: str, dest: str) -> None:
+    from requests import get
+
     print(f"\nAttempting to download {url} to {dest}")
 
     parent_dir = os.path.dirname(dest)
@@ -284,6 +305,7 @@ def download_latest(url: str, prefix: str, destination: str) -> str:
     """Downloads latest build artifact starting with <prefix>,
        and returns the file path to the downloaded file and shell_log."""
 
+    from requests import get
     # https://docs.openstack.org/api-ref/object-store/#show-container-details-and-list-objects
     with get(f"{url}/?prefix={prefix}&format=json", timeout=20) as req:
         if req.status_code == HTTPStatus.NO_CONTENT or req.content == b'[]':
@@ -302,3 +324,24 @@ def download_latest(url: str, prefix: str, destination: str) -> str:
         log.add(f"\ncurl --output {destination}/artifacts.tar.gz {url}/{latest}\n")
 
     return f"{destination}/artifacts.tar.gz"
+
+
+def remove_file_match_ext(directory: str, extension: str) -> str:
+    """
+    Deletes all files in a directory and its subdirectory matching an extension
+
+    Args:
+        directory (str): The path to the directory to search in.
+        extension (str): The regular expression pattern to match filenames against.
+    """
+    print_fancy(f"Removing gcda files from {directory}")
+    log.add(f"\nfind {directory} -name \\*.gcda -exec rm {{}} \\;")
+    pattern = "." + extension
+    count = 0
+    for currentdir, _, files in os.walk(directory):
+        for filename in files:
+            if filename.endswith(pattern):
+                file_path = os.path.join(currentdir, filename)
+                os.remove(file_path)
+                count += 1
+    print_fancy(f"Deleted {count} gcda files")

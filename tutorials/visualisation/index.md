@@ -32,6 +32,10 @@
 \ingroup tutorial_visualisation
 \brief Various examples showing the OpenGL graphics in ROOT.
 
+\defgroup tutorial_rcanvas RCanvas examples
+\ingroup tutorial_visualisation
+\brief These are RCanvas examples.
+
 \defgroup tutorial_cocoa Tutorials specific to Mac/Cocoa
 \ingroup tutorial_visualisation
 \brief Various examples showing graphics done with the Mac graphics system Cocoa.

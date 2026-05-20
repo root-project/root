@@ -56,6 +56,7 @@ object onto a one-dimensional plot.
 #include "TH1D.h"
 #include "TBrowser.h"
 #include "TVirtualPad.h"
+#include "TROOT.h"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -83,9 +84,9 @@ bool RooPlot::setAddDirectoryStatus(bool flag) { bool ret = flag ; _addDirStatus
 
 RooPlot::RooPlot()
 {
-  if (gDirectory && addDirectoryStatus()) {
-    SetDirectory(gDirectory);
-  }
+   if (gDirectory && ROOT::Experimental::ObjectAutoRegistrationEnabled() && addDirectoryStatus()) {
+      SetDirectory(gDirectory);
+   }
 }
 
 
@@ -242,8 +243,8 @@ void RooPlot::initialize()
 {
   SetName(histName()) ;
 
-  if (gDirectory && addDirectoryStatus()) {
-    SetDirectory(gDirectory);
+  if (gDirectory && ROOT::Experimental::ObjectAutoRegistrationEnabled() && addDirectoryStatus()) {
+     SetDirectory(gDirectory);
   }
 
   // We do not have useful stats of our own
@@ -898,22 +899,28 @@ bool RooPlot::drawAfter(const char *after, const char *target)
 /// methods to change the drawing style attributes of a contained
 /// object directly.
 
-TObject *RooPlot::findObject(const char *name, const TClass* tClass) const
+TObject *RooPlot::findObject(const char *name, const TClass *tClass) const
 {
-  TObject *ret = nullptr;
+   TObject *ret = nullptr;
 
-  for(auto const& item : _items) {
-    TObject &obj = *item.first;
-    if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName()))
-        && (!tClass || (obj.IsA()==tClass))) {
-      ret = &obj ;
-    }
-  }
+   for (auto const &item : _items) {
+      TObject &obj = *item.first;
+      if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName())) && (!tClass || (obj.IsA() == tClass))) {
+         ret = &obj;
+      }
+   }
 
-  if (ret == nullptr) {
-    coutE(InputArguments) << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << std::endl ;
-  }
-  return ret ;
+   if (ret == nullptr) {
+      std::stringstream error;
+      error << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name ? name : "<last>") << "\n"
+            << "Available objects are:\n";
+      for (auto const &item : _items) {
+         TObject &obj = *item.first;
+         error << "  - " << obj.IsA()->GetName() << " \"" << obj.GetName() << "\"\n";
+      }
+      coutE(InputArguments) << error.str();
+   }
+   return ret;
 }
 
 
@@ -1318,8 +1325,7 @@ void RooPlot::Streamer(TBuffer &R__b)
   // Custom streamer, needed for backward compatibility
 
   if (R__b.IsReading()) {
-    const bool oldAddDir = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(false);
+    TDirectory::TContext ctx{nullptr}; // No self-registration to directories
 
     // The default c'tor might have registered this with a TDirectory.
     // Streaming the TNamed will make this not retrievable anymore, so
@@ -1357,7 +1363,6 @@ void RooPlot::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, RooPlot::IsA());
     }
 
-    TH1::AddDirectory(oldAddDir);
     if (_dir)
       _dir->Append(this);
 

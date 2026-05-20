@@ -56,7 +56,17 @@ private:
    Int_t           fYPos;               // viewer Y position
    TVirtualPad    *fPad;                // pad we are attached to
    Bool_t          fBuildingScene;      // Rebuilding 3D scene
-   enum EPass { kSize, kDraw };         // Multi-pass build : size then draw
+   enum EPass {
+// clang++ <v20 (-Wshadow) complains about shadowing TStructNode.h global enum EScalingType. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kSize,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kDraw };                          // Multi-pass build : size then draw
    EPass           fPass;
 
    void     CreateViewer(const char *name);

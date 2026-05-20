@@ -13,6 +13,16 @@ TEST(TFormula, Interp)
   TFormula f("func", "TGeoBBox::DeclFileLine()");
 }
 
+TEST(TFormula, 2dFunctions)
+{
+   TFormula xyexpo("f2xyexpo", "xyexpo");
+   EXPECT_EQ(xyexpo.GetExpFormula(), TString("exp([p0]+[p1]*x+[p2]*y)"));
+   TFormula xylandau("f2xylandau", "xylandau");
+   EXPECT_EQ(xylandau.GetExpFormula(), TString("[p0]*TMath::Landau(x,[p1],[p2],false)*TMath::Landau(y,[p3],[p4],false)"));
+   TFormula xylandaun("f2xylandaun", "xylandaun");
+   EXPECT_EQ(xylandaun.GetExpFormula(), TString("TMath::Landau(x,[p0],[p1],true)*TMath::Landau(y,[p2],[p3],true)"));
+}
+
 // Test for TFormula Extended syntax support
 TEST(TFormulaPolTest, BasicPolynomialConstruction)
 {
@@ -87,4 +97,18 @@ TEST(TFormulaPolTest, CompoundExpressions)
 
    TFormula f1("f1", "pol1(x,0) + pol1(y,2)");
    EXPECT_EQ(f1.GetExpFormula(), TString("([p0]+[p1]*x)+([p2]+[p3]*y)"));
+}
+
+// https://github.com/root-project/root/issues/21104
+TEST(TFormula, SingleOpeningBracket)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TFormula", "String '[' with 1 unbalanced chars.");
+   TFormula f1("f1", "[");
+   EXPECT_FALSE(f1.IsValid());
+   EXPECT_EQ(f1.GetNdim(), 0);
+   diags.requiredDiag(kError, "TFormula", "String '(' with 1 unbalanced chars.");
+   TFormula f2("f2", "(");
+   EXPECT_FALSE(f2.IsValid());
+   EXPECT_EQ(f2.GetNdim(), 0);
 }

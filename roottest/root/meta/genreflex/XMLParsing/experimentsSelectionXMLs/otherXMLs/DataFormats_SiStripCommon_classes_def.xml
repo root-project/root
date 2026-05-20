@@ -1,0 +1,28 @@
+<lcgdict>
+
+  <class name="SiStripFecKey" ClassVersion="10">
+   <version ClassVersion="10" checksum="1449235727"/>
+  </class>
+  <class name="SiStripFedKey" ClassVersion="10">
+   <version ClassVersion="10" checksum="2750106675"/>
+  </class>
+  <class name="SiStripDetKey" ClassVersion="10">
+   <version ClassVersion="10" checksum="3857728603"/>
+  </class>
+  <class name="SiStripNullKey" ClassVersion="10">
+   <version ClassVersion="10" checksum="3635527151"/>
+  </class>
+  <class name="SiStripKey" ClassVersion="10">
+   <version ClassVersion="10" checksum="3677735205"/>
+  </class>
+
+  <class name="edm::Wrapper<sistrip::RunType>"/>
+  <class name="edm::Wrapper<sistrip::ApvReadoutMode>"/>
+  <class name="edm::Wrapper<sistrip::FedReadoutMode>"/>
+  <class name="SiStripEventSummary" ClassVersion="10">
+   <version ClassVersion="10" checksum="1592002308"/>
+  </class>
+  <class name="edm::Wrapper<SiStripEventSummary>"/>
+
+</lcgdict>
+

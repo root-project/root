@@ -161,6 +161,8 @@ protected:
    bool      StringToNumber(Int_t code) override;
 
    void              Convert(UInt_t fromVersion) override;
+   Bool_t            AnalyzePrimitive(TString &chain, TObjArray &args, Int_t &err, Int_t offset) override;
+   void              Optimize() override;
 
 private:
    // Not implemented yet

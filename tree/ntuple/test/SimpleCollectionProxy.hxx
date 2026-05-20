@@ -68,10 +68,10 @@ public:
    {
       if constexpr (std::is_same<typename CollectionT::ValueType, char>::value)
          return EDataType::kChar_t;
-      ;
+      if constexpr (std::is_same<typename CollectionT::ValueType, int>::value)
+         return EDataType::kInt_t;
       if constexpr (std::is_same<typename CollectionT::ValueType, float>::value)
          return EDataType::kFloat_t;
-      ;
       if constexpr (std::is_same<typename CollectionT::ValueType, Long64_t>::value)
          return EDataType::kLong64_t;
       return EDataType::kOther_t;

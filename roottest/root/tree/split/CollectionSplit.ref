@@ -1,0 +1,20 @@
+*Branch  :event                                                              *
+*Entries :        0 : BranchElement (see below)                              *
+*Br    0 :fArr      : Int_t fArr_                                            *
+*Br    1 :fArr.fUniqueID : UInt_t fUniqueID[fArr_]                           *
+*Br    2 :fArr.fBits : UInt_t fBits[fArr_]                                   *
+*Br    3 :fArr.fMyClArr : TClonesArray fMyClArr[fArr_]                       *
+*Br    4 :fArr.fMyObjArr : TObjArray fMyObjArr[fArr_]                        *
+*Br    5 :fArr.fValid : Bool_t fValid[fArr_]                                 *
+*Br    6 :fArr.fValue : Float_t fValue[fArr_]                                *
+*Br    7 :fCol      :                                                        *
+*Br    8 :fCol.fUniqueID : UInt_t                                            *
+*Br    9 :fCol.fBits : UInt_t                                                *
+*Br   10 :fCol.fMyClArr : Int_t fCol.fMyClArr_                               *
+*Br   11 :fCol.fMyClArr.fUniqueID : UInt_t fUniqueID[fCol.fMyClArr_]         *
+*Br   12 :fCol.fMyClArr.fBits : UInt_t fBits[fCol.fMyClArr_]                 *
+*Br   13 :fCol.fMyClArr.fName : TString fName[fCol.fMyClArr_]                *
+*Br   14 :fCol.fMyClArr.fTitle : TString fTitle[fCol.fMyClArr_]              *
+*Br   15 :fCol.fMyObjArr : TObjArray                                         *
+*Br   16 :fCol.fValid : Bool_t                                               *
+*Br   17 :fEventNum : Int_t                                                  *

@@ -16,9 +16,12 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RCreateFieldOptions.hxx>
+#include <ROOT/RError.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleRange.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -26,26 +29,24 @@
 #include <new>
 #include <string>
 #include <string_view>
+#include <typeinfo>
+#include <type_traits>
 #include <vector>
 
 namespace ROOT {
 
+class REntry;
 class RFieldBase;
 class RClassField;
 
 namespace Detail {
 class RFieldVisitor;
-} // namespace Detail
-
-namespace Experimental {
-
-class RNTupleJoinProcessor;
-
-namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
 
-} // namespace Experimental
+namespace Experimental {
+class RNTupleAttrSetReader;
+}
 
 namespace Internal {
 
@@ -65,6 +66,10 @@ CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, c
 
 } // namespace Internal
 
+namespace Experimental::Internal {
+struct RNTupleAttrEntry;
+}
+
 // clang-format off
 /**
 \class ROOT::RFieldBase
@@ -81,9 +86,9 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor;      // needs ConstructValue
-   friend class ROOT::Experimental::Detail::RRawPtrWriteEntry; // to call Append()
+   friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
+   friend class ROOT::Detail::RRawPtrWriteEntry;               // to call Append()
+   friend class ROOT::Experimental::RNTupleAttrSetReader;      // for field->Read() in LoadEntry()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
@@ -149,6 +154,10 @@ public:
       /// This field is a user defined type that was missing dictionaries and was reconstructed from the on-disk
       /// information
       kTraitEmulatedField = 0x20,
+      /// Can attach new item fields even when already connected
+      kTraitExtensible = 0x40,
+      /// The field represents a collection in SoA layout
+      kTraitSoACollection = 0x80,
 
       /// Shorthand for types that are both trivially constructible and destructible
       kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible
@@ -273,6 +282,20 @@ private:
 
 protected:
    struct RBulkSpec;
+
+   /// Bits used in CompareOnDisk()
+   enum {
+      /// The in-memory field and the on-disk field differ in the field version
+      kDiffFieldVersion = 0x01,
+      /// The in-memory field and the on-disk field differ in the type version
+      kDiffTypeVersion = 0x02,
+      /// The in-memory field and the on-disk field differ in their structural roles
+      kDiffStructure = 0x04,
+      /// The in-memory field and the on-disk field have different type names
+      kDiffTypeName = 0x08,
+      /// The in-memory field and the on-disk field have different repetition counts
+      kDiffNRepetitions = 0x10
+   };
 
    /// Collections and classes own subfields
    std::vector<std::unique_ptr<RFieldBase>> fSubfields;
@@ -404,6 +427,9 @@ protected:
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
 
+   /// Allow parents to mark their childs as artificial fields (used in class and record fields)
+   static void CallSetArtificialOn(RFieldBase &other) { other.SetArtificial(); }
+
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual std::size_t AppendImpl(const void *from);
@@ -486,14 +512,41 @@ protected:
    // on the data that's written, e.g. for polymorphic types in the streamer field.
    virtual ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return ROOT::RExtraTypeInfoDescriptor(); }
 
-   /// Add a new subfield to the list of nested fields
-   void Attach(std::unique_ptr<RFieldBase> child);
+   /// Add a new subfield to the list of nested fields. Throws an exception if childName is non-empty and the passed
+   /// field has a different name.
+   void Attach(std::unique_ptr<RFieldBase> child, std::string_view expectedChildName = "");
 
-   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate, e.g.
+   /// for the application of I/O rules. In the process, the field at hand or its subfields may be marked as
+   /// "artifical", i.e. introduced by schema evolution and not backed by on-disk information.
+   /// May return a field substitute that fits the on-disk schema as a replacement for the field at hand.
+   /// A field substitute must read into the same in-memory layout than the original field and field substitutions
+   /// must not be cyclic.
+   virtual std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource & /* source */)
+   {
+      return nullptr;
+   }
 
-   /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
-   virtual void AfterConnectPageSource() {}
+   /// For non-artificial fields, check compatibility of the in-memory field and the on-disk field. In the process,
+   /// the field at hand may change its on-disk ID or perform other tasks related to automatic schema evolution.
+   /// If the on-disk field is incompatible with the in-memory field at hand, an exception is thrown.
+   virtual void ReconcileOnDiskField(const RNTupleDescriptor &desc);
+
+   /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
+   /// and the given on-disk field
+   std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const;
+   /// Compares the field to the corresponding on-disk field information in the provided descriptor.
+   /// Throws an exception if the fields don't match.
+   /// Optionally, a set of bits can be provided that should be ignored in the comparison.
+   RResult<void> EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::uint32_t ignoreBits = 0) const;
+   /// Convenience wrapper for the common case of calling EnsureMatchinOnDiskField() for collections. Collections
+   /// may differ in type name (most collections schema evolve into each other).  An on-disk SoA collection may also
+   /// have any type version whereas all other collections need to have type version 0.
+   RResult<void> EnsureMatchingOnDiskCollection(const RNTupleDescriptor &desc) const;
+   /// Many fields accept a range of type prefixes for schema evolution,
+   /// e.g. std::unique_ptr< and std::optional< for nullable fields
+   RResult<void>
+   EnsureMatchingTypePrefix(const RNTupleDescriptor &desc, const std::vector<std::string> &prefixes) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
@@ -700,25 +753,68 @@ public:
 /// Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
 /// Fields can create RValue objects through RFieldBase::CreateValue(), RFieldBase::BindValue()) or
 /// RFieldBase::SplitValue().
-class RFieldBase::RValue {
+class RFieldBase::RValue final {
    friend class RFieldBase;
+   friend class ROOT::REntry;
+   friend struct ROOT::Experimental::Internal::RNTupleAttrEntry;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
    /// Set by Bind() or by RFieldBase::CreateValue(), RFieldBase::SplitValue() or RFieldBase::BindValue()
    std::shared_ptr<void> fObjPtr;
+   mutable std::atomic<const std::type_info *> fTypeInfo = nullptr;
+
    RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
 
 public:
-   RValue(const RValue &) = default;
-   RValue &operator=(const RValue &) = default;
-   RValue(RValue &&other) = default;
-   RValue &operator=(RValue &&other) = default;
+   RValue(const RValue &other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue &operator=(const RValue &other)
+   {
+      fField = other.fField;
+      fObjPtr = other.fObjPtr;
+      // We could copy over the cached type info, or just start with a fresh state...
+      fTypeInfo = nullptr;
+      return *this;
+   }
+   RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue &operator=(RValue &&other)
+   {
+      fField = other.fField;
+      fObjPtr = other.fObjPtr;
+      // We could copy over the cached type info, or just start with a fresh state...
+      fTypeInfo = nullptr;
+      return *this;
+   }
    ~RValue() = default;
 
+private:
+   template <typename T>
+   void EnsureMatchingType() const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         const std::type_info &ti = typeid(T);
+         // Fast path: if we had a matching type before, try comparing the type_info's. This may still fail in case the
+         // type has a suppressed template argument that may change the typeid.
+         auto *cachedTypeInfo = fTypeInfo.load();
+         if (cachedTypeInfo != nullptr && *cachedTypeInfo == ti) {
+            return;
+         }
+         std::string renormalizedTypeName = Internal::GetRenormalizedTypeName(ti);
+         if (Internal::IsMatchingFieldType(fField->GetTypeName(), renormalizedTypeName, ti)) {
+            fTypeInfo.store(&ti);
+            return;
+         }
+         throw RException(R__FAIL("type mismatch for field \"" + fField->GetFieldName() + "\": expected " +
+                                  fField->GetTypeName() + ", got " + renormalizedTypeName));
+      }
+   }
+
    std::size_t Append() { return fField->Append(fObjPtr.get()); }
+
+public:
    void Read(ROOT::NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
    void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
+
    void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
@@ -727,12 +823,14 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr() const
    {
+      EnsureMatchingType<T>();
       return std::static_pointer_cast<T>(fObjPtr);
    }
 
    template <typename T>
    const T &GetRef() const
    {
+      EnsureMatchingType<T>();
       return *static_cast<T *>(fObjPtr.get());
    }
 
@@ -772,7 +870,7 @@ on the same range, where in each read operation a different subset of values is 
 The memory of the value array is managed by the RBulkValues class.
 */
 // clang-format on
-class RFieldBase::RBulkValues {
+class RFieldBase::RBulkValues final {
 private:
    friend class RFieldBase;
 
@@ -795,7 +893,6 @@ private:
    /// Sets a new range for the bulk. If there is enough capacity, the `fValues` array will be reused.
    /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
    void Reset(RNTupleLocalIndex firstIndex, std::size_t size);
-   void CountValidValues();
 
    bool ContainsRange(RNTupleLocalIndex firstIndex, std::size_t size) const
    {
@@ -847,11 +944,14 @@ public:
       bulkSpec.fAuxData = &fAuxData;
       auto nRead = fField->ReadBulk(bulkSpec);
       if (nRead == RBulkSpec::kAllSet) {
-         if ((offset == 0) && (size == fSize)) {
-            fNValidValues = fSize;
-         } else {
-            CountValidValues();
-         }
+         // We expect that field implementations consistently return kAllSet either in all cases or never. This avoids
+         // the following case where we would have to manually count how many valid values we actually have:
+         // 1. A partial ReadBulk, according to maskReq, with values potentially missing in the middle.
+         // 2. A second ReadBulk that reads a complete subrange. If this returned kAllSet, we don't know how to update
+         // fNValidValues, other than counting. The field should return a concrete number of how many new values it read
+         // in addition to those already present.
+         R__ASSERT((offset == 0) && (size == fSize));
+         fNValidValues = fSize;
       } else {
          fNValidValues += nRead;
       }

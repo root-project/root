@@ -30,6 +30,7 @@
 
 class TSocket;
 
+namespace ROOT::Deprecated {
 
 class TNetFile : public TFile {
 
@@ -81,7 +82,6 @@ public:
    ClassDefOverride(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
 
-
 class TNetSystem : public TSystem {
 
 private:
@@ -121,5 +121,10 @@ public:
 
    ClassDefOverride(TNetSystem,0)  // Directory handler for NetSystem
 };
+
+} // namespace ROOT::Deprecated
+
+using TNetFile R__DEPRECATED(6, 42, "TNetFile is deprecated") = ROOT::Deprecated::TNetFile;
+using TNetSystem R__DEPRECATED(6, 42, "TNetSystem is deprecated") = ROOT::Deprecated::TNetSystem;
 
 #endif

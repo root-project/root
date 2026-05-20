@@ -47,7 +47,6 @@
 // To scale fonts to the same size as the TTF version
 const Float_t kScale = 0.93376068;
 
-ClassImp(TGQuartz)
 
 namespace X11 = ROOT::MacOSX::X11;
 namespace Quartz = ROOT::Quartz;
@@ -114,27 +113,31 @@ TGQuartz::TGQuartz(const char *name, const char *title)
    SetAA();
 }
 
-
 //______________________________________________________________________________
-void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+void TGQuartz::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
    //Check some conditions first.
-   if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
+   if ([drawable0 isDirectDraw]) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
          if (!view) {
-            ::Warning("DrawLine", "Invalid view/window for XOR-mode");
+            ::Warning("DrawBoxW", "Invalid view/window for XOR-mode");
             return;
          }
 
-         if (![view.fQuartzWindow findXorWindow])
-            [view.fQuartzWindow addXorWindow];
-         fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
+         [view.fQuartzWindow addXorBox: view : x1 : y1 : x2 : y2];
       }
       return;
    }
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawBox");
+   auto &attline = GetAttLine(wctxt);
+   auto &attfill = GetAttFill(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawBoxW");
    if (!drawable)
       return;
 
@@ -147,7 +150,7 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
    y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
 
-   if (const TColorGradient * const gradient = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
+   if (const TColorGradient * const gradient = dynamic_cast<TColorGradient *>(gROOT->GetColor(attfill.GetFillColor()))) {
       //Draw a box with a gradient fill and a shadow.
       //Ignore all fill styles and EBoxMode, use a gradient fill.
       TPoint polygon[4];
@@ -159,31 +162,37 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
                                           4, polygon, kFALSE); //kFALSE == don't draw a shadow.
    } else {
-      const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
+      const bool isHollow = mode == kHollow || attfill.GetFillStyle() / 1000 == 2;
 
       //Note! Pattern index (and its address) MUST live
       //long enough to be valid at the point of Quartz::DrawBox call!
       unsigned patternIndex = 0;
       if (isHollow) {
-         if (!Quartz::SetLineColor(ctx, GetLineColor())) {
-            Error("DrawBox", "Can not find color for index %d", int(GetLineColor()));
+         if (!Quartz::SetLineColor(ctx, attline.GetLineColor())) {
+            Error("DrawBoxW", "Can not find color for index %d", int(attline.GetLineColor()));
             return;
          }
       } else {
-         if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
-            Error("DrawBox", "SetFillAreaParameters failed");
+         if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, attfill)) {
+            Error("DrawBoxW", "SetFillAreaParameters failed");
             return;
          }
       }
-      Quartz::SetLineStyle(ctx, GetLineStyle());
-      Quartz::SetLineWidth(ctx, GetLineWidth());
+      Quartz::SetLineStyle(ctx, attline.GetLineStyle());
+      Quartz::SetLineWidth(ctx, attline.GetLineWidth());
       Quartz::DrawBox(ctx, x1, y1, x2, y2, isHollow);
    }
 }
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
+void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+{
+   DrawBoxW(GetSelectedContext(), x1, y1, x2, y2, mode);
+}
+
+//______________________________________________________________________________
+void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
    //Comment from TVirtualX:
 
@@ -191,17 +200,19 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
    // n         : number of points
    // xy        : array of points
 
-   //End of comment.
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
    if (n < 3)
       return;
-
-   //Do some checks first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   // No fill area with direct drawing
+   if ([drawable0 isDirectDraw])
       return;
 
-   NSObject<X11Drawable> * const drawable =
-               (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawFillArea");
+   auto &attfill = GetAttFill(wctxt);
 
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawFillAreaW");
    if (!drawable)
       return;
 
@@ -219,9 +230,9 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
    }
 
-   const TColor * const fillColor = gROOT->GetColor(GetFillColor());
+   const TColor * const fillColor = gROOT->GetColor(attfill.GetFillColor());
    if (!fillColor) {
-      Error("DrawFillArea", "Could not find TColor for index %d", GetFillColor());
+      Error("DrawFillAreaW", "Could not find TColor for index %d", attfill.GetFillColor());
       return;
    }
 
@@ -230,13 +241,22 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
                                           n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
-      if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
-         Error("DrawFillArea", "SetFillAreaParameters failed");
+      if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, attfill)) {
+         Error("DrawFillAreaW", "SetFillAreaParameters failed");
          return;
       }
 
-      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE);//The last argument - do not draw shadows.
+      // kFALSE - do not draw shadows.
+      // last argument - fill style
+      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE, attfill);
    }
+}
+
+
+//______________________________________________________________________________
+void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
+{
+   DrawFillAreaW(GetSelectedContext(), n, xy);
 }
 
 
@@ -247,6 +267,49 @@ void TGQuartz::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y
    //Noop.
 }
 
+//______________________________________________________________________________
+void TGQuartz::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
+   if ([drawable0 isDirectDraw]) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
+         if (!view) {
+             ::Warning("DrawLineW", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         [view.fQuartzWindow addXorLine: view : x1 : y1 : x2 : y2];
+      }
+
+      return;
+   }
+
+   auto &attline = GetAttLine(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawLineW");
+   if (!drawable)
+      return;
+
+   CGContextRef ctx = drawable.fContext;
+   const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
+
+   if (!Quartz::SetLineColor(ctx, attline.GetLineColor())) {
+      Error("DrawLineW", "Could not set line color for index %d", int(attline.GetLineColor()));
+      return;
+   }
+
+   Quartz::SetLineStyle(ctx, attline.GetLineStyle());
+   Quartz::SetLineWidth(ctx, attline.GetLineWidth());
+
+   Quartz::DrawLine(ctx, x1, X11::LocalYROOTToCocoa(drawable, y1), x2,
+                    X11::LocalYROOTToCocoa(drawable, y2));
+}
 
 //______________________________________________________________________________
 void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
@@ -255,62 +318,26 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x1,y1        : begin of line
    // x2,y2        : end of line
 
-   if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
-         if (!view) {
-             ::Warning("DrawLine", "Invalid view/window for XOR-mode");
-             return;
-         }
-
-         if (![view.fQuartzWindow findXorWindow])
-            [view.fQuartzWindow addXorWindow];
-         fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);
-      }
-
-      return;
-   }
-
-   //Do some checks first:
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawLine, bad drawable is selected");
-   NSObject<X11Drawable> * const drawable =
-                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawLine");
-   if (!drawable)
-      return;
 
-   CGContextRef ctx = drawable.fContext;
-   const Quartz::CGStateGuard ctxGuard(ctx);
-   //AA flag is not a part of a state.
-   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
-
-   if (!Quartz::SetLineColor(ctx, GetLineColor())) {
-      Error("DrawLine", "Could not set line color for index %d", int(GetLineColor()));
-      return;
-   }
-
-   Quartz::SetLineStyle(ctx, GetLineStyle());
-   Quartz::SetLineWidth(ctx, GetLineWidth());
-
-   Quartz::DrawLine(ctx, x1, X11::LocalYROOTToCocoa(drawable, y1), x2,
-                    X11::LocalYROOTToCocoa(drawable, y2));
+   DrawLineW(GetSelectedContext(), x1, y1, x2, y2);
 }
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
+void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
-   //Comment from TVirtualX:
-   // Draw a line through all points.
-   // n         : number of points
-   // xy        : list of points
-   //End of comment.
-
-   //Some checks first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
       return;
 
-   NSObject<X11Drawable> * const drawable =
-                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyLine");
+   //Some checks first.
+   if ([drawable0 isDirectDraw])
+      return;
+
+   auto &attline = GetAttLine(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyLineW");
    if (!drawable)
       return;
 
@@ -319,13 +346,13 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   if (!Quartz::SetLineColor(ctx, GetLineColor())) {
-      Error("DrawPolyLine", "Could not find TColor for index %d", GetLineColor());
+   if (!Quartz::SetLineColor(ctx, attline.GetLineColor())) {
+      Error("DrawPolyLineW", "Could not find TColor for index %d", attline.GetLineColor());
       return;
    }
 
-   Quartz::SetLineStyle(ctx, GetLineStyle());
-   Quartz::SetLineWidth(ctx, GetLineWidth());
+   Quartz::SetLineStyle(ctx, attline.GetLineStyle());
+   Quartz::SetLineWidth(ctx, attline.GetLineWidth());
 
    //Convert to bottom-left-corner system.
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
@@ -338,22 +365,41 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    // CTM (current transformation matrix) is restored by 'ctxGuard's dtor.
 }
 
-
 //______________________________________________________________________________
-void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
+void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
 {
    //Comment from TVirtualX:
-   // Draw PolyMarker
+   // Draw a line through all points.
    // n         : number of points
    // xy        : list of points
    //End of comment.
 
-   //Do some checks first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawPolyLine, bad drawable is selected");
+
+   DrawPolyLineW(GetSelectedContext(), n, xy);
+}
+
+//______________________________________________________________________________
+void TGQuartz::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      DrawPolyLineW(wctxt, 2, &xy[i]);
+}
+
+//______________________________________________________________________________
+void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
       return;
 
-   NSObject<X11Drawable> * const drawable =
-                        (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyMarker");
+   //Do some checks first.
+   if ([drawable0 isDirectDraw])
+      return;
+
+   auto &attmark = GetAttMarker(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyMarkerW");
    if (!drawable)
       return;
 
@@ -362,21 +408,21 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   if (!Quartz::SetFillColor(ctx, GetMarkerColor())) {
-      Error("DrawPolyMarker", "Could not find TColor for index %d", GetMarkerColor());
+   if (!Quartz::SetFillColor(ctx, attmark.GetMarkerColor())) {
+      Error("DrawPolyMarker", "Could not find TColor for index %d", attmark.GetMarkerColor());
       return;
    }
 
-   Quartz::SetLineColor(ctx, GetMarkerColor());//Can not fail (for coverity).
+   Quartz::SetLineColor(ctx, attmark.GetMarkerColor());//Can not fail (for coverity).
    Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetMarkerStyle()))));
+   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle()))));
 
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(GetMarkerStyle());
+   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(attmark.GetMarkerStyle());
 
    // The fast pixel markers need to be treated separately
    if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
@@ -387,29 +433,46 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
        CGContextSetLineCap(ctx, kCGLineCapRound);
    }
 
-   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(GetMarkerStyle())/2.)/4.;
+   Float_t MarkerSizeReduced = attmark.GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
    Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, markerstyle);
 
    CGContextSetLineJoin(ctx, kCGLineJoinMiter);
    CGContextSetLineCap(ctx, kCGLineCapButt);
 }
 
+//______________________________________________________________________________
+void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
+{
+   //Comment from TVirtualX:
+   // Draw PolyMarker
+   // n         : number of points
+   // xy        : list of points
+   //End of comment.
+
+   DrawPolyMarkerW(GetSelectedContext(), n, xy);
+}
+
 
 //______________________________________________________________________________
-void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
-                        const char *text, ETextMode /*mode*/)
+void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t /* angle */ , Float_t /* mgn */,
+                         const char *text, ETextMode /* mode */)
 {
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
+   if ([drawable0 isDirectDraw])
       return;
 
    if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
       return;
 
-   if (GetTextSize()<1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+   auto &atttext = GetAttText(wctxt);
+
+   if (atttext.GetTextSize() < 1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
       return;
 
-   NSObject<X11Drawable> * const drawable =
-                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawTextW");
    if (!drawable)
       return;
 
@@ -420,8 +483,8 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
    CGContextSetTextMatrix(ctx, CGAffineTransformIdentity);
 
    try {
-      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize())) {
-         const unsigned fontIndex = GetTextFont() / 10;
+      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(atttext.GetTextFont(), kScale * atttext.GetTextSize())) {
+         const unsigned fontIndex = atttext.GetTextFont() / 10;
          if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
             //This is a hack. Correct way is to extract glyphs from symbol.ttf,
             //find correct mapping, place this glyphs. This requires manual layout though (?),
@@ -434,44 +497,51 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
             for (size_type i = 0, len = unichars.size(); i < len; ++i)
                unichars[i] = 0xF000 + (unsigned char)text[i];
 
-            Quartz::TextLine ctLine(unichars, currentFont, GetTextColor());
-            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y));
+            Quartz::TextLine ctLine(unichars, currentFont, atttext.GetTextColor());
+            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y), atttext);
          } else {
-            const Quartz::TextLine ctLine(text, currentFont, GetTextColor());
-            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y));
+            const Quartz::TextLine ctLine(text, currentFont, atttext.GetTextColor());
+            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y), atttext);
          }
       }
    } catch (const std::exception &e) {
-      Error("DrawText", "Exception from Quartz::TextLine: %s", e.what());
+      Error("DrawTextW", "Exception from Quartz::TextLine: %s", e.what());
    }
 }
 
 //______________________________________________________________________________
-void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const wchar_t *text, ETextMode mode)
+void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const char *text, ETextMode mode)
+{
+   DrawTextW(GetSelectedContext(), x, y, angle, mgn, text, mode);
+}
+
+//______________________________________________________________________________
+void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t /* mgn */,
+                         const wchar_t *text, ETextMode mode)
 {
    if (!text || !text[0])
       return;
 
    if (!TTF::IsInitialized()) {
-      Error("DrawText", "wchar_t string to draw, but TTF initialization failed");
+      Error("DrawTextW", "wchar_t string to draw, but TTF initialization failed");
       return;
    }
-
-   if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
-      return;
-
-   (void)x;
-   (void)y;
-   (void)angle;
-   (void)mode;
 
    TTF::SetSmoothing(kTRUE);
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
 
-   AlignTTFString();
-   RenderTTFString(x, y, mode);
+   AlignTTFString(wctxt);
+   RenderTTFString(wctxt, x, y, mode);
+}
+
+//______________________________________________________________________________
+void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const wchar_t *text, ETextMode mode)
+{
+   DrawTextW(GetSelectedContext(), x, y, angle, mgn, text, mode);
 }
 
 //______________________________________________________________________________
@@ -600,6 +670,8 @@ void TGQuartz::SetLineColor(Color_t cindex)
 {
    // Set color index "cindex" for drawing lines.
    TAttLine::SetLineColor(cindex);
+
+   SetAttLine(GetSelectedContext(), *this);
 }
 
 
@@ -608,6 +680,8 @@ void TGQuartz::SetLineStyle(Style_t lstyle)
 {
    // Set line style.
    TAttLine::SetLineStyle(lstyle);
+
+   SetAttLine(GetSelectedContext(), *this);
 }
 
 
@@ -617,6 +691,8 @@ void TGQuartz::SetLineWidth(Width_t width)
    // Set the line width.
 
    TAttLine::SetLineWidth(width);
+
+   SetAttLine(GetSelectedContext(), *this);
 }
 
 
@@ -626,6 +702,8 @@ void TGQuartz::SetFillColor(Color_t cindex)
    // Set color index "cindex" for fill areas.
 
    TAttFill::SetFillColor(cindex);
+
+   SetAttFill(GetSelectedContext(), *this);
 }
 
 
@@ -634,6 +712,8 @@ void TGQuartz::SetFillStyle(Style_t style)
 {
    // Set fill area style.
    TAttFill::SetFillStyle(style);
+
+   SetAttFill(GetSelectedContext(), *this);
 }
 
 
@@ -642,6 +722,8 @@ void TGQuartz::SetMarkerColor(Color_t cindex)
 {
    // Set color index "cindex" for markers.
    TAttMarker::SetMarkerColor(cindex);
+
+   SetAttMarker(GetSelectedContext(), *this);
 }
 
 
@@ -652,6 +734,8 @@ void TGQuartz::SetMarkerSize(Float_t markersize)
    //
    // markersize - the marker scale factor
    TAttMarker::SetMarkerSize(markersize);
+
+   SetAttMarker(GetSelectedContext(), *this);
 }
 
 
@@ -661,6 +745,8 @@ void TGQuartz::SetMarkerStyle(Style_t markerstyle)
    // Set marker style.
 
    TAttMarker::SetMarkerStyle(markerstyle);
+
+   SetAttMarker(GetSelectedContext(), *this);
 }
 
 
@@ -668,11 +754,10 @@ void TGQuartz::SetMarkerStyle(Style_t markerstyle)
 void TGQuartz::SetTextAlign(Short_t talign)
 {
    // Set the text alignment.
-   //
-   // talign = txalh horizontal text alignment
-   // talign = txalv vertical text alignment
 
    TAttText::SetTextAlign(talign);
+
+   SetAttText(GetSelectedContext(), *this);
 }
 
 //______________________________________________________________________________
@@ -681,6 +766,8 @@ void TGQuartz::SetTextColor(Color_t cindex)
    // Set the color index "cindex" for text.
 
    TAttText::SetTextColor(cindex);
+
+   SetAttText(GetSelectedContext(), *this);
 }
 
 
@@ -691,12 +778,7 @@ void TGQuartz::SetTextFont(Font_t fontNumber)
 
    TAttText::SetTextFont(fontNumber);
 
-   if (!TTF::IsInitialized()) {
-      Error("SetTextFont", "TTF is not initialized");
-      return;
-   }
-
-   TTF::SetTextFont(fontNumber);
+   SetAttText(GetSelectedContext(), *this);
 }
 
 //______________________________________________________________________________
@@ -719,12 +801,7 @@ void TGQuartz::SetTextSize(Float_t textsize)
 
    TAttText::SetTextSize(textsize);
 
-   if (!TTF::IsInitialized()) {
-      Error("SetTextSize", "TTF is not initialized");
-      return;
-   }
-
-   TTF::SetTextSize(textsize);
+   SetAttText(GetSelectedContext(), *this);
 }
 
 
@@ -738,10 +815,68 @@ void TGQuartz::SetOpacity(Int_t /*percent*/)
    // colors).
 }
 
+//______________________________________________________________________________
+void TGQuartz::SetOpacityW(WinContext_t /* wctxt */, Int_t /* percent */)
+{
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttFill(WinContext_t wctxt, const TAttFill &att)
+{
+   att.Copy(GetAttFill(wctxt));
+
+   // TODO: remove this after transition done
+   TAttFill::SetFillColor(att.GetFillColor());
+   TAttFill::SetFillStyle(att.GetFillStyle());
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttLine(WinContext_t wctxt, const TAttLine &att)
+{
+   att.Copy(GetAttLine(wctxt));
+
+   // TODO: remove this after transition done
+   TAttLine::SetLineColor(att.GetLineColor());
+   TAttLine::SetLineStyle(att.GetLineStyle());
+   TAttLine::SetLineWidth(att.GetLineWidth());
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
+{
+   att.Copy(GetAttMarker(wctxt));
+
+   // TODO: remove this after transition done
+   TAttMarker::SetMarkerColor(att.GetMarkerColor());
+   TAttMarker::SetMarkerSize(att.GetMarkerSize());
+   TAttMarker::SetMarkerStyle(att.GetMarkerStyle());
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
+{
+   att.Copy(GetAttText(wctxt));
+
+   if (!TTF::IsInitialized()) {
+      Error("SetAttText", "TTF is not initialized");
+      return;
+   }
+
+   TTF::SetTextSize(att.GetTextSize());
+   TTF::SetTextFont(att.GetTextFont());
+
+   // TODO: remove this after transition done
+   TAttText::SetTextAlign(att.GetTextAlign());
+   TAttText::SetTextAngle(att.GetTextAngle());
+   TAttText::SetTextColor(att.GetTextColor());
+   TAttText::SetTextSize(att.GetTextSize());
+   TAttText::SetTextFont(att.GetTextFont());
+}
+
 //TTF related part.
 
 //______________________________________________________________________________
-void TGQuartz::AlignTTFString()
+void TGQuartz::AlignTTFString(WinContext_t wctxt)
 {
    //Comment from TGX11TTF:
    // Compute alignment variables. The alignment is done on the horizontal string
@@ -752,25 +887,27 @@ void TGQuartz::AlignTTFString()
    //This code is from TGX11TTF (with my fixes).
    //It looks like align can not be both X and Y align?
 
-   const EAlign align = EAlign(fTextAlign);
+   auto &atttext = GetAttText(wctxt);
 
+   Int_t txalh = atttext.GetTextAlign() / 10;
+   Int_t txalv = atttext.GetTextAlign() % 10;
+
+   // const EAlign align = EAlign(fTextAlign);
    // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
+   if (txalv == 3) // align == kTLeft || align == kTCenter || align == kTRight)
       fAlign.y = TTF::GetAscent();
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
+   else if (txalv == 2) //  if (align == kMLeft || align == kMCenter || align == kMRight) {
       fAlign.y = TTF::GetAscent() / 2;
-   } else {
+   else
       fAlign.y = 0;
-   }
 
    // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
+   if (txalh == 3) // align == kTRight || align == kMRight || align == kBRight) {
       fAlign.x = TTF::GetWidth();
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
+   else if (txalh == 2) // (align == kTCenter || align == kMCenter || align == kBCenter) {
       fAlign.x = TTF::GetWidth() / 2;
-   } else {
+   else
       fAlign.x = 0;
-   }
 
    FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
    //This shift is from the original code.
@@ -779,7 +916,7 @@ void TGQuartz::AlignTTFString()
 }
 
 //______________________________________________________________________________
-Bool_t TGQuartz::IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
+Bool_t TGQuartz::IsTTFStringVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Comment from TGX11TTF:
    // Test if there is really something to render.
@@ -789,14 +926,16 @@ Bool_t TGQuartz::IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    //Comment from TGX11TTF:
    // If w or h is 0, very likely the string is only blank characters
-   if (!w || !h)
+   if (!w || !h || !wctxt)
       return kFALSE;
+
+   auto drawable = (NSObject<X11Drawable> * const) wctxt;
 
    UInt_t width = 0;
    UInt_t height = 0;
    Int_t xy = 0;
 
-   GetWindowSize(GetCurrentWindow(), xy, xy, width, height);
+   GetWindowSize((Drawable_t) drawable.fID, xy, xy, width, height);
 
    // If string falls outside window, there is probably no need to draw it.
    if (x + int(w) <= 0 || x >= int(width))
@@ -809,7 +948,7 @@ Bool_t TGQuartz::IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 //______________________________________________________________________________
-void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
+void TGQuartz::RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
 {
    //Comment from TGX11TTF:
    // Perform the string rendering in the pad.
@@ -818,7 +957,19 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
 
    //This code is a modified (for Quartz) version of TG11TTF::RenderString.
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
+   if ([drawable0 isDirectDraw])
+      return;
+
+   auto &atttext = GetAttText(wctxt);
+
+   if (!atttext.GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+      return;
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "RenderTTFString");
    if (!drawable)
       return;
 
@@ -830,7 +981,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
 
    if (!dstPixmap) {
       //I can not read pixels from a window (I can, but this is too slow and unreliable).
-      Error("DrawText", "fSelectedDrawable is neither QuartzPixmap nor a double buffered window");
+      Error("RenderTTFString", "fSelectedDrawable is neither QuartzPixmap nor a double buffered window");
       return;
    }
 
@@ -845,13 +996,13 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
    const Int_t x1 = x - xOff - fAlign.x;
    const Int_t y1 = y + yOff + fAlign.y - h;
 
-   if (!IsTTFStringVisible(x1, y1, w, h))
+   if (!IsTTFStringVisible(wctxt, x1, y1, w, h))
       return;
 
    //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : 1.f]);
    if (!pixmap.Get()) {
-      Error("DrawText", "pixmap creation failed");
+      Error("RenderTTFString", "pixmap creation failed");
       return;
    }
 
@@ -868,7 +1019,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
          arrayGuard.Reset([dstPixmap readColorBits : bbox]);
 
       if (!arrayGuard.Get()) {
-         Error("DrawText", "problem with reading background pixels");
+         Error("RenderTTFString", "problem with reading background pixels");
          return;
       }
 
@@ -903,7 +1054,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
       const Int_t bx = bitmap->left + xOff;
       const Int_t by = h - bitmap->top - yOff;
 
-      DrawFTGlyphIntoPixmap(pixmap.Get(), source, TGCocoa::GetPixel(GetTextColor()),
+      DrawFTGlyphIntoPixmap(pixmap.Get(), source, TGCocoa::GetPixel(atttext.GetTextColor()),
                             mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
    }
 
@@ -1061,31 +1212,73 @@ void TGQuartz::SetAA()
 }
 
 //______________________________________________________________________________
-void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
+TAttFill &TGQuartz::GetAttFill(WinContext_t wctxt)
 {
-   assert(calledFrom != 0 && "GetSelectedDrawableChecked, calledFrom parameter is null");
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "GetSelectedDrawableChecked, bad drawable is selected");
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attFill)
+      return *this;
+   return *drawable.attFill;
+}
 
-   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
+//______________________________________________________________________________
+TAttLine &TGQuartz::GetAttLine(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attLine)
+      return *this;
+   return *drawable.attLine;
+}
+
+//______________________________________________________________________________
+TAttMarker &TGQuartz::GetAttMarker(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attMarker)
+      return *this;
+   return *drawable.attMarker;
+}
+
+//______________________________________________________________________________
+TAttText &TGQuartz::GetAttText(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attText)
+      return *this;
+   return *drawable.attText;
+}
+
+//______________________________________________________________________________
+void *TGQuartz::GetPixmapDrawable(void *drawable0, const char *calledFrom) const
+{
+   assert(calledFrom != 0 && "GetDrawableChecked, calledFrom parameter is null");
+
+   if (!drawable0)
+      return nullptr;
+
+   auto drawable = (NSObject<X11Drawable> *) drawable0;
    if (!drawable.fIsPixmap) {
       //TPad/TCanvas ALWAYS draw only into a pixmap.
       if ([drawable isKindOfClass : [QuartzView class]]) {
          QuartzView *view = (QuartzView *)drawable;
          if (!view.fBackBuffer) {
             Error(calledFrom, "Selected window is not double buffered");
-            return 0;
+            return nullptr;
          }
 
          drawable = view.fBackBuffer;
       } else {
          Error(calledFrom, "Selected drawable is neither a pixmap, nor a double buffered window");
-         return 0;
+         return nullptr;
       }
    }
 
    if (!drawable.fContext) {
       Error(calledFrom, "Context is null");
-      return 0;
+      return nullptr;
    }
 
    return drawable;

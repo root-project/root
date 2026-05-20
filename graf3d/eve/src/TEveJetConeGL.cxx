@@ -23,7 +23,6 @@
 OpenGL renderer class for TEveJetCone.
 */
 
-ClassImp(TEveJetConeGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -174,7 +173,6 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 OpenGL renderer class for TEveJetConeProjected.
 */
 
-ClassImp(TEveJetConeProjectedGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

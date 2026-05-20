@@ -31,7 +31,6 @@ scene. It enables to interactively set TEveProjection parameters
 and updates projected scene accordingly.
 */
 
-ClassImp(TEveProjectionManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -36,12 +36,21 @@ class TParameter : public TObject {
 
 public:
    // Defines options / status while merging:
-   enum EStatusBits { kMultiply   = BIT(16),    // Use multiplication
-                      kMax        = BIT(17),    // Take max value
-                      kMin        = BIT(18),    // Take min value
-                      kFirst      = BIT(19),    // Take the first value
-                      kLast       = BIT(20),    // Take the last value
-                      kIsConst    = BIT(21)     // Set if all values are equal
+   enum EStatusBits {
+// clang++ <v20 (-Wshadow) complains about shadowing TAttMarker.h global enum EMarkerStyle. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kMultiply   = BIT(16),    // Use multiplication
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kMax        = BIT(17),    // Take max value
+      kMin        = BIT(18),    // Take min value
+      kFirst      = BIT(19),    // Take the first value
+      kLast       = BIT(20),    // Take the last value
+      kIsConst    = BIT(21)     // Set if all values are equal
    };
 
 private:

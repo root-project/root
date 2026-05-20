@@ -45,25 +45,25 @@ namespace TMVA {
       ~TActivationReLU() {}
 
       // evaluate the activation function
-      Double_t Eval(Double_t arg) { return arg>0 ? arg : 0;}
+      Double_t Eval(Double_t arg) override { return arg>0 ? arg : 0;}
 
       // evaluate the derivative of the activation function
-      Double_t EvalDerivative(Double_t arg) { return arg>0 ? 1 : 0;}
+      Double_t EvalDerivative(Double_t arg) override { return arg>0 ? 1 : 0;}
 
       // minimum of the range of the activation function
-      Double_t GetMin() { return -1; }
+      Double_t GetMin() override { return -1; }
 
       // maximum of the range of the activation function
-      Double_t GetMax() { return 1; }
+      Double_t GetMax() override { return 1; }
 
       // expression for the activation function
-      TString GetExpression();
+      TString GetExpression() override;
 
       // writer of function code
-      virtual void MakeFunction(std::ostream& fout, const TString& fncName);
+      void MakeFunction(std::ostream& fout, const TString& fncName) override;
 
    private:
-      ClassDef(TActivationReLU, 0); // Rectified Linear Unit activation function for TNeuron
+      ClassDefOverride(TActivationReLU, 0); // Rectified Linear Unit activation function for TNeuron
    };
 
 } // namespace TMVA

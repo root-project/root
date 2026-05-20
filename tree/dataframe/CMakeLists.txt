@@ -26,6 +26,10 @@ if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
 
+if (root7)
+  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTHist)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -53,6 +57,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/InterfaceUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
+    ROOT/RDF/RActionSnapshot.hxx
     ROOT/RDF/RActionImpl.hxx
     ROOT/RDF/RColumnRegister.hxx
     ROOT/RDF/RNewSampleNotifier.hxx
@@ -91,6 +96,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RVariationReader.hxx
     ROOT/RDF/RVariationsDescription.hxx
     ROOT/RDF/RVariedAction.hxx
+    ROOT/RDF/SnapshotHelpers.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
@@ -108,10 +114,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFActionHelpers.cxx
     src/RDFColumnReaderUtils.cxx
     src/RDFColumnRegister.cxx
+    src/RDFColumnReaderUtils.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
+    src/RDFSnapshotHelpers.cxx
     src/RDFUtils.cxx
     src/RDFHelpers.cxx
     src/RFilterBase.cxx
@@ -165,10 +173,6 @@ if(MSVC)
   target_compile_definitions(ROOTDataFrame PRIVATE _USE_MATH_DEFINES)
 endif()
 
-if(builtin_nlohmannjson)
-  target_include_directories(ROOTDataFrame PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-else()
-  target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
-endif()
+target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

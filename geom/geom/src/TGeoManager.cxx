@@ -138,7 +138,7 @@ this process.
 ## An interactive session
 
   Provided that a geometry was successfully built and closed (for instance the
-previous example $ROOTSYS/tutorials/visualisation/geom/rootgeom.C ), the manager class will register
+previous example rootgeom.C ), the manager class will register
 itself to ROOT and the logical/physical structures will become immediately browsable.
 The ROOT browser will display starting from the geometry folder : the list of
 transformations and media, the top volume and the top logical node. These last
@@ -276,6 +276,7 @@ in order to enhance rays.
 #include "TGeoBoolNode.h"
 #include "TGeoBuilder.h"
 #include "TVirtualGeoPainter.h"
+#include "TVirtualGeoChecker.h"
 #include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
 #include "TQObject.h"
@@ -285,12 +286,11 @@ in order to enhance rays.
 #include "TGeoRegion.h"
 #include "TGDMLMatrix.h"
 #include "TGeoOpticalSurface.h"
+#include "TGeoColorScheme.h"
 
 // statics and globals
 
 TGeoManager *gGeoManager = nullptr;
-
-ClassImp(TGeoManager);
 
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock = kFALSE;
@@ -351,13 +351,14 @@ TGeoManager::TGeoManager()
       fSkinSurfaces = nullptr;
       fBorderSurfaces = nullptr;
       memset(fPdgId, 0, 1024 * sizeof(Int_t));
-      //   TObjArray            *fNavigators;       //! list of navigators
+      //   TObjArray            *fNavigators;       ///<! list of navigators
       fCurrentTrack = nullptr;
       fCurrentVolume = nullptr;
       fTopVolume = nullptr;
       fTopNode = nullptr;
       fMasterVolume = nullptr;
       fPainter = nullptr;
+      fChecker = nullptr;
       fActivity = kFALSE;
       fIsNodeSelectable = kFALSE;
       fVisDensity = 0.;
@@ -469,6 +470,7 @@ void TGeoManager::Init()
    fTopNode = nullptr;
    fMasterVolume = nullptr;
    fPainter = nullptr;
+   fChecker = nullptr;
    fActivity = kFALSE;
    fIsNodeSelectable = kFALSE;
    fVisDensity = 0.;
@@ -599,6 +601,7 @@ TGeoManager::~TGeoManager()
    ClearNavigators();
    CleanGarbage();
    SafeDelete(fPainter);
+   SafeDelete(fChecker);
    SafeDelete(fGLMatrix);
    if (fSizePNEId) {
       delete[] fKeyPNEId;
@@ -767,8 +770,8 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
    }
    volume->SetNumber(uid);
    if (!fHashVolumes) {
-      fHashVolumes = new THashList(256);
-      fHashGVolumes = new THashList(256);
+      fHashVolumes = new THashList(256, 3);
+      fHashGVolumes = new THashList(256, 3);
    }
    TObjArray *list = fVolumes;
    if (!volume->GetShape() || volume->IsRunTime() || volume->IsVolumeMulti()) {
@@ -1198,6 +1201,26 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Rebuild the voxel structures that are flagged as needing rebuild.
+
+void TGeoManager::RebuildVoxels()
+{
+   Int_t nvol = fVolumes->GetEntriesFast();
+   TGeoVolume *vol;
+   TGeoVoxelFinder *voxels;
+   for (Int_t i = 0; i < nvol; i++) {
+      vol = (TGeoVolume *)fVolumes->At(i);
+      if (!vol)
+         continue;
+      voxels = vol->GetVoxels();
+      if (voxels && voxels->NeedRebuild()) {
+         voxels->Voxelize();
+         vol->FindOverlaps(); // after voxelization, check overlaps again
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Transform all volumes named VNAME to assemblies. The volumes must be virtual.
 
 Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
@@ -1535,8 +1558,8 @@ void TGeoManager::CloseGeometry(Option_t *option)
       if (!fHashVolumes) {
          Int_t nvol = fVolumes->GetEntriesFast();
          Int_t ngvol = fGVolumes->GetEntriesFast();
-         fHashVolumes = new THashList(nvol + 1);
-         fHashGVolumes = new THashList(ngvol + 1);
+         fHashVolumes = new THashList(nvol + 1, 3);
+         fHashGVolumes = new THashList(ngvol + 1, 3);
          Int_t i;
          for (i = 0; i < ngvol; i++)
             fHashGVolumes->AddLast(fGVolumes->At(i));
@@ -1933,7 +1956,7 @@ void TGeoManager::DrawPath(const char *path, Option_t *option)
 
 void TGeoManager::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
 {
-   GetGeomPainter()->RandomPoints((TGeoVolume *)vol, npoints, option);
+   GetGeomChecker()->RandomPoints((TGeoVolume *)vol, npoints, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1941,7 +1964,7 @@ void TGeoManager::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *o
 
 void TGeoManager::Test(Int_t npoints, Option_t *option)
 {
-   GetGeomPainter()->Test(npoints, option);
+   GetGeomChecker()->Test(npoints, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1949,7 +1972,7 @@ void TGeoManager::Test(Int_t npoints, Option_t *option)
 
 void TGeoManager::TestOverlaps(const char *path)
 {
-   GetGeomPainter()->TestOverlaps(path);
+   GetGeomChecker()->TestOverlaps(path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2255,42 +2278,30 @@ Int_t TGeoManager::GetSafeLevel() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set default volume colors according to A of material
+///
+/// If called with no argument, it uses the new default "natural" scheme
+/// (including name-based material overrides) and falls back to Z-binned colors.
 
-void TGeoManager::DefaultColors()
+void TGeoManager::DefaultColors(const TGeoColorScheme *cs /*=nullptr*/)
 {
-   const Int_t nmax = 110;
-   Int_t col[nmax];
-   for (Int_t i = 0; i < nmax; i++)
-      col[i] = kGray;
+   TGeoColorScheme defaultCS(EGeoColorSet::kNatural);
+   const TGeoColorScheme *scheme = cs ? cs : &defaultCS;
 
-   // here we should create a new TColor with the same rgb as in the default
-   // ROOT colors used below
-   col[3] = kYellow - 10;
-   col[4] = col[5] = kGreen - 10;
-   col[6] = col[7] = kBlue - 7;
-   col[8] = col[9] = kMagenta - 3;
-   col[10] = col[11] = kRed - 10;
-   col[12] = kGray + 1;
-   col[13] = kBlue - 10;
-   col[14] = kOrange + 7;
-   col[16] = kYellow + 1;
-   col[20] = kYellow - 10;
-   col[24] = col[25] = col[26] = kBlue - 8;
-   col[29] = kOrange + 9;
-   col[79] = kOrange - 2;
-
-   TGeoVolume *vol;
+   TGeoVolume *vol = nullptr;
    TIter next(fVolumes);
+
    while ((vol = (TGeoVolume *)next())) {
-      TGeoMedium *med = vol->GetMedium();
-      if (!med)
-         continue;
-      TGeoMaterial *mat = med->GetMaterial();
-      Int_t matZ = (Int_t)mat->GetZ();
-      vol->SetLineColor(col[matZ]);
-      if (mat->GetDensity() < 0.1)
-         vol->SetTransparency(60);
+      // Ask scheme for a color (>=0 means "use it")
+      const Int_t c = scheme->Color(vol);
+      if (c >= 0)
+         vol->SetLineColor(c);
+
+      // Ask scheme for transparency ([0..100] means "use it")
+      const Int_t t = scheme->Transparency(vol);
+      if (t >= 0)
+         vol->SetTransparency(t);
    }
+   ModifiedPad();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2404,7 +2415,7 @@ void TGeoManager::SetTopVisible(Bool_t vis)
 
 void TGeoManager::SetCheckedNode(TGeoNode *node)
 {
-   GetGeomPainter()->SetCheckedNode(node);
+   GetGeomChecker()->SetSelectedNode(node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2413,7 +2424,7 @@ void TGeoManager::SetCheckedNode(TGeoNode *node)
 
 void TGeoManager::SetNmeshPoints(Int_t npoints)
 {
-   GetGeomPainter()->SetNmeshPoints(npoints);
+   GetGeomChecker()->SetNmeshPoints(npoints);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2705,7 +2716,6 @@ void TGeoManager::SaveAttributes(const char *filename)
    }
    out << "   // draw top volume with new settings" << std::endl;
    out << "   top->Draw();" << std::endl;
-   out << "   gPad->x3d();" << std::endl;
    out << "}" << std::endl;
    out.close();
 }
@@ -2943,6 +2953,29 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Make a default checker if none present. Returns pointer to it.
+
+TVirtualGeoChecker *TGeoManager::GetGeomChecker()
+{
+   if (!fChecker) {
+      if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoChecker", "root")) {
+         if (h->LoadPlugin() == -1) {
+            Error("GetGeomChecker", "could not load plugin for geo_checker");
+            return nullptr;
+         }
+         fChecker = (TVirtualGeoChecker *)h->ExecPlugin(1, this);
+         if (!fChecker) {
+            Error("GetGeomChecker", "could not create geo_checker");
+            return nullptr;
+         }
+      } else {
+         Error("GetGeomChecker", "not found plugin for geo_checker");
+      }
+   }
+   return fChecker;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Search for a named volume. All trailing blanks stripped.
 
 TGeoVolume *TGeoManager::GetVolume(const char *name) const
@@ -2961,8 +2994,8 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
    if (!fHashVolumes) {
       Int_t nvol = fVolumes->GetEntriesFast();
       Int_t ngvol = fGVolumes->GetEntriesFast();
-      fHashVolumes = new THashList(nvol + 1);
-      fHashGVolumes = new THashList(ngvol + 1);
+      fHashVolumes = new THashList(nvol + 1, 3);
+      fHashGVolumes = new THashList(ngvol + 1, 3);
       Int_t i;
       for (i = 0; i < ngvol; i++)
          fHashGVolumes->AddLast(fGVolumes->At(i));
@@ -3083,7 +3116,7 @@ Int_t TGeoManager::GetMaterialIndex(const char *matname) const
 void TGeoManager::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol,
                              Bool_t check_norm)
 {
-   GetGeomPainter()->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
+   GetGeomChecker()->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3605,6 +3638,7 @@ void TGeoManager::SetNsegments(Int_t nseg)
       fNsegments = nseg;
    if (fPainter)
       fPainter->SetNsegments(nseg);
+   InvalidateMeshCaches();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3613,6 +3647,19 @@ void TGeoManager::SetNsegments(Int_t nseg)
 Int_t TGeoManager::GetNsegments() const
 {
    return fNsegments;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caches built by composite shapes
+
+void TGeoManager::InvalidateMeshCaches()
+{
+   TIter next_shape(fShapes);
+   TGeoShape *shape;
+   while ((shape = (TGeoShape *)next_shape())) {
+      if (shape->IsComposite())
+         ((TGeoCompositeShape *)shape)->InvalidateMeshCaches();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3652,7 +3699,7 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
 
 TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path)
 {
-   return GetGeomPainter()->SamplePoints(npoints, dist, epsil, g3path);
+   return GetGeomChecker()->SamplePoints(npoints, dist, epsil, g3path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3757,7 +3804,7 @@ void TGeoManager::SelectTrackingMedia()
 
 void TGeoManager::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
 {
-   GetGeomPainter()->CheckBoundaryErrors(ntracks, radius);
+   GetGeomChecker()->CheckBoundaryErrors(ntracks, radius);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3767,7 +3814,7 @@ void TGeoManager::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
 
 void TGeoManager::CheckBoundaryReference(Int_t icheck)
 {
-   GetGeomPainter()->CheckBoundaryReference(icheck);
+   GetGeomChecker()->CheckBoundaryReference(icheck);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3775,7 +3822,7 @@ void TGeoManager::CheckBoundaryReference(Int_t icheck)
 
 void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option, Double_t safety)
 {
-   GetGeomPainter()->CheckPoint(x, y, z, option, safety);
+   GetGeomChecker()->CheckPoint(x, y, z, option, safety);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3788,7 +3835,7 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 
 void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
 {
-   GetGeomPainter()->CheckShape(shape, testNo, nsamples, option);
+   GetGeomChecker()->CheckShape(shape, testNo, nsamples, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3828,7 +3875,7 @@ void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Dou
    vertex[0] = vx;
    vertex[1] = vy;
    vertex[2] = vz;
-   GetGeomPainter()->CheckGeometryFull(checkoverlaps, checkcrossings, ntracks, vertex);
+   GetGeomChecker()->CheckGeometryFull(checkoverlaps, checkcrossings, ntracks, vertex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3882,6 +3929,18 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check all geometry for illegal overlaps within a limit OVLP.
+
+void TGeoManager::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
+{
+   if (!fTopNode) {
+      Error("CheckOverlaps", "Top node not set");
+      return;
+   }
+   fTopNode->CheckOverlapsBySampling(ovlp, npoints);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Prints the current list of overlaps.
 
 void TGeoManager::PrintOverlaps() const
@@ -3892,7 +3951,7 @@ void TGeoManager::PrintOverlaps() const
    if (!novlp)
       return;
    TGeoManager *geom = (TGeoManager *)this;
-   geom->GetGeomPainter()->PrintOverlaps();
+   geom->GetGeomChecker()->PrintOverlaps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3901,7 +3960,8 @@ void TGeoManager::PrintOverlaps() const
 
 Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
 {
-   GetGeomPainter();
+   if (!GetGeomChecker())
+      return 0.;
    TString opt(option);
    opt.ToLower();
    Double_t weight;
@@ -3921,7 +3981,7 @@ Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
          printf("========================================\n");
       }
    }
-   weight = fPainter->Weight(precision, option);
+   weight = fChecker->Weight(precision, option);
    return weight;
 }
 

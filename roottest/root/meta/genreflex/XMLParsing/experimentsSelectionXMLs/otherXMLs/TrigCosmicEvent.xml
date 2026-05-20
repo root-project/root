@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="CosmicMuonCollection"
+         id="E7993C41-1213-4EC3-8EF2-35F2A5AD4E83"/>
+  <class name="DataVector<CosmicMuon>"/>
+  <class name="std::vector<CosmicMuon*>"/>
+  <class name="CosmicMuon" id="F9D87786-9DD3-4499-98D9-9AE345AB0448"/>
+  <class name="MdtTrackSegmentCollection"
+         id="EBCB8B2A-9689-43B6-8B30-6BFE503F25F3"/>
+  <class name="DataVector<MdtTrackSegment>"/>
+  <class name="std::vector<MdtTrackSegment*>"/>
+  <class name="MdtTrackSegment" id="0480FCD3-7773-41FF-B373-4293897E1FDC"/>
+</lcgdict>

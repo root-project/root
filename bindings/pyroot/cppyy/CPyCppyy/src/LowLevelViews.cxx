@@ -565,7 +565,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
 
         // rvalue must be an exporter
         if (PyObject_GetBuffer(value, &src, PyBUF_FULL_RO) < 0) {
-            if (src.obj) CPyCppyy_PyBuffer_Release(value, &src);
+            if (src.obj) PyBuffer_Release(&src);
             return ret;
         }
 
@@ -581,7 +581,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
         dest.len = dest.shape[0] * dest.itemsize;
 
         ret = copy_single(&dest, &src);
-        CPyCppyy_PyBuffer_Release(value, &src);
+        PyBuffer_Release(&src);
         return ret;
     }
 
@@ -1001,10 +1001,8 @@ template<> struct typecode_traits<signed char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "SCharAsInt"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 template<> struct typecode_traits<std::byte> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
-#endif
 template<> struct typecode_traits<char*> {
     static constexpr const char* format = "b"; static constexpr const char* name = "char*"; };
 template<> struct typecode_traits<const char*> {
@@ -1095,8 +1093,9 @@ static inline CPyCppyy::LowLevelView* CreateLowLevelViewT(
         llp->fConverter = llp->fElemCnv;
     } else {
     // multi-dim array; sub-views are projected by using more LLViews
-        view.len        = nx * sizeof(void*);
-        view.itemsize   = sizeof(void*);
+        const size_t elemsize = isfix ? sizeof(T) : sizeof(void*);
+        view.len      = nx * elemsize;
+        view.itemsize = elemsize;
         for (Py_ssize_t idim = 1; idim < view.ndim; ++idim)
             view.shape[idim] = shape[idim];
 
@@ -1142,9 +1141,7 @@ PyObject* CPyCppyy::CreateLowLevelView(type** address, cdims_t shape) {     \
 CPPYY_IMPL_VIEW_CREATOR(bool);
 CPPYY_IMPL_VIEW_CREATOR(signed char);
 CPPYY_IMPL_VIEW_CREATOR(unsigned char);
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_VIEW_CREATOR(std::byte);
-#endif
 CPPYY_IMPL_VIEW_CREATOR(short);
 CPPYY_IMPL_VIEW_CREATOR(unsigned short);
 CPPYY_IMPL_VIEW_CREATOR(int);

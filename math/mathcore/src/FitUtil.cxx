@@ -26,12 +26,16 @@
 #include "Math/Error.h"
 #include "Math/Util.h"  // for safe log(x)
 
+#ifdef R__USE_IMT
+#include "ROOT/TThreadExecutor.hxx"
+#endif
+#include "ROOT/TSequentialExecutor.hxx"
+
 #include <limits>
 #include <cmath>
 #include <cassert>
 #include <algorithm>
 #include <numeric>
-//#include <memory>
 
 #include "TROOT.h"
 
@@ -1845,6 +1849,1067 @@ unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
       //return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula
 }
 
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
+namespace FitUtil {
+
+namespace {
+
+template <class T>
+T NumericMax()
+{
+   return T{std::numeric_limits<typename T::value_type>::max()};
+}
+
+template <typename V, typename S>
+void Load(V &v, S const *ptr)
+{
+   for (size_t i = 0; i < V::size(); ++i)
+      v[i] = ptr[i];
+}
+
+template <typename T>
+auto ReduceAdd(const T &v)
+{
+   typename T::value_type result(0);
+   for (size_t i = 0; i < T::size(); ++i) {
+      result += v[i];
+   }
+   return result;
+}
+
+template <typename T>
+bool MaskEmpty(T mask)
+{
+   for (size_t i = 0; i < T::size(); ++i)
+      if (mask[i])
+         return false;
+   return true;
+}
+
+template <class T = ROOT::Double_v>
+auto Int2Mask(unsigned i)
+{
+   T x;
+   for (unsigned j = 0; j < T::size(); j++) {
+      x[j] = j;
+   }
+   return x < T(i);
+}
+
+} // namespace
+
+double Evaluate<Double_v>::EvalChi2(const IModelFunctionTempl<Double_v> &func, const BinData &data, const double *p,
+                                    unsigned int &nPoints, ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+{
+   // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
+   // the actual number of used points
+   // normal chi2 using only error on values (from fitting histogram)
+   // optionally the integral of function in the bin is used
+
+   // Info("EvalChi2","Using vectorized implementation %d",(int) data.Opt().fIntegral);
+
+   unsigned int n = data.Size();
+   nPoints = data.Size(); // npoints
+
+   // set parameters of the function to cache integral value
+#ifdef USE_PARAMCACHE
+   (const_cast<IModelFunctionTempl<Double_v> &>(func)).SetParameters(p);
+#endif
+   // do not cache parameter values (it is not thread safe)
+   // func.SetParameters(p);
+
+   // get fit option and check case if using integral of bins
+   const DataOptions &fitOpt = data.Opt();
+   if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
+      Error("FitUtil::EvaluateChi2",
+            "The vectorized implementation doesn't support Integrals, BinVolume or ExpErrors\n. Aborting operation.");
+
+   (const_cast<IModelFunctionTempl<Double_v> &>(func)).SetParameters(p);
+
+   double maxResValue = std::numeric_limits<double>::max() / n;
+   std::vector<double> ones{1., 1., 1., 1.};
+   auto vecSize = Double_v::size();
+
+   auto mapFunction = [&](unsigned int i) {
+      // in case of no error in y invError=1 is returned
+      Double_v x1, y, invErrorVec;
+      Load(x1, data.GetCoordComponent(i * vecSize, 0));
+      Load(y, data.ValuePtr(i * vecSize));
+      const auto invError = data.ErrorPtr(i * vecSize);
+      auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
+      Load(invErrorVec, invErrorptr);
+
+      const Double_v *x;
+      std::vector<Double_v> xc;
+      if (data.NDim() > 1) {
+         xc.resize(data.NDim());
+         xc[0] = x1;
+         for (unsigned int j = 1; j < data.NDim(); ++j)
+            Load(xc[j], data.GetCoordComponent(i * vecSize, j));
+         x = xc.data();
+      } else {
+         x = &x1;
+      }
+
+      Double_v fval{};
+
+#ifdef USE_PARAMCACHE
+      fval = func(x);
+#else
+      fval = func(x, p);
+#endif
+
+      Double_v tmp = (y - fval) * invErrorVec;
+      Double_v chi2 = tmp * tmp;
+
+      // avoid infinity or nan in chi2 values due to wrong function values
+      where(chi2 > maxResValue, chi2) = maxResValue;
+
+      return chi2;
+   };
+
+   auto redFunction = [](const std::vector<Double_v> &objs) {
+      return std::accumulate(objs.begin(), objs.end(), Double_v{});
+   };
+
+#ifndef R__USE_IMT
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                       "to ::ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ::ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   Double_v res{};
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
+      ROOT::TSequentialExecutor pool;
+      res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
+#ifdef R__USE_IMT
+   } else if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
+      res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+#endif
+   } else {
+      Error("FitUtil::EvaluateChi2",
+            "Execution policy unknown. Available choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n "
+            "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+   }
+
+   // Last SIMD vector of elements (if padding needed)
+   if (data.Size() % vecSize != 0)
+      where(Int2Mask(data.Size() % vecSize), res) = res + mapFunction(data.Size() / vecSize);
+
+   return ReduceAdd(res);
+}
+
+double Evaluate<Double_v>::EvalLogL(const IModelFunctionTempl<Double_v> &func, const UnBinData &data,
+                                    const double *const p, int iWeight, bool extended, unsigned int &nPoints,
+                                    ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+{
+   // evaluate the LogLikelihood
+   unsigned int n = data.Size();
+   nPoints = data.Size(); // npoints
+
+   // unsigned int nRejected = 0;
+   bool normalizeFunc = false;
+
+   // set parameters of the function to cache integral value
+#ifdef USE_PARAMCACHE
+   (const_cast<IModelFunctionTempl<Double_v> &>(func)).SetParameters(p);
+#endif
+
+#ifdef R__USE_IMT
+   // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the
+   // function this will be done in sequential mode and parameters can be set in a thread safe manner
+   if (!normalizeFunc) {
+      if (data.NDim() == 1) {
+         Double_v x;
+         Load(x, data.GetCoordComponent(0, 0));
+         func(&x, p);
+      } else {
+         std::vector<Double_v> x(data.NDim());
+         for (unsigned int j = 0; j < data.NDim(); ++j)
+            Load(x[j], data.GetCoordComponent(0, j));
+         func(x.data(), p);
+      }
+   }
+#endif
+
+   // this is needed if function must be normalized
+   double norm = 1.0;
+   if (normalizeFunc) {
+      // compute integral of the function
+      std::vector<double> xmin(data.NDim());
+      std::vector<double> xmax(data.NDim());
+      IntegralEvaluator<IModelFunctionTempl<Double_v>> igEval(func, p, true);
+      // compute integral in the ranges where is defined
+      if (data.Range().Size() > 0) {
+         norm = 0;
+         for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+            data.Range().GetRange(&xmin[0], &xmax[0], ir);
+            norm += igEval.Integral(xmin.data(), xmax.data());
+         }
+      } else {
+         // use (-inf +inf)
+         data.Range().GetRange(&xmin[0], &xmax[0]);
+         // check if function is zero at +- inf
+         Double_v xmin_v;
+         Double_v xmax_v;
+         Load(xmin_v, xmin.data());
+         Load(xmax_v, xmax.data());
+         if (ReduceAdd(func(&xmin_v, p)) != 0 || ReduceAdd(func(&xmax_v, p)) != 0) {
+            MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+                           "A range has not been set and the function is not zero at +/- inf");
+            return 0;
+         }
+         norm = igEval.Integral(&xmin[0], &xmax[0]);
+      }
+   }
+
+   // needed to compute effective global weight in case of extended likelihood
+
+   auto vecSize = Double_v::size();
+   unsigned int numVectors = n / vecSize;
+
+   auto mapFunction = [&, p](const unsigned i) {
+      Double_v W{};
+      Double_v W2{};
+      Double_v fval{};
+
+      (void)p; /* avoid unused lambda capture warning if PARAMCACHE is disabled */
+
+      Double_v x1;
+      Load(x1, data.GetCoordComponent(i * vecSize, 0));
+      const Double_v *x = nullptr;
+      unsigned int ndim = data.NDim();
+      std::vector<Double_v> xc;
+      if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            Load(xc[j], data.GetCoordComponent(i * vecSize, j));
+         x = xc.data();
+      } else {
+         x = &x1;
+      }
+
+#ifdef USE_PARAMCACHE
+      fval = func(x);
+#else
+      fval = func(x, p);
+#endif
+
+#ifdef DEBUG_FITUTIL
+      if (i < 5 || (i > numVectors - 5)) {
+         if (ndim == 1)
+            std::cout << i << "  x " << x[0] << " fval = " << fval;
+         else
+            std::cout << i << "  x " << x[0] << " y " << x[1] << " fval = " << fval;
+      }
+#endif
+
+      if (normalizeFunc)
+         fval = fval * (1 / norm);
+
+      // function EvalLog protects against negative or too small values of fval
+      auto logval = ROOT::Math::Util::EvalLog(fval);
+      if (iWeight > 0) {
+         Double_v weight{};
+         if (data.WeightsPtr(i) == nullptr)
+            weight = 1;
+         else
+            Load(weight, data.WeightsPtr(i * vecSize));
+         logval *= weight;
+         if (iWeight == 2) {
+            logval *= weight; // use square of weights in likelihood
+            if (!extended) {
+               // needed sum of weights and sum of weight square if likelkihood is extended
+               W = weight;
+               W2 = weight * weight;
+            }
+         }
+      }
+#ifdef DEBUG_FITUTIL
+      if (i < 5 || (i > numVectors - 5)) {
+         std::cout << "   " << fval << "  logfval " << logval << std::endl;
+      }
+#endif
+
+      return LikelihoodAux<Double_v>(logval, W, W2);
+   };
+
+   auto redFunction = [](const std::vector<LikelihoodAux<Double_v>> &objs) {
+      return std::accumulate(
+         objs.begin(), objs.end(), LikelihoodAux<Double_v>(),
+         [](const LikelihoodAux<Double_v> &l1, const LikelihoodAux<Double_v> &l2) { return l1 + l2; });
+   };
+
+#ifndef R__USE_IMT
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                       "to ::ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ::ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   Double_v logl_v{};
+   Double_v sumW_v{};
+   Double_v sumW2_v{};
+   ROOT::Fit::FitUtil::LikelihoodAux<Double_v> resArray;
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
+      ROOT::TSequentialExecutor pool;
+      resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
+#ifdef R__USE_IMT
+   } else if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+      resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+#endif
+   } else {
+      Error("FitUtil::EvaluateLogL",
+            "Execution policy unknown. Available choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n "
+            "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+   }
+
+   logl_v = resArray.logvalue;
+   sumW_v = resArray.weight;
+   sumW2_v = resArray.weight2;
+
+   // Compute the contribution from the remaining points ( Last padded SIMD vector of elements )
+   unsigned int remainingPoints = n % vecSize;
+   if (remainingPoints > 0) {
+      auto remainingPointsContribution = mapFunction(numVectors);
+      // Add the contribution from the valid remaining points and store the result in the output variable
+      auto remainingMask = Int2Mask(remainingPoints);
+      where(remainingMask, logl_v) = logl_v + remainingPointsContribution.logvalue;
+      where(remainingMask, sumW_v) = sumW_v + remainingPointsContribution.weight;
+      where(remainingMask, sumW2_v) = sumW2_v + remainingPointsContribution.weight2;
+   }
+
+   // reduce vector type to double.
+   double logl = ReduceAdd(logl_v);
+   double sumW = ReduceAdd(sumW_v);
+   double sumW2 = ReduceAdd(sumW2_v);
+
+   if (extended) {
+      // add Poisson extended term
+      double extendedTerm = 0; // extended term in likelihood
+      double nuTot = 0;
+      // nuTot is integral of function in the range
+      // if function has been normalized integral has been already computed
+      if (!normalizeFunc) {
+         IntegralEvaluator<IModelFunctionTempl<Double_v>> igEval(func, p, true);
+         std::vector<double> xmin(data.NDim());
+         std::vector<double> xmax(data.NDim());
+
+         // compute integral in the ranges where is defined
+         if (data.Range().Size() > 0) {
+            nuTot = 0;
+            for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+               data.Range().GetRange(&xmin[0], &xmax[0], ir);
+               nuTot += igEval.Integral(xmin.data(), xmax.data());
+            }
+         } else {
+            // use (-inf +inf)
+            data.Range().GetRange(&xmin[0], &xmax[0]);
+            // check if function is zero at +- inf
+            Double_v xmin_v, xmax_v;
+            Load(xmin_v, xmin.data());
+            Load(xmax_v, xmax.data());
+            if (ReduceAdd(func(&xmin_v, p)) != 0 || ReduceAdd(func(&xmax_v, p)) != 0) {
+               MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+                              "A range has not been set and the function is not zero at +/- inf");
+               return 0;
+            }
+            nuTot = igEval.Integral(&xmin[0], &xmax[0]);
+         }
+
+         // force to be last parameter value
+         // nutot = p[func.NDim()-1];
+         if (iWeight != 2)
+            extendedTerm = -nuTot; // no need to add in this case n log(nu) since is already computed before
+         else {
+            // case use weight square in likelihood : compute total effective weight = sw2/sw
+            // ignore for the moment case when sumW is zero
+            extendedTerm = -(sumW2 / sumW) * nuTot;
+         }
+
+      } else {
+         nuTot = norm;
+         extendedTerm = -nuTot + double(n) * ROOT::Math::Util::EvalLog(nuTot);
+         // in case of weights need to use here sum of weights (to be done)
+      }
+
+      logl += extendedTerm;
+   }
+
+#ifdef DEBUG_FITUTIL
+   std::cout << "Evaluated log L for parameters (";
+   for (unsigned int ip = 0; ip < func.NPar(); ++ip)
+      std::cout << " " << p[ip];
+   std::cout << ")  nll = " << -logl << std::endl;
+#endif
+
+   return -logl;
+}
+
+double Evaluate<Double_v>::EvalPoissonLogL(const IModelFunctionTempl<Double_v> &func, const BinData &data,
+                                           const double *p, int iWeight, bool extended, unsigned int,
+                                           ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+{
+   // evaluate the Poisson Log Likelihood
+   // for binned likelihood fits
+   // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
+   // add as well constant term for saturated model to make it like a Chi2/2
+   // by default is extended. If extended is false the fit is not extended and
+   // the global poisson term is removed (i.e is a binomial fit)
+   // (remember that in this case one needs to have a function with a fixed normalization
+   // like in a non extended binned fit)
+   //
+   // if use Weight use a weighted dataset
+   // iWeight = 1 ==> logL = Sum( w f(x_i) )
+   // case of iWeight==1 is actually identical to weight==0
+   // iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
+   //
+
+#ifdef USE_PARAMCACHE
+   (const_cast<IModelFunctionTempl<Double_v> &>(func)).SetParameters(p);
+#endif
+   auto vecSize = Double_v::size();
+   // get fit option and check case of using integral of bins
+   const DataOptions &fitOpt = data.Opt();
+   if (fitOpt.fExpErrors || fitOpt.fIntegral)
+      Error("FitUtil::EvaluateChi2",
+            "The vectorized implementation doesn't support Integrals or BinVolume\n. Aborting operation.");
+   bool useW2 = (iWeight == 2);
+
+   auto mapFunction = [&](unsigned int i) {
+      Double_v y;
+      Load(y, data.ValuePtr(i * vecSize));
+      Double_v fval{};
+
+      if (data.NDim() > 1) {
+         std::vector<Double_v> x(data.NDim());
+         for (unsigned int j = 0; j < data.NDim(); ++j)
+            Load(x[j], data.GetCoordComponent(i * vecSize, j));
+#ifdef USE_PARAMCACHE
+         fval = func(x.data());
+#else
+         fval = func(x.data(), p);
+#endif
+         // one -dim case
+      } else {
+         Double_v x;
+         Load(x, data.GetCoordComponent(i * vecSize, 0));
+#ifdef USE_PARAMCACHE
+         fval = func(&x);
+#else
+         fval = func(&x, p);
+#endif
+      }
+
+      // EvalLog protects against 0 values of fval but don't want to add in the -log sum
+      // negative values of fval
+      where(fval < 0.0, fval) = 0.0;
+
+      Double_v nloglike{}; // negative loglikelihood
+
+      if (useW2) {
+         // apply weight correction . Effective weight is error^2/ y
+         // and expected events in bins is fval/weight
+         // can apply correction only when y is not zero otherwise weight is undefined
+         // (in case of weighted likelihood I don't care about the constant term due to
+         // the saturated model)
+         assert(data.GetErrorType() != ROOT::Fit::BinData::ErrorType::kNoError);
+         Double_v error = 0.0;
+         Load(error, data.ErrorPtr(i * vecSize));
+         // for empty bin use the average weight  computed from the total data weight
+         auto m = y != 0.0;
+         Double_v weight{};
+         where(m, weight) = (error * error) / y;
+         where(!m, weight) = Double_v{data.SumOfError2() / data.SumOfContent()};
+         if (extended) {
+            nloglike = weight * (fval - y);
+         }
+         where(y != 0, nloglike) =
+            nloglike + weight * y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
+
+      } else {
+         // standard case no weights or iWeight=1
+         // this is needed for Poisson likelihood (which are extended and not for multinomial)
+         // the formula below  include constant term due to likelihood of saturated model (f(x) = y)
+         // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
+         if (extended)
+            nloglike = fval - y;
+
+         where(y > 0, nloglike) = nloglike + y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
+      }
+
+      return nloglike;
+   };
+
+#ifdef R__USE_IMT
+   auto redFunction = [](const std::vector<Double_v> &objs) {
+      return std::accumulate(objs.begin(), objs.end(), Double_v{});
+   };
+#else
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::Evaluate<T>::EvalPoissonLogL",
+              "Multithread execution policy requires IMT, which is disabled. Changing "
+              "to ::ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ::ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   Double_v res{};
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
+      for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
+         res += mapFunction(i);
+      }
+#ifdef R__USE_IMT
+   } else if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
+      res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+#endif
+   } else {
+      Error("FitUtil::Evaluate<T>::EvalPoissonLogL",
+            "Execution policy unknown. Available choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n "
+            "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+   }
+
+   // Last padded SIMD vector of elements
+   if (data.Size() % vecSize != 0)
+      where(Int2Mask(data.Size() % vecSize), res) = res + mapFunction(data.Size() / vecSize);
+
+   return ReduceAdd(res);
+}
+
+namespace {
+
+// Compute a mask to filter out infinite numbers and NaN values.
+// The argument rval is updated so infinite numbers and NaN values are replaced by
+// maximum finite values (preserving the original sign).
+auto CheckInfNaNValues(Double_v &rval)
+{
+   auto mask = rval > -NumericMax<Double_v>() && rval < NumericMax<Double_v>();
+
+   // Case +inf or nan
+   where(!mask, rval) = +NumericMax<Double_v>();
+
+   // Case -inf
+   where(!mask && rval < 0, rval) = -NumericMax<Double_v>();
+
+   return mask;
+}
+
+} // namespace
+
+void Evaluate<Double_v>::EvalChi2Gradient(const IModelFunctionTempl<Double_v> &f, const BinData &data, const double *p,
+                                          double *grad, unsigned int &nPoints, ::ROOT::EExecutionPolicy executionPolicy,
+                                          unsigned nChunks)
+{
+   // evaluate the gradient of the chi2 function
+   // this function is used when the model function knows how to calculate the derivative and we can
+   // avoid that the minimizer re-computes them
+   //
+   // case of chi2 effective (errors on coordinate) is not supported
+
+   if (data.HaveCoordErrors()) {
+      MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                     "Error on the coordinates are not used in calculating Chi2 gradient");
+      return; // it will assert otherwise later in GetPoint
+   }
+
+   auto *fg = dynamic_cast<const IGradModelFunctionTempl<Double_v> *>(&f);
+   assert(fg != nullptr); // must be called by a gradient function
+
+   auto &func = *fg;
+
+   const DataOptions &fitOpt = data.Opt();
+   if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
+      Error("FitUtil::EvaluateChi2Gradient", "The vectorized implementation doesn't support Integrals,"
+                                             "BinVolume or ExpErrors\n. Aborting operation.");
+
+   unsigned int npar = func.NPar();
+   auto vecSize = Double_v::size();
+   unsigned initialNPoints = data.Size();
+   unsigned numVectors = initialNPoints / vecSize;
+
+   // numVectors + 1 because of the padded data (call to mapFunction with i = numVectors after the main loop)
+   std::vector<Double_v::mask_type> validPointsMasks(numVectors + 1);
+
+   auto mapFunction = [&](const unsigned int i) {
+      // set all vector values to zero
+      std::vector<Double_v> gradFunc(npar);
+      std::vector<Double_v> pointContributionVec(npar);
+
+      Double_v x1, y, invError;
+
+      Load(x1, data.GetCoordComponent(i * vecSize, 0));
+      Load(y, data.ValuePtr(i * vecSize));
+      const auto invErrorPtr = data.ErrorPtr(i * vecSize);
+
+      if (invErrorPtr == nullptr)
+         invError = 1;
+      else
+         Load(invError, invErrorPtr);
+
+      // TODO: Check error options and invert if needed
+
+      Double_v fval = 0;
+
+      const Double_v *x = nullptr;
+
+      unsigned int ndim = data.NDim();
+      // need to declare vector outside if statement
+      // otherwise pointer will be invalid
+      std::vector<Double_v> xc;
+      if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            Load(xc[j], data.GetCoordComponent(i * vecSize, j));
+         x = xc.data();
+      } else {
+         x = &x1;
+      }
+
+      fval = func(x, p);
+      func.ParameterGradient(x, p, &gradFunc[0]);
+
+      validPointsMasks[i] = CheckInfNaNValues(fval);
+      if (MaskEmpty(validPointsMasks[i])) {
+         // Return a zero contribution to all partial derivatives on behalf of the current points
+         return pointContributionVec;
+      }
+
+      // loop on the parameters
+      for (unsigned int ipar = 0; ipar < npar; ++ipar) {
+         // avoid singularity in the function (infinity and nan ) in the chi2 sum
+         // eventually add possibility of excluding some points (like singularity)
+         validPointsMasks[i] = CheckInfNaNValues(gradFunc[ipar]);
+
+         if (MaskEmpty(validPointsMasks[i])) {
+            break; // exit loop on parameters
+         }
+
+         // calculate derivative point contribution (only for valid points)
+         where(validPointsMasks[i], pointContributionVec[ipar]) =
+            -2.0 * (y - fval) * invError * invError * gradFunc[ipar];
+      }
+
+      return pointContributionVec;
+   };
+
+   // Reduce the set of vectors by summing its equally-indexed components
+   auto redFunction = [&](const std::vector<std::vector<Double_v>> &partialResults) {
+      std::vector<Double_v> result(npar);
+
+      for (auto const &pointContributionVec : partialResults) {
+         for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+            result[parameterIndex] += pointContributionVec[parameterIndex];
+      }
+
+      return result;
+   };
+
+   std::vector<Double_v> gVec(npar);
+   std::vector<double> g(npar);
+
+#ifndef R__USE_IMT
+   // to fix compiler warning
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                               "to ::ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ::ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
+      ROOT::TSequentialExecutor pool;
+      gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
+   }
+#ifdef R__USE_IMT
+   else if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+      gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
+   }
+#endif
+   else {
+      Error("FitUtil::EvaluateChi2Gradient",
+            "Execution policy unknown. Available choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+   }
+
+   // Compute the contribution from the remaining points
+   unsigned int remainingPoints = initialNPoints % vecSize;
+   if (remainingPoints > 0) {
+      auto remainingPointsContribution = mapFunction(numVectors);
+      // Add the contribution from the valid remaining points and store the result in the output variable
+      auto remainingMask = Int2Mask(remainingPoints);
+      for (unsigned int param = 0; param < npar; param++) {
+         where(remainingMask, gVec[param]) = gVec[param] + remainingPointsContribution[param];
+      }
+   }
+   // reduce final gradient result from T to double
+   for (unsigned int param = 0; param < npar; param++) {
+      grad[param] = ReduceAdd(gVec[param]);
+   }
+
+   // correct the number of points
+   nPoints = initialNPoints;
+
+   if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(), [](auto validPoints) {
+          // Check if the mask is not full
+          for (size_t i = 0; i < Double_v::mask_type::size(); ++i)
+             if (!validPoints[i])
+                return true;
+          return false;
+       })) {
+      unsigned nRejected = 0;
+
+      for (const auto &mask : validPointsMasks) {
+         for (unsigned int i = 0; i < vecSize; i++) {
+            nRejected += !mask[i];
+         }
+      }
+
+      assert(nRejected <= initialNPoints);
+      nPoints = initialNPoints - nRejected;
+
+      if (nPoints < npar) {
+         MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                        "Too many points rejected for overflow in gradient calculation");
+      }
+   }
+}
+
+void Evaluate<Double_v>::EvalPoissonLogLGradient(const IModelFunctionTempl<Double_v> &f, const BinData &data,
+                                                 const double *p, double *grad, unsigned int &,
+                                                 ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+{
+   // evaluate the gradient of the Poisson log likelihood function
+
+   auto *fg = dynamic_cast<const IGradModelFunctionTempl<Double_v> *>(&f);
+   assert(fg != nullptr); // must be called by a grad function
+
+   auto &func = *fg;
+
+   (const_cast<IGradModelFunctionTempl<Double_v> &>(func)).SetParameters(p);
+
+   const DataOptions &fitOpt = data.Opt();
+   if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
+      Error("FitUtil::EvaluatePoissonLogLGradient", "The vectorized implementation doesn't support Integrals,"
+                                                    "BinVolume or ExpErrors\n. Aborting operation.");
+
+   unsigned int npar = func.NPar();
+   auto vecSize = Double_v::size();
+   unsigned initialNPoints = data.Size();
+   unsigned numVectors = initialNPoints / vecSize;
+
+   auto mapFunction = [&](const unsigned int i) {
+      // set all vector values to zero
+      std::vector<Double_v> gradFunc(npar);
+      std::vector<Double_v> pointContributionVec(npar);
+
+      Double_v x1, y;
+
+      Load(x1, data.GetCoordComponent(i * vecSize, 0));
+      Load(y, data.ValuePtr(i * vecSize));
+
+      Double_v fval = 0;
+
+      const Double_v *x = nullptr;
+
+      unsigned ndim = data.NDim();
+      std::vector<Double_v> xc;
+      if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            Load(xc[j], data.GetCoordComponent(i * vecSize, j));
+         x = xc.data();
+      } else {
+         x = &x1;
+      }
+
+      fval = func(x, p);
+      func.ParameterGradient(x, p, &gradFunc[0]);
+
+      // correct the gradient
+      for (unsigned int ipar = 0; ipar < npar; ++ipar) {
+         auto positiveValuesMask = fval > 0;
+
+         // df/dp * (1.  - y/f )
+         where(positiveValuesMask, pointContributionVec[ipar]) = gradFunc[ipar] * (1. - y / fval);
+
+         auto validNegativeValuesMask = !positiveValuesMask && gradFunc[ipar] != 0;
+
+         if (!MaskEmpty(validNegativeValuesMask)) {
+            const Double_v kdmax1 = sqrt(NumericMax<Double_v>());
+            const Double_v kdmax2 = NumericMax<Double_v>() / (4 * initialNPoints);
+            Double_v gg = kdmax1 * gradFunc[ipar];
+            auto mask = gg > 0;
+            where(mask, pointContributionVec[ipar]) = min(gg, kdmax2);
+            where(!mask, pointContributionVec[ipar]) = max(gg, -kdmax2);
+            pointContributionVec[ipar] = -pointContributionVec[ipar];
+         }
+      }
+
+#ifdef DEBUG_FITUTIL
+      {
+         R__LOCKGUARD(gROOTMutex);
+         if (i < 5 || (i > data.Size() - 5)) {
+            if (data.NDim() > 1)
+               std::cout << i << "  x " << x[0] << " y " << x[1];
+            else
+               std::cout << i << "  x " << x[0];
+            std::cout << " func " << fval << " gradient ";
+            for (unsigned int ii = 0; ii < npar; ++ii)
+               std::cout << "  " << pointContributionVec[ii];
+            std::cout << "\n";
+         }
+      }
+#endif
+
+      return pointContributionVec;
+   };
+
+   // Vertically reduce the set of vectors by summing its equally-indexed components
+   auto redFunction = [&](const std::vector<std::vector<Double_v>> &partialResults) {
+      std::vector<Double_v> result(npar);
+
+      for (auto const &pointContributionVec : partialResults) {
+         for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+            result[parameterIndex] += pointContributionVec[parameterIndex];
+      }
+
+      return result;
+   };
+
+   std::vector<Double_v> gVec(npar);
+
+#ifndef R__USE_IMT
+   // to fix compiler warning
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::EvaluatePoissonLogLGradient",
+              "Multithread execution policy requires IMT, which is disabled. Changing "
+              "to ::ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ::ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
+      ROOT::TSequentialExecutor pool;
+      gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
+   }
+#ifdef R__USE_IMT
+   else if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+      gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
+   }
+#endif
+   else {
+      Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Available choices:\n "
+                                                    "::ROOT::EExecutionPolicy::kSequential (default)\n "
+                                                    "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+   }
+
+   // Compute the contribution from the remaining points
+   unsigned int remainingPoints = initialNPoints % vecSize;
+   if (remainingPoints > 0) {
+      auto remainingPointsContribution = mapFunction(numVectors);
+      // Add the contribution from the valid remaining points and store the result in the output variable
+      auto remainingMask = Int2Mask(remainingPoints);
+      for (unsigned int param = 0; param < npar; param++) {
+         where(remainingMask, gVec[param]) = gVec[param] + remainingPointsContribution[param];
+      }
+   }
+   // reduce final gradient result from T to double
+   for (unsigned int param = 0; param < npar; param++) {
+      grad[param] = ReduceAdd(gVec[param]);
+   }
+
+#ifdef DEBUG_FITUTIL
+   std::cout << "***** Final gradient : ";
+   for (unsigned int ii = 0; ii < npar; ++ii)
+      std::cout << grad[ii] << "   ";
+   std::cout << "\n";
+#endif
+}
+
+void Evaluate<Double_v>::EvalLogLGradient(const IModelFunctionTempl<Double_v> &f, const UnBinData &data,
+                                          const double *p, double *grad, unsigned int &,
+                                          ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+{
+   // evaluate the gradient of the log likelihood function
+
+   auto *fg = dynamic_cast<const IGradModelFunctionTempl<Double_v> *>(&f);
+   assert(fg != nullptr); // must be called by a grad function
+
+   auto &func = *fg;
+
+   unsigned int npar = func.NPar();
+   auto vecSize = Double_v::size();
+   unsigned initialNPoints = data.Size();
+   unsigned numVectors = initialNPoints / vecSize;
+
+#ifdef DEBUG_FITUTIL
+   std::cout << "\n===> Evaluate Gradient for parameters ";
+   for (unsigned int ip = 0; ip < npar; ++ip)
+      std::cout << "  " << p[ip];
+   std::cout << "\n";
+#endif
+
+   (const_cast<IGradModelFunctionTempl<Double_v> &>(func)).SetParameters(p);
+
+   const Double_v kdmax1 = sqrt(NumericMax<Double_v>());
+   const Double_v kdmax2 = NumericMax<Double_v>() / (4 * initialNPoints);
+
+   auto mapFunction = [&](const unsigned int i) {
+      std::vector<Double_v> gradFunc(npar);
+      std::vector<Double_v> pointContributionVec(npar);
+
+      Double_v x1;
+      Load(x1, data.GetCoordComponent(i * vecSize, 0));
+
+      const Double_v *x = nullptr;
+
+      unsigned int ndim = data.NDim();
+      std::vector<Double_v> xc(ndim);
+      if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            Load(xc[j], data.GetCoordComponent(i * vecSize, j));
+         x = xc.data();
+      } else {
+         x = &x1;
+      }
+
+      Double_v fval = func(x, p);
+      func.ParameterGradient(x, p, &gradFunc[0]);
+
+#ifdef DEBUG_FITUTIL
+      if (i < 5 || (i > numVectors - 5)) {
+         if (ndim > 1)
+            std::cout << i << "  x " << x[0] << " y " << x[1] << " gradient " << gradFunc[0] << "  " << gradFunc[1]
+                      << "  " << gradFunc[3] << std::endl;
+         else
+            std::cout << i << "  x " << x[0] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  "
+                      << gradFunc[3] << std::endl;
+      }
+#endif
+
+      auto positiveValues = fval > 0;
+
+      for (unsigned int kpar = 0; kpar < npar; ++kpar) {
+         if (!MaskEmpty(positiveValues)) {
+            where(positiveValues, pointContributionVec[kpar]) = -1. / fval * gradFunc[kpar];
+         }
+
+         auto nonZeroGradientValues = !positiveValues && gradFunc[kpar] != 0;
+         if (!MaskEmpty(nonZeroGradientValues)) {
+            Double_v gg = kdmax1 * gradFunc[kpar];
+            auto mask = nonZeroGradientValues && gg > 0;
+            where(mask, pointContributionVec[kpar]) = -min(gg, kdmax2);
+            where(!mask, pointContributionVec[kpar]) = -max(gg, -kdmax2);
+         }
+         // if func derivative is zero term is also zero so do not add in g[kpar]
+      }
+
+      return pointContributionVec;
+   };
+
+   // Vertically reduce the set of vectors by summing its equally-indexed components
+   auto redFunction = [&](const std::vector<std::vector<Double_v>> &pointContributions) {
+      std::vector<Double_v> result(npar);
+
+      for (auto const &pointContributionVec : pointContributions) {
+         for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+            result[parameterIndex] += pointContributionVec[parameterIndex];
+      }
+
+      return result;
+   };
+
+   std::vector<Double_v> gVec(npar);
+   std::vector<double> g(npar);
+
+#ifndef R__USE_IMT
+   // to fix compiler warning
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::EvaluateLogLGradient", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                               "to ::ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ::ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   if (executionPolicy == ::ROOT::EExecutionPolicy::kSequential) {
+      ROOT::TSequentialExecutor pool;
+      gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
+   }
+#ifdef R__USE_IMT
+   else if (executionPolicy == ::ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+      gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
+   }
+#endif
+   else {
+      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Available choices:\n "
+                                             "::ROOT::EExecutionPolicy::kSequential (default)\n "
+                                             "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+   }
+
+   // Compute the contribution from the remaining points
+   unsigned int remainingPoints = initialNPoints % vecSize;
+   if (remainingPoints > 0) {
+      auto remainingPointsContribution = mapFunction(numVectors);
+      // Add the contribution from the valid remaining points and store the result in the output variable
+      auto remainingMask = Int2Mask(initialNPoints % vecSize);
+      for (unsigned int param = 0; param < npar; param++) {
+         where(remainingMask, gVec[param]) = gVec[param] + remainingPointsContribution[param];
+      }
+   }
+   // reduce final gradient result from T to double
+   for (unsigned int param = 0; param < npar; param++) {
+      grad[param] = ReduceAdd(gVec[param]);
+   }
+
+#ifdef DEBUG_FITUTIL
+   std::cout << "Final gradient ";
+   for (unsigned int param = 0; param < npar; param++) {
+      std::cout << "  " << grad[param];
+   }
+   std::cout << "\n";
+#endif
+}
+
+} // namespace FitUtil
+
+#endif // R__HAS_STD_EXPERIMENTAL_SIMD
 }
 
 } // end namespace ROOT

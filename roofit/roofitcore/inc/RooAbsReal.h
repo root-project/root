@@ -18,6 +18,7 @@
 
 #include "RooAbsArg.h"
 #include "RooArgList.h"
+#include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooCmdArg.h"
 #include "RooCurve.h"
@@ -26,6 +27,9 @@
 #include "RooGlobalFunc.h"
 
 #include <ROOT/RSpan.hxx>
+
+#include <TList.h>
+#include <TObjString.h>
 
 class RooDataSet ;
 class RooPlot;
@@ -176,26 +180,44 @@ public:
   bool getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-                              const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+  {
+    return RooFit::makeOwningPtr(chi2FitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
+  }
 
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-             const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-             const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+  {
+    return RooFit::makeOwningPtr(createChi2Impl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
+  }
 
   // Chi^2 fits to X-Y datasets
   virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
                               const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
+                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={})
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
 
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
   virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
                const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-               const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
+               const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={})
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
 
   virtual RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) ;
 
@@ -387,8 +409,14 @@ public:
   virtual void doEval(RooFit::EvalContext &) const;
 
   virtual bool hasGradient() const { return false; }
+  virtual bool hasHessian() const { return false; }
   virtual void gradient(double *) const {
     if(!hasGradient()) throw std::runtime_error("RooAbsReal::gradient(double *) not implemented by this class!");
+  }
+  virtual void hessian(double *) const
+  {
+     if (!hasHessian())
+        throw std::runtime_error("RooAbsReal::hessian(double *) not implemented by this class!");
   }
 
   // PlotOn with command list
@@ -420,18 +448,18 @@ protected:
   void plotOnCompSelect(RooArgSet* selNodes) const ;
   RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
 
-  // Support interface for subclasses to advertise their analytic integration
-  // and generator capabilities in their analyticalIntegral() and generateEvent()
-  // implementations.
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a) const ;
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a, const RooArgProxy& b) const ;
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a, const RooArgProxy& b,
-         const RooArgProxy& c, const RooArgProxy& d) const ;
+  template<typename... Proxies>
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, const RooArgProxy& a, const Proxies&... proxies) const
+  {
+    TList nameList;
+    // Fold expression to add all proxy names to the list
+    nameList.Add(new TObjString(a.absArg()->GetName()));
+    (nameList.Add(new TObjString(proxies.absArg()->GetName())), ...);
+
+    bool result = matchArgsByName(allDeps, analDeps, nameList);
+    nameList.Delete(); // Clean up the list contents
+    return result;
+  }
 
   bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgSet& set) const ;
@@ -522,6 +550,9 @@ protected:
 
 private:
 
+  std::unique_ptr<RooAbsReal> createChi2Impl(RooDataHist& data, const RooLinkedList& cmdList);
+  std::unique_ptr<RooFitResult> chi2FitToImpl(RooDataHist& data, const RooLinkedList& cmdList);
+
   /// Debug version of getVal(), which is slow and does error checking.
   double _DEBUG_getVal(const RooArgSet* normalisationSet) const;
 
@@ -537,8 +568,8 @@ private:
    TString _label;                                         ///< Plot label for objects value
    bool _forceNumInt = false;                              ///< Force numerical integration if flag set
    std::unique_ptr<RooNumIntConfig> _specIntegratorConfig; // Numeric integrator configuration specific for this object
-   TreeReadBuffer *_treeReadBuffer = nullptr;              //! A buffer for reading values from trees
-   bool _selectComp = true;                                //! Component selection flag for RooAbsPdf::plotCompOn
+   TreeReadBuffer *_treeReadBuffer = nullptr;              ///<! A buffer for reading values from trees
+   bool _selectComp = true;                                ///<! Component selection flag for RooAbsPdf::plotCompOn
    mutable RooFit::UniqueId<RooArgSet>::Value_t _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<!
 
    static bool _globalSelectComp; // Global activation switch for component selection

@@ -49,7 +49,6 @@ public:
    ~TMultiGraph() override;
 
    virtual void      Add(TGraph *graph, Option_t *chopt = "");
-   virtual void      Add(TMultiGraph *multigraph, Option_t *chopt = "");
    void              Browse(TBrowser *b) override;
    Int_t             DistancetoPrimitive(Int_t px, Int_t py) override;
    void              Draw(Option_t *chopt = "") override;
@@ -73,12 +72,13 @@ public:
    TAxis            *GetXaxis();
    TAxis            *GetYaxis();
    void              Paint(Option_t *chopt = "") override;
-   void              PaintPads(Option_t *chopt = "");
+   void              PaintPads(Option_t *chopt = "", Int_t nColumn = 0);
    void              PaintPolyLine3D(Option_t *chopt = "");
    void              PaintReverse(Option_t *chopt = "");
    void              Print(Option_t *chopt="") const override;
    void              RecursiveRemove(TObject *obj) override;
    void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void              SetHistogram(TH1F *hist);
    virtual void      SetMaximum(Double_t maximum=-1111);
    virtual void      SetMinimum(Double_t minimum=-1111);
 

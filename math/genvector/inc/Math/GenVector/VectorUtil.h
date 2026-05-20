@@ -18,8 +18,7 @@
 #ifndef ROOT_Math_GenVector_VectorUtil
 #define ROOT_Math_GenVector_VectorUtil  1
 
-#include "Math/Math.h"
-
+#include "TMath.h"
 
 #include "Math/GenVector/Boost.h"
 
@@ -40,12 +39,14 @@ namespace ROOT {
 
        @ingroup GenVector
 
-       @sa Overview of the @ref GenVector "physics vector library"
+       @see GenVector
        */
 
 
       namespace VectorUtil {
 
+      /// \addtogroup GenVector
+      /// @{
 
          // methods for 3D vectors
 
@@ -60,10 +61,10 @@ namespace ROOT {
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar DeltaPhi( const Vector1 & v1, const Vector2 & v2) {
             typename Vector1::Scalar dphi = v2.Phi() - v1.Phi();
-            if ( dphi > M_PI ) {
-               dphi -= 2.0*M_PI;
-            } else if ( dphi <= -M_PI ) {
-               dphi += 2.0*M_PI;
+            if (dphi > TMath::Pi()) {
+               dphi -= 2.0 * TMath::Pi();
+            } else if (dphi <= -TMath::Pi()) {
+               dphi += 2.0 * TMath::Pi();
             }
             return dphi;
          }
@@ -259,6 +260,8 @@ namespace ROOT {
             //return ( v1 + v2).mag();
          }
 
+         /// @brief Returns the square of what InvariantMass(const Vector1&, const Vector2&) would return.
+         /// This is mostly useful for speed optimisations, because the expensive sqrt operation is skipped.
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar InvariantMass2( const Vector1 & v1, const Vector2 & v2) {
             typedef typename  Vector1::Scalar Scalar;
@@ -275,15 +278,16 @@ namespace ROOT {
 
          // rotation and transformations
 
-
          /**
           rotation along X axis for a generic vector by an Angle alpha
           returning a new vector.
-          The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
           and SetXYZ methods.
           */
          template <class Vector>
          Vector RotateX(const Vector & v, double alpha) {
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
+               return v;
             using std::sin;
             double sina = sin(alpha);
             using std::cos;
@@ -298,11 +302,13 @@ namespace ROOT {
          /**
           rotation along Y axis for a generic vector by an Angle alpha
           returning a new vector.
-          The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
           and SetXYZ methods.
           */
          template <class Vector>
          Vector RotateY(const Vector & v, double alpha) {
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
+               return v;
             using std::sin;
             double sina = sin(alpha);
             using std::cos;
@@ -317,11 +323,13 @@ namespace ROOT {
          /**
           rotation along Z axis for a generic vector by an Angle alpha
           returning a new vector.
-          The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
           and SetXYZ methods.
           */
          template <class Vector>
          Vector RotateZ(const Vector & v, double alpha) {
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
+               return v;
             using std::sin;
             double sina = sin(alpha);
             using std::cos;
@@ -333,6 +341,40 @@ namespace ROOT {
             return vrot;
          }
 
+         /**
+          rotation along a custom axis for a generic vector by an Angle alpha (in rad)
+          returning a new vector.
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
+          and SetXYZ methods.
+          */
+         template <class Vector>
+         Vector Rotate(const Vector &v, double alpha, const Vector &axis)
+         {
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
+               return v;
+            const double ll = std::sqrt(axis.X() * axis.X() + axis.Y() * axis.Y() + axis.Z() * axis.Z());
+            if (ll == 0.)
+               GenVector_Throw("Axis Vector has zero magnitude");
+            const double sa = std::sin(alpha);
+            const double ca = std::cos(alpha);
+            const double dx = axis.X() / ll;
+            const double dy = axis.Y() / ll;
+            const double dz = axis.Z() / ll;
+            // clang-format off
+            const double rot00 = (1 - ca) * dx * dx + ca     , rot01 = (1 - ca) * dx * dy - sa * dz, rot02 = (1 - ca) * dx * dz + sa * dy,
+                         rot10 = (1 - ca) * dy * dx + sa * dz, rot11 = (1 - ca) * dy * dy + ca     , rot12 = (1 - ca) * dy * dz - sa * dx,
+                         rot20 = (1 - ca) * dz * dx - sa * dy, rot21 = (1 - ca) * dz * dy + sa * dx, rot22 = (1 - ca) * dz * dz + ca     ;
+            // clang-format on
+            const double xX = v.X();
+            const double yY = v.Y();
+            const double zZ = v.Z();
+            const double x2 = rot00 * xX + rot01 * yY + rot02 * zZ;
+            const double y2 = rot10 * xX + rot11 * yY + rot12 * zZ;
+            const double z2 = rot20 * xX + rot21 * yY + rot22 * zZ;
+            Vector vrot;
+            vrot.SetXYZ(x2, y2, z2);
+            return vrot;
+         }
 
          /**
           rotation on a generic vector using a generic rotation class.
@@ -369,7 +411,7 @@ namespace ROOT {
             double bz = b.Z();
             double b2 = bx*bx + by*by + bz*bz;
             if (b2 >= 1) {
-               GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -395,7 +437,7 @@ namespace ROOT {
          template <class LVector, class T>
          LVector boostX(const LVector & v, T beta) {
             if (beta >= 1) {
-               GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -417,7 +459,7 @@ namespace ROOT {
          template <class LVector>
          LVector boostY(const LVector & v, double beta) {
             if (beta >= 1) {
-               GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -438,7 +480,7 @@ namespace ROOT {
          template <class LVector>
          LVector boostZ(const LVector & v, double beta) {
             if (beta >= 1) {
-               GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -515,7 +557,8 @@ namespace ROOT {
           */
          double  Phi_mpi_pi(double phi);
 
-
+         // Close of doxygen group:
+         /// @}
 
       }  // end namespace Vector Util
 

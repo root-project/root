@@ -12,7 +12,7 @@
 #ifndef PYROOT_PYTHONIZE_H
 #define PYROOT_PYTHONIZE_H
 
-#include "Python.h"
+#include <Python.h>
 
 namespace PyROOT {
 
@@ -24,8 +24,6 @@ PyObject *GetBranchAttr(PyObject *self, PyObject *args);
 PyObject *BranchPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
-
-PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 
 PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
 

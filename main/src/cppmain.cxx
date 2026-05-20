@@ -19,7 +19,7 @@
  * representations about the suitability of this software for any
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
-#include <stdio.h>
+#include <cstdio>
 
 extern "C" {
 extern void G__setothermain(int othermain);

@@ -22,7 +22,7 @@
 #include <thread>
 #include <unordered_map>
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 #include "tbb/enumerable_thread_specific.h"
 #endif
 
@@ -152,7 +152,7 @@ struct RecurseCounts {
 
 };
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 struct RecurseCountsTBB {
    using Hint_t = TVirtualRWMutex::Hint_t;
 

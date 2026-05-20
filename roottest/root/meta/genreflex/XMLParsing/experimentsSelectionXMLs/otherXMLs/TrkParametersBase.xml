@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="Trk::ParametersBase" />
+  <class name="std::vector<const Trk::ParametersBase*>" />
+  <class name="Trk::MeasuredParametersBase"/>
+</lcgdict>

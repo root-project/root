@@ -52,17 +52,16 @@ to be merged, like the standalone hadd program.
 #include <cstring>
 #include <map>
 
-ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
 TClassRef R__RNTuple_Class("ROOT::RNTuple");
 
 static const Int_t kCpProgress = BIT(14);
-static const Int_t kCintFileNumber = 100;
+static const Int_t kClingFileNumber = 100;
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the maximum number of allowed opened files minus some wiggle room
-/// for CINT or at least of the standard library (stdio).
+/// for Cling or at least of the standard library (stdio).
 
 static Int_t R__GetSystemMaxOpenedFiles()
 {
@@ -78,8 +77,12 @@ static Int_t R__GetSystemMaxOpenedFiles()
       maxfiles = 512;
    }
 #endif
-   if (maxfiles > kCintFileNumber) {
-      return maxfiles - kCintFileNumber;
+   if (maxfiles > kClingFileNumber) {
+      // Limit the maximum number of opened files to 128 to mitigate memory
+      // consumption issues that may arise during merges with many files.
+      // For further details see analysis at:
+      // https://github.com/root-project/root/issues/21660
+      return std::min(128, maxfiles - kClingFileNumber);
    } else if (maxfiles > 5) {
       return maxfiles - 5;
    } else {
@@ -542,7 +545,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
             keyname, keytitle);
       return kTRUE;
    }
-   Bool_t canBeFound = (type & kIncremental) && (current_sourcedir->GetList()->FindObject(keyname) != nullptr);
+   Bool_t canBeFound = (type & kIncremental) && (target->GetList()->FindObject(keyname) != nullptr);
 
    // if (cl->IsTObject())
    //    obj->ResetBit(kMustCleanup);
@@ -591,8 +594,15 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // GetPath(), so we can still figure out where we are in the recursion
 
       // If this folder is a onlyListed object, merge everything inside.
-      if (onlyListed) type &= ~kOnlyListed;
-      status = MergeRecursive(newdir, sourcelist, type);
+      const auto mergeType = onlyListed ? type & ~kOnlyListed : type;
+      status = MergeRecursive(newdir, sourcelist, mergeType);
+
+      if ((type & kOnlyListed) && !(type & kIncremental) && !onlyListed && newdir->GetNkeys() == 0) {
+         // None of the children were merged, and the directory is not listed
+         delete newdir;
+         newdir = nullptr;
+         target->rmdir(obj->GetName());
+      }
       // Delete newdir directory after having written it (merged)
       if (!(type&kIncremental)) delete newdir;
       if (onlyListed) type |= kOnlyListed;
@@ -655,6 +665,13 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                if (!hobj) {
                   TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(keyname);
                   if (key2) {
+                     if (strcmp(key2->GetClassName(), keyclassname) != 0) {
+                        Error("MergeRecursive",
+                              "Object type mismatch for key '%s' in file '%s': expected '%s' but found '%s'.", keyname,
+                              nextsource->GetName(), keyclassname, key2->GetClassName());
+                        nextsource = (TFile *)sourcelist->After(nextsource);
+                        return kFALSE;
+                     }
                      hobj = key2->ReadObj();
                      if (!hobj) {
                         switch (fErrBehavior) {
@@ -795,7 +812,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    target->cd();
 
    oldkeyname = keyname;
-   //!!if the object is a tree, it is stored in globChain...
+   // if the object is a tree, it is stored in globChain...
    if (cl->InheritsFrom(TDirectory::Class())) {
       // printf("cas d'une directory\n");
 
@@ -821,8 +838,9 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
          ndir->ResetBit(kMustCleanup);
          delete ndir;
       }
-   } else if (!canBeFound) { // Don't write the partial result for TTree and TH1
-
+   } else if (!canBeFound) { // object (TTree, TH1) is not yet owned by the target, thus write it
+      if (gDebug > 0)
+         Info("MergeOne", "Writing partial result of %s into target", oldkeyname.Data());
       if (!canBeMerged) {
          TIter peeknextkey(nextkey);
          status = WriteCycleInOrder(oldkeyname, nextkey, peeknextkey, target) && status;
@@ -936,16 +954,17 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 /// the file "FileMerger.root" in the working directory. Returns true
 /// on success, false in case of error.
 /// The type is defined by the bit values in EPartialMergeType:
-///   kRegular        : normal merge, overwritting the output file
-///   kIncremental    : merge the input file with the content of the output file (if already exising) (default)
-///   kResetable      : merge only the objects with a MergeAfterReset member function.
-///   kNonResetable   : merge only the objects without a MergeAfterReset member function.
-///   kDelayWrite     : delay the TFile write (to reduce the number of write when reusing the file)
-///   kAll            : merge all type of objects (default)
-///   kAllIncremental : merge incrementally all type of objects.
-///   kOnlyListed     : merge only the objects specified in fObjectNames list
-///   kSkipListed     : skip objects specified in fObjectNames list
-///   kKeepCompression: keep compression level unchanged for each input
+///
+///     kRegular        : normal merge, overwriting the output file
+///     kIncremental    : merge the input file with the content of the output file (if already exising) (default)
+///     kResetable      : merge only the objects with a MergeAfterReset member function.
+///     kNonResetable   : merge only the objects without a MergeAfterReset member function.
+///     kDelayWrite     : delay the TFile write (to reduce the number of write when reusing the file)
+///     kAll            : merge all type of objects (default)
+///     kAllIncremental : merge incrementally all type of objects.
+///     kOnlyListed     : merge only the objects specified in fObjectNames list
+///     kSkipListed     : skip objects specified in fObjectNames list
+///     kKeepCompression: keep compression level unchanged for each input
 ///
 /// If the type is not set to kIncremental, the output file is deleted at the end of this operation.
 
@@ -1063,12 +1082,12 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open up to fMaxOpenedFiles of the excess files.
+/// Open up to (fMaxOpenedFiles-1) of the excess files.
 
 Bool_t TFileMerger::OpenExcessFiles()
 {
    if (fPrintLevel > 0) {
-      Printf("%s Opening the next %d files", fMsgPrefix.Data(), TMath::Min(fExcessFiles.GetEntries(), fMaxOpenedFiles - 1));
+      Printf("%s Opening the next %d files", fMsgPrefix.Data(), std::min(fExcessFiles.GetEntries(), fMaxOpenedFiles - 1));
    }
    Int_t nfiles = 0;
    TIter next(&fExcessFiles);
@@ -1123,8 +1142,9 @@ void TFileMerger::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a limit to the number of files that TFileMerger will open simultaneously.
 ///
-/// If the request is higher than the system limit, we reset it to the system limit.
-/// If the request is less than two, we reset it to 2 (one for the output file and one for the input file).
+/// This number includes both the read input files and the output file.
+/// \param newmax if higher than the system limit, we reset it to the system limit;
+/// if less than two, we reset it to 2 (one for the output file and one for the input file).
 
 void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
 {

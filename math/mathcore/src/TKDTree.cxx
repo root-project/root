@@ -16,7 +16,6 @@
 #include <cstring>
 #include <limits>
 
-templateClassImp(TKDTree);
 
 
 /**
@@ -115,9 +114,13 @@ in the 2 subtrees as close as possible. The following section gives more details
     kdtree->SetData(2, datatree->GetV3());
     kdtree->Build();
     }
+\endcode
+
     NOTE, that this implementation of kd-tree doesn't support adding new points after the tree has been built
     Of course, it's not necessary to use TTree::Draw(). What is important, is to have data columnwise.
     An example with regular arrays:
+
+\code{.cpp}
     {
     Int_t npoints = 100000;
     Int_t ndim = 3;
@@ -741,9 +744,9 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Find all points in the sphere of a given radius "range" around the given point
-///1st argument - the point
-///2nd argument - radius of the shere
-///3rd argument - a vector, in which the results will be returned
+/// \param point the point
+/// \param range radius of the sphere
+/// \param res a vector, in which the results will be returned
 
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::FindInRange(Value * point, Value range, std::vector<Index> &res)
@@ -793,13 +796,13 @@ void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, 
       }
       return;
    }
-   if (point[fAxis[inode]]<=fValue[inode]){
+   if (point[fAxis[inode]]<fValue[inode]){
       //first examine the node that contains the point
       UpdateRange(GetLeft(inode),point, range, res);
       UpdateRange(GetRight(inode),point, range, res);
    } else {
-      UpdateRange(GetLeft(inode),point, range, res);
       UpdateRange(GetRight(inode),point, range, res);
+      UpdateRange(GetLeft(inode),point, range, res);
    }
 }
 

@@ -34,7 +34,6 @@ batch mode directly using an instance of this base class.
 TGuiFactory *gGuiFactory = nullptr;
 TGuiFactory *gBatchGuiFactory = nullptr;
 
-ClassImp(TGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGuiFactory ctor only called by derived classes.

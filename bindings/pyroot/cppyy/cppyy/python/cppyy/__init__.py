@@ -56,20 +56,6 @@ import sys
 import sysconfig
 import warnings
 
-if not 'CLING_STANDARD_PCH' in os.environ:
-    def _set_pch():
-        try:
-            import cppyy_backend as cpb
-            local_pch = os.path.join(
-                    os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
-            if os.path.exists(local_pch):
-                os.putenv('CLING_STANDARD_PCH', local_pch)
-                os.environ['CLING_STANDARD_PCH'] = local_pch
-        except (ImportError, AttributeError):
-            pass
-    _set_pch()
-    del _set_pch
-
 try:
     import __pypy__
     del __pypy__
@@ -310,78 +296,6 @@ elif ispypy:
     apipath = os.path.dirname(apipath)
     if os.path.exists(apipath) and os.path.exists(os.path.join(apipath, 'Python.h')):
         add_include_path(apipath)
-
-# add access to extra headers for dispatcher (CPyCppyy only (?))
-if not ispypy:
-    try:
-        apipath_extra = os.environ['CPPYY_API_PATH']
-        if os.path.basename(apipath_extra) == 'CPyCppyy':
-            apipath_extra = os.path.dirname(apipath_extra)
-    except KeyError:
-        apipath_extra = None
-
-    if apipath_extra is None:
-        try:
-            if 0x30a0000 <= sys.hexversion:
-                import importlib.metadata as m
-
-                for p in m.files('CPyCppyy'):
-                    if p.match('API.h'):
-                        ape = p.locate()
-                        break
-                del p, m
-            else:
-                import pkg_resources as pr
-
-                d = pr.get_distribution('CPyCppyy')
-                for line in d.get_metadata_lines('RECORD'):
-                    if 'API.h' in line:
-                        ape = os.path.join(d.location, line[0:line.find(',')])
-                        break
-                del line, d, pr
-
-            if os.path.exists(ape):
-                apipath_extra = os.path.dirname(os.path.dirname(ape))
-            del ape
-        except Exception:
-            pass
-
-    if apipath_extra is None:
-        ldversion = sysconfig.get_config_var('LDVERSION')
-        if not ldversion:
-            ldversion = sys.version[:3]
-
-        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
-        if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            import glob, libcppyy
-            ape = os.path.dirname(libcppyy.__file__)
-          # a "normal" structure finds the include directory up to 3 levels up,
-          # ie. dropping lib/pythonx.y[md]/site-packages
-            for i in range(3):
-                if os.path.exists(os.path.join(ape, 'include')):
-                    break
-                ape = os.path.dirname(ape)
-
-            ape = os.path.join(ape, 'include')
-            if os.path.exists(os.path.join(ape, 'CPyCppyy')):
-                apipath_extra = ape
-            else:
-              # add back pythonx.y or site/pythonx.y if present
-                for p in glob.glob(os.path.join(ape, 'python'+sys.version[:3]+'*'))+\
-                         glob.glob(os.path.join(ape, '*', 'python'+sys.version[:3]+'*')):
-                    if os.path.exists(os.path.join(p, 'CPyCppyy')):
-                        apipath_extra = p
-                        break
-
-    if apipath_extra.lower() != 'none':
-        if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            warnings.warn("CPyCppyy API not found (tried: %s); "
-                          "set CPPYY_API_PATH envar to the 'CPyCppyy' API directory to fix"
-                          % apipath_extra)
-        else:
-            add_include_path(apipath_extra)
-
-    del apipath_extra
 
 if os.getenv('CONDA_PREFIX'):
   # MacOS, Linux

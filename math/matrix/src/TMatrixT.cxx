@@ -31,7 +31,6 @@ See the \ref Matrix page for the documentation of the linear algebra package
 #include "TMatrixDEigen.h"
 #include "TMath.h"
 
-templateClassImp(TMatrixT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for (nrows x ncols) matrix

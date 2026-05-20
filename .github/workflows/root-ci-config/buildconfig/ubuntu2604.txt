@@ -1,4 +1,2 @@
-ccache=ON
-mysql=OFF
-pythia8=OFF
-tmva-sofie=ON
+CMAKE_CXX_STANDARD=23
+davix=OFF

@@ -1,0 +1,113 @@
+<!-- 
+     * $Id: LoKiCore.xml 130709 2011-10-30 18:29:40Z ibelyaev $ 
+     * ========================================================================
+     * CVS tag:$Name: not supported by cvs2svn $, version $Revision: 130709 $ 
+     * ======================================================================== 
+     * @file
+     * The selection file to build Reflex dictionaries for Phys/LoKiCore package
+     * @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     * @date 2006-02-06
+     * ========================================================================
+-->
+
+<lcgdict>
+  
+  <!--
+      <class name      = "Gaudi::RangeBase_"     />
+  -->
+
+  <class name      = "LoKi::ILoKiSvc"        />
+  <class name      = "LoKi::IReporter"       />
+
+  <class name      = "LoKi::Welcome"         />
+  <class name      = "LoKi::Report"          />
+  <class name      = "LoKi::Base"            />
+
+  <class name      = "LoKi::AuxFunBase"      />
+  <class name      = "LoKi::KeeperBase"      />
+
+  <class name      = "LoKi::Services"        />
+  
+  <class pattern   = "LoKi::Interface<*>"    />
+  
+  <function pattern = "LoKi::Geometry::*"      />
+  <function pattern = "LoKi::Kinematics::*"    />
+  <function pattern = "LoKi::Particles::*"     />
+  
+  <variable pattern = "LoKi::Constants::*"     />
+
+  <function name = "LoKi::throwException"  />
+  <!--function name = "LoKi::Assert"          /-->
+  <function name = "LoKi::Print::toString" />
+
+  <class name    = "LoKi::Dump"            />
+  <class name    = "LoKi::FirstN"          />
+  <class name    = "LoKi::Reverse"         />
+  <class name    = "LoKi::Sort"            />
+  <class name    = "LoKi::Timer"           />
+  <class name    = "LoKi::DecayChainBase"  />  
+  
+  <class name    = "Bender::Welcome"       />
+  
+  <class name = "LoKi::Hybrid::ICoreFactory"               />
+  <class name = "LoKi::Hybrid::ICoreAntiFactory"           />
+  <class name = "LoKi::Hybrid::CoreEngine"                 />
+
+  
+  <class    name = "Gaudi::Histo1DDef"                 />
+  <function name = "Gaudi::Histos::book"               />
+  <function name = "LoKi::HistoBook::book"             />
+  <function name = "LoKi::Monitoring::getCounter"      />
+
+
+  <function name = "Decays::Trees::arrow"      />
+  <function name = "Decays::Trees::decayOnly"  />
+  <function name = "Decays::Trees::photos"     />
+  <function name = "Decays::Trees::algorithm"  />
+  <function name = "Decays::Trees::valid"      />
+  <enum     name = "Decays::Trees::Oscillation" />
+  <enum     name = "Decays::Trees::Alg"   />
+  <enum     name = "Decays::Trees::Arrow" />
+  <class    name = "Decays::iTree"      />
+  <class    name = "Decays::IDecayNode" />
+  
+  <enum name = "LoKi::Monitoring::Flag"  />
+
+  <class name    = "IStatSvc"      />
+  <class name    = "IChronoSvc"    />
+  
+  <class name    = "LoKi::Listener">
+    <field name = "m_incSvc" transient = "true"/>
+  </class>
+  
+  <class name =        "implements1<IIncidentListener>" />
+  <class name = "extend_interfaces1<IIncidentListener>" />
+  
+  <exclusion>
+    <function name    = "LoKi::tokenize" /> 
+    
+    <class pattern="LoKi::Interface&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::I*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Hybrid::*">
+      <method name="=" />
+    </class>
+    <class pattern="std::unary_function&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="std::binary_function&lt;*&gt;">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Listener">
+      <method name="release"  />
+      <method name="addRef"   />
+      <method name="refCount" />
+    </class>
+    
+  </exclusion>
+  
+</lcgdict>

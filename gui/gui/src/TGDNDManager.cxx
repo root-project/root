@@ -65,7 +65,6 @@ Window used as drag icon during drag and drop operations.
 */
 
 
-ClassImp(TGDragWindow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGDragWindow constructor.
@@ -188,7 +187,6 @@ void TGDragWindow::DoRedraw()
 // Central Drag and Drop manager for ROOT.
 //_____________________________________________________________________________
 
-ClassImp(TGDNDManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGDNDManager constructor.

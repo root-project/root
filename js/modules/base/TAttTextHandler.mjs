@@ -22,7 +22,8 @@ class TAttTextHandler {
      * @param {object} attr - attributes, see {@link TAttTextHandler#setArgs} */
    constructor(args) {
       this.used = true;
-      if (args._typename && (args.fTextFont !== undefined)) args = { attr: args };
+      if (args._typename && (args.fTextFont !== undefined))
+         args = { attr: args };
       this.setArgs(args);
    }
 
@@ -88,7 +89,8 @@ class TAttTextHandler {
 
    /** @summary Create argument for drawText method */
    createArg(arg) {
-      if (!arg) arg = {};
+      if (!arg)
+         arg = {};
       this.align_used = !arg.noalign && !arg.align;
       if (this.align_used)
          arg.align = this.align;
@@ -112,7 +114,7 @@ class TAttTextHandler {
    setGedFont(value) {
       const v = parseInt(value);
       if ((v > 0) && (v < 17))
-         this.change(v*10 + (this.font % 10));
+         this.change(v * 10 + (this.font % 10));
       return this.font;
    }
 

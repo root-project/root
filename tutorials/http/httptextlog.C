@@ -54,8 +54,8 @@ class TMsgList : public TNamed {
       TList      fMsgs;         //  list messages, stored as TObjString
       Int_t      fLimit = 1000; //  max number of stored messages
       Long64_t   fCounter = 0;  //  current message id
-      TList      fSelect;       //! temporary list used for selection
-      TObjString fStrCounter;   //! current id stored in the string
+      TList      fSelect;       ///<! temporary list used for selection
+      TObjString fStrCounter;   ///<! current id stored in the string
 
    public:
 
@@ -135,7 +135,7 @@ void httptextlog()
 
    // One could specify location of newer version of JSROOT
    // serv->SetJSROOT("https://root.cern/js/latest/");
-   // serv->SetJSROOT("https://jsroot.gsi.de/dev/");
+   // serv->SetJSROOT("https://jsroot.gsi.de/latest/");
 
    // Detect macro file location to specify full path to the JavaScript file
    TString jspath = "currentdir/", jsname = "httptextlog.mjs";

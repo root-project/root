@@ -18,8 +18,8 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
-#include <errno.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdlib>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>

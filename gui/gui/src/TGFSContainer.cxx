@@ -60,8 +60,6 @@ Utility class used by the file selection dialog (TGFSDialog).
 #include <cstdlib>
 #include <iostream>
 
-ClassImp(TGFileItem);
-ClassImp(TGFileContainer);
 
 class TViewUpdateTimer : public TTimer {
 

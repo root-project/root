@@ -1,0 +1,15 @@
+<lcgdict>
+  <class name="pool::CollectionService" />
+  <class name="pool::ICollection" />
+  <class name="pool::ICollectionDescription" />
+  <class name="pool::CollectionDescription" />
+  <class name="pool::ICollectionSchemaEditor" />
+  <class name="pool::ICollectionDataEditor" />
+  <class name="pool::ICollectionColumn" />
+  <class name="pool::ICollectionQuery" />
+  <class name="pool::ICollectionCursor" />
+  <class name="pool::CollectionRowBuffer" />
+  <class name="pool::TokenList" />
+  <class name="pool::TokenList::iterator" />
+  <class name="pool::TokenList::iterator_base" />
+</lcgdict>

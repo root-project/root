@@ -24,7 +24,6 @@
 #include "TThread.h"
 #include "TWin32Mutex.h"
 
-ClassImp(TWin32Mutex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a Win32 mutex lock.

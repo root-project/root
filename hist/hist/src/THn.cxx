@@ -174,7 +174,6 @@ created THn will have compatble storage type, i.e. calling CreateHn() on
 a TH2F will create a THnF.
 */
 
-ClassImp(THn);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a THn.
@@ -185,6 +184,15 @@ THn::THn(const char* name, const char* title,
    THnBase(name, title, dim, nbins, xmin, xmax),
    fSumw2(dim, nbins, kTRUE /*overflow*/)
 {
+}
+
+THn::THn(const char *name, const char *title, const std::vector<TAxis> &axes) : THnBase(name, title, axes)
+{
+   const Int_t dim = axes.size();
+   std::vector<Int_t> nbins(dim);
+   for (Int_t i = 0; i < dim; i++)
+      nbins[i] = axes.at(i).GetNbins();
+   fSumw2 = TNDArrayT<Double_t>(dim, nbins.data(), kTRUE /*overflow*/);
 }
 
 THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,

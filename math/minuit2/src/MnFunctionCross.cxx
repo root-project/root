@@ -11,8 +11,6 @@
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/FCNBase.h"
-#include "Minuit2/MnParabola.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnParabolaFactory.h"
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MnMachinePrecision.h"
@@ -106,7 +104,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    if (aulim < aopt + tla)
       limset = true;
 
-   MnMigrad migrad(fFCN, fState, MnStrategy(std::max(0, int(fStrategy.Strategy() - 1))));
+   MnMigrad migrad(fFCN, fState, fStrategy.NextLower());
 
    print.Info([&](std::ostream &os) {
       os << "Run Migrad with fixed parameters:";
@@ -115,7 +113,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    });
 
    for (unsigned int i = 0; i < npar; i++)
-      migrad.SetValue(par[i], pmid[i]);
+      migrad.State().SetValue(par[i], pmid[i]);
 
    // find minimum with respect all the other parameters (n- npar) (npar are the fixed ones)
 
@@ -165,7 +163,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    });
 
    for (unsigned int i = 0; i < npar; i++)
-      migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+      migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
    FunctionMinimum min1 = migrad(maxcalls, mgr_tlr);
    nfcn += min1.NFcn();
@@ -223,7 +221,7 @@ L300:
          });
 
          for (unsigned int i = 0; i < npar; i++)
-            migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+            migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
          min1 = migrad(maxcalls, mgr_tlr);
          nfcn += min1.NFcn();
@@ -302,7 +300,7 @@ L460:
    });
 
    for (unsigned int i = 0; i < npar; i++)
-      migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+      migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
    FunctionMinimum min2 = migrad(maxcalls, mgr_tlr);
    nfcn += min2.NFcn();
@@ -388,8 +386,7 @@ L500:
 
    do {
       // do parabola fit
-      MnParabola parbol = MnParabolaFactory()(MnParabolaPoint(alsb[0], flsb[0]), MnParabolaPoint(alsb[1], flsb[1]),
-                                              MnParabolaPoint(alsb[2], flsb[2]));
+      MnParabola parbol = MnParabolaFactory()({alsb[0], flsb[0]}, {alsb[1], flsb[1]}, {alsb[2], flsb[2]});
       //   aopt = parbol.X_pos(aim);
       // std::cout<<"alsb1,2,3= "<<alsb[0]<<", "<<alsb[1]<<", "<<alsb[2]<<std::endl;
       // std::cout<<"flsb1,2,3= "<<flsb[0]<<", "<<flsb[1]<<", "<<flsb[2]<<std::endl;
@@ -515,7 +512,7 @@ L500:
       });
 
       for (unsigned int i = 0; i < npar; i++)
-         migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+         migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
       min2 = migrad(maxcalls, mgr_tlr);
       nfcn += min2.NFcn();

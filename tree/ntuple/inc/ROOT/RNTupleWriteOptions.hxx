@@ -82,7 +82,7 @@ on how large the I/O buffer can grow during writing.
 <td>`std::size_t`</td>
 <td>256</td>
 <td>
-Initially, columns start with a page of this size. The default value is chosen to accomodate at least 32 elements
+Initially, columns start with a page of this size. The default value is chosen to accommodate at least 32 elements
 of 64 bits, or 64 elements of 32 bits. If more elements are needed, pages are increased up until the byte limit
 given by the option `MaxUnzippedPageSize` or until the total page buffer limit is reached (as a sum of all page buffers).
 The total write buffer limit needs to be large enough to hold the initial pages of all columns.
@@ -148,6 +148,11 @@ performance (with Direct I/O) at a reasonable memory consumption.
 <td>EImplicitMT::kDefault</td>
 <td>
 Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
+The meaning of EImplicitMT::kDefault depends on the used writer: For the (sequential) RNTupleWriter, it translates
+to EImplicitMT::kOn and the user has to manually disable the use of implicit multi-threading if it is not wanted.
+For the RNTupleParalellWriter, the implementation defaults to EImplicitMT::kOff in order to avoid interference with
+explicit parallelism that might create one RNTupleFillContext per thread. If implicit multi-threading is wanted on
+top of this, the user has to explicitly request EImplicitMT::kOn.
 </td>
 </tr>
 
@@ -178,6 +183,7 @@ class RNTupleWriteOptions {
 public:
    enum class EImplicitMT {
       kOff,
+      kOn,
       kDefault,
    };
 
@@ -257,6 +263,20 @@ public:
    void SetEnableSamePageMerging(bool val);
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
+
+   friend bool operator==(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs)
+   {
+      return lhs.fCompression == rhs.fCompression && lhs.fApproxZippedClusterSize == rhs.fApproxZippedClusterSize &&
+             lhs.fMaxUnzippedClusterSize == rhs.fMaxUnzippedClusterSize &&
+             lhs.fInitialUnzippedPageSize == rhs.fInitialUnzippedPageSize &&
+             lhs.fMaxUnzippedPageSize == rhs.fMaxUnzippedPageSize && lhs.fPageBufferBudget == rhs.fPageBufferBudget &&
+             lhs.fUseBufferedWrite == rhs.fUseBufferedWrite && lhs.fUseDirectIO == rhs.fUseDirectIO &&
+             lhs.fWriteBufferSize == rhs.fWriteBufferSize && lhs.fUseImplicitMT == rhs.fUseImplicitMT &&
+             lhs.fEnablePageChecksums == rhs.fEnablePageChecksums &&
+             lhs.fEnableSamePageMerging == rhs.fEnableSamePageMerging && lhs.fMaxKeySize == rhs.fMaxKeySize;
+   }
+
+   friend bool operator!=(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs) { return !(lhs == rhs); }
 };
 
 namespace Internal {

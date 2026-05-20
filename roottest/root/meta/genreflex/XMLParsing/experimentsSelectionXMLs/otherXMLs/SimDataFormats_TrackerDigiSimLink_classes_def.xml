@@ -1,0 +1,36 @@
+<lcgdict>
+
+  <class name="PixelDigiSimLink" ClassVersion="10">
+   <version ClassVersion="10" checksum="408436386"/>
+  </class>
+ <class name="edm::DetSet<PixelDigiSimLink>"/>
+ <class name="std::vector<PixelDigiSimLink>"/>
+ <class name="edm::DetSetVector<PixelDigiSimLink>"/>
+ <class name="std::vector<edm::DetSet<PixelDigiSimLink> >"/>
+ <class name="edm::Wrapper< edm::DetSet<PixelDigiSimLink> >" splitLevel="0" />
+ <class name="edm::Wrapper< std::vector<edm::DetSet<PixelDigiSimLink> > >" splitLevel="0" />
+ <class name="edm::Wrapper< edm::DetSetVector<PixelDigiSimLink> >" splitLevel="0" />
+
+ <class name="StripDigiSimLink" ClassVersion="10">
+  <version ClassVersion="10" checksum="2019711893"/>
+ </class>
+ <class name="edm::DetSet<StripDigiSimLink>"/>
+ <class name="std::vector<StripDigiSimLink>"/>
+ <class name="edm::DetSetVector<StripDigiSimLink>"/>
+ <class name="std::vector<edm::DetSet<StripDigiSimLink> >"/>
+ <class name="edm::Wrapper< edm::DetSet<StripDigiSimLink> >" splitLevel="0" />
+ <class name="edm::Wrapper< std::vector<edm::DetSet<StripDigiSimLink> > >" splitLevel="0" />
+ <class name="edm::Wrapper< edm::DetSetVector<StripDigiSimLink> >" splitLevel="0" />
+
+ <class name="StripCompactDigiSimLinks" />
+ <class name="StripCompactDigiSimLinks::key_type" />
+ <class name="StripCompactDigiSimLinks::TrackRecord" />
+ <class name="StripCompactDigiSimLinks::HitRecord" />
+ <class name="std::vector<StripCompactDigiSimLinks::TrackRecord>" />
+ <class name="std::vector<StripCompactDigiSimLinks::HitRecord>" />
+ <!--
+ <class name="edm::Wrapper< StripCompactDigiSimLinks >" splitLevel="0" />
+ -->
+ <class name="edm::Wrapper< StripCompactDigiSimLinks >"  />
+
+</lcgdict>

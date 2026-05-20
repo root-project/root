@@ -37,12 +37,12 @@ private:
    friend class TProtoClass;
    friend class TROOT;
 
-   TClass    *fClass; //! Context of this list.  Not owned.
+   TClass    *fClass; ///<! Context of this list.  Not owned.
 
-   TExMap    *fIds;      //! Map from DeclId_t to TEnum*
-   THashList *fUnloaded; //! Holder of TEnum for unloaded Enums.
-   Bool_t     fIsLoaded; //! Mark whether Load was executed.
-   ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
+   TExMap    *fIds;      ///<! Map from DeclId_t to TEnum*
+   THashList *fUnloaded; ///<! Holder of TEnum for unloaded Enums.
+   Bool_t     fIsLoaded; ///<! Mark whether Load was executed.
+   ULong64_t  fLastLoadMarker; ///<! Represent interpreter state when we last did a full load.
 
    TListOfEnums(const TListOfEnums&) = delete;
    TListOfEnums& operator=(const TListOfEnums&) = delete;
@@ -83,10 +83,15 @@ public:
    void       AddLast(TObject *obj) override;
    void       AddLast(TObject *obj, Option_t *opt) override;
    void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAt(TObject *obj, Int_t idx, Option_t *opt) override;
    void       AddAfter(const TObject *after, TObject *obj) override;
    void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddAfter(const TObject *after, TObject *obj, Option_t *opt) override;
+   void       AddAfter(TObjLink *after, TObject *obj, Option_t *opt) override;
    void       AddBefore(const TObject *before, TObject *obj) override;
    void       AddBefore(TObjLink *before, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj, Option_t *opt) override;
+   void       AddBefore(TObjLink *before, TObject *obj, Option_t *opt) override;
 
    void       RecursiveRemove(TObject *obj) override;
    TObject   *Remove(TObject *obj) override;

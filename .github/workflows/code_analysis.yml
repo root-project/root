@@ -15,46 +15,69 @@ jobs:
     # can be skipped if the tag [skip-ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+        ))
 
     runs-on: ubuntu-latest
     env:
       TRAVIS_BRANCH: ${{ github.base_ref }} 
+      TRAVIS_PULL_REQUEST_REPO: ${{ github.event.pull_request.head.repo.html_url }}
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 1024
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Fetch base sha
-      run: git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+      run: git fetch --depth=1024 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+    - name: Determine merge base
+      run: echo "MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_ENV
     - name: install clang-format
-      run: sudo apt-get install -y clang-format
+      run: |
+         wget https://apt.llvm.org/llvm.sh
+         chmod u+x ./llvm.sh
+         sudo ./llvm.sh 20
+         sudo apt-get install -y clang-format-20
+         PATH=/usr/lib/llvm-20/bin:${PATH}
     - name: run clang-format script
-      run: .ci/format_script.sh
+      run: |
+        PATH=/usr/lib/llvm-20/bin:${PATH}
+        .ci/format_script.sh
 
   ruff:
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+        ))
 
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 2
 
     - name: Get the list of changed files
       id: diff
       run: |
-        git fetch --depth=1 origin $GITHUB_BASE_REF 
-        git diff --name-only origin/$GITHUB_BASE_REF > changed_files.txt
+        git diff --diff-filter=AMR --name-only HEAD~1 | tee changed_files.txt
 
     - name: Install ruff
       uses: astral-sh/ruff-action@v3
       with:
+        version: "latest"
         args: "--version"
 
     - name: Lint code
       run: |
-        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        files=$(grep '\.py$' changed_files.txt || echo "")
         if [ -n "$files" ]; then
           echo "$files" | xargs ruff check --diff || true
           echo "$files" | xargs ruff check
@@ -65,10 +88,10 @@ jobs:
     - name: Format code
       if: always()
       run: |
-        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        files=$(grep '\.py$' changed_files.txt || echo "")
         if [ -n "$files" ]; then
-          diff_command=""
           apply_command=""
+          failure=false
           for file in $files; do
             while IFS=- read -r start length; do
               [ -z "$start" ] && continue
@@ -78,20 +101,14 @@ jobs:
                 continue
               fi
               end=$((start + length))
-              diff_command+="ruff format --diff --range $start-$end $file && "
+              ruff format --diff --preview --range ${start}-${end} ${file} || failure=true
               apply_command+="ruff format --range $start-$end $file && "
-            done < <(git diff --unified=0 origin/$GITHUB_BASE_REF "$file" | grep '^@@' | sed -E 's/^@@ -[0-9]+(,[0-9]+)? \+([0-9]+)(,([0-9]+))? @@.*/\2-\4/')
+            done < <(git diff --unified=0 HEAD~1 -- "$file" | grep '^@@' | sed -E 's/^@@ -[0-9]+(,[0-9]+)? \+([0-9]+)(,([0-9]+))? @@.*/\2-\4/')
           done
 
-          if [ -n "$diff_command" ]; then
-            diff_command=${diff_command% && }
-            if ! eval "$diff_command"; then
-              apply_command=${apply_command% && }
-              echo -e "::error::Formatting failed. To apply the changes locally, run the following command:\n$apply_command"
-              exit 123
-            fi
-          else
-            echo "No ranges detected to format."
+          if ${failure}; then
+            echo -e "::error::Formatting failed. To apply the changes locally, run the following command:\n$apply_command"
+            exit 123;
           fi
         else
           echo "No python files to format"

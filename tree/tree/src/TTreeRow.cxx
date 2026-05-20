@@ -21,7 +21,6 @@ Related classes are TTreeResult.
 #include "TTreeRow.h"
 #include "TBuffer.h"
 
-ClassImp(TTreeRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of a query result.

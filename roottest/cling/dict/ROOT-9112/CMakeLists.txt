@@ -1,0 +1,3 @@
+ROOTTEST_ADD_TEST(ROOT9112
+                  MACRO runROOT9112.C
+                  COPY_TO_BUILDDIR ROOT9112.C)

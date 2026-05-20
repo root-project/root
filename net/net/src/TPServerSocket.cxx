@@ -27,7 +27,6 @@ done via the TSystem class (either TUnixSystem or TWinNTSystem).
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TPServerSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a parallel server socket object on a specified port. Set reuse
@@ -139,8 +138,10 @@ TPSocket *TPServerSocket::Accept(UChar_t Opt)
    }
 
    // Transmit authentication information, if any
-   if (setupSocket->IsAuthenticated())
-      newPSocket->SetSecContext(setupSocket->GetSecContext());
+   if (ROOT::Deprecated::TSocketFriend::IsAuthenticated(*setupSocket)) {
+      ROOT::Deprecated::TSocketFriend::SetSecContext(*newPSocket,
+                                                     ROOT::Deprecated::TSocketFriend::GetSecContext(*setupSocket));
+   }
 
    // clean up, if needed
    if (size > 0)

@@ -7,7 +7,7 @@
 // and slots communication mechanism can be found in $ROOTSYS/tutorials.
 // That version can be run entirely in the interpreter.
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <TROOT.h>
 #include <TApplication.h>

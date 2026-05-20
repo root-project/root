@@ -27,13 +27,13 @@ Editor for a TGeoPcon.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualPad.h"
 #include "TView.h"
+#include "TMath.h"
 #include "TGCanvas.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoPconEditor);
 
 enum ETGeoPconWid { kPCON_NAME, kPCON_NZ, kPCON_PHI1, kPCON_DPHI, kPCON_APPLY, kPCON_UNDO };
 
@@ -490,7 +490,6 @@ Utility frame used by TGeoPcon editor.
 
 */
 
-ClassImp(TGeoPconSection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

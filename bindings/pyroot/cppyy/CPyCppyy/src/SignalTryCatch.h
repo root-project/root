@@ -71,6 +71,11 @@ using CppyyExceptionContext_t = ExceptionContext_t;
         gException = R__old; \
     }
 
-CPYCPPYY_IMPORT CppyyExceptionContext_t *gException;
+// extern, defined in ROOT Core
+#ifdef _MSC_VER
+extern __declspec(dllimport) CppyyExceptionContext_t *gException;
+#else
+extern CppyyExceptionContext_t *gException;
+#endif
 
 #endif

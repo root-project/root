@@ -29,6 +29,9 @@ ParserFuncSignature ParseBatchNormalization = [](RModelParser_ONNX &parser, cons
          op.reset(new ROperator_BatchNormalization<float>(fepsilon, fmomentum, ftraining_mode, nodeproto.input(0),
                                                           nodeproto.input(1), nodeproto.input(2), nodeproto.input(3),
                                                           nodeproto.input(4), output_name));
+      } else {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser BatchNormalization op requires exactly 5 inputs, got " +
+                                  std::to_string(nodeproto.input_size()));
       }
       break;
    default:

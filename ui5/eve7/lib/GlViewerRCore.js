@@ -87,6 +87,8 @@ sap.ui.define([
                   return canvasDOM;
                };
 
+               pthis.ApplyTemporaryRCoreExtensions();
+
                pthis.bootstrap();
             });
          } else {
@@ -97,7 +99,8 @@ sap.ui.define([
       bootstrap()
       {
          RC.GLManager.sCheckFrameBuffer = false;
-         RC.Object3D.sDefaultPickable = false;
+         RC.Object3D.sDefaultQuaternionsAndAutoUpdate = false;
+         RC.Mesh.sDefaultPickable = false;
          RC.PickingShaderMaterial.DEFAULT_PICK_MODE = RC.PickingShaderMaterial.PICK_MODE.UINT;
 
          this.createRCoreRenderer();
@@ -203,6 +206,7 @@ sap.ui.define([
          this.renderer.clearColor = "#00000000";
          this.scene = new RC.Scene();
          this.overlay_scene = new RC.Scene();
+         this.scene_bbox = new RC.Box3();
 
          this.lights = new RC.Group;
          this.lights.name = "Light container";
@@ -457,31 +461,33 @@ sap.ui.define([
             diffuse: col.clone().multiplyScalar(0.5)
          }
          );
-         let vtx = new Float32Array(3);
-         vtx[0] = 0; vtx[1] = 0; vtx[2] = 0;
          let s = new RC.ZSprite(null, sm);
          s.instanced = false;
-         s.position.set(0, 0, 0);
          s.visible = false;
          this.scene.add(s);
-         this.controls.centerMarker = s;
+         this.centerMarker = s;
 
          // This will also call render().
          this.resetRenderer();
       }
 
+      recalcSceneBBox()
+      {
+         this.scene_bbox.setFromObject( this.scene );
+         if (this.scene_bbox.isEmpty())
+         {
+            console.error("GlViewerRenderCore.resetRenderer scene bbox empty", this.scene_bbox);
+            const ext = 100;
+            this.scene_bbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
+            this.scene_bbox.expandByPoint(new RC.Vector3( ext, ext, ext));
+         }
+      }
+
       resetRenderer()
       {
-         let sbbox = new RC.Box3();
-         sbbox.setFromObject( this.scene );
-         if (sbbox.isEmpty())
-         {
-            console.error("GlViewerRenderCore.resetRenderer scene bbox empty", sbbox);
-            const ext = 100;
-            sbbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
-            sbbox.expandByPoint(new RC.Vector3( ext, ext, ext));
-         }
+         this.recalcSceneBBox();
 
+         let sbbox = this.scene_bbox;
          let posV = new RC.Vector3; posV.subVectors(sbbox.max, this.rot_center);
          let negV = new RC.Vector3; negV.subVectors(sbbox.min, this.rot_center);
 
@@ -491,9 +497,14 @@ sap.ui.define([
          if (this._logLevel >= 2)
             console.log("GlViewerRenderCore.resetRenderer", sbbox, posV, negV, extV, extR);
 
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         let v1 = eveView.camera.V1;
+         let v2 = eveView.camera.V2;
+
+
          if (this.camera.isPerspectiveCamera)
          {
-            this.controls.setCamBaseMtx(new RC.Vector3(-1, 0, 0), new RC.Vector3(0, 1, 0)); //XOZ floor
+            this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             this.controls.screenSpacePanning = true;
 
             let lc = this.lights.children;
@@ -508,7 +519,7 @@ sap.ui.define([
          }
          else
          {
-            this.controls.setCamBaseMtx(new RC.Vector3(0, 0, 1), new RC.Vector3(0, 1, 0)); // XOY floor
+            this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             let ey = 1.02 * extV.y;
             let ex = ey / this.get_height() * this.get_width();
             this.camera._left   = -ex;
@@ -530,11 +541,26 @@ sap.ui.define([
             // console.log("resetRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
 
+         this.centerMarker.visible = false;
+
          this.controls.setFromBBox(sbbox);
 
          this.controls.update();
       }
 
+      setupCamera()
+      {
+         // To be used with JS debugger to edit the values as needed.
+
+         let pos = new RC.Vector3;
+         let lookat = new RC.Vector3;
+         let fov = 30; // in degrees
+
+         console.log("A good place to set the breakpoint and edit the values");
+
+         // Call the controller stuff, hope it's not all local, otherwise we need to edit it there.
+         // Sigh, should really have it (and RedeQuTor) in ROOT.
+      }
 
       updateViewerAttributes()
       {
@@ -625,7 +651,8 @@ sap.ui.define([
                      color: this.fgCol,
                      font: font_metrics,
                   });
-                  text.position = ax.p;
+                  text.matrix.setPosition(ax.p);
+                  text.matrixChanged();
                   text.material.side = RC.FRONT_SIDE;
                   ag.add(text);
                }
@@ -636,10 +663,11 @@ sap.ui.define([
 
       //==============================================================================
 
-      request_render()
+      request_render(recalc_sbbox=false)
       {
          // console.log("REQUEST RENDER");
 
+         this.render_requested_recalc_sbbox ||= recalc_sbbox;
          if (this.render_requested) return;
          setTimeout(this.render.bind(this), 0);
          this.render_requested = true;
@@ -650,6 +678,13 @@ sap.ui.define([
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
          this.render_requested = false;
+         if (this.render_requested_recalc_sbbox) {
+            this.recalcSceneBBox();
+            this.render_requested_recalc_sbbox = false;
+         }
+         if (this.camera.isPerspectiveCamera) {
+            this.camera.optimizeNearFar(this.scene_bbox);
+         }
 
          if (this.canvas.width <= 0 || this.canvas.height <= 0) return;
 
@@ -713,7 +748,7 @@ sap.ui.define([
          // Note that rgt.render_end() releases all std textures.
 
          if (this.rqt.queue.used_fail_count == 0) {
-            // AMT: All render passess are drawn with the black bg
+            // AMT: All render passes are drawn with the black bg
             //      except of the tone map render pass
             this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
             this.rqt.render_tone_map_to_screen();
@@ -925,7 +960,7 @@ sap.ui.define([
          let c = pstate.ctrl;
          let idx = c.extractIndex(pstate.instance);
 
-         c.elementHighlighted(idx, null);
+         c.elementHighlighted(idx, null, pstate.object)
 
          if (this.highlighted_top_object !== pstate.top_object)
          {
@@ -1050,6 +1085,10 @@ sap.ui.define([
          e.applyMatrix4(pthis.camera.testMtx);
          // console.log("picked word view coordinates ", e);
 
+         pthis.centerMarker.matrix.setPosition(e.x, e.y, e.z);
+			pthis.centerMarker.matrixChanged();
+			pthis.centerMarker.visible = true;
+
          pthis.controls.setCameraCenter(e.x, e.y, e.z);
          pthis.request_render();
       }
@@ -1062,7 +1101,7 @@ sap.ui.define([
 
          if (pstate) {
             let c = pstate.ctrl;
-            c.elementSelected(c.extractIndex(pstate.instance), event);
+            c.elementSelected(c.extractIndex(pstate.instance), event, pstate.object);
             // WHY ??? this.highlighted_scene = pstate.top_object.scene;
          } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr
@@ -1215,6 +1254,25 @@ sap.ui.define([
          </html>`);
          win.document.close();
       }
+
+      //==============================================================================
+      // Temporary RCore additions (to avoid updating of RCore.tgz)
+      //==============================================================================
+
+      ApplyTemporaryRCoreExtensions() {
+         console.log("GlViewerRCore.ApplyTemporaryRCoreExtensions()");
+
+         // E.g.:
+         // if (RC.PerspectiveCamera.prototype.optimizeNearFar === undefined) {
+         //    RC.PerspectiveCamera.prototype.optimizeNearFar = function(scene_bbox) {
+         //       this.matrixWorldInverse.getInverse(this.matrixWorld);
+         //       // .....
+         //    };
+         // }
+      }
+
+      //==============================================================================
+
    } // class GlViewerRCore
 
    return GlViewerRCore;

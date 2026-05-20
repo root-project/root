@@ -1,0 +1,92 @@
+After reading:
+First flag: 2
+Canary (1): 101
+Second flag: 1
+Canary (2): 102
+mFlags size: 4
+Value: 0
+Value: 0
+Value: 2
+Value: 1
+  CalArrays
+  Value: 3
+  Value: 4
+  PadSubset: 5
+  Value: 3
+  Value: 4
+  PadSubset: 5
+When filled expecting:
+  mPad: 4,3,2,1,3
+  mChar: 5,4,3,2,1
+mPad: 4
+mPad: 3
+mPad: 2
+mPad: 1
+mPad: 3
+mChar: 5
+mChar: 4
+mChar: 3
+mChar: 2
+mChar: 1
+First flag: 2
+Canary (1): 101
+Second flag: 1
+Canary (2): 102
+mFlags size: 4
+Value: 0
+Value: 0
+Value: 2
+Value: 1
+  CalArrays
+  Value: 3
+  Value: 4
+  PadSubset: 5
+  Value: 3
+  Value: 4
+  PadSubset: 5
+After reading:
+First flag: 2
+Canary (1): 101
+Second flag: 1
+Canary (2): 102
+mFlags size: 4
+Value: 0
+Value: 0
+Value: 2
+Value: 1
+  CalArrays
+  Value: 3
+  Value: 4
+  PadSubset: 5
+  Value: 3
+  Value: 4
+  PadSubset: 5
+When filled expecting:
+  mPad: 4,3,2,1,3
+  mChar: 5,4,3,2,1
+mPad: 4
+mPad: 3
+mPad: 2
+mPad: 1
+mPad: 3
+mChar: 5
+mChar: 4
+mChar: 3
+mChar: 2
+mChar: 1
+First flag: 2
+Canary (1): 101
+Second flag: 1
+Canary (2): 102
+mFlags size: 4
+Value: 0
+Value: 0
+Value: 2
+Value: 1
+  CalArrays
+  Value: 3
+  Value: 4
+  PadSubset: 5
+  Value: 3
+  Value: 4
+  PadSubset: 5

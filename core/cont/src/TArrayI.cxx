@@ -18,7 +18,6 @@ Array of integers (32 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayI);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayI ctor.

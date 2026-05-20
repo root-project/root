@@ -1,0 +1,16 @@
+<rootdict>
+   <class name="A" />
+   <class name="A" />
+
+   <class name="Atd1" />
+
+   <class name="Atd1" />
+   <class name="Atd2" />
+
+   <class pattern = "thisClas*"/>
+   <class pattern = "thisClas*"/>
+
+   <class pattern = "*LongTd*" />
+   <class pattern = "*LongT*" />
+
+</rootdict>

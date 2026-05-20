@@ -52,4 +52,3 @@ python -i makeAndDrawHistoInMain.py
 \endpythondoc
 """
 
-from . import pythonization

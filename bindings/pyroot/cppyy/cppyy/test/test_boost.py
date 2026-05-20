@@ -1,6 +1,6 @@
-import os
+import os, pytest
 from pytest import mark, raises, skip
-from .support import setup_make
+from support import setup_make
 
 noboost = False
 if not (os.path.exists(os.path.join(os.path.sep, 'usr', 'include', 'boost')) or \
@@ -141,7 +141,7 @@ class TestBOOSTERASURE:
         cppyy.include("boost/type_erasure/member.hpp")
         cppyy.include("boost/mpl/vector.hpp")
 
-    @mark.skip
+    @mark.xfail(run=False, reason="TClassInfo for 'Lengths' is missing & triggering Cling assertions during unloading")
     def test01_erasure_usage(self):
         """boost::type_erasure usage"""
 
@@ -166,3 +166,7 @@ class TestBOOSTERASURE:
         """)
 
         assert cppyy.gbl.lengths() is not None
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

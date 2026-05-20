@@ -28,7 +28,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 #include <iostream>
 #include "snprintf.h"
@@ -105,7 +105,7 @@ void stress_matrix(Int_t verbose=0)
   stress_binary_ebe_op(10,20);
   stress_transposition(20);
   stress_special_creation(20);
-#ifndef __CINT__
+#ifndef __CLING__
   stress_matrix_promises(20);
 #endif
   stress_norms(40,20);
@@ -255,7 +255,7 @@ void stress_matrix_fill(Int_t rsize,Int_t csize)
   if (gVerbose)
     std::cout << "Creating m  with Apply function..." << std::endl;
   TMatrixD m(-1,rsize-2,1,csize);
-#ifndef __CINT__
+#ifndef __CLING__
   FillMatrix f(m);
   m.Apply(f);
 #else
@@ -504,7 +504,7 @@ void stress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
   {
-#ifndef __CINT__
+#ifndef __CLING__
     FillMatrix f(m);
     m.Apply(f);
 #else
@@ -515,7 +515,7 @@ void stress_element_op(Int_t rsize,Int_t csize)
   }
   m1 = m;
   {
-#ifndef __CINT__
+#ifndef __CLING__
     ApplyFunction s(&TMath::Sin);
     ApplyFunction c(&TMath::Cos);
     m.Apply(s);
@@ -704,7 +704,7 @@ public:
   MakeHilbert() { }
 };
 
-#ifndef __CINT__
+#ifndef __CLING__
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
   void Operation(Double_t &element) const override
@@ -740,7 +740,7 @@ void stress_special_creation(Int_t dim)
     TMatrixD m1(TMatrixD::kZero,m);
     ok &= ( !(m == m1) ) ? kTRUE : kFALSE;
     ok &= ( m != 0 ) ? kTRUE : kFALSE;
-#ifndef __CINT__
+#ifndef __CLING__
     MakeHilbert mh;
     m1.Apply(mh);
 #else
@@ -768,7 +768,7 @@ void stress_special_creation(Int_t dim)
     if (gVerbose)
       std::cout << "test creating unit matrices" << std::endl;
     TMatrixD m(dim,dim);
-#ifndef __CINT__
+#ifndef __CLING__
     {
       TestUnit test_unit;
       m.Apply(test_unit);
@@ -778,7 +778,7 @@ void stress_special_creation(Int_t dim)
     ok &= ( !is_indeed_unit(m) ) ? kTRUE : kFALSE;
 #endif
     m.UnitMatrix();
-#ifndef __CINT__
+#ifndef __CLING__
     {
       TestUnit test_unit;
        m.Apply(test_unit);
@@ -789,7 +789,7 @@ void stress_special_creation(Int_t dim)
 #endif
     m.ResizeTo(dim-1,dim);
     TMatrixD m2(TMatrixD::kUnit,m);
-#ifndef __CINT__
+#ifndef __CLING__
     {
       TestUnit test_unit;
       m2.Apply(test_unit);
@@ -800,7 +800,7 @@ void stress_special_creation(Int_t dim)
 #endif
     m.ResizeTo(dim,dim-2);
     m.UnitMatrix();
-#ifndef __CINT__
+#ifndef __CLING__
     {
       TestUnit test_unit;
       m.Apply(test_unit);

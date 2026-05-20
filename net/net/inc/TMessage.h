@@ -32,7 +32,6 @@ class TVirtualStreamerInfo;
 
 class TMessage : public TBufferFile {
 
-friend class TAuthenticate;
 friend class TSocket;
 friend class TUDPSocket;
 friend class TPSocket;

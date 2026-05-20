@@ -34,11 +34,14 @@ public:
    TVector3(const Float_t *);
    // Constructors from an array
 
-   TVector3(const TVector3 &);
+   TVector3(const TVector3 &) noexcept;
    // The copy constructor.
 
-   ~TVector3() override {};
+   ~TVector3() override = default;
    // Destructor
+
+   /// The length is always 3. For compatibility with the standard library.
+   constexpr std::size_t size() const { return 3; }
 
    Double_t operator () (int) const;
    inline Double_t operator [] (int) const;
@@ -247,7 +250,7 @@ inline void TVector3::GetXYZ(Float_t *carray) const {
 inline TVector3::TVector3()
 : fX(0.0), fY(0.0), fZ(0.0) {}
 
-inline TVector3::TVector3(const TVector3 & p) : TObject(p),
+inline TVector3::TVector3(const TVector3 & p) noexcept : TObject(p),
   fX(p.fX), fY(p.fY), fZ(p.fZ) {}
 
 inline TVector3::TVector3(Double_t xx, Double_t yy, Double_t zz)

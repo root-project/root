@@ -11,25 +11,21 @@
 #ifndef ROOT_TWebPadPainter
 #define ROOT_TWebPadPainter
 
-#include "TVirtualPadPainter.h"
+#include "TPadPainterBase.h"
 
-#include "TAttLine.h"
-#include "TAttFill.h"
-#include "TAttText.h"
-#include "TAttMarker.h"
 #include <string>
 
 #include "TWebPainting.h"
 
 class TWebCanvas;
 
-class TWebPadPainter : public TVirtualPadPainter, public TAttLine, public TAttFill, public TAttText, public TAttMarker {
+class TWebPadPainter : public TPadPainterBase {
 
 friend class TWebCanvas;
 
 protected:
 
-   TWebPainting *fPainting{nullptr};      ///!< object to store all painting, owned by TWebPS object
+   TWebPainting *fPainting{nullptr};      ///<! object to store all painting, owned by TWebPS object
 
    enum { attrLine = 0x1, attrFill = 0x2, attrMarker = 0x4, attrText = 0x8, attrAll = 0xf };
 
@@ -41,40 +37,8 @@ public:
 
    void SetPainting(TWebPainting *p) { fPainting = p; }
 
-   //Final overrides for TVirtualPadPainter pure virtual functions.
-   //1. Part, which simply catch attributes.
-   //Line attributes.
-   Color_t  GetLineColor() const override { return TAttLine::GetLineColor(); }
-   Style_t  GetLineStyle() const override { return TAttLine::GetLineStyle(); }
-   Width_t  GetLineWidth() const override { return TAttLine::GetLineWidth(); }
 
-   void     SetLineColor(Color_t lcolor) override { TAttLine::SetLineColor(lcolor); }
-   void     SetLineStyle(Style_t lstyle) override { TAttLine::SetLineStyle(lstyle); }
-   void     SetLineWidth(Width_t lwidth) override { TAttLine::SetLineWidth(lwidth); }
-
-   //Fill attributes.
-   Color_t  GetFillColor() const override { return TAttFill::GetFillColor(); }
-   Style_t  GetFillStyle() const override { return TAttFill::GetFillStyle(); }
-   Bool_t   IsTransparent() const override { return TAttFill::IsTransparent(); }
-
-   void     SetFillColor(Color_t fcolor) override { TAttFill::SetFillColor(fcolor); }
-   void     SetFillStyle(Style_t fstyle) override { TAttFill::SetFillStyle(fstyle); }
-   void     SetOpacity(Int_t percent) override { TAttFill::SetFillStyle(4000 + percent); }
-
-   //Text attributes.
-   Short_t  GetTextAlign() const override { return TAttText::GetTextAlign(); }
-   Float_t  GetTextAngle() const override { return TAttText::GetTextAngle(); }
-   Color_t  GetTextColor() const override { return TAttText::GetTextColor(); }
-   Font_t   GetTextFont()  const override { return TAttText::GetTextFont(); }
-   Float_t  GetTextSize()  const override { return TAttText::GetTextSize(); }
-   Float_t  GetTextMagnitude() const override { return  0; }
-
-   void     SetTextAlign(Short_t align) override { TAttText::SetTextAlign(align); }
-   void     SetTextAngle(Float_t tangle) override { TAttText::SetTextAngle(tangle); }
-   void     SetTextColor(Color_t tcolor) override { TAttText::SetTextColor(tcolor); }
-   void     SetTextFont(Font_t tfont) override { TAttText::SetTextFont(tfont); }
-   void     SetTextSize(Float_t tsize) override { TAttText::SetTextSize(tsize); }
-   void     SetTextSizePixels(Int_t npixels) override { TAttText::SetTextSizePixels(npixels); }
+   void     SetOpacity(Int_t percent) override;
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t, UInt_t) override { return -1; }
@@ -111,6 +75,10 @@ public:
    void     DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode) override;
    void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) override;
    void     DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) override;
+
+   void     DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
+
+   Bool_t   IsSupportAlpha() const override { return kTRUE; }
 
 private:
    //Let's make this clear:

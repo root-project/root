@@ -25,24 +25,24 @@ class RooJSONFactoryWSTool(object):
         hs3 = {}
 
         for key, importer in jio.importers():
-            if not key in hs3.keys():
+            if key not in hs3.keys():
                 hs3[key] = {}
-            if not "import" in hs3[key]:
+            if "import" not in hs3[key]:
                 hs3[key]["import"] = []
             hs3[key]["import"].append({"native": True})
         for tclass, exporters in jio.exporters():
             for exp in exporters:
                 key = exp.key()
-                if not key in hs3.keys():
+                if key not in hs3.keys():
                     hs3[key] = {}
                 hs3[key]["class"] = str(tclass.GetName())
-                if not "export" in hs3[key]:
+                if "export" not in hs3[key]:
                     hs3[key]["export"] = []
                 hs3[key]["export"].append({"native": True})
         for key, importer in jio.importExpressions():
-            if not key in hs3.keys():
+            if key not in hs3.keys():
                 hs3[key] = {}
-            if not "import" in hs3[key]:
+            if "import" not in hs3[key]:
                 hs3[key]["import"] = []
             hs3[key]["import"].append(
                 {
@@ -53,10 +53,10 @@ class RooJSONFactoryWSTool(object):
             )
         for tclass, exporter in jio.exportKeys():
             key = exporter.type
-            if not key in hs3.keys():
+            if key not in hs3.keys():
                 hs3[key] = {}
             hs3[key]["class"] = str(tclass.GetName())
-            if not "export" in hs3[key]:
+            if "export" not in hs3[key]:
                 hs3[key]["export"] = []
             hs3[key]["export"].append(
                 {

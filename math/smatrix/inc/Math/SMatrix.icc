@@ -40,7 +40,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <assert.h>
+#include <cassert>
 //#ifndef ROOT_Math_Dsinv
 //#include "Math/Dsinv.h"
 //#endif

@@ -36,7 +36,6 @@ Sigmoid activation function for TNeuron.
 #include <iostream>
 
 
-ClassImp(TMVA::TActivationSigmoid);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluate the sigmoid

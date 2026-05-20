@@ -1,0 +1,45 @@
+<lcgdict>
+  <class name="reco::GsfComponent5D" ClassVersion="10">
+   <version ClassVersion="10" checksum="3284228167"/>
+  </class>
+  <class name="std::vector<reco::GsfComponent5D>"/>
+
+  <class name="reco::GsfTangent" ClassVersion="10">
+   <version ClassVersion="10" checksum="3902664602"/>
+     <field name="position_" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" /> 
+     <field name="momentum_" iotype="ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+     <field name="deltaP_" iotype="Double32_t" />
+     <field name="sigDeltaP_" iotype="Double32_t" />
+   </class>
+   <class name="std::vector<reco::GsfTangent>"/>
+
+
+  <class name="reco::GsfTrackExtra" ClassVersion="10">
+   <version ClassVersion="10" checksum="1516446662"/>
+  </class>
+  <class name="std::vector<reco::GsfTrackExtra>"/>
+  <class name="edm::Wrapper<std::vector<reco::GsfTrackExtra> >" splitLevel="0"/>
+  <class name="edm::RefProd<std::vector<reco::GsfTrackExtra> >"/>
+  <class name="edm::Ref<std::vector<reco::GsfTrackExtra>,reco::GsfTrackExtra,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfTrackExtra>,reco::GsfTrackExtra> >"/>
+  <class name="edm::RefVector<std::vector<reco::GsfTrackExtra>,reco::GsfTrackExtra,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfTrackExtra>,reco::GsfTrackExtra> >"/>
+
+  <class name="reco::GsfTrack" ClassVersion="11">
+   <version ClassVersion="11" checksum="1456169080"/>
+    <field name="momentumMode_" iotype="ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" /> 
+  </class>
+  <class name="std::vector<reco::GsfTrack>"/>
+  <class name="edm::Wrapper<std::vector<reco::GsfTrack> >"/>
+  <class name="edm::RefProd<std::vector<reco::GsfTrack> >"/>
+  <class name="edm::Ref<std::vector<reco::GsfTrack>,reco::GsfTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfTrack>,reco::GsfTrack> >"/>
+  <class name="edm::RefVector<std::vector<reco::GsfTrack>,reco::GsfTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfTrack>,reco::GsfTrack> >"/>
+
+  <class name="edm::helpers::Key< edm::RefProd < std::vector < reco::GsfTrack > > >" />
+
+  <class name="edm::AssociationMap<edm::OneToValue< std::vector<reco::GsfTrack>, double, unsigned int > >">
+    <field name="transientMap_" transient="true" /> 
+  </class>
+
+  <class name="edm::reftobase::Holder<reco::Track, reco::GsfTrackRef>" />
+  <class name="edm::reftobase::RefHolder<reco::GsfTrackRef>" />
+
+  </lcgdict>

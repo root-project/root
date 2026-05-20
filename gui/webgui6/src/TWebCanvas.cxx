@@ -12,7 +12,6 @@
 
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
-#include "TWebPS.h"
 #include "TWebMenuItem.h"
 #include "ROOT/RWebWindowsManager.hxx"
 #include "THttpServer.h"
@@ -34,9 +33,9 @@
 #include "TList.h"
 #include "TF1.h"
 #include "TF2.h"
+#include "TF3.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TH1K.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
@@ -54,6 +53,7 @@
 #include "TView.h"
 #include "TExec.h"
 #include "TVirtualX.h"
+#include "TVirtualPS.h"
 #include "TMath.h"
 #include "TTimer.h"
 #include "TThread.h"
@@ -80,19 +80,20 @@ public:
    {
       fSlow = slow;
       fSlowCnt = 0;
-      SetTime(slow ? 1000 : 10);
+      SetTime(slow ? 50 : 10);
    }
 
    /// used to send control messages to clients
    void Timeout() override
    {
-      if (fProcessing || fCanv.fProcessingData) return;
+      if (fProcessing || fCanv.fProcessingData)
+         return;
       fProcessing = kTRUE;
       Bool_t res = fCanv.CheckDataToSend();
       fProcessing = kFALSE;
       if (res) {
          fSlowCnt = 0;
-      } else if (++fSlowCnt > 10 && !IsSlow()) {
+      } else if (++fSlowCnt > 100 && !IsSlow()) {
          SetSlow(kTRUE);
       }
    }
@@ -313,7 +314,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
       const char *name{nullptr};
       bool with_derived{false};
       bool reduse_by_many{false};
-   } supported_classes[] = {{"TH1", true},
+   } supported_classes[] = {{"ROOT::Experimental::RTreeMapPainter"},
+                            {"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
                             {"TScatter"},
@@ -323,6 +325,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TGraphPolargram", true},
                             {"TPave", true},
                             {"TGaxis"},
+                            {"TEfficiency"},
                             {"TPave", true},
                             {"TButton", true},
                             {"TSlider", true},
@@ -331,6 +334,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
+                            {"TPie"},
                             {"TText"},
                             {"TLatex"},
                             {"TLink"},
@@ -507,7 +511,7 @@ bool TWebCanvas::IsCustomClass(const TClass *cl)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
 
-void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps)
+void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPainting *masterps)
 {
    if (IsJSSupportedClass(obj, masterps != nullptr)) {
       master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kObject, obj);
@@ -534,12 +538,15 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    TVirtualPS *saveps = gVirtualPS;
 
-   TWebPS ps;
-   ps.GetPainting()->SetClassName(obj->ClassName());
-   ps.GetPainting()->SetObjectName(obj->GetName());
-   gVirtualPS = masterps ? masterps : &ps;
+   auto painting = masterps;
+   if (!masterps) {
+      painting = new TWebPainting;
+      painting->SetClassName(obj->ClassName());
+      painting->SetObjectName(obj->GetName());
+   }
+   gVirtualPS = nullptr;
    if (painter)
-      painter->SetPainting(ps.GetPainting());
+      painter->SetPainting(painting);
 
    // calling Paint function for the object
    obj->Paint(opt);
@@ -559,8 +566,12 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    fPadsStatus[pad]._has_specials = true;
 
    // if there are master PS, do not create separate entries
-   if (!masterps && !ps.IsEmptyPainting())
-      master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, ps.TakePainting(), kTRUE);
+   if (!masterps) {
+      if (!painting->IsEmpty())
+         master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, painting, kTRUE);
+      else
+         delete painting;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -675,7 +686,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   TWebPS masterps;
+   auto masterps = std::make_unique<TWebPainting>();
    bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
 
    TIter iter(primitives);
@@ -823,10 +834,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       primitives->Add(polargram, polargram_drawopt);
 
    auto flush_master = [&]() {
-      if (!usemaster || masterps.IsEmptyPainting()) return;
+      if (!usemaster || masterps->IsEmpty()) return;
 
-      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
-      masterps.CreatePainting(); // create for next operations
+      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.release(), kTRUE);
+      masterps = std::make_unique<TWebPainting>(); // create for next operations
    };
 
    auto check_cutg_in_options = [&](const TString &opt) {
@@ -857,7 +868,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if ((fTF1UseSave == 1) && f1->HasSave())
          return;
 
-      f1->Save(0, 0, 0, 0, 0, 0);
+      auto f3 = dynamic_cast<TF3 *>(f1);
+      auto f2 = dynamic_cast<TF2 *>(f1);
+      if (f3)
+         f3->Save(f3->GetXmin(), f3->GetXmax(), f3->GetYmin(), f3->GetYmax(), f3->GetZmin(), f3->GetZmax());
+      else if (f2)
+         f2->Save(f2->GetXmin(), f2->GetXmax(), f2->GetYmin(), f2->GetYmax(), 0, 0);
+      else
+         f1->Save(f1->GetXmin(), f1->GetXmax(), 0, 0, 0, 0);
    };
 
    auto create_stats = [&]() {
@@ -935,27 +953,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (!process_primitives) {
          continue;
-      } else if (obj->InheritsFrom(TH1K::Class())) {
-         flush_master();
-         TH1K *hist = static_cast<TH1K *>(obj);
-
-         Int_t nbins = hist->GetXaxis()->GetNbins();
-
-         TH1D *h1 = new TH1D("__dummy_name__", hist->GetTitle(), nbins, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
-         h1->SetDirectory(nullptr);
-         h1->SetName(hist->GetName());
-         hist->TAttLine::Copy(*h1);
-         hist->TAttFill::Copy(*h1);
-         hist->TAttMarker::Copy(*h1);
-         for (Int_t n = 1; n <= nbins; ++n)
-             h1->SetBinContent(n, hist->GetBinContent(n));
-
-         TIter fiter(hist->GetListOfFunctions());
-         while (auto fobj = fiter())
-            h1->GetListOfFunctions()->Add(fobj->Clone());
-
-         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
-
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
@@ -1160,7 +1157,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
-         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
+         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? masterps.get() : nullptr);
       }
    }
 
@@ -1798,8 +1795,7 @@ void TWebCanvas::ProcessExecs(TPad *pad, TExec *extra)
       return;
 
    auto saveps = gVirtualPS;
-   TWebPS ps;
-   gVirtualPS = &ps;
+   gVirtualPS = nullptr;
 
    auto savex = gVirtualX;
    TVirtualX x;
@@ -3022,3 +3018,4 @@ TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t
 
    return canvas;
 }
+

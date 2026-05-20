@@ -118,7 +118,6 @@ class TAsyncReadvHandler: public XrdCl::ResponseHandler
 };
 
 
-ClassImp(TNetXNGFile);
 
 TNetXNGFile::TNetXNGFile()
    : TFile(),

@@ -3,28 +3,39 @@
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Clock, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
+import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Timer, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
 
 /**
- * Text = 3D Text
+ * A class for generating text as a single geometry. It is constructed by providing a string of text, and a set of
+ * parameters consisting of a loaded font and extrude settings.
  *
- * parameters = {
- *  font: <THREE.Font>, // font
+ * See the {@link FontLoader} page for additional details.
  *
- *  size: <float>, // size of the text
- *  depth: <float>, // thickness to extrude text
- *  curveSegments: <int>, // number of points on the curves
+ * `TextGeometry` uses [typeface.json](http://gero3.github.io/facetype.js/) generated fonts.
+ * Some existing fonts can be found located in `/examples/fonts`.
  *
- *  bevelEnabled: <bool>, // turn on bevel
- *  bevelThickness: <float>, // how deep into text bevel goes
- *  bevelSize: <float>, // how far from text outline (including bevelOffset) is bevel
- *  bevelOffset: <float> // how far from text outline does bevel start
- * }
+ * ```js
+ * const loader = new FontLoader();
+ * const font = await loader.loadAsync( 'fonts/helvetiker_regular.typeface.json' );
+ * const geometry = new TextGeometry( 'Hello three.js!', {
+ * 	font: font,
+ * 	size: 80,
+ * 	depth: 5,
+ * 	curveSegments: 12
+ * } );
+ * ```
+ *
+ * @augments ExtrudeGeometry
+ * @three_import import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
  */
-
-
 class TextGeometry extends ExtrudeGeometry {
 
+	/**
+	 * Constructs a new text geometry.
+	 *
+	 * @param {string} text - The text that should be transformed into a geometry.
+	 * @param {TextGeometry~Options} [parameters] - The text settings.
+	 */
 	constructor( text, parameters = {} ) {
 
 		const font = parameters.font;
@@ -35,7 +46,7 @@ class TextGeometry extends ExtrudeGeometry {
 
 		} else {
 
-			const shapes = font.generateShapes( text, parameters.size );
+			const shapes = font.generateShapes( text, parameters.size, parameters.direction );
 
 			// defaults
 
@@ -54,24 +65,51 @@ class TextGeometry extends ExtrudeGeometry {
 
 }
 
-//
-
+/**
+ * Class representing a font.
+ */
 class Font {
 
+	/**
+	 * Constructs a new font.
+	 *
+	 * @param {Object} data - The font data as JSON.
+	 */
 	constructor( data ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isFont = true;
 
 		this.type = 'Font';
 
+		/**
+		 * The font data as JSON.
+		 *
+		 * @type {Object}
+		 */
 		this.data = data;
 
 	}
 
-	generateShapes( text, size = 100 ) {
+	/**
+	 * Generates geometry shapes from the given text and size. The result of this method
+	 * should be used with {@link ShapeGeometry} to generate the actual geometry data.
+	 *
+	 * @param {string} text - The text.
+	 * @param {number} [size=100] - The text size.
+	 * @param {string} [direction='ltr'] - Char direction: ltr(left to right), rtl(right to left) & tb(top bottom).
+	 * @return {Array<Shape>} An array of shapes representing the text.
+	 */
+	generateShapes( text, size = 100, direction = 'ltr' ) {
 
 		const shapes = [];
-		const paths = createPaths( text, size, this.data );
+		const paths = createPaths( text, size, this.data, direction );
 
 		for ( let p = 0, pl = paths.length; p < pl; p ++ ) {
 
@@ -85,7 +123,7 @@ class Font {
 
 }
 
-function createPaths( text, size, data ) {
+function createPaths( text, size, data, direction ) {
 
 	const chars = Array.from( text );
 	const scale = size / data.resolution;
@@ -94,6 +132,12 @@ function createPaths( text, size, data ) {
 	const paths = [];
 
 	let offsetX = 0, offsetY = 0;
+
+	if ( direction == 'rtl' || direction == 'tb' ) {
+
+		chars.reverse();
+
+	}
 
 	for ( let i = 0; i < chars.length; i ++ ) {
 
@@ -107,7 +151,18 @@ function createPaths( text, size, data ) {
 		} else {
 
 			const ret = createPath( char, scale, offsetX, offsetY, data );
-			offsetX += ret.offsetX;
+
+			if ( direction == 'tb' ) {
+
+				offsetX = 0;
+				offsetY += data.ascender * scale;
+
+			} else {
+
+				offsetX += ret.offsetX;
+
+			}
+
 			paths.push( ret.path );
 
 		}
@@ -196,16 +251,30 @@ function createPath( char, scale, offsetX, offsetY, data ) {
 
 }
 
-// OrbitControls performs orbiting, dollying (zooming), and panning.
-// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
-//
-//    Orbit - left mouse / touch: one-finger move
-//    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
-//    Pan - right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move
-
+/**
+ * Fires when the camera has been transformed by the controls.
+ *
+ * @event OrbitControls#change
+ * @type {Object}
+ */
 const _changeEvent = { type: 'change' };
+
+/**
+ * Fires when an interaction was initiated.
+ *
+ * @event OrbitControls#start
+ * @type {Object}
+ */
 const _startEvent = { type: 'start' };
+
+/**
+ * Fires when an interaction has finished.
+ *
+ * @event OrbitControls#end
+ * @type {Object}
+ */
 const _endEvent = { type: 'end' };
+
 const _ray = new Ray();
 const _plane = new Plane();
 const _TILT_LIMIT = Math.cos( 70 * MathUtils.DEG2RAD );
@@ -225,85 +294,344 @@ const _STATE = {
 };
 const _EPS = 0.000001;
 
+
+/**
+ * Orbit controls allow the camera to orbit around a target.
+ *
+ * OrbitControls performs orbiting, dollying (zooming), and panning. Unlike {@link TrackballControls},
+ * it maintains the "up" direction `object.up` (+Y by default).
+ *
+ * - Orbit: Left mouse / touch: one-finger move.
+ * - Zoom: Middle mouse, or mousewheel / touch: two-finger spread or squish.
+ * - Pan: Right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move.
+ *
+ * ```js
+ * const controls = new OrbitControls( camera, renderer.domElement );
+ *
+ * // controls.update() must be called after any manual changes to the camera's transform
+ * camera.position.set( 0, 20, 100 );
+ * controls.update();
+ *
+ * function animate() {
+ *
+ * 	// required if controls.enableDamping or controls.autoRotate are set to true
+ * 	controls.update();
+ *
+ * 	renderer.render( scene, camera );
+ *
+ * }
+ * ```
+ *
+ * @augments Controls
+ * @three_import import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+ */
 class OrbitControls extends Controls {
 
+	/**
+	 * Constructs a new controls instance.
+	 *
+	 * @param {Object3D} object - The object that is managed by the controls.
+	 * @param {?HTMLElement} domElement - The HTML element used for event listeners.
+	 */
 	constructor( object, domElement = null ) {
 
 		super( object, domElement );
 
 		this.state = _STATE.NONE;
 
-		// Set to false to disable this control
-		this.enabled = true;
-
-		// "target" sets the location of focus, where the object orbits around
+		/**
+		 * The focus point of the controls, the `object` orbits around this.
+		 * It can be updated manually at any point to change the focus of the controls.
+		 *
+		 * @type {Vector3}
+		 */
 		this.target = new Vector3();
 
-		// Sets the 3D cursor (similar to Blender), from which the maxTargetRadius takes effect
+		/**
+		 * The focus point of the `minTargetRadius` and `maxTargetRadius` limits.
+		 * It can be updated manually at any point to change the center of interest
+		 * for the `target`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.cursor = new Vector3();
 
-		// How far you can dolly in and out ( PerspectiveCamera only )
+		/**
+		 * How far you can dolly in (perspective camera only).
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.minDistance = 0;
+
+		/**
+		 * How far you can dolly out (perspective camera only).
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.maxDistance = Infinity;
 
-		// How far you can zoom in and out ( OrthographicCamera only )
+		/**
+		 * How far you can zoom in (orthographic camera only).
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.minZoom = 0;
+
+		/**
+		 * How far you can zoom out (orthographic camera only).
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.maxZoom = Infinity;
 
-		// Limit camera target within a spherical area around the cursor
+		/**
+		 * How close you can get the target to the 3D `cursor`.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.minTargetRadius = 0;
+
+		/**
+		 * How far you can move the target from the 3D `cursor`.
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.maxTargetRadius = Infinity;
 
-		// How far you can orbit vertically, upper and lower limits.
-		// Range is 0 to Math.PI radians.
-		this.minPolarAngle = 0; // radians
-		this.maxPolarAngle = Math.PI; // radians
+		/**
+		 * How far you can orbit vertically, lower limit. Range is `[0, Math.PI]` radians.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
+		this.minPolarAngle = 0;
 
-		// How far you can orbit horizontally, upper and lower limits.
-		// If set, the interval [ min, max ] must be a sub-interval of [ - 2 PI, 2 PI ], with ( max - min < 2 PI )
-		this.minAzimuthAngle = - Infinity; // radians
-		this.maxAzimuthAngle = Infinity; // radians
+		/**
+		 * How far you can orbit vertically, upper limit. Range is `[0, Math.PI]` radians.
+		 *
+		 * @type {number}
+		 * @default Math.PI
+		 */
+		this.maxPolarAngle = Math.PI;
 
-		// Set to true to enable damping (inertia)
-		// If damping is enabled, you must call controls.update() in your animation loop
+		/**
+		 * How far you can orbit horizontally, lower limit. If set, the interval `[ min, max ]`
+		 * must be a sub-interval of `[ - 2 PI, 2 PI ]`, with `( max - min < 2 PI )`.
+		 *
+		 * @type {number}
+		 * @default -Infinity
+		 */
+		this.minAzimuthAngle = - Infinity;
+
+		/**
+		 * How far you can orbit horizontally, upper limit. If set, the interval `[ min, max ]`
+		 * must be a sub-interval of `[ - 2 PI, 2 PI ]`, with `( max - min < 2 PI )`.
+		 *
+		 * @type {number}
+		 * @default -Infinity
+		 */
+		this.maxAzimuthAngle = Infinity;
+
+		/**
+		 * Set to `true` to enable damping (inertia), which can be used to give a sense of weight
+		 * to the controls. Note that if this is enabled, you must call `update()` in your animation
+		 * loop.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.enableDamping = false;
+
+		/**
+		 * The damping inertia used if `enableDamping` is set to `true`.
+		 *
+		 * Note that for this to work, you must call `update()` in your animation loop.
+		 *
+		 * @type {number}
+		 * @default 0.05
+		 */
 		this.dampingFactor = 0.05;
 
-		// This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
-		// Set to false to disable zooming
+		/**
+		 * Enable or disable zooming (dollying) of the camera.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enableZoom = true;
+
+		/**
+		 * Speed of zooming / dollying.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.zoomSpeed = 1.0;
 
-		// Set to false to disable rotating
+		/**
+		 * Enable or disable horizontal and vertical rotation of the camera.
+		 *
+		 * Note that it is possible to disable a single axis by setting the min and max of the
+		 * `minPolarAngle` or `minAzimuthAngle` to the same value, which will cause the vertical
+		 * or horizontal rotation to be fixed at that value.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enableRotate = true;
+
+		/**
+		 * Speed of rotation.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.rotateSpeed = 1.0;
+
+		/**
+		 * How fast to rotate the camera when the keyboard is used.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.keyRotateSpeed = 1.0;
 
-		// Set to false to disable panning
+		/**
+		 * Enable or disable camera panning.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enablePan = true;
+
+		/**
+		 * Speed of panning.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.panSpeed = 1.0;
-		this.screenSpacePanning = true; // if false, pan orthogonal to world-space direction camera.up
-		this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
+
+		/**
+		 * Defines how the camera's position is translated when panning. If `true`, the camera pans
+		 * in screen space. Otherwise, the camera pans in the plane orthogonal to the camera's up
+		 * direction.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.screenSpacePanning = true;
+
+		/**
+		 * How fast to pan the camera when the keyboard is used in
+		 * pixels per keypress.
+		 *
+		 * @type {number}
+		 * @default 7
+		 */
+		this.keyPanSpeed = 7.0;
+
+		/**
+		 * Setting this property to `true` allows to zoom to the cursor's position.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.zoomToCursor = false;
 
-		// Set to true to automatically rotate around the target
-		// If auto-rotate is enabled, you must call controls.update() in your animation loop
+		/**
+		 * Set to true to automatically rotate around the target
+		 *
+		 * Note that if this is enabled, you must call `update()` in your animation loop.
+		 * If you want the auto-rotate speed to be independent of the frame rate (the refresh
+		 * rate of the display), you must pass the time `deltaTime`, in seconds, to `update()`.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.autoRotate = false;
-		this.autoRotateSpeed = 2.0; // 30 seconds per orbit when fps is 60
 
-		// The four arrow keys
+		/**
+		 * How fast to rotate around the target if `autoRotate` is `true`. The default  equates to 30 seconds
+		 * per orbit at 60fps.
+		 *
+		 * Note that if `autoRotate` is enabled, you must call `update()` in your animation loop.
+		 *
+		 * @type {number}
+		 * @default 2
+		 */
+		this.autoRotateSpeed = 2.0;
+
+		/**
+		 * This object contains references to the keycodes for controlling camera panning.
+		 *
+		 * ```js
+		 * controls.keys = {
+		 * 	LEFT: 'ArrowLeft', //left arrow
+		 * 	UP: 'ArrowUp', // up arrow
+		 * 	RIGHT: 'ArrowRight', // right arrow
+		 * 	BOTTOM: 'ArrowDown' // down arrow
+		 * }
+		 * ```
+		 * @type {Object}
+		 */
 		this.keys = { LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' };
 
-		// Mouse buttons
+		/**
+		 * This object contains references to the mouse actions used by the controls.
+		 *
+		 * ```js
+		 * controls.mouseButtons = {
+		 * 	LEFT: THREE.MOUSE.ROTATE,
+		 * 	MIDDLE: THREE.MOUSE.DOLLY,
+		 * 	RIGHT: THREE.MOUSE.PAN
+		 * }
+		 * ```
+		 * @type {Object}
+		 */
 		this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
 
-		// Touch fingers
+		/**
+		 * This object contains references to the touch actions used by the controls.
+		 *
+		 * ```js
+		 * controls.mouseButtons = {
+		 * 	ONE: THREE.TOUCH.ROTATE,
+		 * 	TWO: THREE.TOUCH.DOLLY_PAN
+		 * }
+		 * ```
+		 * @type {Object}
+		 */
 		this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
 
-		// for reset
+		/**
+		 * Used internally by `saveState()` and `reset()`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.target0 = this.target.clone();
+
+		/**
+		 * Used internally by `saveState()` and `reset()`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.position0 = this.object.position.clone();
+
+		/**
+		 * Used internally by `saveState()` and `reset()`.
+		 *
+		 * @type {number}
+		 */
 		this.zoom0 = this.object.zoom;
+
+		this._cursorStyle = 'auto';
 
 		// the target DOM element for key events
 		this._domElementKeyEvents = null;
@@ -368,7 +696,7 @@ class OrbitControls extends Controls {
 
 		if ( this.domElement !== null ) {
 
-			this.connect();
+			this.connect( this.domElement );
 
 		}
 
@@ -376,7 +704,37 @@ class OrbitControls extends Controls {
 
 	}
 
-	connect() {
+	/**
+	 * Defines the visual representation of the cursor.
+	 *
+	 * @type {('auto'|'grab')}
+	 * @default 'auto'
+	 */
+	set cursorStyle( type ) {
+
+		this._cursorStyle = type;
+
+		if ( type === 'grab' ) {
+
+			this.domElement.style.cursor = 'grab';
+
+		} else {
+
+			this.domElement.style.cursor = 'auto';
+
+		}
+
+	}
+
+	get cursorStyle() {
+
+		return this._cursorStyle;
+
+	}
+
+	connect( element ) {
+
+		super.connect( element );
 
 		this.domElement.addEventListener( 'pointerdown', this._onPointerDown );
 		this.domElement.addEventListener( 'pointercancel', this._onPointerUp );
@@ -394,8 +752,8 @@ class OrbitControls extends Controls {
 	disconnect() {
 
 		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
-		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
-		this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+		this.domElement.ownerDocument.removeEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.ownerDocument.removeEventListener( 'pointerup', this._onPointerUp );
 		this.domElement.removeEventListener( 'pointercancel', this._onPointerUp );
 
 		this.domElement.removeEventListener( 'wheel', this._onMouseWheel );
@@ -416,24 +774,45 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Get the current vertical rotation, in radians.
+	 *
+	 * @return {number} The current vertical rotation, in radians.
+	 */
 	getPolarAngle() {
 
 		return this._spherical.phi;
 
 	}
 
+	/**
+	 * Get the current horizontal rotation, in radians.
+	 *
+	 * @return {number} The current horizontal rotation, in radians.
+	 */
 	getAzimuthalAngle() {
 
 		return this._spherical.theta;
 
 	}
 
+	/**
+	 * Returns the distance from the camera to the target.
+	 *
+	 * @return {number} The distance from the camera to the target.
+	 */
 	getDistance() {
 
 		return this.object.position.distanceTo( this.target );
 
 	}
 
+	/**
+	 * Adds key event listeners to the given DOM element.
+	 * `window` is a recommended argument for using this method.
+	 *
+	 * @param {HTMLElement} domElement - The DOM element
+	 */
 	listenToKeyEvents( domElement ) {
 
 		domElement.addEventListener( 'keydown', this._onKeyDown );
@@ -441,6 +820,9 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Removes the key event listener previously defined with `listenToKeyEvents()`.
+	 */
 	stopListenToKeyEvents() {
 
 		if ( this._domElementKeyEvents !== null ) {
@@ -452,6 +834,9 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Save the current state of the controls. This can later be recovered with `reset()`.
+	 */
 	saveState() {
 
 		this.target0.copy( this.target );
@@ -460,6 +845,10 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Reset the controls to their state from either the last time the `saveState()`
+	 * was called, or the initial state.
+	 */
 	reset() {
 
 		this.target.copy( this.target0 );
@@ -472,6 +861,67 @@ class OrbitControls extends Controls {
 		this.update();
 
 		this.state = _STATE.NONE;
+
+	}
+
+	/**
+	 * Programmatically pan the camera.
+	 *
+	 * @param {number} deltaX - The horizontal pan amount in pixels.
+	 * @param {number} deltaY - The vertical pan amount in pixels.
+	 */
+	pan( deltaX, deltaY ) {
+
+		this._pan( deltaX, deltaY );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically dolly in (zoom in for perspective camera).
+	 *
+	 * @param {number} dollyScale - The dolly scale factor.
+	 */
+	dollyIn( dollyScale ) {
+
+		this._dollyIn( dollyScale );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically dolly out (zoom out for perspective camera).
+	 *
+	 * @param {number} dollyScale - The dolly scale factor.
+	 */
+	dollyOut( dollyScale ) {
+
+		this._dollyOut( dollyScale );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically rotate the camera left (around the vertical axis).
+	 *
+	 * @param {number} angle - The rotation angle in radians.
+	 */
+	rotateLeft( angle ) {
+
+		this._rotateLeft( angle );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically rotate the camera up (around the horizontal axis).
+	 *
+	 * @param {number} angle - The rotation angle in radians.
+	 */
+	rotateUp( angle ) {
+
+		this._rotateUp( angle );
+		this.update();
 
 	}
 
@@ -1339,8 +1789,8 @@ function onPointerDown( event ) {
 
 		this.domElement.setPointerCapture( event.pointerId );
 
-		this.domElement.addEventListener( 'pointermove', this._onPointerMove );
-		this.domElement.addEventListener( 'pointerup', this._onPointerUp );
+		this.domElement.ownerDocument.addEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.ownerDocument.addEventListener( 'pointerup', this._onPointerUp );
 
 	}
 
@@ -1359,6 +1809,12 @@ function onPointerDown( event ) {
 	} else {
 
 		this._onMouseDown( event );
+
+	}
+
+	if ( this._cursorStyle === 'grab' ) {
+
+		this.domElement.style.cursor = 'grabbing';
 
 	}
 
@@ -1390,12 +1846,18 @@ function onPointerUp( event ) {
 
 			this.domElement.releasePointerCapture( event.pointerId );
 
-			this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
-			this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+			this.domElement.ownerDocument.removeEventListener( 'pointermove', this._onPointerMove );
+			this.domElement.ownerDocument.removeEventListener( 'pointerup', this._onPointerUp );
 
 			this.dispatchEvent( _endEvent );
 
 			this.state = _STATE.NONE;
+
+			if ( this._cursorStyle === 'grab' ) {
+
+				this.domElement.style.cursor = 'grab';
+
+			}
 
 			break;
 
@@ -1739,9 +2201,16 @@ function interceptControlUp( event ) {
 }
 
 /**
- * Full-screen textured quad shader
+ * @module CopyShader
+ * @three_import import { CopyShader } from 'three/addons/shaders/CopyShader.js';
  */
 
+/**
+ * Full-screen copy shader pass.
+ *
+ * @constant
+ * @type {ShaderMaterial~Shader}
+ */
 const CopyShader = {
 
 	name: 'CopyShader',
@@ -1782,34 +2251,98 @@ const CopyShader = {
 
 };
 
+/**
+ * Abstract base class for all post processing passes.
+ *
+ * This module is only relevant for post processing with {@link WebGLRenderer}.
+ *
+ * @abstract
+ * @three_import import { Pass } from 'three/addons/postprocessing/Pass.js';
+ */
 class Pass {
 
+	/**
+	 * Constructs a new pass.
+	 */
 	constructor() {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isPass = true;
 
-		// if set to true, the pass is processed by the composer
+		/**
+		 * If set to `true`, the pass is processed by the composer.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enabled = true;
 
-		// if set to true, the pass indicates to swap read and write buffer after rendering
+		/**
+		 * If set to `true`, the pass indicates to swap read and write buffer after rendering.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.needsSwap = true;
 
-		// if set to true, the pass clears its buffer before rendering
+		/**
+		 * If set to `true`, the pass clears its buffer before rendering
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.clear = false;
 
-		// if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
+		/**
+		 * If set to `true`, the result of the pass is rendered to screen. The last pass in the composers
+		 * pass chain gets automatically rendered to screen, no matter how this property is configured.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.renderToScreen = false;
 
 	}
 
+	/**
+	 * Sets the size of the pass.
+	 *
+	 * @abstract
+	 * @param {number} width - The width to set.
+	 * @param {number} height - The height to set.
+	 */
 	setSize( /* width, height */ ) {}
 
+	/**
+	 * This method holds the render logic of a pass. It must be implemented in all derived classes.
+	 *
+	 * @abstract
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( /* renderer, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
 
 		console.error( 'THREE.Pass: .render() must be implemented in derived pass.' );
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the pass is no longer used in your app.
+	 *
+	 * @abstract
+	 */
 	dispose() {}
 
 }
@@ -1835,26 +2368,58 @@ class FullscreenTriangleGeometry extends BufferGeometry {
 
 const _geometry = new FullscreenTriangleGeometry();
 
+
+/**
+ * This module is a helper for passes which need to render a full
+ * screen effect which is quite common in context of post processing.
+ *
+ * The intended usage is to reuse a single full screen quad for rendering
+ * subsequent passes by just reassigning the `material` reference.
+ *
+ * This module can only be used with {@link WebGLRenderer}.
+ *
+ * @augments Mesh
+ * @three_import import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+ */
 class FullScreenQuad {
 
+	/**
+	 * Constructs a new full screen quad.
+	 *
+	 * @param {?Material} material - The material to render te full screen quad with.
+	 */
 	constructor( material ) {
 
 		this._mesh = new Mesh( _geometry, material );
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the instance is no longer used in your app.
+	 */
 	dispose() {
 
 		this._mesh.geometry.dispose();
 
 	}
 
+	/**
+	 * Renders the full screen quad.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 */
 	render( renderer ) {
 
 		renderer.render( this._mesh, _camera );
 
 	}
 
+	/**
+	 * The quad's material.
+	 *
+	 * @type {?Material}
+	 */
 	get material() {
 
 		return this._mesh.material;
@@ -1869,13 +2434,54 @@ class FullScreenQuad {
 
 }
 
+/**
+ * This pass can be used to create a post processing effect
+ * with a raw GLSL shader object. Useful for implementing custom
+ * effects.
+ *
+ * ```js
+ * const fxaaPass = new ShaderPass( FXAAShader );
+ * composer.addPass( fxaaPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+ */
 class ShaderPass extends Pass {
 
-	constructor( shader, textureID ) {
+	/**
+	 * Constructs a new shader pass.
+	 *
+	 * @param {Object|ShaderMaterial} [shader] - A shader object holding vertex and fragment shader as well as
+	 * defines and uniforms. It's also valid to pass a custom shader material.
+	 * @param {string} [textureID='tDiffuse'] - The name of the texture uniform that should sample
+	 * the read buffer.
+	 */
+	constructor( shader, textureID = 'tDiffuse' ) {
 
 		super();
 
-		this.textureID = ( textureID !== undefined ) ? textureID : 'tDiffuse';
+		/**
+		 * The name of the texture uniform that should sample the read buffer.
+		 *
+		 * @type {string}
+		 * @default 'tDiffuse'
+		 */
+		this.textureID = textureID;
+
+		/**
+		 * The pass uniforms.
+		 *
+		 * @type {?Object}
+		 */
+		this.uniforms = null;
+
+		/**
+		 * The pass material.
+		 *
+		 * @type {?ShaderMaterial}
+		 */
+		this.material = null;
 
 		if ( shader instanceof ShaderMaterial ) {
 
@@ -1899,10 +2505,23 @@ class ShaderPass extends Pass {
 
 		}
 
-		this.fsQuad = new FullScreenQuad( this.material );
+		// internals
+
+		this._fsQuad = new FullScreenQuad( this.material );
 
 	}
 
+	/**
+	 * Performs the shader pass.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		if ( this.uniforms[ this.textureID ] ) {
@@ -1911,50 +2530,115 @@ class ShaderPass extends Pass {
 
 		}
 
-		this.fsQuad.material = this.material;
+		this._fsQuad.material = this.material;
 
 		if ( this.renderToScreen ) {
 
 			renderer.setRenderTarget( null );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		} else {
 
 			renderer.setRenderTarget( writeBuffer );
 			// TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
 			if ( this.clear ) renderer.clear( renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		}
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the pass is no longer used in your app.
+	 */
 	dispose() {
 
 		this.material.dispose();
 
-		this.fsQuad.dispose();
+		this._fsQuad.dispose();
 
 	}
 
 }
 
+/**
+ * This pass can be used to define a mask during post processing.
+ * Meaning only areas of subsequent post processing are affected
+ * which lie in the masking area of this pass. Internally, the masking
+ * is implemented with the stencil buffer.
+ *
+ * ```js
+ * const maskPass = new MaskPass( scene, camera );
+ * composer.addPass( maskPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { MaskPass } from 'three/addons/postprocessing/MaskPass.js';
+ */
 class MaskPass extends Pass {
 
+	/**
+	 * Constructs a new mask pass.
+	 *
+	 * @param {Scene} scene - The 3D objects in this scene will define the mask.
+	 * @param {Camera} camera - The camera.
+	 */
 	constructor( scene, camera ) {
 
 		super();
 
+		/**
+		 * The scene that defines the mask.
+		 *
+		 * @type {Scene}
+		 */
 		this.scene = scene;
+
+		/**
+		 * The camera.
+		 *
+		 * @type {Camera}
+		 */
 		this.camera = camera;
 
+		/**
+		 * Overwritten to perform a clear operation by default.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.clear = true;
+
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsSwap = false;
 
+		/**
+		 * Whether to inverse the mask or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.inverse = false;
 
 	}
 
+	/**
+	 * Performs a mask pass with the configured scene and camera.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		const context = renderer.getContext();
@@ -2021,16 +2705,46 @@ class MaskPass extends Pass {
 
 }
 
+/**
+ * This pass can be used to clear a mask previously defined with {@link MaskPass}.
+ *
+ * ```js
+ * const clearPass = new ClearMaskPass();
+ * composer.addPass( clearPass );
+ * ```
+ *
+ * @augments Pass
+ */
 class ClearMaskPass extends Pass {
 
+	/**
+	 * Constructs a new clear mask pass.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsSwap = false;
 
 	}
 
+	/**
+	 * Performs the clear of the currently defined mask.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer /*, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
 
 		renderer.state.buffers.stencil.setLocked( false );
@@ -2040,10 +2754,53 @@ class ClearMaskPass extends Pass {
 
 }
 
+/**
+ * Used to implement post-processing effects in three.js.
+ * The class manages a chain of post-processing passes to produce the final visual result.
+ * Post-processing passes are executed in order of their addition/insertion.
+ * The last pass is automatically rendered to screen.
+ *
+ * This module can only be used with {@link WebGLRenderer}.
+ *
+ * ```js
+ * const composer = new EffectComposer( renderer );
+ *
+ * // adding some passes
+ * const renderPass = new RenderPass( scene, camera );
+ * composer.addPass( renderPass );
+ *
+ * const glitchPass = new GlitchPass();
+ * composer.addPass( glitchPass );
+ *
+ * const outputPass = new OutputPass()
+ * composer.addPass( outputPass );
+ *
+ * function animate() {
+ *
+ * 	composer.render(); // instead of renderer.render()
+ *
+ * }
+ * ```
+ *
+ * @three_import import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+ */
 class EffectComposer {
 
+	/**
+	 * Constructs a new effect composer.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} [renderTarget] - This render target and a clone will
+	 * be used as the internal read and write buffers. If not given, the composer creates
+	 * the buffers automatically.
+	 */
 	constructor( renderer, renderTarget ) {
 
+		/**
+		 * The renderer.
+		 *
+		 * @type {WebGLRenderer}
+		 */
 		this.renderer = renderer;
 
 		this._pixelRatio = renderer.getPixelRatio();
@@ -2068,20 +2825,59 @@ class EffectComposer {
 		this.renderTarget2 = renderTarget.clone();
 		this.renderTarget2.texture.name = 'EffectComposer.rt2';
 
+		/**
+		 * A reference to the internal write buffer. Passes usually write
+		 * their result into this buffer.
+		 *
+		 * @type {WebGLRenderTarget}
+		 */
 		this.writeBuffer = this.renderTarget1;
+
+		/**
+		 * A reference to the internal read buffer. Passes usually read
+		 * the previous render result from this buffer.
+		 *
+		 * @type {WebGLRenderTarget}
+		 */
 		this.readBuffer = this.renderTarget2;
 
+		/**
+		 * Whether the final pass is rendered to the screen (default framebuffer) or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.renderToScreen = true;
 
+		/**
+		 * An array representing the (ordered) chain of post-processing passes.
+		 *
+		 * @type {Array<Pass>}
+		 */
 		this.passes = [];
 
+		/**
+		 * A copy pass used for internal swap operations.
+		 *
+		 * @private
+		 * @type {ShaderPass}
+		 */
 		this.copyPass = new ShaderPass( CopyShader );
 		this.copyPass.material.blending = NoBlending;
 
-		this.clock = new Clock();
+		/**
+		 * The internal timer for managing time data.
+		 *
+		 * @private
+		 * @type {Timer}
+		 */
+		this.timer = new Timer();
 
 	}
 
+	/**
+	 * Swaps the internal read/write buffers.
+	 */
 	swapBuffers() {
 
 		const tmp = this.readBuffer;
@@ -2090,6 +2886,11 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Adds the given pass to the pass chain.
+	 *
+	 * @param {Pass} pass - The pass to add.
+	 */
 	addPass( pass ) {
 
 		this.passes.push( pass );
@@ -2097,6 +2898,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Inserts the given pass at a given index.
+	 *
+	 * @param {Pass} pass - The pass to insert.
+	 * @param {number} index - The index into the pass chain.
+	 */
 	insertPass( pass, index ) {
 
 		this.passes.splice( index, 0, pass );
@@ -2104,6 +2911,11 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Removes the given pass from the pass chain.
+	 *
+	 * @param {Pass} pass - The pass to remove.
+	 */
 	removePass( pass ) {
 
 		const index = this.passes.indexOf( pass );
@@ -2116,6 +2928,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Returns `true` if the pass for the given index is the last enabled pass in the pass chain.
+	 *
+	 * @param {number} passIndex - The pass index.
+	 * @return {boolean} Whether the pass for the given index is the last pass in the pass chain.
+	 */
 	isLastEnabledPass( passIndex ) {
 
 		for ( let i = passIndex + 1; i < this.passes.length; i ++ ) {
@@ -2132,13 +2950,21 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Executes all enabled post-processing passes in order to produce the final frame.
+	 *
+	 * @param {number} deltaTime - The delta time in seconds. If not given, the composer computes
+	 * its own time delta value.
+	 */
 	render( deltaTime ) {
 
 		// deltaTime value is in seconds
 
+		this.timer.update();
+
 		if ( deltaTime === undefined ) {
 
-			deltaTime = this.clock.getDelta();
+			deltaTime = this.timer.getDelta();
 
 		}
 
@@ -2196,6 +3022,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Resets the internal state of the EffectComposer.
+	 *
+	 * @param {WebGLRenderTarget} [renderTarget] - This render target has the same purpose like
+	 * the one from the constructor. If set, it is used to setup the read and write buffers.
+	 */
 	reset( renderTarget ) {
 
 		if ( renderTarget === undefined ) {
@@ -2220,6 +3052,13 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Resizes the internal read and write buffers as well as all passes. Similar to {@link WebGLRenderer#setSize},
+	 * this method honors the current pixel ration.
+	 *
+	 * @param {number} width - The width in logical pixels.
+	 * @param {number} height - The height in logical pixels.
+	 */
 	setSize( width, height ) {
 
 		this._width = width;
@@ -2239,6 +3078,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Sets device pixel ratio. This is usually used for HiDPI device to prevent blurring output.
+	 * Setting the pixel ratio will automatically resize the composer.
+	 *
+	 * @param {number} pixelRatio - The pixel ratio to set.
+	 */
 	setPixelRatio( pixelRatio ) {
 
 		this._pixelRatio = pixelRatio;
@@ -2247,6 +3092,10 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the composer is no longer used in your app.
+	 */
 	dispose() {
 
 		this.renderTarget1.dispose();
@@ -2258,27 +3107,121 @@ class EffectComposer {
 
 }
 
+/**
+ * This class represents a render pass. It takes a camera and a scene and produces
+ * a beauty pass for subsequent post processing effects.
+ *
+ * ```js
+ * const renderPass = new RenderPass( scene, camera );
+ * composer.addPass( renderPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+ */
 class RenderPass extends Pass {
 
+	/**
+	 * Constructs a new render pass.
+	 *
+	 * @param {Scene} scene - The scene to render.
+	 * @param {Camera} camera - The camera.
+	 * @param {?Material} [overrideMaterial=null] - The override material. If set, this material is used
+	 * for all objects in the scene.
+	 * @param {?(number|Color|string)} [clearColor=null] - The clear color of the render pass.
+	 * @param {?number} [clearAlpha=null] - The clear alpha of the render pass.
+	 */
 	constructor( scene, camera, overrideMaterial = null, clearColor = null, clearAlpha = null ) {
 
 		super();
 
+		/**
+		 * The scene to render.
+		 *
+		 * @type {Scene}
+		 */
 		this.scene = scene;
+
+		/**
+		 * The camera.
+		 *
+		 * @type {Camera}
+		 */
 		this.camera = camera;
 
+		/**
+		 * The override material. If set, this material is used
+		 * for all objects in the scene.
+		 *
+		 * @type {?Material}
+		 * @default null
+		 */
 		this.overrideMaterial = overrideMaterial;
 
+		/**
+		 * The clear color of the render pass.
+		 *
+		 * @type {?(number|Color|string)}
+		 * @default null
+		 */
 		this.clearColor = clearColor;
+
+		/**
+		 * The clear alpha of the render pass.
+		 *
+		 * @type {?number}
+		 * @default null
+		 */
 		this.clearAlpha = clearAlpha;
 
+		/**
+		 * Overwritten to perform a clear operation by default.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.clear = true;
+
+		/**
+		 * If set to `true`, only the depth can be cleared when `clear` is to `false`.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.clearDepth = false;
+
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsSwap = false;
+
+		/**
+		 * This flag indicates that this pass renders the scene itself.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
+		this.isRenderPass = true;
+
 		this._oldClearColor = new Color();
 
 	}
 
+	/**
+	 * Performs a beauty pass with the configured scene and camera.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		const oldAutoClear = renderer.autoClear;
@@ -2351,20 +3294,22 @@ class RenderPass extends Pass {
 
 }
 
-// Ported from Stefan Gustavson's java implementation
-// http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
-// Read Stefan's excellent paper for details on how this code works.
-//
-// Sean McCullough banksean@gmail.com
-//
-// Added 4D noise
-
 /**
- * You can pass in a random number generator object if you like.
- * It is assumed to have a random() method.
+ * A utility class providing noise functions.
+ *
+ * The code is based on [Simplex noise demystified](https://web.archive.org/web/20210210162332/http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf)
+ * by Stefan Gustavson, 2005.
+ *
+ * @three_import import { SimplexNoise } from 'three/addons/math/SimplexNoise.js';
  */
 class SimplexNoise {
 
+	/**
+	 * Constructs a new simplex noise object.
+	 *
+	 * @param {Object} [r=Math] - A math utility class that holds a `random()` method. This makes it
+	 * possible to pass in custom random number generator.
+	 */
 	constructor( r = Math ) {
 
 		this.grad3 = [[ 1, 1, 0 ], [ -1, 1, 0 ], [ 1, -1, 0 ], [ -1, -1, 0 ],
@@ -2411,24 +3356,13 @@ class SimplexNoise {
 
 	}
 
-	dot( g, x, y ) {
-
-		return g[ 0 ] * x + g[ 1 ] * y;
-
-	}
-
-	dot3( g, x, y, z ) {
-
-		return g[ 0 ] * x + g[ 1 ] * y + g[ 2 ] * z;
-
-	}
-
-	dot4( g, x, y, z, w ) {
-
-		return g[ 0 ] * x + g[ 1 ] * y + g[ 2 ] * z + g[ 3 ] * w;
-
-	}
-
+	/**
+	 * A 2D simplex noise method.
+	 *
+	 * @param {number} xin - The x coordinate.
+	 * @param {number} yin - The y coordinate.
+	 * @return {number} The noise value.
+	 */
 	noise( xin, yin ) {
 
 		let n0; // Noise contributions from the three corners
@@ -2482,7 +3416,7 @@ class SimplexNoise {
 		else {
 
 			t0 *= t0;
-			n0 = t0 * t0 * this.dot( this.grad3[ gi0 ], x0, y0 ); // (x,y) of grad3 used for 2D gradient
+			n0 = t0 * t0 * this._dot( this.grad3[ gi0 ], x0, y0 ); // (x,y) of grad3 used for 2D gradient
 
 		}
 
@@ -2491,7 +3425,7 @@ class SimplexNoise {
 		else {
 
 			t1 *= t1;
-			n1 = t1 * t1 * this.dot( this.grad3[ gi1 ], x1, y1 );
+			n1 = t1 * t1 * this._dot( this.grad3[ gi1 ], x1, y1 );
 
 		}
 
@@ -2500,7 +3434,7 @@ class SimplexNoise {
 		else {
 
 			t2 *= t2;
-			n2 = t2 * t2 * this.dot( this.grad3[ gi2 ], x2, y2 );
+			n2 = t2 * t2 * this._dot( this.grad3[ gi2 ], x2, y2 );
 
 		}
 
@@ -2510,7 +3444,14 @@ class SimplexNoise {
 
 	}
 
-	// 3D simplex noise
+	/**
+	 * A 3D simplex noise method.
+	 *
+	 * @param {number} xin - The x coordinate.
+	 * @param {number} yin - The y coordinate.
+	 * @param {number} zin - The z coordinate.
+	 * @return {number} The noise value.
+	 */
 	noise3d( xin, yin, zin ) {
 
 		let n0; // Noise contributions from the four corners
@@ -2610,7 +3551,7 @@ class SimplexNoise {
 		else {
 
 			t0 *= t0;
-			n0 = t0 * t0 * this.dot3( this.grad3[ gi0 ], x0, y0, z0 );
+			n0 = t0 * t0 * this._dot3( this.grad3[ gi0 ], x0, y0, z0 );
 
 		}
 
@@ -2619,7 +3560,7 @@ class SimplexNoise {
 		else {
 
 			t1 *= t1;
-			n1 = t1 * t1 * this.dot3( this.grad3[ gi1 ], x1, y1, z1 );
+			n1 = t1 * t1 * this._dot3( this.grad3[ gi1 ], x1, y1, z1 );
 
 		}
 
@@ -2628,7 +3569,7 @@ class SimplexNoise {
 		else {
 
 			t2 *= t2;
-			n2 = t2 * t2 * this.dot3( this.grad3[ gi2 ], x2, y2, z2 );
+			n2 = t2 * t2 * this._dot3( this.grad3[ gi2 ], x2, y2, z2 );
 
 		}
 
@@ -2637,7 +3578,7 @@ class SimplexNoise {
 		else {
 
 			t3 *= t3;
-			n3 = t3 * t3 * this.dot3( this.grad3[ gi3 ], x3, y3, z3 );
+			n3 = t3 * t3 * this._dot3( this.grad3[ gi3 ], x3, y3, z3 );
 
 		}
 
@@ -2647,7 +3588,15 @@ class SimplexNoise {
 
 	}
 
-	// 4D simplex noise
+	/**
+	 * A 4D simplex noise method.
+	 *
+	 * @param {number} x - The x coordinate.
+	 * @param {number} y - The y coordinate.
+	 * @param {number} z - The z coordinate.
+	 * @param {number} w - The w coordinate.
+	 * @return {number} The noise value.
+	 */
 	noise4d( x, y, z, w ) {
 
 		// For faster and easier lookups
@@ -2747,7 +3696,7 @@ class SimplexNoise {
 		else {
 
 			t0 *= t0;
-			n0 = t0 * t0 * this.dot4( grad4[ gi0 ], x0, y0, z0, w0 );
+			n0 = t0 * t0 * this._dot4( grad4[ gi0 ], x0, y0, z0, w0 );
 
 		}
 
@@ -2756,7 +3705,7 @@ class SimplexNoise {
 		else {
 
 			t1 *= t1;
-			n1 = t1 * t1 * this.dot4( grad4[ gi1 ], x1, y1, z1, w1 );
+			n1 = t1 * t1 * this._dot4( grad4[ gi1 ], x1, y1, z1, w1 );
 
 		}
 
@@ -2765,7 +3714,7 @@ class SimplexNoise {
 		else {
 
 			t2 *= t2;
-			n2 = t2 * t2 * this.dot4( grad4[ gi2 ], x2, y2, z2, w2 );
+			n2 = t2 * t2 * this._dot4( grad4[ gi2 ], x2, y2, z2, w2 );
 
 		}
 
@@ -2774,7 +3723,7 @@ class SimplexNoise {
 		else {
 
 			t3 *= t3;
-			n3 = t3 * t3 * this.dot4( grad4[ gi3 ], x3, y3, z3, w3 );
+			n3 = t3 * t3 * this._dot4( grad4[ gi3 ], x3, y3, z3, w3 );
 
 		}
 
@@ -2783,7 +3732,7 @@ class SimplexNoise {
 		else {
 
 			t4 *= t4;
-			n4 = t4 * t4 * this.dot4( grad4[ gi4 ], x4, y4, z4, w4 );
+			n4 = t4 * t4 * this._dot4( grad4[ gi4 ], x4, y4, z4, w4 );
 
 		}
 
@@ -2792,18 +3741,42 @@ class SimplexNoise {
 
 	}
 
+	// private
+
+	_dot( g, x, y ) {
+
+		return g[ 0 ] * x + g[ 1 ] * y;
+
+	}
+
+	_dot3( g, x, y, z ) {
+
+		return g[ 0 ] * x + g[ 1 ] * y + g[ 2 ] * z;
+
+	}
+
+	_dot4( g, x, y, z, w ) {
+
+		return g[ 0 ] * x + g[ 1 ] * y + g[ 2 ] * z + g[ 3 ] * w;
+
+	}
+
 }
 
 /**
- * Luminosity
- * http://en.wikipedia.org/wiki/Luminosity
+ * @module LuminosityHighPassShader
+ * @three_import import { LuminosityHighPassShader } from 'three/addons/shaders/LuminosityHighPassShader.js';
  */
 
+/**
+ * Luminosity high pass shader.
+ *
+ * @constant
+ * @type {ShaderMaterial~Shader}
+ */
 const LuminosityHighPassShader = {
 
 	name: 'LuminosityHighPassShader',
-
-	shaderID: 'luminosityHighPass',
 
 	uniforms: {
 
@@ -2854,27 +3827,86 @@ const LuminosityHighPassShader = {
 };
 
 /**
- * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
+ * This pass is inspired by the bloom pass of Unreal Engine. It creates a
  * mip map chain of bloom textures and blurs them with different radii. Because
  * of the weighted combination of mips, and because larger blurs are done on
  * higher mips, this effect provides good quality and performance.
  *
+ * When using this pass, tone mapping must be enabled in the renderer settings.
+ *
  * Reference:
- * - https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
+ * - [Bloom in Unreal Engine](https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/)
+ *
+ * ```js
+ * const resolution = new THREE.Vector2( window.innerWidth, window.innerHeight );
+ * const bloomPass = new UnrealBloomPass( resolution, 1.5, 0.4, 0.85 );
+ * composer.addPass( bloomPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
  */
 class UnrealBloomPass extends Pass {
 
-	constructor( resolution, strength, radius, threshold ) {
+	/**
+	 * Constructs a new Unreal Bloom pass.
+	 *
+	 * @param {Vector2} [resolution] - The effect's resolution.
+	 * @param {number} [strength=1] - The Bloom strength.
+	 * @param {number} radius - The Bloom radius.
+	 * @param {number} threshold - The luminance threshold limits which bright areas contribute to the Bloom effect.
+	 */
+	constructor( resolution, strength = 1, radius, threshold ) {
 
 		super();
 
-		this.strength = ( strength !== undefined ) ? strength : 1;
+		/**
+		 * The Bloom strength.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
+		this.strength = strength;
+
+		/**
+		 * The Bloom radius. Must be in the range `[0,1]`.
+		 *
+		 * @type {number}
+		 */
 		this.radius = radius;
+
+		/**
+		 * The luminance threshold limits which bright areas contribute to the Bloom effect.
+		 *
+		 * @type {number}
+		 */
 		this.threshold = threshold;
+
+		/**
+		 * The effect's resolution.
+		 *
+		 * @type {Vector2}
+		 * @default (256,256)
+		 */
 		this.resolution = ( resolution !== undefined ) ? new Vector2( resolution.x, resolution.y ) : new Vector2( 256, 256 );
 
-		// create color only once here, reuse it later inside the render function
+		/**
+		 * The effect's clear color
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.clearColor = new Color( 0, 0, 0 );
+
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.needsSwap = false;
+
+		// internals
 
 		// render targets
 		this.renderTargetsHorizontal = [];
@@ -2926,13 +3958,15 @@ class UnrealBloomPass extends Pass {
 		// gaussian blur materials
 
 		this.separableBlurMaterials = [];
-		const kernelSizeArray = [ 3, 5, 7, 9, 11 ];
+		// These sizes have been changed to account for the altered coefficients-calculation to avoid blockiness,
+		// while retaining the same blur-strength. For details see https://github.com/mrdoob/three.js/pull/31528
+		const kernelSizeArray = [ 6, 10, 14, 18, 22 ];
 		resx = Math.round( this.resolution.x / 2 );
 		resy = Math.round( this.resolution.y / 2 );
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			this.separableBlurMaterials.push( this.getSeparableBlurMaterial( kernelSizeArray[ i ] ) );
+			this.separableBlurMaterials.push( this._getSeparableBlurMaterial( kernelSizeArray[ i ] ) );
 
 			this.separableBlurMaterials[ i ].uniforms[ 'invSize' ].value = new Vector2( 1 / resx, 1 / resy );
 
@@ -2944,7 +3978,7 @@ class UnrealBloomPass extends Pass {
 
 		// composite material
 
-		this.compositeMaterial = this.getCompositeMaterial( this.nMips );
+		this.compositeMaterial = this._getCompositeMaterial( this.nMips );
 		this.compositeMaterial.uniforms[ 'blurTexture1' ].value = this.renderTargetsVertical[ 0 ].texture;
 		this.compositeMaterial.uniforms[ 'blurTexture2' ].value = this.renderTargetsVertical[ 1 ].texture;
 		this.compositeMaterial.uniforms[ 'blurTexture3' ].value = this.renderTargetsVertical[ 2 ].texture;
@@ -2960,32 +3994,32 @@ class UnrealBloomPass extends Pass {
 
 		// blend material
 
-		const copyShader = CopyShader;
-
-		this.copyUniforms = UniformsUtils.clone( copyShader.uniforms );
+		this.copyUniforms = UniformsUtils.clone( CopyShader.uniforms );
 
 		this.blendMaterial = new ShaderMaterial( {
 			uniforms: this.copyUniforms,
-			vertexShader: copyShader.vertexShader,
-			fragmentShader: copyShader.fragmentShader,
+			vertexShader: CopyShader.vertexShader,
+			fragmentShader: CopyShader.fragmentShader,
+			premultipliedAlpha: true,
 			blending: AdditiveBlending,
 			depthTest: false,
 			depthWrite: false,
 			transparent: true
 		} );
 
-		this.enabled = true;
-		this.needsSwap = false;
-
 		this._oldClearColor = new Color();
-		this.oldClearAlpha = 1;
+		this._oldClearAlpha = 1;
 
-		this.basic = new MeshBasicMaterial();
+		this._basic = new MeshBasicMaterial();
 
-		this.fsQuad = new FullScreenQuad( null );
+		this._fsQuad = new FullScreenQuad( null );
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the pass is no longer used in your app.
+	 */
 	dispose() {
 
 		for ( let i = 0; i < this.renderTargetsHorizontal.length; i ++ ) {
@@ -3012,14 +4046,20 @@ class UnrealBloomPass extends Pass {
 
 		this.compositeMaterial.dispose();
 		this.blendMaterial.dispose();
-		this.basic.dispose();
+		this._basic.dispose();
 
 		//
 
-		this.fsQuad.dispose();
+		this._fsQuad.dispose();
 
 	}
 
+	/**
+	 * Sets the size of the pass.
+	 *
+	 * @param {number} width - The width to set.
+	 * @param {number} height - The height to set.
+	 */
 	setSize( width, height ) {
 
 		let resx = Math.round( width / 2 );
@@ -3041,10 +4081,21 @@ class UnrealBloomPass extends Pass {
 
 	}
 
+	/**
+	 * Performs the Bloom pass.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
 
 		renderer.getClearColor( this._oldClearColor );
-		this.oldClearAlpha = renderer.getClearAlpha();
+		this._oldClearAlpha = renderer.getClearAlpha();
 		const oldAutoClear = renderer.autoClear;
 		renderer.autoClear = false;
 
@@ -3056,12 +4107,12 @@ class UnrealBloomPass extends Pass {
 
 		if ( this.renderToScreen ) {
 
-			this.fsQuad.material = this.basic;
-			this.basic.map = readBuffer.texture;
+			this._fsQuad.material = this._basic;
+			this._basic.map = readBuffer.texture;
 
 			renderer.setRenderTarget( null );
 			renderer.clear();
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		}
 
@@ -3069,11 +4120,11 @@ class UnrealBloomPass extends Pass {
 
 		this.highPassUniforms[ 'tDiffuse' ].value = readBuffer.texture;
 		this.highPassUniforms[ 'luminosityThreshold' ].value = this.threshold;
-		this.fsQuad.material = this.materialHighPassFilter;
+		this._fsQuad.material = this.materialHighPassFilter;
 
 		renderer.setRenderTarget( this.renderTargetBright );
 		renderer.clear();
-		this.fsQuad.render( renderer );
+		this._fsQuad.render( renderer );
 
 		// 2. Blur All the mips progressively
 
@@ -3081,19 +4132,19 @@ class UnrealBloomPass extends Pass {
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			this.fsQuad.material = this.separableBlurMaterials[ i ];
+			this._fsQuad.material = this.separableBlurMaterials[ i ];
 
 			this.separableBlurMaterials[ i ].uniforms[ 'colorTexture' ].value = inputRenderTarget.texture;
 			this.separableBlurMaterials[ i ].uniforms[ 'direction' ].value = UnrealBloomPass.BlurDirectionX;
 			renderer.setRenderTarget( this.renderTargetsHorizontal[ i ] );
 			renderer.clear();
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 			this.separableBlurMaterials[ i ].uniforms[ 'colorTexture' ].value = this.renderTargetsHorizontal[ i ].texture;
 			this.separableBlurMaterials[ i ].uniforms[ 'direction' ].value = UnrealBloomPass.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetsVertical[ i ] );
 			renderer.clear();
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 			inputRenderTarget = this.renderTargetsVertical[ i ];
 
@@ -3101,18 +4152,18 @@ class UnrealBloomPass extends Pass {
 
 		// Composite All the mips
 
-		this.fsQuad.material = this.compositeMaterial;
+		this._fsQuad.material = this.compositeMaterial;
 		this.compositeMaterial.uniforms[ 'bloomStrength' ].value = this.strength;
 		this.compositeMaterial.uniforms[ 'bloomRadius' ].value = this.radius;
 		this.compositeMaterial.uniforms[ 'bloomTintColors' ].value = this.bloomTintColors;
 
 		renderer.setRenderTarget( this.renderTargetsHorizontal[ 0 ] );
 		renderer.clear();
-		this.fsQuad.render( renderer );
+		this._fsQuad.render( renderer );
 
 		// Blend it additively over the input texture
 
-		this.fsQuad.material = this.blendMaterial;
+		this._fsQuad.material = this.blendMaterial;
 		this.copyUniforms[ 'tDiffuse' ].value = this.renderTargetsHorizontal[ 0 ].texture;
 
 		if ( maskActive ) renderer.state.buffers.stencil.setTest( true );
@@ -3120,29 +4171,32 @@ class UnrealBloomPass extends Pass {
 		if ( this.renderToScreen ) {
 
 			renderer.setRenderTarget( null );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		} else {
 
 			renderer.setRenderTarget( readBuffer );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		}
 
 		// Restore renderer settings
 
-		renderer.setClearColor( this._oldClearColor, this.oldClearAlpha );
+		renderer.setClearColor( this._oldClearColor, this._oldClearAlpha );
 		renderer.autoClear = oldAutoClear;
 
 	}
 
-	getSeparableBlurMaterial( kernelRadius ) {
+	// internals
+
+	_getSeparableBlurMaterial( kernelRadius ) {
 
 		const coefficients = [];
+		const sigma = kernelRadius / 3;
 
 		for ( let i = 0; i < kernelRadius; i ++ ) {
 
-			coefficients.push( 0.39894 * Math.exp( -0.5 * i * i / ( kernelRadius * kernelRadius ) ) / kernelRadius );
+			coefficients.push( 0.39894 * Math.exp( -0.5 * i * i / ( sigma * sigma ) ) / sigma );
 
 		}
 
@@ -3159,40 +4213,52 @@ class UnrealBloomPass extends Pass {
 				'gaussianCoefficients': { value: coefficients } // precomputed Gaussian coefficients
 			},
 
-			vertexShader:
-				`varying vec2 vUv;
+			vertexShader: /* glsl */`
+
+				varying vec2 vUv;
+
 				void main() {
+
 					vUv = uv;
 					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
 				}`,
 
-			fragmentShader:
-				`#include <common>
+			fragmentShader: /* glsl */`
+
+				#include <common>
+
 				varying vec2 vUv;
+
 				uniform sampler2D colorTexture;
 				uniform vec2 invSize;
 				uniform vec2 direction;
 				uniform float gaussianCoefficients[KERNEL_RADIUS];
 
 				void main() {
+
 					float weightSum = gaussianCoefficients[0];
 					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * weightSum;
-					for( int i = 1; i < KERNEL_RADIUS; i ++ ) {
-						float x = float(i);
+
+					for ( int i = 1; i < KERNEL_RADIUS; i ++ ) {
+
+						float x = float( i );
 						float w = gaussianCoefficients[i];
 						vec2 uvOffset = direction * invSize * x;
 						vec3 sample1 = texture2D( colorTexture, vUv + uvOffset ).rgb;
 						vec3 sample2 = texture2D( colorTexture, vUv - uvOffset ).rgb;
-						diffuseSum += (sample1 + sample2) * w;
-						weightSum += 2.0 * w;
+						diffuseSum += ( sample1 + sample2 ) * w;
+
 					}
-					gl_FragColor = vec4(diffuseSum/weightSum, 1.0);
+
+					gl_FragColor = vec4( diffuseSum, 1.0 );
+
 				}`
 		} );
 
 	}
 
-	getCompositeMaterial( nMips ) {
+	_getCompositeMaterial( nMips ) {
 
 		return new ShaderMaterial( {
 
@@ -3212,15 +4278,21 @@ class UnrealBloomPass extends Pass {
 				'bloomRadius': { value: 0.0 }
 			},
 
-			vertexShader:
-				`varying vec2 vUv;
+			vertexShader: /* glsl */`
+
+				varying vec2 vUv;
+
 				void main() {
+
 					vUv = uv;
 					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
 				}`,
 
-			fragmentShader:
-				`varying vec2 vUv;
+			fragmentShader: /* glsl */`
+
+				varying vec2 vUv;
+
 				uniform sampler2D blurTexture1;
 				uniform sampler2D blurTexture2;
 				uniform sampler2D blurTexture3;
@@ -3231,17 +4303,27 @@ class UnrealBloomPass extends Pass {
 				uniform float bloomFactors[NUM_MIPS];
 				uniform vec3 bloomTintColors[NUM_MIPS];
 
-				float lerpBloomFactor(const in float factor) {
+				float lerpBloomFactor( const in float factor ) {
+
 					float mirrorFactor = 1.2 - factor;
-					return mix(factor, mirrorFactor, bloomRadius);
+					return mix( factor, mirrorFactor, bloomRadius );
+
 				}
 
 				void main() {
-					gl_FragColor = bloomStrength * ( lerpBloomFactor(bloomFactors[0]) * vec4(bloomTintColors[0], 1.0) * texture2D(blurTexture1, vUv) +
-						lerpBloomFactor(bloomFactors[1]) * vec4(bloomTintColors[1], 1.0) * texture2D(blurTexture2, vUv) +
-						lerpBloomFactor(bloomFactors[2]) * vec4(bloomTintColors[2], 1.0) * texture2D(blurTexture3, vUv) +
-						lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) +
-						lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
+
+					// 3.0 for backwards compatibility with previous alpha-based intensity
+					vec3 bloom = 3.0 * bloomStrength * (
+						lerpBloomFactor( bloomFactors[ 0 ] ) * bloomTintColors[ 0 ] * texture2D( blurTexture1, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 1 ] ) * bloomTintColors[ 1 ] * texture2D( blurTexture2, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 2 ] ) * bloomTintColors[ 2 ] * texture2D( blurTexture3, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 3 ] ) * bloomTintColors[ 3 ] * texture2D( blurTexture4, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 4 ] ) * bloomTintColors[ 4 ] * texture2D( blurTexture5, vUv ).rgb
+					);
+
+					float bloomAlpha = max( bloom.r, max( bloom.g, bloom.b ) );
+					gl_FragColor = vec4( bloom, bloomAlpha );
+
 				}`
 		} );
 
@@ -3362,10 +4444,18 @@ class RenderableSprite {
 
 }
 
-//
-
+/**
+ * This class can project a given scene in 3D space into a 2D representation
+ * used for rendering with a 2D API. `Projector` is currently used by {@link SVGRenderer}
+ * and was previously used by the legacy `CanvasRenderer`.
+ *
+ * @three_import import { Projector } from 'three/addons/renderers/Projector.js';
+ */
 class Projector {
 
+	/**
+	 * Constructs a new projector.
+	 */
 	constructor() {
 
 		let _object, _objectCount, _objectPoolLength = 0,
@@ -3373,7 +4463,7 @@ class Projector {
 			_face, _faceCount, _facePoolLength = 0,
 			_line, _lineCount, _linePoolLength = 0,
 			_sprite, _spriteCount, _spritePoolLength = 0,
-			_modelMatrix;
+			_modelMatrix, _clipInput = [], _clipOutput = [];
 
 		const
 
@@ -3393,7 +4483,19 @@ class Projector {
 
 			_frustum = new Frustum(),
 
-			_objectPool = [], _vertexPool = [], _facePool = [], _linePool = [], _spritePool = [];
+			_objectPool = [], _vertexPool = [], _facePool = [], _linePool = [], _spritePool = [],
+
+			_clipVertexPool = [],
+			_clipPos1 = new Vector4(),
+			_clipPos2 = new Vector4(),
+			_clipPos3 = new Vector4(),
+			_screenVertexPool = [],
+			_clipInputVertices = [ null, null, null ],
+
+			_clipPlanes = [
+				{ sign: 1 },
+				{ sign: -1 }
+			];
 
 		//
 
@@ -3532,48 +4634,165 @@ class Projector {
 				const v2 = _vertexPool[ b ];
 				const v3 = _vertexPool[ c ];
 
-				if ( checkTriangleVisibility( v1, v2, v3 ) === false ) return;
+				// Get homogeneous clip space positions (before perspective divide)
+				_clipPos1.copy( v1.positionWorld ).applyMatrix4( _viewProjectionMatrix );
+				_clipPos2.copy( v2.positionWorld ).applyMatrix4( _viewProjectionMatrix );
+				_clipPos3.copy( v3.positionWorld ).applyMatrix4( _viewProjectionMatrix );
 
-				if ( material.side === DoubleSide || checkBackfaceCulling( v1, v2, v3 ) === true ) {
+				// Check if triangle needs clipping
+				const nearDist1 = _clipPos1.z + _clipPos1.w;
+				const nearDist2 = _clipPos2.z + _clipPos2.w;
+				const nearDist3 = _clipPos3.z + _clipPos3.w;
+				const farDist1 = - _clipPos1.z + _clipPos1.w;
+				const farDist2 = - _clipPos2.z + _clipPos2.w;
+				const farDist3 = - _clipPos3.z + _clipPos3.w;
 
-					_face = getNextFaceInPool();
+				// Check if completely outside
+				if ( ( nearDist1 < 0 && nearDist2 < 0 && nearDist3 < 0 ) ||
+					( farDist1 < 0 && farDist2 < 0 && farDist3 < 0 ) ) {
 
-					_face.id = object.id;
-					_face.v1.copy( v1 );
-					_face.v2.copy( v2 );
-					_face.v3.copy( v3 );
-					_face.z = ( v1.positionScreen.z + v2.positionScreen.z + v3.positionScreen.z ) / 3;
-					_face.renderOrder = object.renderOrder;
+					return; // Triangle completely clipped
 
-					// face normal
-					_vector3.subVectors( v3.position, v2.position );
-					_vector4.subVectors( v1.position, v2.position );
-					_vector3.cross( _vector4 );
-					_face.normalModel.copy( _vector3 );
-					_face.normalModel.applyMatrix3( normalMatrix ).normalize();
+				}
 
-					for ( let i = 0; i < 3; i ++ ) {
+				// Check if completely inside (no clipping needed)
+				if ( nearDist1 >= 0 && nearDist2 >= 0 && nearDist3 >= 0 &&
+					farDist1 >= 0 && farDist2 >= 0 && farDist3 >= 0 ) {
 
-						const normal = _face.vertexNormalsModel[ i ];
-						normal.fromArray( normals, arguments[ i ] * 3 );
-						normal.applyMatrix3( normalMatrix ).normalize();
+					// No clipping needed - use original path
+					if ( checkTriangleVisibility( v1, v2, v3 ) === false ) return;
 
-						const uv = _face.uvs[ i ];
-						uv.fromArray( uvs, arguments[ i ] * 2 );
+					if ( material.side === DoubleSide || checkBackfaceCulling( v1, v2, v3 ) === true ) {
+
+						_face = getNextFaceInPool();
+
+						_face.id = object.id;
+						_face.v1.copy( v1 );
+						_face.v2.copy( v2 );
+						_face.v3.copy( v3 );
+						_face.z = ( v1.positionScreen.z + v2.positionScreen.z + v3.positionScreen.z ) / 3;
+						_face.renderOrder = object.renderOrder;
+
+						// face normal
+						_vector3.subVectors( v3.position, v2.position );
+						_vector4.subVectors( v1.position, v2.position );
+						_vector3.cross( _vector4 );
+						_face.normalModel.copy( _vector3 );
+						_face.normalModel.applyMatrix3( normalMatrix ).normalize();
+
+						for ( let i = 0; i < 3; i ++ ) {
+
+							const normal = _face.vertexNormalsModel[ i ];
+							normal.fromArray( normals, arguments[ i ] * 3 );
+							normal.applyMatrix3( normalMatrix ).normalize();
+
+							const uv = _face.uvs[ i ];
+							uv.fromArray( uvs, arguments[ i ] * 2 );
+
+						}
+
+						_face.vertexNormalsLength = 3;
+
+						_face.material = material;
+
+						if ( material.vertexColors ) {
+
+							_face.color.fromArray( colors, a * 3 );
+
+						}
+
+						_renderData.elements.push( _face );
 
 					}
 
-					_face.vertexNormalsLength = 3;
+					return;
 
-					_face.material = material;
+				}
 
-					if ( material.vertexColors ) {
+				// Triangle needs clipping
+				_clipInputVertices[ 0 ] = _clipPos1;
+				_clipInputVertices[ 1 ] = _clipPos2;
+				_clipInputVertices[ 2 ] = _clipPos3;
+				const clippedCount = clipTriangle( _clipInputVertices );
 
-						_face.color.fromArray( colors, a * 3 );
+				if ( clippedCount < 3 ) return; // Triangle completely clipped
+
+				// Perform perspective divide on clipped vertices and create screen vertices
+				for ( let i = 0; i < clippedCount; i ++ ) {
+
+					const cv = _clipInput[ i ];
+
+					// Get or create renderable vertex from pool
+					let sv = _screenVertexPool[ i ];
+					if ( ! sv ) {
+
+						sv = new RenderableVertex();
+						_screenVertexPool[ i ] = sv;
 
 					}
 
-					_renderData.elements.push( _face );
+					// Perform perspective divide
+					const invW = 1 / cv.w;
+					sv.positionScreen.set( cv.x * invW, cv.y * invW, cv.z * invW, 1 );
+
+					// Interpolate world position (simplified - using weighted average based on barycentric-like coords)
+					// For a proper implementation, we'd need to track interpolation weights
+					sv.positionWorld.copy( v1.positionWorld );
+
+					sv.visible = true;
+
+				}
+
+				// Triangulate the clipped polygon (simple fan triangulation)
+				for ( let i = 1; i < clippedCount - 1; i ++ ) {
+
+					const tv1 = _screenVertexPool[ 0 ];
+					const tv2 = _screenVertexPool[ i ];
+					const tv3 = _screenVertexPool[ i + 1 ];
+
+					if ( material.side === DoubleSide || checkBackfaceCulling( tv1, tv2, tv3 ) === true ) {
+
+						_face = getNextFaceInPool();
+
+						_face.id = object.id;
+						_face.v1.copy( tv1 );
+						_face.v2.copy( tv2 );
+						_face.v3.copy( tv3 );
+						_face.z = ( tv1.positionScreen.z + tv2.positionScreen.z + tv3.positionScreen.z ) / 3;
+						_face.renderOrder = object.renderOrder;
+
+						// face normal - use original triangle's normal
+						_vector3.subVectors( v3.position, v2.position );
+						_vector4.subVectors( v1.position, v2.position );
+						_vector3.cross( _vector4 );
+						_face.normalModel.copy( _vector3 );
+						_face.normalModel.applyMatrix3( normalMatrix ).normalize();
+
+						// Use original vertex normals and UVs (simplified - proper impl would interpolate)
+						for ( let j = 0; j < 3; j ++ ) {
+
+							const normal = _face.vertexNormalsModel[ j ];
+							normal.fromArray( normals, arguments[ j ] * 3 );
+							normal.applyMatrix3( normalMatrix ).normalize();
+
+							const uv = _face.uvs[ j ];
+							uv.fromArray( uvs, arguments[ j ] * 2 );
+
+						}
+
+						_face.vertexNormalsLength = 3;
+
+						_face.material = material;
+
+						if ( material.vertexColors ) {
+
+							_face.color.fromArray( colors, a * 3 );
+
+						}
+
+						_renderData.elements.push( _face );
+
+					}
 
 				}
 
@@ -3645,6 +4864,16 @@ class Projector {
 
 		}
 
+		/**
+		 * Projects the given scene in 3D space into a 2D representation. The result
+		 * is an object with renderable items.
+		 *
+		 * @param {Object3D} scene - A scene or any other type of 3D object.
+		 * @param {Camera} camera - The camera.
+		 * @param {boolean} sortObjects - Whether to sort objects or not.
+		 * @param {boolean} sortElements - Whether to sort elements (faces, lines and sprites) or not.
+		 * @return {{objects:Array<Objects>,lights:Array<Objects>,elements:Array<Objects>}} The projected scene as renderable objects.
+		 */
 		this.projectScene = function ( scene, camera, sortObjects, sortElements ) {
 
 			_faceCount = 0;
@@ -3672,7 +4901,7 @@ class Projector {
 
 			if ( sortObjects === true ) {
 
-				_renderData.objects.sort( painterSort );
+				painterSortStable( _renderData.objects, 0, _renderData.objects.length );
 
 			}
 
@@ -3938,7 +5167,7 @@ class Projector {
 
 			if ( sortElements === true ) {
 
-				_renderData.elements.sort( painterSort );
+				painterSortStable( _renderData.elements, 0, _renderData.elements.length );
 
 			}
 
@@ -4082,6 +5311,115 @@ class Projector {
 
 		}
 
+		function painterSortStable( array, start, length ) {
+
+			// A stable insertion sort for sorting render items
+			// This avoids the GC overhead of Array.prototype.sort()
+
+			for ( let i = start + 1; i < start + length; i ++ ) {
+
+				const item = array[ i ];
+				let j = i - 1;
+
+				while ( j >= start && painterSort( array[ j ], item ) > 0 ) {
+
+					array[ j + 1 ] = array[ j ];
+					j --;
+
+				}
+
+				array[ j + 1 ] = item;
+
+			}
+
+		}
+
+		// Sutherland-Hodgman triangle clipping in homogeneous clip space
+		// Returns count of vertices in clipped polygon (0 if completely clipped, 3+ if partially clipped)
+		// Result vertices are in _clipInput array
+		function clipTriangle( vertices ) {
+
+			// Initialize input with the three input vertices
+			_clipInput[ 0 ] = vertices[ 0 ];
+			_clipInput[ 1 ] = vertices[ 1 ];
+			_clipInput[ 2 ] = vertices[ 2 ];
+
+			let inputCount = 3;
+			let outputCount = 0;
+
+			for ( let p = 0; p < _clipPlanes.length; p ++ ) {
+
+				const plane = _clipPlanes[ p ];
+				outputCount = 0;
+
+				if ( inputCount === 0 ) break;
+
+				for ( let i = 0; i < inputCount; i ++ ) {
+
+					const v1 = _clipInput[ i ];
+					const v2 = _clipInput[ ( i + 1 ) % inputCount ];
+
+					const d1 = plane.sign * v1.z + v1.w;
+					const d2 = plane.sign * v2.z + v2.w;
+
+					const v1Inside = d1 >= 0;
+					const v2Inside = d2 >= 0;
+
+					if ( v1Inside && v2Inside ) {
+
+						// Both inside - add v1
+						_clipOutput[ outputCount ++ ] = v1;
+
+					} else if ( v1Inside && ! v2Inside ) {
+
+						// v1 inside, v2 outside - add v1 and intersection
+						_clipOutput[ outputCount ++ ] = v1;
+
+						const t = d1 / ( d1 - d2 );
+						let intersection = _clipVertexPool[ outputCount ];
+						if ( ! intersection ) {
+
+							intersection = new Vector4();
+							_clipVertexPool[ outputCount ] = intersection;
+
+						}
+
+						intersection.lerpVectors( v1, v2, t );
+						_clipOutput[ outputCount ++ ] = intersection;
+
+					} else if ( ! v1Inside && v2Inside ) {
+
+						// v1 outside, v2 inside - add intersection only
+						const t = d1 / ( d1 - d2 );
+						let intersection = _clipVertexPool[ outputCount ];
+						if ( ! intersection ) {
+
+							intersection = new Vector4();
+							_clipVertexPool[ outputCount ] = intersection;
+
+						}
+
+						intersection.lerpVectors( v1, v2, t );
+						_clipOutput[ outputCount ++ ] = intersection;
+
+					}
+
+					// Both outside - add nothing
+
+				}
+
+				// Swap input/output
+				const temp = _clipInput;
+				_clipInput = _clipOutput;
+				_clipOutput = temp;
+				inputCount = outputCount;
+
+			}
+
+			return inputCount;
+
+		}
+
 		function clipLine( s1, s2 ) {
 
 			let alpha1 = 0, alpha2 = 1;
@@ -4157,8 +5495,32 @@ class Projector {
 
 }
 
+/**
+ * This renderer an be used to render geometric data using SVG. The produced vector
+ * graphics are particular useful in the following use cases:
+ *
+ * - Animated logos or icons.
+ * - Interactive 2D/3D diagrams or graphs.
+ * - Interactive maps.
+ * - Complex or animated user interfaces.
+ *
+ * `SVGRenderer` has various advantages. It produces crystal-clear and sharp output which
+ * is independent of the actual viewport resolution.SVG elements can be styled via CSS.
+ * And they have good accessibility since it's possible to add metadata like title or description
+ * (useful for search engines or screen readers).
+ *
+ * There are, however, some important limitations:
+ * - No advanced shading.
+ * - No texture support.
+ * - No shadow support.
+ *
+ * @three_import import { SVGRenderer } from 'three/addons/renderers/SVGRenderer.js';
+ */
 class SVGRenderer {
 
+	/**
+	 * Constructs a new SVG renderer.
+	 */
 	constructor() {
 
 		let _renderData, _elements, _lights,
@@ -4168,6 +5530,8 @@ class SVGRenderer {
 
 			_svgNode,
 			_pathCount = 0,
+			_svgObjectCount = 0,
+			_renderListCount = 0,
 
 			_precision = null,
 			_quality = 1,
@@ -4194,20 +5558,66 @@ class SVGRenderer {
 			_viewProjectionMatrix = new Matrix4(),
 
 			_svgPathPool = [],
+			_svgObjectsPool = [],
+			_renderListPool = [],
 
 			_projector = new Projector(),
 			_svg = document.createElementNS( 'http://www.w3.org/2000/svg', 'svg' );
 
+		/**
+		 * The DOM where the renderer appends its child-elements.
+		 *
+		 * @type {SVGSVGElement}
+		 */
 		this.domElement = _svg;
 
+		/**
+		 * Whether to automatically perform a clear before a render call or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoClear = true;
+
+		/**
+		 * Whether to sort 3D objects or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.sortObjects = true;
+
+		/**
+		 * Whether to sort elements or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.sortElements = true;
 
+		/**
+		 * Number of fractional pixels to enlarge polygons in order to
+		 * prevent anti-aliasing gaps. Range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 0.5
+		 */
 		this.overdraw = 0.5;
 
+		/**
+		 * The output color space.
+		 *
+		 * @type {(SRGBColorSpace|LinearSRGBColorSpace)}
+		 * @default SRGBColorSpace
+		 */
 		this.outputColorSpace = SRGBColorSpace;
 
+		/**
+		 * Provides information about the number of
+		 * rendered vertices and faces.
+		 *
+		 * @type {Object}
+		 */
 		this.info = {
 
 			render: {
@@ -4219,6 +5629,12 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Sets the render quality. Setting to `high` makes the browser improve SVG quality
+		 * over rendering speed and geometric precision.
+		 *
+		 * @param {('low'|'high')} quality - The quality.
+		 */
 		this.setQuality = function ( quality ) {
 
 			switch ( quality ) {
@@ -4230,6 +5646,11 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Sets the clear color.
+		 *
+		 * @param {(number|Color|string)} color - The clear color to set.
+		 */
 		this.setClearColor = function ( color ) {
 
 			_clearColor.set( color );
@@ -4238,6 +5659,12 @@ class SVGRenderer {
 
 		this.setPixelRatio = function () {};
 
+		/**
+		 * Resizes the renderer to the given width and height.
+		 *
+		 * @param {number} width - The width of the renderer.
+		 * @param {number} height - The height of the renderer.
+		 */
 		this.setSize = function ( width, height ) {
 
 			_svgWidth = width; _svgHeight = height;
@@ -4252,6 +5679,11 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Returns an object containing the width and height of the renderer.
+		 *
+		 * @return {{width:number,height:number}} The size of the renderer.
+		 */
 		this.getSize = function () {
 
 			return {
@@ -4261,6 +5693,11 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Sets the precision of the data used to create a paths.
+		 *
+		 * @param {number} precision - The precision to set.
+		 */
 		this.setPrecision = function ( precision ) {
 
 			_precision = precision;
@@ -4285,6 +5722,52 @@ class SVGRenderer {
 
 		}
 
+		function renderSort( a, b ) {
+
+			const aOrder = a.data.renderOrder !== undefined ? a.data.renderOrder : 0;
+			const bOrder = b.data.renderOrder !== undefined ? b.data.renderOrder : 0;
+
+			if ( aOrder !== bOrder ) {
+
+				return aOrder - bOrder;
+
+			} else {
+
+				const aZ = a.data.z !== undefined ? a.data.z : 0;
+				const bZ = b.data.z !== undefined ? b.data.z : 0;
+
+				return bZ - aZ; // Painter's algorithm: far to near
+
+			}
+
+		}
+
+		function arraySortStable( array, start, length ) {
+
+			// A stable insertion sort for sorting the render list
+			// This avoids the GC overhead of Array.prototype.sort()
+
+			for ( let i = start + 1; i < start + length; i ++ ) {
+
+				const item = array[ i ];
+				let j = i - 1;
+
+				while ( j >= start && renderSort( array[ j ], item ) > 0 ) {
+
+					array[ j + 1 ] = array[ j ];
+					j --;
+
+				}
+
+				array[ j + 1 ] = item;
+
+			}
+
+		}
+
+		/**
+		 * Performs a manual clear with the defined clear color.
+		 */
 		this.clear = function () {
 
 			removeChildNodes();
@@ -4292,6 +5775,12 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Renders the given scene using the given camera.
+		 *
+		 * @param {Object3D} scene - A scene or any other type of 3D object.
+		 * @param {Camera} camera - The camera.
+		 */
 		this.render = function ( scene, camera ) {
 
 			if ( camera instanceof Camera === false ) {
@@ -4328,10 +5817,7 @@ class SVGRenderer {
 
 			calculateLights( _lights );
 
-			 // reset accumulated path
-
-			_currentPath = '';
-			_currentStyle = '';
+			_renderListCount = 0;
 
 			for ( let e = 0, el = _elements.length; e < el; e ++ ) {
 
@@ -4340,71 +5826,15 @@ class SVGRenderer {
 
 				if ( material === undefined || material.opacity === 0 ) continue;
 
-				_elemBox.makeEmpty();
-
-				if ( element instanceof RenderableSprite ) {
-
-					_v1 = element;
-					_v1.x *= _svgWidthHalf; _v1.y *= - _svgHeightHalf;
-
-					renderSprite( _v1, element, material );
-
-				} else if ( element instanceof RenderableLine ) {
-
-					_v1 = element.v1; _v2 = element.v2;
-
-					_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
-					_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
-
-					_elemBox.setFromPoints( [ _v1.positionScreen, _v2.positionScreen ] );
-
-					if ( _clipBox.intersectsBox( _elemBox ) === true ) {
-
-						renderLine( _v1, _v2, material );
-
-					}
-
-				} else if ( element instanceof RenderableFace ) {
-
-					_v1 = element.v1; _v2 = element.v2; _v3 = element.v3;
-
-					if ( _v1.positionScreen.z < -1 || _v1.positionScreen.z > 1 ) continue;
-					if ( _v2.positionScreen.z < -1 || _v2.positionScreen.z > 1 ) continue;
-					if ( _v3.positionScreen.z < -1 || _v3.positionScreen.z > 1 ) continue;
-
-					_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
-					_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
-					_v3.positionScreen.x *= _svgWidthHalf; _v3.positionScreen.y *= - _svgHeightHalf;
-
-					if ( this.overdraw > 0 ) {
-
-						expand( _v1.positionScreen, _v2.positionScreen, this.overdraw );
-						expand( _v2.positionScreen, _v3.positionScreen, this.overdraw );
-						expand( _v3.positionScreen, _v1.positionScreen, this.overdraw );
-
-					}
-
-					_elemBox.setFromPoints( [
-						_v1.positionScreen,
-						_v2.positionScreen,
-						_v3.positionScreen
-					] );
-
-					if ( _clipBox.intersectsBox( _elemBox ) === true ) {
-
-						renderFace3( _v1, _v2, _v3, element, material );
-
-					}
-
-				}
+				getRenderItem( _renderListCount ++, 'element', element, material );
 
 			}
 
-			flushPath(); // just to flush last svg:path
+			_svgObjectCount = 0;
 
 			scene.traverseVisible( function ( object ) {
 
-				 if ( object.isSVGObject ) {
+				if ( object.isSVGObject ) {
 
 					_vector3.setFromMatrixPosition( object.matrixWorld );
 					_vector3.applyMatrix4( _viewProjectionMatrix );
@@ -4414,14 +5844,108 @@ class SVGRenderer {
 					const x = _vector3.x * _svgWidthHalf;
 					const y = - _vector3.y * _svgHeightHalf;
 
-					const node = object.node;
-					node.setAttribute( 'transform', 'translate(' + x + ',' + y + ')' );
+					const svgObject = getSVGObjectData( _svgObjectCount ++ );
 
-					_svg.appendChild( node );
+					svgObject.node = object.node;
+					svgObject.x = x;
+					svgObject.y = y;
+					svgObject.z = _vector3.z;
+					svgObject.renderOrder = object.renderOrder;
+
+					getRenderItem( _renderListCount ++, 'svgObject', svgObject, null );
 
 				}
 
 			} );
+
+			if ( this.sortElements ) {
+
+				arraySortStable( _renderListPool, 0, _renderListCount );
+
+			}
+
+			// Reset accumulated path
+			_currentPath = '';
+			_currentStyle = '';
+
+			// Render in sorted order
+			for ( let i = 0; i < _renderListCount; i ++ ) {
+
+				const item = _renderListPool[ i ];
+
+				if ( item.type === 'svgObject' ) {
+
+					flushPath(); // Flush any accumulated paths before inserting SVG node
+
+					const svgObject = item.data;
+					const node = svgObject.node;
+					node.setAttribute( 'transform', 'translate(' + svgObject.x + ',' + svgObject.y + ')' );
+					_svg.appendChild( node );
+
+				} else {
+
+					const element = item.data;
+					const material = item.material;
+
+					_elemBox.makeEmpty();
+
+					if ( element instanceof RenderableSprite ) {
+
+						_v1 = element;
+						_v1.x *= _svgWidthHalf; _v1.y *= - _svgHeightHalf;
+
+						renderSprite( _v1, element, material );
+
+					} else if ( element instanceof RenderableLine ) {
+
+						_v1 = element.v1; _v2 = element.v2;
+
+						_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
+						_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
+
+						_elemBox.setFromPoints( [ _v1.positionScreen, _v2.positionScreen ] );
+
+						if ( _clipBox.intersectsBox( _elemBox ) === true ) {
+
+							renderLine( _v1, _v2, material );
+
+						}
+
+					} else if ( element instanceof RenderableFace ) {
+
+						_v1 = element.v1; _v2 = element.v2; _v3 = element.v3;
+
+						_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
+						_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
+						_v3.positionScreen.x *= _svgWidthHalf; _v3.positionScreen.y *= - _svgHeightHalf;
+
+						if ( this.overdraw > 0 ) {
+
+							expand( _v1.positionScreen, _v2.positionScreen, this.overdraw );
+							expand( _v2.positionScreen, _v3.positionScreen, this.overdraw );
+							expand( _v3.positionScreen, _v1.positionScreen, this.overdraw );
+
+						}
+
+						_elemBox.setFromPoints( [
+							_v1.positionScreen,
+							_v2.positionScreen,
+							_v3.positionScreen
+						] );
+
+						if ( _clipBox.intersectsBox( _elemBox ) === true ) {
+
+							renderFace3( _v1, _v2, _v3, element, material );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			flushPath(); // Flush any remaining paths
 
 		};
 
@@ -4661,21 +6185,71 @@ class SVGRenderer {
 
 		function getPathNode( id ) {
 
-			if ( _svgPathPool[ id ] == null ) {
+			let path = _svgPathPool[ id ];
 
-				_svgPathPool[ id ] = document.createElementNS( 'http://www.w3.org/2000/svg', 'path' );
+			if ( path === undefined ) {
+
+				path = document.createElementNS( 'http://www.w3.org/2000/svg', 'path' );
 
 				if ( _quality == 0 ) {
 
-					_svgPathPool[ id ].setAttribute( 'shape-rendering', 'crispEdges' ); //optimizeSpeed
+					path.setAttribute( 'shape-rendering', 'crispEdges' ); //optimizeSpeed
 
 				}
 
-				return _svgPathPool[ id ];
+				_svgPathPool[ id ] = path;
 
 			}
 
-			return _svgPathPool[ id ];
+			return path;
+
+		}
+
+		function getSVGObjectData( id ) {
+
+			let svgObject = _svgObjectsPool[ id ];
+
+			if ( svgObject === undefined ) {
+
+				svgObject = {
+					node: null,
+					x: 0,
+					y: 0,
+					z: 0,
+					renderOrder: 0
+				};
+
+				_svgObjectsPool[ id ] = svgObject;
+
+			}
+
+			return svgObject;
+
+		}
+
+		function getRenderItem( id, type, data, material ) {
+
+			let item = _renderListPool[ id ];
+
+			if ( item === undefined ) {
+
+				item = {
+					type: type,
+					data: data,
+					material: material
+				};
+
+				_renderListPool[ id ] = item;
+
+				return item;
+
+			}
+
+			item.type = type;
+			item.data = data;
+			item.material = material;
+
+			return item;
 
 		}
 

@@ -75,7 +75,6 @@ This initializes a helix with its axis in Z direction (rtype=kHelixZ).
 
 Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
 
-ClassImp(THelix);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all helix parameters.

@@ -1,0 +1,18 @@
+<lcgdict>
+<class name="reco::EvtPlane" ClassVersion="10">
+ <version ClassVersion="10" checksum="3204318766"/>
+</class>
+<class name="edm::Wrapper<reco::EvtPlane>"/>
+<class name="reco::Centrality" ClassVersion="10">
+ <version ClassVersion="10" checksum="3770933457"/>
+</class>
+<class name="edm::Wrapper<reco::Centrality>"/>
+<class name="reco::CentralityCollection" />
+<class name="edm::Wrapper<reco::CentralityCollection>" />
+<class name="reco::EvtPlaneCollection" />
+<class name="edm::Wrapper<reco::EvtPlaneCollection>" />
+<class name="pat::HeavyIon"  ClassVersion="10">
+ <version ClassVersion="10" checksum="934677092"/>
+</class>
+<class name="edm::Wrapper<pat::HeavyIon >" />
+</lcgdict>

@@ -1,0 +1,27 @@
+# Additional valgrind suppression file for ROOT.
+#
+# To use, run valgrind with:
+#   valgrind --suppressions=valgrind-suppression_ROOT.supp ...
+#
+# This file suppresses valgrind reports that probably need to be fixed
+# but have not yet been evaluated. This is meant to silence your output,
+# by removing warnings that are not under your control.
+# It only suppresses leaks, no errors!
+
+
+#########  Intentional test errors
+
+
+
+#########  GRAPHICS
+{
+   TStyle's palette (TArrayI) is not freed
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN7TArrayI3SetEi
+   fun:_ZN6TColor10SetPaletteEiPi
+   fun:_ZN6TStyle10SetPaletteEiPi
+   fun:_ZN6TStyle5ResetEPKc
+   fun:_ZN6TStyleC1EPKcS1_
+   fun:_ZN6TStyle11BuildStylesEv
+}

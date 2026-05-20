@@ -32,7 +32,6 @@ See also:
    http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 */
 
-ClassImp(TGLFBO);
 
 Bool_t TGLFBO::fgRescaleToPow2       = kTRUE; // For ATI.
 Bool_t TGLFBO::fgMultiSampleNAWarned = kFALSE;
@@ -75,7 +74,9 @@ void TGLFBO::Init(int w, int h, int ms_samples)
    static const std::string eh("TGLFBO::Init ");
 
    // Should be replaced with ARB_framebuffer_object (SLC6).
-   if (!GLEW_EXT_framebuffer_object)
+   // Similar for GL_EXT_framebuffer_multisample.
+   // This then requires changing all relevant EXT calls and enums.
+   if ( ! GLAD_GL_EXT_framebuffer_object)
    {
       throw std::runtime_error(eh + "GL_EXT_framebuffer_object extension required for FBO.");
    }
@@ -96,7 +97,7 @@ void TGLFBO::Init(int w, int h, int ms_samples)
       }
    }
 
-   if (ms_samples > 0 && ! GLEW_EXT_framebuffer_multisample)
+   if (ms_samples > 0 && ! GLAD_GL_EXT_framebuffer_multisample)
    {
       if (!fgMultiSampleNAWarned)
       {
@@ -124,7 +125,7 @@ void TGLFBO::Init(int w, int h, int ms_samples)
 
    if (fMSSamples > 0)
    {
-      if (GLEW_NV_framebuffer_multisample_coverage)
+      if (GLAD_GL_NV_framebuffer_multisample_coverage)
       {
          GLint n_modes;
          glGetIntegerv(GL_MAX_MULTISAMPLE_COVERAGE_MODES_NV, &n_modes);

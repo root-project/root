@@ -153,10 +153,7 @@ namespace HistFactory{
     }
 
     // split dataset
-    std::unique_ptr<TList> dataByCategory{data->split(*cat)};
-    if(verbose) dataByCategory->Print();
-    // note :
-    // RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject("");
+    std::vector<std::unique_ptr<RooAbsData>> dataByCategory{data->split(*cat)};
 
     // loop over channels
     auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
@@ -169,7 +166,10 @@ namespace HistFactory{
       if(verbose) std::cout << "Getting data for channel: " << ChannelName << std::endl;
       ChannelBinDataMap[ ChannelName ] = std::vector<double>();
 
-      RooAbsData* dataForChan = static_cast<RooAbsData*>(dataByCategory->FindObject(nameIdx.first.c_str()));
+      auto found = std::find_if(dataByCategory.begin(), dataByCategory.end(), [&](auto const &item) {
+        return nameIdx.first == item->GetName();
+      });
+      RooAbsData *dataForChan = found != dataByCategory.end() ? found->get() : nullptr;
       if(verbose) dataForChan->Print();
 
       // Generate observables defined by the pdf associated with this state
@@ -190,6 +190,8 @@ namespace HistFactory{
 
       // multidimensional way to get n
       // credit goes to P. Hamilton
+      std::vector<double> &channelBin = ChannelBinDataMap[ChannelName];
+      channelBin.reserve(dataForChan->numEntries());
       for (int i = 0; i < dataForChan->numEntries(); i++) {
         const RooArgSet *tmpargs = dataForChan->get(i);
          if (verbose)
@@ -197,12 +199,10 @@ namespace HistFactory{
          const double n = dataForChan->weight();
          if (verbose)
            std::cout << "n" << i << " = " << n << std::endl;
-         ChannelBinDataMap[ChannelName].push_back(n);
+         channelBin.push_back(n);
        }
       
     } // End Loop Over Categories
-
-    dataByCategory->Delete();
   }
 
 

@@ -47,7 +47,6 @@ geometries.
 
 #include "TGeoBuilder.h"
 
-ClassImp(TGeoBuilder);
 
 TGeoBuilder *TGeoBuilder::fgInstance = nullptr;
 
@@ -171,7 +170,7 @@ TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium, Double_t 
 TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium, Double_t dx, Double_t dy, Double_t dz,
                                   Double_t alpha, Double_t theta, Double_t phi)
 {
-   if (TMath::Abs(alpha) < TGeoShape::Tolerance() && TMath::Abs(theta) < TGeoShape::Tolerance()) {
+   if (std::abs(alpha) < TGeoShape::Tolerance() && std::abs(theta) < TGeoShape::Tolerance()) {
       Warning("MakePara", "parallelepiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
@@ -708,8 +707,8 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t 
       else
          amother->AddNodeOverlap(volume, nr, new TGeoCombiTrans(x, y, z, matrix));
    } else {
-      if (TMath::Abs(x) < TGeoShape::Tolerance() && TMath::Abs(y) < TGeoShape::Tolerance() &&
-          TMath::Abs(z) < TGeoShape::Tolerance()) {
+      if (std::abs(x) < TGeoShape::Tolerance() && std::abs(y) < TGeoShape::Tolerance() &&
+          std::abs(z) < TGeoShape::Tolerance()) {
          if (isOnly)
             amother->AddNode(volume, nr);
          else
@@ -860,8 +859,8 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t 
       else
          amother->AddNodeOverlap(volume, nr, new TGeoCombiTrans(x, y, z, matrix));
    } else {
-      if (TMath::Abs(x) < TGeoShape::Tolerance() && TMath::Abs(y) < TGeoShape::Tolerance() &&
-          TMath::Abs(z) < TGeoShape::Tolerance()) {
+      if (std::abs(x) < TGeoShape::Tolerance() && std::abs(y) < TGeoShape::Tolerance() &&
+          std::abs(z) < TGeoShape::Tolerance()) {
          if (isOnly)
             amother->AddNode(volume, nr);
          else

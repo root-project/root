@@ -56,6 +56,7 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooDerivative.h"
 #include "RooStringVar.h"
 #include "TROOT.h"
+#include "RooFitImplHelpers.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooChi2Var.h"
@@ -319,7 +320,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   }
   _args.push_back(tmp.substr(start_tok, end_tok));
 
-  // Try CINT interface
+  // Try Cling interface
   pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
   if (ca.first.empty()) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << std::endl ;
@@ -342,10 +343,10 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     return nullptr ;
   }
 
-  // Now construct CINT constructor spec, start with mandatory name and title args
+  // Now construct Cling constructor spec, start with mandatory name and title args
   string cintExpr(Form("new %s(\"%s\",\"%s\"",className,objName,objName)) ;
 
-  // Install argument in static data member to be accessed below through static CINT interface functions
+  // Install argument in static data member to be accessed below through static Cling interface functions
   _of = this ;
 
 
@@ -451,7 +452,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << cintExpr << std::endl ;
 
-  // Call CINT to perform constructor call. Catch any error thrown by argument conversion method
+  // Call Cling to perform constructor call. Catch any error thrown by argument conversion method
   if (std::unique_ptr<RooAbsArg> arg{reinterpret_cast<RooAbsArg*>(gROOT->ProcessLineFast(cintExpr.c_str()))}) {
     if (string(className)=="RooGenericPdf") {
       arg->setStringAttribute("factory_tag",Form("EXPR::%s(%s)",objName,varList)) ;
@@ -464,7 +465,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     RooAbsArg* ret = _ws->arg(objName) ;
     return ret ;
   } else {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in CINT constructor call to create object" << std::endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in Cling constructor call to create object" << std::endl ;
     logError() ;
     return nullptr ;
   }
@@ -761,7 +762,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// ```
 /// to create a pdf and its variables in one go. This nesting can be applied recursively e.g.
 /// ```
-///   SUM::model( f[0.5,0,1] * RooGaussian::g( x[-10,10], m[0], 3] ),
+///   SUM::model( f[0.5,0,1] * RooGaussian::g( x[-10,10], m[0], 3 ),
 ///                            RooChebychev::c( x, {a0[0.1],a1[0.2],a2[-0.3]} ))
 /// ```
 /// creates the sum of a Gaussian and a Chebychev and all its variables.
@@ -1263,65 +1264,50 @@ string RooFactoryWSTool::varTag(string& func, vector<string>& args)
 /// - If list has three args, these are interpreted as `xinit,xmin,xmax`
 /// - If list has one arg, this is interpreted as `xinit` and the variable is set as constant
 
-string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
+string RooFactoryWSTool::processCreateVar(string &func, vector<string> &args)
 {
+   // Determine if first arg is numeric
+   string first = *(args.begin());
+   bool isNumeric = isdigit(first[0]) || first[0] == '.' || first[0] == '+' || first[0] == '-';
 
-  // Determine if first arg is numeric
-  string first = *(args.begin()) ;
-  if (isdigit(first[0]) || first[0]=='.' || first[0]=='+' || first[0]=='-') {
-
-    // Create a RooRealVar
-    vector<string>::iterator ai = args.begin() ;
-    if (args.size()==1) {
-
-      // One argument, create constant variable with given value
-      double xinit = atof((ai)->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << std::endl ;
-      RooRealVar tmp(func.c_str(),func.c_str(),xinit) ;
-      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
-      if (_ws->import(tmp,Silence())) {
-   logError() ;
+   if (!isNumeric) {
+      // Create a RooAbsCategory
+      string allStates;
+      for (auto const &ai : args) {
+         if (!allStates.empty()) {
+            allStates += ",";
+         }
+         allStates += ai;
       }
+      createCategory(func.c_str(), allStates.c_str());
 
-    } else if (args.size()==2) {
+      return func;
+   }
+   std::unique_ptr<RooRealVar> tmp;
 
-      // Two arguments, create variable with given range
-      double xlo = atof((ai++)->c_str()) ;
-      double xhi = atof(ai->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xlo = " << xlo << " xhi = " << xhi << std::endl ;
-      RooRealVar tmp(func.c_str(),func.c_str(),xlo,xhi) ;
-      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
-      if (_ws->import(tmp,Silence())) {
-   logError() ;
+   if (args.size() == 1) {
+      double xinit = toDouble(args[0]);
+      tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xinit);
+
+   } else if (args.size() == 2) {
+      double xlo = toDouble(args[0]);
+      double xhi = toDouble(args[1]);
+      tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xlo, xhi);
+
+   } else if (args.size() == 3) {
+      double xinit = toDouble(args[0]);
+      double xlo = toDouble(args[1]);
+      double xhi = toDouble(args[2]);
+      tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xinit, xlo, xhi);
+   }
+
+   if (tmp) {
+      tmp->setStringAttribute("factory_tag", varTag(func, args).c_str());
+      if (_ws->import(*tmp, Silence())) {
+         logError();
       }
-
-    } else if (args.size()==3) {
-
-      // Three arguments, create variable with given initial value and range
-      double xinit = atof((ai++)->c_str()) ;
-      double xlo = atof((ai++)->c_str()) ;
-      double xhi = atof(ai->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << " xlo = " << xlo << " xhi = " << xhi << std::endl ;
-      RooRealVar tmp(func.c_str(),func.c_str(),xinit,xlo,xhi) ;
-      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
-      if (_ws->import(tmp,Silence())) {
-   logError() ;
-      }
-    }
-  } else {
-
-    // Create a RooAbsCategory
-    string allStates ;
-    for (vector<string>::iterator ai = args.begin() ; ai!=args.end() ; ++ai) {
-      if (!allStates.empty()) {
-   allStates += "," ;
-      }
-      allStates += *ai ;
-    }
-    createCategory(func.c_str(),allStates.c_str()) ;
-
-  }
-  return func ;
+   }
+   return func;
 }
 
 
@@ -1522,13 +1508,13 @@ void RooFactoryWSTool::checkIndex(UInt_t idx)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsArg reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsArg reference found in workspace
 
 RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
   {
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
-    return RooConst(atof(arg)) ;
+     return RooConst(toDouble(arg));
   }
 
   // Otherwise look it up by name in the workspace
@@ -1542,13 +1528,13 @@ RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsReal reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsReal reference found in workspace
 
 RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 {
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
-    return RooConst(atof(arg)) ;
+     return RooConst(toDouble(arg));
   }
 
   RooAbsArg* rarg = ws().arg(arg) ;
@@ -1565,7 +1551,7 @@ RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsRealLValue reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsRealLValue reference found in workspace
 
 RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 {
@@ -1588,7 +1574,7 @@ RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooRealVar reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooRealVar reference found in workspace
 
 RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 {
@@ -1603,7 +1589,7 @@ RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsPdf reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsPdf reference found in workspace
 
 RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 {
@@ -1618,7 +1604,7 @@ RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooResolutionModel reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooResolutionModel reference found in workspace
 
 RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 {
@@ -1637,7 +1623,7 @@ RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsCategory reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsCategory reference found in workspace
 
 RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 {
@@ -1655,7 +1641,7 @@ RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsCategoryLValue reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsCategoryLValue reference found in workspace
 
 RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 {
@@ -1674,7 +1660,7 @@ RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooCategory reference found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooCategory reference found in workspace
 
 RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 {
@@ -1690,7 +1676,7 @@ RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooArgSet of objects found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooArgSet of objects found in workspace
 
 RooArgSet RooFactoryWSTool::asSET(const char* arg)
 {
@@ -1717,7 +1703,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
     // If arg is a numeric string, make a RooConst() of it here
     if (tok[0]=='.' || tok[0]=='+' || tok[0] == '-' || isdigit(tok[0])) {
-      s.add(RooConst(atof(tok))) ;
+       s.add(RooConst(toDouble(tok)));
     } else if (tok[0] == '\'') {
        tok[strlen(tok) - 1] = 0;
        RooStringVar *sv = new RooStringVar(Form("string_set_item%03d", i++), "string_set_item", tok + 1);
@@ -1739,7 +1725,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooArgList of objects found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooArgList of objects found in workspace
 
 RooArgList RooFactoryWSTool::asLIST(const char* arg)
 {
@@ -1753,7 +1739,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
     // If arg is a numeric string, make a RooConst() of it here
     if (tok[0]=='.' || tok[0]=='+' || tok[0] == '-' || isdigit(tok[0])) {
-      l.add(RooConst(atof(tok))) ;
+       l.add(RooConst(toDouble(tok)));
     } else if (tok[0] == '\'') {
        tok[strlen(tok) - 1] = 0;
        RooStringVar *sv = new RooStringVar("listarg", "listarg", tok + 1);
@@ -1775,7 +1761,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsData object found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooAbsData object found in workspace
 
 RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 {
@@ -1789,7 +1775,7 @@ RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooDataHist object found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooDataHist object found in workspace
 
 RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 {
@@ -1806,7 +1792,7 @@ RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooDataSet object found in workspace
+/// Cling constructor interface, return constructor string argument `#idx` as RooDataSet object found in workspace
 
 RooDataSet& RooFactoryWSTool::asDSET(const char* arg)
 {
@@ -1837,7 +1823,7 @@ TObject& RooFactoryWSTool::asOBJ(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as const char*
+/// Cling constructor interface, return constructor string argument `#idx` as const char*
 
 const char* RooFactoryWSTool::asSTRING(const char* arg)
 {
@@ -1867,7 +1853,7 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as Int_t
+/// Cling constructor interface, return constructor string argument `#idx` as Int_t
 
 Int_t RooFactoryWSTool::asINT(const char* arg)
 {
@@ -1876,11 +1862,11 @@ Int_t RooFactoryWSTool::asINT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as double
+/// Cling constructor interface, return constructor string argument `#idx` as double
 
 double RooFactoryWSTool::asDOUBLE(const char* arg)
 {
-  return atof(arg) ;
+   return toDouble(arg);
 }
 
 
@@ -2028,16 +2014,16 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
    throw string(
       Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
       } else {
-   observablesValue = atof(pargv[2].c_str());
+         observablesValue = toDouble(pargv[2]);
       }
     }
 
     if (pargv.size() > 3)
       order = atoi(pargv[3].c_str());
     if (pargv.size() > 4)
-      eps1 = atof(pargv[4].c_str());
+       eps1 = toDouble(pargv[4]);
     if (pargv.size() > 5)
-      eps2 = atof(pargv[5].c_str());
+       eps2 = toDouble(pargv[5]);
 
     if (pargv.size() > 6) {
       throw string(

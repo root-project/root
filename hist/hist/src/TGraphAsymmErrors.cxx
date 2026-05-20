@@ -31,7 +31,6 @@
 #include <fstream>
 
 
-ClassImp(TGraphAsymmErrors);
 
 /** \class TGraphAsymmErrors
     \ingroup Graphs
@@ -290,6 +289,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
 ///  - format = `"%lg %lg %lg %lg"` read only 4 first columns into X, Y, EYL, EYH
 ///  - format = `"%lg %lg %lg %lg %lg %lg"` read only 6 first columns into X, Y, EXL, EXH, EYL, EYH
 ///
+/// If format string is empty, suitable value will be provided based on file extension
+///
 /// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
 /// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
 /// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters (`' ', '\\t', ',', ';'`)
@@ -315,18 +316,30 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
    std::string line;
    Int_t np = 0;
 
-   if (strcmp(option, "") == 0) { // No delimiters specified (standard constructor).
+   TString format_ = format;
 
-      Int_t ncol = TGraphErrors::CalculateScanfFields(format);  //count number of columns in format
+   if (!option || !*option) {  // No delimiters specified (standard constructor).
+
+      Int_t ncol = 6;
+      if (format_.IsNull()) {
+         if (fname.EndsWith(".txt", TString::kIgnoreCase))
+            format_ = "%lg %lg %lg %lg %lg %lg";
+         else if (fname.EndsWith(".tsv", TString::kIgnoreCase))
+            format_ = "%lg\t%lg\t%lg\t%lg\t%lg\t%lg";
+         else
+            format_ = "%lg,%lg,%lg,%lg,%lg,%lg";
+      } else
+         ncol = TGraphErrors::CalculateScanfFields(format);  //count number of columns in format
+
       Int_t res;
       while (std::getline(infile, line, '\n')) {
          exl = exh = eyl = eyh = 0.;
          if (ncol < 3) {
-            res = sscanf(line.c_str(), format, &x, &y);
+            res = sscanf(line.c_str(), format_.Data(), &x, &y);
          } else if (ncol < 5) {
-            res = sscanf(line.c_str(), format, &x, &y, &eyl, &eyh);
+            res = sscanf(line.c_str(), format_.Data(), &x, &y, &eyl, &eyh);
          } else {
-            res = sscanf(line.c_str(), format, &x, &y, &exl, &exh, &eyl, &eyh);
+            res = sscanf(line.c_str(), format_.Data(), &x, &y, &exl, &exh, &eyl, &eyh);
          }
          if (res < 2) {
             continue; //skip empty and ill-formed lines
@@ -340,7 +353,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
    } else { // A delimiter has been specified in "option"
 
       // Checking format and creating its boolean equivalent
-      TString format_ = TString(format) ;
       format_.ReplaceAll(" ", "") ;
       format_.ReplaceAll("\t", "") ;
       format_.ReplaceAll("lg", "") ;
@@ -1244,13 +1256,13 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
 {
    auto xname  = SavePrimitiveVector(out, "grae_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveVector(out, "grae_fy", fNpoints, fY);
-   auto exlname = SavePrimitiveVector(out, "grae_fexl", fNpoints, fEXlow);
-   auto exhname = SavePrimitiveVector(out, "grae_fexh", fNpoints, fEXhigh);
-   auto eylname = SavePrimitiveVector(out, "grae_feyl", fNpoints, fEYlow);
-   auto eyhname = SavePrimitiveVector(out, "grae_feyh", fNpoints, fEYhigh);
+   auto exlname = SavePrimitiveVector(out, "grae_fexl", fNpoints, fEXlow, 111);
+   auto exhname = SavePrimitiveVector(out, "grae_fexh", fNpoints, fEXhigh, 111);
+   auto eylname = SavePrimitiveVector(out, "grae_feyl", fNpoints, fEYlow, 111);
+   auto eyhname = SavePrimitiveVector(out, "grae_feyh", fNpoints, fEYhigh, 111);
 
    SavePrimitiveConstructor(out, Class(), "grae",
-                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+                            TString::Format("%d, %s.data(), %s.data(), %s, %s, %s, %s",
                                             fNpoints, xname.Data(), yname.Data(), exlname.Data(), exhname.Data(),
                                             eylname.Data(), eyhname.Data()),
                             kFALSE);

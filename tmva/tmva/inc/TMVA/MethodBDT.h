@@ -76,7 +76,7 @@ namespace TMVA {
 
       virtual ~MethodBDT( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
 
       // write all Events from the Tree into a vector of Events, that are
@@ -84,29 +84,29 @@ namespace TMVA {
       void InitEventSample();
 
       // optimize tuning parameters
-      virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
-      virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
+      std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA") override;
+      void SetTuneParameters(std::map<TString,Double_t> tuneParameters) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       // revoke training
-      void Reset( void );
+      void Reset( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML(void* parent);
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML(void* parent) override;
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const override;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr);
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr) override;
 
       // get the actual forest size (might be less than fNTrees, the requested one, if boosting is stopped early
       UInt_t   GetNTrees() const {return fForest.size();}
@@ -117,20 +117,20 @@ namespace TMVA {
       void     BoostMonitor(Int_t iTree);
 
    public:
-      const std::vector<Float_t>& GetMulticlassValues();
+      const std::vector<Float_t>& GetMulticlassValues() override;
 
       // regression response
-      const std::vector<Float_t>& GetRegressionValues();
+      const std::vector<Float_t>& GetRegressionValues() override;
 
       // apply the boost algorithm to a tree in the collection
       Double_t Boost( std::vector<const TMVA::Event*>&, DecisionTree *dt, UInt_t cls = 0);
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
       void SetMaxDepth(Int_t d){fMaxDepth = d;}
       void SetMinNodeSize(Double_t sizeInPercent);
       void SetMinNodeSize(TString sizeInPercent);
@@ -158,22 +158,22 @@ namespace TMVA {
       Double_t TestTreeQuality( DecisionTree *dt );
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // header and auxiliary classes
-      void MakeClassSpecificHeader( std::ostream&, const TString& ) const;
+      void MakeClassSpecificHeader( std::ostream&, const TString& ) const override;
 
       void MakeClassInstantiateNode( DecisionTreeNode *n, std::ostream& fout,
                                      const TString& className ) const;
 
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    protected:
-      void DeclareCompatibilityOptions();
+      void DeclareCompatibilityOptions() override;
 
    private:
       // Init used in the various constructors
-      void Init( void );
+      void Init( void ) override;
 
       void PreProcessNegativeEventWeights();
 
@@ -302,7 +302,7 @@ namespace TMVA {
       static const Int_t               fgDebugLevel;     ///< debug level determining some printout/control plots etc.
 
       // for backward compatibility
-      ClassDef(MethodBDT,0);  // Analysis of Boosted Decision Trees
+      ClassDefOverride(MethodBDT,0);  // Analysis of Boosted Decision Trees
    };
 
 } // namespace TMVA

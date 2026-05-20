@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # The Python tutorials appear in the Namespaces page. 
 # This script removes the namespace given as input from all the files.
 
@@ -67,34 +67,34 @@ sed -e '/<compound kind="namespace">/,/<\/compound>/ {
   }
 }' "$file" > "$HTMLPATH/TMP_FILE"
 mv "$HTMLPATH/TMP_FILE" "$file"
-   	 
+       
 # clean namespace in $HTMLPATH/search
 find "$HTMLPATH/search" -type f | xargs -P 12 -n 100 grep -s -l "$s" | while IFS= read -r file; do
   if test -e "$file"; then
-	 echo "   Patching:" $file
-	 # Remove the line containing the namespace
-	 sed -e "/$s/d" "$file" > "$HTMLPATH/TMP_FILE"
-	 mv "$HTMLPATH/TMP_FILE" "$file"
+    echo "   Patching:" $file
+    # Remove the line containing the namespace
+    sed -e "/$s/d" "$file" > "$HTMLPATH/TMP_FILE"
+    mv "$HTMLPATH/TMP_FILE" "$file"
   fi
 done
 
 # remove references to namespace in $HTMLPATH 
 find "$HTMLPATH" -type f | xargs -P 12 -n 100 grep -s -l "$s" | while IFS= read -r file; do
   if test -e "$file"; then
-	 echo "   Patching:" $file
-	 # Remove the links to the namespace
-     sed -e "s/<a class.*href=.$s.*>\(.*\)<\/a>/\1/" "$file" > "$HTMLPATH/TMP_FILE"
-	 mv "$HTMLPATH/TMP_FILE" "$file"
+    echo "   Patching:" $file
+    # Remove the links to the namespace
+    sed -e "s/<a class[^<]*href=.$s[^>]*>\(.*\)<\/a>/\1/" "$file" > "$HTMLPATH/TMP_FILE"
+    mv "$HTMLPATH/TMP_FILE" "$file"
   fi
 done
 
 # remove references to namespace in $HTMLPATH/*.js 
 find "$HTMLPATH" -type f -name "*.js" | xargs -P 12 -n 100 grep -s -l "$s" | while IFS= read -r file; do
   if test -e "$file"; then
-	 echo "   Patching:" $file
+    echo "   Patching:" $file
      # Remove the line containing the namespace
-	 sed -e "/$s/d" "$file" > "$HTMLPATH/TMP_FILE"
-	 mv "$HTMLPATH/TMP_FILE" "$file"
+    sed -e "/$s/d" "$file" > "$HTMLPATH/TMP_FILE"
+    mv "$HTMLPATH/TMP_FILE" "$file"
   fi
 done
 

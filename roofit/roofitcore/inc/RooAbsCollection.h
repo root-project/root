@@ -216,6 +216,11 @@ public:
   /// Find object in the collection, Note: matching by object name, like the find() method
   TObject* FindObject(const TObject* obj) const override { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
 
+  /// Check if collection contains an argument with a specific name.
+  bool contains(const char* name) const {
+    return find(name);
+  }
+
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
   bool contains(const RooAbsArg& var) const {
@@ -362,6 +367,8 @@ public:
 
   void useHashMapForFind(bool flag) const;
 
+  void removeConstantParameters();
+
   // For use in the RooArgList/Set(std::vector<RooAbsArgPtrOrDouble> const&) constructor.
   // Can be replaced with std::variant when C++17 is the minimum supported standard.
   struct RooAbsArgPtrOrDouble {
@@ -418,7 +425,7 @@ private:
 
   static void throwAddTypedException(TClass *klass, RooAbsArg *arg);
 
-  const RooFit::UniqueId<RooAbsCollection> _uniqueId; //!
+  const RooFit::UniqueId<RooAbsCollection> _uniqueId; ///<!
 
   ClassDefOverride(RooAbsCollection,3) // Collection of RooAbsArg objects
 };

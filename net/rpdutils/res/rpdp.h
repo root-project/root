@@ -83,10 +83,6 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service);
 // rpdutils.cxx
 void RpdAuthCleanup(const char *sstr, int opt);
 int  RpdGenRSAKeys(int);
-int  RpdGetAuthProtocol();
-const char *RpdGetKeyRoot();
-int  RpdGetClientProtocol();
-int  RpdGetOffSet();
 int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);

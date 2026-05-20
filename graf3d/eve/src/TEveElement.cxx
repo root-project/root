@@ -42,7 +42,6 @@ can appear in several list-trees as well as several times in the
 same list-tree.
 */
 
-ClassImp(TEveElement::TEveListTreeInfo);
 
 /** \class TEveElement
 \ingroup TEve
@@ -50,7 +49,6 @@ Base class for TEveUtil visualization elements, providing hierarchy
 management, rendering control and list-tree item management.
 */
 
-ClassImp(TEveElement);
 
 const TGPicture* TEveElement::fgRnrIcons[4]      = { nullptr };
 const TGPicture* TEveElement::fgListTreeIcons[9] = { nullptr };
@@ -514,7 +512,7 @@ void TEveElement::SaveVizParams(std::ostream& out, const TString& tag, const TSt
 /// Write-out visual parameters for this object.
 /// This is a virtual function and all sub-classes are required to
 /// first call the base-element version.
-/// The name of the element pointer is 'x%03d', due to cint limitations.
+/// The name of the element pointer is 'x%03d', due to historical CINT limitations.
 /// Three spaces should be used for indentation, same as in
 /// SavePrimitive() methods.
 
@@ -952,7 +950,7 @@ void TEveElement::SpawnEditor()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Export render-element to CINT with variable name var_name.
+/// Export render-element to Cling with variable name var_name.
 
 void TEveElement::ExportToCINT(char* var_name)
 {
@@ -991,7 +989,7 @@ void TEveElement::PrintSourceObject() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Export source object to CINT with given name for the variable.
+/// Export source object to Cling with given name for the variable.
 /// Throws an exception if it is not set.
 
 void TEveElement::ExportSourceObjectToCINT(char* var_name) const
@@ -2081,7 +2079,6 @@ fChildClass member.
 and set fDoColor automatically, based on which ctor is called.
 */
 
-ClassImp(TEveElementList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2149,7 +2146,6 @@ A projected element list -- required for proper propagation
 of render state to projected views.
 */
 
-ClassImp(TEveElementListProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

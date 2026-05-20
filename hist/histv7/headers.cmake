@@ -1,0 +1,22 @@
+set(histv7_headers
+    ROOT/RAxes.hxx
+    ROOT/RAxisVariant.hxx
+    ROOT/RBinIndex.hxx
+    ROOT/RBinIndexMultiDimRange.hxx
+    ROOT/RBinIndexRange.hxx
+    ROOT/RBinWithError.hxx
+    ROOT/RCategoricalAxis.hxx
+    ROOT/RHist.hxx
+    ROOT/RHistAutoAxisFiller.hxx
+    ROOT/RHistConcurrentFiller.hxx
+    ROOT/RHistEngine.hxx
+    ROOT/RHistFillContext.hxx
+    ROOT/RHistStats.hxx
+    ROOT/RHistUtils.hxx
+    ROOT/RLinearizedIndex.hxx
+    ROOT/RRegularAxis.hxx
+    ROOT/RSliceBinIndexMapper.hxx
+    ROOT/RSliceSpec.hxx
+    ROOT/RVariableBinAxis.hxx
+    ROOT/RWeight.hxx
+)

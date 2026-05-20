@@ -1,0 +1,163 @@
+<!-- 
+     * $Id: LoKiHlt.xml,v 1.11 2010-05-18 07:13:33 cattanem Exp $ 
+     * ========================================================================
+     * @file
+     * The XML seleciton file to build Reflex 
+     * dictionaries for Phys/LoKiNumbers package
+     * @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     * @date 2007-12-01
+     * ========================================================================
+-->
+
+<lcgdict>
+
+  <class name = "LoKi::Hybrid::IHltFactory"               />
+  <class name = "LoKi::Hybrid::IHltAntiFactory"           />
+  <class name = "LoKi::Hybrid::HltEngine"                 />
+
+  
+  <class name = "LoKi::Functor<const LHCb::ODIN*,double>" />
+  <class name = "LoKi::Functor<const LHCb::ODIN*,bool>"   />
+  
+  <class name = "LoKi::FunctorFromFunctor<const LHCb::ODIN*,double>" />
+  <class name = "LoKi::FunctorFromFunctor<const LHCb::ODIN*,bool>"   />
+  
+  <class name = "LoKi::Constant<const LHCb::ODIN*,double>" />
+  <class name = "LoKi::Constant<const LHCb::ODIN*,bool>"   />
+  
+  <class pattern   = "LoKi::Dicts::*Ops<*LHCb::ODIN*>"     />
+  <class pattern   = "LoKi::Dicts::*Ops_<*LHCb::ODIN*>"    />
+  <class pattern   = "LoKi::Dicts::*Calls<*LHCb::ODIN*>"   />
+  
+  <class pattern   = "LoKi::Odin::*"   />
+
+  <class name = "LoKi::Functor<const LHCb::L0DUReport*,double>" />
+  <class name = "LoKi::Functor<const LHCb::L0DUReport*,bool>"   />
+  
+  <class name = "LoKi::FunctorFromFunctor<const LHCb::L0DUReport*,double>" />
+  <class name = "LoKi::FunctorFromFunctor<const LHCb::L0DUReport*,bool>"   />
+
+  <class name = "LoKi::Constant<const LHCb::L0DUReport*,double>" />
+  <class name = "LoKi::Constant<const LHCb::L0DUReport*,bool>"   />
+  
+  <class pattern   = "LoKi::Dicts::*Ops<*LHCb::L0DUReport*>"     />
+  <class pattern   = "LoKi::Dicts::*Ops_<*LHCb::L0DUReport*>"    />
+  <class pattern   = "LoKi::Dicts::*Calls<*LHCb::L0DUReport*>"   />
+
+  <class pattern   = "LoKi::L0::*"   />
+
+  <class name = "LoKi::Functor<const LHCb::HltDecReports*,double>" />
+  <class name = "LoKi::Functor<const LHCb::HltDecReports*,bool>"   />
+  
+  <class name = "LoKi::FunctorFromFunctor<const LHCb::HltDecReports*,double>" />
+  <class name = "LoKi::FunctorFromFunctor<const LHCb::HltDecReports*,bool>"   />
+
+  <class name = "LoKi::Constant<const LHCb::HltDecReports*,double>" />
+  <class name = "LoKi::Constant<const LHCb::HltDecReports*,bool>"   />
+  
+  <class pattern   = "LoKi::Dicts::*Ops<*LHCb::HltDecReports*>"     />
+  <class pattern   = "LoKi::Dicts::*Ops_<*LHCb::HltDecReports*>"    />
+  <class pattern   = "LoKi::Dicts::*Calls<*LHCb::HltDecReports*>"   />
+
+  <class pattern   = "LoKi::HLT::*"        />
+  <class pattern   = "LoKi::Algorithms::*" />
+
+  <class name=            "LoKi::Interface<IAlgorithm>"   />
+  <class name="std::vector<LoKi::Interface<IAlgorithm> >" />
+  
+  <enum name="LHCb::L0DUDecision::Type" />
+  
+  <class    name = "LoKi::Numbers::EvtNum"   /> 
+  <class    name = "LoKi::Numbers::EvtNumList">
+    <field  name = "m_list" transient="true" />
+  </class>
+  <class    name = "LoKi::Numbers::RunEvt"    >
+    <field  name = "m_pair" transient="true" />
+  </class>
+  <class    name = "LoKi::Numbers::RunEvtList">
+    <field  name = "m_list" transient="true" />
+  </class> 
+  <function name = "LoKi::Numbers::add1"       /> 
+  <function name = "LoKi::Numbers::add2"       /> 
+  
+  <exclusion>
+    
+    <class name="LoKi::HLT::RoutingBits::Bits"     />
+    <class name="LoKi::HLT::HasSelection::Names"   />
+    <class name="LoKi::HLT::HasDecision::Names"    />
+    <class name="LoKi::HLT::DecisionBut::Names"    />
+    <class name="LoKi::L0::ChannelDecision::Names" />
+    <class name="LoKi::L0::ChannelDecision::Channels" />
+    <class name="LoKi::Algorithms::AnyPassed::Algorithms" /> 
+    <class name="LoKi::Odin::RunNumber::run_list" />
+
+    <class pattern="LoKi::HLT::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::L0::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Odin::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Algorithms::*">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Dicts::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Interface&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::I*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Hybrid::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::Functor&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Constant&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Valid&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::TheSame&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Identity&lt;*&gt;">
+      <method name="=" />
+    </class>
+    
+    <class pattern="Gaudi::Range_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="Gaudi::NamedRange_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::RangeList_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Keeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::UniqueKeeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+
+
+
+    <class pattern="LoKi::HLT::*Regex">
+      <method name="=" />
+      <method name="expression"   />
+      <member name="m_expression" />
+    </class>
+
+ </exclusion>
+  
+
+</lcgdict>

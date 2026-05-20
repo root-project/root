@@ -16,7 +16,7 @@
 #define ROOT_RNTupleSerialize
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RSpan.hxx>
 
 #include <Rtypes.h>
@@ -35,6 +35,13 @@ namespace ROOT {
 class RNTupleDescriptor;
 class RClusterDescriptor;
 enum class EExtraTypeInfoIds;
+
+namespace Experimental {
+class RNTupleAttrSetDescriptor;
+namespace Internal {
+class RNTupleAttrSetDescriptorBuilder;
+} // namespace Internal
+} // namespace Experimental
 
 namespace Internal {
 
@@ -68,6 +75,7 @@ public:
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
    static constexpr std::uint16_t kFlagProjectedField = 0x02;
    static constexpr std::uint16_t kFlagHasTypeChecksum = 0x04;
+   static constexpr std::uint16_t kFlagIsSoACollection = 0x08;
 
    static constexpr std::uint16_t kFlagDeferredColumn = 0x01;
    static constexpr std::uint16_t kFlagHasValueRange = 0x02;
@@ -270,6 +278,12 @@ public:
                                                             const RContext &context, bool forHeaderExtension = false);
    static RResult<std::uint32_t> DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize,
                                                               ROOT::Internal::RNTupleDescriptorBuilder &descBuilder);
+
+   static RResult<std::uint32_t>
+   SerializeAttributeSet(const Experimental::RNTupleAttrSetDescriptor &attrSetDesc, void *buffer);
+   static RResult<std::uint32_t>
+   DeserializeAttributeSet(const void *buffer, std::uint64_t bufSize,
+                           Experimental::Internal::RNTupleAttrSetDescriptorBuilder &attrSetDescBld);
 
    static RResult<RContext> SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
    static RResult<std::uint32_t> SerializePageList(void *buffer, const RNTupleDescriptor &desc,

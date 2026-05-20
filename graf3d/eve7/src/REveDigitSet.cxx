@@ -171,6 +171,7 @@ void REveDigitSet::SetMainColor(Color_t color)
    if (fSingleColor)
    {
       REveElement::SetMainColor(color);
+      StampObjProps();
    }
    else if (fFrame)
    {

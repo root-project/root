@@ -25,7 +25,7 @@
 
 // #include "TMVA/DNN/Architectures/Cuda/Device.h"
 // #include "Kernels.cuh"*/
-// #include <math.h>
+// #include <cmath>
 
 // for std::numeric_limits<T>::max()
 #include <limits>

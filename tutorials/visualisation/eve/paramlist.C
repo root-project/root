@@ -31,7 +31,6 @@ public:
    ClassDef(TParamFollower, 0);
 };
 
-ClassImp(TParamFollower)
 
    void paramlist()
 {

@@ -33,7 +33,6 @@
 GL-overlay annotation.
 */
 
-ClassImp(TGLAnnotation);
 
 Color_t  TGLAnnotation::fgBackColor = kAzure + 10;
 Color_t  TGLAnnotation::fgTextColor = kOrange;

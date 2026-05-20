@@ -88,6 +88,74 @@ typedef enum {
 } CXInterpreter_CompilationResult;
 
 /**
+ * Enum to represent the programming language of the interpreter.
+ */
+typedef enum {
+  CXInterpreterLanguage_Unknown,
+  CXInterpreterLanguage_Asm,
+  CXInterpreterLanguage_CIR,
+  CXInterpreterLanguage_LLVM_IR,
+  CXInterpreterLanguage_C,
+  CXInterpreterLanguage_CPlusPlus,
+  CXInterpreterLanguage_ObjC,
+  CXInterpreterLanguage_ObjCPlusPlus,
+  CXInterpreterLanguage_OpenCL,
+  CXInterpreterLanguage_OpenCLCXX,
+  CXInterpreterLanguage_CUDA,
+  CXInterpreterLanguage_HIP,
+  CXInterpreterLanguage_HLSL
+} CXInterpreterLanguage;
+
+/**
+ * Enum to represent the language standard of the interpreter.
+ */
+typedef enum {
+  CXInterpreterLanguageStandard_c89,
+  CXInterpreterLanguageStandard_c94,
+  CXInterpreterLanguageStandard_gnu89,
+  CXInterpreterLanguageStandard_c99,
+  CXInterpreterLanguageStandard_gnu99,
+  CXInterpreterLanguageStandard_c11,
+  CXInterpreterLanguageStandard_gnu11,
+  CXInterpreterLanguageStandard_c17,
+  CXInterpreterLanguageStandard_gnu17,
+  CXInterpreterLanguageStandard_c23,
+  CXInterpreterLanguageStandard_gnu23,
+  CXInterpreterLanguageStandard_c2y,
+  CXInterpreterLanguageStandard_gnu2y,
+  CXInterpreterLanguageStandard_cxx98,
+  CXInterpreterLanguageStandard_gnucxx98,
+  CXInterpreterLanguageStandard_cxx11,
+  CXInterpreterLanguageStandard_gnucxx11,
+  CXInterpreterLanguageStandard_cxx14,
+  CXInterpreterLanguageStandard_gnucxx14,
+  CXInterpreterLanguageStandard_cxx17,
+  CXInterpreterLanguageStandard_gnucxx17,
+  CXInterpreterLanguageStandard_cxx20,
+  CXInterpreterLanguageStandard_gnucxx20,
+  CXInterpreterLanguageStandard_cxx23,
+  CXInterpreterLanguageStandard_gnucxx23,
+  CXInterpreterLanguageStandard_cxx26,
+  CXInterpreterLanguageStandard_gnucxx26,
+  CXInterpreterLanguageStandard_opencl10,
+  CXInterpreterLanguageStandard_opencl11,
+  CXInterpreterLanguageStandard_opencl12,
+  CXInterpreterLanguageStandard_opencl20,
+  CXInterpreterLanguageStandard_opencl30,
+  CXInterpreterLanguageStandard_openclcpp10,
+  CXInterpreterLanguageStandard_openclcpp2021,
+  CXInterpreterLanguageStandard_hlsl,
+  CXInterpreterLanguageStandard_hlsl2015,
+  CXInterpreterLanguageStandard_hlsl2016,
+  CXInterpreterLanguageStandard_hlsl2017,
+  CXInterpreterLanguageStandard_hlsl2018,
+  CXInterpreterLanguageStandard_hlsl2021,
+  CXInterpreterLanguageStandard_hlsl202x,
+  CXInterpreterLanguageStandard_hlsl202y,
+  CXInterpreterLanguageStandard_lang_unspecified
+} CXInterpreterLanguageStandard;
+
+/**
  * Add a search path to the interpreter.
  *
  * \param I The interpreter.
@@ -211,6 +279,26 @@ CINDEX_LINKAGE void clang_Interpreter_unloadLibrary(CXInterpreter I,
                                                     const char* lib_stem);
 
 /**
+ * Returns the programming language of the interpreter.
+ *
+ * \param I The interpreter.
+ *
+ * \returns CXInterpreterLanguage value.
+ */
+CINDEX_LINKAGE CXInterpreterLanguage
+clang_Interpreter_getLanguage(CXInterpreter I);
+
+/**
+ * Returns the language standard of the interpreter.
+ *
+ * \param I The interpreter.
+ *
+ * \returns CXInterpreterLanguageStandard value.
+ */
+CINDEX_LINKAGE CXInterpreterLanguageStandard
+clang_Interpreter_getLanguageStandard(CXInterpreter I);
+
+/**
  * @}
  */
 
@@ -255,6 +343,13 @@ CINDEX_LINKAGE CXScope clang_getDestructor(CXScope S);
  * void N::f(int i, double d, long l = 0, char ch = 'a').
  */
 CINDEX_LINKAGE CXString clang_getFunctionSignature(CXScope func);
+
+/**
+ * Returns the Doxygen documentation comment for a declaration, or an empty
+ * string if no documentation comment exists.
+ */
+CINDEX_LINKAGE CXString clang_getDoxygenComment(CXScope S,
+                                                bool strip_comment_markers);
 
 /**
  * Checks if a function is a templated function.
@@ -332,7 +427,8 @@ CINDEX_LINKAGE void clang_deallocate(CXObject address);
  * Creates an object of class \c scope and calls its default constructor. If \c
  * arena is set it uses placement new.
  */
-CINDEX_LINKAGE CXObject clang_construct(CXScope scope, void* arena);
+CINDEX_LINKAGE CXObject clang_construct(CXScope scope, void* arena,
+                                        size_t count = 1UL);
 
 /**
  * Creates a trampoline function and makes a call to a generic function or
@@ -360,8 +456,11 @@ CINDEX_LINKAGE void clang_invoke(CXScope func, void* result, void** args,
  * \param type The type of the object.
  *
  * \param withFree Whether to call operator delete/free or not.
+ *
+ * \returns true if wrapper generation and invocation succeeded.
  */
-CINDEX_LINKAGE void clang_destruct(CXObject This, CXScope S, bool withFree);
+CINDEX_LINKAGE bool clang_destruct(CXObject This, CXScope S,
+                                   bool withFree = true, size_t nary = 0UL);
 
 /**
  * @}

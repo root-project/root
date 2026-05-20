@@ -148,7 +148,7 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys)
 {
 
    //suppress messages for num integration of Roofit
-   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
+   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumericIntegration);
 
    AddTestStatistic(&ts);
 }
@@ -476,7 +476,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 /// or whether it should use the expected number of events. It also takes
 /// into account the option to generate a binned data set (*i.e.* RooDataHist).
 
-std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet* protoData, int forceEvents) const {
+std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooAbsData* protoData, int forceEvents) const {
 
   if(fProtoData) {
     protoData = fProtoData;

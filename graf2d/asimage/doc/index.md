@@ -2,7 +2,7 @@
 \ingroup Graphics2D
 \brief Classes interfacing to libAfterImage.
 
-  - [libAfterImage Imaging Library.](http://www.afterstep.org/afterimage/index.php)
+  - Originally forked from [libAfterImage Imaging Library](http://www.afterstep.org/afterimage/index.php), now self-maintained.
   - Several tutorials demonstrate how to use images in ROOT:
     - rose_image.C shows how to draw an image in a pad.
     - galaxy_image.C illustrates the TASImage class and an image editor.

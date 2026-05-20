@@ -24,10 +24,10 @@ void TMVA::annconvergencetest(TString dataset, TDirectory *lhdir )
 
    Double_t m1  = estimatorHistTrain->GetMaximum();
    Double_t m2  = estimatorHistTest ->GetMaximum();
-   Double_t max = TMath::Max( m1, m2 );
+   Double_t max = std::max( m1, m2 );
    m1  = estimatorHistTrain->GetMinimum();
    m2  = estimatorHistTest ->GetMinimum();
-   Double_t min = TMath::Min( m1, m2 );
+   Double_t min = std::min( m1, m2 );
    estimatorHistTrain->SetMaximum( max + 0.1*(max - min) );
    estimatorHistTrain->SetMinimum( min - 0.1*(max - min) );
    estimatorHistTrain->SetLineColor( 2 );

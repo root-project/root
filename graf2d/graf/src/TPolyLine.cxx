@@ -18,7 +18,6 @@
 #include "TVirtualX.h"
 #include "TPolyLine.h"
 
-ClassImp(TPolyLine);
 
 /** \class TPolyLine
 \ingroup BasicGraphics
@@ -590,7 +589,7 @@ void TPolyLine::SavePrimitive(std::ostream &out, Option_t *option)
    args.Append(TString::Format("\"%s\"", TString(fOption).ReplaceSpecialCppChars().Data()));
 
    SavePrimitiveConstructor(out, Class(), "polyline", args, Size() == 0);
-   SaveFillAttributes(out, "polyline", 0, 1001);
+   SaveFillAttributes(out, "polyline", -1, -1);
    SaveLineAttributes(out, "polyline", 1, 1, 1);
 
    if (!option || !strstr(option, "nodraw"))

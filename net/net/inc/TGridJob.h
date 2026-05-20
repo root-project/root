@@ -25,6 +25,7 @@
 #include "TObject.h"
 #include "TString.h"
 
+namespace ROOT::Deprecated {
 
 class TGridJobStatus;
 
@@ -46,5 +47,10 @@ public:
    virtual Bool_t          Cancel () = 0;
    ClassDefOverride(TGridJob,1)  // ABC defining interface to a GRID job
 };
+
+} // namespace ROOT::Deprecated
+
+using TGridJob R__DEPRECATED(6, 42, "TGridJob is expected to be unused and thus deprecated") =
+   ROOT::Deprecated::TGridJob;
 
 #endif

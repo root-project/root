@@ -21,7 +21,6 @@ Editor for changing pie-chart's slice attributes.
 */
 
 
-ClassImp(TPieSliceEditor);
 
 
 enum EPieSliceID{

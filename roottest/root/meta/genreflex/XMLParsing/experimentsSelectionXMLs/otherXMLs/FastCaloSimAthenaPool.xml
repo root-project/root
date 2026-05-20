@@ -1,0 +1,6 @@
+<lcgdict>
+   <class name="FastShowerInfo" id="B1D162FB-7AC1-4209-9B36-8F21BC95A777"/>
+   <class name="FastShowerInfoContainer" id="25D539B3-7250-47F0-B693-270264D3CEED"/>
+   <class name="DataVector<FastShowerInfo>"/>
+   <class name="std::vector<FastShowerInfo*>"/>
+</lcgdict>

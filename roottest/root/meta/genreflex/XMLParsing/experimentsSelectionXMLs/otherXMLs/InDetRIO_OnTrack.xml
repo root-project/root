@@ -1,0 +1,19 @@
+<lcgdict>
+   <class name="InDet::SiClusterOnTrack" >
+    <field name="m_globalPosition" transient="true" />
+  </class>
+  <class name="InDet::PixelClusterOnTrack" >
+    <field name="m_detEl" transient="true" />
+    <field name="m_rio" transient="true" />
+  </class>
+  <class name="InDet::SCT_ClusterOnTrack" >
+    <field name="m_detEl" transient="true" />
+    <field name="m_rio" transient="true" />
+  </class>    
+  <class name="InDet::TRT_DriftCircleOnTrack" >
+    <field name="m_detEl" transient="true" />
+    <field name="m_globalPosition" transient="false" />    
+    <field name="m_rio" transient="true" />
+  </class>    
+  <class name="InDetDD::SiDetectorElement" />
+ </lcgdict>

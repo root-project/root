@@ -40,7 +40,7 @@ are described by TParticlePDG.
  Double_t       fPolarTheta;           // Polar angle of polarisation
  Double_t       fPolarPhi;             // azymutal angle of polarisation
 
- TParticlePDG*  fParticlePDG;          //! reference to the particle record in PDG database
+ TParticlePDG*  fParticlePDG;          ///<! reference to the particle record in PDG database
 \endverbatim
 */
 
@@ -55,7 +55,6 @@ are described by TParticlePDG.
 #include "TClass.h"
 #include "X3DBuffer.h"
 
-ClassImp(TParticle);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor

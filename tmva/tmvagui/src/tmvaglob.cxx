@@ -253,7 +253,7 @@ TImage * TMVA::TMVAGlob::findImage(const char * imageName)
 {
    // looks for the image in tutorialpath
    //TString tutorialPath = "$ROOTSYS/tutorials/machine_learning"; // look for the image in here
-   TString tutorialPath = getenv ("ROOTSYS");
+   TString tutorialPath = std::getenv ("ROOTSYS");
    tutorialPath+="/tutorials/machine_learning";
    TImage *img = nullptr;
    TString fullName = TString::Format("%s/%s", tutorialPath.Data(), imageName);

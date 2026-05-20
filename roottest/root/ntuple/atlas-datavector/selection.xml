@@ -1,0 +1,6 @@
+<lcgdict>
+	<class name="CustomStruct" />
+	<class name="SG::AuxVectorData" />
+	<class name="SG::AuxVectorBase" />
+	<class pattern="AtlasLikeDataVector<CustomStruct,*>" />
+</lcgdict>

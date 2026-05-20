@@ -9,6 +9,8 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
+#include <Python.h>
+
 // Bindings
 #include "CPyCppyy/API.h"
 #include "TPyReturn.h"
@@ -40,7 +42,6 @@
 //  (double)4.14150000000000063e+00
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPyReturn);
 
 namespace {
    class PyGILRAII {
@@ -132,7 +133,7 @@ TPyReturn::operator const char *() const
    if (fPyObject == Py_None) // for void returns
       return 0;
 
-   const char *s = PyUnicode_AsUTF8(fPyObject);
+   const char *s = PyUnicode_AsUTF8AndSize(fPyObject, nullptr);
    if (PyErr_Occurred()) {
       PyErr_Print();
       return 0;
@@ -202,16 +203,20 @@ TPyReturn::operator Double_t() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cast python return value to ROOT object with dictionary (may fail; note that
-/// you have to use the void* converter, as CINT will not call any other).
+/// you have to use the void* converter, as Cling will not call any other).
 
 TPyReturn::operator void *() const
 {
    PyGILRAII gilRaii;
 
    if (fPyObject == Py_None)
-      return 0;
+      return nullptr;
 
-   return static_cast<void *>(CPyCppyy::PyResult{fPyObject});
+   if (CPyCppyy::Instance_Check(fPyObject)) {
+      CPyCppyy::Instance_SetCppOwns(fPyObject);
+      return CPyCppyy::Instance_AsVoidPtr(fPyObject);
+   } else
+      return fPyObject; // borrows reference
 }
 
 ////////////////////////////////////////////////////////////////////////////////

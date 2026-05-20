@@ -19,7 +19,7 @@
 
 #include "RConfigure.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TError.h"
 #include "TRootSecContext.h"
@@ -28,15 +28,14 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TRootSecContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
 
-   TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
-                                    Int_t offset, const char *id,
-                                    const char *token, TDatime expdate,
-                                    void *ctx, Int_t key)
+ROOT::Deprecated::TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
+                                                   Int_t offset, const char *id,
+                                                   const char *token, TDatime expdate,
+                                                   void *ctx, Int_t key)
       : TSecContext(user, host, meth, offset, id, token, expdate, ctx)
 {
    R__ASSERT(gROOT);
@@ -49,9 +48,9 @@ ClassImp(TRootSecContext);
 /// Ctor for SecContext object.
 /// User and host from url = `user@host` .
 
-TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
-                                 const char *id, const char *token,
-                                 TDatime expdate, void *ctx, Int_t key)
+ROOT::Deprecated::TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
+                                                   const char *id, const char *token,
+                                                   TDatime expdate, void *ctx, Int_t key)
    : TSecContext(url, meth, offset, id, token, expdate, ctx)
 {
    R__ASSERT(gROOT);
@@ -64,7 +63,7 @@ TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
 /// Dtor: delete (deActivate, local/remote cleanup, list removal)
 /// all what is still active
 
-TRootSecContext::~TRootSecContext()
+ROOT::Deprecated::TRootSecContext::~TRootSecContext()
 {
    TSecContext::Cleanup();
 }
@@ -76,7 +75,7 @@ TRootSecContext::~TRootSecContext()
 /// If Opt contains "R" or "r", remove from the list
 /// Default Opt="CR"
 
-void TRootSecContext::DeActivate(Option_t *Opt)
+void ROOT::Deprecated::TRootSecContext::DeActivate(Option_t *Opt)
 {
    // Ask remote cleanup of this context
    Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
@@ -94,7 +93,7 @@ void TRootSecContext::DeActivate(Option_t *Opt)
    if (remove && fOffSet > -1){
       R__LOCKGUARD(gROOTMutex);
       // Remove from the global list
-      gROOT->GetListOfSecContexts()->Remove(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Remove(this);
       // Remove also from local lists in THostAuth objects
       TAuthenticate::RemoveSecContext(this);
    }
@@ -110,7 +109,7 @@ void TRootSecContext::DeActivate(Option_t *Opt)
 /// If 'all', all sec context with the same host as ctx
 /// are cleaned.
 
-Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
+Bool_t ROOT::Deprecated::TRootSecContext::CleanupSecContext(Bool_t all)
 {
    Bool_t cleaned = kFALSE;
 
@@ -128,11 +127,9 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
       Int_t srvtyp = nscc->GetType();
       Int_t rproto = nscc->GetProtocol();
       Int_t level = 2;
-      if ((srvtyp == TSocket::kROOTD && rproto < 10) ||
-          (srvtyp == TSocket::kPROOFD && rproto < 9))
+      if ((srvtyp == TSocket::kROOTD && rproto < 10))
          level = 1;
-      if ((srvtyp == TSocket::kROOTD && rproto < 8) ||
-          (srvtyp == TSocket::kPROOFD && rproto < 7))
+      if ((srvtyp == TSocket::kROOTD && rproto < 8))
          level = 0;
       if (level) {
          Int_t port = nscc->GetPort();
@@ -140,11 +137,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
          TSocket *news = new TSocket(fHost.Data(),port,-1);
 
          if (news && news->IsValid()) {
-            if (srvtyp == TSocket::kPROOFD) {
-               news->SetOption(kNoDelay, 1);
-               news->Send("cleaning request");
-            } else
-               news->SetOption(kNoDelay, 0);
+            news->SetOption(kNoDelay, 0);
 
             // Backward compatibility: send socket size
             if (srvtyp == TSocket::kROOTD && level == 1)
@@ -164,7 +157,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
                }
             }
             if (cleaned && gDebug > 2) {
-               char srvname[3][10] = {"sockd", "rootd", "proofd"};
+               char srvname[3][10] = {"sockd", "rootd"};
                Info("CleanupSecContext",
                     "remote %s notified for cleanup (%s,%d)",
                     srvname[srvtyp],fHost.Data(),port);
@@ -187,9 +180,9 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
 /// If opt is "<number>" print in special form for calls within THostAuth
 /// with cardinality "<number>"
 /// If opt is "S" prints short in-line form for calls within TFTP,
-/// TSlave, TProof ...
+/// TSlave ...
 
-void TRootSecContext::Print(Option_t *opt) const
+void ROOT::Deprecated::TRootSecContext::Print(Option_t *opt) const
 {
    // Check if option is numeric
    Int_t ord = -1, i = 0;
@@ -244,7 +237,7 @@ void TRootSecContext::Print(Option_t *opt) const
 /// Returns short string with relevant information about this
 /// security context
 
-const char *TRootSecContext::AsString(TString &out)
+const char *ROOT::Deprecated::TRootSecContext::AsString(TString &out)
 {
    if (fOffSet > -1) {
       if (fID.BeginsWith("AFS"))

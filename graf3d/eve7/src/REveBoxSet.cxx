@@ -238,7 +238,7 @@ void REveBoxSet::AddHex(const REveVector& pos, Float_t r, Float_t angle, Float_t
    REveTrans t; // AMT do we need to reuse ???
    t.SetPos(pos.fX, pos.fY, pos.fZ);
    t.SetScale(r,r,depth);
-   t.RotatePF(1, 2, angle);
+   t.RotateLF(1, 2, angle * TMath::DegToRad());
    for(Int_t i=0; i<16; ++i)
    hex->fMat[i] = t[i];
 }
@@ -381,6 +381,9 @@ Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
 void REveBoxSet::BuildRenderData()
 {
+   if (fPlex.Size() == 0)
+      return;
+
    fRenderData = std::make_unique<REveRenderData>("makeBoxSet", fPlex.Size() * 24, 0, fPlex.Size());
 
    REveChunkManager::iterator bi(fPlex);
@@ -407,6 +410,14 @@ void REveBoxSet::BuildRenderData()
       // printf(" >>> resize render data %d \n", 4 * fTexX * fTexY);
       fRenderData->ResizeV(4 * fTexX * fTexY);
    }
+
+   // save bbox in render data normals
+   ComputeBBox();
+   float* bb = GetBBox();
+   fRenderData->PushN(bb[0], bb[1], bb[2]);
+   fRenderData->PushN(bb[3], bb[4], bb[5]);
+
+   REveElement::BuildRenderData();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

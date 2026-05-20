@@ -1,0 +1,7 @@
+#include <cstdlib>
+
+#define exit_if_backslash_newline_works() \
+   exit(EXIT_SUCCESS)
+
+exit_if_backslash_newline_works();
+exit(EXIT_FAILURE);

@@ -24,7 +24,7 @@
 #include "TClingUtils.h"
 
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <cctype>
 
 #include "clang/Basic/SourceLocation.h"
@@ -225,7 +225,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          return kName;
       }
    } else if (fHasNameAttribute) {
-      if (name_value == name) {
+      if (name_value == name && !decl->isInvalidDecl()) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
       } else if (fCXXRecordDecl == nullptr ||
@@ -236,7 +236,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
                                                    true /*diagnose*/, nullptr);
 
-         if ( target ) {
+         if ( target && !target->isInvalidDecl()) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
          } else {
             // If the lookup failed, let's not try it again, so mark the value has invalid.
@@ -261,7 +261,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
            (fHasFilePatternAttribute && CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
 
       if (hasFileMatch) {
-         // Reject utility classes defined in ClassImp
+         // Reject utility classes defined in ClassDef
          // when using a file based rule
          if (!strncmp(name.c_str(), "R__Init", 7) ||
              strstr(name.c_str(), "::R__Init")) {

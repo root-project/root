@@ -24,7 +24,6 @@ It uses 4 bytes to store the string length (1 byte only for TString).
 #include "Bytes.h"
 
 // Remove to avoid deprecation warnings during root build
-//ClassImp(TStringLong);
 
 
 ////////////////////////////////////////////////////////////////////////////////

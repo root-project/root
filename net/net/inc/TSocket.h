@@ -30,30 +30,50 @@
 #include "TBits.h"
 #include "TInetAddress.h"
 #include "MessageTypes.h"
-#include "TVirtualAuth.h"
 #include "TSecContext.h"
 #include "TTimeStamp.h"
 #include "TVirtualMutex.h"
 
 class TMessage;
-class THostAuth;
+class TSocket;
+
+namespace ROOT::Deprecated {
+struct TSocketFriend {
+   static Bool_t IsAuthenticated(const TSocket &s);
+   static void SetSecContext(TSocket &s, TSecContext *ctx);
+   static TSecContext *GetSecContext(const TSocket &s);
+
+   static TSocket *CreateAuthSocket(const char *user, const char *host,
+                                    Int_t port, Int_t size = 0,
+                                    Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+   static TSocket *CreateAuthSocket(const char *url, Int_t size = 0,
+                                    Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+};
+} // namespace ROOT::Deprecated
 
 class TSocket : public TNamed {
 
 friend class TServerSocket;
-friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
-friend class TSlave;       // to be able to call SendHostAuth()
+friend struct ROOT::Deprecated::TSocketFriend;
 
 public:
    enum EStatusBits { kIsUnix = BIT(16),    // set if unix socket
                       kBrokenConn = BIT(17) // set if conn reset by peer or broken
                     };
    enum EInterest { kRead = 1, kWrite = 2 };
-   enum EServiceType { kSOCKD, kROOTD, kPROOFD };
+   enum EServiceType { kSOCKD, kROOTD };
 
 protected:
    enum ESocketErrors {
-     kInvalid = -1,
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kInvalid = -1,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
      kInvalidStillInList = -2
    };
    TInetAddress  fAddress;        // remote internet address and port #
@@ -62,8 +82,8 @@ protected:
    Int_t         fCompress;       // Compression level and algorithm
    TInetAddress  fLocalAddress;   // local internet address and port #
    Int_t         fRemoteProtocol; // protocol of remote daemon
-   TSecContext  *fSecContext;     // after a successful Authenticate call
-                                  // points to related security context
+   ROOT::Deprecated::TSecContext  *fSecContext; // after a successful Authenticate call
+                                                // points to related security context
    TString       fService;        // name of service (matches remote port #)
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
@@ -124,11 +144,15 @@ public:
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
-   TSecContext          *GetSecContext() const { return fSecContext; }
+   ROOT::Deprecated::TSecContext *GetSecContext() const
+      R__DEPRECATED(6, 42, "TSocket::GetSecContext is deprecated")
+      { return ROOT::Deprecated::TSocketFriend::GetSecContext(*this); }
    Int_t                 GetTcpWindowSize() const { return fTcpWindowSize; }
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl.Data(); }
-   virtual Bool_t        IsAuthenticated() const { return fSecContext ? kTRUE : kFALSE; }
+   virtual Bool_t        IsAuthenticated() const
+      R__DEPRECATED(6, 42, "TSocket::IsAuthenticated is deprecated")
+      { return ROOT::Deprecated::TSocketFriend::IsAuthenticated(*this); }
    virtual Bool_t        IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
    virtual Int_t         Recv(TMessage *&mess);
    virtual Int_t         Recv(Int_t &status, Int_t &kind);
@@ -149,7 +173,9 @@ public:
    void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
-   void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
+   void                  SetSecContext(ROOT::Deprecated::TSecContext *ctx)
+      R__DEPRECATED(6, 42, "TSocket::SetSecContext is deprecated")
+      { ROOT::Deprecated::TSocketFriend::SetSecContext(*this, ctx); }
    void                  SetService(const char *service) { fService = service; }
    void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }
@@ -163,9 +189,15 @@ public:
 
    static TSocket       *CreateAuthSocket(const char *user, const char *host,
                                           Int_t port, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr)
+                        R__DEPRECATED(6, 42, "Socket authentication is deprecated. See README.AUTH for details.")
+                        { return ROOT::Deprecated::TSocketFriend::CreateAuthSocket(
+                           user, host, port, size, tcpwindowsize, s, err); }
    static TSocket       *CreateAuthSocket(const char *url, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
+                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr)
+                        R__DEPRECATED(6, 42, "Socket authentication is deprecated. See README.AUTH for details.")
+                        { return ROOT::Deprecated::TSocketFriend::CreateAuthSocket(url, size, tcpwindowsize, s, err); }
+
    static void           NetError(const char *where, Int_t error);
 
    ClassDefOverride(TSocket,0)  //This class implements client sockets

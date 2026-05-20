@@ -261,7 +261,6 @@ static Bool_t MustEmbed[32];
 Int_t TPostScript::fgLineJoin = 0;
 Int_t TPostScript::fgLineCap  = 0;
 
-ClassImp(TPostScript);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PostScript constructor
@@ -276,7 +275,6 @@ TPostScript::TPostScript() : TVirtualPS()
    fClear           = kFALSE;
    fClip            = 0;
    fClipStatus      = kFALSE;
-   fCurrentColor    = 0;
    fDXC             = 0.;
    fDYC             = 0.;
    fFX              = 0.;
@@ -302,6 +300,8 @@ TPostScript::TPostScript() : TVirtualPS()
    fRange           = kFALSE;
    fRed             = 0.;
    fSave            = 0;
+   fWidth           = 0.;
+   fStyle           = 1;
    fX1v             = 0.;
    fX1w             = 0.;
    fX2v             = 0.;
@@ -362,7 +362,6 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    }
 
    fMarkerSizeCur = 0;
-   fCurrentColor  = 0;
    fRed           = -1;
    fGreen         = -1;
    fBlue          = -1;
@@ -403,7 +402,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    fFileName = fname;
    fStream = new std::ofstream(fFileName.Data(),std::ios::out);
    if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
-      printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fFileName.Data());
+      Error("Open", "Cannot open file: %s", fFileName.Data());
       return;
    }
    gVirtualPS = this;
@@ -473,21 +472,21 @@ void TPostScript::Close(Option_t *)
       // Rename the file fFileName
       TString tmpname = TString::Format("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
       if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
-         Error("Text", "Cannot open temporary file: %s\n", tmpname.Data());
+         Error("Close", "Cannot open temporary file: %s", tmpname.Data());
          return;
       }
 
       // Reopen the file fFileName
       fStream = new std::ofstream(fFileName.Data(),std::ios::out);
       if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
-         Error("Text", "Cannot open file: %s\n", fFileName.Data());
+         Error("Close", "Cannot open file: %s", fFileName.Data());
          return;
       }
 
       // Embed the fonts at the right place
       FILE *sg = fopen(tmpname.Data(),"r");
       if (!sg) {
-         Error("Text", "Cannot open file: %s\n", tmpname.Data());
+         Error("Close", "Cannot open file: %s", tmpname.Data());
          return;
       }
       char line[255];
@@ -945,13 +944,13 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    if (nn > 0) {
       if (fLineWidth<=0) return;
       n = nn;
-      SetLineStyle(fLineStyle);
-      SetLineWidth(fLineWidth);
+      SetStyle(fLineStyle);
+      SetWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
    } else {
       n = -nn;
-      SetLineStyle(1);
-      SetLineWidth(1);
+      SetStyle(1);
+      SetWidth(1);
       SetColor(Int_t(fLineColor));
    }
 
@@ -1006,8 +1005,8 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    }
 END:
    if (nn < 0) {
-      SetLineStyle(linestylesav);
-      SetLineWidth(linewidthsav);
+      SetStyle(linestylesav);
+      SetWidth(linewidthsav);
    }
 }
 
@@ -1029,13 +1028,13 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    if (nn > 0) {
       if (fLineWidth<=0) return;
       n = nn;
-      SetLineStyle(fLineStyle);
-      SetLineWidth(fLineWidth);
+      SetStyle(fLineStyle);
+      SetWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
    } else {
       n = -nn;
-      SetLineStyle(1);
-      SetLineWidth(1);
+      SetStyle(1);
+      SetWidth(1);
       SetColor(Int_t(fLineColor));
    }
 
@@ -1090,8 +1089,8 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    }
 END:
    if (nn < 0) {
-      SetLineStyle(linestylesav);
-      SetLineWidth(linewidthsav);
+      SetStyle(linestylesav);
+      SetWidth(linewidthsav);
    }
 }
 
@@ -1108,8 +1107,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
-   SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
+   SetStyle(1);
+   SetWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
    markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
@@ -1148,8 +1147,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    WriteInteger(YtoPS(y[0]));
    if (n == 1) {
       PrintStr(chtemp);
-      SetLineStyle(linestylesav);
-      SetLineWidth(linewidthsav);
+      SetStyle(linestylesav);
+      SetWidth(linewidthsav);
       return;
    }
    np = 1;
@@ -1165,8 +1164,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
          np = 0;
       }
    }
-   SetLineStyle(linestylesav);
-   SetLineWidth(linewidthsav);
+   SetStyle(linestylesav);
+   SetWidth(linewidthsav);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1182,8 +1181,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
-   SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
+   SetStyle(1);
+   SetWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
    markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
@@ -1222,8 +1221,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    WriteInteger(YtoPS(y[0]));
    if (n == 1) {
       PrintStr(chtemp);
-      SetLineStyle(linestylesav);
-      SetLineWidth(linewidthsav);
+      SetStyle(linestylesav);
+      SetWidth(linewidthsav);
       return;
    }
    np = 1;
@@ -1239,8 +1238,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
          np = 0;
       }
    }
-   SetLineStyle(linestylesav);
-   SetLineWidth(linewidthsav);
+   SetStyle(linestylesav);
+   SetWidth(linewidthsav);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1271,14 +1270,14 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    if (nn > 0) {
       if (fLineWidth<=0) return;
       n = nn;
-      SetLineStyle(fLineStyle);
-      SetLineWidth(fLineWidth);
+      SetStyle(fLineStyle);
+      SetWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
    }
    if (nn < 0) {
       n = -nn;
-      SetLineStyle(1);
-      SetLineWidth(1);
+      SetStyle(1);
+      SetWidth(1);
       SetColor(Int_t(fFillColor));
       fais = fFillStyle/1000;
       fasi = fFillStyle%1000;
@@ -1349,8 +1348,8 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    }
 END:
    if (nn < 0) {
-      SetLineStyle(linestylesav);
-      SetLineWidth(linewidthsav);
+      SetStyle(linestylesav);
+      SetWidth(linewidthsav);
    }
 }
 
@@ -1382,14 +1381,14 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    if (nn > 0) {
       if (fLineWidth<=0) return;
       n = nn;
-      SetLineStyle(fLineStyle);
-      SetLineWidth(fLineWidth);
+      SetStyle(fLineStyle);
+      SetWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
    }
    if (nn < 0) {
       n = -nn;
-      SetLineStyle(1);
-      SetLineWidth(1);
+      SetStyle(1);
+      SetWidth(1);
       SetColor(Int_t(fFillColor));
       fais = fFillStyle/1000;
       fasi = fFillStyle%1000;
@@ -1460,8 +1459,8 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    }
 END:
    if (nn < 0) {
-      SetLineStyle(linestylesav);
-      SetLineWidth(linewidthsav);
+      SetStyle(linestylesav);
+      SetWidth(linewidthsav);
    }
 }
 
@@ -2130,7 +2129,6 @@ void TPostScript::SetFillColor( Color_t cindex )
 {
    fFillColor = cindex;
    if (gStyle->GetFillColor() <= 0) cindex = 0;
-   SetColor(Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2462,7 +2460,6 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 void TPostScript::SetLineColor( Color_t cindex )
 {
    fLineColor = cindex;
-   SetColor(Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2527,7 +2524,18 @@ void TPostScript::SetLineStyle(Style_t linestyle)
 {
    if ( linestyle == fLineStyle) return;
    fLineStyle = linestyle;
-   const char *st = gStyle->GetLineStyleString(linestyle);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the line style in the output file
+
+void TPostScript::SetStyle(Style_t linestyle)
+{
+   if (linestyle == fStyle) return;
+
+   fStyle = linestyle;
+   
+   const char *st = gStyle->GetLineStyleString(fStyle);
    PrintFast(1,"[");
    Int_t nch = strlen(st);
    PrintFast(nch,st);
@@ -2539,10 +2547,21 @@ void TPostScript::SetLineStyle(Style_t linestyle)
 
 void TPostScript::SetLineWidth(Width_t linewidth)
 {
-   if ( linewidth == fLineWidth) return;
+   if (linewidth == fLineWidth) return;
    fLineWidth = linewidth;
-   if (fLineWidth!=0) {
-      WriteInteger(Int_t(fLineScale*fLineWidth));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the line width in the output file
+
+void  TPostScript::SetWidth(Width_t linewidth)
+{
+   if (linewidth == fWidth) return;
+
+   fWidth = linewidth;
+
+   if (fWidth!=0) {
+      WriteInteger(Int_t(fLineScale*fWidth));
       PrintFast(3," lw");
    }
 }
@@ -2553,7 +2572,6 @@ void TPostScript::SetLineWidth(Width_t linewidth)
 void TPostScript::SetMarkerColor( Color_t cindex )
 {
    fMarkerColor = cindex;
-   SetColor(Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2562,7 +2580,6 @@ void TPostScript::SetMarkerColor( Color_t cindex )
 void TPostScript::SetColor(Int_t color)
 {
    if (color < 0) color = 0;
-   fCurrentColor = color;
    TColor *col = gROOT->GetColor(color);
    if (col)
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
@@ -2608,8 +2625,6 @@ void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
 void TPostScript::SetTextColor( Color_t cindex )
 {
    fTextColor = cindex;
-
-   SetColor( Int_t(cindex) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2981,6 +2996,15 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    PrintStr("NC");
 
    SaveRestore(-1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL. Same as Text.
+///
+
+void TPostScript::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+{
+   Text(x, y, chars);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

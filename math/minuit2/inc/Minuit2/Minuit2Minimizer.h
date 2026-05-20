@@ -46,8 +46,12 @@ namespace Minuit2 {
    Using a string  (used by the plugin manager) or via an enumeration
    an one can set all the possible minimization algorithms (Migrad, Simplex, Combined, Scan and Fumili).
 
-   Refer to the [guide](https://root.cern/root/htmldoc/guides/minuit2/Minuit2.html) for an introduction how Minuit
+   Refer to the [guide](https://root.cern.ch/doc/master/Minuit2Page.html) for an introduction how Minuit2
    works.
+
+   \note Some gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
+   via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
+   and later call GradientCalculator::SetParallelOMP()
 
    @ingroup Minuit
 */
@@ -212,7 +216,7 @@ public:
       is most strongly correlated with i.
       If the variable is fixed or const the return value is zero
     */
-   double GlobalCC(unsigned int i) const override;
+   std::vector<double> GlobalCC() const override;
 
    /**
       get the minos error for parameter i, return false if Minos failed
@@ -275,16 +279,18 @@ public:
    /// return the minimizer state (containing values, step size , etc..)
    const ROOT::Minuit2::MnUserParameterState &State() { return fState; }
 
+   /// To set the function directly to a Minuit 2 function.
+   void SetFCN(unsigned int nDim, std::unique_ptr<ROOT::Minuit2::FCNBase> fcn);
+
+   const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN.get(); }
+   ROOT::Minuit2::FCNBase *GetFCN() { return fMinuitFCN.get(); }
+
 protected:
    // protected function for accessing the internal Minuit2 object. Needed for derived classes
 
-   virtual const ROOT::Minuit2::ModularFunctionMinimizer *GetMinimizer() const { return fMinimizer; }
-
-   virtual void SetMinimizer(ROOT::Minuit2::ModularFunctionMinimizer *m) { fMinimizer = m; }
+   virtual const ROOT::Minuit2::ModularFunctionMinimizer *GetMinimizer() const { return fMinimizer.get(); }
 
    void SetMinimizerType(ROOT::Minuit2::EMinimizerType type);
-
-   virtual const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN; }
 
    /// examine the minimum result
    bool ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min);
@@ -304,10 +310,9 @@ private:
    int fMinosStatus = -1; // Minos status code
 
    ROOT::Minuit2::MnUserParameterState fState;
-   // std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
-   ROOT::Minuit2::ModularFunctionMinimizer *fMinimizer;
-   ROOT::Minuit2::FCNBase *fMinuitFCN;
-   ROOT::Minuit2::FunctionMinimum *fMinimum;
+   std::unique_ptr<ROOT::Minuit2::ModularFunctionMinimizer> fMinimizer;
+   std::unique_ptr<ROOT::Minuit2::FCNBase> fMinuitFCN;
+   std::unique_ptr<ROOT::Minuit2::FunctionMinimum> fMinimum;
    mutable std::vector<double> fValues;
    mutable std::vector<double> fErrors;
 };

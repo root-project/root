@@ -42,7 +42,7 @@
 ///
 /// Please have a look to the tutorials ($ROOTSYS/tutorials/fitsio/) to see
 /// some examples. IMPORTANT: to run tutorials it is required that
-/// you change the current working directory of ROOT (CINT) shell to the
+/// you change the current working directory of the ROOT shell to the
 /// tutorials directory. Example:
 /// ~~~ {.cpp}
 /// root [1] gSystem->ChangeDirectory("tutorials/fitsio")
@@ -86,7 +86,6 @@ several methods to manage them.
 #include "fitsio.h"
 #include <cstdlib>
 
-ClassImp(TFITSHDU);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean path from possible filter and put the result in 'dst'.

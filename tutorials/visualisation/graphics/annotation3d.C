@@ -54,7 +54,7 @@ void annotation3d()
    f->SetLineWidth(1);
    f->SetLineColorAlpha(kAzure - 2, 0.3);
 
-   f->Draw("surf1 fb");
+   c->Add(f, "surf1 fb");
 
    // Lines for 3D annotation
    double x[11] = {-0.500, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.500};
@@ -71,21 +71,21 @@ void annotation3d()
 
    g2->SetLineColor(kRed);
    g2->SetLineWidth(3);
-   g2->Draw();
+   c->Add(g2);
 
    l2->SetLineColor(kRed);
    l2->SetLineStyle(kDashed);
    l2->SetLineWidth(1);
-   l2->Draw();
+   c->Add(l2);
 
    // Draw text Annotations
-   TAnnotation *txt = new TAnnotation(-0.45, -0.2, 0.3, "f(y,x_{0})");
+   auto txt = new TAnnotation(-0.45, -0.2, 0.33, "f(y,x_{0})");
    txt->SetTextFont(42);
    txt->SetTextColor(kRed);
-   txt->Draw();
+   c->Add(txt);
 
-   TAnnotation *txt1 = new TAnnotation(0.5, 0.5, 0.3, "f(x,y)");
+   auto txt1 = new TAnnotation(0.5, 0.5, 0.3, "f(x,y)");
    txt1->SetTextColor(kBlue);
    txt1->SetTextFont(42);
-   txt1->Draw();
+   c->Add(txt1);
 }

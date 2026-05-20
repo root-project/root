@@ -43,7 +43,6 @@ specific kernel behaviour.
 #include "Rtypes.h"
 #include "TObject.h"
 
-ClassImp(TMVA::PDEFoamKernelBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

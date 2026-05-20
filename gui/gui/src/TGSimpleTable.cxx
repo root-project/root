@@ -15,7 +15,6 @@
 #include "TGSimpleTableInterface.h"
 #include "TGSimpleTable.h"
 
-ClassImp(TGSimpleTable);
 
 
 /** \class TGSimpleTable

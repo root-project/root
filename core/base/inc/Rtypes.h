@@ -45,6 +45,7 @@
 //---- forward declared class types --------------------------------------------
 
 class TClass;
+class TBrowser;
 class TBuffer;
 class TDirectory;
 class TMemberInspector;
@@ -59,7 +60,7 @@ enum ESysConstants {
    kMAXSIGNALS       = 16,
    kMAXPATHLEN       = 8192,
    kBUFFERSIZE       = 8192,
-   kItimerResolution = 10      // interval-timer resolution in ms
+   kItimerResolution = 5       ///< interval-timer resolution in ms (used for TThread, TTimer, Emit, Connect, etc.)
 };
 
 enum EColor { kWhite   =0,   kBlack    =1,   kGray   =920,
@@ -119,6 +120,7 @@ namespace ROOT {
    typedef void  (*DirAutoAdd_t)(void *, TDirectory *);
    typedef Long64_t (*MergeFunc_t)(void *, TCollection *, TFileMergeInfo *);
    typedef void  (*ResetAfterMergeFunc_t)(void *, TFileMergeInfo *);
+   typedef void (*BrowseFunc_t)(const void *, TBrowser *);
 
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 

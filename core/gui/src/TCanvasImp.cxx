@@ -17,5 +17,52 @@ and a drawing area).
 */
 
 #include "TCanvasImp.h"
+#include "TVirtualX.h"
+#include "TSystem.h"
 
-ClassImp(TCanvasImp);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change mouse pointer, redirect to gVirtualX
+
+void TCanvasImp::Warp(Int_t ix, Int_t iy)
+{
+   if(gVirtualX)
+      gVirtualX->Warp(ix, iy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Request current mouse pointer, redirect to gVirtualX
+
+Int_t TCanvasImp::RequestLocator(Int_t &x, Int_t &y)
+{
+   return gVirtualX ? gVirtualX->RequestLocator(1, 1, x, y) : -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the size and position of the canvas paint area.
+
+void TCanvasImp::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
+{
+   Int_t x, y;
+   gVirtualX->GetGeometry(wid, x, y, w, h);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Resize canvas window, redirect to gVirtualX
+
+void TCanvasImp::ResizeCanvasWindow(Int_t wid)
+{
+   if (gVirtualX)
+      gVirtualX->ResizeWindow(wid);   //resize canvas and off-screen buffer
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update gVirtualX display, also optionally sleep to wait until operation finished
+
+void TCanvasImp::UpdateDisplay(Int_t mode, Bool_t sleep)
+{
+   if (gVirtualX)
+      gVirtualX->Update(mode);
+   if (sleep)
+      gSystem->Sleep(30);
+}

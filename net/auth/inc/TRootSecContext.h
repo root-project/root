@@ -24,6 +24,8 @@
 #include "TAuthenticate.h"
 #include "TSecContext.h"
 
+namespace ROOT::Deprecated {
+
 class TRootSecContext : public TSecContext {
 
 private:
@@ -50,5 +52,9 @@ public:
 
    ClassDefOverride(TRootSecContext,0)  // Class providing host specific authentication information
 };
+
+}
+
+using TRootSecContext R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::TRootSecContext;
 
 #endif

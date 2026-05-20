@@ -118,11 +118,19 @@ private:
 
          inline std::size_t mix(std::size_t init) const
          {
+#ifdef R__B64
             init ^= init >> 32;
             init *= 0xe9846af9b1a615d;
             init ^= init >> 32;
             init *= 0xe9846af9b1a615d;
             init ^= init >> 28;
+#else
+            init ^= init >> 16;
+            init *= 0x21f0aaad;
+            init ^= init >> 15;
+            init *= 0x735a2d97;
+            init ^= init >> 15;
+#endif
             return init;
          }
       };
@@ -149,7 +157,10 @@ private:
       ///
       /// \param[in] pageSource The page source of the RNTuple with the entries to map.
       /// \param[in] joinFieldNames Names of the join fields to use in the mapping.
-      REntryMapping(ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames);
+      /// \param[in] entryOffset Offset to add to each entry index in the mapping. This can can be used when the
+      /// RNTuple represented by the provided page source is part of a chain of RNTuples.
+      REntryMapping(ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames,
+                    ROOT::NTupleSize_t entryOffset = 0);
    };
    /// Names of the join fields used for the mapping to their respective entry indexes.
    std::vector<std::string> fJoinFieldNames;
@@ -187,43 +198,24 @@ public:
    /// \param[in] pageSource The page source of the RNTuple with the entries to map.
    /// \param[in] partitionKey Which partition to add the mapping to. If not provided, it will be added to the default
    /// partition.
+   /// \param[in] entryOffset Offset to add to each entry index in the mapping. This can can be used when the
+   /// RNTuple represented by the provided page source is part of a chain of RNTuples.
    ///
    /// \return A reference to the updated join table.
-   RNTupleJoinTable &Add(ROOT::Internal::RPageSource &pageSource, PartitionKey_t partitionKey = kDefaultPartitionKey);
+   RNTupleJoinTable &Add(ROOT::Internal::RPageSource &pageSource, PartitionKey_t partitionKey = kDefaultPartitionKey,
+                         ROOT::NTupleSize_t entryOffset = 0);
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry indexes for the given join field value(s) within a partition.
-   ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
-   /// \param[in] partitionKey The partition key to use for the lookup. If not provided, it will use the default
-   /// partition key.
-   ///
-   /// \return The entry numbers that correspond to `valuePtrs`. When there are no corresponding entries, an empty
-   /// vector is returned.
-   std::vector<ROOT::NTupleSize_t>
-   GetEntryIndexes(const std::vector<void *> &valuePtrs, PartitionKey_t partitionKey = kDefaultPartitionKey) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry indexes for the given join field value(s) for a specific set of partitions.
-   ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
-   /// \param[in] partitionKeys The partition keys to use for the lookup.
-   ///
-   /// \return The entry numbers that correspond to `valuePtrs`, grouped by partition. When there are no corresponding
-   /// entries, an empty map is returned.
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-   GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs,
-                              const std::vector<PartitionKey_t> &partitionKeys) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry indexes for the given join field value(s) for all partitions.
+   /// \brief Get an entry index (if it exists) for the given join field value(s), from any partition.
    ///
    /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
    ///
-   /// \return The entry numbers that correspond to `valuePtrs`, grouped by partition. When there are no corresponding
-   /// entries, an empty map is returned.
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-   GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs) const;
+   /// \note If one or more corresponding entries exist for the given value(s), the first entry index found in the join
+   /// table is returned.
+   ///
+   /// \return An entry number that corresponds to `valuePtrs`. When there are no corresponding entries,
+   /// `kInvalidNTupleIndex` is returned.
+   ROOT::NTupleSize_t GetEntryIndex(const std::vector<void *> &valuePtrs) const;
 };
 } // namespace Internal
 } // namespace Experimental

@@ -1,0 +1,23 @@
+<lcgdict>
+<!-- Simple Selection    -->
+
+  <class name="class1" ClassVersion="123">
+     <member name="m_j" transient="true" />
+  </class>
+
+  <class name="class2" ClassVersion="567" >
+     <field name="m_i" property1="value1" property2="value2" />
+  </class>
+     
+  <class name="class4" ClassVersion="1977" id="000-000-000-001" myProp="1081983">
+      <field name="m_j" persistent="false" />
+  </class>
+
+  <class name="class5" />
+
+  <class name="class6" />
+        
+  
+</lcgdict>
+
+

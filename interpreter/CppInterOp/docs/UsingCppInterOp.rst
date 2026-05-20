@@ -24,6 +24,44 @@ classes and members that are being used. The interoperability layer helps us
 with the instantiation of templates, diagnostic interaction, creation of 
 objects, and many more things.
 
+CppInterOp API Dispatch Mechanism
+==============================
+The standard way of using CppInterOp as a library is to link against the `clangCppInterOp` target at compile time. However, 
+CppInterOp also supports an API dispatch mechanism that allows clients to load the shared library at runtime in `RTLD_LOCAL` mode.
+This alternate approach is particularly useful in scenarios where CppInterOp is loaded dynamically alongside other tools/libraries/packages that also
+rely on LLVM. With cppyy, importing tools like `numba` or `pygame` that come bundled with a statically linked copy of LLVM,
+leads to symbol interposition and crashes. The dispatch mechanism solves this by solely relying on a C interface, which returns a pointer to the address of a requested function, which can be cast to the appropriate API type and
+invoked as needed. An example can be found in `unittests/CppInterOp/DispatchTest.cpp`. For a user, this system is completely automated via the `Dispatch.h` header file, which maintains a symbol-address map for a fast look-up through a C symbol (`CppGetProcAddress`) which is fetched via `dlsym`. The provided macro system then handles all the declarations on the client end
+with the inclusion of the header:
+
+```cpp
+#include <CppInterOp/Dispatch.h> // instead of the standard <CppInterOp/CppInterOp.h>
+```
+
+At this point, the expansions already provide the same API surface as the standard CppInterOp library, except that the declarations require to be added to a translation unit for the client application.
+This can be done by adding the following preprocessor directive in one of the source files:
+
+```cpp
+#define DISPATCH_API(name, type) CppAPIType::name Cpp::name = nullptr;
+CPPINTEROP_API_TABLE
+#undef DISPATCH_API
+```
+
+This creates the necessary function pointers in the `Cpp` namespace, which can then be used as normal CppInterOp API functions.
+To load the API, invoke:
+
+```cpp
+Cpp::LoadDispatchAPI("path/to/libclangCppInterOp.so");
+```
+
+Now your application can use the CppInterOp API via the `Cpp::` namespace, with all functions being dispatched through the function pointers.
+This is a one-to-one replacement for linking and using <CppInterOp/CppInterOp.h> directly, with a few drawbacks:
+- This system currently does not support overloaded public API
+- The function pointers are not initialized until `LoadDispatchAPI` is called, which means that any attempt to use the API before loading will result in a null pointer dereference.
+- You lose the ability to assume default arguments in API calls, which must now be provided explicitly since we rely on function pointers.
+
+The entire unittest suite has been configured to run in both standard and dispatch modes, ensuring that the mechanism is thoroughly tested and validated to support all public API.
+
 Using LLVM as external library
 ==============================
 

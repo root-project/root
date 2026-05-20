@@ -29,13 +29,13 @@
 // Jan 1, 1995, 00:00:00 in sec from EPOCH (Jan 1, 1970)
 R__EXTERN const TDatime kROOTTZERO;
 
-// Small class with information for final cleanup
-class TSecContextCleanup;
-class TPwdCtx;
+namespace ROOT::Deprecated {
+
+class TRootSecContext;
 
 class TSecContext : public TObject {
 
-friend class TRootSecContext;
+friend class ROOT::Deprecated::TRootSecContext;
 
 private:
    void        *fContext;             // ptr to specific sec context
@@ -110,7 +110,7 @@ class TSecContextCleanup : public TObject {
 private:
    Int_t   fPort;
    Int_t   fServerProtocol;
-   Int_t   fServerType;     // 0 = sockd, 1 = rootd, 2 = proofd
+   Int_t   fServerType;     // 0 = sockd, 1 = rootd
 
 public:
    TSecContextCleanup(Int_t port, Int_t proto, Int_t type) :
@@ -144,5 +144,10 @@ public:
 
 };
 
+} // namespace ROOT::Deprecated
+
+using TSecContext R__DEPRECATED(6, 42, "TSecContext is deprecated") = ROOT::Deprecated::TSecContext;
+using TSecContextCleanup R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TSecContextCleanup;
+using TPwdCtx R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TPwdCtx;
 
 #endif

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import ROOT
 from ROOT._pythonization._rdataframe import _clone_asnumpyresult
-
+import os
 
 def make_tree(*dtypes):
     """
@@ -90,10 +90,22 @@ class RDataFrameAsNumpy(unittest.TestCase):
         Test bool data-type as a special case since we cannot adopt
         the std::vector<bool> with numpy arrays
         """
-        df = ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)")
+        treename = "test_branch_bool"
+        filename = "test_branch_bool.root"
+        # Snapshot a TTree so that column 'x' will be of type 'Bool_t'
+        ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)").Snapshot(treename, filename)
+        # The column 'y' will instead have type 'bool'
+        df = ROOT.RDataFrame(treename, filename).Define("y", "bool(rdfentry_)")
+        self.assertEqual(df.GetColumnType("x"), "Bool_t")
+        self.assertEqual(df.GetColumnType("y"), "bool")
         npy = df.AsNumpy()
-        self.assertFalse(bool(npy["x"][0]))
-        self.assertTrue(bool(npy["x"][1]))
+        # Both numpy arrays should have dtype bool
+        self.assertEqual(npy["x"].dtype, bool)
+        self.assertEqual(npy["y"].dtype, bool)
+        self.assertFalse(npy["x"][0])
+        self.assertTrue(npy["x"][1])
+        self.assertFalse(npy["y"][0])
+        self.assertTrue(npy["y"][1])
 
     def test_read_array(self):
         """

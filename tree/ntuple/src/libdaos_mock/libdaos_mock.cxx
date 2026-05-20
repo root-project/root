@@ -14,7 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <string_view>
 
 #include <daos.h>

@@ -28,7 +28,7 @@ TFile behaviour.
 #include "TROOT.h"
 
 #include <cstdlib>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -53,7 +53,6 @@ static const char* const DCAP_PREFIX = "dcap:";
 static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 
 
-ClassImp(TDCacheFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dCache file object.
@@ -141,7 +140,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
 
    if (create || update) {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);
+      fD = SysOpen(fname, O_RDWR | O_CREAT, 0666);
 #else
       fD = SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
@@ -152,7 +151,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       fWritable = kTRUE;
    } else {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDONLY, 0644);
+      fD = SysOpen(fname, O_RDONLY, 0666);
 #else
       fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
@@ -191,7 +190,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    gDirectory = gROOT;
 }

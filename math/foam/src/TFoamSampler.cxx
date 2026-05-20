@@ -76,7 +76,6 @@ private:
    for sampling arbitrary distributions.
 */
 
-ClassImp(TFoamSampler);
 
 
 TFoamSampler::TFoamSampler() :

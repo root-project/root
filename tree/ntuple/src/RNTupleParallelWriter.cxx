@@ -2,8 +2,6 @@
 /// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-02-01
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
@@ -15,7 +13,9 @@
 
 #include <ROOT/RNTupleParallelWriter.hxx>
 
+#include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -24,6 +24,7 @@
 #include <TDirectory.h>
 #include <TError.h>
 #include <TFile.h>
+#include <TROOT.h>
 
 namespace {
 
@@ -106,18 +107,29 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDatasetImpl() final
+
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final
    {
       throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cloning a RPageSynchronizingSink is not implemented yet"));
+   }
+
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final
+   {
+      throw ROOT::RException(R__FAIL("committing attribute sets is not implemented yet for parallel writing"));
+   }
 };
 
 } // namespace
 
-ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                                 std::unique_ptr<RPageSink> sink)
+ROOT::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model,
+                                                   std::unique_ptr<RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
    if (fModel->GetRegisteredSubfieldNames().size() > 0) {
@@ -128,7 +140,7 @@ ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 }
 
-ROOT::Experimental::RNTupleParallelWriter::~RNTupleParallelWriter()
+ROOT::RNTupleParallelWriter::~RNTupleParallelWriter()
 {
    try {
       CommitDataset();
@@ -137,7 +149,7 @@ ROOT::Experimental::RNTupleParallelWriter::~RNTupleParallelWriter()
    }
 }
 
-void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
+void ROOT::RNTupleParallelWriter::CommitDataset()
 {
    if (fModel->IsExpired())
       return;
@@ -154,10 +166,9 @@ void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
    fModel->Expire();
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
-ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                    std::string_view ntupleName, std::string_view storage,
-                                                    const ROOT::RNTupleWriteOptions &options)
+std::unique_ptr<ROOT::RNTupleParallelWriter>
+ROOT::RNTupleParallelWriter::Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
+                                      std::string_view storage, const ROOT::RNTupleWriteOptions &options)
 {
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
@@ -168,10 +179,9 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<ROOT::RNTupl
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
-ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                  std::string_view ntupleName, TDirectory &fileOrDirectory,
-                                                  const ROOT::RNTupleWriteOptions &options)
+std::unique_ptr<ROOT::RNTupleParallelWriter>
+ROOT::RNTupleParallelWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
+                                    TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options)
 {
    auto file = fileOrDirectory.GetFile();
    if (!file) {
@@ -183,6 +193,11 @@ ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<ROOT::RNTupleM
       throw RException(R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into " +
                                std::string(file->GetName())));
    }
+   if (!file->IsWritable()) {
+      throw RException(R__FAIL("The file '" + std::string(file->GetName()) +
+                               "' given to RNTupleParallelWriter is not writable. Open it with 'UPDATE' or 'RECREATE' "
+                               "if you want to write into it."));
+   }
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
@@ -192,7 +207,7 @@ ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<ROOT::RNTupleM
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
 
-std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTupleParallelWriter::CreateFillContext()
+std::shared_ptr<ROOT::RNTupleFillContext> ROOT::RNTupleParallelWriter::CreateFillContext()
 {
    std::lock_guard g(fMutex);
 
@@ -204,5 +219,14 @@ std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTu
    // (direct) memory of all contexts stays around until the vector of weak_ptr's is cleared.
    std::shared_ptr<RNTupleFillContext> context(new RNTupleFillContext(std::move(model), std::move(sink)));
    fFillContexts.push_back(context);
+
+#ifdef R__USE_IMT
+   if (IsImplicitMTEnabled() &&
+       fSink->GetWriteOptions().GetUseImplicitMT() == ROOT::RNTupleWriteOptions::EImplicitMT::kOn) {
+      context->fZipTasks = std::make_unique<ROOT::Experimental::Internal::RNTupleImtTaskScheduler>();
+      context->fSink->SetTaskScheduler(context->fZipTasks.get());
+   }
+#endif
+
    return context;
 }

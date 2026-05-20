@@ -16,16 +16,16 @@
 
 #include <RooAbsCollection.h>
 #include <RooFit/EvalContext.h>
-#include <RooNumber.h>
 
 #include <ROOT/RSpan.hxx>
 
 #include <cstddef>
-#include <map>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 
 template <class T>
 class RooTemplateProxy;
@@ -56,20 +56,9 @@ public:
       return getResult(key.arg());
    }
 
-   /// @brief Figure out the output size of a node. It is the size of the
-   /// vector observable that it depends on, or 1 if it doesn't depend on any
-   /// or is a reducer node.
-   /// @param key The node to look up the size for.
-   std::size_t outputSize(RooFit::Detail::DataKey key) const
-   {
-      auto found = _nodeOutputSizes.find(key);
-      if (found != _nodeOutputSizes.end())
-         return found->second;
-      return 1;
-   }
-
    void addToGlobalScope(std::string const &str);
    void addVecObs(const char *key, int idx);
+   int observableIndexOf(const RooAbsArg &arg) const;
 
    void addToCodeBody(RooAbsArg const *klass, std::string const &in);
 
@@ -108,7 +97,7 @@ public:
 
    std::string getTmpVarName() const;
 
-   std::string buildArg(RooAbsCollection const &x);
+   std::string buildArg(RooAbsCollection const &x, std::string const &arrayType = "double");
 
    std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }
@@ -116,12 +105,12 @@ public:
    std::vector<double> const &xlArr() { return _xlArr; }
 
    void collectFunction(std::string const &name);
+   std::string const &collectedCode() { return _collectedCode; }
    std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
 
+   auto const &dependsOnData() const { return _dependsOnData; }
    std::string
-   buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes = {});
-
-   auto const &outputSizes() const { return _nodeOutputSizes; }
+   buildFunction(RooAbsArg const &arg, std::unordered_set<RooFit::Detail::DataKey> const &dependsOnData = {});
 
    struct ScopeRAII {
       std::string _fn;
@@ -149,7 +138,9 @@ private:
    template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
    {
-      return RooNumber::toString(x);
+      std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::max_digits10) << x;
+      return ss.str();
    }
 
    // If input is integer, we want to print it into the code like one (i.e. avoid the unnecessary '.0000').
@@ -192,8 +183,8 @@ private:
    std::unordered_map<const TNamed *, std::string> _nodeNames;
    /// @brief A map to keep track of the observable indices if they are non scalar.
    std::unordered_map<const TNamed *, int> _vecObsIndices;
-   /// @brief Map of node output sizes.
-   std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
+   /// @brief Indicate whether a node depends on the dataset.
+   std::unordered_set<RooFit::Detail::DataKey> _dependsOnData;
    /// @brief The code layered by lexical scopes used as a stack.
    std::vector<std::string> _code;
    /// @brief The indentation level for pretty-printing.
@@ -204,6 +195,7 @@ private:
    std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> _listNames;
    std::vector<double> _xlArr;
    std::vector<std::string> _collectedFunctions;
+   std::string _collectedCode;
 };
 
 template <>
@@ -222,10 +214,12 @@ std::string CodegenContext::buildArgSpanImpl(std::span<const T> arr)
 {
    unsigned int n = arr.size();
    std::string arrName = getTmpVarName();
-   std::string arrDecl = typeName<T>() + " " + arrName + "[" + std::to_string(n) + "] = {";
+   std::stringstream ss;
+   ss << typeName<T>() << " " << arrName << "[" << n << "] = {";
    for (unsigned int i = 0; i < n; i++) {
-      arrDecl += " " + std::to_string(arr[i]) + ",";
+      ss << " " << arr[i] << ",";
    }
+   std::string arrDecl = ss.str();
    arrDecl.back() = '}';
    arrDecl += ";\n";
    addToCodeBody(arrDecl, true);

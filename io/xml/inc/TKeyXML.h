@@ -73,9 +73,9 @@ protected:
 
    void *XmlReadAny(void *obj, const TClass *expectedClass);
 
-   XMLNodePointer_t fKeyNode{nullptr}; //! node with stored object
-   Long64_t fKeyId{0};                 //! unique identifier of key for search methods
-   Bool_t fSubdir{kFALSE};             //! indicates that key contains subdirectory
+   XMLNodePointer_t fKeyNode{nullptr}; ///<! node with stored object
+   Long64_t fKeyId{0};                 ///<! unique identifier of key for search methods
+   Bool_t fSubdir{kFALSE};             ///<! indicates that key contains subdirectory
 
    ClassDefOverride(TKeyXML, 1) // a special TKey for XML files
 };

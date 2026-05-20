@@ -78,6 +78,40 @@ TEST(RNTupleBulk, Complex)
    }
 }
 
+TEST(RNTupleBulk, Move)
+{
+   FileRaii fileGuard("test_ntuple_bulk_move.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         *fldInt = i;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RFieldBase::RBulkValues bulk = reader->GetModel().CreateBulk("int");
+
+   auto mask = std::make_unique<bool[]>(10);
+   std::fill(mask.get(), mask.get() + 10, true);
+   auto intArr10 = static_cast<int *>(bulk.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(i, intArr10[i]);
+   }
+
+   // Moving the object should retain the same values pointer that can be reused.
+   RFieldBase::RBulkValues bulkMoved(std::move(bulk));
+   auto intArr10Moved = static_cast<int *>(bulkMoved.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   EXPECT_EQ(intArr10, intArr10Moved);
+
+   // Same for the move-assignment operator, back into the original object.
+   bulk = std::move(bulkMoved);
+   intArr10 = static_cast<int *>(bulk.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   EXPECT_EQ(intArr10, intArr10Moved);
+}
+
 TEST(RNTupleBulk, CardinalityField)
 {
    FileRaii fileGuard("test_ntuple_bulk_cardinality.root");
@@ -117,21 +151,25 @@ TEST(RNTupleBulk, RVec)
    FileRaii fileGuard("test_ntuple_bulk_rvec.root");
    {
       auto model = RNTupleModel::Create();
-      auto fldVecI = model->MakeField<ROOT::RVecI>("vint");
-      auto fldVecS = model->MakeField<ROOT::RVec<CustomStruct>>("vs");
-      auto fldVecVI = model->MakeField<ROOT::RVec<ROOT::RVecI>>("vvint");
+      auto ptrVecI = model->MakeField<ROOT::RVecI>("vint");
+      auto ptrVecS = model->MakeField<ROOT::RVec<CustomStruct>>("vs");
+      auto ptrVecVI = model->MakeField<ROOT::RVec<ROOT::RVecI>>("vvint");
+      auto ptrVecArrI = model->MakeField<ROOT::RVec<std::array<int, 2>>>("varrint");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       for (int i = 0; i < 10; ++i) {
-         fldVecI->resize(i);
-         fldVecS->resize(i);
-         fldVecVI->resize(i);
+         ptrVecI->resize(i);
+         ptrVecS->resize(i);
+         ptrVecVI->resize(i);
+         ptrVecArrI->resize(i);
          for (int j = 0; j < i; ++j) {
-            fldVecI->at(j) = j;
-            fldVecS->at(j).a = j;
-            fldVecVI->at(j).resize(j);
+            ptrVecI->at(j) = j;
+            ptrVecS->at(j).a = j;
+            ptrVecVI->at(j).resize(j);
             for (int k = 0; k < j; ++k) {
-               fldVecVI->at(j).at(k) = k;
+               ptrVecVI->at(j).at(k) = k;
             }
+            ptrVecArrI->at(j).at(0) = 1000 * i + 2 * j;
+            ptrVecArrI->at(j).at(1) = 1000 * i + 2 * j + 1;
          }
          writer->Fill();
       }
@@ -143,6 +181,7 @@ TEST(RNTupleBulk, RVec)
    RFieldBase::RBulkValues bulkI = model.CreateBulk("vint");
    RFieldBase::RBulkValues bulkS = model.CreateBulk("vs");
    RFieldBase::RBulkValues bulkVI = model.CreateBulk("vvint");
+   RFieldBase::RBulkValues bulkVArrI = model.CreateBulk("varrint");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);
@@ -151,12 +190,17 @@ TEST(RNTupleBulk, RVec)
    auto iArr = static_cast<ROOT::RVecI *>(bulkI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
    auto sArr = static_cast<ROOT::RVec<CustomStruct> *>(bulkS.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
    auto viArr = static_cast<ROOT::RVec<ROOT::RVecI> *>(bulkVI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   auto arriArr =
+      static_cast<ROOT::RVec<std::array<int, 2>> *>(bulkVArrI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, iArr[i].size());
+      EXPECT_EQ(i, arriArr[i].size());
       EXPECT_EQ(i == 1 ? 0 : i, sArr[i].size());
       EXPECT_EQ(i == 1 ? 0 : i, viArr[i].size());
-      for (std::size_t j = 0; j < iArr[i].size(); ++j) {
+      for (int j = 0; j < i; ++j) {
          EXPECT_EQ(j, iArr[i].at(j));
+         EXPECT_EQ(1000 * i + 2 * j, arriArr[i].at(j).at(0));
+         EXPECT_EQ(1000 * i + 2 * j + 1, arriArr[i].at(j).at(1));
       }
       // RVec<PoD> should have all the vector elements of the bulk stored consecutively in memory
       if (i > 1) {
@@ -170,6 +214,55 @@ TEST(RNTupleBulk, RVec)
          for (std::size_t k = 0; k < viArr[i].at(j).size(); ++k) {
             EXPECT_EQ(k, viArr[i][j][k]);
          }
+      }
+   }
+}
+
+TEST(RNTupleBulk, Array)
+{
+   FileRaii fileGuard("test_ntuple_bulk_array.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldArrI = model->MakeField<std::array<int, 2>>("aint");
+      auto fld2DArrI = model->MakeField<std::array<std::array<int, 2>, 2>>("2daint");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 3; ++i) {
+         fldArrI->at(0) = 2 * i;
+         fldArrI->at(1) = 2 * i + 1;
+
+         fld2DArrI->at(0).at(0) = 4 * i;
+         fld2DArrI->at(0).at(1) = 4 * i + 1;
+         fld2DArrI->at(1).at(0) = 4 * i + 2;
+         fld2DArrI->at(1).at(1) = 4 * i + 3;
+
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &model = reader->GetModel();
+
+   RFieldBase::RBulkValues bulkI = model.CreateBulk("aint");
+   RFieldBase::RBulkValues bulk2DI = model.CreateBulk("2daint");
+
+   auto mask = std::make_unique<bool[]>(3);
+   mask[0] = true;
+   mask[1] = false; // the std::array<simple type, ...> field optimization should ignore the mask
+   mask[2] = true;
+
+   auto iArr = static_cast<std::array<int, 2> *>(bulkI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 3));
+   auto i2DArr =
+      static_cast<std::array<std::array<int, 2>, 2> *>(bulk2DI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 3));
+
+   for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(2 * i, iArr[i][0]);
+      EXPECT_EQ(2 * i + 1, iArr[i][1]);
+
+      if (mask[i]) {
+         EXPECT_EQ(4 * i, i2DArr[i][0][0]);
+         EXPECT_EQ(4 * i + 1, i2DArr[i][0][1]);
+         EXPECT_EQ(4 * i + 2, i2DArr[i][1][0]);
+         EXPECT_EQ(4 * i + 3, i2DArr[i][1][1]);
       }
    }
 }

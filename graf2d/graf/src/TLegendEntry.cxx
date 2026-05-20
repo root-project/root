@@ -16,7 +16,6 @@
 #include "TROOT.h"
 #include <iostream>
 
-ClassImp(TLegendEntry);
 
 /** \class TLegendEntry
 \ingroup BasicGraphics
@@ -27,7 +26,7 @@ Storage class for one entry of a TLegend.
 ////////////////////////////////////////////////////////////////////////////////
 /// TLegendEntry do-nothing default constructor
 
-TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
+TLegendEntry::TLegendEntry(): TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
 {
    fObject = nullptr;
 }

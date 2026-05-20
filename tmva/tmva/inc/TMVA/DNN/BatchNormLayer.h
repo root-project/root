@@ -115,30 +115,30 @@ public:
     * different events in the batch. Computes activations as well as
     * the first partial derivative of the activation function at those
     * activations. */
-   void Forward(Tensor_t &input, bool inTraining = true);
+   void Forward(Tensor_t &input, bool inTraining = true) override;
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
-   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward) override;
    //              Tensor_t &inp1, Tensor_t &inp2);
 
 
    /* reset at end of training the batch counter */
-   void ResetTraining() { fTrainedBatches = 0; }
+   void ResetTraining() override { fTrainedBatches = 0; }
 
    /*! Printing the layer info. */
-   void Print() const;
+   void Print() const override;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   virtual void AddWeightsXMLTo(void *parent);
+   void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   virtual void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromXML(void *parent) override;
 
    /* initialize weights */
-   virtual void Initialize();
+   void Initialize() override;
 
    /*  get number of trained batches */
    const int & GetNTrainedBatches() const { return fTrainedBatches;}
@@ -182,14 +182,14 @@ public:
    const Matrix_t &GetReshapedData() const { return fReshapedData; }
    Matrix_t &GetReshapedData() { return fReshapedData; }
 
-   std::vector<Matrix_t> GetExtraLayerParameters() const {
+   std::vector<Matrix_t> GetExtraLayerParameters() const override {
       std::vector<Matrix_t> params(2);
       params[0] = this->GetMuVector();
       params[1] = this->GetVarVector();
       return params;
    }
 
-   void SetExtraLayerParameters(const std::vector<Matrix_t> & params)
+   void SetExtraLayerParameters(const std::vector<Matrix_t> & params) override
    {
       this->GetMuVector() = params[0];
       this->GetVarVector() = params[1];

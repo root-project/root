@@ -1,23 +1,31 @@
 // Tests for the RooSimultaneous
 // Authors: Jonas Rembser, CERN  06/2021
 
+#include <Roo1DTable.h>
+#include <RooAddPdf.h>
 #include <RooAddition.h>
 #include <RooCategory.h>
+#include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
+#include <RooExponential.h>
 #include <RooFitResult.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
+#include <RooPlot.h>
 #include <RooProdPdf.h>
 #include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooThresholdCategory.h>
+#include <RooUniform.h>
 #include <RooWorkspace.h>
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
 
 /// Forum issue
@@ -412,6 +420,8 @@ TEST(RooSimultaneous, ConditionalProdPdf)
 // channels can be extended. Also check if the likelihood can be created.
 TEST(RooSimultaneous, PartiallyExtendedPdfs)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooWorkspace ws;
    ws.factory("Gaussian::pdfA(x_a[-10, 10], mu_a[0, -10, 10], sigma_a[2.0, 0.1, 10.0])");
    ws.factory("Gaussian::pdfB(x_b[-10, 10], mu_b[0, -10, 10], sigma_b[2.0, 0.1, 10.0])");
@@ -422,7 +432,6 @@ TEST(RooSimultaneous, PartiallyExtendedPdfs)
    RooArgSet observables{*ws.var("x_a"), *ws.var("x_b"), *ws.cat("cat")};
 
    auto &simPdf = *ws.pdf("simPdf");
-   std::cout << simPdf.getVal() << std::endl;
 
    // A completely extended pdf, just to easily create a toy dataset
    ws.factory("ExtendPdf::pdfAext(pdfA, n_b[1000., 100., 10000.])");
@@ -455,4 +464,322 @@ TEST(RooSimultaneous, DuplicateExtendedPdfs)
 
    EXPECT_FLOAT_EQ(simPdfVal, 0.05);
    EXPECT_DOUBLE_EQ(simPdfVal, simPdfRef.getVal(normSet));
+}
+
+/// GitHub issue #19166.
+/// RooSimultaneous::fitTo() should work well with ConditionalOvservables.
+/// We test this by performing the similar test to a test case in
+/// RooSimultaneousSingleChannelCrossCheck.
+TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheckWithCondVar)
+{
+   using namespace RooFit;
+
+   // silence log output
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Uniform::uniform(width[1, 3])");
+   ws.factory("expr::sigma(\"@0*@1\", width, width_scale[0.8, 0.5, 1.5])");
+   ws.factory("Gaussian::model(x[-20, 20], mean[3, -20., 20.], sigma)");
+
+   RooRealVar &width = *ws.var("width");
+   RooAbsPdf &widthModel = *ws.pdf("uniform");
+   std::unique_ptr<RooDataSet> protoData{widthModel.generate(width, 100)};
+
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("model");
+
+   std::unique_ptr<RooDataSet> data{model.generate(x, *protoData)};
+
+   RooCategory cat("cat", "cat");
+   cat.defineType("physics");
+
+   RooArgSet params;
+   RooArgSet initialParams;
+   model.getParameters(data->get(), params);
+   params.snapshot(initialParams);
+
+   RooSimultaneous modelSim("modelSim", "modelSim", {{"physics", &model}}, cat);
+
+   RooDataSet combData("combData", "combData", {x, width}, Index(cat), Import({{"physics", data.get()}}));
+
+   using namespace RooFit;
+
+   params.assign(initialParams);
+   std::unique_ptr<RooFitResult> resDirect{
+      model.fitTo(*data, ConditionalObservables(width), Save(), PrintLevel(-1), _evalBackend)};
+
+   params.assign(initialParams);
+   std::unique_ptr<RooFitResult> resSimWrapped{
+      modelSim.fitTo(combData, ConditionalObservables(width), Save(), PrintLevel(-1), _evalBackend)};
+
+   EXPECT_TRUE(resSimWrapped->isIdentical(*resDirect))
+      << "Inconsistency in RooSimultaneous wrapping with ConditionalObservables";
+}
+
+/// GitHub issue #18718.
+/// Make sure that we can do a ranged fit on an extended RooAddPdf in a
+/// RooSimultaneous with the new CPU backend.
+///
+/// The reference value is computed analytically: each channel has a single
+/// fixed-shape exponential, so the extended-MLE for the yield reduces to
+/// `N_obs_in_range * I_full / I_range`, where the integrals run over the full
+/// observable range and the fit range respectively. This avoids depending on
+/// the legacy evaluation backend, which is not always built.
+TEST(RooSimultaneous, RangedExtendedRooAddPdf)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
+
+   const double nBkgA_nom = 9000;
+   const double nBkgB_nom = 10000;
+
+   const double cA = -0.06;
+   const double cB = -0.09;
+
+   const double xMin = 100;
+   const double xMax = 150;
+   const double xFitMax = 130;
+
+   RooRealVar x("x", "Observable", xMin, xMax);
+   x.setRange("fitRange", xMin, xFitMax);
+
+   RooRealVar nBkgA("nBkgA", "", nBkgA_nom, 0.8 * nBkgA_nom, 1.2 * nBkgA_nom);
+   RooRealVar nBkgB("nBkgB", "", nBkgB_nom, 0.8 * nBkgB_nom, 1.2 * nBkgB_nom);
+
+   RooExponential expA("expA", "", x, RooFit::RooConst(cA));
+   RooAddPdf modelA("modelA", "", {expA}, {nBkgA});
+
+   RooExponential expB("expB", "", x, RooFit::RooConst(cB));
+   RooAddPdf modelB("modelB", "", {expB}, {nBkgB});
+
+   RooCategory runCat("runCat", "", {{"RunA", 0}, {"RunB", 1}});
+
+   RooSimultaneous simPdf("simPdf", "", {{"RunA", &modelA}, {"RunB", &modelB}}, runCat);
+
+   using namespace RooFit;
+
+   std::unique_ptr<RooDataSet> combData{simPdf.generate(RooArgSet(x, runCat), Extended())};
+
+   std::unique_ptr<RooFitResult> fitResult{
+      simPdf.fitTo(*combData, Save(), Range("fitRange"), EvalBackend(EvalBackend::Cpu()), PrintLevel(-1))};
+
+   ASSERT_NE(fitResult, nullptr);
+   EXPECT_EQ(fitResult->status(), 0);
+
+   auto integ = [](double c, double a, double b) { return (std::exp(c * b) - std::exp(c * a)) / c; };
+
+   const double ratioA = integ(cA, xMin, xMax) / integ(cA, xMin, xFitMax);
+   const double ratioB = integ(cB, xMin, xMax) / integ(cB, xMin, xFitMax);
+
+   const double nBkgA_ref = combData->sumEntries("runCat==0", "fitRange") * ratioA;
+   const double nBkgB_ref = combData->sumEntries("runCat==1", "fitRange") * ratioB;
+
+   auto getFinal = [&](const char *name) { return static_cast<RooRealVar *>(fitResult->floatParsFinal().find(name)); };
+
+   // Tolerance accounts for MINUIT's default convergence precision. The
+   // fit-vs-analytical mismatch caused by the bug in #18718 was several percent.
+   EXPECT_NEAR(getFinal("nBkgA")->getVal(), nBkgA_ref, 1e-3 * nBkgA_ref);
+   EXPECT_NEAR(getFinal("nBkgB")->getVal(), nBkgB_ref, 1e-3 * nBkgB_ref);
+}
+
+/// GitHub issue #20383.
+/// Check that the the simultaneous pdf is normalized correctly when plotting
+/// with a projection dataset.
+TEST(RooSimultaneous, PlotProjWData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", -8, 8);
+   x.setBins(1);
+
+   RooUniform model{"model", "", x};
+   RooUniform model_ctl{"model_ctl", "", x};
+
+   RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
+
+   RooArgSet vars{x, sample};
+   RooDataHist combData{"combData", "", vars};
+   sample.setLabel("physics");
+   combData.add(vars, 1000);
+   sample.setLabel("control");
+   combData.add(vars, 2000);
+
+   RooSimultaneous simPdf("simPdf", "simultaneous pdf", {{"physics", &model}, {"control", &model_ctl}}, sample);
+
+   RooPlot *frame = x.frame();
+   combData.plotOn(frame);
+   simPdf.plotOn(frame, RooFit::ProjWData(sample, combData));
+
+   // The pdf should be normalized to match the data. In this test, we plot a
+   // single bin and the model is uniform, to the curve should be equal to the
+   // sum of data entries in the center.
+   EXPECT_DOUBLE_EQ(frame->getCurve()->interpolate(0.), combData.sumEntries());
+}
+
+/// Second part of GitHub issue #20383.
+/// Check that the the simultaneous pdf is normalized correctly to the data
+/// when plotting with a projection dataset, in the extended and non-extended
+/// case, based on the reproducer provided by the user who opened the issue.
+TEST(RooSimultaneous, PlotProjWDataExtended)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
+
+   RooRealVar xvar1("x1", "", 0.0, 10.0);
+   RooRealVar xvar2("x2", "", 0.0, 10.0);
+
+   RooRealVar mean1("mean1", "", 3.0, 1.0, 4.0);
+   RooRealVar mean2("mean2", "", 5.0, 4.0, 6.0);
+   RooRealVar sigma("sigma", "", 1.0, 0.01, 2.0);
+
+   RooGaussian gauss1("gauss1", "", xvar1, mean1, sigma);
+   RooGaussian gauss2("gauss2", "", xvar2, mean2, sigma);
+
+   RooRealVar a0("a0", "a0", -0.1, -1.0, 1.0);
+   RooChebychev bkg1("bkg1", "b1", xvar1, {a0});
+
+   RooRealVar c0("c0", "c0", -0.1, -1.0, 1.0);
+   RooChebychev bkg2("bkg2", "b2", xvar2, {c0});
+
+   RooRealVar s1("s1", "s1", 75.0, 0.0, 100000.0);
+   RooRealVar b1("b1", "b1", 25.0, 0.0, 100000.0);
+
+   // Extended models
+   RooAddPdf model1e("model1e", "", {gauss1, bkg1}, {s1, b1});
+
+   RooRealVar s2("s2", "s2", 50.0, 0.0, 100000.0);
+   RooRealVar b2("b2", "b2", 50.0, 0.0, 100000.0);
+
+   RooAddPdf model2e("model2e", "model2e", {gauss2, bkg2}, {s2, b2});
+
+   // Non-extended models
+   RooRealVar f1("f1", "f1", 0.75, 0.0, 1.0);
+   RooAddPdf model1n("model1n", "model1n", {gauss1, bkg1}, {f1});
+
+   RooRealVar f2("f2", "f2", 0.50, 0.0, 1.0);
+   RooAddPdf model2n("model2n", "model2n", RooArgList(gauss2, bkg2), RooArgList(f2));
+
+   // Case handling
+   enum class Case {
+      Gaussian,
+      NonExtended,
+      Extended
+   };
+
+   auto caseName = [](Case c) {
+      switch (c) {
+      case Case::Gaussian: return "Gaussian";
+      case Case::NonExtended: return "NonExtended";
+      case Case::Extended: return "Extended";
+      }
+      return "Unknown";
+   };
+
+   const std::vector<Case> cases = {Case::Gaussian, Case::NonExtended, Case::Extended};
+
+   // Helpers
+   auto integrateLastCurve = [](RooPlot *plot) {
+      const double xmin = plot->getPlotVar()->getMin();
+      const double xmax = plot->getPlotVar()->getMax();
+      return plot->getCurve()->average(xmin, xmax) * plot->getPlotVar()->numBins();
+   };
+
+   constexpr double tol = 0.01; // tolerate 1 % sampling error
+
+   // Test body
+   auto runCase = [&](Case c) {
+      SCOPED_TRACE(std::string("Case = ") + caseName(c));
+
+      RooAbsPdf *model1 = nullptr;
+      RooAbsPdf *model2 = nullptr;
+
+      switch (c) {
+      case Case::Gaussian:
+         model1 = &gauss1;
+         model2 = &gauss2;
+         break;
+      case Case::NonExtended:
+         model1 = &model1n;
+         model2 = &model2n;
+         break;
+      case Case::Extended:
+         model1 = &model1e;
+         model2 = &model2e;
+         break;
+      }
+
+      ASSERT_NE(model1, nullptr);
+      ASSERT_NE(model2, nullptr);
+
+      // Generate data
+      std::unique_ptr<RooDataSet> data1{model1->generate(xvar1, 10000)};
+      std::unique_ptr<RooDataSet> data2{model2->generate(xvar2, 1000)};
+
+      // Category
+      RooCategory sample("sample", "");
+      sample.defineType("Fit1");
+      sample.defineType("Fit2");
+
+      RooDataSet data("combinedData", "", {xvar1, xvar2}, Index(sample),
+                      Import({{"Fit1", data1.get()}, {"Fit2", data2.get()}}));
+
+      // Simultaneous PDF
+      RooSimultaneous sim_pdf("sim_pdf", "", sample);
+      sim_pdf.addPdf(*model1, "Fit1");
+      sim_pdf.addPdf(*model2, "Fit2");
+
+      std::unique_ptr<RooFitResult> result{sim_pdf.fitTo(data, Save(true), PrintLevel(-1))};
+
+      // Plot + checks
+      RooPlot *frame1 = xvar1.frame();
+      data.plotOn(frame1, Cut("sample==sample::Fit1"));
+      sim_pdf.plotOn(frame1, Slice(sample, "Fit1"), ProjWData(sample, data));
+
+      EXPECT_THAT(integrateLastCurve(frame1), RelativeNear(data1->sumEntries(), tol));
+
+      RooPlot *frame2 = xvar2.frame();
+      data.plotOn(frame2, Cut("sample==sample::Fit2"));
+      sim_pdf.plotOn(frame2, Slice(sample, "Fit2"), ProjWData(sample, data));
+
+      EXPECT_THAT(integrateLastCurve(frame2), RelativeNear(data2->sumEntries(), tol));
+   };
+
+   // Execute
+   for (Case c : cases) {
+      runCase(c);
+   }
+}
+
+/// JIRA ticket https://its.cern.ch/jira/browse/ROOT-7499
+/// Check that we can also generate Asimov datasets with non-integer weights
+/// via RooSimultaneous.
+TEST(RooSimultaneous, ExpectedDataWithNonIntegerWeights)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
+
+   RooWorkspace ws{"ws"};
+   ws.factory("dummy_obs_a[0,1]");
+   ws.factory("dummy_obs_b[0,1]");
+   ws.factory("Uniform::uniform_a(dummy_obs_a)");
+   ws.factory("Uniform::uniform_b(dummy_obs_b)");
+   ws.factory("SUM::model_a(coeff_a[3.5]*uniform_a)");
+   ws.factory("SUM::model_b(coeff_b[6.5]*uniform_b)");
+
+   RooRealVar &dummy_obs_a = *ws.var("dummy_obs_a");
+   RooRealVar &dummy_obs_b = *ws.var("dummy_obs_b");
+
+   ws.factory("dummy_cat[a]");
+   ws.factory("SIMUL::sim_model(dummy_cat, a = model_a, b = model_b)");
+   RooAbsCategory &dummy_cat = *ws.cat("dummy_cat");
+
+   // std::cout << "simultaneous expected = " << ws.pdf("sim_model")->expectedEvents(dummy_obs) << std::endl;
+   RooDataSet *data = ws.pdf("sim_model")->generate({dummy_obs_a, dummy_obs_b, dummy_cat}, RooFit::ExpectedData());
+
+   std::unique_ptr<Roo1DTable> tab{data->table(dummy_cat)};
+
+   // Check that the sum of entries for each category is as expected, matching
+   // the coefficients from the RooAddPdf.
+   EXPECT_FLOAT_EQ(tab->get("a"), ws.var("coeff_a")->getVal());
+   EXPECT_FLOAT_EQ(tab->get("b"), ws.var("coeff_b")->getVal());
 }

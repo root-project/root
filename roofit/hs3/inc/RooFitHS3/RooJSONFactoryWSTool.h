@@ -39,6 +39,9 @@ class RooJSONFactoryWSTool {
 public:
    static constexpr bool useListsInsteadOfDicts = true;
    static bool allowExportInvalidNames;
+   static bool allowSanitizeNames;
+   static RooWorkspace sanitizeWS(const RooWorkspace &ws);
+   static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
    struct CombinedData {
       std::string name;
@@ -52,11 +55,14 @@ public:
    static std::string name(const RooFit::Detail::JSONNode &n);
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &str, bool forcError);
+   static std::string sanitizeName(const std::string str);
+   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig *mc, RooWorkspace &ws);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
    static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
+   static void fillSeqSanitizedName(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -146,7 +152,7 @@ public:
    void importJSONElement(const std::string &name, const std::string &jsonString);
    void importVariableElement(const RooFit::Detail::JSONNode &n);
 
-   void importFunction(const RooFit::Detail::JSONNode &n, bool importAllDependants);
+   void importFunction(const RooFit::Detail::JSONNode &p, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
@@ -199,7 +205,6 @@ public:
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
-
    void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
 
    // To export multiple objects sorted alphabetically
@@ -221,16 +226,17 @@ private:
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importVariable(const RooFit::Detail::JSONNode &n);
+   void importVariable(const RooFit::Detail::JSONNode &p);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n);
-   void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
+   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
+   void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
    void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &d);
+                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combined,
+                          const std::vector<RooAbsData *> &single);
 
    void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                 std::string const &analysisName,

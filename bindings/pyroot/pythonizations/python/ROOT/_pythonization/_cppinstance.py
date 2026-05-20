@@ -8,13 +8,12 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+
 def pythonize_cppinstance():
-    import cppyy
-    from libROOTPythonizations import AddCPPInstancePickling
+    from ROOT.libROOTPythonizations import AddCPPInstancePickling
 
-    klass = cppyy._backend.CPPInstance
+    AddCPPInstancePickling()
 
-    AddCPPInstancePickling(klass)
 
 # Instant pythonization (executed at `import ROOT` time), no need of a
 # decorator. CPPInstance is the base for cppyy instance proxies and thus needs

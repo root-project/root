@@ -24,7 +24,7 @@
 TEST(RooPlot, Average)
 {
    // Silence the info about numeric integration because we don't care about it
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    RooRealVar x("x", "x", 0, 50);
    RooGenericPdf func("func", "Test Function", "x", x);

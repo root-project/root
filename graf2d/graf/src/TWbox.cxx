@@ -14,11 +14,10 @@
 #include "Strlen.h"
 #include "TWbox.h"
 #include "TColor.h"
+#include "TStyle.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
-#include "TPoint.h"
+#include "TVirtualPadPainter.h"
 
-ClassImp(TWbox);
 
 /** \class TWbox
 \ingroup BasicGraphics
@@ -136,69 +135,115 @@ void TWbox::PaintWbox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
 
 void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                        Color_t color, Short_t bordersize, Short_t bordermode,
-                       Bool_t tops)
+                       Bool_t /* tops */)
 {
-   if (!gPad) return;
-   if (bordermode == 0) return;
-   if (bordersize <= 0) bordersize = 2;
+   if (bordermode == 0)
+      return;
 
-   Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
+   auto oldcolor = GetFillColor();
+   SetFillColor(color);
+
+   PaintBorderOn(gPad, x1, y1, x2, y2, bordersize, bordermode);
+
+   SetFillColor(oldcolor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a 3D border around a box.
+/// Used also by the pad painter
+
+void TWbox::PaintBorderOn(TVirtualPad *pad,
+                          Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                          Short_t bordersize, Short_t bordermode, Bool_t with_selection)
+{
+   if (bordermode == 0)
+      return;
+   if (bordersize <= 0)
+      bordersize = 2;
+
+   auto pp = pad->GetPainter();
+   if (!pp)
+      return;
+
+   Double_t ww = pad->GetWw(), wh = pad->GetWh();
+
+   if (pp->GetPS()) {
+      // SL: need to calculate page size to get real coordiantes for border
+      // TODO: Code can be removed if border not need to be exact pixel size
+      Float_t xsize = 20, ysize = 26;
+      gStyle->GetPaperSize(xsize, ysize);
+      Double_t ratio = wh/ww;
+      if (xsize * ratio > ysize)
+         xsize = ysize/ratio;
+      else
+         ysize = xsize*ratio;
+      ww = 72 / 2.54 * xsize;
+      wh = 72 / 2.54 * ysize;
+   }
+
+   const Double_t realBsX = bordersize / (pad->GetAbsWNDC() * ww) * (pad->GetX2() - pad->GetX1());
+   const Double_t realBsY = bordersize / (pad->GetAbsHNDC() * wh) * (pad->GetY2() - pad->GetY1());
+
+   // GetColorDark() and GetColorBright() use GetFillColor()
+   Color_t fillcolor = GetFillColor();
+   Color_t light = !fillcolor ? 0 : GetLightColor();
+   Color_t dark = !fillcolor ? 0 : GetDarkColor();
+
    Double_t xl, xt, yl, yt;
 
    // Compute real left bottom & top right of the box in pixels
-   px1 = gPad->XtoPixel(x1);   py1 = gPad->YtoPixel(y1);
-   px2 = gPad->XtoPixel(x2);   py2 = gPad->YtoPixel(y2);
-   if (px1 < px2) {pxl = px1; pxt = px2; xl = x1; xt = x2; }
-   else           {pxl = px2; pxt = px1; xl = x2; xt = x1;}
-   if (py1 > py2) {pyl = py1; pyt = py2; yl = y1; yt = y2;}
-   else           {pyl = py2; pyt = py1; yl = y2; yt = y1;}
-
-   if (!gPad->IsBatch()) {
-      TPoint frame[7];
-
-      // GetDarkColor() and GetLightColor() use GetFillColor()
-      Color_t oldcolor = GetFillColor();
-      SetFillColor(color);
-      TAttFill::Modify();
-
-      // Draw top&left part of the box
-      frame[0].fX = pxl;                 frame[0].fY = pyl;
-      frame[1].fX = pxl + bordersize;    frame[1].fY = pyl - bordersize;
-      frame[2].fX = frame[1].fX;         frame[2].fY = pyt + bordersize;
-      frame[3].fX = pxt - bordersize;    frame[3].fY = frame[2].fY;
-      frame[4].fX = pxt;                 frame[4].fY = pyt;
-      frame[5].fX = pxl;                 frame[5].fY = pyt;
-      frame[6].fX = pxl;                 frame[6].fY = pyl;
-
-      if (bordermode == -1) gVirtualX->SetFillColor(GetDarkColor());
-      else                  gVirtualX->SetFillColor(GetLightColor());
-      gVirtualX->DrawFillArea(7, frame);
-
-      // Draw bottom&right part of the box
-      frame[0].fX = pxl;                 frame[0].fY = pyl;
-      frame[1].fX = pxl + bordersize;    frame[1].fY = pyl - bordersize;
-      frame[2].fX = pxt - bordersize;    frame[2].fY = frame[1].fY;
-      frame[3].fX = frame[2].fX;         frame[3].fY = pyt + bordersize;
-      frame[4].fX = pxt;                 frame[4].fY = pyt;
-      frame[5].fX = pxt;                 frame[5].fY = pyl;
-      frame[6].fX = pxl;                 frame[6].fY = pyl;
-
-      if (bordermode == -1) gVirtualX->SetFillColor(TColor::GetColorBright(GetFillColor()));
-      else                  gVirtualX->SetFillColor(TColor::GetColorDark(GetFillColor()));
-      gVirtualX->DrawFillArea(7, frame);
-
-      gVirtualX->SetFillColor(-1);
-      SetFillColor(oldcolor);
+   if (pad->XtoPixel(x1) < pad->XtoPixel(x2)) {
+      xl = x1;
+      xt = x2;
+   } else {
+      xl = x2;
+      xt = x1;
+   }
+   if (pad->YtoPixel(y1) > pad->YtoPixel(y2)) {
+      yl = y1;
+      yt = y2;
+   } else {
+      yl = y2;
+      yt = y1;
    }
 
-   if (!tops) return;
+   Double_t frameXs[7] = {}, frameYs[7] = {};
 
-   // same for PostScript
-   // Double_t dx   = (xt - xl) *Double_t(bordersize)/Double_t(pxt - pxl);
-   // Int_t border = gVirtualPS->XtoPS(xt) - gVirtualPS->XtoPS(xt-dx);
+   // Draw top&left part of the box
+   frameXs[0] = xl;           frameYs[0] = yl;
+   frameXs[1] = xl + realBsX; frameYs[1] = yl + realBsY;
+   frameXs[2] = frameXs[1];   frameYs[2] = yt - realBsY;
+   frameXs[3] = xt - realBsX; frameYs[3] = frameYs[2];
+   frameXs[4] = xt;           frameYs[4] = yt;
+   frameXs[5] = xl;           frameYs[5] = yt;
+   frameXs[6] = xl;           frameYs[6] = yl;
 
-   gPad->PaintBorderPS(xl, yl, xt, yt, bordermode, bordersize,
-                         GetDarkColor(), GetLightColor());
+   SetFillColor(bordermode == -1 ? dark : light);
+   pp->SetAttFill(*this);
+   pp->DrawFillArea(7, frameXs, frameYs);
+
+   // Draw bottom&right part of the box
+   frameXs[0] = xl;              frameYs[0] = yl;
+   frameXs[1] = xl + realBsX;    frameYs[1] = yl + realBsY;
+   frameXs[2] = xt - realBsX;    frameYs[2] = frameYs[1];
+   frameXs[3] = frameXs[2];      frameYs[3] = yt - realBsY;
+   frameXs[4] = xt;              frameYs[4] = yt;
+   frameXs[5] = xt;              frameYs[5] = yl;
+   frameXs[6] = xl;              frameYs[6] = yl;
+
+   SetFillColor(bordermode == -1 ? light : dark);
+   pp->SetAttFill(*this);
+   pp->DrawFillArea(7, frameXs, frameYs);
+
+   SetFillColor(fillcolor);
+
+   if (with_selection) {
+      Color_t oldlinecolor = GetLineColor();
+      SetLineColor(GetFillColor() != 2 ? 2 : 4);
+      pp->SetAttLine(*this);
+      pp->DrawBox(xl + realBsX, yl + realBsY, xt - realBsX, yt - realBsY, TVirtualPadPainter::kHollow);
+      SetLineColor(oldlinecolor);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +253,7 @@ void TWbox::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "wbox", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
-   SaveFillAttributes(out, "wbox", 0, 1001);
+   SaveFillAttributes(out, "wbox", -1, -1);
    SaveLineAttributes(out, "wbox", 1, 1, 1);
 
    SavePrimitiveDraw(out, "wbox", option);

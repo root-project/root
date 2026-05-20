@@ -1,6 +1,20 @@
 #include "ntuple_test.hxx"
 
+#include <ROOT/RConfig.hxx>
+#ifndef R__BYTESWAP
+#define IS_BIG_ENDIAN 1
+#else
+#define IS_BIG_ENDIAN 0
+#endif
+
+#if IS_BIG_ENDIAN
+#include <Byteswap.h>
+#endif
+
+#include <xxhash.h>
+
 #include <cstring> // for memset
+#include <cstdio>
 
 void CreateCorruptedRNTuple(const std::string &uri)
 {
@@ -63,4 +77,37 @@ void CreateCorruptedRNTuple(const std::string &uri)
    pageSink->CommitClusterGroup();
    pageSink->CommitDataset();
    modelClone.reset();
+}
+
+void PatchRNTupleSection(std::string_view filePath, std::uint64_t sectionSeek, std::uint64_t sectionLen,
+                         std::uint64_t patchedOffsetIntoSection, const std::byte *bytesToWrite,
+                         std::size_t bytesToWriteLen, EEndianness sectionEndianness)
+{
+   // sanity check
+   R__ASSERT(sectionLen > 6);
+   R__ASSERT(patchedOffsetIntoSection + bytesToWriteLen <= sectionLen);
+
+   FILE *file = fopen(std::string(filePath).c_str(), "r+b");
+
+   fseek(file, sectionSeek + patchedOffsetIntoSection, SEEK_SET);
+   std::size_t written = fwrite(bytesToWrite, 1, bytesToWriteLen, file);
+   R__ASSERT(written == bytesToWriteLen);
+
+   int err = fseek(file, sectionSeek, SEEK_SET);
+   R__ASSERT(!err);
+
+   // recompute checksum
+   auto buf = MakeUninitArray<std::byte>(sectionLen);
+   auto read = fread(buf.get(), 1, sectionLen, file);
+   R__ASSERT(read == sectionLen);
+
+   std::uint64_t checksum = XXH3_64bits(buf.get(), sectionLen);
+   if ((sectionEndianness == EEndianness::BE) != IS_BIG_ENDIAN) {
+      checksum = RByteSwap<8>::bswap(checksum);
+   }
+   // NOTE: we need to seek here to guarantee that the writing operation following the previous read will succeed
+   // (see "File access flags" here https://en.cppreference.com/w/c/io/fopen).
+   fseek(file, sectionSeek + sectionLen, SEEK_SET);
+   fwrite(&checksum, 1, sizeof(checksum), file);
+   fclose(file);
 }

@@ -11,11 +11,16 @@ class TSeqCollectionListMethods(unittest.TestCase):
 
     num_elems = 3
 
+    _global_objects = []
+
     # Helpers
     def create_tseqcollection(self):
         sc = ROOT.TList()
         for i in reversed(range(self.num_elems)):
-            sc.Add(ROOT.TObjString(str(i)))
+            o = ROOT.TObjString(str(i))
+            sc.Add(o)
+            # To prevent deletion of the objects (TList is by default non-owning)
+            self._global_objects.append(o)
 
         return sc
 
@@ -24,45 +29,49 @@ class TSeqCollectionListMethods(unittest.TestCase):
         sc = self.create_tseqcollection()
 
         # Insert with positive index
-        o = ROOT.TObject()
-        sc.insert(1, o)
+        o1 = ROOT.TObject()
+        sc.insert(1, o1)
         self.assertEqual(sc.GetEntries(), self.num_elems + 1)
-        self.assertEqual(sc.At(1), o)
+        self.assertIs(sc.At(1), o1)
 
         # Insert with negative index (starts from end)
         o2 = ROOT.TObject()
         sc.insert(-1, o2)
         self.assertEqual(sc.GetEntries(), self.num_elems + 2)
-        self.assertEqual(sc.At(self.num_elems), o2)
+        self.assertIs(sc.At(self.num_elems), o2)
 
         # Insert with index beyond lower boundary.
         # Inserts at the beginning
         o3 = ROOT.TObject()
         sc.insert(-(self.num_elems + 3), o3)
         self.assertEqual(sc.GetEntries(), self.num_elems + 3)
-        self.assertEqual(sc.At(0), o3)
+        self.assertIs(sc.At(0), o3)
 
         # Insert with index beyond upper boundary.
         # Inserts at the end
         o4 = ROOT.TObject()
         sc.insert(self.num_elems + 4, o4)
         self.assertEqual(sc.GetEntries(), self.num_elems + 4)
-        self.assertEqual(sc.At(self.num_elems + 3), o4)
+        self.assertIs(sc.At(self.num_elems + 3), o4)
+
+        # Clear before the added element might be garbage collected,
+        # to avoid dangling pointer access.
+        sc.Clear()
 
     def test_pop(self):
         sc = self.create_tseqcollection()
-        l = [ elem for elem in sc ]
+        l1 = [elem for elem in sc]
 
         # No arguments, pop last item
-        self.assertEqual(sc.pop(), l[-1])
+        self.assertEqual(sc.pop(), l1[-1])
         self.assertEqual(sc.GetEntries(), self.num_elems - 1)
 
         # Pop first item, positive index
-        self.assertEqual(sc.pop(0), l[0])
+        self.assertEqual(sc.pop(0), l1[0])
         self.assertEqual(sc.GetEntries(), self.num_elems - 2)
 
         # Pop last item, negative index
-        self.assertEqual(sc.pop(-1), l[1])
+        self.assertEqual(sc.pop(-1), l1[1])
         self.assertEqual(sc.GetEntries(), self.num_elems - 3)
 
         # Pop from empty collection
@@ -82,20 +91,22 @@ class TSeqCollectionListMethods(unittest.TestCase):
         with self.assertRaises(TypeError):
             sc2.pop(1.0)
 
-        # Pop a repeated element
-        sc2.append(ROOT.TObjString('2'))
+        # Pop a repeated element.
+        # Keep Python reference so the added element lives beyond the sc2.pop() call:
+        new_elem = ROOT.TObjString("2")
+        sc2.append(new_elem)
         elem = sc2.pop()
         self.assertEqual(sc2.At(0), elem)
 
     def test_reverse(self):
         sc = self.create_tseqcollection()
-        l = [ elem for elem in sc ]
+        l1 = [elem for elem in sc]
 
         sc.reverse()
 
         self.assertEqual(sc.GetEntries(), self.num_elems)
         for i,elem in zip(range(self.num_elems), sc):
-            self.assertEqual(elem, l[-(i+1)])
+            self.assertEqual(elem, l1[-(i + 1)])
 
         # Empty collection
         sc2 = ROOT.TList()
@@ -104,17 +115,17 @@ class TSeqCollectionListMethods(unittest.TestCase):
 
     def test_sort(self):
         sc = self.create_tseqcollection()
-        l = [ elem for elem in sc ]
+        l1 = [elem for elem in sc]
 
         # Regular sort, rely on TList::Sort
         sc.sort()
         # We need to set `key` until the pythonization to
         # make TObjString comparable is there
-        l.sort(key = lambda s: s.GetName())
+        l1.sort(key=lambda s: s.GetName())
 
         self.assertEqual(sc.GetEntries(), self.num_elems)
-        self.assertEqual(l[0], sc[0])
-        for el1, el2 in zip(sc, l):
+        self.assertEqual(l1[0], sc[0])
+        for el1, el2 in zip(sc, l1):
             self.assertEqual(el1, el2)
 
         # Python sort, key and reverse arguments.
@@ -122,7 +133,9 @@ class TSeqCollectionListMethods(unittest.TestCase):
         sc2 = self.create_tseqcollection()
         l2 = [ elem for elem in sc2 ]
 
-        fsort = lambda elem: elem.Hash()
+        def fsort(elem):
+            return elem.Hash()
+
         rev = True
         sc2.sort(key = fsort, reverse = rev)
         l2.sort(key = fsort, reverse = rev)
@@ -144,9 +157,9 @@ class TSeqCollectionListMethods(unittest.TestCase):
             self.assertEqual(sc.index(elem), i)
 
         # Check element not in collection
-        o = ROOT.TObjString(str(self.num_elems))
+        o1 = ROOT.TObjString(str(self.num_elems))
         with self.assertRaises(ValueError):
-            sc.index(o)
+            sc.index(o1)
 
 
 if __name__ == '__main__':

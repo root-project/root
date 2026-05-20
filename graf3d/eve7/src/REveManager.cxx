@@ -1015,7 +1015,7 @@ void REveManager::SendSceneChanges()
    // send  begin message
    nlohmann::json jobj = {};
    jobj["content"] = "BeginChanges";
-   fWebWindow->Send(0, jobj.dump());
+   SendToAllConnections(jobj.dump());
 
    // send the change json
    fWorld->SendChangesToSubscribers();
@@ -1051,7 +1051,7 @@ void REveManager::SendSceneChanges()
       }
       gEveLogEntries.clear();
    }
-   fWebWindow->Send(0, jobj.dump());
+   SendToAllConnections(jobj.dump());
 }
 
 //
@@ -1145,6 +1145,13 @@ void REveManager::ConnectEveViewer(REveViewer* view)
 }
 
 //____________________________________________________________________
+void REveManager::SendToAllConnections(const std::string &data)
+{
+   for (auto &conn : fConnList) {
+      fWebWindow->Send(conn.fId, data);
+   }
+}
+
 void REveManager::Send(unsigned connid, const std::string &data)
 {
    fWebWindow->Send(connid, data);

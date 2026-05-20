@@ -129,33 +129,16 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   // Create and fill cache
   cache = createCache(nset) ;
 
-  // Check if we have contents registered already in global expensive object cache
-  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
+  fillCacheObject(*cache) ;
 
-  if (histTmp) {
-
-    cache->hist()->reset() ;
-    cache->hist()->add(*histTmp) ;
-
-  } else {
-
-    fillCacheObject(*cache) ;
-
-    auto eoclone = new RooDataHist(*cache->hist()) ;
-    eoclone->removeSelfFromDir() ;
-    expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
-
-  }
-
+  auto eoclone = new RooDataHist(*cache->hist()) ;
+  eoclone->removeSelfFromDir() ;
 
   // Store this cache configuration
   int code = _cacheMgr.setObj(nset,nullptr,(static_cast<RooAbsCacheElement*>(cache)),nullptr) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
        << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
-  if (histTmp) {
-    ccoutI(Caching) << " from preexisting content." ;
-  }
   ccoutI(Caching) << std::endl ;
 
   return cache ;
@@ -391,7 +374,13 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
   RooArgSet *dummy(nullptr);
   const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
-  PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,false) ;
+  // Mirror getAnalyticalIntegralWN's lookup key. If the caller passed a null
+  // normSet to getAnalyticalIntegralWN, the stored normSet2 is non-null but
+  // empty; use anaVars (content-equivalent to the original allVars) instead,
+  // so that analyticalIntegralWN and getAnalyticalIntegralWN both key the
+  // _cacheMgr lookup on the same content and hit the same slot.
+  const RooArgSet *cacheNset = (normSet2 && !normSet2->empty()) ? normSet2 : anaVars;
+  PdfCacheElem *cache = getCache(cacheNset, false);
   double ret = cache->pdf()->analyticalIntegralWN(codeList[0],normSet,rangeName) ;
 
   if (codeList[1]>0) {
@@ -408,7 +397,8 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
 
 void RooAbsCachedPdf::doEval(RooFit::EvalContext &ctx) const
 {
-   getCachePdf(_normSet)->doEval(ctx);
+   const RooArgSet *nset = _hasCompiledNormSet ? &_compiledNormSet : _normSet;
+   getCachePdf(nset)->doEval(ctx);
 }
 
 
@@ -421,14 +411,22 @@ RooAbsCachedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
    std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
    ctx.compileServers(*pdfClone, {});
 
+   // Pin a stable normalization set on the clone so that doEval() and the
+   // analytical integration path triggered inside RooNormalizedPdf below hit
+   // the same _cacheMgr slot. Otherwise the analytical-integral path keys the
+   // slot on its own (local) integration variable set while doEval keys it on
+   // the unset (null) _normSet of the clone, and the heavy cache content is
+   // rebuilt on the first Evaluator step of every fit.
+   auto *cachedClone = static_cast<RooAbsCachedPdf *>(pdfClone.get());
+   cachedClone->_compiledNormSet.removeAll();
+   cachedClone->_compiledNormSet.add(normSet);
+   cachedClone->_hasCompiledNormSet = true;
+
    auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
-   // The direct servers are this pdf and the normalization integral, which
-   // don't need to be compiled further.
-   for (RooAbsArg *server : newArg->servers()) {
-      ctx.markAsCompiled(*server);
-   }
-   ctx.markAsCompiled(*newArg);
+   // The direct servers are the cloned pdf (already compiled above) and the
+   // freshly-built normalization integral. Neither needs further compilation.
+   ctx.markSubtreeAsCompiled(*newArg);
    newArg->addOwnedComponents(std::move(pdfClone));
    return newArg;
 }

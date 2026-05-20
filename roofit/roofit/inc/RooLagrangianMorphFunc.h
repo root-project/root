@@ -185,9 +185,6 @@ private:
    RooRealVar *setupObservable(const char *obsname, TClass *mode, TObject *inputExample);
 
 public:
-   /// length of floating point digits precision supported by implementation.
-   static constexpr double implementedPrecision = RooFit::SuperFloatPrecision::digits10;
-
    void writeMatrixToFile(const TMatrixD &matrix, const char *fname);
    void writeMatrixToStream(const TMatrixD &matrix, std::ostream &stream);
    TMatrixD readMatrixFromFile(const char *fname);
@@ -242,7 +239,7 @@ public:
    static std::unique_ptr<RooRatio> makeRatio(const char *name, const char *title, RooArgList &nr, RooArgList &dr);
 
 private:
-   mutable RooObjCacheManager _cacheMgr; //! The cache manager
+   mutable RooObjCacheManager _cacheMgr; ///<! The cache manager
    double _scale = 1.0;
    std::map<std::string, int> _sampleMap;
    RooListProxy _physics;

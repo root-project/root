@@ -23,9 +23,8 @@
 #include "TTimeStamp.h"
 #include "Windows4Root.h"
 
-#include <errno.h>
+#include <cerrno>
 
-ClassImp(TWin32Condition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Condition variable. Ctor must be given a pointer to an

@@ -25,7 +25,6 @@
 #include <cassert>
 #include <iostream>
 
-ClassImp(TPolyMarker3D);
 
 constexpr Int_t kDimension = 3;
 

@@ -3,7 +3,6 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
-#include <RooStats/HistFactory/Sample.h>
 #include <RooFit/ModelConfig.h>
 
 #include <RooCategory.h>
@@ -58,7 +57,10 @@ void createToyHistos1D()
       histoData->Fill(x_sig);
    }
 
-   histoFile->Write();
+   for (auto histo : {histoBG, histoSig, histoData}) {
+      histoFile->WriteTObject(histo);
+      delete histo;
+   }
 }
 
 /// Test that plotting HistFactory components works correctly. Covers the

@@ -1,0 +1,23 @@
+<lcgdict>
+
+<class name="TileCalibType"/>
+<class name="TileCalibUtils"/>
+<class name="TileBchDecoder"/>
+<class name="TileBchPrbs"/>
+<class name="TileBchStatus"/>
+<class name="TileBchWords"/>
+<class name="TileCalibDrawerBase"/>
+<class name="TileCalibDrawerCmt"/>
+<class name="TileCalibDrawerOfc"/>
+<class name="TileCalibDrawerFlt"/>
+<class name="TileCalibDrawerDat<float>"/>
+<class name="TileCalibDrawerBch"/>
+<class name="TileCalibDrawerDat<uint32_t>"/>
+<class name="TileCalibDrawerInt"/>
+
+<!-- Making std::set work -->
+<class name="std::set<TileBchPrbs::Prb>"/>
+<class name="std::set<TileBchPrbs::Prb>::iterator"/> 
+<class name="std::pair<std::set<TileBchPrbs::Prb>::iterator, bool>"/>
+
+</lcgdict>

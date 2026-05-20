@@ -109,6 +109,7 @@ public:
    void        SetMergeOptions(const TString &options) { fMergeOptions = options; }
    void        SetMergeOptions(const std::string_view &options) { fMergeOptions = options; }
    void        SetIOFeatures(ROOT::TIOFeatures &features) { fIOFeatures = &features; }
+   /// Add object names for PartialMerge().
    void        AddObjectNames(const char *name) {fObjectNames += name; fObjectNames += " ";}
    const char *GetObjectNames() const {return fObjectNames.Data();}
    void        ClearObjectNames() {fObjectNames.Clear();}

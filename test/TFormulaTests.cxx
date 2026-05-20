@@ -1,7 +1,7 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
-#include <stdlib.h>
+#include <cstdlib>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TMath.h>

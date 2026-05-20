@@ -41,7 +41,7 @@ namespace Internal {
       TList    fListOfFriends;
       TList    fListOfPragmas;
       TList    fListOfTopProxies;
-      TList   *fCurrentListOfTopProxies; //!
+      TList   *fCurrentListOfTopProxies; ///<!
       TList    fListOfForwards;
       TTreeProxyGenerator(TTree* tree, const char *script, const char *fileprefix,
                           const char *option, UInt_t maxUnrolling);

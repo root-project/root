@@ -1,0 +1,10 @@
+<lcgdict>
+
+  <!-- Stau Candidates EDM -->
+  <class name="StauCollection" />
+  <class name="MuGirlNS::StauContainer"  />
+  <class name="std::vector<MuGirlNS::StauContainer*>" />
+  <class name="std::vector<const MuGirlNS::StauContainer*>" />
+  <class name="DataVector<MuGirlNS::StauContainer>" />
+
+</lcgdict>

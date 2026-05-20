@@ -476,7 +476,7 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
         self.gTQSender = ROOT.gTQSender
         self.gApplication = ROOT.gApplication
 
-        ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumIntegration)
+        ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumericIntegration)
 
         simPdf = ROOT.nullptr
         numCats = 1

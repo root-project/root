@@ -20,7 +20,11 @@ endif()
 if(builtin_clang)
   set(CLING_LIBRARIES "clingMetaProcessor")
 else()
-  list(APPEND CLING_LIBRARIES ${CLING_DEPEND_LIBS})
+  set(clang_libraries)
+  if(MSVC)
+    ROOT_GET_CLANG_LIBRARIES(clang_libraries)
+  endif()
+  list(APPEND CLING_LIBRARIES ${CLING_DEPEND_LIBS} "${clang_libraries}")
   link_directories("${LLVM_LIBRARY_DIR}")
 endif()
 
@@ -31,6 +35,7 @@ ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:Foundation_Stage1>
                               LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${ROOT_ATOMIC_LIBS}
                               NOINSTALL)
+target_compile_options(rootcling_stage1 PRIVATE -DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
 target_include_directories(rootcling_stage1 PRIVATE
    ${CMAKE_SOURCE_DIR}/core/foundation/inc    # for RConfig.hxx

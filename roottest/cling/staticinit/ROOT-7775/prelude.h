@@ -1,0 +1,134 @@
+#ifndef G__VECTOR_HAS_CLASS_ITERATOR
+  #define G__VECTOR_HAS_CLASS_ITERATOR 1
+#endif
+#ifndef NDEBUG
+  #define NDEBUG 1
+#endif
+#ifndef _GLIBCXX_PERMIT_BACKWARD_HASH
+  #define _GLIBCXX_PERMIT_BACKWARD_HASH 1
+#endif
+#ifndef HAVE_PRETTY_FUNCTION
+  #define HAVE_PRETTY_FUNCTION 1
+#endif
+#ifndef HAVE_LONG_LONG
+  #define HAVE_LONG_LONG 1
+#endif
+#ifndef HAVE_BOOL
+  #define HAVE_BOOL 1
+#endif
+#ifndef HAVE_EXPLICIT
+  #define HAVE_EXPLICIT 1
+#endif
+#ifndef HAVE_MUTABLE
+  #define HAVE_MUTABLE 1
+#endif
+#ifndef HAVE_SIGNED
+  #define HAVE_SIGNED 1
+#endif
+#ifndef HAVE_TYPENAME
+  #define HAVE_TYPENAME 1
+#endif
+#ifndef HAVE_NEW_STYLE_CASTS
+  #define HAVE_NEW_STYLE_CASTS 1
+#endif
+#ifndef HAVE_DYNAMIC_CAST
+  #define HAVE_DYNAMIC_CAST 1
+#endif
+#ifndef HAVE_TYPEID
+  #define HAVE_TYPEID 1
+#endif
+#ifndef HAVE_ANSI_TEMPLATE_INSTANTIATION
+  #define HAVE_ANSI_TEMPLATE_INSTANTIATION 1
+#endif
+#ifndef HAVE_TEMPLATE_DEFAULT_ARGS
+  #define HAVE_TEMPLATE_DEFAULT_ARGS 1
+#endif
+#ifndef HAVE_BROKEN_TEMPLATE_RESCOPE
+  #define HAVE_BROKEN_TEMPLATE_RESCOPE 1
+#endif
+#ifndef HAVE_TEMPLATE_DEFAULT_ARGS
+  #define HAVE_TEMPLATE_DEFAULT_ARGS 1
+#endif
+#ifndef HAVE_BROKEN_TEMPLATE_RESCOPE
+  #define HAVE_BROKEN_TEMPLATE_RESCOPE 1
+#endif
+#ifndef HAVE_TEMPLATE_NULL_ARGS
+  #define HAVE_TEMPLATE_NULL_ARGS 1
+#endif
+#ifndef HAVE_TEMPLATE_NULL_SPEC
+  #define HAVE_TEMPLATE_NULL_SPEC 1
+#endif
+#ifndef HAVE_TEMPLATE_PARTIAL_SPEC
+  #define HAVE_TEMPLATE_PARTIAL_SPEC 1
+#endif
+#ifndef HAVE_MEMBER_TEMPLATES
+  #define HAVE_MEMBER_TEMPLATES 1
+#endif
+#ifndef HAVE_ANSI_OPERATOR_ARROW
+  #define HAVE_ANSI_OPERATOR_ARROW 1
+#endif
+#ifndef HAVE_NAMESPACES
+  #define HAVE_NAMESPACES 1
+#endif
+#ifndef HAVE_NAMESPACE_STD
+  #define HAVE_NAMESPACE_STD 1
+#endif
+#ifndef HAVE_NEW_IOSTREAMS
+  #define HAVE_NEW_IOSTREAMS 1
+#endif
+#ifndef HAVE_OSTREAM_CHAR_OVERLOAD
+  #define HAVE_OSTREAM_CHAR_OVERLOAD 1
+#endif
+#ifndef HAVE_ITERATOR_TRAITS
+  #define HAVE_ITERATOR_TRAITS 1
+#endif
+#ifndef HAVE_ITERATOR
+  #define HAVE_ITERATOR 1
+#endif
+#ifndef HAVE_REVERSE_ITERATOR_STYLE
+  #define HAVE_REVERSE_ITERATOR_STYLE 1
+#endif
+#ifndef HAVE_CXX_STDC_HEADERS
+  #define HAVE_CXX_STDC_HEADERS 1
+#endif
+#ifndef HAVE_64_BITS
+  #define HAVE_64_BITS 1
+#endif
+#ifndef __IDENTIFIER_64BIT__
+  #define __IDENTIFIER_64BIT__ 1
+#endif
+#ifndef PACKAGE_VERSION
+  #define PACKAGE_VERSION "CaloIdentifier-00-10-84"
+#endif
+#ifndef PACKAGE_VERSION_UQ
+  #define PACKAGE_VERSION_UQ CaloIdentifier-00-10-84
+#endif
+#ifndef NDEBUG
+  #define NDEBUG 1
+#endif
+#ifndef _GNU_SOURCE
+  #define _GNU_SOURCE 1
+#endif
+#ifndef GAUDI_V20_COMPAT
+  #define GAUDI_V20_COMPAT 1
+#endif
+#ifndef BOOST_FILESYSTEM_VERSION
+  #define BOOST_FILESYSTEM_VERSION 3
+#endif
+#ifndef BOOST_SPIRIT_USE_PHOENIX_V3
+  #define BOOST_SPIRIT_USE_PHOENIX_V3 1
+#endif
+#ifndef ATLAS_GAUDI_V21
+  #define ATLAS_GAUDI_V21 1
+#endif
+#ifndef NDEBUG
+  #define NDEBUG 1
+#endif
+#ifndef HAVE_GAUDI_PLUGINSVC
+  #define HAVE_GAUDI_PLUGINSVC 1
+#endif
+
+#define _BACKWARD_BACKWARD_WARNING_H
+
+
+

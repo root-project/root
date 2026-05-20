@@ -922,7 +922,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
    }
 
    // Get the result
-   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
+   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumericIntegration);
 
    HypoTestInverter calc(*hc);
    calc.SetConfidenceLevel(optHTInv.confLevel);

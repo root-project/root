@@ -19,32 +19,39 @@
 #endif
 
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/StringUtils.hxx>
 
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace ROOT {
+
+class RRecordField;
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
 namespace Internal {
-std::unique_ptr<RFieldBase> CreateEmulatedField(std::string_view fieldName,
-                                                std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                                std::string_view emulatedFromType);
-}
+std::unique_ptr<RFieldBase> CreateEmulatedRecordField(std::string_view fieldName,
+                                                      std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                                      std::string_view emulatedFromType);
+// Used by to late-model-extend fields to untyped records
+void AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
+} // namespace Internal
 
 /// The field for an untyped record. The subfields are stored consecutively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public RFieldBase {
-   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedField(std::string_view fieldName,
-                                                                    std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                                                    std::string_view emulatedFromType);
+   friend std::unique_ptr<RFieldBase>
+   Internal::CreateEmulatedRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                       std::string_view emulatedFromType);
+   friend void Internal::AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
 
    class RRecordDeleter : public RDeleter {
    private:
@@ -59,12 +66,25 @@ class RRecordField : public RFieldBase {
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
+   std::unordered_set<std::string> fSubfieldNames; ///< Efficient detection of duplicate field names
+
    RRecordField(std::string_view name, const RRecordField &source); // Used by CloneImpl()
 
    /// If `emulatedFromType` is non-empty, this field was created as a replacement for a ClassField that we lack a
    /// dictionary for and reconstructed from the on-disk information.
+   /// Used by the public constructor and by Internal::CreateEmulatedRecordField().
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                 std::string_view emulatedFromType);
+
+   bool IsPairOrTuple() const
+   {
+      return StartsWith(GetTypeName(), "std::pair<") || StartsWith(GetTypeName(), "std::tuple<");
+   }
+
+   /// Adds an additional item field. Note that the derived RPairField and RTupleField have a sub field handling
+   /// that differs from a struct-like record: their sub field names must be numbered and these derived fields have
+   /// their own member offset calculation.
+   void AddItem(std::unique_ptr<RFieldBase> item);
 
 protected:
    std::size_t fMaxAlignment = 1;
@@ -73,7 +93,7 @@ protected:
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -82,28 +102,37 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   /// Used by RPairField and RTupleField descendants. These descendants have their own logic to attach the subfields
+   /// that ensure that the resulting memory layout matches std::pair or std::tuple, resp.
    RRecordField(std::string_view fieldName, std::string_view typeName);
 
-   void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields);
-
-   template <std::size_t N>
-   void AttachItemFields(std::array<std::unique_ptr<RFieldBase>, N> itemFields)
+   template <typename ContainerT>
+   void AttachItemFields(ContainerT &&itemFields)
    {
+      static_assert(std::is_same_v<typename ContainerT::value_type, std::unique_ptr<ROOT::RFieldBase>>,
+                    "ContainerT must hold std::unique_ptr<ROOT::RFieldBase>");
+
+      if (!IsPairOrTuple()) {
+         assert(fOffsets.empty());
+         fOffsets.reserve(itemFields.size());
+      }
+
       fTraits |= kTraitTrivialType;
-      for (unsigned i = 0; i < N; ++i) {
-         fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
-         fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
-         fTraits &= itemFields[i]->GetTraits();
-         Attach(std::move(itemFields[i]));
+      for (auto &&item : itemFields) {
+         AddItem(std::move(item));
       }
       // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
       // requirements of the type with strictest alignment
       fSize += GetItemPadding(fSize, fMaxAlignment);
    }
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) override;
+
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
+   /// The resulting field uses a memory layout for its values as if there was a struct consisting of the passed
+   /// item fields.
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RRecordField(RRecordField &&other) = default;
    RRecordField &operator=(RRecordField &&other) = default;
@@ -127,12 +156,10 @@ public:
 
 /// The generic field for `std::pair<T1, T2>` types
 class RPairField : public RRecordField {
-private:
-   static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
-
 protected:
-   RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
-              const std::array<std::size_t, 2> &offsets);
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields);
@@ -151,17 +178,9 @@ private:
       return {std::make_unique<RField<T1>>("_0"), std::make_unique<RField<T2>>("_1")};
    }
 
-   static std::array<std::size_t, 2> BuildItemOffsets()
-   {
-      auto pair = ContainerT();
-      auto offsetFirst = reinterpret_cast<std::uintptr_t>(&(pair.first)) - reinterpret_cast<std::uintptr_t>(&pair);
-      auto offsetSecond = reinterpret_cast<std::uintptr_t>(&(pair.second)) - reinterpret_cast<std::uintptr_t>(&pair);
-      return {offsetFirst, offsetSecond};
-   }
-
 public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RPairField(name, BuildItemFields(), BuildItemOffsets())
+   explicit RField(std::string_view name) : RPairField(name, BuildItemFields())
    {
       R__ASSERT(fMaxAlignment >= std::max(alignof(T1), alignof(T2)));
       R__ASSERT(fSize >= sizeof(ContainerT));
@@ -177,12 +196,10 @@ public:
 
 /// The generic field for `std::tuple<Ts...>` types
 class RTupleField : public RRecordField {
-private:
-   static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
-
 protected:
-   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-               const std::vector<std::size_t> &offsets);
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
@@ -219,25 +236,9 @@ private:
       return result;
    }
 
-   template <unsigned Index, typename HeadT, typename... TailTs>
-   static void _BuildItemOffsets(std::vector<std::size_t> &offsets, const ContainerT &tuple)
-   {
-      auto offset =
-         reinterpret_cast<std::uintptr_t>(&std::get<Index>(tuple)) - reinterpret_cast<std::uintptr_t>(&tuple);
-      offsets.emplace_back(offset);
-      if constexpr (sizeof...(TailTs) > 0)
-         _BuildItemOffsets<Index + 1, TailTs...>(offsets, tuple);
-   }
-   static std::vector<std::size_t> BuildItemOffsets()
-   {
-      std::vector<std::size_t> result;
-      _BuildItemOffsets<0, ItemTs...>(result, ContainerT());
-      return result;
-   }
-
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name) : RTupleField(name, BuildItemFields(), BuildItemOffsets())
+   explicit RField(std::string_view name) : RTupleField(name, BuildItemFields())
    {
       R__ASSERT(fMaxAlignment >= std::max({alignof(ItemTs)...}));
       R__ASSERT(fSize >= sizeof(ContainerT));

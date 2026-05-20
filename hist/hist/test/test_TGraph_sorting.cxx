@@ -5,6 +5,7 @@
 #include "TGraphMultiErrors.h"
 #include "TGraphBentErrors.h"
 
+#include <algorithm>
 #include <vector>
 
 TEST(TGraphSortTest, TGraphSortingTest)

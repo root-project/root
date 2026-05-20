@@ -42,7 +42,6 @@ using namespace TMVA;
 
 REGISTER_METHOD(RSNNS)
 
-ClassImp(MethodRSNNS);
 
 //creating an Instance
 Bool_t MethodRSNNS::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("RSNNS");

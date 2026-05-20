@@ -51,7 +51,6 @@ namespace {
    } gInitAndCleanupTheXMLParserOnlyOnceCommaEver;
 }
 
-ClassImp(TXMLParser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initializes parser variables.
@@ -151,9 +150,16 @@ const char *TXMLParser::GetParseCodeMessage(Int_t parseCode) const
 
 void TXMLParser::InitializeContext()
 {
-   fContext->linenumbers = 1; // TRUE - This is the default anyway.
-   fContext->validate = fValidate ? 1 : 0;
-   fContext->replaceEntities = fReplaceEntities ? 1 : 0;
+   if (fValidate)
+      fContext->options |= XML_PARSE_DTDVALID;
+   else
+      fContext->options &= ~XML_PARSE_DTDVALID;
+
+   if (fReplaceEntities)
+      fContext->options |= XML_PARSE_NOENT;
+   else
+      fContext->options &= ~XML_PARSE_NOENT;
+
    fContext->_private = this;
 
    fValidateError = "";

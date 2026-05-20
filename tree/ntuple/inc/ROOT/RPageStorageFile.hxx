@@ -35,8 +35,11 @@ namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
 
+namespace Experimental {
+class RFile;
+}
+
 namespace Internal {
-class RClusterPool;
 class RRawFile;
 class RPageAllocatorHeap;
 
@@ -70,6 +73,7 @@ private:
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fInfosOfClassFields;
 
    RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::unique_ptr<ROOT::Internal::RNTupleFileWriter> writer, const ROOT::RNTupleWriteOptions &options);
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
@@ -92,11 +96,13 @@ protected:
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, ROOT::Experimental::RFile &file, std::string_view ntupleDir,
+                 const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile &) = delete;
    RPageSinkFile &operator=(const RPageSinkFile &) = delete;
    RPageSinkFile(RPageSinkFile &&) = default;
@@ -104,6 +110,9 @@ public:
    ~RPageSinkFile() override;
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+
+   std::unique_ptr<RPageSink>
+   CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const override;
 }; // class RPageSinkFile
 
 // clang-format off
@@ -141,8 +150,6 @@ private:
    ROOT::Internal::RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
-   /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 
@@ -179,11 +186,16 @@ public:
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
 
+   std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                        const ROOT::RNTupleReadOptions &options = {}) final;
+
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
+
+   void LoadStreamerInfo() final;
 }; // class RPageSourceFile
 
 } // namespace Internal

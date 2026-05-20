@@ -63,8 +63,12 @@ enum MsgLevel { DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5 } ;
 /// Topics for a RooMsgService::StreamConfig in RooMsgService
 enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32,
     Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048,
-    Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16, IO=1<<17 };
+    Contents=4096, DataHandling=8192, NumericIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16, IO=1<<17 };
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
+
+/// Alias of MsgLevel::NumericIntegration for backwards compatibility.
+/// \see https://github.com/root-project/root/issues/19422
+constexpr static auto NumIntegration = NumericIntegration;
 
 /// For setting the offset mode with the Offset() command argument to
 /// RooAbsPdf::fitTo()
@@ -75,6 +79,12 @@ namespace Experimental {
 /// Configuration options for parallel minimization with multiprocessing library
 RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
 RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
+
+void writeCodegenDebugMacro(RooAbsReal const &absReal, std::string const &name);
+inline void writeCodegenDebugMacro(std::unique_ptr<RooAbsReal> const &absReal, std::string const &name)
+{
+   return writeCodegenDebugMacro(*absReal, name);
+}
 
 } // Experimental
 
@@ -243,7 +253,11 @@ RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
-RooCmdArg Optimize(Int_t flag=2) ;
+RooCmdArg Optimize(Int_t flag=2)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "Please use the default \"cpu\" likelihood evaluation backend if you want all optimizations.")
+#endif
+   ;
 
 class EvalBackend : public RooCmdArg {
 public:
@@ -348,7 +362,7 @@ RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, bool dep
  * @{
  */
 // RooAbsPdf::generate arguments
-RooCmdArg ProtoData(const RooDataSet& protoData, bool randomizeOrder=false, bool resample=false) ;
+RooCmdArg ProtoData(const RooAbsData& protoData, bool randomizeOrder=false, bool resample=false) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
 RooCmdArg NumEvents(double numEvents) ;
 RooCmdArg AutoBinned(bool flag=true) ;

@@ -105,6 +105,27 @@ class ROOTModule(unittest.TestCase):
         if root_module_has("RooFit.Evaluator"):
             from ROOT.RooFit import Evaluator
 
+    def test_deprecated_features(self):
+        """
+        Verify that deprecated features are removed in the release where we
+        announced that they will be removed.
+
+        This serves as a reminder to us to delete the deprecated code after
+        increasing the version number.
+
+        Once a deprecated feature was deleted, we can remove the corresponding
+        check in this test.
+        """
+        import ROOT
+
+        version = tuple(int(n) for n in ROOT.__version__.split("."))
+
+        if version >= (6, 44, 0):
+            # Verify that SetHeuristicMemoryPolicy is not available
+            with self.assertRaises(AttributeError):
+                ROOT.SetHeuristicMemoryPolicy(True)
+                ROOT.SetHeuristicMemoryPolicy(False)
+
     def test_lazy_gdirectory(self):
         """Check that gDirectory is always lazy evaluated to the current
         directory.
@@ -129,10 +150,10 @@ class ROOTModule(unittest.TestCase):
         self.assertEqual(gDirectory_1, gDirectory_2)
         self.assertNotEqual(gDirectory_1, ROOT.gROOT)
 
-        # If we re-assign the gDirectory now, it should be considered
-        ROOT.gDirectory = ROOT.nullptr
-        self.assertEqual(gDirectory_1, ROOT.nullptr)
-        self.assertEqual(gDirectory_2, ROOT.nullptr)
+        # If we reset the global directory to nullptr now, it should be considered
+        with ROOT.TDirectory.TContext(ROOT.nullptr):
+            self.assertEqual(gDirectory_1, ROOT.nullptr)
+            self.assertEqual(gDirectory_2, ROOT.nullptr)
 
 
 if __name__ == "__main__":

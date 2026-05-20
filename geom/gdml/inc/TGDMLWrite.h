@@ -135,7 +135,7 @@ private:
    Int_t fPhysVolCnt;               // count of physical volumes
    UInt_t fActNameErr;              // count of name errors
    UInt_t fSolCnt;                  // count of name solids
-   UInt_t fFltPrecision;            //! floating point precision when writing
+   UInt_t fFltPrecision;            ///<! floating point precision when writing
 
    static const UInt_t fgkProcBit = BIT(14);    // 14th bit is set when solid is processed
    static const UInt_t fgkProcBitVol = BIT(19); // 19th bit is set when volume is processed

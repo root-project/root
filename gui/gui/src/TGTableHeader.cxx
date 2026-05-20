@@ -16,7 +16,6 @@
 #include "TRandom3.h"
 #include "TVirtualX.h"
 
-ClassImp(TGTableHeader);
 
 
 /** \class TGTableHeader

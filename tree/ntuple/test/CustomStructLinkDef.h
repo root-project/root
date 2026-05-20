@@ -1,6 +1,8 @@
 #ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
+#pragma link C++ enum RenamedCustomEnum;
+
 #pragma link C++ enum CustomEnumBool;
 #pragma link C++ enum CustomEnumInt8;
 #pragma link C++ enum CustomEnumUInt8;
@@ -10,6 +12,8 @@
 #pragma link C++ enum CustomEnumUInt32;
 #pragma link C++ enum CustomEnumInt64;
 #pragma link C++ enum CustomEnumUInt64;
+
+#pragma link C++ class CustomAtomicNotLockFree+;
 
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class CustomStruct::VectorWrapper<Long64_t>+;
@@ -47,6 +51,7 @@
 #pragma link C++ class DataVector < int, float> ::Nested < int, double> + ;
 #pragma link C++ class DataVector < int, float> ::Nested < int, float> + ;
 #pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
+#pragma link C++ class InnerCV < const std::vector<std::string[2]>, int, int, int> + ;
 #pragma link C++ class IntegerTemplates < 0, 0> + ;
 #pragma link C++ class IntegerTemplates < -1, 1> + ;
 #pragma link C++ class IntegerTemplates < -2147483650ll, 9223372036854775810ull> + ;
@@ -137,6 +142,9 @@
 #pragma link C++ options = version(3) class NewName < int> + ;
 #pragma link C++ options = version(3) class NewName < NewName < int>> + ;
 #pragma read sourceClass = "OldName<OldName<int>>" targetClass = "NewName<OldName<int>>" version = "[3]"
+#pragma link C++ options = version(4) class OldName<float>+;
+#pragma link C++ options = version(5) class NewName<float>+;
+#pragma read sourceClass = "OldName<float>" targetClass = "NewName<float>"
 
 #pragma link C++ struct SourceStruct + ;
 #pragma link C++ struct StructWithSourceStruct + ;
@@ -155,6 +163,8 @@
 #pragma link C++ class DuplicateBaseB + ;
 #pragma link C++ class DuplicateBaseC + ;
 #pragma link C++ class DuplicateBaseD + ;
+#pragma link C++ class PolymorphicBase + ;
+#pragma link C++ class PolymorphicDerived + ;
 
 #pragma link C++ class Left + ;
 #pragma link C++ class DerivedFromLeftAndTObject+;
@@ -168,5 +178,7 @@
 #pragma link C++ class v2::ExampleMC+;
 #pragma read sourceClass = "v1::ExampleMC" source = "v1::Vector3D fSpin" version="[1-]" targetClass = \
    "v2::ExampleMC" target = "fHelicity" code = "{ fHelicity = onfile.fSpin.fZ; }"
+
+#pragma link C++ class MemberWithCustomStreamer+;
 
 #endif

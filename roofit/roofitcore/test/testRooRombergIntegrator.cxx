@@ -112,7 +112,9 @@ void testConvergenceSettings(const RooFormulaVar &formula, const RooArgSet &obse
    SCOPED_TRACE(std::string("Function to integrate: ") + name + "\t" + formula.GetTitle());
 
    for (double relEps : {1.E-3, 1.E-6, 1.E-8}) {
-      SCOPED_TRACE(std::string("relEps=" + std::to_string(relEps)));
+      std::stringstream traceName;
+      traceName << "relEps=" << relEps;
+      SCOPED_TRACE(traceName.str());
       TStopwatch stopNew;
       TStopwatch stopRoot;
 
@@ -300,9 +302,9 @@ TEST(RooIntegrator1D, RunErf_NStep)
       const double min = limits.first;
       const double max = limits.second;
       RooRealVar theX("theX", "x", min, max);
-      std::string funcStr =
-         std::string("ROOT::Math::gaussian_pdf(theX, ") + std::to_string(sigma) + ", " + std::to_string(mean) + ")";
-      RooFormulaVar gaus("gaus", funcStr.c_str(), theX);
+      std::stringstream funcStr;
+      funcStr << "ROOT::Math::gaussian_pdf(theX, " << sigma << ", " << mean << ")";
+      RooFormulaVar gaus("gaus", funcStr.str().c_str(), theX);
       RooRealBinding binding(gaus, theX);
 
       double targetError = 0.;

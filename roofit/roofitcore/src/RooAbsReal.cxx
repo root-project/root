@@ -37,7 +37,6 @@
 #include "RooAddPdf.h"
 #include "RooAddition.h"
 #include "RooArgList.h"
-#include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooBinning.h"
 #include "RooBrentRootFinder.h"
@@ -79,7 +78,6 @@
 #include "Compression.h"
 #include "Math/IFunction.h"
 #include "TMath.h"
-#include "TObjString.h"
 #include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -671,7 +669,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
     if (!cacheParams.empty()) {
       cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
            << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  std::endl ;
-      std::string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
+      std::string name = std::string{integral->GetName()} + "_CACHE_[" + cacheParams.contentsString() + "]";
       auto cachedIntegral = std::make_unique<RooCachedReal>(name.c_str(),name.c_str(),*integral,cacheParams);
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(std::move(integral));
@@ -1153,7 +1151,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
     const RooArgSet* obs = hist->get(i) ;
     double binVal = theClone->getVal(normSet?normSet:obs)*scaleFactor ;
     if (correctForBinSize) {
-      binVal*= hist->binVolume() ;
+      binVal*= hist->binVolume(i) ;
     }
     hist->set(i, binVal, 0.);
   }
@@ -1226,6 +1224,17 @@ TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t y
 }
 
 
+#define CREATE_CMD_LIST     \
+   RooLinkedList l;         \
+   l.Add((TObject *)&arg1); \
+   l.Add((TObject *)&arg2); \
+   l.Add((TObject *)&arg3); \
+   l.Add((TObject *)&arg4); \
+   l.Add((TObject *)&arg5); \
+   l.Add((TObject *)&arg6); \
+   l.Add((TObject *)&arg7); \
+   l.Add((TObject *)&arg8);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and fill a ROOT histogram TH1, TH2 or TH3 with the values of this function.
@@ -1260,13 +1269,7 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
              const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
              const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
-
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
-
+  CREATE_CMD_LIST;
   return createHistogram(name,xvar,l) ;
 }
 
@@ -1609,11 +1612,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
              const RooCmdArg& arg7, const RooCmdArg& arg8,
              const RooCmdArg& arg9, const RooCmdArg& arg10) const
 {
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  CREATE_CMD_LIST;
   l.Add((TObject*)&arg9) ;  l.Add((TObject*)&arg10) ;
   return plotOn(frame,l) ;
 }
@@ -1944,9 +1943,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
   // Inform user about projections
   if (!projectedVars.empty()) {
-    coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
-          << " integrates over variables " << projectedVars
-          << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << std::endl;
+     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
+                     << " integrates over variables " << projectedVars
+                     << (o.projectionRangeName ? (" in range " + std::string{o.projectionRangeName}) : "") << std::endl;
   }
   if (projDataNeededVars && !projDataNeededVars->empty()) {
     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
@@ -2388,15 +2387,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
     // Set default name of curve
-    TString curveName(funcAsym.GetName()) ;
+    std::stringstream curveName;
+    curveName << funcAsym.GetName();
     if (!sliceSet.empty()) {
-      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;
+       curveName << "_Slice[" << sliceSet.contentsString() << "]";
     }
     if (o.curveNameSuffix) {
       // Append any suffixes imported from RooAbsPdf::plotOn
-      curveName.Append(o.curveNameSuffix) ;
+      curveName << o.curveNameSuffix;
     }
-    curve->SetName(curveName.Data()) ;
+    curve->SetName(curveName.str().c_str());
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, o.drawOptions);
@@ -2481,12 +2481,24 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
     double cenVal = rrv.getVal() ;
     double errVal = sqrt(V(ivar,ivar)) ;
 
+    // Check if the variations are still in the parameter range.
+    if(!rrv.inRange(cenVal+errVal, nullptr) || !rrv.inRange(cenVal-errVal, nullptr)) {
+      std::stringstream ss;
+      ss << "RooAbsReal::getPropagatedError(" << GetName() << "): the 1-sigma variations for the parameter "
+         << "\"" << rrv.GetName() << "\" are invalid "
+         << " because their values (" << cenVal-errVal << ", " << cenVal+errVal
+         << ") are outside the defined range [" << rrv.getMin() << ", " << rrv.getMax() << "]!\n"
+         << "                         The variations will be clipped inside the range."
+         << " This might or might not be acceptable in your usecase.";
+      coutW(Plotting) << ss.str() << std::endl;
+    }
+
     // Make Plus variation
-    rrv.setVal(cenVal+errVal) ;
+    rrv.setVal(std::min(cenVal+errVal, rrv.getMax())) ;
     plusVar.push_back(getVal(nset)) ;
 
     // Make Minus variation
-    rrv.setVal(cenVal-errVal) ;
+    rrv.setVal(std::max(cenVal-errVal, rrv.getMin())) ;
     minusVar.push_back(getVal(nset)) ;
 
     rrv.setVal(cenVal) ;
@@ -2704,9 +2716,23 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       double cenVal = rrv.getVal() ;
       double errVal = sqrt(V(ivar,ivar)) ;
 
-      // Make Plus variation
-      (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal+Z*errVal) ;
+      auto * var = static_cast<RooRealVar*>(paramList.at(ivar));
 
+      // Check if the variations are still in the parameter range, otherwise we
+      // can't compute the error bands and get an invalid plot!
+      if(!var->inRange(cenVal+Z*errVal, nullptr) || !var->inRange(cenVal-Z*errVal, nullptr)) {
+        std::stringstream ss;
+        ss << "RooAbsReal::plotOn(" << GetName() << "): the " << Z << "-sigma error band for the parameter "
+           << "\"" << var->GetName() << "\" is invalid"
+           << " because the variations (" << cenVal-Z*errVal << ", " << cenVal+Z*errVal
+           << ") are outside the defined range [" << var->getMin() << ", " << var->getMax() << "]!\n"
+           << "                         The variations will be clipped inside the range."
+           << " This might or might not be acceptable in your usecase.";
+        coutW(Plotting) << ss.str() << std::endl;
+      }
+
+      // Make Plus variation
+      var->setVal(std::min(cenVal+Z*errVal, var->getMax()));
 
       plotFunc(*cloneFunc);
       plusVar.push_back(frame->getCurve()) ;
@@ -2714,12 +2740,12 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 
 
       // Make Minus variation
-      (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal-Z*errVal) ;
+      var->setVal(std::max(cenVal-Z*errVal, var->getMin()));
       plotFunc(*cloneFunc);
       minusVar.push_back(frame->getCurve()) ;
       frame->remove(nullptr,false) ;
 
-      (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal) ;
+      var->setVal(cenVal) ;
     }
 
     TMatrixDSym C(paramList.size()) ;
@@ -3090,88 +3116,12 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
 RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) const
 {
   auto fund = std::make_unique<RooRealVar>(newname?newname:GetName(),GetTitle(),_value,getUnit());
-  fund->removeRange();
+  fund->removeMin();
+  fund->removeMax();
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
   return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function for use in getAnalyticalIntegral(). If the
-/// content of proxy 'a' occurs in set 'allDeps' then the argument
-/// held in 'a' is copied from allDeps to analDeps
-
-bool RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-               const RooArgProxy& a) const
-{
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  bool result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function for use in getAnalyticalIntegral(). If the
-/// contents of proxies a,b occur in set 'allDeps' then the arguments
-/// held in a,b are copied from allDeps to analDeps
-
-bool RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-               const RooArgProxy& a, const RooArgProxy& b) const
-{
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  nameList.Add(new TObjString(b.absArg()->GetName())) ;
-  bool result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function for use in getAnalyticalIntegral(). If the
-/// contents of proxies a,b,c occur in set 'allDeps' then the arguments
-/// held in a,b,c are copied from allDeps to analDeps
-
-bool RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-               const RooArgProxy& a, const RooArgProxy& b,
-               const RooArgProxy& c) const
-{
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  nameList.Add(new TObjString(b.absArg()->GetName())) ;
-  nameList.Add(new TObjString(c.absArg()->GetName())) ;
-  bool result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function for use in getAnalyticalIntegral(). If the
-/// contents of proxies a,b,c,d occur in set 'allDeps' then the arguments
-/// held in a,b,c,d are copied from allDeps to analDeps
-
-bool RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-               const RooArgProxy& a, const RooArgProxy& b,
-               const RooArgProxy& c, const RooArgProxy& d) const
-{
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  nameList.Add(new TObjString(b.absArg()->GetName())) ;
-  nameList.Add(new TObjString(c.absArg()->GetName())) ;
-  nameList.Add(new TObjString(d.absArg()->GetName())) ;
-  bool result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for use in getAnalyticalIntegral(). If the
@@ -3269,8 +3219,7 @@ RooNumIntConfig* RooAbsReal::specialIntegratorConfig(bool createOnTheFly)
 const RooNumIntConfig* RooAbsReal::getIntegratorConfig() const
 {
   const RooNumIntConfig* config = specialIntegratorConfig() ;
-  if (config) return config ;
-  return defaultIntegratorConfig() ;
+  return config ? config : defaultIntegratorConfig();
 }
 
 
@@ -3282,8 +3231,7 @@ const RooNumIntConfig* RooAbsReal::getIntegratorConfig() const
 RooNumIntConfig* RooAbsReal::getIntegratorConfig()
 {
   RooNumIntConfig* config = specialIntegratorConfig() ;
-  if (config) return config ;
-  return defaultIntegratorConfig() ;
+  return config ? config : defaultIntegratorConfig();
 }
 
 
@@ -3308,21 +3256,13 @@ void RooAbsReal::setIntegratorConfig()
   _specIntegratorConfig.reset();
 }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to force use of a given set of observables
 /// to interpret function value. Needed for functions or p.d.f.s
 /// whose shape depends on the choice of normalization such as
 /// RooAddPdf
 
-void RooAbsReal::selectNormalization(const RooArgSet*, bool)
-{
-}
-
-
-
+void RooAbsReal::selectNormalization(const RooArgSet *, bool) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to force use of a given normalization range
@@ -3330,11 +3270,7 @@ void RooAbsReal::selectNormalization(const RooArgSet*, bool)
 /// whose shape depends on the choice of normalization such as
 /// RooAddPdf
 
-void RooAbsReal::selectNormalizationRange(const char*, bool)
-{
-}
-
-
+void RooAbsReal::selectNormalizationRange(const char *, bool) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise capability to determine maximum value of function for given set of
@@ -3343,12 +3279,10 @@ void RooAbsReal::selectNormalizationRange(const char*, bool)
 /// it can skip the initial trial sampling phase to empirically find the function
 /// maximum
 
-Int_t RooAbsReal::getMaxVal(const RooArgSet& /*vars*/) const
+Int_t RooAbsReal::getMaxVal(const RooArgSet & /*vars*/) const
 {
-  return 0 ;
+   return 0;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum value for set of observables identified by code assigned
@@ -3612,11 +3546,7 @@ void RooAbsReal::fixAddCoefNormalization(const RooArgSet& addNormSet, bool force
   std::unique_ptr<RooArgSet> compSet{getComponents()};
   for(auto * pdf : dynamic_range_cast<RooAbsPdf*>(*compSet)) {
     if (pdf) {
-      if (!addNormSet.empty()) {
-   pdf->selectNormalization(&addNormSet,force) ;
-      } else {
-   pdf->selectNormalization(nullptr,force) ;
-      }
+      pdf->selectNormalization(addNormSet.empty() ? nullptr : &addNormSet,force);
     }
   }
 }
@@ -3750,7 +3680,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
     Int_t isNum= !static_cast<RooRealIntegral&>(*tmp).numIntRealVars().empty();
 
     if (isNum) {
-      coutI(NumIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
+      coutI(NumericIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
              << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order "
              << intOrder << " interpolation on integrated histogram." << std::endl
              << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << std::endl ;
@@ -3946,9 +3876,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
 
 RooDerivative* RooAbsReal::derivative(RooRealVar& obs, Int_t order, double eps)
 {
-  std::string name=Form("%s_DERIV_%s",GetName(),obs.GetName()) ;
-  std::string title=Form("Derivative of %s w.r.t %s ",GetName(),obs.GetName()) ;
-  return new RooDerivative(name.c_str(),title.c_str(),*this,obs,order,eps) ;
+  return derivative(obs, {}, order, eps);
 }
 
 
@@ -3958,8 +3886,8 @@ RooDerivative* RooAbsReal::derivative(RooRealVar& obs, Int_t order, double eps)
 
 RooDerivative* RooAbsReal::derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, double eps)
 {
-  std::string name=Form("%s_DERIV_%s",GetName(),obs.GetName()) ;
-  std::string title=Form("Derivative of %s w.r.t %s ",GetName(),obs.GetName()) ;
+  std::string name=Form("%s_DERIV_%d%s",GetName(),order,obs.GetName()) ;
+  std::string title=Form("%dDerivative of %s w.r.t %s ",order,GetName(),obs.GetName()) ;
   return new RooDerivative(name.c_str(),title.c_str(),*this,obs,normSet,order,eps) ;
 }
 
@@ -4016,15 +3944,27 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// \fn RooAbsReal::chi2FitTo(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+///
+/// Calls RooAbsReal::createChi2 and returns the fit result.
 /// Perform a \f$ \chi^2 \f$ fit to given histogram. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession
 ///
-/// The following named arguments are supported
+/// The following named arguments are supported:
 ///
 /// <table>
-/// <tr><th> <th> Options to control construction of chi2
+/// <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
+///  <tr><td> `DataError()`  <td>  Choose between:
+///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
+///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights squared,
+///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
+///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
+///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
+///    (e.g., the difference between the mean and the 16 % quantile).
+///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
+///    (e.g., the difference between the 84 % quantile and the mean).
+///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
 /// <tr><td> `Extended(bool flag)` <td> **Only applicable when fitting a RooAbsPdf**. Scale the normalized pdf by the number of events predicted by the model instead of scaling by the total data weight.
 ///                                     This imposes a constraint on the predicted number of events analogous to the extended term in a likelihood fit.
 ///                                     - If you don't pass this command, an extended fit will be done by default if the pdf makes a prediction on the number of events
@@ -4039,8 +3979,20 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
 /// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
-/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
+/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization.
+///                                               Only relevant for `legacy` evaluation backend and off by default, as the default `cpu` backend already includes this optimization unconditionally.
+///                                               \warning Deprecated option that will be removed in ROOT 6.42!
 /// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
+/// <tr><td> `Verbose()`    <td> Verbose output of GOF framework
+/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
+/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
+///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
 ///
 /// <tr><th> <th> Options to control flow of fit procedure
 /// <tr><td> `InitialHesse(bool flag)`      <td> Flag controls if HESSE before MIGRAD as well, off by default
@@ -4062,104 +4014,57 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// </table>
 ///
 
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+std::unique_ptr<RooFitResult> RooAbsReal::chi2FitToImpl(RooDataHist &data, const RooLinkedList &cmdList)
 {
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
-  return chi2FitTo(data,l) ;
+   return RooFit::FitHelpers::fitTo(*this, data, cmdList, true);
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
+/// \fn RooAbsReal::createChi2(RooDataHist& data, CmdArgs_t const&... cmdArgs)
 ///
-/// List of possible commands in the `cmdList`:
-///
-///  <table>
-///  <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
-///  <tr><td>
-///  <tr><td> `DataError()`  <td>  Choose between:
-///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
-///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights,
-///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
-///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
-///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
-///    (e.g., the difference between the mean and the 16 % quantile).
-///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
-///    (e.g., the difference between the 84 % quantile and the mean).
-///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
-///  <tr><td>
-///  `Extended()` <td>  Use expected number of events of an extended p.d.f as normalization
-///  <tr><td>
-///  NumCPU()     <td> Activate parallel processing feature
-///  <tr><td>
-///  Range()      <td> Calculate \f$ \chi^2 \f$ only in selected region
-///  <tr><td>
-///  Verbose()    <td> Verbose output of GOF framework
-///  <tr><td>
-///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
-/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
-/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
-///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-///
-/// </table>
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, data, cmdList, true));
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create a \f$ \chi^2 \f$ variable from a histogram and this function.
 ///
-/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
+/// See also RooAbsReal::chi2FitTo for the list of possible command arguments to this function.
 ///
-/// The list of supported command arguments is given in the documentation for
-///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
+/// It calculates:
+///
+///  \f{align*}{
+///    \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2
+///    N_\mathrm{PDF,bin} &=
+///      \begin{cases}
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
+///      \end{cases}
+///    \Delta_\mathrm{bin} &=
+///      \begin{cases}
+///          \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}
+///          \mathtt{data{\rightarrow}weightError()} &\text{otherwise}
+///      \end{cases}
+///  \f}
+///
+/// If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
+/// In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
+/// expected number of events that the PDF predicts.
+///
+/// \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
+/// zero error. This leads to messages like:
+/// ```
+/// [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
+/// ```
+///
+/// \note In this case, one can use the expected errors of the PDF instead of the data errors:
+/// ```{.cpp}
+/// RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
+/// ```
 ///
 /// \param data Histogram with data
+/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 /// \return \f$ \chi^2 \f$ variable
 
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const RooCmdArg &arg1, const RooCmdArg &arg2,
-                                                     const RooCmdArg &arg3, const RooCmdArg &arg4,
-                                                     const RooCmdArg &arg5, const RooCmdArg &arg6,
-                                                     const RooCmdArg &arg7, const RooCmdArg &arg8)
+std::unique_ptr<RooAbsReal> RooAbsReal::createChi2Impl(RooDataHist& data, const RooLinkedList& cmdList)
 {
-   RooLinkedList l;
-   l.Add((TObject *)&arg1);
-   l.Add((TObject *)&arg2);
-   l.Add((TObject *)&arg3);
-   l.Add((TObject *)&arg4);
-   l.Add((TObject *)&arg5);
-   l.Add((TObject *)&arg6);
-   l.Add((TObject *)&arg7);
-   l.Add((TObject *)&arg8);
-   return createChi2(data, l);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \see RooAbsReal::createChi2(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-/// \param data hist data
-/// \param cmdList List with RooCmdArg() from the table
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
+   return RooFit::FitHelpers::createChi2(*this, data, cmdList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4192,20 +4097,16 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const Ro
 ///                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
 ///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
 /// </table>
+///
+/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                   const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  CREATE_CMD_LIST;
   return chi2FitTo(xydata,l) ;
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4215,8 +4116,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
 {
    return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, xydata, cmdList, true));
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4232,22 +4131,21 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
 /// | `YVar(RooRealVar& yvar)`  | Designate given column in dataset as Y value
 /// | `Integrate(bool flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
 ///
+/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                  const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  CREATE_CMD_LIST;
   return createChi2(data,l) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+///
+/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
 {
@@ -4320,6 +4218,8 @@ void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
   for (auto server : servers()) {
     auto serverValues = ctx.at(server);
     if(serverValues.empty()) continue;
+
+    if(!server->isValueServer(*this)) continue;
 
     // maybe we are still missing inhibit dirty here
     auto oldOperMode = server->operMode();

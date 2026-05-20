@@ -9,7 +9,7 @@ export * from './base/BasePainter.mjs';
 
 export * from './base/ObjectPainter.mjs';
 
-export { getColor, extendRootColors, createRootColors } from './base/colors.mjs';
+export { getColor, extendRootColors, createRootColors, setColorPalette, getColorPalette } from './base/colors.mjs';
 
 export { THREE } from './base/base3d.mjs';
 
@@ -23,17 +23,19 @@ export * from './hist/TH3Painter.mjs';
 
 export * from './hist/TGraphPainter.mjs';
 
+export * from './draw/RTreeMapPainter.mjs';
+
 export { geoCfg } from './geom/geobase.mjs';
 
 export { createGeoPainter, TGeoPainter } from './geom/TGeoPainter.mjs';
 
 export { loadOpenui5, registerForResize, setSaveFile, addMoveHandler } from './gui/utils.mjs';
 
-export { draw, redraw, makeSVG, makeImage, addDrawFunc, setDefaultDrawOpt } from './draw.mjs';
+export { draw, redraw, cleanup, build3d, makeSVG, makeImage, addDrawFunc, setDefaultDrawOpt } from './draw.mjs';
 
 export * from './gpad/TCanvasPainter.mjs';
 
-export { openFile, FileProxy, addUserStreamer } from './io.mjs';
+export { openFile, FileProxy, addUserStreamer, unzipJSON } from './io.mjs';
 
 export * from './gui/display.mjs';
 

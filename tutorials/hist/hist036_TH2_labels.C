@@ -9,7 +9,7 @@
 /// \date July 2016
 /// \author Rene Brun
 
-TCanvas *hist036_TH2_labels()
+void hist036_TH2_labels()
 {
    const Int_t nx = 12;
    const Int_t ny = 20;
@@ -44,5 +44,4 @@ TCanvas *hist036_TH2_labels()
    pt->AddText(" \">\"   to sort by decreasing values");
    pt->AddText(" \"<\"   to sort by increasing values");
    pt->Draw();
-   return c1;
 }

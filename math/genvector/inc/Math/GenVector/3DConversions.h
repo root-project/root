@@ -46,8 +46,6 @@ void convert( R1 const &, R2 const) {
 // conversions from Rotation3D
 /**
    conversion functions from 3D rotation.
-   For converting to Euler Angles see
-   <A><HREF="http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf">here</A>
  */
 
 void convert( Rotation3D const & from, AxisAngle   & to);

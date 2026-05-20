@@ -1,0 +1,25 @@
+<lcgdict>
+  <class name="CaloRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="582597904"/>
+  </class>
+  <class name="reco::CaloCluster" ClassVersion="10">
+   <version ClassVersion="10" checksum="3936140"/>
+  </class>
+
+  <class name="edm::RefToBase<CaloRecHit>"/>
+  <class name="edm::Ptr<reco::CaloCluster>"/>
+  <class name="edm::PtrVector<reco::CaloCluster>"/>
+  <class name="edm::Wrapper<edm::PtrVector<reco::CaloCluster> >"/>
+  <class name="std::vector<edm::Ptr<reco::CaloCluster> >"/>
+  <!-- FIXME: The following 2 entries are found already in DataFormats/EgammaReco with the typedef 'reco::BasicCluster' -->
+  <!-- <class name="std::vector<reco::CaloCluster>" /> -->
+  <!-- <class name="edm::Wrapper<std::vector<reco::CaloCluster> >" /> -->
+  <class name="reco::CaloID" ClassVersion="10">
+   <version ClassVersion="10" checksum="2360607337"/>
+  </class>
+  <class name="edm::reftobase::BaseHolder<CaloRecHit>"/>
+
+  <class name="edm::ValueMap<reco::CaloCluster>" />
+  <class name="edm::Wrapper<edm::ValueMap<reco::CaloCluster> >" />
+
+</lcgdict>

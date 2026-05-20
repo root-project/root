@@ -36,7 +36,6 @@ not used in TEve and can be ignored in sub-classes.
 NOTE: Magnetic field direction convention is inverted.
 */
 
-ClassImp(TEveMagField);
 
 /** \class TEveMagFieldConst
 \ingroup TEve
@@ -45,7 +44,6 @@ Implements constant magnetic field, given by a vector fB.
 NOTE: Magnetic field direction convention is inverted.
 */
 
-ClassImp(TEveMagFieldConst);
 
 /** \class TEveMagFieldDuo
 \ingroup TEve
@@ -55,7 +53,6 @@ from vector fBIn to fBOut.
 NOTE: Magnetic field direction convention is inverted.
 */
 
-ClassImp(TEveMagFieldDuo);
 
 namespace
 {
@@ -214,7 +211,6 @@ consists of separate domains (like Rho-Z). The track-breaking is enabled by
 default.
 */
 
-ClassImp(TEveTrackPropagator);
 
 Double_t             TEveTrackPropagator::fgDefMagField = 0.5;
 const Double_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;

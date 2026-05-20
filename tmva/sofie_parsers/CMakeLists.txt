@@ -21,10 +21,13 @@ set_source_files_properties(${PROTO_SRCS} PROPERTIES COMPILE_FLAGS -Wno-unused-p
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
   HEADERS
    TMVA/RModelParser_ONNX.hxx
+   TMVA/RModelParser_Keras.h
+   TMVA/RModelParser_PyTorch.h
   SOURCES
     src/RModelParser_ONNX.cxx
     src/ParseBasicUnary.cxx
     src/ParseBasicBinary.cxx
+    src/ParseBasicIs.cxx
     src/ParseBatchNormalization.cxx
     src/ParseCast.cxx
     src/ParseConcat.cxx
@@ -53,6 +56,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseLayerNormalization.cxx
     src/ParseExpand.cxx
     src/ParseGather.cxx
+    src/ParseGatherND.cxx
     src/ParseElu.cxx
     src/ParseFuseConvAdd.cxx
     src/ParseFuseConvTransposeAdd.cxx
@@ -72,11 +76,26 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseEinsum.cxx
     src/ParseRandom.cxx
     src/ParseScatterElements.cxx
+    src/ParseScatterND.cxx
+    src/ParseNonZero.cxx
+    src/ParseNot.cxx
+    src/ParseClip.cxx
+    src/ParseGelu.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
   DEPENDENCIES
     TMVA
+    ROOTTMVASofie
+)
+
+# Separate library for the parses that have to link against libpython.
+ROOT_LINKER_LIBRARY(ROOTTMVASofiePyParsers
+    src/RModelParser_Keras.cxx
+    src/RModelParser_PyTorch.cxx
+  LIBRARIES
+    Python3::NumPy
+    Python3::Python
     ROOTTMVASofie
 )
 

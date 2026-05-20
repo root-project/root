@@ -36,7 +36,10 @@ protected:
 
 public:
    TF2();
-   TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Option_t * opt = nullptr);
+   TF2(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0,
+       Double_t ymax = 1, EAddToList addToGlobList = EAddToList::kDefault, bool vectorize = false);
+   TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+       Option_t *opt); // same as above but using a string for option
    TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
@@ -53,15 +56,6 @@ public:
       fNpx = 30;
    }
 
-   /// Backward compatible ctor
-   template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * , const char *) :
-      TF1(name,p,memFn,xmin,xmax,npar,2),
-   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
-   {
-      fNpx = 30;
-   }
-
    /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault) :
@@ -70,16 +64,6 @@ public:
    {
       fNpx = 30;
    }
-
-   /// Backward compatible ctor
-   template <typename Func>
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,const char *) :
-      TF1(name,f,xmin,xmax,npar,2),
-   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
-   {
-      fNpx = 30;
-   }
-
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
@@ -111,6 +95,7 @@ public:
    virtual Double_t GetMaximum(Double_t *x ) const;
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}
+   static void InitStandardFunctions();
    using TF1::Integral;
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-6);
    Bool_t   IsInside(const Double_t *x) const override;

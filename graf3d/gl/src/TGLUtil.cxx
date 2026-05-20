@@ -45,7 +45,6 @@ with OpenGL C API calls - which TVector3 etc cannot (easily).
 They are not intended to be fully featured just provide minimum required.
 */
 
-ClassImp(TGLVertex3);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a default (0.0, 0.0, 0.0) vertex
@@ -143,7 +142,6 @@ calls. They are not intended to be fully featured just provide
 minimum required.
 */
 
-ClassImp(TGLVector3);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a vector with components (x,y,z)
@@ -168,7 +166,6 @@ TGLVector3::TGLVector3(const Double_t *src) :
 passing through point 'vertex'. Just wraps a TGLVector3 / TGLVertex3 pair.
 */
 
-ClassImp(TGLLine3);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct 3D line running from 'start' to 'end'
@@ -221,7 +218,6 @@ void TGLLine3::Draw() const
 Viewport (pixel base) 2D rectangle class.
 */
 
-ClassImp(TGLRect);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct empty rect object, corner (0,0), width/height 0
@@ -328,7 +324,6 @@ They are not intended to be fully featured just provide minimum
 required.
 */
 
-ClassImp(TGLPlane);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a default plane of x + y + z = 0
@@ -593,7 +588,6 @@ They are not intended to be fully featured just provide minimum
 required.
 */
 
-ClassImp(TGLMatrix);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct default identity matrix:
@@ -1150,7 +1144,6 @@ Color index is also cached for easier interfacing with the
 traditional ROOT graphics.
 */
 
-ClassImp(TGLColor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. Color is initialized to black.
@@ -1329,7 +1322,6 @@ TString TGLColor::AsString() const
 Class encapsulating a set of colors used throughout standard rendering.
 */
 
-ClassImp(TGLColorSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Sets default for dark background.
@@ -1406,7 +1398,6 @@ void TGLColorSet::StdLightBackground()
 Wrapper class for various misc static functions - error checking, draw helpers etc.
 */
 
-ClassImp(TGLUtil);
 
 UInt_t TGLUtil::fgDefaultDrawQuality = 10;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
@@ -1472,8 +1463,8 @@ public:
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-      gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
-      gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
+      gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) impl_glBegin);
+      gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) impl_glEnd);
       gluTessCallback(fTess, (GLenum)GLU_VERTEX, vertex_func);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
@@ -1503,7 +1494,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator3fv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex3fv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex3fv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -1524,7 +1515,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator4fv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4fv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex4fv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -1545,7 +1536,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator3dv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex3dv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex3dv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -1566,7 +1557,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator4dv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4dv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex4dv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -2788,7 +2779,6 @@ TGLDisableGuard::~TGLDisableGuard()
 \ingroup opengl
 */
 
-ClassImp(TGLSelectionBuffer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGLSelectionBuffer constructor.

@@ -1,6 +1,8 @@
+#include "TMath.h"
+#include "VectorizedTMath.h"
+
 #include <cmath>
 #include <random>
-#include "VectorizedTMath.h"
 #include <gtest/gtest.h>
 
 #define N 16384
@@ -10,60 +12,75 @@ Double_t uniform_random(Double_t a, Double_t b)
    return a + (b - a) * drand48();
 }
 
+template <typename V, typename S>
+void load_simd(V &v, S const *ptr)
+{
+   for (size_t i = 0; i < V::size(); ++i)
+      v[i] = ptr[i];
+}
+
+template <typename V, typename S>
+void store_simd(V const &v, S *ptr)
+{
+   for (size_t i = 0; i < V::size(); ++i)
+      ptr[i] = v[i];
+}
+
 class VectorizedTMathTest : public ::testing::Test {
 protected:
    VectorizedTMathTest() {}
 
-   size_t kVS = vecCore::VectorSize<ROOT::Double_v>();
-   Double_t input_array1[N] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
-   Double_t input_array2[N] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
+   size_t kVS = ROOT::Double_v::size();
+   Double_t input_array1[N];
+   Double_t input_array2[N];
 
-   Double_t output_array[N] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
+   Double_t output_array[N];
 };
 
 #define TEST_VECTORIZED_TMATH_FUNCTION(tmathfunc, a, b)                                                             \
    TEST_F(VectorizedTMathTest, tmathfunc)                                                                           \
    {                                                                                                                \
-      int trials = N;                                                                                           \
+      int trials = N;                                                                                               \
       for (int i = 0; i < trials; i++)                                                                              \
          input_array1[i] = uniform_random(a, b);                                                                    \
                                                                                                                     \
-      ROOT::Double_v x, y;                                                                                          \
+      ROOT::Double_v x{};                                                                                           \
+      ROOT::Double_v y{};                                                                                           \
       for (int j = 0; j < trials; j += kVS) {                                                                       \
-         vecCore::Load<ROOT::Double_v>(x, &input_array1[j]);                                                        \
+         load_simd<ROOT::Double_v>(x, &input_array1[j]);                                                            \
          y = TMath::tmathfunc(x);                                                                                   \
-         vecCore::Store<ROOT::Double_v>(y, &output_array[j]);                                                       \
+         store_simd<ROOT::Double_v>(y, &output_array[j]);                                                           \
       }                                                                                                             \
       for (int j = 0; j < trials; j++) {                                                                            \
          Double_t scalar_output = TMath::tmathfunc(input_array1[j]);                                                \
          Double_t vec_output = output_array[j];                                                                     \
          Double_t re =                                                                                              \
             (scalar_output == vec_output && scalar_output == 0) ? 0 : (vec_output - scalar_output) / scalar_output; \
-         EXPECT_NEAR(0, re, 1e9 * std::numeric_limits<double>::epsilon());                              \
+         EXPECT_NEAR(0, re, 1e9 * std::numeric_limits<double>::epsilon());                                          \
       }                                                                                                             \
    }
 
 #define TEST_VECTORIZED_TMATH_FUNCTION2(tmathfunc, a, b, c, d)                                                      \
    TEST_F(VectorizedTMathTest, tmathfunc)                                                                           \
    {                                                                                                                \
-      int trials = N;                                                                                           \
+      int trials = N;                                                                                               \
       for (int i = 0; i < trials; i++) {                                                                            \
          input_array1[i] = uniform_random(a, b);                                                                    \
          input_array2[i] = uniform_random(c, d);                                                                    \
       }                                                                                                             \
       ROOT::Double_v x1, x2, y;                                                                                     \
       for (int j = 0; j < trials; j += kVS) {                                                                       \
-         vecCore::Load<ROOT::Double_v>(x1, &input_array1[j]);                                                       \
-         vecCore::Load<ROOT::Double_v>(x2, &input_array2[j]);                                                       \
+         load_simd<ROOT::Double_v>(x1, &input_array1[j]);                                                           \
+         load_simd<ROOT::Double_v>(x2, &input_array2[j]);                                                           \
          y = TMath::tmathfunc(x1, x2);                                                                              \
-         vecCore::Store<ROOT::Double_v>(y, &output_array[j]);                                                       \
+         store_simd<ROOT::Double_v>(y, &output_array[j]);                                                           \
       }                                                                                                             \
       for (int j = 0; j < trials; j++) {                                                                            \
          Double_t scalar_output = TMath::tmathfunc(input_array1[j], input_array2[j]);                               \
          Double_t vec_output = output_array[j];                                                                     \
          Double_t re =                                                                                              \
             (scalar_output == vec_output && scalar_output == 0) ? 0 : (vec_output - scalar_output) / scalar_output; \
-         EXPECT_NEAR(0, re, 1e10 * std::numeric_limits<double>::epsilon());                             \
+         EXPECT_NEAR(0, re, 1e10 * std::numeric_limits<double>::epsilon());                                         \
       }                                                                                                             \
    }
 

@@ -1,0 +1,57 @@
+name: 'Visual Studio - Latest'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0  7 * * 3'
+
+jobs:
+  build-windows:
+    if: ${{ github.event.schedule == '0  7 * * 3' || github.event_name == 'workflow_dispatch' }}
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+
+    name: Build Visual Studio - Latest
+
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - latest
+
+    steps:
+      - name: Display Update Log - Visual Studio Latest
+        shell: cmd
+        run: "type C:\\ROOT-CI\\VS-Update.log"
+
+      - name: Checkout
+        if: ${{ always() }}
+        uses: actions/checkout@v6
+        with:
+          ref: master
+
+      - name: Build after VS update
+        if: ${{ !cancelled() }}
+        shell: cmd
+        run: "C:\\setenv.bat x64 &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype        Release
+                    --platform         windows10
+                    --incremental      false
+                    --binaries         false
+                    --upload_artifacts false
+                    --base_ref         master
+                    --repository       ${{ github.server_url }}/${{ github.repository }}
+                    --architecture     x64"
+
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: Test Results - Visual Studio Latest
+          path: C:/ROOT-CI/build/TestResults.xml
+

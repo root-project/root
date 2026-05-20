@@ -63,7 +63,7 @@ The following people have contributed to this new version:
  Silia Taider, CERN/EP-SFT,\
  Florian Uhlig, GSI,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
- Vassil Vasilev, Princeton,\
+ Vassil Vassilev, Princeton,\
  Dongliang Zhang, University of Science and Technology of China
 
 ## Deprecation and Removal
@@ -320,7 +320,7 @@ efficiently. Many small bugs were found and fixed.
 
 ## JavaScript ROOT
 
-ROOT 6.36 will use [JSROOT 7.9](https://github.com/root-project/jsroot/releases/tag/7.9.0) release series. It includes following important changes:
+ROOT 6.36 will use JSROOT 7.9.x release series. It includes following important changes:
 
 * Implement 'nmatch' parameter for `TTree::Draw` to limit processed events
 * Implement 'elist' parameter for `TTree::Draw` to specify entries list for processing
@@ -358,9 +358,8 @@ ROOT 6.36 will use [JSROOT 7.9](https://github.com/root-project/jsroot/releases/
 * Fix - correct axis range in `TScatter` drawing
 * Fix - use draw option also for graph drawing in `TTree::Draw`
 
-## Jupyter lab
 
-Use JSROOT 7.9.0 as fallback version.
+## Class Reference Guide
 
 The tutorials have been reviewed, improved and modernised. It is now more intuitive to navigate through the individual parts of the ROOT tutorials. Some tutorials were added to showcase the new features, some were modernized to modern C++ standards and some were moved to the legacy folder.
 
@@ -588,130 +587,9 @@ More than 200 items were addressed for this release. The full list is:
 
 ## Release 6.36.02
 
-Published on July 9, 2025
-
 ### Items addressed in this release
 
-This release has been patched mainly to cope with a few reports filed mainly by the ALICE and ATLAS experiments.
-
-The list of issues addressed for this release is the following:
-
-  * [[#19241](https://github.com/root-project/root/issues/19241)] - THnBase::ProjectionAny does not calculate errors correctly
-  * [[#19113](https://github.com/root-project/root/issues/19113)] - [Python][UHI] Incorrect number of entries reported in TH1 after slicing
-  * [[#19104](https://github.com/root-project/root/issues/19104)] - RDataFrame Reads Garbage Data instead of File
-  * [[#19038](https://github.com/root-project/root/issues/19038)] - [Python] TH1 equality operator pythonization not appropriate for ROOT histograms
-  * [[#18998](https://github.com/root-project/root/issues/18998)] - Ninja failed to build ROOT 6.36 for AlmaLinux10/x86_64 with cyclic deps error
-  * [[#18974](https://github.com/root-project/root/issues/18974)] - `ROOT/RSpan.hxx` not found error in standalone Minuit2 source package
-  * [[#18972](https://github.com/root-project/root/issues/18972)] - Segmentation fault while running interpreted macro
-  * [[#18955](https://github.com/root-project/root/issues/18955)] - Change in behaviour in `TTreeReaderValueBase::GetSetupStatus()`
-  * [[#18953](https://github.com/root-project/root/issues/18953)] - error opening ZIP archive member (>4GB archive)
-  * [[#18909](https://github.com/root-project/root/issues/18909)] - Patch Version Format has three cyphers
-  * [[#18847](https://github.com/root-project/root/issues/18847)] - [RF] Memory issue in destructor of RooStats::HypoTestInverterResult
-  * [[#18833](https://github.com/root-project/root/issues/18833)] - segfault in TStreamerInfo::Compile with type involving std::function
-  * [[#18811](https://github.com/root-project/root/issues/18811)] - assertion failure in clang::TemplateParameterList::getParam
-  * [[#18768](https://github.com/root-project/root/issues/18768)] - Regression in i-adding array.array to std::vector in PyROOT
-  * [[#18665](https://github.com/root-project/root/issues/18665)] - hadd: Error in header does not cause hadd failure
-  * [[#7470](https://github.com/root-project/root/issues/7470)] - Dictionary generation fails for typedef to template specialization with default parameters
-
-## Release 6.36.04
-
-Published on August 26, 2025
-
-### Items addressed in this release
-
-This release features a few minor fixes. It will also be compatible with macOS 26 Tahoe and XCode 26.
-
-The list of issues addressed for this release is the following:
-
-  * [[#19592](https://github.com/root-project/root/issues/19592)] - No Constant Properties exported for Optical surfaces
-  * [[#19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
-  * [[#19497](https://github.com/root-project/root/issues/19497)] - EL9:: EPEL:: root tags/6-36-02@6-36-02 :: cppyy warning in rootls
-  * [[#19476](https://github.com/root-project/root/issues/19476)] - `std::string_view` adds characters to strings in Python
-  * [[#19442](https://github.com/root-project/root/issues/19442)] - [ntuple] Unable to read back RNTuples without normalized type names from v6.34
-  * [[#19438](https://github.com/root-project/root/issues/19438)] - TH2D COLZ0 option color bug
-  * [[#19419](https://github.com/root-project/root/issues/19419)] - [RF] FrequentistCalculator cannot handle non-parametric Pdfs
-  * [[#19412](https://github.com/root-project/root/issues/19412)] - TASImage Issue with latest libafterimage
-  * [[#19366](https://github.com/root-project/root/issues/19366)] - `THnSparse::CreateSparse` creates histograms that are not sparse
-  * [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with `TH1::SetBuffer` and `TH1::Sumw2`
-  * [[#19327](https://github.com/root-project/root/issues/19327)] - Build Fails on MacOS (ARM, 15)
-  * [[#19267](https://github.com/root-project/root/issues/19267)] - [cppyy] New crash when iterating over polymorphic std::vector
-  * [[#19134](https://github.com/root-project/root/issues/19134)] - Installation issue for ROOT 6.36 RPATHs through Spack on MacOS
-  * [[#11651](https://github.com/root-project/root/issues/11651)] - Syntax error leads to interpreter assert with `Must not nest within unloading transaction` when reading object
-  * [[#11460](https://github.com/root-project/root/issues/11460)] - TF2 (with same name) construction can not be made thread safe without taking a lock
-  * [[#10522](https://github.com/root-project/root/issues/10522)] - complex numbers in RDataFrame (PyROOT)
-  * [[#8899](https://github.com/root-project/root/issues/8899)] - dataframe_concurrency LLVM valgrind error: SelectionDAG::Combine
-
-## Release 6.36.06
-
-Published on November 25, 2025
-
-### Items addressed in this release
-
-This release features a few minor fixes. It will also be compatible with the new Apple XCode 26.2.
-
-The list of issues addressed for this release is the following:
-
-  * [[#20377](https://github.com/root-project/root/issues/20377)] - Investigate I/O of `std::unique_ptr` on latest MacOS beta
-  * [[#20282](https://github.com/root-project/root/issues/20282)] - [ntuple] use meta normalized name for streamer info records
-  * [[#20083](https://github.com/root-project/root/issues/20083)] - [RF] Offset() option is ignored by the fitTo() function
-  * [[#19963](https://github.com/root-project/root/issues/19963)] - Reading individual TTree sub-branch into a std::map lead to write into delete memory.
-  * [[#19889](https://github.com/root-project/root/issues/19889)] - Mixing Clang 20 and ROOT causes very sporadic crashes
-  * [[#19814](https://github.com/root-project/root/issues/19814)] - Regression in 6.34: segfault when using TTreeReader on partially initialized TChain
-  * [[#19327](https://github.com/root-project/root/issues/19327)] - Build Fails on MacOS (ARM, 15)
-  * [[#18782](https://github.com/root-project/root/issues/18782)] - Segfault in TTree::Branch with seemingly simple custom class
-
-## Release 6.36.08
-
-Published on February 6, 2026
-
-### Items addressed in this release
-
-This release features a few minor fixes.
-
-The list of issues addressed for this release is the following:
-
-  * [[#21070](https://github.com/root-project/root/issues/21070)] - RedirectServers - Server not redirected
-  * [[#21066](https://github.com/root-project/root/issues/21066)] - [RF] Crash doing HistFactory Workspace combination
-  * [[#21058](https://github.com/root-project/root/issues/21058)] - ROOT interpreter crashes when using `nlohmann::json`
-  * [[#20954](https://github.com/root-project/root/issues/20954)] - [Minuit2] Analytical Hessian indexing mismatch
-  * [[#20913](https://github.com/root-project/root/issues/20913)] - MIGRAD can call G2 even if HasG2 is set to false
-  * [[#20872](https://github.com/root-project/root/issues/20872)] - hadd crashes when already existing output file is used with remote file input paths
-  * [[#20860](https://github.com/root-project/root/issues/20860)] - Inconsistent information for histogram contours
-  * [[#20858](https://github.com/root-project/root/issues/20858)] - Make "LIST" draw option for contour plot work with "CONT1", "CONT2", and "CONT3" options
-  * [[#20831](https://github.com/root-project/root/issues/20831)] - New test failure with gcc 16 (possibly c++20 related)
-  * [[#20780](https://github.com/root-project/root/issues/20780)] - Font precision 3 doesn't work with divided canvas
-  * [[#20761](https://github.com/root-project/root/issues/20761)] - Chi2Test: Report residuals also for higher dimensions
-  * [[#20706](https://github.com/root-project/root/issues/20706)] - Segmentation violation in the TTree::Merge method for root >= v6.36.00
-  * [[#20665](https://github.com/root-project/root/issues/20665)] - Analytical Hessian is not made positive-definite during minimizer seeding in Minuit2
-  * [[#20643](https://github.com/root-project/root/issues/20643)] - thisroot.sh no longer remove previous version from the paths
-  * [[#20602](https://github.com/root-project/root/issues/20602)] - TGTextEntry spills text out of the text box on macOS but not on Ubuntu
-  * [[#20511](https://github.com/root-project/root/issues/20511)] - CMSSW DQM bin-by-bin comparison failed with ROOT 6.36
-  * [[#18837](https://github.com/root-project/root/issues/18837)] - [Python] Calling `std::span::begin()` broken with gcc15
-  * [[#18314](https://github.com/root-project/root/issues/18314)] - [ntuple] Heuristically reduce memory usage of buffered writing
-
-## Release 6.36.10
-
-Published on March 13, 2026
-
-### Items addressed in this release
-
-This release features a few minor fixes and the changes necessary to run correctly with Apple XCode 26.4.
-
-The list of issues addressed for this release is the following:
-
-  * [[#21541](https://github.com/root-project/root/issues/21541)] - [RF] `createChi2` ignores ranges provided by the Range() option
-  * [[#21159](https://github.com/root-project/root/issues/21159)] - [RF] Unexpected result with RooFFTConvPDF after ROOT 6.32
-  * [[#16673](https://github.com/root-project/root/issues/16673)] - [RF] Different behaviour of multi-range fit in RooAddPdf and RooProdPdf
-
-## Release 6.36.12
-
-Published on April 27, 2026
-
-### Items addressed in this release
-
-This release features a few fixes and minor documentation updates, most notably:
-
-  * [[#22015](https://github.com/root-project/root/issues/22015)] - Non uniquess of the UUID inside TFile
-  * [[#21880](https://github.com/root-project/root/issues/21880)] - [asimage] crash with DrawCircle
-
-## HEAD of the v6-36-00-patches branch
+* [#18665](https://github.com/root-project/root/issues/18665) - `TFileMerger`'s (and `hadd`'s) default behavior on encountering invalid/corrupt objects while merging has changed: previously the corrupt object would be skipped without aborting the merging process; now the merging process will abort by default. The "skip" behavior can be restored by:
+  * calling the new method `TFileMerger::SetErrorBehavior()` (if using `TFileMerger` directly), or
+  * using the `-k` flag if using `hadd`.
+ 

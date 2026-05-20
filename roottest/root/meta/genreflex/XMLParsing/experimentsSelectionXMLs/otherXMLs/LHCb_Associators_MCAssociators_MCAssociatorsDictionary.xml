@@ -1,0 +1,6 @@
+<lcgdict>
+
+<!-- MCAssociators -->
+  <class name = "MCAssociation"/>
+  <class name = "std::vector<MCAssociation>" />
+</lcgdict>

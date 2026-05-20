@@ -1,0 +1,11 @@
+{ decls }
+namespace std {  }
+
+[ libunorderedSet_dictrflx.so ]
+# List of selected classes
+class unordered_set<TH1F,hash<TH1F>,equal_to<TH1F> >
+class unordered_set<TH1F>
+class unordered_set<vector<TH1F> >
+class unordered_set<vector<TH1F>,hash<vector<TH1F> >,equal_to<vector<TH1F> > >
+class vector<unordered_set<TH1F,hash<TH1F>,equal_to<TH1F> > >
+class vector<unordered_set<TH1F> >

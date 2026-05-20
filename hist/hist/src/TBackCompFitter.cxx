@@ -66,7 +66,6 @@ class before issuing a new fit to avoid deleting this information.
 //#define DEBUG 1
 
 
-ClassImp(TBackCompFitter);
 
 
 
@@ -333,7 +332,7 @@ void TBackCompFitter::FixParameter(Int_t ipar) {
 void TBackCompFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
    if (!fFitter->Result().IsValid()) {
-      Error("GetConfidenceIntervals","Cannot compute confidence intervals with an invalide fit result");
+      Error("GetConfidenceIntervals", "Cannot compute confidence intervals with an invalid fit result");
       return;
    }
 
@@ -368,7 +367,7 @@ void TBackCompFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t
 void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 {
    if (!fFitter->Result().IsValid() ) {
-      Error("GetConfidenceIntervals","Cannot compute confidence intervals with an invalide fit result");
+      Error("GetConfidenceIntervals", "Cannot compute confidence intervals with an invalid fit result");
       return;
    }
 

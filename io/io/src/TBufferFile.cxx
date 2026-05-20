@@ -17,7 +17,7 @@
 The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 */
 
-#include <string.h>
+#include <cstring>
 #include <typeinfo>
 #include <string>
 #include <limits>
@@ -56,7 +56,6 @@ const Version_t kMaxVersion     = 0x3FFF;      // highest possible version numbe
 const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
 
 
-ClassImp(TBufferFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass
@@ -1701,7 +1700,7 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
              ) {
-            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and desctructor
+            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and destructor
          }
       }
 
@@ -2665,7 +2664,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
 
    if (!actualObjectStart) {
 
-      // save kNullTag to represent NULL pointer
+      // save kNullTag to represent nullptr pointer
       *this << (UInt_t) kNullTag;
 
    } else {
@@ -2967,9 +2966,12 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
    if (version<=1) {
       if (version <= 0)  {
          if (cl) {
-            if (cl->GetClassVersion() != 0
+            auto clversion = cl->GetClassVersion();
+            if ((clversion != 0
                 // If v.cnt < 6 then we have a class with a version that used to be zero and so there is no checksum.
-                && (v.cnt && v.cnt >= 6)
+                 && (v.cnt && v.cnt >= 6)) ||
+                // ::WriteVersion for a foreign class (no ClassDef) but defining Class_Version() { return 0; } does write checksum.
+                (clversion == 0 && version == 0 && cl->IsForeign())
                 ) {
                UInt_t checksum = 0;
                //*this >> checksum;
@@ -2979,11 +2981,11 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
                   return vinfo->TStreamerInfo::GetClassVersion(); // Try to get inlining.
                } else {
                   // There are some cases (for example when the buffer was stored outside of
-                  // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
+                  // a ROOT file) where we do not have a TStreamerInfo. If the checksum is
                   // the one from the current class, we can still assume that we can read
                   // the data so let use it.
                   if (checksum==cl->GetCheckSum() || cl->MatchLegacyCheckSum(checksum)) {
-                     version = cl->GetClassVersion();
+                     version = clversion;
                   } else {
                      if (fParent) {
                         Error("ReadVersion", "Could not find the StreamerInfo with a checksum of 0x%x for the class \"%s\" in %s.",
@@ -3343,7 +3345,7 @@ Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 
    if (max == 0) return 0;
 
-   Int_t n = TMath::Min(max, (Int_t)(fBufMax - fBufCur));
+   Int_t n = std::min(max, (Int_t)(fBufMax - fBufCur));
 
    memcpy(buf, fBufCur, n);
    fBufCur += n;
@@ -3438,7 +3440,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer() functions in
-/// rootcint-generated dictionaries.
+/// rootcling-generated dictionaries.
 /// This function assumes that the class version and the byte count
 /// information have been read.
 ///
@@ -3540,7 +3542,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer()
-/// functions in rootcint-generated dictionaries.
+/// functions in rootcling-generated dictionaries.
 ///
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)
@@ -3622,9 +3624,10 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
             // one for the current version, otherwise let's complain ...
             // We could also get here when reading a file prior to the introduction of StreamerInfo.
-            // We could also get here if there old class version was '1' and the new class version is higher than 1
+            // We could also get here if the old class version was '1' and the new class version is higher than 1
+            // We could also get here if the stored-in-file class version was '3' and the current-in-memory class version is not defined
             // AND the checksum is the same.
-            if (v2file || version == cl->GetClassVersion() || version == 1 ) {
+            if (v2file || version == cl->GetClassVersion() || version == 1 || (version > 0 && cl->GetClassVersion() == -1) ) {
                R__LOCKGUARD(gInterpreterMutex);
 
                // We need to check if another thread did not get here first
@@ -3792,7 +3795,7 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
+   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig.get();
    if (gDebug) {
 
       // Get the address of the first item for the PrintDebug.

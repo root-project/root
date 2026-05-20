@@ -202,7 +202,7 @@ void RooLinearVar::writeToStream(std::ostream& os, bool compact) const
 /// binning exists on the input variable, it will also exist on this linear transformation,
 /// and a binning adaptor object is created on the fly.
 
- RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly)
+ RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly, bool)
 {
   // Normalization binning
   if (name==nullptr) {
@@ -234,7 +234,7 @@ void RooLinearVar::writeToStream(std::ostream& os, bool compact) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Const version of getBinning()
 
-const RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly) const
+const RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly, bool) const
 {
   return const_cast<RooLinearVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }

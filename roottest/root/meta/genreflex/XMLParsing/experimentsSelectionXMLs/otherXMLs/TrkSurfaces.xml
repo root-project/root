@@ -1,0 +1,33 @@
+<lcgdict>
+  <class name="Trk::Surface" >
+     <field name="m_associatedDetElement"   transient="true" />   
+     <field name="m_center"                 transient="true" />   
+     <field name="m_normal"                 transient="true" />   
+     <field name="m_associatedLayer"        transient="true" />  
+     <field name="s_numberOfInstantiations" transient="true" />
+  </class>
+  <class name="Trk::CylinderSurface">
+    <field name="m_referencePoint"        transient="true"/>
+    <field name="m_rotSymmetryAxis"       transient="true"/>
+  </class>
+  <class name="Trk::DiscSurface">
+    <field name="m_referencePoint"        transient="true"/>
+  </class>
+  <class name="Trk::ConeSurface">
+  </class>
+  <class name="Trk::PerigeeSurface" />
+  <class name="Trk::PlaneSurface" >
+  </class>
+  <class name="Trk::StraightLineSurface" >
+  </class>
+  <class name="Trk::SurfaceBounds" />
+  <class name="Trk::CylinderBounds" />
+  <class name="Trk::DiscBounds" />
+  <class name="Trk::ConeBounds" />
+  <class name="Trk::EllipseBounds" />
+  <class name="Trk::DiamondBounds" />  
+  <class name="Trk::RectangleBounds" />
+  <class name="Trk::RotatedTrapezoidBounds" />
+  <class name="Trk::TrapezoidBounds" />  
+  <class name="Trk::NoBounds" />  
+ </lcgdict>

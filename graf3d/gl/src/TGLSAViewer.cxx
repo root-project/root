@@ -180,7 +180,6 @@ MANIPULATORS\n\
 The top level standalone GL-viewer - created via plugin manager.
 */
 
-ClassImp(TGLSAViewer);
 
 Long_t TGLSAViewer::fgMenuHidingTimeout = 400;
 

@@ -66,7 +66,6 @@ Drag and drop manager used by the ROOT GUI Builder.
 */
 
 
-ClassImp(TGuiBldDragManager);
 
 static UInt_t gGridStep = 8;
 static TGuiBldDragManager *gGuiBldDragManager = 0;
@@ -231,7 +230,7 @@ const char *TGuiBldMenuDialog::GetParameters()
 
       // TODO: Combobox...
 
-      // if necessary, replace the selected object by it's address
+      // if necessary, replace the selected object by its address
       if (selfobjpos == nparam-1) {
          if (params[0]) strlcat(params, ",", 1024-strlen(params));
          snprintf(param, 255, "(TObject*)0x%zx", (size_t)fObject);
@@ -397,21 +396,21 @@ void TGuiBldMenuDialog::Build()
    fOK = new TGTextButton(hf, "&OK", 1);
    hf->AddFrame(fOK, l1);
    fWidgets->Add(fOK);
-   width  = TMath::Max(width, fOK->GetDefaultWidth());
+   width  = std::max(width, fOK->GetDefaultWidth());
 
 /*
    fApply = new TGTextButton(hf, "&Apply", 2);
    hf->AddFrame(fApply, l1);
    fWidgets->Add(fApply);
    height = fApply->GetDefaultHeight();
-   width  = TMath::Max(width, fApply->GetDefaultWidth());
+   width  = std::max(width, fApply->GetDefaultWidth());
 */
 
    fCancel = new TGTextButton(hf, "&Cancel", 3);
    hf->AddFrame(fCancel, l1);
    fWidgets->Add(fCancel);
    height = fCancel->GetDefaultHeight();
-   width  = TMath::Max(width, fCancel->GetDefaultWidth());
+   width  = std::max(width, fCancel->GetDefaultWidth());
 
    // place buttons at the bottom
    l1 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);
@@ -916,15 +915,12 @@ TGuiBldDragManager::TGuiBldDragManager() : TVirtualDragManager() ,
    CreateListOfDialogs();
 
    TString tmpfile = gSystem->TempDirectory();
-   char *s = gSystem->ConcatFileName(tmpfile.Data(),
-               TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid()));
-   fPasteFileName = s;
-   delete [] s;
+   fPasteFileName = TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid());
+   gSystem->PrependPathName(tmpfile.Data(), fPasteFileName);
+   
 
-   s = gSystem->ConcatFileName(tmpfile.Data(),
-               TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
-   fTmpBuildFile = s;
-   delete [] s;
+   fTmpBuildFile = TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid());
+   gSystem->PrependPathName(tmpfile.Data(), fTmpBuildFile);
 
    fName = "Gui Builder Drag Manager";
    SetWindowName(fName.Data());
@@ -1272,10 +1268,10 @@ void TGuiBldDragManager::SelectFrame(TGFrame *frame, Bool_t add)
                                       0, 0, xx, yy, c);
 
       fDragType = kDragLasso;
-      fPimpl->fX0 = x0 = TMath::Min(x0, xx);
-      fPimpl->fX = x = TMath::Max(x, xx + (Int_t)frame->GetWidth());
-      fPimpl->fY0 = y0 = TMath::Min(y0, yy);
-      fPimpl->fY = y = TMath::Max(y, yy + (Int_t)frame->GetHeight());
+      fPimpl->fX0 = x0 = std::min(x0, xx);
+      fPimpl->fX = x = std::max(x, xx + (Int_t)frame->GetWidth());
+      fPimpl->fY0 = y0 = std::min(y0, yy);
+      fPimpl->fY = y = std::max(y, yy + (Int_t)frame->GetHeight());
 
       DrawLasso();
    }
@@ -2033,8 +2029,8 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
 
             if ((event->fTime - gLastClick < 350) &&
                 (event->fCode == gLastButton) &&
-                (TMath::Abs(event->fXRoot - gDbx) < 6) &&
-                (TMath::Abs(event->fYRoot - gDby) < 6) &&
+                (std::abs(event->fXRoot - gDbx) < 6) &&
+                (std::abs(event->fYRoot - gDby) < 6) &&
                 (event->fWindow == gDbw)) {
                dbl_clk = kTRUE;
             }
@@ -2579,8 +2575,8 @@ TList *TGuiBldDragManager::GetFramesInside(Int_t x0, Int_t y0, Int_t x, Int_t y)
    TList *list = new TList();
 
    xx = x0; yy = y0;
-   x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
-   y0 = TMath::Min(yy, y); y = TMath::Max(yy, y);
+   x0 = std::min(xx, x); x = std::max(xx, x);
+   y0 = std::min(yy, y); y = std::max(yy, y);
 
    TIter next(((TGCompositeFrame*)fClient->GetRoot())->GetList());
    TGFrameElement *el;
@@ -2740,8 +2736,8 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
                                       fPimpl->fX0, fPimpl->fY0, x0, y0, c);
 
       xx = x0; yy = y0;
-      x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
-      y0 = TMath::Min(yy, y); y = TMath::Max(yy, y);
+      x0 = std::min(xx, x); x = std::max(xx, x);
+      y0 = std::min(yy, y); y = std::max(yy, y);
 
       li = GetFramesInside(x0, y0, x, y);
 
@@ -2819,8 +2815,8 @@ void TGuiBldDragManager::HandleAlignment(Int_t to, Bool_t lineup)
                                       fPimpl->fX0, fPimpl->fY0, x0, y0, c);
 
       xx = x0; yy = y0;
-      x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
-      y0 = TMath::Min(yy, y); y = TMath::Max(yy, y);
+      x0 = std::min(xx, x); x = std::max(xx, x);
+      y0 = std::min(yy, y); y = std::max(yy, y);
 
       comp = (TGCompositeFrame*)fClient->GetRoot();
 
@@ -2955,8 +2951,8 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
    }
 
    xx = x0; yy = y0;
-   x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
-   y0 = TMath::Min(yy, y); y = TMath::Max(yy, y);
+   x0 = std::min(xx, x); x = std::max(xx, x);
+   y0 = std::min(yy, y); y = std::max(yy, y);
    w = x - x0;
    h = y - y0;
 
@@ -3269,12 +3265,12 @@ void TGuiBldDragManager::CloneEditable()
    }
 
    TString tmpfile = gSystem->TempDirectory();
-   char *s = gSystem->ConcatFileName(tmpfile.Data(), TString::Format("tmp%d.C",
-                                     gRandom->Integer(100)));
+   TString temp;
+   temp.Form("tmp%d.C", gRandom->Integer(100));
+   const char *s = gSystem->PrependPathName(tmpfile, temp);
    Save(s);
    gROOT->Macro(s);
    gSystem->Unlink(s);
-   delete [] s;
 
    if (fClient->GetRoot()->InheritsFrom(TGFrame::Class())) {
       TGFrame *f = (TGFrame *)fClient->GetRoot();
@@ -3909,8 +3905,8 @@ Bool_t TGuiBldDragManager::HandleMotion(Event_t *event)
    gx = event->fXRoot;
 
    if (!fDragging) {
-      if (fMoveWaiting && ((TMath::Abs(fPimpl->fX - event->fXRoot) > 10) ||
-          (TMath::Abs(fPimpl->fY - event->fYRoot) > 10))) {
+      if (fMoveWaiting && ((std::abs(fPimpl->fX - event->fXRoot) > 10) ||
+          (std::abs(fPimpl->fY - event->fYRoot) > 10))) {
 
          return StartDrag(fSource, event->fXRoot, event->fYRoot);
       }
@@ -3964,8 +3960,8 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame, TGLayoutHints *hints)
    ToGrid(x, y);
    ToGrid(x0, y0);
 
-   UInt_t w = TMath::Abs(x - x0);
-   UInt_t h = TMath::Abs(y - y0);
+   UInt_t w = std::abs(x - x0);
+   UInt_t h = std::abs(y - y0);
    x = x > x0 ? x0 : x;
    y = y > y0 ? y0 : y;
 

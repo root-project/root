@@ -27,12 +27,12 @@ Editor for a TGeoTrap.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualPad.h"
 #include "TView.h"
+#include "TMath.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTrapEditor);
 
 enum ETGeoTrapWid {
    kTRAP_NAME,
@@ -518,7 +518,6 @@ void TGeoTrapEditor::DoPhi()
       DoApply();
 }
 
-ClassImp(TGeoGtraEditor);
 
 enum ETGeoGtraWid { kGTRA_TWIST };
 

@@ -1,0 +1,72 @@
+<lcgdict>
+
+  <class name="TauJetContainer_p5" id="7D98A685-ED84-43AD-9B35-69295E19D402" />
+  <class name="std::vector<TauJet_p5>" />
+  <class name="TauJet_p5" />
+
+  <class name="TauJetContainer_p4" id="87896E97-2688-4373-BD6F-6FC0ED406C2B" />
+  <class name="std::vector<TauJet_p4>" />
+  <class name="TauJet_p4" />
+
+  <class name="TauJetContainer_p3" id="3B6CC0D5-D033-45A6-9440-0276EE55B4C5" />
+  <class name="std::vector<TauJet_p3>" />
+  <class name="TauJet_p3" />
+
+  <class name="TauJetContainer_p2" id="3F9C4AF7-1B48-4DBC-BA24-F7CF658E7820" />
+  <class name="std::vector<TauJet_p2>" />
+  <class name="TauJet_p2" />
+
+  <class name="TauJetContainer_p1" id="AD52E539-5A69-493A-B33C-7BE558348EBA" />
+  <class name="std::vector<TauJet_p1>" />
+  <class name="TauJet_p1" />
+
+
+  <class name="TauDetailsContainer_tlp1" id="727655C6-9CF7-476F-8AB4-747834E1FB02" />
+  <class name="TauDetailsContainer_tlp2" id="AF3C1607-E62F-46C0-8BF5-C26874647C07" />
+  <class name="TauDetailsContainer_tlp3" id="5973152F-5913-4A0C-84DE-5CD392945858" />
+  <class name="TauDetailsContainer_tlp4" id="FA5D3190-EC7A-4608-A7C6-A154D7FEFE18" />
+
+  <class name="TauDetailsContainer_p1" />
+  <class name="std::vector<TauDetailsContainer_p1>" />
+
+  <class name="TauRecDetails_p1" />
+  <class name="std::vector<TauRecDetails_p1>" />
+
+  <class name="TauRecExtraDetails_p1" /> 
+  <class name="std::vector<TauRecExtraDetails_p1>" />
+
+  <class name="TauCommonDetails_p2" />
+  <class name="std::vector<TauCommonDetails_p2>" />
+
+  <class name="TauCommonDetails_p1" />
+  <class name="std::vector<TauCommonDetails_p1>" />
+
+  <class name="TauCommonExtraDetails_p1" />
+  <class name="std::vector<TauCommonExtraDetails_p1>" />
+      
+  <class name="PanTauDetails_p1" />
+  <class name="std::vector<PanTauDetails_p1>" />
+
+  <class name="TauPi0Candidate_p1" />
+  <class name="std::vector<TauPi0Candidate_p1>" />
+  
+  <class name="TauPi0Cluster_p1" />
+  <class name="std::vector<TauPi0Cluster_p1>" />  
+
+  <class name="TauPi0Details_p2" />
+  <class name="std::vector<TauPi0Details_p2>" />
+
+  <class name="TauShot_p1" />
+  <class name="std::vector<TauShot_p1>" />
+
+  <!-- old, but keeping for backwards compatibility -->
+  <class name="Tau1P3PDetails_p1" />
+  <class name="std::vector<Tau1P3PDetails_p1>" />
+
+  <class name="Tau1P3PExtraDetails_p1" />
+  <class name="std::vector<Tau1P3PExtraDetails_p1>" />
+
+  <class name="tauAnalysisHelperObject_p1" />
+  <class name="std::vector<tauAnalysisHelperObject_p1>" />
+
+</lcgdict>

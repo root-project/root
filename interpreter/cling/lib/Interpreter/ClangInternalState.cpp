@@ -160,6 +160,9 @@ namespace cling {
     }
 
     builtinNames.push_back(".*__builtin.*");
+    // Ignore TopLevelStmt for now, an invalid TopLevelStmt can still exist
+    // after a failed statement (introduced by llvm/llvm-project@4b70d17bcf)
+    builtinNames.push_back("StoredDeclsMap TopLevelStmt");
 
     differentContent(m_LookupTablesFile, m_DiffPair->m_LookupTablesFile,
                      "lookup tables", verbose, &builtinNames);
@@ -253,7 +256,7 @@ namespace cling {
                                               const SourceManager& SM) {
     // FileInfos are stored as a mapping, and invalidating the cache
     // can change iteration order.
-    std::vector<std::string> ParsedOpen, Parsed, AST;
+    std::vector<std::string> Parsed, AST;
     for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
            E = SM.fileinfo_end(); I != E; ++I) {
       const clang::FileEntryRef FE = I->first;
@@ -270,15 +273,7 @@ namespace cling {
         if (I->second->getBufferDataIfLoaded()) {
           // There is content - a memory buffer or a file.
           // We know it's a file because we started off the FileEntry.
-
-          // FIXME: LLVM will completely migrate to FileEntryRef.
-          // We added `isOpen()` in our commit:
-          // `Accessor to "is file opened"; this is crucial info for us.`
-          // Move this logic to FileEntryRef or have a workaround.
-          if (FE.getFileEntry().isOpen())
-            ParsedOpen.emplace_back(std::move(fileName));
-          else
-            Parsed.emplace_back(std::move(fileName));
+          Parsed.emplace_back(std::move(fileName));
         } else
          AST.emplace_back(std::move(fileName));
       }
@@ -291,7 +286,6 @@ namespace cling {
       for (auto&& FileName : Files)
         Out << " " << FileName << '\n';
     };
-    DumpFiles("Parsed and open", ParsedOpen);
     DumpFiles("Parsed", Parsed);
     DumpFiles("From AST file", AST);
   }
@@ -302,7 +296,17 @@ namespace cling {
     bool PrintInstantiation = false;
     std::string ErrMsg;
     clang::PrintingPolicy policy = C.getPrintingPolicy();
-    TU->print(Out, policy, Indentation, PrintInstantiation);
+    for (Decl* D : TU->decls()) {
+      if (auto* TLSD = dyn_cast<TopLevelStmtDecl>(D)) {
+        if (!TLSD->getStmt()) {
+          // Skip invalid TopLevelStmt. The change llvm/llvm-project@4b70d17bcf
+          // caused an invalid TopLevelStatement to be added to the AST, which
+          // can trigger assertions when dumping.
+          continue;
+        }
+      }
+      D->print(Out, policy, Indentation, PrintInstantiation);
+    }
     // TODO: For future when we relpace the bump allocation with slab.
     //
     //Out << "Allocated memory: " << C.getAllocatedMemory();

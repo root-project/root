@@ -28,13 +28,13 @@ class TGLBoundingBox;
 class TGLManip : public TVirtualGLManip
 {
 protected:
-   TGLPhysicalShape  *fShape;             //! manipulated shape
-   UInt_t             fSelectedWidget;    //! active width (axis) component
-   Bool_t             fActive;            //! manipulator is active?
+   TGLPhysicalShape  *fShape;             ///<! manipulated shape
+   UInt_t             fSelectedWidget;    ///<! active width (axis) component
+   Bool_t             fActive;            ///<! manipulator is active?
 
    // Mouse tracking - in WINDOW coords
-   TPoint             fFirstMouse;        //! first (start) mouse position (in WINDOW coords)
-   TPoint             fLastMouse;         //! last (latest) mouse position (in WINDOW coords)
+   TPoint             fFirstMouse;        ///<! first (start) mouse position (in WINDOW coords)
+   TPoint             fLastMouse;         ///<! last (latest) mouse position (in WINDOW coords)
 
    TGLManip(const TGLManip&);
    TGLManip& operator=(const TGLManip&);

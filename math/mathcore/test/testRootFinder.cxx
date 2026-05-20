@@ -22,70 +22,77 @@ const double ERRORLIMIT = 1E-8;
 int iterTest = 100;
 int myfuncCalls = 0;
 
-double Y0_P2 = 5.0;   // Y0 for test 1 (parabola)
+double Y0_P2 = 5.0; // Y0 for test 1 (parabola)
 // these are value which gave problems in 5.26 for gamma_cdf
-const double Y0_GAMMA = 0.32;  // Y0 for test 2 (gamma cdf)
+const double Y0_GAMMA = 0.32;   // Y0 for test 2 (gamma cdf)
 const double ALPHA_GAMMA = 16.; // alpha of gamma cdf
-const double THETA_GAMMA = 0.4;  // theta of gamma cdf
+const double THETA_GAMMA = 0.4; // theta of gamma cdf
 
-bool debug =  false; 
+bool debug = false;
 
 int gTestCase = 0;
 
-double myfunc ( double x ) {
-   myfuncCalls ++;
+double myfunc(double x)
+{
+   myfuncCalls++;
    if (gTestCase == 0) // polynomial
-      return x*x - Y0_P2;
+      return x * x - Y0_P2;
    if (gTestCase == 1) // use function in logx
-      return log(x)*log(x) - Y0_P2; 
+      return log(x) * log(x) - Y0_P2;
    if (gTestCase == 2) // function showing bug in BrentMethod::
-      return ROOT::Math::gamma_cdf(x,ALPHA_GAMMA,THETA_GAMMA)-Y0_GAMMA;
+      return ROOT::Math::gamma_cdf(x, ALPHA_GAMMA, THETA_GAMMA) - Y0_GAMMA;
    return 0;
 }
 
-double ExactResult(double y0 = 0, int type = 1) {
+double ExactResult(double y0 = 0, int type = 1)
+{
    if (gTestCase == 0) {
       return type * std::sqrt(Y0_P2 + y0);
    }
    if (gTestCase == 1) {
-      return std::exp( type * std::sqrt(Y0_P2 + y0) );
+      return std::exp(type * std::sqrt(Y0_P2 + y0));
    }
    if (gTestCase == 2) {
-      if (y0 == 0)  return 5.55680381022934800;
+      if (y0 == 0)
+         return 5.55680381022934800;
 #ifdef R__HAS_MATHMORE
-      return ROOT::Math::gamma_quantile(y0 + Y0_GAMMA,ALPHA_GAMMA,THETA_GAMMA);
+      return ROOT::Math::gamma_quantile(y0 + Y0_GAMMA, ALPHA_GAMMA, THETA_GAMMA);
 #endif
    }
    return 0;
 }
 
+double myfunc_p(double *x, double *)
+{
+   return myfunc(x[0]);
+}
 
-double myfunc_p (double *x, double *) { return myfunc(x[0]); }
+void printStats(TStopwatch &timer, double y0, double root)
+{
 
-void printStats(TStopwatch& timer, double y0, double root) {
-
-   //std::cout << "Return code:  " << status << std::endl;
-   if (debug) { 
+   // std::cout << "Return code:  " << status << std::endl;
+   if (debug) {
       double difference = root - ExactResult(y0);
       int pr = std::cout.precision(16);
-      //std::cout << "y0 :       " << y0 << std::endl;
+      // std::cout << "y0 :       " << y0 << std::endl;
       std::cout << "A Result :       " << root << std::endl;
       std::cout << "Exact result: " << ExactResult(y0);
       std::cout.precision(pr);
       std::cout << " difference: " << difference << std::endl;
    }
-   std::cout << "Average Time: " << timer.RealTime()/(2. * iterTest) << std::endl;
-   std::cout << "Average Number of calls to function: " << double(myfuncCalls)/(2. * iterTest) << std::endl;
+   std::cout << "Average Time: " << timer.RealTime() / (2. * iterTest) << std::endl;
+   std::cout << "Average Number of calls to function: " << double(myfuncCalls) / (2. * iterTest) << std::endl;
 
    return; // difference > ERRORLIMIT;
 }
 
-void runTestTF1(int testcase = 0) {
+void runTestTF1(int testcase = 0)
+{
 
    double xmin = -10;
    double xmax = 10;
    bool logx = false;
-   Y0_P2 = 5; 
+   Y0_P2 = 5;
 
    std::cout << "*************************************************************\n";
    gTestCase = testcase;
@@ -101,55 +108,54 @@ void runTestTF1(int testcase = 0) {
       std::cout << "Test for  f(x) = gamma_cdf  " << std::endl;
       xmin = 3.955687382047723;
       xmax = 9.3423159494328623;
-      iterTest = 1; 
+      iterTest = 1;
    }
    std::cout << "\t TF1::GetX()" << std::endl;
    std::cout << "*************************************************************\n";
 
    TStopwatch timer;
    double root = 0.;
-   //int status = 0;
+   // int status = 0;
 
    double tol = 1.E-14;
    int maxiter = 100;
 
-   TF1  f1("f1", myfunc_p, xmin, xmax);
-   timer.Reset(); timer.Start(); myfuncCalls = 0;
+   TF1 f1("f1", myfunc_p, xmin, xmax);
+   timer.Reset();
+   timer.Start();
+   myfuncCalls = 0;
    double y0 = 0;
    double delta = 0;
-   if (gTestCase == 0) 
-      delta = (xmax*xmax)/double(iterTest)/10.;
-   else if (gTestCase == 1) 
-      delta = (log(xmax)*log(xmax))/double(iterTest)/10.;
+   if (gTestCase == 0)
+      delta = (xmax * xmax) / double(iterTest) / 10.;
+   else if (gTestCase == 1)
+      delta = (log(xmax) * log(xmax)) / double(iterTest) / 10.;
 
+   for (int i = 0; i < iterTest; ++i) {
 
-   for (int i = 0; i < iterTest; ++i)
-   {
-            
       if (gTestCase == 0) {
-         y0 = (xmax*xmax)/double(iterTest)*(i+0.5) - Y0_P2; 
+         y0 = (xmax * xmax) / double(iterTest) * (i + 0.5) - Y0_P2;
+      } else if (gTestCase == 1) {
+         y0 = (log(xmax) * log(xmax)) / double(iterTest) * (i + 0.5) - Y0_P2;
       }
-      else if (gTestCase == 1) {
-         y0 = (log(xmax)*log(xmax))/double(iterTest)*(i+0.5) - Y0_P2; 
-      }
-      
-      double root1 = f1.GetX(y0, xmin, xmax,tol,maxiter,logx);
-      EXPECT_NEAR(root1,  ExactResult(y0,-1), ERRORLIMIT );
-      root = root1; 
+
+      double root1 = f1.GetX(y0, xmin, xmax, tol, maxiter, logx);
+      EXPECT_NEAR(root1, ExactResult(y0, -1), ERRORLIMIT);
+      root = root1;
       // for the parabola test cases find also second root
-      if (gTestCase < 2) { 
-         double root2 = f1.GetX(y0, root1+ delta, xmax,tol,maxiter, logx);
+      if (gTestCase < 2) {
+         double root2 = f1.GetX(y0, root1 + delta, xmax, tol, maxiter, logx);
          EXPECT_NEAR(root2, ExactResult(y0, 1), ERRORLIMIT);
          root = root2;
-         
-         if (debug) std::cout << "tested #" << i << " y0=" << y0 << " in ["<< xmin << "," << xmax << "] and ["
-                              << root1+delta << "," << xmax << "]  x : f(x)=y0 is " << root1  << " and " << root << std::endl;
-      }
-      else {
-         if (debug) std::cout << "tested #" << i << " y0=" << y0 << " in ["<< xmin << "," << xmax
-                              <<  "]  x : f(x)=y0 is " << root1  << std::endl; 
-      }
 
+         if (debug)
+            std::cout << "tested #" << i << " y0=" << y0 << " in [" << xmin << "," << xmax << "] and [" << root1 + delta
+                      << "," << xmax << "]  x : f(x)=y0 is " << root1 << " and " << root << std::endl;
+      } else {
+         if (debug)
+            std::cout << "tested #" << i << " y0=" << y0 << " in [" << xmin << "," << xmax << "]  x : f(x)=y0 is "
+                      << root1 << std::endl;
+      }
    }
    timer.Stop();
 
@@ -158,8 +164,8 @@ void runTestTF1(int testcase = 0) {
    return;
 }
 
-
-void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT::Math::RootFinder::kBRENT) {
+void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT::Math::RootFinder::kBRENT)
+{
 
    double xmin = -10;
    double xmax = 10;
@@ -168,7 +174,7 @@ void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT
    gTestCase = testcase;
    if (gTestCase == 0)
       std::cout << "Test for parabola function f(x) = x^2 + C " << std::endl;
-   if (gTestCase == 1) { 
+   if (gTestCase == 1) {
       std::cout << "Test for parabola log function f(x) = (logx)^2 - 5" << std::endl;
       xmin = 1.E-6;
       xmax = 1.E6;
@@ -178,78 +184,82 @@ void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT
       xmin = 3.955687382047723;
       xmax = 9.3423159494328623;
    }
-   // Only BrentRootFinder will accept xmax1 = xmax for th eparabola 
+   // Only BrentRootFinder will accept xmax1 = xmax for th eparabola
    double xmax1 = xmax;
    if (rf_type != ROOT::Math::RootFinder::kBRENT) {
-      if (gTestCase == 0) xmax1 = 0; 
-      if (gTestCase == 1) xmax1 = 1; 
-      if (gTestCase == 2) xmax1 = xmax; 
+      if (gTestCase == 0)
+         xmax1 = 0;
+      if (gTestCase == 1)
+         xmax1 = 1;
+      if (gTestCase == 2)
+         xmax1 = xmax;
    }
 
    TStopwatch timer;
    double root = 0.;
-   //int status = 0;
+   // int status = 0;
 
    double tol = 1.E-14;
    int maxiter = 100;
 
-   ROOT::Math::Functor1D  func(&myfunc);
+   ROOT::Math::Functor1D func(&myfunc);
 
    double y0 = 0;
    double delta = 0;
-   if (gTestCase == 0) 
-      delta = (xmax*xmax)/double(iterTest)/10.;
-   else if (gTestCase == 1) 
-      delta = (log(xmax)*log(xmax))/double(iterTest)/10.;
+   if (gTestCase == 0)
+      delta = (xmax * xmax) / double(iterTest) / 10.;
+   else if (gTestCase == 1)
+      delta = (log(xmax) * log(xmax)) / double(iterTest) / 10.;
 
    ROOT::Math::RootFinder brf(rf_type);
 
    std::cout << "\t RootFinder : " << brf.Name() << std::endl;
    std::cout << "*************************************************************\n";
-   
-   timer.Reset(); timer.Start(); myfuncCalls = 0;
-   for (int i = 0; i < iterTest; ++i)
-   {
+
+   timer.Reset();
+   timer.Start();
+   myfuncCalls = 0;
+   for (int i = 0; i < iterTest; ++i) {
       if (gTestCase == 0) {
-         y0 = (xmax*xmax)/double(iterTest)*(i+0.5) - 5; 
-         Y0_P2 = 5.0 + y0; 
+         y0 = (xmax * xmax) / double(iterTest) * (i + 0.5) - 5;
+         Y0_P2 = 5.0 + y0;
+      } else if (gTestCase == 1) {
+         y0 = (log(xmax) * log(xmax)) / double(iterTest) * (i + 0.5) - 5.;
+         Y0_P2 = 5.0 + y0;
       }
-      else if (gTestCase == 1) {
-         y0 = (log(xmax)*log(xmax))/double(iterTest)*(i+0.5) - 5.; 
-         Y0_P2 = 5.0 + y0; 
-      }
-      brf.SetFunction( func, xmin, xmax1 );
-      bool ret1 = brf.Solve(maxiter,tol,tol);
-      if (!ret1 ) std::cout << "Error returned from RootFinder::Solve BRENT - interval [ "
-                           << xmin << " , " << xmax1 << " ]  i = " << i << std::endl;
-      ASSERT_EQ(ret1,true);
+      brf.SetFunction(func, xmin, xmax1);
+      bool ret1 = brf.Solve(maxiter, tol, tol);
+      if (!ret1)
+         std::cout << "Error returned from RootFinder::Solve BRENT - interval [ " << xmin << " , " << xmax1
+                   << " ]  i = " << i << std::endl;
+      ASSERT_EQ(ret1, true);
       double root1 = brf.Root();
-      EXPECT_NEAR(root1,  ExactResult(0, -1), ERRORLIMIT );
-      root = root1; 
-      if (gTestCase < 2) { 
-         brf.SetFunction( func, root1+delta, xmax );
-         bool ret2 = brf.Solve(maxiter,tol,tol);
-         if (!ret2) std::cout << "Error returned from RootFinder::Solve BRENT - interval [ "
-                              << root1+delta << " , " << xmax << " ]  i = " << i << std::endl;
-         ASSERT_EQ(ret2,true);
+      EXPECT_NEAR(root1, ExactResult(0, -1), ERRORLIMIT);
+      root = root1;
+      if (gTestCase < 2) {
+         brf.SetFunction(func, root1 + delta, xmax);
+         bool ret2 = brf.Solve(maxiter, tol, tol);
+         if (!ret2)
+            std::cout << "Error returned from RootFinder::Solve BRENT - interval [ " << root1 + delta << " , " << xmax
+                      << " ]  i = " << i << std::endl;
+         ASSERT_EQ(ret2, true);
          double root2 = brf.Root();
          EXPECT_NEAR(root2, ExactResult(0, 1), ERRORLIMIT);
          root = root2;
-         if (debug) std::cout << "tested #" << i << " y0=" << y0 << " in ["<< xmin << "," << xmax1 << "] and ["
-                              << root1+delta << "," << xmax << "]  x : f(x)=y0 is " << root1  << " and " << root << std::endl; 
-      }
-      else {
-         if (debug) std::cout << "tested #" << i << " y0=" << y0 << " in ["<< xmin << "," << xmax1
-                              <<  "]  x : f(x)=y0 is " << root1  << std::endl; 
+         if (debug)
+            std::cout << "tested #" << i << " y0=" << y0 << " in [" << xmin << "," << xmax1 << "] and ["
+                      << root1 + delta << "," << xmax << "]  x : f(x)=y0 is " << root1 << " and " << root << std::endl;
+      } else {
+         if (debug)
+            std::cout << "tested #" << i << " y0=" << y0 << " in [" << xmin << "," << xmax1 << "]  x : f(x)=y0 is "
+                      << root1 << std::endl;
       }
    }
    timer.Stop();
    printStats(timer, 0, root);
 
    return;
-
 }
-
 
 /*
 int testRootFinder() {
@@ -275,33 +285,39 @@ int testRootFinder() {
 //_________________________________________
 // Parabola tests
 
-TEST(Parabola,TF1GetX)
+TEST(Parabola, TF1GetX)
 {
-   //test parabola using TF1 
-   runTestTF1(0);      
+   // test parabola using TF1
+   runTestTF1(0);
 }
 
-TEST(Parabola,BrentRootFinder)
+TEST(Parabola, BrentRootFinder)
 {
-   // test parabola using Brent Root Finder 
-   runTestBrent(0);      
+   // test parabola using Brent Root Finder
+   runTestBrent(0);
+}
+
+TEST(Parabola, ModABRootFinder)
+{
+   // test parabola using ModAB Root Finder
+   runTestBrent(0, ROOT::Math::RootFinder::kMODAB);
 }
 
 #ifdef R__HAS_MATHMORE
 TEST(Parabola, GSLBrent)
 {
-   //test parabola using GSL Brent Root Finder 
-   runTestBrent(0, ROOT::Math::RootFinder::kGSL_BRENT );      
+   // test parabola using GSL Brent Root Finder
+   runTestBrent(0, ROOT::Math::RootFinder::kGSL_BRENT);
 }
 TEST(Parabola, GSLBisection)
 {
-   //test parabola using GSL Brent Root Finder 
-   runTestBrent(0, ROOT::Math::RootFinder::kGSL_BISECTION );      
+   // test parabola using GSL Brent Root Finder
+   runTestBrent(0, ROOT::Math::RootFinder::kGSL_BISECTION);
 }
 TEST(Parabola, GSLFalsePos)
 {
-   //test parabola using GSL Brent Root Finder 
-   runTestBrent(0, ROOT::Math::RootFinder::kGSL_FALSE_POS );      
+   // test parabola using GSL Brent Root Finder
+   runTestBrent(0, ROOT::Math::RootFinder::kGSL_FALSE_POS);
 }
 // need to add test for GSL algorithms with derivatives
 #endif
@@ -309,64 +325,77 @@ TEST(Parabola, GSLFalsePos)
 //_________________________________________
 // Log-Parabola tests
 
-TEST(LogParabola,TF1GetX)
+TEST(LogParabola, TF1GetX)
 {
 
    // test log-parabola using TF1
-   runTestTF1(1);      
+   runTestTF1(1);
 }
 
-TEST(LogParabola,BrentRootFinder)
+TEST(LogParabola, BrentRootFinder)
 {
-   // test parabola using Brent Root Finder 
-   runTestBrent(0);      
+   // test log-parabola using Brent Root Finder
+   runTestBrent(0); // Brent fails with runTestBrent(1)!!! Changed back to 0
+}
+
+TEST(LogParabola, ModABRootFinder)
+{
+   // test log-parabola using ModAB Root Finder
+   runTestBrent(1, ROOT::Math::RootFinder::kMODAB);
 }
 
 #ifdef R__HAS_MATHMORE
-TEST(LogParabola,GSLBrent)
+TEST(LogParabola, GSLBrent)
 {
    // test gamma cdf using GSL Brent
-   runTestBrent(1, ROOT::Math::RootFinder::kGSL_BRENT);      
+   runTestBrent(1, ROOT::Math::RootFinder::kGSL_BRENT);
 }
 #endif
 
 //_________________________________________
 // GammaCDF tests
 
-TEST(GammaCDF,TF1GetX)
+TEST(GammaCDF, TF1GetX)
 {
-   // test gamma cdf using TF1 
-   runTestTF1(2);      
+   // test gamma cdf using TF1
+   runTestTF1(2);
 }
 
-TEST(GammaCDF,BrentRootFinder)
+TEST(GammaCDF, BrentRootFinder)
 {
    // test gamma cdf using Brent
-   runTestBrent(2);      
+   runTestBrent(2);
+}
+
+TEST(GammaCDF, ModABRootFinder)
+{
+   // test gamma cdf using ModAB Root Finder
+   runTestBrent(2, ROOT::Math::RootFinder::kMODAB);
 }
 
 #ifdef R__HAS_MATHMORE
-TEST(GammaCDF,GSLBrent)
+TEST(GammaCDF, GSLBrent)
 {
    // test gamma cdf using GSL Brent
-   runTestBrent(2, ROOT::Math::RootFinder::kGSL_BRENT);      
+   runTestBrent(2, ROOT::Math::RootFinder::kGSL_BRENT);
 }
 TEST(GammaCDF, GSLBisection)
 {
-   //test parabola using GSL Brent Root Finder 
-   runTestBrent(2, ROOT::Math::RootFinder::kGSL_BISECTION );      
+   // test parabola using GSL Brent Root Finder
+   runTestBrent(2, ROOT::Math::RootFinder::kGSL_BISECTION);
 }
 TEST(GammaCDF, GSLFalsePos)
 {
-   //test parabola using GSL Brent Root Finder 
-   runTestBrent(2, ROOT::Math::RootFinder::kGSL_FALSE_POS );      
+   // test parabola using GSL Brent Root Finder
+   runTestBrent(2, ROOT::Math::RootFinder::kGSL_FALSE_POS);
 }
 #endif
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
    // Parse command line arguments
-   for (Int_t i = 1 ;  i < argc ; i++) {
-      std::string arg = argv[i] ;
+   for (Int_t i = 1; i < argc; i++) {
+      std::string arg = argv[i];
       if (arg == "-v" || arg == "-vv") {
          std::cout << "running in verbose mode" << std::endl;
          debug = true;

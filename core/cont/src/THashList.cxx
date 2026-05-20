@@ -24,7 +24,6 @@ can override Hash() as it sees fit.
 #include "TClass.h"
 
 
-ClassImp(THashList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a THashList object. Capacity is the initial hashtable capacity
@@ -138,6 +137,28 @@ void THashList::AddBefore(TObjLink *before, TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void THashList::AddBefore(const TObject *before, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   TList::AddBefore(before, obj, opt);
+   fTable->AddBefore(before, obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void THashList::AddBefore(TObjLink *before, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   TList::AddBefore(before, obj, opt);
+   fTable->AddBefore(before->GetObject(), obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Insert object after object after in the list.
 
 void THashList::AddAfter(const TObject *after, TObject *obj)
@@ -158,6 +179,27 @@ void THashList::AddAfter(TObjLink *after, TObject *obj)
    TList::AddAfter(after, obj);
    fTable->Add(obj);
 }
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void THashList::AddAfter(const TObject *after, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   TList::AddAfter(after, obj, opt);
+   fTable->Add(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void THashList::AddAfter(TObjLink *after, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   TList::AddAfter(after, obj, opt);
+   fTable->Add(obj);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert object at location idx in the list.
@@ -167,6 +209,17 @@ void THashList::AddAt(TObject *obj, Int_t idx)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    TList::AddAt(obj, idx);
+   fTable->Add(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at location idx in the list, with options.
+
+void THashList::AddAt(TObject *obj, Int_t idx, Option_t *opt)
+{
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   TList::AddAt(obj, idx, opt);
    fTable->Add(obj);
 }
 

@@ -23,6 +23,9 @@ HEADERS
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
+  ROOT/RNTupleAttrReading.hxx
+  ROOT/RNTupleAttrUtils.hxx
+  ROOT/RNTupleAttrWriting.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleFillStatus.hxx
@@ -37,7 +40,9 @@ HEADERS
   ROOT/RNTupleReadOptions.hxx
   ROOT/RNTupleReader.hxx
   ROOT/RNTupleSerialize.hxx
+  ROOT/RNTupleTypes.hxx
   ROOT/RNTupleUtil.hxx
+  ROOT/RNTupleUtils.hxx
   ROOT/RNTupleView.hxx
   ROOT/RNTupleWriteOptions.hxx
   ROOT/RNTupleWriteOptionsDaos.hxx
@@ -64,6 +69,8 @@ SOURCES
   src/RFieldVisitor.cxx
   src/RMiniFile.cxx
   src/RNTuple.cxx
+  src/RNTupleAttrReading.cxx
+  src/RNTupleAttrWriting.cxx
   src/RNTupleDescriptor.cxx
   src/RNTupleDescriptorFmt.cxx
   src/RNTupleFillContext.cxx
@@ -75,7 +82,8 @@ SOURCES
   src/RNTupleProcessor.cxx
   src/RNTupleReader.cxx
   src/RNTupleSerialize.cxx
-  src/RNTupleUtil.cxx
+  src/RNTupleTypes.cxx
+  src/RNTupleUtils.cxx
   src/RNTupleWriteOptions.cxx
   src/RNTupleWriter.cxx
   src/RNTupleView.cxx
@@ -114,7 +122,6 @@ endif()
 
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)
-  set_source_files_properties(src/RField.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

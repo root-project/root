@@ -20,7 +20,6 @@
 #include "TMath.h"
 #include "snprintf.h"
 
-ClassImp(TColorWheel);
 
 /** \class TColorWheel
 \ingroup gpad

@@ -1,3 +1,4 @@
 builtin_vdt=ON
-ccache=ON
-tmva-sofie=ON
+davix=OFF
+pythia8=ON
+use_gsl_cblas=ON

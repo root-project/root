@@ -49,7 +49,6 @@ FT_Face        TTF::fgFace[kTTMaxFonts];
 FT_CharMap     TTF::fgCharMap[kTTMaxFonts];
 TTF::TTGlyph   TTF::fgGlyphs[kMaxGlyphs];
 
-ClassImp(TTF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup TTF environment.
@@ -426,7 +425,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 
    if (!ttfont) {
-      Error("TTF::SetTextFont", "font file %s not found in path", fontname);
+      Error("TTF::SetTextFont", "font file %s not found in path %s", fontname, ttpath);
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
          fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)

@@ -29,8 +29,7 @@ namespace Minuit2 {
 FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters &par) const
 {
    // use initial gradient as starting point
-   InitialGradientCalculator gc(fFcn, fTransformation);
-   FunctionGradient gra = gc(par);
+   FunctionGradient gra = calculateInitialGradient(par, fTransformation, fFcn.ErrorDef());
 
    return (*this)(par, gra);
 }

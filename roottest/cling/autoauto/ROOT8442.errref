@@ -1,0 +1,4 @@
+In file included from input_line_23:1:
+ROOT8442.C:3:3: error: use of undeclared identifier 'notdeclared'
+  notdeclared = 42;
+  ^

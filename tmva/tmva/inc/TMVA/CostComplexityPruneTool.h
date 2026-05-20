@@ -65,7 +65,7 @@ namespace TMVA {
       virtual ~CostComplexityPruneTool( );
 
       // calculate the prune sequence for a given tree
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr, Bool_t isAutomatic = kFALSE );
+      PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr, Bool_t isAutomatic = kFALSE ) override;
 
    private:
       SeparationBase* fQualityIndexTool;             ///<! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
@@ -83,7 +83,7 @@ namespace TMVA {
       // optimize the pruning sequence
       void Optimize( DecisionTree* dt, Double_t weights );
 
-      mutable MsgLogger* fLogger; //! output stream to save logging information
+      mutable MsgLogger* fLogger; ///<! output stream to save logging information
       MsgLogger& Log() const { return *fLogger; }
 
    };

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <TSystem.h>
 #include <TApplication.h>

@@ -90,21 +90,59 @@ RooDerivative::~RooDerivative() = default;
 
 double RooDerivative::evaluate() const
 {
-  if (!_ftor) {
-    _ftor = std::unique_ptr<RooFunctor>{_func.arg().functor(_x.arg(),RooArgSet(),_nset)};
-    ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
-    _rd = std::make_unique<ROOT::Math::RichardsonDerivator>(wf,_eps,true);
-  }
+   if (!_ftor) {
+      _ftor = std::unique_ptr<RooFunctor>{_func.arg().functor(_x.arg(), RooArgSet(), _nset)};
+      ROOT::Math::WrappedFunction<RooFunctor &> wf(*_ftor);
+      _rd = std::make_unique<ROOT::Math::RichardsonDerivator>(wf, _eps, true);
+   }
 
-  switch (_order) {
-  case 1: return _rd->Derivative1(_x);
-  case 2: return _rd->Derivative2(_x);
-  case 3: return _rd->Derivative3(_x);
-  }
-  return 0 ;
+   // Figure out if we are close to the variable boundaries
+   double val = _x;
+   auto &xVar = static_cast<RooRealVar &>(*_x);
+   double valMin = xVar.getMin();
+   double valMax = xVar.getMax();
+   bool isCloseLo = val - valMin < _eps;
+   bool isCloseHi = valMax - val < _eps;
+
+   // If we hit the boundary left and right, there is obviously a mistake when setting epsilon
+   if (isCloseLo && isCloseHi) {
+      std::stringstream errMsg;
+      errMsg << "error in numerical derivator: 2 * epsilon is larger than the variable range!";
+      coutE(Eval) << errMsg.str() << std::endl;
+      throw std::runtime_error(errMsg.str());
+   }
+
+   // If we are close to the variable boundary on either side
+   if (isCloseLo || isCloseHi) {
+      // For first-order derivatives we are good: the RichardsonDerivator can
+      // also calculate the derivative using only forward or backward
+      // variations:
+      if (_order == 1) {
+         return isCloseLo ? _rd->DerivativeForward(val) : _rd->DerivativeBackward(val);
+      }
+      // If the function is constant within floating point precision anyway,
+      // we don't have a problem.
+      const double eps = std::numeric_limits<double>::epsilon();
+      const double yval1 = _ftor->eval(val);
+      const double yval2 = isCloseLo ? _ftor->eval(val + _eps) : _ftor->eval(val - _eps);
+      if (std::abs(yval2 - yval1) <= eps) {
+         return 0.0;
+      }
+
+      // Give up
+      std::stringstream errMsg;
+      errMsg << "error in numerical derivator: variable value is to close to limits to compute finite differences";
+      coutE(Eval) << errMsg.str() << std::endl;
+      throw std::runtime_error(errMsg.str());
+   }
+
+   switch (_order) {
+   case 1: return _rd->Derivative1(val);
+   case 2: return _rd->Derivative2(val);
+   case 3: return _rd->Derivative3(val);
+   }
+   return 0;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Zap functor and derivator ;

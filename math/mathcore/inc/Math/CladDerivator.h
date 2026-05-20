@@ -25,13 +25,6 @@
 #include <plugins/include/clad/Differentiator/Differentiator.h>
 #include "TMath.h"
 
-// For the digamma function, that is the derivative of lgamma. We get it via
-// mathmore from the GSL, so the pullbacks that use digamma are only available
-// with mathmore=ON.
-#ifdef R__HAS_MATHMORE
-#include "Math/SpecFuncMathMore.h"
-#endif
-
 #include <stdexcept>
 
 namespace clad {
@@ -103,15 +96,11 @@ ValueAndPushforward<T, T> Erfc_pushforward(T x, T d_x)
    return {::TMath::Erfc(x), -Erf_pushforward(x, d_x).pushforward};
 }
 
-#ifdef R__HAS_MATHMORE
-
 template <typename T>
 ValueAndPushforward<T, T> LnGamma_pushforward(T z, T d_z)
 {
-   return {::TMath::LnGamma(z), ::ROOT::Math::digamma(z) * d_z};
+   return {::TMath::LnGamma(z), ::clad::custom_derivatives::std::clad_digamma(z) * d_z};
 }
-
-#endif
 
 template <typename T>
 ValueAndPushforward<T, T> Exp_pushforward(T x, T d_x)
@@ -126,7 +115,7 @@ ValueAndPushforward<T, T> Hypot_pushforward(T x, T y, T d_x, T d_y)
 }
 
 template <typename T, typename U>
-void Hypot_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+void Hypot_pullback(T x, T y, U p, T *d_x, T *d_y)
 {
    T h = ::TMath::Hypot(x, y);
    *d_x += x / h * p;
@@ -151,48 +140,8 @@ ValueAndPushforward<T, T> Log2_pushforward(T x, T d_x)
    return {::TMath::Log2(x), (1.0 / (x * ::TMath::Log(2.0))) * d_x};
 }
 
-template <typename T>
-ValueAndPushforward<T, T> Max_pushforward(T x, T y, T d_x, T d_y)
-{
-   T derivative = 0;
-   if (x >= y)
-      derivative = d_x;
-   else
-      derivative = d_y;
-   return {::TMath::Max(x, y), derivative};
-}
-
 template <typename T, typename U>
-void Max_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
-{
-   if (a >= b)
-      *d_a += p;
-   else
-      *d_b += p;
-}
-
-template <typename T>
-ValueAndPushforward<T, T> Min_pushforward(T x, T y, T d_x, T d_y)
-{
-   T derivative = 0;
-   if (x <= y)
-      derivative = d_x;
-   else
-      derivative = d_y;
-   return {::TMath::Min(x, y), derivative};
-}
-
-template <typename T, typename U>
-void Min_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
-{
-   if (a <= b)
-      *d_a += p;
-   else
-      *d_b += p;
-}
-
-template <typename T>
-ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
+ValueAndPushforward<T, T> Power_pushforward(T x, U y, T d_x, U d_y)
 {
    T pushforward = y * ::TMath::Power(x, y - 1) * d_x;
    if (d_y) {
@@ -201,8 +150,8 @@ ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
    return {::TMath::Power(x, y), pushforward};
 }
 
-template <typename T, typename U>
-void Power_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+template <typename T, typename U, typename V>
+void Power_pullback(T x, U y, V p, T *d_x, U *d_y)
 {
    auto t = pow_pushforward(x, y, 1, 0);
    *d_x += t.pushforward * p;
@@ -246,20 +195,6 @@ ValueAndPushforward<T, T> TanH_pushforward(T x, T d_x)
    return {::TMath::TanH(x), (1. / ::TMath::Sq(::TMath::CosH(x))) * d_x};
 }
 
-#ifdef WIN32
-// Additional custom derivatives that can be removed
-// after Issue #12108 in ROOT is resolved
-// constexpr is removed
-ValueAndPushforward<Double_t, Double_t> Pi_pushforward()
-{
-   return {3.1415926535897931, 0.};
-}
-// constexpr is removed
-ValueAndPushforward<Double_t, Double_t> Ln10_pushforward()
-{
-   return {2.3025850929940459, 0.};
-}
-#endif
 } // namespace TMath
 
 namespace ROOT {
@@ -673,8 +608,6 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
    *d_xi += _d_v * -((x - x0) / (xi * xi));
 }
 
-#ifdef R__HAS_MATHMORE
-
 inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x);
 
 inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
@@ -714,9 +647,8 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -793,9 +725,8 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    }
    {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -862,9 +793,8 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -1125,14 +1055,11 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    }
    {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a +=
-         _d_ax *
-         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a += _d_ax * (_t1 - ::clad::custom_derivatives::std::clad_digamma(
+                                 a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
-
-#endif // R__HAS_MATHMORE
 
 } // namespace Math
 } // namespace ROOT
@@ -1154,30 +1081,76 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
                                bool *, int *, int *, int *, float *_d_alpha, float *_d_A, float *_d_B, float *_d_beta,
                                float *_d_C)
 {
+   using ::TMVA::Experimental::SOFIE::Gemm_Call;
+
    // TODO:
-   //    - handle transa and transb cases correctly
-   if (transa || transb) {
+   //    - fix and test the implementation for alpha != 1.0
+   if (alpha != 1.0f) {
       return;
    }
-
-   char ct = 't';
-   char cn = 'n';
 
    // beta needs to be one because we want to add to _d_A and _d_B instead of
    // overwriting it.
    float one = 1.;
 
-   // _d_A, _d_B
-   // note: beta needs to be one because we want to add to _d_A and _d_B instead of overwriting it.
-   ::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
-   ::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
+   // ---- dA ----
+   if (!transa) {
+      // dA += dY * op(B)^T
+      Gemm_Call(_d_A, false, !transb, m, k, n, one, _d_output, B, one, _d_A);
+   } else {
+      // dA += op(B) * dY^T
+      Gemm_Call(_d_A, transb, true, k, m, n, one, B, _d_output, one, _d_A);
+   }
 
-   // _d_alpha, _d_beta, _d_C
+   // ---- dB ----
+   if (!transb) {
+      // dB += op(A)^T * dY
+      Gemm_Call(_d_B, !transa, false, k, n, m, one, A, _d_output, one, _d_B);
+   } else {
+      // dB += dY^T * op(A)
+      Gemm_Call(_d_B, true, transa, n, k, m, one, _d_output, A, one, _d_B);
+   }
+
    int sizeC = n * m;
+
    for (int i = 0; i < sizeC; ++i) {
-      *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
-      *_d_beta += _d_output[i] * C[i];
-      _d_C[i] += _d_output[i] * beta;
+      if (C) {
+         *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
+         *_d_beta += _d_output[i] * C[i];
+      } else {
+         *_d_alpha += _d_output[i] * output[i];
+      }
+      if (_d_C)
+         _d_C[i] += _d_output[i] * beta;
+   }
+}
+
+inline void Copy_pullback(float *output, const float *input, int size, float *_d_output, float *_d_input, int *)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = input[i];
+      _d_input[i] += _d_output[i];
+      _d_output[i] = 0.F;
+   }
+}
+
+inline void Fill_pullback(float *output, float value, int size, float *_d_output, float *_d_value, int *)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = value;
+      *_d_value += _d_output[i];
+      _d_output[i] = 0.F;
+   }
+}
+
+inline void Relu_pullback(float *output, const float *input, int size, float *_d_output, float *_d_input, int *)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = input[i] > 0.F ? input[i] : 0.F;
+      float _r_d0 = _d_output[i];
+      _d_output[i] = 0.F;
+      if (input[i] > 0.F)
+         _d_input[i] += _r_d0;
    }
 }
 

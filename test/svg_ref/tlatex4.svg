@@ -1,0 +1,230 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="640" viewBox="0 0 567 640" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tlatex4.svg
+</title>
+<rect x="0.500" y="0" width="567" height="639" fill="#f2f2f2"/>
+<path d="M0.500,639l 2.0, -2.0v -635h 563l 2.0, -2.0h -567v 639z" fill="white"/>
+<path d="M0.500,639l 2.0, -2.0h 563v -635l 2.0, -2.0v 639h -567z" fill="#a9a9a9"/>
+<text xml:space="preserve" x="50" y="39" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Lower case
+</text>
+<text xml:space="preserve" x="237" y="37" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Upper case
+</text>
+<text xml:space="preserve" x="429" y="39" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Variations
+</text>
+<text xml:space="preserve" x="40" y="69" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">alpha : 
+</text>
+<text xml:space="preserve" x="154" y="69" fill="black" font-size="16" font-family="Times">&#0945;
+</text>
+<text xml:space="preserve" x="40" y="95" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">beta : 
+</text>
+<text xml:space="preserve" x="154" y="93" fill="black" font-size="16" font-family="Times">&#0946;
+</text>
+<text xml:space="preserve" x="40" y="116" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">gamma : 
+</text>
+<text xml:space="preserve" x="154" y="115" fill="black" font-size="16" font-family="Times">&#0947;
+</text>
+<text xml:space="preserve" x="40" y="142" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">delta : 
+</text>
+<text xml:space="preserve" x="154" y="142" fill="black" font-size="16" font-family="Times">&#0948;
+</text>
+<text xml:space="preserve" x="40" y="165" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">epsilon : 
+</text>
+<text xml:space="preserve" x="154" y="165" fill="black" font-size="16" font-family="Times">&#0949;
+</text>
+<text xml:space="preserve" x="40" y="190" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">zeta : 
+</text>
+<text xml:space="preserve" x="154" y="189" fill="black" font-size="16" font-family="Times">&#0950;
+</text>
+<text xml:space="preserve" x="40" y="214" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">eta : 
+</text>
+<text xml:space="preserve" x="154" y="211" fill="black" font-size="16" font-family="Times">&#0951;
+</text>
+<text xml:space="preserve" x="40" y="238" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">theta : 
+</text>
+<text xml:space="preserve" x="154" y="238" fill="black" font-size="16" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="40" y="262" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">iota : 
+</text>
+<text xml:space="preserve" x="154" y="260" fill="black" font-size="16" font-family="Times">&#0953;
+</text>
+<text xml:space="preserve" x="40" y="285" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">kappa : 
+</text>
+<text xml:space="preserve" x="154" y="285" fill="black" font-size="16" font-family="Times">&#0954;
+</text>
+<text xml:space="preserve" x="40" y="310" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">lambda : 
+</text>
+<text xml:space="preserve" x="154" y="310" fill="black" font-size="16" font-family="Times">&#0955;
+</text>
+<text xml:space="preserve" x="40" y="333" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">mu : 
+</text>
+<text xml:space="preserve" x="154" y="331" fill="black" font-size="16" font-family="Times">&#0956;
+</text>
+<text xml:space="preserve" x="40" y="357" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">nu : 
+</text>
+<text xml:space="preserve" x="154" y="356" fill="black" font-size="16" font-family="Times">&#0957;
+</text>
+<text xml:space="preserve" x="40" y="383" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">xi : 
+</text>
+<text xml:space="preserve" x="154" y="381" fill="black" font-size="16" font-family="Times">&#0958;
+</text>
+<text xml:space="preserve" x="40" y="406" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">omicron : 
+</text>
+<text xml:space="preserve" x="154" y="404" fill="black" font-size="16" font-family="Times">&#0959;
+</text>
+<text xml:space="preserve" x="40" y="429" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">pi : 
+</text>
+<text xml:space="preserve" x="154" y="428" fill="black" font-size="16" font-family="Times">&#0960;
+</text>
+<text xml:space="preserve" x="40" y="454" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">rho : 
+</text>
+<text xml:space="preserve" x="154" y="451" fill="black" font-size="16" font-family="Times">&#0961;
+</text>
+<text xml:space="preserve" x="40" y="477" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">sigma : 
+</text>
+<text xml:space="preserve" x="154" y="476" fill="black" font-size="16" font-family="Times">&#0963;
+</text>
+<text xml:space="preserve" x="40" y="502" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">tau : 
+</text>
+<text xml:space="preserve" x="154" y="500" fill="black" font-size="16" font-family="Times">&#0964;
+</text>
+<text xml:space="preserve" x="40" y="525" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">upsilon : 
+</text>
+<text xml:space="preserve" x="154" y="524" fill="black" font-size="16" font-family="Times">&#0965;
+</text>
+<text xml:space="preserve" x="40" y="549" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">phi : 
+</text>
+<text xml:space="preserve" x="154" y="548" fill="black" font-size="16" font-family="Times">&#0966;
+</text>
+<text xml:space="preserve" x="40" y="574" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">chi : 
+</text>
+<text xml:space="preserve" x="154" y="571" fill="black" font-size="16" font-family="Times">&#0967;
+</text>
+<text xml:space="preserve" x="40" y="597" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">psi : 
+</text>
+<text xml:space="preserve" x="154" y="595" fill="black" font-size="16" font-family="Times">&#0968;
+</text>
+<text xml:space="preserve" x="40" y="619" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">omega : 
+</text>
+<text xml:space="preserve" x="154" y="620" fill="black" font-size="16" font-family="Times">&#0969;
+</text>
+<text xml:space="preserve" x="227" y="69" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Alpha : 
+</text>
+<text xml:space="preserve" x="341" y="71" fill="black" font-size="16" font-family="Times">&#0913;
+</text>
+<text xml:space="preserve" x="227" y="95" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Beta : 
+</text>
+<text xml:space="preserve" x="341" y="95" fill="black" font-size="16" font-family="Times">&#0914;
+</text>
+<text xml:space="preserve" x="227" y="119" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Gamma : 
+</text>
+<text xml:space="preserve" x="341" y="119" fill="black" font-size="16" font-family="Times">&#0915;
+</text>
+<text xml:space="preserve" x="227" y="142" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Delta : 
+</text>
+<text xml:space="preserve" x="341" y="142" fill="black" font-size="16" font-family="Times">&#0916;
+</text>
+<text xml:space="preserve" x="227" y="165" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Epsilon : 
+</text>
+<text xml:space="preserve" x="341" y="166" fill="black" font-size="16" font-family="Times">&#0917;
+</text>
+<text xml:space="preserve" x="227" y="190" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Zeta : 
+</text>
+<text xml:space="preserve" x="341" y="190" fill="black" font-size="16" font-family="Times">&#0918;
+</text>
+<text xml:space="preserve" x="227" y="214" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Eta : 
+</text>
+<text xml:space="preserve" x="341" y="214" fill="black" font-size="16" font-family="Times">&#0919;
+</text>
+<text xml:space="preserve" x="227" y="238" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Theta : 
+</text>
+<text xml:space="preserve" x="341" y="238" fill="black" font-size="16" font-family="Times">&#0920;
+</text>
+<text xml:space="preserve" x="227" y="262" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Iota : 
+</text>
+<text xml:space="preserve" x="341" y="262" fill="black" font-size="16" font-family="Times">&#0921;
+</text>
+<text xml:space="preserve" x="227" y="285" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Kappa : 
+</text>
+<text xml:space="preserve" x="341" y="286" fill="black" font-size="16" font-family="Times">&#0922;
+</text>
+<text xml:space="preserve" x="227" y="310" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Lambda : 
+</text>
+<text xml:space="preserve" x="341" y="310" fill="black" font-size="16" font-family="Times">&#0923;
+</text>
+<text xml:space="preserve" x="227" y="334" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Mu : 
+</text>
+<text xml:space="preserve" x="341" y="334" fill="black" font-size="16" font-family="Times">&#0924;
+</text>
+<text xml:space="preserve" x="227" y="358" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Nu : 
+</text>
+<text xml:space="preserve" x="341" y="358" fill="black" font-size="16" font-family="Times">&#0925;
+</text>
+<text xml:space="preserve" x="227" y="383" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Xi : 
+</text>
+<text xml:space="preserve" x="341" y="382" fill="black" font-size="16" font-family="Times">&#0926;
+</text>
+<text xml:space="preserve" x="227" y="406" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Omicron : 
+</text>
+<text xml:space="preserve" x="341" y="406" fill="black" font-size="16" font-family="Times">&#0927;
+</text>
+<text xml:space="preserve" x="227" y="431" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Pi : 
+</text>
+<text xml:space="preserve" x="341" y="430" fill="black" font-size="16" font-family="Times">&#0928;
+</text>
+<text xml:space="preserve" x="227" y="454" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Rho : 
+</text>
+<text xml:space="preserve" x="341" y="454" fill="black" font-size="16" font-family="Times">&#0929;
+</text>
+<text xml:space="preserve" x="227" y="477" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Sigma : 
+</text>
+<text xml:space="preserve" x="341" y="478" fill="black" font-size="16" font-family="Times">&#0931;
+</text>
+<text xml:space="preserve" x="227" y="502" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Tau : 
+</text>
+<text xml:space="preserve" x="341" y="502" fill="black" font-size="16" font-family="Times">&#0932;
+</text>
+<text xml:space="preserve" x="227" y="525" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Upsilon : 
+</text>
+<text xml:space="preserve" x="341" y="526" fill="black" font-size="16" font-family="Times">&#0933;
+</text>
+<text xml:space="preserve" x="227" y="550" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Phi : 
+</text>
+<text xml:space="preserve" x="341" y="550" fill="black" font-size="16" font-family="Times">&#0934;
+</text>
+<text xml:space="preserve" x="227" y="574" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Chi : 
+</text>
+<text xml:space="preserve" x="341" y="574" fill="black" font-size="16" font-family="Times">&#0935;
+</text>
+<text xml:space="preserve" x="227" y="598" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Psi : 
+</text>
+<text xml:space="preserve" x="341" y="598" fill="black" font-size="16" font-family="Times">&#0936;
+</text>
+<text xml:space="preserve" x="227" y="620" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Omega : 
+</text>
+<text xml:space="preserve" x="341" y="622" fill="black" font-size="16" font-family="Times">&#0937;
+</text>
+<text xml:space="preserve" x="414" y="165" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">varepsilon : 
+</text>
+<text xml:space="preserve" x="528" y="165" fill="black" font-size="16" font-family="Times">&#0949;
+</text>
+<text xml:space="preserve" x="414" y="238" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">vartheta : 
+</text>
+<text xml:space="preserve" x="528" y="238" fill="black" font-size="16" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="414" y="477" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">varsigma : 
+</text>
+<text xml:space="preserve" x="528" y="475" fill="black" font-size="16" font-family="Times">&#0962;
+</text>
+<text xml:space="preserve" x="414" y="525" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">varUpsilon : 
+</text>
+<text xml:space="preserve" x="528" y="526" fill="black" font-size="16" font-family="Times">&#0965;
+</text>
+<text xml:space="preserve" x="414" y="549" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">varphi : 
+</text>
+<text xml:space="preserve" x="528" y="547" fill="black" font-size="16" font-family="Times">&#0966;
+</text>
+<text xml:space="preserve" x="414" y="619" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">varomega : 
+</text>
+<text xml:space="preserve" x="528" y="620" fill="black" font-size="16" font-family="Times">&#0969;
+</text></svg>

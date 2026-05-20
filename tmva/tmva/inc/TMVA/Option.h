@@ -58,7 +58,7 @@ namespace TMVA {
       OptionBase( const TString& name, const TString& desc );
       virtual ~OptionBase() {}
 
-      virtual const char* GetName() const { return fNameAllLower.Data(); }
+      const char* GetName() const override { return fNameAllLower.Data(); }
       virtual const char* TheName() const { return fName.Data(); }
       virtual TString     GetValue(Int_t i=-1) const = 0;
 
@@ -87,7 +87,7 @@ namespace TMVA {
       static MsgLogger& Log();
    protected:
 
-       ClassDef(OptionBase,1);
+       ClassDefOverride(OptionBase,1);
    };
 
    // ---------------------------------------------------------------------------
@@ -103,24 +103,24 @@ namespace TMVA {
       virtual ~Option() {}
 
       // getters
-      virtual TString  GetValue( Int_t i=-1 ) const;
+      TString  GetValue( Int_t i=-1 ) const override;
       virtual const T& Value   ( Int_t i=-1 ) const;
-      virtual Bool_t HasPreDefinedVal() const { return (fPreDefs.size()!=0); }
-      virtual Bool_t IsPreDefinedVal( const TString& ) const;
-      virtual Bool_t IsArrayOpt()   const { return kFALSE; }
-      virtual Int_t  GetArraySize() const { return 0; }
+      Bool_t HasPreDefinedVal() const override { return (fPreDefs.size()!=0); }
+      Bool_t IsPreDefinedVal( const TString& ) const override;
+      Bool_t IsArrayOpt()   const override { return kFALSE; }
+      Int_t  GetArraySize() const override { return 0; }
 
       // setters
       virtual void AddPreDefVal(const T&);
       using OptionBase::Print;
-      virtual void Print       ( std::ostream&, Int_t levelofdetail=0 ) const;
+      void Print       ( std::ostream&, Int_t levelofdetail=0 ) const override;
       virtual void PrintPreDefs( std::ostream&, Int_t levelofdetail=0 ) const;
 
    protected:
 
       T& Value(Int_t=-1);
 
-      virtual void   SetValueLocal( const TString& val, Int_t i=-1 );
+      void   SetValueLocal( const TString& val, Int_t i=-1 ) override;
       virtual Bool_t IsPreDefinedValLocal( const T& ) const;
 
       T* fRefPtr;
@@ -136,19 +136,19 @@ namespace TMVA {
       Option<T>(*ref,name, desc), fVRefPtr(&ref), fSize(size) {}
       virtual ~Option() {}
 
-      TString GetValue( Int_t i ) const {
+      TString GetValue( Int_t i ) const override {
          std::stringstream str;
          str << std::scientific << Value(i);
          return str.str();
       }
-      const T& Value( Int_t i ) const { return (*fVRefPtr)[i]; }
-      virtual Bool_t IsArrayOpt()   const { return kTRUE; }
-      virtual Int_t  GetArraySize() const { return fSize; }
+      const T& Value( Int_t i ) const override { return (*fVRefPtr)[i]; }
+      Bool_t IsArrayOpt()   const override { return kTRUE; }
+      Int_t  GetArraySize() const override { return fSize; }
 
       using Option<T>::Print;
-      virtual void Print( std::ostream&, Int_t levelofdetail=0 ) const;
+      void Print( std::ostream&, Int_t levelofdetail=0 ) const override;
 
-      virtual Bool_t SetValue( const TString& val, Int_t i=0 );
+      Bool_t SetValue( const TString& val, Int_t i=0 ) override;
 
       T& Value(Int_t i) { return (*fVRefPtr)[i]; }
       T ** fVRefPtr;

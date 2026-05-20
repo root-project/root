@@ -11,27 +11,26 @@
 ################################################################################
 from __future__ import annotations
 
-import os
-from typing import Any, Dict, List, Optional, Callable, TYPE_CHECKING, Union, Tuple
 import math
-import ROOT
+import os
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
-from DistRDF import DataFrame
-from DistRDF import HeadNode
-from DistRDF.Backends import Base
-from DistRDF.Backends import Utils
+import ROOT
+from ROOT._distrdf import DataFrame, HeadNode
+from ROOT._distrdf.Backends import Base, Utils
 
 try:
     import dask
-    from dask.distributed import Client, get_worker, LocalCluster, progress, as_completed
+    from dask.distributed import Client, LocalCluster, as_completed, get_worker, progress
 except ImportError:
-    raise ImportError(("cannot import a Dask component. Refer to the Dask documentation "
-                       "for installation instructions."))
+    raise ImportError(
+        ("cannot import a Dask component. Refer to the Dask documentation for installation instructions.")
+    )
 
 if TYPE_CHECKING:
     from dask_jobqueue import JobQueueCluster
-    from DistRDF import Ranges
-    from DistRDF._graph_cache import ExecutionIdentifier
+    from ROOT._distrdf import Ranges
+    from ROOT._distrdf._graph_cache import ExecutionIdentifier
 
 
 def get_total_cores_generic(client: Client) -> int:
@@ -268,7 +267,10 @@ class DaskBackend(Base.BaseBackend):
         merged_results = self._process_partial_results(c, drawables_info_dict, reducer, future_tasks)
 
         # Close the live visualization canvas canvas
-        c.Close()    
+        c.Close()
+
+        # Make sure the context destructor is called: don't rely on Python garbage collection
+        backend_pad.__destruct__()
 
         return merged_results
                 
@@ -319,10 +321,11 @@ class DaskBackend(Base.BaseBackend):
         cumulative_plots: Dict[int, Any] = {}
 
         # Collect all futures in batches that had arrived since the last iteration
-        for batch in as_completed(future_tasks, with_results=True).batches():
-            for future, result in batch:
-               merged_results = reducer(merged_results, result) if merged_results else result
-            
+        for batch in as_completed(future_tasks, with_results=False).batches():
+            for future in batch:
+                result = future.result()
+                merged_results = reducer(merged_results, result) if merged_results else result
+
             mergeables = merged_results.mergeables
             
             for pad_num, (drawable_id, (callbacks_list, index, operation_name)) in enumerate(drawables_info_dict.items(), start=1):
@@ -390,8 +393,10 @@ class DaskBackend(Base.BaseBackend):
         Remove the computation graph identified by the input argument from the
         cache.
         """
+
         def remove_from_rdf_cache(exec_id: ExecutionIdentifier) -> None:
-            from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+            from ROOT._distrdf._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+
             _ACTIONS_REGISTER.pop(exec_id, None)
             _RDF_REGISTER.pop(exec_id, None)
 

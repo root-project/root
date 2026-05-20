@@ -28,7 +28,7 @@
 
 PDF implementing the generalized Asymmetrical Double-Sided Crystall Ball line shape.
 \f[
-  f(m;m_0,\sigma,\alpha_L,n_L,\alpha_R,n_R) =
+  f(m;m_0,\sigma_L,\alpha_L,n_L,\sigma_R,\alpha_R,n_R) =
   \begin{cases}
     A_L \cdot (B_L - \frac{m - m_0}{\sigma_L})^{-n_L}, & \mbox{for }\frac{m - m_0}{\sigma_L} < -\alpha_L \\
     \exp \left( - \frac{1}{2} \cdot \left[ \frac{m - m_0}{\sigma_L} \right]^2 \right), & \mbox{for }\frac{m - m_0}{\sigma_L} \leq 0 \\
@@ -185,7 +185,10 @@ inline double integrateTailLogVersion(double sigma, double alpha, double n, doub
    double a = std::pow(r, n) * exp(-0.5 * alpha * alpha);
    double b = r - alpha;
 
-   return a * sigma * (log(b - tmin) - log(b - tmax));
+   double log_b_tmin = log(b - tmin);
+   double log_b_tmax = log(b - tmax);
+
+   return a * sigma * (log_b_tmin - log_b_tmax + 0.5 * (1.0 - n) * (log_b_tmin * log_b_tmin - log_b_tmax * log_b_tmax));
 }
 
 inline double integrateTailRegular(double sigma, double alpha, double n, double tmin, double tmax)

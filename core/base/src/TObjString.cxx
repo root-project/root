@@ -18,7 +18,6 @@ Collectable string class. This is a TObject containing a TString.
 #include "TObjString.h"
 #include "TROOT.h"
 
-ClassImp(TObjString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TObjString destructor.

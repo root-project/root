@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script creates the file Doxyfile_INPUT which defines the list of directories to be
 # analysed by doxygen. To only build a subset of the documentation it is enough to comment
@@ -66,7 +66,6 @@ echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
 echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
-echo "        ../../proof/                     \\" >> Doxyfile_INPUT
 echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
 echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
 echo "        ../../tree/                      \\" >> Doxyfile_INPUT
@@ -83,7 +82,6 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
 # echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
-# echo "        ../../graf3d/glew/               \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
 # echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
 # echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT

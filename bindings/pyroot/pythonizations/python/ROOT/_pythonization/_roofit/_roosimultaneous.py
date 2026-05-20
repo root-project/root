@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, cpp_signature, _dict_to_flat_map
+from ._utils import _dict_to_flat_map, _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooSimultaneous(object):

@@ -1,12 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import uuid
-from typing import Dict, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     import ROOT
-    from DistRDF.PythonMergeables import RDataFrameFutureResult
+
+    from .PythonMergeables import RDataFrameFutureResult
 
 
 @dataclass(frozen=True)

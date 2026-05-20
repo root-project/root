@@ -30,6 +30,8 @@
 
 class TSeqCollection;
 
+namespace ROOT::Deprecated {
+
 typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *,
                            std::string&, Int_t &, Int_t &, std::string &,
                            TSeqCollection *);
@@ -39,13 +41,20 @@ typedef Int_t (*SrvClup_t)(TSeqCollection *);
 const UChar_t kSrvAuth   = 0x1;            // Require client authentication
 const UChar_t kSrvNoAuth = (kSrvAuth<<4);  // Force no client authentication
 
+} // namespace ROOT::Deprecated
+
+using SrvAuth_t R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::SrvAuth_t;
+using SrvClup_t R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::SrvClup_t;
+const UChar_t kSrvAuth R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::kSrvAuth;
+const UChar_t kSrvNoAuth R__DEPRECATED(6, 42, "Socket authentication is deprecated") = ROOT::Deprecated::kSrvNoAuth;
+
 class TServerSocket : public TSocket {
 
 private:
    TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
-   static SrvAuth_t fgSrvAuthHook;
-   static SrvClup_t fgSrvAuthClupHook;
-   static UChar_t fgAcceptOpt;     // Default accept options
+   static ROOT::Deprecated::SrvAuth_t fgSrvAuthHook;
+   static ROOT::Deprecated::SrvClup_t fgSrvAuthClupHook;
+   static UChar_t fgAcceptOpt;     // Default accept options (DEPRECATED)
 
    TServerSocket() : fSecContexts(nullptr) {}
    TServerSocket(const TServerSocket &);
@@ -88,9 +97,9 @@ public:
    Int_t         RecvRaw(void *, Int_t, ESendRecvOptions = kDefault) override
                     { MayNotUse("RecvRaw(void *, Int_t, ESendRecvOptions)"); return 0; }
 
-   static UChar_t     GetAcceptOptions();
-   static void        SetAcceptOptions(UChar_t Opt);
-   static void        ShowAcceptOptions();
+   static UChar_t     GetAcceptOptions() R__DEPRECATED(6, 42, "Socket authentication is deprecated");
+   static void        SetAcceptOptions(UChar_t Opt) R__DEPRECATED(6, 42, "Socket authentication is deprecated");
+   static void        ShowAcceptOptions() R__DEPRECATED(6, 42, "Socket authentication is deprecated");
 
    ClassDefOverride(TServerSocket, 0);  //This class implements server sockets
 };

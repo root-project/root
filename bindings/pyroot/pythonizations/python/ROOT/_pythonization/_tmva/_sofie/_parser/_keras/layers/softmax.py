@@ -1,0 +1,31 @@
+def MakeKerasSoftmax(layer):
+    """
+    Create a Keras-compatible softmax activation operation using SOFIE framework.
+
+    This function takes a dictionary representing a layer and its attributes and
+    constructs a Keras-compatible softmax activation operation using the SOFIE framework.
+    Softmax is an activation function that converts input values into a probability
+    distribution, often used in the output layer of a neural network for multi-class
+    classification tasks.
+
+    Parameters:
+    layer (dict): A dictionary containing layer information including input, output,
+                  and data type - must be float.
+
+    Returns:
+    ROperator_Softmax: A SOFIE framework operator representing the softmax activation operation.
+    """
+    from ROOT.TMVA.Experimental import SOFIE
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
+    fLayerInputName = finput[0]
+    fLayerOutputName = foutput[0]
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_Softmax(-1, fLayerInputName, fLayerOutputName, False)
+        return op
+    else:
+        raise RuntimeError(
+            "TMVA::SOFIE - Unsupported - Operator Softmax does not yet support input type " + fLayerDType
+        )

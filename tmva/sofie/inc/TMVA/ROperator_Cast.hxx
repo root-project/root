@@ -19,14 +19,15 @@ private:
 
    std::string fNX;
    std::string fNY;
-   std::vector<size_t> fShape;
-   std::string fAttrType = "float";
+   std::vector<Dim> fShape;
+   ETensorType fType;
 
 public:
    ROperator_Cast(){}
-   ROperator_Cast(std::string attr_type,std::string nameX, std::string nameY):
-   fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)),
-   fAttrType(attr_type) {
+   ROperator_Cast(ETensorType type,std::string nameX, std::string nameY):
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)),
+      fType(type)
+   {
       fInputTensorNames = { fNX };
       fOutputTensorNames = { fNY };
    }
@@ -45,47 +46,48 @@ public:
       if (model.CheckIfTensorAlreadyExist(fNX) == false){
         throw std::runtime_error("TMVA SOFIE Cast Op Input Tensor is not found in model");
       }
-      fShape = model.GetTensorShape(fNX);
-      // shoud we add a check if the same type
+      fShape = model.GetDimTensorShape(fNX);
+      // should we add a check if the same type
       auto inputType = model.GetTensorType(fNX);
       if (model.IsInitializedTensor(fNX)) {
          fIsOutputConstant = true;
          auto inputData = model.GetInitializedTensorData(fNX);
-         if (ConvertStringToType(fAttrType) == ETensorType::INT64) {
-            model.AddConstantTensor<int64_t>(fNY, fShape, static_cast<int64_t*>(inputData.get()));
+         if (fType == ETensorType::INT64) {
+            model.AddConstantTensor<int64_t>(fNY, ConvertShapeToInt(fShape), static_cast<int64_t*>(inputData.get()));
             model.SetNotWritableInitializedTensor(fNX);
          }
          else
             fIsOutputConstant = false;
+      } else if (model.IsShapeTensor(fNX) && fType == ETensorType::INT64) {
+         auto shapeData = model.GetShapeTensorValues(fNX);
+         model.AddShapeTensor(fNY, shapeData, fShape.size() == 0);
+         fIsOutputConstant = true;
       }
       if (!fIsOutputConstant)
-         model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
+         model.AddIntermediateTensor(fNY, fType, fShape);
       if (model.Verbose()) {
-         std::cout << "Cast : " << ConvertTypeToString(inputType) << " " << fNX << " -> " << fAttrType << " for " << fNY;
+         std::cout << "Cast : " << ConvertTypeToString(inputType) << " " << fNX << " -> " << ConvertTypeToString(fType) << " for " << fNY
+                  << " shape " << ConvertDimShapeToString(fShape);
          if (fIsOutputConstant) std::cout << " (constant) ";
          std::cout << std::endl;
       }
    }
 
 
-   std::string Generate(std::string OpName) override {
-      if (fIsOutputConstant) return "";
+   std::string Generate(std::string opName) override {
 
-      OpName = "op_" + OpName;
-      if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Cast called to Generate without being initialized first");
-      }
+      // output shape can be empty if is a scalar
+
       std::stringstream out;
-      size_t length = ConvertShapeToLength(fShape);
+      auto length = ConvertDimShapeToLength(fShape);
 
-      // out << SP << ETensorType << " " << OpName << "_attr = "  << fattr << ";\n";
-      out << "\n//------ CAST\n";
+      out << "\n//------ CAST " << opName << " ---> " << fNY << "  " << ConvertDimShapeToString(fShape) << "\n";
        // no generated code for constant outputs
       if (fIsOutputConstant) return out.str();
 
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
 
-      out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< fAttrType << ">(tensor_" << fNX << "[id]);\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< ConvertTypeToString(fType) << ">(tensor_" << fNX << "[id]);\n";
 
       out << SP << "}\n";
       return out.str();

@@ -58,11 +58,11 @@ private:
    // Fields
 
    // Debuging visual aids
-   TGLBoundingBox   fPreviousInterestBox;  //! previous interest box (DEBUG)
-   TGLBoundingBox   fInterestFrustum;      //! frustum basis of current interest box - NOT a true BB! (DEBUG)
-   TGLBoundingBox   fInterestFrustumAsBox; //! frustum basis (as box) of current interest box (DEBUG)
+   TGLBoundingBox   fPreviousInterestBox;  ///<! previous interest box (DEBUG)
+   TGLBoundingBox   fInterestFrustum;      ///<! frustum basis of current interest box - NOT a true BB! (DEBUG)
+   TGLBoundingBox   fInterestFrustumAsBox; ///<! frustum basis (as box) of current interest box (DEBUG)
 
-   static const Double_t fgInterestBoxExpansion; //! expansion c.f. aligned current frustum box
+   static const Double_t fgInterestBoxExpansion; ///<! expansion c.f. aligned current frustum box
 
    // Methods
    TGLBoundingBox Frustum(Bool_t asBox = kTRUE) const; // current frustum
@@ -81,10 +81,10 @@ protected:
     TGLVector3  fExtCenter;       //  external camera center
     TGLVector3  fDefCenter;       //  default camera center
     TGLVector3  fFDCenter;        //  fixed default camera center
-    TGLVector3 *fCenter;          //! current camera center
+    TGLVector3 *fCenter;          ///<! current camera center
 
-    mutable Double_t fNearClip;   //! last applied near-clip
-    mutable Double_t fFarClip;    //! last applied far-clip
+    mutable Double_t fNearClip;   ///<! last applied near-clip
+    mutable Double_t fFarClip;    ///<! last applied far-clip
 
     // Set in Setup()
     Double_t    fDollyDefault;    // default distnce from viewing centre
@@ -92,19 +92,19 @@ protected:
     Float_t     fVAxisMinAngle;   // minimal allowed angle between up and fCamTrans Z vector
 
    // Internal cached matrices and frustum planes
-   mutable Bool_t    fCacheDirty;                      //! cached items dirty?
-   mutable UInt_t    fTimeStamp;                       //! timestamp
-   mutable TGLMatrix fLastNoPickProjM;                 //! no-pick projection matrix (cached)
-   mutable TGLMatrix fProjM;                           //! projection matrix        (cached)
-   mutable TGLMatrix fModVM;                           //! modelView matrix         (cached)
-   mutable TGLMatrix fClipM;                           //! object space clip matrix (cached)
-   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //! frustum planes           (cached)
+   mutable Bool_t    fCacheDirty;                      ///<! cached items dirty?
+   mutable UInt_t    fTimeStamp;                       ///<! timestamp
+   mutable TGLMatrix fLastNoPickProjM;                 ///<! no-pick projection matrix (cached)
+   mutable TGLMatrix fProjM;                           ///<! projection matrix        (cached)
+   mutable TGLMatrix fModVM;                           ///<! modelView matrix         (cached)
+   mutable TGLMatrix fClipM;                           ///<! object space clip matrix (cached)
+   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; ///<! frustum planes           (cached)
 
-   TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
+   TGLRect   fViewport;    ///<! viewport (GL coords - origin bottom left)
 
-   TGLBoundingBox   fInterestBox;          //! the interest box - created in UpdateInterest()
-   mutable Double_t fLargestSeen;          //! largest box diagonal seen in OfInterest() - used when
-                                           //! bootstrapping interest box
+   TGLBoundingBox   fInterestBox;          ///<! the interest box - created in UpdateInterest()
+   mutable Double_t fLargestSeen;          ///<! largest box diagonal seen in OfInterest() - used when
+                                           ///<! bootstrapping interest box
 
    // Internal cache update - const as the actual camera configuration is unaffected
    void       UpdateCache() const;

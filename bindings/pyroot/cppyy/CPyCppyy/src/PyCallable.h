@@ -18,6 +18,8 @@ public:
 
 public:
     virtual PyObject* GetSignature(bool show_formalargs = true) = 0;
+    virtual PyObject* GetSignatureNames() = 0;
+    virtual PyObject* GetSignatureTypes() = 0;
     virtual PyObject* GetPrototype(bool show_formalargs = true) = 0;
     virtual PyObject* GetTypeName() { return GetPrototype(false); }
     virtual PyObject* GetDocString() { return GetPrototype(); }

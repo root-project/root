@@ -144,7 +144,7 @@ PyTypeObject TypedefPointerToClass_Type = {
     0,                              // tp_dict
     0,                              // tp_descr_get
     0,                              // tp_descr_set
-    offsetof(typedefpointertoclassobject, fDict), // tp_dictoffset
+    0,                              // tp_dictoffset
     0,                              // tp_init
     0,                              // tp_alloc
     0,                              // tp_new

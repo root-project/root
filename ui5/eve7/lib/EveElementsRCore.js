@@ -470,83 +470,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
    } // class Calo2Control
 
    //==============================================================================
-
-
-   class GeoTopNodeControl extends EveElemControl {
-     
-      addMeshRec(o3, res){
-         for (let c of o3.children)
-         {
-            if (c.material) {
-               console.log("add mesh ", c);
-               res.geom.push(c);
-            }
-            this.addMeshRec(c, res);
-         }
-      }
-      DrawForSelection(sec_idcs, res, extra) {
-
-         if (extra.stack.length > 0) {
-            let topNode = this.top_obj;
-            let stack = extra.stack;
-            let clones = topNode.clones;
-
-            // NOTE: this needs to be done diffeewnrly, this code is related to objects3d
-            // TODO: make same logic fro RC objects 
-            let x = topNode.clones.createRCObject3D(stack, topNode, 'force');
-
-            // console.log("geo topnode control res = ",x);
-            this.addMeshRec(x, res);
-         }
-      }
-      getTooltipText() {
-         return this.top_obj.eve_el.fName;
-      }
-      extractIndex(instance) {
-         this.pick = instance;
-      }
-
-      sendSocketMassage(pstate_obj, t1, t2)
-      {
-         let topNode = this.top_obj;
-         let aa = pstate_obj.stack || [];
-
-         let mgr =  topNode.scene.mgr;
-         let hbr = mgr.GetElement(topNode.eve_el.dataId);
-
-         if (!hbr.hasOwnProperty("websocket"))
-         {
-            let websocket = mgr.handle.createChannel();
-            mgr.handle.send("SETCHANNEL:" + hbr.fElementId + "," + websocket.getChannelId());
-            hbr.websocket =  websocket;
-         }
-
-         let name = topNode.clones.getStackName(aa);
-         const myArray = name.split("/");
-         let msg = '[';
-         let lastIdx = myArray.length - 1;
-         for (let p = 0; p < myArray.length; ++p) {
-            let np = "\"" + myArray[p] + "\"";
-            msg += np;
-            if (p == lastIdx)
-               msg += ']';
-            else
-               msg += ",";
-
-         }
-
-         hbr.websocket.sendLast(t1, 200, t2 + msg);
-      }
-
-      elementSelected(idx, event, pstate_obj) {
-         this.sendSocketMassage(pstate_obj, 'click', 'CLICK:');
-      }
-
-      elementHighlighted(idx, event, pstate_obj) {
-         this.sendSocketMassage( pstate_obj, 'hover', 'HOVER:');
-      }
-   }
-
    //==============================================================================
    // EveElements
    //==============================================================================
@@ -885,6 +808,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             rnr_data.vtxBuff, hit.fTexX, hit.fTexY,
             txName);
 
+         // bounding box
+         let bb = rnr_data.nrmBuff;
+         s.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+
          this.RcPickable(hit, s);
 
          return s;
@@ -1181,13 +1108,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let lcol = RcCol(ebox.fLineColor);
          let line = new RC.Line(geo_rim, this.RcLineMaterial(lcol, 0.8, 1));
          mesh.add(line);
+         this.RcPickable(ebox, mesh);
 
-         mesh.get_ctrl = function () { return new EveElemControl(this); }
+         // AMT dispose function outdated
          mesh.dispose = function () {
             this.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
             this.geometry.dispose(); this.material.dispose();
          };
-
          return mesh;
       }
       //==============================================================================
@@ -1251,10 +1178,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       {
          if (this.TestRnr("boxset", boxset, rnr_data)) return null;
          // use instancing if texture coordinates
+         let mesh;
          if (boxset.instanced === true)
-            return this.makeBoxSetInstanced(boxset, rnr_data);
+            mesh = this.makeBoxSetInstanced(boxset, rnr_data);
          else
-            return this.makeFreeBoxSet(boxset, rnr_data);
+            mesh = this.makeFreeBoxSet(boxset, rnr_data);
+
+         // bounding box
+         let bb = rnr_data.nrmBuff;
+         mesh.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+
+         return mesh;
       }
 
       makeFreeBoxSet(boxset, rnr_data)
@@ -1586,109 +1520,55 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          return mesh;
       }
 
-      makeGeoTopNodeProcessObject(o3, ctx, eveTopNode)
-      {
-         let orc;
-         if (o3 instanceof THREE.Mesh) {
-            if (!ctx.geomap.has(o3.geometry)) {
-               let g = new RC.Geometry();
-               g.vertices = new RC.BufferAttribute(o3.geometry.attributes.position.array, 3);
-               g.normals = new RC.BufferAttribute(o3.geometry.attributes.normal.array, 3);
-               delete o3.geometry.attributes;
-               ctx.geomap.set(o3.geometry, g);
-            } else {
-               ++ctx.n_geo_reuse;
-            }
-            let m3 = o3.material;
-            let mrc = this.RcFancyMaterial(new RC.Color(m3.color.r, m3.color.g, m3.color.b), m3.opacity);
-            orc = new RC.Mesh(ctx.geomap.get(o3.geometry), mrc);
-            this.RcPickable(eveTopNode, orc, true, GeoTopNodeControl);
-            orc.material.normalFlat = true;
-            // orc.amt_debug_name = "mesh" + o3.name; // set for debugging purposes
-            ++ctx.n_mesh;
-         } else {
-            orc = new RC.Group();
-            // orc.amt_debug_name = "group" + o3.name; // set for debugging purposes
-            ++ctx.n_o3d;
-         }
+      makeGeoTopNode(topNode, rnr_data) {
 
-         orc.nchld = o3.nchld;
-         orc.matrixAutoUpdate = false;
-         orc.setMatrixFromArray(o3.matrix.elements);
-         for (let c of o3.children) {
-            orc.add(this.makeGeoTopNodeProcessObject(c, ctx, eveTopNode));
-         }
+         const buf = new ArrayBuffer(4);
+         const f32 = new Float32Array(buf);
+         const u8 = new Uint8Array(buf);
 
-         // selection ... remore new ...
-         orc.stack = o3.stack;
-         return orc;
-      }
+         // f32[0] = rnr_data.vtxBuff[0];   // write float bits little indian test
+         // console.log(u8[0], u8[1], u8[2], u8[3]);
 
-      makeGeoTopNode(tn, rnr_data) {
-         // console.log("make top node ", tn);
-         let json = atob(tn.geomDescription);
-         let zz = EVE.JSR.parse(json);
-         let o3 = EVE.JSR.build(zz);
-         // console.log("tgeo painter builder o3 obj =", o3);
-         let ctx = { geomap: new Map, n_o3d: 0, n_mesh: 0, n_geo_reuse: 0 };
-         let orc = this.makeGeoTopNodeProcessObject(o3, ctx, tn);
-         // console.log("map summary ", ctx.geomap.size, ctx.n_o3d, ctx.n_mesh, ctx.n_geo_reuse);
-         orc.get_ctrl = function () { return new GeoTopNodeControl(this, orc); };
+         let g = new RC.Geometry();
 
-         orc.clones = o3.clones;
+         // bounding box
+         let bb = topNode.bbox;
+         g.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
 
-         // function to get stack
-         orc.clones.createRCObject3D = function (stack, toplevel, options) {
-            let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0;
+         // let vatt = new RC.BufferAttribute(topNode.shapeVertices, 3);
+         // g.vertices = new RC.BufferAttribute(topNode.shapeVertices, 3);
+         g.vertices = RC.Float32Attribute(topNode.shapeVertices, 3);
+         // g.indices = new RC.BufferAttribute(topNode.shapeIndices,1);
+         g.indices = RC.Uint32Attribute(topNode.shapeIndices, 1);
 
-            for (let lvl = 0; lvl <= stack.length; ++lvl) {
-               let nchld = (lvl > 0) ? stack[lvl - 1] : 0;
-               // console.log("level ", lvl, "nchld", nchld);
-               // extract current node
-               if (lvl > 0) node = this.nodes[node.chlds[nchld]];
-               if (!node) return null;
+         let mm = new RC.ZMultiMesh(g);
+         // nodes info
+         mm.nodeShapeIds = topNode.nodeShapeIds;
+         mm.nodeTrans = topNode.nodeTrans;
+         mm.nodeVisibility = topNode.nodeVisibility;
 
-               let obj3d = undefined;
+         // shapes poly info
+         mm.shapeIndices = topNode.shapeIndices; // already in RC.Geomtery
+         mm.shapeIndicesOff = topNode.shapeIndicesOff;
+         mm.shapeIndicesSize = topNode.shapeIndicesSize;
 
-               if (three_prnt.children)
-                  for (let i = 0; i < three_prnt.children.length; ++i) {
-                     console.log(i, "<< comapre ",three_prnt.children[i].nchld, nchld );
-                     if (three_prnt.children[i].nchld === nchld) {
-                        console.log("createRCObject3D .... reuse obj3d .... from clones ??");
-                        obj3d = three_prnt.children[i];
-                        break;
-                     }
-                  }
+         // shape vertex info
+         mm.shapeVertices = topNode.shapeVertices; // aready in RC.Geometry
 
-               if (obj3d) {
-                  three_prnt = obj3d;
-                  // console.log("set three");
-                  if (obj3d.$jsroot_drawable) draw_depth++;
-                  continue;
-               }
+         // color
+         const floatBuffer = new Float32Array(rnr_data.vtxBuff);
+         const bytes = new Uint8Array(floatBuffer.buffer);
+         // console.log("color ", bytes);
+         mm.nodeColors = bytes; // aready in RC.Geometry
 
-               // console.log("make NEW ode ", node);
-               obj3d = new RC.Object3D();
+         // picking Ids: is this needed ???
+         mm.nodeIds = topNode.nodeIds;
 
-               if (node.abs_matrix) {
-                  obj3d.absMatrix = new RC.Matrix4();
-                  obj3d.absMatrix.fromArray(node.matrix);
-               } else if (node.matrix) {
-                  obj3d.matrix.fromArray(node.matrix);
-                  obj3d.matrix.decompose(obj3d.position, obj3d.quaternion, obj3d.scale);
-               }
+         mm.pickable = true;
+         let pick_children = false;
+         this.RcPickable(topNode, mm, pick_children);
 
-               // add the mesh to the scene
-               three_prnt.add(obj3d);
-               obj3d.updateMatrixWorld();
-
-               three_prnt = obj3d;
-            }
-
-            return three_prnt;
-         } // end clones create obj3d
-
-         return orc;
+        return mm;
       }
 
       //==============================================================================

@@ -118,7 +118,6 @@ extern void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Doubl
 extern void GraphFitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 
-ClassImp(TFumili);
 
 TFumili *gFumili=nullptr;
 // Machine dependent values  fiXME!!

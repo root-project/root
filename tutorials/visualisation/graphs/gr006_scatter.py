@@ -37,4 +37,7 @@ scatter.SetTitle("Scatter plot titleX titleY titleZ title")
 scatter.GetXaxis().SetRangeUser(20.0, 90.0)
 scatter.GetYaxis().SetRangeUser(55.0, 90.0)
 scatter.GetZaxis().SetRangeUser(10.0, 200.0)
+# an alternative way to zoom the Z-axis:
+# scatter->GetHistogram()->SetMinimum(10);
+# scatter->GetHistogram()->SetMaximum(200);
 scatter.Draw("A")

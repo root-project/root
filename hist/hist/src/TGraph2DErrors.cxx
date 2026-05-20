@@ -17,7 +17,6 @@
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
 
-ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
     \ingroup Graphs
@@ -79,14 +78,20 @@ TGraph2DErrors::TGraph2DErrors() {}
 TGraph2DErrors::TGraph2DErrors(Int_t n)
                : TGraph2D(n)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
    }
 
-   fEX = new Double_t[n];
-   fEY = new Double_t[n];
-   fEZ = new Double_t[n];
+   if (n>0) {
+      fEX = new Double_t[n];
+      fEY = new Double_t[n];
+      fEZ = new Double_t[n];
+   } else {
+      fEX = nullptr;
+      fEY = nullptr;
+      fEZ = nullptr;
+   }
 
    for (Int_t i=0;i<n;i++) {
       fEX[i] = 0;
@@ -103,14 +108,20 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
                                Double_t *ex, Double_t *ey, Double_t *ez, Option_t *)
                :TGraph2D(n, x, y, z)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
    }
 
-   fEX = new Double_t[n];
-   fEY = new Double_t[n];
-   fEZ = new Double_t[n];
+   if (n>0) {
+      fEX = new Double_t[n];
+      fEY = new Double_t[n];
+      fEZ = new Double_t[n];
+   } else {
+      fEX = nullptr;
+      fEY = nullptr;
+      fEZ = nullptr;
+   }
 
    for (Int_t i=0;i<n;i++) {
       if (ex) fEX[i] = ex[i];
@@ -456,12 +467,12 @@ void TGraph2DErrors::SavePrimitive(std::ostream &out, Option_t *option)
    TString arrx = SavePrimitiveVector(out, "gr2derr_x", fNpoints, fX, kTRUE);
    TString arry = SavePrimitiveVector(out, "gr2derr_y", fNpoints, fY);
    TString arrz = SavePrimitiveVector(out, "gr2derr_z", fNpoints, fZ);
-   TString arrex = SavePrimitiveVector(out, "gr2derr_ex", fNpoints, fEX);
-   TString arrey = SavePrimitiveVector(out, "gr2derr_ey", fNpoints, fEY);
-   TString arrez = SavePrimitiveVector(out, "gr2derr_ez", fNpoints, fEZ);
+   TString arrex = SavePrimitiveVector(out, "gr2derr_ex", fNpoints, fEX, 111);
+   TString arrey = SavePrimitiveVector(out, "gr2derr_ey", fNpoints, fEY, 111);
+   TString arrez = SavePrimitiveVector(out, "gr2derr_ez", fNpoints, fEZ, 111);
 
    SavePrimitiveConstructor(out, Class(), "gr2derr",
-                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s, %s, %s",
                                             fNpoints, arrx.Data(), arry.Data(), arrz.Data(), arrex.Data(), arrey.Data(),
                                             arrez.Data()),
                             kFALSE);

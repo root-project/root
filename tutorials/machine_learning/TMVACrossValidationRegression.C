@@ -10,7 +10,7 @@
 /// The output file "TMVARegCv.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
-/// Launch the GUI via the command:
+/// You can also launch the GUI in another ROOT session via the command:
 ///
 /// ```
 /// root -l -e 'TMVA::TMVAGui("TMVARegCv.root")'
@@ -199,7 +199,7 @@ int TMVACrossValidationRegression()
 
 //
 // This is used if the macro is compiled. If run through ROOT with
-// `root -l -b -q MACRO.C` or similar it is unused.
+// `root -b -q MACRO.C` or similar it is unused.
 //
 int main(int argc, char **argv)
 {

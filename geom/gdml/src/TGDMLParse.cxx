@@ -119,7 +119,6 @@ When most solids or volumes are added to the geometry they
 #include <sstream>
 #include <locale>
 
-ClassImp(TGDMLParse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -1291,7 +1290,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
 XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int z)
 {
-   //! Map to hold fractions while being processed
+   ///<! Map to hold fractions while being processed
    typedef FracMap::iterator fractions;
    //  typedef FracMap::iterator i;
    FracMap fracmap;
@@ -2243,7 +2242,9 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
          if (!auxmap) {
             // printf("Auxiliary values for volume %s\n",vol->GetName());
             auxmap = new TMap();
-            vol->SetUserExtension(new TGeoRCExtension(auxmap));
+            auto ext = new TGeoRCExtension(auxmap);
+            vol->SetUserExtension(ext); // grabs a copy
+            ext->Release();
          }
          attr = gdml->GetFirstAttr(child);
          while (attr) {
@@ -4607,7 +4608,6 @@ file.
 
 */
 
-ClassImp(TGDMLRefl);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This constructor method stores the values brought in as params.

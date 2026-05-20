@@ -118,10 +118,6 @@ else()
   endif()
 endif()
 
-if( NOT "NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
-  message(FATAL_ERROR "NVPTX backend is not activated\n"
-    "Please enable it via -DLLVM_TARGETS_TO_BUILD=\"host;NVPTX\"")
-endif()
 
 set(CLING_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(CLING_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -242,7 +238,7 @@ endif()
 
 if(MSVC)
   add_definitions(/DNOMINMAX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /D CLANG_EXPORTS=1")
 endif()
 
 if (APPLE)
@@ -295,10 +291,7 @@ macro(add_cling_library name)
   set(srcs)
   if(MSVC_IDE OR XCODE)
     # Add public headers
-    file(RELATIVE_PATH lib_path
-      ${CLING_SOURCE_DIR}/lib/
-      ${CMAKE_CURRENT_SOURCE_DIR}
-    )
+    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR BASE_DIRECTORY ${CLING_SOURCE_DIR}/lib/ OUTPUT_VARIABLE lib_path)
     if(NOT lib_path MATCHES "^[.][.]")
       file( GLOB_RECURSE headers
         ${CLING_SOURCE_DIR}/include/cling/${lib_path}/*.h

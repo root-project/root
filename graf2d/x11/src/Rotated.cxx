@@ -813,6 +813,8 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    RotatedTextItem_t *item = (RotatedTextItem_t *)malloc((unsigned)sizeof(RotatedTextItem_t));
    if(!item) return nullptr;
 
+   memset(item, 0, sizeof(RotatedTextItem_t));
+
    /* count number of sections in string */
    item->fNl=1;
    if(align!=NONE)
@@ -868,7 +870,7 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
 
    /* bitmap for drawing on */
    canvas=XCreatePixmap(dpy, DefaultRootWindow(dpy),
-                         item->fColsIn, item->fRowsIn, 1);
+                         item->fColsIn > 0 ? item->fColsIn : 1, item->fRowsIn, 1);
 
    /* create a GC for the bitmap */
    font_gc = XCreateGC(dpy, canvas, 0, nullptr);

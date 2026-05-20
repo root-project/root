@@ -14,7 +14,6 @@
 #include "TPluginManager.h"
 #include "TSystem.h"
 
-ClassImp(TImage);
 
 /** \class TImage
 \ingroup BasicGraphics

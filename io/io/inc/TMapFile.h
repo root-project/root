@@ -73,16 +73,15 @@ protected:
 
    static void *MapToAddress();
 
-public:
-   enum { kDefaultMapSize = 0x80000 }; // default size of mapped heap is 500 KB
-
-   // Should both be protected (waiting for cint)
    ~TMapFile() override;
    void *operator new(size_t sz) { return TObject::operator new(sz); }
    void *operator new[](size_t sz) { return TObject::operator new[](sz); }
    void *operator new(size_t sz, void *vp) { return TObject::operator new(sz, vp); }
    void *operator new[](size_t sz, void *vp) { return TObject::operator new[](sz, vp); }
    void     operator delete(void *vp);
+
+public:
+   enum { kDefaultMapSize = 0x80000 }; // default size of mapped heap is 500 KB
 
    void          Browse(TBrowser *b) override;
    void          Close(Option_t *option = "") override;

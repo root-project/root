@@ -11,7 +11,8 @@ enum EFitPanel {
    kFP_CHEB0,  kFP_CHEB1,  kFP_CHEB2,  kFP_CHEB3,  kFP_CHEB4,  kFP_CHEB5,
    kFP_CHEB6,  kFP_CHEB7,  kFP_CHEB8,  kFP_CHEB9,
    kFP_XYGAUS, kFP_BIGAUS, kFP_XYEXP, kFP_XYLAN, kFP_XYLANN,
-// Above here -> All editable formulaes!
+   kFP_XYZGAUS,
+   // Above here -> All editable formulaes!
    kFP_USER,
    kFP_NONE,  kFP_ADD,   kFP_NORMADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST, kFP_EMPW1,
    kFP_INTEG, kFP_IMERR, kFP_USERG, kFP_ADDLS, kFP_ALLW1, kFP_IFITR, kFP_NOCHI,

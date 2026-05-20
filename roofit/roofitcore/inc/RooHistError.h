@@ -37,13 +37,6 @@ public:
   static RooAbsFunc *createBinomialSum(Int_t n, Int_t m, bool eff) ;
 
 private:
-
-
-  bool getPoissonIntervalCalc(Int_t n, double &mu1, double &mu2, double nSigma= 1) const;
-  double _poissonLoLUT[1000] ;
-  double _poissonHiLUT[1000] ;
-
-  RooHistError();
   double seek(const RooAbsFunc &f, double startAt, double step, double value) const;
 
   // -----------------------------------------------------------

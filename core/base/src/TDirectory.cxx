@@ -29,7 +29,8 @@
 
 #include "TSpinLockGuard.h"
 
-Bool_t TDirectory::fgAddDirectory = kTRUE;
+#include <algorithm>
+#include <limits>
 
 const Int_t  kMaxLen = 2048;
 
@@ -45,7 +46,6 @@ static std::atomic_flag *GetCurrentDirectoryLock()
 Describe directory structure in memory.
 */
 
-ClassImp(TDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Directory default constructor.
@@ -161,21 +161,18 @@ TDirectory::TContext::~TContext()
    while(fDirectoryWait);
 }
 
+// Mask deprecation warnings to allow for deprecating the fgAddDirectory bit.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the flag controlling the automatic add objects like histograms, TGraph2D, etc
-/// in memory
-///
-/// By default (fAddDirectory = kTRUE), these objects are automatically added
-/// to the list of objects in memory.
-/// Note that in the classes like TH1, TGraph2D supporting this facility,
-/// one object can be removed from its support directory
-/// by calling object->SetDirectory(nullptr) or object->SetDirectory(dir) to add it
-/// to the list of objects in the directory dir.
-///
-///  NOTE that this is a static function. To call it, use:
-/// ~~~ {.cpp}
-///     TDirectory::AddDirectory
-/// ~~~
+/// Set the value returned by TDirectory::AddDirectoryStatus().
+/// \deprecated This function is not used in ROOT.
 
 void TDirectory::AddDirectory(Bool_t add)
 {
@@ -183,12 +180,19 @@ void TDirectory::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: see TDirectory::AddDirectory for more comments.
+/// Return the value set by TDirectory::AddDirectory.
+/// \deprecated This function is not used in ROOT.
 
 Bool_t TDirectory::AddDirectoryStatus()
 {
    return fgAddDirectory;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to this directory.
@@ -203,8 +207,10 @@ void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
    if (replace && obj->GetName() && obj->GetName()[0]) {
       TObject *old;
       while (nullptr != (old = GetList()->FindObject(obj->GetName()))) {
-         Warning("Append","Replacing existing %s: %s (Potential memory leak).",
-                 obj->IsA()->GetName(),obj->GetName());
+         if (obj != old) {
+            Warning("Append", "Replacing existing %s: %s (Potential memory leak).", obj->IsA()->GetName(),
+                    obj->GetName());
+         }
          ROOT::DirAutoAdd_t func = old->IsA()->GetDirectoryAutoAdd();
          if (func) {
             func(old,nullptr);
@@ -358,7 +364,7 @@ static TBuffer* R__CreateBuffer()
 ///
 /// If autoadd is true and if the object class has a
 /// DirectoryAutoAdd function, it will be called at the end of the
-/// function with the parameter gDirector.  This usually means that
+/// function with the parameter gDirectory.  This usually means that
 /// the object will be appended to the current ROOT directory.
 
 TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE */)

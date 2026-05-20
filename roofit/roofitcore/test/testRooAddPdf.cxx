@@ -2,6 +2,7 @@
 // Authors: Jonas Rembser, CERN 07/2022
 
 #include <RooAddPdf.h>
+#include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooFit/Evaluator.h>
@@ -423,4 +424,32 @@ TEST(RooAddPdf, IntegralsForRangedFitWithIdenticalCoefRange)
    // We expect only two integral objects: one normalization integral for each
    // of the component pdfs.
    EXPECT_EQ(iIntegrals, 2);
+}
+
+// Verify that likelihoods for Pdfs with recursive fractions can be created.
+// Covers GitHub issues #21635 and #2144.
+TEST(RooAddPdf, NLLWithRecursiveFractions)
+{
+    // Create observables
+    RooRealVar x("x", "x", -8, 8);
+
+    // Construct signal pdf
+    RooRealVar mean("mean", "mean", 0, -8, 8);
+    RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+    RooGaussian gx("gx", "gx", x, mean, sigma);
+
+    // Construct background pdf
+    RooRealVar a0("a0", "a0", -0.1, -1, 1);
+    RooRealVar a1("a1", "a1", 0.004, -1, 1);
+    RooChebychev px("px", "px", x, RooArgList(a0, a1));
+
+    // Construct composite pdf
+    RooRealVar b("b", "b", 200, 0.0, 10000);
+    RooRealVar s("s", "s", 800, 0.0, 10000);
+    RooRealVar f("f", "f", 0.5, 0.0, 1.0);
+    RooAddPdf model("model", "model", RooArgList(gx, px), RooArgList(f), true);
+
+    std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x), 1000)};
+
+    std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
 }

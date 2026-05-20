@@ -1,8 +1,7 @@
 import unittest
 
-from DistRDF import Operation
-
 import ROOT
+from ROOT._distrdf import Operation
 
 
 class ClassifyTest(unittest.TestCase):
@@ -112,3 +111,14 @@ class HistoModelTests(unittest.TestCase):
         """Creating a histogram without model raises ValueError."""
         with self.assertRaises(ValueError):
             _ = Operation.create_op("HistoND", ["a", "b", "c", "d"])
+
+    def test_histonsparsed_with_thnsparsedmodel(self):
+        """THnDModel"""
+        op = Operation.create_op("HistoNSparseD", ROOT.RDF.THnSparseDModel(), ["a", "b", "c", "d"])
+        self.assertIsInstance(op, Operation.Histo)
+        self.assertEqual(op.name, "HistoNSparseD")
+
+    def test_histonsparsed_without_model(self):
+        """Creating a histogram without model raises ValueError."""
+        with self.assertRaises(ValueError):
+            _ = Operation.create_op("HistoNSparseD", ["a", "b", "c", "d"])

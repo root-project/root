@@ -40,7 +40,6 @@ namespace Cppyy {
 } // namespace Cppyy
 
 // Bindings
-#include "CPyCppyy/PyResult.h"
 #include "CPyCppyy/CommonDefs.h"
 
 // Standard
@@ -174,6 +173,10 @@ CPYCPPYY_EXTERN void* CallVoidP(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallCo
 
 //- C++ access to cppyy objects ---------------------------------------------
 
+// Get C++ Instance (python object proxy) name.
+// Sets a TypeError and returns an empty string if the pyobject is not a CPPInstance.
+CPYCPPYY_EXTERN std::string Instance_GetScopedFinalName(PyObject* pyobject);
+
 // C++ Instance (python object proxy) to void* conversion
 CPYCPPYY_EXTERN void* Instance_AsVoidPtr(PyObject* pyobject);
 
@@ -189,6 +192,10 @@ CPYCPPYY_EXTERN bool Scope_CheckExact(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Instance_Check(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Instance_CheckExact(PyObject* pyobject);
 
+// memory management: ownership of the underlying C++ object
+CPYCPPYY_EXTERN void Instance_SetPythonOwns(PyObject* pyobject);
+CPYCPPYY_EXTERN void Instance_SetCppOwns(PyObject* pyobject);
+
 // type verifier for sequences
 CPYCPPYY_EXTERN bool Sequence_Check(PyObject* pyobject);
 
@@ -199,6 +206,11 @@ CPYCPPYY_EXTERN bool Instance_IsLively(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Overload_Check(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Overload_CheckExact(PyObject* pyobject);
 
+// Sets the __reduce__ method for the CPPInstance class, which is by default not
+// implemented by cppyy but might make sense to implement by frameworks that
+// support IO of arbitrary C++ objects, like ROOT.
+CPYCPPYY_EXTERN void Instance_SetReduceMethod(PyCFunction reduceMethod);
+
 
 //- access to the python interpreter ----------------------------------------
 
@@ -207,9 +219,6 @@ CPYCPPYY_EXTERN bool Import(const std::string& name);
 
 // execute a python statement (e.g. "import sys")
 CPYCPPYY_EXTERN bool Exec(const std::string& cmd);
-
-// evaluate a python expression (e.g. "1+1")
-CPYCPPYY_EXTERN const PyResult Eval(const std::string& expr);
 
 // execute a python stand-alone script, with argv CLI arguments
 CPYCPPYY_EXTERN void ExecScript(const std::string& name, const std::vector<std::string>& args);

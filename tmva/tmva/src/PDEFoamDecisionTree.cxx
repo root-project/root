@@ -61,7 +61,6 @@ events in a cell without sampling.
 
 class TString;
 
-ClassImp(TMVA::PDEFoamDecisionTree);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.

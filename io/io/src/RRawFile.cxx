@@ -71,12 +71,10 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
-   if (transport == "http" || transport == "https" ||
-       transport == "root" || transport == "roots" ) {
-      std::string plgclass = transport.compare( 0, 4, "http" ) == 0 ?
-                             "RRawFileDavix" : "RRawFileNetXNG";
-      if (TPluginHandler *h = gROOT->GetPluginManager()->
-          FindHandler("ROOT::Internal::RRawFile", std::string(url).c_str())) {
+   if (transport == "http" || transport == "https" || transport == "root" || transport == "roots") {
+      std::string plgclass = transport.compare(0, 4, "http") == 0 ? "RRawFileDavix" : "RRawFileNetXNG";
+      if (TPluginHandler *h =
+             gROOT->GetPluginManager()->FindHandler("ROOT::Internal::RRawFile", std::string(url).c_str())) {
          if (h->LoadPlugin() == 0) {
             return std::unique_ptr<RRawFile>(reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options)));
          }
@@ -94,6 +92,7 @@ void ROOT::Internal::RRawFile::EnsureOpen()
 
    OpenImpl();
    fIsOpen = true;
+   SetDiscourageReadAheadImpl(!fIsBuffering);
 }
 
 void ROOT::Internal::RRawFile::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
@@ -202,6 +201,8 @@ void ROOT::Internal::RRawFile::SetBuffering(bool value)
    fIsBuffering = value;
    if (!fIsBuffering)
       fBufferSpace.reset();
+   if (fIsOpen)
+      SetDiscourageReadAheadImpl(!fIsBuffering);
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)

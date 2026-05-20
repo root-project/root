@@ -397,8 +397,8 @@ the option string
 
          if (use_rnn_type[i]) {
 
-            TString modelName = TString::Format("model_%s.h5", rnn_types[i].c_str());
-            TString trainedModelName = TString::Format("trained_model_%s.h5", rnn_types[i].c_str());
+            TString modelName = TString::Format("model_%s.keras", rnn_types[i].c_str());
+            TString trainedModelName = TString::Format("trained_model_%s.keras", rnn_types[i].c_str());
 
             Info("TMVA_RNN_Classification", "Building recurrent keras model using a %s layer", rnn_types[i].c_str());
             // create python script which can be executed
@@ -445,8 +445,7 @@ the option string
                factory->BookMethod(dataloader, TMVA::Types::kPyKeras,
                                    TString::Format("PyKeras_%s", rnn_types[i].c_str()),
                                    TString::Format("!H:!V:VarTransform=None:FilenameModel=%s:tf.keras:"
-                                                   "FilenameTrainedModel=%s:GpuOptions=allow_growth=True:"
-                                                   "NumEpochs=%d:BatchSize=%d",
+                                                   "FilenameTrainedModel=%s:NumEpochs=%d:BatchSize=%d",
                                                    modelName.Data(), trainedModelName.Data(), maxepochs, batchSize));
             }
          }

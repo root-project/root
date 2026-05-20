@@ -46,10 +46,10 @@ class TMD5 {
 friend Bool_t operator==(const TMD5 &m1, const TMD5 &m2);
 
 private:
-   UInt_t    fBuf[4];     //!temp buffer
-   UInt_t    fBits[2];    //!temp buffer
-   UChar_t   fIn[64];     //!temp buffer
-   mutable Char_t fString[33]; //!string representation of digest
+   UInt_t    fBuf[4];     ///<!temp buffer
+   UInt_t    fBits[2];    ///<!temp buffer
+   UChar_t   fIn[64];     ///<!temp buffer
+   mutable Char_t fString[33]; ///<!string representation of digest
    UChar_t   fDigest[16]; //message digest
    Bool_t    fFinalized;  //true if message digest has been finalized
 

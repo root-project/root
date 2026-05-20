@@ -8,11 +8,11 @@
 # Author: Axel Naumann <axel@cern.ch>, 2014-10-16
 # Translated to Python by Danilo Piparo, 2015-04-22
 
-from __future__ import print_function
-import sys
-import os
 import glob
+import os
 import shutil
+import sys
+
 
 #-------------------------------------------------------------------------------
 def removeFiles(filesList):
@@ -52,113 +52,116 @@ def getGuardedStlInclude(headerName):
 
 #-------------------------------------------------------------------------------
 def getSTLIncludes():
-   """
-   Here we include the list of c++11 stl headers
-   From http://en.cppreference.com/w/cpp/header
-   valarray is removed because it causes lots of compilation at startup.
-   """
-   stlHeadersList = ("cstdlib",
-                     "csignal",
-                     "csetjmp",
-                     "cstdarg",
-                     "typeinfo",
-                     "typeindex",
-                     "type_traits",
-                     "bitset",
-                     "functional",
-                     "utility",
-                     "ctime",
-                     "chrono",
-                     "cstddef",
-                     "initializer_list",
-                     "tuple",
-                     "new",
-                     "memory",
-                     "scoped_allocator",
-                     "climits",
-                     "cfloat",
-                     "cstdint",
-                     "cinttypes",
-                     "limits",
-                     "exception",
-                     "stdexcept",
-                     "cassert",
-                     "system_error",
-                     "cerrno",
-                     "cctype",
-                     "cwctype",
-                     "cstring",
-                     "cwchar",
-                     "cuchar",
-                     "string",
-                     "array",
-                     "vector",
-                     "deque",
-                     "list",
-                     "forward_list",
-                     "set",
-                     "map",
-                     "unordered_set",
-                     "unordered_map",
-                     "stack",
-                     "queue",
-                     "algorithm",
-                     "iterator",
-                     "cmath",
-                     "complex",
-#                     "valarray",
-                     "random",
-                     "numeric",
-                     "ratio",
-                     "cfenv",
-                     "iosfwd",
-                     "ios",
-                     "istream",
-                     "ostream",
-                     "iostream",
-                     "fstream",
-                     "sstream",
-                     "iomanip",
-                     "streambuf",
-                     "cstdio",
-                     "locale",
-                     "clocale",
-                     "codecvt",
-                     "atomic",
-                     "thread",
-                     "mutex",
-                     "future",
-                     "condition_variable",
-                     "ciso646",
-                     "ccomplex",
-                     "ctgmath",
-                     "regex",
-                     "cstdbool")
+    """
+    Here we include the list of c++11 stl headers
+    From http://en.cppreference.com/w/cpp/header
+    valarray is removed because it causes lots of compilation at startup.
+    """
+    stlHeadersList = (
+        "cstdlib",
+        "csignal",
+        "csetjmp",
+        "cstdarg",
+        "typeinfo",
+        "typeindex",
+        "type_traits",
+        "bitset",
+        "functional",
+        "utility",
+        "ctime",
+        "chrono",
+        "cstddef",
+        "initializer_list",
+        "tuple",
+        "new",
+        "memory",
+        "scoped_allocator",
+        "climits",
+        "cfloat",
+        "cstdint",
+        "cinttypes",
+        "limits",
+        "exception",
+        "stdexcept",
+        "cassert",
+        "system_error",
+        "cerrno",
+        "cctype",
+        "cwctype",
+        "cstring",
+        "cwchar",
+        "cuchar",
+        "string",
+        "array",
+        "vector",
+        "deque",
+        "list",
+        "forward_list",
+        "set",
+        "map",
+        "unordered_set",
+        "unordered_map",
+        "stack",
+        "queue",
+        "algorithm",
+        "iterator",
+        "cmath",
+        "complex",
+        # "valarray",
+        "random",
+        "numeric",
+        "ratio",
+        "cfenv",
+        "iosfwd",
+        "ios",
+        "istream",
+        "ostream",
+        "iostream",
+        "fstream",
+        "sstream",
+        "iomanip",
+        "streambuf",
+        "cstdio",
+        "locale",
+        "clocale",
+        "codecvt",
+        "atomic",
+        "thread",
+        "mutex",
+        "future",
+        "condition_variable",
+        "ciso646",
+        "regex",
+    )
 
-   allHeadersPartContent = "// STL headers\n"
+    allHeadersPartContent = "// STL headers\n"
 
-   for header in stlHeadersList:
-      allHeadersPartContent += getGuardedStlInclude(header)
+    for header in stlHeadersList:
+        allHeadersPartContent += getGuardedStlInclude(header)
 
-   # Special case for regex
-   allHeadersPartContent += '// treat regex separately\n' +\
-                            '#if __has_include("regex") && !defined __APPLE__\n' +\
-                            '#include <regex>\n' +\
-                            '#endif\n'
+    # Special case for regex
+    allHeadersPartContent += (
+        "// treat regex separately\n"
+        + '#if __has_include("regex") && !defined __APPLE__\n'
+        + "#include <regex>\n"
+        + "#endif\n"
+    )
 
-   # treat this deprecated headers in a special way
-   stlDeprecatedHeadersList=["strstream"]
-   allHeadersPartContent += '// STL Deprecated headers\n' +\
-                            '#define _BACKWARD_BACKWARD_WARNING_H\n' +\
-                            "#pragma clang diagnostic push\n" +\
-                            '#pragma GCC diagnostic ignored "-Wdeprecated"\n'
+    # treat this deprecated headers in a special way
+    stlDeprecatedHeadersList = ["strstream"]
+    allHeadersPartContent += (
+        "// STL Deprecated headers\n"
+        + "#define _BACKWARD_BACKWARD_WARNING_H\n"
+        + "#pragma clang diagnostic push\n"
+        + '#pragma GCC diagnostic ignored "-Wdeprecated"\n'
+    )
 
-   for header in stlDeprecatedHeadersList:
-      allHeadersPartContent += getGuardedStlInclude(header)
+    for header in stlDeprecatedHeadersList:
+        allHeadersPartContent += getGuardedStlInclude(header)
 
-   allHeadersPartContent += '#pragma clang diagnostic pop\n' +\
-                            '#undef _BACKWARD_BACKWARD_WARNING_H\n'
-   return allHeadersPartContent
+    allHeadersPartContent += "#pragma clang diagnostic pop\n" + "#undef _BACKWARD_BACKWARD_WARNING_H\n"
+    return allHeadersPartContent
+
 
 #-------------------------------------------------------------------------------
 def getExtraIncludes(headers):
@@ -203,13 +206,15 @@ def getDirName(dictName):
    return os.path.normpath(os.path.split(dictName)[0])
 
 #-------------------------------------------------------------------------------
-def isAnyPatternInString(patterns,theString):
-   """
-   Check if any of the patterns is contained in the string
-   """
-   for pattern in patterns:
-      if os.path.normpath(pattern) in theString: return True
-   return False
+def isAnyPatternInString(patterns, theString):
+    """
+    Check if any of the patterns is contained in the string
+    """
+    for pattern in patterns:
+        if os.path.normpath(pattern) in theString:
+            return True
+    return False
+
 
 #-------------------------------------------------------------------------------
 def isDirForPCH(dirName, legacyPyROOT):
@@ -259,27 +264,29 @@ def isDirForPCH(dirName, legacyPyROOT):
 
 #-------------------------------------------------------------------------------
 def getLinesFromDict(marker, dictFileName):
-   """
-   Search for the line marker
-   in the dictionary and save all lines until the line 'nullptr'
-   Return them as List
-   """
-   selectedLines = []
-   ifile = open(dictFileName)
-   lines = ifile.readlines()
-   ifile.close()
-   recording = False
-   for line in lines:
-      if marker in line:
-         recording = True
-         continue
+    """
+    Search for the line marker
+    in the dictionary and save all lines until the line 'nullptr'
+    Return them as List
+    """
+    selectedLines = []
+    ifile = open(dictFileName)
+    lines = ifile.readlines()
+    ifile.close()
+    recording = False
+    for line in lines:
+        if marker in line:
+            recording = True
+            continue
 
-      if recording and "nullptr" == line[0:7]: break
+        if recording and "nullptr" == line[0:7]:
+            break
 
-      if recording:
-         selectedLines.append(line[:-1])
+        if recording:
+            selectedLines.append(line[:-1])
 
-   return selectedLines
+    return selectedLines
+
 
 #-------------------------------------------------------------------------------
 def getIncludeLinesFromDict(dictFileName):
@@ -335,7 +342,6 @@ def copyLinkDefs(rootSrcDir, outdir):
    """
    Extract the linkdef files
    """
-   linkDefPartContent = ""
    curDir = os.getcwd()
    os.chdir(rootSrcDir)
    wildcards = (os.path.join("*", "inc", "*LinkDef*.h"),
@@ -377,20 +383,21 @@ def resolveSoftLinks(thePaths):
    return map(os.path.realpath,thePaths)
 
 #-------------------------------------------------------------------------------
-def getCppFlags(rootSrcDir,allIncPaths):
-   """
-   Sort, clean, no duplicates
-   cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
-   We must resolve softlinks.
-   returns a string
-   """
-   allHeadersPartContent = ""
-   filteredIncPaths = sorted(list(set(resolveSoftLinks(allIncPaths))))
-   for name in resolveSoftLinks((rootSrcDir,os.getcwd())):
-      filteredIncPaths = filter (lambda incPath: not name in incPath,filteredIncPaths)
-   for incPath in filteredIncPaths:
-      allHeadersPartContent += "-I%s\n" %incPath
-   return allHeadersPartContent
+def getCppFlags(rootSrcDir, allIncPaths):
+    """
+    Sort, clean, no duplicates
+    cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
+    We must resolve softlinks.
+    returns a string
+    """
+    allHeadersPartContent = ""
+    filteredIncPaths = sorted(list(set(resolveSoftLinks(allIncPaths))))
+    for name in resolveSoftLinks((rootSrcDir, os.getcwd())):
+        filteredIncPaths = filter(lambda incPath: name not in incPath, filteredIncPaths)
+    for incPath in filteredIncPaths:
+        allHeadersPartContent += "-I%s\n" % incPath
+    return allHeadersPartContent
+
 
 #-------------------------------------------------------------------------------
 def writeToFile(content, filename):
@@ -432,69 +439,69 @@ def removeUnwantedHeaders(allHeadersContent):
 
 #-------------------------------------------------------------------------------
 def makePCHInput():
-   """
-   Create the input for the pch file, i.e. 3 files:
-      * etc/dictpch/allLinkDefs.h
-      * etc/dictpch/allHeaders.h
-      * etc/dictpch/allCppflags.txt
-   """
-   rootSrcDir, modules, legacyPyROOT, clingetpchList = getParams()
+    """
+    Create the input for the pch file, i.e. 3 files:
+       * etc/dictpch/allLinkDefs.h
+       * etc/dictpch/allHeaders.h
+       * etc/dictpch/allCppflags.txt
+    """
+    rootSrcDir, modules, legacyPyROOT, clingetpchList = getParams()
 
-   outdir = os.path.join("etc","dictpch")
-   allHeadersFilename = os.path.join(outdir,"allHeaders.h")
-   allLinkdefsFilename = os.path.join(outdir,"allLinkDefs.h")
-   cppFlagsFilename = os.path.join(outdir, "allCppflags.txt")
+    outdir = os.path.join("etc", "dictpch")
+    allHeadersFilename = os.path.join(outdir, "allHeaders.h")
+    allLinkdefsFilename = os.path.join(outdir, "allLinkDefs.h")
+    cppFlagsFilename = os.path.join(outdir, "allCppflags.txt")
 
-   if sys.platform == 'win32':
-      outdir.replace("\\","/")
-      allHeadersFilename.replace("\\","/")
-      allLinkdefsFilename.replace("\\","/")
-      cppFlagsFilename.replace("\\","/")
+    if sys.platform == "win32":
+        outdir.replace("\\", "/")
+        allHeadersFilename.replace("\\", "/")
+        allLinkdefsFilename.replace("\\", "/")
+        cppFlagsFilename.replace("\\", "/")
 
-   mkdirIfNotThere(outdir)
-   removeLeftOvers([allHeadersFilename, allLinkdefsFilename, cppFlagsFilename])
+    mkdirIfNotThere(outdir)
+    removeLeftOvers([allHeadersFilename, allLinkdefsFilename, cppFlagsFilename])
 
-   allHeadersContent = getSTLIncludes()
-   allHeadersContent += getExtraIncludes(clingetpchList)
+    allHeadersContent = getSTLIncludes()
+    allHeadersContent += getExtraIncludes(clingetpchList)
 
-   # Make sure we don't get warnings from the old RooFit test statistics
-   # headers that are deprecated. This line can be removed once the deprecaded
-   # headers are gone (ROOT 6.32.00):
-   allHeadersContent += "#define ROOFIT_BUILDS_ITSELF\n"
+    allLinkdefsContent = ""
 
-   allLinkdefsContent = ""
+    # Loop over the dictionaries, ROOT modules
+    dictNames = getDictNames(modules)
+    selModules = set([])
+    allIncPathsList = []
+    for dictName in dictNames:
+        dirName = getDirName(dictName)
+        if not isDirForPCH(dirName, legacyPyROOT):
+            continue
 
-   # Loop over the dictionaries, ROOT modules
-   dictNames = getDictNames(modules)
-   selModules = set([])
-   allIncPathsList = []
-   for dictName in dictNames:
-      dirName = getDirName(dictName)
-      if not isDirForPCH(dirName, legacyPyROOT): continue
+        selModules.add(dirName)
 
-      selModules.add(dirName)
+        allHeadersContent += getIncludeLinesFromDict(dictName)
+        allIncPathsList += getIncludePathsFromDict(dictName)
 
-      allHeadersContent += getIncludeLinesFromDict(dictName)
-      allIncPathsList += getIncludePathsFromDict(dictName)
+        allHeadersContent += getDefUndefLines(dictName)
 
-      allHeadersContent += getDefUndefLines(dictName)
+        allLinkdefsContent += getLocalLinkDefs(rootSrcDir, outdir, dirName)
 
-      allLinkdefsContent += getLocalLinkDefs(rootSrcDir, outdir , dirName)
+    allHeadersContent += getExtraHeaders()
 
-   allHeadersContent += getExtraHeaders()
+    allHeadersContent = removeUnwantedHeaders(allHeadersContent)
 
-   allHeadersContent = removeUnwantedHeaders(allHeadersContent)
+    copyLinkDefs(rootSrcDir, outdir)
 
-   copyLinkDefs(rootSrcDir, outdir)
+    cppFlagsContent = getCppFlags(rootSrcDir, allIncPathsList) + "\n"
 
-   cppFlagsContent = getCppFlags(rootSrcDir, allIncPathsList) + '\n'
+    writeFiles(
+        (
+            (allHeadersContent, allHeadersFilename),
+            (allLinkdefsContent, allLinkdefsFilename),
+            (cppFlagsContent, cppFlagsFilename),
+        )
+    )
 
-   writeFiles(((allHeadersContent, allHeadersFilename),
-               (allLinkdefsContent, allLinkdefsFilename),
-               (cppFlagsContent, cppFlagsFilename)))
+    printModulesMessageOnScreen(selModules)
 
-
-   printModulesMessageOnScreen(selModules)
 
 if __name__ == "__main__":
    makePCHInput()

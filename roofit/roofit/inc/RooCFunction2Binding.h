@@ -145,7 +145,7 @@ class RooCFunction2Ref : public TObject {
   }
 
   typedef VO (*func_t)(VI1,VI2);
-  func_t _ptr; //! Pointer to embedded function
+  func_t _ptr; ///<! Pointer to embedded function
 
   static RooCFunction2Map<VO,VI1,VI2>* _fmap ; // Pointer to mapping service object
 

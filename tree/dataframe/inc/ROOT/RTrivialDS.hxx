@@ -8,11 +8,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RTRIVIALTDS
-#define ROOT_RTRIVIALTDS
+#ifndef ROOT_RTRIVIALDS
+#define ROOT_RTRIVIALDS
 
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDataSource.hxx"
+
+namespace ROOT::Internal::RDF {
+class R__CLING_PTRCHECK(off) RTrivialDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   ULong64_t *fValuePtr;
+   void *GetImpl(Long64_t) final { return fValuePtr; }
+
+public:
+   RTrivialDSColumnReader(ULong64_t *valuePtr) : fValuePtr(valuePtr) {}
+};
+} // namespace ROOT::Internal::RDF
 
 namespace ROOT {
 
@@ -55,6 +65,9 @@ public:
    void SetNSlots(unsigned int nSlots) final;
    void Initialize() final;
    std::string GetLabel() final;
+
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int slot, std::string_view colName, const std::type_info &tid) final;
 };
 
 /// \brief Make a RDF wrapping a RTrivialDS with the specified amount of entries.

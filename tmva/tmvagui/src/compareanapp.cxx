@@ -100,14 +100,14 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
 
          // frame limits (choose judicuous x range)
          Float_t nrms = 4;
-         Float_t xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(),
+         Float_t xmin = std::max( std::min(sig->GetMean() - nrms*sig->GetRMS(),
                                                bgd->GetMean() - nrms*bgd->GetRMS() ),
                                     sig->GetXaxis()->GetXmin() );
-         Float_t xmax = TMath::Min( TMath::Max(sig->GetMean() + nrms*sig->GetRMS(),
+         Float_t xmax = std::min( std::max(sig->GetMean() + nrms*sig->GetRMS(),
                                                bgd->GetMean() + nrms*bgd->GetRMS() ),
                                     sig->GetXaxis()->GetXmax() );
          Float_t ymin = 0;
-         Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*1.2 ;
+         Float_t ymax = std::max( sig->GetMaximum(), bgd->GetMaximum() )*1.2 ;
 
          if (Draw_CFANN_Logy && methodName == "CFANN") ymin = 0.01;
 

@@ -21,7 +21,6 @@ A TLeaf for a 16 bit Integer data type.
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafS);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafS.
@@ -132,8 +131,11 @@ void TLeafS::Import(TClonesArray *list, Int_t n)
    char *clone;
    for (Int_t i=0;i<n;i++) {
       clone = (char*)list->UncheckedAt(i);
-      if (clone) memcpy(&fValue[j],clone + fOffset, 2*fLen);
-      else       memcpy(&fValue[j],&kShortUndefined,  2*fLen);
+      if (clone)
+         memcpy(&fValue[j],clone + fOffset, 2*fLen);
+      else       
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kShortUndefined;
       j += fLen;
    }
 }

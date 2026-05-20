@@ -18,7 +18,6 @@ This class describes one single function template.
 #include "TInterpreter.h"
 #include "TClass.h"
 
-ClassImp(TFunctionTemplate);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TFunctionTemplate ctor.

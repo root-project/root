@@ -94,7 +94,6 @@
 #include "TClassTable.h"
 #include "Riostream.h"
 
-ClassImp(TLimit);
 
 TArrayD *TLimit::fgTable = new TArrayD(0);
 TOrdCollection *TLimit::fgSystNames = new TOrdCollection();

@@ -46,7 +46,7 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    flag=1
    NUM=1
 
-   touch $listener_socket $listener_socket.log
+   touch $listener_socket.log
 
    # on MacOS it is not possible to start netcat multiple times with same socket
    # therefore run it permanently and redirect output to log file
@@ -55,13 +55,17 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    #remember processid to be able kill it
    nc_procid=$!
 
-   # protect socket and log file from reading
-   chmod -f 0700 $listener_socket $listener_socket.log
+   # protect log file from reading
+   chmod -f 0700 $listener_socket.log
 
-   # remove netcat listening on socket
+   # cleanup netcat listening on socket at the end
    trap "kill -SIGINT $nc_procid >/dev/null 2>&1; rm -f $listener_socket.log" 0 1 2 3 6
 
    while [[ ($flag -ne 0) && (-f $listener_socket.log) ]] ; do
+      # protect socket from reading
+      if [ -S $listener_socket ] ; then
+         chmod -f 0700 $listener_socket
+      fi
 
       line=$(sed "${NUM}q;d" $listener_socket.log)
 

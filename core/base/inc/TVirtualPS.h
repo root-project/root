@@ -48,6 +48,7 @@ public:
    virtual     ~TVirtualPS();
    virtual void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) = 0;
    virtual void  CellArrayFill(Int_t r, Int_t g, Int_t b) = 0;
+   virtual void  CellArrayPng(char * /* buffer */, int /* size */) {}
    virtual void  CellArrayEnd() = 0;
    virtual void  Close(Option_t *opt="") = 0;
    virtual void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) = 0;
@@ -57,10 +58,12 @@ public:
    virtual void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) = 0;
    virtual void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) = 0;
    virtual void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) = 0;
+   virtual void  DrawSegments(Int_t n, Double_t *xw, Double_t *yw);
    virtual void  NewPage() = 0;
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
    virtual void  Text(Double_t x, Double_t y, const wchar_t *string) = 0;
+   virtual void  TextUrl(Double_t x, Double_t y, const char *string, const char *url) = 0;
    virtual void  SetColor(Float_t r, Float_t g, Float_t b) = 0;
 
    virtual void  PrintFast(Int_t nch, const char *string="");

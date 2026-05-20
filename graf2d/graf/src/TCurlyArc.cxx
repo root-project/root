@@ -37,7 +37,6 @@ Double_t TCurlyArc::fgDefaultWaveLength = 0.02;
 Double_t TCurlyArc::fgDefaultAmplitude  = 0.01;
 Bool_t   TCurlyArc::fgDefaultIsCurly    = kTRUE;
 
-ClassImp(TCurlyArc);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

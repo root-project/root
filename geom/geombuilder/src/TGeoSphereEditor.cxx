@@ -33,7 +33,6 @@ Editor for a TGeoSphere.
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 
-ClassImp(TGeoSphereEditor);
 
 enum ETGeoSphereWid {
    kSPHERE_NAME,

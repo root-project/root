@@ -33,7 +33,6 @@ By setting the fHierarchical flag, positions of children get
 calculated by multiplying the transformation matrices of all parents.
 */
 
-ClassImp(TEveScene);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -229,7 +228,6 @@ const TGPicture* TEveScene::GetListTreeIcon(Bool_t)
 List of Scenes providing common operations on TEveScene collections.
 */
 
-ClassImp(TEveSceneList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

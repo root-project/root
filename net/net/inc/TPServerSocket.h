@@ -46,7 +46,7 @@ public:
 
    virtual ~TPServerSocket() {}
 
-   TPSocket *Accept(UChar_t Opt = kSrvNoAuth) override;
+   TPSocket *Accept(UChar_t Opt = ROOT::Deprecated::kSrvNoAuth) override;
 
    ClassDefOverride(TPServerSocket,0)  // Parallel server socket
 };

@@ -59,28 +59,28 @@ namespace TMVA {
 
       virtual ~MethodRuleFit( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ ) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo     ( void* parent ) const;
+      void AddWeightsXMLTo     ( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML   ( void* wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML   ( void* wghtnode ) override;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const override;
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       Bool_t                                   UseBoost()           const   { return fUseBoost; }
 
@@ -115,17 +115,17 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       void MakeClassRuleCuts( std::ostream& ) const;
 
       void MakeClassLinear( std::ostream& ) const;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
       // initialize rulefit
-      void Init( void );
+      void Init( void ) override;
 
       // copy all training events into a stl::vector
       void InitEventSample( void );
@@ -149,8 +149,8 @@ namespace TMVA {
          inline Int_t VerifyRange( const T& var, const T& vmin, const T& vmax );
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       RuleFit                      fRuleFit;        ///< RuleFit instance
       std::vector<TMVA::Event *>   fEventSample;    ///< the complete training sample
@@ -207,7 +207,7 @@ namespace TMVA {
       Double_t                     fRuleMinDist;    ///< rule min distance - see RuleEnsemble
       Double_t                     fLinQuantile;    ///< quantile cut to remove outliers - see RuleEnsemble
 
-      ClassDef(MethodRuleFit,0);  // Friedman's RuleFit method
+      ClassDefOverride(MethodRuleFit,0);  // Friedman's RuleFit method
    };
 
 } // namespace TMVA

@@ -33,9 +33,11 @@ if 'win32' in sys.platform:
     else:
         IS_WINDOWS = 32
 
+IS_MAC = False
 IS_MAC_ARM = 0
 if 'darwin' in sys.platform:
     import platform
+    IS_MAC = True
     if 'arm64' in platform.machine():
         IS_MAC_ARM = 64
         os.environ["CPPYY_UNCAUGHT_QUIET"] = "1"

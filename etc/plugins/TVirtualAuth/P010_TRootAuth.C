@@ -1,5 +1,5 @@
 void P010_TRootAuth()
 {
-   gPluginMgr->AddHandler("TVirtualAuth", "Root", "TRootAuth",
-      "RootAuth", "TRootAuth()");
+   gPluginMgr->AddHandler("TVirtualAuth", "Root", "ROOT::Deprecated::TRootAuth",
+      "RootAuth", "ROOT::Deprecated::TRootAuth()");
 }

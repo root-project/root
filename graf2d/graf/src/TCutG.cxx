@@ -91,7 +91,6 @@ A Graphical cut may be saved to a file via TCutG::Write.
 #include "TH2.h"
 #include "strlcpy.h"
 
-ClassImp(TCutG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG default constructor.
@@ -379,7 +378,7 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option)
    out << "   cutg->SetVarY(\"" << GetVarY() << "\");\n";
    out << "   cutg->SetTitle(\"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\");\n";
 
-   SaveFillAttributes(out, "cutg", 0, 1001);
+   SaveFillAttributes(out, "cutg", 0, 1000);
    SaveLineAttributes(out, "cutg", 1, 1, 1);
    SaveMarkerAttributes(out, "cutg", 1, 1, 1);
 

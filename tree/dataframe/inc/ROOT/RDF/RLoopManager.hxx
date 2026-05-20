@@ -11,7 +11,6 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
-#include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -46,13 +45,12 @@ class RDataSource;
 namespace Internal {
 class RSlotStack;
 namespace RDF {
-std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
-
 class GraphNode;
 class RActionBase;
 class RVariationBase;
 class RDefinesWithReaders;
 class RVariationsWithReaders;
+class RColumnRegister;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
@@ -120,8 +118,6 @@ class RLoopManager : public RNodeBase {
    using ColumnNames_t = std::vector<std::string>;
    enum class ELoopType {
       kInvalid,
-      kROOTFiles,
-      kROOTFilesMT,
       kNoFiles,
       kNoFilesMT,
       kDataSource,
@@ -131,6 +127,13 @@ class RLoopManager : public RNodeBase {
    friend struct RCallCleanUpTask;
    friend struct ROOT::Internal::RDF::RDSRangeRAII;
 
+   /*
+   A wrapped reference to a TTree dataset that can be shared by many computation graphs. Ensures lifetime management.
+   It needs to be destroyed *after* the fDataSource data member, in case it is holding the only Python reference to the
+   input dataset and the data source needs to access it before it is destroyed.
+   */
+   std::any fTTreeLifeline{};
+
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
    std::vector<RDFInternal::RActionBase *> fRunActions;    ///< Non-owning pointers to actions already run
    std::vector<RFilterBase *> fBookedFilters;
@@ -139,9 +142,6 @@ class RLoopManager : public RNodeBase {
    std::vector<RDefineBase *> fBookedDefines;
    std::vector<RDFInternal::RVariationBase *> fBookedVariations;
 
-   /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
-   /// argument to RDataFrame's ctor (in which case we let users retain ownership).
-   std::shared_ptr<TTree> fTree{nullptr};
    Long64_t fBeginEntry{0};
    Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
 
@@ -150,8 +150,6 @@ class RLoopManager : public RNodeBase {
    /// Samples need to survive throughout the whole event loop, hence stored as an attribute
    std::vector<ROOT::RDF::Experimental::RSample> fSamples;
 
-   /// Friends of the fTree. Only used if we constructed fTree ourselves.
-   std::vector<std::unique_ptr<TChain>> fFriends;
    ColumnNames_t fDefaultColumns;
    /// Range of entries created when no data source is specified.
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
@@ -176,17 +174,11 @@ class RLoopManager : public RNodeBase {
    /// Readers for TTree/RDataSource columns (one per slot), shared by all nodes in the computation graph.
    std::vector<std::unordered_map<std::string, std::unique_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
 
-   /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
-   ColumnNames_t fValidBranchNames;
-
-   ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
    /// Pointer to a shared slot stack in case this instance runs concurrently with others:
    std::weak_ptr<ROOT::Internal::RSlotStack> fSlotStack;
 
    void RunEmptySourceMT();
    void RunEmptySource();
-   void RunTreeProcessorMT();
-   void RunTreeReader();
    void RunDataSourceMT();
    void RunDataSource();
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
@@ -210,9 +202,27 @@ class RLoopManager : public RNodeBase {
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
       fUniqueVariationsWithReaders;
 
-   /// A wrapped reference to a TTree dataset that can be shared by many computation graphs. Ensures lifetime
-   /// management.
-   std::any fTTreeLifeline{};
+   // deferred function calls to Jitted functions
+   struct DeferredJitCall {
+      std::size_t fFunctionId{};
+      std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> fColRegister;
+      std::vector<std::string> fColNames;
+      std::shared_ptr<void> fJittedNode;
+      // Extra arguments to be passed to the jitted function, in one value. Each function will need to unpack it
+      // accordingly.
+      std::shared_ptr<void> fExtraArgs;
+      DeferredJitCall(std::size_t id, std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> cols,
+                      const std::vector<std::string> &colNamesArg, std::shared_ptr<void> jittedNode,
+                      std::shared_ptr<void> arg);
+
+      DeferredJitCall(const DeferredJitCall &) = delete;
+      DeferredJitCall &operator=(const DeferredJitCall &) = delete;
+      DeferredJitCall(DeferredJitCall &&) noexcept;
+      DeferredJitCall &operator=(DeferredJitCall &&) noexcept;
+      ~DeferredJitCall();
+   };
+   std::vector<DeferredJitCall> fJitHelperCalls{};
+   std::hash<std::string> fStringHasher{};
 
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});
@@ -230,10 +240,10 @@ public:
    ~RLoopManager() override;
 
    void Jit();
+   void RunDeferredCalls();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
-   TTree *GetTree() const;
    ULong64_t GetNEmptyEntries() const { return fEmptyEntryRange.second - fEmptyEntryRange.first; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Register(RDFInternal::RActionBase *actionPtr);
@@ -251,17 +261,18 @@ public:
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
-   void SetTree(std::shared_ptr<TTree> tree);
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
+   void RegisterJitHelperCall(const std::string &funcBody,
+                              std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> colRegister,
+                              const std::vector<std::string> &colnames, std::shared_ptr<void> jittedNode,
+                              std::shared_ptr<void> argument = nullptr);
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
    bool HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const;
    void AddDataSourceColumnReaders(std::string_view col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
                                    const std::type_info &ti);
-   RColumnReaderBase *AddTreeColumnReader(unsigned int slot, std::string_view col,
-                                          std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti);
    RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti) const;
    RColumnReaderBase *AddDataSourceColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti,
                                                 TTreeReader *treeReader);
@@ -280,8 +291,6 @@ public:
 
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) final;
-
-   const ColumnNames_t &GetBranchNames();
 
    void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 

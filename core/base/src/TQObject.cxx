@@ -78,10 +78,6 @@ void *gTQSender; // A pointer to the object that sent the last signal.
 Bool_t TQObject::fgAllSignalsBlocked = kFALSE;
 
 
-ClassImpQ(TQObject)
-ClassImpQ(TQObjSender)
-ClassImpQ(TQClass)
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes "const" words and blanks from full (with prototype)
 /// method name and resolve any typedefs in the method signature.
@@ -438,7 +434,7 @@ TList *TQObject::GetListOfClassSignals() const
 
    qcl = dynamic_cast<TQClass*>(IsA());
 
-   return qcl ? qcl->fListOfSignals : nullptr; //!!
+   return qcl ? qcl->fListOfSignals : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

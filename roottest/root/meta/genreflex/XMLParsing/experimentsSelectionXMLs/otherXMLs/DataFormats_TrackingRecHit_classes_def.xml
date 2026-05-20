@@ -1,0 +1,35 @@
+<lcgdict>
+<selection>
+  <class name="TrackingRecHit" ClassVersion="11">
+   <version ClassVersion="11" checksum="1162527707"/>
+   <version ClassVersion="10" checksum="1481465852"/>
+  </class>
+  <class name="RecHit1D" ClassVersion="10">
+   <version ClassVersion="10" checksum="2579934268"/>
+  </class>
+  <class name="InvalidTrackingRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="3356557851"/>
+  </class>
+  <class name="RecHit2DLocalPos" ClassVersion="10">
+   <version ClassVersion="10" checksum="1168669560"/>
+  </class>
+  <class name="RecSegment" ClassVersion="10">
+   <version ClassVersion="10" checksum="1295706057"/>
+  </class>
+  <class name="std::vector<TrackingRecHit*>"/>
+  <class name="edm::OwnVector<TrackingRecHit, edm::ClonePolicy<TrackingRecHit> >"/>
+  <class name="edm::Ref<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit,edm::refhelper::FindUsingAdvance<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit> >"/>
+  <class name="edm::RefVectorIterator<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit,edm::refhelper::FindUsingAdvance<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit> >"/>
+  <class pattern="std::iterator<*edm::Ref*>"/>
+  <class name="std::auto_ptr<edm::Ref<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit,edm::refhelper::FindUsingAdvance<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit> > >"/>
+  <class name="std::pair<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >::const_iterator,edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >::const_iterator>"/>
+  <class name="edm::RefProd<edm::OwnVector<TrackingRecHit, edm::ClonePolicy<TrackingRecHit> > >"/>
+  <class name="edm::RefVector<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit,edm::refhelper::FindUsingAdvance<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit> >"/>
+  <class name="edm::Wrapper<edm::OwnVector<TrackingRecHit, edm::ClonePolicy<TrackingRecHit> > >"/>
+</selection>
+<exclusion>
+  <class name="edm::OwnVector<TrackingRecHit, edm::ClonePolicy<TrackingRecHit> >">
+    <method name="sort" />
+  </class>
+</exclusion>
+</lcgdict>

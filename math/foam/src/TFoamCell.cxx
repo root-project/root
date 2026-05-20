@@ -16,7 +16,6 @@ allow to save total memory allocation needed for the system of cells.
 #include "TFoamVect.h"
 
 
-ClassImp(TFoamCell);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

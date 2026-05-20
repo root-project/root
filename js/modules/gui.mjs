@@ -1,7 +1,8 @@
 import { decodeUrl, settings, constants, gStyle, internals, browser,
          findFunction, parse, isFunc, isStr, isObject, isBatchMode, setBatchMode } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
-import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
+import { addColor } from './base/colors.mjs';
+import { HierarchyPainter, parseAsArray } from './gui/HierarchyPainter.mjs';
 import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
 import { setDefaultDrawOpt } from './draw.mjs';
 import { createMenu, closeMenu } from './gui/menu.mjs';
@@ -62,7 +63,8 @@ function readStyleFromURL(url) {
    let mr = d.get('maxranges');
    if (mr) {
       mr = parseInt(mr);
-      if (Number.isInteger(mr)) settings.MaxRanges = mr;
+      if (Number.isInteger(mr))
+         settings.MaxRanges = mr;
    }
 
    if (d.has('wrong_http_response'))
@@ -70,6 +72,12 @@ function readStyleFromURL(url) {
 
    if (d.has('prefer_saved_points'))
       settings.PreferSavedPoints = true;
+
+   if (d.has('tmout'))
+      settings.ServerTimeout = parseFloat(d.get('tmout'));
+
+   if (d.has('ftmout'))
+      settings.FilesTimeout = parseFloat(d.get('ftmout'));
 
    const tf1_style = d.get('tf1');
    if (tf1_style === 'curve')
@@ -90,9 +98,15 @@ function readStyleFromURL(url) {
          inter = '000000';
       if (inter.length === 6) {
          switch (inter[0]) {
-            case '0': settings.ToolBar = false; break;
-            case '1': settings.ToolBar = 'popup'; break;
-            case '2': settings.ToolBar = true; break;
+            case '0':
+               settings.ToolBar = false;
+               break;
+            case '1':
+               settings.ToolBar = 'popup';
+               break;
+            case '2':
+               settings.ToolBar = true;
+               break;
          }
          inter = inter.slice(1);
       }
@@ -114,24 +128,38 @@ function readStyleFromURL(url) {
    if (latex !== null)
       settings.Latex = constants.Latex.fromString(latex);
 
-   if (d.has('nomenu')) settings.ContextMenu = false;
+   if (d.has('nomenu'))
+      settings.ContextMenu = false;
    if (d.has('noprogress'))
       settings.ProgressBox = false;
    else
       get_bool('progress', 'ProgressBox', 'modal');
 
-   if (d.has('notouch')) browser.touches = false;
-   if (d.has('adjframe')) settings.CanAdjustFrame = true;
+   if (d.has('notouch'))
+      browser.touches = false;
+   if (d.has('adjframe'))
+      settings.CanAdjustFrame = true;
 
    const has_toolbar = d.has('toolbar');
    if (has_toolbar) {
       const toolbar = d.get('toolbar', '');
       let val = null;
-      if (toolbar.indexOf('popup') >= 0) val = 'popup';
-      if (toolbar.indexOf('left') >= 0) { settings.ToolBarSide = 'left'; val = 'popup'; }
-      if (toolbar.indexOf('right') >= 0) { settings.ToolBarSide = 'right'; val = 'popup'; }
-      if (toolbar.indexOf('vert') >= 0) { settings.ToolBarVert = true; val = 'popup'; }
-      if (toolbar.indexOf('show') >= 0) val = true;
+      if (toolbar.indexOf('popup') >= 0)
+         val = 'popup';
+      if (toolbar.indexOf('left') >= 0) {
+         settings.ToolBarSide = 'left';
+         val = 'popup';
+      }
+      if (toolbar.indexOf('right') >= 0) {
+         settings.ToolBarSide = 'right';
+         val = 'popup';
+      }
+      if (toolbar.indexOf('vert') >= 0) {
+         settings.ToolBarVert = true;
+         val = 'popup';
+      }
+      if (toolbar.indexOf('show') >= 0)
+         val = true;
       settings.ToolBar = val || ((toolbar.indexOf('0') < 0) && (toolbar.indexOf('false') < 0) && (toolbar.indexOf('off') < 0));
    }
 
@@ -143,19 +171,25 @@ function readStyleFromURL(url) {
 
    if (d.has('palette')) {
       const palette = parseInt(d.get('palette'));
-      if (Number.isInteger(palette) && (palette > 0) && (palette < 113)) settings.Palette = palette;
+      if (Number.isInteger(palette) && (palette > 0) && (palette < 113))
+         settings.Palette = palette;
    }
 
    const render3d = d.get('render3d'), embed3d = d.get('embed3d'), geosegm = d.get('geosegm');
-   if (render3d) settings.Render3D = constants.Render3D.fromString(render3d);
-   if (embed3d) settings.Embed3D = constants.Embed3D.fromString(embed3d);
-   if (geosegm) settings.GeoGradPerSegm = Math.max(2, parseInt(geosegm));
+   if (render3d)
+      settings.Render3D = constants.Render3D.fromString(render3d);
+   if (embed3d)
+      settings.Embed3D = constants.Embed3D.fromString(embed3d);
+   if (geosegm)
+      settings.GeoGradPerSegm = Math.max(2, parseInt(geosegm));
    get_bool('geocomp', 'GeoCompressComp');
 
-   if (d.has('hlimit')) settings.HierarchyLimit = parseInt(d.get('hlimit'));
+   if (d.has('hlimit'))
+      settings.HierarchyLimit = parseInt(d.get('hlimit'));
 
    function get_int_style(name, field, dflt) {
-      if (!d.has(name)) return;
+      if (!d.has(name))
+         return;
       const val = d.get(name);
       if (!val || (val === 'true') || (val === 'on'))
          gStyle[field] = dflt;
@@ -163,18 +197,21 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
-      return gStyle[field] !== 0;
+      return gStyle[field];
    }
    function get_float_style(name, field) {
-      if (!d.has(name)) return;
+      if (!d.has(name))
+         return;
       const val = d.get(name),
             flt = Number.parseFloat(val);
       if (Number.isFinite(flt))
          gStyle[field] = flt;
    }
 
-   if (d.has('histzero')) gStyle.fHistMinimumZero = true;
-   if (d.has('histmargin')) gStyle.fHistTopMargin = parseFloat(d.get('histmargin'));
+   if (d.has('histzero'))
+      gStyle.fHistMinimumZero = true;
+   if (d.has('histmargin'))
+      gStyle.fHistTopMargin = parseFloat(d.get('histmargin'));
    get_int_style('optstat', 'fOptStat', 1111);
    get_int_style('optfit', 'fOptFit', 0);
    const has_date = get_int_style('optdate', 'fOptDate', 1),
@@ -183,6 +220,8 @@ function readStyleFromURL(url) {
       settings.ToolBarVert = true;
    get_float_style('datex', 'fDateX');
    get_float_style('datey', 'fDateY');
+   get_float_style('barwidth', 'fBarWidth');
+   get_float_style('baroffset', 'fBarOffset');
 
    get_int_style('opttitle', 'fOptTitle', 1);
    if (d.has('utc'))
@@ -199,6 +238,20 @@ function readStyleFromURL(url) {
 
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
+
+   if (d.has('colors')) {
+      parseAsArray(d.get('colors')).forEach(elem => {
+         if (!isStr(elem))
+            return;
+         const p = elem.indexOf('_');
+         if (p < 0)
+            return;
+         const id = parseInt(elem.slice(0, p)),
+               col = elem.slice(p + 1);
+         if (col.match(/^[a-fA-F0-9]+/) && ((col.length === 6) || (col.length === 8)))
+            addColor('#' + col, null, id);
+      });
+   }
 }
 
 
@@ -217,7 +270,7 @@ async function buildGUI(gui_element, gui_kind = '') {
 
    myDiv.html(''); // clear element
 
-   const d = decodeUrl(), getSize = name => {
+   const nb = (gui_kind === 'notebook'), d = decodeUrl(), getSize = name => {
       const res = d.has(name) ? d.get(name).split('x') : [];
       if (res.length !== 2)
          return null;
@@ -232,7 +285,7 @@ async function buildGUI(gui_element, gui_kind = '') {
    else if ((gui_kind === 'nobrowser') || d.has('nobrowser') || (myDiv.attr('nobrowser') && myDiv.attr('nobrowser') !== 'false'))
       nobrowser = true;
 
-   if (myDiv.attr('ignoreurl') === 'true')
+   if (nb || (myDiv.attr('ignoreurl') === 'true'))
       settings.IgnoreUrlOptions = true;
 
    readStyleFromURL();
@@ -258,10 +311,15 @@ async function buildGUI(gui_element, gui_kind = '') {
    }
 
    const hpainter = new HierarchyPainter('root', null);
-   if (online) hpainter.is_online = drawing ? 'draw' : 'online';
+   if (online)
+      hpainter.is_online = drawing ? 'draw' : 'online';
    if (drawing || isBatchMode())
       hpainter.exclude_browser = true;
    hpainter.start_without_browser = nobrowser;
+   if (nb) {
+      hpainter.no_select = true;
+      hpainter.top_info = 'ROOT notebook';
+   }
 
    return hpainter.startGUI(myDiv).then(() => {
       if (!nobrowser)
@@ -271,7 +329,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       const func = internals.getCachedObject || findFunction('GetCachedObject'),
             obj = isFunc(func) ? parse(func()) : undefined;
       if (isObject(obj))
-         hpainter._cached_draw_object = obj;
+         hpainter.setCachedObject(obj);
       let opt = d.get('opt', '');
       if (d.has('websocket'))
          opt += ';websocket';

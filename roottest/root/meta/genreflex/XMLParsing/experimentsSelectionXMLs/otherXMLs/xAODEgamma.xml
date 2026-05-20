@@ -1,0 +1,88 @@
+<!-- $Id: selection.xml 595013 2014-04-30 17:33:15Z blenzi $ -->
+<lcgdict>
+
+  <!-- Egamma_v1 dictionaries: -->
+  <class name="xAOD::Egamma_v1">
+    <field name="m_p4" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+  </class>
+  <class name="xAOD::EgammaContainer_v1"
+         id="CE53CD7A-0B8E-44F5-9AB1-997E87713BC5" />
+  <read sourceClass="xAOD::Egamma_v1" version="[1-]"
+        targetClass="xAOD::Egamma_v1" source="" target="m_p4Cached" >
+    <![CDATA[
+       m_p4Cached = false;
+    ]]>
+  </read>
+
+  <class name="xAOD::EgammaAuxContainer_v1"
+         id="01A7F3AA-D5CA-4FCF-A314-20F822FF6CA0" />
+
+  <!-- Smart pointers to Egamma_v1: -->
+  <class name="DataLink<xAOD::EgammaContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::EgammaContainer_v1> >" />
+  <class name="ElementLink<xAOD::EgammaContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::EgammaContainer_v1> >" />
+  <class name="ElementLinkVector<xAOD::EgammaContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::EgammaContainer_v1> >" />
+
+
+  <!-- Electron_v1 dictionaries: -->
+  <class name="xAOD::Electron_v1" >
+  </class>
+  <class name="xAOD::ElectronContainer_v1"
+         id="9CA52CF4-E219-45B8-9971-6DAA89125952" />
+  <class name="xAOD::ElectronAuxContainer_v1"
+         id="85A46300-3F57-454C-8B7E-94B653AA70CF" />
+
+  <!-- Smart pointers to Electron_v1: -->
+  <class name="DataLink<xAOD::ElectronContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::ElectronContainer_v1> >" />
+  <class name="ElementLink<xAOD::ElectronContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::ElectronContainer_v1> >" />
+  <class name="ElementLinkVector<xAOD::ElectronContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::ElectronContainer_v1> >" />
+
+  <!-- Photon_v1 dictionaries: -->
+  <class name="xAOD::Photon_v1" >
+  </class>
+  <class name="xAOD::PhotonContainer_v1"
+         id="5F045AAE-DBD8-47E4-90AC-9162530A9565" />
+  <class name="xAOD::PhotonAuxContainer_v1"
+         id="67A1818E-4591-4100-B8BD-9A3C9E0D4EBB" />
+
+  <!-- Smart pointers to Photon_v1: -->
+  <class name="DataLink<xAOD::PhotonContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::PhotonContainer_v1> >" />
+  <class name="ElementLink<xAOD::PhotonContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::PhotonContainer_v1> >" />
+  <class name="ElementLinkVector<xAOD::PhotonContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::PhotonContainer_v1> >" />
+
+  <!-- Objects from the namespace -->
+  <variable pattern="xAOD::EgammaParameters::*" />
+  
+  <!-- Enums -->
+  <enum pattern="xAOD::EgammaParameters::*" />
+  
+  <!--Add Helper Functions -->
+  <function pattern="xAOD::EgammaHelpers::*" />  
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <class pattern="xAOD::TrackParticle*" />
+    <class pattern="DataVector<xAOD::TrackParticle*" />
+    <class pattern="ElementLink<DataVector<xAOD::TrackParticle*" />
+    <class pattern="xAOD::Vertex*" />
+    <class pattern="DataVector<xAOD::Vertex*" />
+    <class pattern="ElementLink<DataVector<xAOD::Vertex*" />
+    <class pattern="xAOD::CaloCluster*" />
+    <class pattern="DataVector<xAOD::CaloCluster*" />
+    <class pattern="ElementLink<DataVector<xAOD::CaloCluster*" />
+  </exclusion>
+
+</lcgdict>

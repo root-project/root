@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.2
+# RNTuple Binary Format Specification 1.0.2.0
 
 ## Versioning Notes
 
@@ -374,13 +374,16 @@ The field version and type version are used for schema evolution.
 
 The structural role of the field can have one of the following values:
 
-| Value    | Structural role                                                          |
-|----------|--------------------------------------------------------------------------|
-| 0x00     | Leaf field in the schema tree                                            |
-| 0x01     | The field is the parent of a collection (e.g., a vector)                 |
-| 0x02     | The field is the parent of a record (e.g., a struct)                     |
-| 0x03     | The field is the parent of a variant                                     |
-| 0x04     | The field stores objects serialized with the ROOT streamer               |
+| Value    | Structural role                                                                 |
+|----------|---------------------------------------------------------------------------------|
+| 0x00     | Plain field in the schema tree that does not carry a particular structural role |
+| 0x01     | The field is the parent of a collection (e.g., a vector)                        |
+| 0x02     | The field is the parent of a record (e.g., a struct)                            |
+| 0x03     | The field is the parent of a variant                                            |
+| 0x04     | The field stores objects serialized with the ROOT streamer                      |
+
+A plain field is either a leaf or a "wrapper field" in the schema tree such as the parent field of an enum data field
+(see Section "Mapping of C++ Types to Fields and Columns")
 
 The "flags" field can have any of the following bits set:
 
@@ -389,11 +392,12 @@ The "flags" field can have any of the following bits set:
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
+| 0x08     | The field is a collection that was stored using a SoA layout               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 For fixed-size arrays, another (sub) field with `Parent Field ID` equal to the ID of this field
 is expected to be found, representing the array content.
-The field backing `std::bitmap<N>` is a single repetitive field.
+The field backing `std::bitset<N>` is a single repetitive field.
 (See Section "Mapping of C++ Types to Fields and Columns").
 
 If `flag==0x02` (_projected field_) is set,
@@ -403,7 +407,7 @@ these columns are alias columns to physical columns attached to the source field
 The following restrictions apply on field projections:
   - The source field and the target field must have the same structural role,
     except for an `RNTupleCardinality` field, which must have a collection field as a source.
-  - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
+  - For streamer fields and plain fields, the type name of the source field and the projected field must be identical.
   - Projections involving variants or fixed-size arrays are unsupported.
   - Projected fields must be on the same schema path of collection fields as the source field.
     For instance, one can project a vector of structs with floats to individual vectors of floats but cannot
@@ -411,6 +415,11 @@ The following restrictions apply on field projections:
 
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
+
+If `flag==0x08` (_SoA_) is set,
+the field is a collection that was represented in memory in a SoA (struct of arrays) layout.
+The flag has no impact otherwise on the on-disk representation of the collection.
+It can be used to distingush collections stored through a collection proxy from collection stored with a SoA field.
 
 Depending on the flags, the following optional values follow:
 
@@ -555,13 +564,19 @@ including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
-If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
-for this column (used e.g. for quantized real values).
-The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
-
 If the index of the first element is negative (sign bit set), the column is deferred _and_ suppressed.
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
 See Section "Page List Envelope" for further information about suppressed columns.
+
+Note that an unsuppressed deferred column must only be attached to a field that has no ancestor fields
+with the structural role collection or variant.
+For instance, columns belonging to nested structs can be deferred; columns belonging to a struct under a vector cannot.
+For the latter to work, the RNTuple metadata would need to store the sum of elements written in a collection
+(or individually for all variants) per cluster and cluster group, which is not recorded in this file format version.
+
+If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
+for this column (used e.g. for quantized real values).
+The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
 
 #### Alias columns
 
@@ -624,6 +639,7 @@ The footer envelope has the following structure:
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of cluster group record frames
+- List frame of linked attribute set record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
@@ -646,6 +662,7 @@ In general, a schema extension is optional, and thus this record frame might be 
 The interpretation of the information contained therein should be identical
 as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
+In particular, it is possible to add in the extension header subfields of parents defined in the regular header.
 
 Note that the field IDs and physical column IDs given by the serialization order
 should continue from the largest IDs found in the header.
@@ -680,6 +697,22 @@ The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs
 even if cluster groups are accessed non-sequentially.
+
+#### Linked Attribute Set Record Frame
+
+The attribute set record frame references the anchor of a linked attribute set RNTuple and gives information about it.
+It has the following contents, followed a locator to the linked RNTuple anchor and a string with the attribute set name.
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Schema Version Major     |     Schema Version Minor       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|             Attribute Anchor Uncompressed Size                |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+The meaning of the Schema Version is described below.
+Note that the Attribute Anchor Uncompressed Size includes the 8 bytes of the checksum.
 
 ### Page List Envelope
 
@@ -725,7 +758,7 @@ Every item of the top-most list frame consists of an outer list frame where ever
 Every item of the outer list frame is an inner list frame
 whose items correspond to the pages of the column in the cluster.
 The inner list is followed by a 64bit signed integer element offset and,
-unless the column is suppressed, the 32bit compression settings
+unless the column is suppressed, the 32bit compression settings.
 See next Section on "Suppressed Columns" for additional details.
 Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of columns in the header and the extension header (small to large).
@@ -756,7 +789,7 @@ without inspecting the metadata of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
 
-    # this is `List frame of cluster group record frames` mentioned above
+    # this is `Nested list frame of page locations` mentioned above
     - Top-most cluster list frame (one item for each cluster in this RNTuple)
     |
     |---- Cluster 1 column list frame (outer list frame, one item for each column in this RNTuple)
@@ -796,6 +829,47 @@ In every cluster, every field has exactly one primary column representation.
 All other representations must be suppressed.
 Note that the primary column representation can change from cluster to cluster.
 
+## Linked Attribute Sets
+
+An RNTuple has zero or more linked attribute sets, containing user-defined metadata.
+Each attribute set is stored on disk as an RNTuple and the anchor of each RNTuple is linked to by the main
+RNTuple's footer.
+
+An attribute set RNTuple has the following restrictions compared to a regular RNTuple:
+
+1. it cannot have linked attribute RNTuples itself;
+2. the alias columns sections, both in its header and footer, must be empty (i.e. none of the attribute set RNTuple's
+   fields can be projected fields);
+3. none of its fields may have a structural role of 0x04 (i.e. it must not contain a ROOT streamer object);
+
+All linked attribute sets must have a non-empty, distinct name.
+
+### Reserved Attribute Set Names
+
+Attribute set names starting with `__` (two underscores) are reserved for internal use by implementations: compliant
+writers should disallow users from creating attribute sets with such names and only use them for internal metadata
+(read access to internal attribute sets may be allowed).
+
+### Attribute Schema Version
+
+Each attribute set is created with a user-defined schema. This schema is not used directly by the underlying attribute
+set RNTuple, but it is augmented with internal fields used to store additional data that serve to associate each
+entry in the attribute set with those in the main RNTuple.
+
+The Attribute Schema Version describes the internal schema of the linked attribute set RNTuple.
+A change in Major version number indicates a breaking, non-forward-compatible change in the schema: readers should
+refuse reading an attribute set whose Major Schema Version is unknown.
+A change in Minor version number indicates the presence of optional additional fields in the schema: readers should
+still be able to read the attribute set as before, ignoring any new field.
+
+The current Attribute Schema Version is **1.0**. It has the following fields (in the following order):
+  1. `_rangeStart` (type `std::uint64_t`): the start of the range that each attribute entry refers to;
+  2. `_rangeLen` (type `std::uint64_t`): the length of the range that each attribute entry refers to.
+     Note that `_rangeLen == 0` is valid and refers to an empty range;
+  3. `_userData` (untyped record): a record-type field that serves as the root field to the user-provided schema description
+     of the attribute set RNTuple. Each user-defined field that was attached to the root field in the user-provided
+     schema will be attached to this field in the attribute set RNTuple.
+
 ## Mapping of C++ Types to Fields and Columns
 
 This section is a comprehensive list of the C++ types with RNTuple I/O support.
@@ -805,10 +879,12 @@ e.g. `std::vector<MyEvent>` or `std::vector<std::vector<float>>`.
 ### Type Name Normalization
 
 Type names are stored according to the following normalization rules
-  - The type name of a field has typedefs and usings fully resolved (except for the following rule).
+  - The type name of a field has typedefs and usings fully resolved (except for the following two rules).
   - The integer types `signed char`, `unsigned char`, and `[signed|unsigned](short|int|long[ long])`
     are replaced by the corresponding (at the time of writing) `std::[u]int(8|16|32|64)_t` standard integer typedef.
-  - Qualifiers `volatile` and `const` that do not appear in template arguments are removed.
+  - Supported stdlib types are not further resolved (e.g., `std::string` is _not_ stored as `std::basic_string<char>`).
+  - C style array types (`T[N][M]`) are mapped to stdlib arrays (`std::array<std::array<T,M>,N>`)
+  - Qualifiers `volatile` and `const` that do not appear in template arguments of user-defined types are removed.
   - The `class`, `struct`, and `enum` keywords are removed.
   - Type names are fully qualified by the namespace in which they are declared;
     the root namespace ('::' prefix) is stripped.
@@ -845,7 +921,7 @@ It is always normalized to `double` and the type name containing `Double32_t` is
 
 ### Fundamental Types
 
-The following fundamental types are stored as `leaf` fields with a single column each.
+The following fundamental types are stored as `plain` fields with a single column each.
 Fundamental C++ types can potentially be stored in multiple possible column types.
 The possible combinations are marked as `W` in the following table.
 Additionally, some types allow for reading from certain column types but not to write into them.
@@ -938,7 +1014,7 @@ The child fields are named `_0`, `_1`, ...
 
 #### std::bitset\<N\>
 
-A bitset is stored as a repetitive leaf field with an attached `Bit` column.
+A bitset is stored as a repetitive plain field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field metadata.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
 
@@ -967,13 +1043,13 @@ whose principal column is of type `(Split)Index[64|32]` and a child field of typ
 
 ### std::atomic\<T\>
 
-Atomic types are stored as a leaf field with a single subfield named `_0`.
+Atomic types are stored as a plain field with a single subfield named `_0`.
 The parent field has no attached columns.
 The subfield corresponds to the inner type `T`.
 
 ### User-defined enums
 
-User-defined enums are stored as a leaf field with a single subfield named `_0`.
+User-defined enums are stored as a plain field with a single subfield named `_0`.
 The parent field has no attached columns.
 The subfield corresponds to the integer type the underlies the enum.
 Unscoped and scoped enums are supported as long as the enum has a dictionary.
@@ -1015,6 +1091,19 @@ The on-disk representation of associative collections is identical to a `std::ma
   - Child field of type `std::pair<K, V>`, where `K` and `V` must be types with RNTuple I/O support.
 
 N.B., proxy-based associative collections are supported in the RNTuple binary format, but currently are not implemented in ROOT's RNTuple reader and writer. This will be added in the future.
+
+#### Classes representing a SoA layout of an underlying record type
+
+User classes that are marked in the dictionary as SoA layout classes of an underlying record type `T`
+behave as collections of the given underlying record type.
+The underlying record type must be a user-defined class with RNTuple support.
+The on-disk representation is identical to a `std::vector<T>`, using two fields:
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
+  - Child field of type `T` with name `_0`.
+
+The field's type name is the type of the SoA class.
+The type checksum and the type version of the SoA class is stored as field information.
+The SoA flag of the field descriptor must be set.
 
 ### ROOT::RNTupleCardinality<SizeT>
 

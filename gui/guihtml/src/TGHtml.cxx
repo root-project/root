@@ -61,7 +61,6 @@ The ROOT HTML widget. A derivate of TGView.
 */
 
 
-ClassImp(TGHtml);
 
 int HtmlTraceMask = 0; //HtmlTrace_Table1 | HtmlTrace_Table4;
 int HtmlDepth = 0;
@@ -1391,7 +1390,7 @@ Bool_t TGHtml::HandleButton(Event_t *event)
    int amount, ch;
 
    ch = fCanvas->GetHeight();
-   amount = fScrollVal.fY * TMath::Max(ch/6, 1);
+   amount = fScrollVal.fY * std::max(ch/6, 1);
 
    int ix = event->fX + fVisible.fX;
    int iy = event->fY + fVisible.fY;

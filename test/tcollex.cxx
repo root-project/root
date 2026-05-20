@@ -1,7 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Fons Rademakers   19/08/96
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TString.h"
@@ -390,7 +390,7 @@ int tcollex() {
    return 0;
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main() {
    return tcollex();
 }

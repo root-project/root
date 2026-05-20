@@ -122,7 +122,7 @@ class NumpyArrayView(unittest.TestCase):
         """
         for dtype in self.typemap:
             cpp_arr = self.generate_cpp_arrays(dtype[1])
-            np_obj = np.frombuffer(cpp_arr, dtype[0], count=11 * 2).reshape(11, 2)
+            np_obj = np.array(cpp_arr, dtype=dtype[0])
             self.check_shape(cpp_arr, np_obj)
             self.validate_numpy_view(np_obj, dtype)
 

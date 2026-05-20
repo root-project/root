@@ -41,18 +41,18 @@ protected:
    TGeoManager *fGeoManager;     // base geometry
    TObjArray *fPaths;            // array of paths
    Bool_t fUseOverlaps;          // Activated if user defined overlapping candidates
-   Bool_t fIsClosed;             //! Closed flag
-   TGeoVolume *fVolume;          //! helper volume
-   TGeoPhysicalNode *fLastState; //! Last PN touched
-   TObjArray *fPhysical;         //! array of physical nodes
+   Bool_t fIsClosed;             ///<! Closed flag
+   TGeoVolume *fVolume;          ///<! helper volume
+   TGeoPhysicalNode *fLastState; ///<! Last PN touched
+   TObjArray *fPhysical;         ///<! array of physical nodes
 
-   void *fBVH = nullptr; //! BVH helper structure for safety and navigation
+   void *fBVH = nullptr; ///<! BVH helper structure for safety and navigation
    TGeoVoxelGrid<SafetyVoxelInfo> *fSafetyVoxelCache =
-      nullptr;                                        //! A regular 3D cache layer for fast point-based safety lookups
-   std::vector<unsigned int> fSafetyCandidateStore{}; //! stores bounding boxes serving a quick safety candidates (to be
-                                                      //! used with the VoxelGrid and SafetyVoxelInfo)
-   void *fBoundingBoxes = nullptr;                    //! to keep the vector of primitive axis aligned bounding boxes
-   AccelerationMode fAccMode = AccelerationMode::kVoxelFinder; //! switch between different algorithm implementations
+      nullptr;                                        ///<! A regular 3D cache layer for fast point-based safety lookups
+   std::vector<unsigned int> fSafetyCandidateStore{}; ///<! stores bounding boxes serving a quick safety candidates (to be
+                                                      ///<! used with the VoxelGrid and SafetyVoxelInfo)
+   void *fBoundingBoxes = nullptr;                    ///<! to keep the vector of primitive axis aligned bounding boxes
+   AccelerationMode fAccMode = AccelerationMode::kVoxelFinder; ///<! switch between different algorithm implementations
 
    TGeoParallelWorld(const TGeoParallelWorld &) = delete;
    TGeoParallelWorld &operator=(const TGeoParallelWorld &) = delete;

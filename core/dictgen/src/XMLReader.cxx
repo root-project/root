@@ -18,6 +18,7 @@
 
 
 #include "XMLReader.h"
+#include "RConversionRuleParser.h"
 #include "SelectionRules.h"
 #include "TClingUtils.h"
 
@@ -453,7 +454,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
 {
 
-   std::ifstream file(fileName);
+   std::ifstream file(fileName, std::ios::binary);
 
    PopulateMap();
 
@@ -960,6 +961,13 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                               "not both\n",
                               lineNumCharp, iAttrValue.c_str());
                         } else {
+                           if (!csr->RequestedRNTupleSoARecord().empty()) {
+                              ROOT::TMetaUtils::Error(
+                                 nullptr,
+                                 "XML at line %s: class attributes rntupleStreamerMode and rntupleSoARecord "
+                                 "are mutually exclusive\n",
+                                 lineNumCharp, iAttrValue.c_str());
+                           }
                            csr->SetRequestedRNTupleSerializationMode(-1);
                         }
                      } else {
@@ -969,6 +977,18 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                            "(it was %s)\n",
                            lineNumCharp, iAttrValue.c_str());
                      }
+                  }
+
+                  // request RNTuple SoA record type name
+                  if (tagKind == kClass && csr && "rntupleSoARecord" == iAttrName) {
+                     if (csr->RequestedRNTupleSerializationMode() == -1) {
+                        ROOT::TMetaUtils::Error(
+                           nullptr,
+                           "XML at line %s: class attributes rntupleStreamerMode and rntupleSoARecord "
+                           "are mutually exclusive\n",
+                           lineNumCharp, iAttrValue.c_str());
+                     }
+                     csr->SetRequestedRNTupleSoARecord(iAttrValue);
                   }
 
                   // request no input operator

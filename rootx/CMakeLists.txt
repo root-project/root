@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_EXECUTABLE(root src/rootx.cxx CMAKENOEXPORT)
+ROOT_EXECUTABLE(root src/rootx.cxx)
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(root PRIVATE util procstat)
@@ -27,7 +27,3 @@ target_include_directories(root PRIVATE
   ${CMAKE_SOURCE_DIR}/core/meta/inc    # for TGenericClassInfo.h
   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h and rootCommandLineOptionsHelp.h
 )
-
-if(rpath)
-  target_compile_definitions(root PRIVATE IS_RPATH_BUILD)
-endif()

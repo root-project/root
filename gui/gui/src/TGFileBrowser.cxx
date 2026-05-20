@@ -102,7 +102,6 @@ This class is the real core of the ROOT browser.
 */
 
 
-ClassImp(TGFileBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGFileBrowser constructor.
@@ -1094,9 +1093,7 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
    TString dirname = itm->GetText();
 
    while ((parent=itm->GetParent())) {
-      char *s = gSystem->ConcatFileName(parent->GetText(), dirname);
-      dirname = s;
-      delete [] s;
+      gSystem->PrependPathName(parent->GetText(), dirname);
       itm = parent;
    }
    gSystem->ExpandPathName(dirname);

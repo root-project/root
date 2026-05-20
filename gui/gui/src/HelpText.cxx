@@ -14,12 +14,7 @@ histogramming, fitting and minimization algorithms) and visualization\n\
 tools. The user interacts with ROOT via a graphical user interface, the\n\
 command line or batch scripts. The command and scripting language\n\
 is C++ (using the interpreter) and large scripts can be compiled and\n\
-dynamically linked in. Using the PROOF (Parallel ROOT Facility)\n\
-extension large databases can be analysed in parallel on MPP's,\n\
-SMP's or loosely coupled workstation/PC clusters. ROOT also\n\
-contains a C++ to HTML documentation generation system using\n\
-the interpreter's dictionaries (the reference manual on\n\
-the web is generated that way) and a rich set of interprocess\n\
+dynamically linked in. ROOT also provides a rich set of interprocess\n\
 communication classes allowing the transfer of complete objects\n\
 from one process to another.\n\
 ";
@@ -241,7 +236,6 @@ you can create as before the following graphics objects:\n\
   TCutG *cut = (TCutG*)gPad->FindObject(\"CUTG\").\n\n\
   ";
 
-
 const char gHelpPullDownMenus[] = "\
 Each canvas has a menu bar with the following items:\n\
 \"File\" with the items:\n\
@@ -256,6 +250,9 @@ Each canvas has a menu bar with the following items:\n\
         <name.svg >   makes a SVG file\n\
         <name.tex >   makes a TeX file\n\
         <name.gif >   makes a GIF file\n\
+        <name.jpg >   makes a JPEG file\n\
+        <name.png >   makes a PNG file\n\
+        <name.bmp >   makes a BMP file\n\
         <name.C   >   generates a C++ macro to reproduce the canvas\n\
         <name.root>   saves canvas objects in a Root file\n\
      <Save As...  >   brings up the Save As... dialog\n\
@@ -269,8 +266,8 @@ Each canvas has a menu bar with the following items:\n\
            <Pad   >   clears the last selected pad via middle mouse button)\n\
            <Canvas>   clears this canvas.\n\
      <Undo >          not implemented\n\
-     <Redo >          not implemented\n\n"
-"\"View\" with the items:\n\
+     <Redo >          not implemented\n\n\
+\"View\" with the items:\n\
      <Editor      >   toggles the pad editor\n\
      <Toolbar     >   toggles the tool bar\n\
      <Event Status>   toggles the event status bar that shows the identification\n\
@@ -302,7 +299,6 @@ In addition to the tool bar menus, one can set the canvas properties\n\
 by clicking with the right mouse button in the regions closed to the canvas \n\
 borders. This will display a menu to perform operations on a canvas.\n\n\
 ";
-
 
 const char gHelpCanvas[] = "\
 A canvas (see TCanvas) is a top level pad (See TPad).\n\
@@ -407,9 +403,9 @@ command line.\n\n\
 You can interrupt a running macro by selecting the Tools menu / \n\
 Interrupt; by clicking on the corresponding toolbar button, or by \n\
 using Shift+F5 accelerator keys.\n\n\
-      Interface to CINT Interpreter\n\n\
+      Interface to Cling Interpreter\n\n\
 Any command entered in the 'Command' combo box will be passed to the\n\
-CINT interpreter. This combo box will keep the commands history and \n\
+Cling interpreter. This combo box will keep the commands history and \n\
 will allow you to re-execute the same commands during an editor session.\n\n"
 "      Keyboard Bindings\n\n\
 The following table lists the keyboard shortcuts and accelerator keys.\n\n\

@@ -22,13 +22,15 @@
 
 #include "ROOT/StringUtils.hxx"
 
-#include <array>
-#include <iostream>
-#include <memory>
-#include <unordered_map>
 #include <functional>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <memory>
 #include <set>
+#include <stack>
 #include <sstream>
+#include <unordered_map>
 
 using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 
@@ -37,7 +39,70 @@ using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 #endif
 #include "v5/TFormula.h"
 
-ClassImp(TFormula);
+
+namespace {
+
+std::string doubleToString(double val)
+{
+   std::stringstream ss;
+   ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
+   return ss.str();
+}
+
+bool areMatching(char opening, char closing)
+{
+   return (opening == '(' && closing == ')') || (opening == '{' && closing == '}') ||
+          (opening == '[' && closing == ']') || (opening == '\"' && closing == '\"');
+}
+
+bool isBalanced(const TString &s)
+{
+   std::stack<char> i;
+   auto sLength = s.Length();
+   for (Ssiz_t c = 0; c < sLength; ++c) {
+      if (s[c] == '[' || s[c] == '{' || s[c] == '(') {
+         i.push(s[c]);
+      } else if (s[c] == ']' || s[c] == '}' || s[c] == ')') {
+         if (i.empty() || !areMatching(i.top(), s[c])) {
+            Error("TFormula", "Found unbalanced char '%c' (expected closing of '%c') at index %d of '%s'", s[c], i.top(), c,
+                  s.Data());
+            return false;
+         } else
+            i.pop();
+      } else if (s[c] == '\"') {
+         if (i.empty())
+            i.push(s[c]);
+         else if (areMatching(i.top(), s[c]))
+            i.pop();
+         else {
+            i.push(s[c]);
+         }
+      }
+   }
+   if (!i.empty()) {
+      Error("TFormula", "String '%s' with %zu unbalanced chars.", s.Data(), i.size());
+      return false;
+   }
+   return true;
+}
+
+// In the interpreter, we must match the SIMD width used by compiled ROOT.
+// ROOT::Double_v aliases the best available native SIMD type, which may differ
+// between compiled and interpreted contexts (e.g. with -march=native).
+// Therefore, we explicitly select the fixed-size SIMD type corresponding to
+// the native SIMD width used in compiled ROOT.
+std::string vectorizedArgType()
+{
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
+   auto n = ROOT::Double_v::size();
+   return "std::experimental::resize_simd_t<" + std::to_string(n) + ", ROOT::Double_v>";
+#else
+   // For other possible VecCore backends, we assume using the same type is fine.
+   return "ROOT::Double_v";
+#endif
+}
+
+} // namespace
 
 /** \class TFormula  TFormula.h "inc/TFormula.h"
     \ingroup Hist
@@ -108,17 +173,17 @@ ClassImp(TFormula);
     above also applies to the predefined parametrized functions like `gaus` and
     `expo`.
 
-    Comparisons operators are also supported `(&amp;&amp;, ||, ==, &lt;=, &gt;=, !)`
+    Comparisons operators are also supported `(&&, ||, ==, <=, >=, !)`
 
     Examples:
 
-    `sin(x*(x&lt;0.5 || x&gt;1))`
+    `sin(x*(x<0.5 || x>1))`
 
     If the result of a comparison is TRUE, the result is 1, otherwise 0.
 
     Already predefined names can be given. For example, if the formula
 
-    `TFormula old("old",sin(x*(x&lt;0.5 || x&gt;1)))`
+    `TFormula old("old",sin(x*(x<0.5 || x>1)))`
 
     one can assign a name to the formula. By default the name of the object = title = formula itself.
 
@@ -126,7 +191,7 @@ ClassImp(TFormula);
 
     is equivalent to:
 
-    `TFormula new("new","x*sin(x*(x&lt;0.5 || x&gt;1))")`
+    `TFormula new("new","x*sin(x*(x<0.5 || x>1))")`
 
     The class supports unlimited number of variables and parameters.
     By default the names which can be used for the variables are `x,y,z,t` or
@@ -175,6 +240,7 @@ ClassImp(TFormula);
     2. Two Dimensional functions:
       - `xygaus` is a substitute for `[Constant]*exp(-0.5*pow(((x-[MeanX])/[SigmaX]),2 )- 0.5*pow(((y-[MeanY])/[SigmaY]),2))`, a 2d Gaussian without correlation.
       - `bigaus` is a substitute for `[Constant]*ROOT::Math::bigaussian_pdf (x,y,[SigmaX],[SigmaY],[Rho],[MeanX],[MeanY])`, a 2d gaussian including a correlation parameter.
+         Note the different order of parameters for bigaus: [Constant]=[0], [SigmaX]=[2], [SigmaY]=[4], [Rho]=[5], [MeanX]=[1], [MeanY]=[3]
     3. Three Dimensional functions:
       - `xyzgaus` is for a 3d Gaussians without correlations:
       `[Constant]*exp(-0.5*pow(((x-[MeanX])/[SigmaX]),2 )- 0.5*pow(((y-[MeanY])/[SigmaY]),2 )- 0.5*pow(((z-[MeanZ])/[SigmaZ]),2))`
@@ -234,9 +300,9 @@ ClassImp(TFormula);
     conjunction with a variable or a parameter. Variables and parameters are treated
     as doubles internally for which these operators are not defined.
     This means the following command will run successfully
-       ```root -l -q -e TFormula("", "x+(10%3)").Eval(0)```
+       ```root -q -e TFormula("", "x+(10%3)").Eval(0)```
     but not
-       ```root -l -q -e TFormula("", "x%10").Eval(0)```.
+       ```root -q -e TFormula("", "x%10").Eval(0)```.
 
     The operator `^` is defined to mean exponentiation instead of the C/C++
     interpretation xor. `**` is added, also meaning exponentiation.
@@ -346,9 +412,9 @@ Bool_t TFormula::IsHexadecimal(const TString & formula, int i)
    // }
    return false;
 }
+
 ////////////////////////////////////////////////////////////////////////////
-// check is given position is in a parameter name i.e. within "[ ]"
-////
+/// check if given position is in a parameter name i.e. within "[ ]"
 Bool_t TFormula::IsAParameterName(const TString & formula, int pos) {
 
    Bool_t foundOpenParenthesis = false;
@@ -489,7 +555,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList, bo
    fNumber = 0;
    fLambdaPtr = nullptr;
    fVectorized = vectorize;
-#ifndef R__HAS_VECCORE
+#ifndef R__HAS_STD_EXPERIMENTAL_SIMD
    fVectorized = false;
 #endif
 
@@ -803,7 +869,7 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
       if (IsVectorized)
-         prototypeArguments.Append("ROOT::Double_v const*");
+         prototypeArguments.Append(vectorizedArgType() + " const*");
       else
          prototypeArguments.Append("Double_t const*");
    }
@@ -870,7 +936,7 @@ bool TFormula::PrepareEvalMethod()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Inputs formula, transfered to C++ code into Cling
+///    Inputs formula, transferred to C++ code into Cling
 
 void TFormula::InputFormulaIntoCling()
 {
@@ -919,17 +985,8 @@ void TFormula::FillDefaults()
    // const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
    //       {"infinity",TMath::Infinity()}, {"ln10",TMath::Ln10()},
    //       {"loge",TMath::LogE()}, {"true",1},{"false",0} };
-   const pair<TString,TString> funShortcuts[] =
-      { {"sin","TMath::Sin" },
-        {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
-        {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
-        {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
-        {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
-        {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
-        {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
-        {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
-        {"sq","TMath::Sq"}
-      };
+   const std::pair<TString, TString> funShortcuts[] = {
+      {"sign", "TMath::Sign"}, {"binomial", "TMath::Binomial"}, {"sq", "TMath::Sq"}};
 
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
@@ -952,42 +1009,9 @@ void TFormula::FillDefaults()
    for (auto con : defconsts) {
       fConsts[con.first] = con.second;
    }
-   if (fVectorized) {
-      FillVecFunctionsShurtCuts();
-   } else {
-      for (auto fun : funShortcuts) {
-         fFunctionsShortcuts[fun.first] = fun.second;
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///    Fill the shortcuts for vectorized functions
-///    We will replace for example sin with vecCore::Mat::Sin
-///
-
-void TFormula::FillVecFunctionsShurtCuts() {
-#ifdef R__HAS_VECCORE
-   const pair<TString,TString> vecFunShortcuts[] =
-      { {"sin","vecCore::math::Sin" },
-        {"cos","vecCore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
-        {"tan","vecCore::math::Tan"},
-        //{"sinh","vecCore::math::Sinh"}, {"cosh","vecCore::math::Cosh"},{"tanh","vecCore::math::Tanh"},
-        {"asin","vecCore::math::ASin"},
-        {"acos","TMath::Pi()/2-vecCore::math::ASin"},
-        {"atan","vecCore::math::ATan"},
-        {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
-        {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
-        {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
-        {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
-        //{"sq","TMath::Sq"}, {"binomial","TMath::Binomial"}  // this last two functions will not work in vectorized mode
-      };
-   // replace in the data member maps fFunctionsShortcuts
-   for (auto fun : vecFunShortcuts) {
+   for (auto fun : funShortcuts) {
       fFunctionsShortcuts[fun.first] = fun.second;
    }
-#endif
-   // do nothing in case Veccore is not enabled
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1193,15 +1217,17 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
    // replace old names xygaus -> gaus[x,y]
    formula.ReplaceAll("xyzgaus","gaus[x,y,z]");
+   formula.ReplaceAll("xygausn","gausn[x,y]");
    formula.ReplaceAll("xygaus","gaus[x,y]");
    formula.ReplaceAll("xgaus","gaus[x]");
    formula.ReplaceAll("ygaus","gaus[y]");
    formula.ReplaceAll("zgaus","gaus[z]");
+   formula.ReplaceAll("xyexpo","expo[x,y]");
    formula.ReplaceAll("xexpo","expo[x]");
    formula.ReplaceAll("yexpo","expo[y]");
    formula.ReplaceAll("zexpo","expo[z]");
+   formula.ReplaceAll("xylandaun","landaun[x,y]");
    formula.ReplaceAll("xylandau","landau[x,y]");
-   formula.ReplaceAll("xyexpo","expo[x,y]");
    // at the moment pre-defined functions have no more than 3 dimensions
    const char * defaultVariableNames[] = { "x","y","z"};
 
@@ -1262,7 +1288,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          // check if function has specified the [...] e.g. gaus[x,y]
          Int_t openingBracketPos = funPos + funName.Length() + (isNormalized ? 1 : 0);
          Int_t closingBracketPos = kNPOS;
-         if (openingBracketPos > formula.Length() || formula[openingBracketPos] != '[') {
+         if (openingBracketPos >= formula.Length() || formula[openingBracketPos] != '[') {
             dim = funDim;
             variables.resize(dim);
             for (Int_t idim = 0; idim < dim; ++idim)
@@ -1440,15 +1466,15 @@ void TFormula::HandleFunctionArguments(TString &formula)
 
       // ignore things that start with square brackets
       if (formula[i] == '[') {
-         while (formula[i] != ']')
+         while (i < formula.Length() && formula[i] != ']')
             i++;
          continue;
       }
       // ignore strings
-      if (formula[i] == '\"') {
+      if (i < formula.Length() && formula[i] == '\"') {
          do
             i++;
-         while (formula[i] != '\"');
+         while (i < formula.Length() && formula[i] != '\"');
          continue;
       }
       // ignore numbers (scientific notation)
@@ -1456,13 +1482,13 @@ void TFormula::HandleFunctionArguments(TString &formula)
          continue;
       // ignore x in hexadecimal number
       if (IsHexadecimal(formula, i)) {
-         while (!IsOperator(formula[i]) && i < formula.Length())
+         while (i < formula.Length() && !IsOperator(formula[i]))
             i++;
          continue;
       }
 
       // investigate possible start of function name
-      if (isalpha(formula[i]) && !IsOperator(formula[i])) {
+      if (i < formula.Length() && isalpha(formula[i]) && !IsOperator(formula[i])) {
          // std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha" << std::endl;
 
          int j; // index to end of name
@@ -1808,7 +1834,7 @@ void TFormula::HandleExponentiation(TString &formula)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Handle linear functions defined with the operator ++.
+/// Handle linear functions defined with the operator ++ (@ is the shorthand).
 
 void TFormula::HandleLinear(TString &formula)
 {
@@ -1820,13 +1846,15 @@ void TFormula::HandleLinear(TString &formula)
    TString expandedFormula = "";
    int delimeterPos = 0;
    for(std::size_t iTerm = 0; iTerm < terms.size(); ++iTerm) {
-      // determine the position of the "@" operator in the formula
-      delimeterPos += terms[iTerm].size() + (iTerm == 0);
-      if(IsAParameterName(formula, delimeterPos)) {
-         // append the current term and the remaining formula unchanged to the expanded formula
-         expandedFormula += terms[iTerm];
-         expandedFormula += formula(delimeterPos, formula.Length() - (delimeterPos + 1));
-         break;
+      if (iTerm < terms.size() - 1) { // N terms, N - 1 @
+         // determine the position of the "@" operator in the formula
+         delimeterPos += terms[iTerm].size() + iTerm;
+         if(IsAParameterName(formula, delimeterPos)) {
+            // append the current term and the remaining formula unchanged to the expanded formula
+            expandedFormula += terms[iTerm];
+            expandedFormula += formula(delimeterPos, formula.Length() - delimeterPos);
+            break;
+         }
       }
       SetBit(kLinear, true);
       auto termName = std::string("__linear") + std::to_string(iTerm+1);
@@ -1841,7 +1869,7 @@ void TFormula::HandleLinear(TString &formula)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    Preprocessing of formula
-///    Replace all ** by ^, and removes spaces.
+///    Replace all ** by ^, all ++ by @, and removes spaces.
 ///    Handle also parametrized functions like polN,gaus,expo,landau
 ///    and exponentiation.
 ///    Similar functionality should be added here.
@@ -1856,7 +1884,7 @@ void TFormula::PreProcessFormula(TString &formula)
    HandleParamRanges(formula);
    HandleFunctionArguments(formula);
    HandleExponentiation(formula);
-   // "++" wil be dealt with Handle Linear
+   // "++" (now @ since we just called ReplaceAll a few lines above) will be dealt with HandleLinear
    HandleLinear(formula);
    // special case for "--" and "++"
    // ("++" needs to be written with whitespace that is removed before but then we re-add it again
@@ -1872,6 +1900,12 @@ Bool_t TFormula::PrepareFormula(TString &formula)
 {
    fFuncs.clear();
    fReadyToExecute = false;
+
+   // Check for balanced parentheses
+   if (!isBalanced(formula)) {
+      return false;
+   }
+
    ExtractFunctors(formula);
 
    // update the expression with the new formula
@@ -1968,7 +2002,7 @@ void TFormula::ExtractFunctors(TString &formula)
          // look for next instance of "\"
          do {
             i++;
-         } while (formula[i] != '\"');
+         } while (i < formula.Length() && formula[i] != '\"');
       }
       // case of e or E for numbers in exponential notation (e.g. 2.2e-3)
       if (IsScientificNotation(formula, i))
@@ -1977,7 +2011,7 @@ void TFormula::ExtractFunctors(TString &formula)
       if (IsHexadecimal(formula, i)) {
          // find position of operator
          // do not check cases if character is not only a to f, but accept anything
-         while (!IsOperator(formula[i]) && i < formula.Length()) {
+         while (i < formula.Length() && !IsOperator(formula[i])) {
             i++;
          }
          continue;
@@ -2009,7 +2043,7 @@ void TFormula::ExtractFunctors(TString &formula)
          // printf(" build a name %s \n",name.Data() );
          if (formula[i] == '(') {
             i++;
-            if (formula[i] == ')') {
+            if (i < formula.Length() && formula[i] == ')') {
                fFuncs.push_back(TFormulaFunction(name, body, 0));
                name = body = "";
                continue;
@@ -2199,7 +2233,7 @@ void TFormula::ProcessFormula(TString &formula)
 
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
-            // look for last occurence of "::"
+            // look for last occurrence of "::"
             std::string name(fun.fName.Data());
             size_t index = name.rfind("::");
             assert(index != std::string::npos);
@@ -2341,8 +2375,7 @@ void TFormula::ProcessFormula(TString &formula)
          map<TString, Double_t>::iterator constIt = fConsts.find(fun.GetName());
          if (constIt != fConsts.end()) {
             TString pattern = TString::Format("{%s}", fun.GetName());
-            TString value = TString::Format("%lf", (*constIt).second);
-            formula.ReplaceAll(pattern, value);
+            formula.ReplaceAll(pattern, doubleToString(constIt->second));
             fun.fFound = true;
             // std::cout << "constant with name " << fun.GetName() << " is found " << std::endl;
             continue;
@@ -2383,7 +2416,7 @@ void TFormula::ProcessFormula(TString &formula)
          if (fVectorized)
             inputFormulaVecFlag += " (vectorized)";
 
-         TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
+         TString argType = fVectorized ? vectorizedArgType() : "Double_t";
 
          // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
          TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " const *x").Data() : ""),
@@ -2532,12 +2565,14 @@ void TFormula::FillParametrizedFunctions(map<pair<TString, Int_t>, pair<TString,
       make_pair(make_pair("gaus", 2), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)", "")));
    functions.insert(
       make_pair(make_pair("landau", 2),
-                make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)", "")));
-   functions.insert(make_pair(make_pair("expo", 2), make_pair("exp([0]+[1]*{V0})", "exp([0]+[1]*{V0}+[2]*{V1})")));
+                make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)", "TMath::Landau({V0},[0],[1],true)*TMath::Landau({V1},[2],[3],true)")));
+   functions.insert(
+      make_pair(make_pair("expo", 2),
+                make_pair("exp([0]+[1]*{V0}+[2]*{V1})", "")));
    // 3-dimensional function
    functions.insert(
       make_pair(make_pair("gaus", 3), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2 - 0.5*(({V2}-[5])/[6])^2)", "")));
-   // gaussian with correlations
+   // 2-d gaussian with correlations
    functions.insert(
       make_pair(make_pair("bigaus", 2), make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])",
                                                   "[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])")));
@@ -3123,7 +3158,7 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
 ////////////////////////////////////////////////////////////////////////////////
 void TFormula::SetVectorized(Bool_t vectorized)
 {
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    if (fNdim == 0) {
       Info("SetVectorized","Cannot vectorized a function of zero dimension");
       return;
@@ -3142,13 +3177,12 @@ void TFormula::SetVectorized(Bool_t vectorized)
 
       fMethod.reset();
 
-      FillVecFunctionsShurtCuts();   // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
       PreProcessFormula(fFormula);
       PrepareFormula(fFormula);
    }
 #else
    if (vectorized)
-      Warning("SetVectorized", "Cannot set vectorized -- try building with option -Dbuiltin_veccore=On");
+      Warning("SetVectorized", "Cannot set vectorized -- try building with C++20 on Linux");
 #endif
 }
 
@@ -3158,11 +3192,11 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
    if (!fVectorized)
       return DoEval(x, params);
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 
    if (fNdim == 0 || !x) {
       ROOT::Double_v ret =  DoEvalVec(nullptr, params);
-      return vecCore::Get( ret, 0 );
+      return ret[0];
    }
 
     // otherwise, regular Double_t inputs on a vectorized function
@@ -3178,7 +3212,7 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
          xvec[i] = x[i];
 
       ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
-      return vecCore::Get(ans, 0);
+      return ans[0];
    }
    // allocating a vector is much slower (we do only for dim > 4)
    std::vector<ROOT::Double_v> xvec(fNdim);
@@ -3186,12 +3220,12 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
       xvec[i] = x[i];
 
    ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
-   return  vecCore::Get(ans, 0);
+   return ans[0];
 
 #else
    // this should never happen, because fVectorized can only be set true with
-   // R__HAS_VECCORE, but just in case:
-   Error("EvalPar", "Formula is vectorized (even though VECCORE is disabled!)");
+   // R__HAS_STD_EXPERIMENTAL_SIMD, but just in case:
+   Error("EvalPar", "Formula is vectorized (even though vectorizaton is not supported!)");
    return TMath::QuietNaN();
 #endif
 }
@@ -3280,7 +3314,9 @@ bool TFormula::GenerateGradientPar() {
       return false;
 
    IncludeCladRuntime(fIsCladRuntimeIncluded);
-
+   if (!fIsCladRuntimeIncluded)
+      return false;
+    
    // Check if the gradient request was made as part of another TFormula.
    // This can happen when we create multiple TFormula objects with the same
    // formula. In that case, the hasher will give identical id and we can
@@ -3345,6 +3381,8 @@ bool TFormula::GenerateHessianPar()
       return false;
 
    IncludeCladRuntime(fIsCladRuntimeIncluded);
+   if (!fIsCladRuntimeIncluded)
+      return false;
 
    // Check if the hessian request was made as part of another TFormula.
    // This can happen when we create multiple TFormula objects with the same
@@ -3397,7 +3435,7 @@ void TFormula::HessianPar(const Double_t *x, Double_t *result) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 // ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
 // {
 //    ROOT::Double_v xxx[] = {x, y, z, t};
@@ -3417,16 +3455,16 @@ ROOT::Double_v TFormula::EvalParVec(const ROOT::Double_v *x, const Double_t *par
    if (gDebug)
       Info("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
 
-   const int vecSize = vecCore::VectorSize<ROOT::Double_v>();
+   const int vecSize = ROOT::Double_v::size();
    std::vector<Double_t>  xscalars(vecSize*fNdim);
 
    for (int i = 0; i < vecSize; i++)
       for (int j = 0; j < fNdim; j++)
-         xscalars[i*fNdim+j] = vecCore::Get(x[j],i);
+         xscalars[i * fNdim + j] = x[j][i];
 
    ROOT::Double_v answers(0.);
    for (int i = 0; i < vecSize; i++)
-      vecCore::Set(answers, i, DoEval(&xscalars[i*fNdim], params));
+      answers[i] = DoEval(&xscalars[i * fNdim], params);
 
    return answers;
 }
@@ -3493,7 +3531,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
 
 ////////////////////////////////////////////////////////////////////////////////
 // Copied from DoEval, but this is the vectorized version
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params) const
 {
    if (!fReadyToExecute) {
@@ -3537,8 +3575,7 @@ ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params
    }
    return result;
 }
-#endif // R__HAS_VECCORE
-
+#endif // R__HAS_STD_EXPERIMENTAL_SIMD
 
 //////////////////////////////////////////////////////////////////////////////
 /// Re-initialize eval method
@@ -3600,14 +3637,10 @@ void TFormula::ReInitializeEvalMethod() {
 /// Return the expression formula.
 ///
 ///  - If option = "P" replace the parameter names with their values
-///  - If option = "CLING" return the actual expression used to build the function  passed to cling
-///  - If option = "CLINGP" replace in the CLING expression the parameter with their values
-///  @param fl_format specifies the printf floating point precision when option
-///  contains "p". Default is `%g` (6 decimals). If you need more precision,
-///  change e.g. to `%.9f`, or `%a` for a lossless representation.
-///  @see https://cplusplus.com/reference/cstdio/printf/
+///  - If option = "CLING" return the actual expression used to build the function passed to Cling
+///  - If option = "CLINGP" replace in the Cling expression the parameter with their values
 
-TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
+TString TFormula::GetExpFormula(Option_t *option) const
 {
    TString opt(option);
    if (opt.IsNull() || TestBit(TFormula::kLambda) ) return fFormula;
@@ -3635,17 +3668,18 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
          // look for p[number
          if (clingFormula[i] == 'p' && clingFormula[i+1] == '[' && isdigit(clingFormula[i+2]) ) {
             int j = i+3;
-            while ( isdigit(clingFormula[j]) ) { j++;}
-            if (clingFormula[j] != ']') {
+            while ( j < clingFormula.Length() && isdigit(clingFormula[j]) ) { j++;}
+            if ( j >= clingFormula.Length() || clingFormula[j] != ']') {
                Error("GetExpFormula","Parameters not found - invalid expression - return default cling formula");
                return clingFormula;
             }
             TString parNumbName = clingFormula(i+2,j-i-2);
             int parNumber = parNumbName.Atoi();
             assert(parNumber < fNpar);
-            TString replacement = TString::Format(fl_format, GetParameter(parNumber));
-            clingFormula.Replace(i,j-i+1, replacement );
-            i += replacement.Length();
+            std::stringstream ss;
+            std::string replacement = doubleToString(GetParameter(parNumber));
+            clingFormula.Replace(i,j-i+1, replacement);
+            i += replacement.size();
          }
          i++;
       }
@@ -3659,15 +3693,16 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
          // look for [parName]
          if (expFormula[i] == '[') {
             int j = i+1;
-            while ( expFormula[j] != ']' ) { j++;}
-            if (expFormula[j] != ']') {
+            while ( j < expFormula.Length() && expFormula[j] != ']' ) { j++;}
+            if ( j >= expFormula.Length() || expFormula[j] != ']') {
                Error("GetExpFormula","Parameter names not found - invalid expression - return default formula");
                return expFormula;
             }
             TString parName = expFormula(i+1,j-i-1);
-            TString replacement = TString::Format(fl_format, GetParameter(parName));
-            expFormula.Replace(i,j-i+1, replacement );
-            i += replacement.Length();
+            std::stringstream ss;
+            std::string replacement = doubleToString(GetParameter(parName));
+            expFormula.Replace(i,j-i+1, replacement);
+            i += replacement.size();
          }
          i++;
       }

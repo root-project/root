@@ -1,0 +1,567 @@
+Writing Hit
+Warning in <Build>: RootCaloHit: RootPCnoRequestedDict has no streamer or dictionary, data member "mynocell" will not be saved
+Error in <TClass::GetCheckSum>: Calculating the checksum for (RootPCellID) requires the base class (BaseWithNoDict) meta information to be available!
+Warning in <Build>: RootPCellID: base class BaseWithNoDict has no streamer or dictionary it will not be saved
+Warning in <TBufferFile::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
+Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
+
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell                                    
+mycell.id                     3           
+mycell.base[5]                t            ...
+myArr[3]                                   ...
+myArrFix[4]                                ...
+index                         2           
+*myArrVar                                 ![index]  WAITING on Vicktor's implementation [index]
+*objVarArr                                ![index]  Not implemented yet ... will it ever?
+mynocell                                  
+mynocell.nodict               55          
+mynocell.id                   7           
+mynocell.base[5]              n            ...
+*mycellnull                   ->0         
+*mycellfix                                
+*mycellvirt                               
+*mynocellp                                
+myobj                                     
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[5]                 o            ...
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   0x03000000  bit field status word
+myobj2                                    
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  0x03000000  bit field status word
+myobj2.id                     9           
+myobj2.base[5]                o            ...
+*myobjp                                   
+*myobj2p                                  
+*myobjSt                                  ->
+*myobj2St                                 ->
+*mytobjp                                  
+*mytobj2p                                 
+*mytobjSt                                 ->
+*mytobj2St                                ->
+*myobjdp                                  
+*myobj2dp                                 
+myobjarr[2]                                ...
+myobjarr2[2]                               ...
+fUniqueID                     0           object unique identifier
+fBits                         0x03000000  bit field status word
+base 	t e s t 
+id 	3
+base 	n o R e 
+id 	7
+noRequestedDict 	55
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+nodict 	55
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+base 	v i r t 
+id 	0
+virt 	44
+base 	f i x 1 
+id 	1
+fix 	33
+base 	v a r r 
+id 	3
+base 	v a r r 
+id 	4
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
+
+Reading Hit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell                                    
+mycell.id                     3           
+mycell.base[5]                t            ...
+myArr[3]                                   ...
+myArrFix[4]                                ...
+index                         2           
+*myArrVar                     ->0         ![index]  WAITING on Vicktor's implementation [index]
+*objVarArr                    ->0         ![index]  Not implemented yet ... will it ever?
+mynocell                                  
+mynocell.nodict               0           
+mynocell.id                   0           
+mynocell.base[5]              n            ...
+*mycellnull                   ->0         
+*mycellfix                                
+*mycellvirt                               
+*mynocellp                                
+myobj                                     
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[5]                 o            ...
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   0x03000000  bit field status word
+myobj2                                    
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  0x03000000  bit field status word
+myobj2.id                     9           
+myobj2.base[5]                o            ...
+*myobjp                                   
+*myobj2p                                  
+*myobjSt                                  ->
+*myobj2St                                 ->
+*mytobjp                                  
+*mytobj2p                                 
+*mytobjSt                                 ->
+*mytobj2St                                ->
+*myobjdp                                  
+*myobj2dp                                 
+myobjarr[2]                                ...
+myobjarr2[2]                               ...
+fUniqueID                     0           object unique identifier
+fBits                         0x03000000  bit field status word
+base 	t e s t 
+id 	3
+base 	n o n e 
+id 	0
+noRequestedDict 	0
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
+
+Writing Data
+Warning in <TBufferFile::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
+Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
+
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell                                    
+mycell.id                     3           
+mycell.base[5]                t            ...
+myArr[3]                                   ...
+myArrFix[4]                                ...
+index                         2           
+*myArrVar                                 ![index]  WAITING on Vicktor's implementation [index]
+*objVarArr                                ![index]  Not implemented yet ... will it ever?
+mynocell                                  
+mynocell.nodict               55          
+mynocell.id                   7           
+mynocell.base[5]              n            ...
+*mycellnull                   ->0         
+*mycellfix                                
+*mycellvirt                               
+*mynocellp                                
+myobj                                     
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[5]                 o            ...
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   0x03000000  bit field status word
+myobj2                                    
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  0x03000000  bit field status word
+myobj2.id                     9           
+myobj2.base[5]                o            ...
+*myobjp                                   
+*myobj2p                                  
+*myobjSt                                  ->
+*myobj2St                                 ->
+*mytobjp                                  
+*mytobj2p                                 
+*mytobjSt                                 ->
+*mytobj2St                                ->
+*myobjdp                                  
+*myobj2dp                                 
+myobjarr[2]                                ...
+myobjarr2[2]                               ...
+fUniqueID                     0           object unique identifier
+fBits                         0x03000000  bit field status word
+base 	t e s t 
+id 	3
+base 	n o R e 
+id 	7
+noRequestedDict 	55
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+nodict 	55
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+base 	v i r t 
+id 	0
+virt 	44
+base 	f i x 1 
+id 	1
+fix 	33
+base 	v a r r 
+id 	3
+base 	v a r r 
+id 	4
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
+
+Reading Data
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell                                    
+mycell.id                     3           
+mycell.base[5]                t            ...
+myArr[3]                                   ...
+myArrFix[4]                                ...
+index                         2           
+*myArrVar                     ->0         ![index]  WAITING on Vicktor's implementation [index]
+*objVarArr                    ->0         ![index]  Not implemented yet ... will it ever?
+mynocell                                  
+mynocell.nodict               0           
+mynocell.id                   0           
+mynocell.base[5]              n            ...
+*mycellnull                   ->0         
+*mycellfix                                
+*mycellvirt                               
+*mynocellp                                
+myobj                                     
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[5]                 o            ...
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   0x03000000  bit field status word
+myobj2                                    
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  0x03000000  bit field status word
+myobj2.id                     9           
+myobj2.base[5]                o            ...
+*myobjp                                   
+*myobj2p                                  
+*myobjSt                                  ->
+*myobj2St                                 ->
+*mytobjp                                  
+*mytobj2p                                 
+*mytobjSt                                 ->
+*mytobj2St                                ->
+*myobjdp                                  
+*myobj2dp                                 
+myobjarr[2]                                ...
+myobjarr2[2]                               ...
+fUniqueID                     0           object unique identifier
+fBits                         0x03000000  bit field status word
+base 	t e s t 
+id 	3
+base 	n o n e 
+id 	0
+noRequestedDict 	0
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
+
+Writing multiple inherited objects
+base 	o b j 1 
+id 	110
+obj 	101
+base 	o b j 2 
+id 	111
+obj 	102
+Reading multiple inherited objects with old methods
+base 	o b j 2 
+id 	111
+obj 	102
+Reading multiple inherited objects with new methods
+base 	o b j 1 
+id 	110
+obj 	101
+base 	o b j 2 
+id 	111
+obj 	102
+Reading multiple inherited objects with newer methods
+Check the base class offset in the case of private (and protected) inheritance
+OBJ: TClass	RootPrivPCobject	inherits privately from RootPCellID then publicly from TObject
+base class offset for RootPrivPCobject's TObject is: 16
+OBJ: TClass	RootPrivPCobject2	inherits publicly from TObject then privately from RootPCellID
+base class offset for RootPrivPCobject2's TObject is: 0

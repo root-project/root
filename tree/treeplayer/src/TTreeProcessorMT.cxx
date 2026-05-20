@@ -24,6 +24,7 @@ of a ROOT::TThreadedObject, so that each thread works with its own TFile and TTr
 objects.
 */
 
+#include <cmath>
 #include <memory>
 
 #include "TROOT.h"

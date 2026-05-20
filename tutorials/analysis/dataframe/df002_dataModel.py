@@ -15,7 +15,7 @@
 import ROOT
 
 # A simple helper function to fill a test tree: this makes the example stand-alone.
-fill_tree_code = '''
+fill_tree_code = """
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectorVec = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
@@ -47,9 +47,9 @@ void fill_tree(const char *filename, const char *treeName)
    };
 
    ROOT::RDataFrame d(64);
-   d.Define("tracks", genTracks).Snapshot<FourVectorVec>(treeName, filename, {"tracks"});
+   d.Define("tracks", genTracks).Snapshot(treeName, filename, {"tracks"});
 }
-'''
+"""
 
 # We prepare an input tree to run on
 fileName = "df002_dataModel_py.root"
@@ -64,8 +64,8 @@ d = ROOT.RDataFrame(treeName, fileName)
 # Operating on branches which are collections of objects
 # Here we deal with the simplest of the cuts: we decide to accept the event
 # only if the number of tracks is greater than 8.
-n_cut = 'tracks.size() > 8'
-nentries = d.Filter(n_cut).Count();
+n_cut = "tracks.size() > 8"
+nentries = d.Filter(n_cut).Count()
 
 print("%s events passed all filters" % nentries.GetValue())
 
@@ -74,34 +74,36 @@ print("%s events passed all filters" % nentries.GetValue())
 # In this example, we will cut on the number of tracks and plot their
 # transverse momentum.
 
-getPt_code ='''
+getPt_code = """
 using namespace ROOT::VecOps;
 ROOT::RVecD getPt(const RVec<FourVector> &tracks)
 {
    auto pt = [](const FourVector &v) { return v.pt(); };
    return Map(tracks, pt);
 }
-'''
+"""
 ROOT.gInterpreter.Declare(getPt_code)
 
-getPtWeights_code ='''
+getPtWeights_code = """
 using namespace ROOT::VecOps;
 ROOT::RVecD getPtWeights(const RVec<FourVector> &tracks)
 {
    auto ptWeight = [](const FourVector &v) { return 1. / v.Pt(); };
    return Map(tracks, ptWeight);
 };
-'''
+"""
 ROOT.gInterpreter.Declare(getPtWeights_code)
 
-augmented_d = d.Define('tracks_n', '(int)tracks.size()') \
-               .Filter('tracks_n > 2') \
-               .Define('tracks_pts', 'getPt( tracks )') \
-               .Define("tracks_pts_weights", 'getPtWeights( tracks )' )
+augmented_d = (
+    d.Define("tracks_n", "(int)tracks.size()")
+    .Filter("tracks_n > 2")
+    .Define("tracks_pts", "getPt( tracks )")
+    .Define("tracks_pts_weights", "getPtWeights( tracks )")
+)
 
 # The histogram is initialised with a tuple containing the parameters of the
 # histogram
-trN = augmented_d.Histo1D(("", "", 40, -.5, 39.5), "tracks_n")
+trN = augmented_d.Histo1D(("", "", 40, -0.5, 39.5), "tracks_n")
 trPts = augmented_d.Histo1D("tracks_pts")
 trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights")
 

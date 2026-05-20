@@ -305,7 +305,6 @@ myTreeOrChain.GetTree()->PrintCacheStats();
 
 Int_t TTreeCache::fgLearnEntries = 100;
 
-ClassImp(TTreeCache);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.

@@ -16,7 +16,17 @@
 #include <vector>
 #include <memory>
 
+class TMemFile;
+
+namespace ROOT::Internal {
+
+void DumpBin(const TMemFile &file, FILE *out);
+
+}
+
 class TMemFile : public TFile {
+   friend void ROOT::Internal::DumpBin(const TMemFile &file, FILE *out);
+   
 public:
    using ExternalDataPtr_t = std::shared_ptr<const std::vector<char>>;
    /// A read-only memory range which we do not control.

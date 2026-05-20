@@ -23,7 +23,6 @@
 #include "TLatex.h"
 #include "strlcpy.h"
 
-ClassImp(TPaveStats);
 
 /** \class TPaveStats
 \ingroup BasicGraphics
@@ -333,7 +332,7 @@ void TPaveStats::SetOption(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Invalid method to change drawing option for stats box
 /// While stats box should never appear in pad list of primitives, this method cannot work
-/// Please use SetOption() method insted
+/// Please use SetOption() method instead
 /// Redefined here to remove **MENU** qualifier and exclude it from context menu
 
 void TPaveStats::SetDrawOption(Option_t *option)
@@ -351,11 +350,11 @@ void TPaveStats::Paint(Option_t *option)
 
    if (!fLines) return;
    TString typolabel;
-   Double_t y2ref = TMath::Max(fY1,fY2);
-   Double_t x1ref = TMath::Min(fX1,fX2);
-   Double_t x2ref = TMath::Max(fX1,fX2);
-   Double_t dx    = TMath::Abs(fX2 - fX1);
-   Double_t dy    = TMath::Abs(fY2 - fY1);
+   Double_t y2ref = std::max(fY1,fY2);
+   Double_t x1ref = std::min(fX1,fX2);
+   Double_t x2ref = std::max(fX1,fX2);
+   Double_t dx    = std::abs(fX2 - fX1);
+   Double_t dy    = std::abs(fY2 - fY1);
    Double_t titlesize=0;
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
@@ -464,9 +463,9 @@ void TPaveStats::Paint(Option_t *option)
             Double_t yline2 = ytext-yspace/2.;
             Double_t xline1 = dx/3+x1ref;
             Double_t xline2 = 2*dx/3+x1ref;
-            gPad->PaintLine(x1ref,yline1,x2ref,yline1);
-            gPad->PaintLine(xline1,yline1,xline1,yline2);
-            gPad->PaintLine(xline2,yline1,xline2,yline2);
+            Double_t xx[6] = { x1ref,  x2ref,  xline1, xline1, xline2, xline2 };
+            Double_t yy[6] = { yline1, yline1, yline1, yline2, yline1, yline2 };
+            gPad->PaintSegments(3, xx, yy);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
             while ( st ) {
@@ -490,6 +489,7 @@ void TPaveStats::Paint(Option_t *option)
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                           titlesize,
                                           sl);
+            TAttLine::Modify();
             gPad->PaintLine(x1ref,y2ref-yspace,x2ref,y2ref-yspace);
          }
          delete [] sl;
@@ -532,7 +532,7 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t *option)
    if (fBorderSize != 4)
       out << "   ptstats->SetBorderSize(" << fBorderSize << ");\n";
 
-   SaveFillAttributes(out, "ptstats", 19, 1001);
+   SaveFillAttributes(out, "ptstats", -1, -1);
    SaveLineAttributes(out, "ptstats", 1, 1, 1);
    SaveTextAttributes(out, "ptstats", 22, 0, 1, 62, 0);
    SaveLines(out, "ptstats", kTRUE);

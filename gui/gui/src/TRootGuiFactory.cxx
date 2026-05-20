@@ -32,7 +32,6 @@ the member functions of the ABS TGuiFactory.
 
 #include <iostream>
 
-ClassImp(TRootGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRootGuiFactory ctor.
