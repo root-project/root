@@ -87,7 +87,7 @@ TEST(THttpServer, main)
                   "  \"fBits\" : 8,\n"
                   "  \"fName\" : \"obj1\",\n"
                   "  \"fTitle\" : \"title1\"\n"
-                  "}");
+                  "}") << "result of root.json request";
 
    // check XML representation for the object
    res = execute_request("/obj1/root.xml");
@@ -97,18 +97,18 @@ TEST(THttpServer, main)
                   "    <fName str=\"obj1\"/>\n"
                   "    <fTitle str=\"title1\"/>\n"
                   "  </TNamed>\n"
-                  "</Object>\n");
+                  "</Object>\n") << "result of root.xml request";
 
 
    // check BINARY representation for the object
    res = execute_request("/obj1/root.bin");
    // keep minimal margin for binary format change
-   EXPECT_NEAR(res.length(), 28, 4);
+   EXPECT_NEAR(res.length(), 28, 4) << "size of root.bin request";
 
    // check ROOT file creation
    res = execute_request("/obj1/file.root");
    // TODO: anlyze why so big size for small object
-   EXPECT_NEAR(res.length(), 1024, 100);
+   EXPECT_NEAR(res.length(), 1024, 100) << "size of file.root request";
 
    // check item request hierarchy request
    res = execute_request("/obj1/item.json");
@@ -118,7 +118,7 @@ TEST(THttpServer, main)
                   "  \"_root_version\" : " + std::to_string(gROOT->GetVersionCode()) + ",\n"
                   "  \"_kind\" : \"ROOT.TNamed\",\n"
                   "  \"_title\" : \"title1\"\n"
-                  "}");
+                  "}") << "result of item.json request";
 
 
    // check multi request to several objects
@@ -135,12 +135,12 @@ TEST(THttpServer, main)
                   "  \"fBits\" : 8,\n"
                   "  \"fName\" : \"obj2\",\n"
                   "  \"fTitle\" : \"title2\"\n"
-                  "}]");
+                  "}]") << "result of multi.json request";
 
 
    // by default methods execution is not allowed
    res = execute_request("/obj1/exe.json?method=GetTitle");
-   EXPECT_EQ(res, "");
+   EXPECT_EQ(res, "") << "exe.json should be empty in readonly";
 
 
    // disable readonly to get extra functionality
@@ -148,10 +148,10 @@ TEST(THttpServer, main)
 
    // only now one can execute method
    res = execute_request("/obj1/exe.json?method=GetTitle");
-   EXPECT_EQ(res, "\"title1\"");
+   EXPECT_EQ(res, "\"title1\"") << "result of exe.json with object title";
 
    res = execute_request("/obj1/exe.json?method=SetTitle&title=NewTitle");
-   EXPECT_EQ(res, "null");
-   EXPECT_EQ(std::string("NewTitle"), obj1.GetTitle());
+   EXPECT_EQ(res, "null") << "returns null when executes void method";
+   EXPECT_EQ(std::string("NewTitle"), obj1.GetTitle()) << "title must match with submitted value";
    obj1.SetTitle("title1");
 }
