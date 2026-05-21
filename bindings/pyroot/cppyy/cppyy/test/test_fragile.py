@@ -544,13 +544,12 @@ class TestFRAGILE:
         assert "invaliddigit" in err
         assert "1aap=42;" in err
 
-    @mark.xfail(strict=True, condition=not IS_WINDOWS, reason="Fails on Windows")
     def test22_cppexec(self):
         """Interactive access to the Cling global scope"""
 
         import cppyy
 
-        cppyy.cppexec("int interactive_b = 4")
+        cppyy.cppdef("int interactive_b = 4;")
         assert cppyy.gbl.interactive_b == 4
 
         with raises(SyntaxError):
