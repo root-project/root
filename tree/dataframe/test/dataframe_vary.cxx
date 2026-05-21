@@ -355,6 +355,40 @@ TEST_P(RDFVary, VaryDefinePerSample)
    EXPECT_EQ(ss["x:1"], 2 * 10);
 }
 
+TEST_P(RDFVary, VaryDefinePerSampleDownstreamVariedAction)
+{
+   // Regression test for https://github.com/root-project/root/issues/22367
+   struct DataRAII {
+      const char *fFileName{"VaryDefinePerSampleDownstreamVariedAction.root"};
+      const char *fTreeName{"VaryDefinePerSampleDownstreamVariedAction"};
+      DataRAII()
+      {
+         auto f = std::make_unique<TFile>(fFileName, "recreate");
+         auto t = std::make_unique<TTree>(fTreeName, fTreeName);
+
+         float qcd_scale{};
+         t->Branch("qcd_scale", &qcd_scale);
+         std::vector<float> vals{0.5f, 1.f, 1.5f, 2.f, 2.5f};
+         for (auto val : vals) {
+            qcd_scale = val;
+            t->Fill();
+         }
+         f->Write();
+      }
+      ~DataRAII() { std::remove(fFileName); }
+   } dataset;
+
+   ROOT::RDF::RNode df = ROOT::RDataFrame(dataset.fTreeName, dataset.fFileName);
+   df = df.DefinePerSample("xs", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 0.5f; });
+   df = df.Vary("qcd_scale", [](float s) { return ROOT::RVecF{s * 1.1f, s * 0.9f}; }, {"qcd_scale"}, {"up", "down"});
+   df = df.Define("weight", [](float scale, float xs) { return scale * xs; }, {"qcd_scale", "xs"});
+   auto nominal = df.Sum<float>("weight");
+   auto vars = ROOT::RDF::Experimental::VariationsFor(nominal);
+   EXPECT_FLOAT_EQ(vars["nominal"], 0.5f * 7.5f);
+   EXPECT_FLOAT_EQ(vars["qcd_scale:up"], 0.5f * 1.1f * 7.5f);
+   EXPECT_FLOAT_EQ(vars["qcd_scale:down"], 0.5f * 0.9f * 7.5f);
+}
+
 TEST(RDFVary, SaveGraph)
 {
    ROOT::RDataFrame df(1);
