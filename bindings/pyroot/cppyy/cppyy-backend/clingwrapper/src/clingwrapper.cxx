@@ -1677,10 +1677,40 @@ std::string Cppyy::GetMethodSignature(TCppMethod_t method, bool show_formal_args
     return sig.str();
 }
 
-std::string Cppyy::GetMethodPrototype(TCppMethod_t method, bool show_formal_args)
-{
-  assert(0 && "Unused");
-  return ""; // return Cpp::GetFunctionPrototype(method, show_formal_args);
+Cppyy::TCppType_t Cppyy::GetFnTypeFromStdFn(TCppType_t fn_type) {
+    fn_type = Cpp::IsReferenceType(fn_type) ? Cpp::GetNonReferenceType(fn_type) : fn_type;
+    fn_type = Cpp::IsPointerType(fn_type) ? Cpp::GetPointeeType(fn_type) : fn_type;
+    TCppScope_t scope = Cpp::GetScopeFromType(fn_type);
+    std::vector<Cpp::TemplateArgInfo> args;
+    Cpp::GetClassTemplateArgs(scope, args);
+    assert(args.size() == 1);
+    if (args.size() == 1)
+        return args[0].m_Type;
+    return nullptr;
+}
+
+void Cppyy::GetFnTypeSig(TCppType_t fn_type, std::vector<TCppType_t>& arg_types) {
+    fn_type = Cpp::IsReferenceType(fn_type) ? Cpp::GetNonReferenceType(fn_type) : fn_type;
+    fn_type = Cpp::IsPointerType(fn_type) ? Cpp::GetPointeeType(fn_type) : fn_type;
+    Cpp::GetFnTypeSignature(fn_type, arg_types);
+}
+
+bool Cppyy::IsSameType(TCppType_t typ1, TCppType_t typ2) {
+    return Cpp::IsSameType(typ1, typ2);
+}
+
+bool Cppyy::IsFunctionType(TCppType_t typ) {
+    typ = Cpp::IsReferenceType(typ) ? Cpp::GetNonReferenceType(typ) : typ;
+    typ = Cpp::IsPointerType(typ) ? Cpp::GetPointeeType(typ) : typ;
+    return Cpp::IsFunctionProtoType(typ);
+}
+
+bool Cppyy::IsSimilarFnTypes(TCppType_t typ1, TCppType_t typ2) {
+    typ1 = Cpp::IsReferenceType(typ1) ? Cpp::GetNonReferenceType(typ1) : typ1;
+    typ2 = Cpp::IsReferenceType(typ2) ? Cpp::GetNonReferenceType(typ2) : typ2;
+    typ1 = Cpp::IsPointerType(typ1) ? Cpp::GetPointeeType(typ1) : typ1;
+    typ2 = Cpp::IsPointerType(typ2) ? Cpp::GetPointeeType(typ2) : typ2;
+    return Cpp::IsSameType(typ1, typ2);
 }
 
 std::string Cppyy::GetDoxygenComment(TCppScope_t scope, bool strip_markers)
@@ -1831,7 +1861,7 @@ Cppyy::TCppMethod_t Cppyy::GetGlobalOperator(
     std::vector<TCppScope_t> overloads;
     Cpp::GetOperator(scope, Cpp::GetOperatorFromSpelling(opname), overloads,
                      /*kind=*/Cpp::OperatorArity::kBoth);
-
+    
     // Avoid pushing nullptr into arg_types which would crash
     // BestOverloadFunctionMatch when it dereferences each entry's QualType.
     auto resolve_arg_type = [](const std::string& name) -> Cppyy::TCppType_t {
@@ -1840,7 +1870,7 @@ Cppyy::TCppMethod_t Cppyy::GetGlobalOperator(
                 return Cppyy::GetReferencedType(t);
         return Cppyy::GetType(name, /*enable_slow_lookup=*/true);
     };
-    
+
     std::vector<Cpp::TemplateArgInfo> arg_types;
     if (auto l = resolve_arg_type(lc_type))
         arg_types.emplace_back(l);
