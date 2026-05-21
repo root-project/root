@@ -81,7 +81,10 @@ public:
 
    RDefineBase &GetVariedDefine(const std::string &) final
    {
-      R__ASSERT(false && "This should never be called");
+      // RDefinePerSample cannot depend on varied columns, so we return itself.
+      // This supports the use case of a downstream defined variable that depends on variations and also on a column
+      // created via DefinePerSample. The request for an action depending on that defined variable will end up here when
+      // looking for a variation of the dependant column.
       return *this;
    }
 };
