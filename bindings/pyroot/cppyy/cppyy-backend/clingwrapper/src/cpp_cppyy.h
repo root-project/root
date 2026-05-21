@@ -299,9 +299,16 @@ namespace Cppyy {
     std::string GetMethodArgDefault(TCppMethod_t, TCppIndex_t iarg);
     RPY_EXPORTED
     std::string GetMethodSignature(TCppMethod_t, bool show_formal_args, TCppIndex_t max_args = (TCppIndex_t)-1);
-    // GetMethodPrototype is unused.
     RPY_EXPORTED
-    std::string GetMethodPrototype(TCppMethod_t, bool show_formal_args);
+    bool IsFunctionType(TCppType_t typ);
+    RPY_EXPORTED
+    TCppType_t GetFnTypeFromStdFn(TCppType_t fn_type);
+    RPY_EXPORTED
+    void GetFnTypeSig(TCppType_t fn_type, std::vector<TCppType_t>& arg_types);
+    RPY_EXPORTED
+    bool IsSameType(TCppType_t typ1, TCppType_t typ2);
+    RPY_EXPORTED
+    bool IsSimilarFnTypes(TCppType_t typ1, TCppType_t typ2);
     RPY_EXPORTED
     std::string GetDoxygenComment(TCppScope_t scope, bool strip_markers = true);
     RPY_EXPORTED
