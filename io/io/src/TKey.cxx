@@ -84,6 +84,18 @@ const static TString gTDirectoryString("TDirectory");
 std::atomic<UInt_t> keyAbsNumber{0};
 
 ClassImp(TKey);
+namespace {
+bool CheckKeyObjLenOverflow(const char *methodName, Int_t keyLen, Int_t objLen)
+{
+   constexpr auto maxInt_t = std::numeric_limits<Int_t>::max();
+   if (keyLen > (maxInt_t - objLen)) {
+      Error(methodName, "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.", objLen,
+            keyLen, maxInt_t);
+      return true;
+   }
+   return false;
+}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TKey default constructor.
@@ -1262,9 +1274,9 @@ void TKey::ReadKeyBuffer(char *&buffer)
       return;
    }
 
-   constexpr auto maxInt_t = std::numeric_limits<Int_t>::max();
-   if (fKeylen > (maxInt_t - fObjlen)) {
-      Error("ReadKeyBuffer", "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.", fObjlen, fKeylen, maxInt_t);
+   if(CheckKeyObjLenOverflow("ReadKeyBuffer", fKeylen, fObjlen)){
+      fKeylen = 0;
+      fObjlen = 0;
       MakeZombie();
       return;
    }
@@ -1442,6 +1454,10 @@ void TKey::Streamer(TBuffer &b)
          Error("Streamer","The value of fNbytes is incorrect (%d) ; trying to recover by setting it to zero",fNbytes);
          MakeZombie();
          fNbytes = 0;
+      }
+      if (CheckKeyObjLenOverflow("Streamer", fKeylen, fObjlen)) {
+         MakeZombie();
+         return;
       }
 
    } else {
