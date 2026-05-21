@@ -3695,7 +3695,7 @@ void TBranchElement::InitializeOffsets()
                dataName.Replace(dotpos,endpos-dotpos,subBranchElement->GetFullName());
             }
             TRealData* rd = pClass->GetRealData(dataName);
-            TRealData* stagingRd = nullptr;
+            TRealData *stagingRd = nullptr;
             if (!rd && fOnfileObject && fOnfileObject->fClass) {
                // The data member does not exist in the user (target) class.
                // If the parent owns an on-file staging area (e.g. for an I/O
@@ -3790,9 +3790,7 @@ void TBranchElement::InitializeOffsets()
                   // 'localOffset', we need to remove it explicitly.
                   subBranch->SetOffset(offset - localOffset);
                }
-               if (subBranch->TestBit(kReadFromStagingArray)
-                   && subBranch->fReadActionSequence)
-               {
+               if (subBranch->TestBit(kReadFromStagingArray) && subBranch->fReadActionSequence) {
                   // The sub-branch's read action sequence may have been
                   // built before the staging-redirect bit was set above,
                   // so re-build it now to install the UseCacheVectorLoop
@@ -5805,9 +5803,7 @@ void TBranchElement::SetReadActionSequence()
       // so the action iterates over the staging area rather than the user
       // collection.  The element offsets configured on the inner actions are
       // already expressed relative to the staging element layout.
-      TVirtualStreamerInfo *stagingInfo = fOnfileObject->fClass
-         ? fOnfileObject->fClass->GetStreamerInfo()
-         : nullptr;
+      TVirtualStreamerInfo *stagingInfo = fOnfileObject->fClass ? fOnfileObject->fClass->GetStreamerInfo() : nullptr;
       if (stagingInfo)
          fReadActionSequence->WrapAllActionsWithUseCacheVectorLoop(stagingInfo);
    }
