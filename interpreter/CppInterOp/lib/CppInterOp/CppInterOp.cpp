@@ -3816,7 +3816,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
     make_narg_ctor_with_return(FD, N, class_name, buf, indent_level);
     return;
   }
-  QualType QT = FD->getReturnType();
+  QualType QT = FD->getReturnType().getCanonicalType();
   if (QT->isVoidType()) {
     std::ostringstream typedefbuf;
     std::ostringstream callbuf;
