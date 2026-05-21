@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include <chrono>
+#include <limits>
 
 #include "TBasket.h"
 #include "TBuffer.h"
@@ -31,6 +32,7 @@
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
+constexpr auto gMaxInt_t = std::numeric_limits<Int_t>::max();
 
 /** \class TBasket
 \ingroup tree
@@ -574,6 +576,31 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          rawCompressedBuffer = fCompressedBufferRef->Buffer();
          memcpy(rawCompressedBuffer, fBufferRef->Buffer(), len);
       }
+   }
+   // Sanitize nbytes and lengths
+   if (fKeylen < 0) {
+      Error("ReadBasketBuffers", "The value of fKeylen is incorrect (%d) ; trying to recover by setting it to zero", fKeylen);
+      MakeZombie();
+      fKeylen = 0;
+      return 1;
+   }
+   if (fObjlen < 0) {
+      Error("ReadBasketBuffers", "The value of fObjlen is incorrect (%d) ; trying to recover by setting it to zero", fObjlen);
+      MakeZombie();
+      fObjlen = 0;
+      return 1;
+   }
+   if (fNbytes < 0) {
+      Error("ReadBasketBuffers", "The value of fNbytes is incorrect (%d) ; trying to recover by setting it to zero", fNbytes);
+      MakeZombie();
+      fNbytes = 0;
+      return 1;
+   }
+   if (fKeylen > (gMaxInt_t - fObjlen)) {
+      Error("ReadBasketBuffers", "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.",
+            fObjlen, fKeylen, gMaxInt_t);
+      MakeZombie();
+      return 1;
    }
 
    // Initialize buffer to hold the uncompressed data
