@@ -16,6 +16,8 @@
 
 class TDecodeTest : public TRootSniffer {
    public:
+      TDecodeTest() : TRootSniffer("sniffer") {}
+
       std::string Decode(const char *value, Bool_t remove_quotes = kTRUE)
       {
          TString res = DecodeUrlOptionValue(value, remove_quotes);
@@ -66,7 +68,7 @@ TEST(TRootSniffer, root_json)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj);
 
@@ -86,7 +88,7 @@ TEST(TRootSniffer, root_xml)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj);
 
@@ -106,7 +108,7 @@ TEST(TRootSniffer, root_bin)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj);
 
@@ -121,7 +123,7 @@ TEST(TRootSniffer, file_root)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj);
 
@@ -135,7 +137,7 @@ TEST(TRootSniffer, item_json)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj);
 
@@ -155,7 +157,7 @@ TEST(TRootSniffer, exe_json)
 {
    TNamed obj("obj","title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj);
 
@@ -190,7 +192,7 @@ TEST(TRootSniffer, exe_post_json)
       json = TBufferJSON::ToJSON(&hist2).Data();
    }
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &hist);
 
@@ -219,7 +221,7 @@ TEST(TRootSniffer, set_title)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
    // disable readonly to get method executed
    sniffer.SetReadOnly(kFALSE);
 
@@ -252,7 +254,7 @@ TEST(TRootSniffer, cmd_json)
 {
    TNamed obj("obj", "title");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
    sniffer.SetReadOnly(kFALSE);
 
    sniffer.RegisterObject("/", &obj);
@@ -302,7 +304,7 @@ TEST(TRootSniffer, multi_json)
    TNamed obj1("obj1", "title1");
    TNamed obj2("obj2", "title2");
 
-   TRootSnifferFull sniffer;
+   TRootSnifferFull sniffer("sniffer");
 
    sniffer.RegisterObject("/", &obj1);
    sniffer.RegisterObject("/", &obj2);
