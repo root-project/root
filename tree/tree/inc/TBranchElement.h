@@ -51,7 +51,8 @@ protected:
       kOwnOnfileObj  = BIT(19), ///<  We are the owner of fOnfileObject.
       kAddressSet    = BIT(20), ///<  The addressing set have been called for this branch
       kMakeClass     = BIT(21), ///<  This branch has been switched to using the MakeClass Mode
-      kDecomposedObj = BIT(21)  ///<  More explicit alias for kMakeClass.
+      kDecomposedObj = BIT(21), ///<  More explicit alias for kMakeClass.
+      kReadFromStagingArray = BIT(23) ///< This split sub-branch must read its data into the parent's on-file staging area (e.g. for a schema-evolution rule with a nested split source).
    };
 
 
