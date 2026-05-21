@@ -570,7 +570,6 @@ execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAI
 
 configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
 # file used in TROOT.cxx, not need in include/ dir and not need to install
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in ginclude/RConfigOptions.h NEWLINE_STYLE UNIX)
@@ -805,7 +804,6 @@ install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigOptions.h
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
-              ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 endfunction()

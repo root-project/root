@@ -638,7 +638,6 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          PATTERN "notebook/JsMVA" EXCLUDE
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
-                         PATTERN "system.rootdaemonrc" EXCLUDE
                          PATTERN "root.mimes" EXCLUDE
                          PATTERN "*.in" EXCLUDE)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR} ${DIR_PERMISSIONS})
