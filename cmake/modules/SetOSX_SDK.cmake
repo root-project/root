@@ -16,7 +16,7 @@ endif()
 
 find_program(XCRUN_EXECUTABLE xcrun)
 if(EXISTS ${XCRUN_EXECUTABLE})
-  if(NOT DEFINED "${CMAKE_OSX_SYSROOT}")
+  if(NOT DEFINED CMAKE_OSX_SYSROOT)
     execute_process(COMMAND ${XCRUN_EXECUTABLE} --sdk macosx --show-sdk-path
       OUTPUT_VARIABLE SDK_PATH
       OUTPUT_STRIP_TRAILING_WHITESPACE)
