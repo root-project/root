@@ -405,30 +405,30 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
    }
 
    std::uint64_t idxInCluster;
-   RClusterInfo clusterInfo;
+   RPageSummary pageSummary;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
-      clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
+      pageSummary.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
 
-      if (clusterInfo.fClusterId == ROOT::kInvalidDescriptorId)
+      if (pageSummary.fClusterId == ROOT::kInvalidDescriptorId)
          throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
-      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(pageSummary.fClusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
       if (columnRange.IsSuppressed())
          return ROOT::Internal::RPageRef();
 
-      clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
-      R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
-      idxInCluster = globalIndex - clusterInfo.fColumnOffset;
-      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+      pageSummary.fColumnOffset = columnRange.GetFirstElementIndex();
+      R__ASSERT(pageSummary.fColumnOffset <= globalIndex);
+      idxInCluster = globalIndex - pageSummary.fColumnOffset;
+      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   if (clusterInfo.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
+   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
-   UpdateLastUsedCluster(clusterInfo.fClusterId);
-   return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
+   UpdateLastUsedCluster(pageSummary.fClusterId);
+   return LoadPageImpl(columnHandle, pageSummary, idxInCluster);
 }
 
 ROOT::Internal::RPageRef
@@ -448,7 +448,7 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
    if (clusterId == kInvalidDescriptorId)
       throw RException(R__FAIL("entry out of bounds"));
 
-   RClusterInfo clusterInfo;
+   RPageSummary pageSummary;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
@@ -456,16 +456,16 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
       if (columnRange.IsSuppressed())
          return ROOT::Internal::RPageRef();
 
-      clusterInfo.fClusterId = clusterId;
-      clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
-      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+      pageSummary.fClusterId = clusterId;
+      pageSummary.fColumnOffset = columnRange.GetFirstElementIndex();
+      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   if (clusterInfo.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
+   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
-   UpdateLastUsedCluster(clusterInfo.fClusterId);
-   return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
+   UpdateLastUsedCluster(clusterId);
+   return LoadPageImpl(columnHandle, pageSummary, idxInCluster);
 }
 
 void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
