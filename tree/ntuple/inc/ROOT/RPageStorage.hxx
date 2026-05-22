@@ -567,6 +567,16 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+protected:
+   /// Summarizes meta-data necessary to load a certain page. Used by LoadPageImpl().
+   struct RPageSummary {
+      ROOT::DescriptorId_t fClusterId = 0;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+      /// Location of the page on disk
+      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
+   };
+
 public:
    /// Used in SetEntryRange / GetEntryRange
    struct REntryRange {
@@ -640,6 +650,9 @@ private:
    /// Must not be called when the descriptor guard is taken.
    void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
 
+   // Common treatment of zero pages that would otherwise need to be handled in LoadPageImpl()
+   ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
+
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
    struct RCounters {
@@ -693,15 +706,6 @@ protected:
       }
    };
 
-   /// Summarizes meta-data is necessary to load a certain page. Used by LoadPageImpl().
-   struct RPageSummary {
-      ROOT::DescriptorId_t fClusterId = 0;
-      /// The first element number of the page's column in the given cluster
-      std::uint64_t fColumnOffset = 0;
-      /// Location of the page on disk
-      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
-   };
-
    std::unique_ptr<RCounters> fCounters;
 
    ROOT::RNTupleReadOptions fOptions;
@@ -725,7 +729,7 @@ protected:
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
-   // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
+   // Returns a page from storage if not found in the page pool. Will never receive requests for zero pages.
    virtual ROOT::Internal::RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
