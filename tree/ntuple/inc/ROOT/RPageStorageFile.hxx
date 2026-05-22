@@ -181,6 +181,7 @@ protected:
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
    RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);
@@ -199,9 +200,6 @@ public:
 
    std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
                                                         const ROOT::RNTupleReadOptions &options = {}) final;
-
-   void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
