@@ -561,16 +561,6 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
    const auto elementSize = element->GetSize();
    const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
 
-   if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
-      auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.GetNElements());
-      pageZero.GrowUnchecked(pageInfo.GetNElements());
-      memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
-      pageZero.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
-                         ROOT::Internal::RPage::RClusterInfo(clusterId, pageSummary.fColumnOffset));
-      return fPagePool.RegisterPage(std::move(pageZero),
-                                    ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
-   }
-
    RSealedPage sealedPage;
    sealedPage.SetNElements(pageInfo.GetNElements());
    sealedPage.SetHasChecksum(pageInfo.HasChecksum());
