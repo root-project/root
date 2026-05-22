@@ -178,6 +178,15 @@ if(asimage)
   # This check can be added only now because of the reasons explained above, where all
   # other required dependencies are checked.
   ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+  # special check for opensuse which does not provide RelWithDebInfo for PNG
+  if(NOT builtin_png AND TARGET PNG::PNG)
+    get_target_property(PNG_RELWITHDEB_LOC PNG::PNG IMPORTED_LOCATION_RELWITHDEBINFO)
+    get_target_property(PNG_RELEASE_LOC PNG::PNG IMPORTED_LOCATION_RELEASE)
+    if(NOT PNG_RELWITHDEB_LOC AND PNG_RELEASE_LOC)
+        message(STATUS "PNG::PNG misses RelWithDebInfo. Use Release as fallback.")
+        set_target_properties(PNG::PNG PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+    endif()
+  endif()
   ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
 endif()
 
@@ -369,7 +378,7 @@ if(asimage)
     get_target_property(JPEG_LIBRARY_LOCATION JPEG::JPEG IMPORTED_LOCATION)
   endif()
   list(APPEND ASEXTRA_LIBRARIES JPEG::JPEG)
-  
+
   if(builtin_tiff)
     add_subdirectory(builtins/libtiff)
     get_target_property(TIFF_INCLUDE_DIR TIFF::TIFF INTERFACE_INCLUDE_DIRECTORIES)
