@@ -547,9 +547,8 @@ void ROOT::Internal::RPageSourceFile::LoadSealedPage(ROOT::DescriptorId_t physic
    sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 }
 
-ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                                       const RPageSummary &pageSummary,
-                                                                       ROOT::NTupleSize_t idxInCluster)
+ROOT::Internal::RPageRef
+ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary)
 {
    const auto &columnId = columnHandle.fPhysicalId;
    const auto &clusterId = pageSummary.fClusterId;
@@ -598,8 +597,9 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
          fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPageRef =
-         fPagePool.GetPage(RPagePool::RKey{columnId, elementInMemoryType}, RNTupleLocalIndex(clusterId, idxInCluster));
+      // The cluster pool may have unzipped the required page into the page pool
+      auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
+                                             RNTupleLocalIndex(clusterId, pageInfo.GetFirstElementIndex()));
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 
