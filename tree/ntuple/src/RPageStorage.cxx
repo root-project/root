@@ -393,6 +393,24 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
 }
 
 ROOT::Internal::RPageRef
+ROOT::Internal::RPageSource::LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary)
+{
+   const auto &pageInfo = pageSummary.fPageInfo;
+   assert(pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero);
+
+   const auto element = columnHandle.fColumn->GetElement();
+   const auto elementSize = element->GetSize();
+   const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
+
+   auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.GetNElements());
+   pageZero.GrowUnchecked(pageInfo.GetNElements());
+   std::memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
+   pageZero.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
+                      RPage::RClusterInfo(pageSummary.fClusterId, pageSummary.fColumnOffset));
+   return fPagePool.RegisterPage(std::move(pageZero), RPagePool::RKey{columnHandle.fPhysicalId, elementInMemoryType});
+}
+
+ROOT::Internal::RPageRef
 ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
@@ -422,8 +440,11 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
       pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(globalIndex - pageSummary.fColumnOffset);
    }
 
-   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
+   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown) {
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
+   } else if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
+      return LoadZeroPage(columnHandle, pageSummary);
+   }
 
    UpdateLastUsedCluster(pageSummary.fClusterId);
    return LoadPageImpl(columnHandle, pageSummary);
@@ -458,8 +479,11 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
       pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(localIndex.GetIndexInCluster());
    }
 
-   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
+   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown) {
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
+   } else if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
+      return LoadZeroPage(columnHandle, pageSummary);
+   }
 
    UpdateLastUsedCluster(clusterId);
    return LoadPageImpl(columnHandle, pageSummary);
