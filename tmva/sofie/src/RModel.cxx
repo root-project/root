@@ -229,6 +229,16 @@ void RModel::AddInitializedTensor(std::string tensor_name, ETensorType type, std
     fInitializedTensors[tensor_name] = new_tensor;
 }
 
+void RModel::AddInitializedTensor(const std::string &tensor_name, ETensorType tensor_type,
+                                  const std::vector<std::size_t> &shape, void *raw_data)
+{
+   size_t size = ConvertShapeToLength(shape);
+   auto itemsize = GetTypeSize(tensor_type);
+   std::shared_ptr<void> data(malloc(size * itemsize), free);
+   std::memcpy(data.get(), raw_data, size * itemsize);
+   AddInitializedTensor(tensor_name, tensor_type, shape, data);
+}
+
 void RModel::AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data) {
     tensor_name = UTILITY::Clean_name(tensor_name);
     //NB: own data

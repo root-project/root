@@ -133,21 +133,20 @@ def add_weights(gin, weights, function_target):
         function_target: Target for the function to update either of nodes, edges or globals
 
     """
-    import ROOT
+    from ROOT.TMVA.Experimental import SOFIE
 
-    if function_target == ROOT.TMVA.Experimental.SOFIE.FunctionTarget.NODES:
+    if function_target == SOFIE.FunctionTarget.NODES:
         model_block = gin.nodes_update_block
-    elif function_target == ROOT.TMVA.Experimental.SOFIE.FunctionTarget.EDGES:
+    elif function_target == SOFIE.FunctionTarget.EDGES:
         model_block = gin.edges_update_block
     else:
         model_block = gin.globals_update_block
 
     for i in weights:
-        shape = ROOT.std.vector['std::size_t']()
-        shape_as_list = i.shape.as_list()
-        for j in shape_as_list:
-            shape.push_back(j)
-        model_block.GetFunctionBlock().AddInitializedTensor['float'](i.name, shape, i.numpy())
+        model_block.GetFunctionBlock().AddInitializedTensor(
+            i.name, SOFIE.ETensorType.FLOAT, i.shape.as_list(), i.numpy()
+        )
+
 
 def add_aggregate_function(gin, reducer, relation):
     """
