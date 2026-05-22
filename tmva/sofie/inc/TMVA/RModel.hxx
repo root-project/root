@@ -76,6 +76,8 @@ public:
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
+   void AddInitializedTensor(const std::string &tensor_name, ETensorType tensor_type,
+                             const std::vector<std::size_t> &shape, void *raw_data);
    void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
 
@@ -97,15 +99,6 @@ public:
       std::copy(data.begin(), data.end(), (T*) data_ptr.get());
       //std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
       AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
-   }
-
-   template <typename T>
-   void AddInitializedTensor(const std::string & tensor_name, const std::vector<std::size_t> & shape, T *raw_data)
-   {
-      size_t size = ConvertShapeToLength(shape);
-      std::shared_ptr<void> data(malloc(size * sizeof(T)), free);
-      std::memcpy(data.get(), raw_data, size * sizeof(T));
-      AddInitializedTensor(tensor_name,  GetTemplatedType(T()), shape, data);
    }
 
    void AddShapeTensor(const std::string & name, const std::vector<Dim> & shapeValues, bool scalar = false);
