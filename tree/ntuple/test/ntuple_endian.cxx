@@ -94,6 +94,7 @@ protected:
    }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
    RPageRef LoadPageImpl(ColumnHandle_t, const RPageSummary &) final { return RPageRef(); }
+   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
    void LoadStreamerInfo() final {}
 
    std::unique_ptr<ROOT::Internal::RPageSource>
@@ -115,7 +116,6 @@ public:
       return fPagePool.RegisterPage(std::move(page), key);
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::RNTupleLocalIndex) final { return RPageRef(); }
-   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
 } // anonymous namespace

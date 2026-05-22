@@ -515,39 +515,9 @@ std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() cons
    return fDaosContainer->GetDefaultObjectClass().ToString();
 }
 
-void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::DescriptorId_t physicalColumnId,
-                                                                   RNTupleLocalIndex localIndex,
-                                                                   RSealedPage &sealedPage)
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNTupleLocator &, RSealedPage &)
 {
-   const auto clusterId = localIndex.GetClusterId();
-
-   ROOT::RClusterDescriptor::RPageInfo pageInfo;
-   {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
-   }
-
-   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
-   sealedPage.SetNElements(pageInfo.GetNElements());
-   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
-   if (!sealedPage.GetBuffer())
-      return;
-
-   if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
-      assert(!pageInfo.HasChecksum());
-      memcpy(const_cast<void *>(sealedPage.GetBuffer()), ROOT::Internal::RPage::GetPageZeroBuffer(),
-             sealedPage.GetBufferSize());
-      return;
-   }
-
-   RDaosKey daosKey =
-      GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId,
-                                          pageInfo.GetLocator().GetPosition<RNTupleLocatorObject64>().GetLocation());
-   fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(), daosKey.fOid,
-                                  daosKey.fDkey, daosKey.fAkey);
-
-   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
+   throw ROOT::RException(R__FAIL("temporarily not implemented"));
 }
 
 ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
