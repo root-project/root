@@ -34,7 +34,10 @@ execute_process(
 # curl introduce support from 8.11 but it works reliably only with 8.18
 if(CURL_CLI_OUTPUT MATCHES "curl ([0-9]+\\.[0-9]+\\.[0-9]+)")
   set(CURL_CLI_VERSION "${CMAKE_MATCH_1}")
-  message(STATUS "Find curl ${CURL_CLI_VERSION} for http server tests")
+  message(STATUS "Found curl ${CURL_CLI_VERSION} for http server tests")
+  if(CURL_CLI_VERSION VERSION_GREATER_EQUAL "7.50.0")
+    ROOT_ADD_GTEST(testUnixSocket test_xsocket.cxx LIBRARIES RHTTP RHTTPSniff Hist)
+  endif()
   if(CURL_CLI_VERSION VERSION_GREATER_EQUAL "8.18.0")
     ROOT_ADD_GTEST(testWebSocket test_websocket.cxx LIBRARIES RHTTP Hist)
   endif()
