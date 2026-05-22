@@ -158,6 +158,38 @@ TEST_F(RPageStorageDaos, Options)
    EXPECT_EQ(1U, source.GetNEntries());
 }
 
+TEST_F(RPageStorageDaos, LoadSealedPage)
+{
+   std::string daosUri = RegisterLabel("ntuple-test-load-sealed-page");
+   const std::string_view ntupleName("ntuple");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrPt = model->MakeField<float>("pt");
+
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
+      *ptrPt = 1.0;
+      writer->Fill();
+   }
+
+   ROOT::Experimental::Internal::RPageSourceDaos source(ntupleName, daosUri, ROOT::RNTupleReadOptions());
+   source.Attach();
+   RPageStorage::RSealedPage sealedPage;
+   source.LoadSealedPage(0, RNTupleLocalIndex{0, 0}, sealedPage);
+   EXPECT_TRUE(sealedPage.GetHasChecksum());
+   ASSERT_EQ(12u, sealedPage.GetBufferSize());
+
+   unsigned char buffer[12];
+   sealedPage.SetBuffer(buffer);
+   source.LoadSealedPage(0, RNTupleLocalIndex{0, 0}, sealedPage);
+
+   float pt = 0;
+   memcpy(&pt, sealedPage.GetBuffer(), sizeof(pt));
+   EXPECT_FLOAT_EQ(1.0, pt);
+}
+
 TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
 {
    std::string daosUri = RegisterLabel("ntuple-test-multiple");
