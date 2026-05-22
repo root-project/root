@@ -106,6 +106,7 @@ More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.ht
 /// at once, separating them with semicolon (";"). Following engines are supported:
 ///
 ///     http     - TCivetweb, civetweb-based implementation of http protocol
+///     socket   - TCivetweb bound to unix socket
 ///     fastcgi  - TFastCgi, special protocol for communicating with web servers
 ///
 /// For each created engine one should provide socket port number like "http:8080" or "fastcgi:9000".
@@ -411,6 +412,8 @@ void THttpServer::SetDrawPage(const std::string &filename)
 ///     serv->CreateEngine("http:8080");
 ///     serv->CreateEngine("civetweb:8080");
 ///     serv->CreateEngine(":8080");
+///     // creates civetweb web server bound with unix socket
+///     serv->CreateEngine("socket:/home/user/server.socket?socket_mode=0700");
 ///     // creates fastcgi server with port 9000
 ///     serv->CreateEngine("fastcgi:9000");
 ///
