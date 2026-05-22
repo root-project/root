@@ -551,8 +551,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::Descrip
 }
 
 ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                                                     const RPageSummary &pageSummary,
-                                                                                     ROOT::NTupleSize_t idxInCluster)
+                                                                                     const RPageSummary &pageSummary)
 {
    const auto &columnId = columnHandle.fPhysicalId;
    const auto &clusterId = pageSummary.fClusterId;
@@ -593,8 +592,9 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
          fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
+      // The cluster pool may have unzipped the required page into the page pool
       auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
-                                             RNTupleLocalIndex(clusterId, idxInCluster));
+                                             RNTupleLocalIndex(clusterId, pageInfo.GetFirstElementIndex()));
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 

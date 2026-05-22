@@ -726,8 +726,7 @@ protected:
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual ROOT::Internal::RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary, ROOT::NTupleSize_t idxInCluster) = 0;
+   virtual ROOT::Internal::RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is

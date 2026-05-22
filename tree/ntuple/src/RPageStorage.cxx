@@ -404,7 +404,6 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
       return cachedPageRef;
    }
 
-   std::uint64_t idxInCluster;
    RPageSummary pageSummary;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
@@ -420,22 +419,20 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
 
       pageSummary.fColumnOffset = columnRange.GetFirstElementIndex();
       R__ASSERT(pageSummary.fColumnOffset <= globalIndex);
-      idxInCluster = globalIndex - pageSummary.fColumnOffset;
-      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(globalIndex - pageSummary.fColumnOffset);
    }
 
    if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    UpdateLastUsedCluster(pageSummary.fClusterId);
-   return LoadPageImpl(columnHandle, pageSummary, idxInCluster);
+   return LoadPageImpl(columnHandle, pageSummary);
 }
 
 ROOT::Internal::RPageRef
 ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex)
 {
    const auto clusterId = localIndex.GetClusterId();
-   const auto idxInCluster = localIndex.GetIndexInCluster();
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
    auto cachedPageRef =
@@ -458,14 +455,14 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
 
       pageSummary.fClusterId = clusterId;
       pageSummary.fColumnOffset = columnRange.GetFirstElementIndex();
-      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(localIndex.GetIndexInCluster());
    }
 
    if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    UpdateLastUsedCluster(clusterId);
-   return LoadPageImpl(columnHandle, pageSummary, idxInCluster);
+   return LoadPageImpl(columnHandle, pageSummary);
 }
 
 void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
