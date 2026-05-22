@@ -44,7 +44,8 @@ ROOT::RNTupleLocator::ELocatorType ROOT::RNTupleLocator::GetType() const
    case 1: return kTypeDAOS;
    case 2: return kTypePageZero;
    case 3: return kTypeUnknown;
-   case 4: return Internal::kTestLocatorType;
+   case 4: return kTypeS3;
+   case 5: return Internal::kTestLocatorType;
    default: break;
    }
    R__ASSERT(false);
@@ -59,9 +60,10 @@ void ROOT::RNTupleLocator::SetType(ELocatorType type)
    case kTypeDAOS: compactType = 1; break;
    case kTypePageZero: compactType = 2; break;
    case kTypeUnknown: compactType = 3; break;
+   case kTypeS3: compactType = 4; break;
    default:
       if (type == Internal::kTestLocatorType)
-         compactType = 4;
+         compactType = 5;
       else
          throw RException(R__FAIL("invalid locator type: " + std::to_string(type)));
    }
@@ -78,7 +80,7 @@ void ROOT::RNTupleLocator::SetPosition(std::uint64_t position)
 
 void ROOT::RNTupleLocator::SetPosition(RNTupleLocatorObject64 position)
 {
-   if (GetType() != kTypeDAOS)
+   if (GetType() != kTypeDAOS && GetType() != kTypeS3)
       throw RException(R__FAIL("cannot set position as 64bit object for type " + std::to_string(GetType())));
    fPosition = position.GetLocation();
 }
@@ -93,7 +95,7 @@ std::uint64_t ROOT::Internal::RNTupleLocatorHelper<std::uint64_t>::Get(const RNT
 ROOT::RNTupleLocatorObject64
 ROOT::Internal::RNTupleLocatorHelper<ROOT::RNTupleLocatorObject64>::Get(const RNTupleLocator &loc)
 {
-   if (loc.GetType() != ROOT::RNTupleLocator::kTypeDAOS)
+   if (loc.GetType() != ROOT::RNTupleLocator::kTypeDAOS && loc.GetType() != ROOT::RNTupleLocator::kTypeS3)
       throw RException(R__FAIL("cannot retrieve position as 64bit object for type " + std::to_string(loc.GetType())));
    return RNTupleLocatorObject64{loc.fPosition};
 }

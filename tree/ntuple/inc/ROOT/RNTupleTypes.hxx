@@ -235,6 +235,7 @@ public:
       // if the size of the referenced data block is >2GB
       kTypeFile = 0x00,
       kTypeDAOS = 0x02,
+      kTypeS3 = 0x03,
 
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,

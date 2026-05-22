@@ -505,7 +505,7 @@ ROOT::RResult<void> DeserializeLocatorPayloadObject64(const unsigned char *buffe
       locator.SetNBytesOnStorage(nBytesOnStorage);
       RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint64_t), location);
    } else {
-      return R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload));
+      return R__FAIL("invalid Object64 locator payload size: " + std::to_string(sizeofLocatorPayload));
    }
    locator.SetPosition(ROOT::RNTupleLocatorObject64{location});
    return ROOT::RResult<void>::Success();
@@ -1090,6 +1090,10 @@ ROOT::Internal::RNTupleSerializer::SerializeLocator(const RNTupleLocator &locato
       size += SerializeLocatorPayloadObject64(locator, payloadp);
       locatorType = 0x02;
       break;
+   case RNTupleLocator::kTypeS3:
+      size += SerializeLocatorPayloadObject64(locator, payloadp);
+      locatorType = 0x03;
+      break;
    default:
       if (locator.GetType() == ROOT::Internal::kTestLocatorType) {
          // For the testing locator, use the same payload format as Object64. We won't read it back anyway.
@@ -1136,6 +1140,10 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::DeserializeLocat
          break;
       case 0x02:
          locator.SetType(RNTupleLocator::kTypeDAOS);
+         DeserializeLocatorPayloadObject64(bytes, payloadSize, locator);
+         break;
+      case 0x03:
+         locator.SetType(RNTupleLocator::kTypeS3);
          DeserializeLocatorPayloadObject64(bytes, payloadSize, locator);
          break;
       default: locator.SetType(RNTupleLocator::kTypeUnknown);
