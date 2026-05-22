@@ -455,6 +455,24 @@ public:
    }
 };
 
+inline std::unique_ptr<ROperator> createBasicBinary(std::string layerDType, std::string layerType, std::string nameA,
+                                                    std::string nameB, std::string nameY)
+{
+   if (ConvertStringToType(layerDType) != ETensorType::FLOAT) {
+      throw std::runtime_error(
+         ("TMVA::SOFIE - Unsupported - Operator BasicBinary does not yet support input type " + layerDType).c_str());
+   }
+   if (layerType == "Add")
+      return std::make_unique<ROperator_BasicBinary<float, EBasicBinaryOperator::Add>>(nameA, nameB, nameY);
+   if (layerType == "Subtract")
+      return std::make_unique<ROperator_BasicBinary<float, EBasicBinaryOperator::Sub>>(nameA, nameB, nameY);
+   if (layerType == "Multiply")
+      return std::make_unique<ROperator_BasicBinary<float, EBasicBinaryOperator::Mul>>(nameA, nameB, nameY);
+
+   throw std::runtime_error(
+      ("TMVA::SOFIE - Unsupported - Operator BasicBinary does not yet support layer type " + layerType).c_str());
+}
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA
