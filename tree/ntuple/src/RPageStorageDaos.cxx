@@ -551,12 +551,12 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::Descrip
 }
 
 ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                                                     const RClusterInfo &clusterInfo,
+                                                                                     const RPageSummary &pageSummary,
                                                                                      ROOT::NTupleSize_t idxInCluster)
 {
-   const auto columnId = columnHandle.fPhysicalId;
-   const auto clusterId = clusterInfo.fClusterId;
-   const auto &pageInfo = clusterInfo.fPageInfo;
+   const auto &columnId = columnHandle.fPhysicalId;
+   const auto &clusterId = pageSummary.fClusterId;
+   const auto &pageInfo = pageSummary.fPageInfo;
 
    const auto element = columnHandle.fColumn->GetElement();
    const auto elementSize = element->GetSize();
@@ -566,8 +566,8 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
       auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.GetNElements());
       pageZero.GrowUnchecked(pageInfo.GetNElements());
       memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
-      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstElementIndex(),
-                         ROOT::Internal::RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
+      pageZero.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
+                         ROOT::Internal::RPage::RClusterInfo(clusterId, pageSummary.fColumnOffset));
       return fPagePool.RegisterPage(std::move(pageZero),
                                     ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
    }
@@ -611,8 +611,8 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
       fCounters->fSzUnzip.Add(elementSize * pageInfo.GetNElements());
    }
 
-   newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstElementIndex(),
-                     ROOT::Internal::RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
+   newPage.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
+                     ROOT::Internal::RPage::RClusterInfo(clusterId, pageSummary.fColumnOffset));
    fCounters->fNPageUnsealed.Inc();
    return fPagePool.RegisterPage(std::move(newPage), ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
 }

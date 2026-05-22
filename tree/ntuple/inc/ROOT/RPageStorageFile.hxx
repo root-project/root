@@ -181,7 +181,7 @@ protected:
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
    RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
+   LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary, ROOT::NTupleSize_t idxInCluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);

@@ -693,14 +693,13 @@ protected:
       }
    };
 
-   /// Summarizes cluster-level information that are necessary to load a certain page.
-   /// Used by LoadPageImpl().
-   struct RClusterInfo {
+   /// Summarizes meta-data is necessary to load a certain page. Used by LoadPageImpl().
+   struct RPageSummary {
       ROOT::DescriptorId_t fClusterId = 0;
-      /// Location of the page on disk
-      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
       /// The first element number of the page's column in the given cluster
       std::uint64_t fColumnOffset = 0;
+      /// Location of the page on disk
+      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
    };
 
    std::unique_ptr<RCounters> fCounters;
@@ -728,7 +727,7 @@ protected:
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
    virtual ROOT::Internal::RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) = 0;
+   LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary, ROOT::NTupleSize_t idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is

@@ -160,7 +160,7 @@ private:
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    ROOT::Internal::RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
+   LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary, ROOT::NTupleSize_t idxInCluster) final;
 
 protected:
    void LoadStructureImpl() final {}
