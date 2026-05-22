@@ -49,12 +49,6 @@ using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleSerializer;
 
-/// \brief RNTuple page-DAOS mappings
-enum EDaosMapping {
-   kOidPerCluster,
-   kOidPerPage
-};
-
 struct RDaosKey {
    daos_obj_id_t fOid;
    DistributionKey_t fDkey;
@@ -77,21 +71,11 @@ static constexpr decltype(daos_obj_id_t::lo) kOidLowPageList = -2;
 
 static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 
-static constexpr EDaosMapping kDefaultDaosMapping = kOidPerCluster;
-
-template <EDaosMapping mapping>
-RDaosKey GetPageDaosKey(ROOT::Experimental::Internal::ntuple_index_t ntplId, long unsigned clusterId,
-                        long unsigned columnId, long unsigned pageCount)
+RDaosKey GetPageDaosKey(ROOT::Experimental::Internal::ntuple_index_t ntplId, long unsigned pageCount)
 {
-   if constexpr (mapping == kOidPerCluster) {
-      return RDaosKey{daos_obj_id_t{static_cast<decltype(daos_obj_id_t::lo)>(clusterId),
-                                    static_cast<decltype(daos_obj_id_t::hi)>(ntplId)},
-                      static_cast<DistributionKey_t>(columnId), static_cast<AttributeKey_t>(pageCount)};
-   } else if constexpr (mapping == kOidPerPage) {
-      return RDaosKey{daos_obj_id_t{static_cast<decltype(daos_obj_id_t::lo)>(pageCount),
-                                    static_cast<decltype(daos_obj_id_t::hi)>(ntplId)},
-                      kDistributionKeyDefault, kAttributeKeyDefault};
-   }
+   return RDaosKey{daos_obj_id_t{static_cast<decltype(daos_obj_id_t::lo)>(pageCount),
+                                 static_cast<decltype(daos_obj_id_t::hi)>(ntplId)},
+                   kDistributionKeyDefault, kAttributeKeyDefault};
 }
 
 struct RDaosURI {
@@ -308,15 +292,14 @@ ROOT::RNTupleLocator ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl
 }
 
 ROOT::RNTupleLocator
-ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
+ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::DescriptorId_t,
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
    auto pageId = fPageId.fetch_add(1);
-   ROOT::DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
 
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, pageId);
+      RDaosKey daosKey = GetPageDaosKey(fNTupleIndex, pageId);
       fDaosContainer->WriteSingleAkey(sealedPage.GetBuffer(), sealedPage.GetBufferSize(), daosKey.fOid, daosKey.fDkey,
                                       daosKey.fAkey);
    }
@@ -340,7 +323,6 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
    auto nPages = mask.size();
    locators.reserve(nPages);
 
-   ROOT::DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
    int64_t payloadSz = 0;
 
    /// Aggregate batch of requests by object ID and distribution key, determined by the ntuple-DAOS mapping
@@ -353,8 +335,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
          d_iov_t pageIov;
          d_iov_set(&pageIov, const_cast<void *>(s.GetBuffer()), s.GetBufferSize());
 
-         RDaosKey daosKey =
-            GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, pageId);
+         RDaosKey daosKey = GetPageDaosKey(fNTupleIndex, pageId);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
          it->second.Insert(daosKey.fAkey, pageIov);
@@ -515,9 +496,12 @@ std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() cons
    return fDaosContainer->GetDefaultObjectClass().ToString();
 }
 
-void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNTupleLocator &, RSealedPage &)
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNTupleLocator &locator,
+                                                                       RSealedPage &sealedPage)
 {
-   throw ROOT::RException(R__FAIL("temporarily not implemented"));
+   RDaosKey daosKey = GetPageDaosKey(fNTupleIndex, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
+   fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(), daosKey.fOid,
+                                  daosKey.fDkey, daosKey.fAkey);
 }
 
 ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
@@ -539,8 +523,8 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
 
    if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
-         fNTupleIndex, clusterId, columnId, pageInfo.GetLocator().GetPosition<RNTupleLocatorObject64>().GetLocation());
+      RDaosKey daosKey =
+         GetPageDaosKey(fNTupleIndex, pageInfo.GetLocator().GetPosition<RNTupleLocatorObject64>().GetLocation());
       fDaosContainer->ReadSingleAkey(directReadBuffer.get(), sealedPage.GetBufferSize(), daosKey.fOid, daosKey.fDkey,
                                      daosKey.fAkey);
       fCounters->fNPageRead.Inc();
@@ -633,8 +617,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
          d_iov_t iov;
          d_iov_set(&iov, clusterBuffer, sealedLoc.fBufferSize);
 
-         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, sealedLoc.fClusterId, sealedLoc.fColumnId,
-                                                                sealedLoc.fPageId);
+         RDaosKey daosKey = GetPageDaosKey(fNTupleIndex, sealedLoc.fPageId);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [itReq, ret] = readRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
          itReq->second.Insert(daosKey.fAkey, iov);
