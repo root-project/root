@@ -392,6 +392,36 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
    fLastUsedCluster = clusterId;
 }
 
+void ROOT::Internal::RPageSource::LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex,
+                                                 RSealedPage &sealedPage)
+{
+   const auto clusterId = localIndex.GetClusterId();
+
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
+      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
+   }
+
+   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
+   sealedPage.SetNElements(pageInfo.GetNElements());
+   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
+
+   if (!sealedPage.GetBuffer())
+      return;
+
+   if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
+      assert(!pageInfo.HasChecksum());
+      memcpy(const_cast<void *>(sealedPage.GetBuffer()), ROOT::Internal::RPage::GetPageZeroBuffer(),
+             sealedPage.GetBufferSize());
+      return;
+   }
+
+   LoadSealedPageImpl(pageInfo.GetLocator(), sealedPage);
+   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
+}
+
 ROOT::Internal::RPageRef
 ROOT::Internal::RPageSource::LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary)
 {

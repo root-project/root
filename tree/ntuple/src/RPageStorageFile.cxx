@@ -518,33 +518,10 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
    return desc;
 }
 
-void ROOT::Internal::RPageSourceFile::LoadSealedPage(ROOT::DescriptorId_t physicalColumnId,
-                                                     RNTupleLocalIndex localIndex, RSealedPage &sealedPage)
+void ROOT::Internal::RPageSourceFile::LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage)
 {
-   const auto clusterId = localIndex.GetClusterId();
-
-   ROOT::RClusterDescriptor::RPageInfo pageInfo;
-   {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
-   }
-
-   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
-   sealedPage.SetNElements(pageInfo.GetNElements());
-   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
-   if (!sealedPage.GetBuffer())
-      return;
-   if (pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero) {
-      fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),
-                         pageInfo.GetLocator().GetPosition<std::uint64_t>());
-   } else {
-      assert(!pageInfo.HasChecksum());
-      memcpy(const_cast<void *>(sealedPage.GetBuffer()), ROOT::Internal::RPage::GetPageZeroBuffer(),
-             sealedPage.GetBufferSize());
-   }
-
-   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
+   fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),
+                      locator.GetPosition<std::uint64_t>());
 }
 
 ROOT::Internal::RPageRef

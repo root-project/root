@@ -160,6 +160,7 @@ private:
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    ROOT::Internal::RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 protected:
    void LoadStructureImpl() final {}
@@ -170,9 +171,6 @@ protected:
 public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleReadOptions &options);
    ~RPageSourceDaos() override;
-
-   void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
