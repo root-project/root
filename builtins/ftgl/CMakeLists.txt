@@ -12,14 +12,14 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
   set(ROOT_FTGL_POSTFIX d)
 endif()
 # Cherry-pick https://github.com/frankheckenbach/ftgl/commit/835f2ba7911a6c15a1a314d5e3267fa089b5a319 :
-set(ROOT_FTGL_PATCH_FILE_1 "${CMAKE_CURRENT_SOURCE_DIR}/0001-src-CMakeLists.txt-remove-FTLibrary.h-from-libftgl_l.patch")
+set(ROOT_FTGL_PATCH_FILE_1 "${CMAKE_CURRENT_SOURCE_DIR}/0001-fix-CMakeLists.patch")
 # From https://github.com/frankheckenbach/ftgl/issues/22, see also https://github.com/xmake-io/xmake-repo/pull/9040/changes and https://github.com/root-project/root/commit/a028d13255f0c2d0c84f2e1b99ccb6a112598e0c
 if(Freetype_VERSION VERSION_GREATER_EQUAL 2.13.3) # https://github.com/root-project/root/commit/a028d13255f0c2d0c84f2e1b99ccb6a112598e0c
   set(ROOT_FTGL_PATCH_FILE_2 "${CMAKE_CURRENT_SOURCE_DIR}/0002-fix-type-error.patch")
 else()
   set(ROOT_FTGL_PATCH_FILE_2 "")
 endif()
-set(ROOT_FTGL_PATCH_FILE_3 "${CMAKE_CURRENT_SOURCE_DIR}/prevent_nullptr_access.patch") # https://github.com/root-project/root/issues/22076#issuecomment-4335481094
+set(ROOT_FTGL_PATCH_FILE_3 "${CMAKE_CURRENT_SOURCE_DIR}/0003-fix-nullptr.patch") # https://github.com/root-project/root/issues/22076#issuecomment-4335481094
 set(ROOT_FTGL_PREFIX ${CMAKE_BINARY_DIR}/builtins/FTGL-prefix)
 set(ROOT_FTGL_LIBRARY ${ROOT_FTGL_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ftgl${ROOT_FTGL_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
 
