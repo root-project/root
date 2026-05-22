@@ -96,8 +96,8 @@ Current limitations of the importer:
   - No support for trees containing TClonesArray collections
   - Due to RNTuple currently storing data fully split, "don't split" markers are ignored
   - Some types are not available in RNTuple. Please refer to the
-    [RNTuple specification](https://github.com/root-project/root/blob/master/tree/ntuple/v7/doc/specifications.md) for
-    an overview of all types currently supported.
+    [RNTuple specification](https://github.com/root-project/root/blob/master/tree/ntuple/doc/BinaryFormatSpecification.md)
+    for an overview of all types currently supported.
 */
 // clang-format on
 class RNTupleImporter {
