@@ -99,6 +99,11 @@ def add_layer_into_RModel(rmodel, layer_data):
         """
         import ROOT
 
+        # If the object is already held by a smart pointer, just move it.
+        smartptr = op.__smartptr__()
+        if smartptr:
+            return type(smartptr)(ROOT.std.move(smartptr))
+
         ROOT.SetOwnership(op, False)
         return ROOT.std.unique_ptr[type(op)](op)
 
