@@ -254,6 +254,10 @@ ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also
 if(builtin_freetype)
   list(APPEND ROOT_BUILTINS BUILTIN_FREETYPE)
   add_subdirectory(builtins/freetype)
+elseif(NOT Freetype_VERSION AND FREETYPE_VERSION_STRING)
+  # on mac brew installed freetype version_string is returned
+  message(STATUS "Found legacy freetype ${FREETYPE_VERSION_STRING}")
+  set(Freetype_VERSION ${FREETYPE_VERSION_STRING})
 endif()
 
 #---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
@@ -369,7 +373,7 @@ if(asimage)
     get_target_property(JPEG_LIBRARY_LOCATION JPEG::JPEG IMPORTED_LOCATION)
   endif()
   list(APPEND ASEXTRA_LIBRARIES JPEG::JPEG)
-  
+
   if(builtin_tiff)
     add_subdirectory(builtins/libtiff)
     get_target_property(TIFF_INCLUDE_DIR TIFF::TIFF INTERFACE_INCLUDE_DIRECTORIES)
