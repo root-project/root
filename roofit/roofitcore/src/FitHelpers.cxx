@@ -1173,13 +1173,27 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
 
    RooLinkedList fitCmdList(cmdList);
    std::string nllCmdListString;
+
+   // Check on the raw command list whether parallel minimization is requested,
+   // because in that case ModularL(true) is implied below. The check needs to
+   // happen before filtering the command list: with a modular likelihood,
+   // offsetting is configured on the minimizer instead of the likelihood, so
+   // the OffsetLikelihood argument must not be forwarded to createNLL(), where
+   // it is mutually exclusive with ModularL.
+   auto cmdEnabled = [&cmdList](const char *cmdName) {
+      auto *arg = static_cast<RooCmdArg *>(cmdList.FindObject(cmdName));
+      return arg && arg->getInt(0) != 0;
+   };
+   const bool parallelRequested =
+      cmdEnabled("Parallelize") || cmdEnabled("ParallelGradientOptions") || cmdEnabled("ParallelDescentOptions");
+
    if (!chi2) {
       nllCmdListString = "ProjectedObservables,Extended,Range,"
                          "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
                          "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,"
                          "EvalBackend,IntegrateBins,ModularL";
 
-      if (!cmdList.FindObject("ModularL") || static_cast<RooCmdArg *>(cmdList.FindObject("ModularL"))->getInt(0) == 0) {
+      if (!parallelRequested && !cmdEnabled("ModularL")) {
          nllCmdListString += ",OffsetLikelihood";
       }
    } else {
@@ -1240,7 +1254,7 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
    }
 
    RooCmdArg modularL_option;
-   if (pc.getInt("parallelize") != 0 || pc.getInt("enableParallelGradient") || pc.getInt("enableParallelDescent")) {
+   if (parallelRequested) {
       // Set to new style likelihood if parallelization is requested
       modularL_option = RooFit::ModularL(true);
       nllCmdList.Add(&modularL_option);
@@ -1253,6 +1267,12 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
       }
    } else {
       nll = std::unique_ptr<RooAbsReal>{dynamic_cast<RooAbsPdf &>(real).createNLL(data, nllCmdList)};
+   }
+
+   if (!nll) {
+      oocoutE(&real, InputArguments) << "RooFit::FitHelpers::fitTo(" << real.GetName()
+                                     << ") could not create the test statistic, no fit performed" << std::endl;
+      return nullptr;
    }
 
    return RooFit::FitHelpers::minimize(real, *nll, data, pc);
