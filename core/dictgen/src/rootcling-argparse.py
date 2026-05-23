@@ -2,7 +2,7 @@ import argparse
 import sys
 
 EPILOG = """
-The options -p, -c, -l, -cint and -gccxml are deprecated and currently ignored.
+The options -p, -c, -l, -cint and -gccxml are deprecated and currently ignored, and might be removed in the future.
 
 
 

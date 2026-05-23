@@ -69,7 +69,7 @@ namespace ROOT {
 // TClassEdit is used to manipulate class and type names.
 //
 // This class does not dependent on any other ROOT facility
-// so that it can be used by rootcint.
+// so that it can be used by rootcling.
 
 namespace TClassEdit {
 

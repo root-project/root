@@ -1,6 +1,6 @@
 /*************************************************************************
  * This file defines a complex class which has an layout identical to the one
- * of ROOT5. The file was located in cint/lib/prec_stl/complex
+ * of ROOT5. The file was historically located in cint/lib/prec_stl/complex
  * This class is used to provide to the ROOT6 typesystem a backward compatible
  * and platform independent information for the complex numbers.
  *
