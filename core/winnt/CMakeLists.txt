@@ -30,4 +30,20 @@ target_link_libraries(Core PRIVATE
 
 target_include_directories(Core PRIVATE inc)
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/
+      FILES
+          inc/TWin32SplashThread.h
+          inc/TWinNTSystem.h
+          inc/Win32Constants.h
+          inc/Windows4Root.h
+          inc/LinkDef.h
+  )
+endif()
+
 ROOT_INSTALL_HEADERS()

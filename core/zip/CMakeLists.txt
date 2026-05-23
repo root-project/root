@@ -21,6 +21,22 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ src/
+      FILES
+          inc/Compression.h
+          inc/RZip.h
+          src/Bits.h
+          src/Tailor.h
+          src/ZIP.h
+  )
+endif()
+
 ROOT_INSTALL_HEADERS()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
