@@ -104,38 +104,45 @@ public:
       // so no need to check that again. Instead search for the library that
       // provides the symbol and create one MaterializationUnit per library to
       // actually load it if needed.
-      std::unordered_map<std::string, llvm::orc::SymbolNameVector> found;
+      llvm::StringMap<llvm::orc::SymbolNameVector> found;
 
       // TODO: Do we need to take gInterpreterMutex?
       // R__LOCKGUARD(gInterpreterMutex);
 
-      for (auto &&KV : Symbols) {
-         llvm::orc::SymbolStringPtr name = KV.first;
+      SmallVector<StringRef> Syms;
+      for (auto &KV : Symbols)
+         Syms.push_back(*KV.first);
 
-         const cling::DynamicLibraryManager &DLM = *fInterpreter->getDynamicLibraryManager();
+      const cling::DynamicLibraryManager &DLM = *fInterpreter->getDynamicLibraryManager();
+      DLM.searchLibrariesForSymbol(
+         Syms,
+         [&](llvm::orc::SymbolQuery &Q) {
+            for (auto &&KV : Symbols) {
+               auto ResolvedLibOrOpt = Q.getResolvedLib(*KV.first);
+               if (!ResolvedLibOrOpt || ResolvedLibOrOpt->empty())
+                  continue;
+               auto ResolvedLib = *ResolvedLibOrOpt;
+               // libNew overrides memory management functions; must never autoload that.
+               assert(ResolvedLib.find("/libNew.") == std::string::npos && "We must not autoload libNew!");
 
-         std::string libName = DLM.searchLibrariesForSymbol((*name).str(),
-                                                            /*searchSystem=*/true);
+               // libCling symbols are intentionally hidden from the process, and libCling must not be
+               // dlopened. Instead, symbols must be resolved by specifically querying the dynlib handle of
+               // libCling, which by definition is loaded - else we could not call this code. The handle
+               // is made available as argument to `CreateInterpreter`.
+               assert(ResolvedLib.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
 
-         // libNew overrides memory management functions; must never autoload that.
-         assert(libName.find("/libNew.") == std::string::npos && "We must not autoload libNew!");
-
-         // libCling symbols are intentionally hidden from the process, and libCling must not be
-         // dlopened. Instead, symbols must be resolved by specifically querying the dynlib handle of
-         // libCling, which by definition is loaded - else we could not call this code. The handle
-         // is made available as argument to `CreateInterpreter`.
-         assert(libName.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
-
-         if (!libName.empty())
-            found[libName].push_back(name);
-      }
+               if (!ResolvedLib.empty())
+                  found[ResolvedLib].push_back(KV.first);
+            }
+         },
+         /*searchSystem=*/true);
 
       llvm::orc::SymbolMap loadedSymbols;
       for (const auto &KV : found) {
          // Try to load the library which should provide the symbol definition.
          // TODO: Should this interface with the DynamicLibraryManager directly?
-         if (TCling__LoadLibrary(KV.first.c_str()) < 0) {
-            ROOT::TMetaUtils::Error("AutoloadLibraryMU", "Failed to load library %s", KV.first.c_str());
+         if (TCling__LoadLibrary(KV.first().data()) < 0) {
+            ROOT::TMetaUtils::Error("AutoloadLibraryMU", "Failed to load library %s", KV.first().data());
          }
 
          for (const auto &symbol : KV.second) {
