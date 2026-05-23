@@ -105,6 +105,19 @@ class DaskBackend(Base.BaseBackend):
         self.client = (daskclient if daskclient is not None else
                        Client(LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1, processes=True)))
 
+        workers = self.client.scheduler_info().get("workers", None)
+
+        if workers is not None:
+            for worker in workers.values():
+                threads = worker.get("nthreads", 1)
+
+                if threads > 1:
+                    raise RuntimeError(
+                        "RDataFrame: running in distributed mode with Dask workers using more than one thread is "
+                        "not supported. Please make sure that your Dask cluster was created with the appropriate "
+                        "options, e.g. `processes=True` and `threads_per_worker=1`."
+                    )
+
     def optimize_npartitions(self) -> int:
         """
         Attempts to compute a clever number of partitions for the current

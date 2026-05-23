@@ -62,6 +62,48 @@ class TestBackendInit:
             backend = Backend.SparkBackend(sparkcontext=connection)
             assert backend.optimize_npartitions() == 2
 
+    def test_dask_backend_handles_missing_workers(self, payload):
+        """
+        Check that DaskBackend initialization succeeds when scheduler_info
+        does not provide worker information.
+        """
+        connection, backend = payload
+
+        if backend != "dask":
+            return
+
+        from ROOT._distrdf.Backends.Dask import Backend
+
+        original_scheduler_info = connection.scheduler_info
+
+        try:
+            connection.scheduler_info = lambda: {}
+
+            backend = Backend.DaskBackend(daskclient=connection)
+            assert backend.client is connection
+
+            df = ROOT.RDataFrame(10, executor=connection)
+            assert df.Count().GetValue() == 10
+
+        finally:
+            connection.scheduler_info = original_scheduler_info
+
+    def test_dask_backend_rejects_threaded_workers(self):
+        """
+        Check that DaskBackend rejects threaded workers.
+        """
+        from dask.distributed import Client, LocalCluster
+        from ROOT._distrdf.Backends.Dask import Backend
+
+        with (
+            LocalCluster(n_workers=1, threads_per_worker=2, processes=False, dashboard_address=":0") as cluster,
+            Client(cluster) as client,
+            pytest.raises(
+                RuntimeError,
+                match="running in distributed mode with Dask workers using more than one thread is not supported",
+            )
+        ):
+            Backend.DaskBackend(daskclient=client)
 
 class TestInitialization:
     """Check initialization method in the Dask backend"""
