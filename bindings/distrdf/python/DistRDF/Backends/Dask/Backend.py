@@ -111,10 +111,10 @@ class DaskBackend(Base.BaseBackend):
             threads = worker.get("nthreads", 1)
 
             if threads > 1:
-               raise RuntimeError(
-                "DistRDF with Dask does not support threaded workers. "
-                "Please use processes=True and threads_per_worker=1."
-            )
+                raise RuntimeError(
+                    "DistRDF with Dask does not support threaded workers. "
+                    "Please use processes=True and threads_per_worker=1."
+               )
 
     def optimize_npartitions(self) -> int:
         """
