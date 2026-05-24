@@ -67,7 +67,6 @@ class RSoAField : public RFieldBase {
    /// The offset of the RVec members in the SoA type in the order of subfields of the underlying record type.
    /// In particular, the order is not necessarily the same then the order of RVec members in the SoA class.
    std::vector<std::size_t> fSoAMemberOffsets;
-   std::size_t fMaxAlignment = 1;
    ROOT::Internal::RColumnIndex fNWritten;
 
    RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
@@ -98,7 +97,7 @@ public:
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return fMaxAlignment; }
+   size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
    /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type

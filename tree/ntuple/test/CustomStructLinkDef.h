@@ -181,4 +181,7 @@
 
 #pragma link C++ class MemberWithCustomStreamer+;
 
+#pragma link C++ class AlignmentDeterminedByTransientMember+;
+#pragma link C++ class AlignedAs+;
+
 #endif

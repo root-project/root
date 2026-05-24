@@ -502,3 +502,15 @@ TEST(RNTuple, MemberWithCustomStreamer)
    // After setting member streamer: field creation should throw
    EXPECT_THROW(RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap(), ROOT::RException);
 }
+
+TEST(RNTuple, AlignmentCornerCases)
+{
+   // Alignment determined by transient member
+   EXPECT_EQ(alignof(AlignmentDeterminedByTransientMember),
+             RFieldBase::Create("", "AlignmentDeterminedByTransientMember").Unwrap()->GetAlignment());
+
+   // Respect custom alignment
+   EXPECT_EQ(alignof(AlignedAs), RFieldBase::Create("", "AlignedAs").Unwrap()->GetAlignment());
+   EXPECT_EQ(sizeof(AlignedAs), RFieldBase::Create("", "AlignedAs").Unwrap()->GetValueSize());
+   EXPECT_EQ(8u, RFieldBase::Create("", "AlignedAs").Unwrap()->GetValueSize());
+}
