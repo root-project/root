@@ -69,7 +69,6 @@ class RSoAField : public RFieldBase {
    std::vector<std::size_t> fSoAMemberOffsets;
    ///< A deleter returned by each record member's GetDeleter()
    std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
-   std::size_t fMaxAlignment = 1;
    ROOT::Internal::RColumnIndex fNWritten;
 
    /// For reading and writing, the RVecs of the SoA class do not have a dedicated field. The in-memory RVecs of the
@@ -105,7 +104,7 @@ public:
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return fMaxAlignment; }
+   size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
    /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type

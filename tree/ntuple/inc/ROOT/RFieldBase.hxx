@@ -555,6 +555,9 @@ protected:
           const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
+   /// Maximum supported alignment for field types, i.e. maximum returned by GetAlignment()
+   static constexpr std::size_t kMaxAlignment = 4096;
+
    template <bool IsConstT>
    class RSchemaIteratorTemplate;
    using RSchemaIterator = RSchemaIteratorTemplate<false>;
@@ -623,10 +626,9 @@ public:
    /// correct `std::variant` or all the elements of a collection. The default implementation assumes no subvalues
    /// and returns an empty vector.
    virtual std::vector<RValue> SplitValue(const RValue &value) const;
-   /// The number of bytes taken by a value of the appropriate type
+   /// What sizeof(T) for this type returns
    virtual size_t GetValueSize() const = 0;
-   /// As a rule of thumb, the alignment is equal to the size of the type. There are, however, various exceptions
-   /// to this rule depending on OS and CPU architecture. So enforce the alignment to be explicitly spelled out.
+   /// What alignof(T) for this type returns
    virtual size_t GetAlignment() const = 0;
    std::uint32_t GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
