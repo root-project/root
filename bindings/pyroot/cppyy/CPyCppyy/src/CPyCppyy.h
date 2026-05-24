@@ -385,4 +385,34 @@ static inline PyObject* PyObject_CallMethodOneArg(PyObject* obj, PyObject* name,
 // export macros for our own API
 #include "CPyCppyy/CommonDefs.h"
 
+// --- reusable PyTypeObject initializer tail -------------------------------
+// Members appended to PyTypeObject in newer CPython releases. Every CPyCppyy
+// type leaves all of these zero/null-initialized, so they share one tail.
+// To support a future Python version, add one block below and one line to
+// CPYCPPYY_PYTYPE_TAIL.
+
+#if PY_VERSION_HEX >= 0x030c0000
+#define CPYCPPYY_TP_WATCHED        , 0          /* tp_watched      (>= 3.12) */
+#else
+#define CPYCPPYY_TP_WATCHED
+#endif
+
+#if PY_VERSION_HEX >= 0x030d0000
+#define CPYCPPYY_TP_VERSIONS_USED  , 0          /* tp_versions_used(>= 3.13) */
+#else
+#define CPYCPPYY_TP_VERSIONS_USED
+#endif
+
+#if PY_VERSION_HEX >= 0x030f0000
+#define CPYCPPYY_TP_ITERITEM       , nullptr    /* _tp_iteritem    (>= 3.15) */
+#else
+#define CPYCPPYY_TP_ITERITEM
+#endif
+
+#define CPYCPPYY_PYTYPE_TAIL \
+    CPYCPPYY_TP_WATCHED \
+    CPYCPPYY_TP_VERSIONS_USED \
+    CPYCPPYY_TP_ITERITEM
+// --------------------------------------------------------------------------
+
 #endif // !CPYCPPYY_CPYCPPYY_H
