@@ -478,4 +478,11 @@ struct MemberWithCustomStreamer {
    ClassDefNV(MemberWithCustomStreamer, 2);
 };
 
+struct AlignmentDeterminedByTransientMember {
+   short int fA;
+   float fTransient; ///<!
+};
+
+struct alignas(8) AlignedAs {};
+
 #endif
