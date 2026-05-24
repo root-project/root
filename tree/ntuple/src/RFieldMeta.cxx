@@ -14,6 +14,7 @@
 //  - RField<TObject>
 //  - RVariantField
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldUtils.hxx>
@@ -116,6 +117,12 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
+void EnsureValidAlignment(std::size_t align)
+{
+   if (align == 0 || align > ROOT::RFieldBase::kMaxAlignment || !ROOT::Internal::IsPowerOfTwo(align))
+      throw ROOT::RException(R__FAIL(std::string("invalid alignment: ") + std::to_string(align)));
+}
+
 /// Create a comma-separated list of type names from the given fields. Uses either the real type names or the
 /// type aliases (if there are any, otherwise the actual type name). Used to construct template argument lists
 /// for templated types such as std::pair<...>, std::tuple<...>, std::variant<...>.
@@ -186,8 +193,7 @@ std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFie
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
    : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(source.fClass),
-     fSubfieldsInfo(source.fSubfieldsInfo),
-     fMaxAlignment(source.fMaxAlignment)
+     fSubfieldsInfo(source.fSubfieldsInfo)
 {
    for (const auto &f : source.GetConstSubfields()) {
       RFieldBase::Attach(f->Clone(f->GetFieldName()));
@@ -280,7 +286,6 @@ ROOT::RClassField::~RClassField()
 
 void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info)
 {
-   fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
    fSubfieldsInfo.push_back(info);
    RFieldBase::Attach(std::move(child));
 }
@@ -622,9 +627,16 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RClassField::SplitValue(const RValue
    return result;
 }
 
-size_t ROOT::RClassField::GetValueSize() const
+std::size_t ROOT::RClassField::GetValueSize() const
 {
    return fClass->GetClassSize();
+}
+
+std::size_t ROOT::RClassField::GetAlignment() const
+{
+   const auto align = fClass->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
 }
 
 std::uint32_t ROOT::RClassField::GetTypeVersion() const
@@ -656,8 +668,7 @@ void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
    : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fSoAClass(source.fSoAClass),
-     fSoAMemberOffsets(source.fSoAMemberOffsets),
-     fMaxAlignment(source.fMaxAlignment)
+     fSoAMemberOffsets(source.fSoAMemberOffsets)
 {
    fTraits = source.GetTraits();
    Attach(source.fSubfields[0]->Clone(source.fSubfields[0]->GetFieldName()));
@@ -762,8 +773,6 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
          throw RException(R__FAIL(std::string("SoA member type mismatch: ") + vecField->GetFieldName() + " (" +
                                   leftType + " vs. " + rightType + ")"));
       }
-
-      fMaxAlignment = std::max(fMaxAlignment, vecField->GetAlignment());
 
       assert(itr->second < fSoAMemberOffsets.size());
       fSoAMemberOffsets[itr->second] = dataMember->GetOffset();
@@ -910,7 +919,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(
    return values;
 }
 
-size_t ROOT::Experimental::RSoAField::GetValueSize() const
+std::size_t ROOT::Experimental::RSoAField::GetValueSize() const
 {
    return fSoAClass->GetClassSize();
 }
@@ -923,6 +932,13 @@ std::uint32_t ROOT::Experimental::RSoAField::GetTypeVersion() const
 std::uint32_t ROOT::Experimental::RSoAField::GetTypeChecksum() const
 {
    return fSoAClass->GetCheckSum();
+}
+
+std::size_t ROOT::Experimental::RSoAField::GetAlignment() const
+{
+   const auto align = fSoAClass->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
 }
 
 const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() const
@@ -1250,6 +1266,18 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RProxiedCollectionField::SplitValue(
    return result;
 }
 
+std::size_t ROOT::RProxiedCollectionField::GetValueSize() const
+{
+   return fProxy->Sizeof();
+}
+
+std::size_t ROOT::RProxiedCollectionField::GetAlignment() const
+{
+   const auto align = fProxy->GetCollectionClass()->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
+}
+
 void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitProxiedCollectionField(*this);
@@ -1457,7 +1485,9 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RStreamerField::GetExtraTypeInfo() const
 
 std::size_t ROOT::RStreamerField::GetAlignment() const
 {
-   return std::min(alignof(std::max_align_t), GetValueSize()); // TODO(jblomer): fix me
+   const auto align = fClass->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
 }
 
 std::size_t ROOT::RStreamerField::GetValueSize() const

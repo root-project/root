@@ -263,8 +263,8 @@ public:
    ~ROptionalField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final;
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 };
 
 template <typename ItemT>
@@ -312,8 +312,8 @@ public:
    ~RUniquePtrField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
-   size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
+   std::size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
+   std::size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
 };
 
 template <typename ItemT>
@@ -362,8 +362,8 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(std::string); }
-   size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
+   std::size_t GetValueSize() const final { return sizeof(std::string); }
+   std::size_t GetAlignment() const final { return alignof(std::string); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -435,8 +435,8 @@ public:
    RVariantField &operator=(RVariantField &&other) = default;
    ~RVariantField() override = default;
 
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final;
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 };
 
 template <typename... ItemTs>

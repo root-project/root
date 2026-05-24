@@ -1,11 +1,14 @@
 #ifndef ROOT_RNTuple_Test_CustomStruct
 #define ROOT_RNTuple_Test_CustomStruct
 
+#include <ROOT/RVec.hxx>
+
 #include <RtypesCore.h> // for Double32_t
 #include <TObject.h>
 #include <TRootIOCtor.h>
 #include <TVirtualCollectionProxy.h>
 
+#include <array>
 #include <chrono>
 #include <stdexcept>
 #include <cstddef>
@@ -476,6 +479,22 @@ struct MemberWithCustomStreamer {
    int fNormal = 0;
    int fCustom = 0;
    ClassDefNV(MemberWithCustomStreamer, 2);
+};
+
+struct AlignmentDeterminedByTransientMember {
+   short int fA;
+   float fTransient; ///<!
+};
+
+struct alignas(8) AlignedAs {};
+
+struct alignas(64) OverAligned {
+   std::uint32_t fA;
+};
+
+struct AlignmentEnvelope {
+   ROOT::RVec<OverAligned> fVec;
+   std::array<OverAligned, 2> fArr;
 };
 
 #endif

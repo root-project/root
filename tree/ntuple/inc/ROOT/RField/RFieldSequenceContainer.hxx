@@ -265,8 +265,8 @@ public:
    CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -319,8 +319,8 @@ public:
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
 
-   size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
+   std::size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
+   std::size_t GetAlignment() const final { return alignof(std::vector<bool>); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -414,8 +414,8 @@ public:
    RArrayAsVectorField &operator=(RArrayAsVectorField &&other) = default;
    ~RArrayAsVectorField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
