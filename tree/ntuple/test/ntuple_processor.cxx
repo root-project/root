@@ -305,6 +305,24 @@ TEST_F(RNTupleProcessorTest, Subfields)
    }
 }
 
+TEST_F(RNTupleProcessorTest, AddAllFields)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 4);
+}
+
+TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfields)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 13);
+}
+
 TEST_F(RNTupleProcessorTest, PrintStructureSingle)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
@@ -952,3 +970,40 @@ TEST_F(GH16805ProcessorTest, JoinReading)
    EXPECT_EQ(20u, joinedAll->GetNEntriesProcessed());
 }
 
+TEST_F(RNTupleProcessorTest, AddAllFieldsComposed)
+{
+   auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
+
+   auto auxProc = RNTupleProcessor::CreateJoin(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}),
+      std::move(auxProcIntermediate), {"i"});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   // 11 fields instead of 10, because the join field is also included.
+   EXPECT_EQ(fieldIdxs.size(), 11);
+}
+
+TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfieldsComposed)
+{
+   auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
+
+   auto auxProc = RNTupleProcessor::CreateJoin(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}),
+      std::move(auxProcIntermediate), {"i"});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   // 36 fields instead of 25, because the join field is also included.
+   EXPECT_EQ(fieldIdxs.size(), 36);
+}
