@@ -66,5 +66,19 @@ class TH1IMT(unittest.TestCase):
         self.assertGreater(r.Parameter(0), 0)
 
 
+class TH1FitWarning(unittest.TestCase):
+    def test_fit_with_warning(self):
+        """
+        Regression test for https://github.com/root-project/root/issues/22396
+        """
+        import ROOT
+
+        h = ROOT.TH1D("test", "test", 100, 0, 1)
+        # Trying to fit a empty histogram will result in a warning on the C++ side which is re-raised as a Python
+        # warning by the ROOT CPython extension
+        with self.assertWarns(RuntimeWarning, msg="Fit data is empty"):
+            h.Fit("gaus", "S")
+
+
 if __name__ == "__main__":
     unittest.main()

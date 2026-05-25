@@ -122,7 +122,9 @@ static void ErrMsgHandler(int level, Bool_t abort, const char *location, const c
       // the GIL.
       if (!gGlobalMutex) {
          // Either printout or raise exception, depending on user settings
+         auto state = PyGILState_Ensure();
          PyErr_WarnExplicit(NULL, (char *)msg, (char *)location, 0, (char *)"ROOT", NULL);
+         PyGILState_Release(state);
       } else {
          ::DefaultErrorHandler(level, abort, location, msg);
       }
