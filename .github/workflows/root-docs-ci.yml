@@ -69,6 +69,12 @@ jobs:
         PYTHONUNBUFFERED: true
 
     steps:
+    - name: Prepare qhelpgenerator
+      # Qt6's libexec executables are not in the PATH by default
+      run: |
+        which qhelpgenerator && exit 0 # Already in PATH
+        PATH=/usr/lib64/qt6/libexec/:${PATH} which qhelpgenerator && echo "/usr/lib64/qt6/libexec/" >> "${GITHUB_PATH}"
+
     - name: Checkout
       uses: actions/checkout@v6
       with:
@@ -79,7 +85,7 @@ jobs:
       # if the `if` expr is false, `if` still has exit code 0.
       # if the `if` block is entered, the block's exit code becomes the exit
       # code of the `if`.
-      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo ${PATH%:*} >> "${GITHUB_PATH}"; fi'
 
     - name: Build ROOT
       run: ".github/workflows/root-ci-config/build_root.py
