@@ -191,20 +191,22 @@ jobs:
       # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
+        failure=0
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.svg
-        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.map
-        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.md5
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         cd ..
-        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
+        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
+        exit $failure
