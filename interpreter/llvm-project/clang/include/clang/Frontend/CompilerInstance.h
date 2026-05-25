@@ -197,15 +197,6 @@ class CompilerInstance : public ModuleLoader {
   /// Force an output buffer.
   std::unique_ptr<llvm::raw_pwrite_stream> OutputStream;
 
-public:
-  using IncrementalInitFn =
-      std::function<bool(CompilerInstance &, const FrontendInputFile &Input)>;
-
-private:
-  /// A Custom user provided SourceManager initializer for incremental
-  /// compilation mode.
-  IncrementalInitFn IncInitFn;
-
   CompilerInstance(const CompilerInstance &) = delete;
   void operator=(const CompilerInstance &) = delete;
 public:
@@ -516,23 +507,6 @@ public:
 
   /// setSourceManager - Replace the current source manager.
   void setSourceManager(llvm::IntrusiveRefCntPtr<SourceManager> Value);
-
-  /// @}
-  /// @name IncrementalInitializer
-  /// @{
-
-  bool hasIncrementalSourceMgrInitializer() const {
-    return static_cast<bool>(IncInitFn);
-  }
-
-  void setIncrementalSourceMgrInitializer(IncrementalInitFn Fn) {
-    IncInitFn = Fn;
-  }
-
-  bool runIncrementalSourceMgrInitializer(const FrontendInputFile &Input) {
-    assert(hasIncrementalSourceMgrInitializer());
-    return IncInitFn(*this, Input);
-  }
 
   /// @}
   /// @name Preprocessor
