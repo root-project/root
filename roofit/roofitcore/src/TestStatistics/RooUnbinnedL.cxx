@@ -206,6 +206,18 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       std::tie(result, sumWeight) =
          computeBatchFunc(probas, data_.get(), apply_weight_squared, 1, events.begin(N_events_), events.end(N_events_));
    } else {
+      // The cache-and-track optimization tracks staleness of the cached
+      // branches globally, but recalculateCache() only refreshes the requested
+      // event range. A cache that was refreshed for one event section hence
+      // reports itself as up-to-date for all other sections as well, even
+      // though their rows may still hold values from an older parameter point.
+      // This happens when event-range tasks migrate between workers in
+      // RooFit::MultiProcess likelihood splitting. Force a full update of the
+      // cached branches whenever the evaluated section changes.
+      if (!(events == lastCacheSection_)) {
+         data_->store()->forceCacheUpdate();
+         lastCacheSection_ = events;
+      }
       data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
       std::tie(result, sumWeight) = computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
                                                       events.begin(N_events_), events.end(N_events_));
