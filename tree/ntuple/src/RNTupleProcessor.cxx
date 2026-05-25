@@ -157,9 +157,9 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
 
    std::string onDiskFieldName = qualifiedFieldName;
 
-   // Strip the "_join" prefix (for join fields) from the field name, if present.
-   if (onDiskFieldName.find("_join.") == 0) {
-      onDiskFieldName = onDiskFieldName.substr(6);
+   // Strip the "R_rntproc_join_" prefix (for join fields) from the field name, if present.
+   if (onDiskFieldName.find("R_rntproc_join_") == 0) {
+      onDiskFieldName = onDiskFieldName.substr(15);
    }
 
    const auto &desc = fPageSource->GetSharedDescriptorGuard().GetRef();
@@ -512,7 +512,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
 
          // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
          // composed join operations.
-         auto fieldIdx = AddFieldToEntry(fProcessorName + "._join." + joinField, "std::uint64_t", nullptr,
+         auto fieldIdx = AddFieldToEntry(fProcessorName + ".R_rntproc_join_" + joinField, "std::uint64_t", nullptr,
                                          Internal::RNTupleProcessorProvenance(fProcessorName));
          fJoinFieldIdxs.insert(fieldIdx);
       }
