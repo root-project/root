@@ -1,0 +1,5 @@
+C=== rzcycle.inc ===============================================
+      INTEGER KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
+     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
+      COMMON/RZCYCLE/KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
+     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
