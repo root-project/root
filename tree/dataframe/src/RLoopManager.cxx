@@ -220,6 +220,12 @@ std::string LogRangeProcessing(const DatasetLogInfo &info)
    return msg.str();
 }
 
+[[noreturn]] void RethrowWithEventLoopMessage()
+{
+   std::cerr << "RDataFrame::Run: event loop was interrupted\n";
+   throw;
+}
+
 auto MakeDatasetColReadersKey(std::string_view colName, const std::type_info &ti)
 {
    // We use a combination of column name and column type name as the key because in some cases we might end up
@@ -539,10 +545,8 @@ void RLoopManager::RunEmptySourceMT()
             RunAndCheckFilters(slot, currEntry);
          }
       } catch (...) {
-         // Error might throw in experiment frameworks like CMSSW
-         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-         throw;
-      }
+           RethrowWithEventLoopMessage();
+         }
    };
 
    ROOT::TThreadExecutor pool;
@@ -565,9 +569,8 @@ void RLoopManager::RunEmptySource()
          RunAndCheckFilters(0, currEntry);
       }
    } catch (...) {
-      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-      throw;
-   }
+        RethrowWithEventLoopMessage();
+      }
 }
 
 #ifdef R__USE_IMT
@@ -664,9 +667,8 @@ void RLoopManager::RunDataSource()
             }
          }
       } catch (...) {
-         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-         throw;
-      }
+           RethrowWithEventLoopMessage();
+         }
 
    } while (!ranges.empty() && fNStopsReceived < fNChildren);
 
@@ -1364,9 +1366,8 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
          }
       }
    } catch (...) {
-      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-      throw;
-   }
+        RethrowWithEventLoopMessage();
+      }
 #else
    (void)entryRange;
    (void)slotStack;
@@ -1400,9 +1401,8 @@ void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(TTreeReader &treeReader, R
          RunAndCheckFilters(slot, count++);
       }
    } catch (...) {
-      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-      throw;
-   }
+        RethrowWithEventLoopMessage();
+      }
    // fNStopsReceived < fNChildren is always true at the moment as we don't support event loop early quitting in
    // multi-thread runs, but it costs nothing to be safe and future-proof in case we add support for that later.
    if (treeReader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
