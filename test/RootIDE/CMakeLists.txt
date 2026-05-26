@@ -25,7 +25,7 @@ ROOT_GENERATE_DICTIONARY(RIDEDict ${HEADERS} LINKDEF LinkDef.h)
 file(COPY ${HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(RIDE ${SOURCES} RIDEDict.cxx)
-target_link_libraries(RIDE ROOT::Core ROOT::Rint ROOT::Gui ROOT::GuiHtml ROOT::Thread ROOT::RIO ROOT::Hist ROOT::Gpad)
+target_link_libraries(RIDE ROOT::Core ROOT::Rint ROOT::Gui ROOT::Thread ROOT::RIO ROOT::Hist ROOT::Gpad)
 set_target_properties(RIDE PROPERTIES ENABLE_EXPORTS 1)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET RIDE POST_BUILD

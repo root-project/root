@@ -43,10 +43,12 @@ The picture below shows a canvas with a pop-up menu.
 #include "TRootBrowser.h"
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
+#include "TSystem.h"
 #include "KeySymbols.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
 #include "snprintf.h"
+#include <regex>
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
@@ -636,7 +638,7 @@ void TRootContextMenu::OnlineHelp()
 {
    TString clname;
    TString cmd;
-   TString url = gEnv->GetValue("Browser.StartUrl", "https://root.cern.ch/doc/master");
+   TString url = gEnv->GetValue("Browser.StartUrl", "https://root.cern.ch/doc/");
    if (url.EndsWith(".html", TString::kIgnoreCase)) {
       if (url.Last('/') != kNPOS)
          url.Remove(url.Last('/'));
@@ -646,27 +648,41 @@ void TRootContextMenu::OnlineHelp()
    }
    TObject *obj = fContextMenu->GetSelectedObject();
    if (obj) {
+      url = "https://root.cern.ch/doc/";
+      std::string version;
+      std::string gitversion = gROOT->GetGitBranch();
+      std::regex pattern(R"(.*\/(v(\d+)-(\d+)-.*))");
+      std::smatch match;
+      if (std::regex_match(gitversion, match, pattern)) {
+         version = "v" + match[2].str() + match[3].str() + '/';
+      } else {
+         version = "master/";
+      }
+      url += version.c_str();
       clname = obj->ClassName();
       if (fContextMenu->GetSelectedMethod()) {
          TString smeth = fContextMenu->GetSelectedMethod()->GetName();
          TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
          if (method) clname = method->GetClass()->GetName();
+         url += "class";
          url += clname;
          url += ".html";
-         url += "#";
-         url += clname;
-         url += ":";
-         url += smeth.Data();
       }
       else {
+         url += "class";
          url += clname;
          url += ".html";
       }
-      if (fDialog) delete fDialog;
+      if (fDialog)
+         delete fDialog;
       fDialog = 0;
-      cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
-      gROOT->ProcessLine(cmd.Data());
    }
+#ifdef WIN32
+   cmd = TString::Format("start %s", url.Data());
+#else
+   cmd = TString::Format("xdg-open %s", url.Data());
+#endif
+   gSystem->Exec(cmd.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
