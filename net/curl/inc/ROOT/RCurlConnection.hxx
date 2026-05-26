@@ -75,6 +75,7 @@ private:
 
    void SetupErrorBuffer();
    void SetOptions();
+   void ResetHandle();
    RResult<void> SetUrl(const std::string &url);
    void Perform(RStatus &status);
 

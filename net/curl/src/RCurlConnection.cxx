@@ -660,6 +660,37 @@ void ROOT::Internal::RCurlConnection::SetOptions()
    R__ASSERT(rc == CURLE_OK);
 }
 
+/// Reset method-specific sticky curl options so that the easy handle is in a clean state
+/// before configuring it for the next request (HEAD, GET, or PUT).
+void ROOT::Internal::RCurlConnection::ResetHandle()
+{
+   auto rc = curl_easy_setopt(fHandle, CURLOPT_NOBODY, 0L);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_HTTPGET, 0L);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_UPLOAD, 0L);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_RANGE, NULL);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_READFUNCTION, NULL);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_READDATA, NULL);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_SEEKFUNCTION, NULL);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_SEEKDATA, NULL);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(-1));
+   R__ASSERT(rc == CURLE_OK);
+
+#ifndef HAS_CURL_EASY_HEADER
+   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERFUNCTION, NULL);
+   R__ASSERT(rc == CURLE_OK);
+   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERDATA, NULL);
+   R__ASSERT(rc == CURLE_OK);
+#endif
+}
+
 ROOT::RResult<void> ROOT::Internal::RCurlConnection::SetUrl(const std::string &url)
 {
    CURLU *cu = curl_url();
@@ -731,17 +762,9 @@ ROOT::Internal::RCurlConnection::RStatus ROOT::Internal::RCurlConnection::SendHe
 {
    remoteSize = kUnknownSize;
 
+   ResetHandle();
    auto rc = curl_easy_setopt(fHandle, CURLOPT_NOBODY, 1);
    R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_RANGE, NULL); // may have been set by a previous SendRangesReq() on the object
-   R__ASSERT(rc == CURLE_OK);
-
-#ifndef HAS_CURL_EASY_HEADER
-   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERFUNCTION, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERDATA, NULL);
-   R__ASSERT(rc == CURLE_OK);
-#endif
 
    RStatus status;
    Perform(status);
@@ -778,6 +801,7 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
       return RStatus(RStatus::kSuccess);
    }
 
+   ResetHandle();
    auto rc = curl_easy_setopt(fHandle, CURLOPT_HTTPGET, 1);
    R__ASSERT(rc == CURLE_OK);
 
