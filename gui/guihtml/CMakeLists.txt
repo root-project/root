@@ -29,5 +29,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
   DEPENDENCIES
     Gui
     Graf
-    Net
 )
