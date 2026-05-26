@@ -552,6 +552,15 @@ void ReverseDisplacements(std::vector<std::size_t> &displacements, ROOT::Interna
    }
 }
 
+/// Wrapper around curl_easy_setopt that asserts on failure.  Most option-setting calls in this
+/// file use valid options and values by construction, so failure indicates a programming error.
+template <typename T>
+void SetCurlOption(void *handle, CURLoption option, T value)
+{
+   auto rc = curl_easy_setopt(handle, option, value);
+   R__ASSERT(rc == CURLE_OK);
+}
+
 std::string GetCurlErrorString(CURLcode code)
 {
    return std::string(curl_easy_strerror(code)) + " (" + std::to_string(code) + ")";
@@ -631,63 +640,41 @@ void ROOT::Internal::RCurlConnection::SetupErrorBuffer()
 {
    if (!fErrorBuffer)
       fErrorBuffer = std::make_unique<char[]>(CURL_ERROR_SIZE);
-   auto rc = curl_easy_setopt(fHandle, CURLOPT_ERRORBUFFER, fErrorBuffer.get());
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_ERRORBUFFER, fErrorBuffer.get());
 }
 
 void ROOT::Internal::RCurlConnection::SetOptions()
 {
-   int rc;
-
    if (gDebug) {
-      rc = curl_easy_setopt(fHandle, CURLOPT_VERBOSE, 1);
-      R__ASSERT(rc == CURLE_OK);
-      rc = curl_easy_setopt(fHandle, CURLOPT_DEBUGFUNCTION, CallbackDebug);
-      R__ASSERT(rc == CURLE_OK);
+      SetCurlOption(fHandle, CURLOPT_VERBOSE, 1);
+      SetCurlOption(fHandle, CURLOPT_DEBUGFUNCTION, CallbackDebug);
    } else {
-      rc = curl_easy_setopt(fHandle, CURLOPT_VERBOSE, 0);
-      R__ASSERT(rc == CURLE_OK);
+      SetCurlOption(fHandle, CURLOPT_VERBOSE, 0);
    }
 
    static const std::string kUserAgent = GetUserAgentString();
-   rc = curl_easy_setopt(fHandle, CURLOPT_USERAGENT, kUserAgent.c_str());
-   R__ASSERT(rc == CURLE_OK);
-
-   rc = curl_easy_setopt(fHandle, CURLOPT_FOLLOWLOCATION, 1);
-   R__ASSERT(rc == CURLE_OK);
-
-   rc = curl_easy_setopt(fHandle, CURLOPT_WRITEFUNCTION, CallbackData);
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_USERAGENT, kUserAgent.c_str());
+   SetCurlOption(fHandle, CURLOPT_FOLLOWLOCATION, 1);
+   SetCurlOption(fHandle, CURLOPT_WRITEFUNCTION, CallbackData);
 }
 
 /// Reset method-specific sticky curl options so that the easy handle is in a clean state
 /// before configuring it for the next request (HEAD, GET, or PUT).
 void ROOT::Internal::RCurlConnection::ResetHandle()
 {
-   auto rc = curl_easy_setopt(fHandle, CURLOPT_NOBODY, 0L);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_HTTPGET, 0L);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_UPLOAD, 0L);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_RANGE, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_READFUNCTION, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_READDATA, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_SEEKFUNCTION, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_SEEKDATA, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(-1));
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_NOBODY, 0L);
+   SetCurlOption(fHandle, CURLOPT_HTTPGET, 0L);
+   SetCurlOption(fHandle, CURLOPT_UPLOAD, 0L);
+   SetCurlOption(fHandle, CURLOPT_RANGE, static_cast<const char *>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_READFUNCTION, static_cast<curl_read_callback>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_READDATA, static_cast<void *>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_SEEKFUNCTION, static_cast<curl_seek_callback>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_SEEKDATA, static_cast<void *>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(-1));
 
 #ifndef HAS_CURL_EASY_HEADER
-   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERFUNCTION, NULL);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERDATA, NULL);
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_HEADERFUNCTION, static_cast<curl_write_callback>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_HEADERDATA, static_cast<void *>(nullptr));
 #endif
 }
 
@@ -763,14 +750,13 @@ ROOT::Internal::RCurlConnection::RStatus ROOT::Internal::RCurlConnection::SendHe
    remoteSize = kUnknownSize;
 
    ResetHandle();
-   auto rc = curl_easy_setopt(fHandle, CURLOPT_NOBODY, 1);
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_NOBODY, 1);
 
    RStatus status;
    Perform(status);
    if (status) {
       curl_off_t length = -1;
-      rc = curl_easy_getinfo(fHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &length);
+      auto rc = curl_easy_getinfo(fHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &length);
       if (rc == CURLE_OK && length >= 0)
          remoteSize = length;
    }
@@ -802,18 +788,14 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
    }
 
    ResetHandle();
-   auto rc = curl_easy_setopt(fHandle, CURLOPT_HTTPGET, 1);
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_HTTPGET, 1);
 
    RTransferState transfer(ranges, order, fHandle);
-   rc = curl_easy_setopt(fHandle, CURLOPT_WRITEDATA, &transfer);
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_WRITEDATA, &transfer);
 
 #ifndef HAS_CURL_EASY_HEADER
-   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERFUNCTION, CallbackHeader);
-   R__ASSERT(rc == CURLE_OK);
-   rc = curl_easy_setopt(fHandle, CURLOPT_HEADERDATA, &transfer);
-   R__ASSERT(rc == CURLE_OK);
+   SetCurlOption(fHandle, CURLOPT_HEADERFUNCTION, CallbackHeader);
+   SetCurlOption(fHandle, CURLOPT_HEADERDATA, &transfer);
 #endif
 
    RStatus status;
@@ -835,8 +817,7 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
          for (std::size_t i = 1; i < nRanges; ++i) {
             rangeHeader += "," + requestRanges[b + i].ToString();
          }
-         rc = curl_easy_setopt(fHandle, CURLOPT_RANGE, rangeHeader.c_str());
-         R__ASSERT(rc == CURLE_OK);
+         SetCurlOption(fHandle, CURLOPT_RANGE, rangeHeader.c_str());
 
          if (b > 0) {
             const std::uint64_t lastByteRequested = requestRanges[b - 1].fLastByte;
@@ -900,13 +881,10 @@ void ROOT::Internal::RCurlConnection::ClearCredentials()
    if (!fCredentials)
       return;
 
-   CURLcode rc;
    switch (fCredentials->fType) {
    case EHTTPCredentialsType::kS3:
-      rc = curl_easy_setopt(fHandle, CURLOPT_AWS_SIGV4, NULL);
-      R__ASSERT(rc == CURLE_OK);
-      rc = curl_easy_setopt(fHandle, CURLOPT_USERPWD, NULL);
-      R__ASSERT(rc == CURLE_OK);
+      SetCurlOption(fHandle, CURLOPT_AWS_SIGV4, static_cast<const char *>(nullptr));
+      SetCurlOption(fHandle, CURLOPT_USERPWD, static_cast<const char *>(nullptr));
       break;
    default: R__ASSERT(false && "internal error: unknown credentials type");
    }
