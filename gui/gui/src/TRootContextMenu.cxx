@@ -43,13 +43,11 @@ The picture below shows a canvas with a pop-up menu.
 #include "TRootBrowser.h"
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
-#include "TSystem.h"
 #include "TApplication.h"
 #include "KeySymbols.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
 #include "snprintf.h"
-#include <regex>
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
