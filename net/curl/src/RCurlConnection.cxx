@@ -552,6 +552,52 @@ void ReverseDisplacements(std::vector<std::size_t> &displacements, ROOT::Interna
    }
 }
 
+/// State for the PUT upload read callback: tracks progress through the upload buffer.
+struct RUploadState {
+   const unsigned char *fData = nullptr;
+   std::size_t fLength = 0;
+   std::size_t fOffset = 0;
+};
+
+/// CURLOPT_READFUNCTION callback for PUT uploads.  Copies up to `size * nmemb` bytes from the
+/// upload buffer into `buffer` and advances the offset.  Returns the number of bytes copied,
+/// i.e. min(requested, remaining), or 0 at end-of-data to signal that the upload is complete.
+std::size_t CallbackPutRead(char *buffer, std::size_t size, std::size_t nmemb, void *userdata)
+{
+   auto *state = static_cast<RUploadState *>(userdata);
+   R__ASSERT(state->fOffset <= state->fLength);
+
+   std::size_t remaining = state->fLength - state->fOffset;
+   if (remaining == 0)
+      return 0;
+
+   std::size_t requested = size * nmemb;
+   // CURL_READFUNC_ABORT (0x10000000) collides with a valid byte count at 256 MiB;
+   // assert that curl never asks for that much in a single callback invocation.
+   R__ASSERT(requested < CURL_READFUNC_ABORT);
+   std::size_t nbytes = std::min(requested, remaining);
+   memcpy(buffer, state->fData + state->fOffset, nbytes);
+   state->fOffset += nbytes;
+   return nbytes;
+}
+
+/// CURLOPT_SEEKFUNCTION callback for PUT uploads.  Required because CURLOPT_FOLLOWLOCATION
+/// is enabled: on a redirect curl needs to rewind the upload data before resending.
+/// Returns CURL_SEEKFUNC_OK (0) on success, CURL_SEEKFUNC_FAIL (1) for invalid offsets
+/// which aborts the transfer, or CURL_SEEKFUNC_CANTSEEK (2) for unsupported seek origins
+/// which lets curl try to work around it.
+int CallbackPutSeek(void *userdata, curl_off_t offset, int origin)
+{
+   auto *state = static_cast<RUploadState *>(userdata);
+   // curl documents that it will only use SEEK_SET; guard against anything else defensively.
+   if (origin != SEEK_SET)
+      return CURL_SEEKFUNC_CANTSEEK;
+   if (offset < 0 || static_cast<std::size_t>(offset) > state->fLength)
+      return CURL_SEEKFUNC_FAIL;
+   state->fOffset = static_cast<std::size_t>(offset);
+   return CURL_SEEKFUNC_OK;
+}
+
 /// Wrapper around curl_easy_setopt that asserts on failure.  Most option-setting calls in this
 /// file use valid options and values by construction, so failure indicates a programming error.
 template <typename T>
@@ -655,7 +701,6 @@ void ROOT::Internal::RCurlConnection::SetOptions()
    static const std::string kUserAgent = GetUserAgentString();
    SetCurlOption(fHandle, CURLOPT_USERAGENT, kUserAgent.c_str());
    SetCurlOption(fHandle, CURLOPT_FOLLOWLOCATION, 1);
-   SetCurlOption(fHandle, CURLOPT_WRITEFUNCTION, CallbackData);
 }
 
 /// Reset method-specific sticky curl options so that the easy handle is in a clean state
@@ -666,6 +711,8 @@ void ROOT::Internal::RCurlConnection::ResetHandle()
    SetCurlOption(fHandle, CURLOPT_HTTPGET, 0L);
    SetCurlOption(fHandle, CURLOPT_UPLOAD, 0L);
    SetCurlOption(fHandle, CURLOPT_RANGE, static_cast<const char *>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_WRITEFUNCTION, static_cast<curl_write_callback>(nullptr));
+   SetCurlOption(fHandle, CURLOPT_WRITEDATA, static_cast<void *>(nullptr));
    SetCurlOption(fHandle, CURLOPT_READFUNCTION, static_cast<curl_read_callback>(nullptr));
    SetCurlOption(fHandle, CURLOPT_READDATA, static_cast<void *>(nullptr));
    SetCurlOption(fHandle, CURLOPT_SEEKFUNCTION, static_cast<curl_seek_callback>(nullptr));
@@ -791,6 +838,7 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
    SetCurlOption(fHandle, CURLOPT_HTTPGET, 1);
 
    RTransferState transfer(ranges, order, fHandle);
+   SetCurlOption(fHandle, CURLOPT_WRITEFUNCTION, CallbackData);
    SetCurlOption(fHandle, CURLOPT_WRITEDATA, &transfer);
 
 #ifndef HAS_CURL_EASY_HEADER
@@ -850,6 +898,26 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
    }
 
    ReverseDisplacements(displacements, ranges, order, static_cast<bool>(status));
+
+   return status;
+}
+
+ROOT::Internal::RCurlConnection::RStatus
+ROOT::Internal::RCurlConnection::SendPutReq(const unsigned char *data, std::size_t length)
+{
+   ResetHandle();
+
+   SetCurlOption(fHandle, CURLOPT_UPLOAD, 1L);
+   SetCurlOption(fHandle, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(length));
+
+   RUploadState uploadState{data, length, 0};
+   SetCurlOption(fHandle, CURLOPT_READFUNCTION, CallbackPutRead);
+   SetCurlOption(fHandle, CURLOPT_READDATA, &uploadState);
+   SetCurlOption(fHandle, CURLOPT_SEEKFUNCTION, CallbackPutSeek);
+   SetCurlOption(fHandle, CURLOPT_SEEKDATA, &uploadState);
+
+   RStatus status;
+   Perform(status);
 
    return status;
 }
