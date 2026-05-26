@@ -219,11 +219,12 @@ class RVectorField : public RFieldBase {
    class RVectorDeleter : public RDeleter {
    private:
       std::size_t fItemSize = 0;
+      std::size_t fItemAlignment = 0;
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RVectorDeleter();
-      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter);
+      explicit RVectorDeleter(std::size_t itemAlignment);
+      RVectorDeleter(std::size_t itemSize, std::size_t itemAlignment, std::unique_ptr<RDeleter> itemDeleter);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -248,7 +249,7 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -402,7 +403,7 @@ protected:
    void GenerateColumns() final;
    using RFieldBase::GenerateColumns;
 
-   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
+   void ConstructValue(void *where) const final;
    /// Returns an RVectorField::RVectorDeleter
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
