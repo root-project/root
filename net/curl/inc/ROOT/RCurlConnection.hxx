@@ -117,6 +117,8 @@ public:
    /// a valid batching of requests into multiple multi-range requests takes place automatically.
    /// The fNBytesRecv member of the ranges is only well-defined on success.
    RStatus SendRangesReq(std::size_t N, RUserRange *ranges);
+   /// Uploads data to the URL using an HTTP PUT request.
+   RStatus SendPutReq(const unsigned char *data, std::size_t length);
 
    const std::string &GetEscapedUrl() const { return fEscapedUrl; }
 
