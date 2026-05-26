@@ -518,12 +518,17 @@ TEST(RNTuple, AlignmentCornerCases)
    auto f = RFieldBase::Create("", "AlignmentEnvelope").Unwrap();
    EXPECT_GT(alignof(AlignmentEnvelope), sizeof(std::max_align_t));
    EXPECT_EQ(alignof(AlignmentEnvelope), f->GetAlignment());
+   std::unique_ptr<AlignmentEnvelope> ptr(f->CreateObject<AlignmentEnvelope>().release());
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(ptr.get()) % alignof(AlignmentEnvelope));
+
+   f = RFieldBase::Create("", "std::vector<AlignmentEnvelope>").Unwrap();
+   auto vecPtr = f->CreateObject<std::vector<AlignmentEnvelope>>().release();
+   EXPECT_TRUE(vecPtr->data() == nullptr ||
+               reinterpret_cast<std::uintptr_t>(vecPtr->data()) % alignof(AlignmentEnvelope) == 0);
+
    auto res = RFieldBase::Create("", "ROOT::RVec<OverAligned>");
    EXPECT_FALSE(res);
    EXPECT_THAT(res.GetError()->GetReport(), ::testing::HasSubstr("RVec does not support over-aligned types"));
-
-   std::unique_ptr<AlignmentEnvelope> ptr(f->CreateObject<AlignmentEnvelope>().release());
-   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(ptr.get()) % alignof(AlignmentEnvelope));
 
    FileRaii fileGuard("test_ntuple_alignment_corner_cases.root");
    {
