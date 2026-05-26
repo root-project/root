@@ -44,6 +44,7 @@ The picture below shows a canvas with a pop-up menu.
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
 #include "TSystem.h"
+#include "TApplication.h"
 #include "KeySymbols.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
@@ -637,52 +638,18 @@ Bool_t TRootContextMenu::HandleMotion(Event_t *event)
 void TRootContextMenu::OnlineHelp()
 {
    TString clname;
-   TString cmd;
-   TString url = gEnv->GetValue("Browser.StartUrl", "https://root.cern.ch/doc/");
-   if (url.EndsWith(".html", TString::kIgnoreCase)) {
-      if (url.Last('/') != kNPOS)
-         url.Remove(url.Last('/'));
-   }
-   if (!url.EndsWith("/")) {
-      url += '/';
-   }
    TObject *obj = fContextMenu->GetSelectedObject();
    if (obj) {
-      url = "https://root.cern.ch/doc/";
-      std::string version;
-      std::string gitversion = gROOT->GetGitBranch();
-      std::regex pattern(R"(.*\/(v(\d+)-(\d+)-.*))");
-      std::smatch match;
-      if (std::regex_match(gitversion, match, pattern)) {
-         version = "v" + match[2].str() + match[3].str() + '/';
-      } else {
-         version = "master/";
-      }
-      url += version.c_str();
       clname = obj->ClassName();
       if (fContextMenu->GetSelectedMethod()) {
          TString smeth = fContextMenu->GetSelectedMethod()->GetName();
          TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
-         if (method) clname = method->GetClass()->GetName();
-         url += "class";
-         url += clname;
-         url += ".html";
+         if (method)
+            clname = method->GetClass()->GetName();
+         clname += "::" + smeth;
       }
-      else {
-         url += "class";
-         url += clname;
-         url += ".html";
-      }
-      if (fDialog)
-         delete fDialog;
-      fDialog = 0;
+      gApplication->OpenReferenceGuideFor(clname);
    }
-#ifdef WIN32
-   cmd = TString::Format("start %s", url.Data());
-#else
-   cmd = TString::Format("xdg-open %s", url.Data());
-#endif
-   gSystem->Exec(cmd.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
