@@ -1221,8 +1221,8 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplRFile::ReserveBlobKey(size
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize, bool hidden)
-   : fIsHidden(hidden), fNTupleName(name)
+ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize, bool isHidden)
+   : fIsHidden(isHidden), fNTupleName(name)
 {
    auto &fileSimple = fFile.emplace<RImplSimple>();
    fileSimple.fControlBlock = std::make_unique<ROOT::Internal::RTFileControlBlock>();
@@ -1269,8 +1269,8 @@ ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::st
    // RNTupleFileWriter::RImplSimple does its own buffering, turn off additional buffering from C stdio.
    std::setvbuf(fileStream, nullptr, _IONBF, 0);
 
-   auto writer =
-      std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize(), /*hidden=*/false));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      new RNTupleFileWriter(ntupleName, options.GetMaxKeySize(), /*isHidden=*/false));
    RImplSimple &fileSimple = std::get<RImplSimple>(writer->fFile);
    fileSimple.fFile = fileStream;
    fileSimple.fDirectIO = options.GetUseDirectIO();
@@ -1309,7 +1309,7 @@ std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
                                           std::string_view ntupleDir, std::uint64_t maxKeySize)
 {
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize, /*hidden=*/false));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize, /*isHidden=*/false));
    auto &rfile = writer->fFile.emplace<RImplRFile>();
    rfile.fFile = &file;
    R__ASSERT(ntupleDir.empty() || ntupleDir[ntupleDir.size() - 1] == '/');
@@ -1321,7 +1321,7 @@ std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::CloneAsHidden(std::string_view ntupleName) const
 {
    if (auto *file = std::get_if<RImplTFile>(&fFile)) {
-      return Append(ntupleName, *file->fDirectory, fNTupleAnchor.fMaxKeySize, /* hidden= */ true);
+      return Append(ntupleName, *file->fDirectory, fNTupleAnchor.fMaxKeySize, /* isHidden= */ true);
    }
    // TODO: support also non-TFile-based writers
    throw ROOT::RException(R__FAIL("cannot clone a non-TFile-based RNTupleFileWriter."));
