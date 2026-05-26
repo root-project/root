@@ -96,6 +96,13 @@ ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::str
 
 //------------------------------------------------------------------------------
 
+void ROOT::RFieldBase::RDeleter::DeleteAligned(void *objPtr) const
+{
+   operator delete(objPtr, std::align_val_t(fAlignment));
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::RFieldBase::RColumnRepresentations::RColumnRepresentations()
 {
    // A single representations with an empty set of columns
