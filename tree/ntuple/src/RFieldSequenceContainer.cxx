@@ -567,7 +567,41 @@ void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t
          itemDeleter->operator()(typedValue->data() + (i * itemSize), true /* dtorOnly */);
       }
    }
-   typedValue->resize(nItems * itemSize);
+
+   // Resize the vector with correct alignment
+   const auto itemAlignment = itemField.GetAlignment();
+   const auto nbytes = nItems * itemSize;
+
+   auto fnAlignedResize = [](auto &vecOfAlignedStorage, std::size_t targetSize) {
+      constexpr auto valueTypeSize = sizeof(typename std::decay_t<decltype(vecOfAlignedStorage)>::value_type);
+      constexpr auto valueTypeAlignment = alignof(typename std::decay_t<decltype(vecOfAlignedStorage)>::value_type);
+      // Ensure that this function is used with RAlignedStorage as a template argument.
+      // In general, the actual (user-defined) item type may have larger size than alignment.
+      static_assert(valueTypeSize == valueTypeAlignment);
+      assert(targetSize % valueTypeAlignment == 0);
+      vecOfAlignedStorage.resize(targetSize / valueTypeSize);
+   };
+
+   static_assert(kMaxItemAlignment == 4096);
+   // clang-format off
+   switch (itemAlignment) {
+   case    1: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   1>> *>(vec), nbytes); break;
+   case    2: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   2>> *>(vec), nbytes); break;
+   case    4: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   4>> *>(vec), nbytes); break;
+   case    8: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   8>> *>(vec), nbytes); break;
+   case   16: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<  16>> *>(vec), nbytes); break;
+   case   32: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<  32>> *>(vec), nbytes); break;
+   case   64: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<  64>> *>(vec), nbytes); break;
+   case  128: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage< 128>> *>(vec), nbytes); break;
+   case  256: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage< 256>> *>(vec), nbytes); break;
+   case  512: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage< 512>> *>(vec), nbytes); break;
+   case 1024: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<1024>> *>(vec), nbytes); break;
+   case 2048: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<2048>> *>(vec), nbytes); break;
+   case 4096: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<4096>> *>(vec), nbytes); break;
+   default: throw RException(R__FAIL(std::string("Unsupported alignment: ") + std::to_string(itemAlignment)));
+   }
+   // clang-format on
+
    if (!(itemField.GetTraits() & kTraitTriviallyConstructible)) {
       for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
          CallConstructValueOn(itemField, typedValue->data() + (i * itemSize));

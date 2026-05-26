@@ -260,6 +260,9 @@ protected:
    void CommitClusterImpl() final { fNWritten = 0; }
 
 public:
+   /// Maximum alignment of the vector's value type
+   static constexpr std::size_t kMaxItemAlignment = 4096;
+
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    RVectorField(RVectorField &&other) = default;
    RVectorField &operator=(RVectorField &&other) = default;

@@ -110,6 +110,7 @@ protected:
    /// the field has been destructed.
    class RDeleter {
       std::size_t fAlignment;
+      void DeleteAligned(void *objPtr) const; // outlined to make Windows happy
 
    public:
       explicit RDeleter(std::size_t align) : fAlignment(align) { assert(Internal::IsValidAlignment(align)); }
@@ -123,7 +124,7 @@ protected:
          if (fAlignment <= sizeof(std::max_align_t)) {
             operator delete(objPtr);
          } else {
-            operator delete(objPtr, std::align_val_t(fAlignment));
+            DeleteAligned(objPtr);
          }
       }
    };

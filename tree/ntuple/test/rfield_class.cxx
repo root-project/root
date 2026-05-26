@@ -540,6 +540,5 @@ TEST(RNTuple, AlignmentCornerCases)
 
    auto view = reader->GetView<AlignmentEnvelope>("f");
    EXPECT_EQ(1u, view(0).fVec.size());
-   // TODO(jblomer): FIXME
-   // EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(view(0).fVec.data()) % alignof(OverAligned));
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(view(0).fVec.data()) % alignof(OverAligned));
 }
