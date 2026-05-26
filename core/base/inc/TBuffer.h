@@ -390,7 +390,7 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
    auto cl = TClass::GetClass<Tmpl>();
-   obj = (Tmpl *) ( (void*) buf.ReadObjectAny(cl) );
+   obj = reinterpret_cast<Tmpl *>(buf.ReadObjectAny(cl));
    return buf;
 }
 
