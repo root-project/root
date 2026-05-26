@@ -231,6 +231,38 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithVoidPtr)
    }
 }
 
+TEST_F(RNTupleProcessorTest, RequestFieldWithTypeString)
+{
+   {
+      auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+      EXPECT_NO_THROW(proc->RequestField("y", "std::vector<float    >"));
+   }
+   {
+      auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+      EXPECT_NO_THROW(proc->RequestField("y", "std::vector<Float_t>"));
+   }
+   {
+      auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+      EXPECT_THROW(proc->RequestField("y", "std::vetor<float>"), ROOT::RException);
+   }
+
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   auto x = proc->RequestField("x", "float");
+   auto yPtr = std::make_shared<std::vector<float>>();
+   auto y = proc->RequestField("y", "std::vector<float>", yPtr.get());
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *std::static_pointer_cast<float>(x.GetPtr()));
+
+      std::vector<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
+      EXPECT_EQ(yExp, *std::static_pointer_cast<std::vector<float>>(y.GetPtr()));
+   }
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
 TEST_F(RNTupleProcessorTest, AlternativeTypes)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
