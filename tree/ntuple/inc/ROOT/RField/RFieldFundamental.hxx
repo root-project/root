@@ -28,13 +28,6 @@
 #include <type_traits>
 
 namespace ROOT {
-namespace Experimental {
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
-
-} // namespace Experimental
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for concrete C++ fundamental types

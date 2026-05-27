@@ -31,13 +31,6 @@
 #include <variant>
 
 namespace ROOT {
-namespace Experimental {
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
-
-} // namespace Experimental
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for C++ std::atomic
