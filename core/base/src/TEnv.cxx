@@ -16,10 +16,14 @@ The TEnv class reads config files, by default named `.rootrc`.
 Three types of config files are read: global, user and local files. The
 global file is `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`)
 the user file is `$HOME/<name>` and the local file is `./<name>`.
+
 By setting the shell variable `ROOTENV_NO_HOME=1` the reading of
 the `$HOME/<name>` resource file will be skipped. This might be useful
 in case the home directory resides on an auto-mounted remote file
 system and one wants to avoid this file system from being mounted.
+
+By setting ROOTENV_USER_PATH=<path>, the user-level configuration can
+be read from a custom path instead of from $HOME.
 
 The format of the `.rootrc` file is similar to the `.Xdefaults` format:
 ~~~ {.cpp}
@@ -388,7 +392,7 @@ TString TEnvRec::ExpandValue(const char *value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files,
-/// i.e.\ `$ROOTSYS/etc/system<name>` or `ROOTETCDIR/system<name>` 
+/// i.e.\ `$ROOTSYS/etc/system<name>` or `ROOTETCDIR/system<name>`
 /// (kEnvGlobal), `$HOME/<name>` or (kEnvUser),  and `$PWD/<name>` (kEnvLocal).
 /// ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
 /// read additional user defined resource files by creating additional TEnv
@@ -396,10 +400,10 @@ TString TEnvRec::ExpandValue(const char *value)
 /// the `$HOME/<name>` resource file will be skipped. This might be useful in
 /// case the home directory resides on an auto-mounted remote file system
 /// and one wants to avoid the file system from being mounted.
-/// In case the environment variable ROOTENV_USER_PATH is specified, 
-/// and ROOTENV_NO_HOME is not set, then `$ROOTENV_USER_PATH/<name>` 
+/// In case the environment variable ROOTENV_USER_PATH is specified,
+/// and ROOTENV_NO_HOME is not set, then `$ROOTENV_USER_PATH/<name>`
 /// is considered instead of `$HOME/<name>`.
-/// If environment variables have to be avoided, a `rootlogon.C` script 
+/// If environment variables have to be avoided, a `rootlogon.C` script
 /// can be created where where the environment can be set through an
 /// invocation of TEnv::ReadFile.
 
