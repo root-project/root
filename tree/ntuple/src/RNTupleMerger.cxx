@@ -429,7 +429,7 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
-std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
+static std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
 {
    if (x) {
       os << '(' << x->fMin << ", " << x->fMax << ')';
