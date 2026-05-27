@@ -143,7 +143,7 @@ void ROOT::Internal::RPrintValueVisitor::PrintRecord(const ROOT::RFieldBase &fie
    auto elems = field.SplitValue(fValue);
    for (auto iValue = elems.begin(); iValue != elems.end();) {
       if (!fPrintOptions.fPrintSingleLine)
-         fOutput << std::endl;
+         fOutput << '\n';
 
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
@@ -152,7 +152,7 @@ void ROOT::Internal::RPrintValueVisitor::PrintRecord(const ROOT::RFieldBase &fie
 
       if (++iValue == elems.end()) {
          if (!fPrintOptions.fPrintSingleLine)
-            fOutput << std::endl;
+            fOutput << '\n';
          break;
       } else {
          fOutput << ",";
