@@ -484,6 +484,9 @@ protected:
 
    virtual void InitImpl(unsigned char *serializedHeader, std::uint32_t length) = 0;
 
+   /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
+   void InitImpl(RNTupleModel &model) final;
+
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) = 0;
    virtual RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
@@ -503,6 +506,9 @@ protected:
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
    virtual RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
+
+   /// \return The locator and length of the written anchor.
+   RNTupleLink CommitDatasetImpl() final;
 
    /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -531,8 +537,6 @@ public:
 
    ROOT::NTupleSize_t GetNEntries() const final { return fPrevClusterNEntries; }
 
-   /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
-   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) override;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
@@ -551,8 +555,6 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo) final;
-   /// \return The locator and length of the written anchor.
-   RNTupleLink CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off
