@@ -236,14 +236,6 @@ namespace TClassEdit {
    {
       return 0 == name.compare(0, 17, "std::__pair_base<") || 0 == name.compare(0, 12, "__pair_base<");
    }
-   inline std::string GetUniquePtrType(std::string_view name)
-   {
-      // Find the first template parameter
-      std::vector<std::string> v;
-      int i;
-      GetSplit(name.data(), v, i);
-      return v[1];
-   }
    std::string GetNameForIO(const std::string& templateInstanceName,
                            TClassEdit::EModType mode = TClassEdit::kNone,
                            bool* hasChanged = nullptr);
