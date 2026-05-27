@@ -374,10 +374,8 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
          if (!fListTree->FindChildByName(fListLevel, name)) {
             TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj,
                                                       pic, pic, kTRUE);
-            if ((pic != fFileIcon) && (pic != fCachedPic)) {
+            if ((pic != fFileIcon) && (pic != fCachedPic))
                fClient->FreePicture(pic);
-               fClient->FreePicture(pic);
-            }
             if (item) fListTree->CheckItem(item, (Bool_t)check);
             fListTree->SetToolTipItem(item, FormatToolTip(obj, 32));
          }
@@ -416,10 +414,8 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
          else {
             if (!fListTree->FindChildByName(fListLevel, name)) {
                TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj, pic, pic);
-               if ((pic != fFileIcon) && (pic != fCachedPic)) {
+               if ((pic != fFileIcon) && (pic != fCachedPic))
                   fClient->FreePicture(pic);
-                  fClient->FreePicture(pic);
-               }
                if (item && obj && obj->InheritsFrom("TObject"))
                   item->SetDNDSource(kTRUE);
                fListTree->SetToolTipItem(item, FormatToolTip(obj, 32));
@@ -456,11 +452,8 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
       pic = (TGPicture*)spic; pic->AddReference();
 
       if ((!fListTree->FindChildByName(fListLevel, filename)) &&
-         (!fListTree->FindChildByData(fListLevel, obj))) {
+         (!fListTree->FindChildByData(fListLevel, obj)))
          fListTree->AddItem(fListLevel, filename, obj, pic, pic);
-         gClient->FreePicture(pic);
-         gClient->FreePicture(pic);
-      }
    }
 }
 
@@ -768,7 +761,6 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
       if (pic) {
          item->SetPictures(pic, pic);
          gClient->FreePicture(pic);
-         gClient->FreePicture(pic);
       }
    }
 }
@@ -813,10 +805,8 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
    GetObjPicture(&pic, obj);
    if (!fListTree->FindChildByName(item, name)) {
       TGListTreeItem *it = fListTree->AddItem(item, name, obj, pic, pic);
-      if (pic && (pic != fFileIcon) && (pic != fCachedPic)) {
+      if (pic && (pic != fFileIcon) && (pic != fCachedPic))
          fClient->FreePicture(pic);
-         fClient->FreePicture(pic);
-      }
       it->SetDNDSource(kTRUE);
       it->SetTipText(FormatToolTip(obj, 32));
    }
@@ -1410,10 +1400,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                   pic = MakeLinkPic(pic);
                if (!fListTree->FindChildByName(item, fname)) {
                   itm = fListTree->AddItem(item, fname, pic, pic);
-                  if (pic != fFileIcon) {
+                  if (pic != fFileIcon)
                      fClient->FreePicture(pic);
-                     fClient->FreePicture(pic);
-                  }
                   if (sbuf.fIsLink) {
                      TString fullname = file->GetName();
                      gSystem->ExpandPathName(fullname);

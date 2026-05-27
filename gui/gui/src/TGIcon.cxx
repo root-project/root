@@ -69,10 +69,7 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
 
 TGIcon::~TGIcon()
 {
-   if (fPic)
-      fClient->FreePicture(fPic);
-   if (fImage)
-      delete fImage;
+   if (fPic) fClient->FreePicture(fPic);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
