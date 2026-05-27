@@ -1245,8 +1245,8 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStora
          }
 
          const auto *p = itr->second.fSealedPage;
-         if (sealedPageIt->GetDataSize() != p->GetDataSize() ||
-             memcmp(sealedPageIt->GetBuffer(), p->GetBuffer(), p->GetDataSize())) {
+         if ((sealedPageIt->GetDataSize() != p->GetDataSize()) ||
+             (memcmp(sealedPageIt->GetBuffer(), p->GetBuffer(), p->GetDataSize()) != 0)) {
             mask.emplace_back(true);
             locatorIndexes.emplace_back(iLocator++);
             continue;
