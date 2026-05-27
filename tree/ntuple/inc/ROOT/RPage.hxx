@@ -81,7 +81,7 @@ public:
    {}
    RPage(const RPage &) = delete;
    RPage &operator=(const RPage &) = delete;
-   RPage(RPage &&other)
+   RPage(RPage &&other) noexcept
    {
       fBuffer = other.fBuffer;
       fPageAllocator = other.fPageAllocator;
@@ -92,7 +92,7 @@ public:
       fClusterInfo = other.fClusterInfo;
       other.fPageAllocator = nullptr;
    }
-   RPage &operator=(RPage &&other)
+   RPage &operator=(RPage &&other) noexcept
    {
       if (this != &other) {
          std::swap(fBuffer, other.fBuffer);
