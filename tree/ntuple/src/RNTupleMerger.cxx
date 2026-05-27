@@ -725,7 +725,7 @@ ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, ROOT
    try {
       mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
    } catch (const ROOT::RException &ex) {
-      return R__FAIL(ex.GetError().GetReport());
+      return R__FAIL(ex.what());
    }
 
    commonFields.reserve(commonFields.size() + newFields.size());
