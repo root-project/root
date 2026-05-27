@@ -197,8 +197,14 @@ ROOT::RNTupleModel::RUpdater::~RUpdater()
    // If we made any changes, we should commit them because the model was already altered.
    // Otherwise, we _do not_ commit -- it may be that the referenced model is already expired if the
    // corresponding writer is already destructed.
-   if (!fOpenChangeset.IsEmpty())
+   if (fOpenChangeset.IsEmpty())
+      return;
+
+   try {
       ROOT::RNTupleModel::RUpdater::CommitUpdate();
+   } catch (std::runtime_error &e) {
+      Fatal("RNTupleModel::RUpdater::~RUpdater", "cannot commit model changes during updater destructor: %s", e.what());
+   }
 }
 
 void ROOT::RNTupleModel::RUpdater::BeginUpdate()
