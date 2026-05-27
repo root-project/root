@@ -65,12 +65,12 @@ ROOT::Experimental::Detail::RNTupleMetrics::GetCounter(std::string_view name) co
 void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, const std::string &prefix) const
 {
    if (!fIsEnabled) {
-      output << fName << " metrics disabled!" << std::endl;
+      output << fName << " metrics disabled!\n";
       return;
    }
 
    for (const auto &c : fCounters) {
-      output << prefix << fName << kNamespaceSeperator << c->ToString() << std::endl;
+      output << prefix << fName << kNamespaceSeperator << c->ToString() << '\n';
    }
    for (const auto c : fObservedMetrics) {
       c->Print(output, prefix + fName + ".");
