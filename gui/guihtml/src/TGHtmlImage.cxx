@@ -43,9 +43,6 @@
 #include "TSocket.h"
 #include "TSystem.h"
 #include "TError.h"
-#ifdef R__SSL
-#include "TSSLSocket.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor.
@@ -210,82 +207,6 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Temporary function to read remote pictures
-
-static TImage *ReadRemoteImage(const char *url)
-{
-   TImage *image = 0;
-   FILE *tmp;
-   char *buf;
-   TUrl fUrl(url);
-
-   TString msg = "GET ";
-   msg += fUrl.GetProtocol();
-   msg += "://";
-   msg += fUrl.GetHost();
-   msg += ":";
-   msg += fUrl.GetPort();
-   msg += "/";
-   msg += fUrl.GetFile();
-   msg += "\r\n";
-
-   TString uri(url);
-   if ((!uri.BeginsWith("http://") && !uri.BeginsWith("https://")) ||
-       uri.EndsWith(".html"))
-      return 0;
-   TSocket *s;
-   if (uri.BeginsWith("https://")) {
-#ifdef R__SSL
-      s = new ROOT::Deprecated::TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
-#else
-      ::Error("ReadRemoteImage", "library compiled without SSL, https not supported");
-      return 0;
-#endif
-   }
-   else {
-      s = new TSocket(fUrl.GetHost(), fUrl.GetPort());
-   }
-   if (!s->IsValid()) {
-      delete s;
-      return 0;
-   }
-   if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
-      delete s;
-      return 0;
-   }
-   Int_t size = 1024*1024;
-   buf = (char *)calloc(size, sizeof(char));
-   if (!buf) {
-      delete s;
-      return 0;
-   }
-   if (s->RecvRaw(buf, size) == -1) {
-      free(buf);
-      delete s;
-      return 0;
-   }
-   TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
-                                     gSystem->BaseName(url));
-   tmp = fopen(pathtmp.Data(), "wb");
-   if (!tmp) {
-      free(buf);
-      delete s;
-      return 0;
-   }
-   fwrite(buf, sizeof(char), size, tmp);
-   fclose(tmp);
-   free(buf);
-   image = TImage::Open(pathtmp.Data());
-   if (image && !image->IsValid()) {
-      delete image;
-      image = 0;
-   }
-   gSystem->Unlink(pathtmp.Data());
-   delete s;
-   return image;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// This is the default LoadImage() procedure. It just tries to load the
 /// image from a file in the local filesystem.
 
@@ -293,14 +214,7 @@ TImage *TGHtml::LoadImage(const char *url, int w, int h)
 {
    TImage *image = 0;
 
-   //TGHtmlUri uri(url);
-
-   TString uri(url);
-   if ((uri.BeginsWith("http://") || uri.BeginsWith("https://")) &&
-       !uri.EndsWith(".html"))
-      image = ReadRemoteImage(url);
-   else
-      image = TImage::Open(url);
+   image = TImage::Open(url);
    if (image) {
       if (!image->IsValid()) {
          delete image;
