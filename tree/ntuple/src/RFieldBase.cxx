@@ -438,7 +438,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       } else if (resolvedType.substr(0, 24) == "std::unordered_multiset<") {
          std::string itemTypeName = resolvedType.substr(24, resolvedType.length() - 25);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
          result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kUnorderedMultiSet, std::move(itemField));
       } else if (resolvedType.substr(0, 9) == "std::map<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(9, resolvedType.length() - 10));
