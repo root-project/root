@@ -235,10 +235,6 @@ void TGFileBrowser::CreateBrowser()
 
    fDblClick = kFALSE;
 
-   if (TClass::GetClass("TGHtmlBrowser"))
-      TQObject::Connect("TGHtmlBrowser", "Clicked(char*)",
-                        "TGFileBrowser", this, "Selected(char*)");
-
    TQObject::Connect("TPad", "Modified()",
                      "TGFileBrowser", this, "PadModified()");
 
@@ -253,8 +249,6 @@ void TGFileBrowser::CreateBrowser()
 
 TGFileBrowser::~TGFileBrowser()
 {
-   if (TClass::GetClass("TGHtmlBrowser"))
-      TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
    TQObject::Disconnect("TPad", "Modified()");
 
    delete fContextMenu;
@@ -1810,7 +1804,7 @@ void TGFileBrowser::RequestFilter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A ROOT File has been selected in TGHtmlBrowser.
+/// A ROOT File has been selected in TGFileBrowser.
 
 void TGFileBrowser::Selected(char *)
 {

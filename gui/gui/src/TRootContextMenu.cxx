@@ -43,6 +43,7 @@ The picture below shows a canvas with a pop-up menu.
 #include "TRootBrowser.h"
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
+#include "TApplication.h"
 #include "KeySymbols.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
@@ -635,37 +636,17 @@ Bool_t TRootContextMenu::HandleMotion(Event_t *event)
 void TRootContextMenu::OnlineHelp()
 {
    TString clname;
-   TString cmd;
-   TString url = gEnv->GetValue("Browser.StartUrl", "https://root.cern.ch/doc/master");
-   if (url.EndsWith(".html", TString::kIgnoreCase)) {
-      if (url.Last('/') != kNPOS)
-         url.Remove(url.Last('/'));
-   }
-   if (!url.EndsWith("/")) {
-      url += '/';
-   }
    TObject *obj = fContextMenu->GetSelectedObject();
    if (obj) {
       clname = obj->ClassName();
       if (fContextMenu->GetSelectedMethod()) {
          TString smeth = fContextMenu->GetSelectedMethod()->GetName();
          TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
-         if (method) clname = method->GetClass()->GetName();
-         url += clname;
-         url += ".html";
-         url += "#";
-         url += clname;
-         url += ":";
-         url += smeth.Data();
+         if (method)
+            clname = method->GetClass()->GetName();
+         clname += "::" + smeth;
       }
-      else {
-         url += clname;
-         url += ".html";
-      }
-      if (fDialog) delete fDialog;
-      fDialog = 0;
-      cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
-      gROOT->ProcessLine(cmd.Data());
+      gApplication->OpenReferenceGuideFor(clname);
    }
 }
 
