@@ -32,8 +32,6 @@
 #include <set>
 #include <utility>
 
-using ROOT::Internal::RNTupleSerializer;
-
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&

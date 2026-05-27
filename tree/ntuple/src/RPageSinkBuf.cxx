@@ -27,7 +27,6 @@ using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTuplePlainCounter;
 using ROOT::Experimental::Detail::RNTuplePlainTimer;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
-using ROOT::Internal::MakeUninitArray;
 
 void ROOT::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {

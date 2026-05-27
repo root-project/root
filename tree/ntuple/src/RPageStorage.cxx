@@ -41,7 +41,6 @@
 #include <unordered_map>
 #include <utility>
 
-using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RClusterDescriptorBuilder;
 using ROOT::Internal::RClusterGroupDescriptorBuilder;
 using ROOT::Internal::RColumn;
