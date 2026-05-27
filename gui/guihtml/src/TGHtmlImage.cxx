@@ -214,12 +214,6 @@ TImage *TGHtml::LoadImage(const char *url, int w, int h)
 {
    TImage *image = 0;
 
-   //TGHtmlUri uri(url);
-
-   TString uri(url);
-   if ((uri.BeginsWith("http://") || uri.BeginsWith("https://")) &&
-       !uri.EndsWith(".html"))
-      return nullptr;
    image = TImage::Open(url);
    if (image) {
       if (!image->IsValid()) {
