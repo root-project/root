@@ -76,11 +76,36 @@ public:
 */
 // clang-format on
 class RException : public std::runtime_error {
-   RError fError;
+   std::optional<RError> fError;
 
 public:
    explicit RException(const RError &error) : std::runtime_error(error.GetReport()), fError(error) {}
-   const RError &GetError() const { return fError; }
+   RException(const RException &other) noexcept : std::runtime_error(other)
+   {
+      // A copy constructor of an exception should not throw; otherwise, during `throw RException(...)`,
+      // a second exception may be thrown that would immediately terminate the program.
+      // The fError member may throw due to the memory allocation in its string and vector members.
+      try {
+         fError = other.fError;
+      } catch (...) {
+         // OOM? Leave fError unset.
+         (void)fError;
+      }
+   }
+   RException(RException &&other) = default;
+   RException &operator=(RException &&other) = default;
+   RException &operator=(const RException &other) = default;
+
+   const RError &GetError() const
+   {
+      if (!fError) {
+         static const RError gOomError = RError("invalid fError in exception, possibly out of memory'",
+                                                {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__});
+
+         return gOomError;
+      }
+      return *fError;
+   }
 };
 
 // clang-format off
