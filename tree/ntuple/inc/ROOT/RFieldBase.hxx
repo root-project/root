@@ -791,7 +791,7 @@ public:
       fTypeInfo = nullptr;
       return *this;
    }
-   RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue(RValue &&other) : fField(other.fField), fObjPtr(std::move(other.fObjPtr)) {}
    RValue &operator=(RValue &&other)
    {
       fField = other.fField;
