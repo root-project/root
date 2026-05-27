@@ -398,13 +398,13 @@ void ROOT::Experimental::RNTupleChainProcessor::PrintStructureImpl(std::ostream 
 
 //------------------------------------------------------------------------------
 
-namespace ROOT::Experimental::Internal {
+namespace {
 class RAuxiliaryProcessorField final : public ROOT::RRecordField {
 private:
    using RFieldBase::GenerateColumns;
    void GenerateColumns() final
    {
-      throw RException(R__FAIL("RAuxiliaryProcessorField fields must only be used for reading"));
+      throw ROOT::RException(R__FAIL("RAuxiliaryProcessorField fields must only be used for reading"));
    }
 
 public:
@@ -414,7 +414,7 @@ public:
       AttachItemFields(std::move(itemFields));
    }
 };
-} // namespace ROOT::Experimental::Internal
+} // anonymous namespace
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                                                                std::unique_ptr<RNTupleProcessor> auxProcessor,
