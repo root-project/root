@@ -45,16 +45,13 @@ using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using ROOT::Experimental::Detail::RNTupleCalcPerf;
 using ROOT::Experimental::Detail::RNTupleMetrics;
-using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RCluster;
-using ROOT::Internal::RClusterPool;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleFileWriter;
 using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::ROnDiskPage;
 using ROOT::Internal::ROnDiskPageMap;
-using ROOT::Internal::RPagePool;
 
 ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options)
