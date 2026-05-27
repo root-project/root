@@ -8,23 +8,6 @@
 # CMakeLists.txt file for building ROOT net/net package
 ############################################################################
 
-if(ssl)
-  add_definitions(-DR__SSL)
-
-  set(NET_SSL_HEADERS
-    TSSLSocket.h
-  )
-
-  set(NET_SSL_SOURCES
-    src/TSSLSocket.cxx
-  )
-
-  if(MACOSX_SSL_DEPRECATED)
-    set_source_files_properties(src/TSSLSocket.cxx
-      COMPILE_FLAGS -Wno-deprecated-declarations)
-  endif()
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Net
   HEADERS
     NetErrors.h
@@ -47,7 +30,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     TSQLStatement.h
     TSQLTableInfo.h
     TUDPSocket.h
-    ${NET_SSL_HEADERS}
   SOURCES
     src/NetErrors.cxx
     src/TApplicationRemote.cxx
@@ -68,7 +50,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     src/TSQLStatement.cxx
     src/TSQLTableInfo.cxx
     src/TUDPSocket.cxx
-    ${NET_SSL_SOURCES}
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
@@ -76,10 +57,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
   LIBRARIES
     ${ROOT_ATOMIC_LIBS}
 )
-
-if(ssl)
-  target_include_directories(Net PRIVATE ${OPENSSL_INCLUDE_DIR})
-  target_link_libraries(Net PRIVATE ${OPENSSL_LIBRARIES})
-endif()
-
 ROOT_ADD_TEST_SUBDIRECTORY(test)
