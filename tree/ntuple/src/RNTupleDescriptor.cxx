@@ -720,7 +720,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
          const auto cat = invalid.GetCategory();
          bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
-            throw invalid.GetError();
+            throw RException(R__FAIL(invalid.GetError()));
 
          // Not a hard error: skip the field and go on.
          continue;
