@@ -159,7 +159,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
           << float(headerSize + footerSize) / float(nBytesOnStorage) << "\n";
    output << "------------------------------------------------------------\n";
    output << "CLUSTER DETAILS\n";
-   output << "------------------------------------------------------------" << std::endl;
+   output << "------------------------------------------------------------\n";
 
    std::sort(clusters.begin(), clusters.end());
    for (unsigned int i = 0; i < clusters.size(); ++i) {
@@ -168,7 +168,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
       output << "         " << "   # Pages:         " << clusters[i].fNPages << "\n";
       output << "         " << "   Size on storage: " << clusters[i].fNBytesOnStorage << " B\n";
       output << "         " << "   Compression:     " << std::fixed << std::setprecision(2)
-             << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << std::endl;
+             << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << '\n';
    }
 
    output << "------------------------------------------------------------\n";
@@ -199,6 +199,6 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
       output << "    Size on storage:     " << col.fNBytesOnStorage << " B\n";
       output << "    Compression:         " << std::fixed << std::setprecision(2)
              << float(col.fElementSize * col.fNElements) / float(col.fNBytesOnStorage) << "\n";
-      output << "............................................................" << std::endl;
+      output << "............................................................\n";
    }
 }
