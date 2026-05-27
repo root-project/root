@@ -73,7 +73,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          nElems += columnRange.GetNElements();
 
          if (!fCompressionSettings && columnRange.GetCompressionSettings()) {
-            fCompressionSettings = *columnRange.GetCompressionSettings();
+            fCompressionSettings = columnRange.GetCompressionSettings();
          } else if (fCompressionSettings && columnRange.GetCompressionSettings() &&
                     (*fCompressionSettings != *columnRange.GetCompressionSettings())) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
