@@ -674,7 +674,7 @@ sap.ui.define([
 
       render()
       {
-         console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
+         // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
          this.render_requested = false;
          if (this.render_requested_recalc_sbbox) {
