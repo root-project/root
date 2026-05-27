@@ -44,7 +44,7 @@ ROOT::RNTupleFillContext::~RNTupleFillContext()
    try {
       FlushCluster();
    } catch (const RException &err) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure flushing cluster: " << err.GetError().GetReport();
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure flushing cluster: " << err.what();
    }
 
    if (!fStagedClusters.empty()) {
