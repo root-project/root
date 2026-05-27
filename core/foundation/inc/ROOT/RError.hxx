@@ -58,9 +58,9 @@ private:
 
 public:
    /// Used by R__FAIL
-   RError(std::string_view message, RLocation &&sourceLocation);
+   RError(std::string_view message, const RLocation &sourceLocation);
    /// Used by R__FORWARD_RESULT
-   void AddFrame(RLocation &&sourceLocation);
+   void AddFrame(const RLocation &sourceLocation);
    /// Add more information to the diagnostics
    void AppendToMessage(std::string_view info) { fMessage += info; }
    /// Format a dignostics report, e.g. for an exception message
@@ -150,12 +150,12 @@ public:
 
    /// Used by R__FORWARD_ERROR in order to keep track of the stack trace.
    [[nodiscard]]
-   static RError ForwardError(RResultBase &&result, RError::RLocation &&sourceLocation)
+   static RError ForwardError(const RResultBase &result, const RError::RLocation &sourceLocation)
    {
       if (!result.fError) {
-         return RError("internal error: attempt to forward error of successful operation", std::move(sourceLocation));
+         return RError("internal error: attempt to forward error of successful operation", sourceLocation);
       }
-      result.fError->AddFrame(std::move(sourceLocation));
+      result.fError->AddFrame(sourceLocation);
       return *result.fError;
    }
 }; // class RResultBase
@@ -252,10 +252,10 @@ public:
    ~RResult() = default;
 
    /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
-   RResult &Forward(RError::RLocation &&sourceLocation)
+   RResult &Forward(const RError::RLocation &sourceLocation)
    {
       if (fError)
-         fError->AddFrame(std::move(sourceLocation));
+         fError->AddFrame(sourceLocation);
       return *this;
    }
 
@@ -302,10 +302,10 @@ public:
    ~RResult() = default;
 
    /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
-   RResult &Forward(RError::RLocation &&sourceLocation)
+   RResult &Forward(const RError::RLocation &sourceLocation)
    {
       if (fError)
-         fError->AddFrame(std::move(sourceLocation));
+         fError->AddFrame(sourceLocation);
       return *this;
    }
 
@@ -325,7 +325,7 @@ public:
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
 #define R__FORWARD_RESULT(res) std::move(res.Forward({R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}))
 /// Short-hand to return an RResult<T> in an error state (i.e. after checking)
-#define R__FORWARD_ERROR(res) res.ForwardError(std::move(res), {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
+#define R__FORWARD_ERROR(res) res.ForwardError(res, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 
 } // namespace ROOT
 
