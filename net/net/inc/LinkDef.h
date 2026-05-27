@@ -33,8 +33,4 @@
 #pragma link C++ class TUDPSocket;
 #pragma link C++ class TParallelMergingFile+;
 
-#ifdef R__SSL
-#pragma link C++ class ROOT::Deprecated::TSSLSocket;
-#endif
-
 #endif

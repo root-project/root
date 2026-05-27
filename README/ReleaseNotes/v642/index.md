@@ -44,6 +44,7 @@ The following people have contributed to this new version:
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
+* The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
 
 ## Python Interface
 
@@ -76,5 +77,3 @@ If the vectorized backend does not work for a given use case, **please report it
 ## Documentation and Examples
 
 ## Build, Configuration and Testing
-
-
