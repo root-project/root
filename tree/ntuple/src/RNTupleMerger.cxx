@@ -217,7 +217,7 @@ try {
                   "determined.";
             return -1;
          }
-         compression = (*firstColRange).GetCompressionSettings().value();
+         compression = (*firstColRange).GetCompressionSettings();
          R__LOG_INFO(NTupleMergeLog()) << "Using the first RNTuple's compression: " << *compression;
       }
       sources.push_back(std::move(source));
@@ -245,7 +245,7 @@ try {
    // Now merge
    RNTupleMerger merger{std::move(destination), std::move(model)};
    RNTupleMergeOptions mergerOpts;
-   mergerOpts.fCompressionSettings = *compression;
+   mergerOpts.fCompressionSettings = compression;
    mergerOpts.fExtraVerbose = extraVerbose;
    if (auto mergingMode = ParseOptionMergingMode(mergeInfo->fOptions)) {
       mergerOpts.fMergingMode = *mergingMode;
