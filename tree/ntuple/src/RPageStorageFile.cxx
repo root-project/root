@@ -395,9 +395,8 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
    // For local TFiles, TDavixFile, TCurlFile, and TNetXNGFile, we want to open a new RRawFile to take advantage of the
    // faster reading. We check the exact class name to avoid classes inheriting in ROOT (for example TMemFile) or in
    // experiment frameworks.
-   std::string className = anchor.fFile->IsA()->GetName();
-   auto url = anchor.fFile->GetEndpointUrl();
-   auto protocol = std::string(url->GetProtocol());
+   const std::string className = anchor.fFile->IsA()->GetName();
+   const auto url = anchor.fFile->GetEndpointUrl();
    if (className == "TFile") {
       rawFile = ROOT::Internal::RRawFile::Create(url->GetFile());
    } else if (className == "TDavixFile" || className == "TCurlFile" || className == "TNetXNGFile") {
