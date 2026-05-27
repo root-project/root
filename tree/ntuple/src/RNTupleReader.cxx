@@ -309,18 +309,18 @@ void ROOT::RNTupleReader::Show(ROOT::NTupleSize_t index, std::ostream &output)
    reader->LoadEntry(index);
    output << "{";
    for (auto iValue = entry.begin(); iValue != entry.end();) {
-      output << std::endl;
+      output << '\n';
       ROOT::Internal::RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
       iValue->GetField().AcceptVisitor(visitor);
 
       if (++iValue == entry.end()) {
-         output << std::endl;
+         output << '\n';
          break;
       } else {
          output << ",";
       }
    }
-   output << "}" << std::endl;
+   output << "}\n";
 }
 
 const ROOT::RNTupleDescriptor &ROOT::RNTupleReader::GetDescriptor()
