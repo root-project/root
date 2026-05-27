@@ -1300,9 +1300,9 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnD
 
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
-   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedColumn(columnDesc);
+   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
 
    return RResult<void>::Success();
 }
