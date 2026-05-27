@@ -393,7 +393,7 @@ void NormalizeTemplateArguments(std::string &templatedTypeName, int maxTemplateA
 // Given a type name normalized by ROOT Meta, return the type name normalized according to the RNTuple rules.
 std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
 {
-   const auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
+   auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
    // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
    // (also in template parameters)
    if (canonicalTypePrefix == "Double32_t")
@@ -573,7 +573,7 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
    TClassEdit::TSplitType splitname(origName.c_str(), modType);
    std::string shortType;
    splitname.ShortType(shortType, modType);
-   const auto canonicalTypePrefix = GetCanonicalTypePrefix(shortType);
+   auto canonicalTypePrefix = GetCanonicalTypePrefix(shortType);
 
    if (canonicalTypePrefix.find('<') == std::string::npos) {
       // If there are no templates, the function is done.
