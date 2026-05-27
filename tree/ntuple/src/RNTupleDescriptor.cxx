@@ -143,7 +143,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
       return field;
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
-         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
+         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.what(),
                                                       ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
