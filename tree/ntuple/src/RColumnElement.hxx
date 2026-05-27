@@ -58,7 +58,7 @@ void UnpackBits(void *dst, const void *src, std::size_t count, std::size_t sizeo
 
 } // namespace ROOT::Internal::BitPacking
 
-namespace {
+namespace { // NOLINT(misc-anonymous-namespace-in-header): this header is only used in tests and in RColumnElement.cxx
 
 // In this namespace, common routines are defined for element packing and unpacking of ints and floats.
 // The following conversions and encodings exist:
@@ -331,7 +331,7 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 } // namespace
 
 // anonymous namespace because these definitions are not meant to be exported.
-namespace {
+namespace { // NOLINT(misc-anonymous-namespace-in-header): this header is only used in tests and in RColumnElement.cxx
 
 using ROOT::ENTupleColumnType;
 using ROOT::Internal::kTestFutureColumnType;
