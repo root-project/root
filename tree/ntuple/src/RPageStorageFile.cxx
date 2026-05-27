@@ -672,7 +672,7 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
    clusters.reserve(clusterKeys.size());
-   for (auto key : clusterKeys) {
+   for (const auto &key : clusterKeys) {
       clusters.emplace_back(PrepareSingleCluster(key, readRequests));
    }
 
