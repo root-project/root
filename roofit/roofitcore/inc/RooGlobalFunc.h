@@ -78,7 +78,7 @@ namespace Experimental {
 
 /// Configuration options for parallel minimization with multiprocessing library
 RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
-RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
+RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=0) ;
 
 void writeCodegenDebugMacro(RooAbsReal const &absReal, std::string const &name);
 inline void writeCodegenDebugMacro(std::unique_ptr<RooAbsReal> const &absReal, std::string const &name)
