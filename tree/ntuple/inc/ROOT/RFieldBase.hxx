@@ -511,7 +511,7 @@ protected:
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
    /// Returns an index that can be used to remove the callback.
-   size_t AddReadCallback(ReadCallback_t func);
+   size_t AddReadCallback(const ReadCallback_t &func);
    void RemoveReadCallback(size_t idx);
 
    // Perform housekeeping tasks for global to cluster-local index translation
@@ -778,7 +778,7 @@ private:
    std::shared_ptr<void> fObjPtr;
    mutable std::atomic<const std::type_info *> fTypeInfo = nullptr;
 
-   RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
+   RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(std::move(objPtr)) {}
 
 public:
    RValue(const RValue &other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
@@ -829,7 +829,7 @@ public:
    void Read(ROOT::NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
    void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
 
-   void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
+   void Bind(std::shared_ptr<void> objPtr) { fObjPtr = std::move(objPtr); }
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
    void EmplaceNew() { fObjPtr = fField->CreateValue().GetPtr<void>(); }

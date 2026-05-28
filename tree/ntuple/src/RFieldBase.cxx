@@ -773,7 +773,7 @@ ROOT::RFieldBase::RBulkValues ROOT::RFieldBase::CreateBulk()
 
 ROOT::RFieldBase::RValue ROOT::RFieldBase::BindValue(std::shared_ptr<void> objPtr)
 {
-   return RValue(this, objPtr);
+   return RValue(this, std::move(objPtr));
 }
 
 std::size_t ROOT::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
@@ -893,7 +893,7 @@ ROOT::RFieldBase::EnsureCompatibleColumnTypes(const ROOT::RNTupleDescriptor &des
                             "(representation index: " + std::to_string(representationIndex) + ")"));
 }
 
-size_t ROOT::RFieldBase::AddReadCallback(ReadCallback_t func)
+size_t ROOT::RFieldBase::AddReadCallback(const ReadCallback_t &func)
 {
    fReadCallbacks.push_back(func);
    fIsSimple = false;
