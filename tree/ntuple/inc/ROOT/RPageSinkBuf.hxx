@@ -52,8 +52,8 @@ class RPageSinkBuf : public RPageSink {
       RColumnBuf() = default;
       RColumnBuf(const RColumnBuf&) = delete;
       RColumnBuf& operator=(const RColumnBuf&) = delete;
-      RColumnBuf(RColumnBuf&&) = default;
-      RColumnBuf& operator=(RColumnBuf&&) = default;
+      RColumnBuf(RColumnBuf &&) noexcept = default;
+      RColumnBuf &operator=(RColumnBuf &&) noexcept = default;
       ~RColumnBuf() { DropBufferedPages(); }
 
       /// Returns a reference to the newly buffered page. The reference remains
