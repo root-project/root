@@ -389,6 +389,16 @@ TString TEnvRec::ExpandValue(const char *value)
    return val;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the home directory or, if set, the value of the environment variable
+/// ROOTENV_USER_PATH.
+const char *TEnv::GetUserDirectory() const
+{
+   const auto customPath = gSystem->Getenv("ROOTENV_USER_PATH");
+   if (customPath)
+      return customPath;
+   return gSystem->HomeDirectory();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files,
@@ -422,16 +432,10 @@ TEnv::TEnv(const char *name)
       const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
       ReadFile(s, kEnvGlobal);
       if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-         if (const auto rootrcPath = gSystem->Getenv("ROOTENV_USER_PATH")) {
-            TString temp(name);
-            const char *s1 = gSystem->PrependPathName(rootrcPath, temp);
-            ReadFile(s1, kEnvUser);
-         } else {
-            TString temp(name);
-            const char *s1 = gSystem->PrependPathName(gSystem->HomeDirectory(), temp);
-            ReadFile(s1, kEnvUser);
-         }
-         if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
+         TString temp(name);
+         gSystem->PrependPathName(GetUserDirectory(), temp);
+         ReadFile(temp.Data(), kEnvUser);
+         if (strcmp(GetUserDirectory(), gSystem->WorkingDirectory())) {
             ReadFile(name, kEnvLocal);
          }
       } else {
@@ -693,16 +697,16 @@ void TEnv::SaveLevel(EEnvLevel level)
    FILE     *ifp, *ofp;
 
    if (level == kEnvGlobal) {
-
       TString sname = "system";
       sname += fRcName;
       rootrcdir = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
    } else if (level == kEnvUser) {
-      rootrcdir = gSystem->PrependPathName(gSystem->HomeDirectory(), fRcName);
-   } else if (level == kEnvLocal)
+      rootrcdir = gSystem->PrependPathName(GetUserDirectory(), fRcName);
+   } else if (level == kEnvLocal) {
       rootrcdir = fRcName;
-   else
+   } else {
       return;
+   }
 
    if ((ofp = fopen(TString::Format("%s.new", rootrcdir.Data()).Data(), "w"))) {
       ifp = fopen(rootrcdir.Data(), "r");

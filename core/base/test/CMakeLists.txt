@@ -22,6 +22,8 @@ endif()
 target_compile_options(CoreBaseTests PRIVATE -DEXPECTED_SHARED_LIBRARY_DIR="${localruntimedir}")
 target_compile_options(CoreBaseTests PRIVATE -DEXPECTED_INCLUDE_DIR="${CMAKE_BINARY_DIR}/include")
 
+ROOT_ADD_GTEST(CoreEnvTests TEnvTests.cxx LIBRARIES Core)
+
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
