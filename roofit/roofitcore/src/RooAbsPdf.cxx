@@ -1040,12 +1040,13 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData &data, const Roo
  *                                                                                                      The second argument determines the internal partial derivative calculation
  *                                                                                                      ordering strategy. The third argument determines the number of partial
  *                                                                                                      derivatives that are executed per task package on each worker.
- * <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** - Control settings related to the parallelization of likelihoods
+ * <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=0)`   <td>  **Experimental** - Control settings related to the parallelization of likelihoods
  *                                                                                                      outside of the gradient calculation but in the minimization, most prominently
  *                                                                                                      in the linesearch step. The first argument this disables or enables likelihood
- *                                                                                                      parallelization. The second argument determines whether to split the task batches
- *                                                                                                      per event or per likelihood component. And the third argument how many events or
- *                                                                                                      respectively components to include in each batch.
+ *                                                                                                      parallelization. The second argument determines whether to split the tasks in
+ *                                                                                                      blocks of events (0) or per likelihood component (1). And the third argument
+ *                                                                                                      determines into how many tasks to split the likelihood, where the default of
+ *                                                                                                      zero keeps the automatic task-splitting settings of `RooFit::MultiProcess`.
  * <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** - Log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
  *                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the
  *                                         `RooFit::MultiProcess::HeatmapAnalyzer`. Only works with simultaneous likelihoods.
