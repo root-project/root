@@ -276,8 +276,9 @@ void ROOT::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> fi
    fOpenChangeset.AddField(std::move(field), parentName);
 }
 
-ROOT::RResult<void> ROOT::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
-                                                                             RNTupleModel::FieldMappingFunc_t mapping)
+ROOT::RResult<void>
+ROOT::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
+                                                         const RNTupleModel::FieldMappingFunc_t &mapping)
 {
    auto fieldp = field.get();
    auto result = fModel.AddProjectedField(std::move(field), mapping);
@@ -286,10 +287,10 @@ ROOT::RResult<void> ROOT::Internal::RNTupleModelChangeset::AddProjectedField(std
    return R__FORWARD_RESULT(result);
 }
 
-ROOT::RResult<void>
-ROOT::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping)
+ROOT::RResult<void> ROOT::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
+                                                                    const FieldMappingFunc_t &mapping)
 {
-   return R__FORWARD_RESULT(fOpenChangeset.AddProjectedField(std::move(field), std::move(mapping)));
+   return R__FORWARD_RESULT(fOpenChangeset.AddProjectedField(std::move(field), mapping));
 }
 
 void ROOT::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
@@ -457,7 +458,7 @@ void ROOT::RNTupleModel::RegisterSubfield(std::string_view qualifiedFieldName)
 }
 
 ROOT::RResult<void>
-ROOT::RNTupleModel::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping)
+ROOT::RNTupleModel::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const FieldMappingFunc_t &mapping)
 {
    EnsureNotFrozen();
    if (!field)

@@ -107,7 +107,7 @@ private:
            fQualifiedFieldName(qualifiedFieldName),
            fValue(std::move(value)),
            fIsValid(isValid),
-           fProcessorProvenance(provenance)
+           fProcessorProvenance(std::move(provenance))
       {
       }
    };

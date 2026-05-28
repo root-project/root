@@ -402,7 +402,7 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
       return idSourceMember;
 
    for (const auto &subFieldDesc : desc.GetFieldIterable(classFieldId)) {
-      const auto subFieldName = subFieldDesc.GetFieldName();
+      const auto &subFieldName = subFieldDesc.GetFieldName();
       if (subFieldName.length() > 2 && subFieldName[0] == ':' && subFieldName[1] == '_') {
          idSourceMember = LookupMember(desc, memberName, subFieldDesc.GetId());
          if (idSourceMember != ROOT::kInvalidDescriptorId)
@@ -1250,14 +1250,14 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RProxiedCollectionField::GetDe
 
 ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::RProxiedCollectionDeleter(
    std::shared_ptr<TVirtualCollectionProxy> proxy)
-   : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()), fProxy(proxy)
+   : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()), fProxy(std::move(proxy))
 {
 }
 
 ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::RProxiedCollectionDeleter(
    std::shared_ptr<TVirtualCollectionProxy> proxy, std::unique_ptr<RDeleter> itemDeleter, size_t itemSize)
    : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()),
-     fProxy(proxy),
+     fProxy(std::move(proxy)),
      fItemDeleter(std::move(itemDeleter)),
      fItemSize(itemSize)
 {
@@ -1391,7 +1391,7 @@ private:
 
 public:
    TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
-      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(callbackStreamerInfo)
+      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(std::move(callbackStreamerInfo))
    {
    }
    void TagStreamerInfo(TVirtualStreamerInfo *info) final { fCallbackStreamerInfo(info); }

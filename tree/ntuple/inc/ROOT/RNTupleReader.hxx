@@ -166,7 +166,7 @@ public:
       void DeactivateEntry(NTupleSize_t entryNumber);
 
       explicit RActiveEntryToken(std::shared_ptr<RActiveEntriesControlBlock> ptrControlBlock)
-         : fPtrControlBlock(ptrControlBlock)
+         : fPtrControlBlock(std::move(ptrControlBlock))
       {
       }
 
