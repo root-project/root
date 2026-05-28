@@ -254,7 +254,7 @@ public:
    static std::unique_ptr<RNTupleImporter> Create(TTree *sourceTree, std::string_view destFileName);
 
    ROOT::RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
-   void SetWriteOptions(ROOT::RNTupleWriteOptions options) { fWriteOptions = options; }
+   void SetWriteOptions(const ROOT::RNTupleWriteOptions &options) { fWriteOptions = options; }
    void SetNTupleName(const std::string &name) { fNTupleName = name; }
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; };
 
@@ -267,7 +267,7 @@ public:
 
    /// Add custom method to adjust column representations.  Will be called for every field of the frozen model
    /// before it is attached to the page sink
-   void SetFieldModifier(FieldModifier_t modifier) { fFieldModifier = modifier; }
+   void SetFieldModifier(const FieldModifier_t &modifier) { fFieldModifier = modifier; }
 
    /// Import works in two steps:
    /// 1. PrepareSchema() calls SetBranchAddress() on all the TTree branches and creates the corresponding RNTuple

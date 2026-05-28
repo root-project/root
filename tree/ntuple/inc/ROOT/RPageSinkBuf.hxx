@@ -118,7 +118,7 @@ class RPageSinkBuf : public RPageSink {
    ROOT::DescriptorId_t fNColumns = 0;
 
    void ConnectFields(const std::vector<ROOT::RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry);
-   void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
+   void FlushClusterImpl(const std::function<void(void)> &FlushClusterFn);
 
    void InitImpl(ROOT::RNTupleModel &model) final;
    RNTupleLink CommitDatasetImpl() final;
