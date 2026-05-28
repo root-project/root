@@ -365,11 +365,11 @@ private:
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
    RNTupleCollectionView &operator=(const RNTupleCollectionView &other) = delete;
-   RNTupleCollectionView(RNTupleCollectionView &&other)
+   RNTupleCollectionView(RNTupleCollectionView &&other) noexcept(false)
       : fSource(other.fSource), fField(std::move(other.fField)), fValue(fField.CreateValue())
    {
    }
-   RNTupleCollectionView &operator=(RNTupleCollectionView &&other)
+   RNTupleCollectionView &operator=(RNTupleCollectionView &&other) noexcept(false)
    {
       if (this == &other)
          return *this;

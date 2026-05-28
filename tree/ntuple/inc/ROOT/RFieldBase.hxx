@@ -790,8 +790,8 @@ public:
       fTypeInfo = nullptr;
       return *this;
    }
-   RValue(RValue &&other) : fField(other.fField), fObjPtr(std::move(other.fObjPtr)) {}
-   RValue &operator=(RValue &&other)
+   RValue(RValue &&other) noexcept : fField(other.fField), fObjPtr(std::move(other.fObjPtr)) {}
+   RValue &operator=(RValue &&other) noexcept
    {
       fField = other.fField;
       fObjPtr = other.fObjPtr;
@@ -927,8 +927,8 @@ public:
    ~RBulkValues();
    RBulkValues(const RBulkValues &) = delete;
    RBulkValues &operator=(const RBulkValues &) = delete;
-   RBulkValues(RBulkValues &&other);
-   RBulkValues &operator=(RBulkValues &&other);
+   RBulkValues(RBulkValues &&other) noexcept;
+   RBulkValues &operator=(RBulkValues &&other) noexcept;
 
    // Sets `fValues` and `fSize`/`fCapacity` to the given values. The capacity is specified in number of values.
    // Once a buffer is adopted, an attempt to read more values then available throws an exception.

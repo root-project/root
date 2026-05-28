@@ -129,7 +129,7 @@ void ROOT::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 
 //------------------------------------------------------------------------------
 
-ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other)
+ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other) noexcept
    : fField(other.fField),
      fValueSize(other.fValueSize),
      fCapacity(other.fCapacity),
@@ -143,7 +143,7 @@ ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other)
    std::swap(fMaskAvail, other.fMaskAvail);
 }
 
-ROOT::RFieldBase::RBulkValues &ROOT::RFieldBase::RBulkValues::operator=(RBulkValues &&other)
+ROOT::RFieldBase::RBulkValues &ROOT::RFieldBase::RBulkValues::operator=(RBulkValues &&other) noexcept
 {
    std::swap(fField, other.fField);
    std::swap(fDeleter, other.fDeleter);
