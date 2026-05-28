@@ -1093,8 +1093,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
    fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
-                                                         const std::string_view description)
+void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(std::string_view name, std::string_view description)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
