@@ -441,6 +441,21 @@ ROOT::Internal::RPageSource::LoadZeroPage(ColumnHandle_t columnHandle, const RPa
 }
 
 ROOT::Internal::RPageRef
+ROOT::Internal::RPageSource::LoadPageFromSummary(ColumnHandle_t columnHandle, const RPageSummary &pageSummary)
+{
+   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown) {
+      throw RException(R__FAIL("tried to read a page with an unknown locator"));
+   } else if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
+      return LoadZeroPage(columnHandle, pageSummary);
+   }
+
+   // TOOD(jblomer): move cluster cache handling from concrete page sources to this super class
+
+   UpdateLastUsedCluster(pageSummary.fClusterId);
+   return LoadPageImpl(columnHandle, pageSummary);
+}
+
+ROOT::Internal::RPageRef
 ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
@@ -470,14 +485,7 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
       pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(globalIndex - pageSummary.fColumnOffset);
    }
 
-   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown) {
-      throw RException(R__FAIL("tried to read a page with an unknown locator"));
-   } else if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
-      return LoadZeroPage(columnHandle, pageSummary);
-   }
-
-   UpdateLastUsedCluster(pageSummary.fClusterId);
-   return LoadPageImpl(columnHandle, pageSummary);
+   return LoadPageFromSummary(columnHandle, pageSummary);
 }
 
 ROOT::Internal::RPageRef
@@ -509,14 +517,7 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
       pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(localIndex.GetIndexInCluster());
    }
 
-   if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown) {
-      throw RException(R__FAIL("tried to read a page with an unknown locator"));
-   } else if (pageSummary.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
-      return LoadZeroPage(columnHandle, pageSummary);
-   }
-
-   UpdateLastUsedCluster(clusterId);
-   return LoadPageImpl(columnHandle, pageSummary);
+   return LoadPageFromSummary(columnHandle, pageSummary);
 }
 
 void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)

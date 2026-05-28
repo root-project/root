@@ -652,6 +652,10 @@ private:
 
    // Common treatment of zero pages that would otherwise need to be handled in LoadPageImpl()
    ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
+   // Once the page is found to be missing in the page cache and all information about the page is collected,
+   // either using a global or a local element index, perform the common page loading tasks using the page summary.
+   // This includes zero page handling and prefetching the corresponding cluster.
+   ROOT::Internal::RPageRef LoadPageFromSummary(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
 
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
