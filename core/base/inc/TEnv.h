@@ -87,6 +87,7 @@ private:
    TEnv& operator=(const TEnv&) = delete;
 
    const char       *Getvalue(const char *name) const;
+   const char       *GetUserDirectory() const;
 
 public:
    TEnv(const char *name="");
