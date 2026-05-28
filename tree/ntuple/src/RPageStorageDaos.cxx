@@ -504,63 +504,6 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNT
                                   daosKey.fDkey, daosKey.fAkey);
 }
 
-ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                                                     const RPageSummary &pageSummary)
-{
-   const auto &columnId = columnHandle.fPhysicalId;
-   const auto &clusterId = pageSummary.fClusterId;
-   const auto &pageInfo = pageSummary.fPageInfo;
-
-   const auto element = columnHandle.fColumn->GetElement();
-   const auto elementSize = element->GetSize();
-   const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
-
-   RSealedPage sealedPage;
-   sealedPage.SetNElements(pageInfo.GetNElements());
-   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
-   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
-   std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
-
-   if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
-      directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
-      RDaosKey daosKey =
-         GetPageDaosKey(fNTupleIndex, pageInfo.GetLocator().GetPosition<RNTupleLocatorObject64>().GetLocation());
-      fDaosContainer->ReadSingleAkey(directReadBuffer.get(), sealedPage.GetBufferSize(), daosKey.fOid, daosKey.fDkey,
-                                     daosKey.fAkey);
-      fCounters->fNPageRead.Inc();
-      fCounters->fNRead.Inc();
-      fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
-      sealedPage.SetBuffer(directReadBuffer.get());
-   } else {
-      if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
-         fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
-      R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
-
-      // The cluster pool may have unzipped the required page into the page pool
-      auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
-                                             RNTupleLocalIndex(clusterId, pageInfo.GetFirstElementIndex()));
-      if (!cachedPageRef.Get().IsNull())
-         return cachedPageRef;
-
-      ROOT::Internal::ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
-      auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
-      R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
-      sealedPage.SetBuffer(onDiskPage->GetAddress());
-   }
-
-   ROOT::Internal::RPage newPage;
-   {
-      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      newPage = UnsealPage(sealedPage, *element).Unwrap();
-      fCounters->fSzUnzip.Add(elementSize * pageInfo.GetNElements());
-   }
-
-   newPage.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
-                     ROOT::Internal::RPage::RClusterInfo(clusterId, pageSummary.fColumnOffset));
-   fCounters->fNPageUnsealed.Inc();
-   return fPagePool.RegisterPage(std::move(newPage), ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
-}
-
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
    auto clone = new RPageSourceDaos(fNTupleName, fURI, fOptions);

@@ -11,7 +11,6 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPageRef LoadPageImpl(ColumnHandle_t, const RPageSummary &) final { return RPageRef(); }
    void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
    void LoadStreamerInfo() final {}
    std::unique_ptr<ROOT::Internal::RPageSource>

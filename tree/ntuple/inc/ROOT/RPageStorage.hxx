@@ -568,7 +568,7 @@ The page source also gives access to the ntuple's metadata.
 // clang-format on
 class RPageSource : public RPageStorage {
 protected:
-   /// Summarizes meta-data necessary to load a certain page. Used by LoadPageImpl().
+   /// Summarizes meta-data necessary to load a certain page. Used by LoadPageFromSummary().
    struct RPageSummary {
       ROOT::DescriptorId_t fClusterId = 0;
       /// The first element number of the page's column in the given cluster
@@ -645,12 +645,15 @@ private:
    /// previous clusters are evicted from the page pool. Pinned clusters won't be evicted.
    std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
 
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
+   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
+
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
    /// Must not be called when the descriptor guard is taken.
    void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
 
-   // Common treatment of zero pages that would otherwise need to be handled in LoadPageImpl()
+   // Common treatment of zero pages in LoadPageFromSummary()
    ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
    // Once the page is found to be missing in the page cache and all information about the page is collected,
    // either using a global or a local element index, perform the common page loading tasks using the page summary.
@@ -733,8 +736,6 @@ protected:
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
-   // Returns a page from storage if not found in the page pool. Will never receive requests for zero pages.
-   virtual ROOT::Internal::RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) = 0;
    // Returns a sealed page from storage without adding it to the page pool. The sealed pages buffer and buffer size
    // is already initialized.
    virtual void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) = 0;
@@ -813,8 +814,9 @@ public:
    void SetEntryRange(const REntryRange &range);
    REntryRange GetEntryRange() const { return fEntryRange; }
 
-   /// Allocates and fills a page that contains the index-th element. The default implementation searches
-   /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
+   /// Allocates and fills a page that contains the index-th element. Calls into the concrete page source
+   /// for loading the corresponding sealed page of cluster where necessary.
+   /// Returns a default-constructed RPage for suppressed columns.
    virtual ROOT::Internal::RPageRef LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
