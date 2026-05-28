@@ -84,7 +84,7 @@ ROOT::RNTupleReader::RActiveEntryToken::RActiveEntryToken(const RActiveEntryToke
    SetEntryNumber(other.fEntryNumber);
 }
 
-ROOT::RNTupleReader::RActiveEntryToken::RActiveEntryToken(RActiveEntryToken &&other)
+ROOT::RNTupleReader::RActiveEntryToken::RActiveEntryToken(RActiveEntryToken &&other) noexcept
 {
    std::swap(fEntryNumber, other.fEntryNumber);
    std::swap(fPtrControlBlock, other.fPtrControlBlock);
@@ -105,7 +105,8 @@ ROOT::RNTupleReader::RActiveEntryToken::operator=(const RActiveEntryToken &other
    return *this;
 }
 
-ROOT::RNTupleReader::RActiveEntryToken &ROOT::RNTupleReader::RActiveEntryToken::operator=(RActiveEntryToken &&other)
+ROOT::RNTupleReader::RActiveEntryToken &
+ROOT::RNTupleReader::RActiveEntryToken::operator=(RActiveEntryToken &&other) noexcept
 {
    std::swap(fEntryNumber, other.fEntryNumber);
    std::swap(fPtrControlBlock, other.fPtrControlBlock);
