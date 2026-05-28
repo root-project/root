@@ -78,9 +78,9 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(primaryNTuple, processorName);
+   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(std::move(primaryNTuple), processorName);
 
-   std::unique_ptr<RNTupleProcessor> auxProcessor = Create(auxNTuple);
+   std::unique_ptr<RNTupleProcessor> auxProcessor = Create(std::move(auxNTuple));
 
    return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, processorName);
 }

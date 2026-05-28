@@ -350,8 +350,8 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
 
 void ROOT::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
-      perPageFunc)
+   const std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
+      &perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
