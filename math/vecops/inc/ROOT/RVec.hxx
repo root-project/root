@@ -564,6 +564,7 @@ namespace VecOps {
 template <typename T>
 class R__CLING_PTRCHECK(off) RVecImpl : public Internal::VecOps::SmallVectorTemplateBase<T> {
    using SuperClass = Internal::VecOps::SmallVectorTemplateBase<T>;
+   static constexpr bool kIsNoExcept = std::is_nothrow_destructible_v<T> && std::is_nothrow_move_constructible_v<T>;
 
 public:
    using iterator = typename SuperClass::iterator;
@@ -932,7 +933,7 @@ public:
 
    RVecImpl &operator=(const RVecImpl &RHS);
 
-   RVecImpl &operator=(RVecImpl &&RHS);
+   RVecImpl &operator=(RVecImpl &&RHS) noexcept(kIsNoExcept);
 };
 
 template <typename T>
@@ -1049,7 +1050,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(const RVecImpl<T> &RHS)
 }
 
 template <typename T>
-RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
+RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS) noexcept(kIsNoExcept)
 {
    // Avoid self-assignment.
    if (this == &RHS)
@@ -1197,7 +1198,7 @@ public:
       return *this;
    }
 
-   RVecN(RVecN &&RHS) : Detail::VecOps::RVecImpl<T>(N)
+   RVecN(RVecN &&RHS) noexcept(false) : Detail::VecOps::RVecImpl<T>(N)
    {
       if (!RHS.empty())
          Detail::VecOps::RVecImpl<T>::operator=(::std::move(RHS));
@@ -1211,7 +1212,7 @@ public:
 
    RVecN(const std::vector<T> &RHS) : RVecN(RHS.begin(), RHS.end()) {}
 
-   RVecN &operator=(RVecN &&RHS)
+   RVecN &operator=(RVecN &&RHS) noexcept(std::is_nothrow_move_assignable_v<Detail::VecOps::RVecImpl<T>>)
    {
       Detail::VecOps::RVecImpl<T>::operator=(::std::move(RHS));
       return *this;
@@ -1565,9 +1566,9 @@ public:
       return *this;
    }
 
-   RVec(RVec &&RHS) : SuperClass(std::move(RHS)) {}
+   RVec(RVec &&RHS) noexcept(std::is_nothrow_move_constructible_v<SuperClass>) : SuperClass(std::move(RHS)) {}
 
-   RVec &operator=(RVec &&RHS)
+   RVec &operator=(RVec &&RHS) noexcept(std::is_nothrow_move_assignable_v<SuperClass>)
    {
       SuperClass::operator=(std::move(RHS));
       return *this;
