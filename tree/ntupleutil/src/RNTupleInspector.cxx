@@ -17,7 +17,6 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
-#include <ROOT/RError.hxx>
 
 #include <TFile.h>
 
