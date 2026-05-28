@@ -72,8 +72,8 @@ jobs:
     - name: Prepare qhelpgenerator
       # Qt6's libexec executables are not in the PATH by default
       run: |
-        which qhelpgenerator && exit 0 # Already in PATH
-        PATH=/usr/lib64/qt6/libexec/:${PATH} which qhelpgenerator && echo "/usr/lib64/qt6/libexec/" >> "${GITHUB_PATH}"
+        QHELPGENERATOR=$(which qhelpgenerator) && echo "QHELPGENERATOR=${QHELPGENERATOR}" >> "${GITHUB_ENV}"
+        PATH=/usr/lib64/qt6/libexec/:${PATH} QHELPGENERATOR=$(which qhelpgenerator) && echo "QHELPGENERATOR=${QHELPGENERATOR}" >> "${GITHUB_ENV}"
 
     - name: Checkout
       uses: actions/checkout@v6
