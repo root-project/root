@@ -249,8 +249,6 @@ public:
    RResult &operator=(const RResult &other) = delete;
    RResult &operator=(RResult &&other) = default;
 
-   ~RResult() = default;
-
    /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
    RResult &Forward(const RError::RLocation &sourceLocation)
    {
