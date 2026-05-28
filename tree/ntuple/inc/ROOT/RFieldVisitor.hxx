@@ -56,6 +56,8 @@ As an example of a concrete use case, see Internal::RPrintSchemaVisitor.
 // clang-format on
 class RFieldVisitor {
 public:
+   virtual ~RFieldVisitor() = default;
+
    virtual void VisitField(const ROOT::RFieldBase &field) = 0;
    virtual void VisitFieldZero(const ROOT::RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const ROOT::RArrayField &field) { VisitField(field); }
