@@ -38,9 +38,9 @@ private:
 
 public:
    TTaskGroup();
-   TTaskGroup(TTaskGroup &&other);
+   TTaskGroup(TTaskGroup &&other) noexcept;
    TTaskGroup(const TTaskGroup &) = delete;
-   TTaskGroup &operator=(TTaskGroup &&other);
+   TTaskGroup &operator=(TTaskGroup &&other) noexcept;
    ~TTaskGroup();
 
    void Cancel();

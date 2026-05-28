@@ -66,12 +66,12 @@ TTaskGroup::TTaskGroup()
 #endif
 }
 
-TTaskGroup::TTaskGroup(TTaskGroup &&other)
+TTaskGroup::TTaskGroup(TTaskGroup &&other) noexcept
 {
    *this = std::move(other);
 }
 
-TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
+TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other) noexcept
 {
    fTaskArenaW = other.fTaskArenaW;
    fTaskContainer = other.fTaskContainer;
