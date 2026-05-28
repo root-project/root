@@ -83,10 +83,11 @@ public:
  * An RPageSource that can be constructed given the raw content of its pages and unpacks them on demand
  */
 class RPageSourceMock : public RPageSource {
-protected:
    const RColumnElementBase &fElement;
    const std::vector<RPageStorage::RSealedPage> &fPages;
+   ROOT::Internal::RPagePool fMyPagePool;
 
+protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode) final
    {
@@ -104,7 +105,7 @@ protected:
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)
-      : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages)
+      : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages), fMyPagePool(*this)
    {
    }
 
@@ -112,7 +113,7 @@ public:
    {
       auto page = RPageSource::UnsealPage(fPages[i], fElement).Unwrap();
       ROOT::Internal::RPagePool::RKey key{columnHandle.fPhysicalId, std::type_index(typeid(void))};
-      return fPagePool.RegisterPage(std::move(page), key);
+      return fMyPagePool.RegisterPage(std::move(page), key);
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::RNTupleLocalIndex) final { return RPageRef(); }
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }

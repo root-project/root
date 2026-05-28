@@ -414,7 +414,7 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
 
 ROOT::Internal::RPageSourceFile::~RPageSourceFile()
 {
-   fClusterPool.StopBackgroundThread();
+   StopClusterPoolBackgroundThread();
 }
 
 std::unique_ptr<ROOT::Internal::RPageSource>
