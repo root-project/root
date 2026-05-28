@@ -180,7 +180,6 @@ protected:
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) final;
    void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 public:
