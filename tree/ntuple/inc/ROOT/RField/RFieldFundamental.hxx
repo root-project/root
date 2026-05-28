@@ -412,14 +412,13 @@ protected:
       fPrincipalColumn = fAvailableColumns[0].get();
    }
 
-   ~RRealField() override = default;
-
 public:
    using Base::SetColumnRepresentatives;
 
    RRealField(std::string_view name, std::string_view typeName) : RSimpleField<T>(name, typeName) {}
    RRealField(RRealField &&other) = default;
    RRealField &operator=(RRealField &&other) = default;
+   ~RRealField() override = default;
 
    /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
    /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.
