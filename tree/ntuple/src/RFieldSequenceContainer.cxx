@@ -15,7 +15,7 @@
 
 namespace {
 
-std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr, ROOT::RFieldBase &itemField)
+std::vector<ROOT::RFieldBase::RValue> SplitVector(const std::shared_ptr<void> &valuePtr, ROOT::RFieldBase &itemField)
 {
    auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
    const auto itemSize = itemField.GetValueSize();
