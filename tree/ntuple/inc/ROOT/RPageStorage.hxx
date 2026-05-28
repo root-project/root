@@ -631,12 +631,55 @@ public:
    };
 
 private:
+   /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.
+   /// When using alias columns (projected fields), physical columns may be requested multiple times.
+   class RActivePhysicalColumns {
+      public:
+      struct RColumnInfo {
+         ROOT::Internal::RColumnElementBase::RIdentifier fElementId;
+         std::size_t fRefCounter = 0;
+      };
+
+      private:
+      /// Maps physical column IDs to all the requested in-memory representations.
+      /// A pair of physical column ID and in-memory representation can be requested multiple times, which is
+      /// indicated by the reference counter.
+      /// We can only have a handful of possible in-memory representations for a given column,
+      /// so it is fine to search them linearly.
+      std::unordered_map<ROOT::DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
+
+      public:
+      void Insert(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
+      void Erase(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
+      ROOT::Internal::RCluster::ColumnSet_t ToColumnSet() const;
+      bool HasColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
+      {
+         return fColumnInfos.count(physicalColumnId) > 0;
+      }
+      const std::vector<RColumnInfo> &GetColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
+      {
+         return fColumnInfos.at(physicalColumnId);
+      }
+   };
+
    ROOT::RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
    REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
    bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
    bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
+
+   /// The active columns are implicitly defined by the model fields or views
+   RActivePhysicalColumns fActivePhysicalColumns;
+
+   /// The cluster pool asynchronously preloads the next few clusters. Note that derived classes should call
+   /// StopClusterPoolBackgroundThread() in their destructor so that the I/O background thread does not call
+   /// methods from the destructed derived class.
+   ROOT::Internal::RClusterPool fClusterPool;
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
+   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
+   /// Pages that are unzipped with IMT are staged into the page pool
+   ROOT::Internal::RPagePool fPagePool;
 
    /// Remembers the last cluster id from which a page was requested
    ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
@@ -645,8 +688,9 @@ private:
    /// previous clusters are evicted from the page pool. Pinned clusters won't be evicted.
    std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
 
-   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
+   /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
+   /// Pages of pinned clusters won't be evicted from the page pool.
+   std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
@@ -682,52 +726,9 @@ protected:
       ROOT::Experimental::Detail::RNTupleCalcPerf &fCompressionRatio;
    };
 
-   /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.
-   /// When using alias columns (projected fields), physical columns may be requested multiple times.
-   class RActivePhysicalColumns {
-   public:
-      struct RColumnInfo {
-         ROOT::Internal::RColumnElementBase::RIdentifier fElementId;
-         std::size_t fRefCounter = 0;
-      };
-
-   private:
-      /// Maps physical column IDs to all the requested in-memory representations.
-      /// A pair of physical column ID and in-memory representation can be requested multiple times, which is
-      /// indicated by the reference counter.
-      /// We can only have a handful of possible in-memory representations for a given column,
-      /// so it is fine to search them linearly.
-      std::unordered_map<ROOT::DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
-
-   public:
-      void Insert(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
-      void Erase(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
-      ROOT::Internal::RCluster::ColumnSet_t ToColumnSet() const;
-      bool HasColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
-      {
-         return fColumnInfos.count(physicalColumnId) > 0;
-      }
-      const std::vector<RColumnInfo> &GetColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
-      {
-         return fColumnInfos.at(physicalColumnId);
-      }
-   };
-
    std::unique_ptr<RCounters> fCounters;
 
    ROOT::RNTupleReadOptions fOptions;
-   /// The active columns are implicitly defined by the model fields or views
-   RActivePhysicalColumns fActivePhysicalColumns;
-   /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
-   /// Pages of pinned clusters won't be evicted from the page pool.
-   std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
-
-   /// The cluster pool asynchronously preloads the next few clusters. Note that derived classes should call
-   /// fClusterPool.StopBackgroundThread() in their destructor so that the I/O background thread does not call
-   /// methods from the destructed derived class.
-   ROOT::Internal::RClusterPool fClusterPool;
-   /// Pages that are unzipped with IMT are staged into the page pool
-   ROOT::Internal::RPagePool fPagePool;
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
@@ -758,6 +759,9 @@ protected:
 
    /// Note that the underlying lock is not recursive. See `GetSharedDescriptorGuard()` for further information.
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
+
+   // To be called in the destructor of derived classes
+   void StopClusterPoolBackgroundThread() { fClusterPool.StopBackgroundThread(); }
 
 public:
    RPageSource(std::string_view ntupleName, const ROOT::RNTupleReadOptions &fOptions);

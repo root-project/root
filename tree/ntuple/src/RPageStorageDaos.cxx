@@ -452,7 +452,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
 
 ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos()
 {
-   fClusterPool.StopBackgroundThread();
+   StopClusterPoolBackgroundThread();
 }
 
 ROOT::RNTupleDescriptor
