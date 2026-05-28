@@ -159,7 +159,6 @@ private:
 
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   ROOT::Internal::RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RPageSummary &pageSummary) final;
    void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 protected:

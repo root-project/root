@@ -449,10 +449,59 @@ ROOT::Internal::RPageSource::LoadPageFromSummary(ColumnHandle_t columnHandle, co
       return LoadZeroPage(columnHandle, pageSummary);
    }
 
-   // TOOD(jblomer): move cluster cache handling from concrete page sources to this super class
+   const auto &columnId = columnHandle.fPhysicalId;
+   const auto &clusterId = pageSummary.fClusterId;
+   const auto &pageInfo = pageSummary.fPageInfo;
 
-   UpdateLastUsedCluster(pageSummary.fClusterId);
-   return LoadPageImpl(columnHandle, pageSummary);
+   const auto element = columnHandle.fColumn->GetElement();
+   const auto elementSize = element->GetSize();
+   const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
+
+   UpdateLastUsedCluster(clusterId);
+
+   RSealedPage sealedPage;
+   sealedPage.SetNElements(pageInfo.GetNElements());
+   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
+   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
+   std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
+
+   if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
+      directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
+      sealedPage.SetBuffer(directReadBuffer.get());
+      LoadSealedPageImpl(pageInfo.GetLocator(), sealedPage);
+
+      fCounters->fNPageRead.Inc();
+      fCounters->fNRead.Inc();
+      fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
+   } else {
+      if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
+          fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
+      R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
+
+      // The cluster pool may have unzipped the required page into the page pool
+      auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
+                                             RNTupleLocalIndex(clusterId, pageInfo.GetFirstElementIndex()));
+      if (!cachedPageRef.Get().IsNull())
+         return cachedPageRef;
+
+      ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
+      auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
+      R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
+      sealedPage.SetBuffer(onDiskPage->GetAddress());
+   }
+
+   ROOT::Internal::RPage newPage;
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
+      newPage = UnsealPage(sealedPage, *element).Unwrap();
+      fCounters->fSzUnzip.Add(elementSize * pageInfo.GetNElements());
+   }
+
+   newPage.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
+                     ROOT::Internal::RPage::RClusterInfo(clusterId, pageSummary.fColumnOffset));
+   fCounters->fNPageUnsealed.Inc();
+
+   return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elementInMemoryType});
 }
 
 ROOT::Internal::RPageRef
