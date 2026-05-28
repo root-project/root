@@ -23,7 +23,6 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
-#include <ROOT/RPageStorageFile.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
 #endif
