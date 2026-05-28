@@ -267,8 +267,7 @@ public:
    }
    TIter &operator=(TIterator *iter)
    {
-      if (fIterator)
-         delete fIterator;
+      delete fIterator;
       fIterator = iter;
       return *this;
    }
