@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_subdirectory(src/libAfterImage)
+add_subdirectory(../../builtins/libAfterImage)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
   NO_INSTALL_HEADERS
