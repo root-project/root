@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.2.0
+# RNTuple Binary Format Specification 1.0.3.0
 
 ## Versioning Notes
 
@@ -1129,6 +1129,18 @@ the restrictions on template arguments (only RNTuple supported types and integer
 The first (principal) column is of type `(Split)Index[32|64]`.
 The second column is of type `Byte`.
 In effect, the column representation is identical to a collection of `std::byte`.
+
+There are two field versions for the streamer field, version 0 and version 1.
+Both versions have an identical on-disk representation when the streamed object is smaller than 1GiB.
+Only version 1 supports larger streamed objects.
+For large objects, the version 1 streamer field prepends the large byte counts ("byte count stack") to the byte stream.
+For objects bigger than 1 GiB, the format for the version 1 byte stream is
+
+  - 64bit unsigned integer: number of elements in the large byte count list
+  - List of 64bit unsigned integer pairs with the byte count location and byte count value
+  - Regular ROOT object stream
+
+The integer values before the regular ROOT object stream are stored in little endianess.
 
 ### Untyped collections and records
 
