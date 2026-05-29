@@ -1444,52 +1444,10 @@ if(webgui)
      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
         $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
   else()
-    if(builtin_openui5)
-      ExternalProject_Add(
-        OPENUI5
-        URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=b9e6495d8640302d9cf2fe3c99331311335aaab0f48794565ebd69ecc7449e58
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
-        TIMEOUT 600
-      )
-    else()
-      ExternalProject_Add(
-        OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.135.0/openui5-runtime-1.135.0.zip
-        URL_HASH SHA256=13acdb88a7f3f1d4afef6d1d500b53bccc4b593e7acf442721bb4e3da4e2690b
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
-        TIMEOUT 600
-      )
-    endif()
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+    add_subdirectory(builtins/openui5)
   endif()
-  ExternalProject_Add(
-    RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-2.0.tar.gz
-    URL_HASH SHA256=6bdcf70fbdec1f950057ab1df722775c468ad6894f8a364f15f589d58c326667
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
-    TIMEOUT 600
-  )
-  ExternalProject_Add(
-     MATHJAX
-     URL ${CMAKE_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
-     URL_HASH SHA256=c5e22e60430a65963a87ab4dcc8856b9be5bd434d3b3871f27ee65b584c3c3ea
-     CONFIGURE_COMMAND ""
-     BUILD_COMMAND ""
-     INSTALL_COMMAND ""
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
-     TIMEOUT 600
-  )
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+  add_subdirectory(builtins/rendercore)
+  add_subdirectory(builtins/mathjax)
 endif()
 
 #------------------------------------------------------------------------------------
