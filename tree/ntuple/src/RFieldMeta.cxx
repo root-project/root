@@ -19,6 +19,7 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RFieldVisitor.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RSpan.hxx>
 
@@ -1316,10 +1317,21 @@ std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
                              [this](TVirtualStreamerInfo *info) { fStreamerInfos[info->GetNumber()] = info; });
    fClass->Streamer(const_cast<void *>(from), buffer);
 
-   auto nbytes = buffer.Length();
+   const auto nbytes = buffer.Length();
+   std::size_t szBufCounts = 0;
    R__ASSERT(nbytes >= 0);
    if (static_cast<std::size_t>(nbytes) > kMaxSmallBuffer) {
-      throw RException(R__FAIL("large objects (>1GiB) not supported by the version 0 streamer field"));
+      const std::uint64_t nCounts = buffer.GetByteCounts().size();
+      szBufCounts = sizeof(std::uint64_t) * (2 * nCounts + 1);
+      auto bufCounts = Internal::MakeUninitArray<unsigned char>(szBufCounts);
+      std::size_t pos = Internal::RNTupleSerializer::SerializeUInt64(nCounts, bufCounts.get());
+      for (const auto &[bcountLoc, bcountVal] : buffer.GetByteCounts()) {
+         pos += Internal::RNTupleSerializer::SerializeUInt64(bcountLoc, bufCounts.get() + pos);
+         pos += Internal::RNTupleSerializer::SerializeUInt64(bcountVal, bufCounts.get() + pos);
+      }
+      assert(pos == szBufCounts);
+      fAuxiliaryColumn->AppendV(bufCounts.get(), szBufCounts);
+      fIndex += szBufCounts;
    } else {
       assert(buffer.GetByteCounts().empty());
    }
@@ -1327,7 +1339,7 @@ std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
    fAuxiliaryColumn->AppendV(buffer.Buffer(), buffer.Length());
    fIndex += nbytes;
    fPrincipalColumn->Append(&fIndex);
-   return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
+   return szBufCounts + nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
 void ROOT::RStreamerField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
@@ -1336,10 +1348,47 @@ void ROOT::RStreamerField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *
    ROOT::NTupleSize_t nbytes;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
 
-   if (nbytes > kMaxSmallBuffer)
-      throw RException(R__FAIL("large objects (>1GiB) not supported by the version 0 streamer field"));
+   TBufferFile::ByteCountFinder_t byteCounts;
+   if (nbytes > kMaxSmallBuffer) {
+      unsigned char bufNCounts[sizeof(std::uint64_t)];
+      fAuxiliaryColumn->ReadV(collectionStart, sizeof(std::uint64_t), bufNCounts);
+      nbytes -= sizeof(std::uint64_t);
+      collectionStart = collectionStart + sizeof(std::uint64_t);
+
+      std::uint64_t nCounts;
+      Internal::RNTupleSerializer::DeserializeUInt64(bufNCounts, nCounts);
+      if (nCounts > (std::numeric_limits<std::size_t>::max() / sizeof(std::uint64_t)) / 2 - 1)
+         throw RException(R__FAIL("invalid byte count size in streamer field: " + std::to_string(nCounts)));
+      const std::size_t szBufCounts = sizeof(std::uint64_t) * (2 * nCounts);
+      if (szBufCounts > nbytes) {
+         throw RException(R__FAIL("invalid byte count size in streamer field: nCounts=" + std::to_string(nCounts) +
+                                  " szBufCounts=" + std::to_string(szBufCounts) + " nbytes=" + std::to_string(nbytes)));
+      }
+
+      auto bufCounts = Internal::MakeUninitArray<unsigned char>(szBufCounts);
+      fAuxiliaryColumn->ReadV(collectionStart, szBufCounts, bufCounts.get());
+      nbytes -= szBufCounts;
+      collectionStart = collectionStart + szBufCounts;
+
+      byteCounts.reserve(nCounts);
+      std::size_t pos = 0;
+      for (std::uint64_t i = 0; i < nCounts; ++i) {
+         std::uint64_t bcountLoc, bcountVal;
+         pos += Internal::RNTupleSerializer::DeserializeUInt64(bufCounts.get() + pos, bcountLoc);
+         pos += Internal::RNTupleSerializer::DeserializeUInt64(bufCounts.get() + pos, bcountVal);
+         if ((bcountLoc > nbytes) || (bcountVal > nbytes) || (nbytes - bcountVal < bcountLoc)) {
+            throw RException(
+               R__FAIL("invalid byte count record: " + std::to_string(bcountLoc) + ", " + std::to_string(bcountVal)));
+         }
+         byteCounts.emplace(bcountLoc, bcountVal);
+      }
+      assert(pos == szBufCounts);
+      if (byteCounts.size() != nCounts)
+         throw RException(R__FAIL("duplicate byte counts"));
+   }
 
    TBufferFile buffer(TBuffer::kRead, nbytes);
+   buffer.SetByteCounts(std::move(byteCounts));
    fAuxiliaryColumn->ReadV(collectionStart, nbytes, buffer.Buffer());
    fClass->Streamer(to, buffer);
 }
