@@ -1035,6 +1035,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
       R__ASSERT(!fColumnRepresentatives.empty());
       if (fOnDiskId != ROOT::kInvalidDescriptorId) {
          const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
+         fOnDiskFieldVersion = fieldDesc.GetFieldVersion();
          fOnDiskTypeVersion = fieldDesc.GetTypeVersion();
          if (fieldDesc.GetTypeChecksum().has_value())
             fOnDiskTypeChecksum = *fieldDesc.GetTypeChecksum();

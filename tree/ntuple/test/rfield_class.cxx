@@ -36,7 +36,15 @@ TEST(RNTuple, TClass) {
    EXPECT_THROW(model->MakeField<TDatime>("datime"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_tclass.root");
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+   {
+      RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &f = reader->GetModel().GetConstField("klass");
+   EXPECT_EQ(0u, f.GetFieldVersion());
+   EXPECT_EQ(0u, f.GetOnDiskFieldVersion());
+   EXPECT_EQ(TClass::GetClass("CustomStruct")->GetClassVersion(), f.GetOnDiskTypeVersion());
+   EXPECT_EQ(TClass::GetClass("CustomStruct")->GetClassVersion(), f.GetTypeVersion());
 }
 
 TEST(RNTuple, CyclicClass)
