@@ -137,6 +137,7 @@ protected:
    };
 
 public:
+   static constexpr std::uint32_t kInvalidFieldVersion = -1U;
    static constexpr std::uint32_t kInvalidTypeVersion = -1U;
    enum {
       /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
@@ -320,6 +321,8 @@ protected:
    std::string fTypeAlias;
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
+   /// Field version cached from the descriptor after a call to ConnectPageSource()
+   std::uint32_t fOnDiskFieldVersion = kInvalidFieldVersion;
    /// C++ type version cached from the descriptor after a call to ConnectPageSource()
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
    /// TClass checksum cached from the descriptor after a call to ConnectPageSource(). Only set
@@ -664,6 +667,8 @@ public:
    virtual std::uint32_t GetTypeVersion() const { return 0; }
    /// Return the current TClass reported checksum of this class. Only valid if `kTraitTypeChecksum` is set.
    virtual std::uint32_t GetTypeChecksum() const { return 0; }
+   /// Return the field version stored in the field descriptor; only valid after a call to ConnectPageSource()
+   std::uint32_t GetOnDiskFieldVersion() const { return fOnDiskFieldVersion; }
    /// Return the C++ type version stored in the field descriptor; only valid after a call to ConnectPageSource()
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
    /// Return checksum stored in the field descriptor; only valid after a call to ConnectPageSource(),
