@@ -33,6 +33,7 @@ class LineFilter:
                 r"^In file included from input_line",  # Wrapper input line
                 r"^[:space:]*$",  # Lines which are empty apart from spaces
                 r"^Info in <TROOT>: Object auto registration",  # ROOT 7 mode
+                r"^<frozen importlib\._bootstrap>:\d+: RuntimeWarning: The global interpreter lock \(GIL\) has been enabled",  # Free-threaded Python re-enabling the GIL to load a C extension that isn't GIL-safe
             ]
         ]
 
