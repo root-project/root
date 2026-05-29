@@ -462,7 +462,7 @@ TEST(RField, StreamerFieldVersion)
       if (version < 2) {
          const auto &f = reader->GetModel().GetConstField("f");
          EXPECT_TRUE(dynamic_cast<const ROOT::RStreamerField *>(&f));
-         EXPECT_EQ(0u, f.GetFieldVersion());
+         EXPECT_EQ(1u, f.GetFieldVersion());
          EXPECT_EQ(version, f.GetOnDiskFieldVersion());
          EXPECT_EQ(2u, f.GetTypeVersion());
          EXPECT_EQ(137u, f.GetOnDiskTypeVersion());
