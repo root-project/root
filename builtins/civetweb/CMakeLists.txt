@@ -14,6 +14,13 @@ set(ROOT_CIVETWEB_LIBRARY ${ROOT_CIVETWEB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PRE
 if (NOT DEFINED GIT_EXECUTABLE)
   set(GIT_EXECUTABLE "git")
 endif()
+# check if the patch has already been applied
+if(NOT EXISTS "${ROOT_CIVETWEB_PREFIX}/src/BUILTIN_CIVETWEB/._patched")
+  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply
+         ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
+         ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
+         ${CMAKE_CURRENT_SOURCE_DIR}/civetweb-marker.diff)
+endif()
 
 include(ExternalProject)
 
@@ -75,7 +82,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   # and potentially install libcivetweb-dev in root-ci-images and change RootBuildOptions default builtin_civetweb to OFF, if random crashes seen by linev are gone
   GIT_REPOSITORY https://github.com/civetweb/civetweb.git
   GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
-  PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1385 and https://github.com/civetweb/civetweb/pull/1389
+  ${ROOT_CIVETWEB_PATCH_COMMAND}
   UPDATE_COMMAND ""
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
