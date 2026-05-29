@@ -185,5 +185,6 @@
 #pragma link C++ class AlignedAs+;
 #pragma link C++ class OverAligned+;
 #pragma link C++ class AlignmentEnvelope+;
+#pragma link C++ class VersionedStreamerField+;
 
 #endif
