@@ -45,6 +45,12 @@ namespace TStreamerInfoActions {
 }
 
 class TBufferFile : public TBufferIO {
+public:
+   ///< This might become a pair<chunk_number, local_offset> if we implement chunked keys
+   using ByteCountLocator_t = std::size_t;
+   ///< Type used to store byte count values, can be changed to uint32_t if we implement chunked keys
+   using ByteCount_t = std::uint64_t;
+   using ByteCountFinder_t = std::unordered_map<ByteCountLocator_t, ByteCount_t>;
 
 protected:
    typedef std::vector<TStreamerInfo*> InfoList_t;
@@ -52,7 +58,6 @@ protected:
    TStreamerInfo  *fInfo{nullptr};  ///< Pointer to TStreamerInfo object writing/reading the buffer
    InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
-   using ByteCountLocator_t = std::size_t; // This might become a pair<chunk_number, local_offset> if we implement chunked keys
    struct ByteCountLocationInfo {
       ///< Position where the byte count value is stored
       ByteCountLocator_t locator;
@@ -66,8 +71,6 @@ protected:
    using ByteCountStack_t = std::vector<ByteCountLocationInfo>;
    ByteCountStack_t fByteCountStack; ///<! Stack to keep track of byte count storage positions
 
-   using ByteCount_t = std::uint64_t; ///< Type used to store byte count values, can be changed to uint32_t if we implement chunked keys
-   using ByteCountFinder_t = std::unordered_map<ByteCountLocator_t, ByteCount_t>;
    // fByteCounts will be stored either in the header/summary tkey or at the end
    // of the last segment/chunk for a large TKey.
    ByteCountFinder_t fByteCounts; ///< Map to find the byte count value for a given position
