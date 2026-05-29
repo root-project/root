@@ -24,12 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     -writeEmptyRootPCM
   LIBRARIES
     libAfterImage
-    JPEG::JPEG
-    PNG::PNG
-    GIF::GIF
-    libAfterImage
     Freetype::Freetype
-    ZLIB::ZLIB
   DEPENDENCIES
     Core
     Graf
@@ -52,18 +47,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
     -writeEmptyRootPCM
   LIBRARIES
     libAfterImage
-    ${ASEXTRA_LIBRARIES}
-    ${FREETYPE_LIBRARIES}
-    ${X11_LIBRARIES}
-    ZLIB::ZLIB
   DEPENDENCIES
     Gui
     ASImage
 )
-
-target_link_libraries(ASImageGui PRIVATE JPEG::JPEG PNG::PNG GIF::GIF libAfterImage Freetype::Freetype)
-if (x11)
-  target_link_libraries(ASImageGui PRIVATE X11::X11)
-endif()
 
 ROOT_INSTALL_HEADERS()
