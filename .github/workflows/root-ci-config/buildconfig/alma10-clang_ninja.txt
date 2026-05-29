@@ -1,6 +1,7 @@
 CMAKE_C_COMPILER=clang
 CMAKE_CXX_COMPILER=clang++
 CMAKE_GENERATOR=Ninja
+builtin_fftw3=ON
 builtin_freetype=ON
 builtin_ftgl=ON
 builtin_gif=ON

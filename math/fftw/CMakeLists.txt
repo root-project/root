@@ -20,12 +20,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FFTW
     src/TFFTComplexReal.cxx
     src/TFFTReal.cxx
     src/TFFTRealComplex.cxx
+  LIBRARIES
+    FFTW::Double
   DEPENDENCIES
     Core
     MathCore
-  BUILTINS
-    FFTW3
 )
-
-target_include_directories(FFTW PRIVATE ${FFTW_INCLUDE_DIR})
-target_link_libraries(FFTW PRIVATE ${FFTW_LIBRARIES})

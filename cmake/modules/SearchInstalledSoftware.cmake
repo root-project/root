@@ -585,23 +585,8 @@ if(fftw3)
   endif()
 endif()
 if(builtin_fftw3)
-  set(FFTW_VERSION 3.3.10)
-  message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
-  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
-  ExternalProject_Add(
-    FFTW3
-    URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
-    URL_HASH SHA256=56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
-    BUILD_COMMAND make CFLAGS=-fPIC
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
-    TIMEOUT 600
-  )
-  set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(FFTW3_TARGET FFTW3)
+  list(APPEND ROOT_BUILTINS BUILTIN_FFTW3)
+  add_subdirectory(builtins/fftw3)
   set(fftw3 ON CACHE BOOL "Enabled because builtin_fftw3 requested (${fftw3_description})" FORCE)
 endif()
 
