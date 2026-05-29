@@ -283,7 +283,7 @@ public:
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
    // As of field version 1, the byte stream contains the byte count stack for large objects (see binary specs)
-   std::uint32_t GetFieldVersion() const final { return 0; }
+   std::uint32_t GetFieldVersion() const final { return 1; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
    TClass *GetClass() const { return fClass; }
