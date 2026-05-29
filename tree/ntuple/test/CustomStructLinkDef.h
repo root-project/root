@@ -181,4 +181,6 @@
 
 #pragma link C++ class MemberWithCustomStreamer+;
 
+#pragma link C++ class VersionedStreamerField+;
+
 #endif
