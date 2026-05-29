@@ -478,4 +478,8 @@ struct MemberWithCustomStreamer {
    ClassDefNV(MemberWithCustomStreamer, 2);
 };
 
+struct VersionedStreamerField {
+   ClassDefNV(VersionedStreamerField, 2);
+};
+
 #endif

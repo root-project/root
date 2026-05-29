@@ -1317,6 +1317,13 @@ std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
    fClass->Streamer(const_cast<void *>(from), buffer);
 
    auto nbytes = buffer.Length();
+   R__ASSERT(nbytes >= 0);
+   if (static_cast<std::size_t>(nbytes) > kMaxSmallBuffer) {
+      throw RException(R__FAIL("large objects (>1GiB) not supported by the version 0 streamer field"));
+   } else {
+      assert(buffer.GetByteCounts().empty());
+   }
+
    fAuxiliaryColumn->AppendV(buffer.Buffer(), buffer.Length());
    fIndex += nbytes;
    fPrincipalColumn->Append(&fIndex);
@@ -1328,6 +1335,9 @@ void ROOT::RStreamerField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t nbytes;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
+
+   if (nbytes > kMaxSmallBuffer)
+      throw RException(R__FAIL("large objects (>1GiB) not supported by the version 0 streamer field"));
 
    TBufferFile buffer(TBuffer::kRead, nbytes);
    fAuxiliaryColumn->ReadV(collectionStart, nbytes, buffer.Buffer());
@@ -1362,7 +1372,13 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(
 
 void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion | kDiffFieldVersion).ThrowOnError();
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetFieldVersion() > 1) {
+      throw RException(R__FAIL("RStreamerField " + GetQualifiedFieldName() + " has unsupported field version " +
+                               std::to_string(fieldDesc.GetFieldVersion()) + "\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
+   }
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
