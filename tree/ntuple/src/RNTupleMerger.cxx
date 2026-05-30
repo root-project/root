@@ -530,8 +530,11 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
 
       // Require that fields types match
       // TODO(gparolini): allow non-identical but compatible types
-      const auto &srcTyName = field.fSrc->GetTypeName();
-      const auto &dstTyName = field.fDst->GetTypeName();
+      // Renormalize both sides to handle pre-ROOT-6.36 files that stored META-normalized type names
+      // (e.g. "Float_t") instead of canonical C++ names (e.g. "float"). Renormalizing a canonical
+      // name is a no-op, so this is safe for current-format files as well.
+      const auto srcTyName = ROOT::Internal::GetRenormalizedTypeName(field.fSrc->GetTypeName());
+      const auto dstTyName = ROOT::Internal::GetRenormalizedTypeName(field.fDst->GetTypeName());
       if (srcTyName != dstTyName) {
          std::stringstream ss;
          ss << "Field `" << fieldName
@@ -1147,8 +1150,10 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RO
       }
 
       // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
-      assert(srcFieldDesc.GetTypeName() == dstFieldDesc.GetTypeName());
-      info.fInMemoryType = ColumnInMemoryType(srcFieldDesc.GetTypeName(), info.fColumnType);
+      assert(ROOT::Internal::GetRenormalizedTypeName(srcFieldDesc.GetTypeName()) ==
+             ROOT::Internal::GetRenormalizedTypeName(dstFieldDesc.GetTypeName()));
+      info.fInMemoryType =
+         ColumnInMemoryType(ROOT::Internal::GetRenormalizedTypeName(srcFieldDesc.GetTypeName()), info.fColumnType);
       columns.emplace_back(info);
    }
 
