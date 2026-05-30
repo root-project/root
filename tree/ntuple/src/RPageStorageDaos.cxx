@@ -305,7 +305,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::Descript
    }
 
    RNTupleLocator result;
-   result.SetType(RNTupleLocator::kTypeDAOS);
+   result.SetType(RNTupleLocator::kTypeObject64);
    result.SetNBytesOnStorage(sealedPage.GetDataSize());
    result.SetPosition(ROOT::RNTupleLocatorObject64{pageId});
    fCounters->fNPageCommitted.Inc();
@@ -341,7 +341,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
          it->second.Insert(daosKey.fAkey, pageIov);
 
          RNTupleLocator locator;
-         locator.SetType(RNTupleLocator::kTypeDAOS);
+         locator.SetType(RNTupleLocator::kTypeObject64);
          locator.SetNBytesOnStorage(s.GetDataSize());
          locator.SetPosition(ROOT::RNTupleLocatorObject64{pageId});
          locators.push_back(locator);
@@ -382,7 +382,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned cha
       daos_obj_id_t{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)}, kDistributionKeyDefault,
       offsetData, kCidMetadata);
    RNTupleLocator result;
-   result.SetType(RNTupleLocator::kTypeDAOS);
+   result.SetType(RNTupleLocator::kTypeObject64);
    result.SetNBytesOnStorage(szPageListZip);
    result.SetPosition(RNTupleLocatorObject64{offsetData});
    fCounters->fSzWritePayload.Add(static_cast<int64_t>(szPageListZip));
