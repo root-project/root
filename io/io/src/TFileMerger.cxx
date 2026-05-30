@@ -498,10 +498,13 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    // Check if only the listed objects are to be merged
    if (type & kOnlyListed) {
-      oldkeyname = keyname;
-      oldkeyname += " ";
-      onlyListed = fObjectNames.Contains(oldkeyname);
-      oldkeyname = keyname;
+      // Search for " key " in " a b c " to match whole words only.
+      // Without the leading space, a key that is a prefix or suffix of a listed name
+      // would match. AddObjectNames() guarantees a trailing space in fObjectNames.
+      TString searchName = " ";
+      searchName += keyname;
+      searchName += " ";
+      onlyListed = (" " + fObjectNames).Contains(searchName);
       if ((!onlyListed) && (!cl->InheritsFrom(TDirectory::Class()))) return kTRUE;
    }
 
