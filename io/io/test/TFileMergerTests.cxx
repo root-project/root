@@ -118,6 +118,44 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
 }
 
+TEST(TFileMerger, OnlyListedNoSuffixLeak)
+{
+   // Regression test for https://github.com/root-project/root/issues/22414:
+   // keys whose names are a prefix or suffix of a listed key must not appear in the output.
+   TMemFile src("OnlyListedNoSuffixLeakSrc.root", "CREATE");
+
+   // "short" is a suffix of "long_short"; "long" is a prefix — both must be excluded.
+   auto hLongShort = new TH1F("long_short", "long_short", 1, 0, 2);
+   auto hShort = new TH1F("short", "short", 1, 0, 2);
+   auto hLong = new TH1F("long", "long", 1, 0, 2);
+   auto hUnrelated = new TH1F("unrelated", "unrelated", 1, 0, 2);
+   for (auto h : {hLongShort, hShort, hLong, hUnrelated})
+      h->SetDirectory(&src);
+   src.Write();
+
+   TFileMerger merger;
+   auto output = std::unique_ptr<TFile>(new TFile("OnlyListedNoSuffixLeak.root", "RECREATE"));
+   ASSERT_TRUE(merger.OutputFile(std::move(output)));
+
+   merger.AddObjectNames("long_short"); // only this one should appear in output
+   merger.AddFile(&src, false);
+
+   const Int_t mode = TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kOnlyListed;
+   ASSERT_TRUE(merger.PartialMerge(mode));
+
+   output = std::unique_ptr<TFile>(TFile::Open("OnlyListedNoSuffixLeak.root"));
+   ASSERT_TRUE(output.get() && output->GetListOfKeys());
+
+   // Exactly one key: "long_short". Suffix, prefix, and unrelated keys must be absent.
+   EXPECT_EQ(output->GetListOfKeys()->GetSize(), 1);
+   EXPECT_NE(output->Get("long_short"), nullptr);
+   EXPECT_EQ(output->Get("short"), nullptr);
+   EXPECT_EQ(output->Get("long"), nullptr);
+   EXPECT_EQ(output->Get("unrelated"), nullptr);
+   output->Close();
+   gSystem->Unlink("OnlyListedNoSuffixLeak.root");
+}
+
 // https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
 TEST(TFileMerger, MergeBranches)
 {
