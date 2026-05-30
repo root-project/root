@@ -377,14 +377,14 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
    EXPECT_EQ(RNTupleLocator::kTypeFile, locator.GetType());
 
-   locator.SetType(RNTupleLocator::kTypeDAOS);
+   locator.SetType(RNTupleLocator::kTypeObject64);
    locator.SetPosition(RNTupleLocatorObject64{1337U});
    locator.SetNBytesOnStorage(420420U);
    locator.SetReserved(0);
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
-   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeObject64);
    EXPECT_EQ(locator.GetNBytesOnStorage(), 420420U);
    EXPECT_EQ(locator.GetReserved(), 0);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
@@ -394,32 +394,32 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
-   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeObject64);
    EXPECT_EQ(locator.GetNBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
    EXPECT_EQ(locator.GetReserved(), 1);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
-   // S3 locator round-trip with 32-bit nBytesOnStorage
+   // Multi locator round-trip with 32-bit nBytesOnStorage
    locator = RNTupleLocator{};
-   locator.SetType(RNTupleLocator::kTypeS3);
+   locator.SetType(RNTupleLocator::kTypeMulti);
    locator.SetPosition(RNTupleLocatorObject64{42U});
    locator.SetNBytesOnStorage(1024U);
    locator.SetReserved(0);
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
-   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeS3);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeMulti);
    EXPECT_EQ(locator.GetNBytesOnStorage(), 1024U);
    EXPECT_EQ(locator.GetReserved(), 0);
    EXPECT_EQ(42U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
-   // S3 locator round-trip with 64-bit nBytesOnStorage and reserved bit
+   // Multi locator round-trip with 64-bit nBytesOnStorage and reserved bit
    locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
    locator.SetReserved(1);
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
-   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeS3);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeMulti);
    EXPECT_EQ(locator.GetNBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
    EXPECT_EQ(locator.GetReserved(), 1);
    EXPECT_EQ(42U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());

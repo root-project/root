@@ -41,10 +41,10 @@ ROOT::RNTupleLocator::ELocatorType ROOT::RNTupleLocator::GetType() const
    std::uint64_t compactType = fFlagsAndNBytes >> 61;
    switch (compactType) {
    case 0: return kTypeFile;
-   case 1: return kTypeDAOS;
-   case 2: return kTypePageZero;
-   case 3: return kTypeUnknown;
-   case 4: return kTypeS3;
+   case 1: return kTypeObject64;
+   case 2: return kTypeMulti;
+   case 3: return kTypePageZero;
+   case 4: return kTypeUnknown;
    case 5: return Internal::kTestLocatorType;
    default: break;
    }
@@ -57,10 +57,10 @@ void ROOT::RNTupleLocator::SetType(ELocatorType type)
    std::uint64_t compactType;
    switch (type) {
    case kTypeFile: compactType = 0; break;
-   case kTypeDAOS: compactType = 1; break;
-   case kTypePageZero: compactType = 2; break;
-   case kTypeUnknown: compactType = 3; break;
-   case kTypeS3: compactType = 4; break;
+   case kTypeObject64: compactType = 1; break;
+   case kTypeMulti: compactType = 2; break;
+   case kTypePageZero: compactType = 3; break;
+   case kTypeUnknown: compactType = 4; break;
    default:
       if (type == Internal::kTestLocatorType)
          compactType = 5;
@@ -80,7 +80,7 @@ void ROOT::RNTupleLocator::SetPosition(std::uint64_t position)
 
 void ROOT::RNTupleLocator::SetPosition(RNTupleLocatorObject64 position)
 {
-   if (GetType() != kTypeDAOS && GetType() != kTypeS3)
+   if (GetType() != kTypeObject64 && GetType() != kTypeMulti)
       throw RException(R__FAIL("cannot set position as 64bit object for type " + std::to_string(GetType())));
    fPosition = position.GetLocation();
 }
@@ -95,7 +95,7 @@ std::uint64_t ROOT::Internal::RNTupleLocatorHelper<std::uint64_t>::Get(const RNT
 ROOT::RNTupleLocatorObject64
 ROOT::Internal::RNTupleLocatorHelper<ROOT::RNTupleLocatorObject64>::Get(const RNTupleLocator &loc)
 {
-   if (loc.GetType() != ROOT::RNTupleLocator::kTypeDAOS && loc.GetType() != ROOT::RNTupleLocator::kTypeS3)
+   if (loc.GetType() != ROOT::RNTupleLocator::kTypeObject64 && loc.GetType() != ROOT::RNTupleLocator::kTypeMulti)
       throw RException(R__FAIL("cannot retrieve position as 64bit object for type " + std::to_string(loc.GetType())));
    return RNTupleLocatorObject64{loc.fPosition};
 }

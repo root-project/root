@@ -234,8 +234,9 @@ public:
       // The kTypeFile locator may translate to an on-disk standard locator (type 0x00) or a large locator (type 0x01),
       // if the size of the referenced data block is >2GB
       kTypeFile = 0x00,
-      kTypeDAOS = 0x02,
-      kTypeS3 = 0x03,
+      // The following locators are experimental and are not defined in the binary format specification.
+      kTypeObject64 = 0x02,
+      kTypeMulti = 0x03,
 
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
@@ -249,7 +250,7 @@ private:
    static constexpr std::uint64_t kMaskType = 0x07ULL << 61;
    static constexpr std::uint64_t kMaskReservedBit = 1ull << 60;
 
-   /// To save memory, we use the most significant bits to store the locator type (file, DAOS, zero page,
+   /// To save memory, we use the most significant bits to store the locator type (file, Object64, zero page,
    /// unkown, kTestLocatorType) as well as one "reserved bit" that can be used in future locators.
    /// Consequently, we can only store sizes up to 60 bits (1 EB), which in practice won't be an issue.
    std::uint64_t fFlagsAndNBytes = 0;
@@ -276,7 +277,7 @@ public:
    void SetType(ELocatorType type);
    void SetReserved(std::uint8_t reserved);
 
-   /// Note that for GetPosition() / SetPosition(), the locator type must correspond (kTypeFile, kTypeDAOS).
+   /// Note that for GetPosition() / SetPosition(), the locator type must correspond (kTypeFile, kTypeObject64).
 
    template <typename T>
    T GetPosition() const
