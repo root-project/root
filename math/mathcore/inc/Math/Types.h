@@ -13,8 +13,21 @@ namespace ROOT {
 
 namespace Internal {
 
+#if defined(R__EXPERIMENTAL_SIMD_PIN_AVX_ABI) && defined(__AVX512F__)
+// libstdc++'s <experimental/simd> _VecBltnBtmsk (AVX-512 mask) ABI fails to
+// compile with non-GCC front ends (Clang, Intel icpx) due to a static_assert
+// requiring `long long` and `long` to be the same type. When AVX-512 is
+// enabled in this TU we'd otherwise hit that path, so pin to the 256-bit AVX
+// ABI instead. The fallback is guarded by __AVX512F__ so that environments
+// without AVX-512 in scope (notably rootcling/cling, which parses headers
+// without -mavx*) still see the regular `native` ABI and pick the
+// always-supported scalar fallback.
+template <typename T>
+using SIMDTag = std::experimental::simd_abi::__avx;
+#else
 template <typename T>
 using SIMDTag = std::experimental::simd_abi::native<T>;
+#endif
 
 } // namespace Internal
 
