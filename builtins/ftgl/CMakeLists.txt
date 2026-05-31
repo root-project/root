@@ -28,7 +28,7 @@ if (NOT DEFINED GIT_EXECUTABLE)
 endif()
 
 if(NOT EXISTS "${ROOT_FTGL_PREFIX}/src/BUILTIN_FTGL/._patched")
-  set(ROOT_FTGL_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace
+  set(ROOT_FTGL_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace
                 ${ROOT_FTGL_PATCH_FILE_1}
                 ${ROOT_FTGL_PATCH_FILE_2}
                 ${ROOT_FTGL_PATCH_FILE_3}
