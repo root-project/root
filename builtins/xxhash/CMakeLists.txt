@@ -20,7 +20,7 @@ if (NOT DEFINED GIT_EXECUTABLE)
 endif()
 # check if the patch has already been applied
 if(NOT EXISTS "${ROOT_XXHASH_PREFIX}/src/BUILTIN_XXHASH/CMakeLists.txt")
-  set(XXHASH_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_XXHASH_PATCH_FILE})
+  set(XXHASH_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_XXHASH_PATCH_FILE})
 endif()
 
 set(ROOT_XXHASH_LIBRARY ${ROOT_XXHASH_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}xxhash${CMAKE_STATIC_LIBRARY_SUFFIX})

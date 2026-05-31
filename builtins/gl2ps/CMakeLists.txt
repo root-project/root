@@ -31,7 +31,7 @@ endif()
 
 # check if the patch has already been applied
 if(NOT EXISTS "${ROOT_GL2PS_PREFIX}/src/BUILTIN_GL2PS/._patched")
-  set(GL2PS_PATCH_COMMAND PATCH_COMMAND git apply ${patch_args} ${ROOT_GL2PS_PATCH_FILES})
+  set(GL2PS_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args} ${ROOT_GL2PS_PATCH_FILES})
 endif()
 
 ExternalProject_Add(

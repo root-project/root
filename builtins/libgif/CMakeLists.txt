@@ -30,7 +30,7 @@ endif()
 
 # check if the patch has already been applied
 if(NOT EXISTS "${ROOT_LIBGIF_PREFIX}/src/BUILTIN_LIBGIF/CMakeLists.txt")
-  set(LIBGIF_PATCH_COMMAND PATCH_COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE})
+  set(LIBGIF_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE})
 endif()
 
 ExternalProject_Add(

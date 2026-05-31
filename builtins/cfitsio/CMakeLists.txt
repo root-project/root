@@ -27,7 +27,7 @@ if(WIN32)
 endif()
 
 if(NOT EXISTS "${CFITSIO_PREFIX}/src/BUILTIN_CFITSIO/._patched")
-  set(CFITSIO_PATCH_COMMAND PATCH_COMMAND git apply ${patch_args}
+  set(CFITSIO_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args}
                 ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
                 ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
                 ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-marker.diff)
