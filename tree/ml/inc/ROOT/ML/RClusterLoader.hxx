@@ -410,10 +410,20 @@ public:
             trainIsPrefix = coin(g);
          }
 
-         // The boundary is the raw entry index of the first entry assigned to validation.
-         // Stable across epochs since the same filter always produces the same ordered entries.
-         const std::uint64_t trainBoundaryEntry = trainIsPrefix ? rdfEntries[trainCount] : rdfEntries[valCount];
-         const std::uint64_t boundary = (valCount > 0) ? trainBoundaryEntry : endRow;
+         // The boundary is the raw entry index that splits train and val sub-ranges within the
+         // cluster. Stable across epochs since the same filter always produces the same ordered
+         // entries. When one side has no filtered entries we fall back to the cluster endpoint that
+         // collapses that side to an empty range, avoiding an out-of-bounds access into rdfEntries
+         // (whose size is totalFiltered, so rdfEntries[totalFiltered] is OOB and trips libstdc++
+         // hardened-mode assertions).
+         std::uint64_t boundary;
+         if (trainIsPrefix) {
+            // train = [startRow, boundary), val = [boundary, endRow)
+            boundary = (trainCount < totalFiltered) ? rdfEntries[trainCount] : endRow;
+         } else {
+            // train = [boundary, endRow), val = [startRow, boundary)
+            boundary = (valCount < totalFiltered) ? rdfEntries[valCount] : endRow;
+         }
 
          const std::uint64_t trainStart = trainIsPrefix ? startRow : boundary;
          const std::uint64_t trainEnd = trainIsPrefix ? boundary : endRow;
