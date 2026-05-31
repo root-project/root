@@ -287,20 +287,20 @@ public:
       // find lower bounds of filtered area
       int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
       // use stride instead of 1 when ceil_mode=1, so the loop covers the extra partial window
-      int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] + (fAttrCeilMode ? (int)fAttrStrides[0] : 1);
+      int hmax = fShapeX[2] + fAttrPads[fDim] - fAttrKernelShape[0] + (fAttrCeilMode ? (int)fAttrStrides[0] : 1);
       int wmin,wmax,dmin,dmax;
 
       if(fDim >= 2){
-         wmin = - fAttrPads[2];   // minimum lower bound value of filter area
-         wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] + (fAttrCeilMode ? (int)fAttrStrides[1] : 1);
+         wmin = -fAttrPads[1]; // minimum lower bound value of filter area
+         wmax = fShapeX[3] + fAttrPads[fDim + 1] - fAttrKernelShape[1] + (fAttrCeilMode ? (int)fAttrStrides[1] : 1);
       }
       else{
          wmin=1;
          wmax=1;
       }
       if(fDim == 3){
-         dmin = - fAttrPads[4];   // minimum lower bound value of filter area
-         dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] + (fAttrCeilMode ? (int)fAttrStrides[2] : 1);
+         dmin = -fAttrPads[2]; // minimum lower bound value of filter area
+         dmax = fShapeX[4] + fAttrPads[fDim + 2] - fAttrKernelShape[2] + (fAttrCeilMode ? (int)fAttrStrides[2] : 1);
       }
       else{
          dmin=1;
