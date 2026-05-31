@@ -1792,6 +1792,52 @@ else()
   " ROOT_HAVE_EXPERIMENTAL_SIMD)
 endif()
 
+# On platforms with AVX-512, the libstdc++ implementation of
+# <experimental/simd> (from GCC up to at least 16) fails to compile with
+# non-GCC front ends (Clang, Intel icpx) because of a static_assert in the
+# _VecBltnBtmsk (AVX-512 mask) ABI that requires `long long` and `long` to be
+# the same type. The bug fires only for the AVX-512 mask ABI path, so we work
+# around it by pinning ROOT's simd alias (Math/Types.h) to the 256-bit AVX2
+# ABI variant instead of the platform-native ABI. That keeps the ABI of
+# Float_v/Double_v/... consistent across all TUs (no `-mno-avx512f` needed)
+# and lets the rest of ROOT keep its native AVX-512 codegen.
+set(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI FALSE CACHE INTERNAL
+    "Pin <experimental/simd> alias to the 256-bit ABI to dodge libstdc++ AVX-512 bug")
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  set(_simd_realistic_test "
+      #include <experimental/simd>
+      int main() {
+          std::experimental::native_simd<double> a(1.0), b(2.0);
+          where(a > b, a) = b;
+          return 0;
+      }
+  ")
+  check_cxx_source_compiles("${_simd_realistic_test}"
+                            ROOT_EXPERIMENTAL_SIMD_FULL_USAGE_OK)
+  if(NOT ROOT_EXPERIMENTAL_SIMD_FULL_USAGE_OK)
+    set(_simd_pinned_abi_test "
+        #include <experimental/simd>
+        namespace stx = std::experimental;
+        int main() {
+            stx::simd<double, stx::simd_abi::__avx> a(1.0), b(2.0);
+            where(a > b, a) = b;
+            return 0;
+        }
+    ")
+    check_cxx_source_compiles("${_simd_pinned_abi_test}"
+                              ROOT_EXPERIMENTAL_SIMD_AVX_ABI_OK)
+    if(ROOT_EXPERIMENTAL_SIMD_AVX_ABI_OK)
+      set(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI TRUE CACHE INTERNAL "" FORCE)
+      message(STATUS "Working around libstdc++ <experimental/simd> AVX-512 bug "
+                     "by pinning Math/Types.h to the 256-bit AVX ABI")
+    else()
+      message(STATUS "Disabling experimental/simd-based features: libstdc++ "
+                     "header fails to compile in this configuration")
+      set(ROOT_HAVE_EXPERIMENTAL_SIMD FALSE CACHE INTERNAL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #------------------------------------------------------------------------------------
 # Check if the pyspark package is installed on the system.
 # Needed to run tests of the distributed RDataFrame module that use pyspark.
