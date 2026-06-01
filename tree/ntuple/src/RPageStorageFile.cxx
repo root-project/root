@@ -525,8 +525,8 @@ void ROOT::Internal::RPageSourceFile::LoadSealedPageImpl(const RNTupleLocator &l
    // Track seek distance (excluding file structure reads)
    if (fLastOffset != 0) {
       R__ASSERT(fFileCounters);
-      const auto distance = static_cast<std::uint64_t>(std::abs(
-         static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
+      const auto distance = static_cast<std::uint64_t>(
+         std::abs(static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
       fFileCounters->fSzSkip.Add(distance);
    }
    fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),

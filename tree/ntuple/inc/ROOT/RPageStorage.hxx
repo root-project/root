@@ -634,13 +634,13 @@ private:
    /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.
    /// When using alias columns (projected fields), physical columns may be requested multiple times.
    class RActivePhysicalColumns {
-      public:
+   public:
       struct RColumnInfo {
          ROOT::Internal::RColumnElementBase::RIdentifier fElementId;
          std::size_t fRefCounter = 0;
       };
 
-      private:
+   private:
       /// Maps physical column IDs to all the requested in-memory representations.
       /// A pair of physical column ID and in-memory representation can be requested multiple times, which is
       /// indicated by the reference counter.
@@ -648,7 +648,7 @@ private:
       /// so it is fine to search them linearly.
       std::unordered_map<ROOT::DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
 
-      public:
+   public:
       void Insert(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
       void Erase(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
       ROOT::Internal::RCluster::ColumnSet_t ToColumnSet() const;
