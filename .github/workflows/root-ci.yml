@@ -415,10 +415,11 @@ jobs:
             is_special: true
             property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Fedora Rawhide with Python debug build
+          # Fedora Rawhide with Python freethreading+debug build
           - image: rawhide
+            python_venv: "/py-venv-3.14td/ROOT-CI"
             is_special: true
-            property: "Fedora pydebug"
+            property: "Fedora pydebug no GIL"
             overrides: ["CMAKE_CXX_STANDARD=23"]
           # Minimal build
           - image: alma10
