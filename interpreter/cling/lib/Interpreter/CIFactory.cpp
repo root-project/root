@@ -729,7 +729,17 @@ namespace {
                             /*AllowModulemapOverride=*/ false);
 #elif __APPLE__
     if (Triple.isMacOSX()) {
-      if (CI.getTarget().getSDKVersion() < VersionTuple(14, 4)) {
+      // The following is needed to support MacOS13 with LLVM 18, but does not
+      // make sense in a conda build where the the SDK version is much older
+      // (typically 11) but the modulemap is shipped separately by conda-forge.
+      const bool isCondaBuild = []() {
+        if (const auto en = std::getenv("CONDA_BUILD")) {
+          return std::strcmp(en, "1") == 0;
+        }
+        return false;
+      }();
+      if (CI.getTarget().getSDKVersion() < VersionTuple(14, 4) &&
+          !isCondaBuild) {
         maybeAppendOverlayEntry(stdIncLoc.str(),
                                 "std_darwin.MacOSX14.2.sdk.modulemap",
                                 clingIncLoc.str().str(), MOverlay,
