@@ -81,6 +81,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseNot.cxx
     src/ParseClip.cxx
     src/ParseGelu.cxx
+    src/ParseHardSigmoid.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
