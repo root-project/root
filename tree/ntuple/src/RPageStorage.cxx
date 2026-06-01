@@ -470,7 +470,7 @@ ROOT::Internal::RPageSource::LoadPageFromSummary(ColumnHandle_t columnHandle, co
       fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
-          fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
+         fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       // The cluster pool may have unzipped the required page into the page pool
