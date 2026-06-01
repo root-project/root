@@ -404,19 +404,14 @@ void ROOT::Internal::RPageSource::LoadSealedPage(ROOT::DescriptorId_t physicalCo
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
    }
 
+   assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);
+
    sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
    sealedPage.SetNElements(pageInfo.GetNElements());
    sealedPage.SetHasChecksum(pageInfo.HasChecksum());
 
    if (!sealedPage.GetBuffer())
       return;
-
-   if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
-      assert(!pageInfo.HasChecksum());
-      memcpy(const_cast<void *>(sealedPage.GetBuffer()), ROOT::Internal::RPage::GetPageZeroBuffer(),
-             sealedPage.GetBufferSize());
-      return;
-   }
 
    LoadSealedPageImpl(pageInfo.GetLocator(), sealedPage);
    sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
