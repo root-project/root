@@ -73,6 +73,8 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
    do {
       Long64_t curfirst = idcur->GetFirst();
       Long64_t curlast  = idcur->GetLast();
+      // We can't have overlapping free segments
+      assert((first < curfirst && last < curfirst) || first > curlast);
 
       if ((curlast == first - 1) && (last - curfirst < kMaxGapSize)) {
          idcur->SetLast(last);
@@ -104,6 +106,8 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
       idcur = (TFree*)lfree->After(idcur);
    } while (idcur);
 
+   // never here
+   assert(false);
    return nullptr;
 }
 
