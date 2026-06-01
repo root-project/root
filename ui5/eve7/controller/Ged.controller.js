@@ -329,7 +329,7 @@ sap.ui.define([
          // camera type selector
          this.makeCameraTypeSelector(el);
          // save camera button
-         this.makeSaveCameraButton(el);
+         // this.makeSaveCameraButton(el);
       },
 
       buildREveDataCollectionSetter : function(el)
@@ -851,6 +851,7 @@ sap.ui.define([
          return cameras;
       },
       
+      /*
       makeSaveCameraButton: function(viewer) {
          let gedFrame = this.getView().byId("GED");
          let gcm = this;
@@ -908,7 +909,7 @@ sap.ui.define([
          sap.m.MessageToast.show("Camera matrix saved!");
          console.log("Saved camera matrix:", camTransMtx);
 
-      }
+      }*/
    });
       
    GedController.canEditClass = function(typename) {

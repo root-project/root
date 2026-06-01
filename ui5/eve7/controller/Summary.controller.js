@@ -300,6 +300,11 @@ sap.ui.define([
          for (let n=0;n<src.length;++n) {
             let elem = src[n];
 
+            // exclude members of EveWorld (fElementId === 1) like Camera list
+            if (elem.fMotherId === 1 && elem.fName === "Cameras") {
+               continue;
+            }
+
             let newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "", fMainColor: "", fSelected: false };
 
             this.setElementsAttributes(newelem, elem);
