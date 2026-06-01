@@ -212,75 +212,7 @@ sap.ui.define([
          this.lights.name = "Light container";
          this.scene.add(this.lights);
 
-         let a_light = new RC.AmbientLight(new RC.Color(0xffffff), 0.05);
-         this.lights.add(a_light);
-
-         let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.PointLight(col, int, dist, decay, args); };
-         // let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.DirectionalLight(col, int); };
-         let light_2d_ctor = function(col, int) { return new RC.DirectionalLight(col, int); };
-
-         // guides
-         this.axis = new RC.Group();
-         this.axis.name = "Axis";
-         // this.overlay_scene.add(this.axis); // looks worse for now put to scene
-         this.scene.add(this.axis);
-
-         if (this.controller.isEveCameraPerspective())
-         {
-            this.camera = new RC.PerspectiveCamera(75, w / h, 20, 4000);
-            this.camera.isPerspectiveCamera = true;
-
-            let l_int = 1.4;
-            let l_args = { constant: 1, linear: 0, quadratic: 0, smap_size: 0 };
-            this.lights.add(light_3d_ctor(0xaa8888, l_int, 0, 1, l_args)); // R
-            this.lights.add(light_3d_ctor(0x88aa88, l_int, 0, 1, l_args)); // G
-            this.lights.add(light_3d_ctor(0x8888aa, l_int, 0, 1, l_args)); // B
-            this.lights.add(light_3d_ctor(0xaaaa66, l_int, 0, 1, l_args)); // Y
-            this.lights.add(light_3d_ctor(0x666666, l_int, 0, 1, l_args)); // gray, bottom
-
-            // Lights are positioned in resetRenderer.
-
-            // Markers on light positions (screws up bounding box / camera reset calculations)
-            // for (let i = 1; i <= 4; ++i)
-            // {
-            //    let l = this.lights.children[i];
-            //    l.add( new RC.IcoSphere(1, 1, 10.0, l.color.clone().multiplyScalar(0.5), false) );
-            // }
-         }
-         else
-         {
-            this.camera = new RC.OrthographicCamera(-w/2, w/2, -h/2, h/2, 20, 2000);
-            this.camera.isOrthographicCamera = true;
-
-            let l_int = 0.85;
-            this.lights.add(light_2d_ctor(0xffffff, l_int)); // white front
-            // this.lights.add(light_2d_ctor(0xffffff, l_int)); // white back
-
-            // Lights are positioned in resetRenderer.
-         }
-
-         // AMT, disable auto update in camera in order prevent reading quaternions in update of
-         // model view  matrix in Obejct3D function updateMatrixWorld
-         this.camera.matrixAutoUpdate = false;
-
-         // Test objects
-         if (this.controller.isEveCameraPerspective())
-         {
-            // let c = new RC.Cube(40, new RC.Color(0.2,.4,.8));
-            // c.material = new RC.MeshPhongMaterial();
-            // c.material.transparent = true;
-            // c.material.opacity = 0.8;
-            // c.material.depthWrite  = false;
-            // this.scene.add(c);
-
-            // let ss = new RC.Stripe([0,0,0, 400,0,0, 400,400,0, 400,400,400]);
-            // ss.material.lineWidth = 20.0;
-            // ss.material.color     = new RC.Color(0xff0000);
-            // ss.material.emissive  = new RC.Color(0x008080);
-            // this.scene.add(ss);
-         }
-
-         this.rot_center = new RC.Vector3(0,0,0);
+         this.createCameraAndLights();
 
          this.rqt = new RC.RendeQuTor(this.renderer, this.scene, this.camera, this.overlay_scene);
          if (this.RQ_Mode == "Direct")
@@ -307,6 +239,82 @@ sap.ui.define([
          {
             return this.pick_instance_low_level(this.ovlpqueue, state);
          }
+      }
+
+      createCameraAndLights()
+      {
+         let a_light = new RC.AmbientLight(new RC.Color(0xffffff), 0.05);
+         this.lights.add(a_light);
+
+         let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.PointLight(col, int, dist, decay, args); };
+         // let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.DirectionalLight(col, int); };
+         let light_2d_ctor = function(col, int) { return new RC.DirectionalLight(col, int); };
+
+         // guides
+         this.axis = new RC.Group();
+         this.axis.name = "Axis";
+         // this.overlay_scene.add(this.axis); // looks worse for now put to scene
+         this.scene.add(this.axis);
+
+         let w = this.canvas.width;
+         let h = this.canvas.height;
+
+         if (this.controller.isEveCameraPerspective())
+         {
+            this.camera = new RC.PerspectiveCamera(75, w / h, 20, 4000);
+            this.camera.isPerspectiveCamera = true;
+
+            let l_int = 1.4;
+            let l_args = { constant: 1, linear: 0, quadratic: 0, smap_size: 0 };
+            this.lights.add(light_3d_ctor(0xaa8888, l_int, 0, 1, l_args)); // R
+            this.lights.add(light_3d_ctor(0x88aa88, l_int, 0, 1, l_args)); // G
+            this.lights.add(light_3d_ctor(0x8888aa, l_int, 0, 1, l_args)); // B
+            this.lights.add(light_3d_ctor(0xaaaa66, l_int, 0, 1, l_args)); // Y
+            this.lights.add(light_3d_ctor(0x666666, l_int, 0, 1, l_args)); // gray, bottom
+
+            // Lights are positioned in positionCameraAndLights.
+
+            // Markers on light positions (screws up bounding box / camera reset calculations)
+            // for (let i = 1; i <= 4; ++i)
+            // {
+            //    let l = this.lights.children[i];
+            //    l.add( new RC.IcoSphere(1, 1, 10.0, l.color.clone().multiplyScalar(0.5), false) );
+            // }
+         }
+         else
+         {
+            this.camera = new RC.OrthographicCamera(-w/2, w/2, -h/2, h/2, 20, 2000);
+            this.camera.isOrthographicCamera = true;
+
+            let l_int = 0.85;
+            this.lights.add(light_2d_ctor(0xffffff, l_int)); // white front
+            // this.lights.add(light_2d_ctor(0xffffff, l_int)); // white back
+
+            // Lights are positioned in positionCameraAndLights.
+         }
+
+         // AMT, disable auto update in camera in order prevent reading quaternions in update of
+         // model view  matrix in Obejct3D function updateMatrixWorld
+         this.camera.matrixAutoUpdate = false;
+
+         // Test objects
+         if (this.controller.isEveCameraPerspective())
+         {
+            // let c = new RC.Cube(40, new RC.Color(0.2,.4,.8));
+            // c.material = new RC.MeshPhongMaterial();
+            // c.material.transparent = true;
+            // c.material.opacity = 0.8;
+            // c.material.depthWrite  = false;
+            // this.scene.add(c);
+
+            // let ss = new RC.Stripe([0,0,0, 400,0,0, 400,400,0, 400,400,400]);
+            // ss.material.lineWidth = 20.0;
+            // ss.material.color     = new RC.Color(0xff0000);
+            // ss.material.emissive  = new RC.Color(0x008080);
+            // this.scene.add(ss);
+         }
+
+         this.rot_center = new RC.Vector3(0,0,0);
       }
 
       setupEventHandlers()
@@ -373,7 +381,7 @@ sap.ui.define([
 
          dome.addEventListener('dblclick', function() {
             //if (glc.controller.dblclick_action == "Reset")
-            glc.resetRenderer();
+            glc.positionCameraAndLights();
          });
 
          dome.addEventListener("mouseup", function() {
@@ -525,7 +533,7 @@ sap.ui.define([
          this.centerMarker = s;
 
          // This will also call render().
-         this.resetRenderer();
+         this.positionCameraAndLights();
       }
 
       recalcSceneBBox()
@@ -533,14 +541,14 @@ sap.ui.define([
          this.scene_bbox.setFromObject( this.scene );
          if (this.scene_bbox.isEmpty())
          {
-            console.error("GlViewerRenderCore.resetRenderer scene bbox empty", this.scene_bbox);
+            console.error("GlViewerRenderCore.positionCameraAndLights scene bbox empty", this.scene_bbox);
             const ext = 100;
             this.scene_bbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
             this.scene_bbox.expandByPoint(new RC.Vector3( ext, ext, ext));
          }
       }
 
-      resetRenderer()
+      positionCameraAndLights()
       {
          this.recalcSceneBBox();
 
@@ -552,7 +560,7 @@ sap.ui.define([
          let extR = extV.length();
 
          if (this._logLevel >= 2)
-            console.log("GlViewerRenderCore.resetRenderer", sbbox, posV, negV, extV, extR);
+            console.log("GlViewerRenderCore.positionCameraAndLights", sbbox, posV, negV, extV, extR);
 
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
 
@@ -561,11 +569,9 @@ sap.ui.define([
 
          let camera = this.controller.mgr.GetElement(cameraId);
          if (this._logLevel >= 2) {
-            console.log("GlViewerRCore.resetRenderer: Using standalone camera ID", cameraId);
+            console.log("GlViewerRCore.positionCameraAndLights: Using standalone camera ID", cameraId);
             if (camera) {
                console.log("  Camera name:", camera.fName);
-               // console.log("  Camera fV1:", camera.fV1);
-               // console.log("  Camera fV2:", camera.fV2);
                console.log("  Camera camBase:", camera.camBase);
             }
          }
@@ -573,23 +579,15 @@ sap.ui.define([
          let v1 = [camera.camBase[0], camera.camBase[1], camera.camBase[2]];   // forward/direction
          let v2 = [camera.camBase[8], camera.camBase[9], camera.camBase[10]];    // up
 
-         // Apply camTrans if available
-         if (camera.camTrans && camera.camTrans.length === 16) {
-            this.controls.setCamTrans(camera.camTrans.slice());
-            if (this._logLevel >= 2) {
-               console.log("GlViewerRCore.resetRenderer: Applied camTrans from REveCamera");
-            }
-         }
-
          if (this._logLevel >= 2) {
-            console.log("GlViewerRCore.resetRenderer: Using standalone REveCamera");
+            console.log("GlViewerRCore.positionCameraAndLights: Using standalone REveCamera");
          }
-         
 
          if (this.camera.isPerspectiveCamera)
          {
             this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             this.controls.screenSpacePanning = true;
+            this.controls.enableRotate = true;
 
             let lc = this.lights.children;
             // lights are const now -- no need to set decay and distance
@@ -598,8 +596,6 @@ sap.ui.define([
             lc[3].position.set( extR, extR,  extR);
             lc[4].position.set(-extR, extR, -extR);
             lc[5].position.set(0, -extR, 0);
-
-            // console.log("resetRenderer 3D scene bbox ", sbbox, ", look_at ", this.rot_center);
          }
          else
          {
@@ -621,40 +617,33 @@ sap.ui.define([
             let lc = this.lights.children;
             lc[1].position.set( 0, 0,  extR);
          }
-        
+
          this.controls.setFromBBox(sbbox);
+
+         // Apply saved camTrans (if initialized)
+         if (camera.fInitialized) {
+            // Apply camTrans after bbox setup
+            this.controls.setCamTrans(camera.camTrans.slice());
+
+            if (this.camera.isOrthographicCamera) {
+               this.camera.zoom = camera.fZoom;
+               this.camera.updateProjectionMatrix();
+               this.controls.zoomChanged = true;
+               this.controls.update();
+            }
+         }
+         this.controls.update();
 
          this.centerMarker.visible = false;
-
-         this.controls.setFromBBox(sbbox);
-
-         this.controls.update();
       }
 
-      setupCamera()
-      {
-         // To be used with JS debugger to edit the values as needed.
-
-         let pos = new RC.Vector3;
-         let lookat = new RC.Vector3;
-         let fov = 30; // in degrees
-
-         console.log("A good place to set the breakpoint and edit the values");
-
-         // Call the controller stuff, hope it's not all local, otherwise we need to edit it there.
-         // Sigh, should really have it (and RedeQuTor) in ROOT.
-      }
-
-      updateViewerAttributes()
-      {
+      updateViewerAttributes() {
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
-         if (eveView.BlackBg)
-         {
+         if (eveView.BlackBg) {
             this.fgCol = this.creator.ColorWhite;
             this.bgCol = this.creator.ColorBlack;
          }
-         else
-         {
+         else {
             this.bgCol = this.creator.ColorWhite;
             this.fgCol = this.creator.ColorBlack;
          }
@@ -663,6 +652,39 @@ sap.ui.define([
          if (eveView.AxesType > 0)
             this.makeAxis();
 
+
+         // compare cam base matrices
+         let a = this.controls.getCamBase().elements;
+         let eveCamera = this.controller.mgr.GetElement(eveView.fCameraId);
+
+         // compare the base matrices
+         let b = eveCamera.camBase;
+         let equal = true;
+         for (let i = 0; i < 16; i++) {
+            if (Math.abs(a[i] - b[i]) > 0.0000005) {
+               equal = false;
+            }
+         }
+
+         // compare exisiting controller type and viewer's REveCamera type
+         if (eveCamera.fType < 3) {
+            if (this.controls?.isOrthographicCamera) {
+               equal = false;
+            }
+
+         }
+         else {
+            if (this.controls?.isPerspectiveCamera) {
+               equal = false;
+            }
+         }
+
+         if (equal !== true) {
+            this.lights.clear();
+            delete this.camera;
+            this.createCameraAndLights();
+            this.positionCameraAndLights();
+         }
          this.request_render();
       }
 
@@ -758,11 +780,8 @@ sap.ui.define([
 
       render()
       {
-<<<<<<< HEAD
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
-=======
->>>>>>> 7075e817ab0 (added fInitialized member)
          this.render_requested = false;
          if (this.render_requested_recalc_sbbox) {
             this.recalcSceneBBox();
@@ -1160,7 +1179,7 @@ sap.ui.define([
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
          let  eve_camera = this.controller.mgr.GetElement(eveView.fCameraId);
          eve_camera.fInitialized = false;
-         this.resetRenderer();
+         this.positionCameraAndLights();
       }
 
       setCameraCenter(data)
