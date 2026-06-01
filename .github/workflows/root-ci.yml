@@ -438,8 +438,8 @@ jobs:
           #   property: gpu
           #   extra-runs-on: gpu
           # openSUSE Leap
-          - image: opensuse15
-            platform_config: opensuse15-march_native
+          - image: opensuse16
+            platform_config: opensuse16-march_native
             is_special: true
             property: march_native
 
