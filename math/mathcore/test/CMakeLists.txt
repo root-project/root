@@ -45,11 +45,6 @@ if(mathmore)
   list(APPEND Libraries MathMore)
 endif()
 
-if(r)
- add_definitions(-DROOT_HAS_R)
- list(APPEND Libraries RInterface)
-endif()
-
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
