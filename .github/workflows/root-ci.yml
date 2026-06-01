@@ -466,14 +466,15 @@ jobs:
       BUILD_DIR: /github/home/ROOT-CI/build
       INSTALL_DIR: /github/home/ROOT-CI/install
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
+      PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
 
     steps:
       - name: Set up environment
         run: |
           ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -s || true
-          if [ -d /py-venv/ROOT-CI/bin/ ]; then
-            . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV;
+          if [ -d "$PYTHON_VENV/bin/" ]; then
+            . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
           fi
           if ${{ contains(matrix.property, 'auto-registration off') }}; then
             echo "Disabling ROOT's object auto registration for this job"
