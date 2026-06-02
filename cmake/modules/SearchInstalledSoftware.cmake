@@ -380,6 +380,8 @@ if(asimage)
     get_target_property(TIFF_LIBRARY_LOCATION TIFF::TIFF IMPORTED_LOCATION)
   endif()
   list(APPEND ASEXTRA_LIBRARIES TIFF::TIFF)
+
+  add_subdirectory(builtins/libAfterImage) # It's a hard-coded builtin, was forked in 2008, system-wide version misses many patches
 endif()
 
 #---Check for Python installation-------------------------------------------------------
