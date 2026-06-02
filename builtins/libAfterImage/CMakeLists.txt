@@ -4,6 +4,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+# Forked from libAfterImage-20080306, see https://github.com/root-project/root/commit/20399dbaeada26020134297a42d3b1b0e9ac0878
+# This builtin is hard-coded, we do not ever use system libafterimage since it's missing many patches for ROOT to work correctly
+
 project(AfterImage)
 
 set(LIB_NAME libAfterImage)
