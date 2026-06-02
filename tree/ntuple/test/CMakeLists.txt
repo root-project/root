@@ -176,6 +176,10 @@ if(daos OR daos_mock)
   endif()
 endif()
 
+if(curl)
+  ROOT_ADD_GTEST(ntuple_storage_s3 ntuple_storage_s3.cxx LIBRARIES ROOTNTuple)
+endif()
+
 
 # RNTuple Python interface tests
 if(pyroot)

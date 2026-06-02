@@ -121,6 +121,13 @@ if(daos OR daos_mock)
   endif()
 endif()
 
+# Enable RNTuple support for S3-compatible object storage
+if(curl)
+  set(ROOTNTuple_EXTRA_HEADERS ${ROOTNTuple_EXTRA_HEADERS} ROOT/RPageStorageS3.hxx)
+  target_sources(ROOTNTuple PRIVATE src/RPageStorageS3.cxx)
+  target_link_libraries(ROOTNTuple PRIVATE nlohmann_json::nlohmann_json)
+endif()
+
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)
 endif()
