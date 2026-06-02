@@ -173,6 +173,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
 #include <cinttypes>
+#include <cassert>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -1504,27 +1505,40 @@ Bool_t TFile::IsOpen() const
 
 void TFile::MakeFree(Long64_t first, Long64_t last)
 {
-   TFree *f1      = (TFree*)fFree->First();
-   if (!f1) return;
-   TFree *newfree = f1->AddFree(fFree,first,last);
-   if(!newfree) return;
+   assert(0 < first && first < last && last < fEND);
+
+   TFree *f1 = static_cast<TFree *>(fFree->First());
+   assert(f1); // There must always be at least the virtual free segment at the end of the file
+
+   TFree *newfree = f1->AddFree(fFree, first, last);
+   assert(newfree); // AddFree() always succeeds
+
    Long64_t nfirst = newfree->GetFirst();
-   Long64_t nlast  = newfree->GetLast();
-   Long64_t nbytesl= nlast-nfirst+1;
-   if (nbytesl > 2000000000) nbytesl = 2000000000;
-   Int_t nbytes    = -Int_t (nbytesl);
+   Long64_t nlast = newfree->GetLast();
+   assert(nfirst > 0 && nfirst <= first && nlast >= last);
+   Long64_t nbytesl = nlast - nfirst + 1;
+   assert(nbytesl >= static_cast<Long64_t>(sizeof(Int_t)));
+
+   if (last == fEND - 1)
+      fEND = nfirst;
+
+   if (nbytesl > TFile::kMaxGapSize)
+      nbytesl = TFile::kMaxGapSize;
+
+   Int_t nbytes = -Int_t(nbytesl);
    char buffer[sizeof(Int_t)];
    char *pbuffer = buffer;
    tobuf(pbuffer, nbytes);
-   if (last == fEND-1) fEND = nfirst;
+
    Seek(nfirst);
-   // We could not update the meta data for this block on the file.
-   // This is not fatal as this only means that we won't get it 'right'
-   // if we ever need to Recover the file before the block is actually
-   // (attempted to be reused.
-   // coverity[unchecked_value]
-   WriteBuffer(buffer, sizeof(buffer));
-   if (fMustFlush) Flush();
+   if (WriteBuffer(buffer, sizeof(buffer)) != 0) {
+      // Not fatal, this only means that we won't get it 'right'
+      // if we ever need to Recover the file before the block is actually
+      // attempted to be reused.
+      Warning("TFile::MakeFree()", "failed to write free segment header");
+   }
+   if (fMustFlush)
+      Flush();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
