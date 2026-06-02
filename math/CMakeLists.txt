@@ -33,8 +33,4 @@ if(fftw3)
   add_subdirectory(fftw)
 endif()
 
-if(r)
-  add_subdirectory(rtools)
-endif()
-
 add_subdirectory(vecops)

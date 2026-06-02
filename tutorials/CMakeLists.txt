@@ -229,10 +229,6 @@ if(NOT xrootd)
                   )
 endif()
 
-if(NOT r)
-  set(r_veto  math/r/*.C)
-endif()
-
 set(histfactory_veto roofit/histfactory/makeExample.C)
 
 if(NOT fitsio)
@@ -518,7 +514,6 @@ set(all_veto hsimple.C
              ${fftw3_veto}
              ${opengl_veto}
              ${gviz_veto}
-             ${r_veto}
              ${runtime_cxxmodules_veto}
              ${histfactory_veto}
              ${tbb_veto}

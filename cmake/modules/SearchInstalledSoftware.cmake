@@ -752,22 +752,6 @@ elseif(builtin_ftgl)
   message(SEND_ERROR "FTGL features enabled with \"builtin_ftgl=ON\" require \"opengl=ON\"")
 endif()
 
-#---Check for R/Rcpp/RInside--------------------------------------------------------------------
-#added search of R packages here to remove multiples searches
-if(r)
-  message(STATUS "Looking for R")
-  find_package(R COMPONENTS Rcpp RInside)
-  if(NOT R_FOUND)
-    if(fail-on-missing)
-       message(SEND_ERROR "R installation not found and is required ('r' option enabled)")
-    else()
-       message(STATUS "R installation not found. Set variable R_DIR to point to your R installation")
-       message(STATUS "For the time being switching OFF 'r' option")
-       set(r OFF CACHE BOOL "Disabled because R not found (${r_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Davix library-----------------------------------------------------------
 
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
@@ -1179,18 +1163,10 @@ if(tmva)
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
   endif()
-  if (R_FOUND)
-    #Rmva is enable when r is found and tmva is on
-    set(tmva-rmva ON)
-  endif()
-  if(tmva-rmva AND NOT R_FOUND)
-    set(tmva-rmva  OFF CACHE BOOL "Disabled because R was not found (${tmva-rmva_description})"  FORCE)
-  endif()
 else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
-  set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
+  set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-cudnn_description})"  FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
-  set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
 endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------

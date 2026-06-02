@@ -25,7 +25,6 @@ cocoa=ON
 davix=OFF
 fortran=OFF
 minuit2_omp=OFF
-r=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 x11=OFF

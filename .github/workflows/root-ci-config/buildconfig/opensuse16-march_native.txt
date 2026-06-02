@@ -11,4 +11,3 @@ test_distrdf_pyspark=OFF
 tmva-pymva=ON
 tmva-sofie=ON
 pythia8=OFF
-r=OFF

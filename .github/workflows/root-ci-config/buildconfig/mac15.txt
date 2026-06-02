@@ -20,5 +20,4 @@ builtin_zstd=ON
 cocoa=ON
 davix=OFF
 minuit2_omp=OFF
-r=OFF
 x11=OFF
