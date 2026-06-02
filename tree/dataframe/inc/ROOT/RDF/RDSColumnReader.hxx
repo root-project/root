@@ -24,7 +24,7 @@ class R__CLING_PTRCHECK(off) RDSColumnReader final : public ROOT::Detail::RDF::R
    T **fDSValuePtr = nullptr;
 
    void *GetImpl(std::size_t) final { return *fDSValuePtr; }
-   void LoadImpl(Long64_t, bool) final {}
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
 
 public:
    RDSColumnReader(void *DSValuePtr) : fDSValuePtr(static_cast<T **>(DSValuePtr)) {}

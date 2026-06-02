@@ -93,35 +93,42 @@ public:
       fLoopManager->Deregister(this);
    }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      auto &newMask = fLastResult[slot * RDFInternal::CacheLineStep<int>()];
-      auto &lastEntry = fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()];
+      auto &cachedResults = fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()];
+      if (entry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
+         return {cachedResults, static_cast<std::uint64_t>(entry)};
 
-      if (entry != lastEntry) {
-         newMask = fPrevNode.CheckFilters(slot, entry);
-
-         // evaluate this filter, cache the result
-         std::for_each(fValues[slot].begin(), fValues[slot].end(),
-                       [entry, newMask](auto *v) { v->Load(entry, newMask); });
-         CheckFilterHelper(slot, /*idx=*/0u, newMask, ColumnTypes_t{}, TypeInd_t{});
-
-         lastEntry = entry;
+      auto mask = fPrevNode.CheckFilters(slot, entry);
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+      // Assume 1-size bulk for now
+      const std::size_t bulkSize{1};
+      std::size_t accepted{0};
+      std::size_t rejected{0};
+      cachedResults.clear();
+      cachedResults.resize(bulkSize);
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         if (mask[i]) {
+            cachedResults[i] = CheckFilterHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});
+            if (cachedResults[i])
+               ++accepted;
+            else
+               ++rejected;
+         }
       }
+      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = entry;
+      fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()] += accepted;
+      fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()] += rejected;
 
-      return newMask;
+      return {cachedResults, static_cast<std::uint64_t>(entry)};
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void CheckFilterHelper(unsigned int slot, std::size_t idx, int &entryMask, TypeList<ColTypes...>,
-                          std::index_sequence<S...>)
+   bool CheckFilterHelper(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      if (entryMask) {
-         entryMask = fFilter(GetValueChecked<ColTypes>(slot, S, idx)...);
-         entryMask ? ++fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()]
-                   : ++fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()];
-      }
-      (void)idx; // avoid unused parameter warning (gcc 12.1)
+      return fFilter(GetValueChecked<ColTypes>(slot, S, idx)...);
+      (void)slot; // avoid unused parameter warning
+      (void)idx;  // avoid unused parameter warning
    }
 
    template <typename ColType>

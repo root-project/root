@@ -44,7 +44,7 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
 
    void *GetImpl(std::size_t /*idx*/) final { return fValuePtr; }
 
-   void LoadImpl(Long64_t entry, bool mask) final { fDefine.Update(fSlot, entry, mask); }
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final { fDefine.Update(fSlot, mask); }
 
 public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)

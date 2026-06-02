@@ -37,8 +37,6 @@ class RLoopManager;
 
 class RFilterBase : public RNodeBase {
 protected:
-   std::vector<Long64_t> fLastCheckedEntry;
-   std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;
@@ -48,6 +46,8 @@ protected:
    ROOT::RVecB fIsDefine;
    std::string fVariation; ///< This indicates for what variation this filter evaluates values.
    std::unordered_map<std::string, std::shared_ptr<RFilterBase>> fVariedFilters;
+
+   std::vector<ROOT::RVec<bool>> fCachedResults{}; // Vector of cached results, per slot
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
