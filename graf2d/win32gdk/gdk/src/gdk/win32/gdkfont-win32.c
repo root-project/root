@@ -1644,7 +1644,7 @@ gdk_wchar_text_handle(GdkFont * font,
           * old behavior set singlefont = NULL and skipped rendering entirely).
           * With added defensive null-checks, this ensures CJK and non-Latin 
           * text visibility without introducing regression risks. */
-         if (private && private->fonts && private->fonts->data) {
+         if (private && private->fonts) {
             singlefont = (GdkWin32SingleFont *) private->fonts->data;
          } else {
             singlefont = NULL; 
