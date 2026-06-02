@@ -1,7 +1,7 @@
 if(builtin_openui5)
   ExternalProject_Add(
     OPENUI5
-    URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz # TODO move to LCG
+    URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
     URL_HASH SHA256=b9e6495d8640302d9cf2fe3c99331311335aaab0f48794565ebd69ecc7449e58
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
