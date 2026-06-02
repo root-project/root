@@ -166,9 +166,10 @@ public:
       for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
          const auto mask = fPrevNodes[varIdx]->CheckFilters(slot, entry);
          std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
-                       [entry, mask](auto *v) { v->Load(entry, mask); });
+                       [&mask](auto *v) { v->Load(mask); });
 
-         if (mask)
+         // Assume 1-size bulk for now
+         if (mask[0])
             CallExec(slot, varIdx, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
       }
    }
