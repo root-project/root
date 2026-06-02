@@ -118,10 +118,14 @@ read_xcf_image( FILE *fp )
 					xcf_im->version = 0 ;
 				else
 					xcf_im->version = atoi(&(sig[XCF_SIGNATURE_LEN+1]));
-				if( xcf_read32( fp, &(xcf_im->width), 3 ) < 3 )
-				{
+				CARD32 arr[3];
+				if( xcf_read32( fp, arr, 3 ) < 3 ) {
 					free( xcf_im );
 					xcf_im = NULL ;
+				} else {
+					xcf_im->width = arr[0];
+					xcf_im->height = arr[1];
+					xcf_im->type = arr[2];
 				}
 			}
 		}
@@ -609,11 +613,11 @@ read_xcf_hierarchy( XcfImage *xcf_im, FILE *fp, CARD8 opacity, ARGB32 colormask 
 
 			if (XCF_TILE_WIDTH < h->width)
 				tile_buf = safemalloc (h->width*XCF_TILE_HEIGHT*6);
-				
+
 			if (xcf_im->width < h->width)
 				for( i = 0 ; i < XCF_TILE_HEIGHT ; i++ )
 				{
-					free_scanline (&(xcf_im->scanline_buf[i]), True); 
+					free_scanline (&(xcf_im->scanline_buf[i]), True);
 					prepare_scanline (h->width,0,&(xcf_im->scanline_buf[i]), False );
 				}
 
@@ -730,7 +734,7 @@ store_colors( CARD8 *data, ASScanline *curr_buf, int bpp, int comp, int offset_x
 	}else
 		out = &(curr_buf->alpha[offset_x]);
 
-	if( out ) 
+	if( out )
   		for( i = 0 ; i < width ; i++ )
 			out[i] = data[i] ;
 }
