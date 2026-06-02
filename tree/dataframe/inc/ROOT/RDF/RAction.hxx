@@ -122,9 +122,10 @@ public:
    void Run(unsigned int slot, Long64_t entry) final
    {
       const auto mask = fPrevNode.CheckFilters(slot, entry);
-      std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
 
-      if (mask)
+      // Assume 1-size bulk for now
+      if (mask[0])
          CallExec(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
    }
 

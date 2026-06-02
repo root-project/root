@@ -68,30 +68,36 @@ public:
    ~RRange() final { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry) {
-         if (fHasStopped)
-            return false;
-         if (!fPrevNode.CheckFilters(slot, entry)) {
-            // a filter upstream returned false, cache the result
-            fLastResult = false;
-         } else {
-            // apply range filter logic, cache the result
-            if (fNProcessedEntries < fStart || (fStop > 0 && fNProcessedEntries >= fStop) ||
-                (fStride != 1 && (fNProcessedEntries - fStart) % fStride != 0))
-               fLastResult = false;
-            else
-               fLastResult = true;
+      if (entry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
+         return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()],
+                 static_cast<std::uint64_t>(entry)};
+
+      if (fHasStopped)
+         return {1ul, false, static_cast<std::uint64_t>(entry)};
+
+      // Assume 1-size bulk for now
+      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = entry;
+      auto mask = fPrevNode.CheckFilters(slot, entry);
+      const std::size_t bulkSize = 1;
+      fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()].clear();
+      fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()].resize(bulkSize);
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         if (mask[i]) {
+            fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()][i] =
+               fNProcessedEntries >= fStart && (fStop == 0 || fNProcessedEntries < fStop) &&
+               (fStride == 1 || (fNProcessedEntries - fStart) % fStride == 0);
             ++fNProcessedEntries;
-            if (fNProcessedEntries == fStop) {
-               fHasStopped = true;
-               fPrevNode.StopProcessing();
-            }
          }
-         fLastCheckedEntry = entry;
       }
-      return fLastResult;
+
+      if (fStop > 0 && fNProcessedEntries >= fStop) {
+         fHasStopped = true;
+         fPrevNode.StopProcessing();
+      }
+
+      return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()], static_cast<std::uint64_t>(entry)};
    }
 
    // recursive chain of `Report`s

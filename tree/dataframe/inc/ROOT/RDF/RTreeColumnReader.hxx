@@ -37,9 +37,10 @@ namespace RDF {
 
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
+   void *fValuePtr{nullptr};
 
    void *GetImpl(std::size_t) override;
-   void LoadImpl(Long64_t, bool) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
@@ -57,9 +58,10 @@ public:
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderUntypedValue
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
+   void *fValuePtr{nullptr};
 
    void *GetImpl(std::size_t) override;
-   void LoadImpl(Long64_t, bool) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName);
@@ -116,7 +118,7 @@ private:
    void *fValuePtr{nullptr};
 
    void *GetImpl(std::size_t) override;
-   void LoadImpl(Long64_t, bool) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
    void *LoadStdArray(Long64_t entry);
    void *LoadStdVector(Long64_t entry);
@@ -130,7 +132,7 @@ class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RCo
 
    void *fValuePtr{nullptr};
    void *GetImpl(std::size_t) override;
-   void LoadImpl(Long64_t, bool) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    RMaskedColumnReader(TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader,

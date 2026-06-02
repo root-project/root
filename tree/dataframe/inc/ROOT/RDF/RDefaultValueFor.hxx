@@ -104,16 +104,20 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry, bool mask) final
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         // evaluate this define expression, cache the result
-         fValues[slot]->Load(entry, mask);
-         if (mask) {
-            fLastResults[slot * RDFInternal::CacheLineStep<T>()] = GetValueOrDefault(slot, /*idx=*/0u);
-            fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
-         }
+      if (static_cast<Long64_t>(mask.GetFirstEntry()) ==
+          fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()])
+         return;
+
+      // Assume 1-size bulk for now
+      fValues[slot]->Load(mask);
+      const std::size_t bulkSize = 1;
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         if (mask[i])
+            fLastResults[slot * RDFInternal::CacheLineStep<T>()] = GetValueOrDefault(slot, i);
       }
+      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
    }
 
    void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo & /*id*/) final {}

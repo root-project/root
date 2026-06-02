@@ -31,7 +31,7 @@ namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RVecDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    TPointerHolder *fPtrHolder;
    void *GetImpl(std::size_t) final { return fPtrHolder->GetPointer(); }
-   void LoadImpl(Long64_t, bool) final {}
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
 
 public:
    RVecDSColumnReader(TPointerHolder *ptrHolder) : fPtrHolder(ptrHolder) {}

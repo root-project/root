@@ -28,7 +28,7 @@ namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RLazyDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    ROOT::Internal::RDF::TPointerHolder *fPtr;
    void *GetImpl(std::size_t) final { return fPtr->GetPointer(); }
-   void LoadImpl(Long64_t, bool) final {}
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
 
 public:
    RLazyDSColumnReader(ROOT::Internal::RDF::TPointerHolder *ptr) : fPtr(ptr) {}
