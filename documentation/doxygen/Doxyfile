@@ -1085,7 +1085,7 @@ EXCLUDE                = ../../interpreter/ \
     ../../core/lzma/ \
     ../../core/newdelete/ \
     ../../core/textinput/ \
-    ../../graf2d/mathtext/ \
+    ../../builtins/mathtext/ \
     ../../graf3d/ftgl/ \
     ../../graf3d/x3d/ \
     ../../net/rootd/ \
