@@ -79,11 +79,8 @@ SOURCES
     Math/LinkDef.h
   DEPENDENCIES
     MathCore
-  BUILTINS
-    GSL
 )
 
-target_include_directories(MathMore SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
-target_link_libraries(MathMore PRIVATE ${GSL_LIBRARIES})
+target_link_libraries(MathMore PRIVATE GSL::gsl GSL::gslcblas)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
