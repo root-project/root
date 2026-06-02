@@ -230,14 +230,18 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry, bool mask) final
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (entry != fLastCheckedEntry[slot * CacheLineStep<Long64_t>()]) {
-         // evaluate this filter, cache the result
-         std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
-         if (mask) {
-            UpdateHelper(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
-            fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = entry;
+      if (static_cast<Long64_t>(mask.GetFirstEntry()) == fLastCheckedEntry[slot * CacheLineStep<Long64_t>()])
+         return;
+
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+      // Assume 1-size bulk for now
+      const std::size_t bulkSize = 1;
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         if (mask[i]) {
+            UpdateHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});
+            fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
          }
       }
    }
