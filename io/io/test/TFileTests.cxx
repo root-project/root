@@ -332,3 +332,50 @@ TEST(TFile, UUID)
    TMemFile f("uuidtest.root", "RECREATE");
    EXPECT_EQ('4', f.GetUUID().AsString()[14]);
 }
+
+TEST(TFile, DeleteKey)
+{
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_delete_keys.root");
+
+   auto fnCountGaps = [](const std::string &fileName) {
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileName.c_str()));
+      std::uint64_t nGaps = 0;
+      for (const auto &k : f->WalkTKeys()) {
+         if (k.fType == ROOT::Detail::TKeyMapNode::kGap)
+            nGaps++;
+      }
+      return nGaps;
+   };
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   f->Write();
+   f->Close();
+
+   // The empty file should have no gaps. Note that gaps are created temporarily when certain keys are overwritten.
+   EXPECT_EQ(0, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   std::vector<char> v;
+   f->WriteObject(&v, "va0");
+   f->WriteObject(&v, "va1");
+   f->WriteObject(&v, "va2");
+   f->Write();
+   f->Close();
+   // 2 gaps: new (larger) keys list and free list are written
+   EXPECT_EQ(2, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->Delete("va1;*"); // should create small gap that cannot be merged, trapped between v0 and v2
+   f->Write();
+   f->Close();
+
+   EXPECT_EQ(3, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->Delete("va2;*"); // gaps at the tail should merge
+   f->Write();
+   f->Close();
+
+   EXPECT_EQ(2, fnCountGaps(fileGuard.GetPath()));
+}
