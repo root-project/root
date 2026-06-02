@@ -1058,9 +1058,10 @@ void RLoopManager::Deregister(RDFInternal::RVariationBase *v)
 }
 
 // dummy call, end of recursive chain of calls
-bool RLoopManager::CheckFilters(unsigned int, Long64_t)
+ROOT::Internal::RDF::RMaskedEntryRange RLoopManager::CheckFilters(unsigned int, Long64_t entry)
 {
-   return true;
+   // Assume 1-size bulk for now
+   return ROOT::Internal::RDF::RMaskedEntryRange{1ul, true, static_cast<std::uint64_t>(entry)};
 }
 
 /// Call `FillReport` on all booked filters
