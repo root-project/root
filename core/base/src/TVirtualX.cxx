@@ -1793,7 +1793,7 @@ void TVirtualX::ChangeProperty(Window_t /*id*/, Atom_t /*property*/,
 /// \param [in] id   the window whose property you want to change
 /// \param [in] hint specifies the type to be changed
 
-void TVirtualX::SetWindowHint(Window_t id, EWindowHint hint)
+void TVirtualX::SetWindowHint(Window_t /*id*/, EWindowHint /*hint*/)
 {
 }
 
