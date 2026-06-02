@@ -96,36 +96,40 @@ public:
       fLoopManager->EraseSuppressErrorsForMissingBranch(fColumnNames[0]);
    }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int slot, Long64_t entry) final
    {
       constexpr static auto cacheLineStepLong64_t = RDFInternal::CacheLineStep<Long64_t>();
-      constexpr static auto cacheLineStepint = RDFInternal::CacheLineStep<int>();
       constexpr static auto cacheLineStepULong64_t = RDFInternal::CacheLineStep<ULong64_t>();
 
-      auto &newMask = fLastResult[slot * cacheLineStepint];
-      auto &lastEntry = fLastCheckedEntry[slot * cacheLineStepLong64_t];
+      if (entry == fLastCheckedEntry[slot * cacheLineStepLong64_t])
+         return {fCachedResults[slot], static_cast<std::uint64_t>(entry)};
 
-      if (entry == lastEntry)
-         return newMask;
+      // Assume 1-size bulk for now
+      const std::size_t bulkSize{1};
+      auto mask = fPrevNodePtr->CheckFilters(slot, entry);
 
-      newMask = fPrevNodePtr->CheckFilters(slot, entry);
-      if (!newMask)
-         return false;
+      fValues[slot]->Load(mask);
 
-      fValues[slot]->Load(entry, newMask);
+      std::size_t accepted{0};
+      std::size_t rejected{0};
+      fCachedResults[slot].clear();
+      fCachedResults[slot].resize(bulkSize);
+      for (std::size_t i = 0; i < bulkSize; i++) {
 
-      const bool valueIsMissing = fValues[slot]->template TryGet<void>(/*idx=*/0u) == nullptr;
-      if (fDiscardEntryWithMissingValue) {
-         valueIsMissing ? ++fRejected[slot * cacheLineStepULong64_t] : ++fAccepted[slot * cacheLineStepULong64_t];
-         newMask = !valueIsMissing;
-      } else {
-         valueIsMissing ? ++fAccepted[slot * cacheLineStepULong64_t] : ++fRejected[slot * cacheLineStepULong64_t];
-         newMask = valueIsMissing;
+         const bool valueIsMissing = fValues[slot]->template TryGet<void>(i) == nullptr;
+         if (fDiscardEntryWithMissingValue) {
+            valueIsMissing ? ++rejected : ++accepted;
+            fCachedResults[slot][i] = mask[i] && !valueIsMissing;
+         } else {
+            valueIsMissing ? ++accepted : ++rejected;
+            fCachedResults[slot][i] = mask[i] && valueIsMissing;
+         }
       }
+      fAccepted[slot * cacheLineStepULong64_t] += accepted;
+      fRejected[slot * cacheLineStepULong64_t] += rejected;
+      fLastCheckedEntry[slot * cacheLineStepLong64_t] = entry;
 
-      lastEntry = entry;
-
-      return newMask;
+      return {fCachedResults[slot], static_cast<std::uint64_t>(entry)};
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
