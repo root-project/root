@@ -1722,7 +1722,7 @@ void TGX11::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
    if (!id) return;
 
    XChangeProperty((Display*)fDisplay, (Window) id, (Atom) property, (Atom) type,
-                   8, PropModeReplace, data, len);
+                   32, PropModeReplace, data, len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

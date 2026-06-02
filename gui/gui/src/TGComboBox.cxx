@@ -75,6 +75,10 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
    wattr.fBorderWidth = 1;
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE_COMBO", kFALSE);
+   gVirtualX->ChangeProperty(fId, property_type, 4, (UChar_t*)&property_value, 1);
+
    AddInput(kStructureNotifyMask);
    fEditDisabled = kEditDisable | kEditDisableGrab  | kEditDisableBtnEnable;
    SetWindowName();

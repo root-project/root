@@ -89,6 +89,10 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
    gVirtualX->ChangeWindowAttributes(fId, &attr);
    SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE_TOOLTIP", kFALSE);
+   gVirtualX->ChangeProperty(fId, property_type, 4, (UChar_t*)&property_value, 1);
+
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
    fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
@@ -124,6 +128,10 @@ TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
    gVirtualX->ChangeWindowAttributes(fId, &attr);
    SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE_TOOLTIP", kFALSE);
+   gVirtualX->ChangeProperty(fId, property_type, 4, (UChar_t*)&property_value, 1);
+
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
    fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
@@ -157,6 +165,10 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
    gVirtualX->ChangeWindowAttributes(fId, &attr);
    SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE_TOOLTIP", kFALSE);
+   gVirtualX->ChangeProperty(fId, property_type, 4, (UChar_t*)&property_value, 1);
+
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
    fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
@@ -187,6 +199,10 @@ TGToolTip::TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms)
 
    gVirtualX->ChangeWindowAttributes(fId, &attr);
    SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE_TOOLTIP", kFALSE);
+   gVirtualX->ChangeProperty(fId, property_type, 4, (UChar_t*)&property_value, 1);
 
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());

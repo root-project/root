@@ -313,6 +313,10 @@ TGedPopup::TGedPopup(const TGWindow *p, const TGWindow *m, UInt_t w, UInt_t h,
    wattr.fSaveUnder = kTRUE;
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE_TOOLTIP", kFALSE);
+   gVirtualX->ChangeProperty(fId, property_type, 4, (UChar_t*)&property_value, 1);
+
    AddInput(kStructureNotifyMask);
 }
 
