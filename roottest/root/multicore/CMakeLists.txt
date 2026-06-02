@@ -95,10 +95,9 @@ if(NOT MSVC AND NOT dev)
 endif()
 
 if(imt)
-  include_directories(${TBB_INCLUDE_DIRS})
   ROOTTEST_GENERATE_EXECUTABLE(threadExecutor
                                tThreadExecutor.cpp
-                               LIBRARIES Core Imt Hist MathCore
+                               LIBRARIES Core Imt Hist MathCore TBB::tbb
                                FIXTURES_SETUP root-multicore-threadExecutor-fixture)
 
   ROOTTEST_ADD_TEST(threadExecutor

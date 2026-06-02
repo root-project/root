@@ -1,6 +1,3 @@
-// Require TBB without captured exceptions
-#define TBB_USE_CAPTURED_EXCEPTION 0
-
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROpaqueTaskArena.hxx"
 #if !defined(_MSC_VER)
@@ -8,7 +5,6 @@
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
 #include "tbb/tbb.h"
-#define TBB_PREVIEW_GLOBAL_CONTROL 1 // required for TBB versions preceding 2019_U4
 #include "tbb/global_control.h"
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic pop

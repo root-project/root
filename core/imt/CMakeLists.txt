@@ -19,13 +19,13 @@ ROOT_LINKER_LIBRARY(Imt
     src/TTaskGroup.cxx
   DEPENDENCIES
     ${MULTIPROC_LIB}
-  BUILTINS
-    TBB
 )
 
 target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
 if(imt)
+  target_link_libraries(Imt PRIVATE TBB::tbb)
+  
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
@@ -40,8 +40,7 @@ if(imt)
       Core
       Thread
       ${MULTIPROC_LIB}
-    BUILTINS
-      TBB
+      TBB::tbb
   )
 
   # G__Imt.cxx is automatically added by ROOT_GENERATE_DICTIONARY()
@@ -50,10 +49,6 @@ if(imt)
     src/TImplicitMT.cxx
     src/TThreadExecutor.cxx
   )
-
-  target_include_directories(Imt SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
-  target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES})
-  set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
