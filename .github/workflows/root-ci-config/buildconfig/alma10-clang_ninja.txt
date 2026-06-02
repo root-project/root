@@ -20,5 +20,4 @@ builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
 pythia8=ON
-r=OFF
 soversion=ON
