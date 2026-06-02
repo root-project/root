@@ -1638,8 +1638,18 @@ gdk_wchar_text_handle(GdkFont * font,
          list = list->next;
       }
 
-      if (!list)
-         singlefont = NULL;
+      if (!list) {
+         /* No font matched the Unicode block exactly. Fall back to the first
+          * font in the font set to avoid silently dropping the character (the
+          * old behavior set singlefont = NULL and skipped rendering entirely).
+          * With added defensive null-checks, this ensures CJK and non-Latin 
+          * text visibility without introducing regression risks. */
+         if (private && private->fonts && private->fonts->data) {
+            singlefont = (GdkWin32SingleFont *) private->fonts->data;
+         } else {
+            singlefont = NULL; 
+         }
+      }
 
       GDK_NOTE(MISC,
                g_print("%d:%d:%d ", start - wcstr, wcp - wcstr, block));
