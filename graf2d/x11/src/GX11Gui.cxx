@@ -1726,6 +1726,27 @@ void TGX11::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This function alters the property for the specified window and
+/// causes the X server to generate a PropertyNotify event on that
+/// window. Specifically for WSL (Windows Subsytem for Linux)
+
+void TGX11::SetWindowHint(Window_t id, EWindowHint hint)
+{
+   if (!id)
+      return;
+   static const char *property_names[] = {
+      "_NET_WM_WINDOW_TYPE_COMBO",
+      "_NET_WM_WINDOW_TYPE_POPUP_MENU",
+      "_NET_WM_WINDOW_TYPE_TOOLTIP"
+   };
+   const char *property_name = property_names[hint];
+   Atom_t property_type = gVirtualX->InternAtom("_NET_WM_WINDOW_TYPE", kFALSE);
+   Atom_t property_value = gVirtualX->InternAtom(property_name, kFALSE);
+   XChangeProperty((Display*)fDisplay, (Window) id, (Atom) property_type,
+                   (Atom) XA_ATOM, 32, PropModeReplace, (UChar_t*)&property_value, 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw a line.
 
 void TGX11::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
