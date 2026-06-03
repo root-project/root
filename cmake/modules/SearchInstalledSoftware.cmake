@@ -90,7 +90,7 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 # not be found.
 macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
   if(NOT ${BUILTIN_CONFIG_OPTION})
-    find_package(${PACKAGE_NAME} ${ARGV0})
+    find_package(${PACKAGE_NAME} ${ARGV2})
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
