@@ -106,6 +106,12 @@ std::pair<ColumnNames_t, ColumnNames_t> FindUsedColsAndAliases(const std::string
          // token is not a potential variable name, skip it
          continue;
       }
+      // Skip symbols that are member accesses (obj.method) — they are not column references.
+      // lexertk does not produce dot-prefixed tokens, so the token immediately before a method
+      // name is always the literal "." token when it is a member access.
+      if (i > 0 && tokens[i - 1].value == ".") {
+         continue;
+      }
 
       ColumnNames_t potentialColNames({tok.value});
 
@@ -159,7 +165,7 @@ TString ResolveAliases(const TString &expr, const ColumnNames_t &usedAliases,
 
    for (const auto &alias : usedAliases) {
       const auto &col = colRegister.ResolveAlias(alias);
-      TPRegexp replacer("\\b" + EscapeDots(alias) + "\\b");
+      TPRegexp replacer("(?<!\\.)\\b" + EscapeDots(alias) + "\\b");
       replacer.Substitute(out, col.data(), "g");
    }
 
@@ -200,7 +206,7 @@ ParsedExpression ParseRDFExpression(std::string_view expr, const ROOT::Internal:
              [](const std::string &a, const std::string &b) { return a.size() > b.size(); });
    for (const auto &col : usedCols) {
       const auto varIdx = std::distance(usedCols.begin(), std::find(usedCols.begin(), usedCols.end(), col));
-      TPRegexp replacer("\\b" + EscapeDots(col) + "\\b");
+      TPRegexp replacer("(?<!\\.)\\b" + EscapeDots(col) + "\\b");
       replacer.Substitute(exprWithVars, varNames[varIdx], "g");
    }
 
