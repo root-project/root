@@ -205,6 +205,9 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
    MultiLevelTemplateArgumentList MLTAL{FTD, defaultTemplateArgs, /*Final=*/false};
+   // LLVM22 (CWG2369): alias templates are now eagerly expanded during substitution, which can emit hard diagnostics
+   // for non-SFINAE-safe alias templates. Suppress them explicitly.
+   Sema::SFINAETrap Trap(S, /*WithAccessChecking=*/true);
    for (const clang::ParmVarDecl *param : templatedDecl->parameters()) {
       QualType paramType = param->getOriginalType();
 
