@@ -961,6 +961,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    wattr.fSaveUnder        = kTRUE;
 
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   gVirtualX->SetWindowHint(fId, TVirtualX::kHintPopup);
 
    AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
 }

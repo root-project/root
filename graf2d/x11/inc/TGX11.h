@@ -325,6 +325,7 @@ public:
    void         ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr) override;
    void         ChangeProperty(Window_t id, Atom_t property, Atom_t type,
                                UChar_t *data, Int_t len) override;
+   void         SetWindowHint(Window_t id, EWindowHint hint) override;
    void         DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
    void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev) override;

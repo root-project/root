@@ -1787,6 +1787,17 @@ void TVirtualX::ChangeProperty(Window_t /*id*/, Atom_t /*property*/,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Alters the property for the specified window and causes the X server
+/// to generate a PropertyNotify event on that window.
+///
+/// \param [in] id   the window whose property you want to change
+/// \param [in] hint specifies the type to be changed
+
+void TVirtualX::SetWindowHint(Window_t /*id*/, EWindowHint /*hint*/)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Uses the components of the specified GC to draw a line between the
 /// specified set of points (x1, y1) and (x2, y2).
 ///
