@@ -1,4 +1,5 @@
 #include "ROOT/RDataFrame.hxx"
+#include <TInterpreter.h>
 #include <TTree.h>
 
 #include "gtest/gtest.h"
@@ -88,4 +89,54 @@ TEST(Aliases, FilterOnAliasJit)
    int i = 1;
    auto c = tdf.Define("c0", [&i]() { return i++; }).Alias("c1", "c0").Filter("c1>1").Count();
    EXPECT_EQ(1U, *c);
+}
+
+// Regression test for https://github.com/root-project/root/issues/22295
+// A column named "phi" must not be confused with a .phi() method call in a JIT expression.
+TEST(ColNames, MethodCallNotConfusedWithColumn)
+{
+   // Declare minimal helper types for use in JIT strings.
+   // Using gInterpreter::Declare avoids any dependency on GenVector or other libraries.
+   gInterpreter->Declare("struct RDF22295Vec { double phi() const { return 0.0; } };");
+   gInterpreter->Declare("struct RDF22295Mem { double phi = 1.5; };");
+
+   // Case 1: column "phi" exists, expression calls .phi() method — must not throw.
+   // Before the fix this crashed with "no member named 'var0'" because the parser
+   // replaced .phi() with .var0().
+   {
+      ROOT::RDataFrame df(1);
+      auto df2 = df.Define("phi", "1.0");
+      EXPECT_NO_THROW({
+         auto df3 = df2.Define("result", "RDF22295Vec{}.phi()");
+         (void)*df3.Take<double>("result");
+      });
+   }
+
+   // Case 2: column "phi" exists, expression uses BOTH .phi() method call AND standalone
+   // phi column reference — only the standalone reference must be substituted.
+   {
+      ROOT::RDataFrame df(1);
+      auto df2 = df.Define("phi", "0.5");
+      std::vector<double> v;
+      EXPECT_NO_THROW({
+         auto df3 = df2.Define("result", "RDF22295Vec{}.phi() + phi");
+         v = *df3.Take<double>("result");
+      });
+      // .phi() returns 0.0; standalone phi column = 0.5
+      EXPECT_NEAR(0.5, v[0], 1e-9);
+   }
+
+   // Case 3: data-member access obj.phi (not a function call) must still work after the
+   // fix — the preceding-dot guard must not break legitimate dot-chain expressions.
+   {
+      ROOT::RDataFrame df(1);
+      auto df2 = df.Define("phi", "0.5");
+      std::vector<double> v;
+      EXPECT_NO_THROW({
+         auto df3 = df2.Define("result", "RDF22295Mem{}.phi + phi");
+         v = *df3.Take<double>("result");
+      });
+      // data member .phi = 1.5; standalone phi column = 0.5
+      EXPECT_NEAR(2.0, v[0], 1e-9);
+   }
 }
