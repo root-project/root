@@ -161,10 +161,10 @@ public:
       (void)idx;
    }
 
-   void Run(unsigned int slot, Long64_t entry) final
+   void Run(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
       for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
-         const auto mask = fPrevNodes[varIdx]->CheckFilters(slot, entry);
+         const auto mask = fPrevNodes[varIdx]->CheckFilters(slot, bulkBeginEntry, bulkSize);
          std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
                        [&mask](auto *v) { v->Load(mask); });
 

@@ -112,7 +112,7 @@ public:
 
       // Assume 1-size bulk for now
       fValues[slot]->Load(mask);
-      const std::size_t bulkSize = 1;
+      const std::size_t bulkSize = fLoopManager->GetCurrentBulkSize();
       for (std::size_t i = 0; i < bulkSize; ++i) {
          if (mask[i])
             fLastResults[slot * RDFInternal::CacheLineStep<T>()] = GetValueOrDefault(slot, i);
