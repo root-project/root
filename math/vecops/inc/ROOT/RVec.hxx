@@ -219,7 +219,12 @@ class R__CLING_PTRCHECK(off) SmallVectorTemplateCommon : public SmallVectorBase 
    // Space after 'FirstEl' is clobbered, do not add any instance vars after it.
 
 protected:
-   SmallVectorTemplateCommon(size_t Size) : Base(getFirstEl(), Size) {}
+   SmallVectorTemplateCommon(size_t Size) : Base(nullptr, Size)
+   {
+      // We delay the initialization of fBeginX until the constructor of the derived class, to avoid doing pointer math
+      // on an object that is not yet fully constructed.
+      fBeginX = getFirstEl();
+   }
 
    void grow_pod(size_t MinSize, size_t TSize) { Base::grow_pod(getFirstEl(), MinSize, TSize); }
 
