@@ -84,3 +84,16 @@ OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
       Wrapper<int&> Wrapper<int&>::Wrapper<int&>(Wrapper<int&>&&)
  OBJ: TMethod	~Wrapper<int&>	 : 0
       void Wrapper<int&>::~Wrapper<int&>()
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	NonSFINAEPtr<int>	 : 0
+      NonSFINAEPtr<int> NonSFINAEPtr<int>::NonSFINAEPtr<int>()
+ OBJ: TMethod	NonSFINAEPtr<int>	 : 0
+      NonSFINAEPtr<int> NonSFINAEPtr<int>::NonSFINAEPtr<int>(const NonSFINAEPtr<int>&)
+ OBJ: TMethod	operator=	 : 0
+      NonSFINAEPtr<int>& NonSFINAEPtr<int>::operator=(const NonSFINAEPtr<int>&)
+ OBJ: TMethod	NonSFINAEPtr<int>	 : 0
+      NonSFINAEPtr<int> NonSFINAEPtr<int>::NonSFINAEPtr<int>(NonSFINAEPtr<int>&&)
+ OBJ: TMethod	operator=	 : 0
+      NonSFINAEPtr<int>& NonSFINAEPtr<int>::operator=(NonSFINAEPtr<int>&&)
+ OBJ: TMethod	~NonSFINAEPtr<int>	 : 0
+      void NonSFINAEPtr<int>::~NonSFINAEPtr<int>()
