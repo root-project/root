@@ -55,7 +55,7 @@ public:
    void SetFilter(std::unique_ptr<RFilterBase> f);
 
    void InitSlot(TTreeReader *r, unsigned int slot) final;
-   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t) final;
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t, std::size_t) final;
    void Report(ROOT::RDF::RCutFlowReport &) const final;
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final;
    void FillReport(ROOT::RDF::RCutFlowReport &) const final;
