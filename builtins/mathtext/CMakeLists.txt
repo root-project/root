@@ -10,7 +10,7 @@ ROOT_LINKER_LIBRARY(mathtext
   mathrender.cc
   mathrenderstyle.cc
   mathrendertoken.cc
-  mathtext.cc
+  mathtext.cxx
   mathtextencode.cc
   mathtextparse.cc
   mathtextview.cc
