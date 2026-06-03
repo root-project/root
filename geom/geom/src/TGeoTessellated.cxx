@@ -328,38 +328,36 @@ bool TGeoTessellated::FacetCheck(int ifacet) const
 
 void TGeoTessellated::CloseShape(bool check, bool fixFlipped, bool verbose)
 {
-   if (fIsClosed && fBVH) {
+   const bool initialized = fIsClosed && fBVH;
+   if (initialized && !check) {
       return;
    }
-   // Compute bounding box
-   fDefined = true;
-   fNvert = fVertices.size();
-   fNfacets = fFacets.size();
-   ComputeBBox();
 
-   BuildBVH();
-   if (fOutwardNormals.size() == 0) {
-      CalculateNormals();
-   } else {
-      // short check if the normal container is of correct size
-      if (fOutwardNormals.size() != fFacets.size()) {
-         std::cerr << "Inconsistency in normal container";
-      }
+   if (!initialized) {
+      // Compute bounding box
+      fDefined = true;
+      fNvert = fVertices.size();
+      fNfacets = fFacets.size();
+      ComputeBBox();
+
+      BuildBVH();
+      fIsClosed = true;
+
+      // Cleanup the vertex map
+      std::multimap<long, int>().swap(fVerticesMap);
    }
-   fIsClosed = true;
-
-   // Cleanup the vertex map
-   std::multimap<long, int>().swap(fVerticesMap);
 
    if (fVertices.size() > 0) {
-      if (!check)
-         return;
+      if (check) {
+         // Check facets
+         for (auto i = 0; i < fNfacets; ++i)
+            FacetCheck(i);
 
-      // Check facets
-      for (auto i = 0; i < fNfacets; ++i)
-         FacetCheck(i);
+         fClosedBody = CheckClosure(fixFlipped, verbose);
+      }
 
-      fClosedBody = CheckClosure(fixFlipped, verbose);
+      if (fOutwardNormals.size() != fFacets.size())
+         CalculateNormals();
    }
 }
 
@@ -422,6 +420,8 @@ bool TGeoTessellated::CheckClosure(bool fixFlipped, bool verbose)
       }
       if (nfixed && verbose)
          Info("Check", "Automatically flipped %d facets to match first defined facet", nfixed);
+      if (nfixed && !fOutwardNormals.empty())
+         CalculateNormals();
    }
    delete[] nn;
    delete[] flipped;
@@ -1277,8 +1277,7 @@ inline Double_t TGeoTessellated::SafetyKernel(const Double_t *point, bool in, in
             const auto object_id = mybvh->prim_ids[p_id];
 
             const auto &facet = fFacets[object_id];
-            auto thissafetySQ =
-               pointFacetDistSq(Vec3f<float>(point[0], point[1], point[2]), facet, fVertices);
+            auto thissafetySQ = pointFacetDistSq(Vec3f<float>(point[0], point[1], point[2]), facet, fVertices);
 
             if (thissafetySQ < smallest_safety_sq) {
                smallest_safety_sq = thissafetySQ;
