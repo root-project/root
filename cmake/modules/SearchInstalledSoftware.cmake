@@ -94,7 +94,7 @@ macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
     if (${ARGN} GREATER 0) # ARGN: extra arguments past named ones
       set(MIN_REQUIRED_VERSION ${ARGV2}) # ARGV0 and ARGV1 are named required args
     endif()
-    find_package(${PACKAGE_NAME} ${MIN_VERSION})
+    find_package(${PACKAGE_NAME} ${MIN_REQUIRED_VERSION})
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
