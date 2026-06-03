@@ -93,16 +93,16 @@ public:
       fLoopManager->Deregister(this);
    }
 
-   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
       auto &cachedResults = fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()];
-      if (entry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
-         return {cachedResults, static_cast<std::uint64_t>(entry)};
+      if (bulkBeginEntry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
+         return {cachedResults, static_cast<std::uint64_t>(bulkBeginEntry)};
 
-      auto mask = fPrevNode.CheckFilters(slot, entry);
+      auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
-      // Assume 1-size bulk for now
-      const std::size_t bulkSize{1};
+
       std::size_t accepted{0};
       std::size_t rejected{0};
       cachedResults.clear();
@@ -116,11 +116,11 @@ public:
                ++rejected;
          }
       }
-      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = entry;
+      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = bulkBeginEntry;
       fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()] += accepted;
       fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()] += rejected;
 
-      return {cachedResults, static_cast<std::uint64_t>(entry)};
+      return {cachedResults, static_cast<std::uint64_t>(bulkBeginEntry)};
    }
 
    template <typename... ColTypes, std::size_t... S>
