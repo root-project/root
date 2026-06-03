@@ -97,7 +97,7 @@ macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
     set(optional_arg "")
   endif ()
   if(NOT ${BUILTIN_CONFIG_OPTION})
-    find_package(${PACKAGE_NAME} REQUIRED ${optional_arg})
+    find_package(${PACKAGE_NAME} ${optional_arg})
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
