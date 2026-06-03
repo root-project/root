@@ -89,15 +89,8 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 # A list of all missing required packages will be printed in case they could
 # not be found.
 macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
-  # Check if we have a third optional argument:
-  list(LENGTH ${ARGN} extra_count)
-  if (${extra_count} GREATER 0)
-    list(GET ${ARGN} 0 optional_arg)
-  else ()
-    set(optional_arg "")
-  endif ()
   if(NOT ${BUILTIN_CONFIG_OPTION})
-    find_package(${PACKAGE_NAME} ${optional_arg})
+    find_package(${PACKAGE_NAME} ${ARGV0})
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
