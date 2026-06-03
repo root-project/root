@@ -91,7 +91,7 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
   if(NOT ${BUILTIN_CONFIG_OPTION})
     set(MIN_REQUIRED_VERSION "")
-    if (${ARGN} GREATER 0) # ARGN: extra arguments past named ones
+    if (${ARGC} GREATER 2) # ARGC: extra arguments + named ones
       set(MIN_REQUIRED_VERSION ${ARGV2}) # ARGV0 and ARGV1 are named required args
     endif()
     find_package(${PACKAGE_NAME} ${MIN_REQUIRED_VERSION})
