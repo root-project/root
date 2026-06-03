@@ -77,9 +77,9 @@ void AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults)
 }
 
 template <typename T>
-void *GetValuePtrHelper(ROOT::RVec<T> &v, std::size_t /*colIdx*/, std::size_t varIdx)
+void *GetValuePtrHelper(ROOT::RVec<ROOT::RVec<T>> &v, std::size_t /*colIdx*/, std::size_t varIdx)
 {
-   return static_cast<void *>(&v[varIdx]);
+   return static_cast<void *>(&v[0][varIdx]);
 }
 ///@}
 
@@ -119,9 +119,9 @@ void AssignResults(std::vector<ROOT::RVec<T>> &resStorage, ROOT::RVec<ROOT::RVec
 }
 
 template <typename T>
-void *GetValuePtrHelper(std::vector<ROOT::RVec<T>> &v, std::size_t colIdx, std::size_t varIdx)
+void *GetValuePtrHelper(ROOT::RVec<std::vector<ROOT::RVec<T>>> &v, std::size_t colIdx, std::size_t varIdx)
 {
-   return static_cast<void *>(&v[colIdx][varIdx]);
+   return static_cast<void *>(&v[0][colIdx][varIdx]);
 }
 ///@}
 
@@ -151,10 +151,11 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using Ret_t = typename CallableTraits<F>::ret_type;
    using VariedCol_t = ColumnType_t<IsSingleColumn, Ret_t>;
    using Result_t = std::conditional_t<IsSingleColumn, ROOT::RVec<VariedCol_t>, std::vector<ROOT::RVec<VariedCol_t>>>;
+   using ValuesPerSlot_t = std::vector<ROOT::RVec<Result_t>>;
 
    F fExpression;
-   /// Per-slot storage for varied column values (for one or multiple columns depending on IsSingleColumn).
-   std::vector<Result_t> fLastResults;
+   // Each slot accesses a cache of values for the current bulk
+   ValuesPerSlot_t fCachedResultsPerSlot;
 
    /// Column readers per slot and per input column
    std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
@@ -186,7 +187,8 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
                                   std::to_string(fVariationNames.size()) + " were expected.");
       }
 
-      AssignResults(fLastResults[slot * CacheLineStep<Result_t>()], std::move(results));
+      AssignResults(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()][0],
+                    std::move(results));
    }
 
 public:
@@ -195,13 +197,17 @@ public:
               RLoopManager &lm, const ColumnNames_t &inputColNames)
       : RVariationBase(colNames, variationName, variationTags, type, defines, lm, inputColNames),
         fExpression(std::move(expression)),
-        fLastResults(lm.GetNSlots() * CacheLineStep<Result_t>()),
+        fCachedResultsPerSlot(lm.GetNSlots() * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()),
         fValues(lm.GetNSlots())
    {
       fLoopManager->Register(this);
 
-      for (auto i = 0u; i < lm.GetNSlots(); ++i)
-         ResizeResults(fLastResults[i * CacheLineStep<Result_t>()], colNames.size(), variationTags.size());
+      // Assume 1-size bulk for now
+      for (decltype(lm.GetNSlots()) i = 0; i < lm.GetNSlots(); ++i) {
+         auto &cachedResultsForThisSlot = fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()];
+         cachedResultsForThisSlot.resize(1ul);
+         ResizeResults(cachedResultsForThisSlot[0], colNames.size(), variationTags.size());
+      }
    }
 
    RVariation(const RVariation &) = delete;
@@ -215,7 +221,8 @@ public:
       fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
    }
 
-   /// Return the (type-erased) address of the value for the given processing slot.
+   /// Return the beginning of the cached results of the current bulk for the input processing slot, column and
+   /// variation
    void *GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) final
    {
       const auto colIt = std::find(fColNames.begin(), fColNames.end(), column);
@@ -226,7 +233,8 @@ public:
       assert(varIt != fVariationNames.end());
       const auto varIdx = std::distance(fVariationNames.begin(), varIt);
 
-      return GetValuePtrHelper(fLastResults[slot * CacheLineStep<Result_t>()], colIdx, varIdx);
+      return GetValuePtrHelper(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()], colIdx,
+                               varIdx);
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
