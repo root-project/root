@@ -119,9 +119,9 @@ public:
       (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
-   void Run(unsigned int slot, Long64_t entry) final
+   void Run(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
-      const auto mask = fPrevNode.CheckFilters(slot, entry);
+      const auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
 
       // Assume 1-size bulk for now

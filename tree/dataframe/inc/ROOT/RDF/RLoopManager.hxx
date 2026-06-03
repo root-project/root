@@ -181,7 +181,7 @@ class RLoopManager : public RNodeBase {
    void RunEmptySource();
    void RunDataSourceMT();
    void RunDataSource();
-   void RunAndCheckFilters(unsigned int slot, Long64_t entry);
+   void RunAndCheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
    void CleanUpNodes();
@@ -224,6 +224,9 @@ class RLoopManager : public RNodeBase {
    std::vector<DeferredJitCall> fJitHelperCalls{};
    std::hash<std::string> fStringHasher{};
 
+   // Assume 1-size bulk for now
+   std::size_t fCurrentBulkSize{1};
+
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -256,7 +259,7 @@ public:
    void Deregister(RDefineBase *definePtr);
    void Register(RDFInternal::RVariationBase *varPtr);
    void Deregister(RDFInternal::RVariationBase *varPtr);
-   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t) final;
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t, std::size_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
@@ -336,6 +339,8 @@ public:
    /// The task run by every thread on an entry range (known by the input TTreeReader), for the TTree data source.
    void
    TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount);
+
+   std::size_t GetCurrentBulkSize() { return fCurrentBulkSize; }
 };
 
 /// \brief Create an RLoopManager that reads a TChain.

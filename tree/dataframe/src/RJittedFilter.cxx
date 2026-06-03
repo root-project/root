@@ -55,10 +55,11 @@ void RJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteFilter->InitSlot(r, slot);
 }
 
-ROOT::Internal::RDF::RMaskedEntryRange RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
+ROOT::Internal::RDF::RMaskedEntryRange
+RJittedFilter::CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize)
 {
    assert(fConcreteFilter != nullptr);
-   return fConcreteFilter->CheckFilters(slot, entry);
+   return fConcreteFilter->CheckFilters(slot, bulkBeginEntry, bulkSize);
 }
 
 void RJittedFilter::Report(ROOT::RDF::RCutFlowReport &cr) const
