@@ -74,6 +74,7 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
    wattr.fBorderPixel = fgBlackPixel;
    wattr.fBorderWidth = 1;
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   gVirtualX->SetWindowHint(fId, TVirtualX::kHintCombo);
 
    AddInput(kStructureNotifyMask);
    fEditDisabled = kEditDisable | kEditDisableGrab  | kEditDisableBtnEnable;
