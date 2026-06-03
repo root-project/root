@@ -65,7 +65,6 @@ public:
    RNodeBase &operator=(RNodeBase &&) = delete;
    virtual ~RNodeBase() = default;
 
-   virtual ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;
@@ -92,6 +91,9 @@ public:
                 "GetVariedFilter was called on a node type that does not implement it. This should never happen.");
       return nullptr;
    }
+
+   virtual ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) = 0;
 };
 } // ns RDF
 } // ns Detail

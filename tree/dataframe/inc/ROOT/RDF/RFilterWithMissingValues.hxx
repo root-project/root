@@ -96,17 +96,16 @@ public:
       fLoopManager->EraseSuppressErrorsForMissingBranch(fColumnNames[0]);
    }
 
-   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
       constexpr static auto cacheLineStepLong64_t = RDFInternal::CacheLineStep<Long64_t>();
       constexpr static auto cacheLineStepULong64_t = RDFInternal::CacheLineStep<ULong64_t>();
 
-      if (entry == fLastCheckedEntry[slot * cacheLineStepLong64_t])
-         return {fCachedResults[slot], static_cast<std::uint64_t>(entry)};
+      if (bulkBeginEntry == fLastCheckedEntry[slot * cacheLineStepLong64_t])
+         return {fCachedResults[slot], static_cast<std::uint64_t>(bulkBeginEntry)};
 
-      // Assume 1-size bulk for now
-      const std::size_t bulkSize{1};
-      auto mask = fPrevNodePtr->CheckFilters(slot, entry);
+      auto mask = fPrevNodePtr->CheckFilters(slot, bulkBeginEntry, bulkSize);
 
       fValues[slot]->Load(mask);
 
@@ -127,9 +126,9 @@ public:
       }
       fAccepted[slot * cacheLineStepULong64_t] += accepted;
       fRejected[slot * cacheLineStepULong64_t] += rejected;
-      fLastCheckedEntry[slot * cacheLineStepLong64_t] = entry;
+      fLastCheckedEntry[slot * cacheLineStepLong64_t] = bulkBeginEntry;
 
-      return {fCachedResults[slot], static_cast<std::uint64_t>(entry)};
+      return {fCachedResults[slot], static_cast<std::uint64_t>(bulkBeginEntry)};
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final

@@ -68,19 +68,18 @@ public:
    ~RRange() final { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
-   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
-      if (entry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
+      if (bulkBeginEntry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
          return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()],
-                 static_cast<std::uint64_t>(entry)};
+                 static_cast<std::uint64_t>(bulkBeginEntry)};
 
       if (fHasStopped)
-         return {1ul, false, static_cast<std::uint64_t>(entry)};
+         return {bulkSize, false, static_cast<std::uint64_t>(bulkBeginEntry)};
 
-      // Assume 1-size bulk for now
-      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = entry;
-      auto mask = fPrevNode.CheckFilters(slot, entry);
-      const std::size_t bulkSize = 1;
+      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = bulkBeginEntry;
+      auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
       fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()].clear();
       fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()].resize(bulkSize);
       for (std::size_t i = 0; i < bulkSize; ++i) {
@@ -97,7 +96,8 @@ public:
          fPrevNode.StopProcessing();
       }
 
-      return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()], static_cast<std::uint64_t>(entry)};
+      return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()],
+              static_cast<std::uint64_t>(bulkBeginEntry)};
    }
 
    // recursive chain of `Report`s
