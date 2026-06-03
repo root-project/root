@@ -96,7 +96,38 @@ CreateTrdLikeTessellated_Triangles(const char *name, double x1, double x2, doubl
    return tsl;
 }
 
+void AddClosedTetrahedronFacets(TGeoTessellated &tsl)
+{
+   // Closed tetrahedron using the same facet winding as the GDML reproducer
+   // for ROOT issue #22395.
+   const Vtx v0(0, 0, 0);
+   const Vtx v1(10, 0, 0);
+   const Vtx v2(5, 10, 0);
+   const Vtx v3(5, 5, 10);
+
+   EXPECT_TRUE(tsl.AddFacet(v0, v2, v1));
+   EXPECT_TRUE(tsl.AddFacet(v0, v1, v3));
+   EXPECT_TRUE(tsl.AddFacet(v1, v2, v3));
+   EXPECT_TRUE(tsl.AddFacet(v0, v3, v2));
+}
+
 } // namespace
+
+TEST(TGeoTessellated, CloseShapeCanCheckAfterUncheckedClose)
+{
+   // TGDMLParse finalizes tessellated solids with CloseShape(false). This must
+   // initialize the shape without preventing a later explicit CloseShape(true)
+   // from running closure validation and setting the closed-body state.
+   TGeoTessellated tsl("Closed Tetrahedron");
+   AddClosedTetrahedronFacets(tsl);
+
+   tsl.CloseShape(/*check=*/false);
+   EXPECT_TRUE(tsl.IsDefined());
+   EXPECT_FALSE(tsl.IsClosedBody());
+
+   tsl.CloseShape(/*check=*/true, /*fixFlipped=*/true, /*verbose=*/false);
+   EXPECT_TRUE(tsl.IsClosedBody());
+}
 
 TEST(TGeoTessellated, TrdLike_CoreNavigation)
 {
