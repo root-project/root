@@ -2181,6 +2181,10 @@ Int_t TFile::Recover()
          break;
       }
       if (nbytes < 0) {
+         if ((-nbytes < static_cast<Int_t>(sizeof(Int_t))) || (-nbytes > static_cast<Int_t>(TFile::kMaxGapSize))) {
+            Error("Recover", "Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
+            break;
+         }
          if (fWritable)
             new TFree(fFree, idcur, idcur - nbytes - 1);
          idcur -= nbytes;
