@@ -53,7 +53,14 @@ namespace mathtext {
 		float sin_angle;
 		float cos_angle;
 
+#if defined(__APPLE__)
+		__sincosf(angle, &sin_angle, &cos_angle);
+#elif defined(_WIN32)
+		sin_angle = std::sin(angle);
+		cos_angle = std::cos(angle);
+#else
 		sincosf(angle, &sin_angle, &cos_angle);
+#endif
 
 		return affine_transform_t(cos_angle, sin_angle,
 								  -sin_angle, cos_angle, 0, 0);
