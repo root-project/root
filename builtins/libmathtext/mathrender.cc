@@ -25,55 +25,6 @@
 
 namespace mathtext {
 
-	point_t::operator std::string(void) const
-	{
-		std::stringstream stream;
-
-		stream << '(' << _x[0] << ", " << _x[1] << ')';
-
-		return stream.str();
-	}
-
-	const affine_transform_t affine_transform_t::identity =
-		affine_transform_t(1.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
-	const affine_transform_t affine_transform_t::flip_y =
-		affine_transform_t(1.0F, 0.0F, 0.0F, -1.0F, 0.0F, 0.0F);
-
-	affine_transform_t affine_transform_t::
-	translate(const float tx, const float ty)
-	{
-		return affine_transform_t(1.0F, 0.0F, 0.0F, 1.0F, tx, ty);
-	}
-
-	affine_transform_t affine_transform_t::
-	scale(const float sx, const float sy)
-	{
-		return affine_transform_t(sx, 0.0F, 0.0F, sy, 0.0F, 0.0F);
-	}
-
-	affine_transform_t affine_transform_t::rotate(const float angle)
-	{
-		float sin_angle;
-		float cos_angle;
-
-		sin_angle = sin(angle);
-		cos_angle = cos(angle);
-
-		return affine_transform_t(cos_angle, sin_angle,
-								  -sin_angle, cos_angle, 0, 0);
-	}
-
-	affine_transform_t::operator std::string(void) const
-	{
-		std::stringstream stream;
-
-		stream << '(' << _a[0] << ", " << _a[1] << ", 0)" << std::endl;
-		stream << '(' << _a[2] << ", " << _a[3] << ", 0)" << std::endl;
-		stream << '(' << _a[4] << ", " << _a[5] << ", 1)";
-
-		return stream.str();
-	}
-
 #ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable: 869)

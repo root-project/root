@@ -33,6 +33,8 @@ namespace mathtext {
 
 	const affine_transform_t affine_transform_t::identity =
 		affine_transform_t(1.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+	const affine_transform_t affine_transform_t::flip_y =
+		affine_transform_t(1.0F, 0.0F, 0.0F, -1.0F, 0.0F, 0.0F);
 
 	affine_transform_t affine_transform_t::
 	translate(const float tx, const float ty)
