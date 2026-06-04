@@ -451,6 +451,33 @@ TEST(TFile, DeleteKey)
    }
    // Same as before the recovery
    EXPECT_EQ(4, fnCountGaps(fileGuard.GetPath()));
+
+   // Write in large gap (between 1GB and 2GB), reproducer of issue https://github.com/root-project/root/issues/19245
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "big1");
+   f->WriteObject(&v, "big2");
+   v.resize(1024 * 1024, 'x');
+   f->WriteObject(&v, "small1");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   // Creates a combined gap close to 2GB
+   f->Delete("big1;*");
+   f->Delete("big2;*");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->WriteObject(&v, "small2");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_FALSE(f->TestBit(TFile::kRecovered));
 }
 
 TEST(TFile, KeySizeLimit)
