@@ -362,6 +362,15 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// ~~~{.cpp}
 ///   TFile *f = TFile::Open("tmpname.root?reproducible=fixedname","RECREATE","File title");
 /// ~~~
+///
+/// To check for the health status of a TFile and detect corruption, you can perform the following checks after opening it:
+/// ~~~{.cpp}
+///   TFile *f = TFile::Open("name.root", "READ");
+///   auto bad_input = (f == nullptr); // e.g. if input url was incorrect
+///   auto bad_initalization = (f && f->IsZombie()); // something went wrong in the constructor, for example when TFile is corrupt
+///   auto bad_storage = (f && f->TestBit(TFile::kRecovered)) // The TFile had to run the recovery mechanism when opening the file
+/// ~~~
+
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE)
