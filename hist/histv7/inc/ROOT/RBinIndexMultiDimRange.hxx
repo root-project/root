@@ -8,9 +8,7 @@
 #include "RBinIndex.hxx"
 #include "RBinIndexRange.hxx"
 
-#include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <utility>
 #include <vector>

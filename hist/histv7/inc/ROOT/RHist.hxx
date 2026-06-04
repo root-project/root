@@ -12,15 +12,17 @@
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
 #include "RRegularAxis.hxx"
+#include "RSliceSpec.hxx"
 #include "RWeight.hxx"
 
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 class TBuffer;

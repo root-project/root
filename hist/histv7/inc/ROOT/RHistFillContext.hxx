@@ -10,6 +10,7 @@
 #include "RHistStats.hxx"
 #include "RWeight.hxx"
 
+#include <cstddef>
 #include <tuple>
 
 namespace ROOT {

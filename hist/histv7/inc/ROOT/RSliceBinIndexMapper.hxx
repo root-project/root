@@ -9,7 +9,8 @@
 #include "RBinIndexRange.hxx"
 #include "RSliceSpec.hxx"
 
-#include <cstdint>
+#include <cassert>
+#include <cstddef>
 #include <stdexcept>
 #include <utility>
 #include <vector>

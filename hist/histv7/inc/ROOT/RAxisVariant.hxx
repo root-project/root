@@ -5,8 +5,11 @@
 #ifndef ROOT_RAxisVariant
 #define ROOT_RAxisVariant
 
+#include "RBinIndex.hxx"
+#include "RBinIndexRange.hxx"
 #include "RCategoricalAxis.hxx"
 #include "RRegularAxis.hxx"
+#include "RSliceSpec.hxx"
 #include "RVariableBinAxis.hxx"
 
 #include <cstdint>
