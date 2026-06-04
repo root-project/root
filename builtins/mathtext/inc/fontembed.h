@@ -20,7 +20,7 @@
 #include <string>
 #include <map>
 #include <cstdio>
-#include <stdint.h>
+#include <cstdint>
 
 namespace mathtext {
 
