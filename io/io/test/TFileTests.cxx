@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <stdexcept>
 
 #include "gtest/gtest.h"
 
@@ -337,10 +338,15 @@ TEST(TFile, DeleteKey)
 {
    ROOT::TestSupport::FileRaii fileGuard("tfile_test_delete_keys.root");
 
-   auto fnCountGaps = [](const std::string &fileName) {
+   auto fnCountGaps = [](const std::string &fileName) -> std::uint64_t {
       auto f = std::unique_ptr<TFile>(TFile::Open(fileName.c_str()));
       std::uint64_t nGaps = 0;
       for (const auto &k : f->WalkTKeys()) {
+         if (k.fLen == TFile::kMaxGapSize) {
+            // this used to indicate a truncated free segment (corrupt segment list). Gaps could still exactly
+            // be 2GB in size but not for the files in this unit test.
+            throw std::runtime_error("truncated free segment");
+         }
          if (k.fType == ROOT::Detail::TKeyMapNode::kGap)
             nGaps++;
       }
@@ -378,4 +384,58 @@ TEST(TFile, DeleteKey)
    f->Close();
 
    EXPECT_EQ(2, fnCountGaps(fileGuard.GetPath()));
+
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      printf("Skipping test partially on 32bit platform.\n");
+      return;
+   }
+
+   v.resize(1000 * 1000, 'x'); // next few objects are 1MB in size
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   f->WriteObject(&v, "vb0");
+   f->WriteObject(&v, "vb1");
+   f->WriteObject(&v, "vb2");
+   f->WriteObject(&v, "vb3");
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "vc0");
+   f->WriteObject(&v, "vc1");
+   f->WriteObject(&v, "vc2");
+   f->Write();
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Close();
+
+   // New file, no gaps
+   EXPECT_EQ(0, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->Delete("vb1;*"); // Make a medium sized gap into which smaller objects fit, e.g. the free list
+   f->Delete("vb3;*"); //  |
+   f->Delete("vc0;*"); //  |
+   f->Delete("vc1;*"); //  |---> Single merged gap in free list, multi-hop free segment on disk
+   f->Write();
+   f->Close();
+
+   // Free list in gap created by vb1, one gap at the end because we have a smaller keys list. Two consecutive
+   // gaps for removed vb3, vc0, vc1.
+   EXPECT_EQ(4, fnCountGaps(fileGuard.GetPath()));
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_FALSE(f->TestBit(TFile::kRecovered));
+   // Only 3 real gaps plus one virtual gap at the end of the file
+   EXPECT_EQ(4, f->GetNfree());
+   // Force the next open to recover the file
+   f->GetListOfKeys()->Clear();
+   f->Write();
+   f->Close();
+
+   {
+      // File recovery should work
+      ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+      diagsRaii.requiredDiag(kInfo, "TFile::Recover", "recovered key vector<char>", false);
+      f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+      EXPECT_TRUE(f->TestBit(TFile::kRecovered));
+      f->Write();
+      f->Close();
+   }
 }

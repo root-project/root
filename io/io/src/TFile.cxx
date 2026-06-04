@@ -174,6 +174,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include <memory>
 #include <cinttypes>
 #include <cassert>
+#include <algorithm>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -1513,30 +1514,48 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    TFree *newfree = f1->AddFree(fFree, first, last);
    assert(newfree); // AddFree() always succeeds
 
-   Long64_t nfirst = newfree->GetFirst();
-   Long64_t nlast = newfree->GetLast();
+   const Long64_t nfirst = newfree->GetFirst();
+   const Long64_t nlast = newfree->GetLast();
    assert(nfirst > 0 && nfirst <= first && nlast >= last);
-   Long64_t nbytesl = nlast - nfirst + 1;
+   Long64_t nbytesl = std::min(nlast, fEND) - nfirst + 1;
    assert(nbytesl >= static_cast<Long64_t>(sizeof(Int_t)));
+
+   auto fnWriteGapHeader = [this](ULong64_t offset, ULong64_t gapSize) {
+      assert((gapSize <= TFile::kMaxGapSize) && (fEND > 0) &&
+             ((offset + sizeof(Int_t)) <= static_cast<ULong64_t>(fEND)));
+
+      auto nbytes = -static_cast<Int_t>(gapSize);
+      char buffer[sizeof(Int_t)];
+      char *pbuffer = buffer;
+      tobuf(pbuffer, nbytes);
+
+      Seek(offset);
+      if (WriteBuffer(buffer, sizeof(buffer)) != 0) {
+         // Not fatal, this only means that we won't get it 'right'
+         // if we ever need to Recover the file before the block is actually
+         // attempted to be reused.
+         Warning("TFile::MakeFree()", "failed to write free segment header");
+      }
+   };
+
+   Long64_t offset = nfirst;
+   while (nbytesl > TFile::kMaxGapSize) {
+      // For gaps larger than 2GB, link several consecutive gaps together. This has to be done because the size
+      // marker on disk is 32 bits. The free list, however, will still have one large gap because the free list
+      // uses 64 bit [first..last] pairs to represent gaps.
+
+      // Make sure that the second gap is large enough to write its size on disk
+      Long64_t gapSize = TFile::kMaxGapSize - sizeof(Int_t);
+      fnWriteGapHeader(offset, gapSize);
+
+      nbytesl -= gapSize;
+      offset += gapSize;
+   }
+   fnWriteGapHeader(offset, nbytesl);
 
    if (last == fEND - 1)
       fEND = nfirst;
 
-   if (nbytesl > TFile::kMaxGapSize)
-      nbytesl = TFile::kMaxGapSize;
-
-   Int_t nbytes = -Int_t(nbytesl);
-   char buffer[sizeof(Int_t)];
-   char *pbuffer = buffer;
-   tobuf(pbuffer, nbytes);
-
-   Seek(nfirst);
-   if (WriteBuffer(buffer, sizeof(buffer)) != 0) {
-      // Not fatal, this only means that we won't get it 'right'
-      // if we ever need to Recover the file before the block is actually
-      // attempted to be reused.
-      Warning("TFile::MakeFree()", "failed to write free segment header");
-   }
    if (fMustFlush)
       Flush();
 }
