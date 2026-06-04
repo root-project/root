@@ -371,7 +371,6 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///   auto bad_storage = (f && f->TestBit(TFile::kRecovered)); // The TFile had to run the recovery mechanism when opening the file
 /// ~~~
 
-
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE)
 {
