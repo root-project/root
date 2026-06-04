@@ -368,7 +368,7 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///   TFile *f = TFile::Open("name.root", "READ");
 ///   auto bad_input = (f == nullptr); // e.g. if input url was incorrect
 ///   auto bad_initalization = (f && f->IsZombie()); // something went wrong in the constructor, for example when TFile is corrupt
-///   auto bad_storage = (f && f->TestBit(TFile::kRecovered)); // The TFile had to run the recovery mechanism when opening the file
+///   auto bad_storage = (f && f->TestBit(TFile::kRecovered)); // The TFile had to run the recovery mechanism when opening the file; often due to the file being incorrectly closed.
 /// ~~~
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
