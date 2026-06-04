@@ -1453,3 +1453,6 @@ endif()
 if(test_distrdf_dask)
   find_package(Dask 2022.08.1 REQUIRED)
 endif()
+
+add_subdirectory (builtins/libmathtext) # hard coded builtin needed for graf2d
+

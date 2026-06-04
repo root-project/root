@@ -373,6 +373,7 @@ namespace mathtext {
 		inline float default_axis_height(
 			const bool display_style = false) const
 		{
+            (void)display_style; // unused var
 			return axis_height * style_size(
 				math_text_t::item_t::STYLE_TEXT);
 		}
