@@ -20,7 +20,16 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdio>
+#if defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define bswap_16 OSSwapInt16
+#define bswap_32 OSSwapInt32
+#elif defined(_WIN32)
+#define bswap_16(x) _byteswap_ushort(x)
+#define bswap_32(x) _byteswap_ulong(x)
+#else
 #include <byteswap.h>
+#endif
 
 // References:
 //
