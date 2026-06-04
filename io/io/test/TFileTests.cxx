@@ -452,3 +452,36 @@ TEST(TFile, DeleteKey)
    // Same as before the recovery
    EXPECT_EQ(4, fnCountGaps(fileGuard.GetPath()));
 }
+
+TEST(TFile, KeySizeLimit)
+{
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      GTEST_SKIP() << "Skipping test on 32bit platform.";
+   }
+
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_key_size_limit.root");
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+
+   // Check that we can add keys >1GB (but smaller than 1GiB, obviously) in small and large files.
+   // This does work even though the last, virtual free segment is 1GB (and not 1GiB). The reason it works is
+   // that when the last free segment is not large enough, the code path that supports upgrading from a small file
+   // to a large file is activated and extends the last free segment as needed.
+
+   std::vector<char> v;
+   v.resize(1000 * 1000 * 1000 + 100, 'x'); // more than 1GB but less the 1GiB
+   f->WriteObject(&v, "v0");
+   EXPECT_LT(f->GetEND(), TFile::kStartBigFile);
+   f->WriteObject(&v, "v1");
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->WriteObject(&v, "v2");
+   f->Write();
+   f->Close();
+}
