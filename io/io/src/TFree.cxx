@@ -92,7 +92,10 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
       }
       idcur = (TFree*)lfree->After(idcur);
    }
-   return 0;
+
+   // never here
+   assert(false);
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,4 +189,3 @@ Int_t TFree::Sizeof() const
    if (fLast > TFile::kStartBigFile) return 18;
    else                              return 10;
 }
-
