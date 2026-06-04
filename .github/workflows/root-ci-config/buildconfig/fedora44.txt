@@ -1,6 +1,4 @@
 CMAKE_CXX_STANDARD=23
-experimental_adaptivecpp=ON
-pythia8=ON
-roofit_multiprocess=ON
-test_distrdf_pyspark=OFF
-vdt=OFF
+CMAKE_BUILD_TYPE=Debug
+minimal=ON
+testing=ON
