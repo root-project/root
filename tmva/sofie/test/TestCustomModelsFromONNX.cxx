@@ -28,6 +28,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/ConvWithStridesPadding.ref.hxx"
 #include "input_models/references/ConvWithStridesNoPadding.ref.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
+#include "input_models/references/ConvWithDilation.ref.hxx"
 #include "input_models/references/MaxPool1d.ref.hxx"
 #include "input_models/references/MaxPool2d.ref.hxx"
 #include "input_models/references/MaxPool2d_CeilMode.ref.hxx"
@@ -663,6 +664,22 @@ TEST(ONNX, ConvWithoutPadding)
    }
 }
 
+TEST(ONNX, ConvWithDilation)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input(49);
+   std::iota(input.begin(), input.end(), 0.0f);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithDilation", input);
+
+   EXPECT_EQ(output.size(), std::size(ConvWithDilation_ExpectedOutput::outputs));
+
+   float *correct = ConvWithDilation_ExpectedOutput::outputs;
+
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
 
 TEST(ONNX, ConvWithAutopadSameLower)
 {

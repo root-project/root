@@ -454,6 +454,7 @@ public:
       // trick for speed is using caffe im2col and output a matrix which contains filtered values as rows.
       // By doing this one has consecutive memory reads and writes
       // Resulting matrix op_xcol is (input channels * filter_h * filter_w , output_h * output_w)
+      // The generated filter tensor is already expanded for fAttrDilations, so Im2col scans it contiguously.
       if (fDim ==1) {
          if (fAttrPads[0] != fAttrPads[1] ) {
             std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
@@ -493,11 +494,10 @@ public:
                 << fShapeW[1] << "," << iHeight << "," << iWidth << ",";
             if (fDim == 1)
                out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                   << fAttrDilations[0];
+                   << 1;
             else // dim ==2
                out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                   << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
-                   << fAttrDilations[1];
+                   << "," << fAttrStrides[0] << "," << fAttrStrides[1] << ",1,1";
             out << "," << "tensor_" <<fNX << "_xcol);\n\n ";
          } else {
             // 3d im2col
@@ -509,8 +509,7 @@ public:
                 << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << ","
                 << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << ","
                 << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrPads[2] << ","
-                << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
-                << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
+                << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ",1,1,1,"
                 << "tensor_" << fNX << "_xcol);\n\n ";
          }
          // BLAS
@@ -551,11 +550,10 @@ public:
                 << fShapeW[1] << "," << iHeight << "," << iWidth << ",";
             if (fDim == 1)
                out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                   << fAttrDilations[0];
+                   << 1;
             else // dim ==2
                out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                   << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
-                   << fAttrDilations[1];
+                   << "," << fAttrStrides[0] << "," << fAttrStrides[1] << ",1,1";
             out << ", tensor_" << fNX << "_xcol);\n\n ";
          } else {
             // 3d im2col
@@ -567,7 +565,7 @@ public:
                 << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << "," << fAttrKernelShape[0] << ","
                 << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1]
                 << "," << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2]
-                << "," << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX
+                << ",1,1,1,tensor_" << fNX
                 << "_xcol);\n\n ";
          }
 
