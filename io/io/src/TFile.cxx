@@ -2181,9 +2181,9 @@ Int_t TFile::Recover()
          break;
       }
       if (nbytes < 0) {
+         if (fWritable)
+            new TFree(fFree, idcur, idcur - nbytes - 1);
          idcur -= nbytes;
-         if (fWritable) new TFree(fFree,idcur,idcur-nbytes-1);
-         Seek(idcur);
          continue;
       }
       Version_t versionkey;
