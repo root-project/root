@@ -6,7 +6,9 @@
 
 ROOT_LINKER_LIBRARY(mathtext
   fontembed.cc
+  fontembedpdf.cc
   fontembedps.cc
+  geometry.cc
   mathrender.cc
   mathrenderstyle.cc
   mathrendertoken.cc
