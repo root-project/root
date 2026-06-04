@@ -565,9 +565,9 @@ if(http AND NOT builtin_civetweb)
       set(builtin_civetweb ON CACHE BOOL "Enabled because system-wide civetweb version was compiled without websockets or xdomsocket (-DCIVETWEB_ENABLE_WEBSOCKETS=ON -DCIVETWEB_ENABLE_X_DOM_SOCKET=ON)" FORCE)
     endif()
   endif()
-  if (NOT builtin_civetweb)
-    target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civetweb one gets failure R__memcompress # TODO can be probably changed to checking bit 9 of CIVETWEB_FEATURES, rather than an external hardcoded flag that might actually depend on an OS
-  endif()
+  #if (NOT builtin_civetweb)
+  #  target_compile_definitions(civetweb::civetweb INTERFACE _EXTERNAL_CIVETWEB) # temporary hack for: with external civetweb one gets failure R__memcompress # TODO can be probably changed to checking bit 9 of CIVETWEB_FEATURES, rather than an external hardcoded flag that might actually depend on an OS
+  #endif()
 endif()
 if(http AND builtin_civetweb)
   list(APPEND ROOT_BUILTINS BUILTIN_CIVETWEB)
