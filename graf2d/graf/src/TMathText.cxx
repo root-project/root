@@ -246,10 +246,8 @@ public:
          upper_right_x <= advance ? 0.0F :
          std::max(0.0F, upper_right_x + margin - advance);
       const mathtext::bounding_box_t ret =
-         mathtext::bounding_box_t(
-            lower_left_x, lower_left_y,
-            upper_right_x, upper_right_y,
-            advance, italic_correction) * scale;
+         mathtext::bounding_box_t(lower_left_x * scale, lower_left_y * scale, upper_right_x * scale,
+                                  upper_right_y * scale, advance * scale, italic_correction * scale);
 
       current_x += ret.advance();
 
