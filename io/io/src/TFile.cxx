@@ -1542,7 +1542,7 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    while (nbytesl > TFile::kMaxGapSize) {
       // For gaps larger than 2GB, link several consecutive gaps together. This has to be done because the size
       // marker on disk is 32 bits. The free list, however, will still have one large gap because the free list
-      // uses 64 bit [first..last] pairs to represent gaps.
+      // uses 64 bit [first..last] pairs to represent gaps. File recovery will merge consecutive gaps.
 
       // Make sure that the second gap is large enough to write its size on disk
       Long64_t gapSize = TFile::kMaxGapSize - sizeof(Int_t);
@@ -2192,8 +2192,14 @@ Int_t TFile::Recover()
             Error("Recover", "Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
             break;
          }
-         if (fWritable)
-            new TFree(fFree, idcur, idcur - nbytes - 1);
+         if (fWritable) {
+            const Long64_t last = idcur - nbytes - 1;
+            if (fFree->Last() && static_cast<TFree *>(fFree->Last())->GetLast() + 1 == idcur) {
+               static_cast<TFree *>(fFree->Last())->SetLast(last);
+            } else {
+               new TFree(fFree, idcur, last);
+            }
+         }
          idcur -= nbytes;
          continue;
       }

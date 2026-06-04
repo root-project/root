@@ -8,15 +8,16 @@
 
 #include <ROOT/TestSupport.hxx>
 
-#include "TFile.h"
-#include "TMemFile.h"
 #include "TDirectory.h"
+#include "TEnv.h"
+#include "TFile.h"
+#include "TFree.h"
 #include "TKey.h"
+#include "TMemFile.h"
 #include "TNamed.h"
 #include "TPluginManager.h"
-#include "TROOT.h" // gROOT
+#include "TROOT.h"
 #include "TSystem.h"
-#include "TEnv.h" // gEnv
 
 TEST(TFile, WriteObjectTObject)
 {
@@ -430,12 +431,24 @@ TEST(TFile, DeleteKey)
    f->Close();
 
    {
-      // File recovery should work
       ROOT::TestSupport::CheckDiagsRAII diagsRaii;
       diagsRaii.requiredDiag(kInfo, "TFile::Recover", "recovered key vector<char>", false);
       f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
       EXPECT_TRUE(f->TestBit(TFile::kRecovered));
+      // We got one more free gap due to the replacement of the empty keys list.  Otherwise, we still want to see
+      // that the large gap was merged from the smaller segments.
+      EXPECT_EQ(5, f->GetNfree());
+      bool foundLargeGap = false;
+      for (const auto gap : ROOT::Detail::TRangeStaticCast<TFree>(f->GetListOfFree())) {
+         if (gap->GetLast() - gap->GetFirst() >= TFile::kMaxGapSize) {
+            foundLargeGap = true;
+            break;
+         }
+      }
+      EXPECT_TRUE(foundLargeGap);
       f->Write();
       f->Close();
    }
+   // Same as before the recovery
+   EXPECT_EQ(4, fnCountGaps(fileGuard.GetPath()));
 }
