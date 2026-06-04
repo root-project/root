@@ -5,10 +5,12 @@
 #ifndef ROOT_RHistUtils
 #define ROOT_RHistUtils
 
-#include <atomic>
 #include <type_traits>
 
 #ifdef _MSC_VER
+#include <atomic>
+#include <cstddef>
+
 #include <intrin.h>
 #endif
 
