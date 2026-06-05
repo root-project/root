@@ -109,7 +109,16 @@ void ROOT::Internal::RPageSinkBuf::UpdateSchema(const ROOT::Internal::RNTupleMod
    auto cloneAddField = [&](const ROOT::RFieldBase *field) {
       auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
-      fInnerModel->AddField(std::move(cloned));
+
+      auto parent = field->GetParent();
+      assert(parent);
+      if (typeid(*parent) != typeid(RFieldZero)) {
+         auto &innerParent = fInnerModel->GetMutableField(parent->GetQualifiedFieldName());
+         assert(dynamic_cast<RRecordField *>(&innerParent));
+         AddItemToRecord(static_cast<RRecordField &>(innerParent), std::move(cloned));
+      } else {
+         fInnerModel->AddField(std::move(cloned));
+      }
       return p;
    };
    auto cloneAddProjectedField = [&](ROOT::RFieldBase *field) {
