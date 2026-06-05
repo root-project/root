@@ -784,6 +784,7 @@ TEST(RNTuple, ModelExtensionRecordNested)
       RNTupleWriteOptions opts;
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), opts);
 
+      EXPECT_EQ(1u, writer->GetModel().GetConstField("r1").GetValueSize());
       auto entry = writer->CreateEntry();
       writer->Fill(*entry);
       writer->CommitCluster();
@@ -799,6 +800,7 @@ TEST(RNTuple, ModelExtensionRecordNested)
       modelUpdater->AddField(std::move(recordField), "r1.r2");
       modelUpdater->CommitUpdate();
 
+      EXPECT_EQ(sizeof(float), writer->GetModel().GetConstField("r1").GetValueSize());
       entry = writer->CreateEntry();
       auto ptrFloat = static_cast<float *>(entry->GetPtr<void>("r1").get());
       *ptrFloat = 1.0;
