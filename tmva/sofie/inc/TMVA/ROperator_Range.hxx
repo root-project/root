@@ -81,12 +81,12 @@ public:
          return ftype;
       };
 
-      T start_value;
-      T limit_value;
-      T delta_value;
-      Dim start_dim;
-      Dim limit_dim;
-      Dim delta_dim;
+      T start_value{};
+      T limit_value{};
+      T delta_value{};
+      Dim start_dim{};
+      Dim limit_dim{};
+      Dim delta_dim{};
       int res1 = analyzeInput(fNStart, start_value, start_dim);
       int res2 = analyzeInput(fNLimit, limit_value, limit_dim);
       int res3 = analyzeInput(fNDelta, delta_value, delta_dim);
