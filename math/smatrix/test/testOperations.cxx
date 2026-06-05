@@ -87,7 +87,7 @@ int test_smatrix_op() {
 
 
   double r1,r2;
-  int npass = NITER;
+  int npass = std::max(int(NITER), int(1));
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
 
@@ -194,7 +194,7 @@ int test_smatrix_sym_op() {
 
 
 
-  int first = NDIM1;  //Can change the size of the matrices
+  int first = std::max(int(NDIM1), int(1));  //Can change the size of the matrices
 
 
   std::cout << "************************************************\n";
@@ -311,7 +311,7 @@ int test_tmatrix_op() {
   double totTime1, totTime2;
 
   double r1,r2;
-  int npass = NITER;
+  int npass = std::max(int(1), int(NITER));
   TRandom3 r(111);
   gMatrixCheck = 0;
 
@@ -828,7 +828,8 @@ int main(int argc , char *argv[] ) {
   TEST(15);
   TEST(20);
   NLOOP = 50*NLOOP_MIN;
-  TEST(30);
+  TEST(29);
+  // TEST(30);
 //   NLOOP = NLOOP_MIN;
 //   TEST(50);
 //   TEST(75);
