@@ -346,7 +346,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          paint_hollow();
 
       if (ipoint < 0) {
-         Int_t pxp0, pyp0, pxp, pyp;
+         Int_t pxp0{}, pyp0{}, pxp{}, pyp{};
          // move all points
          for (Int_t i = 0; i < np; i++) {
             get_point(i, pxp, pyp);
