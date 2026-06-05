@@ -58,7 +58,10 @@ public:
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderUntypedValue
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
-   void *fValuePtr{nullptr};
+   ROOT::RVec<std::byte> fCachedResults{};
+   ROOT::RVec<std::size_t> fCachedResultsInvalidIndices{};
+   std::size_t fValueSize{0};
+   std::uint64_t fLastEntry = std::numeric_limits<std::uint64_t>::max();
 
    void *GetImpl(std::size_t) override;
    void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;

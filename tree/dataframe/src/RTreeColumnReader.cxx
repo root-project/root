@@ -24,16 +24,48 @@ ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReade
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::~RTreeOpaqueColumnReader() = default;
 
-void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(std::size_t)
+void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(std::size_t entryInBulk)
 {
-   return fValuePtr;
+   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame column reader.");
+
+   if (fCachedResultsInvalidIndices.end() !=
+       std::find(fCachedResultsInvalidIndices.begin(), fCachedResultsInvalidIndices.end(), entryInBulk)) {
+      // This entry was marked as invalid during loading, return nullptr to signal this to the caller
+      return nullptr;
+   }
+
+   return fCachedResults.data() + entryInBulk * fValueSize;
 }
 
 void ROOT::Internal::RDF::RTreeUntypedValueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
-   // Assume size-1 bulk for now
-   if (mask[0])
-      fValuePtr = fTreeValue->Get();
+   if (fLastEntry == mask.GetFirstEntry())
+      return;
+
+   if (fValueSize == 0)
+      fValueSize = fTreeValue->GetValueSize();
+   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame column reader.");
+
+   // Assume 1-size bulk for now
+   const auto validIndices = mask.GetValidIndices();
+   fLastEntry = mask.GetFirstEntry();
+   if (validIndices.empty())
+      return;
+
+   fCachedResultsInvalidIndices.clear();
+   fCachedResultsInvalidIndices.reserve(validIndices.size());
+
+   fCachedResults.clear();
+   fCachedResults.reserve(validIndices.size() * fValueSize);
+   for (auto idx : validIndices) {
+      // TODO: go back/forth to the correct valid index in the TTreeReaderValue
+      auto val = reinterpret_cast<std::byte *>(fTreeValue->Get());
+      if (!val) {
+         fCachedResultsInvalidIndices.push_back(idx);
+      } else {
+         std::copy(val, val + fValueSize, std::back_inserter(fCachedResults));
+      }
+   }
 }
 
 ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReader(TTreeReader &r,
