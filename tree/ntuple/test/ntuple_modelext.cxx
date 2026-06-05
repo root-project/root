@@ -737,33 +737,33 @@ TEST(RNTuple, ModelExtensionRecordSimple)
    std::string expect{
 R"({
   "r": {
-    "pt": 1
-  },
-  "vec": []
+    "pt": 1,
+    "vec": []
+  }
 }
 {
   "r": {
-    "pt": 2
-  },
-  "vec": []
+    "pt": 2,
+    "vec": []
+  }
 }
 {
   "r": {
-    "pt": 3
-  },
-  "vec": [10, 11]
+    "pt": 3,
+    "vec": [10, 11]
+  }
 }
 {
   "r": {
-    "pt": 4
-  },
-  "vec": []
+    "pt": 4,
+    "vec": []
+  }
 }
 {
   "r": {
-    "pt": 5
-  },
-  "vec": [12]
+    "pt": 5,
+    "vec": [12]
+  }
 }
 )" };
    // clang-format on
@@ -782,7 +782,6 @@ TEST(RNTuple, ModelExtensionRecordNested)
       model->AddField(std::move(recordField));
 
       RNTupleWriteOptions opts;
-      opts.SetUseBufferedWrite(false);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), opts);
 
       auto entry = writer->CreateEntry();
