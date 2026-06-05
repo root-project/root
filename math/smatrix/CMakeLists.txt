@@ -57,3 +57,5 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
     Core
     MathCore
 )
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
