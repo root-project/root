@@ -248,12 +248,12 @@ Int_t TH3::BufferEmpty(Int_t action)
    const bool extend = CanExtendAllAxes();
    if (extend || xbinAuto || ybinAuto || zbinAuto) {
          //find min, max of entries in buffer
-         Double_t xmin = xbinAuto ? fBuffer[2] : fXaxis.GetXmin();
-         Double_t xmax = xbinAuto ? xmin : fXaxis.GetXmax();
-         Double_t ymin = ybinAuto ? fBuffer[3] : fYaxis.GetXmin();
-         Double_t ymax = ybinAuto ? ymin : fYaxis.GetXmax();
-         Double_t zmin = zbinAuto ? fBuffer[4] : fZaxis.GetXmin();
-         Double_t zmax = zbinAuto ? zmin : fZaxis.GetXmax();
+         Double_t xmin = xbinAuto || extend ? fBuffer[2] : fXaxis.GetXmin();
+         Double_t xmax = xbinAuto || extend ? xmin : fXaxis.GetXmax();
+         Double_t ymin = ybinAuto || extend ? fBuffer[3] : fYaxis.GetXmin();
+         Double_t ymax = ybinAuto || extend ? ymin : fYaxis.GetXmax();
+         Double_t zmin = zbinAuto || extend ? fBuffer[4] : fZaxis.GetXmin();
+         Double_t zmax = zbinAuto || extend ? zmin : fZaxis.GetXmax();
          for (Int_t i=1;i<nbentries;i++) {
             if (extend || xbinAuto) {
                Double_t x = fBuffer[4*i+2];
