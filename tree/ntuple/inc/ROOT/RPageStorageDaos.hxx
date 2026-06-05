@@ -150,8 +150,6 @@ class RPageSourceDaos : public ROOT::Internal::RPageSource {
 private:
    ntuple_index_t fNTupleIndex{0};
 
-   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
