@@ -3680,7 +3680,9 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
             pp->SetAttFill({color, 1001}); // use fill color producing opacity
             pp->SetOpacity(style - 4000);
          }
-      } else if ((color == 10) && (style > 3000) && (style < 3100))
+      } else if ((style >= 4000) && (style <= 4100) && pp->IsCocoa() && (this == fMother))
+         style = 1001;
+      else if ((color == 10) && (style > 3000) && (style < 3100))
          color = 1;
 
       if (do_paint_box) {
