@@ -2,6 +2,7 @@ import unittest
 
 import ROOT
 
+ROOT.gROOT.SetBatch(True)
 
 class XRooFitTests(unittest.TestCase):
 
@@ -45,11 +46,11 @@ class XRooFitTests(unittest.TestCase):
         # add the obsData to the channel
         sr.datasets().Add(obsData)
 
-        # example of accessing expected yields in bins with propagated errors                                                                                                 
+        # example of accessing expected yields in bins with propagated errors
         w.poi()["mu"].setVal(0)
         self.assertAlmostEqual(w["pdfs/simPdf/SR"].GetContent(), bkg.Integral())
         self.assertAlmostEqual(w["pdfs/simPdf/SR"].GetError(), abs(bkg_vary1.Integral()-bkg.Integral()) )
-        # accessing a single sample expected yield                                                                                                                            
+        # accessing a single sample expected yield
         w.poi()["mu"].setVal(0.5)
         self.assertAlmostEqual(w["pdfs/simPdf/SR/sig"].GetContent(), sig.Integral()*w.poi()["mu"].getVal())
         self.assertAlmostEqual(w["pdfs/simPdf/SR/sig"].GetError(), 0.) # no uncert was added to the signal
