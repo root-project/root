@@ -84,13 +84,17 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 #--- Search for packages that are absolutely necessary--------------------------
 
 #----------------------------------------------------------------------------
-# ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION)
+# ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION [MIN_REQUIRED_VERSION])
 # Search for a required dependency, unless it's meant to be a built-in.
 # A list of all missing required packages will be printed in case they could
 # not be found.
 macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
   if(NOT ${BUILTIN_CONFIG_OPTION})
-    find_package(${PACKAGE_NAME})
+    set(MIN_REQUIRED_VERSION "")
+    if (${ARGC} GREATER 2) # ARGC: extra arguments + named ones
+      set(MIN_REQUIRED_VERSION ${ARGV2}) # ARGV0 and ARGV1 are named required args
+    endif()
+    find_package(${PACKAGE_NAME} ${MIN_REQUIRED_VERSION})
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
@@ -125,6 +129,9 @@ ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
 ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
 ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
 ROOT_FIND_REQUIRED_DEP(xxHash builtin_xxhash)
+if (testing OR testsupport)
+  ROOT_FIND_REQUIRED_DEP(GTest builtin_gtest 1.10)
+endif()
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   message(FATAL_ERROR "The following packages need to be installed or enabled to build ROOT: ${MISSING_PACKAGES}")
@@ -1246,45 +1253,28 @@ endif (roofit_multiprocess)
 
 #---Check for googletest---------------------------------------------------------------
 if (testing OR testsupport)
-  if (NOT builtin_gtest)
-    if(fail-on-missing)
-      find_package(GTest 1.10 REQUIRED)
-    else()
-      find_package(GTest 1.10)
-      if(NOT GTEST_FOUND)
-        ROOT_CHECK_CONNECTION("testing=OFF")
-        if(NO_CONNECTION)
-          message(STATUS "GTest not found, and no internet connection. Disabling the 'testing' and 'testsupport' options.")
-          set(testing OFF CACHE BOOL "Disabled because testing requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
-          set(testsupport OFF CACHE BOOL "Disabled because testsupport requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
-        else()
-          message(STATUS "GTest not found, switching ON 'builtin_gtest' option.")
-          set(builtin_gtest ON CACHE BOOL "Enabled because testing requested and GTest not found (${builtin_gtest_description})" FORCE)
-        endif()
-      endif()
-    endif()
-  else()
+  if (builtin_gtest)
     ROOT_CHECK_CONNECTION("testing=OFF")
     if(NO_CONNECTION)
       message(STATUS "No internet connection, disabling the 'testing', 'testsupport' and 'builtin_gtest' options")
       set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
       set(testsupport OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
       set(builtin_gtest OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    else()
+      add_subdirectory(builtins/gtest)
     endif()
   endif()
 endif()
 
-if (builtin_gtest)
-  add_subdirectory(builtins/gtest)
+if (testing OR testsupport)
+  # Starting from cmake 3.23, the GTest targets will have stable names.
+  # ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
+  foreach(LIBNAME gtest_main gmock_main gtest gmock)
+    if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
+      add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
+    endif()
+  endforeach()
 endif()
-
-# Starting from cmake 3.23, the GTest targets will have stable names.
-# ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
-foreach(LIBNAME gtest_main gmock_main gtest gmock)
-  if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
-    add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
-  endif()
-endforeach()
 
 #------------------------------------------------------------------------------------
 if(webgui AND NOT builtin_openui5)
