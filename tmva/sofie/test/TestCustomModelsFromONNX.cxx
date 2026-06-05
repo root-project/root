@@ -22,6 +22,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/Erf.ref.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
+#include "input_models/references/ConvWithDilation.ref.hxx"
 #include "input_models/references/ConvWithoutPadding.ref.hxx"
 #include "input_models/references/ConvWithAutopadSameLower.ref.hxx"
 #include "input_models/references/ConvWithAutopadSameUpper.ref.hxx"
@@ -718,6 +719,27 @@ TEST(ONNX, ConvWithStridesPadding)
    EXPECT_EQ(output.size(), std::size(ConvWithStridesPadding_ExpectedOutput::all_ones));
 
    float *correct = ConvWithStridesPadding_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, ConvWithDilation)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(49);
+   std::iota(input.begin(), input.end(), 0.0f);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithDilation", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), std::size(ConvWithDilation_ExpectedOutput::all_ones));
+
+   float *correct = ConvWithDilation_ExpectedOutput::all_ones;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
