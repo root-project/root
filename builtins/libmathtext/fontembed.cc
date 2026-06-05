@@ -627,7 +627,7 @@ namespace mathtext {
 				  sizeof(struct ttf_table_directory_s) <=
 				  font_data.size())) {
 				ERROR_ACCESS("table directory");
-				continue;
+				break;
 			}
 			memcpy(&table_directory,
 				   &font_data[offset_table_size + i *
@@ -642,7 +642,7 @@ namespace mathtext {
 			if (!(table_directory.offset + table_directory.length <=
 				  font_data.size())) {
 				ERROR_ACCESS("table directory");
-				continue;
+				break;
 			}
 			table[std::string(table_directory.tag,
 							  table_directory.tag + 4)] =
