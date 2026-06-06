@@ -624,7 +624,8 @@ TApplication::EExitOnException TApplication::ExitOnException(TApplication::EExit
 /// The function generates and executes a command that loads the Doxygen URL in
 /// a browser. It works for Mac, Windows and Linux. In the case of Linux, the
 /// function also checks if the DISPLAY is set. If it isn't, a warning message
-/// and the URL will be displayed on the terminal.
+/// and the URL will be displayed on the terminal. In all OS, if the system command
+/// fails, the URL will be also displayed on the terminal.
 ///
 /// \param[in] url web page to be displayed in a browser
 
@@ -636,26 +637,28 @@ void TApplication::OpenInBrowser(const TString &url)
    TString cMac("open ");
    // We generate the full command and execute it.
    cMac.Append(url);
-   gSystem->Exec(cMac);
+   auto res = gSystem->Exec(cMac);
 #elif defined(R__WIN32)
    // Command for opening a browser on Windows.
    TString cWindows("start \"\" ");
    cWindows.Append(url);
-   gSystem->Exec(cWindows);
+   auto res = gSystem->Exec(cWindows);
 #else
-   // Command for opening a browser in Linux.
+   // For Linux we check first if the DISPLAY is set.
+   if (!gSystem->Getenv("DISPLAY")) {
+      // The user will have a warning and the URL in the terminal.
+      Warning("OpenInBrowser", "The $DISPLAY is not set! Please manually open (e.g. Ctrl-click) %s\n", url.Data());
+      return;
+   }   
+   // Command for opening a browser in Linux. Since the DISPLAY is set, it will open the browser.
    TString cLinux("xdg-open ");
-   // For Linux we check if the DISPLAY is set.
-   if (gSystem->Getenv("DISPLAY")) {
-      // If the DISPLAY is set it will open the browser.
-      cLinux.Append(url);
-      gSystem->Exec(cLinux);
-   } else {
-      // Else the user will have a warning and the URL in the terminal.
-      Warning("OpenInBrowser", "The $DISPLAY is not set! Please open (e.g. Ctrl-click) %s\n", url.Data());
+   cLinux.Append(url);
+   auto res = gSystem->Exec(cLinux);
+#endif
+   if (res != EXIT_SUCCESS) {
+      Warning("OpenInBrowser", "Could not automatically open web browser (e.g. due to missing X11)! Please manually open (e.g. Ctrl-click) %s\n", url.Data());
       return;
    }
-#endif
    Info("OpenInBrowser", "A new tab should have opened in your browser.");
 }
 
