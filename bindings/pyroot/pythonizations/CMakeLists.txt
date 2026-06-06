@@ -37,7 +37,8 @@ if (Python3_VERSION VERSION_GREATER_EQUAL "3.11")
   # On Windows we can't use the stable ABI yet: it requires linking against a
   # different libpython, so as long as we don't build all translation units in
   # the ROOT Pythonization library with the stable ABI we should not use it.
-  if(NOT MSVC)
+  # Free-threaded (Py_GIL_DISABLED) interpreters don't support the limited API.
+  if(NOT MSVC AND NOT Python3_GIL_DISABLED)
     target_compile_options(${libname} PRIVATE -DPy_LIMITED_API=0x030B0000)
   endif()
 endif()
