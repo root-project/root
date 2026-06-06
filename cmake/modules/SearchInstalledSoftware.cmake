@@ -412,6 +412,33 @@ if(tmva-pymva OR tmva-sofie)
 endif()
 find_package(Python3 3.10 COMPONENTS ${python_components})
 
+# Detect whether the found Python interpreter is a free-threaded build
+# (Py_GIL_DISABLED is defined in pyconfig.h). The limited C API is not
+# supported in free-threaded builds; including Python.h with Py_LIMITED_API
+# defined produces a hard error there
+# (https://docs.python.org/3/howto/free-threading-extensions.html).
+# Checking the preprocessor symbol directly is more reliable than asking the
+# interpreter (e.g. sysconfig.get_config_var may misreport, and
+# sys._is_gil_enabled() can be overridden at runtime via PYTHON_GIL=1).
+set(Python3_GIL_DISABLED FALSE)
+if(Python3_Development_FOUND OR Python3_Development.Module_FOUND)
+  include(CheckCXXSourceCompiles)
+  set(_old_required_includes ${CMAKE_REQUIRED_INCLUDES})
+  set(CMAKE_REQUIRED_INCLUDES ${Python3_INCLUDE_DIRS})
+  check_cxx_source_compiles("
+    #include <Python.h>
+    #ifndef Py_GIL_DISABLED
+    #error \"GIL is not disabled\"
+    #endif
+    int main() { return 0; }
+  " ROOT_PYTHON_GIL_DISABLED)
+  set(CMAKE_REQUIRED_INCLUDES ${_old_required_includes})
+  if(ROOT_PYTHON_GIL_DISABLED)
+    set(Python3_GIL_DISABLED TRUE)
+    message(STATUS "Python ${Python3_VERSION} is a free-threaded build (Py_GIL_DISABLED defined); the limited C API will not be used")
+  endif()
+endif()
+
 #---Check for OpenGL installation-------------------------------------------------------
 # OpenGL is required by various graf3d features that are enabled with opengl=ON,
 # or by the Cocoa-related code that always requires it.
