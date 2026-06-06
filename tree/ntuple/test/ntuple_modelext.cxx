@@ -805,15 +805,32 @@ TEST(RNTuple, ModelExtensionRecordNested)
       auto ptrFloat = static_cast<float *>(entry->GetPtr<void>("r1").get());
       *ptrFloat = 1.0;
       writer->Fill(*entry);
+
+      modelUpdater->BeginUpdate();
+      modelUpdater->AddField(std::make_unique<RField<double>>("ptHP"), "r1.r2.r3.r4");
+      modelUpdater->CommitUpdate();
+
+      EXPECT_EQ(2 * sizeof(double), writer->GetModel().GetConstField("r1").GetValueSize());
+      entry = writer->CreateEntry();
+      struct FloatAndDouble {
+         float pt;
+         double ptHP;
+      };
+
+      auto ptrFloatAndDouble = static_cast<FloatAndDouble *>(entry->GetPtr<void>("r1").get());
+      ptrFloatAndDouble->pt = 2.0;
+      ptrFloatAndDouble->ptHP = 3.0;
+      writer->Fill(*entry);
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   EXPECT_EQ(3u, reader->GetNEntries());
+   EXPECT_EQ(4u, reader->GetNEntries());
 
    std::ostringstream os;
    reader->Show(0, os);
    reader->Show(1, os);
    reader->Show(2, os);
+   reader->Show(3, os);
    // clang-format off
    std::string expect{
 R"({
@@ -821,7 +838,8 @@ R"({
     "r2": {
       "r3": {
         "r4": {
-          "pt": 0
+          "pt": 0,
+          "ptHP": 0
         }
       }
     }
@@ -832,7 +850,8 @@ R"({
     "r2": {
       "r3": {
         "r4": {
-          "pt": 0
+          "pt": 0,
+          "ptHP": 0
         }
       }
     }
@@ -843,7 +862,20 @@ R"({
     "r2": {
       "r3": {
         "r4": {
-          "pt": 1
+          "pt": 1,
+          "ptHP": 0
+        }
+      }
+    }
+  }
+}
+{
+  "r1": {
+    "r2": {
+      "r3": {
+        "r4": {
+          "pt": 2,
+          "ptHP": 3
         }
       }
     }
