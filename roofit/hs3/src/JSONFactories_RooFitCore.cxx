@@ -35,6 +35,9 @@
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
+#include <RooAddition.h>
+#include <RooProduct.h>
+#include <RooProdPdf.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooPolyVar.h>
@@ -131,6 +134,43 @@ public:
          dependents.add(*tool->request<RooAbsReal>(d, name));
       }
       tool->wsImport(RooArg_t{name.c_str(), formula, dependents});
+      return true;
+   }
+};
+
+// Fast-path importers for RooProduct, RooAddition, and RooProdPdf that
+// bypass the generic factory-expression mechanism. The default path
+// generates a string expression and passes it to gROOT->ProcessLineFast(),
+// which invokes the Cling JIT for every single call. For workspaces with
+// thousands of product/sum nodes (a common shape for HistFactory models)
+// that JIT cost dominates JSON import time. Constructing the RooFit object
+// directly here keeps the work O(N) of cheap C++ calls.
+class RooProductFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      tool->wsEmplace<RooProduct>(name, tool->requestArgList<RooAbsReal>(p, "factors"));
+      return true;
+   }
+};
+
+class RooProdPdfFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      tool->wsEmplace<RooProdPdf>(name, tool->requestArgList<RooAbsPdf>(p, "factors"));
+      return true;
+   }
+};
+
+class RooAdditionFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      tool->wsEmplace<RooAddition>(name, tool->requestArgList<RooAbsReal>(p, "summands"));
       return true;
    }
 };
@@ -1195,6 +1235,9 @@ DEFINE_EXPORTER_KEY(RooSplineStreamer, "spline");
 STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;
 
+   registerImporter<RooProductFactory>("product", false);
+   registerImporter<RooProdPdfFactory>("product_dist", false);
+   registerImporter<RooAdditionFactory>("sum", false);
    registerImporter<RooAddPdfFactory>("mixture_dist", false);
    registerImporter<RooAddModelFactory>("mixture_model", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
