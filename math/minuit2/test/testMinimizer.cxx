@@ -645,7 +645,9 @@ int testRosenBrock()
    RosenBrockFunction fRB;
    double xRB[2] = {-1., 1.2};
 
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(fRB, xRB, s0, "Minuit", "");
+#endif
    iret |= testNewMinimizer(fRB, xRB, s0, "Minuit2", "");
 
    //    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugateFR");
@@ -703,7 +705,9 @@ int testChebyQuad()
 
    std::cout << "FUNC " << func(x1) << std::endl;
 
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(func, x0, s0, "Minuit", "");
+#endif
    iret |= testNewMinimizer(func, x0, s0, "Minuit2", "");
 
    //    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugateFR");
@@ -732,7 +736,9 @@ int testTrigoFletcher()
    std::cout << "\tTRIGONOMETRIC Fletcher function test , n = " << nT << "\n\n";
 
    iret |= testNewMinimizer(fTrigo, xTrigo, sTrigo, "Minuit2", "");
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(fTrigo, xTrigo, sTrigo, "Minuit", "");
+#endif
 
    //    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugateFR");
    //    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugatePR");
@@ -759,7 +765,9 @@ int testWood()
    std::cout << "\n************************************************************\n";
    std::cout << "\tWOOD 4 function test  \n\n";
 
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(f, x0, s0, "Minuit", "");
+#endif
    iret |= testNewMinimizer(f, x0, s0, "Minuit2", "");
 
    return iret;
@@ -783,7 +791,9 @@ int testPowell()
    std::cout << "\n************************************************************\n";
    std::cout << "\tPOWELL function test   \n\n";
 
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(f, x0, s0, "Minuit", "");
+#endif
    iret |= testNewMinimizer(f, x0, s0, "Minuit2", "");
 
    return iret;
@@ -807,7 +817,9 @@ int testQuadFunc()
    std::cout << "\n************************************************************\n";
    std::cout << "\tSIMPLE QUAD  function test   \n\n";
 
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(f, x0, s0, "Minuit", "");
+#endif
    iret |= testNewMinimizer(f, x0, s0, "Minuit2", "");
 
    return iret;

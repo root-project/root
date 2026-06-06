@@ -52,6 +52,10 @@ foreach(file ${TestSource})
   ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname} LABELS ${${testname}_LABELS})
 endforeach()
 
+if(minuit1)
+  target_compile_definitions(testMinim PRIVATE ROOT_MATH_MINUIT_1)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               NO_INSTALL_HEADERS
                               NO_SOURCES

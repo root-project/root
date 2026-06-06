@@ -628,13 +628,17 @@ int testRosenBrock() {
 
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(5,99,00)
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testOldMinimizer(RosenBrock,"Minuit",2);
+#endif
    iret |= testOldMinimizer(RosenBrock,"Minuit2",2);
 #endif
 
    RosenBrockFunction fRB;
    double xRB[2] = { -1.,1.2};
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit","");
+#endif
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","");
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","BFGS");
 #ifdef R__HAS_MATHMORE
@@ -670,7 +674,9 @@ int testTrigoFletcher() {
 
 
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit2","");
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit","");
+#endif
 #ifdef R__HAS_MATHMORE
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugateFR");
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugatePR");
@@ -728,7 +734,9 @@ int testChebyQuad() {
 
 
    iret |= testNewMinimizer(func,x0,s0, "Minuit2","");
+#ifdef ROOT_MATH_MINUIT_1
    iret |= testNewMinimizer(func,x0,s0, "Minuit","");
+#endif
 #ifdef R__HAS_MATHMORE
    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugateFR");
    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugatePR");
