@@ -924,12 +924,11 @@ RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objna
 {
    if (RooAbsPdf *retval = _workspace.pdf(objname))
       return retval;
-   if (const auto &distributionsNode = _rootnodeInput->find("distributions")) {
-      if (const auto &child = findNamedChild(*distributionsNode, objname)) {
-         this->importFunction(*child, true);
-         if (RooAbsPdf *retval = _workspace.pdf(objname))
-            return retval;
-      }
+   auto it = _distributionsByName.find(objname);
+   if (it != _distributionsByName.end()) {
+      this->importFunction(*it->second, true);
+      if (RooAbsPdf *retval = _workspace.pdf(objname))
+         return retval;
    }
    return nullptr;
 }
@@ -945,12 +944,11 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
       return var;
-   if (const auto &functionNode = _rootnodeInput->find("functions")) {
-      if (const auto &child = findNamedChild(*functionNode, objname)) {
-         this->importFunction(*child, true);
-         if (RooAbsReal *retval = _workspace.function(objname))
-            return retval;
-      }
+   auto it = _functionsByName.find(objname);
+   if (it != _functionsByName.end()) {
+      this->importFunction(*it->second, true);
+      if (RooAbsReal *retval = _workspace.function(objname))
+         return retval;
    }
    return nullptr;
 }
@@ -2175,6 +2173,31 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    _attributesNode = findRooFitInternal(*_rootnodeInput, "attributes");
 
+   // Build name-keyed indices over the "functions" and "distributions"
+   // sequences. Without these, every cross-reference resolved during import
+   // (e.g. dependencies of a PiecewiseInterpolation, or factory-expression
+   // arguments) triggers a linear scan over all sibling nodes via
+   // findNamedChild(), which becomes O(N^2) on workspaces with thousands of
+   // entries. Populating the maps up-front turns each lookup into O(1).
+   _functionsByName.clear();
+   _distributionsByName.clear();
+   if (auto seq = n.find("functions")) {
+      if (seq->is_seq()) {
+         _functionsByName.reserve(seq->num_children());
+         for (const auto &p : seq->children()) {
+            _functionsByName.emplace(RooJSONFactoryWSTool::name(p), &p);
+         }
+      }
+   }
+   if (auto seq = n.find("distributions")) {
+      if (seq->is_seq()) {
+         _distributionsByName.reserve(seq->num_children());
+         for (const auto &p : seq->children()) {
+            _distributionsByName.emplace(RooJSONFactoryWSTool::name(p), &p);
+         }
+      }
+   }
+
    this->importDependants(n);
 
    if (auto paramPointsNode = n.find("parameter_points")) {
@@ -2239,6 +2262,8 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    _rootnodeInput = nullptr;
    _domains.reset();
+   _functionsByName.clear();
+   _distributionsByName.clear();
 }
 
 /**
