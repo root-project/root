@@ -28,20 +28,19 @@ def main():
     # Create an RDataFrame and use Define passing the C++ functor by name.
     # Note: the expression uses the helper column `rdfslot_` which is different
     # for each thread when implicit multi-threading is enabled.
-    rdf = ROOT.RDataFrame(100000)
-
-    # Enable implicit multi-threading for example (optional)
+    # Enable implicit multi-threading for example (optional).
+    # This must happen before constructing the RDataFrame.
     try:
         ROOT.EnableImplicitMT()
     except Exception:
         # If ROOT was built without implicit MT, continue single-threaded
         pass
 
+    rdf = ROOT.RDataFrame(100000)
     rdf_x = rdf.Define("x", "myfunctor(rdfslot_)")
     h = rdf_x.Histo1D(("h", "Gaussian per-slot test", 100, -5, 5), "x")
-    # Trigger event loop
-    h.Draw()
-    print("Histogram entries:", int(h.GetEntries()))
+    # Trigger event loop by accessing the filled histogram.
+    print("Histogram entries:", int(h.GetValue().GetEntries()))
 
 if __name__ == '__main__':
     main()
