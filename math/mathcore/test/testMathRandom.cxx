@@ -239,6 +239,16 @@ bool test5() {
       }
    }
 
+   // verify TRandom2 override returns raw integers (no double round-trip)
+   TRandom2 rng2(42);
+   for (int i = 0; i < 10000; i++) {
+      auto v2 = rng2();
+      if (v2 < TRandom::min() || v2 > TRandom::max()) {
+         std::cout << "TRandom2::operator() returned out-of-range value: " << v2 << std::endl;
+         return false;
+      }
+   }
+
    std::cout << "TRandom std interface: OK" << std::endl;
    return true;
 }
