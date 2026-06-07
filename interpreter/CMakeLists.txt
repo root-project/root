@@ -10,8 +10,9 @@ if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
 
-#--Set the LLVM version required for ROOT-----------------------------------------------------------
+#--Set the LLVM version required for ROOT to ensure API compatibility-------------------------------
 set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 20)
+set(ROOT_LLVM_VERSION_REQUIRED_MINOR 1)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -259,7 +260,10 @@ if(builtin_llvm)
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/cmake/modules")
   #---Set into parent scope LLVM_VERSION_MAJOR --------------------------------------------------------
   get_directory_property(_llvm_version_major DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION_MAJOR)
+  get_directory_property(_llvm_version_minor DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION_MINOR)
   set(LLVM_VERSION_MAJOR "${_llvm_version_major}" PARENT_SCOPE)
+  set(LLVM_VERSION_MINOR "${_llvm_version_minor}" PARENT_SCOPE)
+
   #---Forward LLVM_TARGET_TRIPLE for check-cling-------------------------------------------------------
   get_directory_property(LLVM_TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGET_TRIPLE)
   #---Get back the potentially updated LLVM_TARGETS_TO_BUILD (expanding all/host/Native)---------------
@@ -275,7 +279,7 @@ if(builtin_llvm)
     set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
   endif()
 else()
-  find_package(LLVM REQUIRED CONFIG)
+  find_package(LLVM ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.${ROOT_LLVM_VERSION_REQUIRED_MINOR} REQUIRED CONFIG)
   message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} in ${LLVM_CMAKE_DIR}")
 
   separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
@@ -321,10 +325,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.1(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.${ROOT_LLVM_VERSION_REQUIRED_MINOR}(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1.x")
+    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.${ROOT_LLVM_VERSION_REQUIRED_MINOR}.x or switch builtin_llvm=ON")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
@@ -389,6 +393,7 @@ else()
   # To simplify code, just forward that requirement to the rest of ROOT, for example to
   # construct the resource directory in core/clingutils.
   set(LLVM_VERSION_MAJOR ${ROOT_LLVM_VERSION_REQUIRED_MAJOR} PARENT_SCOPE)
+  set(LLVM_VERSION_MINOR ${ROOT_LLVM_VERSION_REQUIRED_MINOR} PARENT_SCOPE)
 
   # We are in the case of NOT builtin_llvm
   if (builtin_clang)
