@@ -438,6 +438,10 @@ jobs:
           #   is_special: true
           #   property: gpu
           #   extra-runs-on: gpu
+          - image: ubuntu2604
+            is_special: true
+            property: "system-llvm"
+            overrides: ["builtin_llvm=off"]
           # openSUSE Leap
           - image: opensuse16
             platform_config: opensuse16-march_native
