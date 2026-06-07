@@ -1,5 +1,5 @@
-% ROOT Version ?.?? Release Notes
-% 20??-??-??
+% ROOT Version 6.42 Release Notes
+% 2026-11-15
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -78,3 +78,9 @@ If the vectorized backend does not work for a given use case, **please report it
 ## Documentation and Examples
 
 ## Build, Configuration and Testing
+
+## Versions of built-in packages
+
+The version of the following packages has been updated:
+
+ - xrootd: 5.9.5
