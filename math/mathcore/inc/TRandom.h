@@ -62,10 +62,10 @@ public:
    using result_type = UInt_t;
    static constexpr result_type min() { return 0; }
    static constexpr result_type max() { return std::numeric_limits<UInt_t>::max(); }
-   // NOTE: Rndm() returns a double in ]0,1[, so converting back to UInt_t
-   // has a small precision loss. Subclasses with access to raw integer output
-   // could override this for better accuracy.
-   result_type operator()() { return static_cast<result_type>(Rndm() * (static_cast<double>(max()) + 1.0)); }
+   /// \note Rndm() returns a double in ]0,1[, so converting back to UInt_t
+   ///   has a small precision loss. Subclasses with access to raw integer output
+   ///   should override this for better accuracy.
+   virtual result_type operator()() { return static_cast<result_type>(Rndm() * (static_cast<double>(max()) + 1.0)); }
 
    ClassDefOverride(TRandom,3)  //Simple Random number generator (periodicity = 10**9)
 };
