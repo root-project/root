@@ -417,7 +417,7 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=20"]
           # Fedora Rawhide with Python freethreading+debug build
           - image: rawhide
-            python_venv: "/py-venv-3.14td/ROOT-CI"
+            python_venv: "/py-venv-3.15td/ROOT-CI"
             is_special: true
             property: "Fedora pydebug no GIL"
             overrides: ["CMAKE_CXX_STANDARD=23"]
