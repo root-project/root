@@ -78,3 +78,10 @@ If the vectorized backend does not work for a given use case, **please report it
 ## Documentation and Examples
 
 ## Build, Configuration and Testing
+
+## Versions of built-in packages
+
+The version of the following packages has been updated:
+
+ - xrootd: 6.0.3
+ 
