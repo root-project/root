@@ -146,6 +146,52 @@ Double_t TRandom3::Rndm()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Return a random 32-bit integer, advancing the generator state by one step.
+///
+/// Implements the std::UniformRandomBitGenerator interface. Returns the raw
+/// Mersenne Twister output directly, including zero, avoiding the round-trip
+/// through double.
+
+TRandom::result_type TRandom3::operator()()
+{
+   UInt_t y;
+
+   const Int_t  kM = 397;
+   const Int_t  kN = 624;
+   const UInt_t kTemperingMaskB =  0x9d2c5680;
+   const UInt_t kTemperingMaskC =  0xefc60000;
+   const UInt_t kUpperMask =       0x80000000;
+   const UInt_t kLowerMask =       0x7fffffff;
+   const UInt_t kMatrixA =         0x9908b0df;
+
+   if (fCount624 >= kN) {
+      Int_t i;
+
+      for (i = 0; i < kN-kM; i++) {
+         y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
+         fMt[i] = fMt[i+kM] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+      }
+
+      for (; i < kN-1; i++) {
+         y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
+         fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+      }
+
+      y = (fMt[kN-1] & kUpperMask) | (fMt[0] & kLowerMask);
+      fMt[kN-1] = fMt[kM-1] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+      fCount624 = 0;
+   }
+
+   y = fMt[fCount624++];
+   y ^=  (y >> 11);
+   y ^= ((y << 7 ) & kTemperingMaskB);
+   y ^= ((y << 15) & kTemperingMaskC);
+   y ^=  (y >> 18);
+
+   return y;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///  \brief Return an array of n random numbers uniformly distributed in ]0, 1[.
 
 void TRandom3::RndmArray(Int_t n, Float_t *array)

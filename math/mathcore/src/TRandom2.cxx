@@ -166,3 +166,17 @@ UInt_t TRandom2::GetSeed() const
 {
    return fSeed;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Return a random 32-bit integer, advancing the generator state by one step.
+///
+/// Implements the std::UniformRandomBitGenerator interface. Returns the raw
+/// Tausworthe XOR output directly, avoiding the round-trip through double.
+
+TRandom::result_type TRandom2::operator()()
+{
+   fSeed  = TAUSWORTHE(fSeed,  13, 19, 4294967294UL, 12);
+   fSeed1 = TAUSWORTHE(fSeed1,  2, 25, 4294967288UL,  4);
+   fSeed2 = TAUSWORTHE(fSeed2,  3, 11, 4294967280UL, 17);
+   return fSeed ^ fSeed1 ^ fSeed2;
+}
