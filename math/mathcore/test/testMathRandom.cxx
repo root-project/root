@@ -15,9 +15,11 @@
 //#include "TRandomNew3.h"
 
 #include "TStopwatch.h"
+#include <algorithm>
 #include <iostream>
-
+#include <numeric>
 #include <random>
+#include <type_traits>
 
 using namespace ROOT::Math;
 
@@ -193,21 +195,70 @@ bool test4() {
 }
 
 
+bool test5() {
+   std::cout << "\nTesting TRandom std::UniformRandomBitGenerator interface" << std::endl;
+
+   TRandom3 rng(42);
+
+   static_assert(std::is_same<TRandom::result_type, UInt_t>::value, "result_type must be UInt_t");
+
+   if (TRandom::min() != 0) {
+      std::cout << "TRandom::min() is not 0" << std::endl;
+      return false;
+   }
+   if (TRandom::max() != std::numeric_limits<UInt_t>::max()) {
+      std::cout << "TRandom::max() is wrong" << std::endl;
+      return false;
+   }
+
+   for (int i = 0; i < 10000; i++) {
+      auto v = rng();
+      if (v < TRandom::min() || v > TRandom::max()) {
+         std::cout << "operator() returned out-of-range value: " << v << std::endl;
+         return false;
+      }
+   }
+
+   std::vector<int> vec(10);
+   std::iota(vec.begin(), vec.end(), 1);
+   std::shuffle(vec.begin(), vec.end(), rng);
+   std::sort(vec.begin(), vec.end());
+   for (int i = 0; i < 10; i++) {
+      if (vec[i] != i + 1) {
+         std::cout << "std::shuffle corrupted the elements" << std::endl;
+         return false;
+      }
+   }
+
+   std::uniform_int_distribution<int> dist(0, 99);
+   for (int i = 0; i < 10000; i++) {
+      int v = dist(rng);
+      if (v < 0 || v > 99) {
+         std::cout << "std::uniform_int_distribution produced out-of-range value: " << v << std::endl;
+         return false;
+      }
+   }
+
+   std::cout << "TRandom std interface: OK" << std::endl;
+   return true;
+}
+
 bool testMathRandom() {
 
-   
+
    bool ret = true;
    std::cout << "testing generating " << NR << " numbers " << std::endl;
 
-   ret &= test1(); 
-   ret &= test2(); 
-   ret &= test3(); 
-   ret &= test4(); 
+   ret &= test1();
+   ret &= test2();
+   ret &= test3();
+   ret &= test4();
+   ret &= test5();
 
    if (!ret) Error("testMathRandom","Test Failed");
    else
       std::cout << "\nTestMathRandom:  OK \n";
-   return ret; 
+   return ret;
 }
 
 int main() {
