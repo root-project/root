@@ -1,3 +1,2 @@
 CMAKE_CXX_STANDARD=23
-builtin_llvm=OFF
 davix=OFF
