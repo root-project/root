@@ -17,6 +17,7 @@ builtin_png=ON
 builtin_tbb=ON
 builtin_tiff=ON
 builtin_vdt=ON
+builtin_xrootd=ON
 builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
