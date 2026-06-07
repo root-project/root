@@ -22,8 +22,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <functional>
 #include <cassert>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -708,8 +709,18 @@ namespace ROOT {
          } else
 #endif
          {
-            f->fType = TF1::EFType::kTemplScalar;
-            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+            if constexpr (std::is_invocable_r_v<double, Func, const double *, std::size_t, const double *, std::size_t>) {
+               Int_t npar = f->fNpar;
+               Int_t ndim = f->fNdim;
+               auto wrapper = [func, npar, ndim](const double *x, const double *p) -> double {
+                  return func(x, static_cast<std::size_t>(ndim), p, static_cast<std::size_t>(npar));
+               };
+               f->fType = TF1::EFType::kTemplScalar;
+               f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctorTempl<double>(wrapper)));
+            } else {
+               f->fType = TF1::EFType::kTemplScalar;
+               f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+            }
          }
 
          f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
@@ -726,8 +737,18 @@ namespace ROOT {
          } else
 #endif
          {
-            f->fType = TF1::EFType::kTemplScalar;
-            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+            if constexpr (std::is_invocable_r_v<double, Func, const double *, std::size_t, const double *, std::size_t>) {
+               Int_t npar = f->fNpar;
+               Int_t ndim = f->fNdim;
+               auto wrapper = [func, npar, ndim](const double *x, const double *p) -> double {
+                  return (*func)(x, static_cast<std::size_t>(ndim), p, static_cast<std::size_t>(npar));
+               };
+               f->fType = TF1::EFType::kTemplScalar;
+               f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctorTempl<double>(wrapper)));
+            } else {
+               f->fType = TF1::EFType::kTemplScalar;
+               f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+            }
          }
 
          f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
