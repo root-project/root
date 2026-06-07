@@ -26,6 +26,8 @@ The publications are available online at
 #include "TRandom2.h"
 #include "TUUID.h"
 
+#define TAUSWORTHE(s,a,b,c,d) (((s &c) <<d) & 0xffffffffUL ) ^ ((((s <<a) & 0xffffffffUL )^s) >>b)
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,17 +55,11 @@ TRandom2::~TRandom2()
 
 Double_t TRandom2::Rndm()
 {
-#define TAUSWORTHE(s,a,b,c,d) (((s &c) <<d) & 0xffffffffUL ) ^ ((((s <<a) & 0xffffffffUL )^s) >>b)
-
    // scale by 1./(Max<UINT> + 1) = 1./4294967296
    const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32)
 
-   fSeed  = TAUSWORTHE (fSeed, 13, 19, 4294967294UL, 12);
-   fSeed1 = TAUSWORTHE (fSeed1, 2, 25, 4294967288UL, 4);
-   fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
-
-   UInt_t iy = fSeed ^ fSeed1 ^ fSeed2;
-   if (iy) return  kScale*static_cast<Double_t>(iy);
+   UInt_t iy = operator()();
+   if (iy) return kScale * static_cast<Double_t>(iy);
    return Rndm();
 }
 
