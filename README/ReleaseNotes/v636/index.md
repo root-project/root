@@ -714,4 +714,16 @@ This release features a few fixes and minor documentation updates, most notably:
   * [[#22015](https://github.com/root-project/root/issues/22015)] - Non uniquess of the UUID inside TFile
   * [[#21880](https://github.com/root-project/root/issues/21880)] - [asimage] crash with DrawCircle
 
+## Release 6.36.14
+Published on June XX, 2026
+
+This patch brings a few fixes, that accumulated since the last release.
+
+
+### Versions of built-in packages
+
+The version of the following packages has been updated:
+
+ - xrootd: 5.9.5
+
 ## HEAD of the v6-36-00-patches branch
