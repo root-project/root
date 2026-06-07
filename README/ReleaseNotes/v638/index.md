@@ -594,3 +594,14 @@ This patch release brings a few fixes, that accumulated during the last month.
   * [[#21366](https://github.com/root-project/root/issues/21366)] - TGraph2D::Build function may leave the newly created object in inconsistent non-initialised state
   * [[#19329](https://github.com/root-project/root/issues/19329)] - h2root fragilities
   * [[#16673](https://github.com/root-project/root/issues/16673)] - [RF] Different behaviour of multi-range fit in RooAddPdf and RooProdPdf
+
+## Release 6.38.06
+Published on June 15, 2026
+
+Last patch release of the 6.38 STS series, now superseded by the superior 6.40, LTS.
+
+### Versions of built-in packages
+
+The version of the following packages has been updated:
+
+ - xrootd: 5.9.5
