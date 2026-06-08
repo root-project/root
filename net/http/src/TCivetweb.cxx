@@ -602,7 +602,7 @@ Int_t TCivetweb::ChangeNumActiveThrerads(int cnt)
 ///
 ///     thrds=N               - there N is number of threads used by the civetweb (default is 10)
 ///     top=name              - configure top name, visible in the web browser
-///     ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
+///     ssl_cert=filename     - SSL certificate, see docs/OpenSSL.md from civetweb
 ///     auth_file=filename    - authentication file name, created with htdigets utility
 ///     auth_domain=domain    - authentication domain
 ///     websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
@@ -684,7 +684,9 @@ Bool_t TCivetweb::Create(const char *args)
             if (adomain)
                auth_domain = adomain;
 
-            const char *sslc = url.GetValueFromOptions("ssl_cert");
+            const char *sslc = url.GetValueFromOptions("ssl_certificate");
+            if (!sslc)
+               sslc = url.GetValueFromOptions("ssl_cert");
             if (sslc)
                ssl_cert = sslc;
 
