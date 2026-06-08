@@ -516,6 +516,11 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
+   if (itemField->GetAlignment() > kMaxItemAlignment) {
+      throw RException(
+         R__FAIL(std::string("Unsupported vector item alignment: ") + std::to_string(itemField->GetAlignment())));
+   }
+
    if (emulatedFromType && !emulatedFromType->empty())
       fTraits |= kTraitEmulatedField;
 
