@@ -452,18 +452,6 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
    const auto &srcColumns = srcField.GetLogicalColumnIds();
    const auto &dstColumns = dstField.GetLogicalColumnIds();
 
-   // Fields must have the same number of columns
-   const auto srcNCols = srcColumns.size();
-   const auto dstNCols = dstColumns.size();
-   if (srcNCols != dstNCols) {
-      std::stringstream ss;
-      ss << "Field `" << srcField.GetFieldName()
-         << "` has a different number of columns than previously-seen field with the same name (old: " << dstNCols
-         << ", new: " << srcNCols << ")";
-      errors.push_back(ss.str());
-      return;
-   }
-
    // Fields must have the same cardinality
    const std::uint32_t srcColCardinality = srcField.GetColumnCardinality();
    const std::uint32_t dstColCardinality = dstField.GetColumnCardinality();
@@ -479,8 +467,8 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
    if (srcColCardinality == 0)
       return; // no columns to match
 
-   const auto srcNColReprs = srcNCols / srcColCardinality;
-   const auto dstNColReprs = dstNCols / dstColCardinality;
+   const auto srcNColReprs = srcColumns.size() / srcColCardinality;
+   const auto dstNColReprs = dstColumns.size() / dstColCardinality;
 
    // For each column representation of the source, check if it matches one in the descriptor.
    // If so, and if it doesn't match the destination's repr index, add a mapping for it.
