@@ -18,58 +18,70 @@
 #include <TText.h>
 
 #include <string>
-#include <cstdlib>     // std::getenv
-#include <cstring>     // std::strcmp
-#include <algorithm>   // std::replace
-#include <cstdio>      // std::printf
+#include <cstdlib>   // std::getenv
+#include <cstring>   // std::strcmp
+#include <algorithm> // std::replace
+#include <cstdio>    // std::printf
 
 namespace {
-   inline bool IsWindows() { return std::strcmp(gSystem->GetName(), "WinNT") == 0; }
-   inline bool IsMac()     { return std::strcmp(gSystem->GetName(), "Macosx") == 0; }
+inline bool IsWindows()
+{
+   return std::strcmp(gSystem->GetName(), "WinNT") == 0;
+}
+inline bool IsMac()
+{
+   return std::strcmp(gSystem->GetName(), "Macosx") == 0;
+}
 
-   // Minimal, pragmatic shell quoting for filenames/paths.
-   // Good enough for normal paths; not a full shell-escaping library.
-   std::string QuoteForShell(const std::string& s)
-   {
-      if (s.empty()) return "''";
+// Minimal, pragmatic shell quoting for filenames/paths.
+// Good enough for normal paths; not a full shell-escaping library.
+std::string QuoteForShell(const std::string &s)
+{
+   if (s.empty())
+      return "''";
 
-      if (IsWindows()) {
-         // Wrap in double quotes; replace embedded " with ' (rare in paths)
-         std::string q = s;
-         std::replace(q.begin(), q.end(), '"', '\'');
-         return "\"" + q + "\"";
-      } else {
-         // POSIX: single-quote, escape internal single quotes with '"'"'
-         std::string out; out.reserve(s.size() + 2);
-         out.push_back('\'');
-         for (char c : s) {
-            if (c == '\'') out += "'\"'\"'";
-            else out.push_back(c);
-         }
-         out.push_back('\'');
-         return out;
+   if (IsWindows()) {
+      // Wrap in double quotes; replace embedded " with ' (rare in paths)
+      std::string q = s;
+      std::replace(q.begin(), q.end(), '"', '\'');
+      return "\"" + q + "\"";
+   } else {
+      // POSIX: single-quote, escape internal single quotes with '"'"'
+      std::string out;
+      out.reserve(s.size() + 2);
+      out.push_back('\'');
+      for (char c : s) {
+         if (c == '\'')
+            out += "'\"'\"'";
+         else
+            out.push_back(c);
       }
-   }
-
-   std::string GetEnvOrEmpty(const char* name)
-   {
-      if (const char* v = std::getenv(name)) return std::string(v);
-      return {};
-   }
-
-   // Build a command that (on POSIX) returns immediately to keep the ROOT prompt usable.
-   std::string MaybeBackground(std::string cmd)
-   {
-      if (!IsWindows()) cmd += " &";
-      return cmd;
+      out.push_back('\'');
+      return out;
    }
 }
 
+std::string GetEnvOrEmpty(const char *name)
+{
+   if (const char *v = std::getenv(name))
+      return std::string(v);
+   return {};
+}
+
+// Build a command that (on POSIX) returns immediately to keep the ROOT prompt usable.
+std::string MaybeBackground(std::string cmd)
+{
+   if (!IsWindows())
+      cmd += " &";
+   return cmd;
+}
+} // namespace
+
 //______________________________________________________________________________
 // Open a file in the user's editor, with robust cross-platform fallbacks.
-void edit(const char* file)
+void edit(const char *file)
 {
-   const std::string f  = (file ? file : "");
+   const std::string f = (file ? file : "");
    const std::string qf = QuoteForShell(f);
    const std::string editor = GetEnvOrEmpty("EDITOR");
 
@@ -92,8 +104,8 @@ void edit(const char* file)
       if (!editor.empty())
          cmd = MaybeBackground(editor + " " + qf);
       else
-         cmd = MaybeBackground("(command -v xdg-open >/dev/null 2>&1 && xdg-open " + qf +
-                               ") || (xterm -e vi " + qf + ")");
+         cmd =
+            MaybeBackground("(command -v xdg-open >/dev/null 2>&1 && xdg-open " + qf + ") || (xterm -e vi " + qf + ")");
    }
 
    gSystem->Exec(cmd.c_str());
@@ -101,7 +113,7 @@ void edit(const char* file)
 
 //______________________________________________________________________________
 // List a directory in a compact, friendly way.
-void ls(const char* path = nullptr)
+void ls(const char *path = nullptr)
 {
    std::string cmd = IsWindows() ? "dir /w" : "ls";
    if (path && *path) {
@@ -113,7 +125,7 @@ void ls(const char* path = nullptr)
 
 //______________________________________________________________________________
 // More verbose directory view (traditional Unix-y default).
-void dir(const char* path = nullptr)
+void dir(const char *path = nullptr)
 {
    std::string cmd = IsWindows() ? "dir" : "ls -alF";
    if (path && *path) {
@@ -125,18 +137,19 @@ void dir(const char* path = nullptr)
 
 //______________________________________________________________________________
 // Return current working directory (keeps macro API stable: returns const char*).
-const char* pwd()
+const char *pwd()
 {
-   static std::string wd;          // static so c_str() stays valid after return
+   static std::string wd; // static so c_str() stays valid after return
    wd = gSystem->WorkingDirectory();
    return wd.c_str();
 }
 
 //______________________________________________________________________________
 // Change directory; if no path is given, just report where we are.
-const char* cd(const char* path = nullptr)
+const char *cd(const char *path = nullptr)
 {
-   if (path && *path) gSystem->ChangeDirectory(path);
+   if (path && *path)
+      gSystem->ChangeDirectory(path);
    return pwd();
 }
 
@@ -150,10 +163,11 @@ TCanvas *bench = nullptr;
 
 //______________________________________________________________________________
 // Colorize a macro name in the summary before/after execution and run it.
-void bexec2(const char* macro)
+void bexec2(const char *macro)
 {
    std::printf("in bexec dir=%s\n", pwd());
-   if (gROOT->IsBatch()) std::printf("Processing benchmark: %s\n", macro);
+   if (gROOT->IsBatch())
+      std::printf("Processing benchmark: %s\n", macro);
 
    if (!bench) {
       // If bench isn't prepared yet, just run the macro.
@@ -161,17 +175,21 @@ void bexec2(const char* macro)
       return;
    }
 
-   auto* summary = dynamic_cast<TPaveText*>(bench->GetPrimitive("TPave"));
+   auto *summary = dynamic_cast<TPaveText *>(bench->GetPrimitive("TPave"));
    if (summary) {
-      if (auto* tmacro = summary->GetLineWith(macro)) tmacro->SetTextColor(4);
-      bench->Modified(); bench->Update();
+      if (auto *tmacro = summary->GetLineWith(macro))
+         tmacro->SetTextColor(4);
+      bench->Modified();
+      bench->Update();
    }
 
    gROOT->Macro(macro);
 
-   auto* summary2 = dynamic_cast<TPaveText*>(bench->GetPrimitive("TPave"));
+   auto *summary2 = dynamic_cast<TPaveText *>(bench->GetPrimitive("TPave"));
    if (summary2) {
-      if (auto* tmacro2 = summary2->GetLineWith(macro)) tmacro2->SetTextColor(2);
-      bench->Modified(); bench->Update();
+      if (auto *tmacro2 = summary2->GetLineWith(macro))
+         tmacro2->SetTextColor(2);
+      bench->Modified();
+      bench->Update();
    }
 }
