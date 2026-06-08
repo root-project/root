@@ -22,8 +22,8 @@
 #include "TVirtualPS.h"
 #include "TText.h"
 
-#include "../../../graf2d/mathtext/inc/mathtext.h"
-#include "../../../graf2d/mathtext/inc/mathrender.h"
+#include "../../../builtins/mathtext/inc/mathtext.h"
+#include "../../../builtins/mathtext/inc/mathrender.h"
 
 /** \class TMathText
 \ingroup BasicGraphics
