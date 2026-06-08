@@ -628,7 +628,7 @@ TH1::TH1()
    // (see `_TCollection_Add` pythonization).  To ensure the Python bindings
    // get the correct ownership signal, set the ownership on TH1::fFunctions.
    // Although, in reality, TH1's destructor actually handles ownership, this
-   // solution still works, sinde the destructor removes all entries before
+   // solution still works, since the destructor removes all entries before
    // deleting the collection.
    fFunctions->SetOwner(true);
    fNcells        = 0;
@@ -817,7 +817,7 @@ void TH1::Build()
    // (see `_TCollection_Add` pythonization).  To ensure the Python bindings
    // get the correct ownership signal, set the ownership on TH1::fFunctions.
    // Although, in reality, TH1's destructor actually handles ownership, this
-   // solution still works, sinde the destructor removes all entries before
+   // solution still works, since the destructor removes all entries before
    // deleting the collection.
    fFunctions->SetOwner(true);
 
