@@ -57,6 +57,7 @@
 using ROOT::EExtraTypeInfoIds;
 using ROOT::RNTupleLocalIndex;
 using ROOT::RNTupleLocator;
+using ROOT::RNTupleLocatorMulti;
 using ROOT::RNTupleLocatorObject64;
 using ROOT::Internal::RColumnIndex;
 using RClusterDescriptor = ROOT::RClusterDescriptor;
