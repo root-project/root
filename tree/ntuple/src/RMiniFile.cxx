@@ -615,7 +615,7 @@ struct RTFileControlBlock {
 /// like a TBasket.
 /// NOTE: out of anonymous namespace because otherwise ClassDefInline fails to compile
 /// on some platforms.
-class RKeyBlob : public TKey {
+class RKeyBlob : public TKey { // NOLINT(misc-use-internal-linkage)
 public:
    RKeyBlob() = default;
 
