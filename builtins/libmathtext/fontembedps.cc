@@ -31,6 +31,26 @@
 #include <byteswap.h>
 #endif
 
+#ifdef _WIN32
+// https://stackoverflow.com/questions/52988769/writing-own-memmem-for-windows
+void *memmem(const void *haystack, size_t haystack_len, 
+    const void * const needle, const size_t needle_len)
+{
+    if (haystack == nullptr || haystack_len == 0) return nullptr;
+    if (needle == nullptr || needle_len == 0) return (void *)haystack;
+    if (haystack_len < needle_len) return nullptr;
+    
+    for (const char *h = (const char *)haystack;
+            haystack_len >= needle_len;
+            ++h, --haystack_len) {
+        if (!memcmp(h, needle, needle_len)) {
+            return (void *)h;
+        }
+    }
+    return nullptr;
+}
+#endif
+
 // References:
 //
 // Adobe Systems, Inc., PostScript language Document Structuring
