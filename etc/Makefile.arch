@@ -432,3 +432,5 @@ ifneq ($(findstring g++, $(CXX)),)
 GCC_MAJOR := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
 GCC_MINOR := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
 endif
+
+(warning The use of Makefiles is deprecated in ROOT 6.42 and will be removed in a future release.)
