@@ -30,6 +30,13 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+if(ssl)
+  find_program(OPENSSL_EXECUTABLE openssl)
+  if(OPENSSL_EXECUTABLE)
+    ROOT_ADD_GTEST(testHttpsServer test_ssl_server.cxx LIBRARIES RHTTP RHTTPSniff Hist)
+  endif()
+endif()
+
 # only newer curl support websockets - so test version
 # curl introduce support from 8.11 but it works reliably only with 8.18
 if(CURL_CLI_OUTPUT MATCHES "curl ([0-9]+\\.[0-9]+\\.[0-9]+)")
