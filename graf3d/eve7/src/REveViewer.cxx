@@ -136,6 +136,7 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["AxesType"] = fAxesType;
    j["BlackBg"] = fBlackBackground;
    j["fCameraId"] = fCamera ? fCamera->GetElementId() : 0;
+   j["fSyncCam"] = fSyncCamera;
 
    j["UT_PostStream"] = "UT_EveViewerUpdate";
 

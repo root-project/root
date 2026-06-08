@@ -328,8 +328,6 @@ sap.ui.define([
 
          // camera type selector
          this.makeCameraTypeSelector(el);
-         // save camera button
-         // this.makeSaveCameraButton(el);
       },
 
       buildREveDataCollectionSetter : function(el)
@@ -849,67 +847,8 @@ sap.ui.define([
          }
          
          return cameras;
-      },
+      }
       
-      /*
-      makeSaveCameraButton: function(viewer) {
-         let gedFrame = this.getView().byId("GED");
-         let gcm = this;
-         
-         let button = new Button({
-            text: "Save Camera Matrix",
-            width: "50%",
-            press: function() {
-               gcm.onSaveCameraMatrix(viewer);
-            }
-         });
-         
-         gedFrame.addContent(button);
-      },
-      
-      onSaveCameraMatrix: function(viewer) {
-         let view = this.getView();
-         
-         if (!view || !view.oController) {
-            sap.m.MessageToast.show("Controller not found");
-            console.error("view.oController not available");
-            return;
-         }
-         
-         let glViewer = view.oController.editorElement.ca.oController.viewer;
-         
-         if (!glViewer || !glViewer.controls) {
-            sap.m.MessageToast.show("Camera controls not found");
-            console.error("viewer.controls not available");
-            return;
-         }
-         
-         let controls = glViewer.controls;
-         
-         if (!controls) {
-            sap.m.MessageToast.show("Camera control not available");
-            console.error("controls not available");
-            return;
-         }
-
-         let camTransMtx = controls.getCamTransMtx();
-         
-         if (!camTransMtx || camTransMtx.length !== 16) {
-            sap.m.MessageToast.show("Camera transform not available!");
-            return;
-         }
-
-         let jsonStr = JSON.stringify(camTransMtx);
-         let mir = 'SetCamTransMtx("' + jsonStr + '")';
-         
-         console.log("Sending MIR:", mir);
-         
-         this.mgr.SendMIR(mir, viewer.fCameraId, "ROOT::Experimental::REveCamera");
-         
-         sap.m.MessageToast.show("Camera matrix saved!");
-         console.log("Saved camera matrix:", camTransMtx);
-
-      }*/
    });
       
    GedController.canEditClass = function(typename) {
