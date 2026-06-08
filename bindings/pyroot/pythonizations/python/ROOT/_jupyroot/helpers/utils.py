@@ -45,80 +45,64 @@ _canvasHandles = {}
 
 _visualObjects = []
 
-_jsMagicHighlight = """
-Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
-console.log("JupyROOT - %%cpp magic configured");
-"""
 
 _jsNotDrawableClassesPatterns = ["TEve*"]
 
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
-_jsFixedSizeDiv = """
-<div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
-</div>
-"""
 
-_jsFullWidthDiv = """
-<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
+_jsFixedSizeDiv = """<div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
+</div>"""
+
+
+_jsFullWidthDiv = """<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
    <div id="{jsDivId}">
    </div>
-</div>
-"""
+</div>"""
 
-_jsDrawJsonCode = """
-Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
+
+_jsDrawJsonCode = """Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
    const obj = Core.parse(json);
    Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
-}});
-"""
-
-_jsBrowseUrlCode = """
-Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile('{fileUrl}'));
-"""
+}});"""
 
 
-_jsBrowseFileCode = """
-const binaryString = atob('{fileBase64}');
+_jsBrowseUrlCode = """Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile('{fileUrl}'));"""
+
+
+_jsBrowseFileCode = """const binaryString = atob('{fileBase64}');
 const bytes = new Uint8Array(binaryString.length);
 for (let i = 0; i < binaryString.length; i++)
    bytes[i] = binaryString.charCodeAt(i);
-Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
-"""
+Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));"""
 
-_jsCode = """
-{jsDivHtml}
-<script>
-   function process_{jsDivId}() {{
-      function execCode(Core) {{
-         Core.settings.HandleKeys = false;
-         {jsDrawCode}
-      }}
-      const servers = ['/static/', 'https://root.cern/js/7.11.0/', 'https://jsroot.gsi.de/7.11.0/'],
-            path = 'build/jsroot';
-      if (typeof JSROOT !== 'undefined')
-         execCode(JSROOT);
-      else if (typeof requirejs !== 'undefined') {{
-         servers.forEach((s,i) => {{ servers[i] = s + path; }});
-         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  execCode);
-      }} else {{
-         const config = document.getElementById('jupyter-config-data');
-         if (config)
-            servers[0] = (JSON.parse(config.innerHTML || '{{}}')?.baseUrl || '/') + 'static/';
-         else
-            servers.shift();
-         function loadJsroot() {{
-            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => execCode(JSROOT));
-         }}
-         loadJsroot();
-      }}
+
+_jsCode = """function execCode_{jsDivId}(Core) {{
+   Core.settings.HandleKeys = false;
+   {jsDrawCode}
+}}
+const servers = ['/static/', 'https://root.cern/js/7.11.0/', 'https://jsroot.gsi.de/7.11.0/'],
+      path = 'build/jsroot';
+if (typeof JSROOT !== 'undefined')
+   execCode_{jsDivId}(JSROOT);
+else if (typeof requirejs !== 'undefined') {{
+   servers.forEach((s,i) => {{ servers[i] = s + path; }});
+   requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  execCode_{jsDivId});
+}} else {{
+   const config = document.getElementById('jupyter-config-data');
+   if (config)
+      servers[0] = (JSON.parse(config.innerHTML || '{{}}')?.baseUrl || '/') + 'static/';
+   else
+      servers.shift();
+   function loadJsroot_{jsDivId}() {{
+      return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot_{jsDivId}).then(() => execCode_{jsDivId}(JSROOT));
    }}
-   process_{jsDivId}();
-</script>
-"""
+   loadJsroot_{jsDivId}();
+}}"""
 
-TBufferJSONErrorMessage = "The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
+
+TBufferJSONErrorMessage = "The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Check your ROOT installation and libRIO library"
 
 
 def TBufferJSONAvailable():
@@ -508,9 +492,7 @@ class NotebookDrawerUrl:
     def __init__(self, theUrl):
        self.drawUrl = theUrl
 
-    def _getUrlJsCode(self):
-
-        id = _getUniqueDivId()
+    def _getUrlJsCode(self, id):
 
         drawHtml = _jsFullWidthDiv.format(
             jsDivId=id,
@@ -531,7 +513,8 @@ class NotebookDrawerUrl:
         return thisJsCode
 
     def Draw(self, displayFunction):
-        code = self._getUrlJsCode()
+        id = _getUniqueDivId()
+        code = self._getUrlJsCode(id)
         displayFunction(display.HTML(code))
 
 
@@ -545,7 +528,14 @@ class NotebookDrawerFile:
        self.drawFileName = theFileName
        self.drawForce = theForce
 
-    def _getFileJsCode(self):
+    def _getFileHtmlCode(self, id):
+        drawHtml = _jsFullWidthDiv.format(
+            jsDivId=id,
+            jsCanvasHeight=_jsCanvasHeight
+        )
+        return drawHtml
+
+    def _getFileJsCode(self, id):
         base64 = ""
 
         with ROOT.TDirectory.TContext(), ROOT.TFile.Open(self.drawFileName) as f:
@@ -570,13 +560,6 @@ class NotebookDrawerFile:
 
             base64 = ROOT.TBase64.Encode(addrc, sz)
 
-        id = _getUniqueDivId()
-
-        drawHtml = _jsFullWidthDiv.format(
-            jsDivId=id,
-            jsCanvasHeight=_jsCanvasHeight
-        )
-
         browseFileCode = _jsBrowseFileCode.format(
             jsDivId=id,
             fileBase64=base64
@@ -584,16 +567,17 @@ class NotebookDrawerFile:
 
         thisJsCode = _jsCode.format(
             jsDivId=id,
-            jsDivHtml=drawHtml,
             jsDrawCode=browseFileCode
         )
 
         return thisJsCode
 
     def Draw(self, displayFunction):
-        code = self._getFileJsCode()
-        displayFunction(display.HTML(code))
-
+        id = _getUniqueDivId()
+        html = self._getFileHtmlCode(id)
+        code = self._getFileJsCode(id)
+        displayFunction(display.HTML(html))
+        displayFunction(display.Javascript(code))
 
 
 class NotebookDrawerJson:
@@ -622,9 +606,17 @@ class NotebookDrawerJson:
     def _getJsOptions(self):
         return ""
 
-    def _getJsCode(self):
+    def _getHtmlCode(self, id):
         width = self._getWidth()
         height = self._getHeight()
+        drawHtml = _jsFixedSizeDiv.format(
+            jsDivId=id,
+            jsCanvasWidth=width,
+            jsCanvasHeight=height
+        )
+        return drawHtml
+
+    def _getJsCode(self, id):
         json = self._getJson()
         options = self._getJsOptions()
 
@@ -632,14 +624,6 @@ class NotebookDrawerJson:
             return f"Class {self.drawObject.ClassName()} not supported yet"
 
         zip = ROOT.TBufferJSON.zipJSON(json)
-
-        id = _getUniqueDivId()
-
-        drawHtml = _jsFixedSizeDiv.format(
-            jsDivId=id,
-            jsCanvasWidth=width,
-            jsCanvasHeight=height
-        )
 
         drawJsonCode = _jsDrawJsonCode.format(
             jsDivId=id,
@@ -650,9 +634,9 @@ class NotebookDrawerJson:
 
         thisJsCode = _jsCode.format(
             jsDivId=id,
-            jsDivHtml=drawHtml,
             jsDrawCode=drawJsonCode
         )
+
         return thisJsCode
 
     def _getCanvas(self):
@@ -675,9 +659,12 @@ class NotebookDrawerJson:
 
     def Draw(self, displayFunction):
         global _enableJSVis
+        id = _getUniqueDivId()
         if _enableJSVis and self._canJsDisplay():
-            code = self._getJsCode()
-            displayFunction(display.HTML(code))
+            html = self._getHtmlCode(id)
+            code = self._getJsCode(id)
+            displayFunction(display.HTML(html))
+            displayFunction(display.Javascript(code))
         elif self._canPngDisplay():
             displayFunction(self._getPngImage())
         else:
@@ -718,23 +705,42 @@ class NotebookDrawerCanvBase(NotebookDrawerJson):
 
     def Draw(self, displayFunction):
         global _enableJSVis, _canvasHandles
-        code = ""
-        if _enableJSVis and self._canJsDisplay():
-            code = display.HTML(self._getJsCode())
-        elif self._canPngDisplay():
-            code = self._getPngImage()
-        else:
-            code = display.HTML(f"Neither JSROOT nor plain drawing of {self.drawObject.ClassName()} is implemented")
 
+        html = ""
+        code = ""
+        handle = None
         name = self._getCanvasId()
         updated = self._getUpdated()
-        if updated and name and (name in _canvasHandles):
-            _canvasHandles[name].update(code)
-        elif name:
-            _canvasHandles[name] = displayFunction(code, display_id=True)
-        else:
-            displayFunction(code)
+        id = _getUniqueDivId()
 
+        if updated and name and (name in _canvasHandles):
+            handle = _canvasHandles[name]
+            id = handle["divId"]
+
+        if _enableJSVis and self._canJsDisplay():
+            html = display.HTML(self._getHtmlCode(id))
+            code = display.Javascript(self._getJsCode(id))
+        elif self._canPngDisplay():
+            html = self._getPngImage()
+        else:
+            html = display.HTML(f"Neither JSROOT nor plain drawing of {self.drawObject.ClassName()} is implemented")
+
+        if handle:
+            handle["htmlOutput"].update(html)
+            if handle["codeOutput"]:
+                handle["codeOutput"].update(code)
+            elif code:
+                handle["codeOutput"] = displayFunction(code)
+        else:
+            html = displayFunction(html, display_id=True)
+            if code:
+               code = displayFunction(code)
+            if name:
+                _canvasHandles[name] = {
+                    "divId": id,
+                    "htmlOutput": html,
+                    "codeOutput": code,
+                }
 
 
 class NotebookDrawerTCanvas(NotebookDrawerCanvBase):
@@ -892,15 +898,8 @@ def enhanceROOTModule():
     ROOT.enableJSVis = enableJSVis
 
 
-def enableCppHighlighting():
-    ipDispJs = display.display_javascript
-    # Define highlight mode for %%cpp magic
-    ipDispJs(_jsMagicHighlight.format(cppMIME=cppMIME), raw=True)
-
-
 def iPythonize():
     setStyle()
     initializeJSVis()
     loadMagicsAndCapturers()
-    # enableCppHighlighting()
     enhanceROOTModule()
