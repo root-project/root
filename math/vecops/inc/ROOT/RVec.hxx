@@ -418,13 +418,13 @@ void R__CLING_PTRCHECK(off) SmallVectorTemplateBase<T, TriviallyCopyable>::grow(
       destroy_range(this->begin(), this->end());
 
       // If this wasn't grown from the inline copy, deallocate the old space.
-      #if _WIN32
-         if (!this->isSmall())
-            ::operator delete(this->begin());
-      #else
-         if (!this->isSmall())
-            free(this->begin());
-      #endif
+#ifdef _WIN32
+      if (!this->isSmall())
+         ::operator delete(this->begin());
+#else
+      if (!this->isSmall())
+         free(this->begin());
+#endif
    }
 
    this->fBeginX = NewElts;
