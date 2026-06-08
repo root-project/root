@@ -1066,13 +1066,13 @@ RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
    if (!RHS.isSmall()) {
       if (this->Owns()) {
          this->destroy_range(this->begin(), this->end());
-         #if _WIN32
-            if (!this->isSmall())
-               ::operator delete(this->begin());
-         #else
-            if (!this->isSmall())
-               free(this->begin());
-         #endif
+#ifdef _WIN32
+         if (!this->isSmall())
+            ::operator delete(this->begin());
+#else
+         if (!this->isSmall())
+            free(this->begin());
+#endif
       }
       this->fBeginX = RHS.fBeginX;
       this->fSize = RHS.fSize;
