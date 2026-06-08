@@ -119,6 +119,10 @@ sap.ui.define([
          this.updateViewerAttributes();
 
          this.controller.glViewerInitDone();
+
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         if (eveView.fSyncCam)
+           this.syncCamTransTimer();
       }
 
       cleanup() {
@@ -460,22 +464,34 @@ sap.ui.define([
          this.controls = new RC.REveCameraControls(this.camera, this.canvas.canvasDOM);
          this.controls.addEventListener('change', this.render.bind(this));
 
-         // send to server when the client finishes camera setting
-         // use throttle
+         // sync camera trans to server after camera change have ended
+         this.controls.addEventListener('end', function() {
+            glc.controlsChanged = true;
+         });
 
-         // Throttle helper (define once at module level)
-         function throttle(func, limit) {
-            let inThrottle;
-            return function (...args) {
-               if (!inThrottle) {
-                  func.apply(this, args);
-                  inThrottle = true;
-                  setTimeout(() => inThrottle = false, limit);
-               }
-            };
+         // camera center marker
+         let col = new RC.Color(0.5, 0, 0);
+         const msize = this.RQ_SSAA * 8; // marker size
+         let sm = new RC.ZSpriteBasicMaterial({
+            SpriteMode: RC.SPRITE_SPACE_SCREEN, SpriteSize: [msize, msize],
+            color: this.ColorBlack,
+            emissive: col,
+            diffuse: col.clone().multiplyScalar(0.5)
          }
-         this.controls.addEventListener('end', throttle(() => {
+         );
+         let s = new RC.ZSprite(null, sm);
+         s.instanced = false;
+         s.visible = false;
+         this.scene.add(s);
+         this.centerMarker = s;
 
+         // This will also call render().
+         this.positionCameraAndLights();
+      }
+
+      syncCamTransTimer() {
+         let glc = this;
+         if (glc?.controlsChanged === true) {
             let equal = true;
             let a = glc.controls.getCamTrans().elements;
             let eveView = glc.controller.mgr.GetElement(this.controller.eveViewerId);
@@ -504,36 +520,14 @@ sap.ui.define([
                }
 
                // set trans matrix and zoom as array of 17 floats
-               if (eveView && eveView.fCameraId) {
-                  let sz = glc.camera.isOrthographicCamera === true ? glc.camera.zoom : 1;
-                  let fcall = "SetCamTransMtxStr(\"";
-                  fcall += b.join(",") + ","+ sz + "\")";
-                  glc.controller.mgr.SendMIR(fcall, eveView.fCameraId,
-                     "ROOT::Experimental::REveCamera");
-               }
+               let sz = glc.camera.isOrthographicCamera === true ? glc.camera.zoom : 1;
+               let fcall = "SetCamTransMtxStr(\"";
+               fcall += b.join(",") + "," + sz + "\")";
+               glc.controller.mgr.SendMIR(fcall, eveView.fCameraId,"ROOT::Experimental::REveCamera");
+               glc.controlsChanged = false;
             }
-
-         }, 200));
-         //});
-
-         // camera center marker
-         let col = new RC.Color(0.5, 0, 0);
-         const msize = this.RQ_SSAA * 8; // marker size
-         let sm = new RC.ZSpriteBasicMaterial({
-            SpriteMode: RC.SPRITE_SPACE_SCREEN, SpriteSize: [msize, msize],
-            color: this.ColorBlack,
-            emissive: col,
-            diffuse: col.clone().multiplyScalar(0.5)
          }
-         );
-         let s = new RC.ZSprite(null, sm);
-         s.instanced = false;
-         s.visible = false;
-         this.scene.add(s);
-         this.centerMarker = s;
-
-         // This will also call render().
-         this.positionCameraAndLights();
+         setTimeout(this.syncCamTransTimer.bind(this), 5000);
       }
 
       recalcSceneBBox()
@@ -624,14 +618,14 @@ sap.ui.define([
          if (camera.fInitialized) {
             // Apply camTrans after bbox setup
             this.controls.setCamTrans(camera.camTrans.slice());
-
-            if (this.camera.isOrthographicCamera) {
-               this.camera.zoom = camera.fZoom;
-               this.camera.updateProjectionMatrix();
-               this.controls.zoomChanged = true;
-               this.controls.update();
-            }
          }
+
+         if (this.camera.isOrthographicCamera && camera.fZoom !== 1) {
+            this.camera.zoom = camera.fZoom;
+            this.controls.zoomChanged = true;
+            this.camera.updateProjectionMatrix();
+         }
+
          this.controls.update();
 
          this.centerMarker.visible = false;
