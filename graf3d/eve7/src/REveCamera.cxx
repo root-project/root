@@ -84,6 +84,9 @@ void REveCamera::SetCamTransMtx(const std::vector<Double_t> &arr)
    }
 }
 
+// Set translation matrix with an array of 17 floats
+// The first 16 floats are 4x4 matrix element
+// The 17th value is setting the zoom value in orthographic type
 void REveCamera::SetCamTransMtxStr(const char *ins)
 {
    std::stringstream ss(ins);
@@ -98,7 +101,6 @@ void REveCamera::SetCamTransMtxStr(const char *ins)
    fCamTrans.SetFromArray(arr.data());
 
    fInitialized = true;
-   // fCamTrans.Print();
 
    StampObjProps();
    SetCamTransMtx(arr);
@@ -107,7 +109,6 @@ void REveCamera::SetCamTransMtxStr(const char *ins)
 void REveCamera::SetOrthoZoom(float zoom)
 {
    fOrthoZoom = zoom;
-   fInitialized = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

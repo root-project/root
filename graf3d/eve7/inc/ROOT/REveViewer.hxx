@@ -67,6 +67,8 @@ private:
 
    ROOT::Experimental::REveCamera* CreateCamera(ECameraType type);
 
+   bool fSyncCamera{true};
+
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
    ~REveViewer() override;
@@ -81,6 +83,9 @@ public:
    REveCamera* GetCamera() const { return fCamera;}
    void SetCameraByElementId(ElementId_t cameraId); // set camera via ElementID
    void SetCameraType(REveCamera::ECameraType type);
+
+   void SyncCamera(bool s) {fSyncCamera = s;}
+   bool GetSyncCamera() const {return fSyncCamera;}
 
    void SetAxesType(int);
    void SetBlackBackground(bool);
