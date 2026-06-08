@@ -402,7 +402,7 @@ TEST(RNTuple, SerializeLocator)
    // Multi locator round-trip with 32-bit nBytesOnStorage
    locator = RNTupleLocator{};
    locator.SetType(RNTupleLocator::kTypeMulti);
-   locator.SetPosition(RNTupleLocatorObject64{42U});
+   locator.SetPosition(RNTupleLocatorMulti{7, 1024});
    locator.SetNBytesOnStorage(1024U);
    locator.SetReserved(0);
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
@@ -411,7 +411,9 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeMulti);
    EXPECT_EQ(locator.GetNBytesOnStorage(), 1024U);
    EXPECT_EQ(locator.GetReserved(), 0);
-   EXPECT_EQ(42U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
+   auto multi = locator.GetPosition<RNTupleLocatorMulti>();
+   EXPECT_EQ(7U, multi.GetObjectId());
+   EXPECT_EQ(1024U, multi.GetOffset());
 
    // Multi locator round-trip with 64-bit nBytesOnStorage and reserved bit
    locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
@@ -422,7 +424,9 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeMulti);
    EXPECT_EQ(locator.GetNBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
    EXPECT_EQ(locator.GetReserved(), 1);
-   EXPECT_EQ(42U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
+   multi = locator.GetPosition<RNTupleLocatorMulti>();
+   EXPECT_EQ(7U, multi.GetObjectId());
+   EXPECT_EQ(1024U, multi.GetOffset());
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
 #ifndef R__BYTESWAP
@@ -433,6 +437,101 @@ TEST(RNTuple, SerializeLocator)
 #endif
    RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeUnknown);
+}
+
+TEST(RNTuple, RNTupleLocatorMultiPackUnpack)
+{
+   // Default-constructed: all zero
+   RNTupleLocatorMulti zero;
+   EXPECT_EQ(0U, zero.GetObjectId());
+   EXPECT_EQ(0U, zero.GetOffset());
+   EXPECT_EQ(0U, zero.GetReserved());
+   EXPECT_EQ(0ULL, zero.GetLocation());
+
+   // Non-trivial values within the 30-bit range
+   RNTupleLocatorMulti m(0x12345, 0xABCDE);
+   EXPECT_EQ(0x12345U, m.GetObjectId());
+   EXPECT_EQ(0xABCDEU, m.GetOffset());
+   EXPECT_EQ(0U, m.GetReserved());
+   // GetLocation() packs the three fields per the documented layout:
+   // bits [63..60] reserved, [59..30] object id, [29..0] offset
+   EXPECT_EQ((static_cast<std::uint64_t>(0x12345) << 30) | 0xABCDE, m.GetLocation());
+
+   // Round-trip via the raw uint64 constructor
+   RNTupleLocatorMulti round{m.GetLocation()};
+   EXPECT_EQ(m, round);
+   EXPECT_EQ(m.GetObjectId(), round.GetObjectId());
+   EXPECT_EQ(m.GetOffset(), round.GetOffset());
+
+   // Max 30-bit values
+   RNTupleLocatorMulti maxVals(RNTupleLocatorMulti::kMaxObjectId, RNTupleLocatorMulti::kMaxOffset);
+   EXPECT_EQ(0x3FFFFFFFU, maxVals.GetObjectId());
+   EXPECT_EQ(0x3FFFFFFFU, maxVals.GetOffset());
+   EXPECT_EQ(0U, maxVals.GetReserved());
+
+   // Object id only: no bit leak into offset or reserved
+   RNTupleLocatorMulti idOnly(RNTupleLocatorMulti::kMaxObjectId, 0U);
+   EXPECT_EQ(RNTupleLocatorMulti::kMaxObjectId, idOnly.GetObjectId());
+   EXPECT_EQ(0U, idOnly.GetOffset());
+   EXPECT_EQ(0U, idOnly.GetReserved());
+
+   // Offset only: no bit leak into object id or reserved
+   RNTupleLocatorMulti offsetOnly(0U, RNTupleLocatorMulti::kMaxOffset);
+   EXPECT_EQ(0U, offsetOnly.GetObjectId());
+   EXPECT_EQ(RNTupleLocatorMulti::kMaxOffset, offsetOnly.GetOffset());
+   EXPECT_EQ(0U, offsetOnly.GetReserved());
+
+   // Constructor enforces the 30-bit range on both fields
+   EXPECT_THROW(RNTupleLocatorMulti(1U << 30, 0), ROOT::RException);
+   EXPECT_THROW(RNTupleLocatorMulti(0, 1U << 30), ROOT::RException);
+
+   // Reserved bits round-trip without corrupting the other fields
+   RNTupleLocatorMulti withReserved(7, 42);
+   withReserved.SetReserved(0xF);
+   EXPECT_EQ(0xF, withReserved.GetReserved());
+   EXPECT_EQ(7U, withReserved.GetObjectId());
+   EXPECT_EQ(42U, withReserved.GetOffset());
+
+   // SetReserved enforces the 4-bit range
+   EXPECT_THROW(withReserved.SetReserved(0x10), ROOT::RException);
+
+   // Raw uint64 construction preserves bits without validation; the masks
+   // correctly carve out each field from a fully populated location.
+   RNTupleLocatorMulti raw{0xFFFFFFFFFFFFFFFFULL};
+   EXPECT_EQ(RNTupleLocatorMulti::kMaxObjectId, raw.GetObjectId());
+   EXPECT_EQ(RNTupleLocatorMulti::kMaxOffset, raw.GetOffset());
+   EXPECT_EQ(RNTupleLocatorMulti::kMaxReserved, raw.GetReserved());
+}
+
+TEST(RNTuple, RNTupleLocatorMultiTypeEnforcement)
+{
+   RNTupleLocator locator;
+
+   // SetPosition(Multi) requires kTypeMulti.
+   locator.SetType(RNTupleLocator::kTypeObject64);
+   EXPECT_THROW(locator.SetPosition(RNTupleLocatorMulti(1, 2)), ROOT::RException);
+   locator.SetType(RNTupleLocator::kTypeFile);
+   EXPECT_THROW(locator.SetPosition(RNTupleLocatorMulti(1, 2)), ROOT::RException);
+
+   // SetPosition(Object64) no longer accepts kTypeMulti after the split.
+   locator = RNTupleLocator{};
+   locator.SetType(RNTupleLocator::kTypeMulti);
+   EXPECT_THROW(locator.SetPosition(RNTupleLocatorObject64{1}), ROOT::RException);
+
+   // Correct usage round-trip.
+   locator.SetPosition(RNTupleLocatorMulti(1, 2));
+   auto m = locator.GetPosition<RNTupleLocatorMulti>();
+   EXPECT_EQ(1U, m.GetObjectId());
+   EXPECT_EQ(2U, m.GetOffset());
+
+   // GetPosition<Object64>() no longer accepts kTypeMulti after the split.
+   EXPECT_THROW(locator.GetPosition<RNTupleLocatorObject64>(), ROOT::RException);
+
+   // GetPosition<Multi>() rejects non-Multi types.
+   locator = RNTupleLocator{};
+   locator.SetType(RNTupleLocator::kTypeObject64);
+   locator.SetPosition(RNTupleLocatorObject64{1});
+   EXPECT_THROW(locator.GetPosition<RNTupleLocatorMulti>(), ROOT::RException);
 }
 
 TEST(RNTuple, SerializeEnvelopeLink)
