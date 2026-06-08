@@ -101,6 +101,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
     ROOT/RNTupleDS.hxx
+    ROOT/RNTupleProcessorDS.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -143,6 +144,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RTrivialDS.cxx
     src/RDFDescription.cxx
     src/RNTupleDS.cxx
+    src/RNTupleProcessorDS.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}
