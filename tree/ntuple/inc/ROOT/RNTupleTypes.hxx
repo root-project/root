@@ -201,6 +201,28 @@ public:
    std::uint64_t GetLocation() const { return fLocation; }
 };
 
+/// RNTupleLocator payload for the kTypeMulti locator (type 0x03). Used by storage
+/// backends that pack multiple pages into shared objects (e.g., S3 Mode A). The two
+/// 32-bit fields are written to disk as separate integers, so the on-disk layout is
+/// directly interpretable without any bit unpacking.
+class RNTupleLocatorMulti {
+private:
+   std::uint32_t fObjectId = 0;
+   std::uint32_t fOffset = 0;
+
+public:
+   RNTupleLocatorMulti() = default;
+   RNTupleLocatorMulti(std::uint32_t objectId, std::uint32_t offset) : fObjectId(objectId), fOffset(offset) {}
+
+   bool operator==(const RNTupleLocatorMulti &other) const
+   {
+      return fObjectId == other.fObjectId && fOffset == other.fOffset;
+   }
+
+   std::uint32_t GetObjectId() const { return fObjectId; }
+   std::uint32_t GetOffset() const { return fOffset; }
+};
+
 // Workaround missing return type overloading
 class RNTupleLocator;
 namespace Internal {
@@ -216,6 +238,11 @@ template <>
 struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
    static RNTupleLocatorObject64 Get(const RNTupleLocator &loc);
 };
+
+template <>
+struct RNTupleLocatorHelper<RNTupleLocatorMulti> {
+   static RNTupleLocatorMulti Get(const RNTupleLocator &loc);
+};
 } // namespace Internal
 
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
@@ -226,6 +253,7 @@ struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
 class RNTupleLocator {
    friend struct Internal::RNTupleLocatorHelper<std::uint64_t>;
    friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorObject64>;
+   friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorMulti>;
 
 public:
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
@@ -277,7 +305,8 @@ public:
    void SetType(ELocatorType type);
    void SetReserved(std::uint8_t reserved);
 
-   /// Note that for GetPosition() / SetPosition(), the locator type must correspond (kTypeFile, kTypeObject64).
+   /// Note that for GetPosition() / SetPosition(), the locator type must correspond
+   /// (kTypeFile, kTypeObject64, ...).
 
    template <typename T>
    T GetPosition() const
@@ -287,6 +316,7 @@ public:
 
    void SetPosition(std::uint64_t position);
    void SetPosition(RNTupleLocatorObject64 position);
+   void SetPosition(RNTupleLocatorMulti position);
 };
 
 namespace Internal {

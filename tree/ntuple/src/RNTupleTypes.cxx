@@ -80,9 +80,16 @@ void ROOT::RNTupleLocator::SetPosition(std::uint64_t position)
 
 void ROOT::RNTupleLocator::SetPosition(RNTupleLocatorObject64 position)
 {
-   if (GetType() != kTypeObject64 && GetType() != kTypeMulti)
+   if (GetType() != kTypeObject64)
       throw RException(R__FAIL("cannot set position as 64bit object for type " + std::to_string(GetType())));
    fPosition = position.GetLocation();
+}
+
+void ROOT::RNTupleLocator::SetPosition(RNTupleLocatorMulti position)
+{
+   if (GetType() != kTypeMulti)
+      throw RException(R__FAIL("cannot set position as Multi locator for type " + std::to_string(GetType())));
+   fPosition = (static_cast<std::uint64_t>(position.GetObjectId()) << 32) | position.GetOffset();
 }
 
 std::uint64_t ROOT::Internal::RNTupleLocatorHelper<std::uint64_t>::Get(const RNTupleLocator &loc)
@@ -95,7 +102,16 @@ std::uint64_t ROOT::Internal::RNTupleLocatorHelper<std::uint64_t>::Get(const RNT
 ROOT::RNTupleLocatorObject64
 ROOT::Internal::RNTupleLocatorHelper<ROOT::RNTupleLocatorObject64>::Get(const RNTupleLocator &loc)
 {
-   if (loc.GetType() != ROOT::RNTupleLocator::kTypeObject64 && loc.GetType() != ROOT::RNTupleLocator::kTypeMulti)
+   if (loc.GetType() != ROOT::RNTupleLocator::kTypeObject64)
       throw RException(R__FAIL("cannot retrieve position as 64bit object for type " + std::to_string(loc.GetType())));
    return RNTupleLocatorObject64{loc.fPosition};
+}
+
+ROOT::RNTupleLocatorMulti
+ROOT::Internal::RNTupleLocatorHelper<ROOT::RNTupleLocatorMulti>::Get(const RNTupleLocator &loc)
+{
+   if (loc.GetType() != ROOT::RNTupleLocator::kTypeMulti)
+      throw RException(R__FAIL("cannot retrieve position as Multi locator for type " + std::to_string(loc.GetType())));
+   return RNTupleLocatorMulti(static_cast<std::uint32_t>(loc.fPosition >> 32),
+                              static_cast<std::uint32_t>(loc.fPosition));
 }
