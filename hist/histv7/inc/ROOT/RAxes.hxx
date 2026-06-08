@@ -147,8 +147,8 @@ private:
       }
       std::uint64_t globalIndex = 0;
       for (std::size_t i = 0; i < N; i++) {
-         const auto &index = indices[i];
-         const auto &axis = fAxes[i];
+         const auto      &index = indices[i];
+         const auto      &axis = fAxes[i];
          RLinearizedIndex linIndex;
          if (auto *regular = axis.GetRegularAxis()) {
             globalIndex *= regular->GetTotalNBins();
