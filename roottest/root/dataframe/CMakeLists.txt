@@ -215,15 +215,7 @@ ROOTTEST_ADD_TEST(typeguessing
                   OUTREF test_typeguessing.ref
                   FIXTURES_REQUIRED root-dataframe-typeguessing-fixture)
 
-ROOTTEST_GENERATE_EXECUTABLE(misc
-                             test_misc.cxx
-                             LIBRARIES ${DFLIBRARIES} GenVector
-                             FIXTURES_SETUP root-dataframe-misc-fixture)
-
-ROOTTEST_ADD_TEST(misc
-                  EXEC ./misc
-                  OUTREF test_misc.ref
-                  FIXTURES_REQUIRED root-dataframe-misc-fixture)
+ROOT_ADD_GTEST(misc test_misc.cxx LIBRARIES ROOT::ROOTDataFrame ROOT::GenVector)
 
 ROOTTEST_ADD_TEST(ctors
                   MACRO test_ctors.C+
