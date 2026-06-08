@@ -584,13 +584,13 @@ public:
    {
       // Subclass has already destructed this vector's elements.
       // If this wasn't grown from the inline copy, deallocate the old space.
-      #if _WIN32
-         if (!this->isSmall() && this->Owns())
-            ::operator delete(this->begin());
-      #else
-         if (!this->isSmall() && this->Owns())
-            free(this->begin());
-      #endif
+#ifdef _WIN32
+      if (!this->isSmall() && this->Owns())
+         ::operator delete(this->begin());
+#else
+      if (!this->isSmall() && this->Owns())
+         free(this->begin());
+#endif
    }
 
    // also give up adopted memory if applicable
