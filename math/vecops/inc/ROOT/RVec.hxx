@@ -403,11 +403,11 @@ void R__CLING_PTRCHECK(off) SmallVectorTemplateBase<T, TriviallyCopyable>::grow(
    // Always grow, even from zero.
    size_t NewCapacity = size_t(NextPowerOf2(this->capacity() + 2));
    NewCapacity = std::min(std::max(NewCapacity, MinSize), this->SizeTypeMax());
-   #if _WIN32
-      T *NewElts = static_cast<T *>(::operator new(NewCapacity * sizeof(T), std::nothrow));
-   #else
-      T *NewElts = static_cast<T *>(malloc(NewCapacity * sizeof(T)));
-   #endif
+#ifdef _WIN32
+   T *NewElts = static_cast<T *>(::operator new(NewCapacity * sizeof(T), std::nothrow));
+#else
+   T *NewElts = static_cast<T *>(malloc(NewCapacity * sizeof(T)));
+#endif
    R__ASSERT(NewElts != nullptr);
 
    // Move the elements over.
