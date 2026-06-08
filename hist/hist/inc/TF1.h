@@ -710,9 +710,7 @@ namespace ROOT {
 #endif
          {
             if constexpr (std::is_invocable_r_v<double, Func, const double *, std::size_t, const double *, std::size_t>) {
-               Int_t npar = f->fNpar;
-               Int_t ndim = f->fNdim;
-               auto wrapper = [func, npar, ndim](const double *x, const double *p) -> double {
+               auto wrapper = [func, npar = f->fNpar, ndim = f->fNdim](const double *x, const double *p) -> double {
                   return func(x, static_cast<std::size_t>(ndim), p, static_cast<std::size_t>(npar));
                };
                f->fType = TF1::EFType::kTemplScalar;
