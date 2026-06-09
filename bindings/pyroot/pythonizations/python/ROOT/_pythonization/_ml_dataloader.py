@@ -382,10 +382,10 @@ class _RDataLoader:
         return data
 
     def ConvertBatchToNumpy(self, batch) -> np.ndarray:
-        """Convert a RTensor into a NumPy array
+        """Convert the batch into a NumPy array
 
         Args:
-            batch (RTensor): Batch returned from the DataLoader
+            batch: Batch returned from the DataLoader
 
         Returns:
             np.ndarray: converted batch
@@ -393,10 +393,10 @@ class _RDataLoader:
         return self._split_target_and_weights(self._get_raw_array(batch))
 
     def ConvertBatchToPyTorch(self, batch: Any, device=None) -> torch.Tensor:
-        """Convert a RTensor into a PyTorch tensor
+        """Convert the batch into a PyTorch tensor
 
         Args:
-            batch (RTensor): Batch returned from the DataLoader
+            batch: Batch returned from the DataLoader
 
         Returns:
             torch.Tensor: converted batch
@@ -412,10 +412,10 @@ class _RDataLoader:
 
     def ConvertBatchToTF(self, batch: Any) -> Any:
         """
-        Convert a RTensor into a TensorFlow tensor
+        Convert the batch into a TensorFlow tensor
 
         Args:
-            batch (RTensor): Batch returned from the DataLoader
+            batch: Batch returned from the DataLoader
 
         Returns:
             tensorflow.Tensor: converted batch
@@ -444,6 +444,29 @@ class _RDataLoader:
 
         return return_data
 
+    def ConvertBatchToJAX(self, batch: Any, device=None) -> Any:
+        """
+        Convert the batch into a JAX array
+
+        Args:
+            batch: Batch returned from the DataLoader
+
+        Returns:
+            jax.Array: converted batch
+        """
+        import jax
+        import jax.numpy as jnp
+
+        split = self._split_target_and_weights(jnp.asarray(self._get_raw_array(batch)))
+
+        if isinstance(device, str):
+            device = jax.devices(device)[0]
+
+        return (
+            tuple(jax.device_put(arr, device=device) for arr in split)
+            if isinstance(split, tuple)
+            else jax.device_put(split, device=device)
+        )
 
     # Return a batch when available
     def GetTrainBatch(self) -> Any:
@@ -744,6 +767,24 @@ class RDataLoader:
 
         loader = FormattedLoader(self._internal, self._internal.ConvertBatchToTF, self._is_training)
         return tf.data.Dataset.from_generator(lambda: loader, output_signature=batch_signature)
+
+    def as_jax(self, device: str | Any = None) -> FormattedLoader:
+        r"""
+        \ingroup Py_ML
+        Return an iterable that yields batches as JAX arrays.
+
+        Args:
+            device: If given, the returned arrays are moved to the specified device.
+                    Can be a string (e.g. "cpu", "gpu", "tpu") or any of JAX's device objects.
+        """
+        try:
+            import jax  # noqa F401
+        except ImportError:
+            raise ImportError("Failed to import jax needed for the ML dataloader")
+
+        self._ensure_created()
+        conversion_fn = lambda batch: self._internal.ConvertBatchToJAX(batch, device)  # noqa: E731
+        return FormattedLoader(self._internal, conversion_fn, self._is_training)
 
     @property
     def columns(self) -> list[str]:
