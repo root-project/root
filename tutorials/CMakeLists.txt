@@ -77,6 +77,7 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
   list(APPEND dataframe_veto machine_learning/ml_dataloader_filters_vectors.py)
   list(APPEND dataframe_veto machine_learning/ml_dataloader_Higgs_Classification.py)
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_resampling.py)
   # df036* and df037* seem to trigger OS errors when trying to delete the
   # test files created in the tutorials. It is unclear why.
   list(APPEND dataframe_veto analysis/dataframe/df036_missingBranches.C)
@@ -129,6 +130,7 @@ if (NOT dataframe)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_filters_vectors.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_resampling.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_Higgs_Classification.py)
     # RooFit tutorials depending on RDataFrame
     list(APPEND dataframe_veto
@@ -939,6 +941,7 @@ if(pyroot)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/pytorch/*.py
       machine_learning/ml_dataloader_PyTorch.py
+      machine_learning/ml_dataloader_resampling.py
       machine_learning/ml_dataloader_Higgs_Classification.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
