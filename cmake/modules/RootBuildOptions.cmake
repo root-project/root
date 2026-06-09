@@ -189,6 +189,7 @@ option(gminimal "Enable only required options by default, but include X11/Cocoa"
 option(minimal "Enable only required options by default" OFF)
 option(rootbench "Build rootbench if rootbench exists in root or if it is a sibling directory (implies testing=ON)" OFF)
 option(roottest "Build roottest (implies testing=ON)" OFF)
+option(hs3testsuite "Setup and use the HS3 conformance test suite (implies testing=ON)" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(asan "Build ROOT with address sanitizer instrumentation" OFF)
 
@@ -329,7 +330,7 @@ endif()
 ROOT_APPLY_OPTIONS()
 
 #---roottest option implies testing
-if(roottest OR rootbench)
+if(roottest OR rootbench OR hs3testsuite)
   set(testing ON CACHE BOOL "" FORCE)
 endif()
 
