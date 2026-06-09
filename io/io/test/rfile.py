@@ -116,6 +116,10 @@ class RFileTests(unittest.TestCase):
                     ["foo"],
                 )
                 self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("foo", listDirs=True, listObjects=False, listRecursive=False)],
+                    ["foo/bar"],
+                )
+                self.assertEqual(
                     [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listRecursive=False)], ["hist", "foo"]
                 )
         finally:
