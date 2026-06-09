@@ -1116,6 +1116,88 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             self.teardown_file(self.file_name3)
             raise
 
+    def test17_JAX(self):
+        file_name = "multiple_target_columns.root"
+
+        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
+            "b3", "(double) rdfentry_ * 10"
+        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
+
+        try:
+            df = ROOT.RDataFrame("myTree", file_name)
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                df,
+                batch_size=3,
+                batches_in_memory=2,
+                target=["b2", "b4"],
+                weights="b3",
+                shuffle=False,
+                drop_remainder=False,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.4)
+
+            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+            results_x_val = [6.0, 7.0, 8.0, 9.0]
+            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+            results_z_val = [60.0, 70.0, 80.0, 90.0]
+
+            collected_x_train = []
+            collected_x_val = []
+            collected_y_train = []
+            collected_y_val = []
+            collected_z_train = []
+            collected_z_val = []
+
+            iter_train = iter(gen_train.as_jax(device="cpu"))
+            iter_val = iter(gen_validation.as_jax())
+
+            for _ in range(self.n_train_batch):
+                x, y, z = next(iter_train)
+                self.assertTrue(x.shape == (3, 1))
+                self.assertTrue(y.shape == (3, 2))
+                self.assertTrue(z.shape == (3, 1))
+                collected_x_train.append(x.tolist())
+                collected_y_train.append(y.tolist())
+                collected_z_train.append(z.tolist())
+
+            for _ in range(self.n_val_batch):
+                x, y, z = next(iter_val)
+                self.assertTrue(x.shape == (3, 1))
+                self.assertTrue(y.shape == (3, 2))
+                self.assertTrue(z.shape == (3, 1))
+                collected_x_val.append(x.tolist())
+                collected_y_val.append(y.tolist())
+                collected_z_val.append(z.tolist())
+
+            x, y, z = next(iter_val)
+            self.assertTrue(x.shape == (self.val_remainder, 1))
+            self.assertTrue(y.shape == (self.val_remainder, 2))
+            self.assertTrue(z.shape == (self.val_remainder, 1))
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
+
+            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+
+            self.assertEqual(results_x_train, flat_x_train)
+            self.assertEqual(results_x_val, flat_x_val)
+            self.assertEqual(results_y_train, flat_y_train)
+            self.assertEqual(results_y_val, flat_y_val)
+            self.assertEqual(results_z_train, flat_z_train)
+            self.assertEqual(results_z_val, flat_z_val)
+
+        finally:
+            self.teardown_file(file_name)
+
 
 class DataLoaderEagerLoading(unittest.TestCase):
     file_name1 = "first_half.root"
