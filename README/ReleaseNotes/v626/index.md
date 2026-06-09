@@ -1084,6 +1084,9 @@ This release comes with some minor fixes, for example for TMVA nad platfornm sup
 * [[#15590](https://github.com/root-project/root/issues/15590)] - Infinite recursion in TFile::Open
 * [[#14508](https://github.com/root-project/root/issues/14508)] - Using LZMA compression with RNTupleWriter leads to memory corruption
 
-## HEAD of the v6-26-00-patches branch
+## Release 6.26/20
 
-- None so far.
+Published on June 10, 2026
+
+This is the final patch of the 6.26 release series, as per ROOT's [Release and Support Plan](https://root.cern/install/all_releases/).
+It includes minor improvements with respect to 6.26/18, for example more robustness in presence of corrupted ROOT files.
