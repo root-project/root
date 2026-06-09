@@ -623,6 +623,14 @@ TH1::TH1()
 {
    fDirectory     = nullptr;
    fFunctions     = new TList;
+   // ROOT's Python bindings use TCollection::IsOwner to decide whether objects
+   // inserted into a collection (like `TH1::fFunctions`) should be deleted
+   // (see `_TCollection_Add` pythonization).  To ensure the Python bindings
+   // get the correct ownership signal, set the ownership on TH1::fFunctions.
+   // Although, in reality, TH1's destructor actually handles ownership, this
+   // solution still works, since the destructor removes all entries before
+   // deleting the collection.
+   fFunctions->SetOwner(true);
    fNcells        = 0;
    fIntegral      = nullptr;
    fPainter       = nullptr;
@@ -804,6 +812,14 @@ void TH1::Build()
    SetTitle(fTitle.Data());
 
    fFunctions = new TList;
+   // ROOT's Python bindings use TCollection::IsOwner to decide whether objects
+   // inserted into a collection (like `TH1::fFunctions`) should be deleted
+   // (see `_TCollection_Add` pythonization).  To ensure the Python bindings
+   // get the correct ownership signal, set the ownership on TH1::fFunctions.
+   // Although, in reality, TH1's destructor actually handles ownership, this
+   // solution still works, since the destructor removes all entries before
+   // deleting the collection.
+   fFunctions->SetOwner(true);
 
    UseCurrentStyle();
 
