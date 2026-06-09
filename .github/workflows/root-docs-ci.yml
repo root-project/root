@@ -46,7 +46,7 @@ jobs:
       PLATFORM: alma10
       DOC_DIR: master
       DOC_LOCATION: /github/home
-      BASE_REF: ${{ inputs.input_branch == null && 'master' || inputs.input_branch }}
+      BASE_REF: ${{ inputs.input_branch == null && github.ref || inputs.input_branch }}
       WEB_DIR_NAME: ${{ inputs.eos_upload_directory == null && '' || inputs.eos_upload_directory }}
       TAR_FILE: htmlmaster.tar.gz
 
@@ -78,8 +78,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
       with:
-        ref: ${{ env.BASE_REF }}
         fetch-depth: 0
+        ref: ${{ env.BASE_REF }}
 
     - name: Set up Python Virtual Env
       # if the `if` expr is false, `if` still has exit code 0.
