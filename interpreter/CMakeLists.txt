@@ -59,8 +59,6 @@ if(NOT experimental_adaptivecpp)
   set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 endif()
 
-# will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -252,6 +250,8 @@ if(builtin_llvm)
   set(CMAKE_CXX_STANDARD ${_cxx_standard})
   set(CMAKE_BUILD_TYPE ${_build_type})
 
+  # Needed to make Cling plugins (clad) find LLVM.
+  set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
     CACHE STRING "LLVM include directories."
