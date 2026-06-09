@@ -1319,7 +1319,7 @@ Bool_t TRootSniffer::ProduceXml(const std::string &/* path */, const std::string
 ////////////////////////////////////////////////////////////////////////////////
 /// Method replaces all kind of special symbols, which could appear in URL options
 
-TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quotes)
+TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quotes, Bool_t escape_special)
 {
    if (!value || !*value)
       return "";
@@ -1349,6 +1349,9 @@ TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quot
       res.Remove(res.Length() - 1);
       res.Remove(0, 1);
    }
+
+   if (!escape_special && remove_quotes)
+      return res;
 
    // we expect normal content here, no special symbols, no unescaped quotes
    TString clean;
