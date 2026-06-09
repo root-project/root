@@ -19,7 +19,7 @@ void TMVA_SOFIE_ONNX(std::string inputFile = ""){
     SOFIE::RModel model = parser.Parse(inputFile, true);
 
     //Generating inference code
-    model.Generate();
+    model.Generate(SOFIE::Options::kProfile);
     // write the code in a file (by default Linear_16.hxx and Linear_16.dat
     model.OutputGenerated();
 
