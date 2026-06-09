@@ -209,7 +209,8 @@ int FitUsingRooFit(TTree &tree, RooAbsPdf &pdf, RooArgSet &xvars)
       std::cout << " Roofit status " << result->status() << std::endl;
       result->Print();
 #endif
-      iret |= int(result == nullptr);
+      if (save && result == nullptr)
+         iret = 1;
    }
 
    w.Stop();
@@ -265,15 +266,15 @@ int FitUsingNewFitter(FitObj *fitobj, Func &func, bool useGrad = false)
    std::cout << "\tFit using new Fit::Fitter\n";
    std::cout << "\tMinimizer is " << MinType::name() << "  " << MinType::name2() << std::endl;
 
-   int iret = 0;
    TStopwatch w;
    w.Start();
 
 #ifdef DEBUG
    func.SetParameters(iniPar);
-   iret |= DoFit<MinType>(fitobj, func, true, useGrad);
+   int iret = DoFit<MinType>(fitobj, func, true, useGrad);
 
 #else
+   int iret = 0;
    for (int i = 0; i < nfit; ++i) {
       func.SetParameters(iniPar);
       iret = DoFit<MinType>(fitobj, func, false, useGrad);
