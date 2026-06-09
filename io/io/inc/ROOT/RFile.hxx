@@ -376,6 +376,7 @@ public:
    /// `basePath` (defaulting to include the content of all subdirectories).
    /// By default, keys referring to directories are not returned: only those referring to leaf objects are.
    /// If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
+   /// If `basePath` is the path of a directory, it won't appear in the listing.
    /// `flags` is a bitmask specifying the listing mode.
    /// If `(flags & kListObjects) != 0`, the listing will include keys of non-directory objects (default);
    /// If `(flags & kListDirs) != 0`, the listing will include keys of directory objects;

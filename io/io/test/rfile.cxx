@@ -482,10 +482,10 @@ TEST(RFile, IterateKeysOnlyDirs)
    {
       auto file = RFile::Open(fileGuard.GetPath());
       EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListDirs | RFile::kListRecursive)), "a, a/b, e, e/c");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs | RFile::kListRecursive)), "a, a/b");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs | RFile::kListRecursive)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs | RFile::kListRecursive)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs | RFile::kListRecursive)), "");
       EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListDirs | RFile::kListRecursive)), "");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs | RFile::kListRecursive)), "e, e/c");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs | RFile::kListRecursive)), "e/c");
    }
 }
 
@@ -506,10 +506,10 @@ TEST(RFile, IterateKeysOnlyDirsNonRecursive)
    {
       auto file = RFile::Open(fileGuard.GetPath());
       EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListDirs)), "a, e");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs)), "a, a/b");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs)), "");
       EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListDirs)), "");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs)), "e, e/c");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs)), "e/c");
    }
 }
 
