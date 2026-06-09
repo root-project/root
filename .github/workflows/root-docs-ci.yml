@@ -129,7 +129,7 @@ jobs:
     #Upload to GitHub as an artifact
     - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{env.TAR_FILE}}
         path: ${{env.DOC_LOCATION}}/${{env.TAR_FILE}}
