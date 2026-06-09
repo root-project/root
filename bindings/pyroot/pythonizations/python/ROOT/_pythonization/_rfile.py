@@ -66,8 +66,8 @@ class _RFile_Put:
         if isinstance(obj, str):
             # special case: automatically convert python str to std::string
             className = "std::string"
-        elif not hasattr(objType, '__cpp_name__'):
-            raise TypeError(f"type {objType} is not supported by ROOT I/O") 
+        elif not hasattr(objType, "__cpp_name__"):
+            raise TypeError(f"type {objType} is not supported by ROOT I/O")
         else:
             className = objType.__cpp_name__
         self._rfile.Put[className](name, obj)
@@ -119,8 +119,43 @@ def _GetKeyInfo(rfile, path):
     return None
 
 
-def _ListKeys(rfile, basePath="", listObjects = True, listDirs = False, listRecursive = True):
+def _ListKeys(rfile, basePath="", **kwargs):
+    """
+    Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
+    `basePath` (defaulting to include the content of all subdirectories).
+    By default, keys referring to directories are not returned: only those referring to leaf objects are.
+    If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
+    If it is the path of a directory, it will not be included in the listing.
+
+    You can specify what to list via the keyword arguments:
+    - if `listObjects == True`, the listing will include keys of non-directory objects (default);
+    - if `listDirs == True`, the listing will include keys of directory objects;
+    - if `listRecursive == True`, the listing will recurse on all subdirectories of `basePath` (default),
+    otherwise it will only list immediate children of `basePath`.
+        Example usage:
+    ~~~{.py}
+    for key in file.ListKeys():
+        # iterate over all objects in the RFile
+        print(f"{key.GetPath()};{key.GetCycle()} of type {key.GetClassName()}")
+
+    for key in file.ListKeys("", listDirs=True):
+        # iterate over all objects and directories in the RFile
+        print(f"{key.GetPath()};{key.GetCycle()} of type {key.GetClassName()}")
+
+    for key in file.ListKeys("a/b", listRecursive=False):
+        # iterate over all objects that are immediate children of directory "a/b"
+        print(f"{key.GetPath()};{key.GetCycle()} of type {key.GetClassName()}")
+
+    for key in file.ListKeys("foo", listDirs=True, listObjects=False):
+        # iterate over all directories under directory "foo", recursively
+        print(key.GetPath())
+    ~~~
+    """
     from ROOT.Experimental import RFile
+
+    listObjects = kwargs['listObjects'] if 'listObjects' in kwargs else True
+    listDirs = kwargs['listDirs'] if 'listDirs' in kwargs else False
+    listRecursive = kwargs['listRecursive'] if 'listRecursive' in kwargs else True
 
     flags = (listObjects * RFile.kListObjects) | (listDirs * RFile.kListDirs) | (listRecursive * RFile.kListRecursive)
     iter = rfile._OriginalListKeys(basePath, flags)
