@@ -655,7 +655,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 
    // Easy work scheduling: one file per slot. We skip empty files (files without entries).
 
-   if ((nRemainingFiles >= fNSlots) || (fGlobalEntryRange.has_value())) {
+   if (nRemainingFiles >= fNSlots) {
       while ((fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles)) {
          REntryRangeDS range;
 
@@ -670,6 +670,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
          range.fSource->Attach();
          fNextFileIndex++;
          auto nEntries = range.fSource->GetNEntries();
+         fRangeOffsets.insert({range.fFileName, nEntries});
          if (nEntries == 0)
             continue;
          range.fLastEntry = nEntries; // whole file per slot, i.e. entry range [0..nEntries - 1]
@@ -683,6 +684,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
    // Every slot still has its own page source but these page sources may open the same file.
    // Again, we need to skip empty files.
    unsigned int nSlotsPerFile = fNSlots / nRemainingFiles;
+   size_t rangeOffset = 0;
    for (std::size_t i = 0; (fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles); ++i) {
       std::unique_ptr<ROOT::Internal::RPageSource> source;
       // Need to look for the file name to populate the sample info later
@@ -696,6 +698,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       fNextFileIndex++;
 
       auto nEntries = source->GetNEntries();
+      fRangeOffsets.insert({sourceFileName, nEntries});
       if (nEntries == 0)
          continue;
 
@@ -708,13 +711,28 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
          const auto descGuard = source->GetSharedDescriptorGuard();
          return ROOT::Internal::GetClusterBoundaries(descGuard.GetRef());
       }();
+      unsigned int iFirstRange = 0;
+      unsigned int iLastRange = rangesByCluster.size() - 1;
+      if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first != fGlobalEntryRange->second) {
 
-      const unsigned int nRangesByCluster = rangesByCluster.size();
+         for (size_t j = 0; j < rangesByCluster.size(); j++) {
+            if (rangesByCluster[j].fFirstEntry + rangeOffset <= fGlobalEntryRange->first) {
+               iFirstRange = j;
+            }
+            if (rangesByCluster[j].fLastEntryPlusOne + rangeOffset >= fGlobalEntryRange->second) {
+               iLastRange = j;
+               break;
+            }
+         }
+         rangeOffset += fRangeOffsets[sourceFileName];
+      }
+
+      const unsigned int nRangesByCluster = iLastRange - iFirstRange + 1;
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
       const auto nClustersPerSlot = nRangesByCluster / nSlotsPerFile;
       const auto remainder = nRangesByCluster % nSlotsPerFile;
-      std::size_t iRange = 0;
+      std::size_t iRange = iFirstRange;
       unsigned int iSlot = 0;
       const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
       for (; iSlot < N; ++iSlot) {
@@ -793,14 +811,16 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    fOriginalRanges.clear();
 
    ULong64_t nEntriesPerSource = 0;
-
+   auto lastFileName = fCurrentRanges[0].fFileName;
    for (std::size_t i = 0; i < fCurrentRanges.size(); ++i) {
 
       // Several consecutive ranges may operate on the same file (each with their own page source clone).
       // We can detect a change of file when the first entry number jumps back to 0.
-      if (fCurrentRanges[i].fFirstEntry == 0) {
+      auto currentFileName = fCurrentRanges[i].fFileName;
+      if ((lastFileName != currentFileName || fCurrentRanges[i].fFirstEntry == 0) && i != 0) {
          // New source
-         fSeenEntriesNoGlobalRange += nEntriesPerSource;
+         fSeenEntriesNoGlobalRange += fRangeOffsets[lastFileName];
+         lastFileName = currentFileName;
          nEntriesPerSource = 0;
       }
 
