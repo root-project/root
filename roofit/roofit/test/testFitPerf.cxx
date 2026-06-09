@@ -518,8 +518,6 @@ int FitUsingRooFit(TH1 *hist, TF1 *func)
 // unbinned roo fit
 int FitUsingRooFit(TTree *tree, TF1 *func)
 {
-
-   int iret = 0;
    std::cout << "\n************************************************************\n";
    std::cout << "\tFit using RooFit (Likelihood Fit)\n";
    std::cout << "\twith function " << func->GetName() << "\n";
@@ -567,26 +565,21 @@ int FitUsingRooFit(TTree *tree, TF1 *func)
       std::cout << " Roofit status " << result->status() << std::endl;
       result->Print();
 #endif
-      if (save)
-         iret |= int(result == nullptr);
-
-      if (iret != 0) {
+      if (save && result == nullptr) {
          std::cout << "Fit failed " << std::endl;
-         return iret;
+         return 1;
       }
    }
 
    w.Stop();
    std::cout << "\nTime: \t" << w.RealTime() << " , " << w.CpuTime() << std::endl;
    std::cout << "\n************************************************************\n";
-   return iret;
+   return 0;
 }
 
 // unbinned roo fit (large tree)
 int FitUsingRooFit2(TTree *tree)
 {
-
-   int iret = 0;
    std::cout << "\n************************************************************\n";
    std::cout << "\tFit using RooFit (Likelihood Fit)\n";
 
@@ -647,23 +640,16 @@ int FitUsingRooFit2(TTree *tree)
       std::unique_ptr<RooFitResult> result{
          pdf[N - 1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1), RooFit::PrintLevel(level), RooFit::Save(save))};
 
-#ifdef DEBUG
-      assert(result == nullptr);
-//std::cout << " Roofit status " << result->status() << std::endl;
-//result->Print();
-#endif
-
-      iret |= int(result != nullptr);
-
-      if (iret != 0)
-         return iret;
-      // assert(iret == 0);
+      if (save && result == nullptr) {
+         std::cout << "Fit failed " << std::endl;
+         return 1;
+      }
    }
 
    w.Stop();
    std::cout << "\nTime: \t" << w.RealTime() << " , " << w.CpuTime() << std::endl;
    std::cout << "\n************************************************************\n";
-   return iret;
+   return 0;
 }
 
 double poly2(const double *x, const double *p)
