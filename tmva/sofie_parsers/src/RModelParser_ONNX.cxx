@@ -68,6 +68,7 @@ extern ParserFuncSignature ParseLeakyRelu;
 extern ParserFuncSignature ParseGelu;
 extern ParserFuncSignature ParseSelu;
 extern ParserFuncSignature ParseSigmoid;
+extern ParserFuncSignature ParseSwish;
 extern ParserFuncSignature ParseGemm;
 extern ParserFuncSignature ParseRNN;
 extern ParserFuncSignature ParseLSTM;
@@ -353,6 +354,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Selu", ParseSelu);
    RegisterOperator("Shape", ParseShape);
    RegisterOperator("Sigmoid", ParseSigmoid);
+   RegisterOperator("Swish", ParseSwish);
    RegisterOperator("Slice", ParseSlice);
    RegisterOperator("Softmax", ParseSoftmax);
    RegisterOperator("LogSoftmax", ParseSoftmax);
