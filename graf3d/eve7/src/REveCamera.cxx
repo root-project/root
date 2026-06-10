@@ -133,5 +133,3 @@ Int_t REveCamera::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    return ret;
 }
-
-ClassImp(REveCamera);

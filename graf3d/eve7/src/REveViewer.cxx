@@ -171,7 +171,7 @@ void REveViewer::SetMandatory(bool x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set camera reference by ID, yuxiao
+/// Set camera reference
 
 void REveViewer::SetCamera(::ROOT::Experimental::REveCamera *cam)
 {
