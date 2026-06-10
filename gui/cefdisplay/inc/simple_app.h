@@ -35,7 +35,8 @@ class SimpleApp : public CefApp,
                   /*, public CefRenderProcessHandler */
                   public CefBrowserProcessHandler {
 protected:
-   bool fUseViewes{false};  ///<! is views framework used
+   bool fUseViewes = false;  ///<! is views framework used
+   bool fSupressLog = false; ///<! supress log output when possible
    THttpServer *fFirstServer; ///<! first server
    std::string fFirstUrl;   ///<! first URL to open
    std::string fFirstContent; ///<! first page content open
@@ -46,7 +47,7 @@ protected:
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
 public:
-   SimpleApp(bool use_viewes,
+   SimpleApp(bool use_viewes, bool supress_log,
              THttpServer *serv = nullptr, const std::string &url = "", const std::string &cont = "",
              int width = 0, int height = 0, bool headless = false);
 

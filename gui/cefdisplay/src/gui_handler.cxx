@@ -175,20 +175,21 @@ bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
    switch (level) {
    case LOGSEVERITY_WARNING:
       if (fConsole > -1)
-         R__LOG_WARNING(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_WARNING(CefWebDisplayLog()) << TString::Format("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    case LOGSEVERITY_ERROR:
       if (fConsole > -2)
-         R__LOG_ERROR(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_ERROR(CefWebDisplayLog()) << TString::Format("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    default:
       if (fConsole > 0)
-         R__LOG_DEBUG(0, CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_DEBUG(0, CefWebDisplayLog()) << TString::Format("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    }
 
    return true;
 }
+
 
 cef_return_value_t GuiHandler::OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,
