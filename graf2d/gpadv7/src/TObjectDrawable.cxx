@@ -35,11 +35,21 @@ using namespace ROOT::Experimental;
 void TObjectDrawable::CheckOwnership(TObject *obj)
 {
    if (obj && obj->InheritsFrom("TH1")) {
-      TMethodCall call(obj->IsA(), "SetDirectory", "nullptr");
-      call.Execute((void *)(obj));
+      TMethodCall call;
+      call.InitWithPrototype(obj->IsA(), "SetDirectory", "TDirectory*");
+      if (call.IsValid()) {
+         void *arg0 = nullptr;
+         const void *method_args[1] = { &arg0 };
+         call.Execute((void *) obj, method_args, 1);
+      }
    } else if (obj && obj->InheritsFrom("TF1")) {
-      TMethodCall call(obj->IsA(), "AddToGlobalList", "kFALSE");
-      call.Execute((void *)(obj));
+      TMethodCall call;
+      call.InitWithPrototype(obj->IsA(), "AddToGlobalList", "Bool_t");
+      if (call.IsValid()) {
+         Bool_t arg0 = kFALSE;
+         const void *method_args[1] = { &arg0 };
+         call.Execute((void *) obj, method_args, 1);
+      }
    }
 }
 
