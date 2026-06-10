@@ -16,6 +16,7 @@ builtin_pcre=ON
 builtin_png=ON
 builtin_tbb=ON
 builtin_tiff=ON
+builtin_unuran=ON
 builtin_vdt=ON
 builtin_xrootd=ON
 builtin_xxhash=ON
