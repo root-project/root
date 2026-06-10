@@ -48,7 +48,7 @@ using ROOT::Experimental::Internal::RSliceBinIndexMapper;
 template <typename Work>
 void StressInParallel(std::size_t nThreads, Work &&w)
 {
-   std::atomic<bool> flag;
+   std::atomic<bool> flag = false;
 
    std::vector<std::thread> threads;
    for (std::size_t i = 0; i < nThreads; i++) {
