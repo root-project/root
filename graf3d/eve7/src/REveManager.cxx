@@ -999,7 +999,7 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      std::cout << "caught exception executing " << tag << ": " << e.what();
+      R__LOG_ERROR(REveLog()) << "caught exception executing " << tag << ": " << e.what();
    } catch (...) {
       R__LOG_ERROR(REveLog()) << "caught unknown execption.";
    }

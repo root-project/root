@@ -182,7 +182,7 @@ public:
 
    REveSceneList  *GetScenes()  const { return fScenes;  }
    REveViewerList *GetViewers() const { return fViewers; }
-   REveElement    *GetCameras() const { return fCameras; } //yuxiao
+   REveElement    *GetCameras() const { return fCameras; }
 
    REveScene *GetGlobalScene() const { return fGlobalScene; }
    REveScene *GetEventScene()  const { return fEventScene;  }
