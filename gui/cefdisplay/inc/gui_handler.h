@@ -109,7 +109,7 @@ public:
 
    std::string MakePageUrl(THttpServer *serv, const std::string &addr);
 
-   static bool PlatformInit();
+   static void PlatformInit();
 
    static std::string GetDataURI(const std::string& data, const std::string& mime_type);
 

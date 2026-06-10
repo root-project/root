@@ -16,10 +16,8 @@
 
 #include "include/cef_browser.h"
 
-
-bool GuiHandler::PlatformInit()
+void GuiHandler::PlatformInit()
 {
-   return false; // MAC not yet support ozone and headless mode
 }
 
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
