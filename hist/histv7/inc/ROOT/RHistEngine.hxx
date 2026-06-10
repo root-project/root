@@ -84,6 +84,9 @@ class RHistEngine final {
    /// The bin contents for this histogram
    std::vector<BinContentType> fBinContents;
 
+   /// Flag to pause filling while a snapshot is ongoing
+   mutable std::atomic<bool> fSnapshotInProgress{false}; //!
+
 public:
    /// Construct a histogram engine.
    ///
@@ -134,7 +137,7 @@ public:
    /// Efficiently move construct a histogram engine.
    ///
    /// After this operation, the moved-from object is invalid.
-   RHistEngine(RHistEngine &&) = default;
+   RHistEngine(RHistEngine &&rhs) noexcept : fAxes(std::move(rhs.fAxes)), fBinContents(std::move(rhs.fBinContents)) {}
 
    /// The copy assignment operator is deleted.
    ///
@@ -144,7 +147,12 @@ public:
    /// Efficiently move a histogram engine.
    ///
    /// After this operation, the moved-from object is invalid.
-   RHistEngine &operator=(RHistEngine &&) = default;
+   RHistEngine &operator=(RHistEngine &&rhs) noexcept
+   {
+      std::swap(fAxes, rhs.fAxes);
+      std::swap(fBinContents, rhs.fBinContents);
+      return *this;
+   }
 
    ~RHistEngine() = default;
 
@@ -513,6 +521,10 @@ public:
    template <typename... A>
    void FillAtomic(const std::tuple<A...> &args)
    {
+      while (fSnapshotInProgress.load(std::memory_order_relaxed)) {
+         // Spin while a snapshot is running
+      }
+
       // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
       // be confusing for users.
       if (sizeof...(A) != GetNDimensions()) {
@@ -536,6 +548,10 @@ public:
    void FillAtomic(const std::tuple<A...> &args, RWeight weight)
    {
       static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
+
+      while (fSnapshotInProgress.load(std::memory_order_relaxed)) {
+         // Spin while a snapshot is running
+      }
 
       // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
       // be confusing for users.
@@ -562,6 +578,10 @@ public:
       static_assert(std::is_class_v<BinContentType>,
                     "user-defined weight types are only supported for user-defined bin content types");
 
+      while (fSnapshotInProgress.load(std::memory_order_relaxed)) {
+         // Spin while a snapshot is running
+      }
+
       // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
       // be confusing for users.
       if (sizeof...(A) != GetNDimensions()) {
@@ -583,6 +603,10 @@ public:
    {
       static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
       if constexpr (sizeof...(A) >= 1) {
+         while (fSnapshotInProgress.load(std::memory_order_relaxed)) {
+            // Spin while a snapshot is running
+         }
+
          auto t = std::forward_as_tuple(args...);
          if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
             static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
@@ -846,6 +870,12 @@ public:
       static_assert(std::is_trivially_copyable_v<BinContentType>,
                     "snapshotting requires a trivially copyable bin content type");
 
+      do {
+         while (fSnapshotInProgress.load(std::memory_order_relaxed)) {
+            // Spin while another snapshot is running
+         }
+      } while (fSnapshotInProgress.exchange(true, std::memory_order_relaxed));
+
       RHistEngine snapshot(fAxes.Get());
       // Do a first collect.
       for (std::size_t i = 0; i < fBinContents.size(); i++) {
@@ -870,6 +900,8 @@ public:
             }
          }
       } while (changed);
+
+      fSnapshotInProgress.store(false, std::memory_order_relaxed);
 
       return snapshot;
    }

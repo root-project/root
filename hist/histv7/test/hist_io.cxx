@@ -10,6 +10,8 @@ static void ExpectThrowOnWriteObject(const T &obj)
 {
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.optionalDiag(kWarning, "TKey::TKey", "no public constructor", /*matchFullMessage=*/false);
+   diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "data member \"fSnapshotInProgress\" will not be saved",
+                         /*matchFullMessage=*/false);
 
    TMemFile f("mem.root", "RECREATE");
    EXPECT_THROW(f.WriteObject(&obj, "o"), std::runtime_error);
