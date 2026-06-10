@@ -819,7 +819,6 @@ The following items were addressed:
 
   * [[#22538](https://github.com/root-project/root/issues/22538)] - [ntuple] Late model extension of untyped records broken
   * [[#22496](https://github.com/root-project/root/issues/22496)] - root -q -e '.gh bug' doesn't work on ssh connections
-  * [[#22473](https://github.com/root-project/root/issues/22473)] - [tmva][sofie] Conv generates invalid code and crashes for dilation > 1
   * [[#22471](https://github.com/root-project/root/issues/22471)] - issue with transparency and interactive mode on macOS
   * [[#22447](https://github.com/root-project/root/issues/22447)] - 6.40: Glitch in TTree::Draw for 3D (missing bins)
   * [[#22436](https://github.com/root-project/root/issues/22436)] - [tmva][sofie] MaxPool and AveragePool generates wrong code for asymmetric padding
