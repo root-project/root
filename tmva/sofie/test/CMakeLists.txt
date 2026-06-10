@@ -146,7 +146,6 @@ if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND BLAS_FOUND AND NOT brok
         LIBRARIES
         ROOTTMVASofie
         TMVA
-        Python3::NumPy
         Python3::Python
         BLAS::BLAS
         INCLUDE_DIRS
@@ -165,7 +164,6 @@ if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
    ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
        LIBRARIES
        ROOTTMVASofie
-       Python3::NumPy
        Python3::Python
        BLAS::BLAS
        INCLUDE_DIRS
