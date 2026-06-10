@@ -106,6 +106,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/RangeFloat.ref.hxx"
 #include "input_models/references/RangeInt.ref.hxx"
 #include "input_models/references/Tile5D.ref.hxx"
+#include "input_models/references/Swish.ref.hxx"
 
 #include "gtest/gtest.h"
 
@@ -3273,6 +3274,26 @@ TEST(ONNX, Gelu)
    EXPECT_EQ(output.size(), std::size(Gelu_ExpectedOutput::outputs));
 
    float *correct = Gelu_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Swish)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Input spanning negative and positive values
+   std::vector<float> input{1.0, -2.0, 3.0, 0.5, -1.0, 2.0};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Swish", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), std::size(Swish_ExpectedOutput::outputs));
+
+   float *correct = Swish_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
