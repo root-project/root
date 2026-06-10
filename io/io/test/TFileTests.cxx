@@ -480,6 +480,161 @@ TEST(TFile, DeleteKey)
    EXPECT_FALSE(f->TestBit(TFile::kRecovered));
 }
 
+TEST(TFile, WriteInLargeGap)
+{
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      GTEST_SKIP() << "Skipping test on 32bit platform.";
+   }
+
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_large_gap_at_end.root");
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   std::vector<char> v;
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "v0");
+   f->WriteObject(&v, "v1");
+   f->WriteObject(&v, "v2");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Delete("v0;*");
+   f->Delete("v1;*");
+   f->Delete("v2;*");
+   v.clear();
+   f->WriteObject(&v, "small"); //< This should not crash, i.e. the new key should be placed in the large gap
+
+   int nConsecutiveGapsAfterSmall = -1;
+   for (const auto &k : f->WalkTKeys()) {
+      if (k.fType == ROOT::Detail::TKeyMapNode::kGap && nConsecutiveGapsAfterSmall >= 0) {
+         nConsecutiveGapsAfterSmall++;
+         continue;
+      }
+      if (k.fKeyName == "small") {
+         nConsecutiveGapsAfterSmall = 0;
+         continue;
+      }
+      if (nConsecutiveGapsAfterSmall >= 0)
+         break;
+   }
+   EXPECT_EQ(2, nConsecutiveGapsAfterSmall);
+
+   TNamed x("x", "");
+   f->WriteObject(&x, "x"); //< Update the streamer info so that it doesn't block shrinking the file
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   EXPECT_LT(f->GetEND(), TFile::kStartBigFile);
+}
+
+TEST(TFile, WriteInLargeGapCornerCase)
+{
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      GTEST_SKIP() << "Skipping test on 32bit platform.";
+   }
+
+   // Constructs a case that requires writing 2 free segment headers after a key
+
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_write_in_large_gap_corner_case.root");
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   std::vector<char> v;
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "v0");
+   f->WriteObject(&v, "v1");
+   f->WriteObject(&v, "v2");
+   f->Write();
+   f->Delete("v0;*");
+   f->Delete("v1;*");
+   f->Delete("v2;*");
+   f->Write();
+
+   // We should have two large consecutive gaps
+   Long64_t seekGap = 0;
+   Long64_t gapSize = 0; // the combined gap size
+   for (const auto &k : f->WalkTKeys()) {
+      if (seekGap > 0) {
+         // second gap
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         gapSize += k.fLen;
+         break;
+      }
+      if (k.fLen > 1000000) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         seekGap = k.fAddr;
+         gapSize = k.fLen;
+      }
+   }
+   ASSERT_GT(seekGap, 0);
+   ASSERT_GT(gapSize, TFile::kMaxGapSize);
+
+   // Create new key in the large gap; not huge but large enough to only fit in the large gap
+   TKey testKey("TEST", "TITLE", TObject::Class(), 1024 * 1024, f.get());
+   EXPECT_EQ(seekGap, testKey.GetSeekKey());
+
+   // Manipulate the linked list of free segments in the large gap:
+   //   - 2 empty free gaps
+   //   - 1 max sized gap 1 byte after the key end
+   //   - final segment pointing to the original end
+   std::array<char, sizeof(Int_t)> buf;
+   char *pbuf = buf.data();
+
+   Long64_t offset = seekGap;
+   f->Seek(offset);
+   tobuf(pbuf, -static_cast<Int_t>(sizeof(Int_t)));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   offset += sizeof(Int_t);
+   pbuf = buf.data();
+   tobuf(pbuf, -static_cast<Int_t>(seekGap + testKey.GetNbytes() + 1 - offset));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   offset += testKey.GetNbytes() + 1 - sizeof(Int_t);
+   f->Seek(offset);
+   pbuf = buf.data();
+   tobuf(pbuf, -static_cast<Int_t>(TFile::kMaxGapSize));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   offset += TFile::kMaxGapSize;
+   f->Seek(offset);
+   EXPECT_GT(seekGap + gapSize, offset);
+   EXPECT_LT(seekGap + gapSize - offset, TFile::kMaxGapSize);
+   pbuf = buf.data();
+   tobuf(pbuf, -static_cast<Int_t>(seekGap + gapSize - offset));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   testKey.WriteFile(1, f.get());
+
+   int step = 0;
+   for (const auto &k : f->WalkTKeys()) {
+      if (step == 3) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         EXPECT_EQ(k.fAddr + k.fLen, seekGap + gapSize);
+         step = 4;
+      } else if (step == 2) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         EXPECT_LT(k.fLen, TFile::kMaxGapSize);
+         step = 3;
+      } else if (step == 1) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         EXPECT_EQ(sizeof(Int_t), k.fLen);
+         step = 2;
+      } else if (k.fAddr == static_cast<ULong64_t>(seekGap)) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kKey, k.fType);
+         EXPECT_EQ(k.fLen, testKey.GetNbytes());
+         step = 1;
+      }
+   }
+   EXPECT_EQ(4, step);
+
+   f->Write();
+   f->Close();
+}
+
 TEST(TFile, KeySizeLimit)
 {
    // The following tests run out of memory on 32bit platforms

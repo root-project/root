@@ -21,6 +21,8 @@ class TBuffer;
 #include "TBuffer.h"
 #endif
 
+#include <array>
+
 class TBrowser;
 class TDirectory;
 class TFile;
@@ -38,6 +40,11 @@ private:
    Int_t UnzipBuffer(char *targetBuffer, const char *compressedBuffer) const;
 
 protected:
+   // After a key that has been placed in a gap larger than the key itself, one or very rarely two marker bytes
+   // follow to restore the linked list of segments. The two char buffers are meant to be written to disk, i.e.
+   // they should contain big-endian encoded negative integer values for the size of a gap, or zero if unused.
+   using GapHeaderBuf_t = std::array<std::array<char, sizeof(Int_t)>, 2>;
+
    Int_t       fVersion;     ///< Key version identifier
    Int_t       fNbytes;      ///< Number of bytes for the whole key on file (key header and data)
    Int_t       fObjlen;      ///< Length of uncompressed object in bytes
@@ -47,7 +54,7 @@ protected:
    Long64_t    fSeekKey;     ///< Location of object on file
    Long64_t    fSeekPdir;    ///< Location of parent directory on file
    TString     fClassName;   ///< Object Class name
-   Int_t       fLeft;        ///< Number of bytes left in current segment
+   Long64_t    fLeft;        ///< Number of bytes left in current segment
    char       *fBuffer;      ///< Object buffer
    TBuffer    *fBufferRef;   ///< Pointer to the TBuffer object
    UShort_t    fPidOffset;   ///<!Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
@@ -58,6 +65,7 @@ protected:
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
            void     Reset(); // Currently only for the use of TBasket.
    virtual Int_t    WriteFileKeepBuffer(TFile *f = nullptr);
+           UShort_t FillGapHeaderBuffers(TFile &f, GapHeaderBuf_t &buffers) const;
 
  public:
    TKey();
