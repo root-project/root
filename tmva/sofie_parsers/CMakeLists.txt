@@ -94,7 +94,6 @@ ROOT_LINKER_LIBRARY(ROOTTMVASofiePyParsers
     src/RModelParser_Keras.cxx
     src/RModelParser_PyTorch.cxx
   LIBRARIES
-    Python3::NumPy
     Python3::Python
     ROOTTMVASofie
 )

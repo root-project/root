@@ -4,8 +4,6 @@
 
 #include <Python.h>
 #include "TSystem.h"
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 
 #include "gtest/gtest.h"
 #include <cmath>
@@ -60,18 +58,17 @@ TEST(RModelParser_PyTorch, SEQUENTIAL_MODEL)
                                                         "-0.7750, -1.6701,"
                                                         " 0.8171, -0.2858]),(2,4))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).detach().numpy().reshape(2,6)",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputSequentialSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    PyRun_String("outputFlat=output.flatten().tolist()",Py_single_input,fGlobalNS,fLocalNS);
+    PyObject* pSequentialValues=PyDict_GetItemString(fLocalNS,"outputFlat");
+    std::size_t pOutputSequentialSize=(std::size_t)PyList_Size(pSequentialValues);
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputSequential.size(), pOutputSequentialSize);
 
-    PyArrayObject* pSequentialValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputSequential=(float*)PyArray_DATA(pSequentialValues);
-
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputSequential.size(); ++i) {
-      EXPECT_LE(std::abs(outputSequential[i] - pOutputSequential[i]), TOLERANCE);
+      float pOutputSequential=(float)PyFloat_AsDouble(PyList_GetItem(pSequentialValues, i));
+      EXPECT_LE(std::abs(outputSequential[i] - pOutputSequential), TOLERANCE);
     }
 
 }
@@ -114,18 +111,17 @@ TEST(RModelParser_PyTorch, MODULE_MODEL)
                                                        "-1.8818,  0.4736,"
                                                        " 1.1102,  1.8694]),(2,6))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).detach().numpy().reshape(2,12)",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputModuleSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    PyRun_String("outputFlat=output.flatten().tolist()",Py_single_input,fGlobalNS,fLocalNS);
+    PyObject* pModuleValues=PyDict_GetItemString(fLocalNS,"outputFlat");
+    std::size_t pOutputModuleSize=(std::size_t)PyList_Size(pModuleValues);
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputModule.size(), pOutputModuleSize);
 
-    PyArrayObject* pModuleValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputModule=(float*)PyArray_DATA(pModuleValues);
-
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputModule.size(); ++i) {
-      EXPECT_LE(std::abs(outputModule[i] - pOutputModule[i]), TOLERANCE);
+      float pOutputModule=(float)PyFloat_AsDouble(PyList_GetItem(pModuleValues, i));
+      EXPECT_LE(std::abs(outputModule[i] - pOutputModule), TOLERANCE);
     }
 }
 
@@ -158,17 +154,16 @@ TEST(RModelParser_PyTorch, CONVOLUTION_MODEL)
     PyRun_String("model=torch.jit.load('PyTorchModelConvolution.pt')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=torch.arange(1,751,dtype=torch.float).reshape(5,6,5,5)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).detach().numpy().reshape(5,5,2,2)",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputConvSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    PyRun_String("outputFlat=output.flatten().tolist()",Py_single_input,fGlobalNS,fLocalNS);
+    PyObject* pConvValues=PyDict_GetItemString(fLocalNS,"outputFlat");
+    std::size_t pOutputConvSize=(std::size_t)PyList_Size(pConvValues);
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputConv.size(), pOutputConvSize);
 
-    PyArrayObject* pConvValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputConv=(float*)PyArray_DATA(pConvValues);
-
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputConv.size(); ++i) {
-      EXPECT_LE(std::abs(outputConv[i] - pOutputConv[i]), TOLERANCE);
+      float pOutputConv=(float)PyFloat_AsDouble(PyList_GetItem(pConvValues, i));
+      EXPECT_LE(std::abs(outputConv[i] - pOutputConv), TOLERANCE);
     }
 }

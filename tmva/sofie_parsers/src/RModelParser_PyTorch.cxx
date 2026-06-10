@@ -25,9 +25,6 @@
 
 #include <Python.h>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
-
 namespace TMVA::Experimental::SOFIE::PyTorch {
 
 namespace {
@@ -486,32 +483,39 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     }
 
 
-    //Extracting model weights to add the initialized tensors to the RModel
+    // Extracting model weights to add the initialized tensors to the RModel
+    //
+    // The weight shapes and the raw contiguous bytes are extracted on the Python side
+    // (NumPy's `shape` attribute and `tobytes()`), so the parser does not depend on the
+    // NumPy C API and hence is not tied to a specific NumPy ABI/version.
     PyRunString("weightNames=[k for k in graph[1].keys()]",fGlobalNS,fLocalNS);
-    PyRunString("weights=[v.numpy() for v in graph[1].values()]",fGlobalNS,fLocalNS);
+    PyRunString("weightValues=[v.numpy() for v in graph[1].values()]",fGlobalNS,fLocalNS);
+    PyRunString("weightShapes=[list(v.shape) for v in weightValues]",fGlobalNS,fLocalNS);
+    PyRunString("weightBytes=[v.tobytes() for v in weightValues]",fGlobalNS,fLocalNS);
     PyRunString("weightDTypes=[v.type()[6:-6] for v in graph[1].values()]",fGlobalNS,fLocalNS);
     PyObject* fPWeightNames = PyDict_GetItemString(fLocalNS,"weightNames");
-    PyObject* fPWeightTensors = PyDict_GetItemString(fLocalNS,"weights");
+    PyObject* fPWeightShapes = PyDict_GetItemString(fLocalNS,"weightShapes");
+    PyObject* fPWeightBytes = PyDict_GetItemString(fLocalNS,"weightBytes");
     PyObject* fPWeightDTypes = PyDict_GetItemString(fLocalNS,"weightDTypes");
-    PyArrayObject* fWeightTensor;
     std::string fWeightName;
     ETensorType fWeightDType;
     std::vector<std::size_t> fWeightShape;
     std::size_t fWeightSize;
 
-    for(Py_ssize_t weightIter=0; weightIter<PyList_Size(fPWeightTensors);++weightIter){
-        fWeightTensor = (PyArrayObject*)PyList_GetItem(fPWeightTensors,weightIter);
+    for(Py_ssize_t weightIter=0; weightIter<PyList_Size(fPWeightNames);++weightIter){
         fWeightName   = PyStringAsString(PyList_GetItem(fPWeightNames,weightIter));
         fWeightDType  = ConvertStringToType(PyStringAsString(PyList_GetItem(fPWeightDTypes,weightIter)));
         fWeightSize   = 1;
         fWeightShape.clear();
-        for(int j=0; j<PyArray_NDIM(fWeightTensor); ++j){
-            fWeightShape.push_back((std::size_t)(PyArray_DIM(fWeightTensor,j)));
-            fWeightSize*=(std::size_t)(PyArray_DIM(fWeightTensor,j));
+        PyObject* fShapeList = PyList_GetItem(fPWeightShapes,weightIter);
+        for(Py_ssize_t j=0; j<PyList_Size(fShapeList); ++j){
+            std::size_t dim = (std::size_t)PyLong_AsLong(PyList_GetItem(fShapeList,j));
+            fWeightShape.push_back(dim);
+            fWeightSize*=dim;
         }
         switch(fWeightDType){
             case ETensorType::FLOAT:{
-                float* fWeightValue = (float*)PyArray_DATA(fWeightTensor);
+                char* fWeightValue = PyBytes_AsString(PyList_GetItem(fPWeightBytes,weightIter));
                 std::shared_ptr<void> fData(malloc(fWeightSize * sizeof(float)), free);
                 std::memcpy(fData.get(),fWeightValue,fWeightSize * sizeof(float));
                 rmodel.AddInitializedTensor(fWeightName, ETensorType::FLOAT,fWeightShape,fData);
