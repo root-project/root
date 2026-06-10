@@ -8,7 +8,7 @@
 namespace CPyCppyy {
 
 // make the named C++ class more python-like
-bool Pythonize(PyObject* pyclass, const std::string& name);
+bool Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope);
 
 } // namespace CPyCppyy
 

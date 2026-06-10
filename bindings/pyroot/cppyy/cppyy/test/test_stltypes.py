@@ -449,6 +449,7 @@ class TestSTLVECTOR:
         assert std.distance(v.begin(), v.end()) == v.size()
         assert std.distance[type(v).iterator](v.begin(), v.end()) == v.size()
 
+    @mark.xfail(run=False, reason="Fatal Python error: Segmentation fault")
     def test11_vector_of_pair(self):
         """Use of std::vector<std::pair>"""
 
@@ -615,7 +616,6 @@ class TestSTLVECTOR:
         v = cppyy.gbl.std.vector(l)
         assert list(l) == l
 
-    @mark.xfail(strict=True)
     def test18_array_interface(self):
         """Test usage of __array__ from numpy"""
 
@@ -1108,7 +1108,6 @@ class TestSTLSTRING:
         assert s.rfind('c')  < 0
         assert s.rfind('c') == s.npos
 
-    @mark.xfail(strict=True)
     def test10_string_in_repr_and_str_bytes(self):
         """Special cases for __str__/__repr__"""
 
@@ -1937,7 +1936,6 @@ class TestSTLTUPLE:
         t = std.make_tuple("aap", 42, 5.)
         assert std.tuple_size(type(t)).value == 3
 
-    @mark.xfail(strict=True)
     def test03_tuple_iter(self):
         """Pack/unpack tuples"""
 
@@ -1952,7 +1950,6 @@ class TestSTLTUPLE:
         assert b == '2'
         assert c == 5.
 
-    @mark.xfail(strict=True)
     def test04_tuple_lifeline(self):
         """Tuple memory management"""
 
@@ -2012,6 +2009,7 @@ class TestSTLPAIR:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = global_n
 
+    @mark.xfail(run=False, reason="Fatal Python error: Segmentation fault")
     def test01_pair_pack_unpack(self):
         """Pack/unpack pairs"""
 

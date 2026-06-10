@@ -42,6 +42,8 @@ dict_lookup_func gDictLookupOrg = nullptr;
 } // namespace CPyCppyy
 #endif
 
+std::map<Cppyy::TCppType_t, Cppyy::TCppType_t> TypeReductionMap;
+
 // Note: as of py3.11, dictionary objects no longer carry a function pointer for
 // the lookup, so it can no longer be shimmed and "from cppyy.interactive import *"
 // thus no longer works.
@@ -454,7 +456,7 @@ static PyObject* SetCppLazyLookup(PyObject*, PyObject* args)
 }
 
 //----------------------------------------------------------------------------
-static PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
+static PyObject* MakeCppTemplateClass(PyObject* /* self */, PyObject* args)
 {
 // Create a binding for a templated class instantiation.
 
@@ -464,14 +466,31 @@ static PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
         PyErr_Format(PyExc_TypeError, "too few arguments for template instantiation");
         return nullptr;
     }
+    PyObject *cppscope = PyTuple_GET_ITEM(args, 0);
+    void * tmpl = PyLong_AsVoidPtr(cppscope);
 
 // build "< type, type, ... >" part of class name (modifies pyname)
-    const std::string& tmpl_name =
-        Utility::ConstructTemplateArgs(PyTuple_GET_ITEM(args, 0), args, nullptr, Utility::kNone, 1);
-    if (!tmpl_name.size())
-        return nullptr;
+    std::vector<Cpp::TemplateArgInfo> types =
+        Utility::GetTemplateArgsTypes(cppscope, args, nullptr, Utility::kNone, 1);
+    if (PyErr_Occurred())
+      return nullptr;
 
-    return CreateScopeProxy(tmpl_name);
+    Cppyy::TCppScope_t scope = 
+        Cppyy::InstantiateTemplate(tmpl, types.data(), types.size());
+    for (Cpp::TemplateArgInfo i: types) {
+        if (i.m_IntegralValue)
+            std::free((void*)i.m_IntegralValue);
+    }
+
+    if (!scope) {
+      PyErr_Format(PyExc_TypeError,
+                   "Template instantiation failed: '%s' with args: '%s\n'",
+                   Cppyy::GetScopedFinalName(cppscope).c_str(),
+                   CPyCppyy_PyText_AsString(PyObject_Repr(args)));
+      return nullptr;
+    }
+
+    return CreateScopeProxy(scope);
 }
 
 //----------------------------------------------------------------------------
@@ -561,6 +580,12 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args, PyObject* kwds
             void* caddr = (void*)PyCFunction_GetFunction(arg0);
             return PyLong_FromLongLong((intptr_t)caddr);
         }
+
+    // LowLevelViews
+    if (LowLevelView_CheckExact(arg0)) {
+        auto *llv = (LowLevelView*)arg0;
+        return PyLong_FromLongLong((intptr_t)llv->get_buf());
+    }
 
     // final attempt: any type of buffer
         Utility::GetBuffer(arg0, '*', 1, addr, false);
@@ -680,7 +705,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
     }
 
 // convert 2nd argument first (used for both pointer value and instance cases)
-    Cppyy::TCppType_t cast_type = 0;
+    Cppyy::TCppScope_t cast_type = 0;
     PyObject* arg1 = PyTuple_GET_ITEM(args, 1);
     if (!CPyCppyy_PyText_Check(arg1)) {          // not string, then class
         if (CPPScope_Check(arg1))
@@ -691,7 +716,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         Py_INCREF(arg1);
 
     if (!cast_type && arg1) {
-        cast_type = (Cppyy::TCppType_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(arg1));
+        cast_type = (Cppyy::TCppScope_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(arg1));
         Py_DECREF(arg1);
     }
 
@@ -708,7 +733,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
     // if this instance's class has a relation to the requested one, calculate the
     // offset, erase if from any caches, and update the pointer and type
         CPPInstance* arg0_pyobj = (CPPInstance*)arg0;
-        Cppyy::TCppType_t cur_type = arg0_pyobj->ObjectIsA(false /* check_smart */);
+        Cppyy::TCppScope_t cur_type = arg0_pyobj->ObjectIsA(false /* check_smart */);
 
         bool isPython = CPPScope_Check(arg1) && \
             (((CPPClass*)arg1)->fFlags & CPPScope::kIsPython);
@@ -719,12 +744,12 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         }
 
         int direction = 0;
-        Cppyy::TCppType_t base = 0, derived = 0;
-        if (Cppyy::IsSubtype(cast_type, cur_type)) {
+        Cppyy::TCppScope_t base = 0, derived = 0;
+        if (Cppyy::IsSubclass(cast_type, cur_type)) {
             derived = cast_type;
             base    = cur_type;
             direction = -1;      // down-cast
-        } else if (Cppyy::IsSubtype(cur_type, cast_type)) {
+        } else if (Cppyy::IsSubclass(cur_type, cast_type)) {
             base    = cast_type;
             derived = cur_type;
             direction =  1;      // up-cast
@@ -898,7 +923,9 @@ static PyObject* AddTypeReducer(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, const_cast<char*>("ss"), &reducable, &reduced))
         return nullptr;
 
-    Cppyy::AddTypeReducer(reducable, reduced);
+    Cppyy::TCppType_t reducable_type = Cppyy::GetTypeFromScope(Cppyy::GetScope(reducable));
+    Cppyy::TCppType_t reduced_type = Cppyy::GetTypeFromScope(Cppyy::GetScope(reduced));
+    TypeReductionMap[reducable_type] = reduced_type;
 
     Py_RETURN_NONE;
 }
@@ -1056,6 +1083,7 @@ static struct PyModuleDef moduledef = {
     cpycppyymodule_clear,
     nullptr
 };
+
 #endif
 
 namespace CPyCppyy {
