@@ -230,7 +230,7 @@ TEST(TRootSniffer, set_title)
    std::string res;
 
    sniffer.Produce("/obj", "exe.json", "method=SetTitle&title=NewTitle", res);
-   EXPECT_EQ(res, "null") << "return value of exe.json when methout return void";
+   EXPECT_EQ(res, "null") << "return value of exe.json when method return void";
    EXPECT_EQ(std::string("NewTitle"), obj.GetTitle()) << "compare object title with applied value";
 
    res = "";
@@ -244,9 +244,31 @@ TEST(TRootSniffer, set_title)
    EXPECT_EQ(std::string("UrlStyleQuotedTitle"), obj.GetTitle()) << "compare object title with applied value";
 
    res = "";
-   sniffer.Produce("/obj", "exe.json", "method=SetTitle&title=Mail\"Formed\"Title", res);
+   sniffer.Produce("/obj", "exe.json", "method=SetTitle&title=Mal\"formed\"title", res);
    EXPECT_EQ(res, "null");
-   EXPECT_EQ(std::string("Mail\"Formed\"Title"), obj.GetTitle()) << "compare object title with applied value";
+   EXPECT_EQ(std::string("Mal\"formed\"title"), obj.GetTitle()) << "compare object title with applied value";
+}
+
+// changing object title many times
+TEST(TRootSniffer, many_set_title)
+{
+   TNamed obj("obj", "title");
+
+   TRootSnifferFull sniffer("sniffer");
+   // disable readonly to get method executed
+   sniffer.SetReadOnly(kFALSE);
+
+   sniffer.RegisterObject("/", &obj);
+
+   std::string res;
+
+   for (int n = 0; n < 1000; ++n) {
+      std::string new_title = "NewTitle" + std::to_string(n);
+
+      sniffer.Produce("/obj", "exe.json", "method=SetTitle&title=" + new_title, res);
+      EXPECT_EQ(res, "null") << "return value of exe.json when method return void";
+      EXPECT_EQ(new_title, obj.GetTitle()) << "compare object title with applied value";
+   }
 }
 
 // testing command execution with different signatures
