@@ -64,6 +64,7 @@
 #pragma link C++ class TNotifyLink<ROOT::Internal::RDF::RNewSampleFlag>;
 #pragma link C++ class ROOT::RDF::RCutFlowReport;
 #pragma link C++ class ROOT::RDF::TCutInfo;
+#pragma link C++ class ROOT::Detail::RDF::RMergeableValue<ROOT::RDF::RCutFlowReport>+;
 
 #endif
 
