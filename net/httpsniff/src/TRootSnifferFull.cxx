@@ -825,19 +825,29 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
 
    if (method != nullptr) {
       if (can_use_plain) {
-         call = new TMethodCall();
-         call->InitWithPrototype(obj_cl, method_name, prototype.IsNull() ? nullptr : prototype.Data());
-      } else
+         // prevent creation of huge cache
+         if (fExeCache.size() > 1000)
+            fExeCache.clear();
+         auto iter = fExeCache.find(method);
+         if (iter != fExeCache.end()) {
+            call = iter->second.get();
+         } else {
+            call = new TMethodCall();
+            call->InitWithPrototype(obj_cl, method_name, prototype.IsNull() ? nullptr : prototype.Data());
+            fExeCache.emplace(method, std::unique_ptr<TMethodCall>(call));
+         }
+      } else {
          call = new TMethodCall(obj_cl, method_name, call_args.Data());
+         garbage.Add(call);
+      }
       if (debug)
          debug->append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()).Data());
    } else {
       call = new TMethodCall(funcname.Data(), call_args.Data());
+      garbage.Add(call);
       if (debug)
          debug->append(TString::Format("Calling %s(%s);\n", funcname.Data(), call_args.Data()).Data());
    }
-
-   garbage.Add(call);
 
    if (!call->IsValid()) {
       if (debug)
