@@ -83,20 +83,12 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
 
          if ((getter.Length() > 0) && cl->GetMethodAllAny(getter)) {
             // execute getter method to get current state of toggle item
-
-            TMethodCall *call = new TMethodCall(cl, getter, "");
-
-            if (call->ReturnType() == TMethodCall::kLong) {
-               Longptr_t l(0);
-               call->Execute(obj, l);
-
+            TMethodCall call(cl, getter, "");
+            if (call.ReturnType() == TMethodCall::kLong) {
+               Longptr_t l = 0;
+               call.Execute(obj, l);
                AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, TString::Format("%s(%s)", m->GetName(), (l != 0) ? "0" : "1").Data(), m->GetClass());
-
-            } else {
-               // Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
             }
-
-            delete call;
          }
       } else {
          TList *args = m->GetListOfMethodArgs();
