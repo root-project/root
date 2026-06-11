@@ -90,7 +90,7 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    Int_t wait_tmout = args.IsHeadless() ? gEnv->GetValue("WebGui.CefHeadlessTimeout", 30) : -1;
 
    if (fCefApp) {
-      fCefApp->SetNextHandle(handle.get());
+      fCefApp->SetNextHandle(handle.get(), args.IsHeadless());
 
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
@@ -146,6 +146,9 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
       cef_argv.emplace_back("--allow-file-access-from-files");
       cef_argv.emplace_back("--disable-web-security");
       cef_argv.emplace_back("--disable-gpu");
+      cef_argv.emplace_back("--ignore-gpu-blocklist");
+      cef_argv.emplace_back("--use-gl=swiftshader");
+      cef_argv.emplace_back("--enable-unsafe-swiftshader");
       cef_argv.emplace_back("--off-screen-rendering-enabled");
       if (use_views)
          cef_argv.emplace_back("--ozone-platform=headless");
@@ -230,7 +233,7 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
                            args.GetHeight() > 0 ? args.GetHeight() : 600,
                            args.IsHeadless());
 
-   fCefApp->SetNextHandle(handle.get());
+   fCefApp->SetNextHandle(handle.get(), args.IsHeadless());
 
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, fCefApp.get(), nullptr);
