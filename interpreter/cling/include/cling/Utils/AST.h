@@ -360,6 +360,9 @@ namespace utils {
                               const clang::UsingShadowDecl *USD,
                               bool FullyQualify);
 
+    clang::QualType QualifyTypeUnderPrefix(const clang::ASTContext& Ctx,
+                                           clang::QualType QT,
+                                           clang::NestedNameSpecifier prefix);
   } // end namespace TypeName
 } // end namespace utils
 } // end namespace cling
