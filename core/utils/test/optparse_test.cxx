@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/optparse.hxx"
+#include "../inc/optparse.hxx"
 
 #include <vector>
 

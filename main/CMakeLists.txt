@@ -135,10 +135,18 @@ add_dependencies(rootcint rootcint)
 
 if (TARGET Gui)
   ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
+  target_include_directories(rootbrowse PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 endif()
-ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core Rint)
-ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
-ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core Rint)
-ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core Rint)
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core Rint)
+target_include_directories(rootcp PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
+
+ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
+target_include_directories(rootls PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
+
+ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core Rint)
+target_include_directories(rootmkdir PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
+
+ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core Rint)
+target_include_directories(rootrm PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
+
