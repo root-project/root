@@ -596,9 +596,34 @@ This patch release brings a few fixes, that accumulated during the last month.
   * [[#16673](https://github.com/root-project/root/issues/16673)] - [RF] Different behaviour of multi-range fit in RooAddPdf and RooProdPdf
 
 ## Release 6.38.06
-Published on June 15, 2026
+Published on June 12, 2026
 
 Last patch release of the 6.38 STS series, now superseded by the superior 6.40, LTS.
+
+### Items addressed in this release
+The following items were addressed for this release:
+
+  * [[#22501](https://github.com/root-project/root/issues/22501)] - THttpServer/TRootSniffer: exe.json leaks the object returned by the executed method (e.g. TH2::ProjectionY)
+  * [[#22496](https://github.com/root-project/root/issues/22496)] - root -q -e '.gh bug' doesn't work on ssh connections
+  * [[#22367](https://github.com/root-project/root/issues/22367)] - Wrong interaction of DefinePerSample with downstream varied action
+  * [[#22015](https://github.com/root-project/root/issues/22015)] - Non uniquess of the UUID inside TFile
+  * [[#21997](https://github.com/root-project/root/issues/21997)] - Memory leak in TFile::Open with UPDATE mode
+  * [[#21933](https://github.com/root-project/root/issues/21933)] - Web canvas saves files in the wrong format if extension is not specified
+  * [[#21881](https://github.com/root-project/root/issues/21881)] - [gui,asimage] crash when opening xpm icon in batch mode
+  * [[#21880](https://github.com/root-project/root/issues/21880)] - [asimage] crash with DrawCircle
+  * [[#21787](https://github.com/root-project/root/issues/21787)] - ROOT and Python 3.15
+  * [[#21758](https://github.com/root-project/root/issues/21758)] - [RDF] "error: macro name must be an identifier" when declaring C++ code for a distributed RDF
+  * [[#21756](https://github.com/root-project/root/issues/21756)] - [RDF] RDF.RSnapshotOptions with a distributed RDF
+  * [[#21732](https://github.com/root-project/root/issues/21732)] - invalid looping over the `std::array<long double,..>` objects  in PyROOT
+  * [[#21716](https://github.com/root-project/root/issues/21716)] - Strange error message when reading RNTuples
+  * [[#21693](https://github.com/root-project/root/issues/21693)] - [PyROOT] ROOT package import method changes gDirectory.pwd() result
+  * [[#21431](https://github.com/root-project/root/issues/21431)] - [cppyy] cast to long long pointer result in unsigned long long pointer
+  * [[#21367](https://github.com/root-project/root/issues/21367)] - Stack corruption in TColorGradient with clang 20 to 22
+  * [[#20066](https://github.com/root-project/root/issues/20066)] - [Python] cppyy cannot bind select types
+  * [[#18733](https://github.com/root-project/root/issues/18733)] - Get list of top-level fields from RDataFrame
+  * [[#16601](https://github.com/root-project/root/issues/16601)] - [6.32/master] Fail to materialise symbols from `libMatrix`
+  * [[#8125](https://github.com/root-project/root/issues/8125)] - BMP TASImage artefacts and crashes
+
 
 ### Versions of built-in packages
 
