@@ -1,8 +1,7 @@
 import os
-from pathlib import Path
 import sys
 import unittest
-
+from pathlib import Path
 
 hs3_root_dir = os.environ.get("HS3TESTSUITE_ROOT")
 if hs3_root_dir:
