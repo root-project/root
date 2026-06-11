@@ -22,7 +22,7 @@ def MakeKerasSwish(layer):
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
     if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
-        op = SOFIE.ROperator_Swish("float")(fLayerInputName, fLayerOutputName)
+        op = SOFIE.ROperator_Swish(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError("TMVA::SOFIE - Unsupported - Operator Swish does not yet support input type " + fLayerDType)
