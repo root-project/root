@@ -77,6 +77,8 @@ class RHistEngine final {
    // For slicing, RHist needs to call SliceImpl.
    friend class RHist<BinContentType>;
 
+   friend class RProfile;
+
    /// The axis configuration for this histogram. Relevant methods are forwarded from the public interface.
    Internal::RAxes fAxes;
    /// The bin contents for this histogram
@@ -409,6 +411,27 @@ public:
       }
    }
 
+   /// \}
+   // End the group to ensure that all contained member functions are public.
+
+private:
+   // Also used by RProfile::Fill(const A &...args) - similar to the variadic RHistEngine::Fill(const A &...args) below,
+   // is has all arguments in the forwarded std::tuple and needs to explicitly specify how many of them should be used
+   // by RAxes::ComputeGlobalIndexImpl<N>(args).
+   template <std::size_t N, typename... A, typename W>
+   void FillImpl(const std::tuple<A...> &args, const W &weight)
+   {
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         fBinContents[index.fIndex] += weight;
+      }
+   }
+
+public:
+   /// \name Filling
+   /// \{
+
    /// Fill an entry into the histogram with a user-defined weight.
    ///
    /// This overload is only available for user-defined bin content types.
@@ -432,11 +455,7 @@ public:
       if (sizeof...(A) != GetNDimensions()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
-      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
-      if (index.fValid) {
-         assert(index.fIndex < fBinContents.size());
-         fBinContents[index.fIndex] += weight;
-      }
+      FillImpl<sizeof...(A)>(args, weight);
    }
 
    /// Fill an entry into the histogram.
