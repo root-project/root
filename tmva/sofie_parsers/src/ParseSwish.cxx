@@ -34,12 +34,7 @@ ParserFuncSignature ParseSwish = [](RModelParser_ONNX &parser, const onnx::NodeP
 
    std::string output_name = nodeproto.output(0);
 
-   switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Swish<float>(input_name, output_name)); break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Swish does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+   op.reset(new ROperator_Swish(input_name, output_name));
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
