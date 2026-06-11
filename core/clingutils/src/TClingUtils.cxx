@@ -3255,22 +3255,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    if (prefix) {
       // LLVM22: In the old API this was:
       // instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
-
-      // In case of template specializations iterate over the arguments and
-      // fully qualify them as well.
-      if (const auto *TT = llvm::dyn_cast<clang::TagType>(instanceType.getTypePtr())) {
-        // We are asked to fully qualify and we have a Record Type (which
-        // may point to a template specialization) or Template
-        // Specialization Type. We need to fully qualify their arguments.
-
-        const clang::Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-            Ctx, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
-        instanceType = clang::QualType(TypePtr, 0);
-      } else if (const auto *TT = llvm::dyn_cast<clang::TypedefType>(instanceType.getTypePtr())) {
-        instanceType = Ctx.getTypedefType(
-            TT->getKeyword(), prefix, TT->getDecl(),
-            clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
-      }
+      instanceType = cling::utils::TypeName::QualifyTypeUnderPrefix(Ctx, instanceType, prefix);
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
@@ -4188,29 +4173,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    if (prefix) {
       // LLVM22: In the old API this was:
       // normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
-
-      // In case of template specializations iterate over the arguments and
-      // fully qualify them as well.
-      if (const auto *TT = dyn_cast<TagType>(normalizedType.getTypePtr())) {
-        // We are asked to fully qualify and we have a Record Type (which
-        // may point to a template specialization) or Template
-        // Specialization Type. We need to fully qualify their arguments.
-
-        const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-            astCtxt, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
-        normalizedType = QualType(TypePtr, 0);
-      } else if (const auto *TT = dyn_cast<TypedefType>(normalizedType.getTypePtr())) {
-        normalizedType = astCtxt.getTypedefType(
-            TT->getKeyword(), prefix, TT->getDecl(),
-            clang::TypeName::getFullyQualifiedType(TT->desugar(), astCtxt, /*WithGlobalNsPrefix=*/false));
-      } else if (const auto *TST =
-                 dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr())) {
-        // e.g. TDataPoint<float> with prefix NS:: reconstructed as
-        // NS::TDataPoint<float>
-        const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
-            astCtxt, TST, /*WithGlobalNsPrefix=*/false);
-        normalizedType = QualType(TypePtr, 0);
-      }
+      normalizedType = cling::utils::TypeName::QualifyTypeUnderPrefix(astCtxt, normalizedType, prefix);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
 }

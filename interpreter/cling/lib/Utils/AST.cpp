@@ -133,6 +133,23 @@ namespace utils {
     return FQQT.getAsString(Policy);
   }
 
+  // Does not exist upstream. Maybe upstream?
+  QualType TypeName::QualifyTypeUnderPrefix(const ASTContext& Ctx, QualType QT,
+                                            NestedNameSpecifier prefix) {
+    if (const auto* TT = dyn_cast<TagType>(QT.getTypePtr())) {
+      const Type* TypePtr = TypeName::getFullyQualifiedTemplateType(
+          Ctx, TT, ElaboratedTypeKeyword::None, prefix,
+          /*WithGlobalNsPrefix=*/false);
+      QT = QualType(TypePtr, 0);
+    } else if (const auto* TT = dyn_cast<TypedefType>(QT.getTypePtr())) {
+      QT = Ctx.getTypedefType(
+          ElaboratedTypeKeyword::None, prefix, TT->getDecl(),
+          TypeName::getFullyQualifiedType(TT->desugar(), Ctx,
+                                          /*WithGlobalNsPrefix=*/false));
+    }
+    return QT;
+  }
+
   static
   QualType GetPartiallyDesugaredTypeImpl(const ASTContext& Ctx,
                                          QualType QT,
