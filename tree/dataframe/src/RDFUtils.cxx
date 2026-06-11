@@ -513,9 +513,19 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
                             const std::string &colName)
 {
-   // We want to explicitly support the reading of bools as unsigned char, as
-   // this is quite common to circumvent the std::vector<bool> specialization.
-   const bool explicitlySupported = (colType == typeid(bool) && requestedType == typeid(unsigned char)) ? true : false;
+   // We explicitly support certain type conversions
+   const bool explicitlySupported = [&colType, &requestedType]() {
+      // bool as unsigned char is common to circumvent the std::vector<bool> specialization.
+      if (colType == typeid(bool) && requestedType == typeid(unsigned char))
+         return true;
+      // char as unsigned char allows reading a vector of char as a Python numpy array of integers, avoiding the
+      // automatic conversion of 'char *' to string in Python. For more info, see
+      // https://github.com/root-project/root/issues/22554
+      if (colType == typeid(char) && requestedType == typeid(unsigned char))
+         return true;
+
+      return false;
+   }();
 
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
