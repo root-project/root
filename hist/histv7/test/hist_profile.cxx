@@ -23,6 +23,8 @@ TEST(RProfile, Constructor)
    EXPECT_EQ(profile.GetNDimensions(), 2);
    const auto &engine = profile.GetEngine();
    EXPECT_EQ(engine.GetNDimensions(), 2);
+   const auto &stats = profile.GetStats();
+   EXPECT_EQ(stats.GetNDimensions(), 3);
    EXPECT_EQ(profile.GetAxes().size(), 2);
    // Both axes include underflow and overflow bins.
    EXPECT_EQ(profile.GetTotalNBins(), (Bins + 2) * (Bins + 2));
@@ -73,6 +75,13 @@ TEST(RProfile, Fill)
    EXPECT_EQ(bin9.fSumValues2, 625.0);
    EXPECT_EQ(bin9.fSum, 1.0);
    EXPECT_EQ(bin9.fSum2, 1.0);
+
+   EXPECT_EQ(profile.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(profile.ComputeNEffectiveEntries(), 2);
+   EXPECT_FLOAT_EQ(profile.ComputeMean(0), 9);
+   EXPECT_FLOAT_EQ(profile.ComputeStdDev(0), 0.5);
+   EXPECT_FLOAT_EQ(profile.ComputeMean(1), 24.0);
+   EXPECT_FLOAT_EQ(profile.ComputeStdDev(1), 1.0);
 }
 
 TEST(RProfile, FillInvalidNumberOfArguments)
@@ -111,6 +120,14 @@ TEST(RProfile, FillWeight)
    EXPECT_FLOAT_EQ(bin9.fSumValues2, 562.5);
    EXPECT_FLOAT_EQ(bin9.fSum, 0.9);
    EXPECT_FLOAT_EQ(bin9.fSum2, 0.81);
+
+   EXPECT_EQ(profile.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(profile.GetStats().GetSumW(), 1.7);
+   EXPECT_FLOAT_EQ(profile.GetStats().GetSumW2(), 1.45);
+   // Cross-checked with TH1
+   EXPECT_FLOAT_EQ(profile.ComputeNEffectiveEntries(), 1.9931034);
+   EXPECT_FLOAT_EQ(profile.ComputeMean(0), 9.0294118);
+   EXPECT_FLOAT_EQ(profile.ComputeStdDev(0), 0.49913420);
 }
 
 TEST(RProfile, FillWeightInvalidNumberOfArguments)
@@ -151,6 +168,9 @@ TEST(RProfile, FillCategorical)
    EXPECT_EQ(bin2.fSumValues2, 625.0);
    EXPECT_EQ(bin2.fSum, 1.0);
    EXPECT_EQ(bin2.fSum2, 1.0);
+
+   EXPECT_EQ(profile.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(profile.ComputeNEffectiveEntries(), 2);
 }
 
 TEST(RProfile, FillCategoricalWeight)
@@ -173,4 +193,35 @@ TEST(RProfile, FillCategoricalWeight)
    EXPECT_FLOAT_EQ(bin2.fSumValues2, 562.5);
    EXPECT_FLOAT_EQ(bin2.fSum, 0.9);
    EXPECT_FLOAT_EQ(bin2.fSum2, 0.81);
+
+   EXPECT_EQ(profile.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(profile.GetStats().GetSumW(), 1.7);
+   EXPECT_FLOAT_EQ(profile.GetStats().GetSumW2(), 1.45);
+   // Cross-checked with TH1
+   EXPECT_FLOAT_EQ(profile.ComputeNEffectiveEntries(), 1.9931034);
+}
+
+TEST(RProfile, FillExceptionSafety)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RProfile profile({axis, axis});
+
+   profile.Fill(1.5, 2.5, 3.5);
+   ASSERT_EQ(profile.GetNEntries(), 1);
+   ASSERT_EQ(profile.GetBinContent(RBinIndex(1), RBinIndex(2)).fSumValues, 3.5);
+
+   EXPECT_THROW(profile.Fill(1.5, "b", 3.5), std::invalid_argument);
+   EXPECT_THROW(profile.Fill(std::make_tuple(1.5, "b"), 3.5), std::invalid_argument);
+   EXPECT_THROW(profile.Fill(1.5, "b", 3.5, RWeight(1)), std::invalid_argument);
+   EXPECT_THROW(profile.Fill(std::make_tuple(1.5, "b"), 3.5, RWeight(1)), std::invalid_argument);
+
+   // Verify exception safety. Only the first entry should be there.
+   EXPECT_EQ(profile.GetNEntries(), 1);
+   EXPECT_EQ(profile.GetBinContent(RBinIndex(1), RBinIndex(2)).fSumValues, 3.5);
+   EXPECT_EQ(profile.GetStats().GetSumW(), 1);
+   EXPECT_EQ(profile.GetStats().GetSumW2(), 1);
+   EXPECT_EQ(profile.GetStats().GetDimensionStats(0).fSumWX, 1.5);
+   EXPECT_EQ(profile.GetStats().GetDimensionStats(1).fSumWX, 2.5);
+   EXPECT_EQ(profile.GetStats().GetDimensionStats(2).fSumWX, 3.5);
 }
