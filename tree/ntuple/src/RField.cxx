@@ -643,6 +643,26 @@ void ROOT::Internal::AddItemToRecord(RRecordField &record, std::unique_ptr<RFiel
    // Only supported for untyped records
    assert(record.GetTypeName().empty());
    record.AddItem(std::move(newItem));
+
+   // For nested record fields, we have to reattach all fields of all parents because the modification to the
+   // current field will change its size and may change its alignment and hence the layout of all parents.
+   auto parent = record.fParent;
+   while (parent && typeid(*parent) != typeid(RFieldZero)) {
+      // untyped records can only have an untyped record as parent
+      assert(dynamic_cast<RRecordField *>(parent) && parent->GetTypeName().empty());
+
+      auto precord = static_cast<RRecordField *>(parent);
+      std::vector<std::unique_ptr<ROOT::RFieldBase>> subfields;
+      std::swap(precord->fSubfields, subfields);
+      precord->fTraits = ROOT::RFieldBase::kTraitExtensible;
+      precord->fSubfieldNames.clear();
+      precord->fMaxAlignment = 1;
+      precord->fSize = 0;
+      precord->fOffsets.clear();
+      precord->AttachItemFields(std::move(subfields));
+
+      parent = precord->fParent;
+   }
 }
 
 std::size_t ROOT::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
@@ -730,7 +750,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RRecordField::GetDeleter() con
    for (const auto &f : fSubfields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RRecordDeleter>(std::move(itemDeleters), fOffsets);
+   return std::make_unique<RRecordDeleter>(std::move(itemDeleters), fOffsets, GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RRecordField::SplitValue(const RValue &value) const
@@ -1168,7 +1188,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::ROptionalField::GetDeleter() c
 {
    return std::make_unique<ROptionalDeleter>(
       (fSubfields[0]->GetTraits() & kTraitTriviallyDestructible) ? nullptr : GetDeleterOf(*fSubfields[0]),
-      fSubfields[0]->GetValueSize());
+      fSubfields[0]->GetValueSize(), GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::ROptionalField::SplitValue(const RValue &value) const

@@ -23,6 +23,7 @@
 #include <map>
 #include <stdexcept>
 #include <set>
+#include <unordered_map>
 
 namespace RooFit {
 namespace JSONIO {
@@ -253,5 +254,12 @@ private:
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+
+   // Name-keyed indices over the top-level "functions" and "distributions"
+   // sequences of the input JSON. Built once at the start of importAllNodes()
+   // so that requestImpl() lookups become O(1) instead of an O(N) scan over
+   // every sibling node.
+   std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _functionsByName;
+   std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _distributionsByName;
 };
 #endif

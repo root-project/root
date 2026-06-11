@@ -512,6 +512,29 @@ Bool_t TRootSnifferFull::ProduceXml(const std::string &path, const std::string &
    return !res.empty();
 }
 
+class TArgHolderBase : public TObject {
+   public:
+      TArgHolderBase() : TObject() {}
+      virtual const void *GetPtr() const { return nullptr; }
+};
+
+template<typename T>
+class TArgHolder : public TArgHolderBase {
+   public:
+      T fValue;
+      TArgHolder(T v) : fValue(v) {}
+      const void *GetPtr() const override { return &fValue; }
+};
+
+class TArgHolderConstChar : public TArgHolderBase {
+   public:
+      TString fValue;
+      const char *fBuf = nullptr;
+      TArgHolderConstChar(const char *v) : fValue(v) { fBuf = fValue.Data(); }
+      const void *GetPtr() const override { return &fBuf; }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute command for specified object
 ///
@@ -613,9 +636,18 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
    garbage.SetOwner(kTRUE);     // use as garbage collection
    TObject *post_obj = nullptr; // object reconstructed from post request
    TString call_args;
+   std::vector<const void *> plain_args;
+   Bool_t can_use_plain = kTRUE, add_plain = kFALSE;
+
+   auto add_plain_arg = [&plain_args, &garbage, &add_plain](TArgHolderBase *arg) {
+      plain_args.emplace_back(arg->GetPtr());
+      garbage.Add(arg);
+      add_plain = kTRUE;
+   };
 
    TIter next(args);
    while (auto arg = static_cast<TMethodArg *>(next())) {
+      add_plain = kFALSE;
 
       if ((strcmp(arg->GetName(), "rest_url_opt") == 0) && (strcmp(arg->GetFullTypeName(), "const char*") == 0) &&
           (args->GetSize() == 1)) {
@@ -629,6 +661,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
          call_args.Append("\"");
          call_args.Append(DecodeUrlOptionValue(rest_url, kTRUE));
          call_args.Append("\"");
+         add_plain_arg(new TArgHolderConstChar(rest_url));
          break;
       }
 
@@ -642,6 +675,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       if (sval == "_this_") {
          // special case - object itself is used as argument
          sval.Form("(%s*)0x%zx", obj_cl->GetName(), (size_t)obj_ptr);
+         add_plain_arg(new TArgHolder<void*>(obj_ptr));
       } else if ((fCurrentArg != nullptr) && (fCurrentArg->GetPostData() != nullptr)) {
          // process several arguments which are specific for post requests
          if (fAllowPostObject && (sval == "_post_object_xml_")) {
@@ -654,6 +688,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
+            add_plain_arg(new TArgHolder<void*>(post_obj));
          } else if (fAllowPostObject && (sval == "_post_object_json_")) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferJSON::ConvertFromJSON((const char *)fCurrentArg->GetPostData());
@@ -664,6 +699,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                if (url.HasOption("_destroy_post_"))
                   garbage.Add(post_obj);
             }
+            add_plain_arg(new TArgHolder<void*>(post_obj));
          } else if (fAllowPostObject && (sval == "_post_object_") && url.HasOption("_post_class_")) {
             TString clname = DecodeUrlOptionValue(url.GetValueFromOptions("_post_class_"), kTRUE);
             TClass *arg_cl = gROOT->GetClass(clname, kTRUE, kTRUE);
@@ -686,9 +722,11 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                sval = "0";
             else
                sval.Form("(%s*)0x%zx", clname.Data(), (size_t)post_obj);
-         } else if (sval == "_post_data_")
+            add_plain_arg(new TArgHolder<void*>(post_obj));
+         } else if (sval == "_post_data_") {
             sval.Form("(void*)0x%zx", (size_t)fCurrentArg->GetPostData());
-         else if (sval == "_post_length_")
+            add_plain_arg(new TArgHolder<const void*>(fCurrentArg->GetPostData()));
+         } else if (sval == "_post_length_")
             sval.Form("%ld", (long)fCurrentArg->GetPostDataLength());
          else
             sanitize_numeric = kTRUE;
@@ -705,6 +743,39 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
 
       if (call_args.Length() > 0)
          call_args += ", ";
+
+      if (!add_plain) {
+         std::string tname = arg->GetTypeNormalizedName();
+         if (tname == "const char*")
+            // one can use original string, just remove optional quotes
+            add_plain_arg(new TArgHolderConstChar(DecodeUrlOptionValue(val, kTRUE, kFALSE)));
+         else if (tname == "bool")
+            add_plain_arg(new TArgHolder<bool>(!sval.IsNull() && (sval != "0") && (sval != "false")));
+         else if (tname == "double")
+            add_plain_arg(new TArgHolder<double>(std::stod(sval.Data())));
+         else if (tname == "float")
+            add_plain_arg(new TArgHolder<float>(std::stof(sval.Data())));
+         else if (tname == "int")
+            add_plain_arg(new TArgHolder<int>(std::stol(sval.Data())));
+         else if (tname == "long")
+            add_plain_arg(new TArgHolder<long>(std::stol(sval.Data())));
+         else if (tname == "short")
+            add_plain_arg(new TArgHolder<short>(std::stol(sval.Data())));
+         else if (tname == "char")
+            add_plain_arg(new TArgHolder<char>(std::stol(sval.Data())));
+         else if (tname == "unsigned int")
+            add_plain_arg(new TArgHolder<unsigned int>(std::stoul(sval.Data())));
+         else if (tname == "unisgned long")
+            add_plain_arg(new TArgHolder<unsigned long>(std::stoul(sval.Data())));
+         else if (tname == "unsigned short")
+            add_plain_arg(new TArgHolder<unsigned short>(std::stoul(sval.Data())));
+         else if (tname == "unsigned char")
+            add_plain_arg(new TArgHolder<unsigned char>(std::stoul(sval.Data())));
+         else if (!tname.empty() && tname.back() == '*' && (sval == "0" || sval == "null" || sval == "nullptr"))
+            add_plain_arg(new TArgHolder<Longptr_t>(0));
+         else
+            can_use_plain = kFALSE; // unsupported type, plain args cannot be used
+      }
 
       Bool_t isstr = (strcmp(arg->GetFullTypeName(), "const char*") == 0) ||
                      (strcmp(arg->GetFullTypeName(), "Option_t*") == 0) ||
@@ -742,16 +813,30 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
    TMethodCall *call = nullptr;
 
    if (method != nullptr) {
-      call = new TMethodCall(obj_cl, method_name, call_args.Data());
+      if (can_use_plain) {
+         // prevent creation of huge cache
+         if (fExeCache.size() > 1000)
+            fExeCache.clear();
+         auto iter = fExeCache.find(method);
+         if (iter != fExeCache.end()) {
+            call = iter->second.get();
+         } else {
+            call = new TMethodCall();
+            call->InitWithPrototype(obj_cl, method_name, prototype.IsNull() ? nullptr : prototype.Data());
+            fExeCache.emplace(method, std::unique_ptr<TMethodCall>(call));
+         }
+      } else {
+         call = new TMethodCall(obj_cl, method_name, call_args.Data());
+         garbage.Add(call);
+      }
       if (debug)
          debug->append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()).Data());
    } else {
       call = new TMethodCall(funcname.Data(), call_args.Data());
+      garbage.Add(call);
       if (debug)
          debug->append(TString::Format("Calling %s(%s);\n", funcname.Data(), call_args.Data()).Data());
    }
-
-   garbage.Add(call);
 
    if (!call->IsValid()) {
       if (debug)
@@ -772,10 +857,23 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       garbage.Add(resbuf);
    }
 
-   switch (call->ReturnType()) {
+   auto ret_type = call->ReturnType();
+   if (ret_type == TMethodCall::kOther) {
+      std::string ret_kind = func ? func->GetReturnTypeNormalizedName() : method->GetReturnTypeNormalizedName();
+      if ((ret_kind.length() > 0) && (ret_kind[ret_kind.length() - 1] == '*')) {
+         ret_kind.resize(ret_kind.length() - 1);
+         ret_cl = gROOT->GetClass(ret_kind.c_str(), kTRUE, kTRUE);
+      }
+      if (!ret_cl)
+         ret_type = TMethodCall::kNone;
+   }
+
+   switch (ret_type) {
    case TMethodCall::kLong: {
-      Longptr_t l(0);
-      if (method)
+      Longptr_t l = 0;
+      if (method && can_use_plain)
+         call->Execute(obj_ptr, plain_args.data(), plain_args.size(), &l);
+      else if (method)
          call->Execute(obj_ptr, l);
       else
          call->Execute(l);
@@ -786,8 +884,10 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       break;
    }
    case TMethodCall::kDouble: {
-      Double_t d(0.);
-      if (method)
+      Double_t d = 0.;
+      if (method && can_use_plain)
+         call->Execute(obj_ptr, plain_args.data(), plain_args.size(), &d);
+      else if (method)
          call->Execute(obj_ptr, d);
       else
          call->Execute(d);
@@ -799,7 +899,9 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
    }
    case TMethodCall::kString: {
       char *txt = nullptr;
-      if (method)
+      if (method && can_use_plain)
+         call->Execute(obj_ptr, plain_args.data(), plain_args.size(), &txt);
+      else if (method)
          call->Execute(obj_ptr, &txt);
       else
          call->Execute(&txt);
@@ -812,31 +914,21 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
       break;
    }
    case TMethodCall::kOther: {
-      std::string ret_kind = func ? func->GetReturnTypeNormalizedName() : method->GetReturnTypeNormalizedName();
-      if ((ret_kind.length() > 0) && (ret_kind[ret_kind.length() - 1] == '*')) {
-         ret_kind.resize(ret_kind.length() - 1);
-         ret_cl = gROOT->GetClass(ret_kind.c_str(), kTRUE, kTRUE);
-      }
-
-      if (ret_cl != nullptr) {
-         Longptr_t l(0);
-         if (method)
-            call->Execute(obj_ptr, l);
-         else
-            call->Execute(l);
-         if (l != 0)
-            ret_obj = (void *)l;
-      } else {
-         if (method)
-            call->Execute(obj_ptr);
-         else
-            call->Execute();
-      }
-
+      Longptr_t l = 0;
+      if (method && can_use_plain)
+         call->Execute(obj_ptr, plain_args.data(), plain_args.size(), &l);
+      else if (method)
+         call->Execute(obj_ptr, l);
+      else
+         call->Execute(l);
+      if (l != 0)
+         ret_obj = (void *)l;
       break;
    }
    case TMethodCall::kNone: {
-      if (method)
+      if (method && can_use_plain)
+         call->Execute(obj_ptr, plain_args.data(), plain_args.size());
+      else if (method)
          call->Execute(obj_ptr);
       else
          call->Execute();

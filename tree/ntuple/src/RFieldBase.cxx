@@ -2,6 +2,7 @@
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
@@ -95,6 +96,13 @@ ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::str
 
 //------------------------------------------------------------------------------
 
+void ROOT::RFieldBase::RDeleter::DeleteAligned(void *objPtr) const
+{
+   operator delete(objPtr, std::align_val_t(fAlignment));
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::RFieldBase::RColumnRepresentations::RColumnRepresentations()
 {
    // A single representations with an empty set of columns
@@ -167,7 +175,7 @@ void ROOT::RFieldBase::RBulkValues::ReleaseValues()
       }
    }
 
-   operator delete(fValues);
+   operator delete(fValues, std::align_val_t(fField->GetAlignment()));
 }
 
 void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::size_t size)
@@ -177,7 +185,7 @@ void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::siz
          throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
       }
       ReleaseValues();
-      fValues = operator new(size * fValueSize);
+      fValues = operator new(size * fValueSize, std::align_val_t(fField->GetAlignment()));
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
@@ -632,7 +640,15 @@ std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
 
 void *ROOT::RFieldBase::CreateObjectRawPtr() const
 {
-   void *where = operator new(GetValueSize());
+   const auto align = GetAlignment();
+   void *where;
+   if (align <= sizeof(std::max_align_t)) {
+      // We use the normal operator new for regularly aligned types to not complicate the user code that
+      // deletes objects returned by CreateObject()
+      where = operator new(GetValueSize());
+   } else {
+      where = operator new(GetValueSize(), std::align_val_t(GetAlignment()));
+   }
    R__ASSERT(where != nullptr);
    ConstructValue(where);
    return where;

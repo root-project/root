@@ -198,7 +198,13 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
-  set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+  elseif(TARGET ROOT::genreflex)
+    set(ROOT_genreflex_CMD $<TARGET_FILE:ROOT::genreflex>)
+  else()
+    set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
+  endif()
   add_custom_command(
     COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
