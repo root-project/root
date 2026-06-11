@@ -50,6 +50,10 @@ It also keeps statistics of the unbinned values for each dimension.
 This class combines `RHistEngine`, with its axes and bin contents, and `RHistStats`.
 During `Fill`, it delegates to `RHistEngine::Fill` but also updates the histogram statistics.
 
+### `RProfile`
+
+This class builds on `RHistEngine`, but requires an additional value during `Fill`.
+
 ## Classes for Weighted Filling
 
 ### `RBinWithError`
