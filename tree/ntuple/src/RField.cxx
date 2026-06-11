@@ -14,6 +14,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -158,7 +159,8 @@ void ROOT::RSimpleField<T>::ReconcileFloatingPointField(const RNTupleDescriptor 
    EnsureMatchingOnDiskField(desc, kDiffTypeName);
 
    const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   if (!(fieldDesc.GetTypeName() == "float" || fieldDesc.GetTypeName() == "double")) {
+   const auto onDiskTypeName = ROOT::Internal::GetRenormalizedTypeName(fieldDesc.GetTypeName());
+   if (!(onDiskTypeName == "float" || onDiskTypeName == "double")) {
       throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
                                GetTypeName() + "'\n" + Internal::GetTypeTraceReport(*this, desc)));
    }
