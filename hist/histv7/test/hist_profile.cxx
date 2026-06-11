@@ -59,8 +59,14 @@ TEST(RProfile, Fill)
    static constexpr std::size_t Bins = 20;
    RProfile profile(Bins, {0, Bins});
 
+   profile.Fill(8.5, 23.0);
    profile.Fill(std::make_tuple(9.5), 25.0);
 
+   auto &bin8 = profile.GetBinContent(RBinIndex(8));
+   EXPECT_EQ(bin8.fSumValues, 23.0);
+   EXPECT_EQ(bin8.fSumValues2, 529.0);
+   EXPECT_EQ(bin8.fSum, 1.0);
+   EXPECT_EQ(bin8.fSum2, 1.0);
    std::array<RBinIndex, 1> indices = {9};
    auto &bin9 = profile.GetBinContent(indices);
    EXPECT_EQ(bin9.fSumValues, 25.0);
@@ -69,13 +75,36 @@ TEST(RProfile, Fill)
    EXPECT_EQ(bin9.fSum2, 1.0);
 }
 
+TEST(RProfile, FillInvalidNumberOfArguments)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RProfile profile1(axis);
+   ASSERT_EQ(profile1.GetNDimensions(), 1);
+   RProfile profile2(axis, axis);
+   ASSERT_EQ(profile2.GetNDimensions(), 2);
+
+   EXPECT_NO_THROW(profile1.Fill(1, 2));
+   EXPECT_THROW(profile1.Fill(1, 2, 3), std::invalid_argument);
+
+   EXPECT_THROW(profile2.Fill(1, 2), std::invalid_argument);
+   EXPECT_NO_THROW(profile2.Fill(1, 2, 3));
+   EXPECT_THROW(profile2.Fill(1, 2, 3, 4), std::invalid_argument);
+}
+
 TEST(RProfile, FillWeight)
 {
    static constexpr std::size_t Bins = 20;
    RProfile profile(Bins, {0, Bins});
 
+   profile.Fill(8.5, 23.0, RWeight(0.8));
    profile.Fill(std::make_tuple(9.5), 25.0, RWeight(0.9));
 
+   auto &bin8 = profile.GetBinContent(RBinIndex(8));
+   EXPECT_FLOAT_EQ(bin8.fSumValues, 18.4);
+   EXPECT_FLOAT_EQ(bin8.fSumValues2, 423.2);
+   EXPECT_FLOAT_EQ(bin8.fSum, 0.8);
+   EXPECT_FLOAT_EQ(bin8.fSum2, 0.64);
    std::array<RBinIndex, 1> indices = {9};
    auto &bin9 = profile.GetBinContent(indices);
    EXPECT_FLOAT_EQ(bin9.fSumValues, 22.5);
@@ -84,14 +113,38 @@ TEST(RProfile, FillWeight)
    EXPECT_FLOAT_EQ(bin9.fSum2, 0.81);
 }
 
+TEST(RProfile, FillWeightInvalidNumberOfArguments)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RProfile profile1(axis);
+   ASSERT_EQ(profile1.GetNDimensions(), 1);
+   RProfile profile2(axis, axis);
+   ASSERT_EQ(profile2.GetNDimensions(), 2);
+
+   EXPECT_THROW(profile1.Fill(1, RWeight(1)), std::invalid_argument);
+   EXPECT_NO_THROW(profile1.Fill(1, 2, RWeight(1)));
+   EXPECT_THROW(profile1.Fill(1, 2, 3, RWeight(1)), std::invalid_argument);
+
+   EXPECT_THROW(profile2.Fill(1, 2, RWeight(1)), std::invalid_argument);
+   EXPECT_NO_THROW(profile2.Fill(1, 2, 3, RWeight(1)));
+   EXPECT_THROW(profile2.Fill(1, 2, 3, 4, RWeight(1)), std::invalid_argument);
+}
+
 TEST(RProfile, FillCategorical)
 {
    const std::vector<std::string> categories = {"a", "b", "c"};
    const RCategoricalAxis axis(categories);
    RProfile profile({axis});
 
+   profile.Fill("b", 23.0);
    profile.Fill(std::make_tuple("c"), 25.0);
 
+   auto &bin1 = profile.GetBinContent(RBinIndex(1));
+   EXPECT_EQ(bin1.fSumValues, 23.0);
+   EXPECT_EQ(bin1.fSumValues2, 529.0);
+   EXPECT_EQ(bin1.fSum, 1.0);
+   EXPECT_EQ(bin1.fSum2, 1.0);
    std::array<RBinIndex, 1> indices = {2};
    auto &bin2 = profile.GetBinContent(indices);
    EXPECT_EQ(bin2.fSumValues, 25.0);
@@ -106,8 +159,14 @@ TEST(RProfile, FillCategoricalWeight)
    const RCategoricalAxis axis(categories);
    RProfile profile({axis});
 
+   profile.Fill("b", 23.0, RWeight(0.8));
    profile.Fill(std::make_tuple("c"), 25.0, RWeight(0.9));
 
+   auto &bin1 = profile.GetBinContent(RBinIndex(1));
+   EXPECT_FLOAT_EQ(bin1.fSumValues, 18.4);
+   EXPECT_FLOAT_EQ(bin1.fSumValues2, 423.2);
+   EXPECT_FLOAT_EQ(bin1.fSum, 0.8);
+   EXPECT_FLOAT_EQ(bin1.fSum2, 0.64);
    std::array<RBinIndex, 1> indices = {2};
    auto &bin2 = profile.GetBinContent(indices);
    EXPECT_FLOAT_EQ(bin2.fSumValues, 22.5);

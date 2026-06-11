@@ -8,6 +8,7 @@
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
 #include "RHistEngine.hxx"
+#include "RHistUtils.hxx"
 #include "RRegularAxis.hxx"
 #include "RWeight.hxx"
 
@@ -17,6 +18,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -28,11 +30,11 @@ namespace Experimental {
 /**
 A profile histogram, computing statistical quantities of an additional variable per bin.
 
-Calling \ref Fill(const std::tuple<A...> &args, const V &value) "Fill" requires an additional value:
+Calling \ref Fill(const A &... args) "Fill" requires an additional value:
 \code
 ROOT::Experimental::RProfile profile(10, {5, 15});
-hist.Fill(std::make_tuple(8.2), 23.0);
-hist.Fill(std::make_tuple(8.7), 25.0);
+hist.Fill(8.2, 23.0);
+hist.Fill(8.7, 25.0);
 // Bin 3 has a mean of 24.0 and a standard deviation of 1.0
 \endcode
 
@@ -264,7 +266,8 @@ public:
    /// \param[in] args the arguments for each axis
    /// \param[in] v the additional argument
    /// \par See also
-   /// the \ref Fill(const std::tuple<A...> &args, const V &value, RWeight weight) "overload for weighted filling"
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly and the
+   /// \ref Fill(const std::tuple<A...> &args, const V &value, RWeight weight) "overload for weighted filling"
    template <typename... A, typename V>
    void Fill(const std::tuple<A...> &args, const V &value)
    {
@@ -290,12 +293,61 @@ public:
    /// \param[in] v the additional argument
    /// \param[in] weight the weight for this entry
    /// \par See also
-   /// the \ref Fill(const std::tuple<A...> &args, const V &value) "overload for unweighted filling"
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly and the
+   /// \ref Fill(const std::tuple<A...> &args, const V &value) "overload for unweighted filling"
    template <typename... A, typename V>
    void Fill(const std::tuple<A...> &args, const V &value, RWeight weight)
    {
       RValueWeightWrapper wrapper(value, weight.fValue);
       fEngine.Fill(args, wrapper);
+   }
+
+   /// Fill an entry into the profile histogram.
+   ///
+   /// \code
+   /// ROOT::Experimental::RProfile profile({/* two dimensions */});
+   /// profile.Fill(8.5, 10.5, 23.0);
+   /// \endcode
+   ///
+   /// For weighted filling, pass an RWeight as the last argument:
+   /// \code
+   /// profile.Fill(8.5, 10.5, 23.0, ROOT::Experimental::RWeight(0.8));
+   /// \endcode
+   ///
+   /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
+   /// discarded.
+   ///
+   /// Throws an exception if the number of arguments does not match the axis configuration, or if an argument cannot be
+   /// converted for the axis type at run-time.
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \par See also
+   /// the function overloads accepting `std::tuple`
+   /// \ref Fill(const std::tuple<A...> &args, const V &value) "for unweighted filling" and
+   /// \ref Fill(const std::tuple<A...> &args, const V &value, RWeight weight) "for weighted filling"
+   template <typename... A>
+   void Fill(const A &...args)
+   {
+      static_assert(sizeof...(A) >= 2, "need at least two arguments to Fill");
+      if constexpr (sizeof...(A) >= 2) {
+         auto t = std::forward_as_tuple(args...);
+         if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+            static constexpr std::size_t N = sizeof...(A) - 2;
+            if (N != GetNDimensions()) {
+               throw std::invalid_argument("invalid number of arguments to Fill");
+            }
+            RWeight weight = std::get<N + 1>(t);
+            RValueWeightWrapper wrapper(std::get<N>(t), weight.fValue);
+            fEngine.FillImpl<N>(t, wrapper);
+         } else {
+            static constexpr std::size_t N = sizeof...(A) - 1;
+            if (N != GetNDimensions()) {
+               throw std::invalid_argument("invalid number of arguments to Fill");
+            }
+            RValueWrapper wrapper(std::get<N>(t));
+            fEngine.FillImpl<N>(t, wrapper);
+         }
+      }
    }
 
    /// \}
