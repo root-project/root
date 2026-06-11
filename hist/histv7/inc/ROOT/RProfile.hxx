@@ -8,6 +8,7 @@
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
 #include "RHistEngine.hxx"
+#include "RHistStats.hxx"
 #include "RHistUtils.hxx"
 #include "RRegularAxis.hxx"
 #include "RWeight.hxx"
@@ -97,12 +98,23 @@ public:
 private:
    /// The histogram engine including the bin contents.
    RHistEngine<RProfileBin> fEngine;
+   /// The global histogram statistics.
+   RHistStats fStats;
 
 public:
    /// Construct a profile histogram.
    ///
    /// \param[in] axes the axis objects, must have size > 0
-   explicit RProfile(std::vector<RAxisVariant> axes) : fEngine(std::move(axes)) {}
+   explicit RProfile(std::vector<RAxisVariant> axes) : fEngine(std::move(axes)), fStats(fEngine.GetNDimensions() + 1)
+   {
+      // The axes parameter was moved, use from the engine.
+      const auto &engineAxes = fEngine.GetAxes();
+      for (std::size_t i = 0; i < engineAxes.size(); i++) {
+         if (engineAxes[i].GetCategoricalAxis() != nullptr) {
+            fStats.DisableDimension(i);
+         }
+      }
+   }
 
    /// Construct a profile histogram.
    ///
@@ -163,10 +175,28 @@ public:
    /// \{
 
    const RHistEngine<RProfileBin> &GetEngine() const { return fEngine; }
+   const RHistStats &GetStats() const { return fStats; }
 
    const std::vector<RAxisVariant> &GetAxes() const { return fEngine.GetAxes(); }
    std::size_t GetNDimensions() const { return fEngine.GetNDimensions(); }
    std::uint64_t GetTotalNBins() const { return fEngine.GetTotalNBins(); }
+
+   std::uint64_t GetNEntries() const { return fStats.GetNEntries(); }
+
+   /// \}
+   /// \name Computations
+   /// \{
+
+   /// \copydoc RHistStats::ComputeNEffectiveEntries()
+   double ComputeNEffectiveEntries() const { return fStats.ComputeNEffectiveEntries(); }
+   /// \copydoc RHistStats::ComputeMean()
+   double ComputeMean(std::size_t dim = 0) const { return fStats.ComputeMean(dim); }
+   /// \copydoc RHistStats::ComputeStdDev()
+   double ComputeStdDev(std::size_t dim = 0) const { return fStats.ComputeStdDev(dim); }
+
+   /// \}
+   /// \name Accessors
+   /// \{
 
    /// Get the content of a single bin.
    ///
@@ -266,6 +296,8 @@ public:
    {
       RValueWrapper wrapper(value);
       fEngine.Fill(args, wrapper);
+      // Avoid a second conversion of value, which we already did in wrapper.
+      fStats.Fill(Internal::AppendReference(args, wrapper.fValue));
    }
 
    /// Fill an entry into the profile histogram with a weight.
@@ -293,6 +325,8 @@ public:
    {
       RValueWeightWrapper wrapper(value, weight.fValue);
       fEngine.Fill(args, wrapper);
+      // Avoid a second conversion of value, which we already did in wrapper.
+      fStats.Fill(Internal::AppendReference(args, wrapper.fValue), weight);
    }
 
    /// Fill an entry into the profile histogram.
@@ -340,6 +374,7 @@ public:
             RValueWrapper wrapper(std::get<N>(t));
             fEngine.FillImpl<N>(t, wrapper);
          }
+         fStats.Fill(args...);
       }
    }
 
