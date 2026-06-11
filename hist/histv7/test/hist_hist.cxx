@@ -12,8 +12,8 @@
 // Mostly, RHist = RHistEngine + RHistStats which are tested individually. Here we mostly check that the forwarding
 // works correctly.
 
-static_assert(std::is_nothrow_move_constructible_v<RHistEngine<int>>);
-static_assert(std::is_nothrow_move_assignable_v<RHistEngine<int>>);
+static_assert(std::is_nothrow_move_constructible_v<RHist<int>>);
+static_assert(std::is_nothrow_move_assignable_v<RHist<int>>);
 
 TEST(RHist, Constructor)
 {
