@@ -43,6 +43,7 @@ protected:
    CefRect fFirstRect;      ///<! original width
    bool fFirstHeadless{false}; ///<! is first window is headless
    RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
+   bool fNextHeadless = false; ///< if next handle display is headless
 
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
@@ -51,7 +52,7 @@ public:
              THttpServer *serv = nullptr, const std::string &url = "", const std::string &cont = "",
              int width = 0, int height = 0, bool headless = false);
 
-   void SetNextHandle(RCefWebDisplayHandle *handle);
+   void SetNextHandle(RCefWebDisplayHandle *handle, bool headless);
 
    // CefApp methods:
    CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }

@@ -131,9 +131,10 @@ SimpleApp::SimpleApp(bool use_viewes, bool supress_log,
 }
 
 
-void SimpleApp::SetNextHandle(RCefWebDisplayHandle *handle)
+void SimpleApp::SetNextHandle(RCefWebDisplayHandle *handle, bool headless)
 {
    fNextHandle = handle;
+   fNextHeadless = headless;
 }
 
 
@@ -150,29 +151,10 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
       command_line->AppendSwitch("disable-logging");
       command_line->AppendSwitchWithValue("enable-logging", "none");
    }
-//   command_line->AppendSwitch("allow-file-access-from-files");
-//   command_line->AppendSwitch("disable-web-security");
-//   if (fBatch) {
-//      command_line->AppendSwitch("disable-gpu");
-//      command_line->AppendSwitch("disable-gpu-compositing");
-//      command_line->AppendSwitch("disable-gpu-sandbox");
-//   }
 }
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)
 {
-   if (fSupressLog) {
-      command_line->AppendSwitchWithValue("v", "-1");
-      command_line->AppendSwitch("disable-logging");
-      command_line->AppendSwitchWithValue("enable-logging", "none");
-   }
-//   command_line->AppendSwitch("allow-file-access-from-files");
-//   command_line->AppendSwitch("disable-web-security");
-//   if (fLastBatch) {
-//      command_line->AppendSwitch("disable-webgl");
-//      command_line->AppendSwitch("disable-gpu");
-//      command_line->AppendSwitch("disable-gpu-compositing");
-//   }
 }
 
 void SimpleApp::OnContextInitialized()
