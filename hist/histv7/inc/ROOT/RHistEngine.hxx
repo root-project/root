@@ -472,7 +472,7 @@ public:
          if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
             static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
             static constexpr std::size_t N = sizeof...(A) - 1;
-            if (N != fAxes.GetNDimensions()) {
+            if (N != GetNDimensions()) {
                throw std::invalid_argument("invalid number of arguments to Fill");
             }
             RWeight weight = std::get<N>(t);
@@ -568,7 +568,7 @@ public:
          if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
             static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
             static constexpr std::size_t N = sizeof...(A) - 1;
-            if (N != fAxes.GetNDimensions()) {
+            if (N != GetNDimensions()) {
                throw std::invalid_argument("invalid number of arguments to Fill");
             }
             RWeight weight = std::get<N>(t);
