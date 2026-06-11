@@ -74,7 +74,8 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
    /// column is added as a `ROOT::VecOps::RVec`. Otherwise, the collection field's on-disk type is used. Note, however,
    /// that inner record members of such collections will still be added as `ROOT::VecOps::RVec` (e.g., `std::set<Jet>
    /// will be added as a `std::set`, but `Jet.[pt|eta] will be added as `ROOT::VecOps::RVec<float>).
-   void AddField(const ROOT::RFieldBase &field, std::string_view colName, std::vector<RFieldInfo> fieldInfos,
+   void AddField(const ROOT::RFieldBase &field, std::string_view colName,
+                 Internal::RNTupleProcessorProvenance procProvenance, std::vector<RFieldInfo> fieldInfos,
                  bool convertToRVec = true);
 
 public:
