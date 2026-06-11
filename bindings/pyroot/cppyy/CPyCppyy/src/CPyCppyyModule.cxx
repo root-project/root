@@ -253,6 +253,11 @@ namespace CPyCppyy {
        static std::map<std::string, std::vector<PyObject*>> pyzMap;
        return pyzMap;
     }
+
+    // Forward-declared from CPyCppyy/API.h (which can't be #include'd here
+    // because it would conflict with the internal Converters.h).
+    PyObject* CreatePyValueFromMemory(
+        const std::string& typeName, void* address, dim_t ndim = 0, const dim_t* dims = nullptr);
 }
 
 
@@ -807,6 +812,54 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
 }
 
 //----------------------------------------------------------------------------
+static PyObject* CreateValueFromMemoryPy(PyObject*, PyObject* args)
+{
+// Python entry point for CPyCppyy::CreatePyValueFromMemory.
+//
+// Arguments:
+//   type_name (str): C++ type name to convert from, e.g. "double", "int",
+//                    "double[]", "float*", "MyClass*", etc.
+//   address   (int): memory address to read from. For scalar (non-array)
+//                    types this is the address of the value. For array
+//                    types this is the address of the data array itself
+//                    (i.e. the value of the data pointer).
+//   dims (sequence, optional): sequence of integers giving the shape of
+//                    the array. If provided, the value is treated as an
+//                    array (a LowLevelView is returned). If omitted or
+//                    None, the value is treated as a scalar.
+    const char* typeName = nullptr;
+    PyObject* addressArg = nullptr;
+    PyObject* dimsArg = Py_None;
+    if (!PyArg_ParseTuple(args, "sO|O:_create_value_from_memory", &typeName, &addressArg, &dimsArg))
+        return nullptr;
+
+    void* address = PyLong_AsVoidPtr(addressArg);
+    if (PyErr_Occurred())
+        return nullptr;
+
+    std::vector<dim_t> dimsVec;
+    if (dimsArg && dimsArg != Py_None) {
+        if (!PySequence_Check(dimsArg)) {
+            PyErr_SetString(PyExc_TypeError, "_create_value_from_memory: dims must be a sequence");
+            return nullptr;
+        }
+        Py_ssize_t ndim = PySequence_Length(dimsArg);
+        dimsVec.reserve(ndim);
+        for (Py_ssize_t i = 0; i < ndim; ++i) {
+            PyObject* item = PySequence_GetItem(dimsArg, i);
+            if (!item) return nullptr;
+            dim_t d = (dim_t)PyLong_AsLongLong(item);
+            Py_DECREF(item);
+            if (PyErr_Occurred()) return nullptr;
+            dimsVec.push_back(d);
+        }
+    }
+
+    return CPyCppyy::CreatePyValueFromMemory(
+        typeName, address, (dim_t)dimsVec.size(), dimsVec.data());
+}
+
+//----------------------------------------------------------------------------
 static PyObject* Move(PyObject*, PyObject* pyobject)
 {
 // Prepare the given C++ object for moving.
@@ -986,6 +1039,8 @@ static PyMethodDef gCPyCppyyMethods[] = {
       METH_O, (char*)"Represent an array of objects as raw memory."},
     {(char*)"bind_object", (PyCFunction)BindObject,
       METH_VARARGS | METH_KEYWORDS, (char*) "Create an object of given type, from given address."},
+    {(char*)"_create_value_from_memory", (PyCFunction)CreateValueFromMemoryPy,
+      METH_VARARGS, (char*) "Build a Python value from a memory address using a Converter."},
     {(char*) "move", (PyCFunction)Move,
       METH_O, (char*)"Cast the C++ object to become movable."},
     {(char*) "add_pythonization", (PyCFunction)AddPythonization,
