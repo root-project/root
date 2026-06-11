@@ -144,3 +144,10 @@ TEST(RHist, Streamer)
    const RHist<RBinWithError> histE({axis});
    ExpectThrowOnWriteObject(histE);
 }
+
+TEST(RProfile, Streamer)
+{
+   static constexpr std::size_t Bins = 20;
+   const RProfile profile(Bins, {0, Bins});
+   ExpectThrowOnWriteObject(profile);
+}
