@@ -320,8 +320,6 @@ else()
   include(HandleLLVMOptions)
   include(VersionFromVCS)
 
-  set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
     set(LLVM_INCLUDE_TESTS ON)
   endif()
