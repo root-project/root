@@ -93,6 +93,8 @@ public:
    ESetupStatus GetSetupStatus() const { return fSetupStatus; }
    virtual EReadStatus GetReadStatus() const { return fReadStatus; }
 
+   virtual std::size_t GetValueSize() const;
+
    /// If we are reading a leaf, return the corresponding TLeaf.
    TLeaf *GetLeaf() { return fLeaf; }
 

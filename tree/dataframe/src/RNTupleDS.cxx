@@ -204,7 +204,6 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<RFieldBase> fField;         ///< The field backing the RDF column
    std::unique_ptr<RFieldBase::RValue> fValue; ///< The memory location used to read from fField
    std::shared_ptr<void> fValuePtr;            ///< Used to reuse the object created by fValue when reconnecting sources
-   Long64_t fLastEntry = -1;                   ///< Last entry number that was read
    /// For chains, the logical entry and the physical entry in any particular file can be different.
    /// The entry offset stores the logical entry number (sum of all previous physical entries) when a file of the
    /// corresponding data source was opened.
@@ -217,7 +216,6 @@ public:
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source, Long64_t entryOffset)
    {
-      assert(fLastEntry == -1);
 
       fEntryOffset = entryOffset;
 
@@ -267,16 +265,16 @@ public:
       }
       fValue = nullptr;
       fField = nullptr;
-      fLastEntry = -1;
    }
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(std::size_t /*idx*/) final { return fValue->GetPtr<void>().get(); }
+
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (entry != fLastEntry) {
-         fValue->Read(entry - fEntryOffset);
-         fLastEntry = entry;
+      // Assume 1-size bulk for now
+      if (mask[0]) {
+         fValue->Read(mask.GetFirstEntry() - fEntryOffset);
       }
-      return fValue->GetPtr<void>().get();
    }
 };
 } // namespace ROOT::Internal::RDF

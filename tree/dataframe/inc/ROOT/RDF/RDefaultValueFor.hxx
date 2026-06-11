@@ -45,11 +45,12 @@ template <typename T>
 class R__CLING_PTRCHECK(off) RDefaultValueFor final : public RDefineBase {
    using ColumnTypes_t = ROOT::TypeTraits::TypeList<T>;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
-   // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
-   using ValuesPerSlot_t = std::conditional_t<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>;
+
+   using ValuesPerSlot_t = std::vector<ROOT::RVec<T>>;
 
    T fDefaultValue;
-   ValuesPerSlot_t fLastResults;
+   // Each slot accesses a cache of values for the current bulk
+   ValuesPerSlot_t fCachedResultsPerSlot;
    // One column reader per slot
    std::vector<RColumnReaderBase *> fValues;
 
@@ -57,9 +58,9 @@ class R__CLING_PTRCHECK(off) RDefaultValueFor final : public RDefineBase {
    /// The map key is the full variation name, e.g. "pt:up".
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
-   T &GetValueOrDefault(unsigned int slot, Long64_t entry)
+   T &GetValueOrDefault(unsigned int slot, std::size_t idx)
    {
-      if (auto *value = fValues[slot]->template TryGet<T>(entry))
+      if (auto *value = fValues[slot]->template TryGet<T>(idx))
          return *value;
       else
          return fDefaultValue;
@@ -71,12 +72,16 @@ public:
                     RLoopManager &lm, const std::string &variationName = "nominal")
       : RDefineBase(name, type, colRegister, lm, columns, variationName),
         fDefaultValue(defaultValue),
-        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<T>()),
+        fCachedResultsPerSlot(lm.GetNSlots() * RDFInternal::CacheLineStep<ROOT::RVec<T>>()),
         fValues(lm.GetNSlots())
    {
       fLoopManager->Register(this);
       // We suppress errors that TTreeReader prints regarding the missing branch
       fLoopManager->InsertSuppressErrorsForMissingBranch(fColumnNames[0]);
+      // Assume 1-size bulk for now
+      for (decltype(lm.GetNSlots()) i = 0; i < lm.GetNSlots(); ++i) {
+         fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<T>>()].resize(1ul);
+      }
    }
 
    RDefaultValueFor(const RDefaultValueFor &) = delete;
@@ -97,20 +102,30 @@ public:
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
-   /// Return the (type-erased) address of the Define'd value for the given processing slot.
+   /// Return the beginning of the cached results of the current bulk for the input processing slot
    void *GetValuePtr(unsigned int slot) final
    {
-      return static_cast<void *>(&fLastResults[slot * RDFInternal::CacheLineStep<T>()]);
+      return static_cast<void *>(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<T>>()].data());
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry) final
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         // evaluate this define expression, cache the result
-         fLastResults[slot * RDFInternal::CacheLineStep<T>()] = GetValueOrDefault(slot, entry);
-         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
+      if (static_cast<Long64_t>(mask.GetFirstEntry()) ==
+          fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()])
+         return;
+
+      // Assume 1-size bulk for now
+      fValues[slot]->Load(mask);
+      const std::size_t bulkSize = fLoopManager->GetCurrentBulkSize();
+      auto &result = fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<T>>()];
+      result.clear();
+      result.resize(bulkSize);
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         if (mask[i])
+            fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<T>>()][i] = GetValueOrDefault(slot, i);
       }
+      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
    }
 
    void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo & /*id*/) final {}
