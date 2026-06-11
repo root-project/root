@@ -5,7 +5,9 @@
 #ifndef ROOT_RHistUtils
 #define ROOT_RHistUtils
 
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 #ifdef _MSC_VER
 #include <atomic>
@@ -24,6 +26,19 @@ template <typename T>
 struct LastType<T> {
    using type = T;
 };
+
+template <typename... Ts, std::size_t... I, typename A>
+std::tuple<const Ts &..., const A &>
+AppendReferenceImpl(const std::tuple<Ts...> &t, std::index_sequence<I...>, const A &a)
+{
+   return std::tuple<const Ts &..., const A &>(std::get<I>(t)..., a);
+}
+
+template <typename... Ts, typename A>
+std::tuple<const Ts &..., const A &> AppendReference(const std::tuple<Ts...> &t, const A &a)
+{
+   return AppendReferenceImpl(t, std::make_index_sequence<sizeof...(Ts)>(), a);
+}
 
 #ifdef _MSC_VER
 namespace MSVC {
