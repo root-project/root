@@ -8,7 +8,6 @@
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
 #include "RBinIndexMultiDimRange.hxx"
-#include "RCategoricalAxis.hxx"
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
 #include "RRegularAxis.hxx"
