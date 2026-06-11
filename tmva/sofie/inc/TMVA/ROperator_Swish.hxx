@@ -11,7 +11,6 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-template <typename T>
 class ROperator_Swish final : public ROperator
 {
 
