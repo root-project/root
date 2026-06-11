@@ -213,6 +213,7 @@ public:
 ROOT::Experimental::RDF::RNTupleProcessorDS::~RNTupleProcessorDS() = default;
 
 void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_view colName,
+                                                           Internal::RNTupleProcessorProvenance procProvenance,
                                                            std::vector<RNTupleProcessorDS::RFieldInfo> fieldInfos,
                                                            bool convertToRVec)
 {
@@ -262,7 +263,7 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
          convertToRVec && (field.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
                            field.GetTypeName().substr(0, 12) == "std::vector<" || field.GetTypeName() == "");
       const auto *f = field.GetConstSubfields()[0];
-      AddField(*f, colName, fieldInfos, representableAsRVec);
+      AddField(*f, colName, procProvenance, fieldInfos, representableAsRVec);
 
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
       // collection as whole, so we are done.
@@ -271,14 +272,14 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
    } else if (nRepetitions > 0) {
       // Fixed-size array, same logic as ROOT::RVec.
       const auto *f = field.GetConstSubfields()[0];
-      AddField(*f, colName, fieldInfos);
+      AddField(*f, colName, procProvenance, fieldInfos);
       return;
    } else if (field.GetStructure() == ROOT::ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto &f : field.GetConstSubfields()) {
          auto innerName = colName.empty() ? f->GetFieldName() : (std::string(colName) + "." + f->GetFieldName());
          // Inner fields of collections of records are always exposed as ROOT::RVec
-         AddField(*f, innerName, fieldInfos);
+         AddField(*f, innerName, procProvenance, fieldInfos);
       }
 
       // Do not add untyped record fields
@@ -314,7 +315,8 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!fieldInfos.empty()) {
       const auto &info = fieldInfos.back();
-      const std::string name = "R_rdf_sizeof_" + info.fFieldName;
+      const std::string name =
+         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + "_R_rdf_sizeof_") + info.fFieldName;
       if (info.fNRepetitions > 0) {
          cardinalityField = std::make_unique<Internal::RDF::RArraySizeField>(name, info.fNRepetitions);
       } else {
@@ -363,7 +365,8 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
    }
 
    if (cardinalityField) {
-      std::string cardinalityFieldName = "R_rdf_sizeof_" + std::string(colName);
+      std::string cardinalityFieldName =
+         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + "_R_rdf_sizeof_") + std::string(colName);
       fColumnNames.emplace_back(cardinalityFieldName);
       fColumnTypes.emplace_back(cardinalityField->GetTypeName());
       fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
@@ -371,11 +374,13 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
    }
 
    fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
-   fColumnNames.emplace_back(colName);
+   std::string canonicalName = (procProvenance.Empty() ? "" : procProvenance.Get() + ".") + std::string(colName);
+   fColumnNames.emplace_back(canonicalName);
    fColumnTypes.emplace_back(valueField->GetTypeName());
 
+   // Add nested fields explicitly to the entry, because they may be mapped differently.
    if (fieldInfos.size() > 1) {
-      fProcessor->AddFieldToEntry(std::move(valueField), std::string(colName), nullptr,
+      fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
                                   Internal::RNTupleProcessorProvenance());
    }
 }
@@ -390,7 +395,7 @@ ROOT::Experimental::RDF::RNTupleProcessorDS::RNTupleProcessorDS(
    const auto &entry = fProcessor->GetEntry();
    for (auto fieldIdx : entry.GetFieldIndices()) {
       const auto &field = entry.GetValue(fieldIdx).GetField();
-      AddField(field, entry.GetQualifiedFieldName(fieldIdx),
+      AddField(field, entry.GetQualifiedFieldName(fieldIdx), entry.GetFieldProvenance(fieldIdx),
                std::vector<ROOT::Experimental::RDF::RNTupleProcessorDS::RFieldInfo>());
    }
 }
@@ -557,9 +562,6 @@ bool ROOT::Experimental::RDF::RNTupleProcessorDS::SetEntry(unsigned int /* slot 
 ROOT::RDataFrame
 ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
 {
-   if (dynamic_cast<const ROOT::Experimental::RNTupleJoinProcessor *>(processor.get())) {
-      throw std::runtime_error("RNTupleProcessorDS: Joins are not yet supported");
-   }
    return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RDF::RNTupleProcessorDS>(std::move(processor)));
 }
 

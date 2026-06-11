@@ -318,12 +318,72 @@ TEST(RNTupleProcessorDS, Join)
    }
 
    auto proc = RNTupleProcessor::CreateJoin({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {});
-   try {
-      auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
-      FAIL() << "creating a datasource from a join processor should throw";
-   } catch (const std::runtime_error &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("RNTupleProcessorDS: Joins are not yet supported"));
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
+
+   auto count = df.Count();
+   EXPECT_EQ(10, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 4.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(5, electronFilterCount.GetValue());
+
+   auto jetSum = df.Aggregate(
+      [](float &acc, const ROOT::RVec<float> &jets) {
+         for (const auto &jet : jets)
+            acc += jet;
+      },
+      [](float a, float b) { return a + b; }, "auxiliary.jets");
+   EXPECT_FLOAT_EQ(13.5, jetSum.GetValue());
+}
+
+TEST(RNTupleProcessorDS, JoinUnaligned)
+{
+   FileRAII guardFile1("RNTupleProcessorDS_test_join_unaligned_1.root");
+   FileRAII guardFile2("RNTupleProcessorDS_test_join_unaligned_2.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldId = model->MakeField<std::uint32_t>("idx");
+      auto fldElectron = model->MakeField<Electron>("electrons");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "primary", guardFile1.GetPath());
+      for (unsigned i = 0; i < 10; ++i) {
+         // only fill odd events
+         if (i % 2 == 0)
+            continue;
+         *fldId = i;
+         fldElectron->pt = static_cast<float>(i);
+         writer->Fill();
+      }
    }
+   {
+      auto model = RNTupleModel::Create();
+      auto fldId = model->MakeField<std::uint32_t>("idx");
+      auto fldJets = model->MakeField<std::vector<float>>("jets");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "auxiliary", guardFile2.GetPath());
+      // fill in reverse
+      for (int i = 9; i >= 0; --i) {
+         *fldId = i;
+         *fldJets = {static_cast<float>(i) * .1f, static_cast<float>(i) * .2f};
+         writer->Fill();
+      }
+   }
+
+   auto proc =
+      RNTupleProcessor::CreateJoin({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {"idx"});
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
+
+   auto count = df.Count();
+   EXPECT_EQ(5, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 4.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(3, electronFilterCount.GetValue());
+
+   auto jetSum = df.Aggregate(
+      [](float &acc, const ROOT::RVec<float> &jets) {
+         for (const auto &jet : jets)
+            acc += jet;
+      },
+      [](float a, float b) { return a + b; }, "auxiliary.jets");
+   EXPECT_FLOAT_EQ(7.5, jetSum.GetValue());
 }
 
 // #ifdef R__USE_IMT
