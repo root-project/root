@@ -452,8 +452,8 @@ class RFutureField : public RFieldBase {
 public:
    RFutureField(std::string_view name) : RFieldBase(name, "Future", ROOT::Internal::kTestFutureFieldStructure, false) {}
 
-   std::size_t GetValueSize() const final { return 0; }
-   std::size_t GetAlignment() const final { return 0; }
+   std::size_t GetValueSize() const final { return 1; }
+   std::size_t GetAlignment() const final { return 1; }
 };
 
 TEST(RNTupleCompat, FutureFieldStructuralRole)

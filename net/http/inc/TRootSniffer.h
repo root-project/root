@@ -144,7 +144,7 @@ protected:
 
    virtual void ScanRoot(TRootSnifferScanRec &rec);
 
-   TString DecodeUrlOptionValue(const char *value, Bool_t remove_quotes = kTRUE);
+   TString DecodeUrlOptionValue(const char *value, Bool_t remove_quotes = kTRUE, Bool_t escape_special = kTRUE);
 
    TObject *GetItem(const char *fullname, TFolder *&parent, Bool_t force = kFALSE, Bool_t within_objects = kTRUE);
 

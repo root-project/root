@@ -549,3 +549,16 @@ TEST(RNTuple, RVecAdopted)
    EXPECT_FLOAT_EQ(2.0, buf[1]);
    EXPECT_FLOAT_EQ(0.0, buf[2]);
 }
+
+TEST(RNTuple, OverAligned)
+{
+   auto res = RFieldBase::Create("f", "std::vector<ROOT::Internal::RAlignedStorage<4096>>");
+   if (!res)
+      FAIL() << "Createing a vector of a 4096B aligned type should work";
+
+   res = RFieldBase::Create("f", "std::vector<ROOT::Internal::RAlignedStorage<8192>>");
+   if (res)
+      FAIL() << "Createing a vector of a 8192B aligned type should fail";
+
+   EXPECT_THAT(res.GetError()->GetReport(), ::testing::HasSubstr("Unsupported vector item alignment: 8192"));
+}
