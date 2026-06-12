@@ -40,6 +40,18 @@ TestSmartPtr create_TestSmartPtr_by_value() {
     return TestSmartPtr{};
 }
 
+std::shared_ptr<TestSmartPtr> create_shared_ptr_to_derived() {
+    return std::shared_ptr<TestSmartPtr>(new PubDerivedTestSmartPtr);
+}
+
+std::unique_ptr<TestSmartPtr> create_unique_ptr_to_derived() {
+    return std::unique_ptr<TestSmartPtr>(new PubDerivedTestSmartPtr);
+}
+
+std::unique_ptr<TestSmartPtrIface> create_unique_ptr_to_offset_derived() {
+    return std::unique_ptr<TestSmartPtrIface>(new MultiDerivedTestSmartPtr);
+}
+
 
 // for move ctors etc.
 int TestMoving1::s_move_counter = 0;
