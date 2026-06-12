@@ -358,7 +358,10 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
    std::size_t currProcessorNumber = fCurrentProcessorNumber;
    ROOT::NTupleSize_t entriesSeen = 0;
    for (unsigned i = 0; i < currProcessorNumber; ++i) {
-      entriesSeen += fInnerProcessors[i]->GetNEntries();
+      if (fInnerNEntries[i] == kInvalidNTupleIndex) {
+         fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+      }
+      entriesSeen += fInnerNEntries[i];
    }
    ROOT::NTupleSize_t localEntryNumber = entryNumber - entriesSeen;
 
