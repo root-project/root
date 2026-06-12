@@ -615,9 +615,8 @@ private:
    /// \brief Get the total number of entries in this processor.
    ROOT::NTupleSize_t GetNEntries() final
    {
-      Initialize();
       if (fNEntries == ROOT::kInvalidNTupleIndex)
-         Connect(fFieldIdxs);
+         Initialize();
       return fNEntries;
    }
 
