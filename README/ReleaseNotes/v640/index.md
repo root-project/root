@@ -808,3 +808,35 @@ More than 130 items were addressed for this release:
   * [[ROOT-7499](https://its.cern.ch/jira/browse/ROOT-7499)] - ExpectedData generated from RooSimultaneous does not have non-integer weights
   * [[ROOT-5306](https://its.cern.ch/jira/browse/ROOT-5306)] - Read a file with a versioned class layout fails if the current class layout is unversioned
   * [[ROOT-5174](https://its.cern.ch/jira/browse/ROOT-5174)] - rootcling without linkdef
+
+## Release 6.40.02
+Published on June 11, 2026
+
+This patch release brings a few fixes, that accumulated since the 6.40.00 release.
+
+## Items addressed for this release
+The following items were addressed:
+
+  * [[#22538](https://github.com/root-project/root/issues/22538)] - [ntuple] Late model extension of untyped records broken
+  * [[#22496](https://github.com/root-project/root/issues/22496)] - root -q -e '.gh bug' doesn't work on ssh connections
+  * [[#22473](https://github.com/root-project/root/issues/22473)] - [tmva][sofie] Conv generates invalid code and crashes for dilation > 1
+  * [[#22471](https://github.com/root-project/root/issues/22471)] - issue with transparency and interactive mode on macOS
+  * [[#22447](https://github.com/root-project/root/issues/22447)] - 6.40: Glitch in TTree::Draw for 3D (missing bins)
+  * [[#22436](https://github.com/root-project/root/issues/22436)] - [tmva][sofie] MaxPool and AveragePool generates wrong code for asymmetric padding
+  * [[#22427](https://github.com/root-project/root/issues/22427)] - Failing ML Dataloader test on alma10 builds with auto-registration off
+  * [[#22417](https://github.com/root-project/root/issues/22417)] - 6.40: TBox added to TH1::GetListOfFunctions() appears to be freed before Write
+  * [[#22415](https://github.com/root-project/root/issues/22415)] - [ftgl] FTGL builtin build fails due to missing src/FTLibrary.h
+  * [[#22414](https://github.com/root-project/root/issues/22414)] - TFileMerger: when using kOnlyListed, any 'listed' key will bring in any unlisted keys that are a suffix of a listed key
+  * [[#22396](https://github.com/root-project/root/issues/22396)] - Crash in PyROOT in 6.40 (GIL issue?)
+  * [[#22395](https://github.com/root-project/root/issues/22395)] - TGeoTessellated volumes read from GDML impossible to be closed (6.40.00 regression)
+  * [[#22394](https://github.com/root-project/root/issues/22394)] - Unable to build ROOT 6.40 against free-threaded python 3.14t (6.40.00 regression)
+  * [[#22378](https://github.com/root-project/root/issues/22378)] - SetOSX_SDK.cmake overrides requested `CMAKE_OSX_SYSROOT`
+  * [[#22370](https://github.com/root-project/root/issues/22370)] - ROOT 6.40.00 seems won't compile with Clang + GCC 16 standard library
+  * [[#22367](https://github.com/root-project/root/issues/22367)] - Wrong interaction of DefinePerSample with downstream varied action
+  * [[#22300](https://github.com/root-project/root/issues/22300)] - Compilation failure with Ubuntu 26.04
+
+### Versions of built-in packages
+
+The version of the following packages has been updated:
+
+ - xrootd: 5.9.5

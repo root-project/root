@@ -418,6 +418,33 @@ if(tmva-pymva OR tmva-sofie)
 endif()
 find_package(Python3 3.10 COMPONENTS ${python_components})
 
+# Detect whether the found Python interpreter is a free-threaded build
+# (Py_GIL_DISABLED is defined in pyconfig.h). The limited C API is not
+# supported in free-threaded builds; including Python.h with Py_LIMITED_API
+# defined produces a hard error there
+# (https://docs.python.org/3/howto/free-threading-extensions.html).
+# Checking the preprocessor symbol directly is more reliable than asking the
+# interpreter (e.g. sysconfig.get_config_var may misreport, and
+# sys._is_gil_enabled() can be overridden at runtime via PYTHON_GIL=1).
+set(Python3_GIL_DISABLED FALSE)
+if(Python3_Development_FOUND OR Python3_Development.Module_FOUND)
+  include(CheckCXXSourceCompiles)
+  set(_old_required_includes ${CMAKE_REQUIRED_INCLUDES})
+  set(CMAKE_REQUIRED_INCLUDES ${Python3_INCLUDE_DIRS})
+  check_cxx_source_compiles("
+    #include <Python.h>
+    #ifndef Py_GIL_DISABLED
+    #error \"GIL is not disabled\"
+    #endif
+    int main() { return 0; }
+  " ROOT_PYTHON_GIL_DISABLED)
+  set(CMAKE_REQUIRED_INCLUDES ${_old_required_includes})
+  if(ROOT_PYTHON_GIL_DISABLED)
+    set(Python3_GIL_DISABLED TRUE)
+    message(STATUS "Python ${Python3_VERSION} is a free-threaded build (Py_GIL_DISABLED defined); the limited C API will not be used")
+  endif()
+endif()
+
 #---Check for OpenGL installation-------------------------------------------------------
 # OpenGL is required by various graf3d features that are enabled with opengl=ON,
 # or by the Cocoa-related code that always requires it.
@@ -1790,6 +1817,52 @@ else()
           return 0;
       }
   " ROOT_HAVE_EXPERIMENTAL_SIMD)
+endif()
+
+# On platforms with AVX-512, the libstdc++ implementation of
+# <experimental/simd> (from GCC up to at least 16) fails to compile with
+# non-GCC front ends (Clang, Intel icpx) because of a static_assert in the
+# _VecBltnBtmsk (AVX-512 mask) ABI that requires `long long` and `long` to be
+# the same type. The bug fires only for the AVX-512 mask ABI path, so we work
+# around it by pinning ROOT's simd alias (Math/Types.h) to the 256-bit AVX2
+# ABI variant instead of the platform-native ABI. That keeps the ABI of
+# Float_v/Double_v/... consistent across all TUs (no `-mno-avx512f` needed)
+# and lets the rest of ROOT keep its native AVX-512 codegen.
+set(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI FALSE CACHE INTERNAL
+    "Pin <experimental/simd> alias to the 256-bit ABI to dodge libstdc++ AVX-512 bug")
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  set(_simd_realistic_test "
+      #include <experimental/simd>
+      int main() {
+          std::experimental::native_simd<double> a(1.0), b(2.0);
+          where(a > b, a) = b;
+          return 0;
+      }
+  ")
+  check_cxx_source_compiles("${_simd_realistic_test}"
+                            ROOT_EXPERIMENTAL_SIMD_FULL_USAGE_OK)
+  if(NOT ROOT_EXPERIMENTAL_SIMD_FULL_USAGE_OK)
+    set(_simd_pinned_abi_test "
+        #include <experimental/simd>
+        namespace stx = std::experimental;
+        int main() {
+            stx::simd<double, stx::simd_abi::__avx> a(1.0), b(2.0);
+            where(a > b, a) = b;
+            return 0;
+        }
+    ")
+    check_cxx_source_compiles("${_simd_pinned_abi_test}"
+                              ROOT_EXPERIMENTAL_SIMD_AVX_ABI_OK)
+    if(ROOT_EXPERIMENTAL_SIMD_AVX_ABI_OK)
+      set(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI TRUE CACHE INTERNAL "" FORCE)
+      message(STATUS "Working around libstdc++ <experimental/simd> AVX-512 bug "
+                     "by pinning Math/Types.h to the 256-bit AVX ABI")
+    else()
+      message(STATUS "Disabling experimental/simd-based features: libstdc++ "
+                     "header fails to compile in this configuration")
+      set(ROOT_HAVE_EXPERIMENTAL_SIMD FALSE CACHE INTERNAL "" FORCE)
+    endif()
+  endif()
 endif()
 
 #------------------------------------------------------------------------------------

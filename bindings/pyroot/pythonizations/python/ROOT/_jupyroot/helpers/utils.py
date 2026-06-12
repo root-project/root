@@ -89,7 +89,6 @@ Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
 
 _jsCode = """
 {jsDivHtml}
-</div>
 <script>
    function process_{jsDivId}() {{
       function execCode(Core) {{
@@ -118,47 +117,6 @@ _jsCode = """
    process_{jsDivId}();
 </script>
 """
-
-
-_jsFileCode = """
-<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
-   <div id="{jsDivId}">
-   </div>
-</div>
-<script>
-   function process_{jsDivId}() {{
-      function showFile(Core) {{
-         Core.settings.HandleKeys = false;
-         const binaryString = atob('{fileBase64}');
-         const bytes = new Uint8Array(binaryString.length);
-         for (let i = 0; i < binaryString.length; i++)
-            bytes[i] = binaryString.charCodeAt(i);
-         Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
-      }}
-      const servers = ['/static/', 'https://root.cern/js/7.11.0/', 'https://jsroot.gsi.de/7.11.0/' ],
-            path = 'build/jsroot';
-      if (typeof JSROOT !== 'undefined')
-         showFile(JSROOT);
-      else if (typeof requirejs !== 'undefined') {{
-         servers.forEach((s,i) => {{ servers[i] = s + path; }});
-         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  showFile);
-      }} else {{
-         const config = document.getElementById('jupyter-config-data');
-         if (config)
-            servers[0] = (JSON.parse(config.innerHTML || '{{}}')?.baseUrl || '/') + 'static/';
-         else
-            servers.shift();
-         function loadJsroot() {{
-            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => showFile(JSROOT));
-         }}
-         loadJsroot();
-      }}
-   }}
-   process_{jsDivId}();
-</script>
-"""
-
-
 
 TBufferJSONErrorMessage = "The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
 

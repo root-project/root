@@ -33,6 +33,8 @@
 #include <memory>
 #include <vector>
 #include <cstring>
+#include <cctype>
+
 
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";
@@ -1213,9 +1215,41 @@ Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &opti
             return kTRUE;
          }
 
-         TString svalue = DecodeUrlOptionValue(argvalue, kTRUE);
          argname = TString("%") + argname + TString("%");
-         method.ReplaceAll(argname, svalue);
+         auto p = method.Index(argname);
+         if (p == kNPOS)
+            continue;
+
+         method.Remove(p, argname.Length());
+
+         if ((p > 0) && (p < method.Length()) && (method.Length() > 1) && (method[p-1] == '"') && (method[p] == '"')) {
+            // command definition has quotes around argument
+            // one can insert value from URL removing quotes
+            method.Insert(p, DecodeUrlOptionValue(argvalue, kTRUE));
+            continue;
+         }
+
+         // extract argument without removing quotes
+         TString svalue = DecodeUrlOptionValue(argvalue, kFALSE);
+
+         if ((svalue.Length() > 1) && (svalue[0] == '"') && (svalue[svalue.Length() - 1] == '"')) {
+            // if value itself has quotes, all special symbols already escaped and one can insert it as is
+            method.Insert(p, svalue);
+            continue;
+         }
+
+         Bool_t is_numeric = kTRUE;
+         // expect decimal, hex or float values here, E/e also belong to hex
+         for(Size_t i = 0; is_numeric && (i < svalue.Length()); ++i)
+            is_numeric = std::isxdigit(svalue[i]) || std::strchr(".+-", svalue[i]);
+
+         // always quote content which not numeric
+         if (!is_numeric)
+            svalue = "\"" + svalue + "\"";
+         else if (svalue.IsNull())
+            svalue = "0";
+
+         method.Insert(p, svalue);
       }
    }
 
@@ -1289,10 +1323,14 @@ Bool_t TRootSniffer::ProduceXml(const std::string &/* path */, const std::string
 
 TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quotes)
 {
-   if (!value || (strlen(value) == 0))
-      return TString();
+   if (!value || !*value)
+      return "";
 
    TString res = value;
+
+   // discard too large URL options, they should not appear at all
+   if (res.Length() > 1024)
+      return "";
 
    res.ReplaceAll("%27", "\'");
    res.ReplaceAll("%22", "\"");
@@ -1303,13 +1341,40 @@ TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quot
    res.ReplaceAll("%5D", "]");
    res.ReplaceAll("%3D", "=");
 
-   if (remove_quotes && (res.Length() > 1) && ((res[0] == '\'') || (res[0] == '\"')) &&
-       (res[0] == res[res.Length() - 1])) {
+   Char_t quote = 0;
+
+   if ((res.Length() > 1) && ((res[0] == '\'') || (res[0] == '\"')) && (res[0] == res[res.Length() - 1]))
+      quote = res[0];
+
+   // first remove quotes
+   if (quote) {
       res.Remove(res.Length() - 1);
       res.Remove(0, 1);
    }
 
-   return res;
+   // we expect normal content here, no special symbols, no unescaped quotes
+   TString clean;
+   for (Ssiz_t i = 0; i < res.Length(); ++i) {
+      char c = res[i];
+      if (c == '"' || c == '\\') {
+         // escape quotes and slahes
+         clean.Append('\\');
+         clean.Append(c);
+      } else if (!std::iscntrl(c))
+         // ignore all special symbols
+         clean.Append(c);
+   }
+
+   if (quote && !remove_quotes) {
+      // return string with quotes - when desired
+      res = "";
+      res.Append(quote);
+      res.Append(clean);
+      res.Append(quote);
+      return res;
+   }
+
+   return clean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

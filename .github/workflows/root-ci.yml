@@ -415,10 +415,11 @@ jobs:
             is_special: true
             property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Fedora Rawhide with Python debug build
+          # Fedora Rawhide with Python freethreading+debug build
           - image: rawhide
+            python_venv: "/py-venv-3.15td/ROOT-CI"
             is_special: true
-            property: "Fedora pydebug"
+            property: "Fedora pydebug no GIL"
             overrides: ["CMAKE_CXX_STANDARD=23"]
           # Minimal build
           - image: alma10
@@ -438,8 +439,8 @@ jobs:
           #   property: gpu
           #   extra-runs-on: gpu
           # openSUSE Leap
-          - image: opensuse15
-            platform_config: opensuse15-march_native
+          - image: opensuse16
+            platform_config: opensuse16-march_native
             is_special: true
             property: march_native
 
@@ -466,14 +467,15 @@ jobs:
       BUILD_DIR: /github/home/ROOT-CI/build
       INSTALL_DIR: /github/home/ROOT-CI/install
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
+      PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
 
     steps:
       - name: Set up environment
         run: |
           ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -s || true
-          if [ -d /py-venv/ROOT-CI/bin/ ]; then
-            . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV;
+          if [ -d "$PYTHON_VENV/bin/" ]; then
+            . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
           fi
           if ${{ contains(matrix.property, 'auto-registration off') }}; then
             echo "Disabling ROOT's object auto registration for this job"
