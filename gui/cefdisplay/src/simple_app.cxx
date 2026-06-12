@@ -44,22 +44,26 @@ namespace {
 // implementation for the CefWindow that hosts the Views-based browser.
 class SimpleWindowDelegate : public CefWindowDelegate {
    CefRefPtr<CefBrowserView> fBrowserView;
-   int fWidth{800};  ///< preferred window width
-   int fHeight{600}; ///< preferred window height
+   int fWidth = 800;  ///< preferred window width
+   int fHeight = 600; ///< preferred window height
+   bool fBatch = false;
 public:
-   explicit SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view, int width = 800, int height = 600)
-      : fBrowserView(browser_view), fWidth(width), fHeight(height)
+   explicit SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view, int width = 800, int height = 600, bool batch = false)
+      : fBrowserView(browser_view), fWidth(width), fHeight(height), fBatch(batch)
    {
    }
 
    void OnWindowCreated(CefRefPtr<CefWindow> window) override
    {
-      // Add the browser view and show the window.
       window->AddChildView(fBrowserView);
-      window->Show();
 
-      // Give keyboard focus to the browser view.
-      fBrowserView->RequestFocus();
+      if (fBatch) {
+         window->Hide();
+      } else {
+         window->Show();
+         // Give keyboard focus to the browser view.
+         fBrowserView->RequestFocus();
+      }
    }
 
    void OnWindowDestroyed(CefRefPtr<CefWindow> window) override { fBrowserView = nullptr; }
@@ -202,7 +206,7 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, new SimpleBrowserViewDelegate());
 
       // Create the Window. It will show itself after creation.
-      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view, rect.width, rect.height));
+      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view, rect.width, rect.height, is_batch));
 
       if (fNextHandle) {
          fNextHandle->SetBrowser(browser_view->GetBrowser());
@@ -217,13 +221,14 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
       // one should implement CefRenderHandler
 
       #if defined(OS_WIN)
-         RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
-         if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
+         if (!rect.IsEmpty())
+            window_info.SetAsChild(0, rect);
          // On Windows we need to specify certain flags that will be passed to
          // CreateWindowEx().
          window_info.SetAsPopup(0, "cefsimple");
          if (is_batch)
-            window_info.SetAsWindowless(GetDesktopWindow());
+            // window_info.SetAsWindowless(GetDesktopWindow());
+            window_info.SetAsWindowless(kNullWindowHandle);
       #else
          if (!rect.IsEmpty())
             window_info.SetAsChild(0, rect);
