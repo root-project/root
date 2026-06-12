@@ -435,6 +435,17 @@ namespace TypeName {
   /// versions of any template parameters.
   QualType getFullyQualifiedType(QualType QT, const ASTContext &Ctx,
                                  bool WithGlobalNsPrefix) {
+    // Use the underlying deduced type for AutoType
+    if (const auto *AT = dyn_cast<AutoType>(QT.getTypePtr())) {
+      if (AT->isDeduced()) {
+        // Get the qualifiers.
+        Qualifiers Quals = QT.getQualifiers();
+        QT = AT->getDeducedType();
+        // Add back the qualifiers.
+        QT = Ctx.getQualifiedType(QT, Quals);
+      }
+    }
+
     // In case of myType* we need to strip the pointer first, fully
     // qualify and attach the pointer once again.
     if (isa<PointerType>(QT.getTypePtr())) {
@@ -491,19 +502,45 @@ namespace TypeName {
           Qualifiers);
     }
 
-    // Remove the part of the type related to the type being a template
-    // parameter (we won't report it as part of the 'type name' and it
-    // is actually make the code below to be more complex (to handle
-    // those)
-    while (isa<SubstTemplateTypeParmType>(QT.getTypePtr())) {
-      // Get the qualifiers.
-      Qualifiers Quals = QT.getQualifiers();
+    bool Changed;
+    do {
+      Changed = false;
+      // Remove the part of the type related to the type being a template
+      // parameter (we won't report it as part of the 'type name' and it
+      // is actually make the code below to be more complex (to handle
+      // those)
+      while (isa<SubstTemplateTypeParmType>(QT.getTypePtr())) {
+        // Get the qualifiers.
+        Qualifiers Quals = QT.getQualifiers();
+        QT = cast<SubstTemplateTypeParmType>(QT.getTypePtr())->desugar();
+        // Add back the qualifiers.
+        QT = Ctx.getQualifiedType(QT, Quals);
+        Changed = true;
+      }
 
-      QT = cast<SubstTemplateTypeParmType>(QT.getTypePtr())->desugar();
+      // Try to get to the underlying type for DecltypeType
+      while (const auto *DT = dyn_cast<DecltypeType>(QT.getTypePtr())) {
+        // Get the qualifiers.
+        Qualifiers Quals = QT.getQualifiers();
+        QualType Underlying = DT->getUnderlyingType();
+        if (Underlying.isNull() || Underlying->isDependentType())
+          break;
+        // Add back the qualifiers.
+        QT = Ctx.getQualifiedType(Underlying, Quals);
+        Changed = true;
+      }
 
-      // Add back the qualifiers.
-      QT = Ctx.getQualifiedType(QT, Quals);
-    }
+      // UnaryTransformType represents compiler built-ins like __remove_extent(T).
+      // We must peel these layers back to reach the underlying type so it can be
+      // fully qualified.
+      while (const auto *UTT = dyn_cast<UnaryTransformType>(QT.getTypePtr())) {
+        if (!UTT->isSugared())
+          break;
+        Qualifiers Quals = QT.getQualifiers();
+        QT = Ctx.getQualifiedType(UTT->desugar(), Quals);
+        Changed = true;
+      }
+    } while (Changed);
 
     if (const auto *TST =
             dyn_cast<const TemplateSpecializationType>(QT.getTypePtr())) {
