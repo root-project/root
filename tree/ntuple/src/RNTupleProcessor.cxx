@@ -347,12 +347,23 @@ ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fi
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
-   ROOT::NTupleSize_t localEntryNumber = entryNumber;
-   std::size_t currProcessorNumber = 0;
+   // If the requested entry number is lower than the current entry number, we have to again localise the correct local
+   // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
+   // processor that is currently connected, which is much faster when the chain consists of many inner processors.
    if (entryNumber < fCurrentEntryNumber) {
       fCurrentProcessorNumber = 0;
       ConnectInnerProcessor(fCurrentProcessorNumber);
    }
+
+   std::size_t currProcessorNumber = fCurrentProcessorNumber;
+   ROOT::NTupleSize_t entriesSeen = 0;
+   for (unsigned i = 0; i < currProcessorNumber; ++i) {
+      if (fInnerNEntries[i] == kInvalidNTupleIndex) {
+         fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+      }
+      entriesSeen += fInnerNEntries[i];
+   }
+   ROOT::NTupleSize_t localEntryNumber = entryNumber - entriesSeen;
 
    // As long as the entry fails to load from the current processor, we decrement the local entry number with the number
    // of entries in this processor and try with the next processor until we find the correct local entry number.
