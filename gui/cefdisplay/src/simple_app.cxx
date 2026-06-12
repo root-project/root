@@ -44,22 +44,26 @@ namespace {
 // implementation for the CefWindow that hosts the Views-based browser.
 class SimpleWindowDelegate : public CefWindowDelegate {
    CefRefPtr<CefBrowserView> fBrowserView;
-   int fWidth{800};  ///< preferred window width
-   int fHeight{600}; ///< preferred window height
+   int fWidth = 800;  ///< preferred window width
+   int fHeight = 600; ///< preferred window height
+   bool fBatch = false;
 public:
-   explicit SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view, int width = 800, int height = 600)
-      : fBrowserView(browser_view), fWidth(width), fHeight(height)
+   explicit SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view, int width = 800, int height = 600, bool batch = false)
+      : fBrowserView(browser_view), fWidth(width), fHeight(height), fBatch(batch)
    {
    }
 
    void OnWindowCreated(CefRefPtr<CefWindow> window) override
    {
-      // Add the browser view and show the window.
       window->AddChildView(fBrowserView);
-      window->Show();
 
-      // Give keyboard focus to the browser view.
-      fBrowserView->RequestFocus();
+      if (fBatch) {
+         window->Hide();
+      } else {
+         window->Show();
+         // Give keyboard focus to the browser view.
+         fBrowserView->RequestFocus();
+      }
    }
 
    void OnWindowDestroyed(CefRefPtr<CefWindow> window) override { fBrowserView = nullptr; }
@@ -109,10 +113,10 @@ class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
 
 } // namespace
 
-SimpleApp::SimpleApp(bool use_viewes,
+SimpleApp::SimpleApp(bool use_viewes, bool supress_log,
                      THttpServer *serv, const std::string &url, const std::string &cont,
                      int width, int height, bool headless)
-   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
+   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fSupressLog(supress_log), fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -122,18 +126,19 @@ SimpleApp::SimpleApp(bool use_viewes,
    // platform framework. The Views framework is currently only supported on
    // Windows and Linux.
 #else
-   if (fUseViewes) {
-      R__LOG_ERROR(CefWebDisplayLog()) << "view framework does not supported by CEF on the platform, switching off";
-      fUseViewes = false;
-   }
+//   if (fUseViewes) {
+//      R__LOG_ERROR(CefWebDisplayLog()) << "view framework does not supported by CEF on the platform, switching off";
+//      fUseViewes = false;
+//   }
 #endif
 
 }
 
 
-void SimpleApp::SetNextHandle(RCefWebDisplayHandle *handle)
+void SimpleApp::SetNextHandle(RCefWebDisplayHandle *handle, bool headless)
 {
    fNextHandle = handle;
+   fNextHeadless = headless;
 }
 
 
@@ -145,24 +150,15 @@ void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 
 void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
 {
-//   command_line->AppendSwitch("allow-file-access-from-files");
-//   command_line->AppendSwitch("disable-web-security");
-//   if (fBatch) {
-//      command_line->AppendSwitch("disable-gpu");
-//      command_line->AppendSwitch("disable-gpu-compositing");
-//      command_line->AppendSwitch("disable-gpu-sandbox");
-//   }
+   if (fSupressLog) {
+      command_line->AppendSwitchWithValue("v", "-1");
+      command_line->AppendSwitch("disable-logging");
+      command_line->AppendSwitchWithValue("enable-logging", "none");
+   }
 }
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)
 {
-//   command_line->AppendSwitch("allow-file-access-from-files");
-//   command_line->AppendSwitch("disable-web-security");
-//   if (fLastBatch) {
-//      command_line->AppendSwitch("disable-webgl");
-//      command_line->AppendSwitch("disable-gpu");
-//      command_line->AppendSwitch("disable-gpu-compositing");
-//   }
 }
 
 void SimpleApp::OnContextInitialized()
@@ -181,24 +177,24 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
 {
    CEF_REQUIRE_UI_THREAD();
 
+   bool is_batch = addr.empty() && !cont.empty();
+
    if (!fGuiHandler)
       fGuiHandler = new GuiHandler(fUseViewes);
 
    std::string url;
 
-   //bool is_batch = false;
-
-   if(addr.empty() && !cont.empty()) {
+   if(is_batch)
       url = fGuiHandler->AddBatchPage(cont);
-      // is_batch = true;
-   } else if (serv) {
+   else if (serv)
       url = fGuiHandler->MakePageUrl(serv, addr);
-   } else {
+   else
       url = addr;
-   }
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
+   if (is_batch)
+      browser_settings.windowless_frame_rate = 30;
    // browser_settings.plugins = STATE_DISABLED;
    // browser_settings.file_access_from_file_urls = STATE_ENABLED;
    // browser_settings.universal_access_from_file_urls = STATE_ENABLED;
@@ -210,7 +206,7 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, new SimpleBrowserViewDelegate());
 
       // Create the Window. It will show itself after creation.
-      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view, rect.width, rect.height));
+      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view, rect.width, rect.height, is_batch));
 
       if (fNextHandle) {
          fNextHandle->SetBrowser(browser_view->GetBrowser());
@@ -225,22 +221,19 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
       // one should implement CefRenderHandler
 
       #if defined(OS_WIN)
-         RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
-         if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
+         if (!rect.IsEmpty())
+            window_info.SetAsChild(0, rect);
          // On Windows we need to specify certain flags that will be passed to
          // CreateWindowEx().
          window_info.SetAsPopup(0, "cefsimple");
-         //if (is_batch)
-         //   window_info.SetAsWindowless(GetDesktopWindow());
-      #elif defined(OS_LINUX)
-         if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
-         //if (is_batch)
-         //   window_info.SetAsWindowless(kNullWindowHandle);
+         if (is_batch)
+            // window_info.SetAsWindowless(GetDesktopWindow());
+            window_info.SetAsWindowless(kNullWindowHandle);
       #else
          if (!rect.IsEmpty())
-            window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
-         //if (is_batch)
-         //   window_info.SetAsWindowless(kNullWindowHandle);
+            window_info.SetAsChild(0, rect);
+         if (is_batch)
+            window_info.SetAsWindowless(kNullWindowHandle);
       #endif
 
       // Create the first browser window.

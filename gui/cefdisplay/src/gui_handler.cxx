@@ -21,6 +21,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include "include/base/cef_bind.h"
@@ -175,20 +176,21 @@ bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
    switch (level) {
    case LOGSEVERITY_WARNING:
       if (fConsole > -1)
-         R__LOG_WARNING(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         std::cout << TString::Format("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str()) << std::endl;
       break;
    case LOGSEVERITY_ERROR:
       if (fConsole > -2)
-         R__LOG_ERROR(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         std::cerr << TString::Format("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str()) << std::endl;
       break;
    default:
       if (fConsole > 0)
-         R__LOG_DEBUG(0, CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         std::cout << TString::Format("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str()) << std::endl;
       break;
    }
 
    return true;
 }
+
 
 cef_return_value_t GuiHandler::OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,

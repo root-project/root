@@ -788,6 +788,8 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
 ///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
+///      WebGui.CefLogSeveriry: "disable", "fatal", "error", "warning", "info", "verbose" (default is "fatal")
+///      WebGui.CefHeadlessTimeout: timeout to wait produce result of headless output (default is 30 s)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 ///      WebGui.RecordData: if specified enables data recording for each web window; "yes" or "no" (default)
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values

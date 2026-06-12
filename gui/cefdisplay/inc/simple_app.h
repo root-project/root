@@ -35,22 +35,24 @@ class SimpleApp : public CefApp,
                   /*, public CefRenderProcessHandler */
                   public CefBrowserProcessHandler {
 protected:
-   bool fUseViewes{false};  ///<! is views framework used
+   bool fUseViewes = false;  ///<! is views framework used
+   bool fSupressLog = false; ///<! supress log output when possible
    THttpServer *fFirstServer; ///<! first server
    std::string fFirstUrl;   ///<! first URL to open
    std::string fFirstContent; ///<! first page content open
    CefRect fFirstRect;      ///<! original width
    bool fFirstHeadless{false}; ///<! is first window is headless
    RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
+   bool fNextHeadless = false; ///< if next handle display is headless
 
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
 public:
-   SimpleApp(bool use_viewes,
+   SimpleApp(bool use_viewes, bool supress_log,
              THttpServer *serv = nullptr, const std::string &url = "", const std::string &cont = "",
              int width = 0, int height = 0, bool headless = false);
 
-   void SetNextHandle(RCefWebDisplayHandle *handle);
+   void SetNextHandle(RCefWebDisplayHandle *handle, bool headless);
 
    // CefApp methods:
    CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
