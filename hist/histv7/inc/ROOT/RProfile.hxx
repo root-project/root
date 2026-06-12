@@ -7,6 +7,7 @@
 
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
+#include "RBinIndexMultiDimRange.hxx"
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
 #include "RHistUtils.hxx"
@@ -92,6 +93,35 @@ public:
          fSum += rhs.fWeight;
          fSum2 += rhs.fWeight * rhs.fWeight;
          return *this;
+      }
+
+      RProfileBin &operator+=(const RProfileBin &rhs)
+      {
+         fSumValues += rhs.fSumValues;
+         fSumValues2 += rhs.fSumValues2;
+         fSum += rhs.fSum;
+         fSum2 += rhs.fSum2;
+         return *this;
+      }
+
+      RProfileBin &operator*=(double factor)
+      {
+         fSumValues *= factor;
+         fSumValues2 *= factor;
+         fSum *= factor;
+         fSum2 *= factor * factor;
+         return *this;
+      }
+
+      /// Add another bin content using atomic instructions.
+      ///
+      /// \param[in] rhs another bin content that must not be modified during the operation
+      void AtomicAdd(const RProfileBin &rhs)
+      {
+         Internal::AtomicAdd(&fSumValues, rhs.fSumValues);
+         Internal::AtomicAdd(&fSumValues2, rhs.fSumValues2);
+         Internal::AtomicAdd(&fSum, rhs.fSum);
+         Internal::AtomicAdd(&fSum2, rhs.fSum2);
       }
    };
 
@@ -271,6 +301,66 @@ public:
       return fEngine.GetBinContent(args...);
    }
 
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiDimRange GetFullMultiDimRange() const { return fEngine.GetFullMultiDimRange(); }
+
+   /// Set the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RProfile profile({/* two dimensions */});
+   /// std::array<ROOT::Experimental::RBinIndex, 2> indices = {3, 5};
+   /// ROOT::Experimental::RProfile::RProfileBin value = /* ... */;
+   /// profile.SetBinContent(indices, value);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of indices does not match the axis configuration or the bin is not found.
+   ///
+   /// \warning Setting the bin content will taint the global histogram statistics. Attempting to access its values, for
+   /// example calling GetNEntries(), will throw exceptions.
+   ///
+   /// \param[in] indices the array of indices for each axis
+   /// \param[in] value the new value of the bin content
+   /// \par See also
+   /// the \ref SetBinContent(const A &... args) "variadic function template overload" accepting arguments directly
+   template <std::size_t N, typename V>
+   void SetBinContent(const std::array<RBinIndex, N> &indices, const V &value)
+   {
+      fEngine.SetBinContent(indices, value);
+      fStats.Taint();
+   }
+
+   /// Set the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RProfile profile({/* two dimensions */});
+   /// ROOT::Experimental::RProfile::RProfileBin value = /* ... */;
+   /// profile.SetBinContent(3, 5, value);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of arguments does not match the axis configuration or the bin is not found.
+   ///
+   /// \warning Setting the bin content will taint the global histogram statistics. Attempting to access its values, for
+   /// example calling GetNEntries(), will throw exceptions.
+   ///
+   /// \param[in] args the arguments for each axis and the new value of the bin content
+   /// \par See also
+   /// the \ref SetBinContent(const std::array<RBinIndex, N> &indices, const V &value) "function overload" accepting
+   /// `std::array`
+   template <typename... A>
+   void SetBinContent(const A &...args)
+   {
+      fEngine.SetBinContent(args...);
+      fStats.Taint();
+   }
+
    /// \}
    /// \name Filling
    /// \{
@@ -377,6 +467,60 @@ public:
          }
          fStats.Fill(args...);
       }
+   }
+
+   /// \}
+   /// \name Operations
+   /// \{
+
+   /// Add all bin contents and statistics of another profile histogram.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another profile histogram
+   void Add(const RProfile &other)
+   {
+      fEngine.Add(other.fEngine);
+      fStats.Add(other.fStats);
+   }
+
+   /// Add all bin contents and statistics of another profile histogram using atomic instructions.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another profile histogram that must not be modified during the operation
+   void AddAtomic(const RProfile &other)
+   {
+      fEngine.AddAtomic(other.fEngine);
+      fStats.AddAtomic(other.fStats);
+   }
+
+   /// Clear all bin contents and statistics.
+   void Clear()
+   {
+      fEngine.Clear();
+      fStats.Clear();
+   }
+
+   /// Clone this profile histogram.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the cloned object
+   RProfile Clone() const
+   {
+      RProfile profile(fEngine.Clone());
+      profile.fStats = fStats;
+      return profile;
+   }
+
+   /// Scale all bin contents and statistics.
+   ///
+   /// \param[in] factor the scale factor
+   void Scale(double factor)
+   {
+      fEngine.Scale(factor);
+      fStats.Scale(factor);
    }
 
    /// \}
