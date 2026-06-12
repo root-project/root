@@ -134,12 +134,15 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    bool supress_log = (settings.log_severity == LOGSEVERITY_DISABLE) ||
                       (settings.log_severity == LOGSEVERITY_FATAL);
 
-#ifdef OS_WIN
-   CefMainArgs main_args(GetModuleHandle(nullptr));
-#else
    TApplication *root_app = gROOT->GetApplication();
 
    std::vector<const char *> cef_argv = { root_app->Argv(0) };
+
+#ifdef OS_WIN
+
+   CefMainArgs main_args(args.IsHeadless() ? (HINSTANCE) 0 : GetModuleHandle(nullptr));
+
+#else
 
    if (args.IsHeadless()) {
       cef_argv.emplace_back("--user-data-dir=.");
@@ -147,8 +150,10 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
       cef_argv.emplace_back("--disable-web-security");
       cef_argv.emplace_back("--disable-gpu");
       cef_argv.emplace_back("--ignore-gpu-blocklist");
+#ifdef OS_LINUX
       cef_argv.emplace_back("--use-gl=swiftshader");
       cef_argv.emplace_back("--enable-unsafe-swiftshader");
+#endif
       cef_argv.emplace_back("--off-screen-rendering-enabled");
       if (use_views)
          cef_argv.emplace_back("--ozone-platform=headless");
@@ -163,6 +168,7 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    cef_argv.emplace_back(nullptr);
 
    CefMainArgs main_args(cef_argv.size() - 1, (char **) cef_argv.data());
+
 #endif
 
    // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
