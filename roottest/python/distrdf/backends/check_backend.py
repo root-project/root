@@ -4,7 +4,6 @@ import pytest
 import ROOT
 import ROOT._distrdf
 
-
 class TestBackendInit:
     """
     Tests to ensure that the instance variables of `DaskBackend` class have the
@@ -75,10 +74,41 @@ class TestBackendInit:
 
         try:
             connection.scheduler_info = lambda: {}
+
             backend = Backend.DaskBackend(daskclient=connection)
             assert backend.client is connection
+
+            df = ROOT.RDataFrame(10, executor=connection)
+            assert df.Count().GetValue() == 10
+
         finally:
             connection.scheduler_info = original_scheduler_info
+
+    def test_dask_backend_rejects_threaded_workers(self):
+        """
+        Check that DaskBackend rejects threaded workers.
+        """
+        from dask.distributed import Client
+        from dask.distributed import LocalCluster
+        from ROOT._distrdf.Backends.Dask import Backend
+
+        cluster = LocalCluster(
+            n_workers=1,
+            threads_per_worker=2,
+            processes=False
+        )
+
+        client = Client(cluster)
+
+        try:
+            with pytest.raises(
+                RuntimeError,
+                match="DistRDF with Dask does not support threaded workers"
+            ):
+                Backend.DaskBackend(daskclient=client)
+        finally:
+            client.close()
+            cluster.close()
 
 
 class TestInitialization:
