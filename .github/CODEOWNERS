@@ -27,30 +27,30 @@ interpreter/cling/tools/packaging @vgvassilev @hahnjo
 /io/ @pcanal @jblomer
 /io/xml/ @pcanal @linev
 /main/ @pcanal @dpiparo
-/math/ @hagebeck @guitargeek
-/math/minuit @guitargeek @hagebock
-/math/minuit2 @guitargeek @hagebock
-/math/vecops @dpiparo @hagebock
-/misc/ @dpiparo @hagebock
-/montecarlo/ @dpiparo @hagebock
+/math/ @hageboeck @guitargeek
+/math/minuit @guitargeek @hageboeck
+/math/minuit2 @guitargeek @hageboeck
+/math/vecops @dpiparo @hageboeck
+/misc/ @dpiparo @hageboeck
+/montecarlo/ @dpiparo @hageboeck
 /net/ @dpiparo @jblomer
-/roofit/ @guitargeek @hagebock
+/roofit/ @guitargeek @hageboeck
 /rootx/ @dpiparo @guitargeek
 /sql/ @pcanal @linev
 /tmva/ @lmoneta
 /tree/ @pcanal @jblomer
 /tutorials/ @couet @dpiparo
-/tree/dataframe/ @vepadulano @hagebock
+/tree/dataframe/ @vepadulano @hageboeck
 /tree/ml/ @vepadulano @siliataider
-/tree/readspeed/ @vepadulano @hagebock
+/tree/readspeed/ @vepadulano @hageboeck
 /tree/ntuple/ @jblomer @silverweed
 /tree/ntuplebrowse/ @jblomer @silverweed
 /tree/ntupleutil/ @jblomer @silverweed
 /tutorials/sql/ @linev
 
 # Projects that span over several code modules:
-/core/imt/ @dpiparo @hagebock
-/core/multiproc/ @dpiparo @hagebock
+/core/imt/ @dpiparo @hageboeck
+/core/multiproc/ @dpiparo @hageboeck
 /graf2d/cocoa/ @couet @linev
 /graf3d/eve/ @osschar @linev
 /graf3d/eve7/ @osschar @linev
