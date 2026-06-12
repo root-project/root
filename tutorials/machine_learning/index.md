@@ -137,4 +137,5 @@
 | ml_dataloader_NumPy.py | Loading batches of events from a ROOT dataset as Python generators of numpy arrays. |
 | ml_dataloader_PyTorch.py | Loading batches of events from a ROOT dataset into a basic PyTorch workflow. |
 | ml_dataloader_TensorFlow.py | Loading batches of events from a ROOT dataset into a basic TensorFlow workflow. |
+| ml_dataloader_Higgs_Classification | Loading batches of events from different files for a data-normalization workflow. |
 
