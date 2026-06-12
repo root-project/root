@@ -593,6 +593,45 @@ class TestCPP11FEATURES:
 
         cppyy.gbl.std.tuple_element[1, ATuple].type
 
+    def test21_smart_ptr_downcast(self):
+        """Object returned through a smart pointer is auto-downcast"""
+
+        import cppyy
+
+        from cppyy.gbl import TestSmartPtr, PubDerivedTestSmartPtr, TestSmartPtrIface
+        from cppyy.gbl import create_unique_ptr_instance, create_shared_ptr_to_derived
+        from cppyy.gbl import create_unique_ptr_to_derived, create_unique_ptr_to_offset_derived
+        from cppyy.gbl import pass_shared_ptr, pass_unique_ptr_to_derived, pass_shared_ptr_to_derived
+
+        # unique_ptr<Base> holding a Derived comes back as Derived, with the
+        # derived-only method callable, just like a raw pointer return
+        for cf in [create_unique_ptr_to_derived, create_shared_ptr_to_derived]:
+            obj = cf()
+            assert type(obj) == PubDerivedTestSmartPtr
+            assert obj.only_in_derived() == 27
+            assert obj.__smartptr__()      # smart-pointer semantics preserved
+
+        # an object that really is of the declared type stays that type
+        obj = create_unique_ptr_instance()
+        assert type(obj) == TestSmartPtr
+
+        # the most derived type sits at a non-zero offset from the declared
+        # interface, which the dereferencer can not apply: stay the declared
+        # type and keep behaving correctly
+        obj = create_unique_ptr_to_offset_derived()
+        assert type(obj) == TestSmartPtrIface
+        assert obj.only_in_iface() == 37
+
+        # the auto-down-cast must not enable C++-invalid conversions: the proxy
+        # still embeds a smart pointer to the *base* type, which does not convert
+        # to a smart pointer to the derived type (no implicit down-conversion of
+        # smart pointers in C++), so passing it to such a sink must be rejected
+        raises(TypeError, pass_unique_ptr_to_derived, create_unique_ptr_to_derived())
+        raises(TypeError, pass_shared_ptr_to_derived, create_shared_ptr_to_derived())
+
+        # passing it where the matching base smart pointer is expected still works
+        assert pass_shared_ptr(create_shared_ptr_to_derived()) == 17
+
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
