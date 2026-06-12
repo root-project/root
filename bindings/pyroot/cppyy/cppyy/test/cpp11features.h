@@ -36,6 +36,48 @@ int move_unique_ptr_derived(std::unique_ptr<DerivedTestSmartPtr>&& p);
 
 TestSmartPtr create_TestSmartPtr_by_value();
 
+// for auto-downcast of objects returned through a smart pointer
+class PubDerivedTestSmartPtr : public TestSmartPtr {
+public:
+    int only_in_derived() { return 27; }
+};
+
+// second base so that the cross-cast to the most derived type needs a
+// non-zero pointer adjustment, which the smart pointer's dereferencer can
+// not apply consistently (so no down-cast should happen in that case)
+class TestSmartPtrIface {
+public:
+    virtual ~TestSmartPtrIface() {}
+    long m_pad = 0;
+    int only_in_iface() { return 37; }
+};
+
+class MultiDerivedTestSmartPtr : public PubDerivedTestSmartPtr, public TestSmartPtrIface {
+};
+
+std::shared_ptr<TestSmartPtr> create_shared_ptr_to_derived();
+std::unique_ptr<TestSmartPtr> create_unique_ptr_to_derived();
+std::unique_ptr<TestSmartPtrIface> create_unique_ptr_to_offset_derived();
+
+// sinks expecting a smart pointer to the *derived* type; a base-class smart
+// pointer (even when its object was auto-down-cast) must not be accepted here
+int pass_unique_ptr_to_derived(std::unique_ptr<PubDerivedTestSmartPtr> p) {
+    return p->only_in_derived();
+}
+
+int pass_shared_ptr_to_derived(std::shared_ptr<PubDerivedTestSmartPtr> p) {
+    return p->only_in_derived();
+}
+
+// Overloaded function to check if automatic downcasting is consistently
+// applied for regular proxy objects and smart pointer proxies.
+std::string pass_ptr_overloaded(TestSmartPtr *) { return "TestSmartPtr"; }
+std::string pass_ptr_overloaded(PubDerivedTestSmartPtr *) { return "PubDerivedTestSmartPtr"; }
+std::string pass_ref_overloaded(TestSmartPtr &) { return "TestSmartPtr"; }
+std::string pass_ref_overloaded(PubDerivedTestSmartPtr &) { return "PubDerivedTestSmartPtr"; }
+std::string pass_val_overloaded(TestSmartPtr) { return "TestSmartPtr"; }
+std::string pass_val_overloaded(PubDerivedTestSmartPtr) { return "PubDerivedTestSmartPtr"; }
+
 
 //===========================================================================
 class TestMoving1 {          // for move ctors etc.
