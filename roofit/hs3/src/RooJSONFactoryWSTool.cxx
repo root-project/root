@@ -307,6 +307,114 @@ void importAttributes(RooAbsArg *arg, JSONNode const &node)
    }
 }
 
+void addIfPresent(RooArgSet &out, RooArgSet const *args)
+{
+   if (args) {
+      out.add(*args, true);
+   }
+}
+
+void collectParameterStepWidthCandidatesFromModelConfigs(RooWorkspace const &workspace, RooArgSet &candidates,
+                                                         RooArgSet &excluded)
+{
+   for (TObject *obj : workspace.allGenericObjects()) {
+      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+      if (!mc) {
+         continue;
+      }
+
+      addIfPresent(candidates, mc->GetParametersOfInterest());
+      addIfPresent(candidates, mc->GetNuisanceParameters());
+
+      addIfPresent(excluded, mc->GetObservables());
+      addIfPresent(excluded, mc->GetGlobalObservables());
+      addIfPresent(excluded, mc->GetConditionalObservables());
+   }
+}
+
+void collectParameterStepWidthCandidatesFromPdfs(std::vector<RooAbsPdf *> const &pdfs,
+                                                 std::vector<RooAbsData *> const &data, RooArgSet &candidates,
+                                                 RooArgSet &excluded)
+{
+   for (RooAbsPdf const *pdf : pdfs) {
+      RooArgSet observables;
+      for (RooAbsData const *dataset : data) {
+         std::unique_ptr<RooArgSet> pdfObs{pdf->getObservables(*dataset->get())};
+         observables.add(*pdfObs, true);
+      }
+
+      if (observables.empty()) {
+         continue;
+      }
+
+      RooArgSet params;
+      pdf->getParameters(&observables, params);
+      candidates.add(params, true);
+      excluded.add(observables, true);
+   }
+}
+
+void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbsPdf *> const &pdfs,
+                               std::vector<RooAbsData *> const &data, JSONNode &rootnode)
+{
+   RooArgSet candidates;
+   RooArgSet excluded;
+
+   collectParameterStepWidthCandidatesFromModelConfigs(workspace, candidates, excluded);
+   collectParameterStepWidthCandidatesFromPdfs(pdfs, data, candidates, excluded);
+
+   candidates.sort();
+
+   JSONNode *parameterStepWidthsNode = nullptr;
+   for (RooAbsArg *arg : candidates) {
+      if (excluded.find(*arg)) {
+         continue;
+      }
+
+      auto *var = dynamic_cast<RooRealVar *>(arg);
+      if (!var || !var->hasError()) {
+         continue;
+      }
+
+      if (!parameterStepWidthsNode) {
+         parameterStepWidthsNode = &rootnode["misc"]["minimization"]["parameter_stepwidths"].set_seq();
+      }
+
+      JSONNode &stepWidthNode = RooJSONFactoryWSTool::appendNamedChild(*parameterStepWidthsNode, var->GetName());
+      stepWidthNode["step_width"] << var->getError();
+   }
+}
+
+void importParameterStepWidths(RooWorkspace &workspace, JSONNode const &rootnode)
+{
+   auto const *parameterStepWidthsNode = rootnode.find("misc", "minimization", "parameter_stepwidths");
+   if (!parameterStepWidthsNode) {
+      return;
+   }
+   if (!parameterStepWidthsNode->is_seq()) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: misc.minimization.parameter_stepwidths is not a sequence, skipping.");
+      return;
+   }
+
+   for (JSONNode const &stepWidthNode : parameterStepWidthsNode->children()) {
+      if (!stepWidthNode.is_map() || !stepWidthNode.has_child("name") || !stepWidthNode.has_child("step_width")) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: skipping malformed parameter_stepwidths entry.");
+         continue;
+      }
+
+      const std::string name = RooJSONFactoryWSTool::name(stepWidthNode);
+      RooAbsArg *arg = workspace.arg(name);
+      auto *var = dynamic_cast<RooRealVar *>(arg);
+      if (!var) {
+         RooJSONFactoryWSTool::warning(
+            "RooFitHS3: skipping parameter_stepwidths entry for unknown or non-real variable '" + name + "'.");
+         continue;
+      }
+
+      var->setError(stepWidthNode.find("step_width")->val_double());
+   }
+}
+
 // RooWSFactoryTool expression handling
 std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
 {
@@ -594,7 +702,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       for (const auto &d : datasets) {
          if (d->GetName() == nameNode.val()) {
             found = true;
-            observables.add(*d->get());
+            observables.add(*d->get(), true);
          }
       }
       if (nameNode.val() != "0" && !found)
@@ -758,7 +866,7 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
             datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
          if (!component)
             RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
-         allVars.add(*component->get());
+         allVars.add(*component->get(), true);
          dsMap.insert({labels[iChannel], std::move(component)});
          indexCat.defineType(labels[iChannel], indices[iChannel]);
       }
@@ -1787,7 +1895,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
    nllNode["data"].set_seq();
 
    if (dataComponents) {
-      auto simPdf = static_cast<RooSimultaneous const *>(pdf);
+      auto simPdf = dynamic_cast<RooSimultaneous const *>(pdf);
       if (simPdf) {
          for (auto const &item : simPdf->indexCat()) {
             const auto &dataComp = dataComponents->find(item.first);
@@ -1923,6 +2031,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          exportModelConfig(n, *mc, combData, singleData);
       }
    }
+
+   exportParameterStepWidths(_workspace, allpdfs, alldata, n);
 
    for (auto *snsh : static_range_cast<RooArgSet const *>(_workspace.getSnapshots())) {
       RooArgSet snapshotSorted;
@@ -2276,10 +2386,12 @@ bool RooJSONFactoryWSTool::importJSON(std::istream &is)
 {
    // import a JSON file to the workspace
    std::unique_ptr<JSONTree> tree = JSONTree::create(is);
-   this->importAllNodes(tree->rootnode());
+   JSONNode const &rootnode = tree->rootnode();
+   this->importAllNodes(rootnode);
    if (this->workspace()->getSnapshot("default_values")) {
       this->workspace()->loadSnapshot("default_values");
    }
+   importParameterStepWidths(*this->workspace(), rootnode);
    return true;
 }
 
@@ -2312,7 +2424,9 @@ bool RooJSONFactoryWSTool::importYML(std::istream &is)
 {
    // import a YML file to the workspace
    std::unique_ptr<JSONTree> tree = JSONTree::create(is);
-   this->importAllNodes(tree->rootnode());
+   JSONNode const &rootnode = tree->rootnode();
+   this->importAllNodes(rootnode);
+   importParameterStepWidths(*this->workspace(), rootnode);
    return true;
 }
 
