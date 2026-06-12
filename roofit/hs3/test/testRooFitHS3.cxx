@@ -132,6 +132,20 @@ int validate(RooAbsArg const &arg, bool exact = true)
    return validate(ws, arg.GetName(), exact);
 }
 
+std::string parameterStepWidthsNode(std::string const &json)
+{
+   const std::string key = "\"parameter_stepwidths\":[";
+   const auto begin = json.find(key);
+   if (begin == std::string::npos) {
+      return "";
+   }
+   const auto end = json.find("]", begin);
+   if (end == std::string::npos) {
+      return "";
+   }
+   return json.substr(begin, end - begin + 1);
+}
+
 } // namespace
 
 // Test that the IO of attributes and string attributes works.
@@ -163,6 +177,128 @@ TEST(RooFitHS3, AttributesIO)
 
    EXPECT_STREQ(pdf.getStringAttribute("key0"), "val0") << "IO of string attribute didn't work!";
    EXPECT_STREQ(pdf.getStringAttribute("key1"), nullptr) << "unexpected string attribute found!";
+}
+
+TEST(RooFitHS3, ParameterStepWidthsModelConfigRoundTrip)
+{
+   RooWorkspace ws1{"workspace"};
+   ws1.factory("Gaussian::sig(x[-5, 5], mu[0, -10, 10], sigma[1, 0.1, 10])");
+   ws1.factory("Polynomial::bkg(x, {theta[0, -1, 1]})");
+   ws1.factory("SUM::model(fsig[0.5, 0, 1] * sig, bkg)");
+
+   RooRealVar &x = *ws1.var("x");
+   RooDataSet data{"data", "data", RooArgSet{x}};
+   for (double val : {-1.0, 0.5, 1.5}) {
+      x.setVal(val);
+      data.add(RooArgSet{x});
+   }
+   ws1.import(data);
+
+   ws1.var("x")->setError(9.0);
+   ws1.var("mu")->setError(0.12);
+   ws1.var("theta")->setError(0.33);
+   ws1.var("sigma")->setError(0.20);
+   ws1.var("sigma")->setAsymError(-0.18, 0.25);
+
+   RooFit::ModelConfig mc{"mc", &ws1};
+   mc.SetPdf(*ws1.pdf("model"));
+   mc.SetObservables("x");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("sigma");
+   ws1.import(mc);
+
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   const std::string parameterStepWidths = parameterStepWidthsNode(json);
+   ASSERT_FALSE(parameterStepWidths.empty()) << json;
+   EXPECT_NE(parameterStepWidths.find("\"name\":\"mu\""), std::string::npos) << parameterStepWidths;
+   EXPECT_NE(parameterStepWidths.find("\"name\":\"sigma\""), std::string::npos) << parameterStepWidths;
+   EXPECT_NE(parameterStepWidths.find("\"name\":\"theta\""), std::string::npos) << parameterStepWidths;
+   EXPECT_NE(parameterStepWidths.find("\"step_width\":0.12"), std::string::npos) << parameterStepWidths;
+   EXPECT_NE(parameterStepWidths.find("\"step_width\":0.2"), std::string::npos) << parameterStepWidths;
+   EXPECT_EQ(parameterStepWidths.find("\"error_lo\""), std::string::npos) << parameterStepWidths;
+   EXPECT_EQ(parameterStepWidths.find("\"error_hi\""), std::string::npos) << parameterStepWidths;
+   EXPECT_EQ(parameterStepWidths.find("\"name\":\"x\""), std::string::npos) << parameterStepWidths;
+
+   RooWorkspace ws2{"workspace2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+
+   ASSERT_NE(ws2.var("mu"), nullptr);
+   ASSERT_NE(ws2.var("theta"), nullptr);
+   ASSERT_NE(ws2.var("sigma"), nullptr);
+   ASSERT_NE(ws2.var("x"), nullptr);
+   EXPECT_TRUE(ws2.var("mu")->hasError());
+   EXPECT_DOUBLE_EQ(ws2.var("mu")->getError(), 0.12);
+   EXPECT_TRUE(ws2.var("theta")->hasError());
+   EXPECT_DOUBLE_EQ(ws2.var("theta")->getError(), 0.33);
+   EXPECT_TRUE(ws2.var("sigma")->hasError());
+   EXPECT_DOUBLE_EQ(ws2.var("sigma")->getError(), 0.20);
+   EXPECT_FALSE(ws2.var("sigma")->hasAsymError());
+   EXPECT_FALSE(ws2.var("x")->hasError());
+}
+
+TEST(RooFitHS3, ParameterStepWidthsFallbackExcludesDataAxes)
+{
+   RooWorkspace ws1{"workspace"};
+   ws1.factory("Gaussian::model(x[-5, 5], mu[0, -10, 10], sigma[1, 0.1, 10])");
+
+   RooRealVar &x = *ws1.var("x");
+   RooDataSet data{"data", "data", RooArgSet{x}};
+   for (double val : {-1.0, 0.5, 1.5}) {
+      x.setVal(val);
+      data.add(RooArgSet{x});
+   }
+   ws1.import(data);
+
+   ws1.var("x")->setError(9.0);
+   ws1.var("mu")->setError(0.12);
+   ws1.var("sigma")->setError(0.20);
+
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   const std::string parameterStepWidths = parameterStepWidthsNode(json);
+   ASSERT_FALSE(parameterStepWidths.empty()) << json;
+   EXPECT_NE(parameterStepWidths.find("\"name\":\"mu\""), std::string::npos) << parameterStepWidths;
+   EXPECT_NE(parameterStepWidths.find("\"name\":\"sigma\""), std::string::npos) << parameterStepWidths;
+   EXPECT_EQ(parameterStepWidths.find("\"name\":\"x\""), std::string::npos) << parameterStepWidths;
+
+   RooWorkspace ws2{"workspace2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+
+   ASSERT_NE(ws2.var("mu"), nullptr);
+   ASSERT_NE(ws2.var("sigma"), nullptr);
+   ASSERT_NE(ws2.var("x"), nullptr);
+   EXPECT_DOUBLE_EQ(ws2.var("mu")->getError(), 0.12);
+   EXPECT_DOUBLE_EQ(ws2.var("sigma")->getError(), 0.20);
+   EXPECT_FALSE(ws2.var("x")->hasError());
+}
+
+TEST(RooFitHS3, ParameterStepWidthsImportAfterDefaultSnapshot)
+{
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.1.90"},
+      "parameter_points": [
+         {
+            "name": "default_values",
+            "parameters": [
+               {"name": "mu", "value": 0.0, "err": 0.01}
+            ]
+         }
+      ],
+      "misc": {
+         "minimization": {
+            "parameter_stepwidths": [
+               {"name": "mu", "step_width": 0.42},
+               {"name": "missing", "step_width": 1.0}
+            ]
+         }
+      }
+   })";
+
+   RooWorkspace ws{"workspace"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+
+   ASSERT_NE(ws.var("mu"), nullptr);
+   EXPECT_TRUE(ws.var("mu")->hasError());
+   EXPECT_DOUBLE_EQ(ws.var("mu")->getError(), 0.42);
 }
 
 TEST(RooFitHS3, RooAddPdf)
