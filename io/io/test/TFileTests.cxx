@@ -2,20 +2,22 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <stdexcept>
 
 #include "gtest/gtest.h"
 
 #include <ROOT/TestSupport.hxx>
 
-#include "TFile.h"
-#include "TMemFile.h"
 #include "TDirectory.h"
+#include "TEnv.h"
+#include "TFile.h"
+#include "TFree.h"
 #include "TKey.h"
+#include "TMemFile.h"
 #include "TNamed.h"
 #include "TPluginManager.h"
-#include "TROOT.h" // gROOT
+#include "TROOT.h"
 #include "TSystem.h"
-#include "TEnv.h" // gEnv
 
 TEST(TFile, WriteObjectTObject)
 {
@@ -331,4 +333,337 @@ TEST(TFile, UUID)
 {
    TMemFile f("uuidtest.root", "RECREATE");
    EXPECT_EQ('4', f.GetUUID().AsString()[14]);
+}
+
+TEST(TFile, DeleteKey)
+{
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_delete_keys.root");
+
+   auto fnCountGaps = [](const std::string &fileName) -> std::uint64_t {
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileName.c_str()));
+      std::uint64_t nGaps = 0;
+      for (const auto &k : f->WalkTKeys()) {
+         if (k.fLen == TFile::kMaxGapSize) {
+            // this used to indicate a truncated free segment (corrupt segment list). Gaps could still exactly
+            // be 2GB in size but not for the files in this unit test.
+            throw std::runtime_error("truncated free segment");
+         }
+         if (k.fType == ROOT::Detail::TKeyMapNode::kGap)
+            nGaps++;
+      }
+      return nGaps;
+   };
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   f->Write();
+   f->Close();
+
+   // The empty file should have no gaps. Note that gaps are created temporarily when certain keys are overwritten.
+   EXPECT_EQ(0, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   std::vector<char> v;
+   f->WriteObject(&v, "va0");
+   f->WriteObject(&v, "va1");
+   f->WriteObject(&v, "va2");
+   f->Write();
+   f->Close();
+   // 2 gaps: new (larger) keys list and free list are written
+   EXPECT_EQ(2, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->Delete("va1;*"); // should create small gap that cannot be merged, trapped between v0 and v2
+   f->Write();
+   f->Close();
+
+   EXPECT_EQ(3, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->Delete("va2;*"); // gaps at the tail should merge
+   f->Write();
+   f->Close();
+
+   EXPECT_EQ(2, fnCountGaps(fileGuard.GetPath()));
+
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      printf("Skipping test partially on 32bit platform.\n");
+      return;
+   }
+
+   v.resize(1000 * 1000, 'x'); // next few objects are 1MB in size
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   f->WriteObject(&v, "vb0");
+   f->WriteObject(&v, "vb1");
+   f->WriteObject(&v, "vb2");
+   f->WriteObject(&v, "vb3");
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "vc0");
+   f->WriteObject(&v, "vc1");
+   f->WriteObject(&v, "vc2");
+   f->Write();
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Close();
+
+   // New file, no gaps
+   EXPECT_EQ(0, fnCountGaps(fileGuard.GetPath()));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->Delete("vb1;*"); // Make a medium sized gap into which smaller objects fit, e.g. the free list
+   f->Delete("vb3;*"); //  |
+   f->Delete("vc0;*"); //  |
+   f->Delete("vc1;*"); //  |---> Single merged gap in free list, multi-hop free segment on disk
+   f->Write();
+   f->Close();
+
+   // Free list in gap created by vb1, one gap at the end because we have a smaller keys list. Two consecutive
+   // gaps for removed vb3, vc0, vc1.
+   EXPECT_EQ(4, fnCountGaps(fileGuard.GetPath()));
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_FALSE(f->TestBit(TFile::kRecovered));
+   // Only 3 real gaps plus one virtual gap at the end of the file
+   EXPECT_EQ(4, f->GetNfree());
+   // Force the next open to recover the file
+   f->GetListOfKeys()->Clear();
+   f->Write();
+   f->Close();
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+      diagsRaii.requiredDiag(kInfo, "TFile::Recover", "recovered key vector<char>", false);
+      f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+      EXPECT_TRUE(f->TestBit(TFile::kRecovered));
+      // We got one more free gap due to the replacement of the empty keys list.  Otherwise, we still want to see
+      // that the large gap was merged from the smaller segments.
+      EXPECT_EQ(5, f->GetNfree());
+      bool foundLargeGap = false;
+      for (const auto gap : ROOT::Detail::TRangeStaticCast<TFree>(f->GetListOfFree())) {
+         if (gap->GetLast() - gap->GetFirst() >= TFile::kMaxGapSize) {
+            foundLargeGap = true;
+            break;
+         }
+      }
+      EXPECT_TRUE(foundLargeGap);
+      f->Write();
+      f->Close();
+   }
+   // Same as before the recovery
+   EXPECT_EQ(4, fnCountGaps(fileGuard.GetPath()));
+
+   // Write in large gap (between 1GB and 2GB), reproducer of issue https://github.com/root-project/root/issues/19245
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "big1");
+   f->WriteObject(&v, "big2");
+   v.resize(1024 * 1024, 'x');
+   f->WriteObject(&v, "small1");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   // Creates a combined gap close to 2GB
+   f->Delete("big1;*");
+   f->Delete("big2;*");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   f->WriteObject(&v, "small2");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_FALSE(f->TestBit(TFile::kRecovered));
+}
+
+TEST(TFile, WriteInLargeGap)
+{
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      GTEST_SKIP() << "Skipping test on 32bit platform.";
+   }
+
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_large_gap_at_end.root");
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   std::vector<char> v;
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "v0");
+   f->WriteObject(&v, "v1");
+   f->WriteObject(&v, "v2");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Delete("v0;*");
+   f->Delete("v1;*");
+   f->Delete("v2;*");
+   v.clear();
+   f->WriteObject(&v, "small"); //< This should not crash, i.e. the new key should be placed in the large gap
+
+   int nConsecutiveGapsAfterSmall = -1;
+   for (const auto &k : f->WalkTKeys()) {
+      if (k.fType == ROOT::Detail::TKeyMapNode::kGap && nConsecutiveGapsAfterSmall >= 0) {
+         nConsecutiveGapsAfterSmall++;
+         continue;
+      }
+      if (k.fKeyName == "small") {
+         nConsecutiveGapsAfterSmall = 0;
+         continue;
+      }
+      if (nConsecutiveGapsAfterSmall >= 0)
+         break;
+   }
+   EXPECT_EQ(2, nConsecutiveGapsAfterSmall);
+
+   TNamed x("x", "");
+   f->WriteObject(&x, "x"); //< Update the streamer info so that it doesn't block shrinking the file
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   EXPECT_LT(f->GetEND(), TFile::kStartBigFile);
+}
+
+TEST(TFile, WriteInLargeGapCornerCase)
+{
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      GTEST_SKIP() << "Skipping test on 32bit platform.";
+   }
+
+   // Constructs a case that requires writing 2 free segment headers after a key
+
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_write_in_large_gap_corner_case.root");
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   std::vector<char> v;
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f->WriteObject(&v, "v0");
+   f->WriteObject(&v, "v1");
+   f->WriteObject(&v, "v2");
+   f->Write();
+   f->Delete("v0;*");
+   f->Delete("v1;*");
+   f->Delete("v2;*");
+   f->Write();
+
+   // We should have two large consecutive gaps
+   Long64_t seekGap = 0;
+   Long64_t gapSize = 0; // the combined gap size
+   for (const auto &k : f->WalkTKeys()) {
+      if (seekGap > 0) {
+         // second gap
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         gapSize += k.fLen;
+         break;
+      }
+      if (k.fLen > 1000000) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         seekGap = k.fAddr;
+         gapSize = k.fLen;
+      }
+   }
+   ASSERT_GT(seekGap, 0);
+   ASSERT_GT(gapSize, TFile::kMaxGapSize);
+
+   // Create new key in the large gap; not huge but large enough to only fit in the large gap
+   TKey testKey("TEST", "TITLE", TObject::Class(), 1024 * 1024, f.get());
+   EXPECT_EQ(seekGap, testKey.GetSeekKey());
+
+   // Manipulate the linked list of free segments in the large gap:
+   //   - 2 empty free gaps
+   //   - 1 max sized gap 1 byte after the key end
+   //   - final segment pointing to the original end
+   std::array<char, sizeof(Int_t)> buf;
+   char *pbuf = buf.data();
+
+   Long64_t offset = seekGap;
+   f->Seek(offset);
+   tobuf(pbuf, -static_cast<Int_t>(sizeof(Int_t)));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   offset += sizeof(Int_t);
+   pbuf = buf.data();
+   tobuf(pbuf, -static_cast<Int_t>(seekGap + testKey.GetNbytes() + 1 - offset));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   offset += testKey.GetNbytes() + 1 - sizeof(Int_t);
+   f->Seek(offset);
+   pbuf = buf.data();
+   tobuf(pbuf, -static_cast<Int_t>(TFile::kMaxGapSize));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   offset += TFile::kMaxGapSize;
+   f->Seek(offset);
+   EXPECT_GT(seekGap + gapSize, offset);
+   EXPECT_LT(seekGap + gapSize - offset, TFile::kMaxGapSize);
+   pbuf = buf.data();
+   tobuf(pbuf, -static_cast<Int_t>(seekGap + gapSize - offset));
+   EXPECT_FALSE(f->WriteBuffer(buf.data(), sizeof(Int_t)));
+
+   testKey.WriteFile(1, f.get());
+
+   int step = 0;
+   for (const auto &k : f->WalkTKeys()) {
+      if (step == 3) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         EXPECT_EQ(k.fAddr + k.fLen, seekGap + gapSize);
+         step = 4;
+      } else if (step == 2) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         EXPECT_LT(k.fLen, TFile::kMaxGapSize);
+         step = 3;
+      } else if (step == 1) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kGap, k.fType);
+         EXPECT_EQ(sizeof(Int_t), k.fLen);
+         step = 2;
+      } else if (k.fAddr == static_cast<ULong64_t>(seekGap)) {
+         EXPECT_EQ(ROOT::Detail::TKeyMapNode::kKey, k.fType);
+         EXPECT_EQ(k.fLen, testKey.GetNbytes());
+         step = 1;
+      }
+   }
+   EXPECT_EQ(4, step);
+
+   f->Write();
+   f->Close();
+}
+
+TEST(TFile, KeySizeLimit)
+{
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      GTEST_SKIP() << "Skipping test on 32bit platform.";
+   }
+
+   ROOT::TestSupport::FileRaii fileGuard("tfile_test_key_size_limit.root");
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+
+   // Check that we can add keys >1GB (but smaller than 1GiB, obviously) in small and large files.
+   // This does work even though the last, virtual free segment is 1GB (and not 1GiB). The reason it works is
+   // that when the last free segment is not large enough, the code path that supports upgrading from a small file
+   // to a large file is activated and extends the last free segment as needed.
+
+   std::vector<char> v;
+   v.resize(1000 * 1000 * 1000 + 100, 'x'); // more than 1GB but less the 1GiB
+   f->WriteObject(&v, "v0");
+   EXPECT_LT(f->GetEND(), TFile::kStartBigFile);
+   f->WriteObject(&v, "v1");
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->WriteObject(&v, "v2");
+   f->Write();
+   f->Close();
 }

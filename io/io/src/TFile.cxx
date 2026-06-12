@@ -173,6 +173,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
 #include <cinttypes>
+#include <cassert>
+#include <algorithm>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -1504,27 +1506,58 @@ Bool_t TFile::IsOpen() const
 
 void TFile::MakeFree(Long64_t first, Long64_t last)
 {
-   TFree *f1      = (TFree*)fFree->First();
-   if (!f1) return;
-   TFree *newfree = f1->AddFree(fFree,first,last);
-   if(!newfree) return;
-   Long64_t nfirst = newfree->GetFirst();
-   Long64_t nlast  = newfree->GetLast();
-   Long64_t nbytesl= nlast-nfirst+1;
-   if (nbytesl > 2000000000) nbytesl = 2000000000;
-   Int_t nbytes    = -Int_t (nbytesl);
-   char buffer[sizeof(Int_t)];
-   char *pbuffer = buffer;
-   tobuf(pbuffer, nbytes);
-   if (last == fEND-1) fEND = nfirst;
-   Seek(nfirst);
-   // We could not update the meta data for this block on the file.
-   // This is not fatal as this only means that we won't get it 'right'
-   // if we ever need to Recover the file before the block is actually
-   // (attempted to be reused.
-   // coverity[unchecked_value]
-   WriteBuffer(buffer, sizeof(buffer));
-   if (fMustFlush) Flush();
+   assert(0 < first && first < last && last < fEND);
+
+   TFree *f1 = static_cast<TFree *>(fFree->First());
+   assert(f1); // There must always be at least the virtual free segment at the end of the file
+
+   TFree *newfree = f1->AddFree(fFree, first, last);
+   assert(newfree); // AddFree() always succeeds
+
+   const Long64_t nfirst = newfree->GetFirst();
+   const Long64_t nlast = newfree->GetLast();
+   assert(nfirst > 0 && nfirst <= first && nlast >= last);
+   Long64_t nbytesl = std::min(nlast, fEND) - nfirst + 1;
+   assert(nbytesl >= static_cast<Long64_t>(sizeof(Int_t)));
+
+   auto fnWriteGapHeader = [this](ULong64_t offset, ULong64_t gapSize) {
+      assert((gapSize <= TFile::kMaxGapSize) && (fEND > 0) &&
+             ((offset + sizeof(Int_t)) <= static_cast<ULong64_t>(fEND)));
+
+      auto nbytes = -static_cast<Int_t>(gapSize);
+      char buffer[sizeof(Int_t)];
+      char *pbuffer = buffer;
+      tobuf(pbuffer, nbytes);
+
+      Seek(offset);
+      if (WriteBuffer(buffer, sizeof(buffer)) != 0) {
+         // Not fatal, this only means that we won't get it 'right'
+         // if we ever need to Recover the file before the block is actually
+         // attempted to be reused.
+         Warning("TFile::MakeFree()", "failed to write free segment header");
+      }
+   };
+
+   Long64_t offset = nfirst;
+   while (nbytesl > TFile::kMaxGapSize) {
+      // For gaps larger than 2GB, link several consecutive gaps together. This has to be done because the size
+      // marker on disk is 32 bits. The free list, however, will still have one large gap because the free list
+      // uses 64 bit [first..last] pairs to represent gaps. File recovery will merge consecutive gaps.
+
+      // Make sure that the second gap is large enough to write its size on disk
+      Long64_t gapSize = TFile::kMaxGapSize - sizeof(Int_t);
+      fnWriteGapHeader(offset, gapSize);
+
+      nbytesl -= gapSize;
+      offset += gapSize;
+   }
+   fnWriteGapHeader(offset, nbytesl);
+
+   if (last == fEND - 1)
+      fEND = nfirst;
+
+   if (fMustFlush)
+      Flush();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2125,7 +2158,14 @@ Int_t TFile::Recover()
 
    fEND = Long64_t(size);
 
-   if (fWritable && !fFree) fFree  = new TList;
+   if (fWritable) {
+      if (fFree) {
+         // Remove an existing free list because we will recover it from the chain of segments
+         fFree->Delete();
+         delete fFree;
+      }
+      fFree = new TList();
+   }
 
    Int_t nrecov = 0;
    nwheader = 1024;
@@ -2148,9 +2188,19 @@ Int_t TFile::Recover()
          break;
       }
       if (nbytes < 0) {
+         if ((-nbytes < static_cast<Int_t>(sizeof(Int_t))) || (-nbytes > static_cast<Int_t>(TFile::kMaxGapSize))) {
+            Error("Recover", "Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
+            break;
+         }
+         if (fWritable) {
+            const Long64_t last = idcur - nbytes - 1;
+            if (fFree->Last() && static_cast<TFree *>(fFree->Last())->GetLast() + 1 == idcur) {
+               static_cast<TFree *>(fFree->Last())->SetLast(last);
+            } else {
+               new TFree(fFree, idcur, last);
+            }
+         }
          idcur -= nbytes;
-         if (fWritable) new TFree(fFree,idcur,idcur-nbytes-1);
-         Seek(idcur);
          continue;
       }
       Version_t versionkey;
@@ -2196,15 +2246,18 @@ Int_t TFile::Recover()
       idcur += nbytes;
    }
    if (fWritable) {
-      Long64_t max_file_size = Long64_t(kStartBigFile);
-      if (max_file_size < fEND) max_file_size = fEND+1000000000;
-      TFree *last = (TFree*)fFree->Last();
-      if (last) {
-         last->AddFree(fFree,fEND,max_file_size);
-      } else {
-         new TFree(fFree,fEND,max_file_size);
+      if (fFree->Last() && static_cast<TFree *>(fFree->Last())->GetLast() == idcur - 1) {
+         // If the last recovered segment is a free segment, remove it and replace it by a newly created artificial one
+         fEND = static_cast<TFree *>(fFree->Last())->GetFirst();
+         delete fFree->Last();
+         fFree->Remove(fFree->LastLink());
       }
-      if (nrecov) Write();
+      Long64_t max_file_size = Long64_t(kStartBigFile);
+      if (max_file_size < fEND)
+         max_file_size = fEND + 1000000000;
+      new TFree(fFree, fEND, max_file_size);
+      if (nrecov)
+         Write();
    }
    return nrecov;
 }
