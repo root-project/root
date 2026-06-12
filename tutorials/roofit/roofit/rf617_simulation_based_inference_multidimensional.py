@@ -261,17 +261,9 @@ ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
 nllr_learned.plotOn(frame1, LineColor="kP6Blue", ShiftToZero=True, Name="learned")
 
 
-# Declare a helper function in ROOT to dereference unique_ptr
-ROOT.gInterpreter.Declare(
-    """
-RooAbsArg &my_deref(std::unique_ptr<RooAbsArg> const& ptr) { return *ptr; }
-"""
-)
-
 # Choose normalization set for lhr_calc to plot over
 norm_set = ROOT.RooArgSet(x_vars)
-lhr_calc_final_ptr = ROOT.RooFit.Detail.compileForNormSet(lhr_calc, norm_set)
-lhr_calc_final = ROOT.my_deref(lhr_calc_final_ptr)
+lhr_calc_final = ROOT.RooFit.Detail.compileForNormSet(lhr_calc, norm_set)
 lhr_calc_final.recursiveRedirectServers(norm_set)
 
 # Plot the likelihood ratio functions
