@@ -13,7 +13,6 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
-#include "clang/AST/QualTypeNames.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 
@@ -70,6 +69,9 @@ namespace {
 namespace cling {
 namespace utils {
 namespace TypeName {
+  // Forward declare
+  QualType getFullyQualifiedType(QualType QT, const ASTContext &Ctx,
+                                 bool WithGlobalNsPrefix);
 
   // The code below is mostly copied from clang/lib/AST/QualTypeNames.cpp
   // as it became harder and diverged after the NestedNameSpecifier changes
@@ -572,60 +574,60 @@ namespace cling {
 namespace utils {
   static bool GetFullyQualifiedTemplateName(const ASTContext& Ctx,
                                             TemplateName& tname) {
-    return clang::TypeName::getFullyQualifiedTemplateName(
+    return TypeName::getFullyQualifiedTemplateName(
         Ctx, tname, /*WithGlobalNsPrefix=*/false);
   }
 
   static NestedNameSpecifier
   GetFullyQualifiedNameSpecifier(const ASTContext& Ctx,
                                  NestedNameSpecifier scope) {
-    return clang::TypeName::getFullyQualifiedNestedNameSpecifier(
+    return TypeName::getFullyQualifiedNestedNameSpecifier(
         Ctx, scope, /*WithGlobalNsPrefix=*/false);
   }
 
   static NestedNameSpecifier
   CreateNestedNameSpecifierForScopeOf(const ASTContext& Ctx, const Decl* decl,
                                       bool FullyQualified) {
-    return clang::TypeName::createNestedNameSpecifierForScopeOf(
+    return TypeName::createNestedNameSpecifierForScopeOf(
         Ctx, decl, FullyQualified, /*WithGlobalNsPrefix=*/false);
   }
 
   static NestedNameSpecifier CreateNestedNameSpecifierForScopeOf(
       const ASTContext& Ctx, const Type* TypePtr, bool FullyQualified) {
-    return clang::TypeName::createNestedNameSpecifierForScopeOf(
+    return TypeName::createNestedNameSpecifierForScopeOf(
         Ctx, TypePtr, FullyQualified, /*WithGlobalNsPrefix=*/false);
   }
 
   NestedNameSpecifier
   TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
                                       const NamespaceDecl* Namesp) {
-    return clang::TypeName::createNestedNameSpecifier(
+    return TypeName::createNestedNameSpecifier(
         Ctx, Namesp, /*WithGlobalNsPrefix=*/false);
   }
 
   // FIXME: Doesn't exist upstream
   NestedNameSpecifier TypeName::CreateNestedNameSpecifier(
       const ASTContext& Ctx, const TypedefNameDecl* TD, bool FullyQualify) {
-    return clang::TypeName::createNestedNameSpecifier(
+    return TypeName::createNestedNameSpecifier(
         Ctx, TD, FullyQualify, /*WithGlobalNsPrefix=*/false);
   }
 
   NestedNameSpecifier
   TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx, const TagDecl* TD,
                                       bool FullyQualify) {
-    return clang::TypeName::createNestedNameSpecifier(
+    return TypeName::createNestedNameSpecifier(
         Ctx, TD, FullyQualify, /*WithGlobalNsPrefix=*/false);
   }
 
   QualType TypeName::GetFullyQualifiedType(QualType QT, const ASTContext& Ctx) {
-    return clang::TypeName::getFullyQualifiedType(QT, Ctx,
+    return TypeName::getFullyQualifiedType(QT, Ctx,
                                                   /*WithGlobalNsPrefix=*/false);
   }
 
   std::string TypeName::GetFullyQualifiedName(QualType QT,
                                               const ASTContext& Ctx) {
     QualType FQQT =
-        clang::TypeName::getFullyQualifiedType(QT, Ctx,
+        TypeName::getFullyQualifiedType(QT, Ctx,
                                                /*WithGlobalNsPrefix=*/false);
 
     PrintingPolicy Policy(Ctx.getPrintingPolicy());
@@ -1009,13 +1011,13 @@ namespace utils {
           // may point to a template specialization) or Template
           // Specialization Type. We need to fully qualify their arguments.
 
-          const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+          const Type *TypePtr = TypeName::getFullyQualifiedTemplateType(
               Ctx, TT, TT->getKeyword(), outer_scope, /*WithGlobalNsPrefix=*/false);
           desugared = QualType(TypePtr, 0);
         } else if (const auto *TT = dyn_cast<TypedefType>(desugared.getTypePtr())) {
           desugared = Ctx.getTypedefType(
               TT->getKeyword(), outer_scope, TT->getDecl(),
-              clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
+              TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
         }
       }
       return NestedNameSpecifier(desugared.getTypePtr());
@@ -1915,18 +1917,18 @@ namespace utils {
         // may point to a template specialization) or Template
         // Specialization Type. We need to fully qualify their arguments.
 
-        const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+        const Type *TypePtr = TypeName::getFullyQualifiedTemplateType(
             Ctx, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
         QT = QualType(TypePtr, 0);
       } else if (const auto *TT = dyn_cast<TypedefType>(QT.getTypePtr())) {
         QT = Ctx.getTypedefType(
             TT->getKeyword(), prefix, TT->getDecl(),
-            clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
+            TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
       } else if (const auto *TST =
                  dyn_cast<TemplateSpecializationType>(QT.getTypePtr())) {
         // e.g. TDataPoint<float> with prefix NS:: reconstructed as
         // NS::TDataPoint<float>
-        const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+        const Type *TypePtr = TypeName::getFullyQualifiedTemplateType(
             Ctx, TST, /*WithGlobalNsPrefix=*/false);
         QT = QualType(TypePtr, 0);
       }
