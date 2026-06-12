@@ -201,6 +201,67 @@ public:
    std::uint64_t GetLocation() const { return fLocation; }
 };
 
+/// RNTupleLocator payload for the kTypeMulti locator (type 0x03). Used by storage
+/// backends that pack multiple pages into shared objects (e.g., S3 Mode A).
+///
+/// The class stores the object identifier and byte offset as two explicit 32-bit
+/// integers plus a separate 4-bit reserved field. When packed into a single 64-bit
+/// value via GetLocation() (parallel to RNTupleLocatorObject64::GetLocation()), the
+/// layout is:
+///   bits 63..60: 4 reserved bits (for future per-locator flags)
+///   bits 59..30: 30-bit object identifier (max value 2^30 - 1, i.e. ~1 Billion objects)
+///   bits 29..0:  30-bit byte offset within the object (max value 2^30 - 1, i.e. 1 GiB - 1)
+class RNTupleLocatorMulti {
+public:
+   static constexpr std::uint32_t kMaxObjectId = (1U << 30) - 1;
+   static constexpr std::uint32_t kMaxOffset = (1U << 30) - 1;
+   static constexpr std::uint8_t kMaxReserved = 0xF;
+
+private:
+   static constexpr std::uint64_t kMaskReserved = 0xFULL << 60;
+   static constexpr std::uint64_t kMaskObjectId = 0x3FFFFFFFULL << 30;
+   static constexpr std::uint64_t kMaskOffset = 0x3FFFFFFFULL;
+
+   std::uint32_t fObjectId = 0;
+   std::uint32_t fOffset = 0;
+   std::uint8_t fReserved = 0;
+
+public:
+   RNTupleLocatorMulti() = default;
+   /// Construct from logical object identifier and byte offset; throws if either value
+   /// exceeds the 30-bit range.
+   RNTupleLocatorMulti(std::uint32_t objectId, std::uint32_t offset);
+   /// Construct from a raw 64-bit packed location value, extracting the fields per
+   /// the layout documented above. Intended for the deserializer; user code should
+   /// prefer the (objectId, offset) constructor.
+   explicit RNTupleLocatorMulti(std::uint64_t location)
+      : fObjectId(static_cast<std::uint32_t>((location & kMaskObjectId) >> 30)),
+        fOffset(static_cast<std::uint32_t>(location & kMaskOffset)),
+        fReserved(static_cast<std::uint8_t>((location & kMaskReserved) >> 60))
+   {
+   }
+
+   bool operator==(const RNTupleLocatorMulti &other) const
+   {
+      return fObjectId == other.fObjectId && fOffset == other.fOffset && fReserved == other.fReserved;
+   }
+
+   /// Returns the raw 64-bit packed location derived from the three fields, suitable
+   /// for storage in RNTupleLocator::fPosition or for direct serialization. Parallel
+   /// to RNTupleLocatorObject64::GetLocation().
+   std::uint64_t GetLocation() const
+   {
+      return (static_cast<std::uint64_t>(fReserved) << 60) | (static_cast<std::uint64_t>(fObjectId) << 30) | fOffset;
+   }
+
+   std::uint32_t GetObjectId() const { return fObjectId; }
+   std::uint32_t GetOffset() const { return fOffset; }
+   std::uint8_t GetReserved() const { return fReserved; }
+
+   /// Sets the 4-bit reserved field; throws if the value exceeds the 4-bit range.
+   void SetReserved(std::uint8_t reserved);
+};
+
 // Workaround missing return type overloading
 class RNTupleLocator;
 namespace Internal {
@@ -216,6 +277,11 @@ template <>
 struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
    static RNTupleLocatorObject64 Get(const RNTupleLocator &loc);
 };
+
+template <>
+struct RNTupleLocatorHelper<RNTupleLocatorMulti> {
+   static RNTupleLocatorMulti Get(const RNTupleLocator &loc);
+};
 } // namespace Internal
 
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
@@ -226,6 +292,7 @@ struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
 class RNTupleLocator {
    friend struct Internal::RNTupleLocatorHelper<std::uint64_t>;
    friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorObject64>;
+   friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorMulti>;
 
 public:
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
@@ -277,7 +344,8 @@ public:
    void SetType(ELocatorType type);
    void SetReserved(std::uint8_t reserved);
 
-   /// Note that for GetPosition() / SetPosition(), the locator type must correspond (kTypeFile, kTypeObject64).
+   /// Note that for GetPosition() / SetPosition(), the locator type must correspond
+   /// (kTypeFile, kTypeObject64, kTypeMulti).
 
    template <typename T>
    T GetPosition() const
@@ -287,6 +355,7 @@ public:
 
    void SetPosition(std::uint64_t position);
    void SetPosition(RNTupleLocatorObject64 position);
+   void SetPosition(RNTupleLocatorMulti position);
 };
 
 namespace Internal {

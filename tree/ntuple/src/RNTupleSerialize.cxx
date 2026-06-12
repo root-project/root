@@ -511,6 +511,44 @@ ROOT::RResult<void> DeserializeLocatorPayloadObject64(const unsigned char *buffe
    return ROOT::RResult<void>::Success();
 }
 
+std::uint32_t SerializeLocatorPayloadMulti(const ROOT::RNTupleLocator &locator, unsigned char *buffer)
+{
+   const auto &data = locator.GetPosition<ROOT::RNTupleLocatorMulti>();
+   const uint32_t sizeofNBytesOnStorage = (locator.GetNBytesOnStorage() > std::numeric_limits<std::uint32_t>::max())
+                                             ? sizeof(std::uint64_t)
+                                             : sizeof(std::uint32_t);
+   if (buffer) {
+      if (sizeofNBytesOnStorage == sizeof(std::uint32_t)) {
+         RNTupleSerializer::SerializeUInt32(locator.GetNBytesOnStorage(), buffer);
+      } else {
+         RNTupleSerializer::SerializeUInt64(locator.GetNBytesOnStorage(), buffer);
+      }
+      RNTupleSerializer::SerializeUInt64(data.GetLocation(), buffer + sizeofNBytesOnStorage);
+   }
+   return sizeofNBytesOnStorage + sizeof(std::uint64_t);
+}
+
+ROOT::RResult<void> DeserializeLocatorPayloadMulti(const unsigned char *buffer, std::uint32_t sizeofLocatorPayload,
+                                                   ROOT::RNTupleLocator &locator)
+{
+   std::uint64_t packed;
+   if (sizeofLocatorPayload == 12) {
+      std::uint32_t nBytesOnStorage;
+      RNTupleSerializer::DeserializeUInt32(buffer, nBytesOnStorage);
+      locator.SetNBytesOnStorage(nBytesOnStorage);
+      RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), packed);
+   } else if (sizeofLocatorPayload == 16) {
+      std::uint64_t nBytesOnStorage;
+      RNTupleSerializer::DeserializeUInt64(buffer, nBytesOnStorage);
+      locator.SetNBytesOnStorage(nBytesOnStorage);
+      RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint64_t), packed);
+   } else {
+      return R__FAIL("invalid Multi locator payload size: " + std::to_string(sizeofLocatorPayload));
+   }
+   locator.SetPosition(ROOT::RNTupleLocatorMulti{packed});
+   return ROOT::RResult<void>::Success();
+}
+
 std::uint32_t SerializeAliasColumn(const ROOT::RColumnDescriptor &columnDesc,
                                    const ROOT::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
@@ -1091,7 +1129,7 @@ ROOT::Internal::RNTupleSerializer::SerializeLocator(const RNTupleLocator &locato
       locatorType = 0x02;
       break;
    case RNTupleLocator::kTypeMulti:
-      size += SerializeLocatorPayloadObject64(locator, payloadp);
+      size += SerializeLocatorPayloadMulti(locator, payloadp);
       locatorType = 0x03;
       break;
    default:
@@ -1144,7 +1182,7 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::DeserializeLocat
          break;
       case 0x03:
          locator.SetType(RNTupleLocator::kTypeMulti);
-         DeserializeLocatorPayloadObject64(bytes, payloadSize, locator);
+         DeserializeLocatorPayloadMulti(bytes, payloadSize, locator);
          break;
       default: locator.SetType(RNTupleLocator::kTypeUnknown);
       }
