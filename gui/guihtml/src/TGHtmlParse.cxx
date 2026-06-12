@@ -935,11 +935,6 @@ makeMarkupEntry:
 #endif
             case Html_NOSCRIPT:
                break;
-               // coverity[unreachable]
-               if (!fHasScript) break;
-#ifdef pIsInMeachnism
-               pIsInNoScript = 1;
-#endif
             case Html_SCRIPT:
 #ifdef pIsInMeachnism
                pIsInScript = 1;
