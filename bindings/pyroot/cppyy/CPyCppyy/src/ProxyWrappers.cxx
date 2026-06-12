@@ -842,7 +842,31 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     PyObject* smart_type = (!(flags & CPPInstance::kNoWrapConv) && \
                             (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
     if (smart_type) {
-        pyclass = CreateScopeProxy(((CPPSmartClass*)smart_type)->fUnderlyingType);
+        Cppyy::TCppType_t underlying = ((CPPSmartClass*)smart_type)->fUnderlyingType;
+
+    // Down-cast the underlying object to its actual (most derived) class, just
+    // as BindCppObject does for raw pointers. Two conditions must hold:
+    //  * the reported actual class must really be a subtype of the declared one.
+    //    Cppyy::GetActualClass() can return a *base* class (e.g. when the actual
+    //    class has no dictionary of its own and inherits IsA() from a base with
+    //    ClassDef, ROOT reports that base) -- such an up-cast must be rejected.
+    //  * the cast must require no pointer adjustment, because the smart pointer's
+    //    dereferencer always yields a pointer to the underlying (declared) class,
+    //    so a non-zero offset can not be applied consistently on later member
+    //    access (e.g. with multiple inheritance).
+        if (address && !isRef) {
+            void* deref = Cppyy::CallR(
+                ((CPPSmartClass*)smart_type)->fDereferencer, address, 0, nullptr);
+            if (deref) {
+                Cppyy::TCppType_t clActual = Cppyy::GetActualClass(underlying, deref);
+                if (clActual && clActual != underlying &&
+                        Cppyy::IsSubtype(clActual, underlying) &&
+                        Cppyy::GetBaseOffset(clActual, underlying, deref, -1 /* down-cast */) == 0)
+                    underlying = clActual;
+            }
+        }
+
+        pyclass = CreateScopeProxy(underlying);
         if (!pyclass) {
         // simply restore and expose as the actual smart pointer class
             pyclass = smart_type;

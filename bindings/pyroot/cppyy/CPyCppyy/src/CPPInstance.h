@@ -77,6 +77,7 @@ public:
     void SetSmart(PyObject* smart_type);
     void* GetSmartObject() { return GetObjectRaw(); }
     Cppyy::TCppType_t GetSmartIsA() const;
+    Cppyy::TCppType_t GetSmartUnderlyingType() const;
 
 // cross-inheritance dispatch
     void SetDispatchPtr(void*);

@@ -3066,7 +3066,12 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
     }
 
 // final option, try mapping pointer types held (TODO: do not allow for non-const ref)
-    if (pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
+// Note: this must be decided on the smart pointer's *declared* underlying type, not
+// on the (possibly auto-down-cast) type of the dereferenced object. A
+// std::unique_ptr<Base> holding a Derived must not be accepted where a
+// std::unique_ptr<Derived> is expected: the held smart pointer is still a
+// unique_ptr<Base> and does not convert to unique_ptr<Derived>.
+    if (pyobj->IsSmart() && Cppyy::IsSubtype(pyobj->GetSmartUnderlyingType(), fUnderlyingType)) {
         para.fValue.fVoidp = ((CPPInstance*)pyobject)->GetSmartObject();
         para.fTypeCode = 'V';
         return true;
