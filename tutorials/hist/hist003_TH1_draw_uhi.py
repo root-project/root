@@ -5,7 +5,6 @@
 ##
 ## \note When using graphics inside a ROOT macro the objects must be created with `new`.
 ##
-## \macro_image
 ## \macro_code
 ##
 ## \date July 2025
