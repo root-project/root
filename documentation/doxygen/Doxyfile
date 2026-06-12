@@ -1123,7 +1123,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          *.xml \
                          *.dtd \
                          */graf3d/eve7/glu/* \
-                         */gui/cefdisplay/* \
                          */gui/qt6webdisplay/* \
                          */tutorials/visualisation/webgui/qtweb/* \
                          */math/mathcore/src/CDT*
