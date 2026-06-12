@@ -251,8 +251,16 @@ sap.ui.define([
       },
 
       isEveCameraPerspective: function() {
+         // get camera type from standalone REveCamera element
          let vo = this.mgr.GetElement(this.eveViewerId);
-         return vo.camera.type.startsWith("Persp");
+         let camera = this.mgr.GetElement(vo.fCameraId);
+         if (camera && camera.fType !== undefined) {
+            // REveCamera::ECameraType: 0-2 are Perspective, 3-8 are Orthographic
+            return camera.fType < 3;
+         }
+         
+         console.warn("GL.controller.isEveCameraPerspective: no camera info found, defaulting to perspective");
+         return true;
       },
 
       switchSingle: function()

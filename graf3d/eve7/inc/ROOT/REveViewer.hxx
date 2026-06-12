@@ -13,6 +13,7 @@
 #define ROOT7_REveViewer
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveCamera.hxx> 
 
 namespace ROOT {
 namespace Experimental {
@@ -27,23 +28,21 @@ class REveScene;
 class REveViewer : public REveElement
 {
 public:
-   enum ECameraType
-   {
-      // Perspective
-      kCameraPerspXOZ,  // XOZ floor
-      kCameraPerspYOZ,  // YOZ floor
-      kCameraPerspXOY,  // XOY floor
-      // Orthographic
-      kCameraOrthoXOY,  // Looking down  Z axis,  X horz, Y vert
-      kCameraOrthoXOZ,  // Looking along Y axis,  X horz, Z vert
-      kCameraOrthoZOY,  // Looking along X axis,  Z horz, Y vert
-      kCameraOrthoZOX,  // Looking along Y axis,  Z horz, X vert
-      // nOrthographic
-      kCameraOrthoXnOY, // Looking along Z axis, -X horz, Y vert
-      kCameraOrthoXnOZ, // Looking down  Y axis, -X horz, Z vert
-      kCameraOrthoZnOY, // Looking down  X axis, -Z horz, Y vert
-      kCameraOrthoZnOX  // Looking down  Y axis, -Z horz, X vert
-   };
+   // set alias instead
+   using ECameraType = REveCamera::ECameraType;
+   
+   // backward compatibility
+   static constexpr ECameraType kCameraPerspXOZ   = REveCamera::kCameraPerspXOZ;
+   static constexpr ECameraType kCameraPerspYOZ   = REveCamera::kCameraPerspYOZ;
+   static constexpr ECameraType kCameraPerspXOY   = REveCamera::kCameraPerspXOY;
+   static constexpr ECameraType kCameraOrthoXOY   = REveCamera::kCameraOrthoXOY;
+   static constexpr ECameraType kCameraOrthoXOZ   = REveCamera::kCameraOrthoXOZ;
+   static constexpr ECameraType kCameraOrthoZOY   = REveCamera::kCameraOrthoZOY;
+   static constexpr ECameraType kCameraOrthoZOX   = REveCamera::kCameraOrthoZOX;
+   static constexpr ECameraType kCameraOrthoXnOY  = REveCamera::kCameraOrthoXnOY;
+   static constexpr ECameraType kCameraOrthoXnOZ  = REveCamera::kCameraOrthoXnOZ;
+   static constexpr ECameraType kCameraOrthoZnOY  = REveCamera::kCameraOrthoZnOY;
+   static constexpr ECameraType kCameraOrthoZnOX  = REveCamera::kCameraOrthoZnOX;
 
    enum EAxesType {
       kAxesNone,
@@ -51,35 +50,23 @@ public:
       kAxesEdge
    };
 
-   // For the moment REveCamera is internal class
-   class REveCamera
-   {
-      ECameraType fType;
-      std::string fName;
-      REveVector fV2;
-      REveVector fV1;
-
-      public:
-       REveCamera() { Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));}
-       ~REveCamera() {}
-
-       void Setup(ECameraType type, const std::string& name, REveVector v1, REveVector v2);
-
-       ECameraType GetType() const { return fType; }
-
-       int WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/);
-   };
-
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
-   REveCamera fCamera;
+   REveCamera* fCamera{0};
+
    EAxesType fAxesType{kAxesNone};
    bool      fBlackBackground{false};
 
    bool fMandatory{true};
    std::string fPostStreamFlag;
+
+   std::vector<REveCamera*> fCameraList;
+
+   ROOT::Experimental::REveCamera* CreateCamera(ECameraType type);
+
+   bool fSyncCamera{true};
 
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
@@ -90,8 +77,14 @@ public:
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
-   void SetCameraType(ECameraType t);
-   ECameraType GetCameraType() const { return fCamera.GetType(); }
+   // Camera setters
+   void SetCamera(ROOT::Experimental::REveCamera *cam);
+   REveCamera* GetCamera() const { return fCamera;}
+   void SetCameraByElementId(ElementId_t cameraId); // set camera via ElementID
+   void SetCameraType(REveCamera::ECameraType type);
+
+   void SyncCamera(bool s) {fSyncCamera = s;}
+   bool GetSyncCamera() const {return fSyncCamera;}
 
    void SetAxesType(int);
    void SetBlackBackground(bool);

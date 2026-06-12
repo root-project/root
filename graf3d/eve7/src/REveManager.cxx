@@ -11,6 +11,7 @@
 
 #include <ROOT/REveManager.hxx>
 
+#include <ROOT/REveCamera.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveSelection.hxx>
 #include <ROOT/REveViewer.hxx>
@@ -141,6 +142,13 @@ REveManager::REveManager()
    fScenes = new REveSceneList("Scenes");
    fScenes->IncDenyDestroy();
    fWorld->AddElement(fScenes);
+
+   // --------------------------------
+   // Create camera list
+   // --------------------------------
+   fCameras = new REveElement("Cameras", "Camera list");
+   fCameras->IncDenyDestroy();
+   fWorld->AddElement(fCameras);
 
    fGlobalScene = new REveScene("Geometry scene");
    fGlobalScene->IncDenyDestroy();

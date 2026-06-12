@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveViewer.hxx>
-
+#include <ROOT/REveCamera.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveSceneInfo.hxx>
@@ -34,9 +34,10 @@ Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 /// Constructor.
 
 REveViewer::REveViewer(const std::string& n, const std::string& t) :
-   REveElement(n, t)
+   REveElement(n, t),
+   fCamera(nullptr)
 {
-   // SetChildClass(TClass::GetClass<REveSceneInfo>());
+   SetCameraType(REveCamera::kCameraPerspXOZ);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,11 +130,13 @@ void REveViewer::SetBlackBackground(bool x)
 /// Virtual from REveElement.
 int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   fCamera.WriteCoreJson(j, rnr_offset);
+   // fCamera.WriteCoreJson(j, rnr_offset);
 
    j["Mandatory"] = fMandatory;
    j["AxesType"] = fAxesType;
    j["BlackBg"] = fBlackBackground;
+   j["fCameraId"] = fCamera ? fCamera->GetElementId() : 0;
+   j["fSyncCam"] = fSyncCamera;
 
    j["UT_PostStream"] = "UT_EveViewerUpdate";
 
@@ -168,77 +171,12 @@ void REveViewer::SetMandatory(bool x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-//  Set base vectors of camera base matrix
-//
-void REveViewer::SetCameraType(ECameraType cameraType)
+/// Set camera reference
+
+void REveViewer::SetCamera(::ROOT::Experimental::REveCamera *cam)
 {
-   switch(cameraType) {
-      case kCameraPerspXOZ:
-         fCamera.Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)); // XOZ floor
-         break;
-      case kCameraPerspYOZ:
-         fCamera.Setup(kCameraPerspYOZ, "PerspYOZ", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0));// YOZ floor
-         break;
-      case kCameraPerspXOY:
-         fCamera.Setup(kCameraPerspXOY, "PerspXOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 0.0, 1.0));// XOY floor
-         break;
-      case kCameraOrthoXOY:
-         fCamera.Setup(kCameraOrthoXOY, "OrthoXOY", REveVector(0.0, 0.0, 1.0), REveVector(0.0, 1.0, 0.0));// Looking down  Z axis,  X horz, Y vert
-         break;
-      case kCameraOrthoXOZ:
-         fCamera.Setup(kCameraOrthoXOZ, "OrthoXOZ", REveVector(0.0, -1.0, 0.0), REveVector(0.0, 0.0, 1.0));// Looking along Y axis,  X horz, Z vert
-         break;
-      case kCameraOrthoZOY:
-         fCamera.Setup(kCameraOrthoZOY, "OrthoZOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));// Looking along X axis,  Z horz, Y vert
-         break;
-      case kCameraOrthoZOX:
-         fCamera.Setup(kCameraOrthoZOX, "OrthoZOX", REveVector(0.0,-1.0, 0.0), REveVector(1.0, 0.0, 0.0)); // Looking along Y axis,  Z horz, X vert
-         break;
-      case kCameraOrthoXnOY:
-         fCamera.Setup(kCameraOrthoXnOY,  "OrthoXnOY", REveVector(0.0, 0.0, -1.0), REveVector(0.0, 1.0, 0.0));// Looking along Z axis, -X horz, Y vert
-         break;
-      case kCameraOrthoXnOZ:
-         fCamera.Setup(kCameraOrthoXnOZ, "OrthoXnOZ", REveVector(0.0, 1.0, 0.0), REveVector(0.0, 0.0, 1.0));// Looking down  Y axis, -X horz, Z vert
-         break;
-      case kCameraOrthoZnOY:
-         fCamera.Setup(kCameraOrthoZnOY, "OrthoZnOY", REveVector(1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)); // Looking down  X axis, -Z horz, Y vert
-         break;
-      case kCameraOrthoZnOX:
-         fCamera.Setup(kCameraOrthoZnOX, "OrthoZnOX", REveVector(0.0, 1.0, 0.0), REveVector(1.0, 0.0, 0.0)); // Looking down  Y axis, -Z horz, X vert
-         break;
-      default:
-         Error("REveViewer::SetCurrentCamera", "invalid camera type");
-         return;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Set camera base matrix
-//
-void REveViewer::REveCamera::Setup( ECameraType type, const std::string& name, REveVector v1, REveVector v2)
-{
-   fType = type;
-   fName = name;
-   fV1 = v1;
-   fV2 = v2;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-//  Stream camera info
-//
-int REveViewer::REveCamera::WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/)
-{
-   nlohmann::json out;
-   out["type"] = fName;
-   out["V1"] = {fV1.fX, fV1.fY, fV1.fZ};
-   out["V2"] = {fV2.fX, fV2.fY, fV2.fZ};
-
-   j["camera"] = out;
-
-   return 0;
+   fCamera = cam;
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,4 +372,72 @@ void REveViewerList::SwitchColorSet()
       //    c->UseDarkColorSet();
    // }
    // EndChanges on EveWorld;
+}
+
+void REveViewer::SetCameraByElementId(ElementId_t cameraId)
+{
+   auto element = gEve->FindElementById(cameraId);
+   auto cam = dynamic_cast<REveCamera *>(element);
+
+   if (cam) {
+      fCamera = cam;
+      StampObjProps();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set camera by type (backward compatibility with old API)
+
+void REveViewer::SetCameraType(REveCamera::ECameraType type)
+{
+   for (auto &cam : fCameraList) {
+      if (cam->GetType() == type) {
+         fCamera = cam;
+      }
+   }
+
+   fCamera = CreateCamera(type);
+   fCameraList.push_back(fCamera);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Create Camera Based on Type Enum (Lines 161-190)
+REveCamera *REveViewer::CreateCamera(ECameraType type)
+{
+   REveCamera *cam = nullptr;
+
+   struct CameraDef {
+      REveCamera::ECameraType type;
+      const char *name;
+      REveVector v1;
+      REveVector v2;
+   };
+
+   static const CameraDef predefinedCameras[] = {
+      // Perspective cameras
+      {REveCamera::kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraPerspYOZ, "PerspYOZ", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0)},
+      {REveCamera::kCameraPerspXOY, "PerspXOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      // Orthographic cameras
+      {REveCamera::kCameraOrthoXOY, "OrthoXOY", REveVector(0.0, 0.0, 1.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoXOZ, "OrthoXOZ", REveVector(0.0, -1.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      {REveCamera::kCameraOrthoZOY, "OrthoZOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoZOX, "OrthoZOX", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0)},
+      // Orthographic negative camera
+      {REveCamera::kCameraOrthoXnOY, "OrthoXnOY", REveVector(0.0, 0.0, -1.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoXnOZ, "OrthoXnOZ", REveVector(0.0, 1.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      {REveCamera::kCameraOrthoZnOY, "OrthoZnOY", REveVector(1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoZnOX, "OrthoZnOX", REveVector(0.0, 1.0, 0.0), REveVector(1.0, 0.0, 0.0)}};
+
+   // Create and add all predefined cameras
+   for (const auto &camDef : predefinedCameras) {
+      if (type == camDef.type) {
+         cam = new REveCamera(camDef.name);
+         gEve->GetCameras()->AddElement(cam);
+         cam->Setup(camDef.type, camDef.name, camDef.v1, camDef.v2);
+      }
+   }
+
+   return cam;
 }

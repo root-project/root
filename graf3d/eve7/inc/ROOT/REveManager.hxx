@@ -15,7 +15,6 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveSystem.hxx>
 #include <ROOT/RLogger.hxx>
-
 #include <ROOT/RWebDisplayArgs.hxx>
 
 #include "TSysEvtHandler.h"
@@ -127,6 +126,7 @@ protected:
 
    REveViewerList           *fViewers{nullptr};
    REveSceneList            *fScenes{nullptr};
+   REveElement              *fCameras{nullptr}; 
 
    REveScene                *fGlobalScene{nullptr};
    REveScene                *fEventScene{nullptr};
@@ -182,6 +182,7 @@ public:
 
    REveSceneList  *GetScenes()  const { return fScenes;  }
    REveViewerList *GetViewers() const { return fViewers; }
+   REveElement    *GetCameras() const { return fCameras; }
 
    REveScene *GetGlobalScene() const { return fGlobalScene; }
    REveScene *GetEventScene()  const { return fEventScene;  }

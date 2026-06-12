@@ -325,6 +325,9 @@ sap.ui.define([
       {
          this.makeBoolSetter(Boolean(el.AxesType), "ShowAxes", "SetAxesType");
          this.makeBoolSetter(el.BlackBg, "BlackBackground");
+
+         // camera type selector
+         this.makeCameraTypeSelector(el);
       },
 
       buildREveDataCollectionSetter : function(el)
@@ -748,8 +751,7 @@ sap.ui.define([
                let selected = this.secSelectList.getSelectedItems();
                for (let s = 0; s < selected.length; s++)
                   this.secSelectList.setSelectedItem(selected[s], false);
-
-
+      
                for (let i =0; i < sec_idcs.length; ++i) {
                   let sid = "item_"+sec_idcs[i];
                   this.secSelectList.setSelectedItemById(sid, true);
@@ -758,9 +760,97 @@ sap.ui.define([
             else
                this.secSelectList.removeSelections();
          }
-   }
-
+      }, 
+      
+      makeCameraTypeSelector: function(viewer) {
+         let gedFrame = this.getView().byId("GED");
+         let gcm = this;
+         
+         let cameraTypes = [
+            { key: 0, text: "Perspective XOZ" },
+            { key: 1, text: "Perspective YOZ" },
+            { key: 2, text: "Perspective XOY" },
+            { key: 3, text: "Orthographic XOY" },
+            { key: 4, text: "Orthographic XOZ" },
+            { key: 5, text: "Orthographic ZOY" },
+            { key: 6, text: "Orthographic ZOX" },
+            { key: 7, text: "Orthographic XnOY" },
+            { key: 8, text: "Orthographic XnOZ" },
+            { key: 9, text: "Orthographic ZnOY" },
+            { key: 10, text: "Orthographic ZnOX" }
+         ];
+         
+         let currentCamera = null;
+         let currentType = 0;
+         
+         if (viewer.fCameraId) {
+            currentCamera = this.mgr.GetElement(viewer.fCameraId);
+            if (currentCamera && currentCamera.fType !== undefined) {
+               currentType = currentCamera.fType;
+            }
+         }
+         
+         let cameraModel = new sap.ui.model.json.JSONModel({
+            types: cameraTypes
+         });
+         
+         let comboBox = new sap.m.ComboBox({
+            width: "100%",
+            selectedKey: currentType.toString(),
+            items: {
+               path: "/types",
+               template: new sap.ui.core.ListItem({
+                  key: "{key}",
+                  text: "{text}"
+               })
+            },
+            selectionChange: function(oEvent) {
+               let selectedItem = oEvent.getParameter("selectedItem");
+               if (selectedItem) {
+                  let selectedType = parseInt(selectedItem.getKey());
+                  gcm.onCameraTypeChange(viewer, selectedType);
+               }
+            }
+         });
+         
+         comboBox.setModel(cameraModel);
+         
+         let labelWidget = new mText({ text: "Camera Type" });
+         labelWidget.addStyleClass("sapUiTinyMargin");
+         
+         let frame = new HorizontalLayout({
+            content: [labelWidget, comboBox]
+         });
+         
+         gedFrame.addContent(frame);
+      },
+      
+      onCameraTypeChange: function(viewer, newCameraType) {
+      let mir = "SetCameraType(" + newCameraType + ")";
+      this.mgr.SendMIR(mir, viewer.fElementId, viewer._typename);
+      },
+      
+      getCameraList: function() {
+         let cameras = [];
+         
+         if (this.mgr && this.mgr.childs && this.mgr.childs.length > 0) {
+            let world = this.mgr.childs[0];
+            
+            if (world.childs) {
+               for (let child of world.childs) {
+                  if (child.fName === "Cameras" && child.childs) {
+                     cameras = child.childs;
+                     break;
+                  }
+               }
+            }
+         }
+         
+         return cameras;
+      }
+      
    });
+      
    GedController.canEditClass = function(typename) {
       return true;
    };
@@ -775,7 +865,6 @@ sap.ui.define([
 
       return "SetRnrSelf";
    }
-
 
    return GedController;
 
