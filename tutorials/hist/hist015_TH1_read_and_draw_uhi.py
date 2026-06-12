@@ -3,8 +3,6 @@
 ## \notebook -js
 ## A Simple histogram drawing example.
 ##
-## \macro_image
-## \macro_output
 ## \macro_code
 ##
 ## \date July 2025
