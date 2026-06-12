@@ -93,6 +93,19 @@ def generateConv2DModel_SamePadding():
     model.fit(x_train, y_train, verbose=0, epochs=10, batch_size=2)
     model.save('KerasModelConv2D_Same.keras')
 
+def generateConv2DModel_SamePadding_Dilated():
+    model = Sequential()
+    model.add(Conv2D(4, kernel_size=3, activation="relu", input_shape=(8, 8, 1), padding="same", dilation_rate=2))
+
+    randomGenerator = np.random.RandomState(0)
+    x_train = randomGenerator.rand(1, 8, 8, 1)
+    y_train = randomGenerator.rand(1, 8, 8, 4)
+
+    model.compile(loss="mean_squared_error", optimizer=SGD(learning_rate=0.01))
+    model.fit(x_train, y_train, verbose=0, epochs=10, batch_size=2)
+    model.save("KerasModelConv2D_SameDilated.keras")
+
+
 def generateReshapeModel():
     model = Sequential()
     model.add(Conv2D(8, kernel_size=3, activation="relu", input_shape=(4,4,1), padding="same"))
@@ -189,6 +202,7 @@ generateSequentialModel()
 generateBatchNormModel()
 generateConv2DModel_ValidPadding()
 generateConv2DModel_SamePadding()
+generateConv2DModel_SamePadding_Dilated()
 generateReshapeModel()
 generateConcatModel()
 generateBinaryOpModel()
