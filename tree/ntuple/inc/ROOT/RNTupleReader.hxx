@@ -166,16 +166,16 @@ public:
       void DeactivateEntry(NTupleSize_t entryNumber);
 
       explicit RActiveEntryToken(std::shared_ptr<RActiveEntriesControlBlock> ptrControlBlock)
-         : fPtrControlBlock(ptrControlBlock)
+         : fPtrControlBlock(std::move(ptrControlBlock))
       {
       }
 
    public:
       ~RActiveEntryToken() { Reset(); }
       RActiveEntryToken(const RActiveEntryToken &other);
-      RActiveEntryToken(RActiveEntryToken &&other);
+      RActiveEntryToken(RActiveEntryToken &&other) noexcept;
       RActiveEntryToken &operator=(const RActiveEntryToken &other);
-      RActiveEntryToken &operator=(RActiveEntryToken &&other);
+      RActiveEntryToken &operator=(RActiveEntryToken &&other) noexcept;
 
       NTupleSize_t GetEntryNumber() const { return fEntryNumber; }
       /// Set or replace the entry number. If the entry number is replaced, the cluster corresponding to the new

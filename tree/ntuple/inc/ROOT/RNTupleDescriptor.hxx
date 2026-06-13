@@ -1763,7 +1763,7 @@ public:
                    std::uint16_t versionPatch);
    void SetVersionForWriting();
 
-   void SetNTuple(const std::string_view name, const std::string_view description);
+   void SetNTuple(std::string_view name, std::string_view description);
    /// Sets the `flag`-th bit of the feature flag to 1.
    /// Note that `flag` itself is not a bitmask, just the bit index of the flag to enable.
    void SetFeature(unsigned int flag);

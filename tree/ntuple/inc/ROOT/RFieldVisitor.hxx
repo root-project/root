@@ -56,6 +56,8 @@ As an example of a concrete use case, see Internal::RPrintSchemaVisitor.
 // clang-format on
 class RFieldVisitor {
 public:
+   virtual ~RFieldVisitor() = default;
+
    virtual void VisitField(const ROOT::RFieldBase &field) = 0;
    virtual void VisitFieldZero(const ROOT::RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const ROOT::RArrayField &field) { VisitField(field); }
@@ -199,7 +201,7 @@ private:
 public:
    RPrintValueVisitor(ROOT::RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options)
+      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
    {
    }
 

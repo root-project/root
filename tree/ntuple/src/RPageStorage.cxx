@@ -23,7 +23,6 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
-#include <ROOT/RPageStorageFile.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -41,7 +40,6 @@
 #include <unordered_map>
 #include <utility>
 
-using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RClusterDescriptorBuilder;
 using ROOT::Internal::RClusterGroupDescriptorBuilder;
 using ROOT::Internal::RColumn;
@@ -333,8 +331,8 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
 
 void ROOT::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
-      perPageFunc)
+   const std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
+      &perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
@@ -1227,8 +1225,8 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStora
          }
 
          const auto *p = itr->second.fSealedPage;
-         if (sealedPageIt->GetDataSize() != p->GetDataSize() ||
-             memcmp(sealedPageIt->GetBuffer(), p->GetBuffer(), p->GetDataSize())) {
+         if ((sealedPageIt->GetDataSize() != p->GetDataSize()) ||
+             (memcmp(sealedPageIt->GetBuffer(), p->GetBuffer(), p->GetDataSize()) != 0)) {
             mask.emplace_back(true);
             locatorIndexes.emplace_back(iLocator++);
             continue;

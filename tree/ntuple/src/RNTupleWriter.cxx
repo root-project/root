@@ -55,7 +55,7 @@ ROOT::RNTupleWriter::~RNTupleWriter()
    try {
       CommitDataset();
    } catch (const RException &err) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.what();
    }
 }
 

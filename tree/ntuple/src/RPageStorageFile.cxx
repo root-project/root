@@ -45,16 +45,13 @@ using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using ROOT::Experimental::Detail::RNTupleCalcPerf;
 using ROOT::Experimental::Detail::RNTupleMetrics;
-using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RCluster;
-using ROOT::Internal::RClusterPool;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleFileWriter;
 using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::ROnDiskPage;
 using ROOT::Internal::ROnDiskPageMap;
-using ROOT::Internal::RPagePool;
 
 ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options)
@@ -74,7 +71,7 @@ ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TDirec
                                              const ROOT::RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize(), /*hidden=*/false);
+   fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize(), /*isHidden=*/false);
 }
 
 ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, ROOT::Experimental::RFile &file,
@@ -395,9 +392,8 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
    // For local TFiles, TDavixFile, TCurlFile, and TNetXNGFile, we want to open a new RRawFile to take advantage of the
    // faster reading. We check the exact class name to avoid classes inheriting in ROOT (for example TMemFile) or in
    // experiment frameworks.
-   std::string className = anchor.fFile->IsA()->GetName();
-   auto url = anchor.fFile->GetEndpointUrl();
-   auto protocol = std::string(url->GetProtocol());
+   const std::string className = anchor.fFile->IsA()->GetName();
+   const auto url = anchor.fFile->GetEndpointUrl();
    if (className == "TFile") {
       rawFile = ROOT::Internal::RRawFile::Create(url->GetFile());
    } else if (className == "TDavixFile" || className == "TCurlFile" || className == "TNetXNGFile") {
@@ -676,7 +672,7 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
    clusters.reserve(clusterKeys.size());
-   for (auto key : clusterKeys) {
+   for (const auto &key : clusterKeys) {
       clusters.emplace_back(PrepareSingleCluster(key, readRequests));
    }
 

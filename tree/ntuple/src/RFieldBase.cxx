@@ -129,7 +129,7 @@ void ROOT::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 
 //------------------------------------------------------------------------------
 
-ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other)
+ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other) noexcept
    : fField(other.fField),
      fValueSize(other.fValueSize),
      fCapacity(other.fCapacity),
@@ -143,7 +143,7 @@ ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other)
    std::swap(fMaskAvail, other.fMaskAvail);
 }
 
-ROOT::RFieldBase::RBulkValues &ROOT::RFieldBase::RBulkValues::operator=(RBulkValues &&other)
+ROOT::RFieldBase::RBulkValues &ROOT::RFieldBase::RBulkValues::operator=(RBulkValues &&other) noexcept
 {
    std::swap(fField, other.fField);
    std::swap(fDeleter, other.fDeleter);
@@ -438,7 +438,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       } else if (resolvedType.substr(0, 24) == "std::unordered_multiset<") {
          std::string itemTypeName = resolvedType.substr(24, resolvedType.length() - 25);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
          result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kUnorderedMultiSet, std::move(itemField));
       } else if (resolvedType.substr(0, 9) == "std::map<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(9, resolvedType.length() - 10));
@@ -774,7 +773,7 @@ ROOT::RFieldBase::RBulkValues ROOT::RFieldBase::CreateBulk()
 
 ROOT::RFieldBase::RValue ROOT::RFieldBase::BindValue(std::shared_ptr<void> objPtr)
 {
-   return RValue(this, objPtr);
+   return RValue(this, std::move(objPtr));
 }
 
 std::size_t ROOT::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
@@ -894,7 +893,7 @@ ROOT::RFieldBase::EnsureCompatibleColumnTypes(const ROOT::RNTupleDescriptor &des
                             "(representation index: " + std::to_string(representationIndex) + ")"));
 }
 
-size_t ROOT::RFieldBase::AddReadCallback(ReadCallback_t func)
+size_t ROOT::RFieldBase::AddReadCallback(const ReadCallback_t &func)
 {
    fReadCallbacks.push_back(func);
    fIsSimple = false;
