@@ -601,6 +601,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
       }
 
       TDataMember* dmCounter = 0;
+      int premultiplier = 1;
       if (dmIsPtr) {
          //
          // look for a pointer data member with a counter
@@ -608,11 +609,19 @@ void TStreamerInfo::Build(Bool_t isTransient)
          //
          //      int n;
          //      double* MyArray; //[n]
-         //
+         //      double* MyMatrix;//[3*n]
+
          const char* lbracket = TVirtualStreamerInfo::GetElementCounterStart(dmTitle);
-         const char* rbracket = ::strchr(dmTitle, ']');
+         const char* rbracket = std::strchr(dmTitle, ']');
          if (lbracket && rbracket) {
             const char* counterName = dm->GetArrayIndex();
+            auto multiple = std::strchr(counterName, '*');
+            if (multiple) {
+               std::string s;
+               s.assign(counterName, multiple - counterName);
+               premultiplier = std::stoi(s);
+               counterName = multiple + 1;
+            }
             TRealData* rdCounter = (TRealData*) fClass->GetListOfRealData()->FindObject(counterName);
             if (!rdCounter || rdCounter->TestBit(TRealData::kTransient)) {
                if (!isTransient)
@@ -654,7 +663,12 @@ void TStreamerInfo::Build(Bool_t isTransient)
          } else if (dmIsPtr && (dtype != kCharStar)) {
             if (dmCounter) {
                // data member is pointer to an array of basic types
-               element = new TStreamerBasicPointer(dmName, dmTitle, offset, dtype, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
+               const char* counterName = dm->GetArrayIndex();
+               auto multiple = std::strchr(counterName, '*');
+               if (multiple) {
+                  counterName = multiple + 1;
+               }
+               element = new TStreamerBasicPointer(dmName, dmTitle, offset, dtype, counterName, dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
             } else {
                if ((fName == "TString") || (fName == "TClass")) {
                   continue;
@@ -780,7 +794,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
       if (!narr) {
          narr = 1;
       }
-      element->SetSize(dsize*narr);
+      element->SetSize(dsize*narr*premultiplier);
       element->SetStreamer(streamer);
       if (!streamer) {
          Int_t k = element->GetType();
