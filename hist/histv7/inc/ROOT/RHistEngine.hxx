@@ -17,9 +17,11 @@
 #include "RWeight.hxx"
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <initializer_list>
 #include <stdexcept>
 #include <tuple>
@@ -500,7 +502,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicInc(&fBinContents[index.fIndex]);
+         Internal::AtomicIncRelease(&fBinContents[index.fIndex]);
       }
    }
 
@@ -524,7 +526,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+         Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight.fValue);
       }
    }
 
@@ -549,7 +551,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicAdd(&fBinContents[index.fIndex], weight);
+         Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight);
       }
    }
 
@@ -573,7 +575,7 @@ public:
             RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
             if (index.fValid) {
                assert(index.fIndex < fBinContents.size());
-               Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+               Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight.fValue);
             }
          } else {
             FillAtomic(t);
@@ -810,6 +812,47 @@ public:
    {
       std::vector<RSliceSpec> sliceSpecs{args...};
       return Slice(sliceSpecs);
+   }
+
+   /// Create an atomic snapshot of this histogram engine.
+   ///
+   /// A snapshot is a consistent copy of the histogram, during concurrent filling. It is guaranteed that the returned
+   /// copy represents a state between the begin and end of the snapshot operation.
+   ///
+   /// Snapshotting a histogram engine with many bins can be an expensive operation.
+   ///
+   /// \return the atomic snapshot
+   RHistEngine SnapshotAtomic() const
+   {
+      static_assert(std::is_trivially_copyable_v<BinContentType>,
+                    "snapshotting requires a trivially copyable bin content type");
+
+      RHistEngine snapshot(fAxes.Get());
+      // Do a first collect.
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         Internal::AtomicLoad(&fBinContents[i], &snapshot.fBinContents[i]);
+      }
+
+      // Now do another collect. If no change is detected, the snapshot is consistent. Otherwise update the bin contents
+      // and try again.
+      BinContentType tmp;
+      bool changed;
+      do {
+         // To guarantee correctness, we let the release operation(s) in FillAtomic synchronize with this acquire fence.
+         // This ensures that all previous writes become visible side-effects and the atomic loads will see them.
+         std::atomic_thread_fence(std::memory_order_acquire);
+
+         changed = false;
+         for (std::size_t i = 0; i < fBinContents.size(); i++) {
+            Internal::AtomicLoad(&fBinContents[i], &tmp);
+            if (std::memcmp(&tmp, &snapshot.fBinContents[i], sizeof(BinContentType))) {
+               std::memcpy(&snapshot.fBinContents[i], &tmp, sizeof(BinContentType));
+               changed = true;
+            }
+         }
+      } while (changed);
+
+      return snapshot;
    }
 
    /// \}

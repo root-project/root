@@ -54,13 +54,15 @@ struct User {
       return *this;
    }
 
-   void AtomicInc() { ROOT::Experimental::Internal::AtomicInc(&fValue); }
+   void AtomicIncRelease() { ROOT::Experimental::Internal::AtomicIncRelease(&fValue); }
 
-   void AtomicAdd(double w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w); }
+   void AtomicAddRelease(double w) { ROOT::Experimental::Internal::AtomicAddRelease(&fValue, w); }
 
-   void AtomicAdd(const UserWeight &w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w.fWeight); }
+   void AtomicAddRelease(const UserWeight &w) { ROOT::Experimental::Internal::AtomicAddRelease(&fValue, w.fWeight); }
 
    void AtomicAdd(const User &rhs) { ROOT::Experimental::Internal::AtomicAdd(&fValue, rhs.fValue); }
+
+   void AtomicLoad(User *ret) const { ROOT::Experimental::Internal::AtomicLoad(&fValue, &ret->fValue); }
 };
 
 static_assert(std::is_nothrow_move_constructible_v<RHistEngine<User>>);
@@ -192,7 +194,7 @@ TEST(RHistEngineUser, FillUserWeightInvalidNumberOfArguments)
 
 TEST(RHistEngineUser, FillAtomic)
 {
-   // Unweighted filling with atomic instructions uses AtomicInc
+   // Unweighted filling with atomic instructions uses AtomicIncRelease
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -207,7 +209,7 @@ TEST(RHistEngineUser, FillAtomic)
 
 TEST(RHistEngineUser, FillAtomicWeight)
 {
-   // Weighted filling with atomic instructions uses AtomicAdd(double)
+   // Weighted filling with atomic instructions uses AtomicAddRelease(double)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -222,7 +224,7 @@ TEST(RHistEngineUser, FillAtomicWeight)
 
 TEST(RHistEngineUser, FillAtomicUserWeight)
 {
-   // Weighted filling with user-defined weight and atomic instructions uses AtomicAdd(const UserWeight &)
+   // Weighted filling with user-defined weight and atomic instructions uses AtomicAddRelease(const UserWeight &)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -273,4 +275,17 @@ TEST(RHistEngineUser, SetBinContent)
    const std::array<RBinIndex, 1> indices = {index};
    engine.SetBinContent(indices, 43);
    EXPECT_EQ(engine.GetBinContent(indices).fValue, 43);
+}
+
+TEST(RHistEngineUser, SnapshotAtomic)
+{
+   // Snapshotting uses AtomicLoad.
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engineA({axis});
+
+   engineA.Fill(8.5);
+
+   RHistEngine<User> engineB = engineA.SnapshotAtomic();
+   EXPECT_EQ(engineB.GetBinContent(8).fValue, 1);
 }

@@ -142,7 +142,7 @@ struct AtomicOps<8> {
 #endif
 
 template <typename T>
-void AtomicLoad(const T *ptr, T *ret)
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoad(const T *ptr, T *ret)
 {
 #ifndef _MSC_VER
    __atomic_load(ptr, ret, __ATOMIC_RELAXED);
@@ -152,7 +152,25 @@ void AtomicLoad(const T *ptr, T *ret)
 }
 
 template <typename T>
-void AtomicStoreRelease(T *ptr, T *val)
+auto AtomicLoad(const T *ptr, T *ret) -> decltype(ptr->AtomicLoad(ret))
+{
+   return ptr->AtomicLoad(ret);
+}
+
+template <typename T>
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoadAcquire(const T *ptr, T *ret)
+{
+#ifndef _MSC_VER
+   __atomic_load(ptr, ret, __ATOMIC_ACQUIRE);
+#else
+   MSVC::AtomicOps<sizeof(T)>::Load(ptr, ret);
+   // Cannot specify the memory order directly, use a fence.
+   std::atomic_thread_fence(std::memory_order_acquire);
+#endif
+}
+
+template <typename T>
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicStoreRelease(T *ptr, T *val)
 {
 #ifndef _MSC_VER
    __atomic_store(ptr, val, __ATOMIC_RELEASE);
@@ -164,7 +182,7 @@ void AtomicStoreRelease(T *ptr, T *val)
 }
 
 template <typename T>
-bool AtomicCompareExchange(T *ptr, T *expected, T *desired)
+std::enable_if_t<std::is_arithmetic_v<T>, bool> AtomicCompareExchange(T *ptr, T *expected, T *desired)
 {
 #ifndef _MSC_VER
    return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
@@ -174,7 +192,7 @@ bool AtomicCompareExchange(T *ptr, T *expected, T *desired)
 }
 
 template <typename T>
-bool AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
+std::enable_if_t<std::is_arithmetic_v<T>, bool> AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
 {
 #ifndef _MSC_VER
    return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
@@ -187,12 +205,36 @@ bool AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
 }
 
 template <typename T>
-void AtomicAddCompareExchangeLoop(T *ptr, T val)
+std::enable_if_t<std::is_arithmetic_v<T>, bool> AtomicCompareExchangeRelease(T *ptr, T *expected, T *desired)
+{
+#ifndef _MSC_VER
+   return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
+#else
+   // Cannot specify the memory order directly, use an unconditional fence to avoid branching code.
+   std::atomic_thread_fence(std::memory_order_release);
+   return MSVC::AtomicOps<sizeof(T)>::CompareExchange(ptr, expected, desired);
+#endif
+}
+
+template <typename T>
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicAddCompareExchangeLoop(T *ptr, T val)
 {
    T expected;
    AtomicLoad(ptr, &expected);
    T desired = expected + val;
    while (!AtomicCompareExchange(ptr, &expected, &desired)) {
+      // expected holds the new value; try again.
+      desired = expected + val;
+   }
+}
+
+template <typename T>
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicAddCompareExchangeReleaseLoop(T *ptr, T val)
+{
+   T expected;
+   AtomicLoad(ptr, &expected);
+   T desired = expected + val;
+   while (!AtomicCompareExchangeRelease(ptr, &expected, &desired)) {
       // expected holds the new value; try again.
       desired = expected + val;
    }
@@ -227,17 +269,35 @@ std::enable_if_t<std::is_floating_point_v<T>> AtomicAdd(T *ptr, T val)
    AtomicAddCompareExchangeLoop(ptr, val);
 }
 
-// For adding a double-precision weight to a single-precision bin content type, cast the argument once before the
-// compare-exchange loop.
-static inline void AtomicAdd(float *ptr, double val)
+template <typename T>
+std::enable_if_t<std::is_integral_v<T>> AtomicAddRelease(T *ptr, T val)
 {
-   AtomicAdd(ptr, static_cast<float>(val));
+#ifndef _MSC_VER
+   __atomic_fetch_add(ptr, val, __ATOMIC_RELEASE);
+#else
+   // Cannot specify the memory order directly, use a fence.
+   std::atomic_thread_fence(std::memory_order_release);
+   MSVC::AtomicOps<sizeof(T)>::Add(ptr, &val);
+#endif
 }
 
 template <typename T>
-std::enable_if_t<std::is_arithmetic_v<T>> AtomicInc(T *ptr)
+std::enable_if_t<std::is_floating_point_v<T>> AtomicAddRelease(T *ptr, T val)
 {
-   AtomicAdd(ptr, static_cast<T>(1));
+   AtomicAddCompareExchangeReleaseLoop(ptr, val);
+}
+
+// For adding a double-precision weight to a single-precision bin content type, cast the argument once before the
+// compare-exchange loop.
+static inline void AtomicAddRelease(float *ptr, double val)
+{
+   AtomicAddRelease(ptr, static_cast<float>(val));
+}
+
+template <typename T>
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicIncRelease(T *ptr)
+{
+   AtomicAddRelease(ptr, static_cast<T>(1));
 }
 
 template <typename T, typename U>
@@ -246,10 +306,16 @@ auto AtomicAdd(T *ptr, const U &add) -> decltype(ptr->AtomicAdd(add))
    return ptr->AtomicAdd(add);
 }
 
-template <typename T>
-auto AtomicInc(T *ptr) -> decltype(ptr->AtomicInc())
+template <typename T, typename U>
+auto AtomicAddRelease(T *ptr, const U &add) -> decltype(ptr->AtomicAddRelease(add))
 {
-   return ptr->AtomicInc();
+   return ptr->AtomicAddRelease(add);
+}
+
+template <typename T>
+auto AtomicIncRelease(T *ptr) -> decltype(ptr->AtomicIncRelease())
+{
+   return ptr->AtomicIncRelease();
 }
 
 } // namespace Internal
