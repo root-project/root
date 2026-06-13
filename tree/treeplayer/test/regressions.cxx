@@ -507,6 +507,89 @@ TEST(TTreeScan, chainNameWithDifferentTreeName)
    }
 }
 
+// Alt$(primary, alternate) used on its own, with 'primary' a variable-length
+// array, must loop over all the elements of the array instead of just the
+// first one. Previously the array dimension of 'primary' was not propagated to
+// the enclosing TTreeFormula manager when Alt$ was the only source of
+// multiplicity, so the formula reported a single instance per entry.
+TEST(TTreeFormulaRegressions, AltDollarVariableArray)
+{
+   TTree t("t", "t");
+   Int_t n = 3;
+   Float_t x[3]{};
+   t.Branch("n", &n);
+   t.Branch("x", &x, "x[n]/F");
+   x[0] = 1;
+   x[1] = 2;
+   x[2] = 3;
+   t.Fill();
+   x[0] = 4;
+   x[1] = 5;
+   x[2] = 6;
+   t.Fill();
+   n = 2;
+   x[0] = -1;
+   x[1] = -2;
+   x[2] = -3;
+   t.Fill();
+   n = 1;
+   x[0] = 0;
+   t.Fill();
+
+   auto evalAll = [](TTree &tree, TTreeFormula &form, Long64_t entry) {
+      tree.LoadTree(entry);
+      const Int_t ndata = form.GetNdata();
+      std::vector<double> values;
+      for (Int_t i = 0; i < ndata; ++i)
+         values.push_back(form.EvalInstance(i));
+      return values;
+   };
+
+   // 1) Standalone Alt$ over the whole array loops over its elements.
+   {
+      TTreeFormula form("form", "Alt$(x,-1)", &t);
+      EXPECT_EQ(form.GetMultiplicity(), 1);
+      const std::vector<std::vector<double>> expected{{1, 2, 3}, {4, 5, 6}, {-1, -2}, {0}};
+      for (Long64_t entry = 0; entry < t.GetEntries(); ++entry)
+         EXPECT_EQ(evalAll(t, form, entry), expected[entry]) << "entry " << entry;
+   }
+
+   // 2) A fixed index into the variable-length array stays a single value per
+   // entry and falls back to the alternate when the index is out of range.
+   // This is the documented Alt$(arr[i], default) use case and must not be
+   // turned into a zero-instance (dropped) entry.
+   {
+      TTreeFormula form("form", "Alt$(x[2],-1)", &t);
+      const std::vector<std::vector<double>> expected{{3}, {6}, {-1}, {-1}}; // x[2] only exists for n==3
+      for (Long64_t entry = 0; entry < t.GetEntries(); ++entry)
+         EXPECT_EQ(evalAll(t, form, entry), expected[entry]) << "entry " << entry;
+   }
+}
+
+// Companion to AltDollarVariableArray: when Alt$ is combined with another array
+// that drives the iteration, the alternate must pad the shorter array rather
+// than shrinking the loop. See the TTree::Draw documentation for Alt$.
+TEST(TTreeFormulaRegressions, AltDollarPadsShorterArray)
+{
+   TTree t("t", "t");
+   Int_t n1 = 3, n2 = 2;
+   Float_t a1[3]{10, 20, 30};
+   Float_t a2[3]{1, 2, 3};
+   t.Branch("n1", &n1);
+   t.Branch("n2", &n2);
+   t.Branch("a1", &a1, "a1[n1]/F");
+   t.Branch("a2", &a2, "a2[n2]/F");
+   t.Fill();
+
+   // The loop is driven by a1 (3 elements); Alt$(a2,0) yields a2[0],a2[1],0.
+   TTreeFormula form("form", "a1+Alt$(a2,0)", &t);
+   t.LoadTree(0);
+   ASSERT_EQ(form.GetNdata(), 3);
+   const std::vector<double> expected{11, 22, 30};
+   for (Int_t i = 0; i < 3; ++i)
+      EXPECT_FLOAT_EQ(form.EvalInstance(i), expected[i]) << "instance " << i;
+}
+
 // https://github.com/root-project/root/issues/20249
 TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
 {
