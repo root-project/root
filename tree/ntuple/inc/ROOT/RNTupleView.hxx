@@ -115,7 +115,7 @@ protected:
    }
 
    RNTupleViewBase(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
-      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(objPtr))
+      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(std::move(objPtr)))
    {
    }
 
@@ -232,7 +232,7 @@ protected:
    }
 
    RNTupleView(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<void> objPtr)
-      : RNTupleViewBase<void>(std::move(field), range, objPtr)
+      : RNTupleViewBase<void>(std::move(field), range, std::move(objPtr))
    {
    }
 
@@ -365,11 +365,11 @@ private:
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
    RNTupleCollectionView &operator=(const RNTupleCollectionView &other) = delete;
-   RNTupleCollectionView(RNTupleCollectionView &&other)
+   RNTupleCollectionView(RNTupleCollectionView &&other) noexcept(false)
       : fSource(other.fSource), fField(std::move(other.fField)), fValue(fField.CreateValue())
    {
    }
-   RNTupleCollectionView &operator=(RNTupleCollectionView &&other)
+   RNTupleCollectionView &operator=(RNTupleCollectionView &&other) noexcept(false)
    {
       if (this == &other)
          return *this;

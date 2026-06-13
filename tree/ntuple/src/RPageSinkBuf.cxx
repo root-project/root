@@ -27,7 +27,6 @@ using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTuplePlainCounter;
 using ROOT::Experimental::Detail::RNTuplePlainTimer;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
-using ROOT::Internal::MakeUninitArray;
 
 void ROOT::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
@@ -261,7 +260,7 @@ void ROOT::Internal::RPageSinkBuf::CommitSealedPageV(
 // We implement both StageCluster() and CommitCluster() because we can call CommitCluster() on the inner sink more
 // efficiently in a single critical section. For parallel writing, it also guarantees that we produce a fully sequential
 // file.
-void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(std::function<void(void)> FlushClusterFn)
+void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(const std::function<void(void)> &FlushClusterFn)
 {
    WaitForAllTasks();
    assert(fBufferedUncompressed == 0 && "all buffered pages should have been processed");

@@ -213,9 +213,9 @@ public:
    RPageRef(const RPageRef &other) = delete;
    RPageRef &operator=(const RPageRef &other) = delete;
 
-   RPageRef(RPageRef &&other) : RPageRef(other.fPage, other.fPagePool) { other.fPagePool = nullptr; }
+   RPageRef(RPageRef &&other) noexcept : RPageRef(other.fPage, other.fPagePool) { other.fPagePool = nullptr; }
 
-   RPageRef &operator=(RPageRef &&other)
+   RPageRef &operator=(RPageRef &&other) noexcept
    {
       if (this != &other) {
          std::swap(fPage, other.fPage);

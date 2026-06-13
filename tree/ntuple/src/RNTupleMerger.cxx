@@ -217,7 +217,7 @@ try {
                   "determined.";
             return -1;
          }
-         compression = (*firstColRange).GetCompressionSettings().value();
+         compression = (*firstColRange).GetCompressionSettings();
          R__LOG_INFO(NTupleMergeLog()) << "Using the first RNTuple's compression: " << *compression;
       }
       sources.push_back(std::move(source));
@@ -245,7 +245,7 @@ try {
    // Now merge
    RNTupleMerger merger{std::move(destination), std::move(model)};
    RNTupleMergeOptions mergerOpts;
-   mergerOpts.fCompressionSettings = *compression;
+   mergerOpts.fCompressionSettings = compression;
    mergerOpts.fExtraVerbose = extraVerbose;
    if (auto mergingMode = ParseOptionMergingMode(mergeInfo->fOptions)) {
       mergerOpts.fMergingMode = *mergingMode;
@@ -429,7 +429,7 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
-std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
+static std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
 {
    if (x) {
       os << '(' << x->fMin << ", " << x->fMax << ')';
@@ -725,7 +725,7 @@ ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, ROOT
    try {
       mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
    } catch (const ROOT::RException &ex) {
-      return R__FAIL(ex.GetError().GetReport());
+      return R__FAIL(ex.what());
    }
 
    commonFields.reserve(commonFields.size() + newFields.size());

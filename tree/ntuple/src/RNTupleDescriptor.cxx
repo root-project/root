@@ -32,8 +32,6 @@
 #include <set>
 #include <utility>
 
-using ROOT::Internal::RNTupleSerializer;
-
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
@@ -143,7 +141,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
       return field;
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
-         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
+         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.what(),
                                                       ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
@@ -720,7 +718,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
          const auto cat = invalid.GetCategory();
          bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
-            throw invalid.GetError();
+            throw RException(R__FAIL(invalid.GetError()));
 
          // Not a hard error: skip the field and go on.
          continue;
@@ -1095,8 +1093,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
    fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
-                                                         const std::string_view description)
+void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(std::string_view name, std::string_view description)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
@@ -1300,9 +1297,9 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnD
 
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
-   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedColumn(columnDesc);
+   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
 
    return RResult<void>::Success();
 }

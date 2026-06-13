@@ -60,6 +60,12 @@ private:
    RPageSink *fInnerSink;
    std::mutex *fMutex;
 
+   void InitImpl(ROOT::RNTupleModel &) final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final
+   {
+      throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
+   }
+
 public:
    explicit RPageSynchronizingSink(RPageSink &inner, std::mutex &mutex)
       : RPageSink(inner.GetNTupleName(), inner.GetWriteOptions()), fInnerSink(&inner), fMutex(&mutex)
@@ -76,7 +82,6 @@ public:
    NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
 
    ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
-   void InitImpl(ROOT::RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw ROOT::RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
@@ -105,11 +110,6 @@ public:
    void CommitClusterGroup() final
    {
       throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
-   }
-
-   ROOT::Internal::RNTupleLink CommitDatasetImpl() final
-   {
-      throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
@@ -144,7 +144,7 @@ ROOT::RNTupleParallelWriter::~RNTupleParallelWriter()
    try {
       CommitDataset();
    } catch (const RException &err) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.what();
    }
 }
 

@@ -37,7 +37,6 @@ namespace Internal {
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
-private:
    /// A buffered column. The column is not responsible for RPage memory management (i.e. ReservePage),
    /// which is handled by the enclosing RPageSinkBuf.
    class RColumnBuf {
@@ -53,8 +52,8 @@ private:
       RColumnBuf() = default;
       RColumnBuf(const RColumnBuf&) = delete;
       RColumnBuf& operator=(const RColumnBuf&) = delete;
-      RColumnBuf(RColumnBuf&&) = default;
-      RColumnBuf& operator=(RColumnBuf&&) = default;
+      RColumnBuf(RColumnBuf &&) noexcept = default;
+      RColumnBuf &operator=(RColumnBuf &&) noexcept = default;
       ~RColumnBuf() { DropBufferedPages(); }
 
       /// Returns a reference to the newly buffered page. The reference remains
@@ -94,7 +93,6 @@ private:
       RPageStorage::SealedPageSequence_t fSealedPages;
    };
 
-private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
       ROOT::Experimental::Detail::RNTuplePlainCounter &fParallelZip;
@@ -120,7 +118,10 @@ private:
    ROOT::DescriptorId_t fNColumns = 0;
 
    void ConnectFields(const std::vector<ROOT::RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry);
-   void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
+   void FlushClusterImpl(const std::function<void(void)> &FlushClusterFn);
+
+   void InitImpl(ROOT::RNTupleModel &model) final;
+   RNTupleLink CommitDatasetImpl() final;
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -136,7 +137,6 @@ public:
 
    ROOT::NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
 
-   void InitImpl(ROOT::RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
@@ -148,7 +148,6 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   RNTupleLink CommitDatasetImpl() final;
    void CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo) final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;

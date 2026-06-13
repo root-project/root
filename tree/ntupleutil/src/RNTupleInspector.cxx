@@ -17,7 +17,6 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
-#include <ROOT/RError.hxx>
 
 #include <TFile.h>
 
@@ -73,7 +72,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          nElems += columnRange.GetNElements();
 
          if (!fCompressionSettings && columnRange.GetCompressionSettings()) {
-            fCompressionSettings = *columnRange.GetCompressionSettings();
+            fCompressionSettings = columnRange.GetCompressionSettings();
          } else if (fCompressionSettings && columnRange.GetCompressionSettings() &&
                     (*fCompressionSettings != *columnRange.GetCompressionSettings())) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
@@ -265,21 +264,20 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       output << " column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | "
                 "# pages \n"
              << "----------------|---------|-------------|------------------|--------------------|-------------------|-"
-                "------"
-             << std::endl;
+                "------\n";
       for (const auto &[colType, typeInfo] : colTypeInfo)
          output << std::setw(15) << RColumnElementBase::GetColumnTypeName(colType) << " |" << std::setw(8)
                 << typeInfo.count << " |" << std::setw(12) << typeInfo.nElems << " |" << std::setw(17)
                 << typeInfo.compressedSize << " |" << std::setw(19) << typeInfo.uncompressedSize << " |" << std::fixed
                 << std::setprecision(3) << std::setw(18) << typeInfo.GetCompressionFactor() << " |" << std::setw(6)
-                << typeInfo.nPages << " " << std::endl;
+                << typeInfo.nPages << " \n";
       break;
    case ENTupleInspectorPrintFormat::kCSV:
-      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionFactor,nPages" << std::endl;
+      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionFactor,nPages\n";
       for (const auto &[colType, typeInfo] : colTypeInfo) {
          output << RColumnElementBase::GetColumnTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
                 << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << "," << std::fixed
-                << std::setprecision(3) << typeInfo.GetCompressionFactor() << "," << typeInfo.nPages << std::endl;
+                << std::setprecision(3) << typeInfo.GetCompressionFactor() << "," << typeInfo.nPages << '\n';
       }
       break;
    default: R__ASSERT(false && "Invalid print format");

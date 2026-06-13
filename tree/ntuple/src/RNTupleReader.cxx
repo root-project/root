@@ -40,9 +40,8 @@ void ROOT::RNTupleReader::RActiveEntryToken::DeactivateEntry(NTupleSize_t entryN
 {
    const auto descGuard = fPtrControlBlock->fPageSource->GetSharedDescriptorGuard();
    const auto clusterId = Internal::CallFindClusterIdOn(descGuard.GetRef(), entryNumber);
-
-   if (clusterId == kInvalidDescriptorId)
-      throw RException(R__FAIL(std::string("entry number ") + std::to_string(entryNumber) + " out of range"));
+   // We acquired the given entry number so we must be able to find it back
+   R__ASSERT(clusterId != kInvalidDescriptorId);
 
    auto itr = fPtrControlBlock->fActiveClusters.find(clusterId);
    assert(itr != fPtrControlBlock->fActiveClusters.end());
@@ -85,7 +84,7 @@ ROOT::RNTupleReader::RActiveEntryToken::RActiveEntryToken(const RActiveEntryToke
    SetEntryNumber(other.fEntryNumber);
 }
 
-ROOT::RNTupleReader::RActiveEntryToken::RActiveEntryToken(RActiveEntryToken &&other)
+ROOT::RNTupleReader::RActiveEntryToken::RActiveEntryToken(RActiveEntryToken &&other) noexcept
 {
    std::swap(fEntryNumber, other.fEntryNumber);
    std::swap(fPtrControlBlock, other.fPtrControlBlock);
@@ -106,7 +105,8 @@ ROOT::RNTupleReader::RActiveEntryToken::operator=(const RActiveEntryToken &other
    return *this;
 }
 
-ROOT::RNTupleReader::RActiveEntryToken &ROOT::RNTupleReader::RActiveEntryToken::operator=(RActiveEntryToken &&other)
+ROOT::RNTupleReader::RActiveEntryToken &
+ROOT::RNTupleReader::RActiveEntryToken::operator=(RActiveEntryToken &&other) noexcept
 {
    std::swap(fEntryNumber, other.fEntryNumber);
    std::swap(fPtrControlBlock, other.fPtrControlBlock);
@@ -310,18 +310,18 @@ void ROOT::RNTupleReader::Show(ROOT::NTupleSize_t index, std::ostream &output)
    reader->LoadEntry(index);
    output << "{";
    for (auto iValue = entry.begin(); iValue != entry.end();) {
-      output << std::endl;
+      output << '\n';
       ROOT::Internal::RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
       iValue->GetField().AcceptVisitor(visitor);
 
       if (++iValue == entry.end()) {
-         output << std::endl;
+         output << '\n';
          break;
       } else {
          output << ",";
       }
    }
-   output << "}" << std::endl;
+   output << "}\n";
 }
 
 const ROOT::RNTupleDescriptor &ROOT::RNTupleReader::GetDescriptor()

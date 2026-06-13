@@ -75,10 +75,10 @@ public:
    RNTupleAttrPendingRange(const RNTupleAttrPendingRange &) = delete;
    RNTupleAttrPendingRange &operator=(const RNTupleAttrPendingRange &) = delete;
 
-   RNTupleAttrPendingRange(RNTupleAttrPendingRange &&other) { *this = std::move(other); }
+   RNTupleAttrPendingRange(RNTupleAttrPendingRange &&other) noexcept { *this = std::move(other); }
 
    // NOTE: explicitly implemented to make sure that 'other' gets invalidated upon move.
-   RNTupleAttrPendingRange &operator=(RNTupleAttrPendingRange &&other)
+   RNTupleAttrPendingRange &operator=(RNTupleAttrPendingRange &&other) noexcept
    {
       if (&other != this) {
          std::swap(fStart, other.fStart);
