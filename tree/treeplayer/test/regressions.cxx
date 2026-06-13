@@ -19,6 +19,7 @@
 
 #include "gtest/gtest.h"
 
+#include <limits>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -579,6 +580,80 @@ TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
 *        2 *                        2 *                        5 *
 *        3 *                        3 *                        6 *
 ******************************************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
+
+// https://github.com/root-project/root/issues/7844
+// TTree::Scan() used to lose precision when printing 64-bit integer branches
+// (e.g. ULong64_t): the "lld" column format, when given without an embedded
+// column size (i.e. via "colsize=N col=lld"), was not recognized as a
+// "long long" modifier because of an off-by-one in the length-modifier
+// detection in TTreeFormula::PrintValue. As a consequence the value was
+// evaluated and printed as a double, rounding anything above 2^53.
+TEST(TTreeScan, ULong64Precision)
+{
+   // The "long long" Scan/Draw column format is evaluated through `long double`
+   // (see TTreeFormula::PrintValue), so exact 64-bit integer output is only
+   // possible where `long double` has more mantissa bits than `double`. That is
+   // the case on x86-64 (80-bit, 64-bit mantissa) but not, e.g., on macOS ARM
+   // where `long double` is just a 64-bit `double` (53-bit mantissa). Skip the
+   // exactness check there, since the value genuinely cannot be represented.
+   if (std::numeric_limits<long double>::digits <= std::numeric_limits<double>::digits)
+      GTEST_SKIP() << "long double is not wider than double on this platform";
+
+   // 1617047019150033926 needs 61 bits, so it cannot be represented exactly
+   // by a double (53-bit mantissa).
+   constexpr ULong64_t value{1617047019150033926ULL};
+
+   struct DatasetRAII {
+      const char *fTreeName{"tree_7844"};
+      const char *fFileName{"tree_7844.root"};
+      DatasetRAII(ULong64_t v)
+      {
+         auto file = std::make_unique<TFile>(fFileName, "recreate");
+         auto tree = std::make_unique<TTree>(fTreeName, fTreeName);
+
+         ULong64_t x = v;
+         tree->Branch("x", &x, "x/l");
+         tree->Fill();
+         file->Write();
+      }
+
+      ~DatasetRAII() { std::remove(fFileName); }
+   } dataset{value};
+
+   auto file = std::make_unique<TFile>(dataset.fFileName);
+   std::unique_ptr<TTree> tree{file->Get<TTree>(dataset.fTreeName)};
+
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(tree->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"tree_7844_regression_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         // The "lld" format without an embedded size (the size is given
+         // separately via "colsize=") must print the exact 64-bit value, as
+         // well as the exact result of integer arithmetic with large constants.
+         tree->Scan("x:x-1617047019150033925:x-1617047019150033000", "", "colsize=21 col=lld:lld:lld");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(************************************************************************************
+*    Row   *                     x * x-1617047019150033925 * x-1617047019150033000 *
+************************************************************************************
+*        0 *   1617047019150033926 *                     1 *                   926 *
+************************************************************************************
 )Scan"};
          EXPECT_EQ(redirectOutput.str(), expectedScanOut);
       } else

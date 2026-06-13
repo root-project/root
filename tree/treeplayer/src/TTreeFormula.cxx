@@ -5052,12 +5052,12 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
             Ssiz_t len = strlen(decform);
             Char_t outputSizeLevel = 1;
             char *expo = nullptr;
-            if (len>2) {
+            if (len > 1) {
                switch (decform[len-2]) {
                   case 'l':
                   case 'L': {
                      outputSizeLevel = 2;
-                     if (len>3 && tolower(decform[len-3])=='l') {
+                     if (len > 2 && tolower(decform[len - 3]) == 'l') {
                         outputSizeLevel = 3;
                      }
                      break;
