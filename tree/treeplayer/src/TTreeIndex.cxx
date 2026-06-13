@@ -189,7 +189,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          Error("TTreeIndex", "In tree entry %lld, Ndata in formula is zero for both '%s' and '%s'", i,
                fMajorName.Data(), fMinorName.Data());
       }
-      auto GetAndRangeCheck = [this](bool isMajor, Long64_t entry) {
+      auto GetAndRangeCheck = [this](bool isMajor, Long64_t entry) -> Long64_t {
          LongDouble_t ret = (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<LongDouble_t>();
          // Check whether the value (vs significant bits) of ldRet can represent
          // the full precision of the returned value. If we return 10^60, the
@@ -206,11 +206,16 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
                     "In tree entry %lld, %s value %s=%Lf possibly out of range for internal `long double`", entry,
                     isMajor ? "major" : "minor", isMajor ? fMajorName.Data() : fMinorName.Data(), ret);
          }
-         return ret;
+         return static_cast<Long64_t>(ret); // static_cast necessary for use in ternary expression below
       };
       auto GetLong64 = [this](bool isMajor) {
          return (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<Long64_t>();
       };
+      // Note: in ternary expression ensure both branches have same return data type Long64_t.
+      // otherwise, with LongDouble_t, the expression is implicitly cast to their
+      // common type `long double` regardless of the branch taken. On platforms where
+      // `sizeof(long double) == sizeof(double)` (macOS arm64, Windows) this silently
+      // rounds the exact Long64_t value, defeating the purpose of the long64 flag.
       tmp_major[i] = long64major ? GetLong64(true) : GetAndRangeCheck(true, i);
       tmp_minor[i] = long64minor ? GetLong64(false) : GetAndRangeCheck(false, i);
    }
