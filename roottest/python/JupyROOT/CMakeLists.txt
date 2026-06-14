@@ -49,6 +49,18 @@ if(imt)
                     PYTHON_DEPS jupyter)
 endif()
 
+# Regression test for https://github.com/root-project/root/issues/20018 :
+# TColor.DefinedColors(1) followed by drawing a canvas inline used to segfault.
+# This notebook draws a canvas, so its output (unique div ids, random data) is
+# not reproducible - just check that it runs without error ("OFF", no compare).
+set(TCOLOR_NB tcolor_definedcolors.ipynb)
+get_filename_component(NOTEBOOKBASE ${TCOLOR_NB} NAME_WE)
+ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
+                  COPY_TO_BUILDDIR ${TCOLOR_NB}
+                  COMMAND ${Python3_EXECUTABLE} ${NBDIFFUTIL} ${TCOLOR_NB} "OFF"
+                  RUN_SERIAL
+                  PYTHON_DEPS jupyter)
+
 endif()
 
 endif()

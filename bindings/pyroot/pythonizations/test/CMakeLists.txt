@@ -59,6 +59,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 
 # TColor-related pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
+ROOT_ADD_PYUNITTEST(regression_20018 regression_20018.py)
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1 th1.py)

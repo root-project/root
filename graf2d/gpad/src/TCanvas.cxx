@@ -2353,7 +2353,13 @@ void TCanvas::Streamer(TBuffer &b)
       //in the buffer, do not add the list of colors to the list of primitives.
       TObjArray *colors = nullptr;
       TObjArray *CurrentColorPalette = nullptr;
-      if (TColor::DefinedColors()) {
+      // fPrimitives can be temporarily null while streaming a web-canvas
+      // snapshot (see TWebCanvas::CreatePadSnapshot). In that case colors and
+      // palette are delivered separately, so the list of colors must not be
+      // added here. The guard also avoids a null dereference that crashes when
+      // colors storage has been forced on via TColor::DefinedColors(1)
+      // (see https://github.com/root-project/root/issues/20018).
+      if (fPrimitives && TColor::DefinedColors()) {
          if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
             colors = (TObjArray*)gROOT->GetListOfColors();
             fPrimitives->Add(colors);
