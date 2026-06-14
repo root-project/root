@@ -14,6 +14,7 @@
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RHistFillContext.hxx>
 #include <ROOT/RHistStats.hxx>
+#include <ROOT/RProfile.hxx>
 #include <ROOT/RRegularAxis.hxx>
 #include <ROOT/RSliceBinIndexMapper.hxx>
 #include <ROOT/RSliceSpec.hxx>
@@ -31,6 +32,7 @@ using ROOT::Experimental::RHistAutoAxisFiller;
 using ROOT::Experimental::RHistConcurrentFiller;
 using ROOT::Experimental::RHistEngine;
 using ROOT::Experimental::RHistStats;
+using ROOT::Experimental::RProfile;
 using ROOT::Experimental::RRegularAxis;
 using ROOT::Experimental::RSliceSpec;
 using ROOT::Experimental::RVariableBinAxis;
