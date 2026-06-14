@@ -21,6 +21,27 @@ set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+
+# When ROOT provides zlib as a builtin, disable it in the bundled LLVM so it
+# cannot discover and link the *system* copy (mixing two versions in one
+# process). We cannot point LLVM at the zlib builtin instead: it probes it with
+# a configure-time compile check, but the builtin library is only produced
+# later at build time, so the check would always fail. For symmetry and to
+# preserve historic behavior, also disable ZSTD if we use the ROOT builtin,
+# even though LLVM doesn't do the configure-time compile check there. If no
+# builtins are used, we remove unnecessary degrees of freedom from the build by
+# setting the zlib/zstd flags to FORCE_ON, because zlib and zstd are hard
+# requirements of ROOT that are available anyway.
+if(builtin_zlib)
+  set(LLVM_ENABLE_ZLIB OFF CACHE STRING "Disabled because ROOT uses builtin zlib" FORCE)
+else()
+  set(LLVM_ENABLE_ZLIB FORCE_ON CACHE STRING "Always enabled because it's already a dependency of ROOT" FORCE)
+endif()
+if(builtin_zstd)
+  set(LLVM_ENABLE_ZSTD OFF CACHE STRING "Disabled because ROOT uses builtin zstd" FORCE)
+else()
+  set(LLVM_ENABLE_ZSTD FORCE_ON CACHE STRING "Always enabled because it's already a dependency of ROOT" FORCE)
+endif()
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
