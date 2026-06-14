@@ -36,6 +36,7 @@ namespace cling {
       m_Ctx(Ctx), m_SkipFlag(false), m_IgnoreFile(ignoreFiles) {
     m_PrintInstantiation = false;
     m_Policy.SuppressTagKeyword = true;
+    m_Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
 
     m_Policy.Bool = true; // Avoid printing _Bool instead of bool
 
@@ -46,9 +47,11 @@ namespace cling {
          i != clang::Builtin::FirstTSBuiltin; ++i)
       m_BuiltinNames.insert(BuiltinCtx.getName(i));
 
-    for (auto&& BuiltinInfo: m_Ctx.getTargetInfo().getTargetBuiltins())
-        m_BuiltinNames.insert(BuiltinInfo.Name);
-
+    for (const auto& Shard : m_Ctx.getTargetInfo().getTargetBuiltins()) {
+      for (const auto& BuiltinInfo : Shard.Infos) {
+        m_BuiltinNames.insert(BuiltinInfo.getName(Shard));
+      }
+    }
 
     // Suppress some unfixable warnings.
     // TODO: Find proper fix for these issues
@@ -795,7 +798,7 @@ namespace cling {
     std::string closeBraces = PrintEnclosingDeclContexts(Out(),
                                                          D->getDeclContext());
     Out() << "__asm (";
-    D->getAsmString()->printPretty(Out(), nullptr, m_Policy, m_Indentation);
+    D->getAsmStringExpr()->printPretty(Out(), nullptr, m_Policy, m_Indentation);
     Out() << ");" << closeBraces << '\n';
   }
 
@@ -847,7 +850,7 @@ namespace cling {
                                                          D->getDeclContext());
     Out() << "using namespace ";
     if (D->getQualifier())
-      D->getQualifier()->print(Out(), m_Policy);
+      D->getQualifier().print(Out(), m_Policy);
     Out() << *D->getNominatedNamespaceAsWritten() << ';' << closeBraces << '\n';
   }
 
@@ -879,7 +882,7 @@ namespace cling {
                                                          D->getDeclContext());
     Out() << "namespace " << *D << " = ";
     if (D->getQualifier())
-      D->getQualifier()->print(Out(), m_Policy);
+      D->getQualifier().print(Out(), m_Policy);
     Out() << *D->getAliasedNamespace() << ';' << closeBraces << '\n';
   }
 
@@ -1154,7 +1157,6 @@ namespace cling {
       VISIT_DECL(LValueReference, getPointeeType);
       VISIT_DECL(RValueReference, getPointeeType);
       VISIT_DECL(TypeOf, getUnmodifiedType);
-      VISIT_DECL(Elaborated, getNamedType);
       VISIT_DECL(UnaryTransform, getUnderlyingType);
 #undef VISIT_DECL
 
@@ -1174,7 +1176,7 @@ namespace cling {
           skipDecl(nullptr, "pointee type failed");
           return;
         }
-        Visit(MPT->getClass());
+        VisitNestedNameSpecifier(MPT->getQualifier());
       }
       break;
 
@@ -1295,22 +1297,26 @@ namespace cling {
   }
 
   void ForwardDeclPrinter::VisitNestedNameSpecifier(
-                                        const clang::NestedNameSpecifier* NNS) {
-    if (const clang::NestedNameSpecifier* Prefix = NNS->getPrefix())
-      VisitNestedNameSpecifier(Prefix);
+                                        const clang::NestedNameSpecifier NNS) {
 
-    switch (NNS->getKind()) {
-    case clang::NestedNameSpecifier::Namespace:
-      Visit(NNS->getAsNamespace());
+    switch (NNS.getKind()) {
+    case clang::NestedNameSpecifier::Kind::Namespace: {
+      if (auto prefix = NNS.getAsNamespaceAndPrefix().Prefix)
+        VisitNestedNameSpecifier(prefix);
+      clang::NamespaceDecl* Namespace = const_cast<clang::NamespaceDecl*>(
+          NNS.getAsNamespaceAndPrefix().Namespace->getNamespace());
+      Visit(Namespace);
       break;
-    case clang::NestedNameSpecifier::TypeSpec: // fall-through:
-    case clang::NestedNameSpecifier::TypeSpecWithTemplate:
+    }
+    case clang::NestedNameSpecifier::Kind::Type: {
+      if (auto prefix = NNS.getAsType()->getPrefix())
+        VisitNestedNameSpecifier(prefix);
       // We cannot fwd declare nested types.
       skipDecl(nullptr, "NestedNameSpec TypeSpec/TypeSpecWithTemplate");
       break;
+    }
     default:
-      Log() << "VisitNestedNameSpecifier: Unexpected kind "
-            << NNS->getKind() << '\n';
+      Log() << "VisitNestedNameSpecifier: Unexpected kind " << '\n';
       skipDecl(nullptr, nullptr);
       break;
    };
