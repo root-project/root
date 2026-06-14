@@ -62,6 +62,10 @@ set_target_properties(ZSTD::ZSTD PROPERTIES
     IMPORTED_LOCATION ${ROOT_ZSTD_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ZSTD_INCLUDE_DIR}
 )
+# Make consumers of ZSTD::ZSTD wait for the ExternalProject that actually builds
+# the library, otherwise a parallel or targeted build can try to link the not-yet
+# existing libzstd archive (consistent with builtins/zlib's add_dependencies).
+add_dependencies(ZSTD::ZSTD BUILTIN_ZSTD)
 
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
