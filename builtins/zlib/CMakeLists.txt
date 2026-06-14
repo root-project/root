@@ -74,3 +74,11 @@ set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} PARENT_SCOPE)
 set(ZLIB_LIBRARIES ${ROOT_ZLIB_LIBRARY} PARENT_SCOPE)
 set(ZLIB_FOUND TRUE PARENT_SCOPE)
 set(ZLIB_VERSION ${ROOT_ZLIB_VERSION} PARENT_SCOPE)
+
+# Pre-seed the singular cache variables FindZLIB.cmake checks (its REQUIRED_VARS), so
+# that a real find_package(ZLIB) resolves to this builtin instead of a system copy: it
+# short-circuits the find_library()/find_path() search and reuses the ZLIB::ZLIB target
+# above. Setting them as cache entries also bypasses the on-disk existence check, which
+# matters because the library is only built later by the BUILTIN_ZLIB ExternalProject.
+set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR} CACHE PATH "Path to the builtin zlib headers" FORCE)
+set(ZLIB_LIBRARY ${ROOT_ZLIB_LIBRARY} CACHE FILEPATH "Path to the builtin zlib library" FORCE)

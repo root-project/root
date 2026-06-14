@@ -21,6 +21,18 @@ set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+
+# When ROOT provides zlib/zstd as builtins, disable them in the bundled LLVM so it
+# cannot discover and link the *system* copy (mixing two versions in one process).
+# We cannot point LLVM at the builtins instead: it probes them with a configure-time
+# compile/link check, but the builtin libraries are only produced later by their
+# ExternalProject, so the check would always fail.
+if(builtin_zlib)
+  set(LLVM_ENABLE_ZLIB OFF CACHE STRING "Disabled because ROOT uses builtin zlib" FORCE)
+endif()
+if(builtin_zstd)
+  set(LLVM_ENABLE_ZSTD OFF CACHE STRING "Disabled because ROOT uses builtin zstd" FORCE)
+endif()
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
