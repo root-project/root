@@ -415,6 +415,12 @@ jobs:
             is_special: true
             property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20"]
+          # Asan build
+          - image: alma10
+            platform_config: alma10-minimal
+            is_special: true
+            property: "asan"
+            overrides: ["asan=ON", "minimal=ON", "CMAKE_BUILD_TYPE=Debug"]
           # Fedora Rawhide with Python freethreading+debug build
           - image: rawhide
             python_venv: "/py-venv-3.15td/ROOT-CI"
