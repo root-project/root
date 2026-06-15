@@ -1774,6 +1774,19 @@ namespace utils {
                                                TST->getCanonicalTypeInternal());
         QT = Ctx.getQualifiedType(QT, qualifiers);
       }
+
+      // Attach the prefix to the TST now, before the generic prefix block
+      // below. The generic block's QualifyTypeUnderPrefix does not handle TSTs,
+      // so we must do it here while we still know QT is a TST.
+      if (prefix) {
+        if (const auto* NewTST =
+                dyn_cast<TemplateSpecializationType>(QT.getTypePtr())) {
+          const Type* TypePtr = TypeName::getFullyQualifiedTemplateType(
+              Ctx, NewTST, /*WithGlobalNsPrefix=*/false);
+          QT = Ctx.getQualifiedType(QualType(TypePtr, 0), prefix_qualifiers);
+          return QT;
+        }
+      }
     } else if (fullyQualifyTmpltArg) {
 
       if (const RecordType *TSTRecord
