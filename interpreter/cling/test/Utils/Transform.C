@@ -175,6 +175,15 @@ namespace NS1 {
   }
 }
 
+namespace NS4 {
+  namespace Inner {
+    template <typename T> class TemplateClass {};
+    using UsingAlias = TemplateClass<double>;
+    typedef UsingAlias ConcreteTypedef;
+  }
+}
+typedef NS4::Inner::ConcreteTypedef GlobalAlias;
+
 .rawInput 0
 
 const cling::LookupHelper& lookup = gCling->getLookupHelper();
@@ -491,3 +500,8 @@ if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(d
 // CHECK: cmap<volatile int, volatile int, std::less<volatile int>, std::allocator<std::pair<const volatile int, volatile int> > >
 // CHECK: volatile int
 // CHECK: const volatile int
+
+QT = lookup.findType("const GlobalAlias&", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: NS4::Inner::TemplateClass<double> &
+
