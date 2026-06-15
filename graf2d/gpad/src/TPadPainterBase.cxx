@@ -58,7 +58,7 @@ void TPadPainterBase::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_
    if (!res) {
       TTFhandle ttf;
       ttf.SetTextFont(font);
-      ttf.SetTextSize(size);
+      ttf.SetTextSize(size * GetTTFScale());
       ttf.GetTextExtent(w, h, mess);
    }
 }
@@ -76,7 +76,7 @@ void TPadPainterBase::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_
    if (!res) {
       TTFhandle ttf;
       ttf.SetTextFont(font);
-      ttf.SetTextSize(size);
+      ttf.SetTextSize(size * GetTTFScale());
       ttf.GetTextExtent(w, h, mess);
    }
 }
@@ -99,7 +99,7 @@ void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a
    if (!res) {
       TTFhandle ttf;
       ttf.SetTextFont(font);
-      ttf.SetTextSize(size);
+      ttf.SetTextSize(size * GetTTFScale());
       UInt_t w, h;
       ttf.GetTextExtent(w, h, mess);
       a = ttf.GetBox().yMax;
@@ -126,7 +126,7 @@ void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a
    if (!res) {
       TTFhandle ttf;
       ttf.SetTextFont(font);
-      ttf.SetTextSize(size);
+      ttf.SetTextSize(size * GetTTFScale());
       UInt_t w, h;
       ttf.GetTextExtent(w, h, mess);
       a = ttf.GetBox().yMax;
@@ -147,7 +147,7 @@ UInt_t TPadPainterBase::GetTextAdvance(Font_t font, Double_t size, const char *m
 
    TTFhandle ttf;
    ttf.SetTextFont(font);
-   ttf.SetTextSize(size);
+   ttf.SetTextSize(size * GetTTFScale());
    ttf.SetKerning(kern);
 
    UInt_t a = 0;
