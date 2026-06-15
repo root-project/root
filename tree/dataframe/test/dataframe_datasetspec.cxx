@@ -31,6 +31,13 @@ void EXPECT_VEC_SEQ_EQ(const std::vector<ULong64_t> &vec, const ROOT::TSeq<ULong
       EXPECT_EQ(vec[i], seq[i]);
 }
 
+void expect_vec_eq(const std::vector<ULong64_t> &a, const std::vector<ULong64_t> &b)
+{
+   ASSERT_EQ(a.size(), b.size());
+   for (decltype(a.size()) i{}; i < a.size(); i++)
+      EXPECT_EQ(a[i], b[i]);
+}
+
 struct RTestSample {
    std::string name;
    ULong64_t sampleStart;
@@ -944,50 +951,72 @@ TEST_P(RDatasetSpecTest, RNTupleWithGlobalRanges)
    spec.AddSample(samp);
    spec.AddSample(samp1);
    spec.AddSample(samp2);
-   auto df1 = ROOT::RDataFrame(spec);
+
+   auto is_vector_unique = [](std::vector<ULong64_t> &vec) {
+      std::sort(vec.begin(), vec.end());
+      return std::adjacent_find(vec.begin(), vec.end()) == vec.end();
+   };
+
+   auto df = ROOT::RDataFrame(spec);
+   auto definepersamp =
+      df.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 10.").Count();
+   auto df_final = df.Filter("x > 3").Count();
+   auto df_rdfentry = df.Define("entry", [](ULong64_t entry) { return entry; }, {"rdfentry_"}).Take<ULong64_t>("entry");
+   EXPECT_EQ(df_filtered.GetValue(), 10);
+   EXPECT_EQ(df_final.GetValue(), 11);
+   // rdfentry_ should be a unique number per entry, no guarantee about ordering or alignment with dataset entries
+   EXPECT_TRUE(is_vector_unique(*df_rdfentry));
 
    std::vector<RDatasetSpec::REntryRange> goodRanges = {{1, 4}, {2, 7}, {6, 19}, {16, 20}};
 
-   auto df_final = df1.Filter("x > 3").Count();
-
-   auto definepersamp =
-      df1.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
-   auto df_filtered = definepersamp.Filter("lum == 10.").Count();
-
-   auto df = RDataFrame(spec.WithGlobalRange(goodRanges[0]));
-   auto filt = df.Filter("rdfentry_ == 2");
-   auto result = filt.Take<ULong64_t>("x");
-   auto res = result.GetValue();
-   auto count_entries = df.Count().GetValue();
-   EXPECT_EQ(res[0], 2);
-   EXPECT_EQ(count_entries, 3);
+   auto df1 = RDataFrame(spec.WithGlobalRange(goodRanges[0]));
+   auto rptr_1 = df1.Take<ULong64_t>("x");
+   auto count_entries_1 = df1.Count();
+   auto df1_rdfentry =
+      df1.Define("entry", [](ULong64_t entry) { return entry; }, {"rdfentry_"}).Take<ULong64_t>("entry");
+   // Entries are processed unordered, sort before comparing with expected values
+   std::sort(rptr_1->begin(), rptr_1->end());
+   expect_vec_eq(rptr_1.GetValue(), {1, 2, 3});
+   EXPECT_EQ(count_entries_1.GetValue(), 3);
+   // rdfentry_ should be a unique number per entry, no guarantee about ordering or alignment with dataset entries
+   EXPECT_TRUE(is_vector_unique(*df1_rdfentry));
 
    auto df2 = RDataFrame(spec.WithGlobalRange(goodRanges[1]));
-   auto filt2 = df2.Filter("rdfentry_ == 3");
-   auto result2 = filt2.Take<ULong64_t>("x");
-   auto res2 = result2.GetValue();
-   auto count_entries_2 = df2.Count().GetValue();
-   EXPECT_EQ(res2[0], 3);
-   EXPECT_EQ(count_entries_2, 5);
+   auto rptr_2 = df2.Take<ULong64_t>("x");
+   auto count_entries_2 = df2.Count();
+   auto df2_rdfentry =
+      df2.Define("entry", [](ULong64_t entry) { return entry; }, {"rdfentry_"}).Take<ULong64_t>("entry");
+   // Entries are processed unordered, sort before comparing with expected values
+   std::sort(rptr_2->begin(), rptr_2->end());
+   expect_vec_eq(rptr_2.GetValue(), {0, 2, 3, 4, 4});
+   EXPECT_EQ(count_entries_2.GetValue(), 5);
+   // rdfentry_ should be a unique number per entry, no guarantee about ordering or alignment with dataset entries
+   EXPECT_TRUE(is_vector_unique(*df2_rdfentry));
 
    auto df3 = RDataFrame(spec.WithGlobalRange(goodRanges[2]));
-   auto filt3 = df3.Filter("rdfentry_ == 8");
-   auto result3 = filt3.Take<ULong64_t>("x");
-   auto res3 = result3.GetValue();
-   auto count_entries_3 = df3.Count().GetValue();
-   EXPECT_EQ(res3[0], 12);
-   EXPECT_EQ(count_entries_3, 13);
+   auto rptr_3 = df3.Take<ULong64_t>("x");
+   auto count_entries_3 = df3.Count();
+   auto df3_rdfentry =
+      df3.Define("entry", [](ULong64_t entry) { return entry; }, {"rdfentry_"}).Take<ULong64_t>("entry");
+   // Entries are processed unordered, sort before comparing with expected values
+   std::sort(rptr_3->begin(), rptr_3->end());
+   expect_vec_eq(rptr_3.GetValue(), {0, 0, 2, 3, 4, 4, 6, 6, 8, 8, 9, 12, 16});
+   EXPECT_EQ(count_entries_3.GetValue(), 13);
+   // rdfentry_ should be a unique number per entry, no guarantee about ordering or alignment with dataset entries
+   EXPECT_TRUE(is_vector_unique(*df3_rdfentry));
 
    auto df4 = RDataFrame(spec.WithGlobalRange(goodRanges[3]));
-   auto filt4 = df4.Filter("rdfentry_ == 19");
-   auto result4 = filt4.Take<ULong64_t>("x");
-   auto res4 = result4.GetValue();
-   auto count_entries_4 = df4.Count().GetValue();
-   EXPECT_EQ(res4[0], 12);
-   EXPECT_EQ(count_entries_4, 4);
-
-   EXPECT_EQ(df_final.GetValue(), 11);
-   EXPECT_EQ(df_filtered.GetValue(), 10);
+   auto rptr_4 = df4.Take<ULong64_t>("x");
+   auto count_entries_4 = df4.Count();
+   auto df4_rdfentry =
+      df4.Define("entry", [](ULong64_t entry) { return entry; }, {"rdfentry_"}).Take<ULong64_t>("entry");
+   // Entries are processed unordered, sort before comparing with expected values
+   std::sort(rptr_4->begin(), rptr_4->end());
+   expect_vec_eq(rptr_4.GetValue(), {3, 6, 9, 12});
+   EXPECT_EQ(count_entries_4.GetValue(), 4);
+   // rdfentry_ should be a unique number per entry, no guarantee about ordering or alignment with dataset entries
+   EXPECT_TRUE(is_vector_unique(*df4_rdfentry));
 }
 
 TEST_P(RDatasetSpecTest, FromSpecRNTuple)
