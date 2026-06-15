@@ -2,9 +2,131 @@
 \ingroup Python
 \brief Python-specific functionalities offered by ROOT
 
-This page lists the so-called "pythonizations", that is those functionalities offered by ROOT for classes and functions which are specific to Python usage of the package and provide a more pythonic experience.
+This page describes ROOT's *pythonizations*: functionality that makes ROOT's C++ classes and functions behave more naturally when used from Python. Rather than simply reproducing C++ behavior, a pythonization augments how you interact with a C++ type. For instance, letting you use NumPy arrays in place of C++ arrays in function calls, or automatic downcasting of C++ instances to their actual types.
 
-### Pythonization example 
+Some pythonizations are general and applied automatically to most C++ types, while others apply only to specific ROOT types. Below we explain some of the automatic pythonizations in detail, then show how to implement custom pythonizations for your own C++ classes.
+
+
+### Pretty-printing pythonization
+This example illustrates the pretty printing feature of PyROOT, which reveals
+the content of the object if a string representation is requested, e.g., by
+Python's print statement. The printing behaves similar to the ROOT prompt
+powered by the C++ interpreter cling.
+Create an object with PyROOT
+
+~~~{.py}
+obj = ROOT.std.vector("int")(3)
+for i in range(obj.size()):
+    obj[i] = i
+~~~
+
+Print the object, which reveals the content. Note that `print` calls the special
+method `__str__` of the object internally.
+
+~~~{.py}
+print(obj)
+~~~
+
+The output can be retrieved as string by any function that triggers the `__str__`
+special method of the object, e.g., `str` or `format`.
+
+~~~{.py}
+print(str(obj))
+print("{}".format(obj))
+~~~
+
+Note that the interactive Python prompt does not call `__str__`, it calls
+`__repr__`, which implements a formal and unique string representation of
+the object.
+
+~~~{.py}
+print(repr(obj))
+obj
+~~~
+
+The print output behaves similar to the ROOT prompt, e.g., here for a ROOT histogram.
+
+~~~{.py}
+hist = ROOT.TH1F("name", "title", 10, 0, 1)
+print(hist)
+~~~
+
+If cling cannot produce any nice representation for the class, we fall back to a
+"<ClassName at address>" format, which is what `__repr__` returns
+
+~~~{.py}
+ROOT.gInterpreter.Declare('class MyClass {};')
+m = ROOT.MyClass()
+print(m)
+print(str(m) == repr(m))
+~~~
+
+### Automatic downcasting pythonization
+
+In C++, it is possible to use a base-class pointer to refer to an instance of a
+derived type.
+```cpp
+class Base {
+public:
+   virtual ~Base() = default;
+};
+class Derived : public Base {};
+
+Base *foo() {
+    static Derived obj;
+    return &obj;
+}
+```
+The same is also possible for smart pointers, like `std::unique_ptr` or
+`std::shared_ptr`. For example:
+```cpp
+std::unique_ptr<Base> foo_unique() {
+    return std::unique_ptr<Base>{new Derived};
+}
+```
+Using the `Derived` interface on the return value is not possible in C++ without
+type casting (e.g. a `dynamic_cast`). Since explicit type casting is not natural
+in Python, ROOT attempts to automatically downcast raw pointer or smart pointer
+return values to their actual type. Demonstrating this with the types above:
+```python
+p1 = ROOT.foo()
+p2 = ROOT.foo_unique()
+
+# if you absolutely need a base class proxy, there is a way:
+p3 = ROOT.bind_object(p1, "Base")
+
+print(p1)
+print(p2)
+print(p3)
+```
+will give you something like:
+```txt
+<cppyy.gbl.Derived object>
+<cppyy.gbl.Derived object held by std::unique_ptr<Base>>
+<cppyy.gbl.Base object>
+```
+
+**Note 1**: keep in mind that the auto downcasting also affects overload
+resolution. For example, consider these two overloads:
+```cpp
+void consume(Base *) {}    // overload 1
+void consume(Derived *) {} // overload 2
+```
+In C++, `consume(foo())` will hit overload 1. In Python,
+`ROOT.consume(ROOT.foo())` resolves to the second overload because the pointee
+was automatically downcast. If you really need to hit the first `Base` overload, you'll have to explicitly cast back to the base class type with `ROOT.bind_object`, as shown before.
+
+**Note 2**: while the type of the pointee gets downcast, smart pointer types
+remain unchanged. That's because `std::unique_ptr<Base>` and
+`std::unique_ptr<Derived>` are distinct, unrelated types. Template
+instantiations don't inherit from one another even when their type arguments do.
+
+**Note 3**: automatic downcasting is not enabled
+unconditionally. It is only available for polymorphic base
+classes, which is why the `Base` class in the example has a virtual destructor.
+
+
+### Custom pythonizations for C++ user classes by example
 
 This example shows how to use the `@pythonization` decorator to add extra
 behaviour to C++ user classes that are used from Python via PyROOT.
@@ -24,17 +146,17 @@ class MyClass {};
 ~~~
 
 Next, we define a pythonizor function: the function that will be responsible
-for injecting new behaviour in our C++ class `MyClass`. 
+for injecting new behaviour in our C++ class `MyClass`.
 To convert a given Python function into a pythonizor, we need to decorate it
 with the @pythonization decorator. Such decorator allows us to define which
 which class we want to pythonize by providing its class name and its
 namespace (if the latter is not specified, it defaults to the global
-namespace, i.e. '::').  
+namespace, i.e. '::').
 The decorated function - the pythonizor - must accept either one or two
 parameters:
 1. The class to be pythonized (proxy object where new behaviour can be
 injected)
-2. The fully-qualified name of that class (optional).   
+2. The fully-qualified name of that class (optional).
 Let's see all this with a simple example. Suppose I would like to define how
 `MyClass` objects are represented as a string in Python (i.e. what would be
 shown when I print that object). For that purpose, I can define the following
@@ -113,7 +235,7 @@ for o in o1, o2:
 In addition, @pythonization also accepts prefixes of classes in a certain
 namespace in order to match multiple classes in that namespace. To signal that
 what we provide to @pythonization is a prefix, we need to set the `is_prefix`
-argument to `True` (default is `False`).    
+argument to `True` (default is `False`).
 A common case where matching prefixes is useful is when we have a templated
 class and we want to pythonize all possible instantiations of that template.
 For example, we can pythonize the `std::vector` (templated) class like so:
@@ -199,7 +321,7 @@ first time in the application.
 However, it can also happen that our target class/es have already been
 accessed by the time we register a pythonization. In such a scenario, the
 pythonizor is applied immediately (at registration time) to the target
-class/es    
+class/es
 Let's see an example of what was just explained. We will define a new class
 and immediately create an object of that class. We can check how the object
 still does not have a new attribute `pythonized` that we are going to inject
@@ -229,58 +351,4 @@ Now our object does have the `pythonized` attribute:
 
 ~~~{.py}
 print(o.pythonized) # prints True
-~~~
-
-### Pythonization printing example 
-This example illustrates the pretty printing feature of PyROOT, which reveals
-the content of the object if a string representation is requested, e.g., by
-Python's print statement. The printing behaves similar to the ROOT prompt
-powered by the C++ interpreter cling.   
-Create an object with PyROOT
-
-~~~{.py}
-obj = ROOT.std.vector("int")(3)
-for i in range(obj.size()):
-    obj[i] = i
-~~~
-
-Print the object, which reveals the content. Note that `print` calls the special
-method `__str__` of the object internally.
-
-~~~{.py}
-print(obj)
-~~~
-
-The output can be retrieved as string by any function that triggers the `__str__`
-special method of the object, e.g., `str` or `format`.
-
-~~~{.py}
-print(str(obj))
-print("{}".format(obj))
-~~~
-
-Note that the interactive Python prompt does not call `__str__`, it calls
-`__repr__`, which implements a formal and unique string representation of
-the object.
-
-~~~{.py}
-print(repr(obj))
-obj
-~~~
-
-The print output behaves similar to the ROOT prompt, e.g., here for a ROOT histogram.
-
-~~~{.py}
-hist = ROOT.TH1F("name", "title", 10, 0, 1)
-print(hist)
-~~~
-
-If cling cannot produce any nice representation for the class, we fall back to a
-"<ClassName at address>" format, which is what `__repr__` returns
-
-~~~{.py}
-ROOT.gInterpreter.Declare('class MyClass {};')
-m = ROOT.MyClass()
-print(m)
-print(str(m) == repr(m))
 ~~~
