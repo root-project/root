@@ -87,6 +87,9 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION LOCF (IVAR)
+      IMPLICIT NONE
+      INTEGER :: NADUPW, LADUPW
+      INTEGER*8 :: LOCF, IVAR, J
       DIMENSION    IVAR(9)
       PARAMETER    (NADUPW=4, LADUPW=2)
       J = LOC(IVAR)
@@ -94,6 +97,10 @@
       END
 
       FUNCTION LOCFR (VAR)
+      IMPLICIT NONE
+      REAL :: VAR
+      INTEGER :: NADUPW, LADUPW, LOCFR
+      INTEGER*8 :: J
       DIMENSION    VAR(9)
       PARAMETER    (NADUPW=4, LADUPW=2)
       J = LOC(VAR)
