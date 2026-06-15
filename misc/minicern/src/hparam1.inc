@@ -1,5 +1,4 @@
 C=== hparam1.inc ===============================================
-      INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
       EQUIVALENCE (LQ(1),LMAIN),(IQ(1),LQ(9)),(Q(1),IQ(1))

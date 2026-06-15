@@ -58,6 +58,7 @@
       INCLUDE 'zvfaut.inc'
       INCLUDE 'quest.inc'
       DIMENSION LIST(9)
+      INTEGER IQLETT2(99),NQHOLL2(99)
       JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
       CALL VZEROI (IQUEST,100)
       CALL VZEROI (IQVID,18)
@@ -76,9 +77,13 @@
       CQALLC(48:64) = '#''!:"_]&@?[>< ^;%'
       CQALLC(91:96) = '{|}~`?'
       CQALLC(61:61) = CHAR(92)
-      CALL UCTOH1 (CQALLC, IQLETT, 96)
+      CALL VBLANK(IQLETT2,99)
+      CALL UCOPY(IQLETT,IQLETT2,26)
+      CALL VBLANK(NQHOLL2,99)
+      CALL UCOPY(NQHOLL,NQHOLL2,95)
+      CALL UCTOH1 (CQALLC, IQLETT2, 96)
       CALL UCTOH1 (' 1234567890', IQNUM2, 11)
-      CALL IZHNUM (IQLETT,NQHOLL,95)
+      CALL IZHNUM (IQLETT2,NQHOLL2,95)
       NQHOL0 = NQHOLL(45)
       CALL VFILL (IQCETA,NQTCET,96)
       DO 24  JC=95,1,-1
@@ -155,10 +160,18 @@
       SUBROUTINE MZPAW (NWORDS,CHOPT)
       INCLUDE 'pawc.inc'
       CHARACTER    *(*) CHOPT
+      INTEGER IXPARR(9),IFARR(9),LMARR(9)
       CALL UOPTC (CHOPT,'M',IPAW)
-      IF (IPAW(1).NE.0)   CALL MZEBRA(-1)
+      IF (IPAW(1).NE.0) THEN
+         IXPARR(1)=-1
+         CALL MZEBRA(IXPARR)
+      ENDIF
       NW = MAX (NWORDS,10000)
-      CALL MZSTOR (IXPAWC,'/PAWC/',' ',IFENCE,LMAIN,IPAW(1),IPAW(1),
+      IXPARR(1)=IXPAWC
+      CALL VZERO(IFARR,9)
+      CALL UCOPYI(IFENCE,IFARR,5)
+      LMARR(1)=LMAIN
+      CALL MZSTOR (IXPARR,'/PAWC/',' ',IFARR,LMARR,IPAW(1),IPAW(1),
      +            IPAW(5000),IPAW(NW-11))
       NWPAW  = NW
       IHDIV  = 0
@@ -179,8 +192,8 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcwk.inc'
-*
-      DIMENSION    IXSTOR(9),IFENCE(9)
+      INTEGER LSARR(9),LYARR(9),IXARR(9)
+      DIMENSION    IXSTOR(9),IFENCE(9),MMSYSL2(9)
       DIMENSION    LV(9),LLR(9),LLD(9),LIMIT(9),LAST(9)
       DIMENSION    MMSYSL(5), NAMELA(2), NAMESY(2)
       CHARACTER    *(*) CHNAME,CHOPT
@@ -327,7 +340,12 @@
       IDN = ISHFT (JQSTOR,26)
       IXSTOR(1) = IDN
    71 JQDIVI = JQDVSY
-      CALL MZLIFT (-7,LSYS,0,2,MMSYSL,0)
+      IXARR(1)=-7
+      LYARR(1)=LSYS
+      LSARR(1)=0
+      CALL VZEROI(MMSYSL2, 9)
+      CALL UCOPYI(MMSYSL, MMSYSL2, 5)
+      CALL MZLIFT (IXARR,LYARR,LSARR,2,MMSYSL2,0)
       LQSYSS(KQT+1) = LSYS
       NALL   = LOCF(IQTDUM(1)) - LOCF(LQSYSS(1))
       NSTR   = LOCF(LQSYSR(1)) - LOCF(LQSYSS(1))
@@ -727,6 +745,8 @@
       INCLUDE 'zkpars.inc'
       CHARACTER*(*) CHOPT
       DIMENSION KEYU(*)
+      INTEGER JQARR(9),LRARR(9),LTARR(9),JBPARR(9),IXARR(9),NIA(9),
+     +NZA(9),LSARR(9),LFARR(9),PFLAG(9),LBARR(9),IFARR(9)
       DIMENSION LSUP(1),JBIAS(1),IQK(10),IQKS(10)
       EQUIVALENCE (IOPTA,IQUEST(91)), (IOPTC,IQUEST(92))
      +,      (IOPTD,IQUEST(93)), (IOPTN,IQUEST(94)), (IOPTR,IQUEST(95))
@@ -734,7 +754,13 @@
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       LRIN=LQ(KQSP+LTOP-7)
       IF(LRIN.EQ.0)THEN
-         CALL MZBOOK(JQPDVS,LRIN,LTOP,-7,'RZIN',0,0,LREC+1,2,-1)
+         JQARR(1)=JQPDVS
+         LRARR(1)=LRIN
+         LTARR(1)=LTOP
+         JBPARR(1)=-7
+         NIA(1)=2
+         NZA(1)=-1
+         CALL MZBOOK(JQARR,LRARR,LTARR,JBPARR,'RZIN',0,0,LREC+1,NIA,NZA)
          IQ(KQSP+LRIN-5)=IQ(KQSP+LTOP-5)
          IQ(KQSP+LTOP+KIRIN)=0
       ENDIF
@@ -749,14 +775,18 @@
          CALL UCOPYI(IQUEST(41),IQK,10)
       ENDIF
       LBANK=0
+      IXARR(1)=IXDIV
       IF(LSUP(1).NE.0)THEN
-         CALL MZSDIV(IXDIV,1)
+         PFLAG(1)=1
+         CALL MZSDIV(IXARR,PFLAG)
          IF(JBIAS(1).LE.0)LBANK=LQ(KQS+LSUP(1)+JBIAS(1))
          IF(JBIAS(1).GT.0)LBANK=LSUP(1)
       ENDIF
       IFORM=JBYT(IQUEST(14),1,3)
       IF(IFORM.EQ.0)THEN
-         CALL RZINS(IXDIV,LSUP,JBIAS,LBANK)
+         LSARR(1)=LSUP(1)
+         JBPARR(1)=JBIAS(1)
+         CALL RZINS(IXARR,LSARR,JBPARR,LBANK)
       ELSE
          NDATA=IQUEST(12)
          IF(LBANK.NE.0)THEN
@@ -767,8 +797,13 @@
                IQUEST(1)=3
             ENDIF
          ELSE
-            CALL MZBOOK(IXDIV,LFROM,LSUP,JBIAS,'RZIN',0,0,NDATA,
-     +                  IFORM,-1)
+            LFARR(1)=LFROM
+            LSARR(1)=LSUP(1)
+            JBPARR(1)=JBIAS(1)
+            IFARR(1)=IFORM
+            NZA(1)=-1
+            CALL MZBOOK(IXARR,LFARR,LSARR,JBPARR,'RZIN',0,0,NDATA,
+     +                  IFARR,NZA)
             CALL RZREAD(IQ(KQS+LFROM+1),NDATA,1,IFORM)
             IQUEST(11) = LFROM
          ENDIF
@@ -795,7 +830,8 @@
       INCLUDE 'jauioc.inc'
       INCLUDE 'fzc.inc'
       INCLUDE 'rzclun.inc'
-      DIMENSION    IXDIVP(9),LSUPP(9),JBIASP(9),IDUM(3)
+      INTEGER PFLAG(9)
+      DIMENSION IXDIVP(9),LSUPP(9),JBIASP(9),IDUM(3),LEARR(9),JBARR(9)
       EQUIVALENCE (IOPTR,IQUEST(95))
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXDIVI = IXDIVP(1)
@@ -803,7 +839,8 @@
       JERROR = 0
       NQOCC  = 0
       NQSEG  = 0
-      CALL RZREAD(NWTABI,3,1,1)
+      PFLAG(1)=NWTABI
+      CALL RZREAD(PFLAG,3,1,1)
       IF(IQUEST(1).NE.0) GO TO 99
       NWIOI  = 0
       NWUHI  = 0
@@ -811,7 +848,8 @@
       NWUMXI = 0
       NWTXI  = 0
       NWSEGI = 0
-      CALL MZSDIV(IXDIVI,7)
+      PFLAG(1)=7
+      CALL MZSDIV(IXDIVP,PFLAG)
       IF(JQDIVI.EQ.0) JQDIVI=2
       IF(LBANK.NE.0.AND.IOPTR.NE.0)THEN
          NLINK=IQ(KQS+LBANK-3)
@@ -892,7 +930,10 @@
          LSUPP(1)=LENTRI
       ELSE
          LSUPP(1)=LQSYSR(KQT+1)
-         CALL ZSHUNT(IXDIVI,LENTRI,LSUPP,JB,1)
+         LEARR(1)=LENTRI
+         JBARR(1)=JB
+         PFLAG(1)=1
+         CALL ZSHUNT(IXDIVI,LEARR,LSUPP,JBARR,PFLAG)
       ENDIF
       IQUEST(1)  = 0
       IQUEST(11) = IEVFLI
@@ -1297,6 +1338,7 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
+      INTEGER IXSARR(9),LPARR(9)
       IQFOUL = 0
       LENTRI = 0
       K   = 0
@@ -1304,7 +1346,9 @@
    22 IF (LQ(LMT+1).LE.0)          GO TO 29
       IQNX  = LQ(LMT+3)
       LEND  = LQ(LMT+4)
-   24 CALL MZCHLN (-7,IQNX)
+   24 IXSARR(1) = -7
+      LPARR(1)=IQNX
+      CALL MZCHLN (IXSARR,LPARR)
       IF (IQFOUL.NE.0)             GO TO 91
       IF (IQND.LT.0)               GO TO 27
       IF (K.EQ.0)  THEN
@@ -1335,12 +1379,16 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
+      INTEGER PFLAG(9)
       DIMENSION    IXST(9), LP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXSTOR = IXST(1)
       IQLS   = LP(1)
       IF (IXSTOR.EQ.-7)                 GO TO 21
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+         PFLAG(1)=-7
+         CALL MZSDIV (IXST,PFLAG)
+      ENDIF
    21 IF (IQLS.LT.LQSTA(KQT+1))       GO TO 98
       IF (IQLS.GE.LQSTA(KQT+21))      GO TO 98
       IQNIO = JBYT (IQ(KQS+IQLS),19,4)
@@ -1374,7 +1422,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcl.inc'
-      DIMENSION    IXP(9),LP(9),LSUPP(9),JBP(9),NIOP(9),NZP(9)
+      DIMENSION    IXP(9),LP(9),LSUPP(9),JBP(9),NIOP(9),NZP(9),NQARR(99)
       CHARACTER    CHIDH*(*)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZBO, 4HOK   /
@@ -1384,7 +1432,8 @@
       NQTRAC = NQTRAC + 2
       NQID = IQQUES
       NIO  = MIN (4, LEN(CHIDH))
-      IF  (NIO.NE.0)  CALL UCTOH (CHIDH,NQID,4,NIO)
+      NQARR(1) = NQID
+      IF  (NIO.NE.0)  CALL UCTOH (CHIDH,NQARR,4,NIO)
       NQNL  = NL
       NQNS  = NS
       NQND  = ND
@@ -1397,7 +1446,7 @@
           CALL UCOPYI (NIOP,NQIOCH,NIO+1)
           NQIOSV(1) = 0
         ENDIF
-        CALL MZLIFT (IXP,LP,LSUPP,63, NQID, NZP)
+        CALL MZLIFT (IXP,LP,LSUPP,63, NQARR, NZP(1))
   999 NQTRAC = NQTRAC - 2
       END
 
@@ -1418,7 +1467,11 @@
       INCLUDE 'mzcl.inc'
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
-      DIMENSION    IXDIV(9), LP(9), LSUPP(9), NAME(9)
+      DIMENSION    IXDIV(9), LP(9), LSUPP(9), NAME(9), NQARR(9)
+      INTEGER      LBARR(9),ZARR(9),IXSARR(9),PFLAG(9)
+      EQUIVALENCE (NQID,NQARR(1)), (NQNL,NQARR(2)), (NQNS,NQARR(3)),
+     +(NQND,NQARR(4)), (NQIOCH(1),NQARR(5)), (NQIOCH(2),NQARR(6)),
+     +(NQIOCH(3),NQARR(7)), (NQIOCH(4),NQARR(8)), (NQIOCH(5),NQARR(9))
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZLI, 4HFT   /
       JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
@@ -1433,11 +1486,12 @@
       IF (JBIAS.NE.63)  THEN
           NQBIA = JBIAS
           NIO   = JBYT (NAME(5),12,4)
-          CALL UCOPYI (NAME,NQID,NIO+5)
+          CALL UCOPYI (NAME,NQARR,NIO+5)
           IF (NIO.NE.0)  NQIOSV(1)=0
         ENDIF
       JDV   = IXDIV(1)
       LQSUP = LSUPP(1)
+      CALL VZERO(ZARR,9)
       IF (NQBIA.GE.2)  LQSUP = 0
       ICHORG = NQIOCH(1)
       NTOT   = NQNL + NQND + 10
@@ -1445,7 +1499,7 @@
       IF (JBYT(JDV,27,6).NE.JQSTOR)  GO TO 22
       JQDIVI = JBYT (JDV,1,26)
       IF (JQDIVI.LT.21)              GO TO 23
-   22 CALL MZSDIV (JDV,0)
+   22 CALL MZSDIV (IXDIV,ZARR)
    23 CALL MZCHNB (LP)
    24 CONTINUE
       J = JBYT (NQID,IQBITW-7,8)
@@ -1458,7 +1512,9 @@
       IF (NQND.LT.0)               GO TO 91
       IF (NQBIA.GE.3)              GO TO 91
       IF (LQSUP.EQ.0)              GO TO 25
-      CALL MZCHLS (-7,LQSUP)
+      IXSARR(1)=-7
+      PFLAG(1)=LQSUP
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0)             GO TO 92
       IF (NQBIA.EQ.1)              GO TO 26
       IF (JBIT(IQ(KQS+LQSUP),IQDROP).NE.0)  GO TO 92
@@ -1475,7 +1531,9 @@
       IF (LNEXT.EQ.0)              GO TO 36
       LSAME = LNEXT
       LS    = LNEXT
-      CALL MZCHLS (-7,LNEXT)
+      IXSARR(1)=-7
+      PFLAG(1)=LNEXT
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0)             GO TO 94
       IDN = IQ(KQS+LNEXT-5) + 1
       GO TO 39
@@ -1670,6 +1728,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
+      INTEGER PFLAG(9),IXSARR(9),LSARR(9),ZARR(9),NDPARR(9)
       DIMENSION    LAREA(9),LREF(9),LREFL(9),NAME(2)
       CHARACTER    *(*) CHNAME
       DIMENSION    NAMESR(2)
@@ -1678,13 +1737,21 @@
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
+      CALL VZERO(ZARR,9)
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+         PFLAG(1)=-7
+         IXSARR(1)=IXSTOR
+         CALL MZSDIV (IXSARR,PFLAG)
+      ENDIF
 ******IF (IQVSTA.NE.0)       CALL ZVAUTX
       LSYS  = LQSYSS(KQT+1)
       NWTAB = IQ(KQS+LSYS+1)
       IF (NWTAB+5.GT.IQ(KQS+LSYS-1))  THEN
           JQDIVI = JQDVSY
-          CALL MZPUSH (-7,LSYS,0,100,'I')
+          PFLAG(1)=-7
+          LSARR(1)=LSYS
+          NDPARR(1)=100
+          CALL MZPUSH (PFLAG,LSARR,ZARR,NDPARR,'I')
           LQSYSS(KQT+1) = LSYS
         ENDIF
       LSTO = LSYS + NWTAB
@@ -1781,6 +1848,8 @@
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION IXDIV(9),LORGP(9),INCNLP(9),INCNDP(9)
+      INTEGER IXSARR(9),PFLAG(9),LPARR(9),NWARR(9),LNEWARR(9),ZARR(9),
+     +NQARR(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZPU, 4HSH  /
@@ -1792,8 +1861,10 @@
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+      CALL VZERO(ZARR,9)
       IF (IXDIV(1).EQ.-7) GO TO 12
-      CALL MZSDIV (IXDIV,0)
+      PFLAG(1)=0
+      CALL MZSDIV (IXDIV,PFLAG)
    12 CALL MZCHNB (LORGP)
       LORG = LORGP(1)
       INCNL = INCNLP(1)
@@ -1802,9 +1873,12 @@
       IFLAG = MIN (2, IQUEST(1)+2*IQUEST(2))
       IF ((INCNL.EQ.0) .AND. (INCND.EQ.0)) GO TO 999
       LQSYSR(KQT+1) = LORG
-      JQDIVI = MZFDIV (-7, LORG)
+      PFLAG(1)=-7
+      JQDIVI = MZFDIV (PFLAG, LORGP)
       IF (JQDIVI.EQ.0) GO TO 91
-      CALL MZCHLS (-7,LORG)
+      IXSARR(1)=-7
+      PFLAG(1)=LORG
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 91
       NL = IQNL
       NS = IQNS
@@ -1857,7 +1931,9 @@
       IQ(KQS+LORG-3) = NQNL
       IQ(KQS+LORG-2) = NQNS
       NWD = -INCNL
-      CALL MZPUDX (LN,NWD)
+      LPARR(1)=LN
+      NWARR(1)=NWD
+      CALL MZPUDX (LPARR,NWARR)
       INCNL = 0
       INCTT = INCND
       LN = LNN
@@ -1888,7 +1964,9 @@
       IQ(KQS+LORG-1) = NQND
       L = LE + INCND
       NWD = -INCND
-      CALL MZPUDX (L,NWD)
+      LPARR(1)=L
+      NWARR(1)=NWD
+      CALL MZPUDX (LPARR,NWARR)
       INCND = 0
       INCTT = INCNL
       ND = NQND
@@ -1919,12 +1997,16 @@
       CALL UCOPYI (NQIOCH,LQ(KQS+LNN),NQNIO+1)
       IQ(KQS+LORG-3)= NQNL
       IQ(KQS+LORG-2)= NQNS
-      CALL MZPUDX (LN,-INCNL)
+      LPARR(1)=LN
+      NWARR(1)=-INCNL
+      CALL MZPUDX (LPARR,NWARR)
       IF (INCND.EQ.0) GO TO 54
    52 IQ(KQS+LORG-1) = NQND
       LD = LE + INCND
       NWD = -INCND
-      CALL MZPUDX (LD,NWD)
+      LPARR(1)=LD
+      NWARR(1)=NWD
+      CALL MZPUDX (LPARR,NWARR)
    54 LNEW = LORG
       NDELTA = 0
       IF (IFLAG.NE.0) GO TO 999
@@ -1932,7 +2014,10 @@
    56 J = 64*(32*NQNIO + NQNIO + 1) + 1
       NQIOCH(1) = MSBYT (J,NQIOCH(1),1,16)
       NQBIA = 2
-      CALL MZLIFT (-7,LNEW,0,63,NQID,-1)
+      PFLAG(1)=-7
+      LNEWARR(1)=LNEW
+      NQARR(1)=NQID
+      CALL MZLIFT (PFLAG,LNEWARR,ZARR,63,NQARR,-1)
       LORG = LQSYSR(KQT+1)
       NDELTA = LNEW - LORG
       CALL UCOPYI (LQ(KQS+LORG-NLC),LQ(KQS+LNEW-NLC),NLC+4)
@@ -2029,6 +2114,7 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzct.inc'
       DIMENSION IXDIV(9),NEEDP(9)
+      INTEGER PFLAG(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZNE, 4HED  /
@@ -2042,7 +2128,8 @@
       JQDIVI = JBYT (JDV,1,26)
       IF (JQDIVI.EQ.0) GO TO 22
       IF (JQDIVI.LT.21) GO TO 23
-   22 CALL MZSDIV (JDV,4)
+   22 PFLAG(1)=4
+      CALL MZSDIV (IXDIV,PFLAG)
    23 CONTINUE
       CALL MZRESV
       NQRESV = NQRESV - NEED
@@ -2117,6 +2204,7 @@
       INCLUDE 'rzdir.inc'
       INCLUDE 'rzch.inc'
       INCLUDE 'zkpars.inc'
+      INTEGER LBARR(9)
       DIMENSION IOPTV(5)
       EQUIVALENCE (IOPTR,IOPTV(1)), (IOPTP,IOPTV(2)), (IOPTU,IOPTV(3))
       EQUIVALENCE (IOPTK,IOPTV(4)), (IOPTQ,IOPTV(5))
@@ -2160,7 +2248,8 @@
             IF(IOPTU.EQ.0)THEN
                CALL SBIT1(IQ(KQSP+LBANK),IQDROP)
             ELSE
-               CALL MZDROP(JQPDVS,LBANK,' ')
+               LBARR(1)=LBANK
+               CALL MZDROP(JQPDVS,LBARR,' ')
                IQ(KQSP+LTOP+KIRIN)=0
             ENDIF
             LBANK=LUP
@@ -2246,11 +2335,15 @@
       CHARACTER CHOPT*(*),CHDIR*(*)
       CHARACTER*16 CHTOP
       DIMENSION IOPTV(10)
+      INTEGER JQARR(9),JBPARR(9),PFLAG(9),
+     +ZARR(9),NIARR(9),NDPARR(9)
+      INTEGER LUARR(9),LTARR(9),LFARR(9),LRARR(9),LQARR(9),LFROMARR(9)
       EQUIVALENCE (IOPTM,IOPTV(1)), (IOPTU,IOPTV(2))
       EQUIVALENCE (IOPTS,IOPTV(3)), (IOPTL,IOPTV(4))
       EQUIVALENCE (IOPT1,IOPTV(5)), (IOPTD,IOPTV(6))
       EQUIVALENCE (IOPTC,IOPTV(7)), (IOPTX,IOPTV(8))
       EQUIVALENCE (IOPTB,IOPTV(9)), (IOPTH,IOPTV(10))
+      EQUIVALENCE (JQPDVS,JQARR(1))
       JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IQUEST(1)=0
@@ -2260,6 +2353,10 @@
       LUNP = LUNIN
       CALL RZSAVE
       CALL UOPTC (CHOPT,'MUSL1DCXBH',IOPTV)
+      CALL VZERO(ZARR,9)
+      LTARR(1)=LTOP
+      LRARR(1)=LRZ0
+      LFROMARR(1)=LFROM
       IRELAT=0
       IMODEC=IOPTC
       IMODEH=IOPTH
@@ -2302,8 +2399,10 @@
       IF(LOGLV.GE.0) WRITE(IQLOG,10200) LUN,LRECP,CHOPT
 10200 FORMAT(' RZFILE. UNIT ',I6,' Initializing with LREC=',I6,
      +', OPT= ',A)
-      CALL MZSDIV (0,-7)
+      PFLAG(1)=-7
+      CALL MZSDIV (ZARR,PFLAG)
       LRZ=LQRS
+      LQARR(1)=LQRS
    10 IF(LRZ.NE.0)THEN
          IF(IQ(KQSP+LRZ-5).EQ.LUN)THEN
             IQUEST(1)=1
@@ -2317,8 +2416,10 @@
          ENDIF
       ENDIF
       IF(LQRS.EQ.0)THEN
-         CALL MZLINK(JQPDVS,'RZCL',LTOP,LTOP,LFROM)
-         CALL MZBOOK (JQPDVS,LRZ0,LQRS,1,'RZ0 ',2,2,36,2,0)
+         CALL MZLINK(JQPDVS,'RZCL',LTARR,LTARR,LFROMARR)
+         JBPARR(1)=1
+         NIARR(1)=2
+         CALL MZBOOK(JQARR,LRARR,LQARR,JBPARR,'RZ0 ',2,2,36,NIARR,ZARR)
          IQ(KQSP+LRZ0-5)=0
          ISAVE = 1
          NHPWD = 0
@@ -2327,7 +2428,9 @@
       NCHD = LEN(CHDIR)
       IF(NCHD.GT.16)NCHD=16
       CHTOP = CHDIR(1:NCHD)
-      CALL MZBOOK(JQPDVS,LTOP,LQRS,1,'RZ  ',10,9,LRECP,2,0)
+      JBPARR(1)=1
+      NIARR(1)=2
+      CALL MZBOOK(JQARR,LTARR,LQARR,JBPARR,'RZ  ',10,9,LRECP,NIARR,ZARR)
       IF(IOPTM.EQ.0)THEN
          IQ(KQSP+LTOP-5) = LUN
          IF(IOPTC.NE.0) CALL SBIT1(IQ(KQSP+LTOP),5)
@@ -2340,7 +2443,8 @@
          IQ(KQSP+LRZ0)=NMEM
          IQ(KQSP+LTOP-5)=-NMEM
          IF(2*NMEM.GT.IQ(KQSP+LRZ0-1))THEN
-            CALL MZPUSH(JQPDVS,LRZ0,0,10,' ')
+            NDPARR(1)=10
+            CALL MZPUSH(JQARR,LRARR,ZARR,NDPARR,' ')
          ENDIF
          IQ(KQSP+LRZ0+2*NMEM-1)=LOCF(LUNP)-LOCF(IQ(1))+1
          IQ(KQSP+LRZ0+2*NMEM )=LRECP
@@ -2354,7 +2458,10 @@
       NRD = IQ(KQSP+LTOP+LD)
       IMODEX=JBIT(IQ(KQSP+LTOP+KPW1+2),12)
       NPUSH=NRD*LREC-LRECP
-      IF(NPUSH.NE.0)CALL MZPUSH(JQPDVS,LTOP,0,NPUSH,'I')
+      IF(NPUSH.NE.0)THEN
+         NDPARR(1)=NPUSH
+         CALL MZPUSH(JQARR,LTARR,ZARR,NDPARR,'I')
+      ENDIF
       DO 20 I=2,NRD
          CALL RZIODO(LUN,LREC,IQ(KQSP+LTOP+LD+I),
      + IQ(KQSP+LTOP+(I-1)*LREC+1),1)
@@ -2397,7 +2504,10 @@
       CALL SBIT1(IQ(KQSP+LTOP),1)
       IF(IOPTU.NE.0.OR.IOPT1.NE.0)THEN
          CALL SBIT0(IQ(KQSP+LTOP),1)
-         CALL MZBOOK(JQPDVS,LFREE,LTOP,-2,'RZFR',0,0,21,2,0)
+         JBPARR(1)=-2
+         NIARR(1)=2
+         LFARR(1)=LFREE
+         CALL MZBOOK(JQARR,LFARR,LTARR,JBPARR,'RZFR',0,0,21,NIARR,ZARR)
          IQ(KQSP+LFREE-5)=LUN
          IF(IOPTS.EQ.0)THEN
             CALL SBIT1(IQ(KQSP+LTOP),3)
@@ -2406,7 +2516,7 @@
             IF(IQUEST(1).NE.0)THEN
                CALL SBIT1(IQ(KQSP+LTOP),1)
                IQ1=IQUEST(1)
-               CALL MZDROP(JQPDVS,LFREE,' ')
+               CALL MZDROP(JQPDVS,LFARR,' ')
                LFREE=0
                IQUEST(1)=2+IQ1
                GO TO 30
@@ -2414,7 +2524,10 @@
          ELSE
             CALL SBIT0(IQ(KQSP+LTOP),3)
          ENDIF
-         CALL MZBOOK(JQPDVS,LUSED,LTOP,-3,'RZUS',0,0,21,2,0)
+         JBPARR(1)=-3
+         NIARR(1)=2
+         LUARR(1)=LUSED
+         CALL MZBOOK(JQARR,LUARR,LTARR,JBPARR,'RZUS',0,0,21,NIARR,ZARR)
          IQ(KQSP+LUSED-5)=LUN
       ENDIF
       IQUEST(7)=IQ(KQSP+LCDIR+KNKEYS)
@@ -2438,9 +2551,9 @@
       INCLUDE 'rzcycle.inc'
       CHARACTER*(*) CHROUT
       CHARACTER*(*) CHOPT
-      DIMENSION IHDIR(4)
+      DIMENSION IHDIR(99)
       LOGICAL RZSAME
-      INTEGER FQUOTA
+      INTEGER FQUOTA,JQARR(9),LDARR(9),LRAR(9),JAR(9),NIA(9),NZA(9)
       JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IOPTQ = INDEX(CHOPT,'Q')
@@ -2451,9 +2564,9 @@
          CHL='??? '
          GOTO 90
       ENDIF
-      CALL VBLANK(IHDIR,4)
+      CALL VBLANK(IHDIR,99)
       CALL UCTOH(CHPAT(1),IHDIR,4,16)
-      CALL ZHTOI(IHDIR,IHDIR,4)
+      CALL ZHTOI(IHDIR,IHDIR,99)
       LRZ=LQRS
    10 IF(.NOT.RZSAME(IHDIR,IQ(KQSP+LRZ+1),4))THEN
          LRZ = LQ(KQSP+LRZ)
@@ -2477,7 +2590,7 @@
       DO 60 IL=2,NLPAT
          CALL VBLANK(IHDIR,4)
          CALL UCTOH(CHPAT(IL),IHDIR,4,16)
-         CALL ZHTOI(IHDIR,IHDIR,4)
+         CALL ZHTOI(IHDIR,IHDIR,99)
          CALL SBIT0(IQ(KQSP+LRZ),IQDROP)
          NSDIR=IQ(KQSP+LRZ+KNSD)
          LS =IQ(KQSP+LRZ+KLS)
@@ -2494,7 +2607,13 @@
                IF(IRS.LE.0.OR.IRS.GT.FQUOTA) GOTO 100
                LRN = LQ(KQSP+LRZ-1)
    20 IF(LRN.EQ.0)THEN
-                  CALL MZBOOK(JQPDVS,LDIR,LRZ,-1,'RZ  ',6,6,LREF,2,-1)
+                  JQARR(1)=JQPDVS
+                  LDARR(1)=LDIR
+                  LRAR(1)=LRZ
+                  JAR(1)=-1
+                  NIA(1)=2
+                  NZA(1)=-1
+         CALL MZBOOK(JQARR,LDARR,LRAR,JAR,'RZ  ',6,6,LREF,NIA,NZA)
                   LRZ=LDIR
                   CALL RZIODO(LUNF,LREF,IRS,IQ(KQSP+LRZ+1),1)
                   IF(IQUEST(1).NE.0) GOTO 70
@@ -2503,7 +2622,11 @@
                   IF(LDS.LE.0) GOTO 100
                   NRDS=IQ(KQSP+LRZ+LDS)
                   IF(NRDS.GT.1)THEN
-                     CALL MZPUSH(JQPDVS,LRZ,0,LREF*(NRDS-1),' ')
+                     JQARR(1)=JQPDVS
+                     LRAR(1)=LRZ
+                     LDARR(1)=0
+                     NIA(1)=LREF*(NRDS-1)
+                     CALL MZPUSH(JQARR,LRAR,LDARR,NIA,' ')
                      LDIR=LRZ
                      IQUEST(20) = NRDS
                      IQUEST(21) = IRS
@@ -2574,6 +2697,8 @@
       INCLUDE 'fzci.inc'
       INCLUDE 'jauioc.inc'
       INCLUDE 'fzc.inc'
+      INTEGER PFLAG(9),IXSARR(9),IBARR(9),ICARR(9),IDARR(9),ZARR(9),
+     +JARR(9)
       DIMENSION ITOSOR(20), ISORDV(20), ISORSP(20)
       DIMENSION LSTAV(20), LENDV(20)
       EQUIVALENCE (LSTAV(1),IQUEST(60)), (LENDV(1),IQUEST(80))
@@ -2584,6 +2709,7 @@
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
       IFLGAR = 0
+      CALL VZERO(ZARR,9)
       IF (NQSEG.LE.0) THEN
           NQSEG = 1
           NSOR = 1
@@ -2765,16 +2891,28 @@
    61 IF (IFLGAR.GE.2) GO TO 721
       IXSTOR = ISHFT (JQSTOR,26)
       IF (IFLGAR.NE.0) GO TO 63
-      IXSTOR = MZIXCO (IXSTOR+21,22,23,24)
-      CALL MZGARB (IXSTOR, 0)
+      IXSARR(1) = IXSTOR+21
+      IBARR(1)=22
+      ICARR(1)=23
+      IDARR(1)=24
+      IXSTOR = MZIXCO (IXSARR,IBARR,ICARR,IDARR)
+      IXSARR(1) = IXSTOR
+      CALL MZGARB (IXSARR, ZARR)
       IFLGAR = 1
       IF (JQSTOR.NE.0) GO TO 46
       IFLGAR = 2
       GO TO 46
    63 IFLGAR = 2
-      J = MZIXCO (21,22,23,24)
-      CALL MZGARB (J, 0)
-      CALL MZSDIV (IXSTOR,-7)
+      IXSARR(1)=22
+      IBARR(1)=22
+      ICARR(1)=23
+      IDARR(1)=24
+      J = MZIXCO (IXSARR,IBARR,ICARR,IDARR)
+      JARR(1)=J
+      CALL MZGARB (JARR, ZARR)
+      PFLAG(1)=-7
+      IXSARR(1) = IXSTOR
+      CALL MZSDIV (IXSARR,PFLAG)
       GO TO 46
    81 NWBKI = 0
       JRETCD = -4
@@ -2825,7 +2963,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'zceta.inc'
       INCLUDE 'zkrakc.inc'
-      DIMENSION NP(9), ITABT(99)
+      DIMENSION NP(9), ITABT(*)
       N = NP(1)
       LIM = ITABT(1)
       JGOOD = 0
@@ -2873,6 +3011,7 @@
       INCLUDE 'rzcycle.inc'
       CHARACTER*(*) CHOPT
       DIMENSION KEYU(*)
+      INTEGER NPARR(9)
       EQUIVALENCE (IOPTA,IQUEST(91)), (IOPTC,IQUEST(92))
      +, (IOPTD,IQUEST(93)), (IOPTN,IQUEST(94)), (IOPTR,IQUEST(95))
      +, (IOPTS,IQUEST(96))
@@ -2920,7 +3059,8 @@
                   IF(JBYT(IQ(KQSP+LCDIR+KKDES+IKDES),IKBIT1,3).LT.3)THEN
                      IQUEST(20+K)=IQ(KQSP+LCDIR+LKC+K)
                   ELSE
-                     CALL ZITOH(IQ(KQSP+LCDIR+LKC+K),IQUEST(20+K),1)
+                     NPARR(1)=1
+                     CALL ZITOH(IQ(KQSP+LCDIR+LKC+K),IQUEST(20+K),NPARR)
                   ENDIF
                ENDIF
   15  CONTINUE
@@ -3001,7 +3141,8 @@
                   IKDES=(J-1)/10
                   IKBIT1=3*J-30*IKDES-2
                   IF(JBYT(IQ(KQSP+LCDIR+KKDES+IKDES),IKBIT1,3).GE.3)THEN
-                     CALL ZITOH(IQUEST(30+J),IQUEST(30+J),1)
+                     NPARR(1)=1
+                     CALL ZITOH(IQUEST(30+J),IQUEST(30+J),NPARR)
                   ENDIF
                ENDIF
   52  CONTINUE
@@ -3017,7 +3158,8 @@
                   IKDES=(J-1)/10
                   IKBIT1=3*J-30*IKDES-2
                   IF(JBYT(IQ(KQSP+LCDIR+KKDES+IKDES),IKBIT1,3).GE.3)THEN
-                     CALL ZITOH(IQUEST(40+J),IQUEST(40+J),1)
+                     NPARR(1)=1
+                     CALL ZITOH(IQUEST(40+J),IQUEST(40+J),NPARR)
                   ENDIF
                ENDIF
   53  CONTINUE
@@ -3037,8 +3179,9 @@
                IKDES=(J-1)/10
                IKBIT1=3*J-30*IKDES-2
                IF(JBYT(IQ(KQSP+LCDIR+KKDES+IKDES),IKBIT1,3).GE.3)THEN
-                  CALL ZITOH(IQUEST(30+J),IQUEST(30+J),1)
-                  CALL ZITOH(IQUEST(40+J),IQUEST(40+J),1)
+                  NPARR(1) = 1
+                  CALL ZITOH(IQUEST(30+J),IQUEST(30+J),NPARR)
+                  CALL ZITOH(IQUEST(40+J),IQUEST(40+J),NPARR)
                ENDIF
   91  CONTINUE
          ENDIF
@@ -3230,6 +3373,7 @@
       INCLUDE 'rzcout.inc'
       INCLUDE 'zkpars.inc'
       INCLUDE 'mzioc.inc'
+      INTEGER JQARR(9),LRARR(9),LTARR(9),JARR(9),NIA(9),NZA(9)
       DIMENSION IV(*)
       NL1=LREC-IP1+1
       IF(IPC.LE.NL1)THEN
@@ -3242,7 +3386,13 @@
       ENDIF
       LRIN=LQ(KQSP+LTOP-7)
       IF(LRIN.EQ.0)THEN
-         CALL MZBOOK(JQPDVS,LRIN,LTOP,-7,'RZIN',0,0,LREC+1,2,-1)
+         JQARR(1)=JQPDVS
+         LRARR(1)=LRIN
+         LTARR(1)=LTOP
+         JARR(1)=-7
+         NIA(1)=2
+         NZA(1)=-1
+         CALL MZBOOK(JQARR,LRARR,LTARR,JARR,'RZIN',0,0,LREC+1,NIA,NZA)
          IQ(KQSP+LRIN-5)=IQ(KQSP+LTOP-5)
          IQ(KQSP+LTOP+KIRIN)=0
          IRIN=0
@@ -3397,12 +3547,16 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
+      INTEGER PFLAG(9)
       DIMENSION IXST(9), LP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXSTOR = IXST(1)
       IQLN = LP(1)
       IF (IXSTOR.EQ.-7) GO TO 21
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+         PFLAG(1)=-7
+         CALL MZSDIV (IXST,PFLAG)
+      ENDIF
    21 IF (IQLN.LT.LQSTA(KQT+1)) GO TO 98
       IF (IQLN.GE.LQSTA(KQT+21)) GO TO 98
       IWD = LQ(KQS+IQLN)
@@ -3475,6 +3629,7 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
       DIMENSION LHEADP(9)
+      INTEGER IXSARR(9),PFLAG(9),IQDARR(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZDR, 4HOP  /
@@ -3484,11 +3639,17 @@
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+         IXSARR(1)=IXSTOR
+         PFLAG(1)=-7
+         CALL MZSDIV (IXSARR,PFLAG)
+      ENDIF
       CALL UOPTC (CHOPT,'LV',IQUEST)
       IFLAG = IQUEST(1)
       IF (IQUEST(2).NE.0) IFLAG=-1
-      CALL MZCHLS (-7,LHEAD)
+      IXSARR(1)=-7
+      PFLAG(1)=LHEAD
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 91
       IF (NQLOGL.LT.2) GO TO 19
       WRITE (IQLOG,9018) JQSTOR,LHEAD,IQID,CHOPT
@@ -3496,19 +3657,27 @@
    19 KHEAD = LQ(KQS+LHEAD+2)
    21 IF (IFLAG) 22, 31, 41
    22 NS = IQNS
-      CALL MZFLAG (IXSTOR,LHEAD,IQDROP,'V')
+      PFLAG(1)=LHEAD
+      IQDARR(1)=IQDROP
+      CALL MZFLAG (IXSTOR,PFLAG,IQDARR,'V')
       CALL VZEROI (LQ(KQS+LHEAD-NS),NS)
       GO TO 999
-   31 CALL MZFLAG (IXSTOR,LHEAD,IQDROP,'.')
+   31 PFLAG(1)=LHEAD
+      IQDARR(1)=IQDROP
+      CALL MZFLAG (IXSTOR,PFLAG,IQDARR,'.')
       LN = LQ(KQS+LHEAD)
       IF (LN.EQ.0) GO TO 88
       IF (LN.EQ.LHEAD) GO TO 88
-      CALL MZCHLS (-7,LN)
+      IXSARR(1)=-7
+      PFLAG(1)=LN
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 92
       IF (KHEAD.NE.0) LQ(KQS+KHEAD)=LN
       LQ(KQS+LN+2) = KHEAD
       GO TO 999
-   41 CALL MZFLAG (IXSTOR,LHEAD,IQDROP,'L')
+   41 PFLAG(1)=LHEAD
+      IQDARR(1)=IQDROP
+      CALL MZFLAG (IXSTOR,PFLAG,IQDARR,'L')
    88 IF (KHEAD.NE.0) LQ(KQS+KHEAD)=0
   999 NQTRAC = NQTRAC - 2
       RETURN
@@ -3531,6 +3700,7 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
+      INTEGER PFLAG(9)
       DIMENSION IXDIVP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZDV, 4HAC  /
@@ -3545,13 +3715,15 @@
       JST = JBYT (IXIN,27,6)
       IF (JST.EQ.JQSTOR) GO TO 31
       IF (JST-16.EQ.JQSTOR) GO TO 21
-      CALL MZSDIV (IXIN,-7)
+      PFLAG(1)=-7
+      CALL MZSDIV (IXDIVP,PFLAG)
       IF (JST.LT.16) GO TO 31
    21 IXAC = JBYT (IXIN,1,20)
       IXGE = JBYT (IXIN,21,6)
       IF (IXGE.EQ.0) GO TO 59
       IF (IXGE.LT.16) GO TO 41
-   29 CALL MZSDIV (IXIN,0)
+   29 PFLAG(1)=0
+      CALL MZSDIV (IXDIVP,PFLAG)
    31 JDIV = JBYT (IXIN,1,26)
       IF (JDIV.GE.25) GO TO 29
       IXAC = 0
@@ -3580,7 +3752,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzct.inc'
-      DIMENSION IXGP(1), IXWP(9)
+      DIMENSION IXGP(9), IXWP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZGA, 4HRB  /
       IXGARB = IXGP(1)
@@ -3593,13 +3765,13 @@
       MQDVWI = 0
       IF (IXGARB.EQ.0) GO TO 16
       JVLEV = 1
-      MQDVGA = MZDVAC (IXGARB)
+      MQDVGA = MZDVAC (IXGP)
       IF (IXWIPE.EQ.0) GO TO 19
       JSTO = JQSTOR
-      MQDVWI = MZDVAC (IXWIPE)
+      MQDVWI = MZDVAC (IXWP)
       IF (JSTO.NE.JQSTOR) GO TO 91
       GO TO 19
-   16 MQDVWI = MZDVAC (IXWIPE)
+   16 MQDVWI = MZDVAC (IXWP)
    19 IF (MQDVGA+MQDVWI.EQ.0) GO TO 999
       NQRESV = 0
       JQSTMV = -1
@@ -3740,32 +3912,48 @@
       INCLUDE 'mzcc.inc'
       EQUIVALENCE (LQFORM,LQSYSS(5))
       EQUIVALENCE (NW,IQUEST(1))
-      DIMENSION IXIOP(99)
+      DIMENSION IXIOP(99),IDHARR(99)
       CHARACTER CHID*(*), CHFORM*(*)
-      DIMENSION MMID(5), MMIX(5), MMIO(5)
+      DIMENSION MMID(9), MMIX(9), MMIO(9)
       DIMENSION NAMESR(2)
+      INTEGER LARR(9), ZARR(9), LQARR(9), LIDARR(9), LIXARR(9),
+     +LIODARR(9), JQARR(9),NDPARR(9),NWIOMPARR(9)
       DATA NAMESR / 4HMZFO, 4HRM  /
-      DATA MMID / 4HQID , 2, 2, 10, 5 /
-      DATA MMIX / 4HQIOX, 0, 0, 7, 2 /
-      DATA MMIO / 4HQIOD, 0, 0, 50, 1 /
+      DATA MMID / 4HQID , 2, 2, 10, 5, 0, 0, 0, 0 /
+      DATA MMIX / 4HQIOX, 0, 0, 7, 2, 0, 0, 0, 0 /
+      DATA MMIO / 4HQIOD, 0, 0, 50, 1, 0, 0, 0, 0 /
       MSBYT (MZ,IZW,IZP,NZB) = IOR (
      + IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
      + ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+      CALL VZERO(IDHARR,99)
+      IDHARR(1) = IDH
+      CALL VZERO(ZARR, 9)
+      CALL VZERO(NDPARR, 9)
+      CALL VZERO(LIDARR, 9)
+      CALL VZERO(NWIOMPARR, 9)
+      NWIOMPARR(1)=16
+      CALL VZERO(JQARR, 9)
+      JQARR(1)=JQPDVS
+      CALL VZERO(LARR, 9)
+      LARR(1)=L
+      CALL VZERO(LQARR, 9)
+      LQARR(1)=LQFORM
       N = MIN (4, LEN(CHID))
-      CALL UCTOH (CHID,IDH,4,N)
+      CALL UCTOH (CHID,IDHARR,4,N)
       IF (LQFORM.EQ.0) GO TO 75
    12 IQCETK(121) = IDH
       LIOD = LQ(KQSP+LQFORM-2)
       IXIOD = IQ(KQSP+LIOD+1)
-      CALL MZIOCH (IQ(KQSP+LIOD+IXIOD+1),16,CHFORM)
+      CALL MZIOCH (IQ(KQSP+LIOD+IXIOD+1),NWIOMPARR,CHFORM)
       NW = NW + 1
       NWIO = IXIOD + NW
       IQ(KQSP+LIOD+1) = NWIO
       NFRIO = IQ(KQSP+LIOD-1) - NWIO
       LID = LQFORM
+      LIDARR(1)=LID
       IF (IDH.LT.0) LID=LQ(KQSP+LID)
       LIX = LQ(KQSP+LID-1)
       NWID = IQ(KQSP+LID+1) + 1
@@ -3781,19 +3969,24 @@
    29 CONTINUE
   999 NQTRAC = NQTRAC - 2
       RETURN
-   71 CALL MZPUSH (JQPDVS,LID,0,20,'I')
+   71 NDPARR(1)=20
+      CALL MZPUSH (JQARR,LIDARR,ZARR,NDPARR,'I')
       LIX = LQ(KQSP+LID-1)
-      CALL MZPUSH (JQPDVS,LIX,0,20,'I')
+      LIXARR(1)=LIX
+      NDPARR(1)=20
+      CALL MZPUSH (JQARR,LIXARR,ZARR,NDPARR,'I')
       GO TO 28
    73 LIOD = LQ(KQSP+LQFORM-2)
-      CALL MZPUSH (JQPDVS,LIOD,0,60,'I')
+      LIODARR(1)=LIOD
+      NDPARR(1)=60
+      CALL MZPUSH (JQARR,LIODARR,ZARR,NDPARR,'I')
       GO TO 29
    75 CONTINUE
       DO 76 J=1,2
-      CALL MZLIFT (JQPDVS,L,LQFORM,1,MMID,0)
-      CALL MZLIFT (JQPDVS,LIX,L,-1,MMIX,0)
+      CALL MZLIFT (JQARR,LARR,LQARR,1,MMID,0)
+      CALL MZLIFT (JQARR,LIXARR,LARR,-1,MMIX,0)
    76 CONTINUE
-      CALL MZLIFT (JQPDVS,L,LQFORM,-2,MMIO,0)
+      CALL MZLIFT (JQARR,LARR,LQARR,-2,MMIO,0)
       IQ(KQSP+L+1) = 1
       GO TO 12
       END
@@ -3805,12 +3998,16 @@
       INCLUDE 'quest.inc'
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
+      INTEGER PFLAG(9)
       DIMENSION IXST(9), LIXP(9)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       IXSTOR = IXST(1)
       LIX = LIXP(1)
       IF (IXSTOR.NE.-7) THEN
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+        IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+          PFLAG(1)=-7
+          CALL MZSDIV (IXST,PFLAG)
+        ENDIF
           JDIVI = 2
         ELSE
           JDIVI = JQDIVI
@@ -3954,6 +4151,7 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzct.inc'
       EQUIVALENCE (LS,IQLS), (LNX,IQNX)
+      INTEGER IXSARR(9),LPARR(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZTA, 4HBC  /
       JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
@@ -3972,7 +4170,9 @@
    22 LN = LNX
       IF (LN.GE.LQMTC2) GO TO 41
       N = N + 1
-      CALL MZCHLN (-7,LN)
+      IXSARR(1) = -7
+      LPARR(1)=LN
+      CALL MZCHLN (IXSARR,LPARR)
       IF (IQFOUL.NE.0) GO TO 91
       NEW = JBIT (IQ(KQS+LS),IQTBIT)
       IF (NEW.EQ.MODE) GO TO 22
@@ -4403,6 +4603,7 @@
       DIMENSION MXVALA(4), MXVALB(4), MXVALC(7)
       DIMENSION ITAB(48), INV(10)
       DIMENSION NAMESR(2)
+      INTEGER NCHARR(9),ZARR(9),JUARR(9)
       DATA NAMESR / 4HMZIO, 4HCH  /
       DATA ITAB / 47
      +, -1, 12, -1, 15, -1, 14, -1, 16, 13, -1, -1, -1, -1
@@ -4425,9 +4626,11 @@
       NQTRAC = NQTRAC + 2
       NWIOMX = NWIOMP(1)
       NCH = LEN (CHFORM)
-      IF (NCH.GE.121) GO TO 90
+      CALL VZERO(ZARR,9)
+      IF (NCH.GE.99) GO TO 90
       CALL UCTOH1 (CHFORM,IQHOLK,NCH)
-      CALL IZBCDT (NCH,ITAB)
+      NCHARR(1)=NCH
+      CALL IZBCDT (NCHARR,ITAB)
       NCH = IQUEST(1)
       IF (IQUEST(2).NE.0) GO TO 91
       IF (IQUEST(1).EQ.0) GO TO 91
@@ -4509,13 +4712,13 @@
       NWIO = 1
       IF (NSECA.EQ.1) GO TO 82
       NGR = NSECA
-      CALL MZIOCF (0,MXVALA)
+      CALL MZIOCF (ZARR,MXVALA)
       IF (NGR.NE.NGRU) GO TO 36
       NBT = NBITVA(NGRU)
       GO TO 71
    36 IQUEST(12) = MSBIT1 (IQUEST(12),4)
       NGR = MIN (NSECA,3)
-      CALL MZIOCF (0,MXVALB)
+      CALL MZIOCF (ZARR,MXVALB)
       NBT = NBITVB(NGRU)
       GO TO 70
    38 IQUEST(12) = 16*IQUEST(12)
@@ -4542,7 +4745,7 @@
       IF (NSECA.GE.5) GO TO 61
       IF (IVAL+NSECA.EQ.3) GO TO 48
       NGR = NSECA
-      CALL MZIOCF (0,MXVALA)
+      CALL MZIOCF (ZARR,MXVALA)
       IF (NGR.NE.NGRU) GO TO 61
       IQUEST(12) = MU(1)
       IQUEST(13) = MU(2)
@@ -4565,7 +4768,7 @@
       JBTF = 5
       IF (NSECA.GE.5) GO TO 55
       NGR = NSECA
-      CALL MZIOCF (0,MXVALA)
+      CALL MZIOCF (ZARR,MXVALA)
       IF (NGR.NE.NGRU) GO TO 55
       NBT = NBITVA(NGRU)
       IOWD = 2177
@@ -4573,7 +4776,7 @@
       GO TO 71
    55 IQUEST(12) = MSBIT1 (IQUEST(12),4)
       NGR = MIN (NSECA,4)
-      CALL MZIOCF (0,MXVALB)
+      CALL MZIOCF (ZARR,MXVALB)
       NBT = NBITVB(NGRU)
       GO TO 70
    58 IQUEST(12) = 16*MU(1)
@@ -4588,7 +4791,7 @@
       IQUEST(12) = MSBYT (6,IQUEST(12),14,3)
       JBTF = 8
       NGR = 3
-      CALL MZIOCF (0,MXVALB)
+      CALL MZIOCF (ZARR,MXVALB)
       NBT = NBITVB(NGRU)
    70 IF (NGRU.EQ.1) GO TO 73
    71 JBTC = 1
@@ -4607,7 +4810,8 @@
       NGRU = 1
       NGR = MIN (7,NSECA-NSECD)
       IF (NGR.EQ.1) GO TO 77
-      CALL MZIOCF (JU,MXVALC)
+      JUARR(1)=JU
+      CALL MZIOCF (JUARR,MXVALC)
       IF (NGRU.EQ.1) GO TO 77
       JUST = JU
       DO 76 JL=2,NGRU
@@ -4689,6 +4893,7 @@
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzcwk.inc'
       DIMENSION KBITP(9),LHEADP(9)
+      INTEGER IXSARR(9),PFLAG(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZFL, 4HAG  /
@@ -4703,8 +4908,14 @@
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
-      CALL MZCHLS (-7,LHEAD)
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+         PFLAG(1)=-7
+         IXSARR(1)=IXSTOR
+         CALL MZSDIV (IXSARR,PFLAG)
+      ENDIF
+      IXSARR(1)=-7
+      PFLAG(1)=LHEAD
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 92
       LQLIML = LQSTA(KQT+21)
       LQLIMH = 0
@@ -4732,7 +4943,9 @@
       LNEW = LQ(KQS+LX)
       LX = LX - 1
       IF (LNEW.EQ.0) GO TO 24
-      CALL MZCHLS (-7,LNEW)
+      IXSARR(1)=-7
+      PFLAG(1)=LNEW
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 94
       IF (JBIT(IQ(KQS+LNEW),IQSYSX).NE.0) GO TO 24
       LQ(LEV+1) = LX
@@ -4744,7 +4957,9 @@
       IQ(KQS+LCUR) = MSBIT1 (IQ(KQS+LCUR),IQSYSX)
       LNEW = LQ(KQS+LCUR)
       IF (LNEW.EQ.0) GO TO 36
-      CALL MZCHLS (-7,LNEW)
+      IXSARR(1)=-7
+      PFLAG(1)=LNEW
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 93
       IF (JBIT(IQ(KQS+LNEW),IQSYSX).NE.0) GO TO 36
       IF (LQ(KQS+LNEW+2).NE.LCUR) GO TO 95
@@ -4817,7 +5032,7 @@
       DIMENSION MU(99)
       EQUIVALENCE (MU(1),IQHOLK(1))
       EQUIVALENCE (NGR,IQUEST(1)), (NGRU,IQUEST(2))
-      DIMENSION JUP(9), MXVAL(9)
+      DIMENSION JUP(*), MXVAL(*)
       JU = JUP(1)
       MXC = MU(JU+2)
       DO 24 JL=2,NGR
@@ -5140,6 +5355,7 @@
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
       DIMENSION NAMESR(2)
+      INTEGER IXSARR(9),PFLAG(9),LPARR(9)
       DATA NAMESR / 4HMZRE, 4HLB  /
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
       MQTRAC(NQTRAC+1) = NAMESR(1)
@@ -5175,7 +5391,9 @@
       IF (LN.GE.LSTOP) GO TO 12
       IF (LN.EQ.LDEAD) GO TO 16
    19 CONTINUE
-      CALL MZCHLN (-7,LN)
+      IXSARR(1) = -7
+      LPARR(1)=LN
+      CALL MZCHLN (IXSARR,LPARR)
       IF (IQFOUL.NE.0) GO TO 91
       LNX = IQNX
       IF (IQND.LT.0) GO TO 17
@@ -5226,7 +5444,9 @@
    34 IF (L1.LT.L2) GO TO 24
       IF (LS+1-L1) 36, 24, 35
    35 CONTINUE
-      CALL MZCHLS (-7,LINK)
+      IXSARR(1)=-7
+      PFLAG(1)=LINK
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 92
       LINK = LQ(KQS+LINK)
       LQ(KQS+L1) = LINK
@@ -5256,7 +5476,9 @@
    54 IF (L1.LT.L2) GO TO 44
       IF (LS+1-L1) 56, 44, 55
    55 CONTINUE
-      CALL MZCHLS (-7,LINK)
+      IXSARR(1)=-7
+      PFLAG(1)=LINK
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 92
       LINK = LQ(KQS+LINK)
       LQ(KQS+L1) = LINK
@@ -5303,7 +5525,8 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
       INCLUDE 'mzct.inc'
-      DIMENSION MDESV(99)
+      INTEGER IXSARR(9),PFLAG(9)
+      DIMENSION MDESV(*)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZRE, 4HLL  /
       JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
@@ -5360,7 +5583,9 @@
       GO TO 25
    33 IF (LIX.GE.LIR) GO TO 24
       IF (LQ(JTB+3).LE.0) GO TO 24
-      CALL MZCHLS (-7,LINK)
+      IXSARR(1)=-7
+      PFLAG(1)=LINK
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 91
       LINK = LQ(KQS+LINK)
       LQ(KQS+LIX) = LINK
@@ -5380,7 +5605,9 @@
       GO TO 45
    53 IF (LIX.GE.LIR) GO TO 44
       IF (IFLTB3.LE.0) GO TO 44
-      CALL MZCHLS (-7,LINK)
+      IXSARR(1)=-7
+      PFLAG(1)=LINK
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 91
       LINK = LQ(KQS+LINK)
       LQ(KQS+LIX) = LINK
@@ -5507,6 +5734,7 @@
       INCLUDE 'mzabq.inc'
       INCLUDE 'mzcc.inc'
       INCLUDE 'mzcn.inc'
+      INTEGER IXSARR(9),PFLAG(9)
       DIMENSION LSHP(9),LSUPP(9),JBIASP(9),IFLAGP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HZSHU, 4HNT  /
@@ -5519,8 +5747,14 @@
       LSUP = LSUPP(1)
       JBIAS = JBIASP(1)
       IFLAG = IFLAGP(1)
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
-      CALL MZCHLS (-7,LSH)
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) THEN
+         PFLAG(1)=-7
+         IXSARR(1)=IXSTOR
+         CALL MZSDIV (IXSARR,PFLAG)
+      ENDIF
+      IXSARR(1)=-7
+      PFLAG(1)=LSH
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 91
       IF (NQLOGL.GE.2) THEN
           IF (JBIAS.GE.2) LSUP=0
@@ -5533,7 +5767,9 @@
       LPRE = 0
       IF (JBIAS-1) 21, 25, 28
    21 CONTINUE
-      CALL MZCHLS (-7,LSUP)
+      IXSARR(1)=-7
+      PFLAG(1)=LSUP
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 92
       IF (IQNS+JBIAS.LT.0) GO TO 93
       KIN = LSUP + JBIAS
@@ -5545,7 +5781,9 @@
       GO TO 29
    25 LNIN = LSUP
       IF (LNIN.EQ.0) GO TO 26
-      CALL MZCHLS (-7,LSUP)
+      IXSARR(1)=-7
+      PFLAG(1)=LSUP
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 92
       KIN = LQ(KQS+LNIN+2)
       LUP = LQ(KQS+LNIN+1)
@@ -5575,7 +5813,9 @@
    51 IF (LNEX.EQ.0) GO TO 58
       IF (IFLAG.EQ.0) GO TO 57
       L = LSH
-   53 CALL MZCHLS (-7,LNEX)
+   53 IXSARR(1)=-7
+      PFLAG(1)=LNEX
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 95
       L = LNEX
       LNEX = LQ(KQS+LNEX)
@@ -5588,7 +5828,9 @@
       GO TO 71
    57 CONTINUE
       L = LSH
-      CALL MZCHLS (-7,LNEX)
+      IXSARR(1)=-7
+      PFLAG(1)=LNEX
+      CALL MZCHLS (IXSARR,PFLAG)
       IF (IQFOUL.NE.0) GO TO 95
    58 LEND = LSH
       LQ(KQS+LSH+1) = LUP
@@ -5656,7 +5898,13 @@
       INCLUDE 'zkpars.inc'
       CHARACTER *(*) CHPATH
       EXTERNAL UROUT
-      DIMENSION ISD(NLPATM),NSD(NLPATM),IHDIR(4)
+      DIMENSION ISD(NLPATM),NSD(NLPATM),IHDIR(99)
+      INTEGER LCARR(9)
+      INTEGER NPARR(9)
+      CALL VZERO(LCARR,9)
+      CALL VZERO(NPARR,9)
+      LCARR(1)=LCDIR
+      NPARR(1)=4
       IQUEST(1)=0
       IF(LQRS.EQ.0)GO TO 99
       IF(LCDIR.EQ.0)GO TO 99
@@ -5687,7 +5935,7 @@
          NLPAT=NLPAT+1
          LS=IQ(KQSP+LCDIR+KLS)
          IH=LS+7*(ISD(NLPAT-1)-1)
-         CALL ZITOH(IQ(KQSP+LCDIR+IH),IHDIR,4)
+         CALL ZITOH(IQ(KQSP+LCDIR+IH),IHDIR,NPARR)
          CALL UHTOC(IHDIR,4,CHPAT(NLPAT),16)
          ITIME=ITIME+1
          GO TO 10
@@ -5695,7 +5943,7 @@
          NLPAT=NLPAT-1
          IF(NLPAT.GE.NLPAT0)THEN
             LUP=LQ(KQSP+LCDIR+1)
-            CALL MZDROP(JQPDVS,LCDIR,' ')
+            CALL MZDROP(JQPDVS,LCARR,' ')
             LCDIR=LUP
             GO TO 20
          ENDIF
@@ -5714,9 +5962,10 @@
       DIMENSION    IXWP(9)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZWI, 4HPE   /
-      IXWIPE = IXWP(1)
-      IF (IXWIPE.EQ.0)  IXWIPE=21
-      CALL MZGARB (0,IXWIPE)
+      INTEGER ZARR(9)
+      ZARR(1)=0
+      IF (IXWP(1).EQ.0)  IXWP(1)=21
+      CALL MZGARB (ZARR,IXWP)
       END
 
 *-------------------------------------------------------------------------------
@@ -5730,7 +5979,8 @@
       INCLUDE 'mzcc.inc'
       INCLUDE 'rzcl.inc'
       CHARACTER  CHDIR*(*)
-      DIMENSION IHDIR(4)
+      DIMENSION IHDIR(99)
+      INTEGER LTARR(9)
       LOGICAL RZSAME
       JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
       JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
@@ -5739,7 +5989,8 @@
       CALL RZSAVE
       NCHD=LEN(CHDIR)
       IF(NCHD.GT.16)NCHD=16
-      CALL VBLANK(IHDIR,4)
+      CALL VBLANK(IHDIR,99)
+      CALL VZERO(LTARR,9)
       CALL UCTOH(CHDIR,IHDIR,4,NCHD)
       CALL ZHTOI(IHDIR,IHDIR,4)
       LRZ=LQRS
@@ -5757,7 +6008,8 @@
          print*,'>>>>>> RZFREE'
 *            CALL RZFREE('RZFILE')
          ENDIF
-         CALL MZDROP(JQPDVS,LTOP,' ')
+         LTARR(1)=LTOP
+         CALL MZDROP(JQPDVS,LTARR,' ')
          LTOP = 0
          LCDIR= 0
       ELSEIF(NQLOGD.GE.-2)THEN
