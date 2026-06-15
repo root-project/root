@@ -198,6 +198,18 @@ using namespace std;
 transConfig.m_toSkip.insert(Lookup::Named(Sema, "string"));
 transConfig.m_toSkip.insert(Lookup::Named(Sema, "string", Lookup::Namespace(Sema, "std")));
 
+// Register basic_string<char> to std::string replacement (mirrors TNormalizedCtxImpl)
+clang::QualType stdString = lookup.findType("std::string", diags);
+if (!stdString.isNull()) {
+   if (const clang::TypedefType* TT =
+         llvm::dyn_cast_or_null<clang::TypedefType>(stdString.getTypePtr()))
+      transConfig.m_toSkip.insert(TT->getDecl());  // already done above, but harmless
+
+   clang::QualType canon = stdString->getCanonicalTypeInternal();
+   transConfig.m_toReplace.insert(
+      std::make_pair(canon.getTypePtr(), stdString.getTypePtr()));
+}
+
 const clang::Type* t = 0;
 clang::QualType QT;
 using namespace cling::utils;
