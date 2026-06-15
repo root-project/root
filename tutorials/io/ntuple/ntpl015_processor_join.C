@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Demonstrate the RNTupleProcessor for horizontal compositions (joins) of RNTuples
+/// Demonstrate the RNTupleComposer and RNTupleProcessor for horizontal compositions (joins) of RNTuples
 ///
 /// \macro_image
 /// \macro_code
@@ -9,7 +9,7 @@
 /// \date November 2024
 /// \author The ROOT Team
 
-// NOTE: The RNTupleProcessor and related classes are experimental at this point.
+// NOTE: The RNTupleComposer, RNTupleProcessor and related classes are experimental at this point.
 // Functionality and interface are still subject to changes.
 
 #include <ROOT/RNTupleModel.hxx>
@@ -21,6 +21,7 @@
 #include <TRandom.h>
 
 // Import classes from the `Experimental` namespace for the time being.
+using ROOT::Experimental::RNTupleComposer;
 using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
 
@@ -73,32 +74,35 @@ void WriteAux(std::string_view ntupleName, std::string_view ntupleFileName)
 
 void Read()
 {
-   auto c = new TCanvas("c", "RNTupleJoinProcessor Example", 200, 10, 700, 500);
+   auto c = new TCanvas("c", "RNTupleComposer join Example", 200, 10, 700, 500);
    TH1F hPy("h", "This is the px + py distribution", 100, -4, 4);
    hPy.SetFillColor(48);
 
-   // The first specified ntuple is the primary ntuple and will be used to drive the processor loop. The subsequent
-   // list of ntuples (in this case, only one) are auxiliary and will be joined with the entries from the primary
-   // ntuple. We specify field "i" as the join field. This field, which should be present in all ntuples specified is
+   // The first specified RNTuple is the primary ntuple. Its entries will be loaded sequentially by the
+   // RNTupleProcessor. The subsequent RNTuple is auxiliary and will be joined with the entries from the primary
+   // RNTuple. We specify field "i" as the join field. This field, which should be present in all ntuples specified is
    // used to identify which entries belong together. Multiple join fields can be specified, in which case the
    // combination of field values is used. It is possible to specify up to 4 join fields. Providing an empty list of
-   // join fields signals to the processor that all entries are aligned.
-   auto processor =
-      RNTupleProcessor::CreateJoin({kPrimaryNTupleName, kMainNTuplePath}, {kAuxNTupleName, kAuxNTuplePath}, {"i"});
+   // join fields signals to the composer that all entries are aligned.
+   auto composer =
+      RNTupleComposer::CreateJoin({kPrimaryNTupleName, kMainNTuplePath}, {kAuxNTupleName, kAuxNTuplePath}, {"i"});
 
-   // Access to the processor's fields is done by first requesting them through RNTupleProcessor::RequestField(). The
+   // Access to the composer's fields is done by first requesting them through RNTupleComposer::RequestField(). The
    // returned value can be used to read the current entry's value for that particular field. Fields from the primary
    // ntuple are requested by their original name.
-   auto px = processor->RequestField<float>("vpx");
+   auto px = composer->RequestField<float>("vpx");
    // Fields from auxiliary ntuples are requested by prepending the name of the auxiliary ntuple.
-   auto py = processor->RequestField<float>(kAuxNTupleName + ".vpy");
+   auto py = composer->RequestField<float>(kAuxNTupleName + ".vpy");
+
+   // Create the processor responsible for reading entries from the composer created above.
+   RNTupleProcessor processor(*composer);
 
    // The iterator value is the index of the current entry being processed. In this example, we don't use it.
-   for (auto _ : *processor) {
+   for (auto _ : processor) {
       hPy.Fill(*px + *py);
    }
 
-   std::cout << "Processed a total of " << processor->GetNEntriesProcessed() << " entries" << std::endl;
+   std::cout << "Processed a total of " << processor.GetNEntriesProcessed() << " entries" << std::endl;
 
    hPy.DrawCopy();
 }

@@ -27,6 +27,7 @@ HEADERS
   ROOT/RNTupleAttrUtils.hxx
   ROOT/RNTupleAttrWriting.hxx
   ROOT/RNTupleDescriptor.hxx
+  ROOT/RNTupleComposer.hxx
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleFillStatus.hxx
   ROOT/RNTupleImtTaskScheduler.hxx
@@ -71,6 +72,7 @@ SOURCES
   src/RNTuple.cxx
   src/RNTupleAttrReading.cxx
   src/RNTupleAttrWriting.cxx
+  src/RNTupleComposer.cxx
   src/RNTupleDescriptor.cxx
   src/RNTupleDescriptorFmt.cxx
   src/RNTupleFillContext.cxx
@@ -79,7 +81,6 @@ SOURCES
   src/RNTupleMetrics.cxx
   src/RNTupleModel.cxx
   src/RNTupleParallelWriter.cxx
-  src/RNTupleProcessor.cxx
   src/RNTupleProcessorEntry.cxx
   src/RNTupleReader.cxx
   src/RNTupleSerialize.cxx
