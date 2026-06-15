@@ -350,6 +350,28 @@ TEST(RHist, FillExceptionSafety)
    EXPECT_EQ(hist.GetStats().GetDimensionStats(1).fSumWX, 2.5);
 }
 
+TEST(RHist, FillForward)
+{
+   static constexpr std::size_t Bins = 20;
+   RHist<float> hist(Bins, {0, Bins});
+
+   std::tuple<CopyArgument> args(1.5);
+   hist.Fill(args);
+   hist.Fill(args, RWeight(0.5));
+   EXPECT_EQ(hist.GetNEntries(), 2);
+   EXPECT_EQ(hist.GetBinContent(1), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+
+   CopyArgument arg(2.5);
+   hist.Fill(arg);
+   hist.Fill(arg, RWeight(0.5));
+   EXPECT_EQ(hist.GetNEntries(), 4);
+   EXPECT_EQ(hist.GetBinContent(2), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+}
+
 TEST(RHist, Scale)
 {
    static constexpr std::size_t Bins = 20;

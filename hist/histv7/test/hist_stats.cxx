@@ -664,6 +664,25 @@ TEST(RHistStats, FillExceptionSafety)
    EXPECT_EQ(stats.GetDimensionStats(1).fSumWX, 2);
 }
 
+TEST(RHistEngine, FillForward)
+{
+   RHistStats stats(1);
+
+   std::tuple<CopyArgument> args(1.5);
+   stats.Fill(args);
+   EXPECT_EQ(stats.GetNEntries(), 1);
+   EXPECT_EQ(stats.GetDimensionStats(0).fSumWX, 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+
+   CopyArgument arg(2.5);
+   stats.Fill(arg);
+   EXPECT_EQ(stats.GetNEntries(), 2);
+   EXPECT_EQ(stats.GetDimensionStats(0).fSumWX, 4);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+}
+
 TEST(RHistStats, Scale)
 {
    RHistStats stats(3);
