@@ -237,6 +237,26 @@ TEST(RHistEngine, FillAtomicTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(engine2.FillAtomic(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
 
+TEST(RHistEngine, FillAtomicForward)
+{
+   static constexpr std::size_t Bins = 20;
+   RHistEngine<float> engine(Bins, {0, Bins});
+
+   std::tuple<CopyArgument> args(1.5);
+   engine.FillAtomic(args);
+   engine.FillAtomic(args, RWeight(0.5));
+   EXPECT_EQ(engine.GetBinContent(1), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+
+   CopyArgument arg(2.5);
+   engine.FillAtomic(arg);
+   engine.FillAtomic(arg, RWeight(0.5));
+   EXPECT_EQ(engine.GetBinContent(2), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+}
+
 TEST(RHistEngine, StressFillAddAtomicWeight)
 {
    static constexpr std::size_t NThreads = 4;

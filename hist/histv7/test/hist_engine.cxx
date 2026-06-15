@@ -492,6 +492,26 @@ TEST(RHistEngine, FillWeightNegative)
    EXPECT_EQ(engine.GetBinContent(RBinIndex(1)), 0);
 }
 
+TEST(RHistEngine, FillForward)
+{
+   static constexpr std::size_t Bins = 20;
+   RHistEngine<float> engine(Bins, {0, Bins});
+
+   std::tuple<CopyArgument> args(1.5);
+   engine.Fill(args);
+   engine.Fill(args, RWeight(0.5));
+   EXPECT_EQ(engine.GetBinContent(1), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+
+   CopyArgument arg(2.5);
+   engine.Fill(arg);
+   engine.Fill(arg, RWeight(0.5));
+   EXPECT_EQ(engine.GetBinContent(2), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+}
+
 TEST(RHistEngine, Scale)
 {
    static constexpr std::size_t Bins = 20;

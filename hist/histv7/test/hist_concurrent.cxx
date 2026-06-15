@@ -190,6 +190,36 @@ TEST(RHistFillContext, FillCategoricalWeight)
    EXPECT_FLOAT_EQ(hist->ComputeNEffectiveEntries(), 1.9931034);
 }
 
+TEST(RHistFillContext, FillForward)
+{
+   static constexpr std::size_t Bins = 20;
+   auto hist = std::make_shared<RHist<float>>(Bins, std::make_pair(0, Bins));
+
+   {
+      RHistConcurrentFiller filler(hist);
+      auto context = filler.CreateFillContext();
+      std::tuple<CopyArgument> args(1.5);
+      context->Fill(args);
+      context->Fill(args, RWeight(0.5));
+   }
+   EXPECT_EQ(hist->GetNEntries(), 2);
+   EXPECT_EQ(hist->GetBinContent(1), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+
+   {
+      RHistConcurrentFiller filler(hist);
+      auto context = filler.CreateFillContext();
+      CopyArgument arg(2.5);
+      context->Fill(arg);
+      context->Fill(arg, RWeight(0.5));
+   }
+   EXPECT_EQ(hist->GetNEntries(), 4);
+   EXPECT_EQ(hist->GetBinContent(2), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+}
+
 TEST(RHistFillContext, Flush)
 {
    static constexpr std::size_t Bins = 20;

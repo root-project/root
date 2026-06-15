@@ -45,6 +45,29 @@ using ROOT::Experimental::Internal::RSliceBinIndexMapper;
 #include <thread>
 #include <vector>
 
+class CopyArgument final {
+   static int gCopies;
+
+   double fArgument;
+
+public:
+   CopyArgument(double argument) : fArgument(argument) {}
+   CopyArgument(const CopyArgument &) { gCopies++; }
+   CopyArgument(CopyArgument &&) = default;
+   CopyArgument &operator=(const CopyArgument &)
+   {
+      gCopies++;
+      return *this;
+   }
+   CopyArgument &operator=(CopyArgument &&) = default;
+
+   operator double() const { return fArgument; }
+
+   static bool HasBeenCopied() { return gCopies > 0; }
+};
+
+int CopyArgument::gCopies = 0;
+
 template <typename Work>
 void StressInParallel(std::size_t nThreads, Work &&w)
 {
