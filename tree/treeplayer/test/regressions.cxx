@@ -596,15 +596,14 @@ TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
 // evaluated and printed as a double, rounding anything above 2^53.
 TEST(TTreeScan, ULong64Precision)
 {
-   // The "long long" Scan/Draw column format is evaluated through `long double`
-   // (see TTreeFormula::PrintValue), so exact 64-bit integer output is only
-   // possible where `long double` has more mantissa bits than `double`. That is
-   // the case on x86-64 (80-bit, 64-bit mantissa) but not, e.g., on macOS ARM
-   // where `long double` is just a 64-bit `double` (53-bit mantissa). Skip the
-   // exactness check there, since the value genuinely cannot be represented.
-   if (std::numeric_limits<long double>::digits <= std::numeric_limits<double>::digits)
-      GTEST_SKIP() << "long double is not wider than double here; the 64-bit value "
-                      "is genuinely unrepresentable and exactness cannot be checked";
+   // The "long" ("ld") and "long long" ("lld") Scan column formats are both
+   // evaluated through `long double` (see TTreeFormula::PrintValue), so exact
+   // 64-bit integer output is only possible where `long double` has more mantissa
+   // bits than `double`. That is the case on x86-64 (80-bit, 64-bit mantissa) but
+   // not, e.g., on macOS ARM where `long double` is just a 64-bit `double` (53-bit
+   // mantissa). This test checks the exact output on the former and, on the
+   // latter, that the value's unrepresentability is reported as the
+   // known-limitation error rather than silently rounded.
 
    // 1617047019150033926 needs 61 bits, so it cannot be represented exactly
    // by a double (53-bit mantissa).
@@ -658,10 +657,22 @@ TEST(TTreeScan, ULong64Precision)
    // off-by-one in the length-modifier detection, but both must behave identically.
    // The "ld" ("long") and "lld" ("long long") formats must behave identically too,
    // as both evaluate through `long double`.
-   // long double holds the 61-bit value exactly: every spelling must print the
-   // exact 64-bit value and the exact result of arithmetic with large constants.
-   EXPECT_EQ(scanToString("colsize=21 col=lld:lld:lld"), expectedScanOut);
-   EXPECT_EQ(scanToString("col=21lld:21lld:21lld"), expectedScanOut);
-   EXPECT_EQ(scanToString("colsize=21 col=ld:ld:ld"), expectedScanOut);
-   EXPECT_EQ(scanToString("col=21ld:21ld:21ld"), expectedScanOut);
+   if (std::numeric_limits<long double>::digits > std::numeric_limits<double>::digits) {
+      // long double holds the 61-bit value exactly: every spelling must print the
+      // exact 64-bit value and the exact result of arithmetic with large constants.
+      EXPECT_EQ(scanToString("colsize=21 col=lld:lld:lld"), expectedScanOut);
+      EXPECT_EQ(scanToString("col=21lld:21lld:21lld"), expectedScanOut);
+      EXPECT_EQ(scanToString("colsize=21 col=ld:ld:ld"), expectedScanOut);
+      EXPECT_EQ(scanToString("col=21ld:21ld:21ld"), expectedScanOut);
+   } else {
+      // long double is just a 64-bit double here, so the value is genuinely
+      // unrepresentable: PrintValue must emit the known-limitation error (once per
+      // offending value) instead of silently rounding.
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::PrintValue", "may be inexact", /*matchFullMessage=*/false);
+      scanToString("colsize=21 col=lld:lld:lld");
+      scanToString("col=21lld:21lld:21lld");
+      scanToString("colsize=21 col=ld:ld:ld");
+      scanToString("col=21ld:21ld:21ld");
+   }
 }
