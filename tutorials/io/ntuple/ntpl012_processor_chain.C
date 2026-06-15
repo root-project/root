@@ -68,7 +68,7 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    // The chain-based composition can be created by passing a list of RNTupleOpenSpecs, describing the name and location
    // of each RNTuple in the chain.
    auto composer = RNTupleComposer::CreateChain(ntuples);
-   int prevProcessorNumber{-1};
+   int prevChainIdx{-1};
 
    // Access to the composition's fields is done by first requesting them through RNTupleComposer::RequestField(). The
    // returned value can be used to read the current entry's value for that particular field.
@@ -80,10 +80,10 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    // The iterator value is the index of the current entry being processed.
    for (auto idx : processor) {
       // The RNTupleProcessor provides some additional bookkeeping information, such as the current processor number.
-      if (static_cast<int>(composer->GetCurrentProcessorNumber()) > prevProcessorNumber) {
-         prevProcessorNumber = composer->GetCurrentProcessorNumber();
-         std::cout << "Processing `ntuple" << prevProcessorNumber + 1 << "` (" << idx + 1
-                   << " total entries processed so far)" << std::endl;
+      if (static_cast<int>(composer->GetCurrentChainIndex()) > prevChainIdx) {
+         prevChainIdx = composer->GetCurrentChainIndex();
+         std::cout << "Processing `ntuple" << prevChainIdx + 1 << "` (" << idx + 1 << " total entries processed so far)"
+                   << std::endl;
       }
 
       // We use the value returned from requesting the field to read its data for the current entry.

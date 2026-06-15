@@ -197,14 +197,14 @@ TEST_F(RNTupleJoinComposerTest, UnalignedMultipleJoinFields)
    try {
       RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]},
                                   {"i", "j", "k", "l", "m"});
-      FAIL() << "trying to create a join processor with more than four join fields should throw";
+      FAIL() << "trying to create an RNTupleJoinComposer with more than four join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("a maximum of four join fields is allowed"));
    }
 
    try {
       RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "i"});
-      FAIL() << "trying to create a join processor with duplicate join fields should throw";
+      FAIL() << "trying to create an RNTupleJoinComposer with duplicate join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join fields must be unique"));
    }
@@ -212,23 +212,24 @@ TEST_F(RNTupleJoinComposerTest, UnalignedMultipleJoinFields)
    try {
       auto composer =
          RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"l"});
-      // Without registering a field, the processor won't be initialized.
+      // Without registering a field, the compoer won't be initialized.
       composer->RequestField<float>("x");
-      FAIL() << "trying to use a join processor where not all join fields are present in the primary processor should "
-                "throw";
+      FAIL() << "trying to use an RNTupleJoinComposer where not all join fields are present in the primary composition "
+                "should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"l\" in primary processor \"ntuple1\""));
+      EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"l\" in primary composition \"ntuple1\""));
    }
 
    try {
       auto composer = RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]},
                                                   {"i", "j", "k"});
-      // Without registering a field, the processor won't be initialized.
+      // Without registering a field, the composer won't be initialized.
       composer->RequestField<float>("x");
-      FAIL() << "trying to use a join processor where not all join fields are present in the auxiliary processor "
-                "should throw";
+      FAIL() << "trying to use an RNTupleJoinComposer where not all join fields are present in the auxiliary "
+                "composition should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"j\" in auxiliary processor \"ntuple2\""));
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("could not find join field \"j\" in auxiliary composition \"ntuple2\""));
    }
 
    auto composer =

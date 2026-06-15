@@ -99,12 +99,12 @@ TEST_F(RNTupleChainComposerTest, Basic)
 {
    auto composer = RNTupleComposer::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
 
-   EXPECT_STREQ("ntuple", composer->GetProcessorName().c_str());
+   EXPECT_STREQ("ntuple", composer->GetCompositionName().c_str());
 
    {
       auto namedProc =
          RNTupleComposer::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, "my_ntuple");
-      EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
+      EXPECT_STREQ("my_ntuple", namedProc->GetCompositionName().c_str());
    }
 
    auto x = composer->RequestField<float>("x");
@@ -198,19 +198,19 @@ TEST_F(RNTupleChainComposerTest, LoadRandomEntry)
 
    RNTupleComposerEntryLoader::LoadEntry(*composer, 3);
    EXPECT_EQ(3.f, *x);
-   EXPECT_EQ(0, composer->GetCurrentProcessorNumber());
+   EXPECT_EQ(0, composer->GetCurrentChainIndex());
 
    RNTupleComposerEntryLoader::LoadEntry(*composer, 9);
    EXPECT_EQ(9.f, *x);
-   EXPECT_EQ(1, composer->GetCurrentProcessorNumber());
+   EXPECT_EQ(1, composer->GetCurrentChainIndex());
 
    RNTupleComposerEntryLoader::LoadEntry(*composer, 6);
    EXPECT_EQ(6.f, *x);
-   EXPECT_EQ(1, composer->GetCurrentProcessorNumber());
+   EXPECT_EQ(1, composer->GetCurrentChainIndex());
 
    RNTupleComposerEntryLoader::LoadEntry(*composer, 2);
    EXPECT_EQ(2.f, *x);
-   EXPECT_EQ(0, composer->GetCurrentProcessorNumber());
+   EXPECT_EQ(0, composer->GetCurrentChainIndex());
 
    EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleComposerEntryLoader::LoadEntry(*composer, 10));
 }

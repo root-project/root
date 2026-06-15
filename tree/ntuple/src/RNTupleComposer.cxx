@@ -34,41 +34,42 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleComposer>
-ROOT::Experimental::RNTupleComposer::Create(RNTupleOpenSpec ntuple, std::string_view processorName)
+ROOT::Experimental::RNTupleComposer::Create(RNTupleOpenSpec ntuple, std::string_view compositionName)
 {
-   return std::unique_ptr<RNTupleSingleComposer>(new RNTupleSingleComposer(std::move(ntuple), processorName));
+   return std::unique_ptr<RNTupleSingleComposer>(new RNTupleSingleComposer(std::move(ntuple), compositionName));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleComposer>
-ROOT::Experimental::RNTupleComposer::CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::string_view processorName)
+ROOT::Experimental::RNTupleComposer::CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::string_view compositionName)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
 
-   std::vector<std::unique_ptr<RNTupleComposer>> innerProcessors;
-   innerProcessors.reserve(ntuples.size());
+   std::vector<std::unique_ptr<RNTupleComposer>> innerCompositions;
+   innerCompositions.reserve(ntuples.size());
 
    for (auto &ntuple : ntuples) {
-      innerProcessors.emplace_back(Create(std::move(ntuple)));
+      innerCompositions.emplace_back(Create(std::move(ntuple)));
    }
 
-   return CreateChain(std::move(innerProcessors), processorName);
+   return CreateChain(std::move(innerCompositions), compositionName);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleComposer>
-ROOT::Experimental::RNTupleComposer::CreateChain(std::vector<std::unique_ptr<RNTupleComposer>> innerProcessors,
-                                                 std::string_view processorName)
+ROOT::Experimental::RNTupleComposer::CreateChain(std::vector<std::unique_ptr<RNTupleComposer>> innerCompositions,
+                                                 std::string_view compositionName)
 {
-   if (innerProcessors.empty())
-      throw RException(R__FAIL("at least one inner processor must be provided"));
+   if (innerCompositions.empty())
+      throw RException(R__FAIL("at least one inner composition must be provided"));
 
-   return std::unique_ptr<RNTupleChainComposer>(new RNTupleChainComposer(std::move(innerProcessors), processorName));
+   return std::unique_ptr<RNTupleChainComposer>(
+      new RNTupleChainComposer(std::move(innerCompositions), compositionName));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleComposer>
 ROOT::Experimental::RNTupleComposer::CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
                                                 const std::vector<std::string> &joinFields,
-                                                std::string_view processorName)
+                                                std::string_view compositionName)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -78,18 +79,18 @@ ROOT::Experimental::RNTupleComposer::CreateJoin(RNTupleOpenSpec primaryNTuple, R
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   std::unique_ptr<RNTupleComposer> primaryProcessor = Create(primaryNTuple, processorName);
+   std::unique_ptr<RNTupleComposer> primaryComposition = Create(primaryNTuple, compositionName);
 
-   std::unique_ptr<RNTupleComposer> auxProcessor = Create(auxNTuple);
+   std::unique_ptr<RNTupleComposer> auxComposition = Create(auxNTuple);
 
-   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, processorName);
+   return CreateJoin(std::move(primaryComposition), std::move(auxComposition), joinFields, compositionName);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleComposer>
-ROOT::Experimental::RNTupleComposer::CreateJoin(std::unique_ptr<RNTupleComposer> primaryProcessor,
-                                                std::unique_ptr<RNTupleComposer> auxProcessor,
+ROOT::Experimental::RNTupleComposer::CreateJoin(std::unique_ptr<RNTupleComposer> primaryComposition,
+                                                std::unique_ptr<RNTupleComposer> auxComposition,
                                                 const std::vector<std::string> &joinFields,
-                                                std::string_view processorName)
+                                                std::string_view compositionName)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -100,23 +101,24 @@ ROOT::Experimental::RNTupleComposer::CreateJoin(std::unique_ptr<RNTupleComposer>
    }
 
    return std::unique_ptr<RNTupleJoinComposer>(
-      new RNTupleJoinComposer(std::move(primaryProcessor), std::move(auxProcessor), joinFields, processorName));
+      new RNTupleJoinComposer(std::move(primaryComposition), std::move(auxComposition), joinFields, compositionName));
 }
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleSingleComposer::RNTupleSingleComposer(RNTupleOpenSpec ntuple, std::string_view processorName)
-   : RNTupleComposer(processorName), fNTupleSpec(std::move(ntuple))
+ROOT::Experimental::RNTupleSingleComposer::RNTupleSingleComposer(RNTupleOpenSpec ntuple,
+                                                                 std::string_view compositionName)
+   : RNTupleComposer(compositionName), fNTupleSpec(std::move(ntuple))
 {
-   if (fProcessorName.empty()) {
-      fProcessorName = fNTupleSpec.fNTupleName;
+   if (fCompositionName.empty()) {
+      fCompositionName = fNTupleSpec.fNTupleName;
    }
 }
 
 void ROOT::Experimental::RNTupleSingleComposer::Initialize(
    std::shared_ptr<ROOT::Experimental::Internal::RNTupleComposerEntry> entry)
 {
-   // The processor has already been initialized.
+   // The composer has already been initialized.
    if (IsInitialized())
       return;
 
@@ -191,7 +193,7 @@ ROOT::Experimental::RNTupleSingleComposer::AddFieldToEntry(const std::string &fi
 {
    auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName);
    if (!fieldIdx) {
-      // Strip the processor name prefix(es), if present.
+      // Strip the composition name prefix(es), if present.
       std::string qualifiedFieldName = fieldName;
       if (provenance.IsPresentInFieldName(qualifiedFieldName)) {
          qualifiedFieldName = qualifiedFieldName.substr(provenance.Get().size() + 1);
@@ -202,7 +204,7 @@ ROOT::Experimental::RNTupleSingleComposer::AddFieldToEntry(const std::string &fi
       if (!field) {
          throw RException(R__FAIL("cannot register field with name \"" + qualifiedFieldName +
                                   "\" because it is not present in the on-disk information of the RNTuple(s) this "
-                                  "processor is created from"));
+                                  "composition is created from"));
       }
 
       fieldIdx = fEntry->AddField(qualifiedFieldName, std::move(field), valuePtr, provenance);
@@ -275,16 +277,16 @@ void ROOT::Experimental::RNTupleSingleComposer::PrintStructureImpl(std::ostream 
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleChainComposer::RNTupleChainComposer(std::vector<std::unique_ptr<RNTupleComposer>> processors,
-                                                               std::string_view processorName)
-   : RNTupleComposer(processorName), fInnerProcessors(std::move(processors))
+ROOT::Experimental::RNTupleChainComposer::RNTupleChainComposer(
+   std::vector<std::unique_ptr<RNTupleComposer>> compositions, std::string_view compositionName)
+   : RNTupleComposer(compositionName), fInnerCompositions(std::move(compositions))
 {
-   if (fProcessorName.empty()) {
-      // `CreateChain` ensures there is at least one inner processor.
-      fProcessorName = fInnerProcessors[0]->GetProcessorName();
+   if (fCompositionName.empty()) {
+      // `CreateChain` ensures there is at least one inner composition.
+      fCompositionName = fInnerCompositions[0]->GetCompositionName();
    }
 
-   fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
+   fInnerNEntries.assign(fInnerCompositions.size(), kInvalidNTupleIndex);
 }
 
 void ROOT::Experimental::RNTupleChainComposer::Initialize(
@@ -298,7 +300,7 @@ void ROOT::Experimental::RNTupleChainComposer::Initialize(
    else
       fEntry = entry;
 
-   fInnerProcessors[0]->Initialize(fEntry);
+   fInnerCompositions[0]->Initialize(fEntry);
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::GetNEntries()
@@ -306,9 +308,9 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::GetNEntries()
    if (fNEntries == kInvalidNTupleIndex) {
       fNEntries = 0;
 
-      for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
+      for (unsigned i = 0; i < fInnerCompositions.size(); ++i) {
          if (fInnerNEntries[i] == kInvalidNTupleIndex) {
-            fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+            fInnerNEntries[i] = fInnerCompositions[i]->GetNEntries();
          }
 
          fNEntries += fInnerNEntries[i];
@@ -325,12 +327,12 @@ void ROOT::Experimental::RNTupleChainComposer::Connect(
    Initialize();
    fFieldIdxs = fieldIdxs;
    fProvenance = provenance;
-   ConnectInnerProcessor(fCurrentProcessorNumber);
+   ConnectInnerComposition(fCurrentChainIndex);
 }
 
-void ROOT::Experimental::RNTupleChainComposer::ConnectInnerProcessor(std::size_t processorNumber)
+void ROOT::Experimental::RNTupleChainComposer::ConnectInnerComposition(std::size_t chainIdx)
 {
-   auto &innerProc = fInnerProcessors[processorNumber];
+   auto &innerProc = fInnerCompositions[chainIdx];
    innerProc->Initialize(fEntry);
    innerProc->Connect(fFieldIdxs, fProvenance, /*updateFields=*/true);
 }
@@ -340,7 +342,7 @@ ROOT::Experimental::RNTupleChainComposer::AddFieldToEntry(const std::string &fie
                                                           void *valuePtr,
                                                           const Internal::RNTupleCompositionProvenance &provenance)
 {
-   return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
+   return fInnerCompositions[fCurrentChainIndex]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::LoadEntry(ROOT::NTupleSize_t entryNumber)
@@ -349,15 +351,15 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::LoadEntry(ROOT::NTu
    // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
    // processor that is currently connected, which is much faster when the chain consists of many inner processors.
    if (entryNumber < fCurrentEntryNumber) {
-      fCurrentProcessorNumber = 0;
-      ConnectInnerProcessor(fCurrentProcessorNumber);
+      fCurrentChainIndex = 0;
+      ConnectInnerComposition(fCurrentChainIndex);
    }
 
-   std::size_t currProcessorNumber = fCurrentProcessorNumber;
+   std::size_t currChainIdx = fCurrentChainIndex;
    ROOT::NTupleSize_t entriesSeen = 0;
-   for (unsigned i = 0; i < currProcessorNumber; ++i) {
+   for (unsigned i = 0; i < currChainIdx; ++i) {
       if (fInnerNEntries[i] == kInvalidNTupleIndex) {
-         fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+         fInnerNEntries[i] = fInnerCompositions[i]->GetNEntries();
       }
       entriesSeen += fInnerNEntries[i];
    }
@@ -365,21 +367,21 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::LoadEntry(ROOT::NTu
 
    // As long as the entry fails to load from the current processor, we decrement the local entry number with the number
    // of entries in this processor and try with the next processor until we find the correct local entry number.
-   while (fInnerProcessors[currProcessorNumber]->LoadEntry(localEntryNumber) == kInvalidNTupleIndex) {
-      if (fInnerNEntries[currProcessorNumber] == kInvalidNTupleIndex) {
-         fInnerNEntries[currProcessorNumber] = fInnerProcessors[currProcessorNumber]->GetNEntries();
+   while (fInnerCompositions[currChainIdx]->LoadEntry(localEntryNumber) == kInvalidNTupleIndex) {
+      if (fInnerNEntries[currChainIdx] == kInvalidNTupleIndex) {
+         fInnerNEntries[currChainIdx] = fInnerCompositions[currChainIdx]->GetNEntries();
       }
 
-      localEntryNumber -= fInnerNEntries[currProcessorNumber];
+      localEntryNumber -= fInnerNEntries[currChainIdx];
 
       // The provided global entry number is larger than the number of available entries.
-      if (++currProcessorNumber >= fInnerProcessors.size())
+      if (++currChainIdx >= fInnerCompositions.size())
          return kInvalidNTupleIndex;
 
-      ConnectInnerProcessor(currProcessorNumber);
+      ConnectInnerComposition(currChainIdx);
    }
 
-   fCurrentProcessorNumber = currProcessorNumber;
+   fCurrentChainIndex = currChainIdx;
    fCurrentEntryNumber = entryNumber;
    return entryNumber;
 }
@@ -387,10 +389,10 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::LoadEntry(ROOT::NTu
 void ROOT::Experimental::RNTupleChainComposer::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
                                                                      ROOT::NTupleSize_t entryOffset)
 {
-   for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
-      const auto &innerProc = fInnerProcessors[i];
-      // TODO can this be done (more) lazily? I.e. only when a match cannot be found in the current inner proc?
-      // At this stage, we don't want to fully initialize (i.e. set the entry of) the inner processor yet
+   for (unsigned i = 0; i < fInnerCompositions.size(); ++i) {
+      const auto &innerProc = fInnerCompositions[i];
+      // TODO can this be done (more) lazily? I.e. only when a match cannot be found in the current inner composition?
+      // At this stage, we don't want to fully initialize (i.e. set the entry of) the inner composition yet
       innerProc->Initialize(nullptr);
       innerProc->AddEntriesToJoinTable(joinTable, entryOffset);
       entryOffset += innerProc->GetNEntries();
@@ -399,24 +401,24 @@ void ROOT::Experimental::RNTupleChainComposer::AddEntriesToJoinTable(Internal::R
 
 void ROOT::Experimental::RNTupleChainComposer::PrintStructureImpl(std::ostream &output) const
 {
-   for (const auto &innerProc : fInnerProcessors) {
+   for (const auto &innerProc : fInnerCompositions) {
       innerProc->PrintStructure(output);
    }
 }
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleJoinComposer::RNTupleJoinComposer(std::unique_ptr<RNTupleComposer> primaryProcessor,
-                                                               std::unique_ptr<RNTupleComposer> auxProcessor,
-                                                               const std::vector<std::string> &joinFields,
-                                                               std::string_view processorName)
-   : RNTupleComposer(processorName),
-     fPrimaryProcessor(std::move(primaryProcessor)),
-     fAuxiliaryProcessor(std::move(auxProcessor)),
+ROOT::Experimental::RNTupleJoinComposer::RNTupleJoinComposer(std::unique_ptr<RNTupleComposer> primaryComposition,
+                                                             std::unique_ptr<RNTupleComposer> auxComposition,
+                                                             const std::vector<std::string> &joinFields,
+                                                             std::string_view compositionName)
+   : RNTupleComposer(compositionName),
+     fPrimaryComposition(std::move(primaryComposition)),
+     fAuxiliaryComposition(std::move(auxComposition)),
      fJoinFieldNames(joinFields)
 {
-   if (fProcessorName.empty()) {
-      fProcessorName = fPrimaryProcessor->GetProcessorName();
+   if (fCompositionName.empty()) {
+      fCompositionName = fPrimaryComposition->GetCompositionName();
    }
 }
 
@@ -431,24 +433,24 @@ void ROOT::Experimental::RNTupleJoinComposer::Initialize(
    else
       fEntry = entry;
 
-   fPrimaryProcessor->Initialize(fEntry);
-   fAuxiliaryProcessor->Initialize(fEntry);
+   fPrimaryComposition->Initialize(fEntry);
+   fAuxiliaryComposition->Initialize(fEntry);
 
    if (!fJoinFieldNames.empty()) {
       for (const auto &joinField : fJoinFieldNames) {
-         if (!fPrimaryProcessor->CanReadFieldFromDisk(joinField)) {
-            throw RException(R__FAIL("could not find join field \"" + joinField + "\" in primary processor \"" +
-                                     fPrimaryProcessor->GetProcessorName() + "\""));
+         if (!fPrimaryComposition->CanReadFieldFromDisk(joinField)) {
+            throw RException(R__FAIL("could not find join field \"" + joinField + "\" in primary composition \"" +
+                                     fPrimaryComposition->GetCompositionName() + "\""));
          }
-         if (!fAuxiliaryProcessor->CanReadFieldFromDisk(joinField)) {
-            throw RException(R__FAIL("could not find join field \"" + joinField + "\" in auxiliary processor \"" +
-                                     fAuxiliaryProcessor->GetProcessorName() + "\""));
+         if (!fAuxiliaryComposition->CanReadFieldFromDisk(joinField)) {
+            throw RException(R__FAIL("could not find join field \"" + joinField + "\" in auxiliary composition \"" +
+                                     fAuxiliaryComposition->GetCompositionName() + "\""));
          }
 
-         // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
+         // We prepend the name of the primary composition in this case to prevent reading from the wrong join field in
          // composed join operations.
-         auto fieldIdx = AddFieldToEntry(fProcessorName + "._join." + joinField, "std::uint64_t", nullptr,
-                                         Internal::RNTupleCompositionProvenance(fProcessorName));
+         auto fieldIdx = AddFieldToEntry(fCompositionName + "._join." + joinField, "std::uint64_t", nullptr,
+                                         Internal::RNTupleCompositionProvenance(fCompositionName));
          fJoinFieldIdxs.insert(fieldIdx);
       }
 
@@ -462,7 +464,7 @@ void ROOT::Experimental::RNTupleJoinComposer::Connect(
 {
    Initialize();
 
-   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
+   auto auxProvenance = provenance.Evolve(fAuxiliaryComposition->GetCompositionName());
    for (const auto &fieldIdx : fieldIdxs) {
       const auto &fieldProvenance = fEntry->GetCompositionProvenance(fieldIdx);
       if (fieldProvenance.Contains(auxProvenance))
@@ -471,8 +473,8 @@ void ROOT::Experimental::RNTupleJoinComposer::Connect(
          fFieldIdxs.insert(fieldIdx);
    }
 
-   fPrimaryProcessor->Connect(fFieldIdxs, provenance, updateFields);
-   fAuxiliaryProcessor->Connect(fAuxiliaryFieldIdxs, auxProvenance, updateFields);
+   fPrimaryComposition->Connect(fFieldIdxs, provenance, updateFields);
+   fAuxiliaryComposition->Connect(fAuxiliaryFieldIdxs, auxProvenance, updateFields);
 }
 
 ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t
@@ -480,26 +482,26 @@ ROOT::Experimental::RNTupleJoinComposer::AddFieldToEntry(const std::string &fiel
                                                          void *valuePtr,
                                                          const Internal::RNTupleCompositionProvenance &provenance)
 {
-   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
+   auto auxProvenance = provenance.Evolve(fAuxiliaryComposition->GetCompositionName());
    if (auxProvenance.IsPresentInFieldName(fieldName)) {
-      // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because
-      // the primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor),
-      // there will be name conflicts, so error out.
-      if (fPrimaryProcessor->CanReadFieldFromDisk(fieldName)) {
+      // If the primary composition has a field with the name of the auxiliary composition (either as a "proper" field
+      // or because the primary composition  itself is a join where its auxComposition bears the same name as the
+      // current aux. composition), there will be name conflicts, so error out.
+      if (fPrimaryComposition->CanReadFieldFromDisk(fieldName)) {
          throw RException(R__FAIL("ambiguous field name: \"" + fieldName +
                                   "\" is present in the primary RNTupleComposer \"" +
-                                  fPrimaryProcessor->GetProcessorName() +
+                                  fPrimaryComposition->GetCompositionName() +
                                   "\", but may also refer to a field in the auxiliary RNTupleComposer named \"" +
-                                  fAuxiliaryProcessor->GetProcessorName() +
+                                  fAuxiliaryComposition->GetCompositionName() +
                                   "\". To avoid this ambiguity, rename the auxiliary RNTupleComposer."));
       }
 
-      auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, auxProvenance);
+      auto fieldIdx = fAuxiliaryComposition->AddFieldToEntry(fieldName, typeName, valuePtr, auxProvenance);
       if (fieldIdx)
          fAuxiliaryFieldIdxs.insert(fieldIdx);
       return fieldIdx;
    } else {
-      auto fieldIdx = fPrimaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
+      auto fieldIdx = fPrimaryComposition->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
       if (fieldIdx)
          fFieldIdxs.insert(fieldIdx);
       return fieldIdx;
@@ -515,7 +517,7 @@ void ROOT::Experimental::RNTupleJoinComposer::SetAuxiliaryFieldValidity(bool isV
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinComposer::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
-   if (fPrimaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
+   if (fPrimaryComposition->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
       for (auto fieldIdx : fFieldIdxs) {
          fEntry->SetFieldValidity(fieldIdx, false);
       }
@@ -526,13 +528,13 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinComposer::LoadEntry(ROOT::NTup
    fCurrentEntryNumber = entryNumber;
 
    if (!fJoinTable) {
-      // The auxiliary processor's fields are valid if the entry could be loaded.
-      fAuxiliaryProcessor->LoadEntry(entryNumber);
+      // The auxiliary composition's fields are valid if the entry could be loaded.
+      fAuxiliaryComposition->LoadEntry(entryNumber);
       return entryNumber;
    }
 
    if (!fJoinTableIsBuilt) {
-      fAuxiliaryProcessor->AddEntriesToJoinTable(*fJoinTable);
+      fAuxiliaryComposition->AddEntriesToJoinTable(*fJoinTable);
       fJoinTableIsBuilt = true;
    }
 
@@ -544,7 +546,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinComposer::LoadEntry(ROOT::NTup
       values.push_back(val);
    }
 
-   // Find the entry index corresponding to the join field values for each auxiliary processor and load the
+   // Find the entry index corresponding to the join field values for each auxiliary composition and load the
    // corresponding entry.
    const auto entryIdx = fJoinTable->GetEntryIndex(values);
 
@@ -563,25 +565,25 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinComposer::LoadEntry(ROOT::NTup
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinComposer::GetNEntries()
 {
    if (fNEntries == kInvalidNTupleIndex)
-      fNEntries = fPrimaryProcessor->GetNEntries();
+      fNEntries = fPrimaryComposition->GetNEntries();
    return fNEntries;
 }
 
 void ROOT::Experimental::RNTupleJoinComposer::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
                                                                     ROOT::NTupleSize_t entryOffset)
 {
-   fPrimaryProcessor->AddEntriesToJoinTable(joinTable, entryOffset);
+   fPrimaryComposition->AddEntriesToJoinTable(joinTable, entryOffset);
 }
 
 void ROOT::Experimental::RNTupleJoinComposer::PrintStructureImpl(std::ostream &output) const
 {
    std::ostringstream primaryStructureStr;
-   fPrimaryProcessor->PrintStructure(primaryStructureStr);
+   fPrimaryComposition->PrintStructure(primaryStructureStr);
    const auto primaryStructure = ROOT::Split(primaryStructureStr.str(), "\n", /*skipEmpty=*/true);
    const auto primaryStructureWidth = primaryStructure.front().size();
 
    std::ostringstream auxStructureStr;
-   fAuxiliaryProcessor->PrintStructure(auxStructureStr);
+   fAuxiliaryComposition->PrintStructure(auxStructureStr);
    const auto auxStructure = ROOT::Split(auxStructureStr.str(), "\n", /*skipEmpty=*/true);
 
    const auto maxLength = std::max(primaryStructure.size(), auxStructure.size());

@@ -181,7 +181,7 @@ TEST_F(RNTupleComposerTest, Base)
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(),
                   testing::HasSubstr("cannot register field with name \"z\" because it is not present in the on-disk "
-                                     "information of the RNTuple(s) this processor is created from"));
+                                     "information of the RNTuple(s) this composition is created from"));
    }
 
    auto processor = RNTupleProcessor(*composer);
