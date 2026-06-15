@@ -114,14 +114,14 @@ ROOT::Experimental::RNTupleSingleComposer::RNTupleSingleComposer(RNTupleOpenSpec
 }
 
 void ROOT::Experimental::RNTupleSingleComposer::Initialize(
-   std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
+   std::shared_ptr<ROOT::Experimental::Internal::RNTupleComposerEntry> entry)
 {
    // The processor has already been initialized.
    if (IsInitialized())
       return;
 
    if (!entry)
-      fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
+      fEntry = std::make_shared<Internal::RNTupleComposerEntry>();
    else
       fEntry = entry;
 
@@ -184,10 +184,10 @@ ROOT::Experimental::RNTupleSingleComposer::CreateAndConnectField(const std::stri
    return std::move(fieldZero.ReleaseSubfields()[0]);
 }
 
-ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t
 ROOT::Experimental::RNTupleSingleComposer::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                            void *valuePtr,
-                                                           const Internal::RNTupleProcessorProvenance &provenance)
+                                                           const Internal::RNTupleCompositionProvenance &provenance)
 {
    auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName);
    if (!fieldIdx) {
@@ -225,8 +225,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleComposer::LoadEntry(ROOT::NT
 }
 
 void ROOT::Experimental::RNTupleSingleComposer::Connect(
-   const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-   const Internal::RNTupleProcessorProvenance & /* provenance */, bool updateFields)
+   const std::unordered_set<ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+   const Internal::RNTupleCompositionProvenance & /* provenance */, bool updateFields)
 {
    Initialize();
 
@@ -288,13 +288,13 @@ ROOT::Experimental::RNTupleChainComposer::RNTupleChainComposer(std::vector<std::
 }
 
 void ROOT::Experimental::RNTupleChainComposer::Initialize(
-   std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
+   std::shared_ptr<ROOT::Experimental::Internal::RNTupleComposerEntry> entry)
 {
    if (IsInitialized())
       return;
 
    if (!entry)
-      fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
+      fEntry = std::make_shared<Internal::RNTupleComposerEntry>();
    else
       fEntry = entry;
 
@@ -319,8 +319,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainComposer::GetNEntries()
 }
 
 void ROOT::Experimental::RNTupleChainComposer::Connect(
-   const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-   const Internal::RNTupleProcessorProvenance &provenance, bool /* updateFields */)
+   const std::unordered_set<ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+   const Internal::RNTupleCompositionProvenance &provenance, bool /* updateFields */)
 {
    Initialize();
    fFieldIdxs = fieldIdxs;
@@ -335,10 +335,10 @@ void ROOT::Experimental::RNTupleChainComposer::ConnectInnerProcessor(std::size_t
    innerProc->Connect(fFieldIdxs, fProvenance, /*updateFields=*/true);
 }
 
-ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t
 ROOT::Experimental::RNTupleChainComposer::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                           void *valuePtr,
-                                                          const Internal::RNTupleProcessorProvenance &provenance)
+                                                          const Internal::RNTupleCompositionProvenance &provenance)
 {
    return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
 }
@@ -421,13 +421,13 @@ ROOT::Experimental::RNTupleJoinComposer::RNTupleJoinComposer(std::unique_ptr<RNT
 }
 
 void ROOT::Experimental::RNTupleJoinComposer::Initialize(
-   std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
+   std::shared_ptr<ROOT::Experimental::Internal::RNTupleComposerEntry> entry)
 {
    if (IsInitialized())
       return;
 
    if (!entry)
-      fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
+      fEntry = std::make_shared<Internal::RNTupleComposerEntry>();
    else
       fEntry = entry;
 
@@ -448,7 +448,7 @@ void ROOT::Experimental::RNTupleJoinComposer::Initialize(
          // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
          // composed join operations.
          auto fieldIdx = AddFieldToEntry(fProcessorName + "._join." + joinField, "std::uint64_t", nullptr,
-                                         Internal::RNTupleProcessorProvenance(fProcessorName));
+                                         Internal::RNTupleCompositionProvenance(fProcessorName));
          fJoinFieldIdxs.insert(fieldIdx);
       }
 
@@ -457,14 +457,14 @@ void ROOT::Experimental::RNTupleJoinComposer::Initialize(
 }
 
 void ROOT::Experimental::RNTupleJoinComposer::Connect(
-   const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-   const Internal::RNTupleProcessorProvenance &provenance, bool updateFields)
+   const std::unordered_set<ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+   const Internal::RNTupleCompositionProvenance &provenance, bool updateFields)
 {
    Initialize();
 
    auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
    for (const auto &fieldIdx : fieldIdxs) {
-      const auto &fieldProvenance = fEntry->GetFieldProvenance(fieldIdx);
+      const auto &fieldProvenance = fEntry->GetCompositionProvenance(fieldIdx);
       if (fieldProvenance.Contains(auxProvenance))
          fAuxiliaryFieldIdxs.insert(fieldIdx);
       else
@@ -475,10 +475,10 @@ void ROOT::Experimental::RNTupleJoinComposer::Connect(
    fAuxiliaryProcessor->Connect(fAuxiliaryFieldIdxs, auxProvenance, updateFields);
 }
 
-ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Experimental::Internal::RNTupleComposerEntry::FieldIndex_t
 ROOT::Experimental::RNTupleJoinComposer::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                          void *valuePtr,
-                                                         const Internal::RNTupleProcessorProvenance &provenance)
+                                                         const Internal::RNTupleCompositionProvenance &provenance)
 {
    auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
    if (auxProvenance.IsPresentInFieldName(fieldName)) {

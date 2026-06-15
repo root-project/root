@@ -63,7 +63,7 @@ public:
          // This constructor is called with kInvalidNTupleIndex for RNTupleComposer::end(). In that case, we already
          // know there is nothing to load.
          if (fCurrentEntryNumber != ROOT::kInvalidNTupleIndex) {
-            fComposer.Connect(fComposer.fEntry->GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
+            fComposer.Connect(fComposer.fEntry->GetFieldIndices(), Internal::RNTupleCompositionProvenance(),
                               /*updateFields=*/false);
             fCurrentEntryNumber = fComposer.LoadEntry(fCurrentEntryNumber);
             if (fCurrentEntryNumber != ROOT::kInvalidNTupleIndex)

@@ -178,7 +178,7 @@ namespace ROOT::Experimental::Internal {
 struct RNTupleComposerEntryLoader {
    static ROOT::NTupleSize_t LoadEntry(RNTupleComposer &composer, ROOT::NTupleSize_t entryNumber)
    {
-      composer.Connect(composer.fEntry->GetFieldIndices(), RNTupleProcessorProvenance(), /*updateFields=*/false);
+      composer.Connect(composer.fEntry->GetFieldIndices(), RNTupleCompositionProvenance(), /*updateFields=*/false);
       return composer.LoadEntry(entryNumber);
    }
 

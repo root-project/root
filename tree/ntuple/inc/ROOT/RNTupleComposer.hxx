@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleJoinTable.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleTypes.hxx>
-#include <ROOT/RNTupleProcessorEntry.hxx>
+#include <ROOT/RNTupleComposerEntry.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <memory>
@@ -77,11 +77,11 @@ class RNTupleProcessorOptionalPtr {
    friend class RNTupleComposer;
 
 private:
-   Internal::RNTupleProcessorEntry *fProcessorEntry;
-   Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
+   Internal::RNTupleComposerEntry *fProcessorEntry;
+   Internal::RNTupleComposerEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(Internal::RNTupleProcessorEntry *processorEntry,
-                               Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorOptionalPtr(Internal::RNTupleComposerEntry *processorEntry,
+                               Internal::RNTupleComposerEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -162,11 +162,11 @@ class RNTupleProcessorOptionalPtr<void> {
    friend class RNTupleComposer;
 
 private:
-   Internal::RNTupleProcessorEntry *fProcessorEntry;
-   Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
+   Internal::RNTupleComposerEntry *fProcessorEntry;
+   Internal::RNTupleComposerEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(Internal::RNTupleProcessorEntry *processorEntry,
-                               Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorOptionalPtr(Internal::RNTupleComposerEntry *processorEntry,
+                               Internal::RNTupleComposerEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -254,8 +254,8 @@ class RNTupleComposer {
 
 protected:
    std::string fProcessorName;
-   std::shared_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
-   std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
+   std::shared_ptr<Internal::RNTupleComposerEntry> fEntry = nullptr;
+   std::unordered_set<Internal::RNTupleComposerEntry::FieldIndex_t> fFieldIdxs;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
    /// interface.
@@ -266,7 +266,7 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
-   virtual void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry) = 0;
+   virtual void Initialize(std::shared_ptr<Internal::RNTupleComposerEntry> entry) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the processor already has been initialized.
@@ -279,8 +279,8 @@ protected:
    /// \param[in] provenance Provenance of the processor.
    /// \param[in] updateFields Whether the fields in the entry need to be updated, because the current underlying
    /// RNTuple source changed.
-   virtual void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                        const Internal::RNTupleProcessorProvenance &provenance, bool updateFields) = 0;
+   virtual void Connect(const std::unordered_set<Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+                        const Internal::RNTupleCompositionProvenance &provenance, bool updateFields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
@@ -313,9 +313,9 @@ protected:
    /// \return The index of the newly added field in the entry.
    ///
    /// In case the field was already present in the entry, the index of the existing field is returned.
-   virtual Internal::RNTupleProcessorEntry::FieldIndex_t
+   virtual Internal::RNTupleComposerEntry::FieldIndex_t
    AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) = 0;
+                   const Internal::RNTupleCompositionProvenance &provenance) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -388,7 +388,7 @@ public:
       if constexpr (!std::is_void_v<T>) {
          typeName = ROOT::Internal::GetRenormalizedTypeName(typeid(T));
       }
-      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleCompositionProvenance());
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
    }
 
@@ -411,7 +411,7 @@ public:
    RequestField(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
-      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleCompositionProvenance());
       return RNTupleProcessorOptionalPtr<void>(fEntry.get(), fieldIdx);
    }
 
@@ -529,12 +529,12 @@ private:
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
    ///
    /// At this point, the page source for the underlying RNTuple of the processor will be created and opened.
-   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
+   void Initialize(std::shared_ptr<Internal::RNTupleComposerEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the provided fields indices in the entry to their on-disk fields.
-   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
+   void Connect(const std::unordered_set<Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+                const Internal::RNTupleCompositionProvenance &provenance = Internal::RNTupleCompositionProvenance(),
                 bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -564,9 +564,9 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleComposer::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
+   Internal::RNTupleComposerEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+      const Internal::RNTupleCompositionProvenance &provenance = Internal::RNTupleCompositionProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -615,18 +615,18 @@ private:
    std::vector<std::unique_ptr<RNTupleComposer>> fInnerProcessors;
    std::vector<ROOT::NTupleSize_t> fInnerNEntries;
 
-   Internal::RNTupleProcessorProvenance fProvenance;
+   Internal::RNTupleCompositionProvenance fProvenance;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
-   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
+   void Initialize(std::shared_ptr<Internal::RNTupleComposerEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the provided fields indices in the entry to their on-disk fields.
    ///
    /// \sa RNTupleComposer::Connect()
-   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
+   void Connect(const std::unordered_set<Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+                const Internal::RNTupleCompositionProvenance &provenance = Internal::RNTupleCompositionProvenance(),
                 bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -659,9 +659,9 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleComposer::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
+   Internal::RNTupleComposerEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+      const Internal::RNTupleCompositionProvenance &provenance = Internal::RNTupleCompositionProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -708,22 +708,22 @@ private:
    std::unique_ptr<RNTupleComposer> fAuxiliaryProcessor;
 
    std::vector<std::string> fJoinFieldNames;
-   std::set<Internal::RNTupleProcessorEntry::FieldIndex_t> fJoinFieldIdxs;
+   std::set<Internal::RNTupleComposerEntry::FieldIndex_t> fJoinFieldIdxs;
 
    std::unique_ptr<Internal::RNTupleJoinTable> fJoinTable;
    bool fJoinTableIsBuilt = false;
 
-   std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fAuxiliaryFieldIdxs;
+   std::unordered_set<Internal::RNTupleComposerEntry::FieldIndex_t> fAuxiliaryFieldIdxs;
 
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
-   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
+   void Initialize(std::shared_ptr<Internal::RNTupleComposerEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the provided fields indices in the entry to their on-disk fields.
    ///
    /// \sa RNTupleComposer::Connect()
-   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
+   void Connect(const std::unordered_set<Internal::RNTupleComposerEntry::FieldIndex_t> &fieldIdxs,
+                const Internal::RNTupleCompositionProvenance &provenance = Internal::RNTupleCompositionProvenance(),
                 bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -759,9 +759,9 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleComposer::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
+   Internal::RNTupleComposerEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+      const Internal::RNTupleCompositionProvenance &provenance = Internal::RNTupleCompositionProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
