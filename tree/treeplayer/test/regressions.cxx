@@ -735,12 +735,16 @@ TEST(TTreeScan, ULong64Precision)
 ************************************************************************************
 )Scan"};
 
-   // The "long long" column format must print the exact 64-bit value, as well as
-   // the exact result of integer arithmetic with large constants. The column size
-   // can either be given separately via "colsize=" (so the format passed to
-   // TTreeFormula::PrintValue is just "lld") or be embedded in the format token
-   // itself ("21lld"). Only the former triggered the off-by-one in the
-   // length-modifier detection, but both must yield the exact output.
+   // Each format is checked both with the column size given separately via
+   // "colsize=" (so the format reaching TTreeFormula::PrintValue is just "lld") and
+   // embedded in the token itself ("21lld"). Only the former triggered the
+   // off-by-one in the length-modifier detection, but both must behave identically.
+   // The "ld" ("long") and "lld" ("long long") formats must behave identically too,
+   // as both evaluate through `long double`.
+   // long double holds the 61-bit value exactly: every spelling must print the
+   // exact 64-bit value and the exact result of arithmetic with large constants.
    EXPECT_EQ(scanToString("colsize=21 col=lld:lld:lld"), expectedScanOut);
    EXPECT_EQ(scanToString("col=21lld:21lld:21lld"), expectedScanOut);
+   EXPECT_EQ(scanToString("colsize=21 col=ld:ld:ld"), expectedScanOut);
+   EXPECT_EQ(scanToString("col=21ld:21ld:21ld"), expectedScanOut);
 }
