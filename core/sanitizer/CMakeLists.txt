@@ -20,6 +20,8 @@ set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
 add_library(ROOT::${library} ALIAS ${library})
 
 # Now sanitize executables that are not created with ROOT_EXECUTABLE():
-foreach(target llvm-min-tblgen llvm-tblgen clang-tblgen)
-  target_link_libraries(${target} PRIVATE ${library})
+foreach(target llvm-min-tblgen llvm-tblgen clang-tblgen cppinterop-tblgen)
+  if(TARGET ${target})
+    target_link_libraries(${target} PRIVATE ${library})
+  endif()
 endforeach()
