@@ -3,6 +3,8 @@
 * This file contains the zebra's package subset needed to build h2root.
 * It cannot be used by any zebra application because many zebra functionalities
 * are missing.
+* See https://cds.cern.ch/record/2296399/files/zebra.pdf for explanation of the
+* variables.
 *
 *-------------------------------------------------------------------------------
 
