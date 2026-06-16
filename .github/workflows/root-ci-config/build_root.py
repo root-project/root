@@ -92,9 +92,10 @@ def main():
         build_utils.print_options_diff(options_dict, last_options)
 
     if args.overrides is not None:
+        overrides = ' '.join(args.overrides).split('@')
         print("Build option overrides from command line:")
         last_options = dict(options_dict)
-        options_dict.update((arg.split("=", maxsplit=1) for arg in args.overrides))
+        options_dict.update((arg.split("=", maxsplit=1) for arg in overrides))
         build_utils.print_options_diff(options_dict, last_options)
 
     ctest_custom_flags = ""
