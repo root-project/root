@@ -12,9 +12,11 @@ ROOT_LINKER_LIBRARY(minicern *.c *.f TYPE STATIC)
 set_property(TARGET minicern PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
 
-# Disable optimization since it some cases was causing crashes.
 # Disable warnings, since what has worked for 40 years...
 # (see https://sft.its.cern.ch/jira/browse/ROOT-9179 for the warnings)
-set_target_properties(minicern PROPERTIES COMPILE_FLAGS "-O0 -w")
-# set_target_properties(minicern PROPERTIES COMPILE_FLAGS "-fsanitize=undefined -fsanitize=address")
-# target_link_options(minicern BEFORE PUBLIC -fsanitize=undefined PUBLIC -fsanitize=address)
+target_compile_options(minicern PRIVATE "$<$<COMPILE_LANGUAGE:Fortran>:-w>")
+
+# The offset computations between common blocks go wrong an arm64 with -O2.
+# This is not a proper fix, but getting it right would require rewriting zebra's
+# distance between common blocks logic ...
+target_compile_options(minicern PUBLIC "$<$<COMPILE_LANGUAGE:Fortran>:-O0>")
