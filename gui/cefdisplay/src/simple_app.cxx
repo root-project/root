@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <memory>
 
+#include "include/base/cef_build.h"
 #include "include/cef_browser.h"
 #include "include/cef_version.h"
 #include "include/views/cef_browser_view.h"
@@ -155,6 +156,19 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
       command_line->AppendSwitch("disable-logging");
       command_line->AppendSwitchWithValue("enable-logging", "none");
    }
+
+#ifdef OS_MACOSX
+
+   if (fNextHeadless) {
+      command_line->AppendSwitchWithValue("use-angle", "swiftshader");
+      command_line->AppendSwitch("enable-unsafe-swiftshader");
+      command_line->AppendSwitch("disable-gpu");
+   } else {
+      command_line->AppendSwitchWithValue("use-angle", "metal");
+      command_line->AppendSwitch("ignore-gpu-blocklist");
+      command_line->AppendSwitch("enable-webgl");
+   }
+#endif
 }
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)

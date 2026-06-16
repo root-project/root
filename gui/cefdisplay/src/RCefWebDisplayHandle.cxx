@@ -25,6 +25,8 @@
 #include "TEnv.h"
 #include "TApplication.h"
 
+#include "include/base/cef_build.h"
+
 #include <ROOT/RLogger.hxx>
 
 #include <memory>
@@ -148,15 +150,28 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
       cef_argv.emplace_back("--user-data-dir=.");
       cef_argv.emplace_back("--allow-file-access-from-files");
       cef_argv.emplace_back("--disable-web-security");
+#ifdef OS_LINUX
       cef_argv.emplace_back("--disable-gpu");
       cef_argv.emplace_back("--ignore-gpu-blocklist");
-#ifdef OS_LINUX
       cef_argv.emplace_back("--use-gl=swiftshader");
       cef_argv.emplace_back("--enable-unsafe-swiftshader");
+#endif
+#ifdef OS_MACOSX
+      cef_argv.emplace_back("--use-angle=metal");
+      cef_argv.emplace_back("--ignore-gpu-blocklist");
+      cef_argv.emplace_back("--enable-webgl");
+      cef_argv.emplace_back("--enable-gpu");
+      cef_argv.emplace_back("--enable-gpu-rasterization");
 #endif
       cef_argv.emplace_back("--off-screen-rendering-enabled");
       if (use_views)
          cef_argv.emplace_back("--ozone-platform=headless");
+   } else {
+#ifdef OS_MACOSX
+      cef_argv.emplace_back("--use-angle=metal");
+      cef_argv.emplace_back("--ignore-gpu-blocklist");
+      cef_argv.emplace_back("--enable-webgl");
+#endif
    }
 
    if (supress_log) {
@@ -211,6 +226,13 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    // on mac there is framework directory, where resources and libs are combined together
    TString path = TROOT::GetDataDir() + "/Frameworks/Chromium Embedded Framework.framework";
    cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.framework_dir_path);
+
+
+   TString dypath = gSystem->Getenv("DYLD_LIBRARY_PATH");
+   if (dypath.Length() > 0)
+      dypath.Append(":");
+   dypath.Append(path + "/Libraries/");
+   gSystem->Setenv("DYLD_LIBRARY_PATH", dypath);
 #endif
 
    settings.no_sandbox = true;

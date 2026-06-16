@@ -61,4 +61,9 @@ target_compile_definitions(${libname} PRIVATE NDEBUG)
 
 ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} CMAKENOEXPORT)
 
+if(ROOT_ARCHITECTURE MATCHES macosx)
+  set_property(TARGET ${libname} APPEND PROPERTY BUILD_RPATH "@loader_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Libraries")
+  set_property(TARGET cef_main APPEND PROPERTY BUILD_RPATH "@executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Libraries")
+endif()
+
 endif()
