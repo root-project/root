@@ -1297,9 +1297,9 @@ if (testing OR testsupport)
   # Verify that all GTest subcomponents are installed
   foreach(LIBNAME gtest_main gmock_main gtest gmock)
     if(NOT TARGET GTest::${LIBNAME} AND NOT TARGET ${LIBNAME})
-      message(SEND_ERROR "Missing GTest subcomponent ${LIBNAME}")
+      message(SEND_ERROR "Missing installation of GTest subcomponent ${LIBNAME}")
     endif()
-  endif()
+  endforeach()
   # Starting from cmake 3.23, the GTest targets will have stable names.
   # ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
   foreach(LIBNAME gtest_main gmock_main gtest gmock)
