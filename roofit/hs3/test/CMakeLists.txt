@@ -1,7 +1,7 @@
 ROOT_ADD_GTEST(testRooFitHS3 testRooFitHS3.cxx LIBRARIES RooFitCore RooFit RooFitHS3)
 ROOT_ADD_GTEST(testHS3SimultaneousFit testHS3SimultaneousFit.cxx LIBRARIES RooFitCore RooFit RooFitHS3 RooStats)
 
-if(pyroot AND hs3testsuite)
+if(test_roofit_hs3testsuite)
     set(hs3testsuite_dir ${CMAKE_CURRENT_SOURCE_DIR}/HS3TestSuite)
     if(NOT EXISTS ${hs3testsuite_dir})
         find_package(Git QUIET REQUIRED)
