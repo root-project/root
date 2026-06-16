@@ -60,6 +60,14 @@
  *  The choice of basis returned by basisCode() is guaranteed not to change
  *  during the lifetime of a RooResolutionModel object.
  *
+ *  When a resolution model is passed to a RooAbsAnaConvPdf (e.g. RooDecay), it
+ *  acts as a *configuration* object rather than as a node of that pdf's
+ *  computation graph: the RooAbsAnaConvPdf builds its own internal
+ *  basis-function convolutions from it and does not keep it as a server. As of
+ *  ROOT 6.42, such a "config-only" resolution model is therefore not imported
+ *  into a RooWorkspace together with the RooAbsAnaConvPdf that consumes it. See
+ *  RooAbsAnaConvPdf for details.
+ *
  */
 
 #include "TClass.h"
