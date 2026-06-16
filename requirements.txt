@@ -47,3 +47,4 @@ mplhep
 nbconvert>=7.4.0
 pytest
 setuptools
+jsonschema # for RooFit HS3 validation (using HS3TestSuite)
