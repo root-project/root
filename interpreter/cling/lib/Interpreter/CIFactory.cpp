@@ -434,7 +434,9 @@ namespace {
     }
 
     //Opts.Modules = 1;
+#ifndef __APPLE__
     Opts.BuiltinHeadersInSystemModules = 1;
+#endif
 
     // See test/CodeUnloading/PCH/VTables.cpp which implicitly compares clang
     // to cling lang options. They should be the same, we should not have to
