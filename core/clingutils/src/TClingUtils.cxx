@@ -152,29 +152,6 @@ static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXReco
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if 'scope' or any of its template parameter was substituted when
-/// instantiating the class template instance and replace it with the
-/// partially sugared types we have from 'instance'.
-
-static clang::NestedNameSpecifier ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
-                                                         clang::NestedNameSpecifier scope,
-                                                         const clang::Type *instance)
-{
-   if (scope.getKind() == clang::NestedNameSpecifier::Kind::Type) {
-      const clang::Type* scope_type = scope.getAsType();
-      clang::NestedNameSpecifier outer_scope = scope.getAsNamespaceAndPrefix().Prefix;
-      if (outer_scope) {
-         outer_scope = ReSubstTemplateArgNNS(Ctxt, outer_scope, instance);
-      }
-      clang::QualType substScope =
-         ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType(scope_type,0), instance);
-      // NOTE: Should check whether the type has changed or not.
-      scope = clang::NestedNameSpecifier(substScope.getTypePtr());
-   }
-   return scope;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 static bool IsTypeInt(const clang::Type *type)
 {
@@ -4769,21 +4746,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    using namespace clang;
    const clang::ASTContext &Ctxt = instance->getAsCXXRecordDecl()->getASTContext();
 
-   // Treat scope if type carries a prefix (was elaborated).
-   NestedNameSpecifier desugaredPrefix = input->getPrefix();
-   if (desugaredPrefix) {
-      // We have to also handle the prefix.
-
-      clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
-      assert(instance->getAsCXXRecordDecl() != nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
-
-      clang::QualType subTy = input;
-      if (desugaredPrefix.getKind() == NestedNameSpecifier::Kind::Type)
-         subTy = ReSubstTemplateArg(clang::QualType(desugaredPrefix.getAsType(),0),instance);
-
-      subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
-      return subTy;
-   }
+   // LLVM22: No elaborated type anymore
 
    QualType QT = input;
 
