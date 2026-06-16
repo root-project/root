@@ -86,7 +86,8 @@ ROOT_ADD_GTEST(testRooMinimizer testRooMinimizer.cxx LIBRARIES RooFitCore RooFit
 ROOT_ADD_GTEST(testRooMulti testRooMulti.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooRombergIntegrator testRooRombergIntegrator.cxx LIBRARIES MathCore RooFitCore)
 ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore RooFit)
-ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooFit
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/rooAbsAnaConvPdf_classV3.root)
 
 if (roofit_multiprocess)
   ROOT_ADD_GTEST(testTestStatisticsPlot TestStatistics/testPlot.cxx LIBRARIES RooFitMultiProcess RooFitCore RooFit
