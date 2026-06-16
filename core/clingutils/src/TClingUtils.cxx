@@ -4764,21 +4764,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    using namespace clang;
    const clang::ASTContext &Ctxt = instance->getAsCXXRecordDecl()->getASTContext();
 
-   // Treat scope if type carries a prefix (was elaborated).
-   NestedNameSpecifier desugaredPrefix = input->getPrefix();
-   if (desugaredPrefix) {
-      // We have to also handle the prefix.
-
-      clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
-      assert(instance->getAsCXXRecordDecl() != nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
-
-      clang::QualType subTy = input;
-      if (desugaredPrefix.getKind() == NestedNameSpecifier::Kind::Type)
-         subTy = ReSubstTemplateArg(clang::QualType(desugaredPrefix.getAsType(),0),instance);
-
-      subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
-      return subTy;
-   }
+   // LLVM22: No elaborated type anymore
 
    QualType QT = input;
 

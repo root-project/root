@@ -971,22 +971,7 @@ namespace utils {
 
       NestedNameSpecifier outer_scope = getNNSPrefix(scope);
       // LLVM22: ElaboratedType no longer exists.
-      // Check whether the desugared type carries a prefix (was elaborated).
-      NestedNameSpecifier desugaredPrefix = desugared->getPrefix();
-      if (desugaredPrefix) {
-        // Desugaring returned a type with a prefix, even-though we
-        // did not request it (/*fullyQualify=*/false), so we must have been
-        // looking a typedef pointing at a (or another) scope.
-
-        if (outer_scope) {
-          outer_scope = SelectPrefix(Ctx,desugaredPrefix,outer_scope,TypeConfig);
-        } else {
-          outer_scope = GetPartiallyDesugaredNNS(Ctx, desugaredPrefix,
-                                                 TypeConfig);
-        }
-        // LLVM22: In the old API we had:
-        // desugared = etype->getNamedType();
-      } else {
+      {
         Decl* decl = nullptr;
         if (!desugared.isNull()) {
           const Type* desugaredTy = desugared.getTypePtr();
@@ -1622,16 +1607,8 @@ namespace utils {
     }
 
     NestedNameSpecifier prefix = std::nullopt;
-    NestedNameSpecifier desugaredPrefix = QT->getPrefix();
-    if (desugaredPrefix) {
-
-      prefix = SelectPrefix(Ctx,desugaredPrefix,original_prefix,TypeConfig);
-
-      prefix_qualifiers.addQualifiers(QT.getLocalQualifiers());
-      // TODO: LLVM22: In the old API this was:
-      // QT = QualType(etype->getNamedType().getTypePtr(),0);
-
-    } else if (fullyQualifyType) {
+    // LLVM22: ElaboratedType no longer exists.
+    if (fullyQualifyType) {
       // Let's check whether this type should have been an elaborated type.
       // in which case we want to add it ... but we can't really preserve
       // the typedef in this case ...
