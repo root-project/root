@@ -23,7 +23,6 @@ builtin_xxhash=ON
 builtin_zstd=ON
 cocoa=ON
 davix=OFF
-fortran=OFF
 minuit2_omp=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
