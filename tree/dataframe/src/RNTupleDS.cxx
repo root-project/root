@@ -35,6 +35,11 @@
 #include <typeinfo>
 #include <type_traits>
 #include <utility>
+#ifdef R__USE_IMT
+#include <ROOT/RSlotStack.hxx>
+#include <ROOT/TThreadExecutor.hxx>
+#include <ROOT/InternalIMTUtils.hxx>
+#endif
 
 // clang-format off
 /**
@@ -678,69 +683,11 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       }
       return;
    }
-
-   // Work scheduling of the tail: multiple slots work on the same file.
-   // Every slot still has its own page source but these page sources may open the same file.
-   // Again, we need to skip empty files.
-   unsigned int nSlotsPerFile = fNSlots / nRemainingFiles;
-   for (std::size_t i = 0; (fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles); ++i) {
-      std::unique_ptr<ROOT::Internal::RPageSource> source;
-      // Need to look for the file name to populate the sample info later
-      const auto &sourceFileName = fFileNames[fNextFileIndex];
-      std::swap(fStagingArea[fNextFileIndex], source);
-      if (!source) {
-         // Empty files trigger this condition
-         source = CreatePageSource(fNTupleName, fFileNames[fNextFileIndex]);
-      }
-      source->Attach();
-      fNextFileIndex++;
-
-      auto nEntries = source->GetNEntries();
-      if (nEntries == 0)
-         continue;
-
-      // If last file: use all remaining slots
-      if (i == (nRemainingFiles - 1))
-         nSlotsPerFile = fNSlots - fNextRanges.size();
-
-      const auto rangesByCluster = [&source]() {
-         // Take the shared lock of the descriptor just for the time necessary
-         const auto descGuard = source->GetSharedDescriptorGuard();
-         return ROOT::Internal::GetClusterBoundaries(descGuard.GetRef());
-      }();
-
-      const unsigned int nRangesByCluster = rangesByCluster.size();
-
-      // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
-      const auto nClustersPerSlot = nRangesByCluster / nSlotsPerFile;
-      const auto remainder = nRangesByCluster % nSlotsPerFile;
-      std::size_t iRange = 0;
-      unsigned int iSlot = 0;
-      const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
-      for (; iSlot < N; ++iSlot) {
-         auto start = rangesByCluster[iRange].fFirstEntry;
-         iRange += nClustersPerSlot + static_cast<int>(iSlot < remainder);
-         assert(iRange > 0);
-         auto end = rangesByCluster[iRange - 1].fLastEntryPlusOne;
-
-         REntryRangeDS range;
-         range.fFileName = sourceFileName;
-         // The last range for this file just takes the already opened page source. All previous ranges clone.
-         if (iSlot == N - 1) {
-            range.fSource = std::move(source);
-         } else {
-            range.fSource = source->Clone();
-         }
-         range.fSource->SetEntryRange({start, end - start});
-         range.fFirstEntry = start;
-         range.fLastEntry = end;
-         fNextRanges.emplace_back(std::move(range));
-      }
-   } // loop over tail of remaining files
 }
 
 std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRanges()
 {
+   assert(fNSlots == 1); // MT scheduling doesn't use this function
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
 
    // We need to distinguish between single threaded and multi-threaded runs.
@@ -748,11 +695,8 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    // to new page sources of the chain in GetEntryRanges. In multi-threaded mode, on the other hand,
    // InitSlot is called for every returned range, thus rewiring the column readers takes place in
    // InitSlot and FinalizeSlot.
-
-   if (fNSlots == 1) {
-      for (auto r : fActiveColumnReaders[0]) {
-         r->Disconnect(true /* keepValue */);
-      }
+   for (auto r : fActiveColumnReaders[0]) {
+      r->Disconnect(true /* keepValue */);
    }
 
    // If we have fewer files than slots and we run multiple event loops, we can reuse fCurrentRanges and don't need
@@ -873,26 +817,17 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    return ranges;
 }
 
-void ROOT::RDF::RNTupleDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
+void ROOT::RDF::RNTupleDS::InitSlot(unsigned int slot, ULong64_t columnReaderOffset)
 {
    if (fNSlots == 1) {
-      // Ensure the connection between slot and range is valid also in single-thread mode
-      fSlotsToRangeIdxs[0] = 0;
       return;
    }
 
-   // The same slot ID could be picked multiple times in the same execution, thus
-   // ending up processing different page sources. Here we re-establish the
-   // connection between the slot and the correct page source by finding which
-   // range index corresponds to the first entry passed.
-   auto idxRange = fFirstEntry2RangeIdx.at(firstEntry);
-
-   // We also remember this connection so it can later be retrieved in CreateSampleInfo
-   fSlotsToRangeIdxs[slot * ROOT::Internal::RDF::CacheLineStep<std::size_t>()] = idxRange;
+   const auto &entryRangeDS = fActiveRangesPerSlot.at(slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>());
+   assert(entryRangeDS.fSource != nullptr);
 
    for (auto r : fActiveColumnReaders[slot]) {
-      r->Connect(*fCurrentRanges[idxRange].fSource,
-                 fOriginalRanges[idxRange].first - fCurrentRanges[idxRange].fFirstEntry);
+      r->Connect(*entryRangeDS.fSource, columnReaderOffset);
    }
 }
 
@@ -975,7 +910,7 @@ void ROOT::RDF::RNTupleDS::SetNSlots(unsigned int nSlots)
    assert(nSlots > 0);
    fNSlots = nSlots;
    fActiveColumnReaders.resize(fNSlots);
-   fSlotsToRangeIdxs.resize(fNSlots * ROOT::Internal::RDF::CacheLineStep<std::size_t>());
+   fActiveRangesPerSlot.resize(fNSlots * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>());
 }
 
 ROOT::RDataFrame ROOT::RDF::FromRNTuple(std::string_view ntupleName, std::string_view fileName)
@@ -996,27 +931,31 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
    // connection between the slot and the correct page source by retrieving
    // which range is connected currently to the slot
 
-   const auto &rangeIdx = fSlotsToRangeIdxs.at(slot * ROOT::Internal::RDF::CacheLineStep<std::size_t>());
+   const auto &entryRangeDS = fNSlots == 1
+                                 ? fCurrentRanges[0]
+                                 : fActiveRangesPerSlot.at(slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>());
 
    // Missing source if a file does not exist
-   if (!fCurrentRanges[rangeIdx].fSource)
+   if (!entryRangeDS.fSource)
       return ROOT::RDF::RSampleInfo{};
 
-   const auto &ntupleName = fCurrentRanges[rangeIdx].fSource->GetNTupleName();
-   const auto &ntuplePath = fCurrentRanges[rangeIdx].fFileName;
+   const auto &ntupleName = entryRangeDS.fSource->GetNTupleName();
+   const auto &ntuplePath = entryRangeDS.fFileName;
    const auto ntupleID = std::string(ntuplePath) + '/' + ntupleName;
 
    if (sampleMap.empty())
-      return ROOT::RDF::RSampleInfo(
-         ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry), nullptr,
-         fPrincipalDescriptor.GetNEntries());
+      return ROOT::RDF::RSampleInfo(ntupleID,
+                                    std::make_pair(entryRangeDS.fFirstEntry - entryRangeDS.fEntryOffset,
+                                                   entryRangeDS.fLastEntry - entryRangeDS.fEntryOffset),
+                                    nullptr, fPrincipalDescriptor.GetNEntries());
 
    if (sampleMap.find(ntupleID) == sampleMap.end())
       throw std::runtime_error("Full sample identifier '" + ntupleID + "' cannot be found in the available samples.");
 
-   return ROOT::RDF::RSampleInfo(
-      ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry),
-      sampleMap.at(ntupleID), fPrincipalDescriptor.GetNEntries());
+   return ROOT::RDF::RSampleInfo(ntupleID,
+                                 std::make_pair(entryRangeDS.fFirstEntry - entryRangeDS.fEntryOffset,
+                                                entryRangeDS.fLastEntry - entryRangeDS.fEntryOffset),
+                                 sampleMap.at(ntupleID), fPrincipalDescriptor.GetNEntries());
 }
 
 ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
@@ -1035,3 +974,244 @@ ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::str
    const auto descGuard = source->GetSharedDescriptorGuard();
    return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetRef()), descGuard->GetNEntries());
 }
+
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+ROOT::Internal::RDF::GetClustersAndEntries(const ROOT::Internal::RPageSource &source)
+{
+   // We assume the source to be already attached
+   const auto descGuard = source.GetSharedDescriptorGuard();
+   return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetRef()), descGuard->GetNEntries());
+}
+
+#ifdef R__USE_IMT
+
+namespace {
+
+class RNTupleSplitFileProcessor final : public ROOT::Internal::IMTUtils::RParallelSplitFileProcessor {
+   std::shared_ptr<ROOT::Internal::RPageSource> fPageSource;
+   const std::string &fFileName;
+   const std::vector<ROOT::Internal::RNTupleClusterBoundaries> &fClusters;
+   std::size_t fClusterIdxBegin; // inclusive
+   std::size_t fClusterIdxEnd;   // exclusive
+
+public:
+   RNTupleSplitFileProcessor(std::shared_ptr<ROOT::Internal::RPageSource> pageSource, const std::string &fileName,
+                             const std::vector<ROOT::Internal::RNTupleClusterBoundaries> &clusters,
+                             std::size_t clusterIdxBegin, std::size_t clusterIdxEnd)
+      : fPageSource(pageSource),
+        fFileName(fileName),
+        fClusters(clusters),
+        fClusterIdxBegin(clusterIdxBegin),
+        fClusterIdxEnd(clusterIdxEnd)
+   {
+      fPageSource->SetEntryRange(
+         {fClusters[fClusterIdxBegin].fFirstEntry,
+          fClusters[fClusterIdxEnd - 1].fLastEntryPlusOne - fClusters[fClusterIdxBegin].fFirstEntry});
+   }
+
+   ~RNTupleSplitFileProcessor() final = default;
+   RNTupleSplitFileProcessor(const RNTupleSplitFileProcessor &) = delete;
+   RNTupleSplitFileProcessor &operator=(const RNTupleSplitFileProcessor &) = delete;
+   RNTupleSplitFileProcessor(RNTupleSplitFileProcessor &&) = delete;
+   RNTupleSplitFileProcessor &operator=(RNTupleSplitFileProcessor &&) = delete;
+
+   std::unique_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> SplitWork() final
+   {
+      // Split the cluster range in half and (re)assign as needed
+      auto clusterIdxMid = fClusterIdxBegin + (fClusterIdxEnd - fClusterIdxBegin) / 2;
+
+      auto newClusterIdxBegin = clusterIdxMid;
+      auto newClusterIdxEnd = fClusterIdxEnd;
+      auto newPageSource = fPageSource->Clone();
+      newPageSource->Attach();
+      newPageSource->SetEntryRange(
+         {fClusters[newClusterIdxBegin].fFirstEntry,
+          fClusters[newClusterIdxEnd - 1].fLastEntryPlusOne - fClusters[newClusterIdxBegin].fFirstEntry});
+
+      fClusterIdxEnd = clusterIdxMid;
+      fPageSource->SetEntryRange(
+         {fClusters[fClusterIdxBegin].fFirstEntry,
+          fClusters[fClusterIdxEnd - 1].fLastEntryPlusOne - fClusters[fClusterIdxBegin].fFirstEntry});
+
+      return std::make_unique<RNTupleSplitFileProcessor>(std::move(newPageSource), fFileName, fClusters,
+                                                         newClusterIdxBegin, newClusterIdxEnd);
+   }
+
+   bool IsDivisible() const final
+   {
+      return fClusterIdxEnd - fClusterIdxBegin > 2; // The page source prefetches one cluster
+   }
+
+   bool Empty() const final
+   {
+      // empty is called once at the beginning of the parallel_for by TBB, to guard against empty tasks
+      // We only pass tasks with actual work by construction
+      return false;
+   }
+
+   std::shared_ptr<ROOT::Internal::RPageSource> GetPageSource() const { return fPageSource; }
+
+   std::uint64_t GetCurrentBeginEntry() const { return fClusters[fClusterIdxBegin].fFirstEntry; }
+
+   std::uint64_t GetCurrentEndEntry() const { return fClusters[fClusterIdxEnd - 1].fLastEntryPlusOne; }
+};
+} // namespace
+
+void ROOT::RDF::RNTupleDS::InsertActiveEntryRange(unsigned int slot, const std::string &fileName,
+                                                  std::shared_ptr<ROOT::Internal::RPageSource> pageSource,
+                                                  std::uint64_t beginEntry, std::uint64_t endEntry,
+                                                  std::uint64_t offset)
+{
+   REntryRangeDS entryRangeDS;
+   entryRangeDS.fFileName = fileName;
+   entryRangeDS.fSource = pageSource;
+   entryRangeDS.fFirstEntry = beginEntry + offset;
+   entryRangeDS.fLastEntry = endEntry + offset;
+   entryRangeDS.fEntryOffset = offset;
+   fActiveRangesPerSlot[slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>()] = std::move(entryRangeDS);
+}
+
+void ROOT::RDF::RNTupleDS::ProcessMTRange(
+   ROOT::TThreadExecutor &pool, std::shared_ptr<ROOT::Internal::RPageSource> pageSource, const std::string &fileName,
+   const std::vector<ROOT::Internal::RNTupleClusterBoundaries> &clusterBoundaries, std::uint64_t nEntries,
+   ROOT::Detail::RDF::RLoopManager &lm, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
+   std::atomic<ULong64_t> &globalEntries)
+{
+
+   const auto columnReaderOffset{globalEntries.fetch_add(nEntries)};
+
+   auto parallelForBody = [this, &lm, &fileName, &slotStack, &processedEntries,
+                           &columnReaderOffset](const ROOT::Internal::IMTUtils::RParallelSplitFileProcessor &fp) {
+      ROOT::Internal::RSlotStackRAII slotRAII{slotStack};
+      const auto &rntupleSplitFileProcessor = dynamic_cast<const RNTupleSplitFileProcessor &>(fp);
+      const auto &slot = slotRAII.fSlot;
+      const auto &beginEntry = rntupleSplitFileProcessor.GetCurrentBeginEntry();
+      const auto &endEntry = rntupleSplitFileProcessor.GetCurrentEndEntry();
+
+      processedEntries.fetch_add(endEntry - beginEntry);
+
+      this->InsertActiveEntryRange(slot, fileName, rntupleSplitFileProcessor.GetPageSource(), beginEntry, endEntry,
+                                   columnReaderOffset);
+
+      lm.RNTupleThreadTask({beginEntry + columnReaderOffset, endEntry + columnReaderOffset}, slot, columnReaderOffset);
+   };
+
+   ROOT::Internal::IMTUtils::ParallelFor(
+      pool,
+      std::make_shared<RNTupleSplitFileProcessor>(pageSource, fileName, clusterBoundaries, 0, clusterBoundaries.size()),
+      parallelForBody);
+}
+
+void ROOT::RDF::RNTupleDS::ProcessMT(ROOT::Detail::RDF::RLoopManager &lm)
+{
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
+   std::atomic<ULong64_t> processedEntries(0ull);
+   std::atomic<ULong64_t> globalEntries(0ull);
+   ROOT::TThreadExecutor pool;
+
+   std::vector<std::uint64_t> globalFileOffsets;
+
+   if (fGlobalEntryRange.has_value()) {
+      // If the user explicitly request a global entry range, we pay the cost of
+      // computing the global entry offsets upfront
+      std::vector<std::uint64_t> fileEntries(fFileNames.size());
+      auto processFile = [](const std::string &ntupleName, const std::string &fileName) {
+         // RNTuple
+         auto source = ROOT::Internal::RPageSource::Create(ntupleName, fileName);
+         source->Attach();
+         const auto descGuard = source->GetSharedDescriptorGuard();
+         return descGuard->GetNEntries();
+      };
+      pool.Foreach([&fileEntries, &processFile,
+                    this](std::size_t idx) { fileEntries[idx] = processFile(fNTupleName, fFileNames[idx]); },
+                   ROOT::TSeq<std::size_t>(fFileNames.size()));
+
+      std::uint64_t offset{};
+      globalFileOffsets.reserve(fFileNames.size());
+      for (auto entries : fileEntries) {
+         globalFileOffsets.push_back(offset);
+         offset += entries;
+      }
+   }
+
+   auto processFileWithGlobalOffset = [&](std::size_t fileIdx) {
+      // This function is called when the user has explicitly requested to process only a global entry range. In this
+      // scenario we have precomputed the entry offsets of each file upfront (aligned with the global dataset entry
+      // index) so we can then adjust the range of entries in each file accordingly.
+
+      // Evaluate clusters (with local entry numbers) and number of entries for this file
+      const auto &fileName = fFileNames[fileIdx];
+      auto source = CreatePageSource(fNTupleName, fileName);
+      source->Attach();
+      const auto clustersAndEntries = ROOT::Internal::RDF::GetClustersAndEntries(*source);
+      const auto &nEntries = clustersAndEntries.second;
+      if (nEntries == 0)
+         return;
+
+      const auto &clustersInFile = clustersAndEntries.first;
+      const auto &globalFileOffset = globalFileOffsets[fileIdx];
+      const auto &[globalBegin, globalEnd] = fGlobalEntryRange.value();
+
+      if ((globalFileOffset + nEntries) < globalBegin || globalFileOffset > globalEnd)
+         return;
+
+      if (((globalBegin >= globalFileOffset) && (globalBegin < (globalFileOffset + nEntries))) ||
+          ((globalEnd >= globalFileOffset) && (globalEnd < (globalFileOffset + nEntries)))) {
+         std::vector<ROOT::Internal::RNTupleClusterBoundaries> adjustedClusters;
+         for (const auto &cluster : clustersInFile) {
+            // If either the global begin or global end fit within the current file, we adjust the cluster ranges
+            // accordingly
+            const std::uint64_t localBegin = globalBegin < globalFileOffset ? 0 : globalBegin - globalFileOffset;
+            const std::uint64_t localEnd =
+               globalEnd > globalFileOffset + nEntries ? globalFileOffset + nEntries : globalEnd - globalFileOffset;
+            const auto currentStart = std::max(cluster.fFirstEntry, localBegin);
+            const auto currentEnd = std::min(cluster.fLastEntryPlusOne, localEnd);
+            // This is not satified if the desired start is larger than the last entry of some cluster
+            // In this case, this cluster is not going to be processes further
+            if (currentStart < currentEnd)
+               adjustedClusters.push_back(ROOT::Internal::RNTupleClusterBoundaries{currentStart, currentEnd});
+         }
+
+         this->ProcessMTRange(pool, std::move(source), fileName, adjustedClusters, nEntries, lm, slotStack,
+                              processedEntries, globalEntries);
+      } else {
+         // Otherwise, we just use the cluster boundaries of the whole file
+         this->ProcessMTRange(pool, std::move(source), fileName, clustersInFile, nEntries, lm, slotStack,
+                              processedEntries, globalEntries);
+      }
+   };
+
+   // Per-file processing that also retrieves cluster info for a file
+   auto processFileRetrievingClusters = [&](std::size_t fileIdx) {
+      // Evaluate clusters (with local entry numbers) and number of entries for this file
+      const auto &fileName = fFileNames[fileIdx];
+      auto source = CreatePageSource(fNTupleName, fFileNames[fileIdx]);
+      source->Attach();
+      const auto clustersAndEntries = ROOT::Internal::RDF::GetClustersAndEntries(*source);
+      const auto &nEntries = clustersAndEntries.second;
+      if (nEntries == 0)
+         return;
+      const auto &clusters = clustersAndEntries.first;
+      this->ProcessMTRange(pool, std::move(source), fileName, clusters, nEntries, lm, slotStack, processedEntries,
+                           globalEntries);
+   };
+
+   std::vector<std::size_t> fileIdxs(fFileNames.size());
+   std::iota(fileIdxs.begin(), fileIdxs.end(), 0);
+   if (fGlobalEntryRange.has_value())
+      pool.Foreach(processFileWithGlobalOffset, fileIdxs);
+   else
+      pool.Foreach(processFileRetrievingClusters, fileIdxs);
+
+   if (fGlobalEntryRange.has_value()) {
+      auto &&[begin, end] = fGlobalEntryRange.value();
+      auto &&finalProcessedEntries = processedEntries.load();
+      if ((end - begin) > finalProcessedEntries) {
+         Warning("RDataFrame::Run",
+                 "RDataFrame stopped processing after %lld entries, whereas an entry range (begin=%lld,end=%lld) was "
+                 "requested. Consider adjusting the end value of the entry range to a maximum of %lld.",
+                 finalProcessedEntries, begin, end, begin + finalProcessedEntries);
+      }
+   }
+}
+#endif

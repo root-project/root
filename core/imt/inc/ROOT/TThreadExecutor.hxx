@@ -37,9 +37,23 @@
 #include <vector>
 
 namespace ROOT {
+class TThreadExecutor;
+}
+namespace ROOT::Internal::IMTUtils {
+class RParallelSplitFileProcessor;
+void ParallelFor(TThreadExecutor &pool, std::shared_ptr<RParallelSplitFileProcessor> proc,
+                 const std::function<void(const ROOT::Internal::IMTUtils::RParallelSplitFileProcessor &)> &body);
+} // namespace ROOT::Internal::IMTUtils
+
+namespace ROOT {
 
    class TThreadExecutor: public TExecutorCRTP<TThreadExecutor> {
       friend TExecutorCRTP;
+      void ParallelFor(std::shared_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> fileProcessor,
+                       const std::function<void(const ROOT::Internal::IMTUtils::RParallelSplitFileProcessor &)> &body);
+      friend void ROOT::Internal::IMTUtils::ParallelFor(
+         TThreadExecutor &pool, std::shared_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> proc,
+         const std::function<void(const ROOT::Internal::IMTUtils::RParallelSplitFileProcessor &)> &body);
 
    public:
 
