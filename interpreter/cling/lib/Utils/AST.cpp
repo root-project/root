@@ -890,69 +890,6 @@ namespace utils {
   }
 
   static
-  NestedNameSpecifier SelectPrefix(const ASTContext& Ctx,
-                                    NestedNameSpecifier etypePrefix,
-                                    NestedNameSpecifier original_prefix,
-                             const Transform::Config& TypeConfig) {
-    // We have to also desugar the prefix.
-
-    NestedNameSpecifier prefix = etypePrefix;
-    if (original_prefix && prefix) {
-      // We had a scope prefix as input, let see if it is still
-      // the same as the scope of the result and if it is, then
-      // we use it.
-      if (prefix.getKind() == NestedNameSpecifier::Kind::Type) {
-        const Type *newtype = prefix.getAsType();
-        // Deal with a class
-        const Type *oldtype = original_prefix.getAsType();
-        if (original_prefix.getKind() == NestedNameSpecifier::Kind::Type &&
-            // NOTE: Should we compare the RecordDecl instead?
-            oldtype->getAsCXXRecordDecl() == newtype->getAsCXXRecordDecl())
-        {
-          // This is the same type, use the original prefix as a starting
-          // point.
-          prefix = GetPartiallyDesugaredNNS(Ctx,original_prefix,TypeConfig);
-        } else {
-          prefix = GetPartiallyDesugaredNNS(Ctx,prefix,TypeConfig);
-        }
-      } else {
-        // Deal with namespace.  This is mostly about dealing with
-        // namespace aliases (i.e. keeping the one the user used).
-        const NamespaceDecl *new_ns = getNNSNamespace(prefix);
-        if (new_ns) {
-          new_ns = new_ns->getCanonicalDecl();
-        }
-        else if (const NamespaceAliasDecl *alias = getNNSNamespaceAlias(prefix) )
-        {
-          new_ns = alias->getNamespace()->getCanonicalDecl();
-        }
-        if (new_ns) {
-          const NamespaceDecl *old_ns = getNNSNamespace(original_prefix);
-          if (old_ns) {
-            old_ns = old_ns->getCanonicalDecl();
-          }
-          else if (const NamespaceAliasDecl *alias =
-                   getNNSNamespaceAlias(original_prefix))
-          {
-            old_ns = alias->getNamespace()->getCanonicalDecl();
-          }
-          if (old_ns == new_ns) {
-            // This is the same namespace, use the original prefix
-            // as a starting point.
-            prefix = GetFullyQualifiedNameSpecifier(Ctx,original_prefix);
-          } else {
-            prefix = GetFullyQualifiedNameSpecifier(Ctx,prefix);
-          }
-        } else {
-          prefix = GetFullyQualifiedNameSpecifier(Ctx,prefix);
-        }
-      }
-    }
-    return prefix;
-  }
-
-
-  static
   NestedNameSpecifier GetPartiallyDesugaredNNS(const ASTContext& Ctx,
                                                 NestedNameSpecifier scope,
                                           const Transform::Config& TypeConfig) {
@@ -971,22 +908,7 @@ namespace utils {
 
       NestedNameSpecifier outer_scope = getNNSPrefix(scope);
       // LLVM22: ElaboratedType no longer exists.
-      // Check whether the desugared type carries a prefix (was elaborated).
-      NestedNameSpecifier desugaredPrefix = desugared->getPrefix();
-      if (desugaredPrefix) {
-        // Desugaring returned a type with a prefix, even-though we
-        // did not request it (/*fullyQualify=*/false), so we must have been
-        // looking a typedef pointing at a (or another) scope.
-
-        if (outer_scope) {
-          outer_scope = SelectPrefix(Ctx,desugaredPrefix,outer_scope,TypeConfig);
-        } else {
-          outer_scope = GetPartiallyDesugaredNNS(Ctx, desugaredPrefix,
-                                                 TypeConfig);
-        }
-        // LLVM22: In the old API we had:
-        // desugared = etype->getNamedType();
-      } else {
+      {
         Decl* decl = nullptr;
         if (!desugared.isNull()) {
           const Type* desugaredTy = desugared.getTypePtr();
@@ -1622,16 +1544,8 @@ namespace utils {
     }
 
     NestedNameSpecifier prefix = std::nullopt;
-    NestedNameSpecifier desugaredPrefix = QT->getPrefix();
-    if (desugaredPrefix) {
-
-      prefix = SelectPrefix(Ctx,desugaredPrefix,original_prefix,TypeConfig);
-
-      prefix_qualifiers.addQualifiers(QT.getLocalQualifiers());
-      // TODO: LLVM22: In the old API this was:
-      // QT = QualType(etype->getNamedType().getTypePtr(),0);
-
-    } else if (fullyQualifyType) {
+    // LLVM22: ElaboratedType no longer exists.
+    if (fullyQualifyType) {
       // Let's check whether this type should have been an elaborated type.
       // in which case we want to add it ... but we can't really preserve
       // the typedef in this case ...
