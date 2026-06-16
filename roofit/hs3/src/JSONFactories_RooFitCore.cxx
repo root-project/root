@@ -811,7 +811,11 @@ bool exportPoisson(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem
    return true;
 }
 
-bool exportDecay(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+// The RooDecay servers are the internal resModel-times-basis convolutions,
+// which are implementation details that should not leak into the JSON. We
+// only export the actual dependents (t, tau and the original resolution
+// model) explicitly.
+bool exportDecay(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
    auto *pdf = static_cast<const RooDecay *>(func);
    elem["type"] << key;
@@ -819,6 +823,10 @@ bool exportDecay(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, 
    elem["tau"] << pdf->getTau().GetName();
    elem["resolutionModel"] << pdf->getModel().GetName();
    elem["decayType"] << pdf->getDecayType();
+
+   tool->queueExport(pdf->getT());
+   tool->queueExport(pdf->getTau());
+   tool->queueExport(pdf->getModel());
 
    return true;
 }
@@ -1060,8 +1068,12 @@ public:
 template <auto Func>
 class FuncExporter : public RooFit::JSONIO::Exporter {
 public:
-   FuncExporter(std::string key) : _key{std::move(key)} {}
+   FuncExporter(std::string key, bool autoExportDependants)
+      : _key{std::move(key)}, _autoExportDependants{autoExportDependants}
+   {
+   }
    std::string const &key() const override { return _key; }
+   bool autoExportDependants() const override { return _autoExportDependants; }
    bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
       return Func(tool, func, elem, _key);
@@ -1069,6 +1081,7 @@ public:
 
 private:
    const std::string _key;
+   const bool _autoExportDependants;
 };
 
 template <auto Func>
@@ -1078,9 +1091,10 @@ void registerImporter(const std::string &key, bool topPriority = true)
 }
 
 template <auto Func>
-void registerExporter(TClass const *cl, std::string key, bool topPriority = true)
+void registerExporter(TClass const *cl, std::string key, bool topPriority = true, bool autoExportDependants = true)
 {
-   RooFit::JSONIO::registerExporter(cl, std::make_unique<FuncExporter<Func>>(std::move(key)), topPriority);
+   RooFit::JSONIO::registerExporter(cl, std::make_unique<FuncExporter<Func>>(std::move(key), autoExportDependants),
+                                    topPriority);
 }
 
 STATIC_EXECUTE([]() {
@@ -1133,7 +1147,7 @@ STATIC_EXECUTE([]() {
    registerExporter<exportLogNormal>(RooLognormal::Class(), "lognormal_dist", false);
    registerExporter<exportMultiVarGaussian>(RooMultiVarGaussian::Class(), "multivariate_normal_dist", false);
    registerExporter<exportPoisson>(RooPoisson::Class(), "poisson_dist", false);
-   registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false);
+   registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false, /*autoExportDependants=*/false);
    registerExporter<exportTruthModel>(RooTruthModel::Class(), "delta_resolution_model", false);
    registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_resolution_model", false);
    registerExporter<exportPolynomial<RooPolynomial>>(RooPolynomial::Class(), "polynomial_dist", false);
