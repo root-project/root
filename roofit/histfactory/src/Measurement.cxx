@@ -860,9 +860,18 @@ void Sample::AddHistoFactor(const HistoFactor &Factor)
 void Sample::AddShapeFactor(std::string SysName)
 {
 
-   ShapeFactor factor;
-   factor.SetName(SysName);
-   fShapeFactorList.push_back(factor);
+   fShapeFactorList.emplace_back();
+   fShapeFactorList.back().SetName(SysName);
+}
+
+void Sample::AddShapeFactor(std::string SysName, double Val, double Low, double High)
+{
+
+   fShapeFactorList.emplace_back();
+   fShapeFactorList.back().SetName(SysName);
+   fShapeFactorList.back().SetVal(Val);
+   fShapeFactorList.back().SetLow(Low);
+   fShapeFactorList.back().SetHigh(High);
 }
 
 void Sample::AddShapeFactor(const ShapeFactor &Factor)
@@ -1725,6 +1734,8 @@ void ShapeFactor::Print(std::ostream &stream) const
              << " Shape Hist Name: " << fHistoNameHigh << " Shape Hist Path Name: " << fHistoPathHigh
              << " Shape Hist FileName: " << fInputFileHigh << std::endl;
    }
+   // Print value and range in RooRealVar style
+   stream << "\t \t Value: " << GetVal() << "  L(" << GetLow() << " - " << GetHigh() << ")\n";
 
    if (fConstant) {
       stream << "\t \t ( Constant ): " << std::endl;
@@ -1756,6 +1767,9 @@ void ShapeFactor::PrintXML(std::ostream &xml) const
           << " HistoName=\"" << GetHistoName() << "\" "
           << " HistoPath=\"" << GetHistoPath() << "\" ";
    }
+   xml << " Val=\"" << GetVal() << "\" "
+       << " High=\"" << GetHigh() << "\" "
+       << " Low=\"" << GetLow() << "\" ";
    xml << "  /> " << std::endl;
 }
 
