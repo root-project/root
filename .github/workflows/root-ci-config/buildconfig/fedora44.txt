@@ -4,3 +4,4 @@ pythia8=ON
 roofit_multiprocess=ON
 test_distrdf_pyspark=OFF
 vdt=OFF
+cefweb=ON
