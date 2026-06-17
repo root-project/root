@@ -4,6 +4,7 @@ import pytest
 import ROOT
 import ROOT._distrdf
 
+
 class TestBackendInit:
     """
     Tests to ensure that the instance variables of `DaskBackend` class have the
@@ -91,27 +92,19 @@ class TestBackendInit:
         """
         Check that DaskBackend rejects threaded workers.
         """
-        from dask.distributed import Client
-        from dask.distributed import LocalCluster
+        from dask.distributed import Client, LocalCluster
         from ROOT._distrdf.Backends.Dask import Backend
 
-        cluster = LocalCluster(
-            n_workers=1,
-            threads_per_worker=2,
-            processes=False
-        )
-
+        cluster = LocalCluster(n_workers=1, threads_per_worker=2, processes=False)
         client = Client(cluster)
 
         try:
-            with pytest.raises(
-                RuntimeError,
-                match="DistRDF with Dask does not support threaded workers"
-            ):
+            with pytest.raises(RuntimeError, match="DistRDF with Dask does not support threaded workers"):
                 Backend.DaskBackend(daskclient=client)
         finally:
             client.close()
             cluster.close()
+
 
 
 class TestInitialization:
