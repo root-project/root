@@ -97,7 +97,7 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
 
-      fCefApp->StartWindow(args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), rect);
+      fCefApp->StartWindow(args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), rect, args.IsHeadless());
 
       if (args.IsHeadless())
          handle->WaitForContent(wait_tmout, args.GetExtraArgs());
@@ -136,43 +136,18 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    bool supress_log = (settings.log_severity == LOGSEVERITY_DISABLE) ||
                       (settings.log_severity == LOGSEVERITY_FATAL);
 
-   TApplication *root_app = gROOT->GetApplication();
-
-   std::vector<const char *> cef_argv = { root_app->Argv(0) };
 
 #ifdef OS_WIN
 
-   CefMainArgs main_args(args.IsHeadless() ? (HINSTANCE) 0 : GetModuleHandle(nullptr));
+   // CefMainArgs main_args(args.IsHeadless() ? (HINSTANCE) 0 : GetModuleHandle(nullptr));
+
+   CefMainArgs main_args(GetModuleHandle(nullptr));
 
 #else
 
-   if (args.IsHeadless()) {
-      cef_argv.emplace_back("--user-data-dir=.");
-      cef_argv.emplace_back("--allow-file-access-from-files");
-      cef_argv.emplace_back("--disable-web-security");
-#ifdef OS_LINUX
-      cef_argv.emplace_back("--disable-gpu");
-      cef_argv.emplace_back("--ignore-gpu-blocklist");
-      cef_argv.emplace_back("--use-gl=swiftshader");
-      cef_argv.emplace_back("--enable-unsafe-swiftshader");
-#endif
-#ifdef OS_MACOSX
-      cef_argv.emplace_back("--use-angle=metal");
-      cef_argv.emplace_back("--ignore-gpu-blocklist");
-      cef_argv.emplace_back("--enable-webgl");
-      cef_argv.emplace_back("--enable-gpu");
-      cef_argv.emplace_back("--enable-gpu-rasterization");
-#endif
-      cef_argv.emplace_back("--off-screen-rendering-enabled");
-      if (use_views)
-         cef_argv.emplace_back("--ozone-platform=headless");
-   } else {
-#ifdef OS_MACOSX
-      cef_argv.emplace_back("--use-angle=metal");
-      cef_argv.emplace_back("--ignore-gpu-blocklist");
-      cef_argv.emplace_back("--enable-webgl");
-#endif
-   }
+   TApplication *root_app = gROOT->GetApplication();
+
+   std::vector<const char *> cef_argv = { root_app->Argv(0) };
 
    if (supress_log) {
       cef_argv.emplace_back("--disable-logging");
