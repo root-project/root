@@ -565,3 +565,113 @@ void ROOT::Experimental::RNTupleInspector::PrintFieldTreeAsDot(const ROOT::RFiel
    if (isZeroField)
       output << "}";
 }
+
+void ROOT::Experimental::RNTupleInspector::PrintFieldTreeAsFlamegraphSpecification(
+   EFlamegraphSpecificationFormat format, std::ostream &output) const
+{
+   (void)format; // There is only one format at the moment
+
+   const auto &tupleDescriptor = GetDescriptor();
+   ROOT::DescriptorId_t rootId = tupleDescriptor.GetFieldZeroId();
+   const auto &rootFieldDescriptor = tupleDescriptor.GetFieldDescriptor(rootId);
+
+   struct FrameDescription {
+      std::string name;
+      std::string type;
+      size_t byteSize = 0;
+      char kind; // 'F' or 'C' for field or column
+   };
+
+   struct TimelineOcurrence {
+      size_t frameDescriptionIndex;
+      unsigned int timestamp;
+      char type; // 'O' or 'C' for open or close
+   };
+
+   std::vector<FrameDescription> frameDescriptions;
+   std::vector<TimelineOcurrence> timelineOcurrences;
+   unsigned int currentTime = 0;
+
+   auto visitFieldsDFS = [&](auto &self, const ROOT::RFieldDescriptor &fieldDescriptor) -> size_t {
+      FrameDescription fieldFrame;
+      fieldFrame.name = tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId());
+      fieldFrame.type = fieldDescriptor.GetTypeName();
+      fieldFrame.kind = 'F';
+      frameDescriptions.push_back(fieldFrame);
+
+      size_t frameDescriptionIndex = frameDescriptions.size() - 1;
+
+      timelineOcurrences.push_back({frameDescriptionIndex, currentTime, 'O'});
+
+      size_t subTreeSize = 0;
+      const auto &childIds = fieldDescriptor.GetLinkIds();
+
+      for (const auto &childFieldId : childIds) {
+         const auto &childFieldDescriptor = tupleDescriptor.GetFieldDescriptor(childFieldId);
+         subTreeSize += self(self, childFieldDescriptor);
+      }
+
+      for (const auto &columnDescriptor : tupleDescriptor.GetColumnIterable(fieldDescriptor.GetId())) {
+         const auto &columnInfo = GetColumnInspector(columnDescriptor.GetPhysicalId());
+         size_t columnSize = columnInfo.GetCompressedSize();
+
+         FrameDescription columnFrame;
+
+         columnFrame.name = tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId()) + " [col#" +
+                            std::to_string(columnDescriptor.GetPhysicalId()) + "]";
+         columnFrame.type = ROOT::Internal::RColumnElementBase::GetColumnTypeName(columnDescriptor.GetType());
+         columnFrame.byteSize = columnSize;
+         columnFrame.kind = 'C';
+         frameDescriptions.push_back(columnFrame);
+
+         size_t columnFrameIdx = frameDescriptions.size() - 1;
+
+         timelineOcurrences.push_back({columnFrameIdx, currentTime, 'O'});
+         currentTime += columnSize;
+         timelineOcurrences.push_back({columnFrameIdx, currentTime, 'C'});
+
+         subTreeSize += columnSize;
+      }
+
+      frameDescriptions[frameDescriptionIndex].byteSize = subTreeSize;
+
+      timelineOcurrences.push_back({frameDescriptionIndex, currentTime, 'C'});
+
+      return subTreeSize;
+   };
+
+   visitFieldsDFS(visitFieldsDFS, rootFieldDescriptor);
+
+   output << "{\n";
+   output << "   \"$schema\":\"https://www.speedscope.app/file-format-schema.json\",\n";
+   output << "   \"shared\":{\n";
+   output << "      \"frames\":[\n";
+
+   for (size_t i = 0; i < frameDescriptions.size(); ++i) {
+      output << "         { \"name\":\"" << frameDescriptions[i].name
+             << "\", \"file\":\"Type: " << frameDescriptions[i].type << ", Size: " << frameDescriptions[i].byteSize
+             << "B\" }" << (i + 1 < frameDescriptions.size() ? ",\n" : "\n");
+   }
+
+   output << "      ]\n";
+   output << "   },\n";
+   output << "   \"profiles\":[\n";
+   output << "      {\n";
+   output << "         \"type\":\"evented\",\n";
+   output << "         \"name\":\"Flattened Timeline\",\n";
+   output << "         \"unit\":\"bytes\",\n";
+   output << "         \"startValue\":0,\n";
+   output << "         \"endValue\":" << currentTime << ",\n";
+   output << "         \"events\":[\n";
+
+   for (size_t i = 0; i < timelineOcurrences.size(); ++i) {
+      const auto &e = timelineOcurrences[i];
+      output << "            {\"type\":\"" << e.type << "\",\"frame\":" << e.frameDescriptionIndex
+             << ",\"at\":" << e.timestamp << "}" << (i + 1 < timelineOcurrences.size() ? ",\n" : "\n");
+   }
+
+   output << "         ]\n";
+   output << "      }\n";
+   output << "   ]\n";
+   output << "}\n";
+}

@@ -308,13 +308,13 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
    {
       auto model = RNTupleModel::Create();
 
-      auto int32fld = std::make_unique<RField<std::int32_t>>("int32");
-      int32fld->SetColumnRepresentatives({{ENTupleColumnType::kInt32}});
-      model->AddField(std::move(int32fld));
+      auto int32field = std::make_unique<RField<std::int32_t>>("int32");
+      int32field->SetColumnRepresentatives({{ENTupleColumnType::kInt32}});
+      model->AddField(std::move(int32field));
 
-      auto splitReal64fld = std::make_unique<RField<double>>("splitReal64");
-      splitReal64fld->SetColumnRepresentatives({{ENTupleColumnType::kSplitReal64}});
-      model->AddField(std::move(splitReal64fld));
+      auto splitReal64field = std::make_unique<RField<double>>("splitReal64");
+      splitReal64field->SetColumnRepresentatives({{ENTupleColumnType::kSplitReal64}});
+      model->AddField(std::move(splitReal64field));
 
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(0);
@@ -823,9 +823,9 @@ TEST(RNTupleInspector, MultiColumnRepresentations)
    FileRaii fileGuard("test_ntuple_inspector_multi_column_representations.root");
    {
       auto model = RNTupleModel::Create();
-      auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-      fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
-      model->AddField(std::move(fldPx));
+      auto fieldPx = RFieldBase::Create("px", "float").Unwrap();
+      fieldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+      model->AddField(std::move(fieldPx));
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
       writer->CommitCluster();
@@ -848,8 +848,8 @@ TEST(RNTupleInspector, FieldTreeAsDot)
    FileRaii fileGuard("test_ntuple_inspector_fields_tree_as_dot.root");
    {
       auto model = RNTupleModel::Create();
-      auto fldFloat1 = model->MakeField<float>("float1");
-      auto fldInt = model->MakeField<std::int32_t>("int");
+      auto fieldFloat1 = model->MakeField<float>("float1");
+      auto fieldInt = model->MakeField<std::int32_t>("int");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
@@ -861,4 +861,61 @@ TEST(RNTupleInspector, FieldTreeAsDot)
       "</b>float1<br></br><b>Type: </b>float<br></br><b>ID: </b>0<br></br>>]\n0->2\n2[label=<<b>Name: "
       "</b>int<br></br><b>Type: </b>std::int32_t<br></br><b>ID: </b>1<br></br>>]\n}";
    EXPECT_EQ(dot, expected);
+}
+
+TEST(RNTupleInspector, FieldTreeAsFlamegraphSpecification)
+{
+   FileRaii fileGuard("test_ntuple_inspector_field_tree_as_flamegraph_specification");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFloat1 = model->MakeField<float>("float1");
+      auto fieldInt = model->MakeField<std::int32_t>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (int i = 0; i < 10; ++i) {
+         *fieldFloat1 = 3.14f * i;
+         *fieldInt = 42 * i;
+         writer->Fill();
+      }
+   }
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   std::ostringstream flamegraphSpecificationStream;
+   inspector->PrintFieldTreeAsFlamegraphSpecification(
+      ROOT::Experimental::EFlamegraphSpecificationFormat::kSpeedscopeJSON, flamegraphSpecificationStream);
+   const std::string flamegraphSpecification = flamegraphSpecificationStream.str();
+   const std::string &expected = R"({
+   "$schema":"https://www.speedscope.app/file-format-schema.json",
+   "shared":{
+      "frames":[
+         { "name":"", "file":"Type: , Size: 80B" },
+         { "name":"float1", "file":"Type: float, Size: 40B" },
+         { "name":"float1 [col#0]", "file":"Type: SplitReal32, Size: 40B" },
+         { "name":"int", "file":"Type: std::int32_t, Size: 40B" },
+         { "name":"int [col#1]", "file":"Type: SplitInt32, Size: 40B" }
+      ]
+   },
+   "profiles":[
+      {
+         "type":"evented",
+         "name":"Flattened Timeline",
+         "unit":"bytes",
+         "startValue":0,
+         "endValue":80,
+         "events":[
+            {"type":"O","frame":0,"at":0},
+            {"type":"O","frame":1,"at":0},
+            {"type":"O","frame":2,"at":0},
+            {"type":"C","frame":2,"at":40},
+            {"type":"C","frame":1,"at":40},
+            {"type":"O","frame":3,"at":40},
+            {"type":"O","frame":4,"at":40},
+            {"type":"C","frame":4,"at":80},
+            {"type":"C","frame":3,"at":80},
+            {"type":"C","frame":0,"at":80}
+         ]
+      }
+   ]
+}
+)";
+   EXPECT_EQ(flamegraphSpecification, expected);
 }

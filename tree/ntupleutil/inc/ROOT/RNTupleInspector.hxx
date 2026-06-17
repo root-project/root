@@ -50,6 +50,10 @@ enum class ENTupleInspectorHist {
    kUncompressedSize
 };
 
+enum class EFlamegraphSpecificationFormat {
+   kSpeedscopeJSON
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleInspector
@@ -493,6 +497,9 @@ public:
    {
       PrintFieldTreeAsDot(GetDescriptor().GetFieldZero(), output);
    }
+
+   void PrintFieldTreeAsFlamegraphSpecification(EFlamegraphSpecificationFormat format,
+                                                std::ostream &output = std::cout) const;
 };
 } // namespace Experimental
 } // namespace ROOT
