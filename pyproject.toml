@@ -1,8 +1,9 @@
 [build-system]
-requires = ["cmake", "setuptools<72", "wheel", "numpy"]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
 
 [project]
-name = "ROOT"
+name = "root"
 version = "0.1a12"
 requires-python = ">=3.10"
 maintainers = [
@@ -15,16 +16,73 @@ dependencies = [
   "numpy",
 ]
 
-# Demonstrate how to expose ROOT CLI tools the Python way. For now only include
-# `root`, other tools can be added later using the same approach.
+# Point backend to python packages and to explicitly use Ninja
+[tool.scikit-build]
+wheel.packages = [
+	"bindings/pyroot/pythonizations/python/ROOT",
+	"bindings/pyroot/cppyy/cppyy/python/cppyy",
+]
+cmake.args = [
+	"-GNinja", 
+]
+
+[tool.scikit-build.cmake.define]
+# CMake install directories
+CMAKE_INSTALL_BINDIR = "ROOT/bin"
+CMAKE_INSTALL_CMAKEDIR = "ROOT/cmake"
+CMAKE_INSTALL_FONTDIR = "ROOT/fonts"
+CMAKE_INSTALL_ICONDIR = "ROOT/icons"
+CMAKE_INSTALL_INCLUDEDIR = "ROOT/include"
+CMAKE_INSTALL_LIBDIR = "ROOT/lib"
+CMAKE_INSTALL_MACRODIR = "ROOT/macros"
+CMAKE_INSTALL_MANDIR = "ROOT/man"
+CMAKE_INSTALL_PYTHONDIR = "."
+CMAKE_INSTALL_SYSCONFDIR = "ROOT/etc"
+CMAKE_INSTALL_TUTDIR = "ROOT/tutorials"
+
+# Generic minimal build config
+gminimal="ON"
+asimage="ON"
+opengl="OFF"
+runtime_cxxmodules="ON"
+fail-on-missing="ON"
+
+# Explicitly list components that gminimal implicitly turns off as documentation
+# tmva-pymva and tpython are disabled for manylinux compatibility
+# see https://peps.python.org/pep-0513/#libpythonx-y-so-1 
+tmva-pymva="OFF"
+tpython="OFF"
+thisroot_scripts="OFF" # the thisroot.* scripts are broken if CMAKE_INSTALL_PYTHONDIR!=CMAKE_INSTALL_LIBDIR
+
+# Builtins
+builtin_nlohmannjson="ON"
+builtin_tbb="ON"
+builtin_xrootd="ON"
+builtin_tiff="ON"
+builtin_lz4="ON"
+builtin_fftw3="ON"
+builtin_gsl="ON"
+builtin_lzma="ON"
+builtin_zstd="ON"
+builtin_xxhash="ON"
+pyroot="ON"
+dataframe="ON"
+xrootd="ON"
+ssl="ON"
+imt="ON"
+roofit="ON"
+mathmore="ON"
+
+# Expose the ROOT cli as an executable command via _rootcli wrapper 
 [project.scripts]
 root = "ROOT._rootcli:main"
 
 [tool.cibuildwheel]
-# Increase pip debugging output
+build-frontend = { name = "build" }
 build-verbosity = 1
 manylinux-x86_64-image = "manylinux_2_28"
 
 # Install system libraries
 [tool.cibuildwheel.linux]
 before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel libjpeg-devel giflib-devel libtiff-devel"
+
