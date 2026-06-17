@@ -437,6 +437,7 @@ TEST_F(TClingTests, UndeclaredIdentifierCrash)
 }
 
 // https://github.com/root-project/root/issues/15818
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST_F(TClingTests, VeryLongExpression)
 {
    std::string expression = R"(
@@ -451,3 +452,4 @@ using func0_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(func0)>::
    auto res = gInterpreter->Declare(expression.c_str());
    EXPECT_TRUE(res);
 }
+#endif
