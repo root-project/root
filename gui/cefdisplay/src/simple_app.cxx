@@ -117,7 +117,8 @@ class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
 SimpleApp::SimpleApp(bool use_viewes, bool supress_log,
                      THttpServer *serv, const std::string &url, const std::string &cont,
                      int width, int height, bool headless)
-   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fSupressLog(supress_log), fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
+   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fSupressLog(supress_log),
+     fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -157,16 +158,39 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
       command_line->AppendSwitchWithValue("enable-logging", "none");
    }
 
-#ifdef OS_MACOSX
-
    if (fNextHeadless) {
+      command_line->AppendSwitchWithValue("user-data-dir", ".");
+      command_line->AppendSwitch("allow-file-access-from-files");
+      command_line->AppendSwitch("disable-web-security");
+      command_line->AppendSwitch("off-screen-rendering-enabled");
+   }
+
+#ifdef OS_MACOSX
+   if (fNextHeadless) {
+      command_line->AppendSwitch("headless");
       command_line->AppendSwitchWithValue("use-angle", "swiftshader");
       command_line->AppendSwitch("enable-unsafe-swiftshader");
       command_line->AppendSwitch("disable-gpu");
+      // command_line->AppendSwitch("enable-gpu-rasterization");
+      // if (fUseViewes)
+      //   command_line->AppendSwitchWithValue("ozone-platform", "headless");
    } else {
       command_line->AppendSwitchWithValue("use-angle", "metal");
       command_line->AppendSwitch("ignore-gpu-blocklist");
       command_line->AppendSwitch("enable-webgl");
+   }
+#endif
+
+#ifdef OS_LINUX
+   if (fNextHeadless) {
+      command_line->AppendSwitch("headless");
+      command_line->AppendSwitchWithValue("use-gl", "swiftshader");
+      command_line->AppendSwitch("disable-gpu");
+      command_line->AppendSwitch("ignore-gpu-blocklist");
+      command_line->AppendSwitch("enable-unsafe-swiftshader");
+
+      if (fUseViewes)
+         command_line->AppendSwitchWithValue("ozone-platform", "headless");
    }
 #endif
 }
@@ -180,18 +204,18 @@ void SimpleApp::OnContextInitialized()
    CEF_REQUIRE_UI_THREAD();
 
    if (!fFirstUrl.empty() || !fFirstContent.empty()) {
-      StartWindow(fFirstServer, fFirstUrl, fFirstContent, fFirstRect);
+      StartWindow(fFirstServer, fFirstUrl, fFirstContent, fFirstRect, fFirstHeadless);
       fFirstUrl.clear();
       fFirstContent.clear();
    }
 }
 
 
-void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const std::string &cont, CefRect &rect)
+void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const std::string &cont, CefRect &rect, bool is_headless)
 {
    CEF_REQUIRE_UI_THREAD();
 
-   bool is_batch = addr.empty() && !cont.empty();
+   bool is_batch = (addr.empty() && !cont.empty()) || is_headless;
 
    if (!fGuiHandler)
       fGuiHandler = new GuiHandler(fUseViewes);

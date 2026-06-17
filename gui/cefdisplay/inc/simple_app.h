@@ -81,7 +81,7 @@ public:
 #endif
 
 
-   void StartWindow(THttpServer *serv, const std::string &url, const std::string &cont, CefRect &rect);
+   void StartWindow(THttpServer *serv, const std::string &url, const std::string &cont, CefRect &rect, bool is_headless = false);
 
    // CefRenderProcessHandler methods
    // void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
