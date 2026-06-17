@@ -1079,6 +1079,7 @@ void ROOT::Internal::RPagePersistentSink::UpdateExtraTypeInfo(const ROOT::RExtra
 void ROOT::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
+   fDescriptorBuilder.SetVersionForWriting();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
@@ -1109,6 +1110,7 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 {
    // Create new descriptor
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
+   fDescriptorBuilder.SetVersionForWriting();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    // Create column/page ranges
@@ -1251,6 +1253,8 @@ ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldD
       ++columnIndex;
    }
 
+   fDescriptorBuilder.EnsureValidDescriptor().ThrowOnError();
+
    return firstPhysicalIndex;
 }
 
@@ -1274,6 +1278,8 @@ void ROOT::Internal::RPagePersistentSink::AddAliasColumn(const ROOT::RNTupleDesc
       .FirstElementIndex(pointedColumn.GetFirstElementIndex())
       .RepresentationIndex(pointedColumn.GetRepresentationIndex());
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
+
+   fDescriptorBuilder.EnsureValidDescriptor().ThrowOnError();
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(ColumnHandle_t columnHandle)
