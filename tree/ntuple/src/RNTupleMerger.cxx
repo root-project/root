@@ -431,16 +431,6 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
-static std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
-{
-   if (x) {
-      os << '(' << x->fMin << ", " << x->fMax << ')';
-   } else {
-      os << "(null)";
-   }
-   return os;
-}
-
 } // namespace ROOT::Experimental::Internal
 
 // Subprocedure of CompareDescriptorStructure, extracted for readability.
@@ -500,26 +490,18 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
                const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
                const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
                const auto &dstCol = dstDesc.GetColumnDescriptor(dstColId);
-               if (srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
+               if (srcCol.GetType() != dstCol.GetType() || srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
                    srcCol.GetValueRange() != dstCol.GetValueRange()) {
-                  std::stringstream ss;
-                  ss << "Source field `" << srcField.GetFieldName()
-                     << "` has a matching column representation as its destination field, however one or "
-                        "more "
-                        "of its columns have different column metadata (bit width and/or value range). "
-                        "Merging variable-sized columns is currently only supported if all metadata is "
-                        "identical between source and destination columns."
-                     << "\n   bit width src: " << srcCol.GetBitsOnStorage() << ", dst: " << dstCol.GetBitsOnStorage()
-                     << ""
-                     << "\n   value range src: " << srcCol.GetValueRange() << ", dst: " << dstCol.GetValueRange();
-                  errors.push_back(ss.str());
+                  matches = false;
                   break;
                }
             }
 
-            // We found a valid matching representation: break the loop on the dst column representations.
-            matchingRepr = dstReprIdx;
-            break;
+            if (matches) {
+               // We found a valid matching representation.
+               matchingRepr = dstReprIdx;
+               break;
+            }
          }
       }
 
@@ -799,7 +781,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
    //
    // Since we call ExtendDestinationModel (this function) *before* adding the new column representations,
    // the dst descriptor always gets updated with the new column descriptors coming from the extended fields before
-   //it gets updated with the extended column representations.
+   // it gets updated with the extended column representations.
    //
    // However, in GatherColumnInfos, the new column output ids are added sequentially in *field* order and the fields
    // containing the new column representations are already in that list from earlier! So, to make sure the new output
@@ -1059,7 +1041,7 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       // Note that some suppressed columns may not be in commonColumns because they might not appear at all in the
       // current source.
       FieldCollectionMap_t<ROOT::DescriptorId_t> columnsInCluster;
-      using ColumnHandle_t = ROOT::Internal::RPageSource::ColumnHandle_t;
+      using ColumnHandle_t = ROOT::Internal::RPageStorage::ColumnHandle_t;
 
       // NOTE: `commonColumns` contains all columns that appear *somewhere* both in the src and in the dst.
       // Just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains
@@ -1080,7 +1062,6 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
             columnsInCluster[column.fParentFieldDescriptor].push_back(column.fOutputId);
             if (!colRange.IsSuppressed()) {
                commonColumnSet.emplace(column.fInputId);
-               columnsInCluster[column.fParentFieldDescriptor].push_back(column.fOutputId);
                return true;
             }
             mergeData.fDestination.CommitSuppressedColumn(ColumnHandle_t{column.fOutputId});
@@ -1109,7 +1090,7 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
             assert(colIt != mergeData.fColumnIdMap.end());
             const auto colOutId = colIt->second.fColumnId;
             if (std::find(columnIds.begin(), columnIds.end(), colOutId) == columnIds.end()) {
-               mergeData.fDestination.CommitSuppressedColumn(ROOT::Internal::RPageStorage::ColumnHandle_t{colOutId});
+               mergeData.fDestination.CommitSuppressedColumn(ColumnHandle_t{colOutId});
             }
          }
       }
