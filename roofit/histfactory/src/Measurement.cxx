@@ -1769,7 +1769,8 @@ void ShapeFactor::PrintXML(std::ostream &xml) const
    }
    xml << " Val=\"" << GetVal() << "\" "
        << " High=\"" << GetHigh() << "\" "
-       << " Low=\"" << GetLow() << "\" ";
+       << " Low=\"" << GetLow() << "\" "
+       << " Const=\"" << (IsConstant() ? std::string("True") : std::string("False")) << "\" ";
    xml << "  /> " << std::endl;
 }
 
