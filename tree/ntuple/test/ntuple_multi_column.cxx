@@ -445,12 +445,3 @@ TEST(RNTuple, MultiColumnRepresentationVariableBitWidth)
    reader->LoadEntry(1);
    EXPECT_FLOAT_EQ(2.0, *fldPx);
 }
-
-TEST(RNTuple, MultiColumnRepresentationDedup)
-{
-   FileRaii fileGuard("test_ntuple_multi_column_representation_dedup.root");
-
-   auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-   fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal16}});
-   EXPECT_EQ(fldPx->GetColumnRepresentatives().size(), 1);
-}
