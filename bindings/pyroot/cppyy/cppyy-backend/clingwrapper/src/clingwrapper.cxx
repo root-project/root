@@ -622,11 +622,17 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
         std::ostringstream decl;
     // TODO: now presumed fixed with https://sft.its.cern.ch/jira/browse/ROOT-6988
         for (auto& itype : {"unsigned int"}) {
-            decl << "std::is_same<"
+        // This is pure type introspection: silence any deprecation warning that
+        // would otherwise be emitted just because the enum being resolved (or its
+        // scope) happens to be marked deprecated.
+            decl << "_Pragma(\"clang diagnostic push\")"
+                    "_Pragma(\"clang diagnostic ignored \\\"-Wdeprecated-declarations\\\"\")"
+                 << "std::is_same<"
                  << itype
                  << ", std::underlying_type<"
                  << et_short
-                 << ">::type>::value;";
+                 << ">::type>::value;"
+                    "_Pragma(\"clang diagnostic pop\")";
             if (gInterpreter->ProcessLine(decl.str().c_str())) {
             // TODO: "re-sugaring" like this is brittle, but the top
             // should be re-translated into AST-based code anyway
