@@ -431,16 +431,6 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
-static std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
-{
-   if (x) {
-      os << '(' << x->fMin << ", " << x->fMax << ')';
-   } else {
-      os << "(null)";
-   }
-   return os;
-}
-
 } // namespace ROOT::Experimental::Internal
 
 // Subprocedure of CompareDescriptorStructure, extracted for readability.
@@ -500,26 +490,19 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
                const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
                const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
                const auto &dstCol = dstDesc.GetColumnDescriptor(dstColId);
-               if (srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
+               if (srcCol.GetType() != dstCol.GetType() ||
+                   srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
                    srcCol.GetValueRange() != dstCol.GetValueRange()) {
-                  std::stringstream ss;
-                  ss << "Source field `" << srcField.GetFieldName()
-                     << "` has a matching column representation as its destination field, however one or "
-                        "more "
-                        "of its columns have different column metadata (bit width and/or value range). "
-                        "Merging variable-sized columns is currently only supported if all metadata is "
-                        "identical between source and destination columns."
-                     << "\n   bit width src: " << srcCol.GetBitsOnStorage() << ", dst: " << dstCol.GetBitsOnStorage()
-                     << ""
-                     << "\n   value range src: " << srcCol.GetValueRange() << ", dst: " << dstCol.GetValueRange();
-                  errors.push_back(ss.str());
+                  matches = false;
                   break;
                }
             }
 
-            // We found a valid matching representation: break the loop on the dst column representations.
-            matchingRepr = dstReprIdx;
-            break;
+            if (matches) {
+               // We found a valid matching representation.
+               matchingRepr = dstReprIdx;
+               break;
+            }
          }
       }
 

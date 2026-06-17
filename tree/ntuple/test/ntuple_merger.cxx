@@ -4275,10 +4275,17 @@ TEST(RNTupleMerger, MergeReal32Trunc)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            // Currently we're not supporting merging columns with the same type but different metadata.
-            // TODO: support this.
-            EXPECT_FALSE(bool(res));
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("have different column metadata"));
+            EXPECT_TRUE(bool(res));
+         }
+         {
+            auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+            EXPECT_EQ(reader->GetNEntries(), 20);
+            EXPECT_EQ(reader->GetDescriptor().GetNPhysicalColumns(), 2);
+            auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+            for (auto i : reader->GetEntryRange()) {
+               reader->LoadEntry(i);
+               EXPECT_NEAR(*pFlt, i, 0.01f);
+            }
          }
       }
    }
@@ -4333,10 +4340,17 @@ TEST(RNTupleMerger, MergeReal32Quant)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            // Currently we're not supporting merging columns with the same type but different metadata.
-            // TODO: support this.
-            ASSERT_FALSE(bool(res));
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("have different column metadata"));
+            EXPECT_TRUE(bool(res));
+         }
+         {
+            auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+            EXPECT_EQ(reader->GetNEntries(), 20);
+            EXPECT_EQ(reader->GetDescriptor().GetNPhysicalColumns(), 2);
+            auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+            for (auto i : reader->GetEntryRange()) {
+               reader->LoadEntry(i);
+               EXPECT_NEAR(*pFlt, i, 0.01f);
+            }
          }
       }
    }
@@ -4401,6 +4415,71 @@ TEST(RNTupleMerger, MergeReal32TruncQuantMixed)
             for (auto i : reader->GetEntryRange()) {
                reader->LoadEntry(i);
                EXPECT_NEAR(*pFlt, i, 0.01f);
+            }
+         }
+      }
+   }
+}
+
+TEST(RNTupleMerger, MergeRealRegularQuantMixed)
+{
+   // Merge two files, both containing the same field, but with the first being a SplitReal64 and the second Real32Quant
+   FileRaii fileGuard1("test_ntuple_merge_realregquant_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldDbl = model->MakeField<double>("dbl");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         *fieldDbl = i;
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_realregquant_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RField<double>>("dbl");
+      field->SetQuantized(29, {0., 20.});
+      model->AddField(std::move(field));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldDbl = ntuple->GetModel().GetDefaultEntry().GetPtr<double>("dbl");
+      for (int i = 0; i < 10; ++i) {
+         *fieldDbl = 10 + i;
+         ntuple->Fill();
+      }
+   }
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_realregquant_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            EXPECT_TRUE(bool(res));
+         }
+         {
+            auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+            EXPECT_EQ(reader->GetNEntries(), 20);
+            EXPECT_EQ(reader->GetDescriptor().GetNPhysicalColumns(), 2);
+            auto pDbl = reader->GetModel().GetDefaultEntry().GetPtr<double>("dbl");
+            for (auto i : reader->GetEntryRange()) {
+               reader->LoadEntry(i);
+               if (i < 10)
+                  EXPECT_DOUBLE_EQ(*pDbl, i);
+               else
+                  EXPECT_NEAR(*pDbl, i, 0.01f);
             }
          }
       }
