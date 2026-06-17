@@ -1094,6 +1094,7 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 {
    // Create new descriptor
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
+   fDescriptorBuilder.SetVersionForWriting();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    // Create column/page ranges
@@ -1232,6 +1233,8 @@ ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldD
       ++columnIndex;
    }
 
+   fDescriptorBuilder.EnsureValidDescriptor().ThrowOnError();
+
    return firstPhysicalIndex;
 }
 
@@ -1255,6 +1258,8 @@ void ROOT::Internal::RPagePersistentSink::AddAliasColumn(const ROOT::RNTupleDesc
       .FirstElementIndex(pointedColumn.GetFirstElementIndex())
       .RepresentationIndex(pointedColumn.GetRepresentationIndex());
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
+
+   fDescriptorBuilder.EnsureValidDescriptor().ThrowOnError();
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(ColumnHandle_t columnHandle)
