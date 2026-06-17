@@ -206,33 +206,31 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    TString cef_main = TROOT::GetBinDir() + "/cef_main";
    cef_string_ascii_to_utf16(cef_main.Data(), cef_main.Length(), &settings.browser_subprocess_path);
 
-#ifdef OS_LINUX
-   // on linux resource directory copied to lib/
-   TString path2 = TROOT::GetLibDir() + "/locales";
-   cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
-   TString path3 = TROOT::GetLibDir();
-   cef_string_ascii_to_utf16(path3.Data(), path3.Length(), &settings.resources_dir_path);
-#endif
-
-#ifdef OS_WIN
-   // on windows resource directory copied to bin/
-   TString path2 = TROOT::GetBinDir() + "/locales";
-   cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
-   TString path3 = TROOT::GetBinDir();
-   cef_string_ascii_to_utf16(path3.Data(), path3.Length(), &settings.resources_dir_path);
-#endif
-
 #ifdef OS_MACOSX
    // on mac there is framework directory, where resources and libs are combined together
    TString path = TROOT::GetDataDir() + "/Frameworks/Chromium Embedded Framework.framework";
    cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.framework_dir_path);
 
-
+   // add CEF libraries to DYLD library path
    TString dypath = gSystem->Getenv("DYLD_LIBRARY_PATH");
    if (dypath.Length() > 0)
       dypath.Append(":");
    dypath.Append(path + "/Libraries/");
    gSystem->Setenv("DYLD_LIBRARY_PATH", dypath);
+#endif
+
+#ifdef OS_WIN
+   TString resource_dir = TROOT::GetBinDir();
+   cef_string_ascii_to_utf16(resource_dir.Data(), resource_dir.Length(), &settings.resources_dir_path);
+   TString locales_dir = TROOT::GetDataDir() + "/Frameworks/cef/locales";
+   cef_string_ascii_to_utf16(locales_dir.Data(), locales_dir.Length(), &settings.locales_dir_path);
+#endif
+
+#ifdef OS_LINUX
+   TString resource_dir = TROOT::GetLibDir();
+   cef_string_ascii_to_utf16(resource_dir.Data(), resource_dir.Length(), &settings.resources_dir_path);
+   TString locales_dir = TROOT::GetDataDir() + "/Frameworks/cef/locales";
+   cef_string_ascii_to_utf16(locales_dir.Data(), locales_dir.Length(), &settings.locales_dir_path);
 #endif
 
    settings.no_sandbox = true;
