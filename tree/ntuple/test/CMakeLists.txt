@@ -185,4 +185,7 @@ endif()
 if(pyroot)
   ROOT_ADD_PYUNITTEST(ntuple_py_basics ntuple_basics.py)
   ROOT_ADD_PYUNITTEST(ntuple_py_model ntuple_model.py)
+
 endif()
+
+ROOT_ADD_GTEST(ntuple_processor_gh16805 ntuple_processor_gh16805.cxx LIBRARIES ROOTNTuple)
