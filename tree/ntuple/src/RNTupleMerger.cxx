@@ -443,6 +443,121 @@ static std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RCol
 
 } // namespace ROOT::Experimental::Internal
 
+// Subprocedure of CompareDescriptorStructure, extracted for readability.
+// Given two fields, attempts to match their column representations and schedules column extensions if necessary.
+static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, const ROOT::RNTupleDescriptor &dstDesc,
+                                       const ROOT::RFieldDescriptor &srcField, const ROOT::RFieldDescriptor &dstField,
+                                       RDescriptorsComparison &result, std::vector<std::string> &errors)
+{
+   const auto &srcColumns = srcField.GetLogicalColumnIds();
+   const auto &dstColumns = dstField.GetLogicalColumnIds();
+
+   // Fields must have the same number of columns
+   const auto srcNCols = srcColumns.size();
+   const auto dstNCols = dstColumns.size();
+   if (srcNCols != dstNCols) {
+      std::stringstream ss;
+      ss << "Field `" << srcField.GetFieldName()
+         << "` has a different number of columns than previously-seen field with the same name (old: " << dstNCols
+         << ", new: " << srcNCols << ")";
+      errors.push_back(ss.str());
+      return;
+   }
+
+   // Fields must have the same cardinality
+   const std::uint32_t srcColCardinality = srcField.GetColumnCardinality();
+   const std::uint32_t dstColCardinality = dstField.GetColumnCardinality();
+   if (srcColCardinality != dstColCardinality) {
+      std::stringstream ss;
+      ss << "Field `" << srcField.GetFieldName()
+         << "` has a different column cardinality than previously-seen field with the same name (old: "
+         << dstColCardinality << ", new: " << srcColCardinality << ")";
+      errors.push_back(ss.str());
+      return;
+   }
+
+   if (srcColCardinality == 0)
+      return; // no columns to match
+
+   const auto srcNColReprs = srcNCols / srcColCardinality;
+   const auto dstNColReprs = dstNCols / dstColCardinality;
+
+   // For each column representation of the source, check if it matches one in the descriptor.
+   // If so, and if it doesn't match the destination's repr index, add a mapping for it.
+   // If nothing matches, schedule the column representation to be added later.
+   // NOTE: this has quadratic complexity but the numbers involved are small so it's fine.
+   for (auto srcReprIdx = 0u; srcReprIdx < srcNColReprs; ++srcReprIdx) {
+      std::int64_t matchingRepr = -1;
+      for (auto dstReprIdx = 0u; dstReprIdx < dstNColReprs; ++dstReprIdx) {
+         bool matches = true;
+         for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
+            const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
+            const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
+            const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
+            const auto &dstCol = dstDesc.GetColumnDescriptor(dstColId);
+            if (srcCol.GetType() != dstCol.GetType()) {
+               matches = false;
+               break;
+            }
+         }
+
+         if (matches) {
+            // If this column representation matches by column type, we need to make sure that it also has
+            // matching column metadata. Since we currently do not support multiple column representations
+            // that only differ by such metadata, we forbid merging such columns (e.g. we cannot merge two
+            // Real32Trunc columns with different bit widths). This could technically be supported, but it
+            // would require significant effort, so we currently don't.
+            for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
+               const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
+               const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
+               const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
+               const auto &dstCol = dstDesc.GetColumnDescriptor(dstColId);
+               if (srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
+                   srcCol.GetValueRange() != dstCol.GetValueRange()) {
+                  std::stringstream ss;
+                  ss << "Source field `" << srcField.GetFieldName()
+                     << "` has a matching column representation as its destination field, however one or "
+                        "more "
+                        "of its columns have different column metadata (bit width and/or value range). "
+                        "Merging variable-sized columns is currently only supported if all metadata is "
+                        "identical between source and destination columns."
+                     << "\n   bit width src: " << srcCol.GetBitsOnStorage() << ", dst: " << dstCol.GetBitsOnStorage()
+                     << ""
+                     << "\n   value range src: " << srcCol.GetValueRange() << ", dst: " << dstCol.GetValueRange();
+                  errors.push_back(ss.str());
+                  break;
+               }
+            }
+
+            // We found a valid matching representation: break the loop on the dst column representations.
+            matchingRepr = dstReprIdx;
+            break;
+         }
+      }
+
+      if (errors.empty()) {
+         if (matchingRepr >= 0 && matchingRepr != srcReprIdx) {
+            // a different matching representation was found
+            assert(matchingRepr < std::numeric_limits<std::uint32_t>::max());
+            result.fColReprMappings[&dstField].push_back(
+               RColReprMapping{srcReprIdx, static_cast<std::uint32_t>(matchingRepr)});
+         } else if (matchingRepr < 0) {
+            // this representation was not found in the destination
+            assert(dstNColReprs < std::numeric_limits<std::uint32_t>::max());
+            ROOT::RFieldBase::ColumnRepresentation_t newRepr;
+            for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
+               const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
+               const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
+               newRepr.push_back(srcCol.GetType());
+            }
+            RColReprExtension extension{{srcReprIdx, static_cast<std::uint32_t>(dstNColReprs)}, newRepr};
+            result.fColReprExtensions[&dstField].push_back(extension);
+            result.fColReprMappings[&dstField].push_back(extension);
+         }
+      }
+   }
+}
+
 /// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
 /// In addition, returns the differences between `dst` and `src`'s structures
 static ROOT::RResult<RDescriptorsComparison>
@@ -560,104 +675,7 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
 
       // Require that column representations match
       if (!field.fSrc->IsProjectedField()) {
-         const auto &srcColumns = field.fSrc->GetLogicalColumnIds();
-         const auto &dstColumns = field.fDst->GetLogicalColumnIds();
-         const auto srcNCols = srcColumns.size();
-         const auto dstNCols = dstColumns.size();
-         if (srcNCols != dstNCols) {
-            std::stringstream ss;
-            ss << "Field `" << field.fSrc->GetFieldName()
-               << "` has a different number of columns than previously-seen field with the same name (old: " << dstNCols
-               << ", new: " << srcNCols << ")";
-            errors.push_back(ss.str());
-         } else {
-            const std::uint32_t srcColCardinality = field.fSrc->GetColumnCardinality();
-            const std::uint32_t dstColCardinality = field.fDst->GetColumnCardinality();
-            if (srcColCardinality != dstColCardinality) {
-               std::stringstream ss;
-               ss << "Field `" << field.fSrc->GetFieldName()
-                  << "` has a different column cardinality than previously-seen field with the same name (old: "
-                  << dstColCardinality << ", new: " << srcColCardinality << ")";
-               errors.push_back(ss.str());
-            } else if (srcColCardinality > 0) {
-               const auto srcNColReprs = srcNCols / srcColCardinality;
-               const auto dstNColReprs = dstNCols / dstColCardinality;
-
-               // For each column representation of the source, check if it matches one in the descriptor.
-               // If so, and if it doesn't match the destination's repr index, add a mapping for it.
-               // If nothing matches, schedule the column representation to be added later.
-               // NOTE: this has quadratic complexity but the numbers involved are small so it's fine.
-               for (auto srcReprIdx = 0u; srcReprIdx < srcNColReprs; ++srcReprIdx) {
-                  std::int64_t matchingRepr = -1;
-                  for (auto dstReprIdx = 0u; dstReprIdx < dstNColReprs; ++dstReprIdx) {
-                     bool matches = true;
-                     for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
-                        const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
-                        const auto &srcCol = src.GetColumnDescriptor(srcColId);
-                        const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
-                        const auto &dstCol = dst.GetColumnDescriptor(dstColId);
-                        if (srcCol.GetType() != dstCol.GetType()) {
-                           matches = false;
-                           break;
-                        }
-                     }
-
-                     if (matches) {
-                        // If this column representation matches by column type, we need to make sure that it also has
-                        // matching column metadata. Since we currently do not support multiple column representations
-                        // that only differ by such metadata, we forbid merging such columns (e.g. we cannot merge two
-                        // Real32Trunc columns with different bit widths). This could technically be supported, but it
-                        // would require significant effort, so we currently don't.
-                        for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
-                           const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
-                           const auto &srcCol = src.GetColumnDescriptor(srcColId);
-                           const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
-                           const auto &dstCol = dst.GetColumnDescriptor(dstColId);
-                           if (srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
-                               srcCol.GetValueRange() != dstCol.GetValueRange()) {
-                              std::stringstream ss;
-                              ss << "Source field `" << field.fSrc->GetFieldName()
-                                 << "` has a matching column representation as its destination field, however one or "
-                                    "more "
-                                    "of its columns have different column metadata (bit width and/or value range). "
-                                    "Merging variable-sized columns is currently only supported if all metadata is "
-                                    "identical between source and destination columns."
-                                 << "\n   bit width src: " << srcCol.GetBitsOnStorage()
-                                 << ", dst: " << dstCol.GetBitsOnStorage() << ""
-                                 << "\n   value range src: " << srcCol.GetValueRange()
-                                 << ", dst: " << dstCol.GetValueRange();
-                              errors.push_back(ss.str());
-                              break;
-                           }
-                        }
-                        matchingRepr = dstReprIdx;
-                        break;
-                     }
-                  }
-
-                  if (errors.empty()) {
-                     if (matchingRepr >= 0 && matchingRepr != srcReprIdx) {
-                        // a different matching representation was found
-                        assert(matchingRepr < std::numeric_limits<std::uint32_t>::max());
-                        res.fColReprMappings[field.fDst].push_back(
-                           RColReprMapping{srcReprIdx, static_cast<std::uint32_t>(matchingRepr)});
-                     } else if (matchingRepr < 0) {
-                        // this representation was not found in the destination
-                        assert(dstNColReprs < std::numeric_limits<std::uint32_t>::max());
-                        ROOT::RFieldBase::ColumnRepresentation_t newRepr;
-                        for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
-                           const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
-                           const auto &srcCol = src.GetColumnDescriptor(srcColId);
-                           newRepr.push_back(srcCol.GetType());
-                        }
-                        RColReprExtension extension{{srcReprIdx, static_cast<std::uint32_t>(dstNColReprs)}, newRepr};
-                        res.fColReprExtensions[field.fDst].push_back(extension);
-                        res.fColReprMappings[field.fDst].push_back(extension);
-                     }
-                  }
-               }
-            }
-         }
+         MatchColumnRepresentations(src, dst, *field.fSrc, *field.fDst, res, errors);
       }
 
       // Require that subfields are compatible
