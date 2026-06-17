@@ -19,7 +19,9 @@ from check_reducer_merge import *
 from check_rungraphs import *
 from check_variations import *
 
+import shlex
+
 if __name__ == "__main__":
     # The call to sys.exit is needed otherwise CTest would just ignore the
     # results returned by pytest, even in case of errors.
-    sys.exit(pytest.main(args=[__file__]))
+    sys.exit(pytest.main(args=shlex.split(f"{__file__} -x -vvv")))
