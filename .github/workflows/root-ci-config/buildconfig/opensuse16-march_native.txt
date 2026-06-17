@@ -5,7 +5,6 @@ builtin_tbb=ON
 builtin_vdt=ON
 builtin_xrootd=ON
 builtin_unuran=ON
-builtin_nlohmannjson=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 tmva-pymva=ON
