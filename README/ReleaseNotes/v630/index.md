@@ -773,6 +773,20 @@ This release comes with some minor fixes for SOFIE and histograms. Moreover, it 
 * [[ROOT-7991](https://its.cern.ch/jira/browse/ROOT-7991)] - THnSparse::ProjectionND yields disfunctional histogram
 * [[ROOT-8238](https://its.cern.ch/jira/browse/ROOT-8238)] - TPrincipal tries to make histograms with nbin=0
 
+## Release 6.30.12
+
+Published on June 18, 2026
+
+### Items addressed in this release
+
+This release comes with some minor fixes.
+
+### Versions of built-in packages
+
+The version of the following packages has been updated:
+
+* libpng: 1.6.40
+
 ## HEAD of the v6-30-00-patches branch
 
 - None so far.
