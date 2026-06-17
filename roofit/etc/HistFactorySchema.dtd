@@ -156,5 +156,12 @@ For this element there is no sublemenents so the setting will only have local ef
 <!ELEMENT ShapeFactor EMPTY>
 <!ATTLIST ShapeFactor
           Name              CDATA            #REQUIRED
+          Val               CDATA            #IMPLIED
+          Low               CDATA            #IMPLIED
+          High              CDATA            #IMPLIED
+          Const             CDATA            #IMPLIED
+          InputFile         CDATA            #IMPLIED
+          HistoName         CDATA            #IMPLIED
+          HistoPath         CDATA            #IMPLIED
 >
 

@@ -4,6 +4,7 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#include <RooStats/HistFactory/ConfigParser.h>
 #include <RooFit/ModelConfig.h>
 
 #include <RooFitHS3/JSONIO.h>
@@ -24,6 +25,7 @@
 #include <TROOT.h>
 #include <TFile.h>
 #include <TCanvas.h>
+#include <TSystem.h>
 #include <gtest/gtest.h>
 
 #include "../../roofitcore/test/gtest_wrapper.h"
@@ -793,4 +795,136 @@ TEST(HistFactory, HS3ImportShapeFactorModifier)
    // type "shapesys" in both cases.
    const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
    EXPECT_EQ(js, js2) << "JSON -> WS -> JSON roundtrip changed the JSON";
+}
+
+// Issue #20697: Sample::AddShapeFactor() now allows to set the initial value
+// and the range of the ShapeFactor gammas (just like AddNormFactor() does for
+// the NormFactors). This is important e.g. for ABCD estimates, where the
+// hard-coded default range can cause convergence problems.
+//
+// These settings need to survive being persisted, so this test checks that the
+// value and range make it through:
+//   1. a ROOT file round trip (Measurement::writeToFile),
+//   2. an XML file round trip (Measurement::PrintXML / ConfigParser), and
+//   3. into the actual gamma parameters of the generated workspace.
+TEST(HistFactory, ShapeFactorValueAndRange)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Deliberately use non-default values and a range that differs from the
+   // hard-coded default of [0, 1000].
+   const double sfVal = 2.0;
+   const double sfLow = 0.1;
+   const double sfHigh = 12.0;
+
+   const std::string inputFileName = "TestShapeFactorRange_input.root";
+   {
+      TFile f(inputFileName.c_str(), "RECREATE");
+      auto *data = new TH1D("data", "data", 2, 1, 2);
+      auto *signal = new TH1D("signal", "signal", 2, 1, 2);
+      auto *bkg = new TH1D("background", "background", 2, 1, 2);
+      data->SetBinContent(1, 220);
+      data->SetBinContent(2, 230);
+      signal->SetBinContent(1, 10);
+      signal->SetBinContent(2, 20);
+      bkg->SetBinContent(1, 200);
+      bkg->SetBinContent(2, 200);
+      for (auto *h : {data, signal, bkg})
+         f.WriteTObject(h);
+   }
+
+   auto makeMeasurement = [&]() {
+      Measurement meas("meas", "meas");
+      meas.SetOutputFilePrefix("TestShapeFactorRange");
+      meas.SetPOI("SigXsecOverSM");
+      meas.AddConstantParam("Lumi");
+      meas.SetLumi(1.0);
+      meas.SetLumiRelErr(0.10);
+
+      Channel chan("channel1");
+      chan.SetData("data", inputFileName);
+
+      Sample sig("signal", "signal", inputFileName);
+      sig.AddNormFactor("SigXsecOverSM", 1, 0, 3);
+      chan.AddSample(sig);
+
+      // The new overload under test: ShapeFactor with custom value and range.
+      Sample bkg("background", "background", inputFileName);
+      bkg.AddShapeFactor("bkgShape", sfVal, sfLow, sfHigh);
+      chan.AddSample(bkg);
+
+      meas.AddChannel(chan);
+      meas.CollectHistograms();
+      return meas;
+   };
+
+   // Fetch the (single) ShapeFactor stored in a measurement.
+   auto getShapeFactor = [](Measurement &meas) -> ShapeFactor & {
+      Channel &chan = meas.GetChannel("channel1");
+      for (Sample &sample : chan.GetSamples()) {
+         if (!sample.GetShapeFactorList().empty())
+            return sample.GetShapeFactorList().front();
+      }
+      throw std::runtime_error("ShapeFactor not found in measurement");
+   };
+
+   auto checkShapeFactor = [&](Measurement &meas, const char *context) {
+      ShapeFactor &sf = getShapeFactor(meas);
+      EXPECT_DOUBLE_EQ(sf.GetVal(), sfVal) << context;
+      EXPECT_DOUBLE_EQ(sf.GetLow(), sfLow) << context;
+      EXPECT_DOUBLE_EQ(sf.GetHigh(), sfHigh) << context;
+   };
+
+   // 0. Sanity check on the in-memory measurement.
+   {
+      Measurement meas = makeMeasurement();
+      checkShapeFactor(meas, "in-memory measurement");
+   }
+
+   // 1. ROOT file round trip.
+   {
+      Measurement meas = makeMeasurement();
+      const std::string rootFileName = "TestShapeFactorRange_meas.root";
+      {
+         TFile outFile(rootFileName.c_str(), "RECREATE");
+         meas.writeToFile(&outFile);
+      }
+      TFile inFile(rootFileName.c_str(), "READ");
+      std::unique_ptr<Measurement> measFromFile{inFile.Get<Measurement>("meas")};
+      ASSERT_NE(measFromFile, nullptr);
+      checkShapeFactor(*measFromFile, "ROOT file round trip");
+   }
+
+   // 2. XML file round trip.
+   {
+      Measurement meas = makeMeasurement();
+      const std::string xmlDir = "TestShapeFactorRangeXML";
+      meas.PrintXML(xmlDir);
+
+      // The generated XML files refer to the DTD by relative path, so it has to
+      // be available next to them for the validating parser to find it.
+      gSystem->CopyFile(TString::Format("%s/HistFactorySchema.dtd", TROOT::GetEtcDir().Data()),
+                        TString::Format("%s/HistFactorySchema.dtd", xmlDir.c_str()), true);
+
+      ConfigParser parser;
+      std::vector<Measurement> measFromXML = parser.GetMeasurementsFromXML(xmlDir + "/meas.xml");
+      ASSERT_EQ(measFromXML.size(), 1u);
+      checkShapeFactor(measFromXML.front(), "XML file round trip");
+   }
+
+   // 3. End to end: the gamma parameters of the workspace pick up the requested
+   //    value and range.
+   {
+      Measurement meas = makeMeasurement();
+      std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+      ASSERT_NE(ws, nullptr);
+      for (const char *name : {"gamma_bkgShape_bin_0", "gamma_bkgShape_bin_1"}) {
+         auto *gamma = ws->var(name);
+         ASSERT_NE(gamma, nullptr) << name;
+         EXPECT_DOUBLE_EQ(gamma->getVal(), sfVal) << name;
+         EXPECT_DOUBLE_EQ(gamma->getMin(), sfLow) << name;
+         EXPECT_DOUBLE_EQ(gamma->getMax(), sfHigh) << name;
+      }
+   }
 }
