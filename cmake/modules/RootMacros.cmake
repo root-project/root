@@ -623,22 +623,17 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
-      if(NOT TARGET G__${dep})
-        # This is a library that doesn't come with dictionary/pcm
-        continue()
-      endif()
-
+      # Whether <dep> provides a dictionary/pcm is decided at generation time
+      # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
+      # dependency below are independent of configuration order and expand to
+      # nothing for a dictionary-less library.
+      set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
-        if(TARGET ${dep})
-          get_target_property(_dep_pcm_filename ${dep} ROOT_PCM_FILENAME)
-          if(_dep_pcm_filename)
-            list(APPEND pcm_dependencies ${_dep_pcm_filename})
-          endif()
-        endif()
+        list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
       endif()
-      set(newargs ${newargs} -m  ${dependent_pcm})
+      set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
     endforeach()
   endif()
 
