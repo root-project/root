@@ -7067,8 +7067,21 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
       dataGraph->SetTitle(TString::Format("%s;%s;Events", dataGraph->GetTitle(), theHist->GetXaxis()->GetTitle()));
       *static_cast<TAttMarker *>(dataGraph) = *static_cast<TAttMarker *>(theHist);
       *static_cast<TAttLine *>(dataGraph) = *static_cast<TAttLine *>(theHist);
+
+      // default style based on if generated or not
+
+      if (auto w = theData->weightVar(); w && w->getStringAttribute("fitResult")) {
+         // is generated
+         dataGraph->SetLineColor(kGreen + 2);
+         if (w->getAttribute("expected")) {
+            // is asimov
+            dataGraph->SetLineColor(kBlue);
+         }
+      } else {
+         dataGraph->SetLineColor(kBlack);
+      }
       dataGraph->SetMarkerStyle(20);
-      dataGraph->SetLineColor(kBlack);
+      dataGraph->SetMarkerColor(dataGraph->GetLineColor());
       dataGraph->SetMarkerSize(gStyle->GetMarkerSize());
 
       auto _obs = obs();
@@ -8061,6 +8074,7 @@ xRooNode xRooNode::reduced(const std::function<bool(const xRooNode &)> selector)
       const_cast<xRooNode &>(*this).browse();
    }
    // build a list of children to keep
+   std::string noName = "___"; // assume this is never a name
    std::string childNames;
    for (auto &c : *this) {
       if (selector(*c)) {
@@ -8069,6 +8083,8 @@ xRooNode xRooNode::reduced(const std::function<bool(const xRooNode &)> selector)
          childNames += c->GetName();
       }
    }
+   if (childNames.empty())
+      childNames = noName;     // if childNames was blank it would return the full list;
    return reduced(childNames); // calls main method above ... this will ensure we construct a reduced version of ourself
 }
 
@@ -8242,10 +8258,10 @@ double new_getPropagatedError(const RooAbsReal &f, const RooFitResult &fr, const
 
       if (asymHi || asymLo) {
          errVal = frrrv->getErrorHi();
-         rrv.setVal(cenVal + errVal);
+         rrv.setVal(errVal > 0 ? std::min(cenVal + errVal, rrv.getMax()) : std::max(cenVal + errVal, rrv.getMin()));
          plusVar = f.getVal(nset);
          errVal = frrrv->getErrorLo();
-         rrv.setVal(cenVal + errVal);
+         rrv.setVal(errVal > 0 ? std::min(cenVal + errVal, rrv.getMax()) : std::max(cenVal + errVal, rrv.getMin()));
          minusVar = f.getVal(nset);
          if (asymHi) {
             // pick the one that moved result 'up' most
@@ -8259,10 +8275,10 @@ double new_getPropagatedError(const RooAbsReal &f, const RooFitResult &fr, const
       } else {
          errVal = sqrt(V(ivar, ivar));
          // Make Plus variation
-         rrv.setVal(cenVal + errVal);
+         rrv.setVal(std::min(cenVal + errVal, rrv.getMax()));
          plusVar = f.getVal(nset);
          // Make Minus variation
-         rrv.setVal(cenVal - errVal);
+         rrv.setVal(std::max(cenVal - errVal, rrv.getMin()));
          minusVar = f.getVal(nset);
       }
       F[ivar] = (plusVar - minusVar) * 0.5;
@@ -8715,8 +8731,6 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          TDirectory::TContext ctx{nullptr}; // No self-registration to directories
          h = static_cast<TH1 *>(templateHist->Clone(rar->GetName()));
       }
-      if (h->GetListOfFunctions())
-         h->GetListOfFunctions()->Clear();
       h->SetTitle(rar->GetTitle());
       h->Reset();
    } else if (x) {
@@ -11310,22 +11324,32 @@ void xRooNode::Draw(Option_t *opt)
          // drawing dataset associated to a simultaneous means must find subpads with variation names
          // may not have subpads if drawning a "Yield" plot ...
          bool doneDraw = false;
-         for (auto c : s->bins()) {
-            auto _pad = dynamic_cast<TPad *>(gPad->GetPrimitive(c->GetName()));
+         // in the case of hybrid datasets, the parentPdf will be a reducedPdf ...
+         // but if the dataset has been added to, then there may be additional entries
+         // in other channels ... so loop over all labels of the categorical
+         // and for ones we don't have a channel for, just draw directly on
+
+         for (auto [catName, catVal] : s->get<RooSimultaneous>()->indexCat()) {
+            auto _pad = dynamic_cast<TPad *>(gPad->GetPrimitive(
+               TString::Format("%s=%s", s->get<RooSimultaneous>()->indexCat().GetName(), catName.c_str())));
             if (!_pad)
                continue; // channel was hidden?
             // attach as a child before calling datasets(), so that if this dataset is external to workspace it is
             // included still attaching the dataset ensures dataset reduction for the channel is applied
-            c->push_back(std::make_shared<xRooNode>(*this));
-            auto ds = c->datasets().find(GetName());
-            c->resize(c->size() - 1); // remove the child we attached
-            if (!ds) {
-               std::cout << " no ds " << GetName() << " - this should never happen!" << std::endl;
-               continue;
-            }
             auto tmp = gPad;
             _pad->cd();
-            ds->Draw(opt);
+            if (auto c = s->bins().find(catName)) {
+               c->push_back(std::make_shared<xRooNode>(*this));
+               auto ds = c->datasets().find(GetName());
+               c->resize(c->size() - 1); // remove the child we attached
+               if (!ds) {
+                  std::cout << " no ds " << GetName() << " - this should never happen!" << std::endl;
+                  continue;
+               }
+               ds->Draw(opt);
+            } else {
+               Draw(opt);
+            }
             doneDraw = true;
             tmp->cd();
          }
