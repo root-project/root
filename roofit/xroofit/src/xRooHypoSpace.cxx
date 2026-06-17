@@ -1165,7 +1165,8 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          auto gra2 = static_cast<TMultiGraph *>(out->DrawClone("A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
-            gra2->GetHistogram()->SetMinimum(1e-6);
+            gra2->SetMinimum(1e-6);
+            gra2->SetMaximum(1);
          }
          if (gPad) {
             gPad->RedrawAxis();
@@ -1281,7 +1282,8 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
          gPad->Clear();
          gra->DrawClone("A")->SetBit(kCanDelete);
          gPad->RedrawAxis();
-         gra->GetHistogram()->SetMinimum(1e-9);
+         gra->SetMinimum(1e-9);
+         gra->SetMaximum(1);
          gra->GetHistogram()->GetYaxis()->SetRangeUser(1e-9, 1);
          gPad->Modified();
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
@@ -1591,7 +1593,8 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
          auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone(sOpt.Contains("same") ? "" : "A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
-            gra2->GetHistogram()->SetMinimum(1e-6);
+            gra2->SetMinimum(1e-6);
+            gra2->SetMaximum(1);
          }
          if (gPad) {
             gPad->RedrawAxis();
@@ -1680,9 +1683,9 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
       minMax.second = std::max(minMax.second, val);
    }
    if (minMax.first < std::numeric_limits<double>::infinity())
-      out->GetHistogram()->SetMinimum(minMax.first);
+      out->SetMinimum(minMax.first);
    if (minMax.second > -std::numeric_limits<double>::infinity())
-      out->GetHistogram()->SetMaximum(minMax.second);
+      out->SetMaximum(minMax.second);
 
    TGraph *badPoints = nullptr;
 

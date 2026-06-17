@@ -63,6 +63,7 @@ public:
       xValueWithError(const std::pair<double, double> &in = {0, 0}) : std::pair<double, double>(in) {}
       double value() const { return std::pair<double, double>::first; }
       double error() const { return std::pair<double, double>::second; }
+      std::string __repr__() const { return Form("%g +/- %g", value(), error()); }
    };
 
    void Print(Option_t *opt = "");
