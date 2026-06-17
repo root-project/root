@@ -1003,7 +1003,7 @@ Published on February 12, 2026
 
 This release comes with some minor fixes, for example for TMVA. Moreover, it addresses the following problems:
 
-* [[CVE-2026-24811]](https://nvd.nist.gov/vuln/detail/CVE-2026-24811)] and [[CVE-2026-24812]](https://nvd.nist.gov/vuln/detail/CVE-2026-24812)]
+* [[CVE-2026-24811](https://nvd.nist.gov/vuln/detail/CVE-2026-24811)] and [[CVE-2026-24812](https://nvd.nist.gov/vuln/detail/CVE-2026-24812)]
 * [[#15118](https://github.com/root-project/root/issues/15118)] - jsoninterface does not build if provided with RapidYAML
 * [[#15621](https://github.com/root-project/root/issues/15621)] - Buffer overflow in TBranch::Init
 * [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
@@ -1016,6 +1016,23 @@ This name collision caused massive problems in backwards compatibility and was b
 These classes were only introduced with ROOT 6.28.00 and were not widely advertised, so you should not be affected by this removal.
 If you were using one of these classes, please copy the sources from a previous ROOT tag in your analysis as a temporary solution, and report this unsupported usecase by opening a GitHub issue.
 Based on the feedback to this patch release, the `RooPower` and `RooExpPoly` classes will either be removed or renamed in ROOT 6.32.
+
+## Release 6.28/16
+
+Published on June 18, 2026
+
+### Items addressed in this release
+
+This release comes with some minor fixes, including:
+
+* [[#14416](https://github.com/root-project/root/issues/14416)] - rootls and rootprint broken on Ubuntu 22.04 binary release
+* [[#13825](https://github.com/root-project/root/issues/13825)] - builtin libpng too old
+
+### Versions of built-in packages
+
+The version of the following packages has been updated:
+
+* libpng: 1.6.40
 
 ## HEAD of the v6-28-00-patches branch
 - None so far.
