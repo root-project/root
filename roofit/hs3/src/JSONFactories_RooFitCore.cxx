@@ -48,6 +48,7 @@
 #include <RooTFnBinding.h>
 #include <RooTruthModel.h>
 #include <RooGaussModel.h>
+#include <RooWrapperPdf.h>
 #include <RooWorkspace.h>
 #include <RooRealIntegral.h>
 #include <RooSpline.h>
@@ -1188,17 +1189,65 @@ public:
    }
 };
 
+class RooWrapperPdfImporter : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const RooFit::Detail::JSONNode &node) const override
+   {
+      if (node["type"].val() != "density_function_dist")
+         return false;
+
+      auto name = RooJSONFactoryWSTool::name(node);
+      auto *func = tool->requestArg<RooAbsReal>(node, "function");
+
+      bool selfNormalized = false;
+
+      if (auto sn = node.find("selfNormalized"))
+         selfNormalized = sn->val_bool();
+
+      tool->wsEmplace<RooWrapperPdf>(name, *func, selfNormalized);
+      return true;
+   }
+};
+
+class RooWrapperPdfStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *arg, RooFit::Detail::JSONNode &node) const override
+   {
+      auto const *pdf = dynamic_cast<RooWrapperPdf const *>(arg);
+      if (!pdf)
+         return false;
+
+      node["type"] << "density_function_dist";
+
+      // Proxy name in RooWrapperPdf is "_func" / "func" depending on accessor/proxy export.
+      // Prefer a public accessor if one exists; otherwise inspect proxies as below.
+      auto const *funcProxy = dynamic_cast<RooRealProxy const *>(pdf->getProxy(0));
+      if (!funcProxy || !funcProxy->absArg())
+         return false;
+
+      node["function"] << funcProxy->absArg()->GetName();
+      if (pdf->selfNormalized())
+         node["selfnormalized"] << true;
+
+      return true;
+   }
+};
+
 #define DEFINE_EXPORTER_KEY(class_name, name)    \
    std::string const &class_name::key() const    \
    {                                             \
       const static std::string keystring = name; \
       return keystring;                          \
    }
+
 template <>
 DEFINE_EXPORTER_KEY(RooAddPdfStreamer<RooAddPdf>, "mixture_dist");
 template <>
 DEFINE_EXPORTER_KEY(RooAddPdfStreamer<RooAddModel>, "mixture_model");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
+DEFINE_EXPORTER_KEY(RooWrapperPdfStreamer, "density_function_dist");
 DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
 DEFINE_EXPORTER_KEY(RooLegacyExpPolyStreamer, "legacy_exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooExponentialStreamer, "exponential_dist");
@@ -1224,7 +1273,7 @@ DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
 DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 DEFINE_EXPORTER_KEY(RooDerivativeStreamer, "derivative");
 DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_conv_pdf");
-DEFINE_EXPORTER_KEY(RooExtendPdfStreamer, "extend_pdf");
+DEFINE_EXPORTER_KEY(RooExtendPdfStreamer, "rate_extended_dist");
 DEFINE_EXPORTER_KEY(ParamHistFuncStreamer, "step");
 DEFINE_EXPORTER_KEY(RooSplineStreamer, "spline");
 
@@ -1235,6 +1284,8 @@ DEFINE_EXPORTER_KEY(RooSplineStreamer, "spline");
 STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;
 
+   registerImporter<RooWrapperPdfImporter>("density_function_dist");
+   registerImporter<RooExtendPdfFactory>("rate_extended_dist");
    registerImporter<RooProductFactory>("product", false);
    registerImporter<RooProdPdfFactory>("product_dist", false);
    registerImporter<RooAdditionFactory>("sum", false);
@@ -1265,6 +1316,7 @@ STATIC_EXECUTE([]() {
    registerImporter<ParamHistFuncFactory>("step", false);
    registerImporter<RooSplineFactory>("spline", false);
 
+   registerExporter<RooWrapperPdfStreamer>(RooWrapperPdf::Class());
    registerExporter<RooAddPdfStreamer<RooAddPdf>>(RooAddPdf::Class(), false);
    registerExporter<RooAddPdfStreamer<RooAddModel>>(RooAddModel::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
