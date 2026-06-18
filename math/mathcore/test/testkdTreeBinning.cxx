@@ -28,7 +28,13 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-void testkdTreeBinning() {
+// Returns the number of detected failures (0 on success) so that the caller can
+// turn it into a non-zero process exit code: ROOT's Error() only prints, it does
+// not by itself make the test fail under ctest.
+int testkdTreeBinning()
+{
+
+   int nfail = 0;
 
    // -----------------------------------------------------------------------------------------------
    //  C r e a t e  r a n d o m  s a m p l e
@@ -83,14 +89,22 @@ void testkdTreeBinning() {
    std::cout << "Bin with minimum density: " << ibinMin << " density = " <<  kdBins->GetBinDensity(ibinMin) << " content = " << kdBins->GetBinContent(ibinMin)  << std::endl;
    std::cout << "Bin with maximum density: " << ibinMax << " density = " <<  kdBins->GetBinDensity(ibinMax) << " content = " << kdBins->GetBinContent(ibinMax) << std::endl;
 
-   if (kdBins->GetBinContent(ibinMax) != DATASZ/NBINS)
+   if (kdBins->GetBinContent(ibinMax) != DATASZ / NBINS) {
       Error("testkdTreeBinning","Wrong bin content");
+      ++nfail;
+   }
 
    // order bins by density
    kdBins->SortBinsByDensity(true);
 
-   if (kdBins->GetBinMinDensity() != 0) Error("testkdTreeBinning","Wrong minimum bin after sorting");
-   if (kdBins->GetBinMaxDensity() != nbins-1) Error("testkdTreeBinning","Wrong maximum bin after sorting");
+   if (kdBins->GetBinMinDensity() != 0) {
+      Error("testkdTreeBinning", "Wrong minimum bin after sorting");
+      ++nfail;
+   }
+   if (kdBins->GetBinMaxDensity() != nbins - 1) {
+      Error("testkdTreeBinning", "Wrong maximum bin after sorting");
+      ++nfail;
+   }
 
    if (showGraphics) {
       new TCanvas();
@@ -104,7 +118,6 @@ void testkdTreeBinning() {
    double point[2] = {0,0};
 //   double binCenter[2];
    gRandom->SetSeed(0);
-   bool ok = true;
    for (int itimes = 0; itimes < ntimes; itimes++) {
 
       // generate a random point in 2D
@@ -126,12 +139,12 @@ void testkdTreeBinning() {
                std::cout << " point y " << point[1] << " BIN CENTER is " << binCenter[1] << " min " << binMin[1] << " max " << binMax[1] <<  std::endl;
          }
 
-         ok &= point[0] > binMin[0] && point[0] < binMax[0];
-         ok &=  point[1] > binMin[1] && point[1] < binMax[1];
+         bool ok = point[0] > binMin[0] && point[0] < binMax[0] && point[1] > binMin[1] && point[1] < binMax[1];
          if (!ok) {
             Error ("testkdTreeBinning::FindBin"," Point is not in the right bin " );
             std::cout << " point x " << point[0] << " BIN CENTER is " << binCenter[0] << " min " << binMin[0] << " max " << binMax[0] << std::endl;
             std::cout << " point y " << point[1] << " BIN CENTER is " << binCenter[1] << " min " << binMin[1] << " max " << binMax[1] <<  std::endl;
+            ++nfail;
          }
 
          if (itimes < 2 && showGraphics ) {
@@ -143,15 +156,13 @@ void testkdTreeBinning() {
          }
 
          delete [] binCenter;
-      }
-      else
+      } else {
          Error("testkdTreeBinning::FindBin"," Bin %d is not existing ",ibin);
-
-
+         ++nfail;
+      }
    }
 
-   return;
-
+   return nfail;
 }
 
 int main(int argc, char **argv)
@@ -180,7 +191,7 @@ int main(int argc, char **argv)
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
-   testkdTreeBinning();
+   int nfail = testkdTreeBinning();
 
    if ( showGraphics )
    {
@@ -189,7 +200,6 @@ int main(int argc, char **argv)
       theApp = nullptr;
    }
 
-   return 0;
-
+   return nfail;
 }
 
