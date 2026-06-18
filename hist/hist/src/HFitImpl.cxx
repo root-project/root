@@ -695,6 +695,18 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    TString opt = option;
    opt.ToUpper();
 
+   // Parse the execution policy options first and strip them from the option
+   // string, so that the remaining letters (e.g. the "T", "E", "R" in
+   // "MULTITHREAD") are not mistaken for single-letter options below.
+   if (opt.Contains("SERIAL")) {
+      fitOption.ExecPolicy = ROOT::EExecutionPolicy::kSequential;
+      opt.ReplaceAll("SERIAL", "");
+   }
+   if (opt.Contains("MULTITHREAD")) {
+      fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
+      opt.ReplaceAll("MULTITHREAD", "");
+   }
+
    // parse firt the specific options
    if (type == EFitObjectType::kHistogram) {
 
@@ -714,16 +726,6 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       //    fitOption.ExecPolicy = ROOT::Fit::kMultiprocess;
       //    opt.ReplaceAll("MULTIPROC","");
       // }
-
-      if (opt.Contains("SERIAL")) {
-         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kSequential;
-         opt.ReplaceAll("SERIAL","");
-      }
-
-      if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
-         opt.ReplaceAll("MULTITHREAD","");
-      }
 
       if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
       if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins or points have weight =1 (for chi2 fit)

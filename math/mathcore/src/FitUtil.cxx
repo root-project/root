@@ -425,7 +425,8 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
 
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {
+double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints,
+                                      ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks) {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
    // method using the error in the coordinates
@@ -440,39 +441,42 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 
    assert(data.HaveCoordErrors()  || data.HaveAsymErrors());
 
-   double chi2 = 0;
-   //int nRejected = 0;
-
-
    //func.SetParameters(p);
 
    unsigned int ndim = func.NDim();
 
-   // use Richardson derivator
-   ROOT::Math::RichardsonDerivator derivator;
-
    double maxResValue = std::numeric_limits<double>::max() /n;
 
+   auto mapFunction = [&](const unsigned i) {
 
+      // use a Richardson derivator local to the iteration since it is not thread safe
+      ROOT::Math::RichardsonDerivator derivator;
 
-   for (unsigned int i = 0; i < n; ++ i) {
+      // copy the coordinates and the coordinate errors of the point into thread-local
+      // buffers: the BinData::GetPoint and GetPointError accessors return pointers into
+      // shared temporary storage and are not thread safe (in contrast to the per-component
+      // accessors used here)
+      // TODO: add threadsafe getters to FitData and BinData!
+      std::vector<double> x(ndim);
+      std::vector<double> ex(ndim);
+      for (unsigned int icoord = 0; icoord < ndim; ++icoord) {
+         x[icoord] = *data.GetCoordComponent(i, icoord);
+         ex[icoord] = data.GetCoordErrorComponent(i, icoord);
+      }
 
+      double y = data.Value(i);
 
-      double y = 0;
-      const double * x = data.GetPoint(i,y);
-
-      double fval = func( x, p );
+      double fval = func( x.data(), p );
 
       double delta_y_func = y - fval;
 
 
       double ey = 0;
-      const double * ex = nullptr;
       if (!data.HaveAsymErrors() )
-         ex = data.GetPointError(i, ey);
+         ey = data.Error(i);
       else {
-         double eylow, eyhigh = 0;
-         ex = data.GetPointError(i, eylow, eyhigh);
+         double eylow = 0, eyhigh = 0;
+         data.GetAsymError(i, eylow, eyhigh);
          if ( delta_y_func < 0)
             ey = eyhigh; // function is higher than points
          else
@@ -485,7 +489,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
       // if j is less ndim some elements are not zero
       if (j < ndim) {
          // need an adapter from a multi-dim function to a one-dimensional
-         ROOT::Math::OneDimMultiFunctionAdapter<const IModelFunction &> f1D(func,x,0,p);
+         ROOT::Math::OneDimMultiFunctionAdapter<const IModelFunction &> f1D(func,x.data(),0,p);
          // select optimal step size  (use 10--2 by default as was done in TF1:
          double kEps = 0.01;
          double kPrecision = 1.E-8;
@@ -518,12 +522,38 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 
       // avoid (infinity and nan ) in the chi2 sum
       // eventually add possibility of excluding some points (like singularity)
-      if ( resval < maxResValue )
-         chi2 += resval;
-      else
-         chi2 += maxResValue;
+      return ( resval < maxResValue ) ? resval : maxResValue;
       //nRejected++;
+   };
 
+#ifdef R__USE_IMT
+   auto redFunction = [](const std::vector<double> & objs) {
+      return std::accumulate(objs.begin(), objs.end(), double{});
+   };
+#else
+   (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
+      Warning("FitUtil::EvaluateChi2Effective", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                                "to ROOT::EExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::EExecutionPolicy::kSequential;
+   }
+#endif
+
+   double chi2 = 0;
+   if (executionPolicy == ROOT::EExecutionPolicy::kSequential) {
+      for (unsigned int i = 0; i < n; ++i) {
+         chi2 += mapFunction(i);
+      }
+#ifdef R__USE_IMT
+   } else if (executionPolicy == ROOT::EExecutionPolicy::kMultiThread) {
+      ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
+      chi2 = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
+#endif
+   } else {
+      Error("FitUtil::EvaluateChi2Effective", "Execution policy unknown. Available choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
    }
 
    // reset the number of fitting data points
