@@ -120,11 +120,19 @@ class ROOTModule(unittest.TestCase):
 
         version = tuple(int(n) for n in ROOT.__version__.split("."))
 
-        if version >= (6, 44, 0):
+        if version >= (6, 43, 0):
             # Verify that SetHeuristicMemoryPolicy is not available
             with self.assertRaises(AttributeError):
                 ROOT.SetHeuristicMemoryPolicy(True)
                 ROOT.SetHeuristicMemoryPolicy(False)
+
+        if version >= (6, 43, 0) and hasattr(ROOT, "RooArgSet"):
+            # Verify that the implicit conversion from Python set to RooArgSet
+            # is gone
+            x = ROOT.RooRealVar("x", "x", 1.0)
+            y = ROOT.RooRealVar("y", "y", -1.0)
+            with self.assertRaises(TypeError):
+                ROOT.RooDataSet("data", "data", {x, y})
 
     def test_lazy_gdirectory(self):
         """Check that gDirectory is always lazy evaluated to the current
