@@ -40,13 +40,13 @@ gaussy = ROOT.RooGaussian("gaussy", "Gaussian in y", y, 0.0, 3.0)
 # -------------------------------------------------------
 
 # Create gaussx(x,sx|y) * gaussy(y)
-model = ROOT.RooProdPdf("model", "gaussx(x|y)*gaussy(y)", {gaussy}, Conditional=({gaussx}, {x}))
+model = ROOT.RooProdPdf("model", "gaussx(x|y)*gaussy(y)", gaussy, Conditional=(gaussx, x))
 
 # Sample, fit and plot product pdf
 # ---------------------------------------------------------------
 
 # Generate 1000 events in x and y from model
-data = model.generate({x, y}, 10000)
+data = model.generate([x, y], 10000)
 
 # Plot x distribution of data and projection of model x = Int(dy)
 # model(x,y)

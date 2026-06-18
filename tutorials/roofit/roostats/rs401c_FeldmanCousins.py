@@ -28,10 +28,10 @@ mu = ROOT.RooRealVar("mu", "", 2.5, 0, 15)  # with a limit on mu>=0
 b = ROOT.RooConstVar("b", "", 3.0)
 mean = ROOT.RooAddition("mean", "", [mu, b])
 pois = ROOT.RooPoisson("pois", "", x, mean)
-parameters = {mu}
+parameters = [mu]
 
 # create a toy dataset
-data = pois.generate({x}, 1)
+data = pois.generate(x, 1)
 data.Print("v")
 
 dataCanvas = ROOT.TCanvas("dataCanvas")
@@ -44,7 +44,7 @@ w = ROOT.RooWorkspace()
 modelConfig = ROOT.RooStats.ModelConfig("poissonProblem", w)
 modelConfig.SetPdf(pois)
 modelConfig.SetParametersOfInterest(parameters)
-modelConfig.SetObservables({x})
+modelConfig.SetObservables(x)
 w.Print()
 
 # show use of Feldman-Cousins

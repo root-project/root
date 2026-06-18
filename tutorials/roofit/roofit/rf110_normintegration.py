@@ -34,7 +34,7 @@ print("gx_Norm[x] = ", gx.getVal(nset))
 
 # Create object representing integral over gx
 # which is used to calculate  gx_Norm[x] == gx / gx_Int[x]
-igx = gx.createIntegral({x})
+igx = gx.createIntegral(x)
 print("gx_Int[x] = ", igx.getVal())
 
 # Integrate normalized pdf over subrange
@@ -46,7 +46,7 @@ x.setRange("signal", -5, 5)
 # Create an integral of gx_Norm[x] over x in range "signal"
 # ROOT.This is the fraction of of pdf gx_Norm[x] which is in the
 # range named "signal"
-xset = {x}
+xset = [x]
 igx_sig = gx.createIntegral(xset, NormSet=xset, Range="signal")
 print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
@@ -55,7 +55,7 @@ print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
 # Create the cumulative distribution function of gx
 # i.e. calculate Int[-10,x] gx(x') dx'
-gx_cdf = gx.createCdf({x})
+gx_cdf = gx.createCdf(x)
 
 # Plot cdf of gx versus x
 frame = x.frame(Title="cdf of Gaussian pdf")

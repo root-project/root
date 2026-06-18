@@ -63,7 +63,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [nbkg, nsig])
 
 mcstudy = ROOT.RooMCStudy(
     model,
-    {x},
+    x,
     Binned=True,
     Silence=True,
     Extended=True,

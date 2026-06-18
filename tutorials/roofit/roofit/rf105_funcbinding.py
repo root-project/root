@@ -41,7 +41,7 @@ beta = ROOT.RooFit.bindPdf("beta", ROOT.Math.beta_pdf, x2, a, b)
 beta.Print()
 
 # Generate some events and fit
-data = beta.generate({x2}, 10000)
+data = beta.generate(x2, 10000)
 beta.fitTo(data, PrintLevel=-1)
 
 # Plot data and pdf on frame

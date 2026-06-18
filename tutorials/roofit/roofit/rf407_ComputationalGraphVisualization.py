@@ -66,13 +66,13 @@ model.graphVizTree("rf206_model.dot")
 # ----------------------------------------------------------------------------------------
 
 # Make list of model parameters
-params = model.getParameters({x})
+params = model.getParameters(x)
 
 # Save snapshot of prefit parameters
 initParams = params.snapshot()
 
 # Do fit to data, obtain error estimates on parameters
-data = model.generate({x}, 1000)
+data = model.generate(x, 1000)
 model.fitTo(data, PrintLevel=-1)
 
 # Print LateX table of parameters of pdf
