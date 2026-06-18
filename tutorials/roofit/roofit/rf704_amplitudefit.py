@@ -44,7 +44,7 @@ f2 = ROOT.RooRealVar("f2", "f2", 0.5, 0, 2)
 pdf = ROOT.RooRealSumPdf("pdf", "pdf", [ampl1, ampl2], [f1, f2])
 
 # Generate some toy data from pdf
-data = pdf.generate({t, cosa}, 10000)
+data = pdf.generate([t, cosa], 10000)
 
 # Fit pdf to toy data with only amplitude strength floating
 pdf.fitTo(data, PrintLevel=-1)

@@ -50,7 +50,7 @@ model = ROOT.RooAddPdf("model", "(g1+g2)+a", [bkg, sig], [nbkg, nsig])
 
 # Generate a data sample of expected number events in x from model
 # = model.expectedEvents() = nsig+nbkg
-data = model.generate({x})
+data = model.generate(x)
 
 # Fit model to data, ML term automatically included
 model.fitTo(data, PrintLevel=-1)
@@ -61,11 +61,10 @@ data.plotOn(xframe)
 model.plotOn(xframe)
 
 # Overlay the background component of model with a dashed line
-model.plotOn(xframe, Components={bkg}, LineStyle=":")
+model.plotOn(xframe, Components=[bkg], LineStyle=":")
 
 # Overlay the background+sig2 components of model with a dotted line
-ras_bkg_sig2 = {bkg, sig2}
-model.plotOn(xframe, Components=ras_bkg_sig2, LineStyle=":")
+model.plotOn(xframe, Components=[bkg, sig2], LineStyle=":")
 
 # Print structure of composite pdf
 model.Print("t")

@@ -39,7 +39,7 @@ print("gx_Norm[x,y] = ", gxy.getVal(nset_xy))
 
 # Create object representing integral over gx
 # which is used to calculate  gx_Norm[x,y] == gx / gx_Int[x,y]
-x_and_y = {x, y}
+x_and_y = [x, y]
 igxy = gxy.createIntegral(x_and_y)
 print("gx_Int[x,y] = ", igxy.getVal())
 
@@ -74,7 +74,7 @@ print("gx_Int[x,y|signal]_Norm[x,y] = ", igxy_sig.getVal())
 
 # Create the cumulative distribution function of gx
 # i.e. calculate Int[-10,x] gx(x') dx'
-gxy_cdf = gxy.createCdf({x, y})
+gxy_cdf = gxy.createCdf([x, y])
 
 # Plot cdf of gx versus x
 hh_cdf = gxy_cdf.createHistogram("hh_cdf", x, Binning=40, YVar=dict(var=y, Binning=40))

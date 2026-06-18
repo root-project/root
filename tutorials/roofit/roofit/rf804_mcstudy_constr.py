@@ -44,7 +44,7 @@ sumc = ROOT.RooProdPdf("sumc", "sum with constraint", [sum, fconstraint])
 # ---------------------------------------------------
 
 # Perform toy study with internal constraint on f
-mcs = ROOT.RooMCStudy(sumc, {x}, Constrain={f}, Silence=True, Binned=True, FitOptions={"PrintLevel": -1})
+mcs = ROOT.RooMCStudy(sumc, x, Constrain=[f], Silence=True, Binned=True, FitOptions={"PrintLevel": -1})
 
 # Run 500 toys of 2000 events.
 # Before each toy is generated, value for the f is sampled from the constraint pdf and
