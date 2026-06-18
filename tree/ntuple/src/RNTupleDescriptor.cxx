@@ -1363,6 +1363,14 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t o
       R__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
       fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
    }
+
+   // Patch up column ids in the header extension
+   if (auto &xHeader = fDescriptor.fHeaderExtension) {
+      for (auto &columnId : xHeader->fExtendedColumnRepresentations) {
+         if (columnId >= fDescriptor.GetNPhysicalColumns())
+            columnId += offset;
+      }
+   }
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
