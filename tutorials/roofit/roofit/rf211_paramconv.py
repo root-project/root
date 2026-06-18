@@ -37,14 +37,14 @@ model = ROOT.RooFFTConvPdf("model", "model", mean, modelx, model_mean)
 # Configure convolution to construct a 2-D cache in (x,mean)
 # rather than a 1-d cache in mean that needs to be recalculated
 # for each value of x
-model.setCacheObservables({x})
+model.setCacheObservables(x)
 model.setBufferFraction(1.0)
 
 # Integrate model over projModel = Int model dmean
-projModel = model.createProjection({mean})
+projModel = model.createProjection(mean)
 
 # Generate 1000 toy events
-d = projModel.generateBinned({x}, 1000)
+d = projModel.generateBinned(x, 1000)
 
 # Fit p.d.f. to toy data
 projModel.fitTo(d, Verbose=True, PrintLevel=-1)
@@ -60,7 +60,7 @@ hh = model.createHistogram(
     x,
     Binning=50,
     YVar=dict(var=mean, Binning=50),
-    ConditionalObservables={mean},
+    ConditionalObservables=[mean],
 )
 hh.SetTitle("histogram of model(x|mean)")
 hh.SetLineColor("kBlue")

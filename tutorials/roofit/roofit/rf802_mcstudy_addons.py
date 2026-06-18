@@ -33,7 +33,7 @@ gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
 
 # Create study manager for binned likelihood fits of a Gaussian pdf in 10
 # bins
-mcs = ROOT.RooMCStudy(gauss, {x}, Silence=True, Binned=True)
+mcs = ROOT.RooMCStudy(gauss, x, Silence=True, Binned=True)
 
 # Add chi^2 calculator module to mcs
 chi2mod = ROOT.RooChi2MCSModule()
@@ -60,7 +60,7 @@ gauss2 = ROOT.RooGaussian("gauss2", "gaussian PDF2", x, mean2, sigma)
 # Create study manager with separate generation and fit model. ROOT.This configuration
 # is set up to generate bad fits as the fit and generator model have different means
 # and the mean parameter is not floating in the fit
-mcs2 = ROOT.RooMCStudy(gauss2, {x}, FitModel=gauss, Silence=True, Binned=True)
+mcs2 = ROOT.RooMCStudy(gauss2, x, FitModel=gauss, Silence=True, Binned=True)
 
 # Add chi^2 calculator module to mcs
 chi2mod2 = ROOT.RooChi2MCSModule()
