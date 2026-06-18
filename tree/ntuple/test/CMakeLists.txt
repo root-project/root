@@ -185,5 +185,4 @@ endif()
 if(pyroot)
   ROOT_ADD_PYUNITTEST(ntuple_py_basics ntuple_basics.py)
   ROOT_ADD_PYUNITTEST(ntuple_py_model ntuple_model.py)
-
 endif()

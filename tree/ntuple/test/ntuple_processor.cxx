@@ -799,6 +799,10 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
    EXPECT_EQ(exp2, os2.str());
 }
 
+// This test is a translation using RNTupleProcessor of the test
+// introduced by https://github.com/root-project/root/pull/19322,
+// to ensure that the TTree friendship mechanism works equivalently
+// with the RNTuple join mechanism.
 class GH16805ProcessorTest : public testing::Test {
 protected:
    const std::vector<std::string> fStepZeroFiles{
