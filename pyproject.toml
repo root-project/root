@@ -19,6 +19,7 @@ dependencies = [
 # `root`, other tools can be added later using the same approach.
 [project.scripts]
 root = "ROOT._rootcli:main"
+export_cmake = "ROOT._export_cmake:main"
 
 [tool.cibuildwheel]
 # Increase pip debugging output
