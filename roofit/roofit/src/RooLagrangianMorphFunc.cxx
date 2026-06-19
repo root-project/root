@@ -461,8 +461,7 @@ void setOwnerRecursive(TFolder *theFolder)
    theFolder->SetOwner();
    // And also need to set up ownership for nested folders
    auto subdirs = theFolder->GetListOfFolders();
-   for (auto *subdir : *subdirs) {
-      auto thisfolder = dynamic_cast<TFolder *>(subdir);
+   for (auto *thisfolder : dynamic_range_cast<TFolder *>(*subdirs)) {
       if (thisfolder) {
          // no explicit deletion here, will be handled by parent
          setOwnerRecursive(thisfolder);
@@ -678,8 +677,7 @@ inline bool setParam(RooRealVar *p, double val, bool force)
 template <class T1, class T2>
 inline bool setParams(const T2 &args, T1 val)
 {
-   for (auto itr : args) {
-      RooRealVar *param = dynamic_cast<RooRealVar *>(itr);
+   for (auto *param : dynamic_range_cast<RooRealVar *>(args)) {
       if (!param)
          continue;
       setParam(param, val, true);
@@ -696,8 +694,7 @@ inline bool
 setParams(const std::map<const std::string, T1> &point, const T2 &args, bool force = false, T1 defaultVal = 0)
 {
    bool ok = true;
-   for (auto itr : args) {
-      RooRealVar *param = dynamic_cast<RooRealVar *>(itr);
+   for (auto *param : dynamic_range_cast<RooRealVar *>(args)) {
       if (!param || param->isConstant())
          continue;
       ok = setParam(param, defaultVal, force) && ok;
@@ -725,8 +722,7 @@ inline bool setParams(TH1 *hist, const T &args, bool force = false)
 {
    bool ok = true;
 
-   for (auto itr : args) {
-      RooRealVar *param = dynamic_cast<RooRealVar *>(itr);
+   for (auto *param : dynamic_range_cast<RooRealVar *>(args)) {
       if (!param)
          continue;
       ok = setParam(param, 0., force) && ok;
@@ -752,8 +748,7 @@ template <class T>
 inline RooLagrangianMorphFunc::ParamSet getParams(const T &parameters)
 {
    RooLagrangianMorphFunc::ParamSet retval;
-   for (auto itr : parameters) {
-      RooRealVar *param = dynamic_cast<RooRealVar *>(itr);
+   for (auto *param : dynamic_range_cast<RooRealVar *>(parameters)) {
       if (!param)
          continue;
       retval[param->GetName()] = param->getVal();
@@ -977,9 +972,7 @@ inline void fillFeynmanDiagram(FeynmanDiagram &diagram, const std::vector<List *
    for (auto const &vertex : vertices) {
       std::vector<bool> vertexCouplings(ncouplings, false);
       int idx = -1;
-      RooAbsReal *coupling;
-      for (auto citr : couplings) {
-         coupling = dynamic_cast<RooAbsReal *>(citr);
+      for (auto *coupling : dynamic_range_cast<RooAbsReal *>(couplings)) {
          idx++;
          if (!coupling) {
             std::cerr << "encountered invalid list of couplings in vertex!" << std::endl;
@@ -1120,11 +1113,9 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
          std::cerr << "internal error, number of operators inconsistent!" << std::endl;
       }
 
-      RooAbsReal *obj0;
       int idx = 0;
 
-      for (auto itr1 : couplings) {
-         obj0 = dynamic_cast<RooAbsReal *>(itr1);
+      for (auto *obj0 : dynamic_range_cast<RooAbsReal *>(couplings)) {
          if (obj0->getVal() != 0) {
             couplingsZero[idx] = false;
          }
@@ -1132,8 +1123,7 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
       }
    }
 
-   for (auto itr2 : flags) {
-      auto obj1 = dynamic_cast<RooAbsReal *>(itr2);
+   for (auto *obj1 : dynamic_range_cast<RooAbsReal *>(flags)) {
       int nZero = 0;
       int nNonZero = 0;
       for (auto sampleit : inputFlags) {
@@ -1203,8 +1193,7 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
       // check and apply flags
       bool removedByFlag = false;
 
-      for (auto itr : flags) {
-         auto obj = dynamic_cast<RooAbsReal *>(itr);
+      for (auto *obj : dynamic_range_cast<RooAbsReal *>(flags)) {
          if (!obj)
             continue;
          TString sval(obj->getStringAttribute("NewPhysics"));
@@ -1411,10 +1400,8 @@ public:
             // set all vars to value stored in input file
             setParams(sampleit.second, operators, true);
             bool first = true;
-            RooAbsReal *obj;
 
-            for (auto itr : _couplings) {
-               obj = dynamic_cast<RooAbsReal *>(itr);
+            for (auto *obj : dynamic_range_cast<RooAbsReal *>(_couplings)) {
                if (!first)
                   std::cerr << ", ";
                oocxcoutW((TObject *)nullptr, Eval) << obj->GetName() << "=" << obj->getVal();
@@ -1953,8 +1940,8 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
 {
    for (size_t j = 0; j < other._diagrams.size(); ++j) {
       std::vector<RooListProxy *> diagram;
-      for (size_t i = 0; i < other._diagrams[j].size(); ++i) {
-         RooListProxy *list = new RooListProxy(other._diagrams[j][i]->GetName(), this, *(other._diagrams[j][i]));
+      for (auto *elem : other._diagrams[j]) {
+         RooListProxy *list = new RooListProxy(elem->GetName(), this, *elem);
          diagram.push_back(list);
       }
       _diagrams.push_back(diagram);
@@ -2158,8 +2145,7 @@ RooProduct *RooLagrangianMorphFunc::getSumElement(const char *name) const
    prodname.Append("_");
    prodname.Append(this->GetName());
 
-   for (auto itr : *args) {
-      RooProduct *prod = dynamic_cast<RooProduct *>(itr);
+   for (auto *prod : dynamic_range_cast<RooProduct *>(*args)) {
       if (!prod)
          continue;
       TString sname(prod->GetName());
@@ -2215,11 +2201,9 @@ void RooLagrangianMorphFunc::printSampleWeights() const
 
 void RooLagrangianMorphFunc::randomizeParameters(double z)
 {
-   RooRealVar *obj;
    TRandom3 r;
 
-   for (auto itr : _operators) {
-      obj = dynamic_cast<RooRealVar *>(itr);
+   for (auto *obj : dynamic_range_cast<RooRealVar *>(_operators)) {
       double val = obj->getVal();
       if (obj->isConstant())
          continue;
@@ -2504,8 +2488,7 @@ RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getMorphParameters(cons
 
 void RooLagrangianMorphFunc::setParameters(const RooArgList *list)
 {
-   for (auto itr : *list) {
-      RooRealVar *param = dynamic_cast<RooRealVar *>(itr);
+   for (auto *param : dynamic_range_cast<RooRealVar *>(*list)) {
       if (!param)
          continue;
       this->setParameter(param->GetName(), param->getVal());
@@ -2562,8 +2545,7 @@ TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateEr
       double val = 0;
       double unc2 = 0;
       double unc = 0;
-      for (auto itr : *args) {
-         RooProduct *prod = dynamic_cast<RooProduct *>(itr);
+      for (auto *prod : dynamic_range_cast<RooProduct *>(*args)) {
          if (!prod)
             continue;
          RooAbsArg *phys = prod->components().find(Form("phys_%s", prod->GetName()));
@@ -2595,8 +2577,7 @@ int RooLagrangianMorphFunc::countContributingFormulas() const
    if (!mf)
       coutE(InputArguments) << "unable to retrieve morphing function" << std::endl;
    std::unique_ptr<RooArgSet> args{mf->getComponents()};
-   for (auto itr : *args) {
-      RooProduct *prod = dynamic_cast<RooProduct *>(itr);
+   for (auto *prod : dynamic_range_cast<RooProduct *>(*args)) {
       if (prod->getVal() != 0) {
          nFormulas++;
       }
@@ -2721,8 +2702,7 @@ const RooArgList *RooLagrangianMorphFunc::getCouplingSet() const
 RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getCouplings() const
 {
    RooLagrangianMorphFunc::ParamSet couplings;
-   for (auto obj : *(this->getCouplingSet())) {
-      RooAbsReal *var = dynamic_cast<RooAbsReal *>(obj);
+   for (auto *var : dynamic_range_cast<RooAbsReal *>(*(this->getCouplingSet()))) {
       if (!var)
          continue;
       const std::string name(var->GetName());
@@ -2847,8 +2827,7 @@ double RooLagrangianMorphFunc::expectedUncertainty() const
 void RooLagrangianMorphFunc::printParameters() const
 {
    // print the parameters and their current values
-   for (auto obj : _operators) {
-      RooRealVar *param = static_cast<RooRealVar *>(obj);
+   for (auto *param : static_range_cast<RooRealVar *>(_operators)) {
       if (!param)
          continue;
       param->Print();
@@ -2860,8 +2839,7 @@ void RooLagrangianMorphFunc::printParameters() const
 
 void RooLagrangianMorphFunc::printFlags() const
 {
-   for (auto flag : _flags) {
-      RooRealVar *param = static_cast<RooRealVar *>(flag);
+   for (auto *param : static_range_cast<RooRealVar *>(_flags)) {
       if (!param)
          continue;
       param->Print();
