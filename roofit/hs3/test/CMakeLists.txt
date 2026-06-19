@@ -5,7 +5,7 @@ if(test_roofit_hs3testsuite)
     include(FetchContent)
     FetchContent_Declare(
         hs3testsuite
-        GIT_REPOSITORY https://github.com/Phmonski/HS3TestSuite.git
+        GIT_REPOSITORY https://github.com/hep-statistics-serialization-standard/HS3TestSuite.git
         GIT_TAG 9d04e321ae6fddd283a35507f14ecf852eb7df61
     )
     FetchContent_MakeAvailable(hs3testsuite)
