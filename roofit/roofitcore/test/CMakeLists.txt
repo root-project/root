@@ -98,7 +98,7 @@ if (roofit_multiprocess)
 endif()
 
 if(mathmore)
-  list(APPEND ROOFITMORE_LIBRARIES RooFitMore)
+  list(APPEND ROOFITMORE_LIBRARIES RooFitMore MathMore)
 endif()
 
 #--stressRooFit----------------------------------------------------------------------------------
