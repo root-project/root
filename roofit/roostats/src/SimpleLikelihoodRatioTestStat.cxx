@@ -37,8 +37,10 @@ double RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooAr
 
    // strip pdfs of constraints (which cancel out in the ratio) to avoid unnecessary computations and computational errors
    if (fFirstEval) {
-      fNullPdf = RooStats::MakeUnconstrainedPdf(*fNullPdf, *fNullPdf->getObservables(data));
-      fAltPdf  = RooStats::MakeUnconstrainedPdf(*fAltPdf , *fAltPdf->getObservables(data) );
+      std::unique_ptr<RooArgSet> nullObs{fNullPdf->getObservables(data)};
+      fNullPdf = RooStats::MakeUnconstrainedPdf(*fNullPdf, *nullObs);
+      std::unique_ptr<RooArgSet> altObs{fAltPdf->getObservables(data)};
+      fAltPdf = RooStats::MakeUnconstrainedPdf(*fAltPdf, *altObs);
    }
 
    fFirstEval = false;

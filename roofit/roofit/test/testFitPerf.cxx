@@ -549,7 +549,7 @@ int FitUsingRooFit(TTree *tree, TF1 *func)
       int level = 3;
       std::cout << "num entries = " << data.numEntries() << std::endl;
       bool save = true;
-      (pdf.getVariables())->Print("v"); // print the parameters
+      std::unique_ptr<RooArgSet>{pdf.getVariables()}->Print("v"); // print the parameters
 #else
       int level = -1;
       bool save = false;
@@ -630,7 +630,7 @@ int FitUsingRooFit2(TTree *tree)
       int level = 3;
       std::cout << "num entries = " << data.numEntries() << std::endl;
       bool save = true;
-      (pdf[N - 1]->getVariables())->Print("v"); // print the parameters
+      std::unique_ptr<RooArgSet>{pdf[N - 1]->getVariables()}->Print("v"); // print the parameters
       std::cout << "\n\nDo the fit now \n\n";
 #else
       int level = -1;

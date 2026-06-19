@@ -2247,10 +2247,10 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
   // Take out data-projected dependents from projectedVars
-  RooArgSet* projDataNeededVars = nullptr ;
+  std::unique_ptr<RooArgSet> projDataNeededVars;
   if (o.projData) {
-    projDataNeededVars = projectedVars.selectCommon(projDataVars);
-    projectedVars.remove(projDataVars,true,true) ;
+     projDataNeededVars.reset(projectedVars.selectCommon(projDataVars));
+     projectedVars.remove(projDataVars, true, true);
   }
 
   // Take out plotted asymmetry from projection

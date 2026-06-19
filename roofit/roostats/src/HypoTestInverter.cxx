@@ -1237,7 +1237,8 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       inverter.SetData(*bkgdata);
 
       // print global observables
-      auto gobs = bModel->GetPdf()->getVariables()->selectCommon(* sbModel->GetGlobalObservables() );
+      std::unique_ptr<RooArgSet> bModelVars{bModel->GetPdf()->getVariables()};
+      std::unique_ptr<RooAbsCollection> gobs{bModelVars->selectCommon(*sbModel->GetGlobalObservables())};
       gobs->Print("v");
 
       HypoTestInverterResult * r  = inverter.GetInterval();

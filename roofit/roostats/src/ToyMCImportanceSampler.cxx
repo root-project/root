@@ -302,7 +302,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       std::unique_ptr<RooArgSet> allVarsImpDens{fImportanceDensities[fIndexGenDensity]->getVariables()};
       allVars->add(*allVarsImpDens);
    }
-   const RooArgSet* saveVars = (const RooArgSet*)allVars->snapshot();
+   std::unique_ptr<const RooArgSet> saveVars{static_cast<const RooArgSet *>(allVars->snapshot())};
 
    double globalWeight = 1.0;
    if(fNuisanceParametersSampler) { // use nuisance parameters?
@@ -413,10 +413,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       ooccoutD(nullptr,InputArguments) << "weights["<<j<<"]: " << weights[j] << std::endl;
    }
 
-
-
    allVars->assign(*saveVars);
-   delete saveVars;
 
    return data;
 }
