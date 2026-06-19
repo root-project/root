@@ -15,6 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
     src/xRooNLLVar.cxx
     src/xRooNode.cxx
     src/xRooNode_interactive.cxx
+    src/PythonInterface.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
