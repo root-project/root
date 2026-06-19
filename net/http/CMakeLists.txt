@@ -54,9 +54,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
     ${_civetweb_libs}
     ${FASTCGI_LIBRARY}
     ${CMAKE_DL_LIBS}
+    Thread
   DEPENDENCIES
     RIO
-    Thread
 )
 
 if(builtin_civetweb)

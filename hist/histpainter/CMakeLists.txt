@@ -29,5 +29,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     Graf
     Hist
     MathCore
+  LIBRARIES
     Matrix
 )
