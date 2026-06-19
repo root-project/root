@@ -37,7 +37,7 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "TEnv.h"
 
-#include "Python.h"
+#include "./PythonInterface.h"
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -645,9 +645,9 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    }
    coordString.erase(coordString.end() - 1);
 
-   if (Py_IsInitialized()) {
+   if (xPython::isPythonInitialized()) {
       auto s = TString::Format("Info in <xRooHypoSpace::AddPoint>: Added new point @ %s", coordString.c_str());
-      PySys_WriteStdout("%s\n", s.Data());
+      xPython::writeStdoutLine(s.Data());
       //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
       //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
       //      }
@@ -910,8 +910,8 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          out->GetListOfFunctions()->Add(x, "F");
          x = out->Clone("down");
          x->SetBit(kCanDelete);
-         // dynamic_cast<TAttFill*>(x)->SetFillColor((nSigma==2) ? kYellow : kGreen);
-         // dynamic_cast<TAttFill*>(x)->SetFillStyle(1001);
+         dynamic_cast<TAttFill*>(x)->SetFillColor(kBlack);
+         dynamic_cast<TAttFill*>(x)->SetFillStyle(nSigma == 2 ? 3005 : 3004);
          out->GetListOfFunctions()->Add(x, "F");
       }
       if (sOpt.Contains("ts")) {
@@ -1017,10 +1017,20 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
       for (int i = 0; i < out->GetN(); i++) {
          if (i < out->GetN() - nPointsDown) {
             up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
-            down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            //down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
          } else {
-            up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            //up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
             down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
+         }
+      }
+      // now go back round in reverse
+      for (int i = out->GetN()-1; i >= 0; i--) {
+         if (i < out->GetN() - nPointsDown) {
+            up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            //down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+         } else {
+            //up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
          }
       }
    }
@@ -1110,8 +1120,8 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          // out->GetListOfFunctions()->Add(out->GetHistogram()->Clone(".axis"),"sameaxis"); // redraw axis
 
          for (auto g : *out->GetListOfGraphs()) {
-            if (auto o = dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
-               leg->AddEntry(o, "", "F");
+            if (dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
+               leg->AddEntry(g, "", "F");
             } else {
                leg->AddEntry(g, "", "LPE");
             }
@@ -1280,12 +1290,13 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
          if (!gPad)
             gra->Draw(); // in 6.28 DrawClone wont make the gPad defined :( ... so Draw then clear and Draw Clone
          gPad->Clear();
-         gra->DrawClone("A")->SetBit(kCanDelete);
+         auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone("A"));
+         gra2->SetBit(kCanDelete);
+         gra2->SetMinimum(1e-9);
+         gra2->SetMaximum(1);
          gPad->RedrawAxis();
-         gra->SetMinimum(1e-9);
-         gra->SetMaximum(1);
-         gra->GetHistogram()->GetYaxis()->SetRangeUser(1e-9, 1);
-         gPad->Modified();
+         gPad->GetCanvas()->Paint();
+         gPad->GetCanvas()->Update();
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
          gPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
 #endif

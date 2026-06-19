@@ -66,7 +66,7 @@
 
 #include "TEnv.h"
 
-#include "Python.h"
+#include "./PythonInterface.h"
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -548,8 +548,8 @@ ROOT::Math::IOptions *xRooFit::defaultFitConfigOptions()
 
 void printCerr(const char *msg)
 {
-   if (Py_IsInitialized()) {
-      PySys_WriteStderr("%s\n", msg);
+   if (xPython::isPythonInitialized()) {
+      xPython::writeStderrLine(msg);
       //      if (PyObject *sys_stdout = PySys_GetObject("stderr"); sys_stdout != nullptr) {
       //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
       //      }
@@ -559,8 +559,8 @@ void printCerr(const char *msg)
 }
 void printCout(const char *msg)
 {
-   if (Py_IsInitialized()) {
-      PySys_WriteStdout("%s\n", msg);
+   if (xPython::isPythonInitialized()) {
+      xPython::writeStdoutLine(msg);
       //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
       //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
       //      }
