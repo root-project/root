@@ -1225,8 +1225,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
          RooArgList  genObs(*bkgdata->get(0));
          RooStats::PrintListContent(genObs, oocoutP(nullptr,Generation) );
          nObs = 0;
-         for (std::size_t i = 0; i < genObs.size(); ++i) {
-            RooRealVar * x = dynamic_cast<RooRealVar*>(&genObs[i]);
+         for (auto *x : dynamic_range_cast<RooRealVar*>(genObs)) {
             if (x) nObs += x->getVal();
          }
       }

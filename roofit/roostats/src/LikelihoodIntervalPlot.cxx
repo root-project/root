@@ -338,11 +338,10 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       RooArgList params(*newProfile->getVariables());
       // set values and error for the POI to the best fit values
-      for (std::size_t i = 0; i < params.size(); ++i) {
-         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
-         RooRealVar * fitPar =  static_cast<RooRealVar *> (fInterval->GetBestFitParameters()->find(par.GetName() ) );
+      for (auto *par : static_range_cast<RooRealVar *>(params)) {
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fInterval->GetBestFitParameters()->find(par->GetName() ) );
          if (fitPar) {
-            par.setVal( fitPar->getVal() );
+            par->setVal( fitPar->getVal() );
          }
       }
       // do a profile evaluation to start from the best fit values of parameters

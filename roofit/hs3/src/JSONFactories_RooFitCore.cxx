@@ -627,8 +627,7 @@ private:
 
       // Now build the final list following the order in varList
       RooArgList vars;
-      for (int i = 0; i < varList.getSize(); ++i) {
-         const auto *refVar = dynamic_cast<RooRealVar *>(varList.at(i));
+      for (auto *refVar : dynamic_range_cast<RooRealVar *>(varList)) {
          if (!refVar)
             continue;
 
