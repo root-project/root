@@ -50,6 +50,11 @@ if(roofit)
         ROOT/_pythonization/_roofit/_utils.py)
 endif()
 
+if(root7)
+    list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
+        ROOT/_pythonization/_histv7.py)
+endif()
+
 if(tmva)
     list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
         ROOT/_pythonization/_tmva/_crossvalidation.py
