@@ -15,3 +15,8 @@ target_link_libraries(minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
 # Disable warnings, since what has worked for 40 years...
 # (see https://sft.its.cern.ch/jira/browse/ROOT-9179 for the warnings)
 target_compile_options(minicern PRIVATE "$<$<COMPILE_LANGUAGE:Fortran>:-w>")
+
+# The offset computations between common blocks go wrong an arm64 with -O2.
+# This is not a proper fix, but getting it right would require rewriting zebra's
+# distance between common blocks logic ...
+target_compile_options(minicern PUBLIC "$<$<COMPILE_LANGUAGE:Fortran>:-O0>")
