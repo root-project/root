@@ -821,8 +821,15 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
          std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
          // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
          // also disable question about upload of data
+         user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyBypassNotification\", true);" << std::endl;
          user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
          user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
+
+         // try to avoid any kind of dialogs on the start
+         user_js << "user_pref(\"app.update.auto\", false);" << std::endl;
+         user_js << "user_pref(\"browser.shell.checkDefaultBrowser\", false);" << std::endl;
+         user_js << "user_pref(\"browser.aboutwelcome.enabled\", false);" << std::endl;
+         user_js << "user_pref(\"browser.tabs.disableBackgroundLinkLoading\", true);" << std::endl;
 
          // try to ensure that window closes with last tab
          user_js << "user_pref(\"browser.tabs.closeWindowWithLastTab\", true);" << std::endl;
