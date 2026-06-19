@@ -40,24 +40,24 @@ int testkdTreeBinning()
    //  C r e a t e  r a n d o m  s a m p l e
    // -----------------------------------------------------------------------------------------------
 
-   const UInt_t DATASZ = 10000;
-   const UInt_t DATADIM = 2;
-   const UInt_t NBINS = 50;
+   constexpr std::size_t DATASZ = 10000;
+   constexpr std::size_t DATADIM = 2;
+   constexpr std::size_t NBINS = 50;
 
-   Double_t smp[DATASZ * DATADIM];
+   double smp[DATASZ * DATADIM];
 
    double mu[2] = {0,2};
    double sig[2] = {2,3};
    TRandom3 r;
    r.SetSeed(1);
-   for (UInt_t i = 0; i < DATADIM; ++i)
-      for (UInt_t j = 0; j < DATASZ; ++j)
+   for (std::size_t i = 0; i < DATADIM; ++i)
+      for (std::size_t j = 0; j < DATASZ; ++j)
          smp[DATASZ * i + j] = r.Gaus(mu[i], sig[i]);
 
-   UInt_t h1bins = (UInt_t) std::sqrt(double(NBINS));
+   std::size_t h1bins = std::sqrt(double(NBINS));
 
    TH2D* h1 = new TH2D("h1BinTest", "Regular binning", h1bins, -5., 5., h1bins, -5., 5.);
-   for (UInt_t j = 0; j < DATASZ; ++j)
+   for (std::size_t j = 0; j < DATASZ; ++j)
       h1->Fill(smp[j], smp[DATASZ + j]);
 
 
@@ -67,20 +67,20 @@ int testkdTreeBinning()
 
    TKDTreeBinning* kdBins = new TKDTreeBinning(DATASZ, DATADIM, smp, NBINS);
 
-   UInt_t nbins = kdBins->GetNBins();
-   UInt_t dim   = kdBins->GetDim();
+   std::size_t nbins = kdBins->GetNBins();
+   std::size_t dim = kdBins->GetDim();
 
-   const Double_t* binsMinEdges = kdBins->GetBinsMinEdges();
-   const Double_t* binsMaxEdges = kdBins->GetBinsMaxEdges();
+   const double *binsMinEdges = kdBins->GetBinsMinEdges();
+   const double *binsMaxEdges = kdBins->GetBinsMaxEdges();
 
    TH2Poly* h2pol = new TH2Poly("h2PolyBinTest", "KDTree binning", kdBins->GetDataMin(0), kdBins->GetDataMax(0), kdBins->GetDataMin(1), kdBins->GetDataMax(1));
 
-   for (UInt_t i = 0; i < nbins; ++i) {
-      UInt_t edgeDim = i * dim;
+   for (std::size_t i = 0; i < nbins; ++i) {
+      std::size_t edgeDim = i * dim;
       h2pol->AddBin(binsMinEdges[edgeDim], binsMinEdges[edgeDim + 1], binsMaxEdges[edgeDim], binsMaxEdges[edgeDim + 1]);
    }
 
-   for (UInt_t i = 1; i <= kdBins->GetNBins(); ++i)
+   for (std::size_t i = 1; i <= kdBins->GetNBins(); ++i)
       h2pol->SetBinContent(i, kdBins->GetBinDensity(i - 1));
 
    int ibinMin = kdBins->GetBinMinDensity();
@@ -179,36 +179,36 @@ int testkdTreeBinningFindBinRange()
 
    int nfail = 0;
 
-   const UInt_t DATASZ = 100500; // deliberately NOT a multiple of NBINS
-   const UInt_t DATADIM = 5;
-   const UInt_t NBINS = 1000;
+   constexpr std::size_t DATASZ = 100500; // deliberately NOT a multiple of NBINS
+   constexpr std::size_t DATADIM = 5;
+   constexpr std::size_t NBINS = 1000;
 
-   std::vector<Double_t> smp(DATASZ * DATADIM);
+   std::vector<double> smp(DATASZ * DATADIM);
    TRandom3 r;
    r.SetSeed(1);
-   for (UInt_t i = 0; i < DATADIM; ++i)
-      for (UInt_t j = 0; j < DATASZ; ++j)
+   for (std::size_t i = 0; i < DATADIM; ++i)
+      for (std::size_t j = 0; j < DATASZ; ++j)
          smp[DATASZ * i + j] = r.Uniform(-1., 1.);
 
    TKDTreeBinning kdBins(DATASZ, DATADIM, smp, NBINS);
 
-   const UInt_t nbins = kdBins.GetNBins();
+   const std::size_t nbins = kdBins.GetNBins();
 
    // The number of bins must match the number of terminal nodes of the kd-tree.
    if ((int)nbins != kdBins.GetTree()->GetNNodes() + 1) {
-      Error("testkdTreeBinningFindBinRange", "GetNBins() (%u) != number of kd-tree terminal nodes (%d)", nbins,
+      Error("testkdTreeBinningFindBinRange", "GetNBins() (%zu) != number of kd-tree terminal nodes (%d)", nbins,
             kdBins.GetTree()->GetNNodes() + 1);
       ++nfail;
    }
 
    // Every data point must be assigned to a valid bin.
-   std::vector<Double_t> point(DATADIM);
-   for (UInt_t j = 0; j < DATASZ; ++j) {
-      for (UInt_t i = 0; i < DATADIM; ++i)
+   std::vector<double> point(DATADIM);
+   for (std::size_t j = 0; j < DATASZ; ++j) {
+      for (std::size_t i = 0; i < DATADIM; ++i)
          point[i] = smp[DATASZ * i + j];
-      UInt_t bin = kdBins.FindBin(point.data());
+      std::size_t bin = kdBins.FindBin(point.data());
       if (bin >= nbins) {
-         Error("testkdTreeBinningFindBinRange", "FindBin returned out-of-range bin %u (NBins = %u)", bin, nbins);
+         Error("testkdTreeBinningFindBinRange", "FindBin returned out-of-range bin %zu (NBins = %zu)", bin, nbins);
          ++nfail;
          break;
       }
@@ -216,10 +216,10 @@ int testkdTreeBinningFindBinRange()
 
    // The total bin content must add up to the data size.
    Long64_t total = 0;
-   for (UInt_t i = 0; i < nbins; ++i)
+   for (std::size_t i = 0; i < nbins; ++i)
       total += kdBins.GetBinContent(i);
    if (total != (Long64_t)DATASZ) {
-      Error("testkdTreeBinningFindBinRange", "Sum of bin contents (%lld) != data size (%u)", total, DATASZ);
+      Error("testkdTreeBinningFindBinRange", "Sum of bin contents (%lld) != data size (%zu)", total, DATASZ);
       ++nfail;
    }
 
@@ -229,7 +229,7 @@ int testkdTreeBinningFindBinRange()
 int main(int argc, char **argv)
 {
   // Parse command line arguments
-  for (Int_t i=1 ;  i<argc ; i++) {
+  for (int i = 1; i < argc; i++) {
      std::string arg = argv[i] ;
      if (arg == "-g") {
       showGraphics = true;
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
         cerr << endl;
         return -1;
      }
-   }
+  }
 
    TApplication* theApp = nullptr;
    if ( showGraphics )
