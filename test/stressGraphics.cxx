@@ -566,7 +566,7 @@ void webcanv_batch_mode(int number)
 /// Starts new block of tests
 /// In web mode configure number of batch images
 
-void start_block(const TString &title)
+void start_block(const TString &title, bool is3d = false)
 {
    if (!gOptionR) {
       std::cout << "**********************************************************************\n";
@@ -574,7 +574,12 @@ void start_block(const TString &title)
       std::cout << "**********************************************************************\n";
    }
 
-   webcanv_batch_mode(80);
+   int batch_size = 80;
+   // cef makes problem with many images in 3D mode, so reduce it
+   if (is3d && TString("cef") == gROOT->GetWebDisplay())
+      batch_size = 10;
+
+   webcanv_batch_mode(batch_size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4647,7 +4652,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    graphpolar    ();
    print_reports ();
 
-   start_block("High Level 3D Primitives");
+   start_block("High Level 3D Primitives", true);
    options2d1    ();
    options2d2    ();
    options2d3    ();
