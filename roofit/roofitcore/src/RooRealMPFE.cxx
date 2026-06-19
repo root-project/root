@@ -53,6 +53,7 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #endif
 
 #include <cstdlib>
+#include <memory>
 #include <sstream>
 #include "RooRealMPFE.h"
 #include "RooArgSet.h"
@@ -170,7 +171,7 @@ void RooRealMPFE::initVars()
   _saveVars.removeAll() ;
 
   // Retrieve non-constant parameters
-  auto vars = _arg->getParameters(RooArgSet());
+  std::unique_ptr<RooArgSet> vars{_arg->getParameters(RooArgSet())};
   // RooArgSet *ncVars = vars->selectByAttrib("Constant", false);
   RooArgList varList(*vars) ;
 
