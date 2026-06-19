@@ -765,12 +765,6 @@ std::vector<std::string> splitTopLevelProduct(const std::string &expr)
    return parts;
 }
 
-#include <regex>
-#include <string>
-#include <cctype>
-#include <cstdlib>
-#include <iostream>
-
 NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula)
 {
    static const std::regex pattern(

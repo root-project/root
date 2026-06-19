@@ -147,10 +147,13 @@ bool registerExporter(const std::string &key, std::unique_ptr<const Exporter> f,
    return true;
 }
 
-int removeImporters(const std::string &needle)
+namespace {
+
+template <class Map>
+int removeByTypeName(Map &map, const std::string &needle)
 {
    int n = 0;
-   for (auto &element : importers()) {
+   for (auto &element : map) {
       for (size_t i = element.second.size(); i > 0; --i) {
          auto *imp = element.second[i - 1].get();
          std::string name(typeid(*imp).name());
@@ -161,43 +164,39 @@ int removeImporters(const std::string &needle)
       }
    }
    return n;
+}
+
+template <class Map, class KeyPrinter>
+void printByTypeName(Map &map, KeyPrinter printKey)
+{
+   for (const auto &x : map) {
+      for (const auto &ePtr : x.second) {
+         // Passing *e directory to typeid results in clang warnings.
+         auto const &e = *ePtr;
+         std::cout << printKey(x.first) << "\t" << typeid(e).name() << std::endl;
+      }
+   }
+}
+
+} // namespace
+
+int removeImporters(const std::string &needle)
+{
+   return removeByTypeName(importers(), needle);
 }
 
 int removeExporters(const std::string &needle)
 {
-   int n = 0;
-   for (auto &element : exporters()) {
-      for (size_t i = element.second.size(); i > 0; --i) {
-         auto *imp = element.second[i - 1].get();
-         std::string name(typeid(*imp).name());
-         if (name.find(needle) != std::string::npos) {
-            element.second.erase(element.second.begin() + i - 1);
-            ++n;
-         }
-      }
-   }
-   return n;
+   return removeByTypeName(exporters(), needle);
 }
 
 void printImporters()
 {
-   for (const auto &x : importers()) {
-      for (const auto &ePtr : x.second) {
-         // Passing *e directory to typeid results in clang warnings.
-         auto const &e = *ePtr;
-         std::cout << x.first << "\t" << typeid(e).name() << std::endl;
-      }
-   }
+   printByTypeName(importers(), [](auto const &key) { return key; });
 }
 void printExporters()
 {
-   for (const auto &x : exporters()) {
-      for (const auto &ePtr : x.second) {
-         // Passing *e directory to typeid results in clang warnings.
-         auto const &e = *ePtr;
-         std::cout << x.first->GetName() << "\t" << typeid(e).name() << std::endl;
-      }
-   }
+   printByTypeName(exporters(), [](auto const &key) { return key->GetName(); });
 }
 
 void loadFactoryExpressions(const std::string &fname)

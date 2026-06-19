@@ -909,26 +909,6 @@ void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll,
    }
 }
 
-void RooJSONFactoryWSTool::fillSeqSanitizedName(JSONNode &node, RooAbsCollection const &coll, size_t nMax)
-{
-   const size_t old_children = node.num_children();
-   node.set_seq();
-   size_t n = 0;
-   for (RooAbsArg const *arg : coll) {
-      if (n >= nMax)
-         break;
-      if (isLiteralConstVar(*arg)) {
-         node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-      } else {
-         node.append_child() << sanitizeName(arg->GetName());
-      }
-      ++n;
-   }
-   if (node.num_children() != old_children + coll.size()) {
-      error("unable to stream collection " + std::string(coll.GetName()) + " to " + node.key());
-   }
-}
-
 JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string const &name)
 {
    if (!useListsInsteadOfDicts) {
@@ -1489,25 +1469,31 @@ void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, JS
  * @param node The JSONNode to which the category data will be exported.
  * @return void
  */
+namespace {
+
+// Turn an arbitrary string into a valid variable name, but refuse to change the
+// first character (which would silently rename the object).
+std::string makeValidNameOrError(std::string const &in)
+{
+   if (!std::isalpha(in[0])) {
+      RooJSONFactoryWSTool::error("refusing to change first character of string '" + in + "' to make a valid name!");
+   }
+   std::string out = RooFit::Detail::makeValidVarName(in);
+   if (out != in) {
+      oocoutW(nullptr, IO) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
+   }
+   return out;
+}
+
+} // namespace
+
 void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &node)
 {
    auto &labels = node["labels"].set_seq();
    auto &indices = node["indices"].set_seq();
 
    for (auto const &item : cat) {
-      std::string label;
-      if (std::isalpha(item.first[0])) {
-         label = RooFit::Detail::makeValidVarName(item.first);
-         if (label != item.first) {
-            oocoutW(nullptr, IO) << "RooFitHS3: changed '" << item.first << "' to '" << label
-                                 << "' to become a valid name";
-         }
-      } else {
-         RooJSONFactoryWSTool::error("refusing to change first character of string '" + item.first +
-                                     "' to make a valid name!");
-         label = item.first;
-      }
-      labels.append_child() << label;
+      labels.append_child() << makeValidNameOrError(item.first);
       indices.append_child() << item.second;
    }
 }
@@ -1569,18 +1555,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 
    for (std::unique_ptr<RooAbsData> const &absData : dataList) {
       std::string catName(absData->GetName());
-      std::string dataName;
-      if (std::isalpha(catName[0])) {
-         dataName = RooFit::Detail::makeValidVarName(catName);
-         if (dataName != catName) {
-            oocoutW(nullptr, IO) << "RooFitHS3: changed '" << catName << "' to '" << dataName
-                                 << "' to become a valid name";
-         }
-      } else {
-         RooJSONFactoryWSTool::error("refusing to change first character of string '" + catName +
-                                     "' to make a valid name!");
-         dataName = catName;
-      }
+      std::string dataName = makeValidNameOrError(catName);
       absData->SetName((std::string(data.GetName()) + "_" + dataName).c_str());
       datamap.components[catName] = absData->GetName();
       this->exportData(*absData);
@@ -2162,12 +2137,8 @@ bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
 bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 {
    std::ofstream out(filename.c_str());
-   if (!out.is_open()) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() invalid output file '" << filename << "'." << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-      return false;
-   }
+   if (!out.is_open())
+      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid output file '" + filename + "'.");
    return this->exportJSON(out);
 }
 
@@ -2195,12 +2166,8 @@ bool RooJSONFactoryWSTool::exportYML(std::ostream &os)
 bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 {
    std::ofstream out(filename.c_str());
-   if (!out.is_open()) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() invalid output file '" << filename << "'." << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-      return false;
-   }
+   if (!out.is_open())
+      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid output file '" + filename + "'.");
    return this->exportYML(out);
 }
 
@@ -2405,12 +2372,8 @@ bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
 {
    // import a JSON file to the workspace
    std::ifstream infile(filename.c_str());
-   if (!infile.is_open()) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() invalid input file '" << filename << "'." << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-      return false;
-   }
+   if (!infile.is_open())
+      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid input file '" + filename + "'.");
    return this->importJSON(infile);
 }
 
@@ -2440,12 +2403,8 @@ bool RooJSONFactoryWSTool::importYML(std::string const &filename)
 {
    // import a YML file to the workspace
    std::ifstream infile(filename.c_str());
-   if (!infile.is_open()) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() invalid input file '" << filename << "'." << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-      return false;
-   }
+   if (!infile.is_open())
+      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid input file '" + filename + "'.");
    return this->importYML(infile);
 }
 
