@@ -25,6 +25,7 @@
 #include <cstring>
 #include <deque>
 #include <exception>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 
@@ -564,4 +565,130 @@ void ROOT::Experimental::RNTupleInspector::PrintFieldTreeAsDot(const ROOT::RFiel
    }
    if (isZeroField)
       output << "}";
+}
+
+namespace {
+
+struct SpeedscopeFrame {
+   std::string fPrimaryString;
+   std::string fSecondaryString;
+   std::uint64_t fOpeningPosition = 0;
+   std::uint64_t fClosingPosition = 0;
+};
+
+static void PrintSpeedscopeFrames(const std::vector<SpeedscopeFrame> &frames, std::ostream &output)
+{
+   output << "{\n";
+   output << "   \"$schema\":\"https://www.speedscope.app/file-format-schema.json\",\n";
+   output << "   \"shared\":{\n";
+   output << "      \"frames\":[\n";
+
+   for (std::size_t i = 0; i < frames.size(); ++i) {
+      output << "         { \"name\":\"" << frames[i].fPrimaryString
+             << "\", \"file\":\"Type: " << frames[i].fSecondaryString
+             << ", Size: " << frames[i].fClosingPosition - frames[i].fOpeningPosition << "B\" }"
+             << (i + 1 < frames.size() ? ",\n" : "\n");
+   }
+
+   output << "      ]\n";
+   output << "   },\n";
+   output << "   \"profiles\":[\n";
+   output << "      {\n";
+   output << "         \"type\":\"evented\",\n";
+   output << "         \"name\":\"Flattened Timeline\",\n";
+   output << "         \"unit\":\"bytes\",\n";
+   output << "         \"startValue\":0,\n";
+   output << "         \"endValue\":" << frames.back().fClosingPosition << ",\n";
+   output << "         \"events\":[\n";
+
+   bool first = true;
+
+   // Parameter idx Index of the frame being processed
+   // Parameter limit
+   //   - If the frame is not root: Closing Position of its father
+   //   - If the frame is root: Closing Position of the last element of frames
+   // Returns the next index to be processed
+   std::function<std::size_t(std::size_t, std::uint32_t)> processRecursive = [&](std::size_t nextIdxToProcess,
+                                                                                 std::uint32_t limit) -> std::size_t {
+      while (nextIdxToProcess < frames.size() && frames[nextIdxToProcess].fOpeningPosition < limit) {
+         const std::size_t currentIdx = nextIdxToProcess;
+
+         if (!first)
+            output << ",\n";
+
+         output << "            {\"type\":\"O\",\"frame\":" << currentIdx
+                << ",\"at\":" << frames[currentIdx].fOpeningPosition << "}";
+         first = false;
+
+         nextIdxToProcess = processRecursive(nextIdxToProcess + 1, frames[currentIdx].fClosingPosition);
+
+         output << ",\n            {\"type\":\"C\",\"frame\":" << currentIdx
+                << ",\"at\":" << frames[currentIdx].fClosingPosition << "}";
+      }
+      return nextIdxToProcess;
+   };
+
+   processRecursive(0, frames.back().fClosingPosition);
+
+   output << "\n         ]\n";
+   output << "      }\n";
+   output << "   ]\n";
+   output << "}\n";
+}
+} // namespace
+
+void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile(ESchemaProfileFormat format, std::ostream &output) const
+{
+   // There is only one format at the moment
+   assert(format == ESchemaProfileFormat::kSpeedscopeJSON);
+
+   const auto &tupleDescriptor = GetDescriptor();
+   ROOT::DescriptorId_t rootId = tupleDescriptor.GetFieldZeroId();
+   const auto &rootFieldDescriptor = tupleDescriptor.GetFieldDescriptor(rootId);
+
+   std::vector<SpeedscopeFrame> frames;
+   std::uint64_t positionCursor = 0;
+
+   // Returns size of the visited field
+   auto visitFieldsRecursive = [&](auto &self, const ROOT::RFieldDescriptor &fieldDescriptor) -> std::size_t {
+      SpeedscopeFrame fieldSpeedscopeFrame;
+      fieldSpeedscopeFrame.fPrimaryString = tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId());
+      fieldSpeedscopeFrame.fSecondaryString = fieldDescriptor.GetTypeName();
+      fieldSpeedscopeFrame.fOpeningPosition = positionCursor;
+      frames.push_back(fieldSpeedscopeFrame);
+
+      const std::size_t fieldSpeedscopeFrameIndex = frames.size() - 1;
+
+      std::size_t subTreeSize = 0;
+      const auto &childIds = fieldDescriptor.GetLinkIds();
+
+      for (const auto &childFieldId : childIds) {
+         const auto &childFieldDescriptor = tupleDescriptor.GetFieldDescriptor(childFieldId);
+         subTreeSize += self(self, childFieldDescriptor);
+      }
+
+      for (const auto &columnDescriptor : tupleDescriptor.GetColumnIterable(fieldDescriptor.GetId())) {
+         const auto &columnInfo = GetColumnInspector(columnDescriptor.GetPhysicalId());
+         std::size_t columnSize = columnInfo.GetCompressedSize();
+
+         SpeedscopeFrame columnSpeedscopeFrame;
+         columnSpeedscopeFrame.fPrimaryString = tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId()) +
+                                                " [col#" + std::to_string(columnDescriptor.GetPhysicalId()) + "]";
+         columnSpeedscopeFrame.fSecondaryString =
+            ROOT::Internal::RColumnElementBase::GetColumnTypeName(columnDescriptor.GetType());
+         columnSpeedscopeFrame.fOpeningPosition = positionCursor;
+         positionCursor += columnSize;
+         columnSpeedscopeFrame.fClosingPosition = positionCursor;
+         frames.push_back(columnSpeedscopeFrame);
+         subTreeSize += columnSize;
+      }
+
+      frames[fieldSpeedscopeFrameIndex].fClosingPosition = positionCursor;
+
+      return subTreeSize;
+   };
+
+   visitFieldsRecursive(visitFieldsRecursive, rootFieldDescriptor);
+
+   PrintSpeedscopeFrames(frames, output);
 }

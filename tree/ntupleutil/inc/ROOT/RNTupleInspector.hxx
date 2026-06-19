@@ -50,6 +50,11 @@ enum class ENTupleInspectorHist {
    kUncompressedSize
 };
 
+enum class ESchemaProfileFormat {
+   /// https://www.speedscope.app/file-format-schema.json
+   kSpeedscopeJSON
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleInspector
@@ -493,6 +498,11 @@ public:
    {
       PrintFieldTreeAsDot(GetDescriptor().GetFieldZero(), output);
    }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Print a string that represents the tree of the (sub)fields and columns of an RNTuple in a format which a
+   /// performance profile visualizer can render
+   void PrintSchemaProfile(ESchemaProfileFormat format, std::ostream &output = std::cout) const;
 };
 } // namespace Experimental
 } // namespace ROOT
