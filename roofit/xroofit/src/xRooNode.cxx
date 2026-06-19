@@ -9016,9 +9016,9 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
             for (auto pdf : bins()) {
                // auto _pdf =
                // pdf->get<RooAbsPdf>()->createProjection(*pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
-               auto _pdf =
-                  new xRooProjectedPdf(TString::Format("%s_projection", pdf->GetName()), "", *pdf->get<RooAbsPdf>(),
-                                       *pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
+               std::unique_ptr<RooArgSet> projObs{pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>())};
+               auto _pdf = new xRooProjectedPdf(TString::Format("%s_projection", pdf->GetName()), "",
+                                                *pdf->get<RooAbsPdf>(), *projObs);
                if (hasRange) {
                   dynamic_cast<RooAbsPdf *>(_pdf)->setNormRange("coordRange");
                }
