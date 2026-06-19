@@ -100,7 +100,12 @@ The following people have contributed to this new version:
 * ROOT now adds a RUNPATH to compiled macros. This ensures that when compiled macros are loaded, they load the libraries that belong to the ROOT installation
   that compiled the macro. See [TSystem::SetMakeSharedLib()](https://root.cern.ch/doc/master/classTSystem.html#a80cd12e064e2285b35e9f39b5111d20e) for
   customising or disabling the RUNPATH.
-* `rootcling` fails if no selection rule is specified and if the creation of a C++ module is not requested.
+* `rootcling` fails if no selection rule is specified and if the creation of a C++ module is not requested. Calling `ROOT_GENERATE_DICTIONARY(G__MyClass MyClass.h)` from an external CMake project with classes without any LinkDef might break your build now, since automatic linkdef generation has been removed. To solve it, just update (backward compatible) your header class `MyClass.h`  with the following lines:
+```
+#ifdef __ROOTCLING__
+#pragma link C++ class MyClass + ;
+#endif
+```
 * To ease debugging of unwanted auto-parsing triggered by TClass::GetClass, two new features are introduced:
 * * Give access to the list of classes that triggered auto-parsing:
 ```
