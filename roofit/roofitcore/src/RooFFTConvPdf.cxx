@@ -520,8 +520,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
   std::vector<RooAbsLValue*> obsLV(n);
   Int_t i(0) ;
-  for (auto const& arg : otherObs) {
-    RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(arg) ;
+  for (auto* lvarg : dynamic_range_cast<RooAbsLValue*>(otherObs)) {
     obsLV[i] = lvarg ;
     binCur[i] = 0 ;
     // coverity[FORWARD_NULL]

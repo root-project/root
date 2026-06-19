@@ -1412,8 +1412,7 @@ public:
    {
       std::vector<RooAbsPdf *> constraints;
       RooRealSumPdf *sumpdf = nullptr;
-      for (RooAbsArg *v : prodpdf->pdfList()) {
-         RooAbsPdf *pdf = static_cast<RooAbsPdf *>(v);
+      for (auto *pdf : static_range_cast<RooAbsPdf *>(prodpdf->pdfList())) {
          auto thispdf = dynamic_cast<RooRealSumPdf *>(pdf);
          if (thispdf) {
             if (!sumpdf)
