@@ -60,7 +60,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     Tree
     RIO
     Hist
-    Matrix
     MathCore
     Graf
     Gpad

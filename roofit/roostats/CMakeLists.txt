@@ -126,10 +126,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     Hist
     Matrix
     MathCore
-    Minuit
-    Foam
     Graf
     Gpad
+  LIBRARIES
+    Minuit
+    Foam
   ${EXTRA_DICT_OPTS}
 )
 

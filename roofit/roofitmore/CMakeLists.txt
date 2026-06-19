@@ -40,16 +40,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   LINKDEF
     LinkDef.h
   DEPENDENCIES
-    ${ROOT_MATHMORE_LIBRARY}
     Core
     RooFitCore
     RooFit
     Hist
-    Matrix
     Tree
     RIO
+  LIBRARIES
+    ${ROOT_MATHMORE_LIBRARY}
     MathCore
-    Foam
   ${EXTRA_DICT_OPTS}
 )
 

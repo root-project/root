@@ -47,7 +47,7 @@ endif()
 ROOT_ADD_GTEST(ntuple_field_name ntuple_field_name.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_join_table ntuple_join_table.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx ntuple_test.cxx
-  LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB Tree xxHash::xxHash
+  LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB Tree MathCore xxHash::xxHash
   INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tree/tree/inc)
 ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_model ntuple_model.cxx LIBRARIES ROOTNTuple CustomStruct)

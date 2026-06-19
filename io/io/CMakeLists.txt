@@ -60,9 +60,9 @@ ROOT_LINKER_LIBRARY(RIO
   $<TARGET_OBJECTS:RootPcmObjs>
   LIBRARIES
     ${CMAKE_DL_LIBS}
+    Thread
   DEPENDENCIES
     Core
-    Thread
 )
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
