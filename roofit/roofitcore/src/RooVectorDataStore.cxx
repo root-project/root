@@ -829,6 +829,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   std::vector<RooArgSet*> nsetList ;
   std::vector<std::unique_ptr<RooArgSet>> argObsList ;
+  std::vector<std::unique_ptr<RooArgSet>> ownedNsets;
 
   // Now need to attach branch buffers of clones
   for (const auto arg : cloneSet) {
@@ -844,8 +845,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 //       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << std::endl ;
 
       RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
-      normSet = anset.selectCommon(*argObs);
-
+      ownedNsets.emplace_back(anset.selectCommon(*argObs));
+      normSet = ownedNsets.back().get();
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
     if (catCset) {
