@@ -233,12 +233,11 @@ bool LikelihoodInterval::CreateMinimizer() {
 
    // need to restore values and errors for POI
    if (fBestFitParams) {
-      for (std::size_t i = 0; i < params.size(); ++i) {
-         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
-         RooRealVar * fitPar =  static_cast<RooRealVar *> (fBestFitParams->find(par.GetName() ) );
+      for (auto *par : static_range_cast<RooRealVar *>(params)) {
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fBestFitParams->find(par->GetName() ) );
          if (fitPar) {
-            par.setVal( fitPar->getVal() );
-            par.setError( fitPar->getError() );
+            par->setVal( fitPar->getVal() );
+            par->setError( fitPar->getError() );
          }
       }
    }

@@ -209,8 +209,7 @@ bool RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
 {
   RooArgList newConvSet ;
   bool allOK(true) ;
-  for (auto convArg : _convSet) {
-    auto conv = static_cast<RooResolutionModel*>(convArg);
+  for (auto *conv : static_range_cast<RooResolutionModel*>(_convSet)) {
 
     // Build new resolution model
     std::unique_ptr<RooResolutionModel> newConv{newModel.convolution(const_cast<RooFormulaVar*>(&conv->basis()),this)};
@@ -330,8 +329,7 @@ double RooAbsAnaConvPdf::evaluate() const
   double result(0) ;
 
   Int_t index(0) ;
-  for (auto convArg : _convSet) {
-    auto conv = static_cast<RooAbsPdf*>(convArg);
+  for (auto *conv : static_range_cast<RooAbsPdf*>(_convSet)) {
     double coef = coefficient(index++) ;
     if (coef!=0.) {
       const double c = conv->getVal(nullptr);
