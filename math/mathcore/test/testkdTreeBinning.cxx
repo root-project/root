@@ -165,6 +165,67 @@ int testkdTreeBinning()
    return nfail;
 }
 
+// Regression test for the case where the requested number of bins does not
+// divide the data size evenly. In that situation the kd-tree builds more
+// terminal nodes (bins) than naively expected, and FindBin() must never return
+// an index outside [0, GetNBins()). See
+// https://github.com/root-project/root/issues/10784 about
+// TKDTreeBinning::FindBin returning non-existent bins. Returns the number of
+// detected failures (0 on success) so that the caller can turn it into a
+// non-zero process exit code: ROOT's Error() only prints, it does not by
+// itself make the test fail under ctest.
+int testkdTreeBinningFindBinRange()
+{
+
+   int nfail = 0;
+
+   const UInt_t DATASZ = 100500; // deliberately NOT a multiple of NBINS
+   const UInt_t DATADIM = 5;
+   const UInt_t NBINS = 1000;
+
+   std::vector<Double_t> smp(DATASZ * DATADIM);
+   TRandom3 r;
+   r.SetSeed(1);
+   for (UInt_t i = 0; i < DATADIM; ++i)
+      for (UInt_t j = 0; j < DATASZ; ++j)
+         smp[DATASZ * i + j] = r.Uniform(-1., 1.);
+
+   TKDTreeBinning kdBins(DATASZ, DATADIM, smp, NBINS);
+
+   const UInt_t nbins = kdBins.GetNBins();
+
+   // The number of bins must match the number of terminal nodes of the kd-tree.
+   if ((int)nbins != kdBins.GetTree()->GetNNodes() + 1) {
+      Error("testkdTreeBinningFindBinRange", "GetNBins() (%u) != number of kd-tree terminal nodes (%d)", nbins,
+            kdBins.GetTree()->GetNNodes() + 1);
+      ++nfail;
+   }
+
+   // Every data point must be assigned to a valid bin.
+   std::vector<Double_t> point(DATADIM);
+   for (UInt_t j = 0; j < DATASZ; ++j) {
+      for (UInt_t i = 0; i < DATADIM; ++i)
+         point[i] = smp[DATASZ * i + j];
+      UInt_t bin = kdBins.FindBin(point.data());
+      if (bin >= nbins) {
+         Error("testkdTreeBinningFindBinRange", "FindBin returned out-of-range bin %u (NBins = %u)", bin, nbins);
+         ++nfail;
+         break;
+      }
+   }
+
+   // The total bin content must add up to the data size.
+   Long64_t total = 0;
+   for (UInt_t i = 0; i < nbins; ++i)
+      total += kdBins.GetBinContent(i);
+   if (total != (Long64_t)DATASZ) {
+      Error("testkdTreeBinningFindBinRange", "Sum of bin contents (%lld) != data size (%u)", total, DATASZ);
+      ++nfail;
+   }
+
+   return nfail;
+}
+
 int main(int argc, char **argv)
 {
   // Parse command line arguments
@@ -192,6 +253,8 @@ int main(int argc, char **argv)
       theApp = new TApplication("App",&argc,argv);
 
    int nfail = testkdTreeBinning();
+
+   nfail += testkdTreeBinningFindBinRange();
 
    if ( showGraphics )
    {
