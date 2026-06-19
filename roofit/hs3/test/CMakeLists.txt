@@ -10,6 +10,10 @@ if(test_roofit_hs3testsuite)
     )
     FetchContent_MakeAvailable(hs3testsuite)
     if(EXISTS ${hs3testsuite_SOURCE_DIR})
-        ROOT_ADD_PYUNITTEST(hs3-suite test_hs3_suite.py PYTHON_DEPS jsonschema ENVIRONMENT HS3TESTSUITE_ROOT=${hs3testsuite_SOURCE_DIR})
+        ROOT_ADD_PYUNITTEST(hs3-suite test_hs3_suite.py 
+            PYTHON_DEPS jsonschema 
+            ENVIRONMENT HS3TESTSUITE_ROOT=${hs3testsuite_SOURCE_DIR}
+            COPY_TO_BUILDDIR hs3testsuite_roofit_backend.py
+            )
     endif()
 endif()

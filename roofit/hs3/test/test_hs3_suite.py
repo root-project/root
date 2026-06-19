@@ -8,7 +8,10 @@ if hs3_root_dir:
     sys.path.insert(0, hs3_root_dir)
 
 try:
+    from hs3suite.backends import _BACKENDS
     from hs3suite.runner import run_suite
+    
+    _BACKENDS['roofit'] = ("hs3testsuite_roofit_backend","RooFitBackend")
 
 except ImportError as e:
     TestHS3Suite = type(
