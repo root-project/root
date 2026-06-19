@@ -499,37 +499,6 @@ public:
    }
 };
 
-class RooLegacyExpPolyFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("coefficients")) {
-         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
-      }
-      RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooArgList coefs;
-      int order = 0;
-      int lowestOrder = 0;
-      for (const auto &coef : p["coefficients"].children()) {
-         // As long as the coefficients match the default coefficients in
-         // RooFit, we don't have to instantiate RooFit objects but can
-         // increase the lowestOrder flag.
-         if (order == 0 && coef.val() == "1.0") {
-            ++lowestOrder;
-         } else if (coefs.empty() && coef.val() == "0.0") {
-            ++lowestOrder;
-         } else {
-            coefs.add(*tool->request<RooAbsReal>(coef.val(), name));
-         }
-         ++order;
-      }
-
-      tool->wsEmplace<RooLegacyExpPoly>(name, *x, coefs, lowestOrder);
-      return true;
-   }
-};
-
 class RooMultiVarGaussianFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -744,12 +713,13 @@ public:
    }
 };
 
-class RooHistFuncStreamer : public RooFit::JSONIO::Exporter {
+template <class RooArg_t>
+class RooHistStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
    bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
-      const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
+      const RooArg_t *hf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       RooDataHist const &dh = hf->dataHist();
       tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
@@ -757,7 +727,8 @@ public:
    }
 };
 
-class RooHistFuncFactory : public RooFit::JSONIO::Importer {
+template <class RooArg_t>
+class RooHistFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -767,35 +738,7 @@ public:
       }
       std::unique_ptr<RooDataHist> dataHist =
          RooJSONFactoryWSTool::readBinnedData(p["data"], name, RooJSONFactoryWSTool::readAxes(p["data"]));
-      tool->wsEmplace<RooHistFunc>(name, *dataHist->get(), *dataHist);
-      return true;
-   }
-};
-
-class RooHistPdfStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override;
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
-   {
-      const RooHistPdf *hf = static_cast<const RooHistPdf *>(func);
-      elem["type"] << key();
-      RooDataHist const &dh = hf->dataHist();
-      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
-      return true;
-   }
-};
-
-class RooHistPdfFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("data")) {
-         RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
-      }
-      std::unique_ptr<RooDataHist> dataHist =
-         RooJSONFactoryWSTool::readBinnedData(p["data"], name, RooJSONFactoryWSTool::readAxes(p["data"]));
-      tool->wsEmplace<RooHistPdf>(name, *dataHist->get(), *dataHist);
+      tool->wsEmplace<RooArg_t>(name, *dataHist->get(), *dataHist);
       return true;
    }
 };
@@ -890,17 +833,6 @@ public:
    {
       elem["type"] << key();
       writePolynomialBody(static_cast<const RooArg_t *>(func), elem);
-      return true;
-   }
-};
-
-class RooLegacyExpPolyStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override;
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
-   {
-      elem["type"] << key();
-      writePolynomialBody(static_cast<const RooLegacyExpPoly *>(func), elem);
       return true;
    }
 };
@@ -1249,14 +1181,17 @@ DEFINE_EXPORTER_KEY(RooAddPdfStreamer<RooAddModel>, "mixture_model");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
 DEFINE_EXPORTER_KEY(RooWrapperPdfStreamer, "density_function_dist");
 DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
-DEFINE_EXPORTER_KEY(RooLegacyExpPolyStreamer, "legacy_exp_poly_dist");
+template <>
+DEFINE_EXPORTER_KEY(RooPolynomialStreamer<RooLegacyExpPoly>, "legacy_exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooExponentialStreamer, "exponential_dist");
 template <>
 DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooFormulaVar>, "generic_function");
 template <>
 DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooGenericPdf>, "generic_dist");
-DEFINE_EXPORTER_KEY(RooHistFuncStreamer, "histogram");
-DEFINE_EXPORTER_KEY(RooHistPdfStreamer, "histogram_dist");
+template <>
+DEFINE_EXPORTER_KEY(RooHistStreamer<RooHistFunc>, "histogram");
+template <>
+DEFINE_EXPORTER_KEY(RooHistStreamer<RooHistPdf>, "histogram_dist");
 DEFINE_EXPORTER_KEY(RooLogNormalStreamer, "lognormal_dist");
 DEFINE_EXPORTER_KEY(RooMultiVarGaussianStreamer, "multivariate_normal_dist");
 DEFINE_EXPORTER_KEY(RooPoissonStreamer, "poisson_dist");
@@ -1293,12 +1228,12 @@ STATIC_EXECUTE([]() {
    registerImporter<RooAddModelFactory>("mixture_model", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
-   registerImporter<RooLegacyExpPolyFactory>("legacy_exp_poly_dist", false);
+   registerImporter<RooPolynomialFactory<RooLegacyExpPoly>>("legacy_exp_poly_dist", false);
    registerImporter<RooExponentialFactory>("exponential_dist", false);
    registerImporter<RooFormulaArgFactory<RooFormulaVar>>("generic_function", false);
    registerImporter<RooFormulaArgFactory<RooGenericPdf>>("generic_dist", false);
-   registerImporter<RooHistFuncFactory>("histogram", false);
-   registerImporter<RooHistPdfFactory>("histogram_dist", false);
+   registerImporter<RooHistFactory<RooHistFunc>>("histogram", false);
+   registerImporter<RooHistFactory<RooHistPdf>>("histogram_dist", false);
    registerImporter<RooLogNormalFactory>("lognormal_dist", false);
    registerImporter<RooMultiVarGaussianFactory>("multivariate_normal_dist", false);
    registerImporter<RooPoissonFactory>("poisson_dist", false);
@@ -1321,12 +1256,12 @@ STATIC_EXECUTE([]() {
    registerExporter<RooAddPdfStreamer<RooAddModel>>(RooAddModel::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
-   registerExporter<RooLegacyExpPolyStreamer>(RooLegacyExpPoly::Class(), false);
+   registerExporter<RooPolynomialStreamer<RooLegacyExpPoly>>(RooLegacyExpPoly::Class(), false);
    registerExporter<RooExponentialStreamer>(RooExponential::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooFormulaVar>>(RooFormulaVar::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooGenericPdf>>(RooGenericPdf::Class(), false);
-   registerExporter<RooHistFuncStreamer>(RooHistFunc::Class(), false);
-   registerExporter<RooHistPdfStreamer>(RooHistPdf::Class(), false);
+   registerExporter<RooHistStreamer<RooHistFunc>>(RooHistFunc::Class(), false);
+   registerExporter<RooHistStreamer<RooHistPdf>>(RooHistPdf::Class(), false);
    registerExporter<RooLogNormalStreamer>(RooLognormal::Class(), false);
    registerExporter<RooMultiVarGaussianStreamer>(RooMultiVarGaussian::Class(), false);
    registerExporter<RooPoissonStreamer>(RooPoisson::Class(), false);
