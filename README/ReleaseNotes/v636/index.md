@@ -715,10 +715,13 @@ This release features a few fixes and minor documentation updates, most notably:
   * [[#21880](https://github.com/root-project/root/issues/21880)] - [asimage] crash with DrawCircle
 
 ## Release 6.36.14
-Published on June XX, 2026
+Published on June 20, 2026
 
-This patch brings a few fixes, that accumulated since the last release.
+This patch brings a few fixes, that accumulated since the last release, for example
 
+  * [[#21367](https://github.com/root-project/root/issues/21367)] - Stack corruption in TColorGradient with clang 20 to 22
+  * [[#22496](https://github.com/root-project/root/issues/22496)] - root -q -e '.gh bug' doesn't work on ssh connections
+  * [[#17019](https://github.com/root-project/root/issues/17019)] - [reve] Invalid bounding box calculation for REvePointSet and REveBoxSet
 
 ### Versions of built-in packages
 
