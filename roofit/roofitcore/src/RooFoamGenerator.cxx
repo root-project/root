@@ -149,8 +149,7 @@ const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, double& /
 
   // Transfer contents to dataset
   Int_t i(0) ;
-  for (auto arg : _realVars) {
-    auto var = static_cast<RooRealVar*>(arg);
+  for (auto* var : static_range_cast<RooRealVar*>(_realVars)) {
     var->setVal(_xmin[i] + _range[i]*_vec[i]) ;
     i++ ;
   }

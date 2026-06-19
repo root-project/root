@@ -774,12 +774,12 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
   } else {
 
     if (_allExtendable) {
-      for(auto const& arg : _pdfList) {
-        expectedTotal += static_cast<RooAbsPdf*>(arg)->expectedEvents(nset) ;
+      for(auto *arg : static_range_cast<RooAbsPdf*>(_pdfList)) {
+        expectedTotal += arg->expectedEvents(nset) ;
       }
     } else {
-      for(auto const& arg : _coefList) {
-        expectedTotal += static_cast<RooAbsReal*>(arg)->getVal(nset) ;
+      for(auto *arg : static_range_cast<RooAbsReal*>(_coefList)) {
+        expectedTotal += arg->getVal(nset) ;
       }
     }
 

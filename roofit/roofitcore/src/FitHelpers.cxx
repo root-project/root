@@ -784,8 +784,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       // Create range with name 'fit' with above limits on all observables
       RooArgSet obs;
       pdf.getObservables(data.get(), obs);
-      for (auto arg : obs) {
-         RooRealVar *rrv = dynamic_cast<RooRealVar *>(arg);
+      for (auto *rrv : dynamic_range_cast<RooRealVar *>(obs)) {
          if (rrv)
             rrv->setRange("fit", rangeLo, rangeHi);
       }
@@ -1043,8 +1042,8 @@ std::unique_ptr<RooAbsReal> createChi2FromDataHist(RooAbsReal &real, RooDataHist
       const double rangeHi = pc.getDouble("rangeHi");
       RooArgSet obs;
       real.getObservables(data.get(), obs);
-      for (auto arg : obs) {
-         if (auto *rrv = dynamic_cast<RooRealVar *>(arg)) {
+      for (auto *rrv : dynamic_range_cast<RooRealVar *>(obs)) {
+         if (rrv) {
             rrv->setRange("fit", rangeLo, rangeHi);
          }
       }
