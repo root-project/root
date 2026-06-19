@@ -457,7 +457,7 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf *pdf)
    kickParameters();
    makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name() + std::string("_batch_prefit"));
 
-   auto pars = pdf->getParameters(*_dataFit);
+   std::unique_ptr<RooArgSet> pars{pdf->getParameters(*_dataFit)};
    *pars = _parameters;
 
    for (unsigned int index = 0; index < pars->size(); ++index) {
