@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <memory>
 #include <random>
 #include <vector>
 
@@ -429,4 +430,135 @@ TEST(TH1L, SetBinContent)
    static constexpr long long Large = 1LL << 42;
    h.SetBinContent(1, Large);
    EXPECT_EQ(h.GetBinContent(1), Large);
+}
+
+// Reference cumulative bin content computed directly from the definition:
+// the sum of all source bins whose indices are no greater than (forward) or no
+// less than (backward) those of the target bin along every axis. Works for 1D,
+// 2D and 3D histograms (unused axes have a single bin at index 1).
+static double BruteForceCumulative(const TH1 &h, int ix, int iy, int iz, bool forward)
+{
+   double sum = 0.;
+   for (int jz = 1; jz <= h.GetNbinsZ(); ++jz) {
+      if (forward ? (jz > iz) : (jz < iz))
+         continue;
+      for (int jy = 1; jy <= h.GetNbinsY(); ++jy) {
+         if (forward ? (jy > iy) : (jy < iy))
+            continue;
+         for (int jx = 1; jx <= h.GetNbinsX(); ++jx) {
+            if (forward ? (jx > ix) : (jx < ix))
+               continue;
+            sum += h.GetBinContent(jx, jy, jz);
+         }
+      }
+   }
+   return sum;
+}
+
+// Same as above but accumulating the squared bin errors (variances add for the
+// independent bins entering each cumulative bin).
+static double BruteForceCumulativeErrorSq(const TH1 &h, int ix, int iy, int iz, bool forward)
+{
+   double sum = 0.;
+   for (int jz = 1; jz <= h.GetNbinsZ(); ++jz) {
+      if (forward ? (jz > iz) : (jz < iz))
+         continue;
+      for (int jy = 1; jy <= h.GetNbinsY(); ++jy) {
+         if (forward ? (jy > iy) : (jy < iy))
+            continue;
+         for (int jx = 1; jx <= h.GetNbinsX(); ++jx) {
+            if (forward ? (jx > ix) : (jx < ix))
+               continue;
+            const double err = h.GetBinError(jx, jy, jz);
+            sum += err * err;
+         }
+      }
+   }
+   return sum;
+}
+
+// 1D cumulative must match the textbook prefix/suffix sum in both directions.
+TEST(TH1, GetCumulative1D)
+{
+   TH1D h("h1", "h1", 5, 0, 5);
+   for (int i = 1; i <= 5; ++i)
+      h.SetBinContent(i, i); // 1, 2, 3, 4, 5
+
+   for (bool forward : {true, false}) {
+      std::unique_ptr<TH1> c{h.GetCumulative(forward)};
+      for (int i = 1; i <= 5; ++i)
+         EXPECT_DOUBLE_EQ(c->GetBinContent(i), BruteForceCumulative(h, i, 1, 1, forward)) << "bin " << i;
+   }
+}
+
+// 2D cumulative uses the inclusion-exclusion principle along both axes, not a
+// running sum over the flattened bins (the pre-6.42 behavior).
+TEST(TH1, GetCumulative2D)
+{
+   TH2D h("h2", "h2", 3, 0, 3, 3, 0, 3);
+   double v = 1.;
+   for (int iy = 1; iy <= 3; ++iy)
+      for (int ix = 1; ix <= 3; ++ix)
+         h.SetBinContent(ix, iy, v++); // 1..9
+
+   for (bool forward : {true, false}) {
+      std::unique_ptr<TH1> c{h.GetCumulative(forward)};
+      for (int iy = 1; iy <= 3; ++iy)
+         for (int ix = 1; ix <= 3; ++ix)
+            EXPECT_DOUBLE_EQ(c->GetBinContent(ix, iy), BruteForceCumulative(h, ix, iy, 1, forward))
+               << "bin (" << ix << ", " << iy << ")";
+   }
+
+   // Explicit hand-checked forward anchor: the top-right bin must hold the grand
+   // total, and bin (2,2) the sum of the lower-left 2x2 block (1+2+4+5 = 12).
+   std::unique_ptr<TH1> c{h.GetCumulative(true)};
+   EXPECT_DOUBLE_EQ(c->GetBinContent(1, 1), 1.);
+   EXPECT_DOUBLE_EQ(c->GetBinContent(2, 2), 12.);
+   EXPECT_DOUBLE_EQ(c->GetBinContent(3, 3), 45.);
+}
+
+// 3D cumulative must agree with the brute-force inclusion-exclusion result.
+TEST(TH1, GetCumulative3D)
+{
+   TH3D h("h3", "h3", 2, 0, 2, 3, 0, 3, 2, 0, 2);
+   double v = 1.;
+   for (int iz = 1; iz <= 2; ++iz)
+      for (int iy = 1; iy <= 3; ++iy)
+         for (int ix = 1; ix <= 2; ++ix)
+            h.SetBinContent(ix, iy, iz, v++);
+
+   for (bool forward : {true, false}) {
+      std::unique_ptr<TH1> c{h.GetCumulative(forward)};
+      for (int iz = 1; iz <= 2; ++iz)
+         for (int iy = 1; iy <= 3; ++iy)
+            for (int ix = 1; ix <= 2; ++ix)
+               EXPECT_DOUBLE_EQ(c->GetBinContent(ix, iy, iz), BruteForceCumulative(h, ix, iy, iz, forward))
+                  << "bin (" << ix << ", " << iy << ", " << iz << ")";
+   }
+}
+
+// When Sumw2 is enabled, the squared errors must accumulate over the same region
+// as the contents.
+TEST(TH1, GetCumulativeErrors)
+{
+   TH2D h("h2err", "h2err", 3, 0, 3, 3, 0, 3);
+   h.Sumw2();
+   double v = 1.;
+   for (int iy = 1; iy <= 3; ++iy) {
+      for (int ix = 1; ix <= 3; ++ix) {
+         h.SetBinContent(ix, iy, v);
+         h.SetBinError(ix, iy, 0.5 * v); // errors differ from contents
+         v += 1.;
+      }
+   }
+
+   for (bool forward : {true, false}) {
+      std::unique_ptr<TH1> c{h.GetCumulative(forward)};
+      for (int iy = 1; iy <= 3; ++iy)
+         for (int ix = 1; ix <= 3; ++ix) {
+            const double err = c->GetBinError(ix, iy);
+            EXPECT_DOUBLE_EQ(err * err, BruteForceCumulativeErrorSq(h, ix, iy, 1, forward))
+               << "bin (" << ix << ", " << iy << ")";
+         }
+   }
 }

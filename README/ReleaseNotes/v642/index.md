@@ -57,6 +57,20 @@ The following people have contributed to this new version:
 
 ## Histograms
 
+### Cumulative histograms in more than one dimension
+
+`TH1::GetCumulative()` now computes a true multi-dimensional cumulative for 2D
+(`TH2`) and 3D (`TH3`) histograms, using the inclusion-exclusion principle: each
+bin of the result holds the sum of all bins whose indices are no greater than
+(forward) or no less than (backward) those of the target bin along *every* axis.
+Previously the method accumulated a single running sum over the flattened bin
+iteration, which did not correspond to a meaningful cumulative distribution in
+more than one dimension.
+
+The behavior for one-dimensional histograms is unchanged. Code that relied on
+the previous 2D/3D output (for example to build per-axis selection efficiency
+maps) will now obtain different, mathematically consistent values.
+
 ## Math
 
 ## RooFit

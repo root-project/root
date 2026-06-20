@@ -2651,9 +2651,9 @@ Double_t *TH1::GetIntegral()
  * which defaults to "_cumulative".
  *
  * The cumulative distribution is formed by filling each bin of the
- * resulting histogram with the sum of all the bins whose indice is
+ * resulting histogram with the sum of all the bins whose indices are
  * no greater than (forward) or no less than (backward)
- * that of the target bin. To be exact,
+ * those of the target bin. To be exact,
  * \f[
  *   S_{i_x, i_y, i_z} =
  *   \begin{cases}
@@ -2663,18 +2663,22 @@ Double_t *TH1::GetIntegral()
  * \f]
  *
  * The implementation is based on the Inclusion-Exclusion principle. That is,
+ * for the forward case,
  * \f[
  *   S_{i_x, i_y, i_z} = a_{i_x, i_y, i_z}
- *     + S_{i_x, i_y, i_z-1} + S_{i_x, i_y-1, i_z} + S_{i_x-1, i_y, i_z}
- *     - S_{i_x, i_y-1, i_z-1} + S_{i_x-1, i_y-1, i_z} + S_{i_x, i_y, i_z-1}
- *     + S_{i_x+1, i_y-1, i_z-1}
+ *     + S_{i_x-1, i_y, i_z} + S_{i_x, i_y-1, i_z} + S_{i_x, i_y, i_z-1}
+ *     - S_{i_x-1, i_y-1, i_z} - S_{i_x-1, i_y, i_z-1} - S_{i_x, i_y-1, i_z-1}
+ *     + S_{i_x-1, i_y-1, i_z-1}
  * \f]
+ * where any term referring to a bin outside the summation range is taken to
+ * be zero (and the backward case is obtained by replacing the \f$-1\f$ index
+ * offsets with \f$+1\f$).
  *
- * This ensures that the result make sense in higher dimension,
+ * This ensures that the result makes sense in higher dimensions,
  * especially in the case of selection efficiency computing.
  * For example, one can get a histogram (`*h2_eff_pt_eta`) in which each bin represents
- * the selection efficiency where pt and eta is greater than or equal to the lower edges of the bin
- * from the 2D histogram of these variables (`*h2_pt_eta`) with the followin code,
+ * the selection efficiency where pt and eta are greater than or equal to the lower edges of the bin
+ * from the 2D histogram of these variables (`*h2_pt_eta`) with the following code,
  * ~~~{.cpp}
  * TH2 *h2_eff_pt_eta = h2_pt_eta->GetCumulative(kFALSE, "_efficiency");
  * h2_eff_pt_eta->Scale(1. / h2_eff_pt_eta->GetBinContent(1, 1));
