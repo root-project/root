@@ -143,6 +143,26 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
    EXPECT_EQ(15, proc->GetNEntriesProcessed());
 }
 
+TEST_F(RNTupleChainProcessorTest, AddAllFields)
+{
+   auto proc = RNTupleProcessor::CreateChain(
+      {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 2);
+}
+
+TEST_F(RNTupleChainProcessorTest, AddAllFieldsAndSubfields)
+{
+   auto proc = RNTupleProcessor::CreateChain(
+      {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 3);
+}
+
 TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
 {
    FileRaii fileGuard("test_ntuple_processor_empty_ntuples.root");

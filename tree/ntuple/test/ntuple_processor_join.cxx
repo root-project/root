@@ -164,6 +164,24 @@ TEST(RNTupleJoinProcessor, NameConflict)
    }
 }
 
+TEST_F(RNTupleJoinProcessorTest, AddAllFields)
+{
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 5);
+}
+
+TEST_F(RNTupleJoinProcessorTest, AddAllFieldsAndSubfields)
+{
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 6);
+}
+
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 {
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});

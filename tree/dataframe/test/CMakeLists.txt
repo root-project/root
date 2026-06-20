@@ -113,6 +113,7 @@ ROOT_GENERATE_DICTIONARY(ClassWithNestedSameNameDict
                          DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(datasource_ntuple_processor datasource_ntuple_processor.cxx LIBRARIES ROOTDataFrame)
 if(MSVC)
   set_source_files_properties(datasource_ntuple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
@@ -132,6 +133,9 @@ if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
 endif()
 ROOT_GENERATE_DICTIONARY(ClassWithArraysDict ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithArrays.h
                           MODULE datasource_ntuple LINKDEF ClassWithArraysLinkDef.h OPTIONS -inlineInputHeader
+                          DEPENDENCIES ROOTVecOps)
+ROOT_GENERATE_DICTIONARY(ClassWithArraysDictProc ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithArrays.h
+                          MODULE datasource_ntuple_processor LINKDEF ClassWithArraysLinkDef.h OPTIONS -inlineInputHeader
                           DEPENDENCIES ROOTVecOps)
 
 #### TESTS REQUIRING EXTRA ROOT FEATURES ####
