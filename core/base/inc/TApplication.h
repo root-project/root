@@ -72,6 +72,7 @@ private:
 
    static Bool_t      fgGraphNeeded;    // True if graphics libs need to be initialized
    static Bool_t      fgGraphInit;      // True if graphics libs initialized
+   static Bool_t      fgSkipArguments;  // True if GetOptions() should skip processing positional arguments
 
    TApplication(const TApplication&) = delete;
    TApplication& operator=(const TApplication&) = delete;
@@ -163,6 +164,7 @@ public:
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();
+   static void     SkipParsingArguments();
 
    ClassDefOverride(TApplication,0)  //GUI application singleton
 };
