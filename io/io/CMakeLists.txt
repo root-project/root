@@ -21,6 +21,7 @@ if (uring)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
+  src/InternalIOUtils.cxx
   src/RConcurrentHashColl.cxx
   src/RFile.cxx
   src/RRawFile.cxx
@@ -79,6 +80,7 @@ set_source_files_properties(src/RConcurrentHashColl.cxx
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
 
 ROOT_GENERATE_DICTIONARY(G__RIO
+  ROOT/InternalIOUtils.hxx
   ROOT/RConcurrentHashColl.hxx
   ROOT/RFile.hxx
   ROOT/RRawFile.hxx
