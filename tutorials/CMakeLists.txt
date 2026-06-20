@@ -176,6 +176,14 @@ if(NOT spectrum)
    set(spectrum_veto legacy/spectrum/*.C)
 endif()
 
+if(NOT minuit1)
+   # These tutorials use TMinuit / gMinuit / TSPlot directly, which all
+   # require the original C++ Minuit implementation.
+   set(minuit1_veto math/fit/Ifit.C
+                    math/fit/fitcont.C
+                    legacy/splot/TestSPlot.C)
+endif()
+
 if(NOT roofit)
   set(roofit_veto roofit/roofit/*.C roofit/roofit/*.py
                   roofit/roostats/*.C roofit/roostats/*.py
@@ -532,6 +540,7 @@ set(all_veto hsimple.C
              ${davix_veto}
              ${minimal_veto}
              ${ntuple_veto}
+             ${minuit1_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
