@@ -146,6 +146,38 @@ std::string parameterStepWidthsNode(std::string const &json)
    return json.substr(begin, end - begin + 1);
 }
 
+std::string defaultDomainAxesNode(std::string const &json)
+{
+   const std::string key = "\"domains\":[";
+   const auto domainsBegin = json.find(key);
+   if (domainsBegin == std::string::npos) {
+      return "";
+   }
+   const auto axesBegin = json.find("\"axes\":[", domainsBegin);
+   if (axesBegin == std::string::npos) {
+      return "";
+   }
+   const auto axesEnd = json.find("}]", axesBegin);
+   if (axesEnd == std::string::npos) {
+      return "";
+   }
+   return json.substr(axesBegin, axesEnd - axesBegin + 2);
+}
+
+class ScopedNoDomainConstVarImportFlag {
+public:
+   explicit ScopedNoDomainConstVarImportFlag(bool value)
+      : _oldValue{RooJSONFactoryWSTool::importNoDomainParametersAsRooConstVars}
+   {
+      RooJSONFactoryWSTool::importNoDomainParametersAsRooConstVars = value;
+   }
+
+   ~ScopedNoDomainConstVarImportFlag() { RooJSONFactoryWSTool::importNoDomainParametersAsRooConstVars = _oldValue; }
+
+private:
+   bool _oldValue;
+};
+
 } // namespace
 
 // Test that the IO of attributes and string attributes works.
@@ -294,6 +326,7 @@ TEST(RooFitHS3, ParameterStepWidthsImportAfterDefaultSnapshot)
    })";
 
    RooWorkspace ws{"workspace"};
+   ScopedNoDomainConstVarImportFlag flagGuard{false};
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
 
    ASSERT_NE(ws.var("mu"), nullptr);
@@ -393,6 +426,111 @@ TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
    EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
+{
+   ScopedNoDomainConstVarImportFlag flagGuard{true};
+
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooRealVar mean{"mean", "mean", 0.0};
+   mean.setConstant(true);
+
+   RooConstVar sigmaConst{"sigma_const", "sigma_const", 1.0};
+   RooGaussian gaussConst{"gauss_const", "gauss_const", x, mean, sigmaConst};
+
+   RooGaussian gaussLiteral{"gauss_literal", "gauss_literal", x, mean, RooFit::RooConst(2.0)};
+
+   RooRealVar sigmaReal{"sigma_real", "sigma_real", 1.0, 0.1, 10.0};
+   sigmaReal.setConstant(true);
+   RooGaussian gaussReal{"gauss_real", "gauss_real", x, mean, sigmaReal};
+
+   RooWorkspace ws;
+   ws.import(gaussConst, RooFit::Silence());
+   ws.import(gaussLiteral, RooFit::RecycleConflictNodes(), RooFit::Silence());
+   ws.import(gaussReal, RooFit::RecycleConflictNodes(), RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   const std::string domainAxes = defaultDomainAxesNode(json);
+   ASSERT_FALSE(domainAxes.empty()) << json;
+
+   EXPECT_NE(json.find("\"sigma\":\"sigma_const\""), std::string::npos);
+   EXPECT_NE(json.find("\"name\":\"sigma_const\""), std::string::npos);
+   EXPECT_EQ(json.find("is_const_var"), std::string::npos);
+   EXPECT_EQ(json.find("\"sigma\":1.0"), std::string::npos);
+   EXPECT_NE(json.find("\"sigma\":2.0"), std::string::npos);
+   EXPECT_EQ(domainAxes.find("\"name\":\"sigma_const\""), std::string::npos) << domainAxes;
+
+   EXPECT_NE(json.find("\"sigma\":\"sigma_real\""), std::string::npos);
+   EXPECT_NE(json.find("\"name\":\"sigma_real\""), std::string::npos);
+   EXPECT_NE(domainAxes.find("\"name\":\"sigma_real\""), std::string::npos) << domainAxes;
+
+   // The unbounded constant RooRealVar is still a RooRealVar, so it gets an
+   // empty domain axis that distinguishes it from a RooConstVar.
+   EXPECT_NE(domainAxes.find("\"name\":\"mean\""), std::string::npos) << domainAxes;
+   EXPECT_EQ(domainAxes.find("\"name\":\"mean\",\"min\""), std::string::npos) << domainAxes;
+   EXPECT_EQ(domainAxes.find("\"name\":\"mean\",\"max\""), std::string::npos) << domainAxes;
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   EXPECT_NE(dynamic_cast<RooConstVar *>(imported.obj("sigma_const")), nullptr);
+   EXPECT_EQ(imported.var("sigma_const"), nullptr);
+   EXPECT_NE(dynamic_cast<RooRealVar *>(imported.obj("sigma_real")), nullptr);
+   EXPECT_NE(dynamic_cast<RooRealVar *>(imported.obj("mean")), nullptr);
+
+   const std::string roundTripJson = RooJSONFactoryWSTool{imported}.exportJSONtoString();
+   const std::string roundTripDomainAxes = defaultDomainAxesNode(roundTripJson);
+   EXPECT_NE(roundTripJson.find("\"sigma\":\"sigma_const\""), std::string::npos);
+   EXPECT_EQ(roundTripJson.find("is_const_var"), std::string::npos);
+   EXPECT_EQ(roundTripDomainAxes.find("\"name\":\"sigma_const\""), std::string::npos) << roundTripDomainAxes;
+
+   const std::string legacyJson = R"({
+      "metadata":{"hs3_version":"0.2"},
+      "parameter_points":[{"name":"default_values","parameters":[
+         {"name":"x","value":0.0},
+         {"name":"mean","value":0.0},
+         {"name":"sigma_const","value":1.0,"const":true}
+      ]}],
+      "distributions":[{"name":"gauss","type":"gaussian_dist","x":"x","mean":"mean","sigma":"sigma_const"}]
+   })";
+   RooWorkspace legacyImport;
+   {
+      ScopedNoDomainConstVarImportFlag legacyFlagGuard{false};
+      ASSERT_TRUE(RooJSONFactoryWSTool{legacyImport}.importJSONfromString(legacyJson));
+   }
+   EXPECT_NE(dynamic_cast<RooRealVar *>(legacyImport.obj("sigma_const")), nullptr);
+   EXPECT_EQ(dynamic_cast<RooConstVar *>(legacyImport.obj("sigma_const")), nullptr);
+}
+
+TEST(RooFitHS3, RooConstVarCollectionProxyExport)
+{
+   ScopedNoDomainConstVarImportFlag flagGuard{true};
+
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooRealVar mean1{"mean1", "mean1", -1.0};
+   RooRealVar mean2{"mean2", "mean2", 1.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 10.0};
+
+   RooGaussian g1{"g1", "g1", x, mean1, sigma};
+   RooGaussian g2{"g2", "g2", x, mean2, sigma};
+   RooConstVar frac{"frac_const", "frac_const", 0.25};
+   RooAddPdf model{"model", "model", RooArgList{g1, g2}, RooArgList{frac}};
+
+   RooWorkspace ws;
+   ws.import(model, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   const std::string domainAxes = defaultDomainAxesNode(json);
+   ASSERT_FALSE(domainAxes.empty()) << json;
+   EXPECT_NE(json.find("\"coefficients\":[\"frac_const\"]"), std::string::npos);
+   EXPECT_NE(json.find("\"name\":\"frac_const\""), std::string::npos);
+   EXPECT_EQ(json.find("is_const_var"), std::string::npos);
+   EXPECT_EQ(domainAxes.find("\"name\":\"frac_const\""), std::string::npos) << domainAxes;
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   EXPECT_NE(dynamic_cast<RooConstVar *>(imported.obj("frac_const")), nullptr);
+   EXPECT_EQ(imported.var("frac_const"), nullptr);
 }
 
 TEST(RooFitHS3, RooBernstein)

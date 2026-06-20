@@ -91,6 +91,16 @@ void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
    }
 }
 
+bool Domains::hasVariable(const char *name) const
+{
+   for (auto const &domain : _map) {
+      if (domain.second.hasVariable(name)) {
+         return true;
+      }
+   }
+   return false;
+}
+
 void Domains::ProductDomain::readVariable(RooRealVar const &var)
 {
    readVariable(var.GetName(), var.getMin(), var.getMax());
@@ -98,9 +108,6 @@ void Domains::ProductDomain::readVariable(RooRealVar const &var)
 
 void Domains::ProductDomain::readVariable(const char *name, double min, double max)
 {
-   if (RooNumber::isInfinite(min) && RooNumber::isInfinite(max))
-      return;
-
    auto &elem = _map[name];
 
    if (!RooNumber::isInfinite(min)) {
@@ -123,6 +130,12 @@ void Domains::ProductDomain::writeVariable(RooRealVar &var) const
          var.setMax(elem.max);
    }
 }
+
+bool Domains::ProductDomain::hasVariable(const char *name) const
+{
+   return _map.find(name) != _map.end();
+}
+
 void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
    if (!node.has_child("type") || node["type"].val() != "product_domain") {
@@ -162,7 +175,7 @@ void Domains::ProductDomain::populate(RooWorkspace &ws) const
 {
    for (auto const &item : _map) {
       const auto &name = item.first;
-      if (!ws.var(name)) {
+      if (!ws.arg(name)) {
          const auto &elem = item.second;
          const double vMin = elem.hasMin ? elem.min : -RooNumber::infinity();
          const double vMax = elem.hasMax ? elem.max : RooNumber::infinity();
@@ -176,7 +189,9 @@ void Domains::ProductDomain::registerBinnings(const char *name, RooWorkspace &ws
       auto *var = ws.var(item.first);
       if (!var)
          continue;
-      var->setRange(name, item.second.min, item.second.max);
+      const double vMin = item.second.hasMin ? item.second.min : -RooNumber::infinity();
+      const double vMax = item.second.hasMax ? item.second.max : RooNumber::infinity();
+      var->setRange(name, vMin, vMax);
    }
 }
 

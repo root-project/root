@@ -42,6 +42,8 @@ public:
    void readJSON(RooFit::Detail::JSONNode const &);
    void writeJSON(RooFit::Detail::JSONNode &) const;
 
+   bool hasVariable(const char *name) const;
+
    void populate(RooWorkspace &ws) const;
 
    class ProductDomain {
@@ -52,6 +54,8 @@ public:
 
       void readJSON(RooFit::Detail::JSONNode const &);
       void writeJSON(RooFit::Detail::JSONNode &) const;
+
+      bool hasVariable(const char *name) const;
 
       void populate(RooWorkspace &ws) const;
       void registerBinnings(const char *name, RooWorkspace &ws) const;
