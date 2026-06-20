@@ -26,7 +26,7 @@ template<class T>
 class RShared : public RHolder {
    std::shared_ptr<T> fShared;   ///<! holder without IO
 protected:
-   void *GetShared() const final { return &fShared; }
+   void *GetShared() const final { return (void *) &fShared; }
    RHolder* DoCopy() const final { return new RShared<T>(fShared); }
 public:
    RShared(T *obj) { fShared.reset(obj); }
