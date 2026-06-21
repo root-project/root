@@ -5416,6 +5416,21 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
    }
 }
 
+void TStreamerInfoActions::TActionSequence::WrapAllActionsWithUseCacheVectorLoop(TVirtualStreamerInfo *info)
+{
+   // Replace each action in the sequence with a UseCacheVectorLoop wrapping
+   // the original action.  After this call, the actions iterate over the
+   // staging area pushed onto the buffer's data cache stack rather than the
+   // original (user) iteration range.  The element offsets stored on the
+   // inner actions therefore must be relative to the staging element layout.
+
+   for (auto &configured : fActions) {
+      TConfiguredAction inner(configured);
+      configured.fLoopAction = UseCacheVectorLoop;
+      configured.fConfiguration = new TConfigurationUseCache(info, inner, /*repeat*/ kFALSE);
+   }
+}
+
 void TStreamerInfoActions::TActionSequence::SetMissing()
 {
    // Add the (potentially negative) delta to all the configuration's offset.  This is used by
