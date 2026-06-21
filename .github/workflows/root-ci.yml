@@ -281,6 +281,10 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
 
+      - uses: root-project/gcc-problem-matcher-improved@main
+        with:
+          build-directory: C:\ROOT-CI\src\
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
