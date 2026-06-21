@@ -422,6 +422,9 @@ if(Python3_Development_FOUND OR Python3_Development.Module_FOUND)
   endif()
 endif()
 
+# The invocation of the Python 3 executable that should be used for testing:
+set(Python3_EXECUTABLE_DEV ${Python3_EXECUTABLE} -X dev -W error)
+
 #---Check for OpenGL installation-------------------------------------------------------
 # OpenGL is required by various graf3d features that are enabled with opengl=ON,
 # or by the Cocoa-related code that always requires it.
