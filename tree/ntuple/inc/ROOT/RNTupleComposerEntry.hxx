@@ -1,4 +1,4 @@
-/// \file ROOT/RNTupleProcessor.hxx
+/// \file ROOT/RNTupleComposer.hxx
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2025-06-25
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RNTupleProcessorEntry
-#define ROOT_RNTupleProcessorEntry
+#ifndef ROOT_RNTupleComposerEntry
+#define ROOT_RNTupleComposerEntry
 
 #include <ROOT/RFieldBase.hxx>
 
@@ -27,45 +27,45 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 /**
-\class ROOT::Experimental::RNTupleProcessorProvenance
+\class ROOT::Experimental::RNTupleCompositionProvenance
 \ingroup NTuple
-\brief Identifies how a processor is composed.
+\brief Identifies the provenance of a composed RNTuple.
 
-The processor provenance is used in RNTupleProcessorEntry to identify how an (auxiliary) field in a composed processor
+The composition provenance is used in RNTupleComposerEntry to identify how an (auxiliary) field in a composed RNTuple
 can be accessed.
 */
 // clang-format on
-class RNTupleProcessorProvenance {
+class RNTupleCompositionProvenance {
 private:
    std::string fProvenance{};
 
 public:
-   RNTupleProcessorProvenance() = default;
-   RNTupleProcessorProvenance(const std::string &provenance) : fProvenance(provenance) {}
+   RNTupleCompositionProvenance() = default;
+   RNTupleCompositionProvenance(const std::string &provenance) : fProvenance(provenance) {}
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the full processor provenance, in the form of "x.y.z".
+   /// \brief Get the full composer provenance, in the form of "x.y.z".
    std::string Get() const { return fProvenance; }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Add a new processor to the provenance.
+   /// \brief Add a new composer to the provenance.
    ///
-   /// \param[in] processorName Name of the processor to add.
+   /// \param[in] ntupleName Name of the composed RNTuple to add.
    ///
    /// \return The updated provenance.
-   RNTupleProcessorProvenance Evolve(const std::string &processorName) const
+   RNTupleCompositionProvenance Evolve(const std::string &ntupleName) const
    {
       if (fProvenance.empty())
-         return RNTupleProcessorProvenance(processorName);
+         return RNTupleCompositionProvenance(ntupleName);
 
-      return RNTupleProcessorProvenance(fProvenance + "." + processorName);
+      return RNTupleCompositionProvenance(fProvenance + "." + ntupleName);
    }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check whether the provenance subsumes the provenance in `other`.
    ///
    /// \param[in] other The other provenance
-   bool Contains(const RNTupleProcessorProvenance &other) const
+   bool Contains(const RNTupleCompositionProvenance &other) const
    {
       return fProvenance.rfind(other.fProvenance) != std::string::npos;
    }
@@ -82,37 +82,37 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleProcessorEntry
+\class ROOT::Experimental::Internal::RNTupleComposerEntry
 \ingroup NTuple
-\brief Collection of values in an RNTupleProcessor, analogous to REntry, with checks and support for missing values.
+\brief Collection of values in an RNTupleComposer, analogous to REntry, with checks and support for missing values.
 */
 // clang-format on
-class RNTupleProcessorEntry {
+class RNTupleComposerEntry {
 public:
    // We don't use RFieldTokens here, because it (semantically) does not make sense for the entry to be fixed to the
    // schema ID of a particular model.
    using FieldIndex_t = std::uint64_t;
 
 private:
-   struct RProcessorValue {
+   struct RComposerValue {
       std::unique_ptr<ROOT::RFieldBase> fField;
       std::string fQualifiedFieldName;
       ROOT::RFieldBase::RValue fValue;
       bool fIsValid;
-      RNTupleProcessorProvenance fProcessorProvenance;
+      RNTupleCompositionProvenance fCompositionProvenance;
 
-      RProcessorValue(std::unique_ptr<ROOT::RFieldBase> field, std::string_view qualifiedFieldName,
-                      ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorProvenance provenance)
+      RComposerValue(std::unique_ptr<ROOT::RFieldBase> field, std::string_view qualifiedFieldName,
+                     ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleCompositionProvenance provenance)
          : fField(std::move(field)),
            fQualifiedFieldName(qualifiedFieldName),
            fValue(std::move(value)),
            fIsValid(isValid),
-           fProcessorProvenance(provenance)
+           fCompositionProvenance(provenance)
       {
       }
    };
 
-   std::vector<RProcessorValue> fProcessorValues;
+   std::vector<RComposerValue> fComposerValues;
    // Maps from the field name to all type alternatives for that field that have been added to the entry.
    std::unordered_map<std::string, std::vector<FieldIndex_t>> fFieldName2Index;
 
@@ -121,7 +121,7 @@ public:
    /// \brief Clear all fields from the entry.
    void Clear()
    {
-      fProcessorValues.clear();
+      fComposerValues.clear();
       fFieldName2Index.clear();
    }
 
@@ -132,8 +132,8 @@ public:
    /// \param[in] isValid The new validity of the field.
    void SetFieldValidity(FieldIndex_t fieldIdx, bool isValid)
    {
-      assert(fieldIdx < fProcessorValues.size());
-      fProcessorValues[fieldIdx].fIsValid = isValid;
+      assert(fieldIdx < fComposerValues.size());
+      fComposerValues[fieldIdx].fIsValid = isValid;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -142,8 +142,8 @@ public:
    /// \param[in] fieldIdx The index of the field in the entry.
    bool IsValidField(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fProcessorValues.size());
-      return fProcessorValues[fieldIdx].fIsValid;
+      assert(fieldIdx < fComposerValues.size());
+      return fComposerValues[fieldIdx].fIsValid;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Find the field index of the provided field in the entry.
    ///
-   /// \param[in] canonicalFieldName The name of the field in the entry, including its processor name prefixes and
+   /// \param[in] canonicalFieldName The name of the field in the entry, including its composition prefixes and
    /// parent field names, if applicable.
    ///
    /// \return A `std::optional` containing the field index if it was found.
@@ -170,11 +170,11 @@ public:
    /// \param[in] field Reference to the field to add, used to to create its corresponding RValue.
    /// \param[in] valuePtr Pointer to an object corresponding to the field's type to bind to its value. If this is a
    /// `nullptr`, a pointer will be created.
-   /// \param[in] provenance Processor provenance of the field.
+   /// \param[in] provenance Composition provenance of the field.
    ///
    /// \return The field index of the newly added field.
    FieldIndex_t AddField(const std::string &qualifiedFieldName, std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
-                         const RNTupleProcessorProvenance &provenance);
+                         const RNTupleCompositionProvenance &provenance);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Update a field in the entry, preserving the value pointer.
@@ -199,18 +199,18 @@ public:
 
    const ROOT::RFieldBase::RValue &GetValue(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fProcessorValues.size());
-      return fProcessorValues[fieldIdx].fValue;
+      assert(fieldIdx < fComposerValues.size());
+      return fComposerValues[fieldIdx].fValue;
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the processor provenance of a field in the entry.
+   /// \brief Get the composition provenance of a field in the entry.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
-   const RNTupleProcessorProvenance &GetFieldProvenance(FieldIndex_t fieldIdx) const
+   const RNTupleCompositionProvenance &GetCompositionProvenance(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fProcessorValues.size());
-      return fProcessorValues[fieldIdx].fProcessorProvenance;
+      assert(fieldIdx < fComposerValues.size());
+      return fComposerValues[fieldIdx].fCompositionProvenance;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -219,8 +219,8 @@ public:
    /// \param[in] fieldIdx The index of the field in the entry.
    std::string GetQualifiedFieldName(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fProcessorValues.size());
-      return fProcessorValues[fieldIdx].fQualifiedFieldName;
+      assert(fieldIdx < fComposerValues.size());
+      return fComposerValues[fieldIdx].fQualifiedFieldName;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -231,4 +231,4 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT_RNTupleProcessorEntry
+#endif // ROOT_RNTupleComposerEntry

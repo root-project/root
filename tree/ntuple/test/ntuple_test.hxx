@@ -6,6 +6,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTupleComposer.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleJoinTable.hxx>
@@ -75,6 +76,7 @@ using RMiniFileReader = ROOT::Internal::RMiniFileReader;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
+using RNTupleComposer = ROOT::Experimental::RNTupleComposer;
 using RNTupleCompressor = ROOT::Internal::RNTupleCompressor;
 using RNTupleDecompressor = ROOT::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::RNTupleDescriptor;

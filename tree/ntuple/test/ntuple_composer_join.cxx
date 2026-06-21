@@ -1,13 +1,11 @@
 #include "ntuple_test.hxx"
 
-#include <ROOT/RNTupleProcessor.hxx>
-
 #include <TMemFile.h>
 
-class RNTupleJoinProcessorTest : public testing::Test {
+class RNTupleJoinComposerTest : public testing::Test {
 protected:
-   const std::array<std::string, 4> fFileNames{"test_ntuple_join_processor1.root", "test_ntuple_join_processor2.root",
-                                               "test_ntuple_join_processor3.root", "test_ntuple_join_processor4.root"};
+   const std::array<std::string, 4> fFileNames{"test_ntuple_join_composer1.root", "test_ntuple_join_composer2.root",
+                                               "test_ntuple_join_composer3.root", "test_ntuple_join_composer4.root"};
 
    const std::array<std::string, 4> fNTupleNames{"ntuple1", "ntuple2", "ntuple3", "ntuple4"};
 
@@ -85,19 +83,21 @@ protected:
    }
 };
 
-TEST_F(RNTupleJoinProcessorTest, Aligned)
+TEST_F(RNTupleJoinComposerTest, Aligned)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto composer = RNTupleComposer::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
-   auto i = proc->RequestField<int>("i");
-   auto y = proc->RequestField<std::vector<float>>("y");
-   auto z = proc->RequestField<float>("ntuple3.z");
+   auto i = composer->RequestField<int>("i");
+   auto y = composer->RequestField<std::vector<float>>("y");
+   auto z = composer->RequestField<float>("ntuple3.z");
 
    std::vector<float> yExpected;
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+   auto processor = RNTupleProcessor(*composer);
+
+   for (auto idx : processor) {
+      EXPECT_EQ(idx + 1, processor.GetNEntriesProcessed());
+      EXPECT_EQ(idx, composer->GetCurrentEntryNumber());
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
       EXPECT_EQ(yExpected, *y);
@@ -105,27 +105,29 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
       EXPECT_FLOAT_EQ(*i * 2.f, *z);
    }
 
-   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, processor.GetNEntriesProcessed());
 }
 
-TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
+TEST_F(RNTupleJoinComposerTest, IdenticalFieldNames)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto composer = RNTupleComposer::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
-   auto iPrimary = proc->RequestField<int>("i");
-   auto iAux = proc->RequestField<int>("ntuple3.i");
+   auto iPrimary = composer->RequestField<int>("i");
+   auto iAux = composer->RequestField<int>("ntuple3.i");
 
-   for (auto it = proc->begin(); it != proc->end(); it++) {
+   auto processor = RNTupleProcessor(*composer);
+
+   for (auto idx [[maybe_unused]] : processor) {
       EXPECT_NE(iPrimary.GetPtr(), iAux.GetPtr());
       EXPECT_EQ(*iPrimary, *iAux);
    }
 
-   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, processor.GetNEntriesProcessed());
 }
 
 TEST(RNTupleJoinProcessor, NameConflict)
 {
-   FileRaii fileGuard("ntuple_processor_join_name_conflict.root");
+   FileRaii fileGuard("ntuple_composer_join_name_conflict.root");
    {
       auto model = RNTupleModel::Create();
       auto fldStruct = model->MakeField<CustomStruct>("struct");
@@ -151,31 +153,34 @@ TEST(RNTupleJoinProcessor, NameConflict)
       }
    }
 
-   auto proc = RNTupleProcessor::CreateJoin({"ntuple", fileGuard.GetPath()}, {"struct", fileGuard.GetPath()}, {});
+   auto composer = RNTupleComposer::CreateJoin({"ntuple", fileGuard.GetPath()}, {"struct", fileGuard.GetPath()}, {});
 
    try {
-      proc->RequestField<float>("struct.a");
+      composer->RequestField<float>("struct.a");
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
          err.what(),
-         testing::HasSubstr("ambiguous field name: \"struct.a\" is present in the primary RNTupleProcessor \"ntuple\", "
-                            "but may also refer to a field in the auxiliary RNTupleProcessor named \"struct\". To "
-                            "avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
+         testing::HasSubstr("ambiguous field name: \"struct.a\" is present in the primary RNTupleComposer \"ntuple\", "
+                            "but may also refer to a field in the auxiliary RNTupleComposer named \"struct\". To "
+                            "avoid this ambiguity, rename the auxiliary RNTupleComposer."));
    }
 }
 
-TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
+TEST_F(RNTupleJoinComposerTest, UnalignedSingleJoinField)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});
+   auto composer =
+      RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});
 
-   auto iPrimary = proc->RequestField<int>("i");
-   auto iAux = proc->RequestField<int>("ntuple2.i");
-   auto x = proc->RequestField<float>("x");
-   auto y = proc->RequestField<std::vector<float>>("ntuple2.y");
+   auto iPrimary = composer->RequestField<int>("i");
+   auto iAux = composer->RequestField<int>("ntuple2.i");
+   auto x = composer->RequestField<float>("x");
+   auto y = composer->RequestField<std::vector<float>>("ntuple2.y");
 
    std::vector<float> yExpected;
 
-   for (auto idx : *proc) {
+   auto processor = RNTupleProcessor(*composer);
+
+   for (auto idx : processor) {
       EXPECT_EQ(idx * 2, *iPrimary);
       EXPECT_EQ(*iPrimary, *iAux);
       EXPECT_FLOAT_EQ(*iPrimary * 0.5f, *x);
@@ -184,75 +189,81 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
       EXPECT_EQ(yExpected, *y);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(5, processor.GetNEntriesProcessed());
 }
 
-TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
+TEST_F(RNTupleJoinComposerTest, UnalignedMultipleJoinFields)
 {
    try {
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]},
-                                   {"i", "j", "k", "l", "m"});
-      FAIL() << "trying to create a join processor with more than four join fields should throw";
+      RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]},
+                                  {"i", "j", "k", "l", "m"});
+      FAIL() << "trying to create an RNTupleJoinComposer with more than four join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("a maximum of four join fields is allowed"));
    }
 
    try {
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "i"});
-      FAIL() << "trying to create a join processor with duplicate join fields should throw";
+      RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "i"});
+      FAIL() << "trying to create an RNTupleJoinComposer with duplicate join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join fields must be unique"));
    }
 
    try {
-      auto proc =
-         RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"l"});
-      // Without registering a field, the processor won't be initialized.
-      proc->RequestField<float>("x");
-      FAIL() << "trying to use a join processor where not all join fields are present in the primary processor should "
-                "throw";
+      auto composer =
+         RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"l"});
+      // Without registering a field, the compoer won't be initialized.
+      composer->RequestField<float>("x");
+      FAIL() << "trying to use an RNTupleJoinComposer where not all join fields are present in the primary composition "
+                "should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"l\" in primary processor \"ntuple1\""));
+      EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"l\" in primary composition \"ntuple1\""));
    }
 
    try {
-      auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]},
-                                               {"i", "j", "k"});
-      // Without registering a field, the processor won't be initialized.
-      proc->RequestField<float>("x");
-      FAIL() << "trying to use a join processor where not all join fields are present in the auxiliary processor "
-                "should throw";
+      auto composer = RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]},
+                                                  {"i", "j", "k"});
+      // Without registering a field, the composer won't be initialized.
+      composer->RequestField<float>("x");
+      FAIL() << "trying to use an RNTupleJoinComposer where not all join fields are present in the auxiliary "
+                "composition should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"j\" in auxiliary processor \"ntuple2\""));
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("could not find join field \"j\" in auxiliary composition \"ntuple2\""));
    }
 
-   auto proc =
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "j", "k"});
+   auto composer =
+      RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "j", "k"});
 
-   auto i = proc->RequestField<int>("i");
-   auto x = proc->RequestField<float>("x");
-   auto a = proc->RequestField<float>("ntuple4.a");
+   auto i = composer->RequestField<int>("i");
+   auto x = composer->RequestField<float>("x");
+   auto a = composer->RequestField<float>("ntuple4.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
+   auto processor = RNTupleProcessor(*composer);
 
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
+   for (auto idx : processor) {
+      EXPECT_EQ(composer->GetCurrentEntryNumber(), idx);
+
+      EXPECT_FLOAT_EQ(composer->GetCurrentEntryNumber() * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
       EXPECT_EQ(*i * 0.1f, *a);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(5, processor.GetNEntriesProcessed());
 }
 
-TEST_F(RNTupleJoinProcessorTest, MissingEntries)
+TEST_F(RNTupleJoinComposerTest, MissingEntries)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[3], fFileNames[3]}, {"i"});
+   auto composer =
+      RNTupleComposer::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[3], fFileNames[3]}, {"i"});
 
-   auto i = proc->RequestField<int>("i");
-   auto a = proc->RequestField<float>("ntuple4.a");
+   auto i = composer->RequestField<int>("i");
+   auto a = composer->RequestField<float>("ntuple4.a");
    std::vector<float> yExpected;
 
-   auto procIter = proc->begin();
+   auto processor = RNTupleProcessor(*composer);
+
+   auto procIter = processor.begin();
    EXPECT_TRUE(a.HasValue());
    EXPECT_EQ(*i * 0.1f, *a);
    ++procIter;
@@ -269,9 +280,9 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
    EXPECT_EQ(*i * 0.1f, *a);
 }
 
-TEST_F(RNTupleJoinProcessorTest, TMemFile)
+TEST_F(RNTupleJoinComposerTest, TMemFile)
 {
-   TMemFile memFile("test_ntuple_processor_join_tmemfile.root", "RECREATE");
+   TMemFile memFile("test_ntuple_composer_join_tmemfile.root", "RECREATE");
    {
       auto model = RNTupleModel::Create();
       auto fldI = model->MakeField<int>("i");
@@ -285,15 +296,17 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
       }
    }
 
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {"ntuple_aux", &memFile}, {"i"});
+   auto composer = RNTupleComposer::CreateJoin({fNTupleNames[0], fFileNames[0]}, {"ntuple_aux", &memFile}, {"i"});
 
-   auto i = proc->RequestField<int>("i");
-   auto x = proc->RequestField<float>("x");
-   auto y = proc->RequestField<std::vector<float>>("ntuple_aux.y");
+   auto i = composer->RequestField<int>("i");
+   auto x = composer->RequestField<float>("x");
+   auto y = composer->RequestField<std::vector<float>>("ntuple_aux.y");
 
    std::vector<float> yExpected;
 
-   for (auto idx : *proc) {
+   auto processor = RNTupleProcessor(*composer);
+
+   for (auto idx : processor) {
       EXPECT_EQ(idx * 2, *i);
 
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
@@ -302,19 +315,19 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
       EXPECT_EQ(yExpected, *y);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(5, processor.GetNEntriesProcessed());
 }
 
-TEST_F(RNTupleJoinProcessorTest, PrintStructure)
+TEST_F(RNTupleJoinComposerTest, PrintStructure)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto composer = RNTupleComposer::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
    std::ostringstream os;
-   proc->PrintStructure(os);
+   composer->PrintStructure(os);
 
    const std::string exp = "+-----------------------------+ +-----------------------------+\n"
                            "| ntuple2                     | | ntuple3                     |\n"
-                           "| test_ntuple_join_process... | | test_ntuple_join_process... |\n"
+                           "| test_ntuple_join_compose... | | test_ntuple_join_compose... |\n"
                            "+-----------------------------+ +-----------------------------+\n";
    EXPECT_EQ(exp, os.str());
 }
