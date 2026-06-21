@@ -601,11 +601,11 @@ Int_t TGeoTrd2::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    Double_t dx0 = 0.5 * (fDx1 + fDx2);
    Double_t dy0 = 0.5 * (fDy1 + fDy2);
    Double_t z = origin[2] - dd[2];
-   dd[0] = dx0 - fx * z - origin[0];
-   dd[1] = dy0 - fy * z - origin[1];
+   dd[0] = dx0 - fx * z - TMath::Abs(origin[0]);
+   dd[1] = dy0 - fy * z - TMath::Abs(origin[1]);
    z = origin[2] + dd[2];
-   dd[0] = TMath::Min(dd[0], dx0 - fx * z - origin[0]);
-   dd[1] = TMath::Min(dd[1], dy0 - fy * z - origin[1]);
+   dd[0] = TMath::Min(dd[0], dx0 - fx * z - TMath::Abs(origin[0]));
+   dd[1] = TMath::Min(dd[1], dy0 - fy * z - TMath::Abs(origin[1]));
    if (dd[0] < 0 || dd[1] < 0) {
       Error("GetFittingBox", "wrong matrix");
       return 1;
