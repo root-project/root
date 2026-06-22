@@ -5064,11 +5064,10 @@ void TPad::Print(const char *filename, Option_t *option)
          Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
          gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->Modified();
-         gPad->Update();
-         if (GetPainter()) {
-            GetPainter()->SelectDrawable(wid);
-            GetPainter()->SaveImage(this, psname.Data(), gtype);
+         gPad->ModifiedUpdate();
+         if (auto pp = GetPainter()) {
+            pp->SelectDrawable(wid);
+            pp->SaveImage(this, psname.Data(), gtype);
          }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "GIF file %s has been created", psname.Data());
@@ -5079,11 +5078,13 @@ void TPad::Print(const char *filename, Option_t *option)
       if (gtype != TImage::kUnknown) {
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
          gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->Modified();
-         gPad->Update();
+         gPad->ModifiedUpdate();
+         // GL canvas requires extra update to correctly flush image, fix #22157
+         if (gPad->GetCanvas()->UseGL())
+            gPad->UpdateAsync();
          gPad->GetCanvasImp()->UpdateDisplay(1, kTRUE);
-         if (GetPainter())
-            GetPainter()->SaveImage(this, psname, gtype);
+         if (auto pp = GetPainter())
+            pp->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }
