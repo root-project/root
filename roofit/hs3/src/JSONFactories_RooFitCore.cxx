@@ -853,7 +853,12 @@ public:
 class RooDecayStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   // The RooDecay servers are the internal resModel-times-basis convolutions,
+   // which are implementation details that should not leak into the JSON. We
+   // only export the actual dependents (t, tau and the original resolution
+   // model) explicitly.
+   bool autoExportDependants() const override { return false; }
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
       auto *pdf = static_cast<const RooDecay *>(func);
       elem["type"] << key();
@@ -861,6 +866,10 @@ public:
       elem["tau"] << pdf->getTau().GetName();
       elem["resolutionModel"] << pdf->getModel().GetName();
       elem["decayType"] << pdf->getDecayType();
+
+      tool->queueExport(pdf->getT());
+      tool->queueExport(pdf->getTau());
+      tool->queueExport(pdf->getModel());
 
       return true;
    }
