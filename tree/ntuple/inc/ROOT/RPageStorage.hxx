@@ -704,6 +704,20 @@ private:
    ROOT::Internal::RPageRef LoadPageFromSummary(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
 
 protected:
+   /// Holds the uncompressed header and footer
+   struct RStructureBuffer {
+      std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
+      void *fPtrHeader = nullptr;               ///< either nullptr or points into fBuffer
+      void *fPtrFooter = nullptr;               ///< either nullptr or points into fBuffer
+
+      /// Called at the end of Attach(), i.e. when the header and footer are processed
+      void Reset()
+      {
+         RStructureBuffer empty;
+         std::swap(empty, *this);
+      }
+   };
+
    /// Default I/O performance counters that get registered in `fMetrics`
    struct RCounters {
       ROOT::Experimental::Detail::RNTupleAtomicCounter &fNReadV;
@@ -726,6 +740,7 @@ protected:
    };
 
    std::unique_ptr<RCounters> fCounters;
+   RStructureBuffer fStructureBuffer; ///< Populated by LoadStructureImpl(), reset at the end of Attach()
 
    ROOT::RNTupleReadOptions fOptions;
 
