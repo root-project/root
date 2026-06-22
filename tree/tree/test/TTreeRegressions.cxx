@@ -1,5 +1,6 @@
 #include "TMemFile.h"
 #include "TLeaf.h"
+#include "TChain.h"
 #include "TTree.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
@@ -9,7 +10,9 @@
 
 #include "gtest/gtest.h"
 
+#include <array>
 #include <vector>
+#include <memory>
 
 // ROOT-10702
 TEST(TTreeRegressions, CompositeTypeWithNameClash)
@@ -321,4 +324,358 @@ TEST(TTreeRegressions, DrawAutoBinning)
    EXPECT_EQ(h->GetEntries(), h->GetEffectiveEntries());
    delete h;
    delete gROOT->FindObject("c1");
+}
+
+// Regressions for https://github.com/root-project/root/issues/22652
+struct RegressionGH22652 : public ::testing::Test {
+
+   constexpr static auto fMainTreeName{"main"};
+   constexpr static auto fFriendTreeName{"friend"};
+   constexpr static auto fMainTreeFileName{"main_global.root"};
+   constexpr static auto fNFiles{3};
+   constexpr static auto fNEntriesPerFile{100};
+   // file 0: w in [4,5)   file 1: w in [0,1)   file 2: w in [9,10)
+   constexpr static std::array<double, 3> fLowerBounds{4.0, 0.0, 9.0};
+   constexpr static std::array<const char *, 3> fMainChainFileNames{"main_1.root", "main_2.root", "main_3.root"};
+   constexpr static std::array<const char *, 3> fFriendChainFileNames{"friend_1.root", "friend_2.root",
+                                                                      "friend_3.root"};
+
+   constexpr static auto fNShortFiles{6};
+   constexpr static auto fNEntriesPerShortFile{50};
+   constexpr static std::array<const char *, 6> fShortFriendChainFileNames{
+      "short_friend_1.root", "short_friend_2.root", "short_friend_3.root",
+      "short_friend_4.root", "short_friend_5.root", "short_friend_6.root"};
+   // We set the minimum value in the second file to check that the branch address is updated by TChain::GetMinimum
+   constexpr static std::array<double, 6> fShortFriendChainValues{10, 0, 30, 40, 50, 60};
+
+   constexpr static std::array<const char *, 3> fMainAlternatingChainFileNames{
+      "main_alternating_1.root", "main_alternating_2.root", "main_alternating_3.root"};
+   constexpr static std::array<const char *, 3> fFriendAlternatingChainFileNames{
+      "friend_alternating_1.root", "friend_alternating_2.root", "friend_alternating_3.root"};
+
+   constexpr static std::array<const char *, 2> fMainChainDifferentEntryLayout{"main_different_entry_layout_1.root",
+                                                                               "main_different_entry_layout_2.root"};
+
+   constexpr static std::array<const char *, 10> fFriendChainDifferentEntryLayout{
+      "friend_different_entry_layout_01.root", "friend_different_entry_layout_02.root",
+      "friend_different_entry_layout_03.root", "friend_different_entry_layout_04.root",
+      "friend_different_entry_layout_05.root", "friend_different_entry_layout_06.root",
+      "friend_different_entry_layout_07.root", "friend_different_entry_layout_08.root",
+      "friend_different_entry_layout_09.root", "friend_different_entry_layout_10.root"};
+
+   static void SetUpTestSuite()
+   {
+      {
+         // Main TTree with cumulated number of entries
+         auto fd = std::make_unique<TFile>(fMainTreeFileName, "RECREATE");
+         auto td = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         double x{};
+         td->Branch("x", &x);
+         for ([[maybe_unused]] const auto &_ : fMainChainFileNames)
+            for (int i = 0; i < fNEntriesPerFile; ++i)
+               td->Fill();
+         fd->Write();
+      }
+
+      for (int i = 0; i < fNFiles; i++) {
+         // Trees for the main chain
+         {
+            auto fd = std::make_unique<TFile>(fMainChainFileNames[i], "RECREATE");
+            auto td = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+            double x{};
+            td->Branch("x", &x);
+            for (int j = 0; j < fNEntriesPerFile; j++) {
+               // x in [-0.5, 0.495]
+               x = j * 0.01 - 0.5;
+               td->Fill();
+            }
+            fd->Write();
+         }
+
+         // Trees for the friend chain
+         {
+            auto ff = std::make_unique<TFile>(fFriendChainFileNames[i], "RECREATE");
+            auto tf = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+            double w{};
+            tf->Branch("w", &w);
+            for (int j = 0; j < fNEntriesPerFile; j++) {
+               // w in [fLowerBounds[i], fLowerBounds[i] + 1)
+               w = fLowerBounds[i] + j * (1.0 / fNEntriesPerFile);
+               tf->Fill();
+            }
+            ff->Write();
+         }
+      }
+
+      // A second friend chain with the total number of entries but twice as many files (half of the entries per file)
+      for (auto i = 0; i < fNShortFiles; i++) {
+         auto fd = std::make_unique<TFile>(fShortFriendChainFileNames[i], "RECREATE");
+         auto td = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+         double w{};
+         td->Branch("w", &w);
+         for (int j = 0; j < fNEntriesPerShortFile; j++) {
+            w = fShortFriendChainValues[i];
+            td->Fill();
+         }
+         fd->Write();
+      }
+
+      // Alternating branch in main and friend trees
+      // Main chain
+      {
+         auto f = std::make_unique<TFile>(fMainAlternatingChainFileNames[0], "RECREATE");
+         auto t = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         double w{};
+         t->Branch("w", &w);
+         for (int j = 0; j < fNEntriesPerFile; j++) {
+            // w in [fLowerBounds[i], fLowerBounds[i] + 1)
+            w = fLowerBounds[0] + j * (1.0 / fNEntriesPerFile);
+            t->Fill();
+         }
+         f->Write();
+      }
+      {
+         auto f = std::make_unique<TFile>(fMainAlternatingChainFileNames[1], "RECREATE");
+         auto t = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         for (int j = 0; j < fNEntriesPerFile; j++) {
+            t->Fill();
+         }
+         f->Write();
+      }
+      {
+         auto f = std::make_unique<TFile>(fMainAlternatingChainFileNames[2], "RECREATE");
+         auto t = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         double w{};
+         t->Branch("w", &w);
+         for (int j = 0; j < fNEntriesPerFile; j++) {
+            // w in [fLowerBounds[i], fLowerBounds[i] + 1)
+            w = fLowerBounds[2] + j * (1.0 / fNEntriesPerFile);
+            t->Fill();
+         }
+         f->Write();
+      }
+
+      // Friend chain
+      {
+         auto f = std::make_unique<TFile>(fFriendAlternatingChainFileNames[0], "RECREATE");
+         auto t = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+         for (int j = 0; j < fNEntriesPerFile; j++) {
+            t->Fill();
+         }
+         f->Write();
+      }
+      {
+         auto f = std::make_unique<TFile>(fFriendAlternatingChainFileNames[1], "RECREATE");
+         auto t = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+         double w{};
+         t->Branch("w", &w);
+         for (int j = 0; j < fNEntriesPerFile; j++) {
+            // w in [fLowerBounds[i], fLowerBounds[i] + 1)
+            w = fLowerBounds[1] + j * (1.0 / fNEntriesPerFile);
+            // Inject max value in this file to exercise the logic with GetMaximum
+            if (j == (fNEntriesPerFile - 1))
+               w = 150;
+            t->Fill();
+         }
+         f->Write();
+      }
+      {
+         auto f = std::make_unique<TFile>(fFriendAlternatingChainFileNames[2], "RECREATE");
+         auto t = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+         for (int j = 0; j < fNEntriesPerFile; j++) {
+            t->Fill();
+         }
+         f->Write();
+      }
+
+      // Alternating branch to process between main and friend chain, but the
+      // friend chain has a different entries layout than the main one
+      constexpr auto nEntriesMainDifferentLayout{10};
+      constexpr auto nEntriesFriendDifferentLayout{2};
+      {
+         auto f = std::make_unique<TFile>(fMainChainDifferentEntryLayout[0], "RECREATE");
+         auto t = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         double w{};
+         t->Branch("w", &w);
+         for (int j = 0; j < nEntriesMainDifferentLayout; j++) {
+            w = -1 * j;
+            t->Fill();
+         }
+         f->Write();
+      }
+      {
+         auto f = std::make_unique<TFile>(fMainChainDifferentEntryLayout[1], "RECREATE");
+         auto t = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         for (int j = 0; j < nEntriesMainDifferentLayout; j++) {
+            t->Fill();
+         }
+         f->Write();
+      }
+
+      {
+         for (auto i = 0; i < 5; i++) {
+            auto f = std::make_unique<TFile>(fFriendChainDifferentEntryLayout[i], "RECREATE");
+            auto t = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+            for (int j = 0; j < nEntriesFriendDifferentLayout; j++) {
+               t->Fill();
+            }
+            f->Write();
+         }
+
+         for (auto i = 5; i < 10; i++) {
+            auto f = std::make_unique<TFile>(fFriendChainDifferentEntryLayout[i], "RECREATE");
+            auto t = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+            double w{};
+            t->Branch("w", &w);
+            for (int j = 0; j < nEntriesFriendDifferentLayout; j++) {
+               w = i * j;
+               t->Fill();
+            }
+            f->Write();
+         }
+      }
+   }
+
+   static void TearDownTestSuite()
+   {
+      std::remove(fMainTreeFileName);
+
+      for (const auto &f : fMainChainFileNames)
+         std::remove(f);
+
+      for (const auto &f : fFriendChainFileNames)
+         std::remove(f);
+
+      for (const auto &f : fMainAlternatingChainFileNames)
+         std::remove(f);
+
+      for (const auto &f : fFriendAlternatingChainFileNames)
+         std::remove(f);
+
+      for (const auto &f : fMainChainDifferentEntryLayout)
+         std::remove(f);
+
+      for (const auto &f : fFriendChainDifferentEntryLayout)
+         std::remove(f);
+   }
+};
+
+TEST_F(RegressionGH22652, RunMainTChain)
+{
+   // Main is a TChain, friend is a TChain, entries are aligned
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainChainFileNames)
+      m->Add(fn);
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fFriendChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.99);
+}
+
+TEST_F(RegressionGH22652, RunMainTTree)
+{
+   // Main is a TTree, friend is a TChain, entries are aligned
+
+   auto fm = std::make_unique<TFile>(fMainTreeFileName);
+   std::unique_ptr<TTree> m{fm->Get<TTree>(fMainTreeName)};
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fFriendChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.99);
+}
+
+TEST_F(RegressionGH22652, TChainFriendWithShorterFiles)
+{
+   // Main is a TChain, friend is a TChain, total number of entries is the same
+   // but the friend TChain has double the number of files and half the entries
+   // per file. This exercises in particular the correct updating of the branch
+   // addresses of the friend TChain when it switches to another file even though
+   // the main TChain is still traversing the same file.
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainChainFileNames)
+      m->Add(fn);
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fShortFriendChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 60.0);
+}
+
+TEST_F(RegressionGH22652, BranchAlternatingInMainAndFriendTChain)
+{
+   // Main TChain and friend TChain, same number of files, same number of entries per file, aligned.
+   // The branch to be processed, "w", is found alternating in trees of the main and the friend one:
+   // main file 0 has w, friend file 1 does not have w
+   // main file 1 does not have w, friend file 1 has w
+   // main file 2 has w, friend file 2 does not have w
+   // GetMinimum, GetMaximum should be able to detect the presence of branch "w"
+   // in the second file and connect to it to get the missing values from the
+   // tree of the main chain
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainAlternatingChainFileNames)
+      m->Add(fn);
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fFriendAlternatingChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 150.0);
+}
+
+TEST_F(RegressionGH22652, BranchMissingInSecondFileOfChain)
+{
+   // Main TChain with three files:
+   // main file 0 has w
+   // main file 1 does not have w
+   // main file 2 has w
+   // GetMinimum, GetMaximum should be able to compute their values skipping
+   // the trees where the branch is not present
+
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainAlternatingChainFileNames)
+      m->Add(fn);
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 4.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.99);
+}
+
+TEST_F(RegressionGH22652, AlternatingBranchWithDifferentEntryLayoutInMainAndFriend)
+{
+
+   // Main TChain has two files. Each file has 10 entries. File 1 has branch "w", File 2 does not have it
+   // Friend TChain has 10 files. Each files has 2 entries.
+   // Main and friend are "aligned" such that for each file of main there are 5 corresponding files of friend
+   // The first five files of friend do not have branch "w", so that GetMinimum/Maximum should get the values of "w"
+   // from the main chain The second five files of friend have branch "w", so that GetMinimum/GetMaximum should get the
+   // values of "w" from the friend chain GetMinimum/Maximum should detect that while we are in the entries of the
+   // second file of the main chain, we may be jumping to another file in the friend chain
+
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainChainDifferentEntryLayout)
+      m->Add(fn);
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fFriendChainDifferentEntryLayout)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), -9.);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.);
 }
