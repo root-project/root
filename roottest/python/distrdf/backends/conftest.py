@@ -12,14 +12,19 @@ import pyspark
 import ROOT
 
 
-def create_dask_connection():
+def create_dask_connection() -> Client:
     connection = Client(LocalCluster(
         n_workers=2, threads_per_worker=1, processes=True, memory_limit="2GiB"))
     return connection
 
 
-def cleanup_dask_connection(connection):
+def cleanup_dask_connection(connection: Client):
+    # Ensure proper cleanup of the Dask connection. The Client and LocalCluster
+    # need to be treated separately
+    # Close the client connection first
     connection.close()
+    # Then, ask the client to close the cluster
+    connection.shutdown()
 
 
 def create_spark_connection():
