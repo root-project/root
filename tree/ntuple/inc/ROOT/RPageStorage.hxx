@@ -744,6 +744,7 @@ protected:
 
    ROOT::RNTupleReadOptions fOptions;
 
+   /// Fills fStructureBuffer with the compressed header and footer
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
    virtual ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
