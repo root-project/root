@@ -109,9 +109,10 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DCIVETWEB_ENABLE_ASAN=OFF # If set to ON, you need to set below link_library interface to UBSAN libs
     -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF # If set to ON, you need to set below link_library interface to CMAKE_DL_LIBS
     -DCIVETWEB_BUILD_TESTING=FALSE
+    -DCIVETWEB_ENABLE_ZLIB=ON
+    -DCIVETWEB_ENABLE_WEBSOCKETS=ON
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-    -DCIVETWEB_ENABLE_WEBSOCKETS=ON
     -DOPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}
     -DOPENSSL_CRYPTO_LIBRARY=${OPENSSL_CRYPTO_LIBRARY}
     -DOPENSSL_SSL_LIBRARY=${OPENSSL_SSL_LIBRARY}
@@ -138,12 +139,15 @@ add_dependencies(civetweb::civetweb BUILTIN_CIVETWEB)
 if(builtin_openssl)
   add_dependencies(BUILTIN_CIVETWEB BUILTIN_OPENSSL)
 endif()
+if(builtin_zlib)
+  add_dependencies(BUILTIN_CIVETWEB BUILTIN_ZLIB)
+endif()
 set_target_properties(civetweb::civetweb PROPERTIES
     IMPORTED_LOCATION ${ROOT_CIVETWEB_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_CIVETWEB_PREFIX}/include)
 target_compile_definitions(civetweb::civetweb INTERFACE CIVETWEB_LIBRARY_STATIC) # needed for Win32 since public flag is not correctly propagated to parent scope (BUILD_SHARED_LIBS works fine for building but when installing, flag info is lost)
 if (ssl)
-  target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL)
+  target_link_libraries(civetweb::civetweb INTERFACE OpenSSL::SSL ZLIB::ZLIB)
 endif()
 
 # Set the canonical output of find_package according to
