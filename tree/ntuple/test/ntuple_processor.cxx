@@ -798,3 +798,157 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
                             "                                +-----------------------------+\n";
    EXPECT_EQ(exp2, os2.str());
 }
+
+// This test is a translation using RNTupleProcessor of the test
+// introduced by https://github.com/root-project/root/pull/19322,
+// to ensure that the TTree friendship mechanism works equivalently
+// with the RNTuple join mechanism.
+class GH16805ProcessorTest : public testing::Test {
+protected:
+   const std::vector<std::string> fStepZeroFiles{
+      "gh16805_rntuple_stepzero_0.root",
+      "gh16805_rntuple_stepzero_1.root"
+   };
+
+   const std::vector<std::string> fJoinFiles{
+      "gh16805_rntuple_join_0.root",
+      "gh16805_rntuple_join_1.root",
+      "gh16805_rntuple_join_2.root"
+   };
+
+   const std::string fStepOneFile = "gh16805_rntuple_stepone.root";
+
+   void WriteStepZero(const std::string &fileName, int begin, int end)
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      auto br1 = model->MakeField<int>("stepZeroBr1");
+      auto br2 = model->MakeField<int>("stepZeroBr2");
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "stepzero", fileName);
+
+      for (int i = begin; i < end; ++i) {
+         *br1 = i;
+         *br2 = 2 * i;
+         writer->Fill();
+      }
+   }
+
+   void WriteStepOne(const std::string &fileName, int begin, int end)
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      auto br1 = model->MakeField<int>("stepOneBr1");
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "stepone", fileName);
+
+      for (int i = begin; i < end; ++i) {
+         *br1 = i;
+         writer->Fill();
+      }
+   }
+
+   void WriteJoin(const std::string &fileName, int begin, int end)
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      auto br1 = model->MakeField<int>("joinBr1");
+      auto br2 = model->MakeField<int>("joinBr2");
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "topLevelJoin", fileName);
+
+      for (int i = begin; i < end; ++i) {
+         *br1 = i;
+         *br2 = 2 * i;
+         writer->Fill();
+      }
+   }
+
+   void SetUp() override
+   {
+      WriteStepZero(fStepZeroFiles[0], 0, 10);
+      WriteStepZero(fStepZeroFiles[1], 10, 20);
+
+      WriteJoin(fJoinFiles[0], 200, 207);
+      WriteJoin(fJoinFiles[1], 207, 214);
+      WriteJoin(fJoinFiles[2], 214, 220);
+
+      WriteStepOne(fStepOneFile, 100, 120);
+   }
+
+   void TearDown() override
+   {
+      for (const auto &f : fStepZeroFiles)
+         std::remove(f.c_str());
+
+      for (const auto &f : fJoinFiles)
+         std::remove(f.c_str());
+
+      std::remove(fStepOneFile.c_str());
+   }
+};
+
+TEST_F(GH16805ProcessorTest, JoinReading)
+{
+   std::vector<RNTupleOpenSpec> stepOneSpecs{
+      {"stepone", fStepOneFile}
+   };
+
+   std::vector<RNTupleOpenSpec> stepZeroSpecs{
+      {"stepzero", fStepZeroFiles[0]},
+      {"stepzero", fStepZeroFiles[1]}
+   };
+
+   std::vector<RNTupleOpenSpec> joinSpecs{
+      {"topLevelJoin", fJoinFiles[0]},
+      {"topLevelJoin", fJoinFiles[1]},
+      {"topLevelJoin", fJoinFiles[2]}
+   };
+
+   auto stepOneProc =
+      RNTupleProcessor::CreateChain(stepOneSpecs, "stepone");
+
+   auto stepZeroProc =
+      RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
+
+   auto joinProc =
+      RNTupleProcessor::CreateChain(joinSpecs, "topLevelJoin");
+
+   auto joinedWithJoin =
+      RNTupleProcessor::CreateJoin(
+         std::move(stepOneProc),
+         std::move(joinProc),
+         {}
+      );
+
+   auto joinedAll =
+      RNTupleProcessor::CreateJoin(
+         std::move(joinedWithJoin),
+         std::move(stepZeroProc),
+         {}
+      );
+
+   auto stepOneBr1 = joinedAll->RequestField<int>("stepOneBr1");
+   auto joinBr1 = joinedAll->RequestField<int>("topLevelJoin.joinBr1");
+   auto joinBr2 = joinedAll->RequestField<int>("topLevelJoin.joinBr2");
+   auto stepZeroBr1 = joinedAll->RequestField<int>("stepzero.stepZeroBr1");
+   auto stepZeroBr2 = joinedAll->RequestField<int>("stepzero.stepZeroBr2");
+
+   std::size_t i = 0;
+
+   for (auto idx : *joinedAll) {
+      EXPECT_EQ(i, idx);
+
+      EXPECT_EQ(static_cast<int>(i), *stepZeroBr1);
+      EXPECT_EQ(static_cast<int>(2 * i), *stepZeroBr2);
+      EXPECT_EQ(static_cast<int>(100 + i), *stepOneBr1);
+      EXPECT_EQ(static_cast<int>(200 + i), *joinBr1);
+      EXPECT_EQ(static_cast<int>(2 * (200 + i)), *joinBr2);
+
+      ++i;
+   }
+
+   EXPECT_EQ(20u, i);
+   EXPECT_EQ(20u, joinedAll->GetNEntriesProcessed());
+}
+
