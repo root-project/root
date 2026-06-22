@@ -850,9 +850,9 @@ void TBufferSQL::ReadFastArray(ULong64_t *ull, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void TBufferSQL::ReadFastArray(Float_t   *f, Int_t n)
+void TBufferSQL::ReadFastArray(Float_t   *f, Long64_t n)
 {
-   for(int i=0; i<n; ++i) {
+   for(Long64_t i=0; i<n; ++i) {
       f[i] = atof((*fRowPtr)->GetField(*fIter));
       ++fIter;
    }

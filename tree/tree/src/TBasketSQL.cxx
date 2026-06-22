@@ -111,7 +111,7 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Prepare the basket for the next entry.
 
-void TBasketSQL::PrepareBasket(Long64_t entry)
+void TBasketSQL::PrepareBasket(ULong64_t entry)
 {
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    ((TTreeSQL*)fBranch->GetTree())->PrepEntry(entry);
@@ -121,7 +121,7 @@ void TBasketSQL::PrepareBasket(Long64_t entry)
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::ReadBasketBytes.  This is not implemented in TBasketSQL.
 
-Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
+Int_t TBasketSQL::ReadBasketBytes(ULong64_t , TFile *)
 {
    Error("ReadBasketBytes","This member function should not be called!");
    return 0;
@@ -130,7 +130,7 @@ Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::ReadBasketBuffers.  This is not implemented in TBasketSQL.
 
-Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
+Int_t TBasketSQL::ReadBasketBuffers(ULong64_t , ULong64_t, TFile *)
 {
    Error("ReadBasketBuffers","This member function should not be called!");
    return 0;

@@ -544,12 +544,12 @@ public:
    void               Move(void *arenaFrom, void *arenaTo) const;
    void              *New(ENewType defConstructor = kClassNew, Bool_t quiet = kFALSE) const;
    void              *New(void *arena, ENewType defConstructor = kClassNew) const;
-   void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
-   void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
+   void              *NewArray(Long64_t nElements, ENewType defConstructor = kClassNew) const;
+   void              *NewArray(Long64_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
    ObjectPtr          NewObject(ENewType defConstructor = kClassNew, Bool_t quiet = kFALSE) const;
    ObjectPtr          NewObject(void *arena, ENewType defConstructor = kClassNew) const;
-   ObjectPtr          NewObjectArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
-   ObjectPtr          NewObjectArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
+   ObjectPtr          NewObjectArray(Long64_t nElements, ENewType defConstructor = kClassNew) const;
+   ObjectPtr          NewObjectArray(Long64_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
    virtual void       PostLoadCheck();
    Long_t             Property() const override;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);

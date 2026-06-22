@@ -17,6 +17,7 @@
 #include "TStreamer.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+#include "TStreamerInfoCollectionUtils.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRefTable.h"
 #include "TFile.h"
@@ -151,7 +152,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             } else {
                if (gDebug > 1) {
                   printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
-                         " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                         " %s, bufpos=%lu, arr=%p, eoffset=%d, Redirect=%p\n",
                          fClass->GetName(), aElement->GetName(), i, compinfo[i]->fType, aElement->ClassName(),
                          b.Length(), arr[0], eoffset, b.PeekDataCache()->GetObjectAt(0));
                }
@@ -161,7 +162,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
          } else {
             if (gDebug > 1) {
                printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
-                      " %s, bufpos=%d, arr=%p, eoffset=%d, not a write rule, skipping.\n",
+                      " %s, bufpos=%lu, arr=%p, eoffset=%d, not a write rule, skipping.\n",
                       fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
                       aElement->ClassName(),b.Length(),arr[0], eoffset);
             }
@@ -175,7 +176,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
       if (gDebug > 1) {
          printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, "
-               "bufpos=%d, arr=%p, offset=%d\n",
+               "bufpos=%lu, arr=%p, offset=%d\n",
                 fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,aElement->ClassName(),
                 b.Length(),arr[0],ioffset);
       }
@@ -523,9 +524,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                      for(int j=0;j<compinfo[i]->fLength;++j) {
                         char *cont = contp[j];
                         TVirtualCollectionProxy::TPushPop helper( proxy, cont );
-                        Int_t nobjects = cont ? proxy->Size() : 0;
-                        b << nobjects;
-                        if (nobjects) {
+                        ULong64_t nobjects64 = cont ? proxy->Size() : 0;
+                        TStreamerInfoUtils::WriteCollectionSize(b, nobjects64);
+                        if (nobjects64) {
                            auto actions = proxy->GetWriteMemberWiseActions();
 
                            char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
@@ -587,9 +588,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
                      for(Int_t j=0; j<n; j++,obj+=size) {
                         TVirtualCollectionProxy::TPushPop helper( proxy, obj );
-                        Int_t nobjects = proxy->Size();
-                        b << nobjects;
-                        if (nobjects) {
+                        ULong64_t nobjects64 = proxy->Size();
+                        TStreamerInfoUtils::WriteCollectionSize(b, nobjects64);
+                        if (nobjects64) {
                            auto actions = proxy->GetWriteMemberWiseActions();
 
                            char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];

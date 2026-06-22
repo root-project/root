@@ -19,6 +19,7 @@
 #include "TVirtualArray.h"
 #include "TBufferFile.h"
 #include "TBufferText.h"
+#include "TStreamerInfoCollectionUtils.h"
 #include "TMemberStreamer.h"
 #include "TClassEdit.h"
 #include "TVirtualCollectionIterators.h"
@@ -126,7 +127,7 @@ namespace TStreamerInfoActions
          aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                " %s, bufpos=%d, arr=%p, offset=%d (%s)\n",
+                " %s, bufpos=%lu, arr=%p, offset=%d (%s)\n",
                 info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
                 aElement->ClassName(), buf.Length(), addr, fOffset, sequenceType.Data());
       }
@@ -1274,7 +1275,7 @@ namespace TStreamerInfoActions
       {
          if (gDebug > 1) {
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
-            printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%d, arr=%p, offset=%d, onfileObject=%p\n",
+            printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%lu, arr=%p, offset=%d, onfileObject=%p\n",
                   info->GetClass()->GetName(), fOnfileObject ? "Push" : "Pop", buffer.Length(), object, fOffset, fOnfileObject);
 
          }
@@ -1350,7 +1351,7 @@ namespace TStreamerInfoActions
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
             TStreamerElement *aElement = fCompInfo->fElem;
             fprintf(stdout,"StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                   " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                   " %s, bufpos=%lu, arr=%p, eoffset=%d, Redirect=%p\n",
                    info->GetClass()->GetName(),aElement->GetName(),fElemId,fCompInfo->fType,
                    aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : 0);
          }
@@ -2234,21 +2235,20 @@ namespace TStreamerInfoActions
 
          TConfigSTL *config = (TConfigSTL*)conf;
          UInt_t start, count;
-         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+         Version_t vers = buf.ReadVersion(&start, &count, config->fOldClass);
 
          std::vector<T> *const vec = (std::vector<T>*)(((char*)addr)+config->fOffset);
-         Int_t nvalues;
-         buf.ReadInt(nvalues);
-         vec->resize(nvalues);
+         ULong64_t nvalues64 = TStreamerInfoUtils::ReadCollectionSize(buf, vers);
+         vec->resize(nvalues64);
 
 #ifdef R__VISUAL_CPLUSPLUS
-         if (nvalues <= 0) {
+         if (nvalues64 == 0) {
             buf.CheckByteCount(start,count,config->fTypeName);
             return 0;
          }
 #endif
          T *begin = vec->data();
-         buf.ReadFastArray(begin, nvalues);
+         buf.ReadFastArray(begin, nvalues64);
 
          buf.CheckByteCount(start,count,config->fTypeName);
          return 0;
@@ -2263,8 +2263,8 @@ namespace TStreamerInfoActions
          UInt_t start = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
 
          std::vector<T> *const vec = (std::vector<T>*)(((char*)addr)+config->fOffset);
-         Int_t nvalues = vec->size();
-         buf.WriteInt(nvalues);
+         auto nvalues = vec->size();
+         TStreamerInfoUtils::WriteCollectionSize(buf, nvalues);
 
          T *begin = vec->data();
          buf.WriteFastArray(begin, nvalues);

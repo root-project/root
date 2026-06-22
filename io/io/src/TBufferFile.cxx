@@ -361,7 +361,7 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
    assert( (cntpos == kOverflowPosition ||
             (cntpos < kOverflowPosition && (sizeof(UInt_t) + cntpos) <  static_cast<ULong64_t>(fBufCur - fBuffer)))
         && (fBufCur >= fBuffer)
-        && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
+        && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<Long64_t>::max()
         && "Byte count position is after the end of the buffer");
 
    // We can either make this unconditional or we could split the routine
@@ -440,7 +440,10 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
       // The position is above 4GB but was cached using a 32 bit variable.
       startpos = fByteCountStack.back().locator;
       // See below
-      R__ASSERT((fByteCountStack.back().cl == nullptr || clss == fByteCountStack.back().cl)
+      R__ASSERT((fByteCountStack.back().cl == nullptr ||
+                (clss == nullptr && (classname == nullptr || classname[0] == '\0')) ||
+                (clss && clss == fByteCountStack.back().cl) ||
+                (classname && strcmp(classname, fByteCountStack.back().cl->GetName()) == 0))
                 && "Class on the byte count position stack does not match the passed class");
    } else {
       // This assert allows to reject cases that used to be valid (missing or
@@ -1527,9 +1530,9 @@ void TBufferFile::ReadFastArray(Long64_t *ll, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of n floats from the I/O buffer.
 
-void TBufferFile::ReadFastArray(Float_t *f, Int_t n)
+void TBufferFile::ReadFastArray(Float_t *f, Long64_t n)
 {
-   Int_t l = sizeof(Float_t)*n;
+   auto l = sizeof(Float_t)*n;
    if (ShouldNotReadCollection(l, n)) return;
 
 #ifdef R__BYTESWAP
@@ -1537,7 +1540,7 @@ void TBufferFile::ReadFastArray(Float_t *f, Int_t n)
    bswapcpy32(f, fBufCur, n);
    fBufCur += sizeof(Float_t)*n;
 # else
-   for (int i = 0; i < n; i++)
+   for (Long64_t i = 0; i < n; i++)
       frombuf(fBufCur, &f[i]);
 # endif
 #else
@@ -2330,15 +2333,15 @@ void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
 {
    if (n == 0) return;
 
-   constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   constexpr Long64_t dataWidth = static_cast<Long64_t>(sizeof(Float_t));
+   const Long64_t maxElements = (std::numeric_limits<Long64_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      Fatal("WriteFastArray", "Not enough space left in the buffer. %lld elements is greater than the max left of %lld", n, maxElements);
       return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
-   Int_t l = sizeof(Float_t)*n;
+   auto l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
@@ -2346,7 +2349,7 @@ void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
    bswapcpy32(fBufCur, f, n);
    fBufCur += l;
 # else
-   for (int i = 0; i < n; i++)
+   for (Long64_t i = 0; i < n; i++)
       tobuf(fBufCur, f[i]);
 # endif
 #else
@@ -2658,12 +2661,28 @@ void TBufferFile::SkipObjectAny(Long64_t start, UInt_t count)
 /// real beginning of the object in memory.  You will need to use a
 /// dynamic_cast later if you need to retrieve it.
 
+
+
 void *TBufferFile::ReadObjectAny(const TClass *clCast)
 {
    R__ASSERT(IsReading());
 
    // make sure fMap is initialized
    InitMap();
+
+   struct CaptureAndCheck {
+      using ByteCountStack_t = TBufferFile::ByteCountStack_t;
+      size_t fCurrent;
+      ByteCountStack_t *fByteCountStack;
+
+      CaptureAndCheck(ByteCountStack_t *stack) : fCurrent(stack->size()), fByteCountStack(stack) {}
+      ~CaptureAndCheck() {
+         if (fCurrent != fByteCountStack->size()) {
+            ::Fatal("CaptureAndCheck", "Byte count stack was not properly cleaned up. Current size is %zu but should be %zu", fByteCountStack->size(), fCurrent);
+         }
+      }
+   };
+   CaptureAndCheck checker(&(this->fByteCountStack));
 
    // before reading object save start position
    ULong64_t startpos = static_cast<ULong64_t>(fBufCur-fBuffer);
@@ -3015,6 +3034,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    // return bytecount in objTag
    if (objTag) {
       *objTag = (bcnt & ~kByteCountMask);
+      if (*objTag == 0) {
+         // The byte count was stored but is zero, this means the data
+         // did not fit and thus we stored it in 'fByteCounts' instead.
+         // Mark this case by setting startpos to kOverflowCount.
+         *objTag = kOverflowCount;
+         // We do not have access to the caller's "cntpos" and can not
+         // update to kOverflowPosition (unlike the same code in ReadVersion).
+      }
       if (cl)
         fByteCountStack.back().alt = cl;
    }
@@ -3159,7 +3186,8 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos <= kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
-      fByteCountStack.push_back({(size_t)full_startpos, cl, nullptr});
+      if (bcnt)
+         fByteCountStack.push_back({(size_t)full_startpos, cl, nullptr});
    }
 
    // read byte count (older files don't have byte count)
@@ -3196,7 +3224,8 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
             // did not fit and thus we stored it in 'fByteCounts' instead.
             // Mark this case by setting startpos to kOverflowCount.
             *bcnt = kOverflowCount;
-            *startpos = kOverflowPosition;
+            if (startpos)
+               *startpos = kOverflowPosition;
          }
       }
    }
@@ -3302,7 +3331,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos < kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
       // TODO: Extend ReadVersionNoCheckSum to take the class pointer.
-      fByteCountStack.push_back({(size_t)full_startpos, nullptr, nullptr});
+      if (bcnt)
+         fByteCountStack.push_back({(size_t)full_startpos, nullptr, nullptr});
    }
 
    // read byte count (older files don't have byte count)
@@ -3338,7 +3368,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
             // did not fit and thus we stored it in 'fByteCounts' instead.
             // Mark this case by setting startpos to kOverflowCount.
             *bcnt = kOverflowCount;
-            *startpos = kOverflowPosition;
+            if (startpos)
+               *startpos = kOverflowPosition;
          }
       }
    }
@@ -3754,7 +3785,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
          Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %lu",
                onFileClass->GetName(), version, cl->GetName(), Length() );
          CheckByteCount(start, count, onFileClass);
          return 0;
@@ -3770,7 +3801,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       auto infos = cl->GetStreamerInfos();
       auto ninfos = infos->GetSize();
       if (version < -1 || version >= ninfos) {
-         Error("ReadClassBuffer", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+         Error("ReadClassBuffer", "class: %s, attempting to access a wrong version: %d, object skipped at offset %lu",
                cl->GetName(), version, Length() );
          CheckByteCount(start, count, cl);
          return 0;
@@ -3801,7 +3832,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
                CheckByteCount(start, count, cl);
                return 0;
             } else {
-               Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+               Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %lu",
                      version, cl->GetName(), Length() );
                CheckByteCount(start, count, cl);
                return 0;
@@ -3847,6 +3878,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    else
       version = ReadVersion(&R__s, &R__c, cl);
 
+   size_t current = fByteCountStack.size();
    Bool_t v2file = kFALSE;
    TFile *file = (TFile*)GetParent();
    if (file && file->GetVersion() < 30000) {
@@ -3863,8 +3895,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
          Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %lu",
                onFileClass->GetName(), version, cl->GetName(), Length() );
+         --current;
          CheckByteCount(R__s, R__c, onFileClass);
          return 0;
       }
@@ -3887,8 +3920,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             Int_t infocapacity = infos->Capacity();
             if (infocapacity) {
                if (version < -1 || version >= infocapacity) {
-                  Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                  Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %lu",
                         cl->GetName(), version, Length());
+                  --current;
                   CheckByteCount(R__s, R__c, cl);
                   return 0;
                }
@@ -3947,11 +3981,13 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                // When the object was written the class was version zero, so
                // there is no StreamerInfo to be found.
                // Check that the buffer position corresponds to the byte count.
+               --current;
                CheckByteCount(R__s, R__c, cl);
                return 0;
             } else {
-               Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+               Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %lu",
                      version, cl->GetName(), Length() );
+               --current;
                CheckByteCount(R__s, R__c, cl);
                return 0;
             }
@@ -3963,6 +3999,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer );
    if (sinfo->TStreamerInfo::IsRecovered()) R__c=0; // 'TStreamerInfo::' avoids going via a virtual function.
 
+   if (current != fByteCountStack.size())
+      Fatal("ReadClassBuffer", "We are out of sync at level %zu vs %zu for %s", current, fByteCountStack.size(), cl->GetName());
+   --current;
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(R__s, R__c, cl);
 
@@ -4031,8 +4070,11 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
+         auto current = fByteCountStack.size();
          (*iter).PrintDebug(*this,obj);
          (*iter)(*this,obj);
+         if (current != fByteCountStack.size())
+            Fatal("ApplySequence", "We are out of sync starting at level %zu vs %zu", current, fByteCountStack.size());
       }
 
    } else {
@@ -4041,7 +4083,10 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
+         auto current = fByteCountStack.size();
          (*iter)(*this,obj);
+         if (current != fByteCountStack.size())
+            Fatal("ApplySequence", "ByteCountStack is out of sync starting at level %zu vs %zu", current, fByteCountStack.size());
       }
    }
 
