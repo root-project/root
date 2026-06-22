@@ -6366,31 +6366,56 @@ TLeaf* TTree::GetLeaf(const char *name)
 /// if the Tree has an associated TEventList or TEntryList, the maximum
 /// is computed for the entries in this list.
 
-Double_t TTree::GetMaximum(const char* columname)
+Double_t TTree::GetMaximum(const char *columname)
 {
-   TLeaf* leaf = this->GetLeaf(columname);
-   if (!leaf) {
-      return 0;
-   }
+   constexpr auto errVal{std::numeric_limits<Double_t>::lowest()};
+   if (!columname || strcmp(columname, "") == 0)
+      return errVal;
 
-   // create cache if wanted
-   if (fCacheDoAutoInit)
-      SetCacheSizeAux();
+   // If the requested column is in this TTree, compute the maximum value directly
+   if (auto *leaf = GetLeafFromSelf(nullptr, columname)) {
 
-   TBranch* branch = leaf->GetBranch();
-   Double_t cmax = -DBL_MAX;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
-      branch->GetEntry(entryNumber);
-      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val > cmax) {
-            cmax = val;
+      // Ensure the TTree cursor is brought back to the current entry after computing the value
+      struct CurrentEntryRAII {
+
+         Long64_t fCurrentEntry;
+         TTree &fTree;
+
+         CurrentEntryRAII(TTree &tree) : fCurrentEntry(tree.GetReadEntry()), fTree(tree) {}
+
+         ~CurrentEntryRAII() { fTree.GetEntry(fCurrentEntry); }
+      } raii{*this};
+
+      // create cache if wanted
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux();
+
+      TBranch *branch = leaf->GetBranch();
+      Double_t cmax{errVal};
+      for (Long64_t i = 0; i < fEntries; ++i) {
+         Long64_t entryNumber = this->GetEntryNumber(i);
+         if (entryNumber < 0)
+            break;
+         branch->GetEntry(entryNumber);
+         for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+            Double_t val = leaf->GetValue(j);
+            if (val > cmax) {
+               cmax = val;
+            }
          }
       }
+      return cmax;
    }
-   return cmax;
+
+   // If there are any friends, look for the requested column name. If it is
+   // found in a friend, dispatch the calculation to the friend itself.
+   if (fFriends)
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends))
+         if (auto *tree = frEl->GetTree())
+            if (tree->GetLeaf(columname))
+               return tree->GetMaximum(columname);
+
+   return errVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6408,29 +6433,54 @@ Long64_t TTree::GetMaxTreeSize()
 
 Double_t TTree::GetMinimum(const char* columname)
 {
-   TLeaf* leaf = this->GetLeaf(columname);
-   if (!leaf) {
-      return 0;
-   }
+   constexpr auto errVal{std::numeric_limits<Double_t>::max()};
+   if (!columname || strcmp(columname, "") == 0)
+      return errVal;
 
-   // create cache if wanted
-   if (fCacheDoAutoInit)
-      SetCacheSizeAux();
+   // If the requested column is in this TTree, compute the minimum value directly
+   if (auto *leaf = GetLeafFromSelf(nullptr, columname)) {
 
-   TBranch* branch = leaf->GetBranch();
-   Double_t cmin = DBL_MAX;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
-      branch->GetEntry(entryNumber);
-      for (Int_t j = 0;j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val < cmin) {
-            cmin = val;
+      // Ensure the TTree cursor is brought back to the current entry after computing the value
+      struct CurrentEntryRAII {
+
+         Long64_t fCurrentEntry;
+         TTree &fTree;
+
+         CurrentEntryRAII(TTree &tree) : fCurrentEntry(tree.GetReadEntry()), fTree(tree) {}
+
+         ~CurrentEntryRAII() { fTree.GetEntry(fCurrentEntry); }
+      } raii{*this};
+
+      // create cache if wanted
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux();
+
+      TBranch *branch = leaf->GetBranch();
+      Double_t cmin{errVal};
+      for (Long64_t i = 0; i < fEntries; ++i) {
+         Long64_t entryNumber = this->GetEntryNumber(i);
+         if (entryNumber < 0)
+            break;
+         branch->GetEntry(entryNumber);
+         for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+            Double_t val = leaf->GetValue(j);
+            if (val < cmin) {
+               cmin = val;
+            }
          }
       }
+      return cmin;
    }
-   return cmin;
+
+   // If there are any friends, look for the requested column name. If it is
+   // found in a friend, dispatch the calculation to the friend itself.
+   if (fFriends)
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends))
+         if (auto *tree = frEl->GetTree())
+            if (tree->GetLeaf(columname))
+               return tree->GetMinimum(columname);
+
+   return errVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
