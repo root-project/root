@@ -910,8 +910,8 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          out->GetListOfFunctions()->Add(x, "F");
          x = out->Clone("down");
          x->SetBit(kCanDelete);
-         dynamic_cast<TAttFill*>(x)->SetFillColor(kBlack);
-         dynamic_cast<TAttFill*>(x)->SetFillStyle(nSigma == 2 ? 3005 : 3004);
+         dynamic_cast<TAttFill *>(x)->SetFillColor(kBlack);
+         dynamic_cast<TAttFill *>(x)->SetFillStyle(nSigma == 2 ? 3005 : 3004);
          out->GetListOfFunctions()->Add(x, "F");
       }
       if (sOpt.Contains("ts")) {
@@ -1017,19 +1017,21 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
       for (int i = 0; i < out->GetN(); i++) {
          if (i < out->GetN() - nPointsDown) {
             up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
-            //down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. :
+            // -1.));
          } else {
-            //up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
             down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
          }
       }
       // now go back round in reverse
-      for (int i = out->GetN()-1; i >= 0; i--) {
+      for (int i = out->GetN() - 1; i >= 0; i--) {
          if (i < out->GetN() - nPointsDown) {
             up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
-            //down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. :
+            // -1.));
          } else {
-            //up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
             down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
          }
       }
