@@ -8,7 +8,7 @@
 # 7 Feb 2019, https://github.com/frankheckenbach/ftgl/releases/tag/v2.4.0
 set(ROOT_FTGL_VERSION 2.4.0)
 set(ROOT_FTGL_HASH "aa97da1c3442a8fd3941037655df18016d70b5266381c81d81e8b5335f196ea8")
-if (CMAKE_BUILD_TYPE MATCHES Debug)
+if (CMAKE_BUILD_TYPE MATCHES Debug OR (MSVC AND winrtdebug))
   set(ROOT_FTGL_POSTFIX d)
 endif()
 # Cherry-pick https://github.com/frankheckenbach/ftgl/commit/835f2ba7911a6c15a1a314d5e3267fa089b5a319 :
