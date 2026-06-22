@@ -127,6 +127,19 @@ CPYCPPYY_EXTERN Converter* CreateConverter(const std::string& name, cdims_t = 0)
 // delete a previously created converter
 CPYCPPYY_EXTERN void DestroyConverter(Converter* p);
 
+// Build a Python value from a memory address using a Converter.
+//
+// If ``ndim`` is non-zero, the value is treated as an array of shape
+// ``dims[0] x dims[1] x ... x dims[ndim-1]`` and ``FromMemory(&address)``
+// is called on the converter (matching the calling convention array
+// converters expect). Otherwise the value is treated as a scalar and
+// ``FromMemory(address)`` is called directly.
+//
+// Returns a new reference on success, or nullptr and sets a Python error if
+// no converter for ``typeName`` could be created.
+CPYCPPYY_EXTERN PyObject*
+CreatePyValueFromMemory(const std::string& typeName, void* address, dim_t ndim = 0, const dim_t* dims = nullptr);
+
 // register a custom converter
 typedef Converter* (*ConverterFactory_t)(cdims_t);
 CPYCPPYY_EXTERN bool RegisterConverter(const std::string& name, ConverterFactory_t);

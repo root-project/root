@@ -12,18 +12,11 @@
 // Bindings
 #include <Python.h>
 
-// TODO: refactor public CPyCppyy API such that this forward declaration is not
-// needed anymore. Including "CPyCppyy/API.h" should be enough.
-namespace CPyCppyy {
-typedef Py_ssize_t dim_t;
-} // namespace CPyCppyy
+#include "CPyCppyy/API.h"
 
 #include "../../cppyy/CPyCppyy/src/Cppyy.h"
 #include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
-#include "../../cppyy/CPyCppyy/src/Dimensions.h"
-
-#include "CPyCppyy/API.h"
 
 #include "PyROOTPythonize.h"
 
@@ -150,30 +143,21 @@ static PyObject *WrapLeaf(TLeaf *leaf)
       if (std::count(title.begin(), title.end(), '[') >= 2) {
          dimsVec = getMultiDims(title);
       }
-      CPyCppyy::Dimensions dims{static_cast<dim_t>(dimsVec.size()), dimsVec.data()};
-      Converter *pcnv = CreateConverter(typeName + (isStatic ? "[]" : "*"), dims);
-
       void *address = 0;
       if (leaf->GetBranch())
          address = (void *)leaf->GetBranch()->GetAddress();
       if (!address)
          address = (void *)leaf->GetValuePointer();
 
-      PyObject *value = pcnv->FromMemory(&address);
-      CPyCppyy::DestroyConverter(pcnv);
-
-      return value;
+      return CPyCppyy::CreatePyValueFromMemory(
+         typeName + (isStatic ? "[]" : "*"), address,
+         static_cast<dim_t>(dimsVec.size()), dimsVec.data());
    } else if (leaf->GetValuePointer()) {
       // value types
-      Converter *pcnv = CreateConverter(leaf->GetTypeName());
-      PyObject *value = 0;
-      if (leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class())
-         value = pcnv->FromMemory((void *)*(void **)leaf->GetValuePointer());
-      else
-         value = pcnv->FromMemory((void *)leaf->GetValuePointer());
-      CPyCppyy::DestroyConverter(pcnv);
-
-      return value;
+      void *address = (leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class())
+                         ? (void *)*(void **)leaf->GetValuePointer()
+                         : (void *)leaf->GetValuePointer();
+      return CPyCppyy::CreatePyValueFromMemory(leaf->GetTypeName(), address);
    }
 
    return nullptr;
