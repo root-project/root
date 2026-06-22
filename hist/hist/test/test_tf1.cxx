@@ -11,6 +11,7 @@
 #include "ROOT/TestSupport.hxx"
 
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 
 class MyClass {
@@ -239,6 +240,53 @@ TEST(TF1, Constructors)
    for (auto tf1 : vtf1)
       EXPECT_EQ(tf1(&x, &p), 2);
 }
+
+TEST(TF1, LambdaWithSizes)
+{
+   // lambda with explicit ndim and npar -- allows safe bound checking inside
+   auto f4arg = [](const double *x, std::size_t ndim, const double *p, std::size_t npar) -> double {
+      EXPECT_EQ(ndim, std::size_t{1});
+      EXPECT_EQ(npar, std::size_t{2});
+      return p[0] * x[0] + p[1];
+   };
+
+   TF1 f("f4arg", f4arg, 0, 10, 2);
+   f.SetParameters(3.0, 1.0);
+
+   EXPECT_NEAR(f.Eval(2.0), 7.0, 1e-10);
+   EXPECT_NEAR(f.Eval(5.0), 16.0, 1e-10);
+
+   // same but passing via pointer
+   TF1 fptr("f4arg_ptr", &f4arg, 0, 10, 2);
+   fptr.SetParameters(3.0, 1.0);
+
+   EXPECT_NEAR(fptr.Eval(2.0), 7.0, 1e-10);
+   EXPECT_NEAR(fptr.Eval(5.0), 16.0, 1e-10);
+}
+
+#ifdef __cpp_lib_span
+TEST(TF1, LambdaWithSpan)
+{
+   auto fspan = [](std::span<const double> x, std::span<const double> p) -> double {
+      EXPECT_EQ(x.size(), std::size_t{1});
+      EXPECT_EQ(p.size(), std::size_t{2});
+      return p[0] * x[0] + p[1];
+   };
+
+   TF1 f("fspan", fspan, 0, 10, 2);
+   f.SetParameters(3.0, 1.0);
+
+   EXPECT_NEAR(f.Eval(2.0), 7.0, 1e-10);
+   EXPECT_NEAR(f.Eval(5.0), 16.0, 1e-10);
+
+   // same but passing via pointer
+   TF1 fptr("fspan_ptr", &fspan, 0, 10, 2);
+   fptr.SetParameters(3.0, 1.0);
+
+   EXPECT_NEAR(fptr.Eval(2.0), 7.0, 1e-10);
+   EXPECT_NEAR(fptr.Eval(5.0), 16.0, 1e-10);
+}
+#endif
 
 TEST(TF1, Save)
 {
