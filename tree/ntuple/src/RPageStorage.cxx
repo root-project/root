@@ -227,8 +227,10 @@ void ROOT::Internal::RPageSource::LoadStructure()
 void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
    LoadStructure();
-   if (!fIsAttached)
+   if (!fIsAttached) {
       GetExclDescriptorGuard().MoveIn(AttachImpl(mode));
+      fStructureBuffer.Reset();
+   }
    fIsAttached = true;
 }
 
