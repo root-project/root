@@ -1222,9 +1222,11 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::InitTask(TTreeReader *, 
 
 /// Connect all output fields to the values pointed to by `values`, fill the output dataset,
 /// call the Fill of the output tree, and clear the mask bits that show whether a variation was reached.
-void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(unsigned int /*slot*/, const std::vector<void *> &values,
-                                                             std::vector<bool> const &filterPassed)
+void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(
+   unsigned int /*slot*/, const std::vector<void *> &values,
+   std::vector<ROOT::Internal::RDF::RMaskedEntryRange> const &filterPassed)
 {
+   // Assume 1-size bulk for now
    // Rebind branch pointers to RDF values
    assert(fBranchData.size() == values.size());
    for (std::size_t i = 0; i < values.size(); i++) {
@@ -1234,14 +1236,14 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(unsigned int /*slot
          SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
       } else {
          // Nominal will always be written, systematics only if needed
-         if (variationIndex == 0 || filterPassed[variationIndex]) {
+         if (variationIndex == 0 || filterPassed[variationIndex][0]) {
             const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
             if (!fundamentalType) {
                SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
             }
          }
 
-         if (filterPassed[variationIndex]) {
+         if (filterPassed[variationIndex][0]) {
             fOutputHandle->SetMaskBit(variationIndex);
          }
       }
