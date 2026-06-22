@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <tuple>
 #include <utility>
 #include <regex>
 #include <cassert>
@@ -129,7 +130,7 @@ struct RDaosContainerNTupleLocator {
    int InitNTupleDescriptorBuilder(ROOT::Experimental::Internal::RDaosContainer &cont,
                                    ROOT::Internal::RNTupleDescriptorBuilder &builder)
    {
-      std::unique_ptr<unsigned char[]> buffer, zipBuffer;
+      std::unique_ptr<unsigned char[]> buffer;
       auto &anchor = fAnchor.emplace();
       int err;
 
@@ -146,22 +147,7 @@ struct RDaosContainerNTupleLocator {
 
       builder.SetVersion(anchor.fVersionEpoch, anchor.fVersionMajor, anchor.fVersionMinor, anchor.fVersionPatch);
       builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
-      buffer = MakeUninitArray<unsigned char>(anchor.fLenHeader);
-      zipBuffer = MakeUninitArray<unsigned char>(anchor.fNBytesHeader);
-      if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesHeader, oidMetadata, kDistributionKeyDefault,
-                                     kAttributeKeyHeader, kCidMetadata)))
-         return err;
-      RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
-      RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, builder);
-
       builder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
-      buffer = MakeUninitArray<unsigned char>(anchor.fLenFooter);
-      zipBuffer = MakeUninitArray<unsigned char>(anchor.fNBytesFooter);
-      if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesFooter, oidMetadata, kDistributionKeyDefault,
-                                     kAttributeKeyFooter, kCidMetadata)))
-         return err;
-      RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
-      RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, builder);
 
       return 0;
    }
@@ -174,13 +160,7 @@ struct RDaosContainerNTupleLocator {
       auto &loc = result.first;
       auto &builder = result.second;
 
-      if (int err = loc.InitNTupleDescriptorBuilder(cont, builder); !err) {
-         if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
-            // Hash already taken by a differently-named ntuple.
-            throw ROOT::RException(
-               R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
-         }
-      }
+      loc.InitNTupleDescriptorBuilder(cont, builder);
       return result;
    }
 };
@@ -455,27 +435,64 @@ ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos()
    StopClusterPoolBackgroundThread();
 }
 
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadStructureImpl()
+{
+   RDaosContainerNTupleLocator ntupleLocator;
+   std::tie(ntupleLocator, fDescriptorBuilder) =
+      RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
+   if (!ntupleLocator.IsValid()) {
+      throw ROOT::RException(
+         R__FAIL("LoadStructureImpl: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
+   }
+   fAnchor = *ntupleLocator.fAnchor;
+   fNTupleIndex = ntupleLocator.GetIndex();
+
+   auto oclass = RDaosObject::ObjClassId(fAnchor.fObjClass);
+   if (oclass.IsUnknown())
+      throw ROOT::RException(R__FAIL("LoadStructureImpl: unknown object class " + fAnchor.fObjClass));
+   fDaosContainer->SetDefaultObjectClass(oclass);
+
+   // Reserve enough space for the compressed and the uncompressed header/footer (see AttachImpl)
+   const auto bufSize =
+      fAnchor.fNBytesHeader + fAnchor.fNBytesFooter + std::max(fAnchor.fLenHeader, fAnchor.fLenFooter);
+   fStructureBuffer.fBuffer = MakeUninitArray<unsigned char>(bufSize);
+   fStructureBuffer.fPtrHeader = fStructureBuffer.fBuffer.get();
+   fStructureBuffer.fPtrFooter = fStructureBuffer.fBuffer.get() + fAnchor.fNBytesHeader;
+
+   int err;
+   daos_obj_id_t oidMetadata{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
+
+   if ((err = fDaosContainer->ReadSingleAkey(fStructureBuffer.fPtrHeader, fAnchor.fNBytesHeader, oidMetadata,
+                                             kDistributionKeyDefault, kAttributeKeyHeader, kCidMetadata))) {
+      throw ROOT::RException(R__FAIL("LoadStructureImpl: cannot load header: " + std::to_string(err)));
+   }
+
+   if ((err = fDaosContainer->ReadSingleAkey(fStructureBuffer.fPtrFooter, fAnchor.fNBytesFooter, oidMetadata,
+                                             kDistributionKeyDefault, kAttributeKeyFooter, kCidMetadata))) {
+      throw ROOT::RException(R__FAIL("LoadStructureImpl: cannot load footer: " + std::to_string(err)));
+   }
+}
+
 ROOT::RNTupleDescriptor
 ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
-   ROOT::RNTupleDescriptor ntplDesc;
+   auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor.fNBytesFooter;
+
+   RNTupleDecompressor::Unzip(fStructureBuffer.fPtrHeader, fAnchor.fNBytesHeader, fAnchor.fLenHeader, unzipBuf);
+   RNTupleSerializer::DeserializeHeader(unzipBuf, fAnchor.fLenHeader, fDescriptorBuilder);
+
+   RNTupleDecompressor::Unzip(fStructureBuffer.fPtrFooter, fAnchor.fNBytesFooter, fAnchor.fLenFooter, unzipBuf);
+   RNTupleSerializer::DeserializeFooter(unzipBuf, fAnchor.fLenFooter, fDescriptorBuilder);
+
+   if (fDescriptorBuilder.GetDescriptor().GetName() != fNTupleName) {
+      // Hash already taken by a differently-named ntuple.
+      throw ROOT::RException(R__FAIL("LocateNTuple: ntuple name '" + fNTupleName + "' unavailable in this container."));
+   }
+
+   auto desc = fDescriptorBuilder.MoveDescriptor();
+
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
-
-   auto [locator, descBuilder] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
-   if (!locator.IsValid())
-      throw ROOT::RException(
-         R__FAIL("Attach: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
-
-   auto oclass = RDaosObject::ObjClassId(locator.fAnchor->fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("Attach: unknown object class " + locator.fAnchor->fObjClass));
-
-   fDaosContainer->SetDefaultObjectClass(oclass);
-   fNTupleIndex = locator.GetIndex();
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
-
-   auto desc = descBuilder.MoveDescriptor();
-
    for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
       buffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLength());
       zipBuffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLocator().GetNBytesOnStorage());

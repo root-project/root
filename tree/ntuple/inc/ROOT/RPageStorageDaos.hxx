@@ -155,12 +155,13 @@ private:
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
 
+   RDaosNTupleAnchor fAnchor;
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 protected:
-   void LoadStructureImpl() final {}
+   void LoadStructureImpl() final;
    ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) final;
    /// The cloned page source creates a new connection to the pool/container.
    std::unique_ptr<RPageSource> CloneImpl() const final;
