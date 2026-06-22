@@ -93,10 +93,10 @@ class TestVariations:
         connection, backend = payload
         if backend == "dask":
             RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
-            df = RDataFrame(1, npartitions=1, daskclient=connection)
+            df = RDataFrame(1, npartitions=1, executor=connection)
         elif backend == "spark":
             RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
-            df = RDataFrame(1, npartitions=1, sparkcontext=connection)
+            df = RDataFrame(1, npartitions=1, executor=connection)
 
         df = df.Define("x", "1")
         h = df.Histo1D(("h", "h", 1, 0, 10), "x")

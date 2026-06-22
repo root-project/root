@@ -24,4 +24,9 @@ from check_variations import *  # noqa: F403
 if __name__ == "__main__":
     # The call to sys.exit is needed otherwise CTest would just ignore the
     # results returned by pytest, even in case of errors.
-    sys.exit(pytest.main(args=shlex.split(f"{__file__} -x -vvv")))
+    # We ignore ResourceWarning about unclosed socket because of https://issues.apache.org/jira/browse/SPARK-38659 which
+    # has been fixed by https://github.com/apache/spark/pull/53200 and https://github.com/apache/spark/pull/53203 which
+    # may not be available in all test runner configurations
+    sys.exit(
+        pytest.main(args=shlex.split(f'{__file__} -x -vvv -Werror -Wignore:"unclosed <socket.socket":ResourceWarning'))
+    )
