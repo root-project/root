@@ -200,8 +200,7 @@ protected:
    virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, bool ptr);
    virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, bool isptrptr, Int_t bufsize, Int_t splitlevel);
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
-   Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
-   virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
+   Int_t SetBranchAddressImp(TBranch *branch, void *addr, TBranch **ptr);
 
    Long64_t         GetCacheAutoSize(bool withDefault = false);
    char             GetNewlineValue(std::istream &inputStream);
@@ -217,6 +216,12 @@ protected:
    // if it is not in one particular friend but in another
    virtual Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
                                   bool isptr, bool suppressMissingBranchError);
+
+   // Group of methods to help better separating logic used in GetLeaf
+   TBranch *FindBranchFromSelf(const char *branchName);
+   TBranch *FindBranchFromFriends(const char *branchName);
+   TLeaf *SearchLeafInListOfLeaves(const char *branchName, const char *leafName);
+   TLeaf *SearchLeafInListOfFriends(const char *branchName, const char *leafName);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
