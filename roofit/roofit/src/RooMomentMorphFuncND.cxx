@@ -850,11 +850,30 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
    _squareVec = output;
 
    for (int isq = 0; isq < depth; isq++) {
+      // Reset to a sentinel before searching: if no matching reference point is
+      // found below, we must not silently keep the value left over from a
+      // previous, unrelated call to findShape() (e.g. from a different
+      // hypercube visited earlier in the fit). Falling through to a stale
+      // index here would make the interpolation depend on evaluation history
+      // instead of only on the current parameter point.
+      _squareIdx[isq] = -1;
       for (int iref = 0; iref < nRef; iref++) {
          if (_squareVec[isq] == _referenceGrid._nref[iref]) {
             _squareIdx[isq] = iref;
             break;
          }
+      }
+      if (_squareIdx[isq] < 0) {
+         coutE(InputArguments) << "RooMomentMorphFuncND::findShape(" << GetName()
+                               << ") ERROR: no reference pdf found for grid corner (";
+         for (unsigned int ix = 0; ix < _squareVec[isq].size(); ++ix) {
+            ccoutE(InputArguments) << (ix ? ", " : "") << _squareVec[isq][ix];
+         }
+         ccoutE(InputArguments) << ") of the hypercube enclosing the current morphing "
+                                << "parameter point. The reference grid is missing a pdf at this "
+                                << "coordinate -- check that RooMomentMorphFuncND::Grid::addPdf() was "
+                                << "called for every corner of the parameter range." << std::endl;
+         throw string("RooMomentMorphFuncND::findShape() ERROR: incomplete reference grid");
       }
    }
 
