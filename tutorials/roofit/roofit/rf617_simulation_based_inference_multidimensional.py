@@ -44,7 +44,7 @@ n_samples_train = n_samples_morph * n_bins  # To have a fair comparison
 def morphing(setting, n_dimensions):
     # Define binning for morphing
 
-    binning = [ROOT.RooBinning(n_bins, 0.0, n_bins - 1.0) for dim in range(n_dimensions)]
+    binning = [ROOT.RooBinning(n_bins - 1, 0.0, n_bins - 1.0) for dim in range(n_dimensions)]
     grid = ROOT.RooMomentMorphFuncND.Grid(*binning)
 
     # Set bins for each x variable
@@ -202,8 +202,7 @@ mu_vars = [ws[f"mu{i}"] for i in range(len(mu_observed))]
 morphing(ROOT.RooMomentMorphFuncND.Linear, len(mu_observed))
 
 # Calculate the nll for the moprhed distribution
-# TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
-nll_morph = ws["morph"].createNLL(ws["obs_data"], EvalBackend="legacy")
+nll_morph = ws["morph"].createNLL(ws["obs_data"])
 
 # Initialize the SBI model
 model = SBI(ws, len(mu_observed))
