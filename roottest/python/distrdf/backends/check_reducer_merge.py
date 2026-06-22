@@ -519,10 +519,10 @@ class TestReducerMerge:
         connection, backend = payload
         if backend == "dask":
             RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
+            df = RDataFrame(10, executor=connection)
         elif backend == "spark":
             RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+            df = RDataFrame(10, executor=connection)
         df = df.Define("x", "1")
         df_alias = df.Alias("myalias", "x")
 
