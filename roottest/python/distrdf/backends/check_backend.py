@@ -111,13 +111,14 @@ class TestInitialization:
         # Finally, Histo1D returns a histogram filled with one value. The mean
         # of this single value has to be the value itself, independently of
         # the number of spawned workers.
-        df = ROOT.RDataFrame(1, executor=connection)
+        with pytest.warns(UserWarning, match="Number of partitions 2 is greater than number of entries 1 in the dataframe"):
+            df = ROOT.RDataFrame(1, executor=connection)
 
-        df = df.Define("u", "userValue").Histo1D(
-            ("name", "title", 1, 100, 130), "u")
-        
-        h = df.GetValue()
-        assert h.GetMean() == 123
+            df = df.Define("u", "userValue").Histo1D(
+                ("name", "title", 1, 100, 130), "u")
+
+            h = df.GetValue()
+            assert h.GetMean() == 123
 
 
 class TestEmptyTreeError:

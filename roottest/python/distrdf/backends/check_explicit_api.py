@@ -1,5 +1,4 @@
 import textwrap
-import warnings
 
 import pytest
 import ROOT
@@ -16,10 +15,10 @@ class TestExplicitAPI:
         connection, backend = payload
         if backend == "dask":
             RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, npartitions=2, daskclient=connection)
+            df = RDataFrame(10, npartitions=2, executor=connection)
         elif backend == "spark":
             RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+            df = RDataFrame(10, npartitions=2, executor=connection)
         df = df.Define("x", "1")
         df1 = df.Vary("x", "ROOT::RVecI{-2,2}", ["down", "up"])
         h = df1.Histo1D(("name", "title", 10, -10, 10), "x")
@@ -72,10 +71,10 @@ class TestExplicitAPI:
         connection, backend = payload
         if backend == "dask":
             RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
+            df = RDataFrame(10, executor=connection)
         elif backend == "spark":
             RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+            df = RDataFrame(10, executor=connection)
         df_before = df.Define("x", "1")
         df_after = df_before.Redefine("x", "2")
 
@@ -89,11 +88,11 @@ class TestExplicitAPI:
 
 
 class TestDeprecation:
-    """Test the deprecation message regarding the 'Experimental' module"""
+    """Test deprecation warnings in the distributed module."""
 
-    def test_warning_message(self, payload):
+    def test_experimental_module_deprecation(self, payload):
         connection, backend = payload
-        with warnings.catch_warnings(record=True) as warninglist:
+        with pytest.warns() as warninglist:
             if backend == "dask":
                 RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
                 df = RDataFrame(10, npartitions=2, executor=connection)
@@ -123,6 +122,22 @@ class TestDeprecation:
             assert str(warninglist[0].message == msg_warng)
 
             assert df.Count().GetValue() == 10
+
+    def test_backend_argument_deprecation(self, payload):
+        connection, backend = payload
+
+        if backend == "dask":
+            with pytest.warns(): # This will trigger the warning about experimental module deprecation tested above
+                RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+            with pytest.warns(FutureWarning, match="The keyword argument 'daskclient' is not necessary anymore and will be removed in a future release"):
+                df = RDataFrame(10, npartitions=2, daskclient=connection)
+                assert df.Count().GetValue() == 10
+        elif backend == "spark":
+            with pytest.warns(): # This will trigger the warning about experimental module deprecation tested above
+                RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+            with pytest.warns(FutureWarning, match="The keyword argument 'sparkcontext' is not necessary anymore and will be removed in a future release"):
+                df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+                assert df.Count().GetValue() == 10
 
 
 if __name__ == "__main__":
