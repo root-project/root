@@ -158,11 +158,12 @@ private:
    RDaosNTupleAnchor fAnchor;
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
+   void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
    void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 protected:
    void LoadStructureImpl() final;
-   ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   ROOT::RNTupleDescriptor AttachImpl() final;
    /// The cloned page source creates a new connection to the pool/container.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 

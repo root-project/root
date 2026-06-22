@@ -226,11 +226,27 @@ void ROOT::Internal::RPageSource::LoadStructure()
 
 void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
+   if (fIsAttached)
+      return;
+
    LoadStructure();
-   if (!fIsAttached) {
-      GetExclDescriptorGuard().MoveIn(AttachImpl(mode));
-      fStructureBuffer.Reset();
+
+   auto descGuard = GetExclDescriptorGuard();
+   descGuard.MoveIn(AttachImpl());
+   fStructureBuffer.Reset();
+
+   std::vector<unsigned char> buffer;
+   for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
+      buffer.resize(cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage());
+      auto zipBuffer = buffer.data() + cgDesc.GetPageListLength();
+
+      LoadPageListImpl(cgDesc.GetPageListLocator(), zipBuffer);
+      RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
+                                 cgDesc.GetPageListLength(), buffer.data());
+      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), *descGuard,
+                                             mode);
    }
+
    fIsAttached = true;
 }
 
