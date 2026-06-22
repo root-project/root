@@ -535,8 +535,12 @@ void RLoopManager::RunEmptySourceMT()
       R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
          UpdateSampleInfo(slot, range);
-         for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
-            RunAndCheckFilters(slot, currEntry);
+         auto bulkBeginEntry = range.first;
+         std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(range.second - bulkBeginEntry));
+         while (bulkBeginEntry < range.second) {
+            RunAndCheckFilters(slot, bulkBeginEntry, bulkSize);
+            bulkBeginEntry += bulkSize;
+            bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(range.second - bulkBeginEntry));
          }
       } catch (...) {
          // Error might throw in experiment frameworks like CMSSW
@@ -560,9 +564,13 @@ void RLoopManager::RunEmptySource()
    RCallCleanUpTask cleanup(*this);
    try {
       UpdateSampleInfo(/*slot*/ 0, fEmptyEntryRange);
-      for (ULong64_t currEntry = fEmptyEntryRange.first;
-           currEntry < fEmptyEntryRange.second && fNStopsReceived < fNChildren; ++currEntry) {
-         RunAndCheckFilters(0, currEntry);
+      auto bulkBeginEntry = fEmptyEntryRange.first;
+      std::size_t bulkSize =
+         std::min(GetCurrentBulkSize(), static_cast<std::size_t>(fEmptyEntryRange.second - bulkBeginEntry));
+      while (bulkBeginEntry < fEmptyEntryRange.second) {
+         RunAndCheckFilters(0, bulkBeginEntry, bulkSize);
+         bulkBeginEntry += bulkSize;
+         bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(fEmptyEntryRange.second - bulkBeginEntry));
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -656,11 +664,15 @@ void RLoopManager::RunDataSource()
             const auto start = range.first;
             const auto end = range.second;
             R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
-            for (auto entry = start; entry < end && fNStopsReceived < fNChildren; ++entry) {
-               if (fDataSource->SetEntry(0u, entry)) {
-                  RunAndCheckFilters(0u, entry);
+            auto bulkBeginEntry = start;
+            std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+            while (bulkBeginEntry < end && fNStopsReceived < fNChildren) {
+               if (fDataSource->SetEntry(0u, bulkBeginEntry)) {
+                  RunAndCheckFilters(0u, bulkBeginEntry, bulkSize);
                }
-               processedEntries++;
+               bulkBeginEntry += bulkSize;
+               processedEntries += bulkSize;
+               bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
             }
          }
       } catch (...) {
@@ -709,7 +721,7 @@ void RLoopManager::RunDataSourceMT()
 
 /// Execute actions and make sure named filters are called for each event.
 /// Named filters must be called even if the analysis logic would not require it, lest they report confusing results.
-void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
+void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize)
 {
    // data-block callbacks run before the rest of the graph
    if (fNewSampleNotifier.CheckFlag(slot)) {
@@ -719,9 +731,9 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
    }
 
    for (auto *actionPtr : fBookedActions)
-      actionPtr->Run(slot, entry);
+      actionPtr->Run(slot, bulkBeginEntry, bulkSize);
    for (auto *namedFilterPtr : fBookedNamedFilters)
-      namedFilterPtr->CheckFilters(slot, entry);
+      namedFilterPtr->CheckFilters(slot, bulkBeginEntry, bulkSize);
    for (auto &callback : fCallbacksEveryNEvents)
       callback(slot);
 }
@@ -1058,9 +1070,10 @@ void RLoopManager::Deregister(RDFInternal::RVariationBase *v)
 }
 
 // dummy call, end of recursive chain of calls
-bool RLoopManager::CheckFilters(unsigned int, Long64_t)
+ROOT::Internal::RDF::RMaskedEntryRange
+RLoopManager::CheckFilters(unsigned int, Long64_t bulkBeginEntry, std::size_t bulkSize)
 {
-   return true;
+   return ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)};
 }
 
 /// Call `FillReport` on all booked filters
@@ -1358,10 +1371,14 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
    R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
 
    try {
-      for (auto entry = start; entry < end; ++entry) {
-         if (fDataSource->SetEntry(slot, entry)) {
-            RunAndCheckFilters(slot, entry);
+      auto bulkBeginEntry = start;
+      std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+      while (bulkBeginEntry < end) {
+         if (fDataSource->SetEntry(slot, bulkBeginEntry)) {
+            RunAndCheckFilters(slot, bulkBeginEntry, bulkSize);
          }
+         bulkBeginEntry += bulkSize;
+         bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -1397,7 +1414,9 @@ void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(TTreeReader &treeReader, R
          if (fNewSampleNotifier.CheckFlag(slot)) {
             UpdateSampleInfo(slot, treeReader);
          }
-         RunAndCheckFilters(slot, count++);
+         std::size_t curBulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - start));
+         RunAndCheckFilters(slot, count, curBulkSize);
+         count += curBulkSize;
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
