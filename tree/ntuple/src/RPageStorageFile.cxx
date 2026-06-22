@@ -477,7 +477,7 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
    }
 }
 
-ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
+ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl()
 {
    auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor->GetNBytesFooter();
 
@@ -489,25 +489,10 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
                               unzipBuf);
    RNTupleSerializer::DeserializeFooter(unzipBuf, fAnchor->GetLenFooter(), fDescriptorBuilder);
 
-   auto desc = fDescriptorBuilder.MoveDescriptor();
-
    // fNTupleName is empty if and only if we created this source via CreateFromAnchor. If that's the case, this is the
    // earliest we can set the name.
    if (fNTupleName.empty())
-      fNTupleName = desc.GetName();
-
-   std::vector<unsigned char> buffer;
-   for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
-      buffer.resize(std::max<size_t>(buffer.size(),
-                                     cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage()));
-      auto *zipBuffer = buffer.data() + cgDesc.GetPageListLength();
-      fReader.ReadBuffer(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
-                         cgDesc.GetPageListLocator().GetPosition<std::uint64_t>());
-      RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
-                                 cgDesc.GetPageListLength(), buffer.data());
-
-      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc, mode);
-   }
+      fNTupleName = fDescriptorBuilder.GetDescriptor().GetName();
 
    // For the page reads, we rely on the I/O scheduler to define the read requests
    fFile->SetBuffering(false);
@@ -515,7 +500,12 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
    // Set file size once after buffering is turned off
    fFileSize = fFile->GetSize();
 
-   return desc;
+   return fDescriptorBuilder.MoveDescriptor();
+}
+
+void ROOT::Internal::RPageSourceFile::LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer)
+{
+   fReader.ReadBuffer(buffer, locator.GetNBytesOnStorage(), locator.GetPosition<std::uint64_t>());
 }
 
 void ROOT::Internal::RPageSourceFile::LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage)

@@ -473,8 +473,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadStructureImpl()
    }
 }
 
-ROOT::RNTupleDescriptor
-ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
+ROOT::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl()
 {
    auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor.fNBytesFooter;
 
@@ -489,23 +488,15 @@ ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDe
       throw ROOT::RException(R__FAIL("LocateNTuple: ntuple name '" + fNTupleName + "' unavailable in this container."));
    }
 
-   auto desc = fDescriptorBuilder.MoveDescriptor();
+   return fDescriptorBuilder.MoveDescriptor();
+}
 
-   std::unique_ptr<unsigned char[]> buffer, zipBuffer;
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadPageListImpl(const RNTupleLocator &locator,
+                                                                     unsigned char *buffer)
+{
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
-   for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
-      buffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLength());
-      zipBuffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLocator().GetNBytesOnStorage());
-      fDaosContainer->ReadSingleAkey(
-         zipBuffer.get(), cgDesc.GetPageListLocator().GetNBytesOnStorage(), oidPageList, kDistributionKeyDefault,
-         cgDesc.GetPageListLocator().GetPosition<RNTupleLocatorObject64>().GetLocation(), kCidMetadata);
-      RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().GetNBytesOnStorage(),
-                                 cgDesc.GetPageListLength(), buffer.get());
-
-      RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc, mode);
-   }
-
-   return desc;
+   fDaosContainer->ReadSingleAkey(buffer, locator.GetNBytesOnStorage(), oidPageList, kDistributionKeyDefault,
+                                  locator.GetPosition<RNTupleLocatorObject64>().GetLocation(), kCidMetadata);
 }
 
 std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() const

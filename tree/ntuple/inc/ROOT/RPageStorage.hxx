@@ -625,6 +625,7 @@ public:
          fDescriptor.IncGeneration();
          fLock.unlock();
       }
+      ROOT::RNTupleDescriptor &operator*() const { return fDescriptor; }
       ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
       void MoveIn(ROOT::RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
    };
@@ -747,11 +748,14 @@ protected:
    /// Fills fStructureBuffer with the compressed header and footer
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
-   virtual ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
+   virtual ROOT::RNTupleDescriptor AttachImpl() = 0;
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
+   // Loads a page list into the provided buffer. The buffer parameter needs to point to a memory region
+   // that has space for at least locator.GetNBytesOnStorage() bytes to hold the compressed page list.
+   virtual void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) = 0;
    // Returns a sealed page from storage without adding it to the page pool. The sealed pages buffer and buffer size
    // is already initialized.
    virtual void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) = 0;

@@ -89,11 +89,9 @@ class RPageSourceMock : public RPageSource {
 
 protected:
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode) final
-   {
-      return RNTupleDescriptor();
-   }
+   RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
+   void LoadPageListImpl(const ROOT::RNTupleLocator &, unsigned char *) final {}
    void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
    void LoadStreamerInfo() final {}
 
