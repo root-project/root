@@ -2,19 +2,18 @@
 pytest automatically loads fixtures written in a conftest.py module in the same
 folder as other tests. This module creates a Dask cluster on the local machine.
 """
+
+import os
 from functools import partial
 
-import pytest
-import os
-
-from dask.distributed import Client, LocalCluster
 import pyspark
+import pytest
 import ROOT
+from dask.distributed import Client, LocalCluster
 
 
 def create_dask_connection() -> Client:
-    connection = Client(LocalCluster(
-        n_workers=2, threads_per_worker=1, processes=True, memory_limit="2GiB"))
+    connection = Client(LocalCluster(n_workers=2, threads_per_worker=1, processes=True, memory_limit="2GiB"))
     return connection
 
 
@@ -28,8 +27,7 @@ def cleanup_dask_connection(connection: Client):
 
 
 def create_spark_connection():
-    conf = {"spark.master": "local[2]", "spark.driver.memory": "4g",
-            "spark.app.name": "roottest-distrdf-spark"}
+    conf = {"spark.master": "local[2]", "spark.driver.memory": "4g", "spark.app.name": "roottest-distrdf-spark"}
     sparkconf = pyspark.SparkConf().setAll(conf.items())
     connection = pyspark.SparkContext(conf=sparkconf)
     return connection
@@ -41,7 +39,7 @@ def cleanup_spark_connection(connection):
 
 CONNECTION_FNS = {
     "dask": (create_dask_connection, cleanup_dask_connection),
-    "spark": (create_spark_connection, cleanup_spark_connection)
+    "spark": (create_spark_connection, cleanup_spark_connection),
 }
 
 
