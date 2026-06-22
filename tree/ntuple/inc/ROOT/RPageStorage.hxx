@@ -567,7 +567,6 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
-protected:
    /// Summarizes meta-data necessary to load a certain page. Used by LoadPageFromSummary().
    struct RPageSummary {
       ROOT::DescriptorId_t fClusterId = 0;
