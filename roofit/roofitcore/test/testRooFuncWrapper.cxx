@@ -129,14 +129,16 @@ private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
-std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &absReal, bool useGradient = true)
+std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &absReal, bool useAD = true)
 {
    RooMinimizer::Config cfg;
-   cfg.useGradient = useGradient;
+   cfg.useGradient = useAD;
+   cfg.useHessian = useAD;
    RooMinimizer m{absReal, cfg};
    m.setPrintLevel(-1);
    m.setStrategy(0);
    m.minimize("Minuit2");
+   m.hesse(); // to use the analytical Hessian for error estimation
    return std::unique_ptr<RooFitResult>{m.save()};
 }
 
@@ -164,6 +166,9 @@ TEST_P(FactoryTest, NLLFit)
    // We want to use the generated code also for the nominal likelihood. Like
    // this, we make sure to validate also the NLL values of the generated code.
    static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
+   // Let's also validate the Hessian
+   static_cast<RooFit::Experimental::RooEvaluatorWrapper&>(*nllFunc).generateHessian();
+   static_cast<RooFit::Experimental::RooEvaluatorWrapper&>(*nllFunc).writeDebugMacro(_params._name);
 
    double tol = _params._fitResultTolerance;
 
@@ -214,6 +219,9 @@ TEST_P(FactoryTest, NLLFit)
    // because for very small correlations it's usually not the same within the
    // relative tolerance because you would compare two small values that are
    // only different from zero because of noise.
+   // The error tolerance is also quite large, because the analytical Hessian
+   // gives numerically quite different results.
+   double errorTol = 0.1;
    EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, tol));
    EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, tol, tol));
 }
