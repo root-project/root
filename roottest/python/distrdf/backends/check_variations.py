@@ -42,8 +42,9 @@ class TestVariations:
         connection, _ = payload
         df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1").Define("y", "42")
-        h = df.Vary("x", "ROOT::RVecI{-1, 2}",
-                    variationTags=["down", "up"]).Histo1D(("name", "title", 10, -500, 500), "x", "y")
+        h = df.Vary("x", "ROOT::RVecI{-1, 2}", variationTags=["down", "up"]).Histo1D(
+            ("name", "title", 10, -500, 500), "x", "y"
+        )
         histos = ROOT.RDF.Experimental.VariationsFor(h)
 
         expectednames = ["nominal", "x:down", "x:up"]
@@ -59,9 +60,9 @@ class TestVariations:
         connection, _ = payload
         df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1").Define("y", "42")
-        h = df.Vary(["x", "y"],
-                    "ROOT::RVec<ROOT::RVecI>{{-1, 2, 3}, {41, 43, 44}}",
-                    ["down", "up", "other"], "xy").Histo1D(("name", "title", 10, -500, 500), "x", "y")
+        h = df.Vary(
+            ["x", "y"], "ROOT::RVec<ROOT::RVecI>{{-1, 2, 3}, {41, 43, 44}}", ["down", "up", "other"], "xy"
+        ).Histo1D(("name", "title", 10, -500, 500), "x", "y")
         histos = ROOT.RDF.Experimental.VariationsFor(h)
 
         expectednames = ["nominal", "xy:down", "xy:up", "xy:other"]
@@ -77,8 +78,7 @@ class TestVariations:
         connection, _ = payload
         df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1")
-        df_sum = df.Vary(
-            "x", "ROOT::RVecI{-1*x, 2*x}", ("down", "up"), "myvariation").Filter("x > 0").Sum("x")
+        df_sum = df.Vary("x", "ROOT::RVecI{-1*x, 2*x}", ("down", "up"), "myvariation").Filter("x > 0").Sum("x")
 
         assert df_sum.GetValue() == 10
 

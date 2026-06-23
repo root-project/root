@@ -38,6 +38,7 @@ class TestBackendInit:
         if backend == "spark":
             import pyspark
             from ROOT._distrdf.Backends.Spark import Backend
+
             backend = Backend.SparkBackend(sparkcontext=connection)
 
             assert isinstance(backend.sc, pyspark.SparkContext)
@@ -52,10 +53,12 @@ class TestBackendInit:
         connection, backend = payload
         if backend == "dask":
             from ROOT._distrdf.Backends.Dask import Backend
+
             backend = Backend.DaskBackend(daskclient=connection)
             assert backend.optimize_npartitions() == 2
         elif backend == "spark":
             from ROOT._distrdf.Backends.Spark import Backend
+
             backend = Backend.SparkBackend(sparkcontext=connection)
             assert backend.optimize_npartitions() == 2
 
@@ -92,6 +95,7 @@ class TestInitialization:
 
         def init(value):
             import ROOT
+
             cpp_code = f"int userValue = {value};"
             ROOT.gInterpreter.ProcessLine(cpp_code)
 
@@ -111,11 +115,12 @@ class TestInitialization:
         # Finally, Histo1D returns a histogram filled with one value. The mean
         # of this single value has to be the value itself, independently of
         # the number of spawned workers.
-        with pytest.warns(UserWarning, match="Number of partitions 2 is greater than number of entries 1 in the dataframe"):
+        with pytest.warns(
+            UserWarning, match="Number of partitions 2 is greater than number of entries 1 in the dataframe"
+        ):
             df = ROOT.RDataFrame(1, executor=connection)
 
-            df = df.Define("u", "userValue").Histo1D(
-                ("name", "title", 1, 100, 130), "u")
+            df = df.Define("u", "userValue").Histo1D(("name", "title", 1, 100, 130), "u")
 
             h = df.GetValue()
             assert h.GetMean() == 123
@@ -153,8 +158,7 @@ class TestEmptyTreeError:
 
         connection, _ = payload
         treenames = [f"tree_{i}" for i in range(3)]
-        filenames = [
-            f"../data/ttree/distrdf_roottest_check_backend_{i}.root" for i in range(3)]
+        filenames = [f"../data/ttree/distrdf_roottest_check_backend_{i}.root" for i in range(3)]
 
         empty_treename = "empty"
         empty_filename = "../data/ttree/empty.root"
@@ -219,8 +223,9 @@ class TestChangeAttribute:
 class TestPropagateExceptions:
     """Tests that the C++ exceptions are properly propagated."""
 
-    @pytest.mark.skipif(platform.system() == "Darwin" and platform.machine() == "arm64",
-                        reason="cannot catch exceptions on macOS arm64")
+    @pytest.mark.skipif(
+        platform.system() == "Darwin" and platform.machine() == "arm64", reason="cannot catch exceptions on macOS arm64"
+    )
     def test_runtime_error_is_propagated(self, payload):
         """The test creates a TGraph with mixed scalar and vector columns."""
         connection, backend = payload
@@ -232,14 +237,16 @@ class TestPropagateExceptions:
             # DistRDF. Need to make this distinction so that the pytest.raises
             # call does not get confused by the extra level of indirection
             from py4j import protocol
+
             raised_exc = protocol.Py4JJavaError
         else:
-            raised_exc = RuntimeError # Dask always raises a Python RuntimeError
+            raised_exc = RuntimeError  # Dask always raises a Python RuntimeError
 
         df = df.Define("x", "1").Define("y", "ROOT::RVecF{1., 2., 3.}")
         g = df.Graph("x", "y")
-        cpp_error_what = ("runtime_error: Graph was applied to a mix of scalar "
-                          "values and collections. This is not supported.")
+        cpp_error_what = (
+            "runtime_error: Graph was applied to a mix of scalar values and collections. This is not supported."
+        )
         with pytest.raises(raised_exc, match=cpp_error_what):
             g.GetValue()
 
