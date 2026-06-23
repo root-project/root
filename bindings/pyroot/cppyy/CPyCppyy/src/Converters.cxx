@@ -3370,18 +3370,18 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
     const std::string& cpd = TypeManip::compound(resolvedType);
     std::string realType   = TypeManip::clean_type(resolvedType, false, true);
 
-// mutable pointer references (T*&) are incompatible with Python's object model
-   if (cpd == "*&") {
-       return new NotImplementedConverter{PyExc_TypeError,
-           "argument type '" + resolvedType + "' is not supported: non-const references to pointers (T*&) allow a"
-           " function to replace the pointer itself. Python cannot represent this safely. Consider changing the"
-           " C++ API to return the new pointer or use a wrapper"};
-   }
-
 // accept unqualified type (as python does not know about qualifiers)
     h = gConvFactories.find((isConst ? "const " : "") + realType + cpd);
     if (h != gConvFactories.end())
         return (h->second)(dims);
+
+// mutable pointer references (T*&) are incompatible with Python's object model
+    if (!isConst && cpd == "*&") {
+        return new NotImplementedConverter{PyExc_TypeError,
+            "argument type '" + resolvedType + "' is not supported: non-const references to pointers (T*&) allow a"
+            " function to replace the pointer itself. Python cannot represent this safely. Consider changing the"
+            " C++ API to return the new pointer or use a wrapper"};
+    }
 
 // drop const, as that is mostly meaningless to python (with the exception
 // of c-strings, but those are specialized in the converter map)
@@ -3832,7 +3832,8 @@ public:
         gf["const std::wstring&"] =         gf["std::wstring"];
         gf["const " WSTRING1 "&"] =         gf["std::wstring"];
         gf["const " WSTRING2 "&"] =         gf["std::wstring"];
-        gf["void*&"] =                      (cf_t)+[](cdims_t) { static VoidPtrRefConverter c{};     return &c; };
+        // VoidPtrRefConverter should only be used for const references to pointers
+        gf["const void*&"] =                (cf_t)+[](cdims_t) { static VoidPtrRefConverter c{};     return &c; };
         gf["void**"] =                      (cf_t)+[](cdims_t d) { return new VoidPtrPtrConverter{d}; };
         gf["void ptr"] =                    gf["void**"];
         gf["PyObject*"] =                   (cf_t)+[](cdims_t) { static PyObjectConverter c{};       return &c; };
