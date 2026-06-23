@@ -41,11 +41,7 @@ list(APPEND DISTRDF_ENVIRONMENT_VARS DISTRDF_BACKENDS_IN_USE=${DISTRDF_BACKENDS_
 # setting the property to 4. The test also locks a resource for the creation of
 # the clusters, depending on how many backends are active. The resource lock
 # is shared with the "common" folder and the tutorials of the main repository.
-ROOTTEST_ADD_TEST(test_all
-                    MACRO test_all.py
-                    ENVIRONMENT "${DISTRDF_ENVIRONMENT_VARS}"
-                    TIMEOUT 1200
-                    PROPERTIES PROCESSORS 4)
+ROOT_ADD_PYUNITTEST(test_all test_all.py GENERIC ENVIRONMENT "${DISTRDF_ENVIRONMENT_VARS}")
 
 # This test has to take multiple resource locks. This means that they should
 # be passed as a cmake list (semi-colon separated strings) after the
@@ -55,4 +51,6 @@ ROOTTEST_ADD_TEST(test_all
 # The safest and most reliable thing to do is to call the final cmake
 # function directly here, so we can be sure that the PROPERTIES argument
 # will be properly parsed.
-set_tests_properties(roottest-python-distrdf-backends-test_all PROPERTIES RESOURCE_LOCK "${DISTRDF_RESOURCE_LOCKS}")
+set_tests_properties(
+    pyunittests-roottest-python-distrdf-backends-all
+    PROPERTIES RESOURCE_LOCK "${DISTRDF_RESOURCE_LOCKS}" PROCESSORS 4 TIMEOUT 1200)
