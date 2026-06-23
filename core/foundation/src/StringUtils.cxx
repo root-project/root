@@ -40,6 +40,14 @@ std::vector<std::string> Split(std::string_view str, std::string_view delims, bo
    return out;
 }
 
+std::pair<std::string_view, std::string_view> SplitAt(std::string_view str, char splitter)
+{
+   auto pos = str.find(splitter);
+   if (pos == std::string_view::npos)
+      return {str, ""};
+   return {str.substr(0, pos), str.substr(pos + 1)};
+}
+
 /**
  * \brief Convert (round) a value and its uncertainty to string using one or two significant digits of the error
  * \param error the error. If the error is negative or zero, only the value is returned with no specific rounding

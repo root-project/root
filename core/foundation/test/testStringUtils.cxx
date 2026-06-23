@@ -81,3 +81,14 @@ TEST(StringUtils, Round)
    EXPECT_EQ(ROOT::Round(-30000., 1000000000., 0), "(-0#pm1)*1e9");
    EXPECT_EQ(ROOT::Round(110., 0.24, 1, "+-"), "110.0+-0.2");
 }
+
+TEST(StringUtils, SplitAt) {
+   const auto p = [] (auto a, auto b) { return std::make_pair<std::string_view, std::string_view>(a, b); };
+
+   EXPECT_EQ(ROOT::SplitAt("foo, bar", ','), p("foo", " bar"));
+   EXPECT_EQ(ROOT::SplitAt("foo, bar,", ','), p("foo", " bar,"));
+   EXPECT_EQ(ROOT::SplitAt(", bar,", ','), p("", " bar,"));
+   EXPECT_EQ(ROOT::SplitAt("foo,bar", ' '), p("foo,bar", ""));
+   EXPECT_EQ(ROOT::SplitAt("", ' '), p("", ""));
+   EXPECT_EQ(ROOT::SplitAt(",,,,", ','), p("", ",,,"));
+}
