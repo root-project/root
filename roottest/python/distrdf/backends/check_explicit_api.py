@@ -127,15 +127,21 @@ class TestDeprecation:
         connection, backend = payload
 
         if backend == "dask":
-            with pytest.warns(): # This will trigger the warning about experimental module deprecation tested above
+            with pytest.warns():  # This will trigger the warning about experimental module deprecation tested above
                 RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            with pytest.warns(FutureWarning, match="The keyword argument 'daskclient' is not necessary anymore and will be removed in a future release"):
+            with pytest.warns(
+                FutureWarning,
+                match="The keyword argument 'daskclient' is not necessary anymore and will be removed in a future release",
+            ):
                 df = RDataFrame(10, npartitions=2, daskclient=connection)
                 assert df.Count().GetValue() == 10
         elif backend == "spark":
-            with pytest.warns(): # This will trigger the warning about experimental module deprecation tested above
+            with pytest.warns():  # This will trigger the warning about experimental module deprecation tested above
                 RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            with pytest.warns(FutureWarning, match="The keyword argument 'sparkcontext' is not necessary anymore and will be removed in a future release"):
+            with pytest.warns(
+                FutureWarning,
+                match="The keyword argument 'sparkcontext' is not necessary anymore and will be removed in a future release",
+            ):
                 df = RDataFrame(10, npartitions=2, sparkcontext=connection)
                 assert df.Count().GetValue() == 10
 
