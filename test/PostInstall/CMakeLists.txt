@@ -36,5 +36,11 @@ if(BUILD_TESTING)
       PROPERTIES ENVIRONMENT PYTHONPATH=${ROOT_LIBRARY_DIR}
                  PASS_REGULAR_EXPRESSION "myHistoName"
     )
+    add_test(NAME python-package-metadata
+      COMMAND ${Python3_EXECUTABLE} -c "import importlib.metadata as meta, ROOT; meta.version(\"ROOT\")"
+    )
+    set_tests_properties(python-package-metadata
+      PROPERTIES ENVIRONMENT PYTHONPATH=${ROOT_LIBRARY_DIR}
+    )
   endif()
 endif()

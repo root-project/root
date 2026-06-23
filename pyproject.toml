@@ -47,6 +47,9 @@ opengl="OFF"
 runtime_cxxmodules="ON"
 fail-on-missing="ON"
 
+# Prevent CMake from producing its own .dist-info metadata
+_wheel_build="ON"
+
 # Explicitly list components that gminimal implicitly turns off as documentation
 # tmva-pymva and tpython are disabled for manylinux compatibility
 # see https://peps.python.org/pep-0513/#libpythonx-y-so-1 
