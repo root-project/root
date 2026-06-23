@@ -1214,34 +1214,66 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
          std::ofstream ofs(fnames[n]);
 
          ofs << "<!DOCTYPE html>\n"
-               "<html lang=\"en\">\n"
-               "<head>\n"
-               "  <meta charset=\"utf-8\">\n"
-               "  <title>Dsiplay of ROOT object</title>\n"
-               "  <link rel=\"shortcut icon\" href=\"" << filejsrootsys << "/img/RootIcon.ico\"/>\n"
-               "  <script type=\"importmap\">\n"
-               "    { \"imports\": { \"jsroot\": \"" << filejsrootsys << "/modules/main.mjs\" } }\n"
-               "  </script>\n"
-               "</head>\n"
-               "<body>\n";
-         if (!is_multi_html) {
-            ofs << "  <div id=\"drawing\" style=\"position: relative; width: " << widths[n]
-                << "px;  height: " << heights[n] << "px;\"></div>\n";
-         } else for (unsigned k = 0; k < jsons.size(); ++k) {
-            ofs << "  <div id=\"drawing" << k << "\" style=\"position: relative; width: " << widths[k]
-                << "px; height: " << heights[k] << "px;\"></div>\n";
+                "<html lang=\"en\">\n"
+                "<head>\n"
+                "  <meta charset=\"utf-8\">\n"
+                "  <title>Dsiplay of ROOT " << (is_multi_html ? "objects" : "object") << "</title>\n"
+                "  <link rel=\"shortcut icon\" href=\"" << filejsrootsys << "/img/RootIcon.ico\"/>\n"
+                "  <script type=\"importmap\">\n"
+                "    { \"imports\": { \"jsroot\": \"" << filejsrootsys << "/modules/main.mjs\" } }\n"
+                "  </script>\n"
+                "  <style>\n";
+         if (is_multi_html) {
+            ofs << "    .root-container {\n"
+                   "      display: flex;\n"
+                   "      flex-direction: column;\n"
+                   "      align-items: center;\n"
+                   "      gap: 20px;\n"
+                   "      width: 100%;\n"
+                   "    }\n";
+         } else {
+            ofs << "    body {\n"
+                   "      margin: 0;\n"
+                   "      padding: 0;\n"
+                   "      display: flex;\n"
+                   "      justify-content: center;\n"
+                   "      align-items: center;\n"
+                   "      min-height: 100vh;\n"
+                   "      background-color: #f0f0f0;\n"
+                   "    }\n";
          }
-         ofs << "</body>\n"
-                "<script type=\"module\">"
-                "  import { parse, draw } from \"jsroot\";\n";
-         if (!is_multi_html) {
-            ofs << "  const obj = parse(" << jsons[n] << ");\n"
-                   "  draw(\"drawing\", obj);\n";
-         } else for (unsigned k = 0; k < jsons.size(); ++k) {
-            ofs << "  const obj" << k << " = parse(" << jsons[k] << ");\n"
-                   "  draw(\"drawing" << k << "\", obj" << k << ");\n";
+         ofs << "    .root-drawing {\n"
+                "      background-color: white;\n"
+                "      box-shadow: 0 4px 10px rgba(0,0,0,0.1);\n"
+                "    }\n"
+                "  </style>\n"
+                "</head>\n"
+                "<body>\n";
+         if (is_multi_html) {
+            ofs << "  <div class=\"root-container\">\n";
+            for (unsigned k = 0; k < jsons.size(); ++k)
+               ofs << "    <div id=\"drawing" << k << "\" class=\"root-drawing\""
+                      " style=\"width: " << widths[k] << "px;"
+                      " height: " << heights[k] << "px;\"></div>\n";
+            ofs << "  </div>\n";
+         } else {
+            ofs << "  <div id=\"drawing\" class=\"root-drawing\""
+                   " style=\"width: " << widths[n] << "px;"
+                   " min-height: " << heights[n] << "px;\"></div>\n";
          }
-         ofs << "</script>\n"
+         ofs << "  <script type=\"module\">\n"
+                "    import { parse, draw } from \"jsroot\";\n";
+         if (is_multi_html) {
+            for (unsigned k = 0; k < jsons.size(); ++k) {
+               ofs << "    const obj" << k << " = parse(" << jsons[k] << ");\n"
+                      "    draw(\"drawing" << k << "\", obj" << k << ");\n";
+            }
+         } else {
+            ofs << "    const obj = parse(" << jsons[n] << ");\n"
+                   "    draw(\"drawing\", obj);\n";
+         }
+         ofs << "  </script>\n"
+                "</body>\n"
                 "</html>\n";
 
          fmts[n].clear();
