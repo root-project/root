@@ -129,7 +129,7 @@ To ensure similar painting size for the canvas created with default size for bot
 ~~~ {.cpp}
    {
       auto c = new TCanvas("c", "c");
-      c->SetWindowSize(c->GetWindowWidth() + (c->GetWindowWidth() - c->GetWw()), c->GetWindowHeight() + (c->GetWindowHeight() - c->GetWh())); 
+      c->SetWindowSize(c->GetWindowWidth() + (c->GetWindowWidth() - c->GetWw()), c->GetWindowHeight() + (c->GetWindowHeight() - c->GetWh()));
    }
 ~~~
 
@@ -2741,7 +2741,7 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
       }
 
       if (isSupported) {
-         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\")", (size_t) &pads, fname.Data());
+         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\");", (size_t) &pads, fname.Data());
 
          return (Bool_t) gROOT->ProcessLine(cmd);
       }

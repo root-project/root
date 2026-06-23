@@ -5050,7 +5050,7 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    if (GetCanvas()->IsWeb() && GetPainter() &&
-       (strstr(opt,"svg") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
+       (strstr(opt,"svg") || strstr(opt,"html") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
       GetPainter()->SaveImage(this, psname.Data(), gtype);
       return;
    }
@@ -5825,17 +5825,11 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"xml");
    else if (psname.EndsWith(".json"))
       ((TPad*)this)->Print(psname,"json");
+   else if (psname.EndsWith(".html"))
+      ((TPad*)this)->Print(psname,"html");
    else if (psname.EndsWith(".eps"))
       ((TPad*)this)->Print(psname,"eps");
-   else if (psname.EndsWith(".pdf"))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf["))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf]"))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf("))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf)"))
+   else if (psname.EndsWith(".pdf") || psname.EndsWith(".pdf[") || psname.EndsWith(".pdf]") || psname.EndsWith(".pdf("))
       ((TPad*)this)->Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
       ((TPad*)this)->Print(psname,"svg");
@@ -5845,9 +5839,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"xpm");
    else if (psname.EndsWith(".png"))
       ((TPad*)this)->Print(psname,"png");
-   else if (psname.EndsWith(".jpg"))
-      ((TPad*)this)->Print(psname,"jpg");
-   else if (psname.EndsWith(".jpeg"))
+   else if (psname.EndsWith(".jpg") || psname.EndsWith(".jpeg"))
       ((TPad*)this)->Print(psname,"jpg");
    else if (psname.EndsWith(".bmp"))
       ((TPad*)this)->Print(psname,"bmp");
