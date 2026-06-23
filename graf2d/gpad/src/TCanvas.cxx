@@ -2726,14 +2726,14 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
       ext = "png";
    }
 
-   if (ext != "pdf" && ext != "ps" && ext != "root" && ext != "xml" && !hasArg) {
+   if (ext != "pdf" && ext != "ps" && ext != "root" && ext != "html" && ext != "xml" && !hasArg) {
       fname.Insert(p, "%d");
       hasArg = kTRUE;
    }
 
-   static std::vector<TString> webExtensions = { "png", "json", "svg", "pdf", "jpg", "jpeg", "webp" };
+   static std::vector<TString> webExtensions = { "png", "json", "html", "svg", "pdf", "jpg", "jpeg", "webp" };
 
-   if (gROOT->IsWebDisplay()) {
+   if (gROOT->IsWebDisplay() || (ext == "html")) {
       Bool_t isSupported = kFALSE;
       for (auto &wext : webExtensions) {
          if ((isSupported = (wext == ext)))
