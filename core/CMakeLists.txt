@@ -34,11 +34,6 @@ elseif(NOT WIN32)
   set_property(TARGET Core APPEND PROPERTY BUILD_RPATH $ORIGIN)
 endif()
 
-generateHeader(Core
-  ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
-)
-
 add_dependencies(Core CLING rconfigure)
 
 target_link_libraries(Core
