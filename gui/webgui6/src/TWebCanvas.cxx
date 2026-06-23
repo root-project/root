@@ -2621,7 +2621,7 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png")))
+   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "html") || (fmt == "s.png")))
       return ROOT::RWebDisplayHandle::ProduceImage(fname.Data(), json.Data(), width, height);
 
    if (append_batch) {
