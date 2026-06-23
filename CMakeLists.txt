@@ -691,6 +691,9 @@ if(pyroot)
   set(PYTESTS_WILLFAIL WILLFAIL)
 endif()
 
+#---Insert Python metadata for ROOT import package----------------------------------------------
+include(InstallPythonMetadata)
+
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)

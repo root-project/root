@@ -192,6 +192,7 @@ option(roottest "Build roottest (implies testing=ON)" OFF)
 option(test_roofit_hs3testsuite "Setup and use the HS3 conformance test suite (requires network)" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(asan "Build ROOT with address sanitizer instrumentation (only GCC is currently supported)" OFF)
+option(_wheel_build "ROOT is being packaged as a wheel, do not install .dist-info metadata" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
