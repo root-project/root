@@ -810,7 +810,7 @@ if(pyroot)
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
     list(APPEND TUTORIAL_ENV PYSPARK_PYTHON=${Python3_EXECUTABLE})
-    if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
+    if(CMAKE_SYSTEM_NAME STREQUAL Darwin AND CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL 10.13)
       # MacOS has changed rules about forking processes after 10.13
       # Running pyspark tests with XCode Python3 throws crashes with errors like:
       # `objc[17271]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called.`
