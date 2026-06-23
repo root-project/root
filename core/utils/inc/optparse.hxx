@@ -111,7 +111,10 @@ public:
 
    struct RSettings {
       /// Affects how flags are parsed (\see EFlagTreatment).
-      EFlagTreatment fFlagTreatment;
+      EFlagTreatment fFlagTreatment = EFlagTreatment::kDefault;
+      bool fIgnoreUnknownFlags = false;
+
+      RSettings() {}
    };
 
    enum class EFlagType {
@@ -136,8 +139,14 @@ public:
 
 private:
    RSettings fSettings;
+   /// Flags, in order of appearance
    std::vector<RFlag> fFlags;
+   /// Positional arguments, in order of appearance
    std::vector<std::string> fArgs;
+   /// Index of the first element in fArgs that appeared after `--`.
+   std::optional<std::size_t> fFirstPostDashDashArg;
+   /// Indices of all args passed to Parse() that were skipped.
+   std::vector<std::size_t> fUnprocessedArgsIndices;
 
    struct RExpectedFlag {
       EFlagType fFlagType = EFlagType::kSwitch;
@@ -174,7 +183,7 @@ private:
    }
 
 public:
-   explicit RCmdLineOpts(RSettings settings = {EFlagTreatment::kDefault}) : fSettings(settings) {}
+   explicit RCmdLineOpts(RSettings settings = {}) : fSettings(settings) {}
 
    /// Returns all parsing errors
    const std::vector<std::string> &GetErrors() const { return fErrors; }
@@ -435,11 +444,12 @@ public:
       // into flags "a", "b", and "c", which will be stored in `argStr`).
       std::vector<std::string_view> argStr;
 
-      for (std::size_t i = 0; i < nArgs && fErrors.empty(); ++i) {
-         const char *arg = args[i];
+      for (std::size_t argIndex = 0; argIndex < nArgs && fErrors.empty(); ++argIndex) {
+         const char *arg = args[argIndex];
          const char *const argOrig = arg;
+         const auto argIndexOrig = argIndex;
 
-         if (strcmp(arg, "--") == 0) {
+         if (strcmp(arg, "--") == 0 && !forcePositional) {
             forcePositional = true;
             continue;
          }
@@ -447,6 +457,8 @@ public:
          bool isFlag = !forcePositional && arg[0] == '-';
          if (!isFlag) {
             // positional argument
+            if (forcePositional && !fFirstPostDashDashArg)
+               fFirstPostDashDashArg = fArgs.size();
             fArgs.push_back(arg);
             continue;
          }
@@ -484,9 +496,9 @@ public:
                   nxtArgIsTentative = false;
                } else {
                   argStr.push_back(std::string_view(arg));
-                  if (i < nArgs - 1 && args[i + 1][0] != '-') {
-                     nxtArgStr = args[i + 1];
-                     ++i;
+                  if (argIndex < nArgs - 1 && args[argIndex + 1][0] != '-') {
+                     nxtArgStr = args[argIndex + 1];
+                     ++argIndex;
                   }
                }
             }
@@ -500,9 +512,9 @@ public:
             }
 
             argStr.push_back(std::string_view(arg));
-            if (i < nArgs - 1 && args[i + 1][0] != '-') {
-               nxtArgStr = args[i + 1];
-               ++i;
+            if (argIndex < nArgs - 1 && args[argIndex + 1][0] != '-') {
+               nxtArgStr = args[argIndex + 1];
+               ++argIndex;
             }
          }
 
@@ -513,8 +525,13 @@ public:
 
             const auto *exp = GetExpectedFlag(argS);
             if (!exp) {
-               fErrors.push_back(std::string("Unknown flag: ") + argOrig);
-               break;
+               if (fSettings.fIgnoreUnknownFlags) {
+                  fUnprocessedArgsIndices.push_back(argIndexOrig);
+                  continue;
+               } else {
+                  fErrors.push_back(std::string("Unknown flag: ") + argOrig);
+                  break;
+               }
             }
 
             // In Prefix mode, check if the returned expected flag is shorter than `argS`. This can mean two things:
@@ -526,9 +543,12 @@ public:
             // {flag: "-Dfoo", arg: "bar"}, rather than {flag: "-D", arg: "foo=bar"}.
             if ((exp->fOpts & kFlagPrefixArg) && argS.size() > exp->fName.size()) {
                if (nxtArgIsTentative) {
-                  i -= !nxtArgStr.empty(); // if we had already picked a candidate next arg, undo that.
+                  argIndex -= !nxtArgStr.empty(); // if we had already picked a candidate next arg, undo that.
                   nxtArgStr = argS.substr(exp->fName.size());
                   nxtArgIsTentative = false;
+               } else if (fSettings.fIgnoreUnknownFlags) {
+                  fUnprocessedArgsIndices.push_back(argIndexOrig);
+                  continue;
                } else {
                   fErrors.push_back(std::string("Unknown flag: ") + argOrig);
                   break;
@@ -571,7 +591,7 @@ public:
             } else {
                if (!nxtArg.empty()) {
                   if (nxtArgIsTentative)
-                     --i;
+                     --argIndex;
                   else
                      fErrors.push_back("Flag " + exp->AsStr() + " does not expect an argument");
                }
@@ -587,6 +607,15 @@ public:
             break;
       }
    }
+
+   /// Returns the index of the first positional argument that appeared after `--`. If not null, it is guaranteed
+   /// to be less than the size of GetArgs().
+   std::optional<std::size_t> GetFirstPostDashDashArg() const { return fFirstPostDashDashArg; }
+
+   /// Returns a list of the indices of all args passed to Parse() that were not parsed.
+   /// This will typically be empty, unless the RCmdLineOpts was created with `fIgnoreUnknownFlags == true`, in which
+   /// case this will contain all skipped unknown flags.
+   const std::vector<std::size_t> &GetUnprocessedArgsIndices() const { return fUnprocessedArgsIndices; }
 };
 
 } // namespace ROOT
