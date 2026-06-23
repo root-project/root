@@ -771,3 +771,42 @@ TEST(OptParse, DuplicateFlagAlias)
       EXPECT_STREQ(ex.what(), "The same flag `--a` was passed multiple times to AddFlag().");
    }
 }
+
+TEST(OptParse, IgnoreUnknownFlags)
+{
+   ROOT::RCmdLineOpts::RSettings settings;
+   settings.fIgnoreUnknownFlags = true;
+   ROOT::RCmdLineOpts opts{settings};
+
+   const char *args[] = {"somename", "-f", "foo", "--help"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetUnprocessedArgsIndices(), std::vector<std::size_t>({1, 3}));
+}
+
+TEST(OptParse, MultipleDashDash)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-a"});
+   const char *args[] = {"--", "--", "--"};
+   opts.Parse(args, std::size(args));
+   EXPECT_EQ(opts.GetArgs(), std::vector<std::string>({"--", "--"}));
+}
+
+TEST(OptParse, PostDashDash)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"--foo"});
+   opts.AddFlag({"-a"});
+   opts.AddFlag({"--with-arg"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+
+   // Note that only the first `--` is interpreted as special. Also, all "flags" coming after it are considered
+   // positional arguments.
+   const char *args[] = {"--foo", "first", "-a", "second", "--with-arg", "arg",
+                         "--",    "third", "-c", "fourth", "-a",         "--"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_EQ(opts.GetArgs(), std::vector<std::string>({"first", "second", "third", "-c", "fourth", "-a", "--"}));
+   EXPECT_EQ(opts.GetFirstPostDashDashArg(), 2);
+}
