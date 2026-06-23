@@ -2355,7 +2355,22 @@ void TCling::RegisterModule(const char* modulename,
       llvm::sys::path::remove_filename(pcmFileNameFullPath);
       llvm::sys::path::append(pcmFileNameFullPath,
                               ROOT::TMetaUtils::GetModuleFileName(modulename));
-      LoadPCM(pcmFileNameFullPath.str().str());
+      // A library built with C++ modules may ship only its .pcm and no
+      // <lib>_rdict.pcm (the dictionary payload then lives in the C++ module).
+      // In that case probing the legacy rootpcm makes LoadPCM emit a spurious
+      // "ROOT PCM ... file does not exist" error followed by an in-memory
+      // candidate dump. Skip the probe only when the C++ module was loaded AND
+      // there is genuinely no rootpcm to load -- neither registered in-memory
+      // (an embedded rdict, the check mirrors LoadPCM) nor present on disk. For
+      // libraries without a C++ module the behaviour is unchanged, so a truly
+      // missing rootpcm is still reported.
+      std::string pcmPath = pcmFileNameFullPath.str().str();
+      std::string pcmRealPath = llvm::sys::fs::is_symlink_file(pcmPath)
+                                   ? ROOT::TMetaUtils::GetRealPath(pcmPath)
+                                   : pcmPath;
+      if (!ModuleWasSuccessfullyLoaded || fPendingRdicts.count(pcmRealPath) ||
+          llvm::sys::fs::exists(pcmRealPath))
+         LoadPCM(pcmPath);
    }
 
    { // scope within which diagnostics are de-activated
