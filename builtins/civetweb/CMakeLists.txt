@@ -64,13 +64,12 @@ if(ssl)
 else()
   set(ROOT_SSL_API "-DCIVETWEB_ENABLE_SSL=OFF")
 endif()
-if(NOT MSVC)
-  set(ROOT_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_X_DOM_SOCKET") # TODO remove this workaround once it's 1.17
-else()
-  set(ROOT_C_FLAGS ${CMAKE_C_FLAGS})
-endif()
+set(ROOT_C_FLAGS ${CMAKE_C_FLAGS})
 if (CMAKE_OSX_SYSROOT)
   set(ROOT_C_FLAGS "${ROOT_C_FLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
+endif()
+if(NOT MSVC) # on Windows, one would need to add a patch to #include <afunix.h> and WSAStartup ifdefs...
+  set(ROOT_X_DOM_SOCKET "-DCIVETWEB_ENABLE_X_DOM_SOCKET=ON")
 endif()
 
 # If zlib is not builtin, the string will be empty, nothing special to be 
@@ -125,7 +124,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     ${ROOT_SSL_API}
     -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF # If set to ON, you need to set below link_library interface to CMAKE_DL_LIBS
     -DCIVETWEB_ENABLE_WEBSOCKETS=ON
-    -DCIVETWEB_ENABLE_X_DOM_SOCKET=ON # Will only work starting from 1.17
+    ${ROOT_X_DOM_SOCKET}
     -DCIVETWEB_ENABLE_ZLIB=ON
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
