@@ -1106,6 +1106,8 @@ std::string RWebDisplayHandle::GetImageFormat(const std::string &fname)
       return "s.png"s;
    if (EndsWith(".png"))
       return "png"s;
+   if (EndsWith(".html") || EndsWith(".htm"))
+      return "html"s;
    if (EndsWith(".jpg") || EndsWith(".jpeg"))
       return "jpeg"s;
    if (EndsWith(".webp"))
@@ -1127,7 +1129,7 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce vector of file names for specified file pattern
-/// Depending from supported file forma
+/// Depending from supported file formats
 
 std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string &fname, unsigned nfiles)
 {
@@ -1142,7 +1144,7 @@ std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string
 
       bool has_quialifier = farg.find("%") != std::string::npos;
 
-      if (!has_quialifier && (nfiles > 1) && (fmt != "pdf")) {
+      if (!has_quialifier && (nfiles > 1) && (fmt != "pdf") && (fmt != "html")) {
          farg.insert(farg.rfind("."), "%d");
          has_quialifier = true;
       }
@@ -1152,7 +1154,7 @@ std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string
             auto expand_name = TString::Format(farg.c_str(), (int) n);
             fnames.emplace_back(expand_name.Data());
          } else if (n > 0)
-            fnames.emplace_back(""); // empty name is multiPdf
+            fnames.emplace_back(""); // empty name is multiPdf or multiHtml
          else
             fnames.emplace_back(fname);
       }
@@ -1181,16 +1183,70 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       return false;
 
    std::vector<std::string> fmts;
-   for (auto& fname : fnames)
-      fmts.emplace_back(GetImageFormat(fname));
+   unsigned num_non_empty_fmts = 0, num_non_empty_files = 0;
+   for (auto& fname : fnames) {
+      if (!fname.empty())
+         num_non_empty_files++;
+      std::string fmt = GetImageFormat(fname);
+      if (!fmt.empty())
+         num_non_empty_fmts++;
+      fmts.emplace_back(fmt);
+   }
 
    bool is_any_image = false;
+
+   const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
 
    for (unsigned n = 0; (n < fmts.size()) && (n < jsons.size()); n++) {
       if (fmts[n] == "json") {
          std::ofstream ofs(fnames[n]);
          ofs << jsons[n];
          fmts[n].clear();
+      } else if (fmts[n] == "html") {
+         bool is_multi_html = (num_non_empty_fmts == 1) && (num_non_empty_files == 1) && (jsons.size() > 1) && (n == 0);
+
+         std::string filejsrootsys;
+         if (jsrootsys)
+            filejsrootsys = jsrootsys;
+         if (filejsrootsys.empty() || ((filejsrootsys.find("http://") != 0) && (filejsrootsys.find("https://") != 0)))
+            filejsrootsys = "https://root.cern/js/latest";
+
+         std::ofstream ofs(fnames[n]);
+
+         ofs << "<!DOCTYPE html>\n"
+               "<html lang=\"en\">\n"
+               "<head>\n"
+               "  <meta charset=\"utf-8\">\n"
+               "  <title>Dsiplay of ROOT object</title>\n"
+               "  <link rel=\"shortcut icon\" href=\"" << filejsrootsys << "/img/RootIcon.ico\"/>\n"
+               "  <script type=\"importmap\">\n"
+               "    { \"imports\": { \"jsroot\": \"" << filejsrootsys << "/modules/main.mjs\" } }\n"
+               "  </script>\n"
+               "</head>\n"
+               "<body>\n";
+         if (!is_multi_html) {
+            ofs << "  <div id=\"drawing\" style=\"position: relative; width: " << widths[n]
+                << "px;  height: " << heights[n] << "px;\"></div>\n";
+         } else for (unsigned k = 0; k < jsons.size(); ++k) {
+            ofs << "  <div id=\"drawing" << k << "\" style=\"position: relative; width: " << widths[k]
+                << "px; height: " << heights[k] << "px;\"></div>\n";
+         }
+         ofs << "</body>\n"
+                "<script type=\"module\">"
+                "  import { parse, draw } from \"jsroot\";\n";
+         if (!is_multi_html) {
+            ofs << "  const obj = parse(" << jsons[n] << ");\n"
+                   "  draw(\"drawing\", obj);\n";
+         } else for (unsigned k = 0; k < jsons.size(); ++k) {
+            ofs << "  const obj" << k << " = parse(" << jsons[k] << ");\n"
+                   "  draw(\"drawing" << k << "\", obj" << k << ");\n";
+         }
+         ofs << "</script>\n"
+                "</html>\n";
+
+         fmts[n].clear();
+         if (is_multi_html)
+            break;
       } else if (!fmts[n].empty())
          is_any_image = true;
    }
@@ -1204,7 +1260,6 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    else
       fdebug = TBufferJSON::ToJSON(&fnames, TBufferJSON::kNoSpaces);
 
-   const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
    TString jsrootsysdflt;
    if (!jsrootsys) {
       jsrootsysdflt = TROOT::GetDataDir() + "/js";
@@ -1215,7 +1270,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt5/Qt6 can be used here
+   RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt6 can be used here
    if (!CheckIfCanProduceImages(args)) {
       R__LOG_ERROR(WebGUILog()) << "Fail to detect supported browsers for image production";
       return false;
