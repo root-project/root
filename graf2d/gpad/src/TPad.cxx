@@ -5055,6 +5055,13 @@ void TPad::Print(const char *filename, Option_t *option)
       return;
    }
 
+   // to create HTML file web-based canvas functionality is invoked
+   if (strstr(opt, "html")) {
+      auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
+      gROOT->ProcessLine(cmd);
+      return;
+   }
+
    if (!GetCanvas()->IsBatch() && GetPainter())
       GetPainter()->SelectDrawable(GetCanvasID());
 
