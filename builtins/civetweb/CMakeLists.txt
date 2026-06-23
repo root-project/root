@@ -65,12 +65,25 @@ else()
   set(ROOT_SSL_API "-DCIVETWEB_ENABLE_SSL=OFF")
 endif()
 if(NOT MSVC)
-  set(ROOT_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_X_DOM_SOCKET")
+  set(ROOT_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_X_DOM_SOCKET") # TODO remove this workaround once it's 1.17
 else()
   set(ROOT_C_FLAGS ${CMAKE_C_FLAGS})
 endif()
 if (CMAKE_OSX_SYSROOT)
   set(ROOT_C_FLAGS "${ROOT_C_FLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
+endif()
+
+# If zlib is not builtin, the string will be empty, nothing special to be 
+# done: we rely on libpng CMake to find zlib.
+# If zlib is builtin, we need to direct the builtin libpng to it.
+# For that, the libpng recommended way (see their CMakeLists)
+# is to use the CMake ZLIB_ROOT variable, which has nothing to do with ROOT 
+# despite the name: it's a standard CMake convention to direct the search of
+# the find macro.
+# Therefore we set it to the prefix path of the builtin zlib in ROOT's 
+# build directory.
+if(builtin_zlib)
+  set(ZLIB_ROOT_OPTION "-DZLIB_ROOT=${ROOT_ZLIB_PREFIX}")
 endif()
 
 ExternalProject_Add(BUILTIN_CIVETWEB
@@ -106,11 +119,14 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
     -DBUILD_SHARED_LIBS:BOOL=FALSE
     -DBUILD_TESTING=FALSE
-    -DCIVETWEB_ENABLE_ASAN=OFF # If set to ON, you need to set below link_library interface to UBSAN libs
-    -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF # If set to ON, you need to set below link_library interface to CMAKE_DL_LIBS
     -DCIVETWEB_BUILD_TESTING=FALSE
-    -DCIVETWEB_ENABLE_ZLIB=ON
+    -DCIVETWEB_ENABLE_ASAN=OFF # If set to ON, you need to set below link_library interface to UBSAN libs
+    -DCIVETWEB_ENABLE_CXX=ON
+    ${ROOT_SSL_API}
+    -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF # If set to ON, you need to set below link_library interface to CMAKE_DL_LIBS
     -DCIVETWEB_ENABLE_WEBSOCKETS=ON
+    -DCIVETWEB_ENABLE_X_DOM_SOCKET=ON # Will only work starting from 1.17
+    -DCIVETWEB_ENABLE_ZLIB=ON
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     -DOPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}
@@ -125,7 +141,9 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     #-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
     #-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     # -DCMAKE_INSTALL_RPATH:STRING=${rpath_origin}
-    ${ROOT_SSL_API}
+    -DZLIB_LIBRARY=${ZLIB_LIBRARIES}
+    -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
+    ${ZLIB_ROOT_OPTION}
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_CIVETWEB_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_CIVETWEB_BUILD_COMMAND_FLAGS} --target install
   BUILD_BYPRODUCTS
