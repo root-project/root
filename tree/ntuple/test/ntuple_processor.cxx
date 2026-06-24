@@ -4,6 +4,12 @@
 
 #include <TMemFile.h>
 
+#include <array>
+
+#include <cstdio>
+
+#include <tuple>
+
 TEST(RNTupleProcessor, EmptyNTuple)
 {
    FileRaii fileGuard("test_ntuple_processor_empty.root");
@@ -952,3 +958,181 @@ TEST_F(GH16805ProcessorTest, JoinReading)
    EXPECT_EQ(20u, joinedAll->GetNEntriesProcessed());
 }
 
+using GH20033ProcessorConfig = std::tuple<bool, bool, bool, bool>;
+
+class GH20033ProcessorTest : public testing::TestWithParam<GH20033ProcessorConfig> {
+protected:
+
+   const std::array<std::string, 2> fStepZeroFiles{
+      "gh20033_rntuple_stepzero_0.root",
+      "gh20033_rntuple_stepzero_1.root"
+   };
+
+   // Muut analyysivaiheet omissa tiedostoissaan
+   const std::string fStepOneFile = "gh20033_rntuple_stepone.root";
+   const std::string fStepTwoFile = "gh20033_rntuple_steptwo.root";
+   const std::string fStepThreeFile = "gh20033_rntuple_stepthree.root";
+   const std::string fStepFourFile = "gh20033_rntuple_stepfour.root";
+
+   // Luo stepZero-RNTuplen ja täyttää sen testidatalla
+   static void WriteStepZero(const std::string &fileName, int begin, int end)
+   {
+      auto model = RNTupleModel::Create();
+
+      auto stepZeroBr1 = model->MakeField<int>("stepZeroBr1");
+      auto stepZeroBr2 = model->MakeField<int>("stepZeroBr2");
+      auto value = model->MakeField<int>("value");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "stepzero", fileName);
+
+      for (int i = begin; i < end; ++i) {
+         *stepZeroBr1 = i;
+         *stepZeroBr2 = 2 * i;
+         *value = i;
+         writer->Fill();
+      }
+   }
+
+   static void WriteStepFile(const std::string &fileName,
+                             std::string_view ntupleName,
+                             std::string_view fieldName,
+                             int offset)
+   {
+      auto model = RNTupleModel::Create();
+
+      auto field = model->MakeField<int>(std::string(fieldName));
+
+      auto value = model->MakeField<int>("value");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
+
+      for (int i = 0; i < 20; ++i) {
+         *field = offset + i;
+         *value = offset + i;
+         writer->Fill();
+      }
+   }
+
+   void SetUp() override
+   {
+
+      WriteStepZero(fStepZeroFiles[0], 0, 10);
+      WriteStepZero(fStepZeroFiles[1], 10, 20);
+
+      WriteStepFile(fStepOneFile, "stepone", "stepOneBr1", 100);
+      WriteStepFile(fStepTwoFile, "steptwo", "stepTwoBr1", 200);
+      WriteStepFile(fStepThreeFile, "stepthree", "stepThreeBr1", 300);
+      WriteStepFile(fStepFourFile, "stepfour", "stepFourBr1", 400);
+   }
+
+   void TearDown() override
+   {
+      for (const auto &fileName : fStepZeroFiles)
+         std::remove(fileName.c_str());
+
+      std::remove(fStepOneFile.c_str());
+      std::remove(fStepTwoFile.c_str());
+      std::remove(fStepThreeFile.c_str());
+      std::remove(fStepFourFile.c_str());
+   }
+
+   std::unique_ptr<RNTupleProcessor> CreateStepProcessor(std::string_view ntupleName,
+                                                       const std::string &fileName,
+                                                       bool useChain)
+   {
+      if (useChain) {
+         std::vector<RNTupleOpenSpec> specs{{std::string(ntupleName), fileName}};
+         return RNTupleProcessor::CreateChain(specs, std::string(ntupleName));
+      }
+
+      return RNTupleProcessor::Create({std::string(ntupleName), fileName}, std::string(ntupleName));
+   }
+
+   std::unique_ptr<RNTupleProcessor> CreateJoinedProcessor()
+   {
+      std::vector<RNTupleOpenSpec> stepZeroSpecs{
+         {"stepzero", fStepZeroFiles[0]},
+         {"stepzero", fStepZeroFiles[1]}
+      };
+
+      auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
+
+      const auto &[chainStepOne, chainStepTwo, chainStepThree, chainStepFour] = GetParam();
+
+      auto stepOneProc = CreateStepProcessor("stepone", fStepOneFile, chainStepOne);
+      auto stepTwoProc = CreateStepProcessor("steptwo", fStepTwoFile, chainStepTwo);
+      auto stepThreeProc = CreateStepProcessor("stepthree", fStepThreeFile, chainStepThree);
+      auto stepFourProc = CreateStepProcessor("stepfour", fStepFourFile, chainStepFour);
+
+      auto joined = RNTupleProcessor::CreateJoin(std::move(stepFourProc), std::move(stepThreeProc), {});
+      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepTwoProc), {});
+      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepOneProc), {});
+      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepZeroProc), {});
+
+      return joined;
+   }
+};
+
+TEST_P(GH20033ProcessorTest, Regression)
+{
+   auto proc = CreateJoinedProcessor();
+
+   auto stepFourBr1 = proc->RequestField<int>("stepFourBr1");
+   auto stepThreeBr1 = proc->RequestField<int>("stepthree.stepThreeBr1");
+   auto stepTwoBr1 = proc->RequestField<int>("steptwo.stepTwoBr1");
+   auto stepOneBr1 = proc->RequestField<int>("stepone.stepOneBr1");
+   auto stepZeroBr1 = proc->RequestField<int>("stepzero.stepZeroBr1");
+   auto stepZeroBr2 = proc->RequestField<int>("stepzero.stepZeroBr2");
+
+   std::size_t nEntries = 0;
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(nEntries, idx);
+
+      EXPECT_EQ(static_cast<int>(400 + idx), *stepFourBr1);
+      EXPECT_EQ(static_cast<int>(300 + idx), *stepThreeBr1);
+      EXPECT_EQ(static_cast<int>(200 + idx), *stepTwoBr1);
+      EXPECT_EQ(static_cast<int>(100 + idx), *stepOneBr1);
+      EXPECT_EQ(static_cast<int>(idx), *stepZeroBr1);
+      EXPECT_EQ(static_cast<int>(2 * idx), *stepZeroBr2);
+
+      ++nEntries;
+   }
+
+   EXPECT_EQ(20u, nEntries);
+   EXPECT_EQ(20u, proc->GetNEntriesProcessed());
+}
+
+TEST_P(GH20033ProcessorTest, SameFieldName)
+{
+   auto proc = CreateJoinedProcessor();
+
+   auto stepFourValue = proc->RequestField<int>("value");
+   auto stepThreeValue = proc->RequestField<int>("stepthree.value");
+   auto stepTwoValue = proc->RequestField<int>("steptwo.value");
+   auto stepOneValue = proc->RequestField<int>("stepone.value");
+   auto stepZeroValue = proc->RequestField<int>("stepzero.value");
+
+   std::size_t nEntries = 0;
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(nEntries, idx);
+
+      EXPECT_EQ(static_cast<int>(400 + idx), *stepFourValue);
+      EXPECT_EQ(static_cast<int>(300 + idx), *stepThreeValue);
+      EXPECT_EQ(static_cast<int>(200 + idx), *stepTwoValue);
+      EXPECT_EQ(static_cast<int>(100 + idx), *stepOneValue);
+      EXPECT_EQ(static_cast<int>(idx), *stepZeroValue);
+
+      ++nEntries;
+   }
+
+   EXPECT_EQ(20u, nEntries);
+   EXPECT_EQ(20u, proc->GetNEntriesProcessed());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+   CreateVsCreateChain,
+   GH20033ProcessorTest,
+   testing::Combine(testing::Bool(), testing::Bool(), testing::Bool(), testing::Bool())
+);
