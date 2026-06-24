@@ -26,6 +26,7 @@
                            <items>
                               <MenuItem text="{/CanvasName}.png" tooltip="Creates PNG snapshot of canvas"/>
                               <MenuItem text="{/CanvasName}.svg" tooltip="Creates SVG snapshot of canvas"/>
+                              <MenuItem text="{/CanvasName}.html" tooltip="Creates HTML snapshot of canvas"/>
                               <MenuItem text="{/CanvasName}.jpeg" tooltip="Creates JPEG snapshot of canvas"/>
                               <MenuItem text="{/CanvasName}.webp" tooltip="Creates WEBP snapshot of canvas"/>
                               <MenuItem text="{/CanvasName}.pdf" enabled="{/isRoot6}" tooltip="Create PDF snapshot of canvas"/>

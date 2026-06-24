@@ -1922,7 +1922,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          int filelen = -1;
 
-         if (filename.Index(".svg") != kNPOS) {
+         if ((filename.Index(".svg") != kNPOS) || (filename.Index(".html") != kNPOS)) {
             // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
             ofs << img;
             filelen = strlen(img);
