@@ -123,6 +123,7 @@ enum ERootCanvasCommands {
    kFileSaveAsPS,
    kFileSaveAsEPS,
    kFileSaveAsPDF,
+   kFileSaveAsHTML,
    kFileSaveAsSVG,
    kFileSaveAsGIF,
    kFileSaveAsJPG,
@@ -216,6 +217,7 @@ static const char *gSaveAsTypes[] = { "PDF",          "*.pdf",
                                       "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
                                       "XML",          "*.xml",
+                                      "HTML",         "*.html",
                                       "XPM",          "*.xpm",
                                       "TIFF",         "*.tiff",
                                       "XCF",          "*.xcf",
@@ -233,7 +235,7 @@ static ToolBarData_t gToolBarData[] = {
    { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  0 },
    { "",               "",                 kFALSE,    -1,              0 },
    { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    0 },
-   { "browser.xpm",    "Browser",          kFALSE,    kToolsBrowser, 0 },
+   { "browser.xpm",    "Browser",          kFALSE,    kToolsBrowser,   0 },
    { 0,                0,                  kFALSE,    0,               0 }
 };
 
@@ -385,6 +387,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(TString::Format("%s.&ps",  name), kFileSaveAsPS);
    fFileSaveMenu->AddEntry(TString::Format("%s.&eps", name), kFileSaveAsEPS);
    fFileSaveMenu->AddEntry(TString::Format("%s.p&df", name), kFileSaveAsPDF);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&html", name), kFileSaveAsHTML);
    fFileSaveMenu->AddEntry(TString::Format("%s.&svg", name), kFileSaveAsSVG);
    fFileSaveMenu->AddEntry(TString::Format("%s.&tex", name), kFileSaveAsTEX);
    fFileSaveMenu->AddEntry(TString::Format("%s.&gif", name), kFileSaveAsGIF);
@@ -936,6 +939,7 @@ again:
                             fn.EndsWith(".ps")   ||
                             fn.EndsWith(".eps")  ||
                             fn.EndsWith(".pdf")  ||
+                            fn.EndsWith(".html") ||
                             fn.EndsWith(".svg")  ||
                             fn.EndsWith(".tex")  ||
                             fn.EndsWith(".gif")  ||
@@ -983,6 +987,9 @@ again:
                      break;
                   case kFileSaveAsPDF:
                      fCanvas->SaveAs(".pdf");
+                     break;
+                  case kFileSaveAsHTML:
+                     fCanvas->SaveAs(".html");
                      break;
                   case kFileSaveAsSVG:
                      fCanvas->SaveAs(".svg");
