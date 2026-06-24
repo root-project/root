@@ -8,6 +8,7 @@
 #include "RBinIndex.hxx"
 #include "RBinIndexRange.hxx"
 #include "RCategoricalAxis.hxx"
+#include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
 #include "RSliceSpec.hxx"
 #include "RVariableBinAxis.hxx"
@@ -76,6 +77,22 @@ public:
       } else {
          throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
       }
+   }
+
+   /// \return true if the bin index is valid
+   bool IsValidIndex(RBinIndex index) const
+   {
+      RLinearizedIndex linIndex;
+      if (auto *regular = GetRegularAxis()) {
+         linIndex = regular->GetLinearizedIndex(index);
+      } else if (auto *variable = GetVariableBinAxis()) {
+         linIndex = variable->GetLinearizedIndex(index);
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         linIndex = categorical->GetLinearizedIndex(index);
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+      return linIndex.fValid;
    }
 
    /// Get the range of all normal bins.
