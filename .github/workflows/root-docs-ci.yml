@@ -142,17 +142,17 @@ jobs:
         EOS_DIR_NAME="${EOS_DIR_NAME/-/}"
         echo "Uploading to the directory: ${EOS_DIR_NAME}"
         failure=0
-        echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
-        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-        cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
-        rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
-        rm -rf *.svg
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
+        echo "${RWEBEOS_KT}" | base64 -d > "${KT_FILE_NAME}"
+        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt "${KT_FILE_NAME}"
+        cd "${DOC_DIR}/html/"
+        xrdcp --parallel 64 -rf ./*.html "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME}" || failure=1
+        rm -rf ./*.html
+        xrdcp --parallel 64 -rf ./*.svg "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME}" || failure=1
+        rm -rf ./*.svg
+        xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME}" || failure=1
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME} || failure=1
+        xrdcp --parallel 64 -rf ./ "${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${EOS_DIR_NAME}" || failure=1
         cd ..
-        xrdcp -rf ${TAR_FILE} ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
-        exit $failure
+        xrdcp -rf "${TAR_FILE}" "${EOS_ENDPOINT}/${EOS_BASE_PATH}/download" || failure=1
+        exit "$failure"
