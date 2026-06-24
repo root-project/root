@@ -431,7 +431,7 @@ public:
       return values;
    }
 
-   void Parse(const char **args, std::size_t nArgs)
+   void Parse(const char *const *const args, std::size_t nArgs)
    {
       bool forcePositional = false;
 
