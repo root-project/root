@@ -1202,6 +1202,8 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
          std::ofstream ofs(fnames[n]);
          ofs << jsons[n];
          fmts[n].clear();
+         ::Info("ProduceImages", "JSON file %s size %d bytes has been created", fnames[n].c_str(), (int) jsons[n].length());
+
       } else if (fmts[n] == "html") {
          bool is_multi_html = (num_non_empty_fmts == 1) && (num_non_empty_files == 1) && (jsons.size() > 1) && (n == 0);
 
@@ -1275,6 +1277,8 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
          ofs << "  </script>\n"
                 "</body>\n"
                 "</html>\n";
+
+         ::Info("ProduceImages", "HTML file %s size %d bytes has been created", fnames[n].c_str(), (int) ofs.tellp());
 
          fmts[n].clear();
          if (is_multi_html)
