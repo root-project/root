@@ -7,7 +7,10 @@ import { getColor, addColor } from './colors.mjs';
 const prSVG = 'data:image/svg+xml;charset=utf-8,',
 /** @summary Standard prefix for JSON file context as data url
  * @private */
-      prJSON = 'data:application/json;charset=utf-8,';
+      prJSON = 'data:application/json;charset=utf-8,',
+   /** @summary Standard prefix for HTML file context as data url
+    * @private */
+      prHTML = 'data:text/html;charset=utf-8,';
 
 
 /** @summary Returns visible rect of element
@@ -992,6 +995,6 @@ function getBoxDecorations(xx, yy, ww, hh, bmode, pww, phh) {
 }
 
 
-export { prSVG, prJSON, getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
+export { prSVG, prJSON, prHTML, getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG, getBoxDecorations,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

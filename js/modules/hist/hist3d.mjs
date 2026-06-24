@@ -609,38 +609,46 @@ function render3D(tmout) {
 function getRenderer() { return this.renderer; }
 
 /** @summary Check is 3D drawing need to be resized
+  * @desc If @par is_main === false, return last resize result called by main painter
   * @private */
-function resize3D() {
+function resize3D(is_main) {
+   if (is_main === false)
+      return this.$last_resize_3d;
+
+   let res = true;
+
    const sz = this.getSizeFor3d(this.access3dKind());
 
    this.apply3dSize(sz);
 
    if ((this.scene_width === sz.width) && (this.scene_height === sz.height))
-      return false;
+      res = false;
+   else if ((sz.width < 10) || (sz.height < 10))
+      res = false;
+   else {
+      this.scene_width = sz.width;
+      this.scene_height = sz.height;
 
-   if ((sz.width < 10) || (sz.height < 10))
-      return false;
+      this.camera.aspect = this.scene_width / this.scene_height;
+      this.camera.updateProjectionMatrix();
 
-   this.scene_width = sz.width;
-   this.scene_height = sz.height;
+      this.renderer.setSize(this.scene_width, this.scene_height);
 
-   this.camera.aspect = this.scene_width / this.scene_height;
-   this.camera.updateProjectionMatrix();
+      const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width / sz.height * this.size_z3d) : this.size_z3d,
+            x3d = xy3d * this.x3dscale,
+            y3d = xy3d * this.y3dscale;
 
-   this.renderer.setSize(this.scene_width, this.scene_height);
-
-   const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width / sz.height * this.size_z3d) : this.size_z3d,
-         x3d = xy3d * this.x3dscale,
-         y3d = xy3d * this.y3dscale;
-
-   if ((Math.abs(x3d - this.size_x3d) > 0.15 * this.size_z3d) || (Math.abs(y3d - this.size_y3d) > 0.15 * this.size_z3d)) {
-      this.size_x3d = x3d;
-      this.size_y3d = y3d;
-      this.control?.position0?.copy(getCameraDefaultPosition(this, true));
-      return 1; // indicate significant resize
+      if ((Math.abs(x3d - this.size_x3d) > 0.15 * this.size_z3d) || (Math.abs(y3d - this.size_y3d) > 0.15 * this.size_z3d)) {
+         this.size_x3d = x3d;
+         this.size_y3d = y3d;
+         this.control?.position0?.copy(getCameraDefaultPosition(this, true));
+         res = 1; // indicate significant resize
+      }
    }
+   if (is_main === true)
+      this.$last_resize_3d = res;
 
-   return true;
+   return res;
 }
 
 /** @summary Highlight bin in frame painter 3D drawing
@@ -2202,7 +2210,12 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    handle.grz_min = main_grz_min;
    handle.grz_max = main_grz_max;
 
+   const drawOnlyLines = !is_v7 && !palette && painter.options.Same && painter.getMainPainter()?.draw_content &&
+                         ((painter.options.Surf === 1) || (painter.options.Surf === 13));
+
    buildSurf3D(histo, handle, ilevels, (lvl, pos, normindx) => {
+      if (drawOnlyLines)
+         return;
       const geometry = createLegoGeom(painter, pos, null, handle.i2 - handle.i1, handle.j2 - handle.j1),
             normals = geometry.getAttribute('normal').array;
 
@@ -2278,7 +2291,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                       ? new THREE.LineDashedMaterial({ color: 0x0, dashSize: 2, gapSize: 2 })
                       : new THREE.LineBasicMaterial(getMaterialArgs(color));
       } else
-         material = new THREE.LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth }));
+         material = new THREE.LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth, depthTest: !drawOnlyLines }));
 
 
       const line = createLineSegments(convertLegoBuf(painter, lpos, handle.i2 - handle.i1, handle.j2 - handle.j1), material);
@@ -2294,8 +2307,9 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
       // get levels
       const levels2 = painter.getContourLevels(), // init contour
-            palette2 = painter.getHistPalette();
-      let lastcolindx = -1, layerz = main_grz_max;
+            palette2 = painter.getHistPalette(),
+            meshes = [];
+      let lastcolindx = -1, layerz1 = main_grz_max, layerz2 = main_grz_max;
 
       buildHist2dContour(histo, handle, levels2, palette2, (colindx, xp, yp, iminus, iplus) => {
          // no need for duplicated point
@@ -2319,32 +2333,65 @@ function drawBinsSurf3D(painter, is_v7 = false) {
             return;
 
          if ((lastcolindx < 0) || (lastcolindx !== colindx)) {
+            if (lastcolindx >= 0) {
+               layerz1 += 5e-5 * main_grz_max; // change layers Z
+               layerz2 -= 5e-5 * main_grz_max;
+            }
             lastcolindx = colindx;
-            layerz += 5e-5 * main_grz_max; // change layers Z
          }
 
-         const pos = new Float32Array(faces.length * 9),
-               norm = new Float32Array(faces.length * 9);
+         const pos1 = new Float32Array(faces.length * 9),
+               norm1 = new Float32Array(faces.length * 9);
          let indx = 0;
 
          for (let n = 0; n < faces.length; ++n) {
             const face = faces[n];
             for (let v = 0; v < 3; ++v) {
                const pnt = pnts[face[v]];
-               pos[indx] = pnt.x;
-               pos[indx + 1] = pnt.y;
-               pos[indx + 2] = layerz;
-               norm[indx] = 0;
-               norm[indx + 1] = 0;
-               norm[indx + 2] = 1;
+               pos1[indx] = pnt.x;
+               pos1[indx + 1] = pnt.y;
+               pos1[indx + 2] = layerz1;
+               norm1[indx] = 0;
+               norm1[indx + 1] = 0;
+               norm1[indx + 2] = 1;
 
                indx += 3;
             }
          }
 
-         const geometry = createLegoGeom(painter, pos, norm, handle.i2 - handle.i1, handle.j2 - handle.j1),
-               material = new THREE.MeshBasicMaterial(getMaterialArgs(palette2.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false })),
-               mesh = new THREE.Mesh(geometry, material);
+         const geometry1 = createLegoGeom(painter, pos1, norm1, handle.i2 - handle.i1, handle.j2 - handle.j1),
+               material = new THREE.MeshBasicMaterial(getMaterialArgs(palette2.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false }));
+
+         meshes.push(new THREE.Mesh(geometry1, material));
+
+         // no need to create second layer
+         if (layerz1 === layerz2)
+            return;
+
+         const pos2 = new Float32Array(faces.length * 9),
+               norm2 = new Float32Array(faces.length * 9);
+         indx = 0;
+
+         for (let n = 0; n < faces.length; ++n) {
+            const face = faces[n];
+            for (let v = 0; v < 3; ++v) {
+               const pnt = pnts[face[v]];
+               pos2[indx] = pnt.x;
+               pos2[indx + 1] = pnt.y;
+               pos2[indx + 2] = layerz2;
+               norm2[indx] = 0;
+               norm2[indx + 1] = 0;
+               norm2[indx + 2] = -1;
+
+               indx += 3;
+            }
+         }
+
+         const geometry2 = createLegoGeom(painter, pos2, norm2, handle.i2 - handle.i1, handle.j2 - handle.j1);
+         meshes.unshift(new THREE.Mesh(geometry2, material));
+      });
+
+      meshes.forEach(mesh => {
          mesh.painter = painter;
          fp.add3DMesh(mesh);
       });
