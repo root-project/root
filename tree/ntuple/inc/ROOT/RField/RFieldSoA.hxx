@@ -81,6 +81,9 @@ class RSoAField : public RFieldBase {
    RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
    RSoAField(std::string_view fieldName, TClass *clSoA);
 
+   /// Called during construction, picks up the (nested) member fields of the underlying record type(s)
+   void CollectRecordMemberFields();
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
