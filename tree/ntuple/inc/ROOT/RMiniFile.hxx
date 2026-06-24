@@ -156,9 +156,6 @@ private:
       /// aligned to kBlockAlign...
       static constexpr std::size_t kHeaderBlockSize = 4096;
 
-      /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
-      bool fDirectIO = false;
-
       /// Data that is shared between a "main" RImplSimple and all its clones.
       /// Note that only the main file will write the header and footer, while all the clones are only
       /// used to (sequentially) push data into the same underlying file from multiple locations.
@@ -169,6 +166,8 @@ private:
          std::uint64_t fFilePos = 0;
          /// Keeps track of the next key offset
          std::uint64_t fKeyOffset = 0;
+         /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
+         bool fDirectIO = false;
 
          // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
          unsigned char *fHeaderBlock = nullptr;
