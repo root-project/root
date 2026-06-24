@@ -63,8 +63,11 @@ class RSoAField : public RFieldBase {
    };
 
    TClass *fSoAClass = nullptr;
-   std::vector<RFieldBase *> fRecordMemberFields; ///< Direct access to the member fields of the underlying record
-   /// The offset of the RVec members in the SoA type in the order of subfields of the underlying record type.
+   /// Direct access to the member fields of the underlying record. In case of a nested SoA type, this vector
+   /// contains the contents of the inner fRecordMemberFields, too. Effectively, this record will contain all the
+   /// fields of the underlying record type that correspond to terminal RVec members in a nested SoA type.
+   std::vector<RFieldBase *> fRecordMemberFields;
+   /// The offset of the RVec members in the SoA type in the same order as fRecordMemberFields.
    /// In particular, the order is not necessarily the same then the order of RVec members in the SoA class.
    std::vector<std::size_t> fSoAMemberOffsets;
    ///< A deleter returned by each record member's GetDeleter()

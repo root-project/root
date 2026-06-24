@@ -688,19 +688,19 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string
 
 void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 {
-   fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
+   auto recordSubFields = fSubfields[0]->GetMutableSubfields();
 
-   std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
-   fRecordMemberDeleters.reserve(fRecordMemberFields.size());
-   recordFieldNameToIdx.reserve(fRecordMemberFields.size());
-   for (std::size_t i = 0; i < fRecordMemberFields.size(); ++i) {
-      const RFieldBase *f = fRecordMemberFields[i];
-      assert(!f->GetFieldName().empty());
+   for (const auto f : recordSubFields) {
       if (f->GetFieldName()[0] == ':') {
          throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
       }
-      recordFieldNameToIdx[f->GetFieldName()] = i;
-      fRecordMemberDeleters.emplace_back(GetDeleterOf(*f));
+   }
+
+   // Build map name --> index in recordSubFields vector
+   std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
+   recordFieldNameToIdx.reserve(recordSubFields.size());
+   for (std::size_t i = 0; i < recordSubFields.size(); ++i) {
+      recordFieldNameToIdx[recordSubFields[i]->GetFieldName()] = i;
    }
 
    const auto *bases = fSoAClass->GetListOfBases();
@@ -714,7 +714,6 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
       throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
    }
 
-   fSoAMemberOffsets.resize(fRecordMemberFields.size());
    unsigned int nMembers = 0;
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
       if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())
@@ -725,33 +724,36 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
       }
 
       const std::string typeName{dataMember->GetTrueTypeName()};
-      auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
-      auto vecFieldPtr = dynamic_cast<RRVecField *>(subField.get());
-      if (!vecFieldPtr) {
-         throw RException(R__FAIL("invalid field type in SoA class: " + subField->GetTypeName()));
-      }
-      subField.release();
-      auto vecField = std::unique_ptr<RRVecField>(vecFieldPtr);
+      auto dmField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
 
-      auto itr = recordFieldNameToIdx.find(vecField->GetFieldName());
+      auto itr = recordFieldNameToIdx.find(dmField->GetFieldName());
       if (itr == recordFieldNameToIdx.end()) {
-         throw RException(R__FAIL(std::string("unexpected SoA member: ") + vecField->GetFieldName()));
+         throw RException(R__FAIL(std::string("unexpected SoA member: ") + dmField->GetFieldName()));
       }
-      const RFieldBase *memberField = fRecordMemberFields[itr->second];
-      if (vecField->begin()->GetTypeName() != memberField->GetTypeName() ||
-          vecField->begin()->GetTypeAlias() != memberField->GetTypeAlias()) {
-         const std::string leftType =
-            vecField->begin()->GetTypeName() +
-            (vecField->begin()->GetTypeAlias().empty() ? "" : " [" + vecField->begin()->GetTypeAlias() + "]");
-         const std::string rightType =
-            memberField->GetTypeName() +
-            (memberField->GetTypeAlias().empty() ? "" : " [" + memberField->GetTypeAlias() + "]");
-         throw RException(R__FAIL(std::string("SoA member type mismatch: ") + vecField->GetFieldName() + " (" +
-                                  leftType + " vs. " + rightType + ")"));
+      auto underlyingField = recordSubFields[itr->second];
+
+      if (dynamic_cast<RSoAField *>(dmField.get())) {
+         throw RException(R__FAIL("nested SoA members currently unsupported"));
+      } else if (auto vecField = dynamic_cast<RRVecField *>(dmField.get())) {
+         if (vecField->begin()->GetTypeName() != underlyingField->GetTypeName() ||
+             vecField->begin()->GetTypeAlias() != underlyingField->GetTypeAlias()) {
+            const std::string leftType =
+               vecField->begin()->GetTypeName() +
+               (vecField->begin()->GetTypeAlias().empty() ? "" : " [" + vecField->begin()->GetTypeAlias() + "]");
+            const std::string rightType =
+               underlyingField->GetTypeName() +
+               (underlyingField->GetTypeAlias().empty() ? "" : " [" + underlyingField->GetTypeAlias() + "]");
+            throw RException(R__FAIL(std::string("SoA member type mismatch: ") + vecField->GetFieldName() + " (" +
+                                     leftType + " vs. " + rightType + ")"));
+         }
+
+         fRecordMemberFields.emplace_back(underlyingField);
+         fRecordMemberDeleters.emplace_back(GetDeleterOf(*underlyingField));
+         fSoAMemberOffsets.emplace_back(dataMember->GetOffset());
+      } else {
+         throw RException(R__FAIL("invalid field type in SoA class: " + dmField->GetTypeName()));
       }
 
-      assert(itr->second < fSoAMemberOffsets.size());
-      fSoAMemberOffsets[itr->second] = dataMember->GetOffset();
       nMembers++;
    }
    if (recordFieldNameToIdx.size() != nMembers) {

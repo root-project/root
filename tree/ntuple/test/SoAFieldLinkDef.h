@@ -25,4 +25,9 @@
 #pragma link C++ class RecordComplex+;
 #pragma link C++ options=rntupleSoARecord(RecordComplex) class SoAComplex+;
 
+#pragma link C++ class RecordProperties+;
+#pragma link C++ class RecordDot+;
+#pragma link C++ options=rntupleSoARecord(RecordProperties) class SoAProperties+;
+#pragma link C++ options=rntupleSoARecord(RecordDot) class SoADot+;
+
 #endif // __CLING__

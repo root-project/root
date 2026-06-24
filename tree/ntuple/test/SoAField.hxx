@@ -114,4 +114,34 @@ struct SoAComplex {
    ClassDefNV(SoAComplex, 2);
 };
 
+struct RecordProperties {
+   int fColor;
+   float fSize;
+
+   ClassDefNV(RecordProperties, 2);
+};
+
+struct SoAProperties {
+   ROOT::RVec<int> fColor;
+   ROOT::RVec<float> fSize;
+
+   ClassDefNV(SoAProperties, 2);
+};
+
+struct RecordDot {
+   float fX;
+   float fY;
+   RecordProperties fProperties;
+
+   ClassDefNV(RecordDot, 2);
+};
+
+struct SoADot {
+   ROOT::RVec<float> fX;
+   ROOT::RVec<float> fY;
+   SoAProperties fProperties;
+
+   ClassDefNV(SoADot, 2);
+};
+
 #endif // ROOT_RNTuple_Test_SoAField
