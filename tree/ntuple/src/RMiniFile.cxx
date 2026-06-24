@@ -1045,7 +1045,7 @@ void ROOT::Internal::RNTupleFileWriter::RImplSimple::Flush()
 
    std::size_t lastBlockSize = shared.fFilePos - shared.fBlockOffset;
    R__ASSERT(lastBlockSize <= shared.fBlockSize);
-   if (fDirectIO) {
+   if (shared.fDirectIO) {
       // Round up to a multiple of kBlockAlign.
       lastBlockSize += kBlockAlign - 1;
       lastBlockSize = (lastBlockSize / kBlockAlign) * kBlockAlign;
@@ -1287,9 +1287,9 @@ ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::st
    auto writer =
       std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize(), /*hidden=*/false));
    RImplSimple &fileSimple = std::get<RImplSimple>(writer->fFile);
-   fileSimple.fDirectIO = options.GetUseDirectIO();
    fileSimple.AllocateBuffers(options.GetWriteBufferSize());
    fileSimple.fShared->fFile = fileStream;
+   fileSimple.fShared->fDirectIO = options.GetUseDirectIO();
    writer->fFileName = fileName;
 
    int defaultCompression = options.GetCompression();
@@ -1345,7 +1345,6 @@ ROOT::Internal::RNTupleFileWriter::CloneAsHidden(std::string_view ntupleName) co
          new RNTupleFileWriter(ntupleName, fNTupleAnchor.GetMaxKeySize(), /*hidden=*/true));
       auto &clonedFile = std::get<RImplSimple>(writer->fFile);
       clonedFile.fShared = file->fShared;
-      clonedFile.fDirectIO = file->fDirectIO;
       return writer;
    }
    // TODO: support also RFile-based writers
