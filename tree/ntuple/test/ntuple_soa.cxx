@@ -468,3 +468,18 @@ R"({
    // clang-format on
    EXPECT_EQ(expected, os.str());
 }
+
+TEST(RNTuple, SoANested)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_nested.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      try {
+         model->AddField(std::make_unique<RSoAField>("dot", "SoADot"));
+         FAIL() << "nested SoA structs should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(), testing::HasSubstr("nested SoA members currently unsupported"));
+      }
+   }
+}
