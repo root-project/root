@@ -1,27 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="utf-8">
-      <title>Read a ROOT file</title>
-      <link rel="shortcut icon" href="img/RootIcon.ico"/>
-      <script type="importmap">
-         {
-            "imports": {
-               "jsroot": "./modules/main.mjs"
-            }
-         }
-      </script>
-
-   </head>
-   <body>
-      <div id="simpleGUI" path="https://root.cern/js/files/" files="ct.root;exclusion.root;fillrandom.root;glbox.root;graph.root;hsimple.root;legends.root;rf107.root;stacks.root;zdemo.root">
-         loading modules ...
-      </div>
-      <script type="module">
-         import { buildGUI } from 'jsroot';
-         buildGUI('simpleGUI');
-      </script>
-   </body>
+<head>
+   <meta charset="utf-8">
+   <title>Read a ROOT file</title>
+   <link rel="shortcut icon" href="img/RootIcon.ico"/>
+   <script type="importmap">
+      { "imports": { "jsroot": "./modules/main.mjs" } }
+   </script>
+</head>
+<body>
+   <div id="simpleGUI" path="https://root.cern/js/files/" files="ct.root;exclusion.root;fillrandom.root;glbox.root;graph.root;hsimple.root;legends.root;rf107.root;stacks.root;zdemo.root">
+      loading modules ...
+   </div>
+   <script type="module">
+      import { buildGUI } from 'jsroot';
+      buildGUI('simpleGUI');
+   </script>
+</body>
 </html>
 
 <!--

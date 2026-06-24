@@ -23,10 +23,10 @@ class TH1Painter extends TH1Painter2D {
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         const res = is_main ? fp.resize3D() : false;
+         const res = fp.resize3D(is_main);
          if (res !== 1) {
             full_draw = false;
-            if (res)
+            if (res && is_main)
                fp.render3D();
          }
       }
