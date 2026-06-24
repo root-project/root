@@ -490,8 +490,7 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
                const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
                const auto dstColId = dstColumns[dstReprIdx * dstColCardinality + reprColIdx];
                const auto &dstCol = dstDesc.GetColumnDescriptor(dstColId);
-               if (srcCol.GetType() != dstCol.GetType() ||
-                   srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
+               if (srcCol.GetType() != dstCol.GetType() || srcCol.GetBitsOnStorage() != dstCol.GetBitsOnStorage() ||
                    srcCol.GetValueRange() != dstCol.GetValueRange()) {
                   matches = false;
                   break;
@@ -910,7 +909,9 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
       sealedPages.resize(pages.GetPageInfos().size());
 
       // Each column range potentially has a distinct compression settings
-      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).GetCompressionSettings().value();
+      const auto &columnRange = clusterDesc.GetColumnRange(columnId);
+      assert(!columnRange.IsSuppressed());
+      const auto colRangeCompressionSettings = columnRange.GetCompressionSettings().value();
 
       // Select "merging level". There are 2 levels, from fastest to slowest, depending on the case:
       // L1: compression and encoding of src and dest both match: we can simply copy the page
@@ -1030,9 +1031,12 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       // (columns in the columnIdMap) - (columns in commonColumns which are not suppressed).
       // Note that some suppressed columns may not be in commonColumns because they might not appear at all in the
       // current source.
-      FieldCollectionMap_t<ROOT::DescriptorId_t> activeColumns;
+      FieldCollectionMap_t<ROOT::DescriptorId_t> columnsInCluster;
 
-      // NOTE: just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains
+      using ColumnHandle_t = ROOT::Internal::RPageStorage::ColumnHandle_t;
+
+      // NOTE: `commonColumns` contains all columns that appear *somewhere* both in the src and in the dst.
+      // Just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains
       // it, as it may be a deferred column that only has real data in a future cluster. We need to figure out which
       // columns are actually present in this cluster so we only merge their pages (the missing columns are handled
       // by synthesizing zero pages - see below).
@@ -1048,7 +1052,7 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
             if (!colRange->IsSuppressed()) {
                ++nCommonColumnsInCluster;
                commonColumnSet.emplace(column.fInputId);
-               activeColumns[column.fParentFieldDescriptor].push_back(column.fOutputId);
+               columnsInCluster[column.fParentFieldDescriptor].push_back(column.fOutputId);
                return true;
             }
          }
@@ -1065,7 +1069,7 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       // column we added to the destination so far. However, since it also contains the extraDstColumns, we need to
       // specifically only query those columns that belong to a field that has at least 1 column in commonColumns
       // (remember that commonColumns contains all columns associated to the common fields for this source).
-      for (const auto &[fieldDesc, activeIds] : activeColumns) {
+      for (const auto &[fieldDesc, columnIds] : columnsInCluster) {
          const auto &fieldFQName = mergeData.fSrcDescriptor->GetQualifiedFieldName(fieldDesc->GetId());
          const auto cardinality = fieldDesc->GetColumnCardinality();
          for (auto i = 0u; i < fieldDesc->GetLogicalColumnIds().size(); ++i) {
@@ -1075,8 +1079,8 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
             const auto colIt = mergeData.fColumnIdMap.find(colName);
             assert(colIt != mergeData.fColumnIdMap.end());
             const auto colOutId = colIt->second.fColumnId;
-            if (std::find(activeIds.begin(), activeIds.end(), colOutId) == activeIds.end()) {
-               mergeData.fDestination.CommitSuppressedColumn(ROOT::Internal::RPageStorage::ColumnHandle_t{colOutId});
+            if (std::find(columnIds.begin(), columnIds.end(), colOutId) == columnIds.end()) {
+               mergeData.fDestination.CommitSuppressedColumn(ColumnHandle_t{colOutId});
             }
          }
       }
