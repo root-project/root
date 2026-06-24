@@ -1264,7 +1264,7 @@ TEST(RPageSink, AddColumnRepresentation)
    const auto &desc = sink->GetDescriptor();
    const auto &fdesc = desc.GetFieldDescriptor(fId);
    std::vector<ROOT::Internal::RColumnFormat> newRepr{{ROOT::ENTupleColumnType::kSplitInt16}};
-   sink->AddColumnRepresentation(fdesc, newRepr);
+   sink->AddColumnRepresentation(fdesc, newRepr, 0);
 
    EXPECT_EQ(fdesc.GetColumnCardinality(), 1);
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 2);

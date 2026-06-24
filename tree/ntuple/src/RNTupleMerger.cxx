@@ -331,7 +331,7 @@ struct RCommonField {
 };
 
 /// Maps a column representation from a source to a destination RNTuple.
-/// fSource and fDest are the representation indices of a specific column.
+/// fSource and fDest are the first representation indices of a specific column.
 ///
 /// When we merge fields from different RNTuples, two compatible fields may use different column
 /// representations. When merging their columns we need to make sure that we keep the output
@@ -346,6 +346,10 @@ struct RColReprMapping {
 struct RColReprExtension : RColReprMapping {
    /// The new representations to be added
    std::vector<ROOT::Internal::RColumnFormat> fSourceRepr;
+   /// The first element index that this column had in its source. When adding this representation to the destination,
+   /// the new column will add this amount to the first element index of the 0th-representation column in the
+   /// destination's current cluster.
+   std::uint32_t fOrigFirstElementIndex = 0;
 };
 
 static std::optional<std::uint32_t>
@@ -459,6 +463,7 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
 
    const auto srcNColReprs = srcColumns.size() / srcColCardinality;
    const auto dstNColReprs = dstColumns.size() / dstColCardinality;
+   std::uint32_t nextDstReprIndex = dstNColReprs;
 
    // For each column representation of the source, check if it matches one in the descriptor.
    // If so, and if it doesn't match the destination's repr index, add a mapping for it.
@@ -512,19 +517,23 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
             result.fColReprMappings[&dstField].push_back(
                RColReprMapping{srcReprIdx, static_cast<std::uint32_t>(matchingRepr)});
          } else if (matchingRepr < 0) {
-            // this representation was not found in the destination
-            assert(dstNColReprs < std::numeric_limits<std::uint32_t>::max());
+            // this representation was not found in the destination: add it
             std::vector<ROOT::Internal::RColumnFormat> newRepr;
             newRepr.reserve(srcColCardinality);
+            std::uint32_t firstElemIdx = 0;
             for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
                const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
                const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
+               // All added columns are supposed to have the same firstElementIndex
+               assert(firstElemIdx == 0 || firstElemIdx == srcCol.GetFirstElementIndex());
+               firstElemIdx = srcCol.GetFirstElementIndex();
                auto &reprElement = newRepr.emplace_back();
                reprElement.fType = srcCol.GetType();
                reprElement.fBitWidth = srcCol.GetBitsOnStorage();
                reprElement.fValueRange = srcCol.GetValueRange();
             }
-            RColReprExtension extension{{srcReprIdx, static_cast<std::uint32_t>(dstNColReprs)}, newRepr};
+            RColReprExtension extension{{srcReprIdx, nextDstReprIndex}, newRepr, firstElemIdx};
+            nextDstReprIndex += newRepr.size();
             result.fColReprExtensions[&dstField].push_back(extension);
             result.fColReprMappings[&dstField].push_back(extension);
          }
@@ -876,12 +885,12 @@ ROOT::RResult<void>
 RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
                                   const ROOT::RClusterDescriptor &clusterDesc,
                                   std::span<RColumnMergeInfo> commonColumns,
-                                  const RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
-                                  RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
-                                  ROOT::Internal::RPageAllocator &pageAlloc)
+                                  const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
+                                  const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc)
 {
-   assert(nCommonColumnsInCluster == commonColumnSet.size());
+   const auto nCommonColumnsInCluster = commonColumnSet.size();
    assert(nCommonColumnsInCluster <= commonColumns.size());
+
    if (nCommonColumnsInCluster == 0)
       return ROOT::RResult<void>::Success();
 
@@ -1040,21 +1049,23 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       // it, as it may be a deferred column that only has real data in a future cluster. We need to figure out which
       // columns are actually present in this cluster so we only merge their pages (the missing columns are handled
       // by synthesizing zero pages - see below).
-      size_t nCommonColumnsInCluster = 0;
+
       // Convert columns to a ColumnSet for the ClusterPool query
       RCluster::ColumnSet_t commonColumnSet;
-      commonColumnSet.reserve(nCommonColumnsInCluster);
       // Collect all common columns appearing in this cluster into commonColumnSet and reorganize commonColumns so
       // that those columns are at the start of it (whereas missing columns are at its end).
       // NOTE: it's fine if this scrambles the order of columns: the RNTupleSerializer will sort them by physical ID.
+      int nCommonColumnsInCluster = 0;
       std::partition(commonColumns.begin(), commonColumns.end(), [&](const auto &column) {
          if (const auto *colRange = clusterDesc.TryGetColumnRange(column.fInputId)) {
+            ++nCommonColumnsInCluster;
+            columnsInCluster[column.fParentFieldDescriptor].push_back(column.fOutputId);
             if (!colRange->IsSuppressed()) {
-               ++nCommonColumnsInCluster;
                commonColumnSet.emplace(column.fInputId);
                columnsInCluster[column.fParentFieldDescriptor].push_back(column.fOutputId);
                return true;
             }
+            mergeData.fDestination.CommitSuppressedColumn(ColumnHandle_t{column.fOutputId});
          }
          return false;
       });
@@ -1086,8 +1097,8 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       }
 
       RSealedPageMergeData sealedPageData;
-      auto res = MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, nCommonColumnsInCluster,
-                                    sealedPageData, mergeData, *fPageAlloc);
+      auto res = MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, sealedPageData, mergeData,
+                                    *fPageAlloc);
       if (!res)
          return R__FORWARD_ERROR(res);
 
@@ -1465,7 +1476,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          for (const auto &[fieldDesc, extensions] : colExtensions) {
             auto &mappings = descCmp.fColReprMappings[fieldDesc];
             for (const auto &extension : extensions) {
-               const auto firstColumnId = fDestination->AddColumnRepresentation(*fieldDesc, extension.fSourceRepr);
+               const auto firstColumnId = fDestination->AddColumnRepresentation(*fieldDesc, extension.fSourceRepr,
+                                                                                extension.fOrigFirstElementIndex);
 
                // When adding new column representations to an existing field which is the source of some projected
                // fields, we need to also add new alias columns to those fields so that they can point to the proper

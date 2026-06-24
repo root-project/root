@@ -1164,7 +1164,8 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 
 ROOT::DescriptorId_t
 ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
-                                                             std::span<const RColumnFormat> newRepresentation)
+                                                             std::span<const RColumnFormat> newRepresentation,
+                                                             std::uint32_t addedFirstElementIndex)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -1202,7 +1203,7 @@ ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldD
          .Type(columnRepr.fType)
          .Index(columnIndex)
          // NOTE: marking this column as suppressed with the minus sign
-         .FirstElementIndex(-firstReprColumnRange.GetFirstElementIndex())
+         .FirstElementIndex(-(firstReprColumnRange.GetFirstElementIndex() + addedFirstElementIndex))
          .RepresentationIndex(reprIndex)
          .ValueRange(columnRepr.fValueRange);
       fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
