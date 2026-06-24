@@ -11,3 +11,7 @@ ROOT_ADD_GTEST(TPDF pdfurl.cxx LIBRARIES Gpad)
 if(asimage)
   ROOT_ADD_GTEST(TASImagePDF tasimage_pdf.cxx LIBRARIES Gpad ASImage ZLIB::ZLIB)
 endif()
+
+if(webgui)
+  ROOT_ADD_GTEST(SaveHTML savehtml.cxx LIBRARIES Gpad)
+endif()
