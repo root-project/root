@@ -952,3 +952,160 @@ TEST_F(GH16805ProcessorTest, JoinReading)
    EXPECT_EQ(20u, joinedAll->GetNEntriesProcessed());
 }
 
+// Testiluokka GH20033-regressiotestille
+class GH20033ProcessorTest : public testing::Test {
+protected:
+
+   // StepZero on ketjutettu kahdesta tiedostosta
+   const std::array<std::string, 2> fStepZeroFiles{
+      "gh20033_rntuple_stepzero_0.root",
+      "gh20033_rntuple_stepzero_1.root"
+   };
+
+   // Muut analyysivaiheet omissa tiedostoissaan
+   const std::string fStepOneFile = "gh20033_rntuple_stepone.root";
+   const std::string fStepTwoFile = "gh20033_rntuple_steptwo.root";
+   const std::string fStepThreeFile = "gh20033_rntuple_stepthree.root";
+   const std::string fStepFourFile = "gh20033_rntuple_stepfour.root";
+
+   // Luo stepZero-RNTuplen ja täyttää sen testidatalla
+   static void WriteStepZero(const std::string &fileName, int begin, int end)
+   {
+      auto model = RNTupleModel::Create();
+
+      // Kentät, joita testissä luetaan myöhemmin
+      auto stepZeroBr1 = model->MakeField<int>("stepZeroBr1");
+      auto stepZeroBr2 = model->MakeField<int>("stepZeroBr2");
+      auto value = model->MakeField<int>("value");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "stepzero", fileName);
+
+      // Kirjoita rivit väliltä [begin,end)
+      for (int i = begin; i < end; ++i) {
+         *stepZeroBr1 = i;
+         *stepZeroBr2 = 2 * i;
+         *value = i;
+         writer->Fill();
+      }
+   }
+
+   // Yleinen apufunktio step1-step4 tiedostojen luontiin
+   static void WriteStepFile(const std::string &fileName,
+                             std::string_view ntupleName,
+                             std::string_view branchName,
+                             int offset)
+   {
+      auto model = RNTupleModel::Create();
+
+      // Vaihekohtainen branch
+      auto branch = model->MakeField<int>(std::string(branchName));
+
+      // Sama branch-nimi kaikissa vaiheissa SameBranchName-testiä varten
+      auto value = model->MakeField<int>("value");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
+
+      // Luo 20 tapahtumaa
+      for (int i = 0; i < 20; ++i) {
+         *branch = offset + i;
+         *value = offset + i;
+         writer->Fill();
+      }
+   }
+
+   // Ajetaan ennen jokaista testiä
+   void SetUp() override
+   {
+      // StepZero ketjuna: 0-9 ja 10-19
+      WriteStepZero(fStepZeroFiles[0], 0, 10);
+      WriteStepZero(fStepZeroFiles[1], 10, 20);
+
+      // Muut vaiheet omilla offseteillaan
+      WriteStepFile(fStepOneFile, "stepone", "stepOneBr1", 100);
+      WriteStepFile(fStepTwoFile, "steptwo", "stepTwoBr1", 200);
+      WriteStepFile(fStepThreeFile, "stepthree", "stepThreeBr1", 300);
+      WriteStepFile(fStepFourFile, "stepfour", "stepFourBr1", 400);
+   }
+
+   // Siivoa väliaikaiset ROOT-tiedostot testin jälkeen
+   void TearDown() override
+   {
+      ...
+   }
+
+   // Luo sama join-rakenne kuin GH16805-testissä
+   std::unique_ptr<RNTupleProcessor> CreateJoinedProcessor()
+   {
+      // Ketjutetaan stepZero:n kaksi tiedostoa yhdeksi prosessoriksi
+      std::vector<RNTupleOpenSpec> stepZeroSpecs{
+         {"stepzero", fStepZeroFiles[0]},
+         {"stepzero", fStepZeroFiles[1]}
+      };
+
+      auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
+
+      // Yksittäiset prosessorit muille vaiheille
+      auto stepOneProc = RNTupleProcessor::Create({"stepone", fStepOneFile}, "stepone");
+      auto stepTwoProc = RNTupleProcessor::Create({"steptwo", fStepTwoFile}, "steptwo");
+      auto stepThreeProc = RNTupleProcessor::Create({"stepthree", fStepThreeFile}, "stepthree");
+      auto stepFourProc = RNTupleProcessor::Create({"stepfour", fStepFourFile}, "stepfour");
+
+      // Rakennetaan join-puu vaihe vaiheelta
+      auto joined = RNTupleProcessor::CreateJoin(std::move(stepFourProc), std::move(stepThreeProc), {});
+      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepTwoProc), {});
+      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepOneProc), {});
+      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepZeroProc), {});
+
+      return joined;
+   }
+};
+
+// Tarkistaa että kaikki branchit sisältävät odotetut arvot
+TEST_F(GH20033ProcessorTest, Regression)
+{
+   auto proc = CreateJoinedProcessor();
+
+   // Pyydä branchit prosessorilta
+   auto stepFourBr1 = proc->RequestField<int>("stepFourBr1");
+   auto stepThreeBr1 = proc->RequestField<int>("stepthree.stepThreeBr1");
+   ...
+
+   std::size_t nEntries = 0;
+
+   // Käy kaikki tapahtumat läpi
+   for (auto idx : *proc) {
+
+      // Tarkista että indeksit etenevät oikein
+      EXPECT_EQ(nEntries, idx);
+
+      // Tarkista jokaisen vaiheen arvot
+      EXPECT_EQ(static_cast<int>(400 + idx), *stepFourBr1);
+      ...
+      EXPECT_EQ(static_cast<int>(2 * idx), *stepZeroBr2);
+
+      ++nEntries;
+   }
+
+   // Varmista että kaikki 20 tapahtumaa käsiteltiin
+   EXPECT_EQ(20u, nEntries);
+   EXPECT_EQ(20u, proc->GetNEntriesProcessed());
+}
+
+// Tarkistaa tilanteen jossa kaikissa vaiheissa on branch nimeltä "value"
+TEST_F(GH20033ProcessorTest, SameBranchName)
+{
+   auto proc = CreateJoinedProcessor();
+
+   // Sama branch-nimi eri prosessoreissa
+   auto stepFourValue = proc->RequestField<int>("value");
+   auto stepThreeValue = proc->RequestField<int>("stepthree.value");
+   ...
+
+   // Tarkista että namespace-erottelu toimii oikein
+   for (auto idx : *proc) {
+      ...
+   }
+
+   EXPECT_EQ(20u, nEntries);
+   EXPECT_EQ(20u, proc->GetNEntriesProcessed());
+}
