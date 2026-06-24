@@ -686,34 +686,8 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string
 {
 }
 
-ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection,
-                      false /* isSimple */),
-     fSoAClass(clSoA)
+void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 {
-   static std::once_flag once;
-   std::call_once(once, []() {
-      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "The SoA field is experimental and still under development.";
-   });
-
-   EnsureValidUserClass(fSoAClass, *this, "RSoAField");
-   const auto recordTypeName = ROOT::Internal::GetRNTupleSoARecord(fSoAClass);
-   if (recordTypeName.empty()) {
-      throw ROOT::RException(R__FAIL(std::string("class ") + GetTypeName() +
-                                     " is not marked with the rntupleSoARecord "
-                                     "dictionary option; cannot create corresponding RSoAField."));
-   }
-   try {
-      Attach(std::make_unique<ROOT::RClassField>("_0", recordTypeName));
-   } catch (ROOT::RException &e) {
-      throw RException(R__FAIL("invalid record type of SoA field " + GetTypeName() + " [" + e.what() + "]"));
-   }
-   R__ASSERT(fSoAClass->GetClassVersion() >= 0);
-   if (static_cast<std::uint32_t>(fSoAClass->GetClassVersion()) != fSubfields[0]->GetTypeVersion()) {
-      throw RException(R__FAIL(std::string("version mismatch between SoA type and underlying record type: ") +
-                               std::to_string(fSoAClass->GetClassVersion()) + " vs. " +
-                               std::to_string(fSubfields[0]->GetTypeVersion())));
-   }
    fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
 
    std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
@@ -783,6 +757,38 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    if (recordFieldNameToIdx.size() != nMembers) {
       throw RException(R__FAIL("missing SoA members"));
    }
+}
+
+ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
+   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection,
+                      false /* isSimple */),
+     fSoAClass(clSoA)
+{
+   static std::once_flag once;
+   std::call_once(once, []() {
+      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "The SoA field is experimental and still under development.";
+   });
+
+   EnsureValidUserClass(fSoAClass, *this, "RSoAField");
+   const auto recordTypeName = ROOT::Internal::GetRNTupleSoARecord(fSoAClass);
+   if (recordTypeName.empty()) {
+      throw ROOT::RException(R__FAIL(std::string("class ") + GetTypeName() +
+                                     " is not marked with the rntupleSoARecord "
+                                     "dictionary option; cannot create corresponding RSoAField."));
+   }
+   try {
+      Attach(std::make_unique<ROOT::RClassField>("_0", recordTypeName));
+   } catch (ROOT::RException &e) {
+      throw RException(R__FAIL("invalid record type of SoA field " + GetTypeName() + " [" + e.what() + "]"));
+   }
+   R__ASSERT(fSoAClass->GetClassVersion() >= 0);
+   if (static_cast<std::uint32_t>(fSoAClass->GetClassVersion()) != fSubfields[0]->GetTypeVersion()) {
+      throw RException(R__FAIL(std::string("version mismatch between SoA type and underlying record type: ") +
+                               std::to_string(fSoAClass->GetClassVersion()) + " vs. " +
+                               std::to_string(fSubfields[0]->GetTypeVersion())));
+   }
+
+   CollectRecordMemberFields();
 
    std::string renormalizedAlias;
    if (ROOT::Internal::NeedsMetaNameAsAlias(fSoAClass->GetName(), renormalizedAlias))
