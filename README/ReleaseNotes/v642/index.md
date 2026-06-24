@@ -90,6 +90,20 @@ If the vectorized backend does not work for a given use case, **please report it
 
 ## Graphics and GUI
 
+### Store canvas as HTML file
+
+Now canvas (or several canvases) can be stored in portable HTML file.
+Just call `c1->SaveAs("canvas.html")` or invoke correspondent menu item.
+To store several canvases in single HTML file one can use:
+```cpp
+   auto c1 = new TCanvas("c1", "c1", 4);
+   auto c2 = new TCanvas("c2", "c2", 4);
+   auto c3 = new TCanvas("c3", "c3", 4);
+   TCanvas::SaveAll({c1, c2, c3}, "canvases.html");
+```
+Produced HTML file will include canvas JSON data and JavaScript code to load and display canvas.
+Such file can be loaded locally in any web browser or send as attachment in email to colleagues.
+
 ## Geometry
 
 ## Documentation and Examples
