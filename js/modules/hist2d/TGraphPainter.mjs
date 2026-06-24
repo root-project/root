@@ -69,8 +69,9 @@ class TGraphPainter extends ObjectPainter {
    getHistogram() { return this.getObject()?.fHistogram; }
 
    /** @summary Return true if histogram not present or has dummy ranges (for requested axis) */
-   isDummyHistogram(check_axis) {
-      const histo = this.getHistogram();
+   isDummyHistogram(check_axis, histo = null) {
+      if (!histo)
+         histo = this.getHistogram();
       if (!histo)
          return true;
 
@@ -424,7 +425,7 @@ class TGraphPainter extends ObjectPainter {
      * @desc graph bins should be created when calling this function
      * @param {boolean} [set_x] - set X axis range
      * @param {boolean} [set_y] - set Y axis range */
-   createHistogram(set_x = true, set_y = true) {
+   createHistogram(set_x = true, set_y = true, histo = null) {
       const graph = this.getGraph(),
             xmin = this.xmin,
             margin = this.getHistRangeMargin();
@@ -444,7 +445,8 @@ class TGraphPainter extends ObjectPainter {
          maximum = (1 - margin) * ymax;
 
       const minimum0 = minimum, maximum0 = maximum;
-      let histo = this.getHistogram();
+      if (!histo)
+         histo = this.getHistogram();
 
       if (!this.isScatter() && !histo?.fXaxis.fTimeDisplay) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
@@ -461,7 +463,8 @@ class TGraphPainter extends ObjectPainter {
          histo.fBits |= kNoStats;
          this.#own_histogram = true;
          this.setHistogram(histo);
-      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom) && !this.isDummyHistogram('y')) {
+      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom) &&
+                 !histo.$set_graph_range && !this.isDummyHistogram('y', histo)) {
          minimum = histo.fMinimum;
          maximum = histo.fMaximum;
       }
@@ -488,6 +491,7 @@ class TGraphPainter extends ObjectPainter {
          if (!this.isScatter()) {
             histo.fMinimum = minimum;
             histo.fMaximum = maximum;
+            histo.$set_graph_range = true;
          }
       }
 
@@ -1682,7 +1686,7 @@ class TGraphPainter extends ObjectPainter {
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
-         const histo = this.createHistogram(),
+         const histo = this.createHistogram(true, true, obj.fHistogram),
                hist_painter = this.getMainPainter();
          if (hist_painter?.isSecondary(this)) {
             hist_painter.updateObject(histo, o.Axis);

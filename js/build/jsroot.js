@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/05/2026',
+version_date = '24/06/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8767,7 +8767,10 @@ createRootColors();
 const prSVG = 'data:image/svg+xml;charset=utf-8,',
 /** @summary Standard prefix for JSON file context as data url
  * @private */
-      prJSON = 'data:application/json;charset=utf-8,';
+      prJSON = 'data:application/json;charset=utf-8,',
+   /** @summary Standard prefix for HTML file context as data url
+    * @private */
+      prHTML = 'data:text/html;charset=utf-8,';
 
 
 /** @summary Returns visible rect of element
@@ -81021,6 +81024,13 @@ class JSRootMenu {
 
    /** @summary Add menu header - must be first entry */
    header(name, title) {
+      if (name.length > 25) {
+         if (!title)
+            title = name;
+         else if (isStr(title) && title.indexOf('https://') === 0)
+            title = name + title;
+         name = name.slice(0, 22) + '...';
+      }
       this.add(sHeader + name, undefined, undefined, title);
    }
 
@@ -89160,7 +89170,7 @@ class BrowserLayout {
       if (this.status_layout === 'app')
          return id;
 
-      this.status_layout = new GridDisplay(id, 'horizx4_1213');
+      this.status_layout = new GridDisplay(id, 'horizx4_1231');
 
       const frame_titles = ['object name', 'object title', 'mouse coordinates', 'object info'];
       for (let k = 0; k < 4; ++k) {
@@ -91052,9 +91062,11 @@ class TPadPainter extends ObjectPainter {
       const fmts = ['svg', 'png', 'jpeg', 'webp'];
       if (internals.makePDF)
          fmts.push('pdf');
-      fmts.forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.isCanvas(), `${fname}.${fmt}`)));
+      fmts.forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.isCanvas(), `${fname}.${fmt}`), `Produce ${fmt} image`));
       if (this.isCanvas()) {
          menu.separator();
+         menu.add(`${fname}.html`, () => this.saveAs('html', true, `${fname}.html`), 'Produce html with canvas display');
+         menu.add(`${fname}0.html`, () => this.saveAs('html', false, `${fname}0.html`), 'Produce compact html with canvas display');
          menu.add(`${fname}.json`, () => this.saveAs('json', true, `${fname}.json`), 'Produce JSON with line spacing');
          menu.add(`${fname}0.json`, () => this.saveAs('json', false, `${fname}0.json`), 'Produce JSON without line spacing');
       }
@@ -91711,9 +91723,9 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'webp') || (format === 'pdf')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'html') || (format === 'svg') || (format === 'webp') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
-            if (!res || (format === 'svg'))
+            if (!res || (format === 'svg') || (format === 'html'))
                return res;
             const separ = res.indexOf('base64,');
             return (separ > 0) ? res.slice(separ + 7) : '';
@@ -91931,7 +91943,12 @@ class TPadPainter extends ObjectPainter {
             if (res)
                this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
          } else {
-            const prefix = (kind === 'svg') ? prSVG : (kind === 'json' ? prJSON : '');
+            let prefix = '';
+            switch (kind) {
+               case 'svg': prefix = prSVG; break;
+               case 'json': prefix = prJSON; break;
+               case 'html': prefix = prHTML; break;
+            }
             saveFile(filename, prefix ? prefix + encodeURIComponent(imgdata) : imgdata);
          }
       });
@@ -91951,8 +91968,52 @@ class TPadPainter extends ObjectPainter {
    /** @summary Produce image for the pad
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format, args) {
-      if (file_format === 'json')
-         return isFunc(this.produceJSON) ? this.produceJSON(full_canvas ? 2 : 0) : '';
+      if ((file_format === 'json') || (file_format === 'html')) {
+         const json = isFunc(this.produceJSON) ? this.produceJSON(full_canvas ? 2 : 0) : '';
+         if (!json || (file_format === 'json'))
+            return json;
+         let url = exports.source_dir;
+         if (url.indexOf('http://localhost') === 0) {
+            url = 'https://root.cern/js/';
+            url += version_id ;
+         }
+         return '<!DOCTYPE html>\n' +
+                '<html lang="en">\n' +
+                '<head>\n' +
+                '  <meta charset="utf-8">\n' +
+                '  <title>Dsiplay ROOT canvas</title>\n' +
+                `  <link rel="shortcut icon" href="${url}/img/RootIcon.ico"/>\n` +
+                '  <script type="importmap">\n' +
+                `    { "imports": { "jsroot": "${url}/modules/main.mjs" } }\n` +
+                '  </' + 'script>\n' + // avoid problems with batch production
+                '  <style>\n' +
+                '    body {\n' +
+                '      margin: 0;\n' +
+                '      padding: 0;\n' +
+                '      display: flex;\n' +
+                '      justify-content: center;\n' +
+                '      align-items: center;\n' +
+                '      min-height: 100vh;\n' +
+                '      background-color: #f0f0f0;\n' +
+                '    }\n' +
+                '    .main-draw-box {\n' +
+                '      width: 80%;\n' +
+                '      min-height: 80vh;\n' +
+                '      background-color: white;\n' +
+                '      box-shadow: 0 4px 10px rgba(0,0,0,0.1);\n' +
+                '    }\n' +
+                '  </style>\n' +
+                '</head>\n' +
+                '<body>\n' +
+                '  <div id="drawing" class="main-draw-box"></div>\n' +
+                '  <script type="module">\n' +
+                '    import { parse, draw } from "jsroot";\n' +
+                `    const obj = parse(${json});\n` +
+                '    draw("drawing", obj);\n' +
+                '  </' + 'script>\n' + // avoid problems with batch production
+                '</body>\n' +
+                '</html>\n';
+      }
 
       const use_frame = (full_canvas === 'frame'),
             elem = use_frame ? this.getFrameSvg() : (full_canvas ? this.getCanvSvg() : this.getPadSvg()),
@@ -93169,9 +93230,10 @@ class TCanvasPainter extends TPadPainter {
 
       this.forEachPainterInPad(pp => {
          const pad = pp.getRootPad(true);
-         if (pp.getNumPainters() && pad?.fPrimitives && !pad.fPrimitives.arr.length) {
+         if (pp.getNumPainters() && pad && !pad.fPrimitives?.arr.length) {
+            prims.push(pad, pad.fPrimitives); // remember old value
             // create list of primitives when missing
-            prims.push(pad.fPrimitives);
+            pad.fPrimitives = create$1(clTList);
             pp.forEachPainterInPad(p => {
                // ignore all secondary painters
                if (p.isSecondary())
@@ -93230,7 +93292,8 @@ class TCanvasPainter extends TPadPainter {
          e.hist.fMaximum = e.max;
       });
 
-      prims.forEach(lst => lst.Clear());
+      for (let k = 0; k < prims.length; k += 2)
+         prims[k].fPrimitives = prims[k + 1];
 
       return res;
    }
@@ -99116,7 +99179,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
-      if (!this.isTH2Poly() && this.getPadPainter()?.isCanvas()) {
+      if (!this.isTH2Poly() && !this.isTF1() && this.getPadPainter()?.isCanvas()) {
          let kind = this.#projection_kind || '';
          if (kind)
             kind += this.#projection_widthX;
@@ -102706,38 +102769,46 @@ function render3D(tmout) {
 function getRenderer() { return this.renderer; }
 
 /** @summary Check is 3D drawing need to be resized
+  * @desc If @par is_main === false, return last resize result called by main painter
   * @private */
-function resize3D() {
+function resize3D(is_main) {
+   if (is_main === false)
+      return this.$last_resize_3d;
+
+   let res = true;
+
    const sz = this.getSizeFor3d(this.access3dKind());
 
    this.apply3dSize(sz);
 
    if ((this.scene_width === sz.width) && (this.scene_height === sz.height))
-      return false;
+      res = false;
+   else if ((sz.width < 10) || (sz.height < 10))
+      res = false;
+   else {
+      this.scene_width = sz.width;
+      this.scene_height = sz.height;
 
-   if ((sz.width < 10) || (sz.height < 10))
-      return false;
+      this.camera.aspect = this.scene_width / this.scene_height;
+      this.camera.updateProjectionMatrix();
 
-   this.scene_width = sz.width;
-   this.scene_height = sz.height;
+      this.renderer.setSize(this.scene_width, this.scene_height);
 
-   this.camera.aspect = this.scene_width / this.scene_height;
-   this.camera.updateProjectionMatrix();
+      const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width / sz.height * this.size_z3d) : this.size_z3d,
+            x3d = xy3d * this.x3dscale,
+            y3d = xy3d * this.y3dscale;
 
-   this.renderer.setSize(this.scene_width, this.scene_height);
-
-   const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width / sz.height * this.size_z3d) : this.size_z3d,
-         x3d = xy3d * this.x3dscale,
-         y3d = xy3d * this.y3dscale;
-
-   if ((Math.abs(x3d - this.size_x3d) > 0.15 * this.size_z3d) || (Math.abs(y3d - this.size_y3d) > 0.15 * this.size_z3d)) {
-      this.size_x3d = x3d;
-      this.size_y3d = y3d;
-      this.control?.position0?.copy(getCameraDefaultPosition(this, true));
-      return 1; // indicate significant resize
+      if ((Math.abs(x3d - this.size_x3d) > 0.15 * this.size_z3d) || (Math.abs(y3d - this.size_y3d) > 0.15 * this.size_z3d)) {
+         this.size_x3d = x3d;
+         this.size_y3d = y3d;
+         this.control?.position0?.copy(getCameraDefaultPosition(this, true));
+         res = 1; // indicate significant resize
+      }
    }
+   if (is_main === true)
+      this.$last_resize_3d = res;
 
-   return true;
+   return res;
 }
 
 /** @summary Highlight bin in frame painter 3D drawing
@@ -104299,7 +104370,12 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    handle.grz_min = main_grz_min;
    handle.grz_max = main_grz_max;
 
+   const drawOnlyLines = !is_v7 && !palette && painter.options.Same && painter.getMainPainter()?.draw_content &&
+                         ((painter.options.Surf === 1) || (painter.options.Surf === 13));
+
    buildSurf3D(histo, handle, ilevels, (lvl, pos, normindx) => {
+      if (drawOnlyLines)
+         return;
       const geometry = createLegoGeom(painter, pos, null, handle.i2 - handle.i1, handle.j2 - handle.j1),
             normals = geometry.getAttribute('normal').array;
 
@@ -104375,7 +104451,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                       ? new THREE.LineDashedMaterial({ color: 0x0, dashSize: 2, gapSize: 2 })
                       : new THREE.LineBasicMaterial(getMaterialArgs(color));
       } else
-         material = new THREE.LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth }));
+         material = new THREE.LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth, depthTest: !drawOnlyLines }));
 
 
       const line = createLineSegments(convertLegoBuf(painter, lpos, handle.i2 - handle.i1, handle.j2 - handle.j1), material);
@@ -104391,8 +104467,9 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
       // get levels
       const levels2 = painter.getContourLevels(), // init contour
-            palette2 = painter.getHistPalette();
-      let lastcolindx = -1, layerz = main_grz_max;
+            palette2 = painter.getHistPalette(),
+            meshes = [];
+      let lastcolindx = -1, layerz1 = main_grz_max, layerz2 = main_grz_max;
 
       buildHist2dContour(histo, handle, levels2, palette2, (colindx, xp, yp, iminus, iplus) => {
          // no need for duplicated point
@@ -104416,32 +104493,65 @@ function drawBinsSurf3D(painter, is_v7 = false) {
             return;
 
          if ((lastcolindx < 0) || (lastcolindx !== colindx)) {
+            if (lastcolindx >= 0) {
+               layerz1 += 5e-5 * main_grz_max; // change layers Z
+               layerz2 -= 5e-5 * main_grz_max;
+            }
             lastcolindx = colindx;
-            layerz += 5e-5 * main_grz_max; // change layers Z
          }
 
-         const pos = new Float32Array(faces.length * 9),
-               norm = new Float32Array(faces.length * 9);
+         const pos1 = new Float32Array(faces.length * 9),
+               norm1 = new Float32Array(faces.length * 9);
          let indx = 0;
 
          for (let n = 0; n < faces.length; ++n) {
             const face = faces[n];
             for (let v = 0; v < 3; ++v) {
                const pnt = pnts[face[v]];
-               pos[indx] = pnt.x;
-               pos[indx + 1] = pnt.y;
-               pos[indx + 2] = layerz;
-               norm[indx] = 0;
-               norm[indx + 1] = 0;
-               norm[indx + 2] = 1;
+               pos1[indx] = pnt.x;
+               pos1[indx + 1] = pnt.y;
+               pos1[indx + 2] = layerz1;
+               norm1[indx] = 0;
+               norm1[indx + 1] = 0;
+               norm1[indx + 2] = 1;
 
                indx += 3;
             }
          }
 
-         const geometry = createLegoGeom(painter, pos, norm, handle.i2 - handle.i1, handle.j2 - handle.j1),
-               material = new THREE.MeshBasicMaterial(getMaterialArgs(palette2.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false })),
-               mesh = new THREE.Mesh(geometry, material);
+         const geometry1 = createLegoGeom(painter, pos1, norm1, handle.i2 - handle.i1, handle.j2 - handle.j1),
+               material = new THREE.MeshBasicMaterial(getMaterialArgs(palette2.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false }));
+
+         meshes.push(new THREE.Mesh(geometry1, material));
+
+         // no need to create second layer
+         if (layerz1 === layerz2)
+            return;
+
+         const pos2 = new Float32Array(faces.length * 9),
+               norm2 = new Float32Array(faces.length * 9);
+         indx = 0;
+
+         for (let n = 0; n < faces.length; ++n) {
+            const face = faces[n];
+            for (let v = 0; v < 3; ++v) {
+               const pnt = pnts[face[v]];
+               pos2[indx] = pnt.x;
+               pos2[indx + 1] = pnt.y;
+               pos2[indx + 2] = layerz2;
+               norm2[indx] = 0;
+               norm2[indx + 1] = 0;
+               norm2[indx + 2] = -1;
+
+               indx += 3;
+            }
+         }
+
+         const geometry2 = createLegoGeom(painter, pos2, norm2, handle.i2 - handle.i1, handle.j2 - handle.j1);
+         meshes.unshift(new THREE.Mesh(geometry2, material));
+      });
+
+      meshes.forEach(mesh => {
          mesh.painter = painter;
          fp.add3DMesh(mesh);
       });
@@ -106065,10 +106175,10 @@ class TH1Painter extends TH1Painter$2 {
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         const res = is_main ? fp.resize3D() : false;
+         const res = fp.resize3D(is_main);
          if (res !== 1) {
             full_draw = false;
-            if (res)
+            if (res && is_main)
                fp.render3D();
          }
       }
@@ -106382,10 +106492,10 @@ class TH2Painter extends TH2Painter$2 {
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         const res = is_main ? fp.resize3D() : false;
+         const res = fp.resize3D(is_main);
          if (res !== 1) {
             full_draw = false;
-            if (res)
+            if (res && is_main)
                fp.render3D();
          }
       }
@@ -107099,7 +107209,7 @@ class TH3Painter extends THistPainter {
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         const res = fp.resize3D();
+         const res = fp.resize3D(true);
          if (res !== 1) {
             full_draw = false;
             if (res)
@@ -107346,8 +107456,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    getHistogram() { return this.getObject()?.fHistogram; }
 
    /** @summary Return true if histogram not present or has dummy ranges (for requested axis) */
-   isDummyHistogram(check_axis) {
-      const histo = this.getHistogram();
+   isDummyHistogram(check_axis, histo = null) {
+      if (!histo)
+         histo = this.getHistogram();
       if (!histo)
          return true;
 
@@ -107701,7 +107812,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc graph bins should be created when calling this function
      * @param {boolean} [set_x] - set X axis range
      * @param {boolean} [set_y] - set Y axis range */
-   createHistogram(set_x = true, set_y = true) {
+   createHistogram(set_x = true, set_y = true, histo = null) {
       const graph = this.getGraph(),
             xmin = this.xmin,
             margin = this.getHistRangeMargin();
@@ -107721,7 +107832,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          maximum = (1 - margin) * ymax;
 
       const minimum0 = minimum, maximum0 = maximum;
-      let histo = this.getHistogram();
+      if (!histo)
+         histo = this.getHistogram();
 
       if (!this.isScatter() && !histo?.fXaxis.fTimeDisplay) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
@@ -107738,7 +107850,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          histo.fBits |= kNoStats;
          this.#own_histogram = true;
          this.setHistogram(histo);
-      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom) && !this.isDummyHistogram('y')) {
+      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom) &&
+                 !histo.$set_graph_range && !this.isDummyHistogram('y', histo)) {
          minimum = histo.fMinimum;
          maximum = histo.fMaximum;
       }
@@ -107765,6 +107878,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if (!this.isScatter()) {
             histo.fMinimum = minimum;
             histo.fMaximum = maximum;
+            histo.$set_graph_range = true;
          }
       }
 
@@ -108959,7 +109073,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
-         const histo = this.createHistogram(),
+         const histo = this.createHistogram(true, true, obj.fHistogram),
                hist_painter = this.getMainPainter();
          if (hist_painter?.isSecondary(this)) {
             hist_painter.updateObject(histo, o.Axis);
@@ -165466,7 +165580,7 @@ const drawFuncs = { lst: [
    { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;COL_POL;COL_ARR;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;CHORD;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;COL_POL;COL_ARR;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;CHORD;SURF;SURF1;SURF2;SURF3;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
    { name: clTProfile2D, sameas: clTH2, opt2: ';projxyb;projxyc=e;projxyw' },
    { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
    { name: clTProfile3D, sameas: clTH3 },
@@ -169900,6 +170014,9 @@ class HierarchyPainter extends BasePainter {
          return loadScript(scripts);
 
       return exports._ensureJSROOT().then(v6 => {
+         // this is the case when jsroot.js load directly
+         if (!v6.require)
+            return loadScript(scripts).then(() => globalThis.JSROOT);
          return v6.require(modules)
                   .then(() => loadScript(scripts))
                   .then(() => v6._complete_loading());
@@ -187873,6 +187990,7 @@ exports.openFile = openFile;
 exports.parse = parse$1;
 exports.parseMulti = parseMulti;
 exports.postponePromise = postponePromise;
+exports.prHTML = prHTML;
 exports.prJSON = prJSON;
 exports.prROOT = prROOT;
 exports.prSVG = prSVG;

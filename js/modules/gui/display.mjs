@@ -1580,7 +1580,7 @@ class BrowserLayout {
       if (this.status_layout === 'app')
          return id;
 
-      this.status_layout = new GridDisplay(id, 'horizx4_1213');
+      this.status_layout = new GridDisplay(id, 'horizx4_1231');
 
       const frame_titles = ['object name', 'object title', 'mouse coordinates', 'object info'];
       for (let k = 0; k < 4; ++k) {

@@ -1,11 +1,11 @@
-import { gStyle, settings, constants, browser, internals, BIT,
+import { gStyle, settings, constants, browser, source_dir, version_id, internals, BIT,
          create, toJSON, isBatchMode, loadModules, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr, clTObjArray, clTColor, clTPad, clTFrame, clTStyle, clTLegend,
          clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle, clTList, urlClassPrefix } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors,
          getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
-import { prSVG, prJSON, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate,
+import { prSVG, prJSON, prHTML, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate,
          getTDatime, convertDate, svgToImage, getBoxDecorations } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad, isPadPainter } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -1590,9 +1590,11 @@ class TPadPainter extends ObjectPainter {
       const fmts = ['svg', 'png', 'jpeg', 'webp'];
       if (internals.makePDF)
          fmts.push('pdf');
-      fmts.forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.isCanvas(), `${fname}.${fmt}`)));
+      fmts.forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.isCanvas(), `${fname}.${fmt}`), `Produce ${fmt} image`));
       if (this.isCanvas()) {
          menu.separator();
+         menu.add(`${fname}.html`, () => this.saveAs('html', true, `${fname}.html`), 'Produce html with canvas display');
+         menu.add(`${fname}0.html`, () => this.saveAs('html', false, `${fname}0.html`), 'Produce compact html with canvas display');
          menu.add(`${fname}.json`, () => this.saveAs('json', true, `${fname}.json`), 'Produce JSON with line spacing');
          menu.add(`${fname}0.json`, () => this.saveAs('json', false, `${fname}0.json`), 'Produce JSON without line spacing');
       }
@@ -2249,9 +2251,9 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'webp') || (format === 'pdf')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'html') || (format === 'svg') || (format === 'webp') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
-            if (!res || (format === 'svg'))
+            if (!res || (format === 'svg') || (format === 'html'))
                return res;
             const separ = res.indexOf('base64,');
             return (separ > 0) ? res.slice(separ + 7) : '';
@@ -2469,7 +2471,12 @@ class TPadPainter extends ObjectPainter {
             if (res)
                this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
          } else {
-            const prefix = (kind === 'svg') ? prSVG : (kind === 'json' ? prJSON : '');
+            let prefix = '';
+            switch (kind) {
+               case 'svg': prefix = prSVG; break;
+               case 'json': prefix = prJSON; break;
+               case 'html': prefix = prHTML; break;
+            }
             saveFile(filename, prefix ? prefix + encodeURIComponent(imgdata) : imgdata);
          }
       });
@@ -2489,8 +2496,52 @@ class TPadPainter extends ObjectPainter {
    /** @summary Produce image for the pad
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format, args) {
-      if (file_format === 'json')
-         return isFunc(this.produceJSON) ? this.produceJSON(full_canvas ? 2 : 0) : '';
+      if ((file_format === 'json') || (file_format === 'html')) {
+         const json = isFunc(this.produceJSON) ? this.produceJSON(full_canvas ? 2 : 0) : '';
+         if (!json || (file_format === 'json'))
+            return json;
+         let url = source_dir;
+         if (url.indexOf('http://localhost') === 0) {
+            url = 'https://root.cern/js/';
+            url += (version_id === 'dev') || /^\d+\.\d+\.\d+$/.test(version_id) ? version_id : 'latest';
+         }
+         return '<!DOCTYPE html>\n' +
+                '<html lang="en">\n' +
+                '<head>\n' +
+                '  <meta charset="utf-8">\n' +
+                '  <title>Dsiplay ROOT canvas</title>\n' +
+                `  <link rel="shortcut icon" href="${url}/img/RootIcon.ico"/>\n` +
+                '  <script type="importmap">\n' +
+                `    { "imports": { "jsroot": "${url}/modules/main.mjs" } }\n` +
+                '  </' + 'script>\n' + // avoid problems with batch production
+                '  <style>\n' +
+                '    body {\n' +
+                '      margin: 0;\n' +
+                '      padding: 0;\n' +
+                '      display: flex;\n' +
+                '      justify-content: center;\n' +
+                '      align-items: center;\n' +
+                '      min-height: 100vh;\n' +
+                '      background-color: #f0f0f0;\n' +
+                '    }\n' +
+                '    .main-draw-box {\n' +
+                '      width: 80%;\n' +
+                '      min-height: 80vh;\n' +
+                '      background-color: white;\n' +
+                '      box-shadow: 0 4px 10px rgba(0,0,0,0.1);\n' +
+                '    }\n' +
+                '  </style>\n' +
+                '</head>\n' +
+                '<body>\n' +
+                '  <div id="drawing" class="main-draw-box"></div>\n' +
+                '  <script type="module">\n' +
+                '    import { parse, draw } from "jsroot";\n' +
+                `    const obj = parse(${json});\n` +
+                '    draw("drawing", obj);\n' +
+                '  </' + 'script>\n' + // avoid problems with batch production
+                '</body>\n' +
+                '</html>\n';
+      }
 
       const use_frame = (full_canvas === 'frame'),
             elem = use_frame ? this.getFrameSvg() : (full_canvas ? this.getCanvSvg() : this.getPadSvg()),

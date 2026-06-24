@@ -3710,6 +3710,9 @@ class HierarchyPainter extends BasePainter {
          return loadScript(scripts);
 
       return _ensureJSROOT().then(v6 => {
+         // this is the case when jsroot.js load directly
+         if (!v6.require)
+            return loadScript(scripts).then(() => globalThis.JSROOT);
          return v6.require(modules)
                   .then(() => loadScript(scripts))
                   .then(() => v6._complete_loading());

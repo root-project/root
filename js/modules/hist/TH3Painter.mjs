@@ -650,7 +650,7 @@ class TH3Painter extends THistPainter {
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         const res = fp.resize3D();
+         const res = fp.resize3D(true);
          if (res !== 1) {
             full_draw = false;
             if (res)

@@ -109,6 +109,13 @@ class JSRootMenu {
 
    /** @summary Add menu header - must be first entry */
    header(name, title) {
+      if (name.length > 25) {
+         if (!title)
+            title = name;
+         else if (isStr(title) && title.indexOf('https://') === 0)
+            title = name + title;
+         name = name.slice(0, 22) + '...';
+      }
       this.add(sHeader + name, undefined, undefined, title);
    }
 
