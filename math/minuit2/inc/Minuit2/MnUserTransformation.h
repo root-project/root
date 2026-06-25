@@ -92,6 +92,7 @@ public:
 
    // Index = internal Parameter
    double DInt2Ext(unsigned int, double) const;
+   double D2Int2Ext(unsigned int, double) const;
    double DExt2Int(unsigned int, double) const;
 
    //   // Index = external Parameter

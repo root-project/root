@@ -38,6 +38,9 @@ public:
    // derivative of transformation from internal to external
    long double DInt2Ext(long double Value, long double Lower) const;
 
+   // second derivative of transformation from internal to external
+   long double D2Int2Ext(long double Value, long double Lower) const;
+
    // derivative of transformation from external to internal
    long double DExt2Int(long double Value, long double Lower) const;
 };

@@ -56,6 +56,12 @@ long double SinParameterTransformation::DInt2Ext(long double Value, long double 
    return 0.5 * ((Upper - Lower) * std::cos(Value));
 }
 
+long double SinParameterTransformation::D2Int2Ext(long double Value, long double Upper, long double Lower) const
+{
+   // return the second derivative of the transformation d^2 Ext/ d Int^2
+   return -0.5 * ((Upper - Lower) * std::sin(Value));
+}
+
 long double SinParameterTransformation::DExt2Int(long double Value, long double Upper, long double Lower) const
 {
    // return the derivative of the transformation d Int/ d Ext
