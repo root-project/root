@@ -68,6 +68,7 @@ roofit_multiprocess=OFF
 root7=ON
 rootbench=OFF
 roottest=ON
+test_roofit_hs3testsuite=ON
 runtime_cxxmodules=ON
 shadowpw=OFF
 shared=ON

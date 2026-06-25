@@ -189,6 +189,7 @@ option(gminimal "Enable only required options by default, but include X11/Cocoa"
 option(minimal "Enable only required options by default" OFF)
 option(rootbench "Build rootbench if rootbench exists in root or if it is a sibling directory (implies testing=ON)" OFF)
 option(roottest "Build roottest (implies testing=ON)" OFF)
+option(test_roofit_hs3testsuite "Setup and use the HS3 conformance test suite (requires network)" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(asan "Build ROOT with address sanitizer instrumentation (only GCC is currently supported)" OFF)
 
@@ -338,6 +339,10 @@ if(testing)
   set(testsupport ON CACHE BOOL "" FORCE)
 endif()
 
+#---running HS3 test suite requires both testing and pyroot
+if(test_roofit_hs3testsuite AND (NOT testing OR NOT pyroot))
+    message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
+endif()
 
 if(unfold AND NOT xml)
   message(STATUS "Cannot enable unfold without enabling xml: unfold is disabled.")
