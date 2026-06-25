@@ -456,7 +456,7 @@ def cmake_build(buildtype):
 def build(options, buildtype, **kwargs):
     if not os.path.isdir(os.path.join(WORKDIR, "build")):
         builddir = os.path.join(WORKDIR, "build")
-        result = subprocess_with_log(f"mkdir {builddir}")
+        result = subprocess_with_log(f"mkdir -p {builddir}")
 
         if result != 0:
             die(result, "Failed to create build directory")
