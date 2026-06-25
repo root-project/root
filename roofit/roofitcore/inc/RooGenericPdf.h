@@ -18,9 +18,15 @@
 
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
+#include "RooAbsBinning.h"
+
+#include <map>
+#include <memory>
+#include <string>
 
 class RooArgList ;
 class RooFormula ;
+class RooAbsRealLValue;
 
 class RooGenericPdf : public RooAbsPdf {
 public:
@@ -61,8 +67,14 @@ public:
 
   std::string getUniqueFuncName() const;
 
-protected:
+  void setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness = true);
+  bool removeBinning(const RooAbsRealLValue &obs);
 
+  bool isBinnedDistribution(const RooArgSet &obs) const override;
+  std::list<double> *binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const override;
+  std::list<double> *plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const override;
+
+protected:
   RooFormula& formula() const ;
 
   // Function evaluation
@@ -78,7 +90,10 @@ protected:
   mutable RooFormula * _formula = nullptr; ///<! Formula engine
   TString _formExpr ;            ///< Formula expression string
 
-  ClassDefOverride(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
+  std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index
+                                                           ///< in _actualVars, for a piecewise-flat distribution
+
+  ClassDefOverride(RooGenericPdf, 2) // Generic PDF defined by string expression and list of variables
 };
 
 #endif
