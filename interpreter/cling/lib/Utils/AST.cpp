@@ -10,11 +10,12 @@
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
-#include "clang/Sema/Sema.h"
+#include "clang/AST/QualTypeNames.h"
 #include "clang/Sema/Lookup.h"
-#include "clang/AST/DeclTemplate.h"
+#include "clang/Sema/Sema.h"
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
@@ -42,6 +43,96 @@ namespace {
 
 namespace cling {
 namespace utils {
+  static bool GetFullyQualifiedTemplateName(const ASTContext& Ctx,
+                                            TemplateName& tname) {
+    return clang::TypeName::getFullyQualifiedTemplateName(
+        Ctx, tname, /*WithGlobalNsPrefix=*/false);
+  }
+
+  static bool GetFullyQualifiedTemplateArgument(const ASTContext& Ctx,
+                                                TemplateArgument& arg) {
+    return clang::TypeName::getFullyQualifiedTemplateArgument(
+        Ctx, arg, /*WithGlobalNsPrefix=*/false);
+  }
+
+  static const Type* GetFullyQualifiedLocalType(const ASTContext& Ctx,
+                                                const Type* typeptr) {
+    return clang::TypeName::getFullyQualifiedTemplateType(
+        Ctx, typeptr, /*WithGlobalNsPrefix=*/false);
+  }
+
+  static NestedNameSpecifier* CreateOuterNNS(const ASTContext& Ctx,
+                                             const Decl* D, bool FullyQualify) {
+    return clang::TypeName::createOuterNNS(Ctx, D, FullyQualify,
+                                           /*WithGlobalNsPrefix=*/false);
+  }
+
+  static NestedNameSpecifier*
+  GetFullyQualifiedNameSpecifier(const ASTContext& Ctx,
+                                 NestedNameSpecifier* scope) {
+    return clang::TypeName::getFullyQualifiedNestedNameSpecifier(
+        Ctx, scope, /*WithGlobalNsPrefix=*/false);
+  }
+
+  static NestedNameSpecifier*
+  CreateNestedNameSpecifierForScopeOf(const ASTContext& Ctx, const Decl* decl,
+                                      bool FullyQualified) {
+    return clang::TypeName::createNestedNameSpecifierForScopeOf(
+        Ctx, decl, FullyQualified, /*WithGlobalNsPrefix=*/false);
+  }
+
+  static NestedNameSpecifier* CreateNestedNameSpecifierForScopeOf(
+      const ASTContext& Ctx, const Type* TypePtr, bool FullyQualified) {
+    return clang::TypeName::createNestedNameSpecifierForScopeOf(
+        Ctx, TypePtr, FullyQualified, /*WithGlobalNsPrefix=*/false);
+  }
+
+  NestedNameSpecifier*
+  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
+                                      const NamespaceDecl* Namesp) {
+    return clang::TypeName::createNestedNameSpecifier(
+        Ctx, Namesp, /*WithGlobalNsPrefix=*/false);
+  }
+
+  // FIXME: Doesn't exist upstream
+  NestedNameSpecifier* TypeName::CreateNestedNameSpecifier(
+      const ASTContext& Ctx, const TypedefNameDecl* TD, bool FullyQualify) {
+    return NestedNameSpecifier::Create(Ctx,
+                                       CreateOuterNNS(Ctx, TD, FullyQualify),
+                                       true /*Template*/, TD->getTypeForDecl());
+  }
+  // FIXME: Doesn't exist upstream
+  NestedNameSpecifier* TypeName::CreateNestedNameSpecifier(
+      const ASTContext& Ctx, const UsingShadowDecl* USD, bool FullyQualify) {
+    return NestedNameSpecifier::Create(Ctx,
+                                       CreateOuterNNS(Ctx, USD, FullyQualify),
+                                       true /*Template*/,
+                                       cast<TypeDecl>(USD)->getTypeForDecl());
+  }
+
+  NestedNameSpecifier*
+  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx, const TagDecl* TD,
+                                      bool FullyQualify) {
+    return clang::TypeName::createNestedNameSpecifier(
+        Ctx, TD, FullyQualify, /*WithGlobalNsPrefix=*/false);
+  }
+
+  QualType TypeName::GetFullyQualifiedType(QualType QT, const ASTContext& Ctx) {
+    return clang::TypeName::getFullyQualifiedType(QT, Ctx,
+                                                  /*WithGlobalNsPrefix=*/false);
+  }
+
+  std::string TypeName::GetFullyQualifiedName(QualType QT,
+                                              const ASTContext& Ctx) {
+    QualType FQQT =
+        clang::TypeName::getFullyQualifiedType(QT, Ctx,
+                                               /*WithGlobalNsPrefix=*/false);
+
+    PrintingPolicy Policy(Ctx.getPrintingPolicy());
+    Policy.SuppressScope = false;
+    Policy.AnonymousTagLocations = false;
+    return FQQT.getAsString(Policy);
+  }
 
   static
   QualType GetPartiallyDesugaredTypeImpl(const ASTContext& Ctx,
@@ -54,15 +145,6 @@ namespace utils {
   NestedNameSpecifier* GetPartiallyDesugaredNNS(const ASTContext& Ctx,
                                                 NestedNameSpecifier* scope,
                                            const Transform::Config& TypeConfig);
-
-  static NestedNameSpecifier*
-  CreateNestedNameSpecifierForScopeOf(const ASTContext& Ctx,
-                                      const Decl *decl,
-                                      bool FullyQualified);
-
-  static
-  NestedNameSpecifier* GetFullyQualifiedNameSpecifier(const ASTContext& Ctx,
-                                                      NestedNameSpecifier* scope);
 
   bool Analyze::IsWrapper(const FunctionDecl* ND) {
     if (!ND)
@@ -193,204 +275,6 @@ namespace utils {
       = S->BuildCStyleCastExpr(SourceLocation(), TSI,SourceLocation(),E).get();
     assert(Result && "Cannot create CStyleCastPtrExpr");
     return Result;
-  }
-
-  static bool
-  GetFullyQualifiedTemplateName(const ASTContext& Ctx, TemplateName &tname) {
-
-    bool changed = false;
-    NestedNameSpecifier *NNS = nullptr;
-
-    TemplateDecl *argtdecl = tname.getAsTemplateDecl();
-    QualifiedTemplateName *qtname = tname.getAsQualifiedTemplateName();
-
-    if (qtname && !qtname->hasTemplateKeyword()) {
-      NNS = qtname->getQualifier();
-      NestedNameSpecifier *qNNS = GetFullyQualifiedNameSpecifier(Ctx,NNS);
-      if (qNNS != NNS) {
-        changed = true;
-        NNS = qNNS;
-      } else {
-        NNS = nullptr;
-      }
-    } else {
-      NNS = CreateNestedNameSpecifierForScopeOf(Ctx, argtdecl, true);
-    }
-    if (NNS) {
-      TemplateName UnderlyingTN(argtdecl);
-      if (UsingShadowDecl *USD = tname.getAsUsingShadowDecl())
-        UnderlyingTN = TemplateName(USD);
-      tname = Ctx.getQualifiedTemplateName(NNS,
-                                           /*TemplateKeyword=*/ false,
-                                           UnderlyingTN);
-      changed = true;
-    }
-    return changed;
-  }
-
-  static bool
-  GetFullyQualifiedTemplateArgument(const ASTContext& Ctx,
-                                    TemplateArgument &arg) {
-    bool changed = false;
-
-    // Note: we do not handle TemplateArgument::Expression, to replace it
-    // we need the information for the template instance decl.
-    // See GetPartiallyDesugaredTypeImpl
-
-    if (arg.getKind() == TemplateArgument::Template) {
-      TemplateName tname = arg.getAsTemplate();
-      changed = GetFullyQualifiedTemplateName(Ctx, tname);
-      if (changed) {
-        arg = TemplateArgument(tname);
-      }
-    } else if (arg.getKind() == TemplateArgument::Type) {
-      QualType SubTy = arg.getAsType();
-      // Check if the type needs more desugaring and recurse.
-      QualType QTFQ = TypeName::GetFullyQualifiedType(SubTy, Ctx);
-      if (QTFQ != SubTy) {
-        arg = TemplateArgument(QTFQ);
-        changed = true;
-      }
-    } else if (arg.getKind() == TemplateArgument::Pack) {
-      SmallVector<TemplateArgument, 2> desArgs;
-      for (auto I = arg.pack_begin(), E = arg.pack_end(); I != E; ++I) {
-        TemplateArgument pack_arg(*I);
-        changed = GetFullyQualifiedTemplateArgument(Ctx,pack_arg);
-        desArgs.push_back(pack_arg);
-      }
-      if (changed) {
-        // The allocator in ASTContext is mutable ...
-        // Keep the argument const to be inline will all the other interfaces
-        // like:  NestedNameSpecifier::Create
-        ASTContext &mutableCtx( const_cast<ASTContext&>(Ctx) );
-        arg = TemplateArgument::CreatePackCopy(mutableCtx, desArgs);
-      }
-    }
-    return changed;
-  }
-
-  static const Type*
-  GetFullyQualifiedLocalType(const ASTContext& Ctx,
-                             const Type *typeptr) {
-    // We really just want to handle the template parameter if any ....
-    // In case of template specializations iterate over the arguments and
-    // fully qualify them as well.
-    if (const TemplateSpecializationType* TST
-        = llvm::dyn_cast<const TemplateSpecializationType>(typeptr)) {
-
-      bool mightHaveChanged = false;
-      llvm::SmallVector<TemplateArgument, 4> desArgs;
-      for (const TemplateArgument& Arg : TST->template_arguments()) {
-        // cheap to copy and potentially modified by
-        // GetFullyQualifedTemplateArgument
-        TemplateArgument CopiedArg = Arg;
-        mightHaveChanged |= GetFullyQualifiedTemplateArgument(Ctx, CopiedArg);
-        desArgs.push_back(CopiedArg);
-      }
-
-      // If desugaring happened allocate new type in the AST.
-      if (mightHaveChanged) {
-        QualType QT
-          = Ctx.getTemplateSpecializationType(TST->getTemplateName(),
-                                              desArgs,
-                                              TST->getCanonicalTypeInternal());
-        return QT.getTypePtr();
-      }
-    } else if (const RecordType *TSTRecord
-               = llvm::dyn_cast<const RecordType>(typeptr)) {
-      // We are asked to fully qualify and we have a Record Type,
-      // which can point to a template instantiation with no sugar in any of
-      // its template argument, however we still need to fully qualify them.
-
-      if (const ClassTemplateSpecializationDecl* TSTdecl =
-          llvm::dyn_cast<ClassTemplateSpecializationDecl>(TSTRecord->getDecl()))
-        {
-          const TemplateArgumentList& templateArgs
-            = TSTdecl->getTemplateArgs();
-
-          bool mightHaveChanged = false;
-          llvm::SmallVector<TemplateArgument, 4> desArgs;
-          for(unsigned int I = 0, E = templateArgs.size();
-              I != E; ++I) {
-
-            // cheap to copy and potentially modified by
-            // GetFullyQualifedTemplateArgument
-            TemplateArgument arg(templateArgs[I]);
-            mightHaveChanged |= GetFullyQualifiedTemplateArgument(Ctx,arg);
-            desArgs.push_back(arg);
-
-          }
-
-          // If desugaring happened allocate new type in the AST.
-          if (mightHaveChanged) {
-            TemplateName TN(TSTdecl->getSpecializedTemplate());
-            QualType QT
-              = Ctx.getTemplateSpecializationType(TN, desArgs,
-                                         TSTRecord->getCanonicalTypeInternal());
-            return QT.getTypePtr();
-          }
-        }
-    }
-    return typeptr;
-  }
-
-  static NestedNameSpecifier* CreateOuterNNS(const ASTContext& Ctx,
-                                             const Decl* D,
-                                             bool FullyQualify) {
-    const DeclContext* DC = D->getDeclContext();
-    if (const NamespaceDecl* NS = dyn_cast<NamespaceDecl>(DC)) {
-      while (NS && NS->isInline()) {
-        // Ignore inline namespace;
-        NS = dyn_cast_or_null<NamespaceDecl>(NS->getDeclContext());
-      }
-      if (NS && NS->getDeclName())
-        return TypeName::CreateNestedNameSpecifier(Ctx, NS);
-      return nullptr; // no starting '::', no anonymous
-    } else if (const TagDecl* TD = dyn_cast<TagDecl>(DC)) {
-      return TypeName::CreateNestedNameSpecifier(Ctx, TD, FullyQualify);
-    } else if (const TypedefNameDecl* TDD = dyn_cast<TypedefNameDecl>(DC)) {
-      return TypeName::CreateNestedNameSpecifier(Ctx, TDD, FullyQualify);
-    }
-    return nullptr; // no starting '::'
-  }
-
-  static
-  NestedNameSpecifier* GetFullyQualifiedNameSpecifier(const ASTContext& Ctx,
-                                                  NestedNameSpecifier* scope) {
-    if (!scope)
-      return nullptr;
-    // Return a fully qualified version of this name specifier
-    if (scope->getKind() == NestedNameSpecifier::Global) {
-      // Already fully qualified.
-      return scope;
-    }
-
-    if (const Type *type = scope->getAsType()) {
-      // Find decl context.
-      const TagDecl* TD = nullptr;
-      if (const TagType* tagdecltype = dyn_cast<TagType>(type)) {
-        TD = tagdecltype->getDecl();
-      } else {
-        TD = type->getAsCXXRecordDecl();
-      }
-      if (TD) {
-        return TypeName::CreateNestedNameSpecifier(Ctx, TD,
-                                                   true /*FullyQualified*/);
-      } else if (const TypedefType* TDD = dyn_cast<TypedefType>(type)) {
-        return TypeName::CreateNestedNameSpecifier(Ctx, TDD->getDecl(),
-                                                   true /*FullyQualified*/);
-      } else if (const UsingType* UT = dyn_cast<UsingType>(type)) {
-        return TypeName::CreateNestedNameSpecifier(Ctx, UT->getFoundDecl(),
-                                                   true /*FullyQualified*/);
-      }
-    } else if (const NamespaceDecl* NS = scope->getAsNamespace()) {
-      return TypeName::CreateNestedNameSpecifier(Ctx, NS);
-    } else if (const NamespaceAliasDecl* alias = scope->getAsNamespaceAlias()) {
-      const NamespaceDecl* CanonNS = alias->getNamespace()->getCanonicalDecl();
-      return TypeName::CreateNestedNameSpecifier(Ctx, CanonNS);
-    }
-
-    return scope;
   }
 
   static
@@ -1522,255 +1406,6 @@ namespace utils {
         S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
       }
     }
-  }
-
-  static NestedNameSpecifier*
-  CreateNestedNameSpecifierForScopeOf(const ASTContext& Ctx,
-                                      const Decl *decl,
-                                      bool FullyQualified)
-  {
-    // Create a nested name specifier for the declaring context of the type.
-
-    assert(decl);
-
-    const NamedDecl* outer
-      = llvm::dyn_cast_or_null<NamedDecl>(decl->getDeclContext());
-    const NamespaceDecl* outer_ns
-      = llvm::dyn_cast_or_null<NamespaceDecl>(decl->getDeclContext());
-    if (outer && !(outer_ns && outer_ns->isAnonymousNamespace())) {
-
-      if (const CXXRecordDecl *cxxdecl
-          = llvm::dyn_cast<CXXRecordDecl>(decl->getDeclContext())) {
-
-        if (ClassTemplateDecl *clTempl = cxxdecl->getDescribedClassTemplate()) {
-          // We are in the case of a type(def) that was declared in a
-          // class template but is *not* type dependent.  In clang, it gets
-          // attached to the class template declaration rather than any
-          // specific class template instantiation.   This result in 'odd'
-          // fully qualified typename:
-          //    vector<_Tp,_Alloc>::size_type
-          // Make the situation is 'useable' but looking a bit odd by
-          // picking a random instance as the declaring context.
-          // FIXME: We should not use the iterators here to check if we are in
-          // a template specialization. clTempl != cxxdecl already tell us that
-          // is the case. It seems that we rely on a side-effect from triggering
-          // deserializations to support 'some' use-case. See ROOT-9709.
-          if (clTempl->spec_begin() != clTempl->spec_end()) {
-            decl = *(clTempl->spec_begin());
-            outer  = llvm::dyn_cast<NamedDecl>(decl);
-            outer_ns = llvm::dyn_cast<NamespaceDecl>(decl);
-          }
-        }
-      }
-
-      if (outer_ns) {
-        return TypeName::CreateNestedNameSpecifier(Ctx,outer_ns);
-      } else if (const TagDecl* TD = llvm::dyn_cast<TagDecl>(outer)) {
-        return TypeName::CreateNestedNameSpecifier(Ctx, TD, FullyQualified);
-      }
-    }
-    return nullptr;
-  }
-
-  static NestedNameSpecifier*
-  CreateNestedNameSpecifierForScopeOf(const ASTContext& Ctx,
-                                      const Type *TypePtr,
-                                      bool FullyQualified)
-  {
-    // Create a nested name specifier for the declaring context of the type.
-
-    if (!TypePtr)
-      return nullptr;
-
-    Decl *decl = nullptr;
-    if (const TypedefType* typedeftype = llvm::dyn_cast<TypedefType>(TypePtr)) {
-      decl = typedeftype->getDecl();
-    } else if (const UsingType* usingtype = llvm::dyn_cast<UsingType>(TypePtr)) {
-      decl = usingtype->getFoundDecl();
-    } else {
-      // There are probably other cases ...
-      if (const TagType* tagdecltype = llvm::dyn_cast_or_null<TagType>(TypePtr))
-        decl = tagdecltype->getDecl();
-      else
-        decl = TypePtr->getAsCXXRecordDecl();
-    }
-
-    if (!decl)
-      return nullptr;
-
-    return CreateNestedNameSpecifierForScopeOf(Ctx, decl, FullyQualified);
-  }
-
-  NestedNameSpecifier*
-  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
-                                      const NamespaceDecl* Namesp) {
-    while (Namesp && Namesp->isInline()) {
-      // Ignore inline namespace;
-      Namesp = dyn_cast_or_null<NamespaceDecl>(Namesp->getDeclContext());
-    }
-    if (!Namesp) return nullptr;
-
-    bool FullyQualified = true; // doesn't matter, DeclContexts are namespaces
-    return NestedNameSpecifier::Create(Ctx, CreateOuterNNS(Ctx, Namesp,
-                                                           FullyQualified),
-                                       Namesp);
-  }
-
-  NestedNameSpecifier*
-  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
-                                      const TypedefNameDecl* TD,
-                                      bool FullyQualify) {
-    return NestedNameSpecifier::Create(Ctx, CreateOuterNNS(Ctx, TD,
-                                                           FullyQualify),
-                                       true /*Template*/,
-                                       TD->getTypeForDecl());
-  }
-
-  NestedNameSpecifier*
-  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
-                                      const UsingShadowDecl* USD,
-                                      bool FullyQualify) {
-    return NestedNameSpecifier::Create(Ctx, CreateOuterNNS(Ctx, USD,
-                                                           FullyQualify),
-                                       true /*Template*/,
-                                       cast<TypeDecl>(USD)->getTypeForDecl());
-  }
-
-  NestedNameSpecifier*
-  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
-                                      const TagDecl *TD, bool FullyQualify) {
-    const Type* Ty
-      = Ctx.getTypeDeclType(TD).getTypePtr();
-    if (FullyQualify)
-      Ty = GetFullyQualifiedLocalType(Ctx, Ty);
-    return NestedNameSpecifier::Create(Ctx,
-                                       CreateOuterNNS(Ctx, TD, FullyQualify),
-                                       false /* template keyword wanted */,
-                                       Ty);
-  }
-
-  QualType
-  TypeName::GetFullyQualifiedType(QualType QT, const ASTContext& Ctx) {
-    // Return the fully qualified type, if we need to recurse through any
-    // template parameter, this needs to be merged somehow with
-    // GetPartialDesugaredType.
-
-    // In case of myType* we need to strip the pointer first, fully qualifiy
-    // and attach the pointer once again.
-    if (llvm::isa<PointerType>(QT.getTypePtr())) {
-      // Get the qualifiers.
-      Qualifiers quals = QT.getQualifiers();
-      QT = GetFullyQualifiedType(QT->getPointeeType(), Ctx);
-      QT = Ctx.getPointerType(QT);
-      // Add back the qualifiers.
-      QT = Ctx.getQualifiedType(QT, quals);
-      return QT;
-    }
-
-    // In case of myType& we need to strip the pointer first, fully qualifiy
-    // and attach the pointer once again.
-    if (llvm::isa<ReferenceType>(QT.getTypePtr())) {
-      // Get the qualifiers.
-      bool isLValueRefTy = llvm::isa<LValueReferenceType>(QT.getTypePtr());
-      Qualifiers quals = QT.getQualifiers();
-      QT = GetFullyQualifiedType(QT->getPointeeType(), Ctx);
-      // Add the r- or l-value reference type back to the desugared one.
-      if (isLValueRefTy)
-        QT = Ctx.getLValueReferenceType(QT);
-      else
-        QT = Ctx.getRValueReferenceType(QT);
-      // Add back the qualifiers.
-      QT = Ctx.getQualifiedType(QT, quals);
-      return QT;
-    }
-
-    // Strip deduced types.
-    if (const AutoType* AutoTy = dyn_cast<AutoType>(QT.getTypePtr())) {
-      if (!AutoTy->getDeducedType().isNull())
-        return GetFullyQualifiedType(AutoTy->getDeducedType(), Ctx);
-    }
-
-    // Remove the part of the type related to the type being a template
-    // parameter (we won't report it as part of the 'type name' and it is
-    // actually make the code below to be more complex (to handle those)
-    while (isa<SubstTemplateTypeParmType>(QT.getTypePtr())) {
-      // Get the qualifiers.
-      Qualifiers quals = QT.getQualifiers();
-
-      QT = dyn_cast<SubstTemplateTypeParmType>(QT.getTypePtr())->desugar();
-
-      // Add back the qualifiers.
-      QT = Ctx.getQualifiedType(QT, quals);
-    }
-
-    NestedNameSpecifier* prefix = nullptr;
-    Qualifiers prefix_qualifiers = QT.getLocalQualifiers();
-    if (const ElaboratedType* etype_input
-        = llvm::dyn_cast<ElaboratedType>(QT.getTypePtr())) {
-      // Intentionally, we do not care about the other compononent of
-      // the elaborated type (the keyword) as part of the partial
-      // desugaring (and/or name normalization) is to remove it.
-      prefix = etype_input->getQualifier();
-      if (prefix) {
-        const NamespaceDecl *ns = prefix->getAsNamespace();
-        if (prefix != NestedNameSpecifier::GlobalSpecifier(Ctx)
-            && !(ns && ns->isAnonymousNamespace())) {
-          prefix = GetFullyQualifiedNameSpecifier(Ctx, prefix);
-        } else {
-          prefix = nullptr;
-        }
-      }
-      QT = etype_input->getNamedType();
-    }
-    if (prefix == nullptr) {
-      // Create a nested name specifier if needed (i.e. if the decl context
-      // is not the global scope.
-      prefix = CreateNestedNameSpecifierForScopeOf(Ctx,QT.getTypePtr(),
-                                                   true /*FullyQualified*/);
-
-      // move the qualifiers on the outer type (avoid 'std::const string'!)
-      if (prefix) {
-        prefix_qualifiers.addQualifiers(QT.getLocalQualifiers());
-        QT = QualType(QT.getTypePtr(),0);
-      }
-    }
-
-    // In case of template specializations iterate over the arguments and
-    // fully qualify them as well.
-    if(llvm::isa<const TemplateSpecializationType>(QT.getTypePtr())) {
-
-      Qualifiers qualifiers = QT.getLocalQualifiers();
-      const Type *TypePtr = GetFullyQualifiedLocalType(Ctx,QT.getTypePtr());
-      QT = Ctx.getQualifiedType(TypePtr, qualifiers);
-
-    } else if (llvm::isa<const RecordType>(QT.getTypePtr())) {
-      // We are asked to fully qualify and we have a Record Type,
-      // which can point to a template instantiation with no sugar in any of
-      // its template argument, however we still need to fully qualify them.
-
-      Qualifiers qualifiers = QT.getLocalQualifiers();
-      const Type *TypePtr = GetFullyQualifiedLocalType(Ctx,QT.getTypePtr());
-      QT = Ctx.getQualifiedType(TypePtr, qualifiers);
-
-    }
-    if (prefix) {
-      // We intentionally always use ElaboratedTypeKeyword::None, we never want
-      // the keyword (humm ... what about anonymous types?)
-      QT = Ctx.getElaboratedType(ElaboratedTypeKeyword::None, prefix, QT);
-    }
-    if (prefix_qualifiers) {
-      QT = Ctx.getQualifiedType(QT, prefix_qualifiers);
-    }
-    return QT;
-  }
-
-  std::string TypeName::GetFullyQualifiedName(QualType QT,
-                                              const ASTContext &Ctx) {
-    QualType FQQT = GetFullyQualifiedType(QT, Ctx);
-    PrintingPolicy Policy(Ctx.getPrintingPolicy());
-    Policy.SuppressScope = false;
-    Policy.AnonymousTagLocations = false;
-    return FQQT.getAsString(Policy);
   }
 
 } // end namespace utils
