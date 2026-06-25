@@ -682,7 +682,10 @@ TEST(RooSimultaneous, PlotProjWDataExtended)
    auto integrateLastCurve = [](RooPlot *plot) {
       const double xmin = plot->getPlotVar()->getMin();
       const double xmax = plot->getPlotVar()->getMax();
-      return plot->getCurve()->average(xmin, xmax) * plot->getPlotVar()->numBins();
+      // Multiply by the number of bins of the plot frame (not the plot
+      // variable, which no longer carries a default binning) to turn the
+      // average events-per-bin of the curve back into a total event count.
+      return plot->getCurve()->average(xmin, xmax) * plot->GetNbinsX();
    };
 
    constexpr double tol = 0.01; // tolerate 1 % sampling error

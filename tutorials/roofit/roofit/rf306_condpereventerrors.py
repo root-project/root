@@ -58,6 +58,8 @@ hh_decay.SetLineColor("kBlue")
 
 # Plot decay_gm(dt|dterr) at various values of dterr
 frame = dt.frame(Title="Slices of decay(dt|dterr) at various dterr")
+# Sample dterr in 100 bins to select the slice values below with setBin()
+dterr.setBins(100)
 for ibin in range(0, 100, 20):
     dterr.setBin(ibin)
     decay_gm.plotOn(frame, Normalization=5.0)
