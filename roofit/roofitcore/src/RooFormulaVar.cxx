@@ -52,6 +52,10 @@
 #include "RooMsgService.h"
 #include "RooTrace.h"
 #include "RooFormula.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsBinning.h"
+#include "RooCurve.h"
+#include "RooHelpers.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
@@ -123,6 +127,9 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
   _actualVars("actualVars",this,other._actualVars),
   _formExpr(other._formExpr)
 {
+   for (auto const &item : other._binnings) {
+      _binnings[item.first] = std::unique_ptr<RooAbsBinning>{item.second->clone()};
+   }
   if (other._formula && other._formula->ok()) {
     _formula = new RooFormula(*other._formula);
     _formExpr = _formula->formulaString().c_str();
@@ -228,13 +235,94 @@ void RooFormulaVar::writeToStream(ostream& os, bool compact) const
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Declare that this function is piecewise constant (flat) within the bins of
+/// the given `binning` of the observable `obs`, which must be one of the formula
+/// variables. The method can be called several times to set a binning for more
+/// than one observable. See RooGenericPdf::setBinning() for details.
 
+void RooFormulaVar::setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness)
+{
+   // Match the observable to a formula variable by name, so that a same-named
+   // stand-in for the actual server is accepted too.
+   const int idx = _actualVars.index(obs.GetName());
+   if (idx < 0) {
+      coutE(InputArguments) << "RooFormulaVar::setBinning(" << GetName() << ") the observable " << obs.GetName()
+                            << " is not one of the formula variables of this function, nothing done." << std::endl;
+      return;
+   }
+
+   if (checkFlatness) {
+      // Sample the function by varying the actual formula variable (the server),
+      // which may be a different object than `obs` if `obs` is just a same-named
+      // stand-in: the function's value depends on the server, not on `obs`.
+      if (auto *serverObs = dynamic_cast<RooAbsRealLValue *>(_actualVars.at(idx))) {
+         std::span<const double> boundaries{binning.array(), static_cast<std::size_t>(binning.numBoundaries())};
+         if (!RooHelpers::isFunctionFlatInBins(*this, *serverObs, boundaries)) {
+            coutE(InputArguments) << "RooFormulaVar::setBinning(" << GetName() << ") the expression \"" << _formExpr
+                                  << "\" is not flat within the given bins of " << obs.GetName()
+                                  << ". The binning is not set. Pass checkFlatness=false to override this check."
+                                  << std::endl;
+            return;
+         }
+      }
+   }
+
+   // Key the binning by the observable's index in _actualVars (not its name), so
+   // that it survives a renaming of the variable or a server redirection.
+   _binnings[idx] = std::unique_ptr<RooAbsBinning>{binning.clone()};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward the plot sampling hint from the p.d.f. that defines the observable obs
+/// Remove a binning previously declared with setBinning() for observable `obs`,
+/// reverting to the generic numeric integrator for it. Returns true if a binning
+/// was removed, false if none was set for `obs`.
+
+bool RooFormulaVar::removeBinning(const RooAbsRealLValue &obs)
+{
+   return _binnings.erase(_actualVars.index(obs.GetName())) > 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if a binning was set with setBinning() for every
+/// observable in the integration set `obs`.
+
+bool RooFormulaVar::isBinnedDistribution(const RooArgSet &obs) const
+{
+   if (obs.empty() || _binnings.empty()) {
+      return false;
+   }
+   for (RooAbsArg *o : obs) {
+      const int idx = _actualVars.index(o->GetName());
+      // Observables that are not formula variables of this function are ones we
+      // do not depend on: the function is constant (hence trivially binned) in
+      // them, so they must be ignored here. This matches the convention that
+      // composite functions like RooProduct rely on, where each component's
+      // isBinnedDistribution() is queried with the full observable set.
+      if (idx < 0) {
+         continue;
+      }
+      if (_binnings.find(idx) == _binnings.end()) {
+         return false;
+      }
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the boundaries of the binning set with setBinning() that fall
+/// within [xlo, xhi]. If no binning was set for this observable, forward the bin
+/// boundaries from the server that defines the observable obs.
 
 std::list<double>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
+   auto found = _binnings.find(_actualVars.index(obs.GetName()));
+   if (found != _binnings.end()) {
+      const RooAbsBinning &binning = *found->second;
+      return RooHelpers::binBoundariesInRange({binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo,
+                                              xhi);
+   }
+
   for (const auto par : _actualVars) {
     auto func = static_cast<const RooAbsReal*>(par);
     list<double>* binb = nullptr;
@@ -247,13 +335,20 @@ std::list<double>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, double xl
   return nullptr;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward the plot sampling hint from the p.d.f. that defines the observable obs
+/// Return sampling hints that draw the piecewise-flat shape exactly if a binning
+/// was set for this observable. Otherwise, forward the plot sampling hint from
+/// the server that defines the observable obs.
 
 std::list<double>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
+   auto found = _binnings.find(_actualVars.index(obs.GetName()));
+   if (found != _binnings.end()) {
+      const RooAbsBinning &binning = *found->second;
+      return RooCurve::plotSamplingHintForBinBoundaries(
+         {binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo, xhi);
+   }
+
   for (const auto par : _actualVars) {
     auto func = dynamic_cast<const RooAbsReal*>(par);
     list<double>* hint = nullptr;
