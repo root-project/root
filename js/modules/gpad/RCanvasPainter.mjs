@@ -737,22 +737,19 @@ function drawRPadSnapshot(dom, snap, opt) {
 
 /** @summary Ensure RCanvas and RFrame for the painter object
   * @param {Object} painter  - painter object to process
-  * @param {string|boolean} frame_kind  - false for no frame or '3d' for special 3D mode
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
   * @return {Promise} for ready
   * @private */
-async function ensureRCanvas(painter /* , frame_kind */) {
+async function ensureRCanvas(painter) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 
    // simple check - if canvas there, can use painter
    const pad_painter = painter.getPadPainter(),
-         pr = pad_painter ? Promise.resolve(pad_painter) :
-              RCanvasPainter.draw(painter.getDom(), null /* noframe */);
+         pr = pad_painter ? Promise.resolve(pad_painter)
+                          : RCanvasPainter.draw(painter.getDom(), null);
 
    return pr.then(pp => {
-      // if ((frame_kind !== false) && pp.getFrameSvg().selectChild('.main_layer').empty())
-      //   return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
       painter.addToPadPrimitives(pp);
       return painter;
    });
@@ -1006,7 +1003,7 @@ function drawRFont() {
 function drawRAxis(dom, obj, opt) {
    const painter = new RAxisPainter(dom, obj, opt);
    painter.disable_zooming = true;
-   return ensureRCanvas(painter, false)
+   return ensureRCanvas(painter)
            .then(() => painter.redraw())
            .then(() => painter);
 }
@@ -1017,7 +1014,7 @@ function drawRFrame(dom, obj, opt) {
    const p = new RFramePainter(dom, obj);
    if (opt === '3d')
       p.mode3d = true;
-   return ensureRCanvas(p, false).then(() => p.redraw());
+   return ensureRCanvas(p).then(() => p.redraw());
 }
 
 export { ensureRCanvas, drawRPadSnapshot,

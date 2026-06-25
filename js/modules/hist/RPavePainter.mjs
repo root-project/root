@@ -147,7 +147,7 @@ class RPavePainter extends RObjectPainter {
    /** @summary draw RPave object */
    static async draw(dom, pave, opt) {
       const painter = new RPavePainter(dom, pave, opt, 'pave');
-      return ensureRCanvas(painter, false).then(() => painter.drawPave());
+      return ensureRCanvas(painter).then(() => painter.drawPave());
    }
 
 }
@@ -235,7 +235,7 @@ class RLegendPainter extends RPavePainter {
    /** @summary draw RLegend object */
    static async draw(dom, legend, opt) {
       const painter = new RLegendPainter(dom, legend, opt, 'legend');
-      return ensureRCanvas(painter, false).then(() => painter.drawPave());
+      return ensureRCanvas(painter).then(() => painter.drawPave());
    }
 
 } // class RLegendPainter
@@ -275,7 +275,7 @@ class RPaveTextPainter extends RPavePainter {
    /** @summary draw RPaveText object */
    static async draw(dom, pave, opt) {
       const painter = new RPaveTextPainter(dom, pave, opt, 'pavetext');
-      return ensureRCanvas(painter, false).then(() => painter.drawPave());
+      return ensureRCanvas(painter).then(() => painter.drawPave());
    }
 
 } // class RPaveTextPainter

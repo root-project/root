@@ -331,7 +331,7 @@ class RPadPainter extends RObjectPainter {
          if ((painter !== prim) || !clean_only_secondary)
             painter.cleanup();
          if (this.getMainPainter() === painter) {
-            delete this.setMainPainter(undefined, true);
+            this.setMainPainter(undefined, true);
             resindx = -111;
          }
       });

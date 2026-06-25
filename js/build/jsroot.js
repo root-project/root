@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '24/06/2026',
+version_date = '25/06/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -780,9 +780,9 @@ function parse$1(json) {
          return; // pair object is not counted in the objects map
       }
 
-     // prevent endless loop
-     if (map.indexOf(value) >= 0)
-      return;
+      // prevent endless loop
+      if (map.indexOf(value) >= 0)
+         return;
 
       // add object to object map
       map.push(value);
@@ -165944,7 +165944,7 @@ async function draw(dom, obj, opt) {
          promise = Promise.resolve().then(function () { return RCanvasPainter$1; }).then(v7h => {
             painter = new v7h.RObjectPainter(dom, obj, opt, handle.csstype);
             painter.redraw = handle.func;
-            return v7h.ensureRCanvas(painter, handle.frame || false);
+            return v7h.ensureRCanvas(painter);
          }).then(() => painter.redraw());
       } else if (handle.direct) {
          painter = new ObjectPainter(dom, obj, opt);
@@ -170728,7 +170728,7 @@ function readStyleFromURL(url) {
 
    const b = d.get('batch');
    if (b !== undefined) {
-      setBatchMode(d !== 'off');
+      setBatchMode(b !== 'off');
       if (b === 'png')
          internals.batch_png = true;
    }
@@ -176577,11 +176577,11 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
    #pads;  // pads draw option
    #pads_columns; // number pads columns
 
-   /** @summary Create painter
+   /** @summary Constructor
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} obj - TMultiGraph object to draw */
-   constructor(dom, mgraph) {
-      super(dom, mgraph);
+   constructor(dom, mgraph, opt) {
+      super(dom, mgraph, opt);
       this.#firstpainter = null;
       this.#painters = []; // keep painters to be able update objects
    }
@@ -184587,7 +184587,7 @@ class RPadPainter extends RObjectPainter {
          if ((painter !== prim) || !clean_only_secondary)
             painter.cleanup();
          if (this.getMainPainter() === painter) {
-            delete this.setMainPainter(undefined, true);
+            this.setMainPainter(undefined, true);
             resindx = -111;
          }
       });
@@ -186863,22 +186863,19 @@ function drawRPadSnapshot(dom, snap, opt) {
 
 /** @summary Ensure RCanvas and RFrame for the painter object
   * @param {Object} painter  - painter object to process
-  * @param {string|boolean} frame_kind  - false for no frame or '3d' for special 3D mode
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
   * @return {Promise} for ready
   * @private */
-async function ensureRCanvas(painter /* , frame_kind */) {
+async function ensureRCanvas(painter) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 
    // simple check - if canvas there, can use painter
    const pad_painter = painter.getPadPainter(),
-         pr = pad_painter ? Promise.resolve(pad_painter) :
-              RCanvasPainter.draw(painter.getDom(), null /* noframe */);
+         pr = pad_painter ? Promise.resolve(pad_painter)
+                          : RCanvasPainter.draw(painter.getDom(), null);
 
    return pr.then(pp => {
-      // if ((frame_kind !== false) && pp.getFrameSvg().selectChild('.main_layer').empty())
-      //   return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
       painter.addToPadPrimitives(pp);
       return painter;
    });

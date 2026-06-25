@@ -26,11 +26,11 @@ class TMultiGraphPainter extends ObjectPainter {
    #pads;  // pads draw option
    #pads_columns; // number pads columns
 
-   /** @summary Create painter
+   /** @summary Constructor
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} obj - TMultiGraph object to draw */
-   constructor(dom, mgraph) {
-      super(dom, mgraph);
+   constructor(dom, mgraph, opt) {
+      super(dom, mgraph, opt);
       this.#firstpainter = null;
       this.#painters = []; // keep painters to be able update objects
    }

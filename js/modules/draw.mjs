@@ -424,7 +424,7 @@ async function draw(dom, obj, opt) {
          promise = import('./gpad/RCanvasPainter.mjs').then(v7h => {
             painter = new v7h.RObjectPainter(dom, obj, opt, handle.csstype);
             painter.redraw = handle.func;
-            return v7h.ensureRCanvas(painter, handle.frame || false);
+            return v7h.ensureRCanvas(painter);
          }).then(() => painter.redraw());
       } else if (handle.direct) {
          painter = new ObjectPainter(dom, obj, opt);

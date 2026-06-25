@@ -50,7 +50,7 @@ function readStyleFromURL(url) {
 
    const b = d.get('batch');
    if (b !== undefined) {
-      setBatchMode(d !== 'off');
+      setBatchMode(b !== 'off');
       if (b === 'png')
          internals.batch_png = true;
    }
