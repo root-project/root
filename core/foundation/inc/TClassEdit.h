@@ -236,7 +236,7 @@ namespace TClassEdit {
    {
       return 0 == name.compare(0, 17, "std::__pair_base<") || 0 == name.compare(0, 12, "__pair_base<");
    }
-   inline std::string GetUniquePtrType(std::string_view name)
+   inline std::string R__DEPRECATED(6, 46, "not needed anymore") GetUniquePtrType(std::string_view name)
    {
       // Find the first template parameter
       std::vector<std::string> v;
