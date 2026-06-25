@@ -594,7 +594,7 @@ struct RBareFileHeader {
 };
 #pragma pack(pop)
 
-/// The artifical class name shown for opaque RNTuple keys (see TBasket)
+/// The artificial class name shown for opaque RNTuple keys (see TBasket)
 constexpr char const *kBlobClassName = "RBlob";
 /// The class name of the RNTuple anchor
 constexpr char const *kNTupleClassName = "ROOT::RNTuple";
