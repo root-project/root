@@ -219,7 +219,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   RooCmdConfig pc("RooAbsRealLValue::frame(" + std::string(GetName()) + ")");
   pc.defineDouble("min","Range",0,getMin()) ;
   pc.defineDouble("max","Range",1,getMax()) ;
-  pc.defineInt("nbins","Bins",0,getBins()) ;
+  pc.defineInt("nbins","Bins",0, getBins()!=0 ? getBins() : DefaultNBins) ;
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineString("name","Name",0,"") ;
   pc.defineString("title","Title",0,"") ;
@@ -316,7 +316,7 @@ RooPlot *RooAbsRealLValue::frame(double xlo, double xhi, Int_t nbins) const
 
 RooPlot *RooAbsRealLValue::frame(double xlo, double xhi) const
 {
-  return new RooPlot(*this,xlo,xhi,getBins());
+  return new RooPlot(*this,xlo,xhi, getBins()!=0 ? getBins() : DefaultNBins);
 }
 
 
@@ -366,7 +366,7 @@ RooPlot *RooAbsRealLValue::frame() const
     return nullptr ;
   }
 
-  return new RooPlot(*this,getMin(),getMax(),getBins());
+  return new RooPlot(*this,getMin(),getMax(), getBins()!=0 ? getBins() : DefaultNBins);
 }
 
 
@@ -601,6 +601,10 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     ownBinning[0] = true ;
   } else {
     binning[0] = &getBinning() ;
+    if (binning[0]->numBins() == 0) {
+      binning[0] = new RooUniformBinning(getMin(), getMax(), DefaultNBins) ;
+      ownBinning[0] = true ;
+    }
   }
 
   if (pc.hasProcessed("YVar")) {
@@ -617,6 +621,10 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       ownBinning[1] = true ;
     } else {
       binning[1] = &yvar.getBinning() ;
+      if (binning[1]->numBins() == 0) {
+        binning[1] = new RooUniformBinning(yvar.getMin(), yvar.getMax(), DefaultNBins) ;
+        ownBinning[1] = true ;
+      }
     }
   }
 
@@ -634,6 +642,10 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       ownBinning[2] = true ;
     } else {
       binning[2] = &zvar.getBinning() ;
+      if (binning[2]->numBins() == 0) {
+        binning[2] = new RooUniformBinning(zvar.getMin(), zvar.getMax(), DefaultNBins) ;
+        ownBinning[2] = true ;
+      }
     }
   }
 
@@ -668,7 +680,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   RooArgList list(*this) ;
   double xlo = getMin() ;
   double xhi = getMax() ;
-  Int_t nbins = getBins() ;
+  Int_t nbins = getBins()!=0 ? getBins() : DefaultNBins ;
 
   // coverity[ARRAY_VS_SINGLETON]
   return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins));
@@ -755,8 +767,8 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   }
 
   if (!nBins2) {
-    nbins_fit[0] = getBins() ;
-    nbins_fit[1] = yvar.getBins() ;
+    nbins_fit[0] = getBins()!=0 ? getBins() : DefaultNBins ;
+    nbins_fit[1] = yvar.getBins()!=0 ? yvar.getBins() : DefaultNBins ;
     nBins2 = nbins_fit ;
   }
 
@@ -836,9 +848,9 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   }
 
   if (!nBins2) {
-    nbins_fit[0] = getBins() ;
-    nbins_fit[1] = yvar.getBins() ;
-    nbins_fit[2] = zvar.getBins() ;
+    nbins_fit[0] = getBins()!=0 ? getBins() : DefaultNBins ;
+    nbins_fit[1] = yvar.getBins()!=0 ? yvar.getBins() : DefaultNBins ;
+    nbins_fit[2] = zvar.getBins()!=0 ? zvar.getBins() : DefaultNBins ;
     nBins2 = nbins_fit ;
   }
 
