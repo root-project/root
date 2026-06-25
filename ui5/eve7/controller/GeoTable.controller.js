@@ -92,7 +92,6 @@ sap.ui.define([
 
             t.addColumn(new tableColumn({
                 label: 'Description',
-                tooltip: 'Name of geometry nodes',
                 autoResizable: true,
                 width: show_columns ? '50%' : '100%',
                 visible: true,
