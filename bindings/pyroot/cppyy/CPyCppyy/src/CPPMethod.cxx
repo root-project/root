@@ -1065,10 +1065,18 @@ PyObject* CPyCppyy::CPPMethod::Call(CPPInstance*& self,
 // get its class
     Cppyy::TCppType_t derived = self->ObjectIsA();
 
-// calculate offset (the method expects 'this' to be an object of fScope)
+// calculate offset: the generated wrapper casts 'this' to the method's actual
+// declaring class, which may differ from fScope. In particular, a method
+// brought into fScope through a using-declaration (e.g. `using Base::meth;`)
+// is still declared in the base, so 'this' has to be adjusted to that base's
+// subobject. Using fScope here would yield a zero offset and corrupt memory.
+    Cppyy::TCppScope_t declaring = Cppyy::GetParentScope(fMethod);
+    if (!declaring)
+        declaring = fScope;
+
     ptrdiff_t offset = 0;
-    if (derived && derived != fScope)
-        offset = Cppyy::GetBaseOffset(derived, fScope, object, 1 /* up-cast */);
+    if (derived && derived != declaring)
+        offset = Cppyy::GetBaseOffset(derived, declaring, object, 1 /* up-cast */);
 
 // actual call; recycle self instead of returning new object for same address objects
     CPPInstance* pyobj = (CPPInstance*)Execute(object, offset, ctxt);
