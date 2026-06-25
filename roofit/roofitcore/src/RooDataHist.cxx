@@ -798,6 +798,17 @@ void RooDataHist::initialize(const char* binningName, bool fillTree)
       }
     }
 
+    // If the variable has no binning explicitly set (the default for a
+    // freshly-constructed RooRealVar, which reports zero bins), materialize the
+    // historical default binning. _vars holds this dataset's own clones (see
+    // RooAbsData::initializeVars, which addClone's the input variables), so this
+    // does not affect the user's original variable.
+    if (RooRealVar* rrv = dynamic_cast<RooRealVar*>(_vars[i])) {
+      if (rrv->getBins() == 0) {
+        rrv->setBinning(RooUniformBinning(rrv->getMin(), rrv->getMax(), RooAbsRealLValue::DefaultNBins));
+      }
+    }
+
     auto lvarg = dynamic_cast<RooAbsLValue*>(_vars[i]);
     assert(lvarg);
     _lvvars.push_back(lvarg);

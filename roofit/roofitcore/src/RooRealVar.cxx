@@ -104,7 +104,7 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(n
 RooRealVar::RooRealVar(const char *name, const char *title,
              double value, const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
-  _binning(new RooUniformBinning(-1,1,100))
+  _binning(new RooUniformBinning(-1,1))
 {
   _value = value ;
   _fast = true ;
@@ -122,7 +122,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
              double minValue, double maxValue,
              const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
-  _binning(new RooUniformBinning(minValue,maxValue,100))
+  _binning(new RooUniformBinning(minValue,maxValue))
 {
   _fast = true ;
 
@@ -157,7 +157,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
              double value, double minValue, double maxValue,
              const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
-  _binning(new RooUniformBinning(minValue,maxValue,100))
+  _binning(new RooUniformBinning(minValue,maxValue))
 {
     _fast = true ;
     setRange(minValue,maxValue) ;
@@ -815,7 +815,7 @@ void RooRealVar::writeToStream(ostream &os, bool compact) const
       os << " - +INF) ";
    }
 
-   if (getBins() != 100) {
+   if (getBins() != 0) {
       os << "B(" << getBins() << ") ";
    }
 
@@ -868,7 +868,7 @@ void RooRealVar::printExtras(ostream& os) const
   }
   os << ") " ;
 
-  if (getBins()!=100) {
+  if (getBins()!=0) {
     os << "B(" << getBins() << ") " ;
   }
 

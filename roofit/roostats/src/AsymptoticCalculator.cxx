@@ -1111,6 +1111,20 @@ RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet 
 
     RooArgList obsList(*obs);
 
+    // The Asimov data set is built by looping over the bins of the
+    // observables. A freshly-constructed RooRealVar now defaults to zero bins,
+    // so temporarily materialize the historical default binning for any
+    // observable that has no explicit binning set. The change is undone right
+    // after filling the bins so that the model observables are left untouched.
+    std::vector<RooRealVar *> obsWithDefaultBinning;
+    for (auto *arg : obsList) {
+       auto *rrv = dynamic_cast<RooRealVar *>(arg);
+       if (rrv && rrv->getBins() == 0) {
+          rrv->setBins(RooRealVar::DefaultNBins);
+          obsWithDefaultBinning.push_back(rrv);
+       }
+    }
+
     // loop on observables and on the bins
     if (printLevel >= 2) {
        oocoutI(nullptr,Generation) << "Generating Asimov data for pdf " << pdf.GetName() << std::endl;
@@ -1122,6 +1136,11 @@ RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet 
     double binVolume = 1;
     int nbins = 0;
     FillBins(pdf, obsList, *asimovData, obsIndex, binVolume, nbins);
+
+    // restore the zero-bins default on observables that had no explicit binning
+    for (auto *rrv : obsWithDefaultBinning) {
+       rrv->setBins(0);
+    }
     if (printLevel >= 2)
        oocoutI(nullptr,Generation) << "filled from " << pdf.GetName() << "   " << nbins << " nbins " << " volume is " << binVolume << std::endl;
 

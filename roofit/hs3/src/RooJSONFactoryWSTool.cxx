@@ -1076,7 +1076,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bo
          var["min"] << rrv->getMin();
          var["max"] << rrv->getMax();
       }
-      if (rrv->getBins() != 100 && storeBins) {
+      if (rrv->getBins() != 0 && storeBins) {
          var["nbins"] << rrv->getBins();
       }
       _domains->readVariable(*rrv);

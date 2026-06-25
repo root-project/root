@@ -2543,7 +2543,9 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
                                   const char *name) const
 {
    checkInit();
-   return createHistogram(var1, var2, var1.getBins(), var2.getBins(), cuts, name);
+   const int nBins1 = var1.getBins()!=0 ? var1.getBins() : RooAbsRealLValue::DefaultNBins;
+   const int nBins2 = var2.getBins()!=0 ? var2.getBins() : RooAbsRealLValue::DefaultNBins;
+   return createHistogram(var1, var2, nBins1, nBins2, cuts, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

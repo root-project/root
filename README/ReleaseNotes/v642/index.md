@@ -89,6 +89,21 @@ Users are strongly encouraged to switch to the vectorized CPU backend if they ar
 
 If the vectorized backend does not work for a given use case, **please report it by opening an issue on the ROOT GitHub repository**.
 
+### Default binning of RooFit variables changed to zero bins
+
+A freshly-constructed `RooRealVar` (or `RooErrorVar`) no longer has a default binning of 100 bins.
+Instead, `RooAbsRealLValue::getBins()` now returns `0` until a binning is explicitly set (e.g. via `RooRealVar::setBins()`).
+This makes it possible to distinguish a variable whose binning was deliberately chosen from one that was left at the default, which avoids
+writing redundant `nbins` fields when serializing workspaces to HS3 JSON.
+
+For the cases that previously relied on the default of 100 bins, that value is now injected by the relevant routine:
+unbinned-dataset plotting (`RooAbsRealLValue::frame()`), `RooAbsPdf::generateBinned()`, and `RooAbsRealLValue::createHistogram()`
+all fall back to `RooAbsRealLValue::DefaultNBins` (100) when the variable has no binning set.
+As a result, plotting, generating binned data and creating histograms from a default-constructed variable behave exactly as before.
+
+Code that reads `getBins()`/`numBins()` of a bare variable and expected the value `100` should either set the binning explicitly,
+or read the bin count from the relevant histogram or plot frame instead.
+
 ## Graphics and GUI
 
 ### Store canvas as HTML file
