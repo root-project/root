@@ -93,7 +93,7 @@ target_compile_definitions(FTGL::FTGL INTERFACE FTGL_LIBRARY_STATIC) # needed fo
 if(builtin_freetype)
   add_dependencies(BUILTIN_FTGL BUILTIN_FREETYPE)
 endif()
-if(builin_zlib)
+if(builtin_zlib)
   add_dependencies(BUILTIN_FTGL BUILTIN_ZLIB)
 endif()
 target_link_libraries(FTGL::FTGL INTERFACE Freetype::Freetype) # private: OpenGL::GL OpenGL::GLU ZLIB::ZLIB
