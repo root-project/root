@@ -161,7 +161,7 @@ public:
 };
 
 #pragma pack(push, 1)
-/// A name (type, identifies, ...) in the TFile binary format
+/// A name (type, identifier, ...) in the TFile binary format
 struct RTFString {
    unsigned char fLName{0};
    char fData[255];
@@ -224,7 +224,7 @@ struct RTFKey {
    {
       R__ASSERT(szObjInMem <= std::numeric_limits<std::uint32_t>::max());
       R__ASSERT(szObjOnDisk <= std::numeric_limits<std::uint32_t>::max());
-      // For writing, we alywas produce "big" keys with 64-bit SeekKey and SeekPdir.
+      // For writing, we alyways produce "big" keys with 64-bit SeekKey and SeekPdir.
       fVersion = fVersion + kBigKeyVersion;
       fObjLen = szObjInMem;
       fKeyLen = static_cast<RUInt16BE>(GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize());

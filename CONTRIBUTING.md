@@ -4,7 +4,7 @@ Thank you for your interest in contributing to ROOT!  We strongly welcome and ap
 This short guide tries to make contributing as quick and painless as possible.
 
 > [!NOTE]
-> These guidelines should be applicable to most contributes. At the same time, these are not 'one-size-fits-all' rules,
+> These guidelines should be applicable to most contributions. At the same time, these are not 'one-size-fits-all' rules,
 > and there might be cases where diverging from these guidelines is warranted. If you are unsure about how to structure
 > your contribution, don't hesitate to reach out! We are always happy to provide help and feedback.
 
@@ -43,11 +43,11 @@ This allows us to revert changes when needed, without affecting anything else.
 
 > [!TIP]
 > Enable the CMake build option `dev=ON` to enable extra checks that are normally off. Most notably, this will turn
-> compiler warnings into errors, preventing you from accidentally push code that causes warnings.
+> compiler warnings into errors, preventing you from accidentally pushing code that causes warnings.
 
 ### Your Commit Message
 
-The commit summary (i.e. the first line of the commit message) should be preceded by the a tag indicating the scope of
+The commit summary (i.e. the first line of the commit message) should be preceded by a tag indicating the scope of
 ROOT that is affected by your commit, in square brackets. Most tags are self-describing (e.g., `[tree]` indicates a
 change to TTree, `[RF]` indicates a change to RooFit). If you are unsure about which scope tags to use, we are happy to
 point you in the right direction! See also the [commit log](https://github.com/root-project/root/commits/master/) for
