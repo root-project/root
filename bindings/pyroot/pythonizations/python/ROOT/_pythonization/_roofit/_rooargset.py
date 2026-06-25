@@ -40,8 +40,9 @@ class RooArgSet(RooAbsCollection):
                 FutureWarning,
                 stacklevel=2,
             )
-            return self._init(*args[0], **kwargs)
-        return self._init(*args, **kwargs)
+            self._init(*args[0], **kwargs)
+            return
+        self._init(*args, **kwargs)
 
     def __getitem__(self, key):
         import ROOT
