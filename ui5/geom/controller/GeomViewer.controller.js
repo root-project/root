@@ -551,7 +551,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.byId("geomInfo").setModel(model);
 
-         if (this.geo_clones && path) {
+         if (this.geo_clones) {
             const stack = this.geo_clones.findStackByName(path.join('/')),
                   info = stack ? this.geo_clones.resolveStack(stack) : null,
                   build_shape = this.geo_painter?.findNodeShape(info?.id);
