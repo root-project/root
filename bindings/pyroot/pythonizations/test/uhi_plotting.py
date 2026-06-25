@@ -12,9 +12,7 @@ from uhi.typing.plottable import PlottableHistogram
 
 def _not_writable(hist):
     # For these classes, the values() method always returns a copy so writable=True is not supported.
-    return isinstance(
-        hist, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C, ROOT.TProfile, ROOT.TProfile2D, ROOT.TProfile2Poly, ROOT.TProfile3D)
-    )
+    return isinstance(hist, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C, ROOT.TProfile, ROOT.TProfile2D, ROOT.TProfile3D))
 
 
 class TestTH1Plotting:
