@@ -249,7 +249,7 @@ if(NOT mathmore)
       math/mathmoreIntegration.C
       math/pdf/pdf007_multivarGaus.C
       math/pdf/pdf012_tStudent.C
-      math/pdf/pdf001_Nornal.C
+      math/pdf/pdf001_Normal.C
       roofit/roostats/TestNonCentral.C
       roofit/roostats/TestNonCentral.py
       math/Legendre.py
