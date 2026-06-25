@@ -227,6 +227,25 @@ double MnUserTransformation::DInt2Ext(unsigned int i, double val) const
    return dd;
 }
 
+double MnUserTransformation::D2Int2Ext(unsigned int i, double val) const
+{
+   // return the second derivative of the int->ext transformation: d^2 Pext(i) / d Pint(i)^2
+   // for the parameter i with value val
+
+   double dd = 0.;
+   if (fParameters[fExtOfInt[i]].HasLimits()) {
+      if (fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
+         dd = fDoubleLimTrafo.D2Int2Ext(val, fParameters[fExtOfInt[i]].UpperLimit(),
+                                        fParameters[fExtOfInt[i]].LowerLimit());
+      else if (fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit())
+         dd = fUpperLimTrafo.D2Int2Ext(val, fParameters[fExtOfInt[i]].UpperLimit());
+      else
+         dd = fLowerLimTrafo.D2Int2Ext(val, fParameters[fExtOfInt[i]].LowerLimit());
+   }
+
+   return dd;
+}
+
 double MnUserTransformation::DExt2Int(unsigned int i, double val) const
 {
    // return the derivative of the ext->int transformation: dPint(i) / dPext(i)

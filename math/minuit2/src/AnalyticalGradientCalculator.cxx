@@ -72,13 +72,15 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
    unsigned int n = par.Vec().size();
    assert(hmat.size() == n *(n+1)/2);
    // compute external Hessian and then transform
-   std::vector<double> extHessian = fGradFunc.Hessian(fTransformation(par.Vec()));
+   std::vector<double> extParams = fTransformation(par.Vec());
+   std::vector<double> extHessian = fGradFunc.Hessian(extParams);
    if (extHessian.empty()) {
       MnPrint print("AnalyticalGradientCalculator::Hessian");
       print.Info("FCN cannot compute Hessian matrix");
       return false;
    }
    unsigned int next = sqrt(extHessian.size());
+   std::vector<double> extGradient = fGradFunc.Gradient(extParams);
    // we need now to transform the matrix from external to internal coordinates
    for (unsigned int i = 0; i < n; i++) {
       unsigned int iext = fTransformation.ExtOfInt(i);
@@ -87,6 +89,11 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
          double dxdj = fTransformation.DInt2Ext(j, par.Vec()(j));
          unsigned int jext = fTransformation.ExtOfInt(j);
          hmat(i, j) = dxdi * extHessian[iext*next+ jext] * dxdj;
+         if (i == j) {
+            double d2xdi2 = fTransformation.D2Int2Ext(i, par.Vec()(i));
+            if (d2xdi2 != 0.)
+               hmat(i, j) += d2xdi2 * extGradient[iext];
+         }
       }
    }
    return true;
@@ -100,9 +107,12 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
 
    MnPrint print("AnalyticalGradientCalculator::G2");
 
+   std::vector<double> extParams = fTransformation(par.Vec());
+   std::vector<double> extGradient = fGradFunc.Gradient(extParams);
+
    // --- Preferred path: direct G2 from FCN ---
    if (fGradFunc.HasG2()) {
-      std::vector<double> extG2 = fGradFunc.G2(fTransformation(par.Vec()));
+      std::vector<double> extG2 = fGradFunc.G2(extParams);
       if (extG2.empty()) {
          print.Info("FCN cannot compute the 2nd derivatives vector (G2)");
          return false;
@@ -111,7 +121,8 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
       for (unsigned int i = 0; i < n; i++) {
          const unsigned int iext = fTransformation.ExtOfInt(i);
          const double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
-         g2(i) = dxdi * dxdi * extG2[iext];
+         const double d2xdi2 = fTransformation.D2Int2Ext(i, par.Vec()(i));
+         g2(i) = dxdi * dxdi * extG2[iext] + d2xdi2 * extGradient[iext];
       }
       return true;
    }
@@ -122,7 +133,7 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
       return false;
    }
 
-   std::vector<double> extHessian = fGradFunc.Hessian(fTransformation(par.Vec()));
+   std::vector<double> extHessian = fGradFunc.Hessian(extParams);
    if (extHessian.empty()) {
       print.Info("FCN cannot compute Hessian matrix (needed to derive G2)");
       return false;
@@ -141,7 +152,8 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
       const unsigned int iext = fTransformation.ExtOfInt(i);
       const double diag = extHessian[iext * nExt + iext];
       const double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
-      g2(i) = dxdi * dxdi * diag;
+      const double d2xdi2 = fTransformation.D2Int2Ext(i, par.Vec()(i));
+      g2(i) = dxdi * dxdi * diag + d2xdi2 * extGradient[iext];
    }
    return true;
 }
