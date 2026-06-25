@@ -17,7 +17,6 @@ if (opengl)
     add_subdirectory(gviz3d)
   endif()
   add_subdirectory(gl)
-  add_subdirectory(glad)
 endif()
 
 if(webgui AND root7 AND geom)

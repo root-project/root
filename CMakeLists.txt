@@ -403,6 +403,9 @@ add_subdirectory (io)
 add_subdirectory (net)
 add_subdirectory (builtins/mathtext) # hard coded builtin for graf2d
 add_subdirectory (graf2d)
+if (opengl)
+  add_subdirectory (builtins/glad) # hard coded builtin for graf3d
+endif()
 add_subdirectory (graf3d)
 if(NOT minimal)
   add_subdirectory (gui)
