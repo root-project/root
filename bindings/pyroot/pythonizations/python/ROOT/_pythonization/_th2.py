@@ -83,7 +83,9 @@ _th2_derived_classes_to_pythonize = [
     # "TH2PolyBin", Does not derive from TH2
     "TProfile2D",
     # "TProfile2PolyBin", Derives from TH2PolyBin which does not derive from TH2
-    "TProfile2Poly",
+    # "TProfile2Poly", # Like TH2Poly (its base), its bins are polygons addressed by a
+    #                  # single global bin number, not an (i, j) grid, so it does not fit
+    #                  # the rectangular UHI plotting/indexing model.
 ]
 
 for klass in _th2_derived_classes_to_pythonize:
