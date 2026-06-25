@@ -457,10 +457,9 @@ sap.ui.define([
 
          for (let n = 0; n < cont.length; ++n)
             if (cont[n] && cont[n].ged_fragment) {
-               let model = cont[n].getModel();
-
-               let func = model.getProperty('/specialRefresh');
-               if (func && (typeof func == 'function'))
+               let model = cont[n].getModel(),
+                   func = model.getProperty('/specialRefresh');
+               if (func && (typeof this[func] === 'function'))
                   this[func](model);
                else
                   model.refresh();
