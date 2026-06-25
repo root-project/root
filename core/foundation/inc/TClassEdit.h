@@ -241,7 +241,7 @@ namespace TClassEdit {
       // Find the first template parameter
       std::vector<std::string> v;
       int i;
-      GetSplit(name.data(), v, i);
+      GetSplit(std::string(name).c_str(), v, i);
       return v[1];
    }
    std::string GetNameForIO(const std::string& templateInstanceName,
