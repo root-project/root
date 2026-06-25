@@ -48,6 +48,10 @@ the names of the arguments are not hard coded.
 #include "RooMsgService.h"
 #include "RooArgList.h"
 #include "RooFormula.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsBinning.h"
+#include "RooCurve.h"
+#include "RooHelpers.h"
 
 using std::istream, std::ostream, std::endl;
 
@@ -107,6 +111,9 @@ RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) :
   _actualVars("actualVars",this,other._actualVars),
   _formExpr(other._formExpr)
 {
+   for (auto const &item : other._binnings) {
+      _binnings[item.first] = std::unique_ptr<RooAbsBinning>{item.second->clone()};
+   }
   formula();
 }
 
@@ -122,7 +129,119 @@ RooFormula& RooGenericPdf::formula() const
   return *_formula ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Declare that this pdf is piecewise constant (flat) within the bins of the
+/// given `binning` of the observable `obs`, which must be one of the formula
+/// variables. The method can be called several times to set a binning for more
+/// than one observable. Use a RooUniformBinning to describe many uniform bins
+/// compactly.
+///
+/// Once set, integrals over `obs` use the fast bin integrator (which sums the
+/// central value of each bin times the bin width) instead of the generic
+/// numeric integrator, and plotting samples the step shape exactly.
+///
+/// If `checkFlatness` is true (the default), the function is sampled at several
+/// points inside each bin to verify that it is indeed flat; if it is not, an
+/// error is issued and the binning is not stored.
 
+void RooGenericPdf::setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness)
+{
+   // Match the observable to a formula variable by name, so that a same-named
+   // stand-in for the actual server is accepted too.
+   const int idx = _actualVars.index(obs.GetName());
+   if (idx < 0) {
+      coutE(InputArguments) << "RooGenericPdf::setBinning(" << GetName() << ") the observable " << obs.GetName()
+                            << " is not one of the formula variables of this pdf, nothing done." << std::endl;
+      return;
+   }
+
+   if (checkFlatness) {
+      // Sample the function by varying the actual formula variable (the server),
+      // which may be a different object than `obs` if `obs` is just a same-named
+      // stand-in: the function's value depends on the server, not on `obs`.
+      if (auto *serverObs = dynamic_cast<RooAbsRealLValue *>(_actualVars.at(idx))) {
+         std::span<const double> boundaries{binning.array(), static_cast<std::size_t>(binning.numBoundaries())};
+         if (!RooHelpers::isFunctionFlatInBins(*this, *serverObs, boundaries)) {
+            coutE(InputArguments) << "RooGenericPdf::setBinning(" << GetName() << ") the expression \"" << _formExpr
+                                  << "\" is not flat within the given bins of " << obs.GetName()
+                                  << ". The binning is not set. Pass checkFlatness=false to override this check."
+                                  << std::endl;
+            return;
+         }
+      }
+   }
+
+   // Key the binning by the observable's index in _actualVars (not its name), so
+   // that it survives a renaming of the variable or a server redirection.
+   _binnings[idx] = std::unique_ptr<RooAbsBinning>{binning.clone()};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a binning previously declared with setBinning() for observable `obs`,
+/// reverting to the generic numeric integrator for it. Returns true if a binning
+/// was removed, false if none was set for `obs`.
+
+bool RooGenericPdf::removeBinning(const RooAbsRealLValue &obs)
+{
+   return _binnings.erase(_actualVars.index(obs.GetName())) > 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if a binning was set with setBinning() for every
+/// observable in the integration set `obs`.
+
+bool RooGenericPdf::isBinnedDistribution(const RooArgSet &obs) const
+{
+   if (obs.empty() || _binnings.empty()) {
+      return false;
+   }
+   for (RooAbsArg *o : obs) {
+      const int idx = _actualVars.index(o->GetName());
+      // Observables that are not formula variables of this pdf are ones we do
+      // not depend on: the function is constant (hence trivially binned) in
+      // them, so they must be ignored here. This matches the convention that
+      // composite functions like RooProduct rely on, where each component's
+      // isBinnedDistribution() is queried with the full observable set.
+      if (idx < 0) {
+         continue;
+      }
+      if (_binnings.find(idx) == _binnings.end()) {
+         return false;
+      }
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the boundaries of the binning set with setBinning() that fall
+/// within [xlo, xhi], or a null pointer if no binning was set for this observable.
+
+std::list<double> *RooGenericPdf::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
+{
+   auto found = _binnings.find(_actualVars.index(obs.GetName()));
+   if (found == _binnings.end()) {
+      return nullptr;
+   }
+   const RooAbsBinning &binning = *found->second;
+   return RooHelpers::binBoundariesInRange({binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo,
+                                           xhi);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hints that draw the piecewise-flat shape exactly (a pair of
+/// points just left and right of every bin boundary), or a null pointer if no
+/// binning was set for this observable.
+
+std::list<double> *RooGenericPdf::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
+{
+   auto found = _binnings.find(_actualVars.index(obs.GetName()));
+   if (found == _binnings.end()) {
+      return nullptr;
+   }
+   const RooAbsBinning &binning = *found->second;
+   return RooCurve::plotSamplingHintForBinBoundaries(
+      {binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo, xhi);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of this object
