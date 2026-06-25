@@ -206,13 +206,11 @@ sap.ui.define([
          this.methodDialog.destroy();
 
          if (painter && method && args) {
-
-            if (painter.executeMenuCommand(method, args)) return;
+            if (painter.executeMenuCommand(method, args))
+               return;
             let exec = method.fExec;
-            if (args) exec = exec.substr(0,exec.length-1) + args + ')';
+            exec = exec.substr(0,exec.length-1) + args + ')';
             // invoked only when user press Ok button
-            console.log(`execute method for object ${menu_obj_id} exec ${exec}`);
-
             let canvp = this.getCanvasPainter(),
                 p = menu_obj_id.indexOf('#');
 
