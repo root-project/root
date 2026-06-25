@@ -71,7 +71,7 @@ class TTreeIterable(unittest.TestCase):
             ds.SetBranchAddress('floatb', n)
 
             i = 0
-            for entry in ds:
+            for _ in ds:
                 self.assertEqual(n[0], i+self.more)
                 i = (i + 1) % self.nentries
 
@@ -83,7 +83,7 @@ class TTreeIterable(unittest.TestCase):
             ds.SetBranchAddress('arrayb', a)
 
             i = 0
-            for entry in ds:
+            for _ in ds:
                 for j in range(self.arraysize):
                     self.assertEqual(a[j], i+j)
                 i = (i + 1) % self.nentries
@@ -96,7 +96,7 @@ class TTreeIterable(unittest.TestCase):
             ds.SetBranchAddress('structleaflistb', ms)
 
             i = 0
-            for entry in ds:
+            for _ in ds:
                 self.assertEqual(ms.myint1, i+self.more)
                 self.assertEqual(ms.myint2, i*self.more)
                 i = (i + 1) % self.nentries
@@ -115,7 +115,7 @@ class TTreeIterable(unittest.TestCase):
 
             numentry = 0
         
-            for entry in ds:
+            for _ in ds:
                 for i in range(ncols):
                     self.assertEqual(cs[i][0], numentry + i*self.more)
                 numentry += 1
