@@ -306,6 +306,7 @@ sap.ui.define([], function() {
 
                   if (mc[i].fElementId === elId) {
                      mc.splice(i, 1);
+                     i--; // ensure that next element checked
                   }
                }
             }

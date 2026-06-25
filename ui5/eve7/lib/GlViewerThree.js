@@ -467,7 +467,7 @@ sap.ui.define([
             let ctrl = this.getCtrlRec(intersects[i].object);
             if (intersects[i].object.visible && ctrl)
             {
-               if (ctrl && ctrl.obj3d && ctrl.obj3d.eve_el)
+               if (ctrl.obj3d && ctrl.obj3d.eve_el)
                {
                   let el = ctrl.obj3d.eve_el;
                   if (el && el.fPickable)
