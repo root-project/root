@@ -701,6 +701,12 @@ TEST(RooFitHS3, RooPolynomial)
    EXPECT_EQ(status, 0);
    status = validate({"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
    EXPECT_EQ(status, 0);
+
+   RooWorkspace ws;
+   ws.factory("Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)");
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(json.find("\"coefficients\":[1.0,0.0,\"a_2\"]"), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"coefficients\":[\"1.0\""), std::string::npos) << json;
 }
 
 TEST(RooFitHS3, RooPowerSum)
