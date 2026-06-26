@@ -1019,6 +1019,7 @@ TEST(RooFitHS3, UnbinnedDatasetAxisRange)
    const std::string axesNode = json1.substr(axesPos, axesEnd - axesPos);
    EXPECT_NE(axesNode.find("\"min\":-2.5"), std::string::npos) << axesNode;
    EXPECT_NE(axesNode.find("\"max\":7.5"), std::string::npos) << axesNode;
+   EXPECT_EQ(axesNode.find("\"value\""), std::string::npos) << axesNode;
 }
 
 // HistFactory channels with samples that have a zero-yield bin together with a

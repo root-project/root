@@ -162,6 +162,26 @@ struct Var {
    Var(int n) : nbins(n), min(0), max(n) {}
 };
 
+void exportAxis(JSONNode &obsNode, RooRealVar const &var)
+{
+   std::string name = var.GetName();
+   RooJSONFactoryWSTool::testValidName(name, false);
+   obsNode["name"] << name;
+
+   auto const &binning = var.getBinning();
+   if (binning.isUniform()) {
+      obsNode["min"] << var.getMin();
+      obsNode["max"] << var.getMax();
+      obsNode["nbins"] << var.getBins();
+   } else {
+      auto &edges = obsNode["edges"].set_seq();
+      edges.append_child() << binning.binLow(0);
+      for (int i = 0; i < binning.numBins(); ++i) {
+         edges.append_child() << binning.binHigh(i);
+      }
+   }
+}
+
 /**
  * @brief Check if a string represents a valid number.
  *
@@ -1642,7 +1662,11 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this really is an unbinned dataset
    output["type"] << "unbinned";
-   exportVariables(variables, output["axes"], false, true);
+   auto &observablesNode = output["axes"].set_seq();
+   for (auto *var : static_range_cast<RooRealVar *>(variables)) {
+      _domains->readVariable(*var);
+      exportAxis(observablesNode.append_child().set_map(), *var);
+   }
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
