@@ -31,9 +31,10 @@ class TestRooAbsCollection(unittest.TestCase):
 
     def _test_addowned(self, collection_class):
         coll = collection_class()
-        if True:
-            x = ROOT.RooRealVar("x", "x", -10, 10)
-            coll.addOwned(x)
+        x = ROOT.RooRealVar("x", "x", -10, 10)
+        self.assertTrue(x.__python_owns__)
+        coll.addOwned(x)
+        self.assertFalse(x.__python_owns__)
         self.assertTrue("x" in coll)
 
     def _test_iterator(self, collection_class):
