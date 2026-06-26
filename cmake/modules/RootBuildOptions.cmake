@@ -339,9 +339,9 @@ if(testing)
   set(testsupport ON CACHE BOOL "" FORCE)
 endif()
 
-#---running HS3 test suite requires both testing and pyroot
-if(test_roofit_hs3testsuite AND (NOT testing OR NOT pyroot))
-    message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
+#---running HS3 test suite requires both testing and pyroot, but testing globally disables tests
+if(testing AND test_roofit_hs3testsuite AND NOT pyroot)
+  message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
 endif()
 
 if(unfold AND NOT xml)
