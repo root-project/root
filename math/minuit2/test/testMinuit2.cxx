@@ -405,8 +405,9 @@ TEST(Minuit2, AnalyticalHessianLimitTransformation)
          // magnitude, and dropping the curvature term changes them by ~100%.
          const double tol = 1e-3 * std::max(std::abs(fd), 1.0);
          EXPECT_NEAR(hAnalytic(i, j), fd, tol) << "Hessian mismatch at (" << i << "," << j << ")";
-         if (i == j)
+         if (i == j) {
             EXPECT_NEAR(g2Analytic(i), fd, tol) << "G2 mismatch at " << i;
+         }
       }
    }
 }
