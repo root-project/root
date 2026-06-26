@@ -958,6 +958,10 @@ TEST_F(GH16805ProcessorTest, JoinReading)
    EXPECT_EQ(20u, joinedAll->GetNEntriesProcessed());
 }
 
+// This test is a translation using RNTupleProcessor of the TTree test
+// introduced by https://github.com/root-project/root/pull/20222,
+// to ensure that the corresponding friendship logic works equivalently
+// with the RNTuple join mechanism.
 using GH20033ProcessorConfig = std::tuple<bool, bool, bool, bool>;
 
 class GH20033ProcessorTest : public testing::TestWithParam<GH20033ProcessorConfig> {
@@ -968,13 +972,11 @@ protected:
       "gh20033_rntuple_stepzero_1.root"
    };
 
-   // Muut analyysivaiheet omissa tiedostoissaan
    const std::string fStepOneFile = "gh20033_rntuple_stepone.root";
    const std::string fStepTwoFile = "gh20033_rntuple_steptwo.root";
    const std::string fStepThreeFile = "gh20033_rntuple_stepthree.root";
    const std::string fStepFourFile = "gh20033_rntuple_stepfour.root";
 
-   // Luo stepZero-RNTuplen ja täyttää sen testidatalla
    static void WriteStepZero(const std::string &fileName, int begin, int end)
    {
       auto model = RNTupleModel::Create();
@@ -988,7 +990,7 @@ protected:
       for (int i = begin; i < end; ++i) {
          *stepZeroBr1 = i;
          *stepZeroBr2 = 2 * i;
-         *value = i;
+         *value = i;s
          writer->Fill();
       }
    }
@@ -1037,15 +1039,15 @@ protected:
    }
 
    std::unique_ptr<RNTupleProcessor> CreateStepProcessor(std::string_view ntupleName,
-                                                       const std::string &fileName,
-                                                       bool useChain)
+                                                         std::string_view fileName,
+                                                         bool useChain)
    {
       if (useChain) {
-         std::vector<RNTupleOpenSpec> specs{{std::string(ntupleName), fileName}};
-         return RNTupleProcessor::CreateChain(specs, std::string(ntupleName));
+         std::vector<RNTupleOpenSpec> specs{{std::string(ntupleName), std::string(fileName)}};
+         return RNTupleProcessor::CreateChain(specs);
       }
 
-      return RNTupleProcessor::Create({std::string(ntupleName), fileName}, std::string(ntupleName));
+      return RNTupleProcessor::Create({std::string(ntupleName), std::string(fileName)});
    }
 
    std::unique_ptr<RNTupleProcessor> CreateJoinedProcessor()
