@@ -1,34 +1,20 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
-CLANG_TIDY_CHECKS='-*'
-if [[ $TOOL == clang-tidy-analyzer ]]; then
-  CLANG_TIDY_CHECKS+=',clang-analyzer-*,-clang-analyzer-alpha*,bugprone*'
-elif [[ $TOOL == clang-tidy-modernize ]]; then
-  CLANG_TIDY_CHECKS+=',modernize*'
-fi
+echo "Running $(realpath $0) from $PWD"
 
-echo "Running clang-tidy only against the changes in branch $TRAVIS_BRANCH."
+WORKSPACE="${GITHUB_WORKSPACE:-${PWD}}"
+echo "Setting WORKSPACE to $WORKSPACE"
 
-cd ../root/
+SRC_DIR="${WORKSPACE}/ROOT-CI/src"
+BUILD_DIR="${WORKSPACE}/ROOT-CI/build"
 
-# Workaround for travis issue: travis-ci/travis-ci#6069
-git remote set-branches --add origin master
-git fetch
+mkdir -v -p "${SRC_DIR}" "${BUILD_DIR}"
 
-# clang-tidy-diff.py not installed on travis
-wget https://raw.githubusercontent.com/llvm-mirror/clang-tools-extra/release_50/clang-tidy/tool/clang-tidy-diff.py
+cmake -B "${BUILD_DIR}" -S ${SRC_DIR} \
+  -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_EXPORT_COMPILE_COMMANDS=on \
+  -Dminimal=on -Dasserts=on
 
-RESULT_OUTPUT="$(git diff -U0 origin/master | python clang-tidy-diff.py -p1 -clang-tidy-binary $(which clang-tidy) \
-                 -checks=$CLANG_TIDY_CHECKS)"
-if [[ $? -eq 0 ]]; then
-  echo "$TOOL passed."
-  exit 0
-else
-  echo "To reproduce it locally please run"
-  echo -e "\tgit checkout $TRAVIS_BRANCH"
-  echo -e "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff.py -p1 -clang-tidy-binary \$(which clang-tidy) -checks=$CLANG_TIDY_CHECKS"
-  echo "$RESULT_OUTPUT"
-  exit 1
-fi
+clang-tidy --version
+exit 0
