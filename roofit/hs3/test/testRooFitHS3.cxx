@@ -211,6 +211,22 @@ TEST(RooFitHS3, AttributesIO)
    EXPECT_STREQ(pdf.getStringAttribute("key1"), nullptr) << "unexpected string attribute found!";
 }
 
+TEST(RooFitHS3, ParameterPointsDoNotExportRanges)
+{
+   RooWorkspace ws{"workspace"};
+   ws.factory("Gaussian::pdf(x[0, 10], mu[1, -5, 5], sigma[2, 0.1, 10])");
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+
+   for (auto const &point : tree->rootnode()["parameter_points"].children()) {
+      for (auto const &parameter : point["parameters"].children()) {
+         EXPECT_FALSE(parameter.has_child("min")) << parameter["name"].val();
+         EXPECT_FALSE(parameter.has_child("max")) << parameter["name"].val();
+      }
+   }
+}
+
 TEST(RooFitHS3, ParameterStepWidthsModelConfigRoundTrip)
 {
    RooWorkspace ws1{"workspace"};

@@ -1072,7 +1072,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bo
       var["value"] << rrv->getVal();
       if (rrv->isConstant() && storeConstant) {
          var["const"] << rrv->isConstant();
-      } else {
+      } else if (storeBins) {
          var["min"] << rrv->getMin();
          var["max"] << rrv->getMax();
       }
