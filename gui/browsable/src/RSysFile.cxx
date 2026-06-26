@@ -9,8 +9,6 @@
 /// \file
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-10-15
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 
 #include <ROOT/Browsable/RSysFile.hxx>

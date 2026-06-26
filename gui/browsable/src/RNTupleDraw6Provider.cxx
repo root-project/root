@@ -19,8 +19,6 @@
 \brief Provider for RNTuple drawing on TCanvas
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2021-03-09
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
-welcome!
 */
 
 class RNTupleDraw6Provider : public RProvider {
