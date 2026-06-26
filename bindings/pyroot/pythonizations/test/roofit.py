@@ -343,7 +343,7 @@ def args_equal(arg_1, arg_2):
     return same
 
 
-class TestRooArgList(unittest.TestCase):
+class TestRooCmdArg(unittest.TestCase):
     """
     Test for RooCmdArg pythonizations.
     """
