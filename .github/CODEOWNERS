@@ -10,6 +10,7 @@
 # Coarse-grained ownership
 * @dpiparo
 /bindings/ @guitargeek @vepadulano
+/bindings/pyroot/cppyy @aaronj0 @guitargeek
 /core/ @dpiparo @pcanal
 /documentation/ @couet @dpiparo
 /fonts/ @bellenot @linev
@@ -23,7 +24,8 @@
 /icons/ @bellenot @linev
 /interpreter/ @dpiparo @hahnjo
 /interpreter/llvm-project/ @vgvassilev @hahnjo
-interpreter/cling/tools/packaging @vgvassilev @hahnjo
+/interpreter/cling/tools/packaging/ @vgvassilev @hahnjo
+/interpreter/CppInterOp/ @aaronj0 @vgvassilev
 /io/ @pcanal @jblomer
 /io/xml/ @pcanal @linev
 /main/ @pcanal @dpiparo
