@@ -56,8 +56,18 @@ TApplicationImp *TGuiFactory::CreateApplicationImp(const char *classname, int *a
 
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height)
 {
+   TString canvName;
    if (gROOT->IsWebDisplay()) {
-      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+      canvName = "TWebCanvas";
+   } else {
+      canvName = gEnv->GetValue("Canvas.Name", "");
+      // in batch web display should be configured explicitely
+      if (canvName == "TWebCanvas")
+         canvName.Clear();
+   }
+
+   if (!canvName.IsNull() && (canvName != "TRootCanvas") && (canvName != "TCanvasImp")) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", canvName);
 
       if (ph && ph->LoadPlugin() != -1) {
          auto imp = (TCanvasImp *)ph->ExecPlugin(6, c, title, 0, 0, width, height);
@@ -65,7 +75,7 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t w
             return imp;
       }
 
-      Error("CreateCanvasImp", "Fail to create TWebCanvas, please provide missing libWebGui6 or run 'root --web=off'");
+      Error("CreateCanvasImp", "Fail to create %s canvas implementation", canvName.Data());
    }
 
    return new TCanvasImp(c, title, width, height);
@@ -76,8 +86,18 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t w
 
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   TString canvName;
    if (gROOT->IsWebDisplay()) {
-      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+      canvName = "TWebCanvas";
+   } else {
+      canvName = gEnv->GetValue("Canvas.Name", "");
+      // in batch web display should be configured explicitely
+      if (canvName == "TWebCanvas")
+         canvName.Clear();
+   }
+
+   if (!canvName.IsNull() && (canvName != "TRootCanvas") && (canvName != "TCanvasImp")) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", canvName);
 
       if (ph && ph->LoadPlugin() != -1) {
          auto imp = (TCanvasImp *)ph->ExecPlugin(6, c, title, x, y, width, height);
@@ -85,7 +105,7 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x,
             return imp;
       }
 
-      Error("CreateCanvasImp", "Fail to create TWebCanvas, please provide missing libWebGui6 or run 'root --web=off'");
+      Error("CreateCanvasImp", "Fail to create %s canvas implementation", canvName.Data());
    }
 
    return new TCanvasImp(c, title, x, y, width, height);
