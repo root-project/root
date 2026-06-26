@@ -990,7 +990,7 @@ protected:
       for (int i = begin; i < end; ++i) {
          *stepZeroBr1 = i;
          *stepZeroBr2 = 2 * i;
-         *value = i;s
+         *value = i;
          writer->Fill();
       }
    }
