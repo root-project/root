@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT gui/qt6canvas package
 ############################################################################
 
-find_package(Qt6 COMPONENTS Core Gui CONFIG)
+find_package(Qt6 COMPONENTS Core Widgets CONFIG)
 
 if(NOT Qt6_FOUND)
   if(fail-on-missing)
@@ -20,7 +20,10 @@ if(NOT Qt6_FOUND)
   endif()
 endif()
 
+
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
@@ -28,10 +31,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     TQt6Canvas.h
     TQt6PadPainter.h
   SOURCES
+    src/QCanvasWidget.cpp
     src/TQt6Canvas.cxx
     src/TQt6PadPainter.cxx
   LIBRARIES
-    Qt6::Gui
+    Qt6::Widgets
   DEPENDENCIES
     Core
     Gpad

@@ -14,9 +14,11 @@
 
 #include "TSystem.h"
 #include "TStyle.h"
+#include "TError.h"
 #include "TCanvas.h"
 #include "TThread.h"
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TVirtualX.h"
 #include "TVirtualPS.h"
 #include "TClass.h"
@@ -30,16 +32,20 @@
 #include <sstream>
 #include <vector>
 
+#include <QApplication>
+#include "QCanvasWidget.h"
 
 class TQt6CanvasTimer : public TTimer {
-   TQt6Canvas &fCanv;
 public:
-   TQt6CanvasTimer(TQt6Canvas &canv) : TTimer(10, kTRUE), fCanv(canv) {}
+   TQt6CanvasTimer(Long_t milliSec, Bool_t mode) :
+       TTimer(milliSec, mode) {}
 
 
    /// used to send control messages to clients
    void Timeout() override
    {
+      QApplication::sendPostedEvents();
+      QApplication::processEvents();
    }
 };
 
@@ -65,9 +71,9 @@ TQt6Canvas::TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    // This resolves issue https://github.com/root-project/root/issues/15498
    TThread::SelfId();
 
-   fTimer = new TQt6CanvasTimer(*this);
+   // fTimer = new TQt6CanvasTimer(*this);
 
-   fTimer->TurnOn();
+   // fTimer->TurnOn();
 
    // fAsyncMode = kTRUE;
 }
@@ -78,7 +84,7 @@ TQt6Canvas::TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
 
 TQt6Canvas::~TQt6Canvas()
 {
-   delete fTimer;
+   // delete fTimer;
 }
 
 
@@ -240,6 +246,14 @@ void TQt6Canvas::ProcessExecs(TPad *pad, TExec *extra)
 }
 
 
+void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
+{
+   (void) wid;
+   w = 800;
+   h = 600;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns window geometry including borders and menus
 
@@ -277,7 +291,39 @@ void TQt6Canvas::ForceUpdate()
 
 TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   static QApplication *qapp = nullptr;
+   static int qargc = 1;
+   static char *qargv[2];
+
+   if (!qapp && !QApplication::instance()) {
+
+      if (!gApplication) {
+         ::Error("TQt6Canvas::NewCanvas", "Not found gApplication to create QApplication");
+         return nullptr;
+      }
+
+      qargv[0] = gApplication->Argv(0);
+      qargv[1] = nullptr;
+
+      qapp = new QApplication(qargc, qargv);
+   }
+
+   static TQt6CanvasTimer *timer = nullptr;
+
+   if (!timer) {
+      timer = new TQt6CanvasTimer(10, kTRUE);
+      timer->TurnOn();
+   }
+
+
+   auto widget = new QCanvasWidget();
+   widget->setWindowTitle(QString("QtWeb application, build with qt ") + QT_VERSION_STR);
+   widget->show();
+
    auto imp = new TQt6Canvas(c, name, x, y, width, height);
+
+   imp->fWidget = widget->GetCanvasWidget();
+
 
    // c->fWindowTopX = x;
    // c->fWindowTopY = y;
