@@ -6,6 +6,8 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooAddPdf.h>
+#include <RooAddition.h>
+#include <RooBinning.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
@@ -268,6 +270,61 @@ TEST(RooFitHS3, ProductDomainEntriesExportExplicitBounds)
    EXPECT_GT(importedMean->getMax(), 0.0);
 }
 
+TEST(RooFitHS3, ProductDomainEntriesExportBinning)
+{
+   RooRealVar uniform{"uniform", "uniform", 0.0, 1.0};
+   uniform.setBins(7);
+
+   RooRealVar nonuniform{"nonuniform", "nonuniform", 0.0, 3.0};
+   RooBinning nonuniformBinning{0.0, 3.0};
+   nonuniformBinning.addBoundary(1.0);
+   nonuniformBinning.addBoundary(1.5);
+   nonuniform.setBinning(nonuniformBinning);
+
+   RooAddition sum{"sum", "sum", RooArgList{uniform, nonuniform}};
+
+   RooWorkspace ws{"workspace"};
+   ws.import(sum, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *defaultDomain = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["domains"], "default_domain");
+   ASSERT_NE(defaultDomain, nullptr);
+
+   auto const *uniformAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "uniform");
+   ASSERT_NE(uniformAxis, nullptr);
+   ASSERT_TRUE(uniformAxis->has_child("nbins"));
+   EXPECT_EQ((*uniformAxis)["nbins"].val_int(), 7);
+   EXPECT_FALSE(uniformAxis->has_child("edges"));
+
+   auto const *nonuniformAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "nonuniform");
+   ASSERT_NE(nonuniformAxis, nullptr);
+   ASSERT_TRUE(nonuniformAxis->has_child("edges"));
+   EXPECT_FALSE(nonuniformAxis->has_child("nbins"));
+   auto const &edges = (*nonuniformAxis)["edges"];
+   ASSERT_EQ(edges.num_children(), 4u);
+   EXPECT_DOUBLE_EQ(edges.child(0).val_double(), 0.0);
+   EXPECT_DOUBLE_EQ(edges.child(1).val_double(), 1.0);
+   EXPECT_DOUBLE_EQ(edges.child(2).val_double(), 1.5);
+   EXPECT_DOUBLE_EQ(edges.child(3).val_double(), 3.0);
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedUniform = imported.var("uniform");
+   ASSERT_NE(importedUniform, nullptr);
+   EXPECT_EQ(importedUniform->getBins(), 7);
+
+   auto *importedNonuniform = imported.var("nonuniform");
+   ASSERT_NE(importedNonuniform, nullptr);
+   auto const &importedBinning = importedNonuniform->getBinning();
+   EXPECT_FALSE(importedBinning.isUniform());
+   ASSERT_EQ(importedBinning.numBins(), 3);
+   EXPECT_DOUBLE_EQ(importedBinning.binLow(0), 0.0);
+   EXPECT_DOUBLE_EQ(importedBinning.binHigh(0), 1.0);
+   EXPECT_DOUBLE_EQ(importedBinning.binHigh(1), 1.5);
+   EXPECT_DOUBLE_EQ(importedBinning.binHigh(2), 3.0);
+}
+
 TEST(RooFitHS3, ParameterStepWidthsModelConfigRoundTrip)
 {
    RooWorkspace ws1{"workspace"};
@@ -522,11 +579,15 @@ TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
    EXPECT_NE(json.find("\"name\":\"sigma_real\""), std::string::npos);
    EXPECT_NE(domainAxes.find("\"name\":\"sigma_real\""), std::string::npos) << domainAxes;
 
-   // The unbounded constant RooRealVar is still a RooRealVar, so it gets an
-   // empty domain axis that distinguishes it from a RooConstVar.
-   EXPECT_NE(domainAxes.find("\"name\":\"mean\""), std::string::npos) << domainAxes;
-   EXPECT_EQ(domainAxes.find("\"name\":\"mean\",\"min\""), std::string::npos) << domainAxes;
-   EXPECT_EQ(domainAxes.find("\"name\":\"mean\",\"max\""), std::string::npos) << domainAxes;
+   // The unbounded constant RooRealVar is still a RooRealVar, so it gets a
+   // domain axis with explicit null bounds that distinguishes it from a RooConstVar.
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *defaultDomain = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["domains"], "default_domain");
+   ASSERT_NE(defaultDomain, nullptr);
+   auto const *meanAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "mean");
+   ASSERT_NE(meanAxis, nullptr);
+   EXPECT_TRUE((*meanAxis)["min"].is_null());
+   EXPECT_TRUE((*meanAxis)["max"].is_null());
 
    RooWorkspace imported;
    ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
