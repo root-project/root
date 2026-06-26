@@ -214,10 +214,36 @@ void TQt6Canvas::AssignStatusBits(UInt_t bits)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Returns canvas geometry
+
+void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
+{
+   (void) wid;
+   if (fWidget) {
+      w = fWidget->width();
+      w = fWidget->height();
+   } else {
+      w = 780;
+      h = 580;
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Returns window geometry including borders and menus
 
 UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
+   x = 0;
+   y = 0;
+   if (fCanvasWidget) {
+      w = fCanvasWidget->width();
+      h = fCanvasWidget->height();
+   } else {
+      w = 800;
+      h = 600;
+   }
+
    // x = Canvas()->fWindowTopX;
    // y = Canvas()->fWindowTopY;
    // w = Canvas()->fWindowWidth;
@@ -281,6 +307,7 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    auto imp = new TQt6Canvas(c, name, x, y, width, height);
 
+   imp->fCanvasWidget = widget;
    imp->fWidget = widget->GetCanvasWidget();
 
 
