@@ -25,6 +25,28 @@ namespace Detail {
 
 constexpr static auto defaultDomainName = "default_domain";
 
+namespace {
+
+double readBound(RooFit::Detail::JSONNode const &node, const char *key, double defaultValue)
+{
+   if (!node.has_child(key)) {
+      return defaultValue;
+   }
+   auto const &bound = node[key];
+   return bound.is_null() ? defaultValue : bound.val_double();
+}
+
+void writeBound(RooFit::Detail::JSONNode &node, double value)
+{
+   if (RooNumber::isInfinite(value)) {
+      node.set_null();
+   } else {
+      node << value;
+   }
+}
+
+} // namespace
+
 void Domains::populate(RooWorkspace &ws) const
 {
    auto default_domain = _map.find(defaultDomainName);
@@ -110,24 +132,30 @@ void Domains::ProductDomain::readVariable(const char *name, double min, double m
 {
    auto &elem = _map[name];
 
-   if (!RooNumber::isInfinite(min)) {
-      elem.hasMin = true;
-      elem.min = min;
-   }
-   if (!RooNumber::isInfinite(max)) {
-      elem.hasMax = true;
-      elem.max = max;
-   }
+   elem.hasMin = true;
+   elem.min = min;
+   elem.hasMax = true;
+   elem.max = max;
 }
 void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 {
    auto found = _map.find(var.GetName());
    if (found != _map.end()) {
       auto const &elem = found->second;
-      if (elem.hasMin)
-         var.setMin(elem.min);
-      if (elem.hasMax)
-         var.setMax(elem.max);
+      if (elem.hasMin) {
+         if (RooNumber::isInfinite(elem.min)) {
+            var.removeMin();
+         } else {
+            var.setMin(elem.min);
+         }
+      }
+      if (elem.hasMax) {
+         if (RooNumber::isInfinite(elem.max)) {
+            var.removeMax();
+         } else {
+            var.setMax(elem.max);
+         }
+      }
    }
 }
 
@@ -145,11 +173,11 @@ void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
       auto &elem = _map[RooJSONFactoryWSTool::name(varNode)];
 
       if (varNode.has_child("min")) {
-         elem.min = varNode["min"].val_double();
+         elem.min = readBound(varNode, "min", -RooNumber::infinity());
          elem.hasMin = true;
       }
       if (varNode.has_child("max")) {
-         elem.max = varNode["max"].val_double();
+         elem.max = readBound(varNode, "max", RooNumber::infinity());
          elem.hasMax = true;
       }
    }
@@ -165,10 +193,8 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    for (auto const &item : _map) {
       auto const &elem = item.second;
       RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
-      if (elem.hasMin)
-         varnode["min"] << elem.min;
-      if (elem.hasMax)
-         varnode["max"] << elem.max;
+      writeBound(varnode["min"], elem.hasMin ? elem.min : -RooNumber::infinity());
+      writeBound(varnode["max"], elem.hasMax ? elem.max : RooNumber::infinity());
    }
 }
 void Domains::ProductDomain::populate(RooWorkspace &ws) const

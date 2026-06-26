@@ -227,6 +227,47 @@ TEST(RooFitHS3, ParameterPointsDoNotExportRanges)
    }
 }
 
+TEST(RooFitHS3, ProductDomainEntriesExportExplicitBounds)
+{
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooRealVar mean{"mean", "mean", 0.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 10.0};
+   RooGaussian gauss{"gauss", "gauss", x, mean, sigma};
+
+   RooWorkspace ws{"workspace"};
+   ws.import(gauss, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *defaultDomain = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["domains"], "default_domain");
+   ASSERT_NE(defaultDomain, nullptr);
+
+   auto const *xAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "x");
+   ASSERT_NE(xAxis, nullptr);
+   ASSERT_TRUE(xAxis->has_child("min"));
+   ASSERT_TRUE(xAxis->has_child("max"));
+   EXPECT_FALSE((*xAxis)["min"].is_null());
+   EXPECT_FALSE((*xAxis)["max"].is_null());
+   EXPECT_DOUBLE_EQ((*xAxis)["min"].val_double(), -10.0);
+   EXPECT_DOUBLE_EQ((*xAxis)["max"].val_double(), 10.0);
+
+   auto const *meanAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "mean");
+   ASSERT_NE(meanAxis, nullptr);
+   ASSERT_TRUE(meanAxis->has_child("min"));
+   ASSERT_TRUE(meanAxis->has_child("max"));
+   EXPECT_TRUE((*meanAxis)["min"].is_null());
+   EXPECT_TRUE((*meanAxis)["max"].is_null());
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedMean = imported.var("mean");
+   ASSERT_NE(importedMean, nullptr);
+   EXPECT_TRUE(std::isinf(importedMean->getMin()));
+   EXPECT_LT(importedMean->getMin(), 0.0);
+   EXPECT_TRUE(std::isinf(importedMean->getMax()));
+   EXPECT_GT(importedMean->getMax(), 0.0);
+}
+
 TEST(RooFitHS3, ParameterStepWidthsModelConfigRoundTrip)
 {
    RooWorkspace ws1{"workspace"};

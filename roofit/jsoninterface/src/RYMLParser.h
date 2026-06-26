@@ -50,8 +50,10 @@ public:
       bool is_container() const override;
       bool is_map() const override;
       bool is_seq() const override;
+      bool is_null() const override;
       Node &set_map() override;
       Node &set_seq() override;
+      Node &set_null() override;
       void clear() override;
       std::string key() const override;
       std::string val() const override;
