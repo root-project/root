@@ -16,11 +16,13 @@
 class TPad;
 class TExec;
 class QWidget;
+class QCanvasWidget;
 
 class TQt6Canvas : public TCanvasImp {
 
 protected:
 
+   QCanvasWidget *fCanvasWidget = nullptr;
    QWidget *fWidget = nullptr;
 
    Bool_t fFixedSize = kFALSE;      ///<! true when fixed-size canvas is configured
@@ -37,6 +39,7 @@ protected:
 public:
    TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    ~TQt6Canvas() override;
+
 
    Int_t InitWindow() override;
    void Close() override;

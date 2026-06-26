@@ -12,6 +12,8 @@
 
 #include "TCanvas.h"
 #include "TROOT.h"
+#include "TApplication.h"
+#include "TTimer.h"
 
 #include <QMessageBox>
 #include <QPushButton>
@@ -92,6 +94,11 @@ void QCanvasWidget::PrintCanvas()
 
 void QCanvasWidget::QuitRoot()
 {
+   // set flag which sometimes checked in TSystem::ProcessEvents
+   gROOT->SetInterrupt(kTRUE);
+
+   if (gApplication)
+      TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");
 }
 
 

@@ -249,8 +249,13 @@ void TQt6Canvas::ProcessExecs(TPad *pad, TExec *extra)
 void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
 {
    (void) wid;
-   w = 800;
-   h = 600;
+   if (fWidget) {
+      w = fWidget->width();
+      w = fWidget->height();
+   } else {
+      w = 780;
+      h = 580;
+   }
 }
 
 
@@ -259,6 +264,16 @@ void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
 
 UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
+   x = 0;
+   y = 0;
+   if (fCanvasWidget) {
+      w = fCanvasWidget->width();
+      h = fCanvasWidget->height();
+   } else {
+      w = 800;
+      h = 600;
+   }
+
    // x = Canvas()->fWindowTopX;
    // y = Canvas()->fWindowTopY;
    // w = Canvas()->fWindowWidth;
@@ -322,6 +337,7 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    auto imp = new TQt6Canvas(c, name, x, y, width, height);
 
+   imp->fCanvasWidget = widget;
    imp->fWidget = widget->GetCanvasWidget();
 
 
