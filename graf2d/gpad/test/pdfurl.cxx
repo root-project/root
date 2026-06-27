@@ -6,7 +6,7 @@
 
 TEST(TPad, PDFUrl)
 {
-   const TString pdfFile = "output.pdf";
+   const TString pdfFile = "pdfurl.pdf";
 
    // Generate a multi-page PDF with page titles and #url in TLatex
    TCanvas c1;
