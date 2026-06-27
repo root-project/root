@@ -18,7 +18,7 @@
 \class TVirtualArray
 \ingroup io_other
 Wrapper around an object and giving indirect access to its content
-even if the object is not of a class in the Cint/Reflex dictionary.
+even if the object is not of a class in the rootcling/Reflex dictionary.
 */
 
 #include "TClass.h"
