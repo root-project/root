@@ -76,7 +76,6 @@ private:
    void SetupErrorBuffer();
    void SetOptions();
    void ResetHandle();
-   RResult<void> SetUrl(const std::string &url);
    void Perform(RStatus &status);
 
 public:
@@ -109,6 +108,10 @@ public:
    void ClearCredentials();
    EHTTPCredentialsType GetCredentialsType() const;
 
+   /// Retargets this connection to `url`, reusing the underlying handle so curl can keep the connection
+   /// to the same host alive across requests. Call before a Send*Req to address a different object.
+   /// Returns an error if the URL cannot be set on the handle.
+   RResult<void> SetUrl(const std::string &url);
    /// Checks if the resource exists and if it does, return the value of the content-length header as size
    RStatus SendHeadReq(std::uint64_t &remoteSize);
    /// Reads the given ranges from the remote resource. The ranges can be in any order and also overlapping. They

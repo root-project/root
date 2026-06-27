@@ -149,6 +149,32 @@ TEST(RCurlConnection, Put)
    EXPECT_EQ(std::string(reinterpret_cast<const char *>(payload), payloadLen), body);
 }
 
+TEST(RCurlConnection, SetUrlThenPut)
+{
+   TServerSocket sock(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string baseUrl =
+      std::string("http://") + sock.GetLocalInetAddress().GetHostAddress() + ":" + std::to_string(sock.GetLocalPort());
+
+   const unsigned char payload[] = "object body";
+   const std::size_t payloadLen = sizeof(payload) - 1; // exclude null terminator
+
+   std::string headers;
+   std::string body;
+   std::thread threadRecv(TaskRecvPut, &sock, &headers, &body);
+
+   // The connection is created with the base URL; SetUrl retargets it to a per-request URL (the
+   // mechanism that lets one connection be reused across many objects on the same host).
+   ROOT::Internal::RCurlConnection conn(baseUrl);
+   auto urlStatus = conn.SetUrl(baseUrl + "/myobject/42");
+   ASSERT_TRUE(static_cast<bool>(urlStatus));
+   auto status = conn.SendPutReq(payload, payloadLen);
+
+   threadRecv.join();
+   EXPECT_TRUE(static_cast<bool>(status));
+   EXPECT_EQ(0u, headers.find("PUT /myobject/42 ")) << headers.substr(0, 40);
+   EXPECT_EQ(std::string(reinterpret_cast<const char *>(payload), payloadLen), body);
+}
+
 /// GET (range read) after PUT on the same handle — verifies that WRITEFUNCTION is set correctly
 /// in SendRangesReq after a PUT cleared it.
 TEST(RCurlConnection, GetAfterPut)
@@ -194,8 +220,8 @@ TEST(RCurlConnection, GetAfterPut)
          }
       }
 
-      std::string response = "HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(expectedBody.size()) +
-                             "\r\n\r\n" + expectedBody;
+      std::string response =
+         "HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(expectedBody.size()) + "\r\n\r\n" + expectedBody;
       s->SendRaw(response.data(), response.size());
       s->Close();
    };
