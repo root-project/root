@@ -5,7 +5,7 @@
 
 TEST(TPad, PDFTitle)
 {
-    const TString pdfFile = "output.pdf";
+    const TString pdfFile = "pdftitle.pdf";
 
     // Generate a multi-page PDF with a title
     TCanvas c;
