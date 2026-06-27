@@ -257,20 +257,6 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
    WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
-ROOT::RNTupleLocator ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle,
-                                                                                 const ROOT::Internal::RPage &page)
-{
-   auto element = columnHandle.fColumn->GetElement();
-   RPageStorage::RSealedPage sealedPage;
-   {
-      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
-      sealedPage = SealPage(page, *element);
-   }
-
-   fCounters->fSzZip.Add(page.GetNBytes());
-   return CommitSealedPageImpl(columnHandle.fPhysicalId, sealedPage);
-}
-
 ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::DescriptorId_t,
                                                                   const RPageStorage::RSealedPage &sealedPage)
