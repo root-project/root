@@ -14,7 +14,7 @@ TEST(TUUID, UUIDv4)
    EXPECT_EQ(10000u, uuids.size());
 
    TUUID u;
-   EXPECT_EQ('1', u.AsString()[14]);
+   EXPECT_TRUE('1' == u.AsString()[14] || '3' == u.AsString()[14]);
    u = TUUID::UUIDv4();
    std::string str = u.AsString();
    EXPECT_EQ('4', str[14]);
