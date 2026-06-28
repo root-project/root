@@ -144,11 +144,8 @@ bool NegativeG2LineSearch::HasNegativeG2(const FunctionGradient &grad, const MnM
    // check if function gradient has any component which is negative
 
    for (unsigned int i = 0; i < grad.Vec().size(); i++)
-
-      if (grad.G2()(i) <= 0) {
-
+      if (grad.G2()(i) <= 0)
          return true;
-      }
 
    return false;
 }

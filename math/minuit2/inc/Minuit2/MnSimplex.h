@@ -41,20 +41,17 @@ public:
    {
    }
 
-   MnSimplex(const MnSimplex &migr)
-      : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer)
-   {
-   }
+   /// Copy constructor, copy shares the reference to the same FCNBase in MnApplication
+   MnSimplex(const MnSimplex &) = default;
+
+   // Copy assignment deleted, since MnApplication has unassignable reference to FCNBase
+   MnSimplex &operator=(const MnSimplex &) = delete;
 
    ModularFunctionMinimizer &Minimizer() override { return fMinimizer; }
    const ModularFunctionMinimizer &Minimizer() const override { return fMinimizer; }
 
 private:
    SimplexMinimizer fMinimizer;
-
-private:
-   // forbidden assignment of migrad (const FCNBase& = )
-   MnSimplex &operator=(const MnSimplex &) { return *this; }
 };
 
 } // namespace Minuit2

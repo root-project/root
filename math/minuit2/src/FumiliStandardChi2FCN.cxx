@@ -64,8 +64,6 @@ void FumiliStandardChi2FCN::EvaluateAll(std::vector<double> const &par)
    std::vector<double> &h = Hessian();
    int npar = par.size();
    double chi2 = 0;
-   grad.resize(npar);
-   h.resize(static_cast<unsigned int>(0.5 * npar * (npar + 1)));
    // reset Elements
    grad.assign(npar, 0.0);
    h.assign(static_cast<unsigned int>(0.5 * npar * (npar + 1)), 0.0);
