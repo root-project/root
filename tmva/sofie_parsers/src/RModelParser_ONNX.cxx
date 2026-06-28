@@ -172,13 +172,37 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
          std::memcpy(data.get(), tensorproto->raw_data().c_str(), tensor_size);
 #else
          // big-endian architectures - need to swap bytes
-         for (std::size_t k = 0; k < tensor_size; ++k)
-            (reinterpret_cast<typename RByteSwap<sizeof(uint8_t)>::value_type *>(data.get()))[k] =
-               RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(uint8_t)>::value_type *>(
-                  tensorproto->raw_data().c_str()))[k]);
+         switch (tensor_type) {
+            case ETensorType::FLOAT:
+               for (std::size_t k = 0; k < tensor_size / sizeof(float); ++k)
+                  (reinterpret_cast<typename RByteSwap<sizeof(float)>::value_type *>(data.get()))[k] =
+                     RByteSwap<sizeof(float)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(float)>::value_type *>(
+                        tensorproto->raw_data().c_str()))[k]);
+               break;
+            case ETensorType::DOUBLE:
+               for (std::size_t k = 0; k < tensor_size / sizeof(double); ++k)
+                  (reinterpret_cast<typename RByteSwap<sizeof(double)>::value_type *>(data.get()))[k] =
+                     RByteSwap<sizeof(double)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(double)>::value_type *>(
+                        tensorproto->raw_data().c_str()))[k]);
+               break;
+            case ETensorType::INT32:
+               for (std::size_t k = 0; k < tensor_size / sizeof(int32_t); ++k)
+                  (reinterpret_cast<typename RByteSwap<sizeof(int32_t)>::value_type *>(data.get()))[k] =
+                     RByteSwap<sizeof(int32_t)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(int32_t)>::value_type *>(
+                        tensorproto->raw_data().c_str()))[k]);
+               break;
+            case ETensorType::INT64:
+               for (std::size_t k = 0; k < tensor_size / sizeof(int64_t); ++k)
+                  (reinterpret_cast<typename RByteSwap<sizeof(int64_t)>::value_type *>(data.get()))[k] =
+                     RByteSwap<sizeof(int64_t)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(int64_t)>::value_type *>(
+                        tensorproto->raw_data().c_str()))[k]);
+               break;
+            default:
+               throw std::runtime_error("Data type " + ConvertTypeToString(tensor_type) + " in tensor is not supported!\n");
+         }
 #endif
       } else {
-         // case tensor data are stored as specific types and now in raw_data
+         // case tensor data are stored as specific types and not in raw_data
          switch (tensor_type) {
             case ETensorType::FLOAT: {
                ExtractDataFromTP<float>::Copy(tensorproto, data.get(), tensor_size/ 4);
@@ -200,7 +224,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
                throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in BOOL not supported");
                break;
             }
-             case ETensorType::UINT8: {
+            case ETensorType::UINT8: {
                throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in UINT8 not supported");
                break;
             }
