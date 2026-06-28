@@ -39,10 +39,11 @@ public:
    {
    }
 
-   MnScan(const MnScan &migr)
-      : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer)
-   {
-   }
+   /// Copy constructor, copy shares the reference to the same FCNBase in MnApplication
+   MnScan(const MnScan &) = default;
+
+   // Copy assignment deleted, since MnApplication has unassignable reference to FCNBase
+   MnScan &operator=(const MnScan &) = delete;
 
    ModularFunctionMinimizer &Minimizer() override { return fMinimizer; }
    const ModularFunctionMinimizer &Minimizer() const override { return fMinimizer; }
@@ -52,9 +53,6 @@ public:
 
 private:
    ScanMinimizer fMinimizer;
-
-   /// forbidden assignment (const FCNBase& = )
-   MnScan &operator=(const MnScan &) { return *this; }
 };
 
 } // namespace Minuit2

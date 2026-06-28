@@ -65,8 +65,8 @@ public:
 
    void Scale(double f)
    {
-      for (unsigned int i = 0; i < fData.size(); i++)
-         fData[i] *= f;
+      for (double &x : fData)
+         x *= f;
    }
 
    const std::vector<double> &Data() const { return fData; }

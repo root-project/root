@@ -31,11 +31,7 @@ public:
    {
    }
 
-   ContoursError(const ContoursError &cont)
-      : fParX(cont.fParX), fParY(cont.fParY), fPoints(cont.fPoints), fXMinos(cont.fXMinos), fYMinos(cont.fYMinos),
-        fNFcn(cont.fNFcn)
-   {
-   }
+   ContoursError(const ContoursError &cont) = default;
 
    ContoursError &operator()(const ContoursError &cont)
    {
