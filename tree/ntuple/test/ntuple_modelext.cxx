@@ -810,12 +810,12 @@ TEST(RNTuple, ModelExtensionRecordNested)
       modelUpdater->AddField(std::make_unique<RField<double>>("ptHP"), "r1.r2.r3.r4");
       modelUpdater->CommitUpdate();
 
-      EXPECT_EQ(2 * sizeof(double), writer->GetModel().GetConstField("r1").GetValueSize());
-      entry = writer->CreateEntry();
       struct FloatAndDouble {
          float pt;
          double ptHP;
       };
+      EXPECT_EQ(sizeof(FloatAndDouble), writer->GetModel().GetConstField("r1").GetValueSize());
+      entry = writer->CreateEntry();
 
       auto ptrFloatAndDouble = static_cast<FloatAndDouble *>(entry->GetPtr<void>("r1").get());
       ptrFloatAndDouble->pt = 2.0;
