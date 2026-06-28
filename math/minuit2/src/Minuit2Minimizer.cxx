@@ -787,6 +787,12 @@ bool Minuit2Minimizer::GetHessianMatrix(double *hess) const
 {
    // get value of Hessian matrix
    // this is the second derivative matrices
+   //
+   // Note: for parameters with limits, the returned external Hessian is obtained by inverting the
+   // external covariance matrix, which is transformed from the internal one with the Jacobian of the
+   // int<->ext transformation only (see MnUserTransformation::Int2extCovariance). This is correct only
+   // at the minimum, where the external gradient vanishes. Away from the minimum the transformation
+   // would need an additional second-derivative term and the result would be inaccurate.
    if (!fState.HasCovariance())
       return false; // no info available when minimization has failed
    for (unsigned int i = 0; i < fDim; ++i) {
