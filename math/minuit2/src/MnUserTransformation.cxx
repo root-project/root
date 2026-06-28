@@ -140,6 +140,15 @@ MnUserTransformation::Int2extCovariance(const MnAlgebraicVector &vec, const MnAl
    // return the external covariance matrix from the internal error matrix and the internal parameter value
    // the vector of internal parameter is needed for the derivatives (Jacobian of the transformation)
    // Vext(i,j) = Vint(i,j) * dPext(i)/dPint(i) * dPext(j)/dPint(j)
+   //
+   // Note: only the first derivative (Jacobian) of the int<->ext transformation enters here, even on the
+   // diagonal. Unlike the Hessian/G2 transformation (see AnalyticalGradientCalculator), there is no
+   // d^2Pext/dPint^2 * gradient term. The Hessian needs that extra non-tensorial term because it is
+   // evaluated at arbitrary, non-stationary points where the external gradient is nonzero. The covariance
+   // matrix, by contrast, is the inverse Hessian evaluated at the minimum, where the external gradient
+   // vanishes and that term is identically zero; the covariance then transforms as a genuine (2,0) tensor
+   // with the Jacobian alone. (Adding the term here would also break the exact round-trip between
+   // Int2extCovariance and Ext2intCovariance.)
 
    MnUserCovariance result(cov.Nrow());
    for (unsigned int i = 0; i < vec.size(); i++) {
@@ -171,6 +180,9 @@ MnUserTransformation::Ext2intCovariance(const MnAlgebraicVector &vec, const MnAl
    // return the internal covariance matrix from the external error matrix and the internal parameter value
    // the vector of internal parameter is needed for the derivatives (Jacobian of the transformation)
    // Vint(i,j) = Vext(i,j) * dPint(i)/dPext(i) * dPint(j)/dPext(j)
+   //
+   // As in Int2extCovariance, only the Jacobian enters: no second-derivative (d^2Pint/dPext^2 * gradient)
+   // term is needed, since the covariance is the inverse Hessian at the minimum where the gradient is zero.
 
    MnUserCovariance result(cov.Nrow());
    for (unsigned int i = 0; i < vec.size(); i++) {
