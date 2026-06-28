@@ -249,7 +249,6 @@ if(unuran AND NOT builtin_unuran)
   endif()
 endif()
 if (builtin_unuran)
-  list(APPEND ROOT_BUILTINS BUILTIN_UNURAN)
   add_subdirectory(builtins/unuran)
 endif()
 
