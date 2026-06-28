@@ -4031,3 +4031,92 @@ TEST(RNTupleMerger, MergeNewerVersion)
       }
    }
 }
+
+TEST(RNTupleMerger, MergePreV634TypeName)
+{
+   // Regression test for https://github.com/root-project/root/issues/22130:
+   // merging a pre-ROOT-6.36 RNTuple (spec 1.0.0.0, META-normalized type names) must succeed.
+
+   // Simulate a pre-ROOT-6.36 RNTuple: spec version 1.0.0.0, field type stored as "Float_t"
+   // (what ROOT Meta produced for float fields before type-name renormalization was introduced).
+   FileRaii fileOld("test_ntuple_merge_pre634_old.root");
+   {
+      RNTupleDescriptorBuilder descBuilder;
+      descBuilder.SetVersion(1, 0, 0, 0);
+      descBuilder.SetNTuple("ntuple", "");
+
+      descBuilder.AddField(
+         RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+      descBuilder.AddField(RFieldDescriptorBuilder()
+                              .FieldId(1)
+                              .FieldName("x")
+                              .TypeName("Float_t")
+                              .Structure(ROOT::ENTupleStructure::kPlain)
+                              .MakeDescriptor()
+                              .Unwrap());
+      descBuilder.AddFieldLink(0, 1).ThrowOnError();
+      descBuilder.AddColumn(RColumnDescriptorBuilder()
+                               .LogicalColumnId(0)
+                               .PhysicalColumnId(0)
+                               .FieldId(1)
+                               .BitsOnStorage(32)
+                               .Type(ROOT::ENTupleColumnType::kSplitReal32)
+                               .Index(0)
+                               .MakeDescriptor()
+                               .Unwrap());
+
+      RNTupleWriteOptions options;
+      auto writer = RNTupleFileWriter::Recreate("ntuple", fileOld.GetPath(), EContainerFormat::kTFile, options);
+      RNTupleSerializer serializer;
+
+      auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+      auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
+      ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
+      writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
+
+      auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
+      buffer = std::make_unique<unsigned char[]>(szFooter);
+      serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
+      writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
+
+      writer->Commit();
+      writer = nullptr;
+   }
+
+   // Current-spec source with the same field, type name stored as "float".
+   FileRaii fileNew("test_ntuple_merge_pre634_new.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldX = model->MakeField<float>("x");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileNew.GetPath());
+      *fieldX = 3.14f;
+      ntuple->Fill();
+   }
+
+   // Merge must succeed: "Float_t" and "float" are the same type after renormalization.
+   FileRaii fileOut("test_ntuple_merge_pre634_out.root");
+   {
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileOld.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileNew.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileOut.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger{std::move(destination)};
+      RNTupleMergeOptions opts;
+      opts.fMergingMode = ENTupleMergingMode::kStrict;
+      auto res = merger.Merge(sourcePtrs, opts);
+      EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
+   }
+
+   // fileOld has 0 entries, fileNew has 1 — merged output must have exactly 1.
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileOut.GetPath());
+      EXPECT_EQ(1u, reader->GetNEntries());
+      auto viewX = reader->GetView<float>("x");
+      EXPECT_FLOAT_EQ(3.14f, viewX(0));
+   }
+}
