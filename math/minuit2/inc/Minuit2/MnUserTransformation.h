@@ -38,36 +38,13 @@ class MnUserCovariance;
 class MnUserTransformation {
 
 public:
-   MnUserTransformation()
-      : fPrecision(MnMachinePrecision()), fParameters(std::vector<MinuitParameter>()),
-        fExtOfInt(std::vector<unsigned int>()), fDoubleLimTrafo(SinParameterTransformation()),
-        fUpperLimTrafo(SqrtUpParameterTransformation()), fLowerLimTrafo(SqrtLowParameterTransformation()),
-        fCache(std::vector<double>())
-   {
-   }
+   MnUserTransformation() = default;
 
    MnUserTransformation(std::span<const double>, std::span<const double>);
 
-   MnUserTransformation(const MnUserTransformation &trafo)
-      : fPrecision(trafo.fPrecision), fParameters(trafo.fParameters), fExtOfInt(trafo.fExtOfInt),
-        fDoubleLimTrafo(trafo.fDoubleLimTrafo), fUpperLimTrafo(trafo.fUpperLimTrafo),
-        fLowerLimTrafo(trafo.fLowerLimTrafo), fCache(trafo.fCache)
-   {
-   }
+   MnUserTransformation(const MnUserTransformation &trafo) = default;
 
-   MnUserTransformation &operator=(const MnUserTransformation &trafo)
-   {
-      if (this != &trafo) {
-         fPrecision = trafo.fPrecision;
-         fParameters = trafo.fParameters;
-         fExtOfInt = trafo.fExtOfInt;
-         fDoubleLimTrafo = trafo.fDoubleLimTrafo;
-         fUpperLimTrafo = trafo.fUpperLimTrafo;
-         fLowerLimTrafo = trafo.fLowerLimTrafo;
-         fCache = trafo.fCache;
-      }
-      return *this;
-   }
+   MnUserTransformation &operator=(const MnUserTransformation &trafo) = default;
 
    //#ifdef MINUIT2_THREAD_SAFE
    // thread-safe version (do not use cache)

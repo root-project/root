@@ -68,8 +68,6 @@ void FumiliStandardMaximumLikelihoodFCN::EvaluateAll(std::vector<double> const &
    std::vector<double> &h = Hessian();
    int npar = par.size();
    double logLikelihood = 0;
-   grad.resize(npar);
-   h.resize(static_cast<unsigned int>(0.5 * npar * (npar + 1)));
    grad.assign(npar, 0.0);
    h.assign(static_cast<unsigned int>(0.5 * npar * (npar + 1)), 0.0);
 

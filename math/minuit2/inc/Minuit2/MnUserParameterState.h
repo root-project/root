@@ -36,15 +36,7 @@ class MnUserParameterState {
 
 public:
    /// default constructor (invalid state)
-   MnUserParameterState()
-      : fValid(false),
-        fCovStatus(-1),
-        fParameters(MnUserParameters()),
-        fCovariance(MnUserCovariance()),
-        fIntParameters(std::vector<double>()),
-        fIntCovariance(MnUserCovariance())
-   {
-   }
+   MnUserParameterState() : fValid(false), fCovStatus(-1) {}
 
    /// construct from user parameters (before minimization)
    MnUserParameterState(std::span<const double>, std::span<const double>);
