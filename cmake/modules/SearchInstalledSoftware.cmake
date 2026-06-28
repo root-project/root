@@ -570,7 +570,6 @@ if(http AND NOT builtin_civetweb)
   #endif()
 endif()
 if(http AND builtin_civetweb)
-  list(APPEND ROOT_BUILTINS BUILTIN_CIVETWEB)
   add_subdirectory(builtins/civetweb)
 endif()
 
