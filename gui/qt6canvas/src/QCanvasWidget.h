@@ -29,7 +29,7 @@ public:
 
    virtual ~QCanvasWidget();
 
-   QWidget *GetCanvasWidget() const { return fCanvasWidget; }
+   QPaintWidget *GetPaintWidget() const { return fPaintWidget; }
 
 public slots:
 
