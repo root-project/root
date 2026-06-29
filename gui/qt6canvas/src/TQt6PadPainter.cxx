@@ -169,7 +169,6 @@ void TQt6PadPainter::DrawTextUrl(Double_t x, Double_t y, const char *text, const
    PaintQString(px, py, text);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version working with wchar_t and required by TMathText.
 
@@ -346,4 +345,81 @@ void TQt6PadPainter::PaintQString(int x, int y, const QString &s)
       painter->drawText(0, 0, s);
       painter->restore();
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text extent
+
+void TQt6PadPainter::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess)
+{
+   auto family = GetFontFamily(font);
+   if (family.isEmpty())
+      return;
+
+   QFontMetrics fm(QFont(family, size));
+   QRect rect = fm.boundingRect(mess);
+
+   w = rect.width();
+   h = rect.height();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text extent
+
+void TQt6PadPainter::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess)
+{
+   auto family = GetFontFamily(font);
+   if (family.isEmpty())
+      return;
+
+   QFontMetrics fm(QFont(family, size));
+   QRect rect = fm.boundingRect(QString::fromWCharArray(mess));
+
+   w = rect.width();
+   h = rect.height();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text accent / descent
+
+void TQt6PadPainter::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess)
+{
+   auto family = GetFontFamily(font);
+   if (family.isEmpty())
+      return;
+
+   QFontMetrics fm(QFont(family, size));
+   QRect rect = fm.boundingRect(mess);
+
+   a = -rect.top();
+   d = rect.bottom();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text accent / descent
+
+void TQt6PadPainter::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess)
+{
+   auto family = GetFontFamily(font);
+   if (family.isEmpty())
+      return;
+
+   QFontMetrics fm(QFont(family, size));
+   QRect rect = fm.boundingRect(QString::fromWCharArray(mess));
+
+   a = -rect.top();
+   d = rect.bottom();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text advance
+
+UInt_t TQt6PadPainter::GetTextAdvance(Font_t font, Double_t size, const char *text, Bool_t)
+{
+   auto family = GetFontFamily(font);
+   if (family.isEmpty())
+      return 0;
+
+   QFontMetrics fm(QFont(family, size));
+   return fm.horizontalAdvance(QString(text));
 }
