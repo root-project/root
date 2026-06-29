@@ -41,6 +41,11 @@
 #include <sched.h>
 #include <unistd.h>
 #endif
+#if defined(_WIN32) && (defined(_M_IX86) || defined(__i386__))
+#include "llvm/ExecutionEngine/Orc/AbsoluteSymbols.h"
+#include "llvm/Support/DynamicLibrary.h"
+#include <deque>
+#endif
 #include <algorithm>
 #include <cstdio>
 #include <memory>
@@ -144,6 +149,62 @@ inline clang::NamedDecl* Named(clang::Sema* S, const char* Name,
 
 namespace CppInternal {
 
+#if defined(_WIN32) && (defined(_M_IX86) || defined(__i386__))
+/// Fallback resolver for decorated COFF-i386 symbols, based on cling's
+/// platform::DLSym. i386 linker names are decorated ('_' cdecl prefix,
+/// '@N' stdcall suffix, '__imp_' dllimport indirection) and ORC strips
+/// such prefixes only on MachO, so JIT'd references to the CRT and to
+/// runtime-loaded DLLs fail to materialize. Undecorate and retry.
+class COFFi386SymbolGenerator : public llvm::orc::DefinitionGenerator {
+public:
+  llvm::Error
+  tryToGenerate(llvm::orc::LookupState& LS, llvm::orc::LookupKind K,
+                llvm::orc::JITDylib& JD,
+                llvm::orc::JITDylibLookupFlags JDLookupFlags,
+                const llvm::orc::SymbolLookupSet& LookupSet) override {
+    llvm::orc::SymbolMap NewSymbols;
+    for (const auto& KV : LookupSet) {
+      llvm::StringRef Name = *KV.first;
+      // '?' C++ manglings are undecorated; the default generator owns them.
+      if (Name.empty() || Name.starts_with("?"))
+        continue;
+      if (void* Addr = lookupDecorated(Name))
+        NewSymbols[KV.first] = {llvm::orc::ExecutorAddr::fromPtr(Addr),
+                                llvm::JITSymbolFlags::Exported};
+    }
+    if (NewSymbols.empty())
+      return llvm::Error::success();
+    return JD.define(llvm::orc::absoluteSymbols(std::move(NewSymbols)));
+  }
+
+private:
+  void* lookupDecorated(llvm::StringRef Name) {
+    bool Dllimport = Name.consume_front("__imp_");
+    Name.consume_front("_"); // i386 cdecl prefix
+    std::string S = Name.str();
+    void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(S.c_str());
+    if (!Addr) {
+      // Export tables drop the stdcall '@N' suffix; retry without it.
+      size_t At = S.rfind('@');
+      if (At != std::string::npos && At + 1 < S.size() &&
+          S.find_first_not_of("0123456789", At + 1) == std::string::npos) {
+        S.resize(At);
+        Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(S.c_str());
+      }
+    }
+    if (Addr && Dllimport) {
+      // __imp_ references bind to a pointer to the symbol; hand out a
+      // stable slot holding the resolved address.
+      m_ImportSlots.push_back(Addr);
+      return &m_ImportSlots.back();
+    }
+    return Addr;
+  }
+
+  std::deque<void*> m_ImportSlots;
+};
+#endif // _WIN32 && i386
+
 /// CppInterOp Interpreter
 ///
 class Interpreter {
@@ -244,6 +305,13 @@ public:
       llvm::errs() << "Interpreter creation failed\n";
       return nullptr;
     }
+
+#if defined(_WIN32) && (defined(_M_IX86) || defined(__i386__))
+    // getExecutionEngine forces executor creation; install the generator
+    // before anything runs.
+    compat::getExecutionEngine(*CI)->getMainJITDylib().addGenerator(
+        std::make_unique<COFFi386SymbolGenerator>());
+#endif
 
     return std::make_unique<Interpreter>(std::move(CI), std::move(io_ctx),
                                          outOfProcess);

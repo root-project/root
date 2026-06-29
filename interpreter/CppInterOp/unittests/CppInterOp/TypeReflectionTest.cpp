@@ -144,7 +144,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_GetTypeWithParent) {
     }
   )");
 
-  Cpp::TCppScope_t ns = Cpp::GetNamed("NS");
+  Cpp::DeclRef ns = Cpp::GetNamed("NS");
   ASSERT_TRUE(ns);
 
   // Builtin fast-path is independent of parent: `int` resolves
@@ -443,11 +443,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsTypeDerivedFrom) {
 
   GetAllTopLevelDecls(code, Decls);
 
-  Cpp::TCppType_t type_A = Cpp::GetVariableType(Decls[5]);
-  Cpp::TCppType_t type_B = Cpp::GetVariableType(Decls[6]);
-  Cpp::TCppType_t type_C = Cpp::GetVariableType(Decls[7]);
-  Cpp::TCppType_t type_D = Cpp::GetVariableType(Decls[8]);
-  Cpp::TCppType_t type_E = Cpp::GetVariableType(Decls[9]);
+  Cpp::TypeRef type_A = Cpp::GetVariableType(Decls[5]);
+  Cpp::TypeRef type_B = Cpp::GetVariableType(Decls[6]);
+  Cpp::TypeRef type_C = Cpp::GetVariableType(Decls[7]);
+  Cpp::TypeRef type_D = Cpp::GetVariableType(Decls[8]);
+  Cpp::TypeRef type_E = Cpp::GetVariableType(Decls[9]);
 
   EXPECT_TRUE(Cpp::IsTypeDerivedFrom(type_B, type_A));
   EXPECT_TRUE(Cpp::IsTypeDerivedFrom(type_D, type_B));
@@ -575,7 +575,21 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsPODType) {
   GetAllTopLevelDecls(code, Decls);
   EXPECT_TRUE(Cpp::IsPODType(Cpp::GetVariableType(Decls[2])));
   EXPECT_FALSE(Cpp::IsPODType(Cpp::GetVariableType(Decls[3])));
-  EXPECT_FALSE(Cpp::IsPODType(0));
+  EXPECT_FALSE(Cpp::IsPODType(nullptr));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsTemplateParmType) {
+  std::vector<Decl*> Decls;
+
+  std::string code = R"(
+    template <typename T> void f(T t, const T& r, int i) {}
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  EXPECT_TRUE(Cpp::IsTemplateParmType(Cpp::GetFunctionArgType(Decls[0], 0)));
+  EXPECT_FALSE(Cpp::IsTemplateParmType(Cpp::GetFunctionArgType(Decls[0], 1)));
+  EXPECT_FALSE(Cpp::IsTemplateParmType(Cpp::GetFunctionArgType(Decls[0], 2)));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsSmartPtrType) {
@@ -659,14 +673,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_TypeQualifiers) {
     int *__restrict__ const volatile h = nullptr;
   )");
 
-  Cpp::TCppType_t a = Cpp::GetVariableType(Cpp::GetNamed("a"));
-  Cpp::TCppType_t b = Cpp::GetVariableType(Cpp::GetNamed("b"));
-  Cpp::TCppType_t c = Cpp::GetVariableType(Cpp::GetNamed("c"));
-  Cpp::TCppType_t d = Cpp::GetVariableType(Cpp::GetNamed("d"));
-  Cpp::TCppType_t e = Cpp::GetVariableType(Cpp::GetNamed("e"));
-  Cpp::TCppType_t f = Cpp::GetVariableType(Cpp::GetNamed("f"));
-  Cpp::TCppType_t g = Cpp::GetVariableType(Cpp::GetNamed("g"));
-  Cpp::TCppType_t h = Cpp::GetVariableType(Cpp::GetNamed("h"));
+  Cpp::TypeRef a = Cpp::GetVariableType(Cpp::GetNamed("a"));
+  Cpp::TypeRef b = Cpp::GetVariableType(Cpp::GetNamed("b"));
+  Cpp::TypeRef c = Cpp::GetVariableType(Cpp::GetNamed("c"));
+  Cpp::TypeRef d = Cpp::GetVariableType(Cpp::GetNamed("d"));
+  Cpp::TypeRef e = Cpp::GetVariableType(Cpp::GetNamed("e"));
+  Cpp::TypeRef f = Cpp::GetVariableType(Cpp::GetNamed("f"));
+  Cpp::TypeRef g = Cpp::GetVariableType(Cpp::GetNamed("g"));
+  Cpp::TypeRef h = Cpp::GetVariableType(Cpp::GetNamed("h"));
 
   EXPECT_FALSE(Cpp::HasTypeQualifier(nullptr, Cpp::QualKind::Const));
   EXPECT_FALSE(Cpp::RemoveTypeQualifier(nullptr, Cpp::QualKind::Const));
@@ -769,7 +783,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsFloatingType) {
   EXPECT_TRUE(Cpp::IsFloatingType(Cpp::GetVariableType(Decls[2])));
   EXPECT_FALSE(Cpp::IsFloatingType(Cpp::GetVariableType(Decls[3])));
   EXPECT_FALSE(Cpp::IsFloatingType(Cpp::GetVariableType(Decls[4])));
-  EXPECT_FALSE(Cpp::IsFloatingType(0));
+  EXPECT_FALSE(Cpp::IsFloatingType(nullptr));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsVoidPointerType) {

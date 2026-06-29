@@ -32,6 +32,7 @@
 #include <dlfcn.h>
 #endif
 
+#include "CppInterOp/Box.h"
 #include "CppInterOp/CppInterOpTypes.h"
 
 #include <cstdlib>
@@ -100,8 +101,10 @@ inline void* dlGetProcAddress(const char* name,
 }
 
 // Raw function pointers populated by LoadDispatchAPI. No default arguments.
+// Kept in a separate namespace so the dispatch-table state doesn't pollute
+// the public Cpp:: surface.
 namespace CppInternal::DispatchRaw {
-using namespace CppImpl;
+using namespace Cpp;
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
   extern Ret(*DN) RawTypes;
@@ -109,14 +112,17 @@ using namespace CppImpl;
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace CppInternal::DispatchRaw
 
-// Inline wrappers that restore default arguments and support overloads.
+// Inline wrappers go directly in namespace Cpp so that consumer source code
+// (Cpp::IsAbstract, Cpp::GetNamed, ...) compiles identically against either
+// CppInterOp.h (direct linking, declarations only) or Dispatch.h (inline
+// bodies calling through the dispatch table). The two headers are mutually
+// exclusive (#error guard at top) so only one body of Cpp::* exists per TU.
 // CN (CppName) may differ from DN (DispatchName) for overloaded functions,
 // e.g. CN=GetFunctionAddress, DN=GetFunctionAddress_fn.
-namespace CppInternal::Dispatch {
-using namespace CppImpl;
+namespace Cpp {
 
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  inline Ret CN DeclArgs { return DispatchRaw::DN CallArgs; }
+  inline Ret CN DeclArgs { return ::CppInternal::DispatchRaw::DN CallArgs; }
 #include "CppInterOp/CppInterOpAPI.inc"
 
 /// Initialize all CppInterOp API from the dynamically loaded library.
@@ -136,11 +142,13 @@ inline bool LoadDispatchAPI(const char* customLibPath = nullptr) {
 
   // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  DispatchRaw::DN = reinterpret_cast<Ret(*) RawTypes>(dlGetProcAddress(#DN));
+  ::CppInternal::DispatchRaw::DN =                                             \
+      reinterpret_cast<Ret(*) RawTypes>(dlGetProcAddress(#DN));
 #include "CppInterOp/CppInterOpAPI.inc"
   // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
-  if (!DispatchRaw::GetInterpreter || !DispatchRaw::CreateInterpreter) {
+  if (!::CppInternal::DispatchRaw::GetInterpreter ||
+      !::CppInternal::DispatchRaw::CreateInterpreter) {
     std::cerr << "[CppInterOp Dispatch] Failed to load critical functions\n";
     return false;
   }
@@ -149,12 +157,10 @@ inline bool LoadDispatchAPI(const char* customLibPath = nullptr) {
 
 inline void UnloadDispatchAPI() {
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  DispatchRaw::DN = nullptr;
+  ::CppInternal::DispatchRaw::DN = nullptr;
 #include "CppInterOp/CppInterOpAPI.inc"
   dlGetProcAddress(nullptr, nullptr);
 }
-} // namespace CppInternal::Dispatch
+} // namespace Cpp
 
-// NOLINTNEXTLINE(misc-unused-alias-decls)
-namespace Cpp = CppInternal::Dispatch;
 #endif // CPPINTEROP_DISPATCH_H

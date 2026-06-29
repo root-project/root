@@ -1,7 +1,7 @@
 // Implementation of the dispatch symbol table. Maps function names to
-// CppImpl:: addresses for dlopen consumers via CppGetProcAddress.
+// Cpp:: addresses for dlopen consumers via CppGetProcAddress.
 // This is a library internal — it includes CppInterOp.h (not Dispatch.h)
-// because it needs the CppImpl:: function declarations.
+// because it needs the Cpp:: function declarations.
 
 #include "CppInterOp/CppInterOp.h"
 
@@ -9,7 +9,7 @@
 #include <string_view>
 #include <unordered_map>
 
-using namespace CppImpl;
+using namespace Cpp;
 using CppFnPtrTy = void (*)();
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
@@ -24,7 +24,7 @@ using CppFnPtrTy = void (*)();
 #endif
 static const std::unordered_map<std::string_view, CppFnPtrTy> DispatchMap = {
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  {#DN, (CppFnPtrTy) static_cast<Ret(*) RawTypes>(&CppImpl::CN)},
+  {#DN, (CppFnPtrTy) static_cast<Ret(*) RawTypes>(&Cpp::CN)},
 #include "CppInterOp/CppInterOpAPI.inc"
 };
 #if defined(__GNUC__) || defined(__clang__)

@@ -7,6 +7,15 @@ if (NOT TARGET GTest::gtest AND NOT TARGET gtest)
   include(GoogleTest)
 endif()
 
+# Google Benchmark backs the perf-as-validity tests. Fetch it the same way
+# as gtest when the build doesn't already provide it. Standalone-only: when
+# CppInterOp is embedded (e.g. in ROOT) we must not pull an extra
+# ExternalProject into the host build. Skipped on WASM (unsupported there).
+if (CPPINTEROP_BUILT_STANDALONE AND NOT EMSCRIPTEN
+    AND NOT TARGET benchmark::benchmark AND NOT TARGET benchmark)
+  include(GoogleBenchmark)
+endif()
+
 if(EMSCRIPTEN)
   if (TARGET GTest::gtest)
     # Target names in CMake >= v3.23

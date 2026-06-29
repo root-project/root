@@ -14,14 +14,14 @@ namespace DispatchRaw {
 // ODR-uses the inline JitCall fast path. JC is opaque so the optimizer
 // can't DCE the calls at any -O level. The body never runs at test
 // time; only the .o's UND-symbol surface matters.
-void downstream_link_probe(CppImpl::JitCall* JC) {
+void downstream_link_probe(Cpp::JitCall* JC) {
   JC->Invoke();
   JC->InvokeConstructor(nullptr);
   JC->InvokeDestructor(nullptr);
 }
 
 int downstream_verify_trace_slots(const char* libpath) {
-  if (!CppInternal::Dispatch::LoadDispatchAPI(libpath))
+  if (!Cpp::LoadDispatchAPI(libpath))
     return 1;
   if (!CppInternal::DispatchRaw::CppInterOpTraceJitCallInvokeImpl)
     return 2;

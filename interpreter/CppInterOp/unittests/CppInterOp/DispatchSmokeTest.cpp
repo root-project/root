@@ -15,8 +15,8 @@
 // --- Interpreter ---
 
 TEST(DispatchSmokeTest, CreateAndDeleteInterpreter) {
-  auto* I = Cpp::CreateInterpreter({});
-  EXPECT_NE(I, nullptr);
+  auto I = Cpp::CreateInterpreter({});
+  EXPECT_TRUE(I);
   EXPECT_TRUE(Cpp::DeleteInterpreter());
 }
 
@@ -32,15 +32,15 @@ TEST(DispatchSmokeTest, ScopeLookup) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("namespace DispNS { class Foo {}; }");
 
-  auto* global = Cpp::GetGlobalScope();
-  EXPECT_NE(global, nullptr);
+  auto global = Cpp::GetGlobalScope();
+  EXPECT_TRUE(global);
 
-  auto* ns = Cpp::GetNamed("DispNS");
-  EXPECT_NE(ns, nullptr);
+  auto ns = Cpp::GetNamed("DispNS");
+  EXPECT_TRUE(ns);
   EXPECT_TRUE(Cpp::IsNamespace(ns));
 
-  auto* foo = Cpp::GetScope("Foo", ns);
-  EXPECT_NE(foo, nullptr);
+  auto foo = Cpp::GetScope("Foo", ns);
+  EXPECT_TRUE(foo);
   EXPECT_TRUE(Cpp::IsClass(foo));
   EXPECT_FALSE(Cpp::IsNamespace(foo));
 }
@@ -51,11 +51,11 @@ TEST(DispatchSmokeTest, TypeReflection) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("class DispType { int x; };");
 
-  auto* scope = Cpp::GetNamed("DispType");
-  auto* type = Cpp::GetTypeFromScope(scope);
-  EXPECT_NE(type, nullptr);
+  auto scope = Cpp::GetNamed("DispType");
+  auto type = Cpp::GetTypeFromScope(scope);
+  EXPECT_TRUE(type);
 
-  auto* scope_back = Cpp::GetScopeFromType(type);
+  auto scope_back = Cpp::GetScopeFromType(type);
   EXPECT_EQ(scope, scope_back);
 
   EXPECT_GT(Cpp::SizeOf(scope), 0U);
@@ -69,12 +69,12 @@ TEST(DispatchSmokeTest, FunctionReflection) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("namespace DispFn { int add(int a, int b) { return a+b; } }");
 
-  auto* ns = Cpp::GetNamed("DispFn");
+  auto ns = Cpp::GetNamed("DispFn");
   auto fns = Cpp::GetFunctionsUsingName(ns, "add");
   EXPECT_EQ(fns.size(), 1U);
 
   EXPECT_EQ(Cpp::GetFunctionNumArgs(fns[0]), 2U);
-  EXPECT_EQ(Cpp::GetName(fns[0]), "add");
+  EXPECT_EQ(Cpp::GetName(Cpp::DeclRef{fns[0].data}), "add");
 }
 
 // --- Variable reflection ---
@@ -83,10 +83,10 @@ TEST(DispatchSmokeTest, VariableReflection) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("namespace DispVar { int gval = 99; }");
 
-  auto* ns = Cpp::GetNamed("DispVar");
+  auto ns = Cpp::GetNamed("DispVar");
   // GetNamed finds variables inside a namespace scope.
-  auto* var = Cpp::GetNamed("gval", ns);
-  EXPECT_NE(var, nullptr);
+  auto var = Cpp::GetNamed("gval", ns);
+  EXPECT_TRUE(var);
   EXPECT_TRUE(Cpp::IsVariable(var));
 }
 
@@ -96,7 +96,7 @@ TEST(DispatchSmokeTest, TemplateInstantiation) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("template<typename T> struct DispTmpl { T val; };");
 
-  auto* tmpl = Cpp::GetNamed("DispTmpl");
+  auto tmpl = Cpp::GetNamed("DispTmpl");
   EXPECT_TRUE(Cpp::IsTemplate(tmpl));
 }
 
@@ -106,11 +106,11 @@ TEST(DispatchSmokeTest, ConstructDestruct) {
   Cpp::CreateInterpreter({"-include", "new"});
   Cpp::Declare("struct DispObj { int x = 7; };");
 
-  auto* scope = Cpp::GetNamed("DispObj");
+  auto scope = Cpp::GetNamed("DispObj");
   EXPECT_TRUE(Cpp::IsComplete(scope));
 
-  auto* obj = Cpp::Construct(scope);
-  EXPECT_NE(obj, nullptr);
+  auto obj = Cpp::Construct(scope);
+  EXPECT_TRUE(obj);
   Cpp::Destruct(obj, scope, /*withFree=*/true);
 }
 
@@ -120,7 +120,7 @@ TEST(DispatchSmokeTest, EnumReflection) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("enum DispEnum { A, B, C };");
 
-  auto* e = Cpp::GetNamed("DispEnum");
+  auto e = Cpp::GetNamed("DispEnum");
   EXPECT_TRUE(Cpp::IsEnumScope(e));
 
   auto constants = Cpp::GetEnumConstants(e);

@@ -33,10 +33,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTypeOfBuiltins) {
     if (!QT.isNull()) {                                                        \
       std::string name = QT.getAsString(C.getPrintingPolicy());                \
       if (name[0] != '<' && !QT->isPlaceholderType()) {                        \
-        const auto* FoundTy = Cpp::GetType(name);                              \
+        auto FoundTy = Cpp::GetType(name);                                     \
         EXPECT_TRUE(FoundTy) << "Failed to find builtin: '" << name << "'";    \
         if (FoundTy) {                                                         \
-          EXPECT_EQ(FoundTy, QT.getAsOpaquePtr())                              \
+          EXPECT_EQ(FoundTy.data, QT.getAsOpaquePtr())                         \
               << "Type mismatch for '" << name << "'";                         \
           EXPECT_TRUE(Cpp::IsBuiltin(FoundTy));                                \
         }                                                                      \
@@ -47,8 +47,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTypeOfBuiltins) {
 #undef BUILTIN_TYPE
 
   auto Verify = [&](const char* Name, QualType Expected) {
-    void* Found = Cpp::GetType(Name);
-    EXPECT_EQ(Found, Expected.getAsOpaquePtr()) << "Failed for: " << Name;
+    auto Found = Cpp::GetType(Name);
+    EXPECT_EQ(Found.data, Expected.getAsOpaquePtr()) << "Failed for: " << Name;
   };
 
   // --- Integer Variations ---
@@ -284,7 +284,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsComplete) {
   EXPECT_FALSE(Cpp::IsComplete(Decls[3]));
   EXPECT_FALSE(Cpp::IsComplete(Decls[4]));
   EXPECT_TRUE(Cpp::IsComplete(Decls[5]));
-  Cpp::TCppType_t retTy = Cpp::GetFunctionReturnType(Decls[7]);
+  Cpp::TypeRef retTy = Cpp::GetFunctionReturnType(Decls[7]);
   EXPECT_TRUE(Cpp::IsComplete(Cpp::GetScopeFromType(retTy)));
   EXPECT_FALSE(Cpp::IsComplete(nullptr));
 }
@@ -511,7 +511,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteName) {
   ASTContext& C = Interp->getCI()->getASTContext();
   std::vector<Cpp::TemplateArgInfo> template_args = {
       C.IntTy.getAsOpaquePtr(), C.DoubleTy.getAsOpaquePtr()};
-  Cpp::TCppScope_t fn = Cpp::InstantiateTemplate(Decls[11], template_args);
+  Cpp::DeclRef fn = Cpp::InstantiateTemplate(Decls[11], template_args);
   EXPECT_TRUE(fn);
   EXPECT_EQ(Cpp::GetCompleteName(fn), "fn<int, double>");
 }
@@ -529,7 +529,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetQualifiedName) {
   GetAllSubDecls(Decls[0], Decls);
   GetAllSubDecls(Decls[1], Decls);
 
-  EXPECT_EQ(Cpp::GetQualifiedName(0), "<unnamed>");
+  EXPECT_EQ(Cpp::GetQualifiedName(nullptr), "<unnamed>");
   EXPECT_EQ(Cpp::GetQualifiedName(Decls[0]), "N");
   EXPECT_EQ(Cpp::GetQualifiedName(Decls[1]), "N::C");
   EXPECT_EQ(Cpp::GetQualifiedName(Decls[3]), "N::C::i");
@@ -552,7 +552,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetQualifiedCompleteName) {
   GetAllSubDecls(Decls[0], Decls);
   GetAllSubDecls(Decls[1], Decls);
 
-  EXPECT_EQ(Cpp::GetQualifiedCompleteName(0), "<unnamed>");
+  EXPECT_EQ(Cpp::GetQualifiedCompleteName(nullptr), "<unnamed>");
   EXPECT_EQ(Cpp::GetQualifiedCompleteName(Decls[0]), "N");
   EXPECT_EQ(Cpp::GetQualifiedCompleteName(Decls[1]), "N::C");
   EXPECT_EQ(Cpp::GetQualifiedCompleteName(Decls[2]), "N::A");
@@ -576,7 +576,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetUsingNamespaces) {
   )";
 
   GetAllTopLevelDecls(code, Decls);
-  std::vector<void *> usingNamespaces;
+  std::vector<Cpp::DeclRef> usingNamespaces;
   usingNamespaces = Cpp::GetUsingNamespaces(
           Decls[0]->getASTContext().getTranslationUnitDecl());
 
@@ -589,7 +589,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetUsingNamespaces) {
   )";
 
   GetAllTopLevelDecls(code1, Decls1);
-  std::vector<void*> usingNamespaces1;
+  std::vector<Cpp::DeclRef> usingNamespaces1;
   usingNamespaces1 = Cpp::GetUsingNamespaces(Decls1[0]);
   EXPECT_EQ(usingNamespaces1.size(), 0);
 }
@@ -631,11 +631,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetScope) {
 
   TestFixture::CreateInterpreter();
   Interp->declare(code);
-  Cpp::TCppScope_t tu = Cpp::GetScope("", 0);
-  Cpp::TCppScope_t ns_N = Cpp::GetScope("N", 0);
-  Cpp::TCppScope_t cl_C = Cpp::GetScope("C", ns_N);
-  Cpp::TCppScope_t td_T = Cpp::GetScope("T", 0);
-  Cpp::TCppScope_t non_existent = Cpp::GetScope("sum", 0);
+  Cpp::DeclRef tu = Cpp::GetScope("", nullptr);
+  Cpp::DeclRef ns_N = Cpp::GetScope("N", nullptr);
+  Cpp::DeclRef cl_C = Cpp::GetScope("C", ns_N);
+  Cpp::DeclRef td_T = Cpp::GetScope("T", nullptr);
+  Cpp::DeclRef non_existent = Cpp::GetScope("sum", nullptr);
 
   EXPECT_EQ(Cpp::GetQualifiedName(tu), "");
   EXPECT_EQ(Cpp::GetQualifiedName(ns_N), "N");
@@ -680,10 +680,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamed) {
   TestFixture::CreateInterpreter(interpreter_args);
 
   Interp->declare(code);
-  Cpp::TCppScope_t ns_N1 = Cpp::GetNamed("N1", nullptr);
-  Cpp::TCppScope_t ns_N2 = Cpp::GetNamed("N2", ns_N1);
-  Cpp::TCppScope_t cl_C = Cpp::GetNamed("C", ns_N2);
-  Cpp::TCppScope_t en_E = Cpp::GetNamed("E", cl_C);
+  Cpp::DeclRef ns_N1 = Cpp::GetNamed("N1", nullptr);
+  Cpp::DeclRef ns_N2 = Cpp::GetNamed("N2", ns_N1);
+  Cpp::DeclRef cl_C = Cpp::GetNamed("C", ns_N2);
+  Cpp::DeclRef en_E = Cpp::GetNamed("E", cl_C);
   EXPECT_EQ(Cpp::GetQualifiedName(ns_N1), "N1");
   EXPECT_EQ(Cpp::GetQualifiedName(ns_N2), "N1::N2");
   EXPECT_EQ(Cpp::GetQualifiedName(cl_C), "N1::N2::C");
@@ -696,9 +696,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamed) {
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetNamed("S", cl_C)), "N1::N2::C::S");
 
   Interp->process("#include <string>");
-  Cpp::TCppScope_t std_ns = Cpp::GetNamed("std", nullptr);
-  Cpp::TCppScope_t std_string_class = Cpp::GetNamed("string", std_ns);
-  Cpp::TCppScope_t std_string_npos_var = Cpp::GetNamed("npos", std_string_class);
+  Cpp::DeclRef std_ns = Cpp::GetNamed("std", nullptr);
+  Cpp::DeclRef std_string_class = Cpp::GetNamed("string", std_ns);
+  Cpp::DeclRef std_string_npos_var = Cpp::GetNamed("npos", std_string_class);
   EXPECT_EQ(Cpp::GetQualifiedName(std_ns), "std");
   EXPECT_EQ(Cpp::GetQualifiedName(std_string_class), "std::string");
   EXPECT_EQ(Cpp::GetQualifiedName(std_string_npos_var), "std::basic_string<char>::npos");
@@ -727,16 +727,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamedWithUsing) {
   TestFixture::CreateInterpreter();
   Interp->declare(code);
 
-  Cpp::TCppScope_t ns_N = Cpp::GetNamed("N");
-  Cpp::TCppScope_t ns_M = Cpp::GetNamed("M");
-  Cpp::TCppScope_t ns_P = Cpp::GetNamed("P");
+  Cpp::DeclRef ns_N = Cpp::GetNamed("N");
+  Cpp::DeclRef ns_M = Cpp::GetNamed("M");
+  Cpp::DeclRef ns_P = Cpp::GetNamed("P");
   ASSERT_TRUE(ns_N);
   ASSERT_TRUE(ns_M);
   ASSERT_TRUE(ns_P);
 
-  Cpp::TCppScope_t N_C = Cpp::GetNamed("C", ns_N);
-  Cpp::TCppScope_t N_x = Cpp::GetNamed("x", ns_N);
-  Cpp::TCppScope_t N_f = Cpp::GetNamed("f", ns_N);
+  Cpp::DeclRef N_C = Cpp::GetNamed("C", ns_N);
+  Cpp::DeclRef N_x = Cpp::GetNamed("x", ns_N);
+  Cpp::DeclRef N_f = Cpp::GetNamed("f", ns_N);
   ASSERT_TRUE(N_C);
   ASSERT_TRUE(N_x);
   ASSERT_TRUE(N_f);
@@ -766,7 +766,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamedWithUsing) {
     namespace P2 { using namespace N; }
     namespace Q  { using namespace P2; }
   )");
-  Cpp::TCppScope_t ns_Q = Cpp::GetNamed("Q");
+  Cpp::DeclRef ns_Q = Cpp::GetNamed("Q");
   ASSERT_TRUE(ns_Q);
   EXPECT_EQ(Cpp::GetNamed("C", ns_Q), N_C)
       << "using namespace P2 (which uses N); GetNamed(\"C\", Q) "
@@ -780,7 +780,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamedWithUsing) {
     namespace N3 { class C {}; }
     namespace AmbU { using namespace N; using namespace N3; }
   )");
-  Cpp::TCppScope_t ns_Amb = Cpp::GetNamed("AmbU");
+  Cpp::DeclRef ns_Amb = Cpp::GetNamed("AmbU");
   ASSERT_TRUE(ns_Amb);
   EXPECT_EQ(Cpp::GetNamed("C", ns_Amb), nullptr)
       << "ambiguous using-directives must return nullptr, not silently "
@@ -810,13 +810,13 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetParentScope) {
   TestFixture::CreateInterpreter();
 
   Interp->declare(code);
-  Cpp::TCppScope_t ns_N1 = Cpp::GetNamed("N1");
-  Cpp::TCppScope_t ns_N2 = Cpp::GetNamed("N2", ns_N1);
-  Cpp::TCppScope_t cl_C = Cpp::GetNamed("C", ns_N2);
-  Cpp::TCppScope_t int_i = Cpp::GetNamed("i", cl_C);
-  Cpp::TCppScope_t en_E = Cpp::GetNamed("E", cl_C);
-  Cpp::TCppScope_t en_A = Cpp::GetNamed("A", cl_C);
-  Cpp::TCppScope_t en_B = Cpp::GetNamed("B", cl_C);
+  Cpp::DeclRef ns_N1 = Cpp::GetNamed("N1");
+  Cpp::DeclRef ns_N2 = Cpp::GetNamed("N2", ns_N1);
+  Cpp::DeclRef cl_C = Cpp::GetNamed("C", ns_N2);
+  Cpp::DeclRef int_i = Cpp::GetNamed("i", cl_C);
+  Cpp::DeclRef en_E = Cpp::GetNamed("E", cl_C);
+  Cpp::DeclRef en_A = Cpp::GetNamed("A", cl_C);
+  Cpp::DeclRef en_B = Cpp::GetNamed("B", cl_C);
 
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(ns_N1)), "");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(ns_N2)), "N1");
@@ -861,8 +861,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetScopeFromType) {
           "N::C");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetScopeFromType(QT2.getAsOpaquePtr())),
           "N::S");
-  EXPECT_EQ(Cpp::GetScopeFromType(QT3.getAsOpaquePtr()),
-          (Cpp::TCppScope_t) 0);
+  EXPECT_FALSE(Cpp::GetScopeFromType(QT3.getAsOpaquePtr()));
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetScopeFromType(QT4.getAsOpaquePtr())),
           "N::C");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetScopeFromType(QT5.getAsOpaquePtr())),
@@ -938,16 +937,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetBaseClass) {
   EXPECT_EQ(get_base_class_name(Decls[4], 0), "D");
   EXPECT_EQ(get_base_class_name(Decls[10], 0), "<unnamed>");
 
-  auto* VD = Cpp::GetNamed("var");
-  auto *VT = Cpp::GetVariableType(VD);
-  auto *TC2_A_Decl = Cpp::GetScopeFromType(VT);
-  auto *TC1_A_Decl = Cpp::GetBaseClass(TC2_A_Decl, 0);
+  auto VD = Cpp::GetNamed("var");
+  auto VT = Cpp::GetVariableType(VD);
+  auto TC2_A_Decl = Cpp::GetScopeFromType(VT);
+  auto TC1_A_Decl = Cpp::GetBaseClass(TC2_A_Decl, 0);
   EXPECT_EQ(Cpp::GetCompleteName(TC1_A_Decl), "TC1<A>");
 
-  auto* VD1 = Cpp::GetNamed("var1");
-  auto* VT1 = Cpp::GetVariableType(VD1);
-  auto* TC3_A_Decl = Cpp::GetScopeFromType(VT1);
-  auto* A_class = Cpp::GetBaseClass(TC3_A_Decl, 0);
+  auto VD1 = Cpp::GetNamed("var1");
+  auto VT1 = Cpp::GetVariableType(VD1);
+  auto TC3_A_Decl = Cpp::GetScopeFromType(VT1);
+  auto A_class = Cpp::GetBaseClass(TC3_A_Decl, 0);
   EXPECT_EQ(Cpp::GetCompleteName(A_class), "A");
 }
 
@@ -1096,8 +1095,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_InstantiateNNTPClassTemplate) {
   GetAllTopLevelDecls(code, Decls);
 
   ASTContext &C = Interp->getCI()->getASTContext();
-  Cpp::TCppType_t IntTy = C.IntTy.getAsOpaquePtr();
-  std::vector<Cpp::TemplateArgInfo> args1 = {{IntTy, "5"}};
+  Cpp::TypeRef IntTy = C.IntTy.getAsOpaquePtr();
+  std::vector<Cpp::TemplateArgInfo> args1 = {{IntTy.data, "5"}};
   EXPECT_TRUE(Cpp::InstantiateTemplate(Decls[0], args1));
 }
 
@@ -1111,9 +1110,9 @@ template<class T> constexpr T pi = T(3.1415926535897932385L);
   ASTContext& C = Interp->getCI()->getASTContext();
 
   std::vector<Cpp::TemplateArgInfo> args1 = {C.IntTy.getAsOpaquePtr()};
-  auto* Instance1 = Cpp::InstantiateTemplate(Decls[0], args1);
-  EXPECT_TRUE(isa<VarDecl>(static_cast<Decl*>(Instance1)));
-  auto* VD = cast<VarTemplateSpecializationDecl>(static_cast<Decl*>(Instance1));
+  auto Instance1 = Cpp::InstantiateTemplate(Decls[0], args1);
+  EXPECT_TRUE(isa<VarDecl>(Cpp::unwrap<Decl>(Instance1)));
+  auto* VD = cast<VarTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance1));
   VarTemplateDecl* VDTD1 = VD->getSpecializedTemplate();
   EXPECT_TRUE(VDTD1->isThisDeclarationADefinition());
   TemplateArgument TA1 = (*VD->getTemplateArgsAsWritten())[0].getArgument();
@@ -1130,9 +1129,9 @@ template<typename T> T TrivialFnTemplate() { return T(); }
   ASTContext& C = Interp->getCI()->getASTContext();
 
   std::vector<Cpp::TemplateArgInfo> args1 = {C.IntTy.getAsOpaquePtr()};
-  auto* Instance1 = Cpp::InstantiateTemplate(Decls[0], args1);
-  EXPECT_TRUE(isa<FunctionDecl>(static_cast<Decl*>(Instance1)));
-  FunctionDecl* FD = cast<FunctionDecl>(static_cast<Decl*>(Instance1));
+  auto Instance1 = Cpp::InstantiateTemplate(Decls[0], args1);
+  EXPECT_TRUE(isa<FunctionDecl>(Cpp::unwrap<Decl>(Instance1)));
+  FunctionDecl* FD = cast<FunctionDecl>(Cpp::unwrap<Decl>(Instance1));
   FunctionDecl* FnTD1 = FD->getTemplateInstantiationPattern();
   EXPECT_TRUE(FnTD1->isThisDeclarationADefinition());
   TemplateArgument TA1 = FD->getTemplateSpecializationArgs()->get(0);
@@ -1147,7 +1146,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   Interp->process(code);
   const char* str = "std::make_unique<int,int>";
   auto* Instance1 =
-      static_cast<Decl*>(Cpp::InstantiateTemplateFunctionFromString(str));
+      Cpp::unwrap<Decl>(Cpp::InstantiateTemplateFunctionFromString(str));
   EXPECT_TRUE(Instance1);
 }
 
@@ -1195,10 +1194,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_InstantiateTemplate) {
   ASTContext &C = Interp->getCI()->getASTContext();
 
   std::vector<Cpp::TemplateArgInfo> args1 = {C.IntTy.getAsOpaquePtr()};
-  auto* Instance1 = Cpp::InstantiateTemplate(Decls[0], args1);
+  auto Instance1 = Cpp::InstantiateTemplate(Decls[0], args1);
   EXPECT_TRUE(
-      isa<ClassTemplateSpecializationDecl>(static_cast<Decl*>(Instance1)));
-  auto *CTSD1 = static_cast<ClassTemplateSpecializationDecl*>(Instance1);
+      isa<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance1)));
+  auto* CTSD1 =
+      cast<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance1));
   EXPECT_TRUE(CTSD1->hasDefinition());
   TemplateArgument TA1 = CTSD1->getTemplateArgs().get(0);
   EXPECT_TRUE(TA1.getAsType()->isIntegerType());
@@ -1206,35 +1206,38 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_InstantiateTemplate) {
 
   auto Instance2 = Cpp::InstantiateTemplate(Decls[1], {});
   EXPECT_TRUE(
-      isa<ClassTemplateSpecializationDecl>(static_cast<Decl*>(Instance2)));
-  auto *CTSD2 = static_cast<ClassTemplateSpecializationDecl*>(Instance2);
+      isa<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance2)));
+  auto* CTSD2 =
+      cast<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance2));
   EXPECT_TRUE(CTSD2->hasDefinition());
   TemplateArgument TA2 = CTSD2->getTemplateArgs().get(0);
   EXPECT_TRUE(TA2.getAsType()->isIntegerType());
 
   std::vector<Cpp::TemplateArgInfo> args3 = {C.IntTy.getAsOpaquePtr()};
-  auto* Instance3 = Cpp::InstantiateTemplate(Decls[2], args3);
+  auto Instance3 = Cpp::InstantiateTemplate(Decls[2], args3);
   EXPECT_TRUE(
-      isa<ClassTemplateSpecializationDecl>(static_cast<Decl*>(Instance3)));
-  auto *CTSD3 = static_cast<ClassTemplateSpecializationDecl*>(Instance3);
+      isa<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance3)));
+  auto* CTSD3 =
+      cast<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance3));
   EXPECT_TRUE(CTSD3->hasDefinition());
   TemplateArgument TA3_0 = CTSD3->getTemplateArgs().get(0);
   TemplateArgument TA3_1 = CTSD3->getTemplateArgs().get(1);
   EXPECT_TRUE(TA3_0.getAsType()->isIntegerType());
   EXPECT_TRUE(Cpp::IsRecordType(TA3_1.getAsType().getAsOpaquePtr()));
 
-  std::vector<Cpp::TCppFunction_t> Inst3_methods;
+  std::vector<Cpp::FuncRef> Inst3_methods;
   Cpp::GetClassMethods(Instance3, Inst3_methods);
   EXPECT_EQ(Cpp::GetFunctionSignature(Inst3_methods[0]),
             "C1<int>::C1(const C0<int> &val)");
 
   std::vector<Cpp::TemplateArgInfo> args4 = {C.IntTy.getAsOpaquePtr(),
                                                {C.IntTy.getAsOpaquePtr(), "3"}};
-  auto* Instance4 = Cpp::InstantiateTemplate(Decls[3], args4);
+  auto Instance4 = Cpp::InstantiateTemplate(Decls[3], args4);
 
   EXPECT_TRUE(
-      isa<ClassTemplateSpecializationDecl>(static_cast<Decl*>(Instance4)));
-  auto *CTSD4 = static_cast<ClassTemplateSpecializationDecl*>(Instance4);
+      isa<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance4)));
+  auto* CTSD4 =
+      cast<ClassTemplateSpecializationDecl>(Cpp::unwrap<Decl>(Instance4));
   EXPECT_TRUE(CTSD4->hasDefinition());
   TemplateArgument TA4_0 = CTSD4->getTemplateArgs().get(0);
   TemplateArgument TA4_1 = CTSD4->getTemplateArgs().get(1);
@@ -1256,8 +1259,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetClassTemplateArgs) {
 
   GetAllTopLevelDecls(code, Decls);
 
-  Cpp::TCppScope_t f =
-      Cpp::GetScopeFromType(Cpp::GetVariableType(Decls.back()));
+  Cpp::DeclRef f = Cpp::GetScopeFromType(Cpp::GetVariableType(Decls.back()));
   EXPECT_TRUE(f);
 
   std::vector<Cpp::TemplateArgInfo> tmpl_args;
@@ -1286,14 +1288,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   GetAllTopLevelDecls(code, Decls);
 
-  auto* v1 = Cpp::GetNamed("v1");
-  auto* v2 = Cpp::GetNamed("v2");
-  auto* v3 = Cpp::GetNamed("v3");
+  auto v1 = Cpp::GetNamed("v1");
+  auto v2 = Cpp::GetNamed("v2");
+  auto v3 = Cpp::GetNamed("v3");
   EXPECT_TRUE(v1 && v2 && v3);
 
-  auto *v1_class = Cpp::GetScopeFromType(Cpp::GetVariableType(v1));
-  auto *v2_class = Cpp::GetScopeFromType(Cpp::GetVariableType(v2));
-  auto *v3_class = Cpp::GetScopeFromType(Cpp::GetVariableType(v3));
+  auto v1_class = Cpp::GetScopeFromType(Cpp::GetVariableType(v1));
+  auto v2_class = Cpp::GetScopeFromType(Cpp::GetVariableType(v2));
+  auto v3_class = Cpp::GetScopeFromType(Cpp::GetVariableType(v3));
   EXPECT_TRUE(v1_class && v2_class && v3_class);
 
   std::vector<Cpp::TemplateArgInfo> instance_types;
@@ -1360,7 +1362,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetOperator) {
 
   Cpp::Declare(code.c_str());
 
-  std::vector<Cpp::TCppFunction_t> ops;
+  std::vector<Cpp::FuncRef> ops;
 
   Cpp::GetOperator(Cpp::GetGlobalScope(), Cpp::Operator::OP_Plus, ops);
   EXPECT_EQ(ops.size(), 1);

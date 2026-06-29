@@ -208,7 +208,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnumConstantType) {
 
   GetAllTopLevelDecls(code, Decls);
 
-  auto get_enum_constant_type_as_str = [](Cpp::TCppScope_t enum_constant) {
+  auto get_enum_constant_type_as_str = [](Cpp::DeclRef enum_constant) {
     return Cpp::GetTypeAsString(Cpp::GetEnumConstantType(enum_constant));
   };
 
@@ -297,10 +297,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnums) {
   TestFixture::CreateInterpreter();
   Interp->declare(code);
   std::vector<std::string> enumNames1, enumNames2, enumNames3, enumNames4;
-  Cpp::TCppScope_t globalscope = Cpp::GetScope("", 0);
-  Cpp::TCppScope_t Animals_scope = Cpp::GetScope("Animals", 0);
-  Cpp::TCppScope_t myClass_scope = Cpp::GetScope("myClass", 0);
-  Cpp::TCppScope_t unsupported_scope = Cpp::GetScope("myVariable", 0);
+  Cpp::DeclRef globalscope = Cpp::GetScope("", nullptr);
+  Cpp::DeclRef Animals_scope = Cpp::GetScope("Animals", nullptr);
+  Cpp::DeclRef myClass_scope = Cpp::GetScope("myClass", nullptr);
+  Cpp::DeclRef unsupported_scope = Cpp::GetScope("myVariable", nullptr);
 
   Cpp::GetEnums(globalscope, enumNames1);
   Cpp::GetEnums(Animals_scope, enumNames2);

@@ -4,7 +4,7 @@
 #include "CppInterOp/Dispatch.h"
 
 // Define storage for all raw dispatch function pointers.
-using namespace CppImpl;
+using namespace Cpp;
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
   Ret(*CppInternal::DispatchRaw::DN) RawTypes = nullptr;
 #include "CppInterOp/CppInterOpAPI.inc"

@@ -3,7 +3,7 @@
 
 // Probe entry that ODR-uses the inline JitCall fast path. JC is opaque
 // so the optimizer can't DCE the inlined references at any -O level.
-namespace CppImpl {
+namespace Cpp {
 class JitCall;
 }
 #ifdef _WIN32
@@ -11,7 +11,7 @@ class JitCall;
 #else
 #define TESTDOWNSTREAM_EXPORT extern "C" __attribute__((visibility("default")))
 #endif
-TESTDOWNSTREAM_EXPORT void downstream_link_probe(CppImpl::JitCall* JC);
+TESTDOWNSTREAM_EXPORT void downstream_link_probe(Cpp::JitCall* JC);
 
 /// After LoadDispatchAPI(libpath) succeeds, check every DispatchRaw
 /// trace slot in this DSO is non-null. Returns 0 on success, a
