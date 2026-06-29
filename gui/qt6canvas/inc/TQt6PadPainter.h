@@ -16,9 +16,11 @@
 #ifdef __CLING__
 class QString;
 class QColor;
+class QPen;
 #else
 #include <QString>
 #include <QColor>
+#include <QPen>
 #endif
 
 class QPaintWidget;
@@ -40,6 +42,7 @@ protected:
 
    static QString GetFontFamily(Font_t id);
    static QColor GetQColor(Color_t id);
+   QPen GetLinePen();
 
 public:
 
