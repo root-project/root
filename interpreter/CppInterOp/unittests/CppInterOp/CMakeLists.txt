@@ -45,18 +45,25 @@ endif()
 add_cppinterop_unittest(CppInterOpTests
   CAPITest.cpp
   CommentReflectionTest.cpp
+  CppInterOpThunksTest.cpp
+  DiagnosticTest.cpp
   EnumReflectionTest.cpp
   FunctionReflectionTest.cpp
+  HandleTypesTest.cpp
   InterpreterTest.cpp
   JitTest.cpp
+  ResultTest.cpp
   ScopeReflectionTest.cpp
   TypeReflectionTest.cpp
   Utils.cpp
   VariableReflectionTest.cpp
 )
 if (NOT EMSCRIPTEN)
-  # Emscripten has no GPU; CUDA tests are native-only.
-  target_sources(CppInterOpTests PRIVATE CUDATest.cpp)
+  # Emscripten has no GPU; CUDA tests are native-only. The VTableOverlay
+  # tests need Cpp::Construct, whose placement-new JIT wrapper does not
+  # compile under the Emscripten clang-repl (see FunctionReflection_Construct,
+  # likewise skipped there).
+  target_sources(CppInterOpTests PRIVATE CUDATest.cpp VTableOverlayTest.cpp)
 endif()
 
 if(NOT WIN32)
@@ -78,6 +85,9 @@ if(TARGET CppInterOpTableGen)
   add_dependencies(CAPITestC CppInterOpTableGen)
 endif()
 target_link_libraries(CppInterOpTests PRIVATE CAPITestC)
+target_compile_definitions(CppInterOpTests PRIVATE
+  "CPPINTEROP_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../../\""
+)
 
 set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
@@ -116,6 +126,19 @@ endif()
 
 add_subdirectory(TestSharedLib)
 add_dependencies(DynamicLibraryManagerTests TestSharedLib)
+
+# Cross-TU VTableOverlay perf check, built as part of the test suite.
+# Standalone-only (its Google Benchmark dependency is provisioned only then;
+# keeps it out of embedded host builds such as ROOT). Excluded on WASM
+# (Google Benchmark's WASM support is shaky, and the dispatch-cost claim is
+# about CPU, not JS, execution). The dispatch loop is compiled into
+# TestSharedLib so the call site cannot be devirtualized in this TU.
+if(CPPINTEROP_BUILT_STANDALONE AND NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
+  add_cppinterop_unittest(VTableOverlayCrossTUBench
+    VTableOverlayCrossTUBench.cpp)
+  target_link_libraries(VTableOverlayCrossTUBench PRIVATE benchmark TestSharedLib)
+  add_dependencies(VTableOverlayCrossTUBench TestSharedLib)
+endif()
 
 # Downstream-DSO dlopen check that mirrors libcppyy-backend's contract:
 # a SHARED lib using <CppInterOp/Dispatch.h> without linking against

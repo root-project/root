@@ -1,0 +1,6 @@
+common --enable_bzlmod
+test --test_output=errors
+
+# The C++ toolchain (clang from the LLVM tree) and all ABI-critical flags are
+# centralized in the cppyy_bazel module, which registers @llvm//:cc_toolchain.
+# No per-repo compiler wiring needed.

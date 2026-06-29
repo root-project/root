@@ -310,10 +310,17 @@ struct ReproBuffer {
 
   ReproBuffer() : OS(Buffer) {}
 
-  // Opaque handle pointers — resolved to their registered name.
-  // const void* subsumes void* via the standard add-const conversion,
-  // so one overload covers both TCppFunction_t (= void*) and
-  // TCppConstFunction_t (= const void*) public typedefs.
+  // Opaque handle structs — unwrap .data and resolve to registered name.
+  void append(Cpp::DeclRef h) { append(h.data); }
+  void append(Cpp::TypeRef h) { append(h.data); }
+  void append(Cpp::FuncRef h) { append(h.data); }
+  void append(Cpp::ObjectRef h) { append(h.data); }
+  void append(Cpp::InterpRef h) { append(h.data); }
+  void append(Cpp::ConstDeclRef h) { append(h.data); }
+  void append(Cpp::ConstTypeRef h) { append(h.data); }
+  void append(Cpp::ConstFuncRef h) { append(h.data); }
+
+  // Raw void* pointers — resolved to their registered name.
   void append(const void* p) {
     if (!p) {
       OS << "nullptr";
@@ -380,12 +387,12 @@ struct ReproBuffer {
     OS << "}";
   }
 
-  // TemplateArgInfo: brace-init through the (TCppScope_t, const char*)
+  // TemplateArgInfo: brace-init through the (DeclRef, const char*)
   // ctor so the reproducer compiles. m_Type takes the void* path
   // (renders as vN); nullptr m_IntegralValue must render as `nullptr`
   // (the ctor's default), not the empty string the const char* path
   // would produce.
-  void append(const CppImpl::TemplateArgInfo& tai) {
+  void append(const Cpp::TemplateArgInfo& tai) {
     OS << "Cpp::TemplateArgInfo{";
     append(static_cast<const void*>(tai.m_Type));
     OS << ", ";
@@ -483,6 +490,24 @@ template <typename T>
 struct is_pointer_vector<std::vector<T*>> : std::true_type {};
 template <typename T>
 inline constexpr bool is_pointer_vector_v = is_pointer_vector<T>::value;
+
+/// Detect opaque handle structs (Cpp::DeclRef, Cpp::TypeRef, etc.)
+template <typename T>
+inline constexpr bool is_handle_v =
+    std::is_same_v<T, Cpp::DeclRef> || std::is_same_v<T, Cpp::TypeRef> ||
+    std::is_same_v<T, Cpp::FuncRef> || std::is_same_v<T, Cpp::ObjectRef> ||
+    std::is_same_v<T, Cpp::InterpRef> || std::is_same_v<T, Cpp::ConstDeclRef> ||
+    std::is_same_v<T, Cpp::ConstTypeRef> ||
+    std::is_same_v<T, Cpp::ConstFuncRef>;
+
+/// Detect vector-of-handle types.
+template <typename T> struct is_handle_vector : std::false_type {};
+template <>
+struct is_handle_vector<std::vector<Cpp::DeclRef>> : std::true_type {};
+template <>
+struct is_handle_vector<std::vector<Cpp::FuncRef>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_handle_vector_v = is_handle_vector<T>::value;
 
 /// Holds all the data that is only needed when tracing is active.
 /// Heap-allocated only when TheTraceInfo != nullptr, so disabled tracing
@@ -665,12 +690,19 @@ public:
     if (!m_Data)
       return val;
     m_Data->Returned = true;
-    if constexpr (std::is_pointer_v<T>) {
+    if constexpr (is_handle_v<T>) {
+      m_Data->HasPtrResult = true;
+      m_Data->Result = const_cast<void*>(static_cast<const void*>(val.data));
+    } else if constexpr (std::is_pointer_v<T>) {
       m_Data->HasPtrResult = true;
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
       m_Data->Result = const_cast<void*>(static_cast<const void*>(val));
     } else if constexpr (std::is_null_pointer_v<T>) {
       m_Data->HasPtrResult = true;
+    } else if constexpr (is_handle_vector_v<T>) {
+      m_Data->HasRetVec = true;
+      for (const auto& h : val)
+        m_Data->RetVecPtrs.push_back(h.data);
     } else if constexpr (is_pointer_vector_v<T>) {
       // Snapshot the element pointers; the source vector is owned by
       // the API call site and goes out of scope before ~TraceRegion.

@@ -2,10 +2,12 @@
 #define CPPINTEROP_UNITTESTS_LIBCPPINTEROP_UTILS_H
 
 #include "../../lib/CppInterOp/Compatibility.h"
+#include "../../lib/CppInterOp/Unwrap.h"
 
 #include "CppInterOp/CppInterOp.h"
 #define CPPINTEROP_TEST_MODE CppInterOpTest
 
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -18,8 +20,20 @@ using namespace llvm;
 namespace clang {
 class Decl;
 }
-#define Interp (static_cast<compat::Interpreter*>(Cpp::GetInterpreter()))
+#define Interp (Cpp::unwrap<compat::Interpreter>(Cpp::GetInterpreter()))
 namespace TestUtils {
+
+// Function-pointer / void* round-trip for vtable test/bench code, mirroring
+// the lib-side VTableOverlay::BitCastFn. Sidesteps the conditionally-
+// supported reinterpret_cast between fn and data pointers per
+// [expr.reinterpret.cast]/6; memcpy is well-defined on every platform
+// CppInterOp targets.
+template <class To, class From> inline To BitCastFn(From f) noexcept {
+  static_assert(sizeof(To) == sizeof(From));
+  To to;
+  std::memcpy(&to, &f, sizeof(to));
+  return to;
+}
 
 struct TestConfig {
     std::string name;
@@ -74,6 +88,17 @@ bool IsTargetX86();
 #  define CPPINTEROP_OOP_DISABLED 1
 #endif
 
+// Address-sanitized build (gcc spells it __SANITIZE_ADDRESS__, clang
+// __has_feature).
+#if defined(__has_feature)
+#  if __has_feature(address_sanitizer)
+#    define CPPINTEROP_ASAN_BUILD 1
+#  endif
+#endif
+#if defined(__SANITIZE_ADDRESS__)
+#  define CPPINTEROP_ASAN_BUILD 1
+#endif
+
 // Define type tags for each configuration
 struct InProcessJITConfig {
   static constexpr bool isOutOfProcess = false;
@@ -97,7 +122,7 @@ protected:
   }
 
 public:
-  static Cpp::TInterp_t
+  static Cpp::InterpRef
   CreateInterpreter(const std::vector<const char*>& Args = {},
                     const std::vector<const char*>& GpuArgs = {}) {
     auto mergedArgs = TestUtils::GetInterpreterArgs(Args);

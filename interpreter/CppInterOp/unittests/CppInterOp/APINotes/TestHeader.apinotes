@@ -1,0 +1,6 @@
+Name: TestHeader
+Functions:
+  - Name: testAlloc
+    RetainCountConvention: CFReturnsRetained
+  - Name: testNotAlloc
+    RetainCountConvention: CFReturnsNotRetained
