@@ -13,8 +13,11 @@
 
 #include "TPadPainterBase.h"
 
+#include <QString>
+#include <QColor>
 
 class TQt6Canvas;
+class QPaintWidget;
 
 class TQt6PadPainter : public TPadPainterBase {
 
@@ -22,9 +25,16 @@ friend class TQt6Canvas;
 
 protected:
 
+   QPaintWidget *fPaintWidget = nullptr;
+
+   void PaintQString(int x, int y, const QString &s);
+
+   static QString GetFontFamily(Font_t id);
+   static QColor GetQColor(Color_t id);
+
 public:
 
-   TQt6PadPainter() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
+   TQt6PadPainter(QPaintWidget *widget = nullptr) { fPaintWidget = widget; }
 
    Bool_t   HasTTFonts() const override { return kTRUE; }
 

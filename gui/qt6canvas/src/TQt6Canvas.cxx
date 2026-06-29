@@ -102,7 +102,7 @@ Int_t TQt6Canvas::InitWindow()
 TVirtualPadPainter *TQt6Canvas::CreatePadPainter()
 {
    printf("Create pad painter\n");
-   return new TQt6PadPainter();
+   return new TQt6PadPainter(fPaintWidget);
 }
 
 
@@ -288,12 +288,13 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// if canvas or any subpad was modified,
-/// scan all primitives in the TCanvas and subpads and convert them into
-/// the structure which will be delivered to JSROOT client
+/// invoke Qt update() which will redraw area
 
 Bool_t TQt6Canvas::PerformUpdate(Bool_t async)
 {
-   return kFALSE;
+   if (Canvas()->IsModified())
+      fPaintWidget->update();
+   return kTRUE;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

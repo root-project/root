@@ -10,9 +10,19 @@
 
 #include "TQt6PadPainter.h"
 #include "TError.h"
+#include "TSystem.h"
+#include "TEnv.h"
 #include "TImage.h"
 #include "TPad.h"
+#include "TROOT.h"
+#include "TColor.h"
 
+#include "QPaintWidget.h"
+
+#include <QFont>
+#include <QFontDatabase>
+#include <QRect>
+#include <QPainter>
 
 /** \class TQt6PadPainter
     \ingroup qt6canvas
@@ -142,7 +152,10 @@ void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float
 
 void TQt6PadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
 {
-   printf("DrawText %5.3f %5.3f %s\n", x, y, text);
+   const Int_t px = gPad->XtoAbsPixel(x);
+   const Int_t py = gPad->YtoAbsPixel(y);
+
+   PaintQString(px, py, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,14 +163,22 @@ void TQt6PadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMod
 
 void TQt6PadPainter::DrawTextUrl(Double_t x, Double_t y, const char *text, const char * /* url */)
 {
+   const Int_t px = gPad->XtoAbsPixel(x);
+   const Int_t py = gPad->YtoAbsPixel(y);
+
+   PaintQString(px, py, text);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version working with wchar_t and required by TMathText.
 
-void TQt6PadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, ETextMode /*mode*/)
+void TQt6PadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode /*mode*/)
 {
+   const Int_t px = gPad->XtoAbsPixel(x);
+   const Int_t py = gPad->YtoAbsPixel(y);
+
+   PaintQString(px, py, QString::fromWCharArray(text));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,15 +186,21 @@ void TQt6PadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, 
 
 void TQt6PadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode /*mode*/)
 {
-   printf("DrawTextNDC %5.3f %5.3f %s\n", u, v, text);
+   const Int_t px = gPad->UtoAbsPixel(u);
+   const Int_t py = gPad->VtoAbsPixel(v);
 
+   PaintQString(px, py, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text in normalized coordinates.
 
-void TQt6PadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*text*/, ETextMode /*mode*/)
+void TQt6PadPainter::DrawTextNDC(Double_t  u, Double_t v, const wchar_t *text, ETextMode /*mode*/)
 {
+   const Int_t px = gPad->UtoAbsPixel(u);
+   const Int_t py = gPad->VtoAbsPixel(v);
+
+   PaintQString(px, py, QString::fromWCharArray(text));
 }
 
 
@@ -184,3 +211,139 @@ void TQt6PadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t /* 
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return QColor created from specified TColor
+
+QColor TQt6PadPainter::GetQColor(Color_t id)
+{
+   auto c = gROOT->GetColor(id);
+   if (c)
+      return QColor((int)(c->GetRed() * 255), (int)(c->GetGreen() * 255), (int)(c->GetBlue() * 255), (int)(c->GetAlpha() * 255));
+   return QColor(0, 0, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return font family for specified ROOT font id
+/// If necessary, register TTF font to Qt first
+
+QString TQt6PadPainter::GetFontFamily(Font_t fontnumber)
+{
+   // TODO: make special generic method, used from several places
+   static const char *fonttable[][2] = {
+     { "Root.TTFont.0", "FreeSansBold.otf" },
+     { "Root.TTFont.1", "FreeSerifItalic.otf" },
+     { "Root.TTFont.2", "FreeSerifBold.otf" },
+     { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
+     { "Root.TTFont.4", "texgyreheros-regular.otf" },
+     { "Root.TTFont.5", "texgyreheros-italic.otf" },
+     { "Root.TTFont.6", "texgyreheros-bold.otf" },
+     { "Root.TTFont.7", "texgyreheros-bolditalic.otf" },
+     { "Root.TTFont.8", "FreeMono.otf" },
+     { "Root.TTFont.9", "FreeMonoOblique.otf" },
+     { "Root.TTFont.10", "FreeMonoBold.otf" },
+     { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
+     { "Root.TTFont.12", "symbol.ttf" },
+     { "Root.TTFont.13", "FreeSerif.otf" },
+     { "Root.TTFont.14", "wingding.ttf" },
+     { "Root.TTFont.15", "symbol.ttf" },
+     { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
+     { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
+     { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
+     { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
+     { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
+     { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
+     { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
+     { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
+     { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
+     { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
+     { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
+     { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
+     { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
+     { "Root.TTFont.ME", "DroidSansFallback.ttf" },
+     { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
+     { "Root.TTFont.CJKGothic", "DroidSansFallback.ttf" }
+   };
+
+   int fontid = fontnumber / 10;
+   if (fontid < 0 || fontid > 31)
+      fontid = 0;
+
+   static std::map<int, QString> registeredFonts;
+
+   auto iter = registeredFonts.find(fontid);
+   if (iter != registeredFonts.end())
+      return iter->second;
+
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                        TROOT::GetTTFFontDir());
+
+   TString fname = gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]);
+
+   const char *ttfont = gSystem->FindFile(ttpath, fname, kReadPermission);
+
+   if (!ttfont) {
+      ::Error("TQt6PadPainter::GetFontFamily", "Not found font %s in configured path %s", fname.Data(), ttpath);
+      return "";
+   }
+
+   int qtId = QFontDatabase::addApplicationFont(ttfont);
+   if (qtId == -1) {
+      ::Error("TQt6PadPainter::GetFontFamily", "No able to add font %s to QFontDataBase", ttfont);
+      return "";
+   }
+
+   QString fontFamily = QFontDatabase::applicationFontFamilies(qtId).at(0);
+
+   registeredFonts[fontid] = fontFamily;
+
+   return fontFamily;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Actual text painting image
+
+void TQt6PadPainter::PaintQString(int x, int y, const QString &s)
+{
+   auto painter = fPaintWidget->getPainter();
+   if (!painter)
+      return;
+
+   const TAttText &att = GetAttText();
+   auto family = GetFontFamily(att.GetTextFont());
+   if (family.isEmpty())
+      return;
+
+   painter->setFont(QFont(family, att.GetTextSizePixels(*gPad)));
+
+   painter->setPen(GetQColor(att.GetTextColor()));
+
+   Int_t txalh = att.GetTextAlign() / 10;
+   Int_t txalv = att.GetTextAlign() % 10;
+
+   auto fm = painter->fontMetrics();
+
+   switch (txalh) {
+      case 0:
+      case 1: break; //left
+      case 2: x -= fm.horizontalAdvance(s) / 2; break; //center
+      case 3: x -= fm.horizontalAdvance(s); break; //right
+   }
+
+   switch (txalv) {
+      case 1: break; //bottom
+      case 2: y += fm.height() / 2; break; // middle
+      case 3: y += fm.height(); break; //top
+   }
+
+   if (att.GetTextAngle() == 0) {
+      // Just draw text
+      painter->drawText(x, y, s);
+   } else {
+      // Draw with rotation
+      painter->save();
+      painter->translate(x, y);
+      painter->rotate(-att.GetTextAngle());
+      painter->drawText(0, 0, s);
+      painter->restore();
+   }
+}
