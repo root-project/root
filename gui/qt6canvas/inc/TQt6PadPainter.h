@@ -15,6 +15,7 @@
 
 #include <QString>
 #include <QColor>
+#include <QPen>
 
 class TQt6Canvas;
 class QPaintWidget;
@@ -31,6 +32,7 @@ protected:
 
    static QString GetFontFamily(Font_t id);
    static QColor GetQColor(Color_t id);
+   QPen GetLinePen();
 
 public:
 

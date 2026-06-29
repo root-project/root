@@ -11,17 +11,21 @@
 #include "TQt6PadPainter.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "TStyle.h"
 #include "TEnv.h"
 #include "TImage.h"
 #include "TPad.h"
 #include "TROOT.h"
 #include "TColor.h"
 
+#include <memory>
+
 #include "QPaintWidget.h"
 
 #include <QFont>
 #include <QFontDatabase>
 #include <QRect>
+#include <QBrush>
 #include <QPainter>
 
 /** \class TQt6PadPainter
@@ -52,9 +56,20 @@ void TQt6PadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*wi
 
 void TQt6PadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (GetAttLine().GetLineWidth() <= 0)
+   auto painter = fPaintWidget->getPainter();
+   if (!painter || GetAttLine().GetLineWidth() <= 0)
       return;
 
+   const Int_t px1 = gPad->XtoAbsPixel(x1);
+   const Int_t py1 = gPad->YtoAbsPixel(y1);
+   const Int_t px2 = gPad->XtoAbsPixel(x2);
+   const Int_t py2 = gPad->YtoAbsPixel(y2);
+
+   painter->setPen(GetLinePen());
+
+   painter->setRenderHint(QPainter::Antialiasing);
+
+   painter->drawLine(QPoint(px1, py1), QPoint(px2, py2));
 }
 
 
@@ -63,10 +78,21 @@ void TQt6PadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2
 
 void TQt6PadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (GetAttLine().GetLineWidth() <= 0)
+   auto painter = fPaintWidget->getPainter();
+   if (!painter || GetAttLine().GetLineWidth() <= 0)
       return;
-}
 
+   const Int_t px1 = gPad->UtoAbsPixel(u1);
+   const Int_t py1 = gPad->VtoAbsPixel(v1);
+   const Int_t px2 = gPad->UtoAbsPixel(u2);
+   const Int_t py2 = gPad->VtoAbsPixel(v2);
+
+   painter->setPen(GetLinePen());
+
+   painter->setRenderHint(QPainter::Antialiasing);
+
+   painter->drawLine(QPoint(px1, py1), QPoint(px2, py2));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a simple box.
@@ -76,11 +102,29 @@ void TQt6PadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    if (GetAttLine().GetLineWidth() <= 0 && mode == TVirtualPadPainter::kHollow)
       return;
 
-   // if (mode == TVirtualPadPainter::kHollow)
-   //    draw only border
-   // else
-   //    draw only fill
+   auto painter = fPaintWidget->getPainter();
+   if (!painter)
+      return;
 
+   const Int_t px1 = gPad->XtoAbsPixel(x1);
+   const Int_t py1 = gPad->YtoAbsPixel(y1);
+   const Int_t px2 = gPad->XtoAbsPixel(x2);
+   const Int_t py2 = gPad->YtoAbsPixel(y2);
+
+   if (mode == TVirtualPadPainter::kHollow) {
+      // draw only border
+      painter->setPen(GetLinePen());
+      painter->setRenderHint(QPainter::Antialiasing);
+      painter->setBrush(Qt::NoBrush);
+   } else {
+      // draw only fill
+      painter->setPen(Qt::NoPen);
+      QBrush fillBrush(GetQColor(GetAttFill().GetFillColor())); // A solid flat green
+      painter->setBrush(fillBrush);
+   }
+
+   QRect rectangle(px1, py1, px2, py2);
+   painter->drawRect(rectangle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,8 +151,19 @@ void TQt6PadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
 
 void TQt6PadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-   if ((GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
+   auto painter = fPaintWidget->getPainter();
+   if (!painter || (GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
       return;
+
+   QList<QPointF> points;
+   for (Int_t n = 0; n < nPoints; ++n)
+      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+
+   painter->setPen(GetLinePen());
+
+   painter->setRenderHint(QPainter::Antialiasing);
+
+   painter->drawPolyline(points);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +171,19 @@ void TQt6PadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
 
 void TQt6PadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   if ((GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
+   auto painter = fPaintWidget->getPainter();
+   if (!painter || (GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
       return;
+
+   QList<QPointF> points;
+   for (Int_t n = 0; n < nPoints; ++n)
+      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+
+   painter->setPen(GetLinePen());
+
+   painter->setRenderHint(QPainter::Antialiasing);
+
+   painter->drawPolyline(points);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,8 +191,19 @@ void TQt6PadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
 
 void TQt6PadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Double_t *v)
 {
-   if ((GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
+   auto painter = fPaintWidget->getPainter();
+   if (!painter || (GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
       return;
+
+   QList<QPointF> points;
+   for (Int_t n = 0; n < nPoints; ++n)
+      points.push_back({gPad->UtoAbsPixel(u[n]), gPad->VtoAbsPixel(v[n])});
+
+   painter->setPen(GetLinePen());
+
+   painter->setRenderHint(QPainter::Antialiasing);
+
+   painter->drawPolyline(points);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,6 +296,41 @@ QColor TQt6PadPainter::GetQColor(Color_t id)
    if (c)
       return QColor((int)(c->GetRed() * 255), (int)(c->GetGreen() * 255), (int)(c->GetBlue() * 255), (int)(c->GetAlpha() * 255));
    return QColor(0, 0, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return QPen for lines drawing
+
+QPen TQt6PadPainter::GetLinePen()
+{
+   auto &att = GetAttLine();
+
+   auto style = att.GetLineStyle();
+
+   QPen customPen;
+   customPen.setColor(GetQColor(att.GetLineColor()));
+   customPen.setWidth(att.GetLineWidth());
+   customPen.setStyle(Qt::SolidLine);
+
+   TString patt;
+
+   if (style > 1)
+      patt = gStyle->GetLineStyleString(style);
+
+   if (patt.Length() > 2) {
+      QList<qreal> pattern;
+      std::unique_ptr<TObjArray> tokens(patt.Tokenize(" "));
+      for (Int_t j = 0; j < tokens->GetEntries(); j++) {
+         Int_t it = std::stoi(tokens->At(j)->GetName());
+         pattern.push_back(0.25 * it / att.GetLineWidth());
+      }
+      if (pattern.size() > 1) {
+         customPen.setStyle(Qt::CustomDashLine);
+         customPen.setDashPattern(pattern);
+      }
+   }
+
+   return customPen;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
