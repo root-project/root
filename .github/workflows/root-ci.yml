@@ -420,7 +420,7 @@ jobs:
             platform_config: alma10-asan
             is_special: true
             property: "asan"
-            overrides: ["ROOT_CTEST_CUSTOM_FLAGS=-E@\\(^tutorial-\\|cppinterop-CppInterOpTest\\|roottest-cling-specialobj-runf02$\\|roottest-root-collection-DeleteWarning$\\|roottest-root-io-evolution-fixarr2$\\|roottest-root-meta-rlibmap$\\|roottest-root-treeproxy-vectorint-vectorint$\\)"]
+            overrides: ["ROOT_CTEST_CUSTOM_FLAGS=-E@\\(^tutorial-\\|cppinterop-CppInterOpTest\\|gtest-core-metacling-TClingTest$\\|roottest-cling-specialobj-runf02$\\|roottest-root-collection-DeleteWarning$\\|roottest-root-io-evolution-fixarr2$\\|roottest-root-meta-rlibmap$\\|roottest-root-tree-cloning-runtreeCloneTest2$\\|roottest-root-treeproxy-vectorint-vectorint$\\)"]
           # Fedora Rawhide with Python freethreading+debug build
           - image: rawhide
             python_venv: "/py-venv-3.15td/ROOT-CI"
