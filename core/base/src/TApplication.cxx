@@ -75,7 +75,7 @@ OPTIONS:
   -h, -?, --help                       Show summary of options
   --version                            Show the ROOT version
   --notebook                           Execute ROOT notebook
-  --web                                Use web-based display for graphics, browser, geometry
+  --web                                Use web-based display for graphics, browser, geometry [deprecated, use "web=on" instead]
   --web=<type>                         Use the specified web-based display such as chrome, firefox, qt6
                                        For more options see the documentation of TROOT::SetWebDisplay()
   --web=off                            Disable any kind of web-based display
@@ -398,6 +398,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       if (strncmp(argv[i], "--web", 5) != 0)
          continue;
 
+      Warning("TApplication", "Flag `--web` without arguments is deprecated, use `--web=on` instead.");
       if (argv[i][5] == '=') {
          gROOT->SetWebDisplay(argv[i] + 6);
       } else {
@@ -425,7 +426,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    opts.AddFlag({"-l", "--no-banner"});
    opts.AddFlag({"-a"});
    opts.AddFlag({"-splash"}); // this option is ignored.
-   opts.AddFlag({"-config"});
+   opts.AddFlag({"-config", "--config"});
    opts.AddFlag({"-h", "-?", "--help"});
    opts.AddFlag({"--version"});
 
@@ -479,6 +480,9 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    }
    if (opts.GetSwitch("x")) {
       fExitOnException = kExit;
+   }
+   if (opts.GetSwitch("splash")) {
+      Warning("TApplication", "Flag `-splash` is deprecated and ignored.");
    }
 
    for (auto cmd : opts.GetFlagValues("e")) {
