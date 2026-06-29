@@ -16,6 +16,7 @@
 class TCanvas;
 class TPad;
 class TObject;
+class QPainter;
 
 class QPaintWidget : public QWidget {
 
@@ -28,12 +29,18 @@ public:
    /// returns canvas shown in the widget
    TCanvas *getCanvas() { return fCanvas; }
 
+   QPainter *getPainter() const { return fPainter; }
+
    void SetCanvas(TCanvas *canv) { fCanvas = canv; }
 
 protected:
    void resizeEvent(QResizeEvent *event) override;
 
+   void paintEvent(QPaintEvent *event) override;
+
    TCanvas *fCanvas = nullptr;
+
+   QPainter *fPainter = nullptr;
 };
 
 #endif
