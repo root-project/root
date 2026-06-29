@@ -821,7 +821,6 @@ protected:
       "gh16805_rntuple_join_1.root",
       "gh16805_rntuple_join_2.root"
    };
-
    const std::string fStepOneFile = "gh16805_rntuple_stepone.root";
 
    void WriteStepZero(const std::string &fileName, int begin, int end)
@@ -995,10 +994,8 @@ protected:
       }
    }
 
-   static void WriteStepFile(const std::string &fileName,
-                             std::string_view ntupleName,
-                             std::string_view fieldName,
-                             int offset)
+   static void
+   WriteStepFile(const std::string &fileName, std::string_view ntupleName, std::string_view fieldName, int offset)
    {
       auto model = RNTupleModel::Create();
 
@@ -1038,9 +1035,8 @@ protected:
       std::remove(fStepFourFile.c_str());
    }
 
-   std::unique_ptr<RNTupleProcessor> CreateStepProcessor(std::string_view ntupleName,
-                                                         std::string_view fileName,
-                                                         bool useChain)
+   std::unique_ptr<RNTupleProcessor>
+   CreateStepProcessor(std::string_view ntupleName, std::string_view fileName, bool useChain)
    {
       if (useChain) {
          std::vector<RNTupleOpenSpec> specs{{std::string(ntupleName), std::string(fileName)}};
@@ -1052,10 +1048,7 @@ protected:
 
    std::unique_ptr<RNTupleProcessor> CreateJoinedProcessor()
    {
-      std::vector<RNTupleOpenSpec> stepZeroSpecs{
-         {"stepzero", fStepZeroFiles[0]},
-         {"stepzero", fStepZeroFiles[1]}
-      };
+      std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
       auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
 
@@ -1133,8 +1126,5 @@ TEST_P(GH20033ProcessorTest, SameFieldName)
    EXPECT_EQ(20u, proc->GetNEntriesProcessed());
 }
 
-INSTANTIATE_TEST_SUITE_P(
-   CreateVsCreateChain,
-   GH20033ProcessorTest,
-   testing::Combine(testing::Bool(), testing::Bool(), testing::Bool(), testing::Bool())
-);
+INSTANTIATE_TEST_SUITE_P(CreateVsCreateChain, GH20033ProcessorTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool(), testing::Bool()));
