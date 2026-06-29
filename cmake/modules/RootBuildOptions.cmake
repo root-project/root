@@ -191,7 +191,7 @@ option(rootbench "Build rootbench if rootbench exists in root or if it is a sibl
 option(roottest "Build roottest (implies testing=ON)" OFF)
 option(test_roofit_hs3testsuite "Setup and use the HS3 conformance test suite (requires network)" OFF)
 option(testing "Enable testing with CTest" OFF)
-option(asan "Build ROOT with address sanitizer instrumentation (only GCC is currently supported)" OFF)
+option(asan "Build ROOT with address sanitizer instrumentation (see core/sanitizer for details)" OFF)
 option(_wheel_build "ROOT is being packaged as a wheel, do not install .dist-info metadata" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
