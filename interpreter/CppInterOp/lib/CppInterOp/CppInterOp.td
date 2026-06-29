@@ -24,7 +24,7 @@ services and pushes it onto a stack.
           adds additional arguments to the interpreter.
 \returns nullptr on failure.}];
 
-  let ReturnType = "TInterp_t";
+  let ReturnType = "InterpRef";
   let Args = [
     Arg<"const std::vector<const char*>&", "Args", "{}">,
     Arg<"const std::vector<const char*>&", "GpuArgs", "{}">
@@ -37,7 +37,7 @@ Clang-REPL, etcetera). In practice, the selected interpreter should not
 matter, since the library will function in the same way.
 \returns the current interpreter instance, if any.}];
 
-  let ReturnType = "TInterp_t";
+  let ReturnType = "InterpRef";
 }
 
 def DeleteInterpreter : CppInterOpAPI {
@@ -46,7 +46,7 @@ def DeleteInterpreter : CppInterOpAPI {
 \returns false on failure or if \c I is not tracked in the stack.}];
 
   let ReturnType = "bool";
-  let Args = [Arg<"TInterp_t", "I", "nullptr">];
+  let Args = [Arg<"InterpRef", "I", "nullptr">];
 }
 
 def Process : CppInterOpAPI {
@@ -69,18 +69,28 @@ def Declare : CppInterOpAPI {
 }
 
 def Evaluate : CppInterOpAPI {
-  let Doc = [{Declares, executes and returns the execution result as a intptr_t.
+  let Doc = [{Declares, executes and returns the execution result as a typed
+\c Cpp::Box carrying the Kind tag and the source QualType (when available).
+\c getKind() returns \c K_Unspecified on parse error or
+no-value-after-success.
 \param[in] code - the snippet to declare and execute.
-\param[out] IsValueInvalid - if non-null, set true when the result is
-            unusable (parse error or no-Value-after-success).
-\returns the expression results as a intptr_t.}];
-
-  let ReturnType = "intptr_t";
+\returns a \c Cpp::Box. Use \c unbox<T>() to extract a fundamental
+         (assert-checked: \c T must match the runtime Kind) or
+         \c getObjectPtr() for object payloads. For unknown-Kind extraction
+         dispatch on \c getKind() / \c KindOf<T>() first, or use \c visit().}];
+  // Box has non-trivial copy/dtor and cannot cross the C ABI; suppress
+  // the auto-generated C wrapper.
+  let NoCWrapper = true;
+  let ReturnType = "Box";
   let Args = [
-    Arg<"const char*", "code">,
-    OutArg<"bool*", "IsValueInvalid", "nullptr">
+    Arg<"const char*", "code">
   ];
 }
+
+// NOTE: The legacy C-ABI overload `intptr_t Evaluate(const char*, bool*)`
+// and its matching C wrapper `cppinterop_Evaluate` live hand-written in
+// CXCppInterOp.cpp / CppInterOp.h (look for "C-ABI"). They are not
+// declared here because tablegen does not need to know about them.
 
 // --- Scope / type queries ---
 
@@ -89,10 +99,10 @@ def GetScope : CppInterOpAPI {
 passed as a parameter, and if the parent is not passed,
 then global scope will be assumed.}];
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
     Arg<"const std::string&", "name">,
-    Arg<"TCppScope_t", "parent", "nullptr">
+    Arg<"ConstDeclRef", "parent", "nullptr">
   ];
 }
 
@@ -100,31 +110,31 @@ def GetNamed : CppInterOpAPI {
   let Doc = [{This function performs a lookup within the specified parent,
 a specific named entity (functions, enums, etcetera).}];
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
     Arg<"const std::string&", "name">,
-    Arg<"TCppScope_t", "parent", "nullptr">
+    Arg<"ConstDeclRef", "parent", "nullptr">
   ];
 }
 
 def GetGlobalScope : CppInterOpAPI {
   let Doc = "Gets the global scope of the whole C++  instance.";
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
 }
 
 def IsNamespace : CppInterOpAPI {
   let Doc = "Checks if the scope is a namespace or not.";
 
   let ReturnType = "bool";
-  let Args = [Arg<"TCppScope_t", "scope">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def IsClass : CppInterOpAPI {
   let Doc = "Checks if the scope is a class or not.";
 
   let ReturnType = "bool";
-  let Args = [Arg<"TCppScope_t", "scope">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def GetType : CppInterOpAPI {
@@ -133,29 +143,29 @@ use the name to lookup the actual type. When `parent` is non-null, scoped
 lookup honours using-directives and type aliases declared inside it; passing
 `nullptr` (the default) limits lookup to TU scope.}];
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [Arg<"const std::string&", "name">,
-              Arg<"TCppScope_t", "parent", "nullptr">];
+              Arg<"ConstDeclRef", "parent", "nullptr">];
 }
 
 def GetTypeFromScope : CppInterOpAPI {
   let Doc = [{This will convert a class into its type, so for example, you can
 use it to declare variables in it.}];
 
-  let ReturnType = "TCppType_t";
-  let Args = [Arg<"TCppScope_t", "klass">];
+  let ReturnType = "TypeRef";
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def GetScopeFromType : CppInterOpAPI {
   let Doc = "Gets the scope of the type that is passed as a parameter.";
 
-  let ReturnType = "TCppScope_t";
-  let Args = [Arg<"TCppType_t", "type">];
+  let ReturnType = "DeclRef";
+  let Args = [Arg<"ConstTypeRef", "TyRef">];
 }
 
 def SizeOf : CppInterOpAPI {
   let ReturnType = "size_t";
-  let Args = [Arg<"TCppScope_t", "scope">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 // --- Functions with overloads ---
@@ -163,15 +173,15 @@ def SizeOf : CppInterOpAPI {
 def GetFunctionAddress_str : CppInterOpAPI {
   let Doc = "\\returns the address of the function given its potentially mangled name.";
   let CppName = "GetFunctionAddress";
-  let ReturnType = "TCppFuncAddr_t";
+  let ReturnType = "void*";
   let Args = [Arg<"const char*", "mangled_name">];
 }
 
 def GetFunctionAddress_fn : CppInterOpAPI {
   let Doc = "\\returns the address of the function given its function declaration.";
   let CppName = "GetFunctionAddress";
-  let ReturnType = "TCppFuncAddr_t";
-  let Args = [Arg<"TCppFunction_t", "method">];
+  let ReturnType = "void*";
+  let Args = [Arg<"FuncRef", "method">];
 }
 
 // --- Construction / destruction ---
@@ -179,18 +189,18 @@ def GetFunctionAddress_fn : CppInterOpAPI {
 def Construct : CppInterOpAPI {
   let Doc = [{Creates one or more objects of class \c scope by calling its default
 constructor.
-\param[in] scope Class to construct, or handle to Constructor
+\param[in] scope Class to construct, or DRef to Constructor
 \param[in] arena If set, this API uses placement new to construct at this
 address.
 \param[in] is used to indicate the number of objects to construct.
 \returns a pointer to the constructed object, which is arena if placement
 new is used.}];
 
-  let ReturnType = "TCppObject_t";
+  let ReturnType = "ObjectRef";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
+    Arg<"DeclRef", "DRef">,
     Arg<"void*", "arena", "nullptr">,
-    Arg<"TCppIndex_t", "count", "1UL">
+    Arg<"size_t", "count", "1UL">
   ];
 }
 
@@ -207,10 +217,10 @@ points to an array of objects
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppObject_t", "This">,
-    Arg<"TCppConstScope_t", "scope">,
+    Arg<"ObjectRef", "This">,
+    Arg<"DeclRef", "DRef">,
     Arg<"bool", "withFree", "true">,
-    Arg<"TCppIndex_t", "count", "0UL">
+    Arg<"size_t", "count", "0UL">
   ];
 }
 
@@ -249,7 +259,7 @@ def ObjToString : CppInterOpAPI {
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"const char*", "type">,
+    Arg<"const char*", "TyRef">,
     Arg<"void*", "obj">
   ];
 }
@@ -259,16 +269,16 @@ def GetValueKind : CppInterOpAPI {
 
   let ReturnType = "ValueKind";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
 def GetNonReferenceType : CppInterOpAPI {
   let Doc = "Get the type that the reference refers to";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -277,7 +287,7 @@ def IsEnumType : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -286,7 +296,7 @@ def GetLanguage : CppInterOpAPI {
 
   let ReturnType = "InterpreterLanguage";
   let Args = [
-    Arg<"TInterp_t", "I", "nullptr">
+    Arg<"InterpRef", "I", "nullptr">
   ];
 }
 
@@ -295,16 +305,16 @@ def GetLanguageStandard : CppInterOpAPI {
 
   let ReturnType = "InterpreterLanguageStandard";
   let Args = [
-    Arg<"TInterp_t", "I", "nullptr">
+    Arg<"InterpRef", "I", "nullptr">
   ];
 }
 
 def GetReferencedType : CppInterOpAPI {
   let Doc = "Get lvalue referenced type, or rvalue if rvalue is true";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">,
+    Arg<"ConstTypeRef", "TyRef">,
     Arg<"bool", "rvalue", "false">
   ];
 }
@@ -314,25 +324,25 @@ def IsPointerType : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
 def GetPointeeType : CppInterOpAPI {
   let Doc = "Get the underlying pointee type";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
 def GetPointerType : CppInterOpAPI {
   let Doc = "Get the pointer to type";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -341,7 +351,7 @@ def IsReferenceType : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -350,7 +360,7 @@ def GetTypeAsString : CppInterOpAPI {
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -359,9 +369,9 @@ def GetCanonicalType : CppInterOpAPI {
 is the type with any typedef names, syntactic sugars or modifiers stripped
 out of it.}];
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -371,7 +381,7 @@ qual can be ORed value of enum QualKind}];
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">,
+    Arg<"ConstTypeRef", "TyRef">,
     Arg<"QualKind", "qual">
   ];
 }
@@ -380,9 +390,9 @@ def RemoveTypeQualifier : CppInterOpAPI {
   let Doc = [{Returns type with the qual Qualifiers removed
 qual can be ORed value of enum QualKind}];
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">,
+    Arg<"ConstTypeRef", "TyRef">,
     Arg<"QualKind", "qual">
   ];
 }
@@ -390,9 +400,9 @@ qual can be ORed value of enum QualKind}];
 def GetUnderlyingType : CppInterOpAPI {
   let Doc = "Gets the pure, Underlying Type (as opposed to the Using Type).";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -401,25 +411,25 @@ def IsRecordType : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
 def GetVariableType : CppInterOpAPI {
   let Doc = "Gets the type of the variable that is passed as a parameter.";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppScope_t", "var">
+    Arg<"ConstDeclRef", "var">
   ];
 }
 
 def GetComplexType : CppInterOpAPI {
   let Doc = "\\returns the complex of the provided type.";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "element_type">
+    Arg<"ConstTypeRef", "element_type">
   ];
 }
 
@@ -427,9 +437,9 @@ def GetUnderlyingScope : CppInterOpAPI {
   let Doc = [{Strips the typedef and returns the underlying class, and if the
 underlying decl is not a class it returns the input unchanged.}];
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -447,9 +457,9 @@ variable templates
 
 \returns Instantiated templated class/function/variable pointer}];
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
-    Arg<"TCppScope_t", "tmpl">,
+    Arg<"DeclRef", "tmpl">,
     Arg<"const TemplateArgInfo*", "template_args">,
     Arg<"size_t", "template_args_size">,
     Arg<"bool", "instantiate_body", "false">
@@ -464,9 +474,9 @@ pointer+size overload with \c template_args.data() and
 \c template_args.size().}];
 
   let CppName = "InstantiateTemplate";
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
-    Arg<"TCppScope_t", "tmpl">,
+    Arg<"DeclRef", "tmpl">,
     Arg<"const std::vector<TemplateArgInfo>&", "template_args">,
     Arg<"bool", "instantiate_body", "false">
   ];
@@ -475,9 +485,9 @@ pointer+size overload with \c template_args.data() and
 def GetParentScope : CppInterOpAPI {
   let Doc = "Gets the parent of the scope that is passed as a parameter.";
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -486,16 +496,16 @@ def IsTemplate : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "handle">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
 def IsTypedefed : CppInterOpAPI {
-  let Doc = "Checks if \\c handle introduces a typedef name via \\c typedef or \\c using.";
+  let Doc = "Checks if \\c DRef introduces a typedef name via \\c typedef or \\c using.";
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "handle">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -505,7 +515,7 @@ which means that the class contains or inherits a virtual function}];
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "klass">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -523,7 +533,7 @@ def GetSizeOfType : CppInterOpAPI {
 
   let ReturnType = "size_t";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -532,7 +542,7 @@ def IsBuiltin : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppConstType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -542,7 +552,7 @@ template instantiation if necessary.}];
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -551,10 +561,10 @@ def Allocate : CppInterOpAPI {
 \param[in] scope Given class for which to allocate memory for
 \param[in] count is used to indicate the number of objects to allocate for.}];
 
-  let ReturnType = "TCppObject_t";
+  let ReturnType = "ObjectRef";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
-    Arg<"TCppIndex_t", "count", "1UL">
+    Arg<"DeclRef", "DRef">,
+    Arg<"size_t", "count", "1UL">
   ];
 }
 
@@ -565,16 +575,16 @@ def Deallocate : CppInterOpAPI {
 
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
-    Arg<"TCppObject_t", "address">,
-    Arg<"TCppIndex_t", "count", "1UL">
+    Arg<"DeclRef", "DRef">,
+    Arg<"ObjectRef", "address">,
+    Arg<"size_t", "count", "1UL">
   ];
 }
 
 def IsAbstract : CppInterOpAPI {
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "klass">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -583,7 +593,7 @@ def IsEnumScope : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "handle">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -593,7 +603,7 @@ each enum constant that is defined).}];
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "handle">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -605,7 +615,7 @@ initialization.}];
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -614,14 +624,14 @@ def IsVariable : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
 def GetAllCppNames : CppInterOpAPI {
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
+    Arg<"ConstDeclRef", "DRef">,
     OutArg<"std::set<std::string>&", "names">
   ];
 }
@@ -629,9 +639,9 @@ def GetAllCppNames : CppInterOpAPI {
 def GetUsingNamespaces : CppInterOpAPI {
   let Doc = "Gets the list of namespaces utilized in the supplied scope.";
 
-  let ReturnType = "std::vector<TCppScope_t>";
+  let ReturnType = "std::vector<DeclRef>";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -641,16 +651,16 @@ the name, it also gets the template arguments.}];
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppScope_t", "klass">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
 def GetDestructor : CppInterOpAPI {
   let Doc = "\\returns the class destructor, if any.";
 
-  let ReturnType = "TCppFunction_t";
+  let ReturnType = "FuncRef";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -659,7 +669,7 @@ def IsVirtualMethod : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -667,9 +677,9 @@ def GetNumBases : CppInterOpAPI {
   let Doc = [{Gets the number of Base Classes for the Derived Class that
 is passed as a parameter.}];
 
-  let ReturnType = "TCppIndex_t";
+  let ReturnType = "size_t";
   let Args = [
-    Arg<"TCppScope_t", "klass">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -679,7 +689,7 @@ namespace, variable, or a function).}];
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppScope_t", "klass">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -689,10 +699,10 @@ is used to get the number of Base Classes, and then that number
 can be used to iterate through the index value to get each specific
 base class.}];
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
-    Arg<"TCppScope_t", "klass">,
-    Arg<"TCppIndex_t", "ibase">
+    Arg<"ConstDeclRef", "DRef">,
+    Arg<"size_t", "ibase">
   ];
 }
 
@@ -702,8 +712,8 @@ provided Base Class.}];
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "derived">,
-    Arg<"TCppScope_t", "base">
+    Arg<"ConstDeclRef", "derived">,
+    Arg<"ConstDeclRef", "base">
   ];
 }
 
@@ -712,9 +722,9 @@ def GetOperator : CppInterOpAPI {
 
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
+    Arg<"ConstDeclRef", "DRef">,
     Arg<"Operator", "op">,
-    OutArg<"std::vector<TCppFunction_t>&", "operators">,
+    OutArg<"std::vector<FuncRef>&", "operators">,
     Arg<"OperatorArity", "kind", "kBoth">
   ];
 }
@@ -725,8 +735,8 @@ used to get to the Base Class fields.}];
 
   let ReturnType = "int64_t";
   let Args = [
-    Arg<"TCppScope_t", "derived">,
-    Arg<"TCppScope_t", "base">
+    Arg<"ConstDeclRef", "derived">,
+    Arg<"ConstDeclRef", "base">
   ];
 }
 
@@ -739,8 +749,8 @@ supplied as a parameter.
 
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "klass">,
-    OutArg<"std::vector<TCppFunction_t>&", "methods">
+    Arg<"ConstDeclRef", "DRef">,
+    OutArg<"std::vector<FuncRef>&", "methods">
   ];
 }
 
@@ -749,7 +759,16 @@ def IsFunctionProtoType : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "typ">
+    Arg<"ConstTypeRef", "TyRef">
+  ];
+}
+
+def GetAllocType: CppInterOpAPI {
+  let Doc = "Analyzes function's body to detect memory allocation behaviour";
+
+  let ReturnType = "AllocType";
+  let Args = [
+    Arg<"ConstFuncRef", "Fn">
   ];
 }
 
@@ -759,17 +778,17 @@ def GetFnTypeSignature : CppInterOpAPI {
 
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppType_t", "fn_type">,
-    OutArg<"std::vector<TCppType_t>&", "sig">
+    Arg<"ConstTypeRef", "fn_type">,
+    OutArg<"std::vector<TypeRef>&", "sig">
   ];
 }
 
 def GetFunctionNumArgs : CppInterOpAPI {
   let Doc = "Gets the number of Arguments for the provided function.";
 
-  let ReturnType = "TCppIndex_t";
+  let ReturnType = "size_t";
   let Args = [
-    Arg<"TCppFunction_t", "func">
+    Arg<"ConstFuncRef", "func">
   ];
 }
 
@@ -778,8 +797,8 @@ def GetFunctionArgName : CppInterOpAPI {
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppFunction_t", "func">,
-    Arg<"TCppIndex_t", "param_index">
+    Arg<"ConstFuncRef", "func">,
+    Arg<"size_t", "param_index">
   ];
 }
 
@@ -788,10 +807,10 @@ def GetFunctionArgType : CppInterOpAPI {
 by providing the Argument Index, based on the number of arguments
 from the GetFunctionNumArgs() function.}];
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppFunction_t", "func">,
-    Arg<"TCppIndex_t", "iarg">
+    Arg<"ConstFuncRef", "func">,
+    Arg<"size_t", "iarg">
   ];
 }
 
@@ -800,14 +819,14 @@ def IsConstMethod : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
 def IsTemplatedFunction : CppInterOpAPI {
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppFunction_t", "func">
+    Arg<"ConstFuncRef", "func">
   ];
 }
 
@@ -816,7 +835,7 @@ def IsStaticMethod : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppConstFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -825,7 +844,7 @@ def IsFunctionDeleted : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppConstFunction_t", "function">
+    Arg<"ConstFuncRef", "function">
   ];
 }
 
@@ -834,7 +853,7 @@ def IsPublicMethod : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -843,7 +862,7 @@ def IsProtectedMethod : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -852,7 +871,7 @@ def IsPrivateMethod : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -861,7 +880,7 @@ def IsConstructor : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppConstFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -870,7 +889,7 @@ def IsDestructor : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppConstFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -879,8 +898,8 @@ def GetDatamembers : CppInterOpAPI {
 
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
-    OutArg<"std::vector<TCppScope_t>&", "datamembers">
+    Arg<"DeclRef", "DRef">,
+    OutArg<"std::vector<DeclRef>&", "datamembers">
   ];
 }
 
@@ -891,18 +910,18 @@ def GetStaticDatamembers : CppInterOpAPI {
 
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
-    OutArg<"std::vector<TCppScope_t>&", "datamembers">
+    Arg<"ConstDeclRef", "DRef">,
+    OutArg<"std::vector<DeclRef>&", "datamembers">
   ];
 }
 
 def LookupDatamember : CppInterOpAPI {
   let Doc = "This is a Lookup function to be used specifically for data members.";
 
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [
     Arg<"const std::string&", "name">,
-    Arg<"TCppScope_t", "parent">
+    Arg<"ConstDeclRef", "parent">
   ];
 }
 
@@ -911,7 +930,7 @@ def IsLambdaClass : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
@@ -921,7 +940,7 @@ named decl (a class, namespace, variable, or a function).}];
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppScope_t", "klass">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -931,8 +950,8 @@ value stored in the variable.}];
 
   let ReturnType = "intptr_t";
   let Args = [
-    Arg<"TCppScope_t", "var">,
-    Arg<"TCppScope_t", "parent", "nullptr">
+    Arg<"ConstDeclRef", "var">,
+    Arg<"ConstDeclRef", "parent", "nullptr">
   ];
 }
 
@@ -941,7 +960,7 @@ def IsPublicVariable : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "var">
+    Arg<"ConstDeclRef", "var">
   ];
 }
 
@@ -950,7 +969,7 @@ def IsProtectedVariable : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "var">
+    Arg<"ConstDeclRef", "var">
   ];
 }
 
@@ -959,7 +978,7 @@ def IsPrivateVariable : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "var">
+    Arg<"ConstDeclRef", "var">
   ];
 }
 
@@ -968,7 +987,7 @@ def IsStaticVariable : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "var">
+    Arg<"ConstDeclRef", "var">
   ];
 }
 
@@ -977,7 +996,7 @@ def IsConstVariable : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppScope_t", "var">
+    Arg<"ConstDeclRef", "var">
   ];
 }
 
@@ -987,25 +1006,25 @@ def GetDimensions : CppInterOpAPI {
   let NoCWrapper = true;
   let ReturnType = "std::vector<long int>";
   let Args = [
-    Arg<"TCppType_t", "type">
+    Arg<"ConstTypeRef", "TyRef">
   ];
 }
 
 def GetEnumConstants : CppInterOpAPI {
   let Doc = "Gets a list of all the enum constants for an enum.";
 
-  let ReturnType = "std::vector<TCppScope_t>";
+  let ReturnType = "std::vector<DeclRef>";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
 def GetEnumConstantType : CppInterOpAPI {
   let Doc = "Gets the enum name when an enum constant is passed.";
 
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -1013,16 +1032,16 @@ def GetEnumConstantValue : CppInterOpAPI {
   let Doc = [{Gets the index value (0,1,2, etcetera) of the enum constant
 that was passed into this function.}];
 
-  let ReturnType = "TCppIndex_t";
+  let ReturnType = "size_t";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
 def DumpScope : CppInterOpAPI {
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">
+    Arg<"ConstDeclRef", "DRef">
   ];
 }
 
@@ -1065,7 +1084,7 @@ def GetDoxygenComment : CppInterOpAPI {
 
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
+    Arg<"ConstDeclRef", "DRef">,
     Arg<"bool", "strip_comment_markers", "true">
   ];
 }
@@ -1075,7 +1094,7 @@ def IsExplicit : CppInterOpAPI {
 
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppConstFunction_t", "method">
+    Arg<"ConstFuncRef", "method">
   ];
 }
 
@@ -1083,18 +1102,18 @@ def IsExplicit : CppInterOpAPI {
 // --- Functions not previously in the dispatch table ---
 
 def ActivateInterpreter : CppInterOpAPI {
-  let Doc = [{Activates an instance of an interpreter to handle subsequent API
+  let Doc = [{Activates an instance of an interpreter to DRef subsequent API
 requests.}];
   let ReturnType = "bool";
-  let Args = [Arg<"TInterp_t", "I">];
+  let Args = [Arg<"InterpRef", "I">];
 }
 
 def AddTypeQualifier : CppInterOpAPI {
   let Doc = [{Returns type with the qual Qualifiers added.
 qual can be ORed value of enum QualKind.}];
-  let ReturnType = "TCppType_t";
+  let ReturnType = "TypeRef";
   let Args = [
-    Arg<"TCppType_t", "type">,
+    Arg<"ConstTypeRef", "TyRef">,
     Arg<"QualKind", "qual">
   ];
 }
@@ -1109,9 +1128,9 @@ def BeginStdStreamCapture : CppInterOpAPI {
 def BestOverloadFunctionMatch : CppInterOpAPI {
   let Doc = [{Finds best overload match based on explicit template parameters
 (if any) and argument types.}];
-  let ReturnType = "TCppFunction_t";
+  let ReturnType = "FuncRef";
   let Args = [
-    Arg<"const std::vector<TCppFunction_t>&", "candidates">,
+    Arg<"const std::vector<FuncRef>&", "candidates">,
     Arg<"const std::vector<TemplateArgInfo>&", "explicit_types">,
     Arg<"const std::vector<TemplateArgInfo>&", "arg_types">
   ];
@@ -1162,7 +1181,7 @@ templated function of that type within the parent scope.}];
   let ReturnType = "bool";
   let Args = [
     Arg<"const std::string&", "name">,
-    Arg<"TCppScope_t", "parent", "nullptr">
+    Arg<"ConstDeclRef", "parent", "nullptr">
   ];
 }
 
@@ -1172,7 +1191,7 @@ def GetClassTemplateArgs : CppInterOpAPI {
 \param[out] args Vector of instantiation arguments.}];
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "templ_instance">,
+    Arg<"ConstDeclRef", "templ_instance">,
     OutArg<"std::vector<TemplateArgInfo>&", "args">
   ];
 }
@@ -1185,7 +1204,7 @@ def GetClassTemplateInstantiationArgs : CppInterOpAPI {
   let NoCWrapper = true;
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "templ_instance">,
+    Arg<"ConstDeclRef", "templ_instance">,
     OutArg<"std::vector<TemplateArgInfo>&", "args">
   ];
 }
@@ -1198,15 +1217,15 @@ that is supplied as a parameter.}];
   let ReturnType = "bool";
   let Args = [
     Arg<"const std::string&", "name">,
-    Arg<"TCppScope_t", "parent">,
-    OutArg<"std::vector<TCppFunction_t>&", "funcs">
+    Arg<"ConstDeclRef", "parent">,
+    OutArg<"std::vector<FuncRef>&", "funcs">
   ];
 }
 
 def GetDefaultConstructor : CppInterOpAPI {
   let Doc = "\\returns the default constructor of a class, if any.";
-  let ReturnType = "TCppFunction_t";
-  let Args = [Arg<"TCppScope_t", "scope">];
+  let ReturnType = "FuncRef";
+  let Args = [Arg<"DeclRef", "DRef">];
 }
 
 def GetEnumConstantDatamembers : CppInterOpAPI {
@@ -1216,8 +1235,8 @@ def GetEnumConstantDatamembers : CppInterOpAPI {
 \param[in] include_enum_class Whether to include enum class members.}];
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
-    OutArg<"std::vector<TCppScope_t>&", "datamembers">,
+    Arg<"ConstDeclRef", "DRef">,
+    OutArg<"std::vector<DeclRef>&", "datamembers">,
     Arg<"bool", "include_enum_class", "true">
   ];
 }
@@ -1226,7 +1245,7 @@ def GetEnums : CppInterOpAPI {
   let Doc = "Extracts enum declarations from a specified scope and stores them in a vector.";
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
+    Arg<"ConstDeclRef", "DRef">,
     OutArg<"std::vector<std::string>&", "Result">
   ];
 }
@@ -1235,28 +1254,44 @@ def GetFunctionArgDefault : CppInterOpAPI {
   let Doc = "\\returns the default argument value as string.";
   let ReturnType = "std::string";
   let Args = [
-    Arg<"TCppFunction_t", "func">,
-    Arg<"TCppIndex_t", "param_index">
+    Arg<"ConstFuncRef", "func">,
+    Arg<"size_t", "param_index">
   ];
 }
 
 def GetFunctionRequiredArgs : CppInterOpAPI {
   let Doc = "Gets the number of Required Arguments for the provided function.";
-  let ReturnType = "TCppIndex_t";
-  let Args = [Arg<"TCppConstFunction_t", "func">];
+  let ReturnType = "size_t";
+  let Args = [Arg<"ConstFuncRef", "func">];
 }
 
 def GetFunctionReturnType : CppInterOpAPI {
   let Doc = "Gets the return type of the provided function.";
-  let ReturnType = "TCppType_t";
-  let Args = [Arg<"TCppFunction_t", "func">];
+  let ReturnType = "TypeRef";
+  let Args = [Arg<"ConstFuncRef", "func">];
+}
+
+def IsAllocator : CppInterOpAPI {
+  let Doc = "Checks if the provided function is an allocator function";
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
+}
+
+def IsDeallocator : CppInterOpAPI {
+  let Doc = "Checks if the provided function is a deallocator function";
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
 }
 
 def GetFunctionSignature : CppInterOpAPI {
   let Doc = [{\\returns a stringified version of a given function signature in the
 form: void N::f(int i, double d, long l = 0, char ch = 'a').}];
   let ReturnType = "std::string";
-  let Args = [Arg<"TCppFunction_t", "func">];
+  let Args = [Arg<"ConstFuncRef", "func">];
 }
 
 def GetFunctionTemplatedDecls : CppInterOpAPI {
@@ -1264,17 +1299,17 @@ def GetFunctionTemplatedDecls : CppInterOpAPI {
 un-instantiated/non-overloaded templated methods.}];
   let ReturnType = "void";
   let Args = [
-    Arg<"TCppScope_t", "klass">,
-    OutArg<"std::vector<TCppFunction_t>&", "methods">
+    Arg<"ConstDeclRef", "DRef">,
+    OutArg<"std::vector<FuncRef>&", "methods">
   ];
 }
 
 def GetFunctionsUsingName : CppInterOpAPI {
   let Doc = [{Looks up all the functions that have the name that is
 passed as a parameter in this function.}];
-  let ReturnType = "std::vector<TCppFunction_t>";
+  let ReturnType = "std::vector<FuncRef>";
   let Args = [
-    Arg<"TCppScope_t", "scope">,
+    Arg<"ConstDeclRef", "DRef">,
     Arg<"const std::string&", "name">
   ];
 }
@@ -1294,21 +1329,21 @@ def GetIncludePaths : CppInterOpAPI {
 def GetIntegerTypeFromEnumScope : CppInterOpAPI {
   let Doc = [{For the given "class", get the integer type that the enum
 represents, so that you can store it properly in a box.}];
-  let ReturnType = "TCppType_t";
-  let Args = [Arg<"TCppScope_t", "handle">];
+  let ReturnType = "TypeRef";
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def GetIntegerTypeFromEnumType : CppInterOpAPI {
   let Doc = [{For the given "type", this function gets the integer type that
 the enum represents.}];
-  let ReturnType = "TCppType_t";
-  let Args = [Arg<"TCppType_t", "handle">];
+  let ReturnType = "TypeRef";
+  let Args = [Arg<"ConstTypeRef", "DRef">];
 }
 
 def GetOperatorArity : CppInterOpAPI {
   let Doc = "\\returns arity of the operator or kNone.";
   let ReturnType = "OperatorArity";
-  let Args = [Arg<"TCppFunction_t", "op">];
+  let Args = [Arg<"ConstFuncRef", "op">];
 }
 
 def GetOperatorFromSpelling : CppInterOpAPI {
@@ -1321,14 +1356,14 @@ def GetQualifiedCompleteName : CppInterOpAPI {
   let Doc = [{This is similar to GetQualifiedName() function, but besides
 the "qualified" name, it also gets the template arguments.}];
   let ReturnType = "std::string";
-  let Args = [Arg<"TCppScope_t", "klass">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def GetScopeFromCompleteName : CppInterOpAPI {
   let Doc = [{When the namespace is known, then the parent doesn't need
 to be specified. This will probably be phased-out in
 future versions of the interop library.}];
-  let ReturnType = "TCppScope_t";
+  let ReturnType = "DeclRef";
   let Args = [Arg<"const std::string&", "name">];
 }
 
@@ -1355,7 +1390,7 @@ reports so a reviewer can compare their build to the reporter's.}];
 def HasDefaultConstructor : CppInterOpAPI {
   let Doc = "\\returns if a class has a default constructor.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppScope_t", "scope">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def InsertOrReplaceJitSymbol : CppInterOpAPI {
@@ -1371,53 +1406,61 @@ This is useful for providing implementations for symbols not linked in.}];
 def InstantiateTemplateFunctionFromString : CppInterOpAPI {
   let Doc = [{Instantiates a function template from a given string representation.
 This function parses and instantiates a template function.}];
-  let ReturnType = "TCppFunction_t";
+  let ReturnType = "FuncRef";
   let Args = [Arg<"const char*", "function_template">];
+}
+
+def IsTemplateParmType : CppInterOpAPI {
+  let Doc = "Checks if the given type is a template parameter type.";
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"ConstTypeRef", "TyRef">
+  ];
 }
 
 def IsFunction : CppInterOpAPI {
   let Doc = "Checks if the scope is a function.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppScope_t", "scope">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def IsFunctionPointerType : CppInterOpAPI {
   let Doc = "Checks if the type is a function pointer.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppType_t", "type">];
+  let Args = [Arg<"ConstTypeRef", "TyRef">];
 }
 
 def IsMethod : CppInterOpAPI {
   let Doc = "Checks if the provided parameter is a method.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppConstFunction_t", "method">];
+  let Args = [Arg<"ConstFuncRef", "method">];
 }
 
 def IsPODType : CppInterOpAPI {
   let Doc = "Checks if the provided parameter is a Plain Old Data Type (POD).";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppType_t", "type">];
+  let Args = [Arg<"ConstTypeRef", "TyRef">];
 }
 
 def IsSmartPtrType : CppInterOpAPI {
   let Doc = [{We assume that smart pointer types define both operator* and
 operator->.}];
   let ReturnType = "bool";
-  let Args = [Arg<"TCppType_t", "type">];
+  let Args = [Arg<"ConstTypeRef", "TyRef">];
 }
 
 def IsTemplateSpecialization : CppInterOpAPI {
   let Doc = "Checks if it is a class template specialization class.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppScope_t", "handle">];
+  let Args = [Arg<"ConstDeclRef", "DRef">];
 }
 
 def IsTypeDerivedFrom : CppInterOpAPI {
   let Doc = "Checks if a C++ type derives from another.";
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "derived">,
-    Arg<"TCppType_t", "base">
+    Arg<"ConstTypeRef", "derived">,
+    Arg<"ConstTypeRef", "base">
   ];
 }
 
@@ -1427,8 +1470,8 @@ supplied as a parameter.}];
   let ReturnType = "void";
   let Args = [
     Arg<"const std::string&", "name">,
-    Arg<"TCppScope_t", "parent">,
-    OutArg<"std::vector<TCppFunction_t>&", "funcs">
+    Arg<"ConstDeclRef", "parent">,
+    OutArg<"std::vector<FuncRef>&", "funcs">
   ];
 }
 
@@ -1447,8 +1490,8 @@ a uniform interface to call it from compiled code.}];
   let NoCWrapper = true;
   let ReturnType = "JitCall";
   let Args = [
-    Arg<"TInterp_t", "I">,
-    Arg<"TCppConstFunction_t", "func">
+    Arg<"InterpRef", "I">,
+    Arg<"ConstFuncRef", "func">
   ];
 }
 
@@ -1481,7 +1524,7 @@ def UseExternalInterpreter : CppInterOpAPI {
   let Doc = [{Sets the Interpreter instance with an external interpreter,
 meant to be called before any other API calls.}];
   let ReturnType = "void";
-  let Args = [Arg<"TInterp_t", "I">];
+  let Args = [Arg<"InterpRef", "I">];
 }
 
 def MakeFunctionCallable : CppInterOpAPI {
@@ -1490,7 +1533,76 @@ uniform interface to call it from compiled code.}];
   // JitCall is a C++ class; no mechanical C mapping.
   let NoCWrapper = true;
   let ReturnType = "JitCall";
-  let Args = [Arg<"TCppConstFunction_t", "func">];
+  let Args = [Arg<"ConstFuncRef", "func">];
+}
+
+// --- Runtime vtable overlay: replace virtual slots on a live object ---
+
+def MakeVTableOverlay : CppInterOpAPI {
+  let Doc = [{Copy the vtable of \c inst, replace the slots of the listed
+virtual \c methods with the given function pointers, and install the copy on
+\c inst. The returned DRef owns the copy and remembers the original vptr;
+DestroyVTableOverlay undoes the install. All non-overlaid slots and the
+ABI prefix (offset-to-top + type_info on Itanium) are preserved, so the
+destructor, RTTI and unrelated virtuals keep dispatching normally. Slot
+indices and the vtable size are derived from \c base via Clang's
+VTableContext, so the caller works in reflected methods, not ABI-specific
+indices, and the result is correct for both Itanium and Microsoft ABIs.
+
+The install is per-instance: \c inst's vptr is the only pointer rewritten,
+so other live or future instances of the same type continue to use the
+class's original vtable. The rewrite covers only the primary vptr (offset
+0 of \c inst); a class with multiple polymorphic direct bases or any
+virtual base would have additional vptrs / vbase-offset entries the
+overlay does not touch and is rejected outright -- see \returns.
+\param[in] inst Object whose vptr is read and replaced.
+\param[in] base Polymorphic class supplying \c inst's vtable layout.
+\param[in] methods Virtual methods of \c base whose slots are replaced.
+\param[in] overlay_fns Function pointers to install at those slots.
+\param[in] n_overlays Length of \c methods and \c overlay_fns.
+\param[in] n_extra_prefix_slots Optional \c void* slots prepended *before* the
+           ABI prefix in the owned block, initialized to nullptr. Bindings use
+           them to stash per-instance data adjacent to the vtable -- a thunk
+           reads its slot via \c VTableOverlayExtraSlot(self, i) with a single
+           fixed-offset load, avoiding a runtime registry lookup.
+\param[in] on_destroy Optional callback invoked on the operator-delete path
+           (D0 on Itanium, the single deleting dtor on MSVC). Bindings use
+           it to release per-instance state tied to the object's lifetime
+           (Python handles, closures). Ordering is callback first, then the
+           original deleting destructor; the callback runs while \c inst is
+           still alive and may inspect its state. After the original dtor
+           returns, the object's memory has been freed -- the callback
+           cannot defer the read. The callback receives \c inst and
+           \c cleanup_data verbatim, runs inside a C++ destructor, and must
+           not throw -- an escaping exception is undefined behavior. The
+           callback also must not destroy this overlay (the original dtor
+           still has to run after it returns). Stack-only destruction (D1)
+           does not trigger the callback. Pass nullptr to skip the dtor
+           hook entirely (zero per-call overhead, slot not patched).
+\param[in] cleanup_data Opaque pointer passed back to \c on_destroy.
+\returns nullptr if \c inst is null, any method is null or not virtual,
+         \c base is not a polymorphic class, or \c base has multiple
+         polymorphic direct bases or any virtual base.}];
+  let NoCWrapper = true;
+  let ReturnType = "VTableOverlay*";
+  let Args = [
+    Arg<"void*", "inst">,
+    Arg<"ConstDeclRef", "base">,
+    Arg<"const ConstFuncRef*", "methods">,
+    Arg<"void* const*", "overlay_fns">,
+    Arg<"std::size_t", "n_overlays">,
+    Arg<"std::size_t", "n_extra_prefix_slots", "0">,
+    Arg<"VTableOverlayDtorHook", "on_destroy", "nullptr">,
+    Arg<"void*", "cleanup_data", "nullptr">
+  ];
+}
+
+def DestroyVTableOverlay : CppInterOpAPI {
+  let Doc = [{Restore the original vptr on the overlaid instance and free the
+overlay. Null-safe.}];
+  let NoCWrapper = true;
+  let ReturnType = "void";
+  let Args = [Arg<"VTableOverlay*", "overlay">];
 }
 
 def IsIntegerType : CppInterOpAPI {
@@ -1498,7 +1610,7 @@ def IsIntegerType : CppInterOpAPI {
 If \p s is non-null, it is set to the signedness of the type.}];
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type">,
+    Arg<"ConstTypeRef", "TyRef">,
     Arg<"Signedness*", "s", "nullptr">
   ];
 }
@@ -1506,7 +1618,7 @@ If \p s is non-null, it is set to the signedness of the type.}];
 def IsFloatingType : CppInterOpAPI {
   let Doc = "Checks if type has a floating representation.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppType_t", "type">];
+  let Args = [Arg<"ConstTypeRef", "TyRef">];
 }
 
 def IsSameType : CppInterOpAPI {
@@ -1514,15 +1626,15 @@ def IsSameType : CppInterOpAPI {
 i.e. have the same canonical type.}];
   let ReturnType = "bool";
   let Args = [
-    Arg<"TCppType_t", "type_a">,
-    Arg<"TCppType_t", "type_b">
+    Arg<"ConstTypeRef", "type_a">,
+    Arg<"ConstTypeRef", "type_b">
   ];
 }
 
 def IsVoidPointerType : CppInterOpAPI {
   let Doc = "Checks if type is a void pointer.";
   let ReturnType = "bool";
-  let Args = [Arg<"TCppType_t", "type">];
+  let Args = [Arg<"ConstTypeRef", "TyRef">];
 }
 
 // Trace-hook impls invoked by JitCall's inline fast path through
@@ -1533,7 +1645,7 @@ def CppInterOpTraceJitCallInvokeImpl : CppInterOpAPI {
   let Doc = "Trace hook for the JitCall::Invoke generic call path.";
   let ReturnType = "void";
   let Args = [
-    Arg<"const CppImpl::JitCall*", "JC">,
+    Arg<"const Cpp::JitCall*", "JC">,
     Arg<"void*", "result">,
     Arg<"void**", "args">,
     Arg<"std::size_t", "nargs">,
@@ -1545,7 +1657,7 @@ def CppInterOpTraceJitCallInvokeDestructorImpl : CppInterOpAPI {
   let Doc = "Trace hook for the JitCall::InvokeDestructor path.";
   let ReturnType = "void";
   let Args = [
-    Arg<"const CppImpl::JitCall*", "JC">,
+    Arg<"const Cpp::JitCall*", "JC">,
     Arg<"void*", "object">,
     Arg<"unsigned long", "nary">,
     Arg<"int", "withFree">
@@ -1553,10 +1665,10 @@ def CppInterOpTraceJitCallInvokeDestructorImpl : CppInterOpAPI {
 }
 
 def CppInterOpTraceJitCallInvokeReturnImpl : CppInterOpAPI {
-  let Doc = "Trace hook for post-Invoke pointer-return handle registration.";
+  let Doc = "Trace hook for post-Invoke pointer-return DRef registration.";
   let ReturnType = "void";
   let Args = [
-    Arg<"const CppImpl::JitCall*", "JC">,
+    Arg<"const Cpp::JitCall*", "JC">,
     Arg<"void*", "result">
   ];
 }

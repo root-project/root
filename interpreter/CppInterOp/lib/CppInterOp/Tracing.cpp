@@ -29,12 +29,14 @@
 // consumers carry their per-DSO copies, populated by LoadDispatchAPI.
 namespace CppInternal {
 namespace DispatchRaw {
-CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeImpl)(
-    const CppImpl::JitCall*, void*, void**, std::size_t, void*) = nullptr;
+CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeImpl)(const Cpp::JitCall*,
+                                                        void*, void**,
+                                                        std::size_t,
+                                                        void*) = nullptr;
 CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeDestructorImpl)(
-    const CppImpl::JitCall*, void*, unsigned long, int) = nullptr;
+    const Cpp::JitCall*, void*, unsigned long, int) = nullptr;
 CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeReturnImpl)(
-    const CppImpl::JitCall*, void*) = nullptr;
+    const Cpp::JitCall*, void*) = nullptr;
 } // namespace DispatchRaw
 } // namespace CppInternal
 
@@ -50,11 +52,11 @@ void InitTracing() {
   // Wire libclangCppInterOp's own slots; Dispatch.h consumers do
   // the equivalent via the X-macro in LoadDispatchAPI.
   ::CppInternal::DispatchRaw::CppInterOpTraceJitCallInvokeImpl =
-      &CppImpl::CppInterOpTraceJitCallInvokeImpl;
+      &Cpp::CppInterOpTraceJitCallInvokeImpl;
   ::CppInternal::DispatchRaw::CppInterOpTraceJitCallInvokeDestructorImpl =
-      &CppImpl::CppInterOpTraceJitCallInvokeDestructorImpl;
+      &Cpp::CppInterOpTraceJitCallInvokeDestructorImpl;
   ::CppInternal::DispatchRaw::CppInterOpTraceJitCallInvokeReturnImpl =
-      &CppImpl::CppInterOpTraceJitCallInvokeReturnImpl;
+      &Cpp::CppInterOpTraceJitCallInvokeReturnImpl;
 }
 
 std::optional<uint64_t> TraceRegion::lookupOutMask(llvm::StringRef Name) {
@@ -101,7 +103,7 @@ static void WriteVersionComment(llvm::raw_ostream& OS,
 static std::string GetCppInterOpLibPath() {
 #if defined(__linux__) || defined(__APPLE__)
   Dl_info info;
-  if (dladdr(reinterpret_cast<const void*>(&CppImpl::GetVersion), &info) &&
+  if (dladdr(reinterpret_cast<const void*>(&Cpp::GetVersion), &info) &&
       info.dli_fname) {
     llvm::StringRef Name(info.dli_fname);
     if (Name.contains(".so") || Name.ends_with(".dylib") ||
@@ -117,7 +119,7 @@ static void WriteBuildContext(llvm::raw_ostream& OS) {
   OS << "// Build context (CppInterOp configure-time snapshot):\n";
   // Bind to a local: StringRef of the GetBuildInfo() rvalue would
   // dangle past the next `;`.
-  std::string Snapshot = CppImpl::GetBuildInfo();
+  std::string Snapshot = Cpp::GetBuildInfo();
   llvm::StringRef Info(Snapshot);
   while (!Info.empty()) {
     auto [Line, Rest] = Info.split('\n');
@@ -169,7 +171,7 @@ static void WriteReproducerPrologue(llvm::raw_ostream& OS,
   OS << "#ifdef CPPINTEROP_USE_DISPATCH\n";
   OS << "#include <CppInterOp/Dispatch.h>\n\n";
   // X-macro defines one DispatchRaw slot per public API entry.
-  OS << "using namespace CppImpl;\n";
+  OS << "using namespace Cpp;\n";
   OS << "#define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, "
         "RawTypes) \\\n"
         "  Ret(*CppInternal::DispatchRaw::DN) RawTypes = nullptr;\n"
@@ -205,7 +207,7 @@ std::string TraceInfo::writeToFile(const std::string& Version) {
   llvm::raw_fd_ostream OS(FD, /*shouldClose=*/true);
   DumpScope Guard(*this);
 
-  std::string Ver = Version.empty() ? CppImpl::GetVersion() : Version;
+  std::string Ver = Version.empty() ? Cpp::GetVersion() : Version;
   WriteReproducerPrologue(OS, "crash reproducer", Ver,
                           "Generated automatically — re-run to reproduce.");
   OS << "void reproducer() {\n";
@@ -257,7 +259,7 @@ void TraceInfo::StopRegion(const std::string& Version) {
     return;
 
   DumpScope Guard(*this);
-  std::string Ver = Version.empty() ? CppImpl::GetVersion() : Version;
+  std::string Ver = Version.empty() ? Cpp::GetVersion() : Version;
   WriteReproducerPrologue(OS, "trace region", Ver, "Generated automatically.");
   OS << "void reproducer() {\n";
   OS << "  initCppInterOpReproducer();\n";

@@ -42,6 +42,152 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/// Opaque handle types for the CppInterOp C and C++ API.
+///
+/// Each handle wraps a single void* and is a distinct type so the
+/// compiler rejects cross-kind misuse (e.g. passing a TypeRef where a
+/// DeclRef is expected). Layout is identical across all handles — a
+/// single pointer — so they are trivially copyable and ABI-stable.
+///
+/// The C and C++ views are declared independently:
+///   * C sees `struct CppDeclRef { void* data; }` etc. at global scope,
+///     prefixed so they don't collide with generic names from other
+///     C libraries.
+///   * C++ sees `Cpp::DeclRef` etc. in namespace `Cpp`, no prefix —
+///     the namespace already disambiguates.
+/// Both have identical layout, so a C-linkage function exchanging these
+/// structs across the boundary is byte-identical regardless of which
+/// view names it. The TableGen-emitted C-API .inc adds C++ typedef
+/// aliases (`using CppDeclRef = Cpp::DeclRef;`) so the generated C
+/// wrappers compile under C++ using the prefixed C-side names.
+
+#ifndef __cplusplus
+
+typedef struct CppDeclRef {
+  void* data;
+} CppDeclRef;
+typedef struct CppTypeRef {
+  void* data;
+} CppTypeRef;
+typedef struct CppFuncRef {
+  void* data;
+} CppFuncRef;
+typedef struct CppObjectRef {
+  void* data;
+} CppObjectRef;
+typedef struct CppInterpRef {
+  void* data;
+} CppInterpRef;
+typedef struct CppConstDeclRef {
+  const void* data;
+} CppConstDeclRef;
+typedef struct CppConstTypeRef {
+  const void* data;
+} CppConstTypeRef;
+typedef struct CppConstFuncRef {
+  const void* data;
+} CppConstFuncRef;
+
+#else // __cplusplus
+
+namespace Cpp {
+
+struct DeclRef {
+  void* data;
+  DeclRef() : data(nullptr) {}
+  DeclRef(void* P) : data(P) {}
+  DeclRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(DeclRef a, DeclRef b) { return a.data == b.data; }
+  friend bool operator!=(DeclRef a, DeclRef b) { return !(a == b); }
+};
+
+struct TypeRef {
+  void* data;
+  TypeRef() : data(nullptr) {}
+  TypeRef(void* P) : data(P) {}
+  TypeRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(TypeRef a, TypeRef b) { return a.data == b.data; }
+  friend bool operator!=(TypeRef a, TypeRef b) { return !(a == b); }
+};
+
+struct FuncRef {
+  void* data;
+  FuncRef() : data(nullptr) {}
+  FuncRef(void* P) : data(P) {}
+  FuncRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(FuncRef a, FuncRef b) { return a.data == b.data; }
+  friend bool operator!=(FuncRef a, FuncRef b) { return !(a == b); }
+};
+
+struct ObjectRef {
+  void* data;
+  ObjectRef() : data(nullptr) {}
+  ObjectRef(void* P) : data(P) {}
+  ObjectRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(ObjectRef a, ObjectRef b) { return a.data == b.data; }
+  friend bool operator!=(ObjectRef a, ObjectRef b) { return !(a == b); }
+};
+
+struct InterpRef {
+  void* data;
+  InterpRef() : data(nullptr) {}
+  InterpRef(void* P) : data(P) {}
+  InterpRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(InterpRef a, InterpRef b) { return a.data == b.data; }
+  friend bool operator!=(InterpRef a, InterpRef b) { return !(a == b); }
+};
+
+/// Const handle variants — read-only access to the underlying AST node.
+/// Implicit widening from mutable to const is allowed; narrowing is not.
+
+struct ConstDeclRef {
+  const void* data;
+  ConstDeclRef() : data(nullptr) {}
+  ConstDeclRef(const void* P) : data(P) {}
+  ConstDeclRef(DeclRef d) : data(d.data) {}
+  ConstDeclRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(ConstDeclRef a, ConstDeclRef b) {
+    return a.data == b.data;
+  }
+  friend bool operator!=(ConstDeclRef a, ConstDeclRef b) { return !(a == b); }
+};
+
+struct ConstTypeRef {
+  const void* data;
+  ConstTypeRef() : data(nullptr) {}
+  ConstTypeRef(const void* P) : data(P) {}
+  ConstTypeRef(TypeRef d) : data(d.data) {}
+  ConstTypeRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(ConstTypeRef a, ConstTypeRef b) {
+    return a.data == b.data;
+  }
+  friend bool operator!=(ConstTypeRef a, ConstTypeRef b) { return !(a == b); }
+};
+
+struct ConstFuncRef {
+  const void* data;
+  ConstFuncRef() : data(nullptr) {}
+  ConstFuncRef(const void* P) : data(P) {}
+  ConstFuncRef(FuncRef d) : data(d.data) {}
+  ConstFuncRef(decltype(nullptr)) : data(nullptr) {}
+  explicit operator bool() const { return data != nullptr; }
+  friend bool operator==(ConstFuncRef a, ConstFuncRef b) {
+    return a.data == b.data;
+  }
+  friend bool operator!=(ConstFuncRef a, ConstFuncRef b) { return !(a == b); }
+};
+
+} // namespace Cpp
+
+#endif // __cplusplus
+
 #ifdef __cplusplus
 #include <cassert>
 #include <cstddef>
@@ -50,7 +196,28 @@
 #include <string>
 #include <vector>
 
-namespace CppImpl {
+template <> struct std::hash<Cpp::DeclRef> {
+  std::size_t operator()(const Cpp::DeclRef& obj) const {
+    return std::hash<void*>{}(obj.data);
+  }
+};
+template <> struct std::hash<Cpp::TypeRef> {
+  std::size_t operator()(const Cpp::TypeRef& obj) const {
+    return std::hash<void*>{}(obj.data);
+  }
+};
+template <> struct std::hash<Cpp::FuncRef> {
+  std::size_t operator()(const Cpp::FuncRef& obj) const {
+    return std::hash<void*>{}(obj.data);
+  }
+};
+template <> struct std::hash<Cpp::ObjectRef> {
+  std::size_t operator()(const Cpp::ObjectRef& obj) const {
+    return std::hash<void*>{}(obj.data);
+  }
+};
+
+namespace Cpp {
 class JitCall;
 }
 namespace CppInternal {
@@ -59,16 +226,15 @@ namespace DispatchRaw {
 // CppInterOpAPI.inc re-declares these with identical types. They're
 // here so JitCall::Invoke's inline body below can reference them.
 extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeImpl)(
-    const CppImpl::JitCall* JC, void* result, void** args, std::size_t nargs,
+    const Cpp::JitCall* JC, void* result, void** args, std::size_t nargs,
     void* self);
 extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeDestructorImpl)(
-    const CppImpl::JitCall* JC, void* object, unsigned long nary, int withFree);
+    const Cpp::JitCall* JC, void* object, unsigned long nary, int withFree);
 extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeReturnImpl)(
-    const CppImpl::JitCall* JC, void* result);
+    const Cpp::JitCall* JC, void* result);
 } // namespace DispatchRaw
 } // namespace CppInternal
 
-namespace CppImpl {
 #endif // __cplusplus
 
 /// C-compatible array of opaque pointers, returned by generated C API
@@ -100,17 +266,21 @@ typedef struct TemplateArgInfo {
 } TemplateArgInfo;
 
 #ifdef __cplusplus
+namespace Cpp {
 
-using TCppIndex_t = size_t;
-using TCppScope_t = void*;
-using TCppConstScope_t = const void*;
-using TCppType_t = void*;
-using TCppConstType_t = const void*;
-using TCppFunction_t = void*;
-using TCppConstFunction_t = const void*;
-using TCppFuncAddr_t = void*;
-using TInterp_t = void*;
-using TCppObject_t = void*;
+// Pull file-scope C-compatible structs into the namespace.
+// The handle types (DeclRef etc.) are already defined in this namespace
+// above; only the genuinely-C-visible structs need pulling in.
+using ::CppInterOpArray;
+using ::CppInterOpStringArray;
+using ::TemplateArgInfo;
+
+static_assert(sizeof(DeclRef) == sizeof(ConstDeclRef),
+              "Const/mutable handle ABI mismatch");
+static_assert(sizeof(TypeRef) == sizeof(ConstTypeRef),
+              "Const/mutable handle ABI mismatch");
+static_assert(sizeof(FuncRef) == sizeof(ConstFuncRef),
+              "Const/mutable handle ABI mismatch");
 
 enum Operator : unsigned char {
   OP_None,
@@ -235,6 +405,16 @@ enum class InterpreterLanguageStandard : unsigned char {
   hlsl202y,
   lang_unspecified
 };
+
+enum class AllocType : unsigned char {
+  None,
+  New,
+  NewArr,
+  Malloc,
+  Unknown,
+  CustomAlloc
+};
+
 inline QualKind operator|(QualKind a, QualKind b) {
   return static_cast<QualKind>(static_cast<unsigned char>(a) |
                                static_cast<unsigned char>(b));
@@ -251,8 +431,8 @@ enum class ValueKind : std::uint8_t {
 /// function, constructor or destructor.
 class JitCall {
 public:
-  friend CPPINTEROP_API JitCall MakeFunctionCallable(TInterp_t I,
-                                                     TCppConstFunction_t func);
+  friend CPPINTEROP_API JitCall MakeFunctionCallable(InterpRef I,
+                                                     ConstFuncRef func);
   enum Kind : char {
     kUnknown = 0,
     kGenericCall,
@@ -283,13 +463,13 @@ private:
     DestructorCall m_DestructorCall;
   };
   Kind m_Kind;
-  TCppConstFunction_t m_FD;
+  ConstFuncRef m_FD;
   JitCall() : m_GenericCall(nullptr), m_Kind(kUnknown), m_FD(nullptr) {}
-  JitCall(Kind K, GenericCall C, TCppConstFunction_t FD)
+  JitCall(Kind K, GenericCall C, ConstFuncRef FD)
       : m_GenericCall(C), m_Kind(K), m_FD(FD) {}
-  JitCall(Kind K, ConstructorCall C, TCppConstFunction_t Ctor)
+  JitCall(Kind K, ConstructorCall C, ConstFuncRef Ctor)
       : m_ConstructorCall(C), m_Kind(K), m_FD(Ctor) {}
-  JitCall(Kind K, DestructorCall C, TCppConstFunction_t Dtor)
+  JitCall(Kind K, DestructorCall C, ConstFuncRef Dtor)
       : m_DestructorCall(C), m_Kind(K), m_FD(Dtor) {}
 
   // Trace-hook impls need private m_FD for the function-name lookup.
@@ -402,6 +582,18 @@ public:
   }
 };
 
+/// Opaque handle returned by MakeVTableOverlay. Owns a writable copy
+/// of an instance's vtable with selected slots replaced, and the
+/// original vptr so the overlay can be undone. Itanium ABI, single
+/// inheritance: the offset-to-top + type_info prefix and all
+/// non-overlaid slots are copied verbatim from the original vtable.
+struct VTableOverlay;
+
+// Cleanup callback fired by VTableOverlay's destructor hook (see
+// MakeVTableOverlay). Receives the original instance pointer (possibly
+// dangling -- do not dereference) and the cleanup_data passed at install.
+using VTableOverlayDtorHook = void (*)(void* inst, void* cleanup_data);
+
 // FIXME: Rework GetDimensions to make this enum redundant.
 namespace DimensionValue {
 enum : long int {
@@ -419,7 +611,7 @@ enum CaptureStreamKind : char {
 
 ///@}
 
-} // namespace CppImpl
+} // namespace Cpp
 
 #endif // __cplusplus
 #endif // CPPINTEROP_CPPINTEROPTYPES_H

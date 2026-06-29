@@ -14,13 +14,13 @@ TEST(DispatchTest, DlGetProcAddress_Basic) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("namespace N {} class C{}; int I;");
 
-  using IsClassFn_t = bool (*)(Cpp::TCppScope_t);
+  using IsClassFn_t = bool (*)(Cpp::DeclRef);
   auto* IsClassFn = reinterpret_cast<IsClassFn_t>(dlGetProcAddress("IsClass"));
   EXPECT_NE(IsClassFn, nullptr) << "Failed to obtain API function pointer";
 
-  auto* ns = Cpp::GetNamed("N");
-  auto* cls = Cpp::GetNamed("C");
-  auto* var = Cpp::GetNamed("I");
+  auto ns = Cpp::GetNamed("N");
+  auto cls = Cpp::GetNamed("C");
+  auto var = Cpp::GetNamed("I");
 
   EXPECT_FALSE(IsClassFn(ns));
   EXPECT_TRUE(IsClassFn(cls));

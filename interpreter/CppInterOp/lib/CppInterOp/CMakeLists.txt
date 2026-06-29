@@ -56,6 +56,15 @@ endif()
 
 # Get rid of libLLVM-X.so which is appended to the list of static libraries.
 if (LLVM_LINK_LLVM_DYLIB)
+  # These make up for symbols the stripped libLLVM.so used to provide. Seed them
+  # before the walk below, not after: the walk only drops the shared LLVM
+  # dependency from the targets it visits, and clangStaticAnalyzerCore is not
+  # reachable from the other link_libs -- appending it later leaves libLLVM.so
+  # in DT_NEEDED.
+  list(APPEND link_libs
+    clangCodeGen
+    clangStaticAnalyzerCore
+    )
   set(new_libs ${link_libs})
   set(libs ${new_libs})
   while(NOT "${new_libs}" STREQUAL "")
@@ -95,12 +104,8 @@ if (LLVM_LINK_LLVM_DYLIB)
     Coverage
     FrontendHLSL
     LTO
-    )
-  # We will need to append the missing dependencies to pull in the right
-  # LLVM library dependencies.
-  list(APPEND link_libs
-    clangCodeGen
-    clangStaticAnalyzerCore
+    Option
+    TargetParser
     )
 endif(LLVM_LINK_LLVM_DYLIB)
 
@@ -213,6 +218,7 @@ add_llvm_library(clangCppInterOp
   CppInterOpDispatch.cpp
   CXCppInterOp.cpp
   CXCppInterOpGenerated.cpp
+  ErrorInternal.cpp
   Tracing.cpp
   ${DLM}
   LINK_LIBS

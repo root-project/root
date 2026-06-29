@@ -84,27 +84,190 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate) {
   // Due to a deficiency in the clang-repl implementation to get the value we
   // always must omit the ;
   TestFixture::CreateInterpreter();
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus", nullptr) == 201402);
+  EXPECT_EQ(Cpp::Evaluate("__cplusplus").unbox<long>(), 201402L);
 
-  bool HadError;
-  EXPECT_TRUE(Cpp::Evaluate("#error", &HadError) == (intptr_t)~0UL);
-  EXPECT_TRUE(HadError);
+  // K_Unspecified is the "no usable value" sentinel (parse error or
+  // no-Value-after-success). Replaces the old IsValueInvalid out-param.
+  EXPECT_EQ(Cpp::Evaluate("#error").getKind(), Cpp::Box::K_Unspecified);
   // for llvm < 19 this tests different overloads of
   // __clang_Interpreter_SetValueNoAlloc
-  EXPECT_EQ(Cpp::Evaluate("int i = 11; ++i", &HadError), 12);
-  EXPECT_FALSE(HadError);
-  EXPECT_EQ(Cpp::Evaluate("double a = 12.; a", &HadError), 12.);
-  EXPECT_FALSE(HadError);
-  EXPECT_EQ(Cpp::Evaluate("float b = 13.; b", &HadError), 13.);
-  EXPECT_FALSE(HadError);
-  EXPECT_EQ(Cpp::Evaluate("long double c = 14.; c", &HadError), 14.);
-  EXPECT_FALSE(HadError);
-  EXPECT_EQ(Cpp::Evaluate("long double d = 15.; d", &HadError), 15.);
-  EXPECT_FALSE(HadError);
-  EXPECT_EQ(Cpp::Evaluate("unsigned long long e = 16; e", &HadError), 16);
-  EXPECT_FALSE(HadError);
-  EXPECT_NE(Cpp::Evaluate("struct S{} s; s", &HadError), (intptr_t)~0UL);
-  EXPECT_FALSE(HadError);
+  EXPECT_EQ(Cpp::Evaluate("int i = 11; ++i").unbox<int>(), 12);
+  EXPECT_EQ(Cpp::Evaluate("double a = 12.; a").unbox<double>(), 12.);
+  EXPECT_EQ(Cpp::Evaluate("float b = 13.; b").unbox<float>(), 13.f);
+  EXPECT_EQ(Cpp::Evaluate("long double c = 14.; c").unbox<long double>(), 14.L);
+  EXPECT_EQ(Cpp::Evaluate("long double d = 15.; d").unbox<long double>(), 15.L);
+  EXPECT_EQ(
+      Cpp::Evaluate("unsigned long long e = 16; e").unbox<unsigned long long>(),
+      16ULL);
+  // Object payload: K_PtrOrObj carries an owned pointer to the JIT-managed
+  // instance; lifetime ends with the Value going out of scope.
+  Cpp::Box sV = Cpp::Evaluate("struct S{} s; s");
+  EXPECT_EQ(sV.getKind(), Cpp::Box::K_PtrOrObj);
+  EXPECT_NE(sV.getObjectPtr(), nullptr);
+}
+
+// Copy semantics mirror clang::Value: fundamentals POD-copy; K_PtrOrObj is
+// refcounted-shallow (retain bumps a ref, dtor releases). The test exercises
+// both: fundamentals copy independently, K_PtrOrObj copy shares the payload
+// pointer and survives the original going out of scope.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate_Copy) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  TestFixture::CreateInterpreter();
+
+  // Fundamentals: POD copy; original and copy hold equal data, independent.
+  Cpp::Box i = Cpp::Evaluate("int x = 42; x");
+  Cpp::Box ic = i;
+  EXPECT_EQ(ic.getKind(), Cpp::Box::K_Int);
+  EXPECT_EQ(ic.unbox<int>(), 42);
+  EXPECT_EQ(i.unbox<int>(), 42); // original survives copy
+
+  // K_PtrOrObj: shallow + refcounted. Copy shares the payload pointer; the
+  // payload survives the original going out of scope. Refcount reaches 0
+  // only when both Values destruct (no double-free, no use-after-free under
+  // ASan).
+  void* sharedPtr = nullptr;
+  {
+    Cpp::Box sV = Cpp::Evaluate("struct CopyT { int v = 7; }; CopyT{}");
+    ASSERT_EQ(sV.getKind(), Cpp::Box::K_PtrOrObj);
+    Cpp::Box sC = sV;
+    EXPECT_EQ(sC.getKind(), Cpp::Box::K_PtrOrObj);
+    EXPECT_EQ(sC.getObjectPtr(), sV.getObjectPtr())
+        << "copy shares payload (refcount, not deep copy)";
+    sharedPtr = sV.getObjectPtr();
+    // sV goes out of inner scope here -- refcount drops to 1; sC still owns.
+  }
+  EXPECT_NE(sharedPtr, nullptr);
+
+  // Non-trivial destructor: ValueStorage::Release runs the dtor via its
+  // function pointer when the last ref drops. ASan would flag a leak of
+  // the inner `int` if the refcounted copy fired the dtor twice (or not
+  // at all). Types are declared via Cpp::Declare (TU scope) so cling's
+  // destructor-thunk -- emitted in a later input_line -- can still
+  // resolve the name; declaring the struct inline inside Evaluate would
+  // make it a local struct on cling and break cross-TU lookup.
+  Cpp::Declare("struct DtorT { int* p; DtorT() { p = new int(13); } "
+               "~DtorT() { delete p; } };");
+  {
+    Cpp::Box dV = Cpp::Evaluate("DtorT{}");
+    ASSERT_EQ(dV.getKind(), Cpp::Box::K_PtrOrObj);
+    { Cpp::Box dC = dV; } // copy then drop -- refcount 2 -> 1; no dtor
+    // dV still owns; dtor fires when this scope ends.
+  }
+
+  // Class with a static member: the payload's per-instance heap path
+  // must not double-count the static, and the dtor pointer fires only
+  // for the instance. (Statics live in module data, not the payload.)
+  // TU-scope declaration is required: cling wraps Evaluate snippets in
+  // a function, and C++ forbids static data members in local types.
+  Cpp::Declare("int StatT_freed = 0; "
+               "struct StatT { static int counter; int* p; "
+               "StatT() { p = new int(++counter); } "
+               "~StatT() { delete p; ++StatT_freed; } }; "
+               "int StatT::counter = 0;");
+  {
+    Cpp::Box sV = Cpp::Evaluate("StatT{}");
+    ASSERT_EQ(sV.getKind(), Cpp::Box::K_PtrOrObj);
+    { Cpp::Box sC = sV; } // refcounted copy; no dtor on drop
+  }
+  // After the box drops, exactly one dtor fired (no spurious second
+  // delete from the now-released copy).
+  EXPECT_EQ(Cpp::Evaluate("StatT_freed").unbox<int>(), 1);
+
+  // Move semantics: src is reset to K_Unspecified so its dtor does not
+  // release the storage the destination now owns. A regression here
+  // would double-release the K_PtrOrObj payload (ASan-detectable).
+  Cpp::Declare("struct MoveT { int v = 1; };");
+  Cpp::Box src = Cpp::Evaluate("MoveT{}");
+  ASSERT_EQ(src.getKind(), Cpp::Box::K_PtrOrObj);
+  void* origPtr = src.getObjectPtr();
+  Cpp::Box dst = std::move(src);
+  EXPECT_EQ(src.getKind(), Cpp::Box::K_Unspecified);
+  EXPECT_EQ(dst.getObjectPtr(), origPtr);
+}
+
+// visit() dispatches over Kind to the matching typed slot. Test in two
+// shapes: (a) Kind known statically -- the AOT-fold path that catalog
+// thunks ride, where Create<T>().visit(v) constant-folds to v(x);
+// (b) Kind known only at runtime -- the GenericExecutor pattern, where
+// the visitor must accept every fundamental T.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate_VisitDispatch) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  TestFixture::CreateInterpreter();
+
+  // (a) AOT fold: Kind is K_Int by construction. The visitor receives an
+  // int and routes through the K_Int case only.
+  auto toll = [](auto x) -> long long { return static_cast<long long>(x); };
+  EXPECT_EQ(Cpp::Box::Create<int>(42).visit(toll), 42LL);
+  EXPECT_EQ(Cpp::Box::Create<double>(3.5).visit(toll), 3LL); // trunc to ll
+  EXPECT_EQ(Cpp::Box::Create<bool>(true).visit(toll), 1LL);
+
+  // (b) Runtime: Kind is data, set by Evaluate. visit dispatches on the
+  // runtime tag; the same visitor handles every fundamental.
+  EXPECT_EQ(Cpp::Evaluate("int i = 11; ++i").visit(toll), 12LL);
+  EXPECT_EQ(Cpp::Evaluate("double a = 12.5; a").visit(toll), 12LL);
+  EXPECT_EQ(Cpp::Evaluate("unsigned long long u = 16; u").visit(toll), 16LL);
+
+  // convertTo<T> is the public "I don't know the Kind, give me T" path.
+  // Internally it visit()s and static_casts -- so the same dispatch
+  // covers fundamentals safely without the Kind-mismatch UB of as<T>.
+  // Distinct decl names keep each Evaluate from being a redeclaration
+  // of the previous (which would parse-error to K_Unspecified and trip
+  // visit's __builtin_unreachable).
+  EXPECT_EQ(Cpp::Evaluate("int cv_a = 7; cv_a").convertTo<long>(), 7L);
+  EXPECT_EQ(Cpp::Evaluate("int cv_b = 7; cv_b").convertTo<double>(), 7.0);
+  EXPECT_EQ(Cpp::Evaluate("double cv_c = 4.5; cv_c").convertTo<int>(), 4);
+}
+
+// Covers every BuiltinType::Kind arm of the QualType classifier in
+// Evaluate. Each line exercises a distinct branch of the switch in
+// CppInterOp.cpp's classifyByQualType.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate_AllFundamentals) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  TestFixture::CreateInterpreter();
+
+  EXPECT_EQ(Cpp::Evaluate("bool b = true; b").unbox<bool>(), true);
+  EXPECT_EQ(Cpp::Evaluate("signed char sc = -3; sc").unbox<signed char>(), -3);
+  EXPECT_EQ(Cpp::Evaluate("unsigned char uc = 7; uc").unbox<unsigned char>(),
+            7);
+  EXPECT_EQ(Cpp::Evaluate("short sh = -9; sh").unbox<short>(), -9);
+  EXPECT_EQ(Cpp::Evaluate("unsigned short us = 11; us").unbox<unsigned short>(),
+            11);
+  EXPECT_EQ(Cpp::Evaluate("unsigned int ui = 13; ui").unbox<unsigned int>(),
+            13U);
+  EXPECT_EQ(Cpp::Evaluate("unsigned long ul = 17; ul").unbox<unsigned long>(),
+            17UL);
+  EXPECT_EQ(Cpp::Evaluate("long long ll = -21; ll").unbox<long long>(), -21LL);
+
+  // Plain `char` resolves to Char_S on platforms where char is signed
+  // by default (x86_64 Linux/macOS, MSVC) and Char_U on platforms where
+  // it is unsigned (Linux/aarch64, PowerPC); the classifier folds the
+  // latter into K_UChar so the Box::Create<T> X-macro stays single-
+  // valued per C++ type.
+  Cpp::Box c = Cpp::Evaluate("char ch = 'a'; ch");
+  EXPECT_TRUE(c.getKind() == Cpp::Box::K_Char_S ||
+              c.getKind() == Cpp::Box::K_UChar);
+  EXPECT_EQ(c.convertTo<int>(), 'a');
 }
 
 // Regression (cppyy test12): no-Value-after-success used to abort in
@@ -121,18 +284,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Evaluate_NonValueStatement) {
     GTEST_SKIP() << "Test fails for OOP JIT builds";
   TestFixture::CreateInterpreter();
 
-  bool HadError = false;
-  EXPECT_EQ(Cpp::Evaluate("class EvalRegression_NoValue {};", &HadError),
-            (intptr_t)~0UL);
-  EXPECT_TRUE(HadError);
+  EXPECT_EQ(Cpp::Evaluate("class EvalRegression_NoValue {};").getKind(),
+            Cpp::Box::K_Unspecified);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeleteInterpreter) {
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
-  auto* I1 = TestFixture::CreateInterpreter();
-  auto* I2 = TestFixture::CreateInterpreter();
-  auto* I3 = TestFixture::CreateInterpreter();
+  auto I1 = TestFixture::CreateInterpreter();
+  auto I2 = TestFixture::CreateInterpreter();
+  auto I3 = TestFixture::CreateInterpreter();
   EXPECT_TRUE(I1 && I2 && I3) << "Failed to create interpreters";
 
   EXPECT_EQ(I3, Cpp::GetInterpreter()) << "I3 is not active";
@@ -140,7 +301,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeleteInterpreter) {
   EXPECT_TRUE(Cpp::DeleteInterpreter(/*I=*/nullptr));
   EXPECT_EQ(I2, Cpp::GetInterpreter());
 
-  auto* I4 = reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U));
+  Cpp::InterpRef I4{reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U))};
   EXPECT_FALSE(Cpp::DeleteInterpreter(I4));
 
   EXPECT_TRUE(Cpp::DeleteInterpreter(I1));
@@ -154,8 +315,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_StaticDtorsRunOnDelete) {
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
 
-  auto* I = TestFixture::CreateInterpreter();
-  ASSERT_NE(I, nullptr);
+  auto I = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I);
 
   // Host-side flag the JIT writes to; survives the interpreter deletion
   // that frees JIT memory. Reset explicitly for --gtest_repeat.
@@ -164,11 +325,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_StaticDtorsRunOnDelete) {
   std::string Inject = "extern \"C\" void* dtor_sink = (void*)" +
                        std::to_string(reinterpret_cast<uintptr_t>(&HostFlag)) +
                        ";";
-  Cpp::Declare(Inject.c_str(), I);
+  Cpp::Declare(Inject.c_str());
   Cpp::Declare(R"(
     struct DtorNotify { ~DtorNotify() { *static_cast<int*>(dtor_sink) = 1; } };
-  )",
-               I);
+  )");
   Cpp::Process("static DtorNotify notify;");
 
   EXPECT_EQ(HostFlag, 0);
@@ -203,8 +363,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 #else
   EXPECT_EXIT(
       {
-        auto* I1 = TestFixture::CreateInterpreter();
-        auto* I2 = TestFixture::CreateInterpreter();
+        auto I1 = TestFixture::CreateInterpreter();
+        auto I2 = TestFixture::CreateInterpreter();
         Cpp::ActivateInterpreter(I1);
         Cpp::Process("struct S1 { S1() {} ~S1() {} }; static S1 s1;");
         Cpp::ActivateInterpreter(I2);
@@ -222,25 +382,26 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ActivateInterpreter) {
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
   EXPECT_FALSE(Cpp::ActivateInterpreter(nullptr));
-  auto* Cpp14 = TestFixture::CreateInterpreter({"-std=c++14"});
-  auto* Cpp17 = TestFixture::CreateInterpreter({"-std=c++17"});
-  auto* Cpp20 = TestFixture::CreateInterpreter({"-std=c++20"});
+  auto Cpp14 = TestFixture::CreateInterpreter({"-std=c++14"});
+  auto Cpp17 = TestFixture::CreateInterpreter({"-std=c++17"});
+  auto Cpp20 = TestFixture::CreateInterpreter({"-std=c++20"});
 
   EXPECT_TRUE(Cpp14 && Cpp17 && Cpp20);
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus") == 202002L)
+  EXPECT_EQ(Cpp::Evaluate("__cplusplus").unbox<long>(), 202002L)
       << "Failed to activate C++20";
 
-  auto* UntrackedI = reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U));
+  Cpp::InterpRef UntrackedI{
+      reinterpret_cast<void*>(static_cast<std::uintptr_t>(~0U))};
   EXPECT_FALSE(Cpp::ActivateInterpreter(UntrackedI));
 
   EXPECT_TRUE(Cpp::ActivateInterpreter(Cpp14));
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus") == 201402L);
+  EXPECT_EQ(Cpp::Evaluate("__cplusplus").unbox<long>(), 201402L);
 
   Cpp::DeleteInterpreter(Cpp14);
   EXPECT_EQ(Cpp::GetInterpreter(), Cpp20);
 
   EXPECT_TRUE(Cpp::ActivateInterpreter(Cpp17));
-  EXPECT_TRUE(Cpp::Evaluate("__cplusplus") == 201703L);
+  EXPECT_EQ(Cpp::Evaluate("__cplusplus").unbox<long>(), 201703L);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Process) {
@@ -327,7 +488,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_EmscriptenExceptionHandling) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CreateInterpreter) {
-  auto* I = TestFixture::CreateInterpreter();
+  auto I = TestFixture::CreateInterpreter();
   EXPECT_TRUE(I);
   // Check if the default standard is c++14
 
@@ -560,7 +721,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_BasicBanner) {
   // EXPECT_FALSE(Cpp::GetInterpreter()) << "Failed to delete all interpreters";
 
   // // Create an interpreter (this calls RegisterInterpreter internally)
-  // TInterp_t I = TestFixture::CreateInterpreter();
+  // InterpRef I = TestFixture::CreateInterpreter();
   // ASSERT_NE(I, nullptr);
 
   // We expect the banner to appear in stderr when the process dies
@@ -582,8 +743,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_BasicBanner) {
 // Verify that the handler correctly lists multiple interpreters
 #ifdef GTEST_HAS_DEATH_TEST
 TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_MultipleInterpreters) {
-  ASSERT_NE(TestFixture::CreateInterpreter(), nullptr);
-  ASSERT_NE(TestFixture::CreateInterpreter(), nullptr);
+  ASSERT_TRUE(TestFixture::CreateInterpreter());
+  ASSERT_TRUE(TestFixture::CreateInterpreter());
 
   // The handler iterates through the deque and prints the pointers
 
@@ -604,15 +765,15 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
     GTEST_SKIP() << "Test fails for OOP JIT builds";
 
   // Create first interpreter: add(a,b) returns a + b.
-  auto* I1 = TestFixture::CreateInterpreter();
-  ASSERT_NE(I1, nullptr);
+  auto I1 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I1);
   Cpp::ActivateInterpreter(I1);
   Cpp::Declare("int add(int a, int b) { return a + b; }");
-  auto* AddDecl1 = Cpp::GetNamed("add");
-  ASSERT_NE(AddDecl1, nullptr);
+  auto AddDecl1 = Cpp::GetNamed("add");
+  ASSERT_TRUE(AddDecl1);
 
   Cpp::Declare("#include <new>"); // Needed by JitCall
-  auto JC1 = Cpp::MakeFunctionCallable(AddDecl1);
+  auto JC1 = Cpp::MakeFunctionCallable(Cpp::FuncRef{AddDecl1.data});
   ASSERT_TRUE(JC1.isValid());
 
   int a1 = 3, b1 = 4, r1 = 0;
@@ -621,15 +782,15 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
   EXPECT_EQ(r1, 7);
 
   // Create second interpreter: add(a,b) returns a * b.
-  auto* I2 = TestFixture::CreateInterpreter();
-  ASSERT_NE(I2, nullptr);
+  auto I2 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I2);
   Cpp::ActivateInterpreter(I2);
   Cpp::Declare("int add(int a, int b) { return a * b; }");
-  auto* AddDecl2 = Cpp::GetNamed("add");
-  ASSERT_NE(AddDecl2, nullptr);
+  auto AddDecl2 = Cpp::GetNamed("add");
+  ASSERT_TRUE(AddDecl2);
 
   Cpp::Declare("#include <new>"); // Needed by JitCall
-  auto JC2 = Cpp::MakeFunctionCallable(AddDecl2);
+  auto JC2 = Cpp::MakeFunctionCallable(Cpp::FuncRef{AddDecl2.data});
   ASSERT_TRUE(JC2.isValid());
 
   // Delete the first interpreter.
@@ -663,8 +824,20 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DLMIsPerInterpreter) {
   ASSERT_FALSE(BinaryPath.empty());
   llvm::StringRef BinDir = llvm::sys::path::parent_path(BinaryPath);
 
-  auto* I1 = TestFixture::CreateInterpreter();
-  ASSERT_NE(I1, nullptr);
+  // Baseline: what a pristine interpreter (no user-added search path) sees.
+  // Every DLM defaults to searching "." (the cwd); when the binary's cwd
+  // contains TestSharedLib.so (e.g. under a runfiles-style layout) a fresh
+  // interpreter already resolves kSym, and when it doesn't (e.g. cwd is a
+  // separate build dir) it resolves nothing. Capturing this makes the test
+  // assert about path *leakage*, not about the cwd-dependent default scan.
+  auto I0 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I0);
+  Cpp::ActivateInterpreter(I0);
+  std::string R0 = Cpp::SearchLibrariesForSymbol(kSym, /*system_search=*/false);
+  EXPECT_TRUE(Cpp::DeleteInterpreter(I0));
+
+  auto I1 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I1);
   Cpp::ActivateInterpreter(I1);
   Cpp::AddSearchPath(BinDir.str().c_str());
 
@@ -672,15 +845,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DLMIsPerInterpreter) {
   if (R1.empty())
     GTEST_SKIP() << "TestSharedLib not found — cannot test DLM isolation";
 
-  // With a single function-local-static DLM, the path added on I1
-  // would reach I2 and the lookup below would succeed; the per-
-  // interpreter DLM means I2 starts with a fresh path set.
-  auto* I2 = TestFixture::CreateInterpreter();
-  ASSERT_NE(I2, nullptr);
+  // A fresh I2 has its own DLM and must NOT inherit the path added on I1.
+  // With a single shared DLM, I2 would also see BinDir and so differ from the
+  // pristine baseline I0; per-interpreter DLM means I2 behaves like I0.
+  auto I2 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I2);
   Cpp::ActivateInterpreter(I2);
 
   std::string R2 = Cpp::SearchLibrariesForSymbol(kSym, /*system_search=*/false);
-  EXPECT_TRUE(R2.empty()) << "I2 must not see search paths added on I1; found: "
-                          << R2;
+  EXPECT_EQ(R2, R0) << "I2 must behave like a pristine interpreter; the search "
+                       "path added on I1 must not leak. I2 found: '"
+                    << R2 << "', pristine baseline: '" << R0 << "'";
 }
 #endif // !EMSCRIPTEN
