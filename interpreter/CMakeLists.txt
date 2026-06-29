@@ -600,6 +600,7 @@ set(cppinterop_src_files
   ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/CppInterOp.h
   ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/CppInterOpTypes.h
   ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/Dispatch.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/Box.h
   ${cppinterop_gen_dir}/BuildInfo.inc
   ${cppinterop_gen_dir}/CppInterOpAPI.inc
   ${cppinterop_gen_dir}/CppInterOpDecl.inc
