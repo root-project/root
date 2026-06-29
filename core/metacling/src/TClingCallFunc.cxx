@@ -1254,7 +1254,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
 
    if (Cpp::IsClass(D) || Cpp::IsConstructor(D)) {
       R__LOCKGUARD_CLING(gInterpreterMutex);
-      return Cpp::Construct(D, address, nary);
+      return Cpp::Construct(D, address, nary).data;
    }
 
    ::Error("TClingCallFunc::ExecDefaultConstructor", "ClassInfo missing a valid Scope/Constructor");
@@ -1271,7 +1271,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
-   if (Cpp::Destruct(address, info->GetDecl(), nary, withFree))
+   if (Cpp::Destruct(address, const_cast<clang::Decl *>(info->GetDecl()), withFree, nary))
       return;
 
    ::Error("TClingCallFunc::ExecDestructor", "Called with no wrapper, not implemented!");
