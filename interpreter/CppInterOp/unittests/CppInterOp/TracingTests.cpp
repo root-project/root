@@ -140,7 +140,7 @@ TEST_F(TracingTest, CountParamsHandlesVoidParamList) {
   using TR = CppInterOp::Tracing::TraceRegion;
   EXPECT_EQ(TR::countParams("void foo()"), 0U);
   EXPECT_EQ(TR::countParams("void foo(void)"), 0U);
-  EXPECT_EQ(TR::countParams("void *__cdecl CppImpl::GetInterpreter(void)"), 0U);
+  EXPECT_EQ(TR::countParams("void *__cdecl Cpp::GetInterpreter(void)"), 0U);
   EXPECT_EQ(TR::countParams("void foo(int)"), 1U);
   EXPECT_EQ(TR::countParams("void foo(int, double)"), 2U);
   EXPECT_EQ(TR::countParams("void foo(std::vector<int>&)"), 1U);
@@ -1224,14 +1224,13 @@ TEST_F(TracingTest, JitCallWrapperSourceLogged) {
   // Placement new requires <new>.
   Cpp::Declare("#include <new>");
   Cpp::Declare("namespace WrapNS { int add(int a, int b) { return a + b; } }");
-  auto* Func =
-      static_cast<void*>(Cpp::GetNamed("add", Cpp::GetScope("WrapNS")));
-  ASSERT_NE(Func, nullptr);
+  auto Func = Cpp::GetNamed("add", Cpp::GetScope("WrapNS"));
+  ASSERT_TRUE(Func);
 
   TheTraceInfo->clear();
 
   // MakeFunctionCallable triggers make_wrapper which logs the wrapper source.
-  auto JC = Cpp::MakeFunctionCallable(Func);
+  auto JC = Cpp::MakeFunctionCallable(Cpp::FuncRef{Func.data});
   ASSERT_TRUE(JC.isValid());
 
   auto log = getFullLog();
@@ -1248,11 +1247,10 @@ TEST_F(TracingTest, JitCallInvokeLogged) {
 
   Cpp::Declare("#include <new>");
   Cpp::Declare("namespace InvNS { int square(int x) { return x * x; } }");
-  auto* Func =
-      static_cast<void*>(Cpp::GetNamed("square", Cpp::GetScope("InvNS")));
-  ASSERT_NE(Func, nullptr);
+  auto Func = Cpp::GetNamed("square", Cpp::GetScope("InvNS"));
+  ASSERT_TRUE(Func);
 
-  auto JC = Cpp::MakeFunctionCallable(Func);
+  auto JC = Cpp::MakeFunctionCallable(Cpp::FuncRef{Func.data});
   ASSERT_TRUE(JC.isValid());
 
   // Clear so only the Invoke shows up.
@@ -1281,15 +1279,15 @@ TEST_F(TracingTest, JitCallConstructorInvokeLogged) {
 
   Cpp::Declare("#include <new>");
   Cpp::Declare("namespace InvCtorNS { struct Bar { int x = 7; }; }");
-  auto* ClassBar = Cpp::GetScope("Bar", Cpp::GetScope("InvCtorNS"));
-  ASSERT_NE(ClassBar, nullptr);
-  auto* CtorD = Cpp::GetDefaultConstructor(ClassBar);
-  ASSERT_NE(CtorD, nullptr);
+  auto ClassBar = Cpp::GetScope("Bar", Cpp::GetScope("InvCtorNS"));
+  ASSERT_TRUE(ClassBar);
+  auto CtorD = Cpp::GetDefaultConstructor(ClassBar);
+  ASSERT_TRUE(CtorD);
   // Resolve the dtor up-front so the cleanup at the end of the test
   // can free the heap-allocated Bar (LeakSanitizer otherwise flags
   // the 4-byte `int x` payload).
-  auto* DtorD = Cpp::GetDestructor(ClassBar);
-  ASSERT_NE(DtorD, nullptr);
+  auto DtorD = Cpp::GetDestructor(ClassBar);
+  ASSERT_TRUE(DtorD);
 
   auto CtorJC = Cpp::MakeFunctionCallable(CtorD);
   auto DtorJC = Cpp::MakeFunctionCallable(DtorD);
@@ -1316,12 +1314,12 @@ TEST_F(TracingTest, JitCallDestructorInvokeLogged) {
 
   Cpp::Declare("#include <new>");
   Cpp::Declare("namespace InvDtorNS { struct Baz { ~Baz() {} }; }");
-  auto* ClassBaz = Cpp::GetScope("Baz", Cpp::GetScope("InvDtorNS"));
-  ASSERT_NE(ClassBaz, nullptr);
-  auto* CtorD = Cpp::GetDefaultConstructor(ClassBaz);
-  ASSERT_NE(CtorD, nullptr);
-  auto* DtorD = Cpp::GetDestructor(ClassBaz);
-  ASSERT_NE(DtorD, nullptr);
+  auto ClassBaz = Cpp::GetScope("Baz", Cpp::GetScope("InvDtorNS"));
+  ASSERT_TRUE(ClassBaz);
+  auto CtorD = Cpp::GetDefaultConstructor(ClassBaz);
+  ASSERT_TRUE(CtorD);
+  auto DtorD = Cpp::GetDestructor(ClassBaz);
+  ASSERT_TRUE(DtorD);
 
   auto CtorJC = Cpp::MakeFunctionCallable(CtorD);
   auto DtorJC = Cpp::MakeFunctionCallable(DtorD);
@@ -1351,9 +1349,9 @@ TEST_F(TracingTest, JitCallReturnedPointerRegistered) {
   Cpp::Declare("#include <new>");
   Cpp::Declare("namespace InvRetNS { struct Foo {}; "
                "Foo* makeFoo() { return new Foo(); } }");
-  auto* MakeFD = Cpp::GetNamed("makeFoo", Cpp::GetScope("InvRetNS"));
-  ASSERT_NE(MakeFD, nullptr);
-  auto MakeJC = Cpp::MakeFunctionCallable(MakeFD);
+  auto MakeFD = Cpp::GetNamed("makeFoo", Cpp::GetScope("InvRetNS"));
+  ASSERT_TRUE(MakeFD);
+  auto MakeJC = Cpp::MakeFunctionCallable(Cpp::FuncRef{MakeFD.data});
   ASSERT_TRUE(MakeJC.isValid());
 
   // Sanity: an unrelated pointer remains unregistered.
@@ -1589,9 +1587,11 @@ TEST(TracingCoverageTest, AllPublicAPIsAreTraced) {
     size_t Pos = 0;
     bool Found = false;
     while ((Pos = Impl.find(Pattern, Pos)) != std::string::npos) {
-      // Find the opening brace of the function body.
+      // Find the opening brace of the function body. Wide-signature window
+      // (500) accommodates 8-parameter APIs like MakeVTableOverlay laid out
+      // one-arg-per-line LLVM-style.
       size_t BracePos = Impl.find('{', Pos);
-      if (BracePos == std::string::npos || BracePos - Pos > 300) {
+      if (BracePos == std::string::npos || BracePos - Pos > 500) {
         Pos += Pattern.size();
         continue;
       }

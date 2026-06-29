@@ -39,9 +39,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetDatamembers) {
     };
     )";
 
-  std::vector<Cpp::TCppScope_t> datamembers;
-  std::vector<Cpp::TCppScope_t> datamembers1;
-  std::vector<Cpp::TCppScope_t> datamembers2;
+  std::vector<Cpp::DeclRef> datamembers;
+  std::vector<Cpp::DeclRef> datamembers1;
+  std::vector<Cpp::DeclRef> datamembers2;
   GetAllTopLevelDecls(code, Decls);
   Cpp::GetDatamembers(Decls[0], datamembers);
   Cpp::GetDatamembers(Decls[1], datamembers1);
@@ -126,9 +126,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_DatamembersWithAnonymousStru
 #undef Stringify
 #undef CODE
 
-  std::vector<Cpp::TCppScope_t> datamembers_klass1;
-  std::vector<Cpp::TCppScope_t> datamembers_klass2;
-  std::vector<Cpp::TCppScope_t> datamembers_klass3;
+  std::vector<Cpp::DeclRef> datamembers_klass1;
+  std::vector<Cpp::DeclRef> datamembers_klass2;
+  std::vector<Cpp::DeclRef> datamembers_klass3;
 
   Cpp::GetDatamembers(Decls[0], datamembers_klass1);
   Cpp::GetDatamembers(Decls[2], datamembers_klass2);
@@ -184,11 +184,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetTypeAsString) {
   TestFixture::CreateInterpreter();
   EXPECT_EQ(Cpp::Declare(code.c_str()), 0);
 
-  Cpp::TCppScope_t wrapper =
-      Cpp::GetScopeFromCompleteName("my_namespace::Wrapper");
+  Cpp::DeclRef wrapper = Cpp::GetScopeFromCompleteName("my_namespace::Wrapper");
   EXPECT_TRUE(wrapper);
 
-  std::vector<Cpp::TCppScope_t> datamembers;
+  std::vector<Cpp::DeclRef> datamembers;
   Cpp::GetDatamembers(wrapper, datamembers);
   EXPECT_EQ(datamembers.size(), 1);
 
@@ -280,7 +279,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
 
   EXPECT_EQ(7, Decls.size());
 
-  std::vector<Cpp::TCppScope_t> datamembers;
+  std::vector<Cpp::DeclRef> datamembers;
   Cpp::GetDatamembers(Decls[4], datamembers);
 
   EXPECT_TRUE((bool)Cpp::GetVariableOffset(Decls[0])); // a
@@ -297,7 +296,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
   EXPECT_EQ(Cpp::GetVariableOffset(datamembers[3]),
             ((intptr_t) & (c.d)) - ((intptr_t) & (c.a)));
 
-  auto* VD_C_s_a = Cpp::GetNamed("s_a", Decls[4]); // C::s_a
+  auto VD_C_s_a = Cpp::GetNamed("s_a", Decls[4]); // C::s_a
   EXPECT_TRUE((bool)Cpp::GetVariableOffset(VD_C_s_a));
 
   struct K {
@@ -306,7 +305,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
     int z;
   };
   Cpp::Declare("struct K;");
-  Cpp::TCppScope_t k = Cpp::GetNamed("K");
+  Cpp::DeclRef k = Cpp::GetNamed("K");
   EXPECT_TRUE(k);
 
   Cpp::Declare("struct K { int x; int y; int z; };");
@@ -325,17 +324,17 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
     template <typename T> T constexpr ClassWithStatic<T>::ref_value = 42;
   )");
 
-  Cpp::TCppScope_t klass = Cpp::GetNamed("ClassWithStatic");
+  Cpp::DeclRef klass = Cpp::GetNamed("ClassWithStatic");
   EXPECT_TRUE(klass);
 
   ASTContext& C = Interp->getCI()->getASTContext();
   std::vector<Cpp::TemplateArgInfo> template_args = {
       {C.IntTy.getAsOpaquePtr()}};
-  Cpp::TCppScope_t klass_instantiated =
+  Cpp::DeclRef klass_instantiated =
       Cpp::InstantiateTemplate(klass, template_args);
   EXPECT_TRUE(klass_instantiated);
 
-  Cpp::TCppScope_t var = Cpp::GetNamed("ref_value", klass_instantiated);
+  Cpp::DeclRef var = Cpp::GetNamed("ref_value", klass_instantiated);
   EXPECT_TRUE(var);
 
   EXPECT_TRUE(Cpp::GetVariableOffset(var));
@@ -394,19 +393,19 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_VariableOffsetsWithInheritan
 #undef Stringify
 #undef CODE
 
-  Cpp::TCppScope_t myklass = Cpp::GetNamed("MyKlass");
+  Cpp::DeclRef myklass = Cpp::GetNamed("MyKlass");
   EXPECT_TRUE(myklass);
 
   size_t num_bases = Cpp::GetNumBases(myklass);
   EXPECT_EQ(num_bases, 2);
 
-  std::vector<Cpp::TCppScope_t> datamembers;
+  std::vector<Cpp::DeclRef> datamembers;
   Cpp::GetDatamembers(myklass, datamembers);
   for (size_t i = 0; i < num_bases; i++) {
-    Cpp::TCppScope_t base = Cpp::GetBaseClass(myklass, i);
+    Cpp::DeclRef base = Cpp::GetBaseClass(myklass, i);
     EXPECT_TRUE(base);
     for (size_t i = 0; i < Cpp::GetNumBases(base); i++) {
-      Cpp::TCppScope_t bbase = Cpp::GetBaseClass(base, i);
+      Cpp::DeclRef bbase = Cpp::GetBaseClass(base, i);
       EXPECT_TRUE(base);
       Cpp::GetDatamembers(bbase, datamembers);
     }
@@ -584,10 +583,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
   : public integral_constant<int, sizeof...(Eles)> {};
   )");
 
-  Cpp::TCppScope_t MyClass = Cpp::GetNamed("MyClass");
+  Cpp::DeclRef MyClass = Cpp::GetNamed("MyClass");
   EXPECT_TRUE(MyClass);
 
-  std::vector<Cpp::TCppScope_t> datamembers;
+  std::vector<Cpp::DeclRef> datamembers;
   Cpp::GetStaticDatamembers(MyClass, datamembers);
   EXPECT_EQ(datamembers.size(), 1);
 
@@ -598,7 +597,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
   std::vector<Cpp::TemplateArgInfo> template_args = {
       {C.IntTy.getAsOpaquePtr(), "5"}};
 
-  Cpp::TCppFunction_t MyTemplatedClass = Cpp::InstantiateTemplate(
+  Cpp::DeclRef MyTemplatedClass = Cpp::InstantiateTemplate(
       Cpp::GetNamed("MyTemplatedClass"), template_args);
   EXPECT_TRUE(MyTemplatedClass);
 
@@ -612,13 +611,13 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_StaticConstExprDatamember) {
   std::vector<Cpp::TemplateArgInfo> ele_template_args = {
       {C.IntTy.getAsOpaquePtr()}, {C.FloatTy.getAsOpaquePtr()}};
 
-  Cpp::TCppFunction_t Elements =
+  Cpp::DeclRef Elements =
       Cpp::InstantiateTemplate(Cpp::GetNamed("Elements"), ele_template_args);
   EXPECT_TRUE(Elements);
 
   EXPECT_EQ(1, Cpp::GetNumBases(Elements));
 
-  Cpp::TCppScope_t IC = Cpp::GetBaseClass(Elements, 0);
+  Cpp::DeclRef IC = Cpp::GetBaseClass(Elements, 0);
 
   datamembers.clear();
   Cpp::GetStaticDatamembers(IC, datamembers);
@@ -640,15 +639,15 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   };
   )");
 
-  Cpp::TCppScope_t MyEnumClass = Cpp::GetNamed("MyEnumClass");
+  Cpp::DeclRef MyEnumClass = Cpp::GetNamed("MyEnumClass");
   EXPECT_TRUE(MyEnumClass);
 
-  std::vector<Cpp::TCppScope_t> datamembers;
+  std::vector<Cpp::DeclRef> datamembers;
   Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers);
   EXPECT_EQ(datamembers.size(), 9);
   EXPECT_TRUE(Cpp::IsEnumType(Cpp::GetVariableType(datamembers[0])));
 
-  std::vector<Cpp::TCppScope_t> datamembers2;
+  std::vector<Cpp::DeclRef> datamembers2;
   Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers2, false);
   EXPECT_EQ(datamembers2.size(), 6);
 }

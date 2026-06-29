@@ -8,8 +8,12 @@
 //------------------------------------------------------------------------------
 
 #include "CppInterOp/CppInterOp.h"
+#include "Unwrap.h"
+#include "CppInterOp/Error.h"
 
 #include "Compatibility.h"
+#include "ErrorInternal.h"
+#include "InterpreterInfo.h"
 #include "Sins.h" // for access to private members
 #include "Tracing.h"
 
@@ -36,6 +40,7 @@
 #include "clang/AST/DeclAccessPair.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -47,6 +52,8 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/VTableBuilder.h"
+#include "clang/Basic/CharInfo.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Basic/LangStandard.h"
@@ -95,6 +102,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <deque>
 #include <iostream>
 #include <iterator>
@@ -154,54 +162,10 @@ extern "C" void __clang_Interpreter_SetValueNoAlloc(void* This, void* OutVal,
 #define CPPINTEROP_ASAN_BUILD 1
 #endif
 
-namespace CppImpl {
+namespace Cpp {
 
 using namespace clang;
 using namespace llvm;
-
-struct InterpreterInfo {
-  compat::Interpreter* Interpreter = nullptr;
-  bool isOwned = true;
-  // Store the list of builtin types.
-  llvm::StringMap<QualType> BuiltinMap;
-  // Per-interpreter wrapper caches. Keyed on AST nodes that belong to this
-  // interpreter, so the caches must be destroyed together with it.
-  std::map<const FunctionDecl*, void*> WrapperStore;
-  std::map<const Decl*, void*> DtorWrapperStore;
-
-  InterpreterInfo(compat::Interpreter* I, bool Owned)
-      : Interpreter(I), isOwned(Owned) {}
-
-  // Enable move constructors.
-  InterpreterInfo(InterpreterInfo&& other) noexcept
-      : Interpreter(other.Interpreter), isOwned(other.isOwned) {
-    other.Interpreter = nullptr;
-    other.isOwned = false;
-  }
-  InterpreterInfo& operator=(InterpreterInfo&& other) noexcept {
-    if (this != &other) {
-      // Delete current resource if owned
-      if (isOwned)
-        delete Interpreter;
-
-      Interpreter = other.Interpreter;
-      isOwned = other.isOwned;
-
-      other.Interpreter = nullptr;
-      other.isOwned = false;
-    }
-    return *this;
-  }
-
-  ~InterpreterInfo() {
-    if (isOwned)
-      delete Interpreter;
-  }
-
-  // Disable copy semantics (to avoid accidental double deletes)
-  InterpreterInfo(const InterpreterInfo&) = delete;
-  InterpreterInfo& operator=(const InterpreterInfo&) = delete;
-};
 
 static void DefaultProcessCrashHandler(void*);
 
@@ -307,6 +271,7 @@ static void DefaultProcessCrashHandler(void*) {
 static void RegisterInterpreter(compat::Interpreter* I, bool Owned) {
   std::deque<InterpreterInfo>& Interps = GetInterpreters(Owned);
   Interps.emplace_back(I, Owned);
+  InstallDiagConsumer(&Interps.back());
 }
 
 static InterpreterInfo& getInterpInfo(compat::Interpreter* I = nullptr) {
@@ -321,13 +286,17 @@ static InterpreterInfo& getInterpInfo(compat::Interpreter* I = nullptr) {
   return Interps.back();
 }
 
-static compat::Interpreter& getInterp(TInterp_t I = nullptr) {
+static compat::Interpreter& getInterp(InterpRef I = nullptr) {
   if (I)
-    return *static_cast<compat::Interpreter*>(I);
+    return *unwrap<compat::Interpreter>(I);
   return *getInterpInfo().Interpreter;
 }
 
-TInterp_t GetInterpreter() {
+CPPINTEROP_API InterpreterInfo* GetInterpInfo(InterpRef I) {
+  return &getInterpInfo(I ? unwrap<compat::Interpreter>(I) : nullptr);
+}
+
+InterpRef GetInterpreter() {
   INTEROP_TRACE();
   std::deque<InterpreterInfo>& Interps = GetInterpreters();
   if (Interps.empty())
@@ -335,23 +304,25 @@ TInterp_t GetInterpreter() {
   return INTEROP_RETURN(Interps.back().Interpreter);
 }
 
-void UseExternalInterpreter(TInterp_t I) {
+void UseExternalInterpreter(InterpRef I) {
   INTEROP_TRACE(I);
   assert(GetInterpreters(false).empty() && "sInterpreter already in use!");
   SkipShutDown = true;
-  RegisterInterpreter(static_cast<compat::Interpreter*>(I), /*Owned=*/false);
+  RegisterInterpreter(unwrap<compat::Interpreter>(I), /*Owned=*/false);
   return INTEROP_VOID_RETURN();
 }
 
-bool ActivateInterpreter(TInterp_t I) {
+bool ActivateInterpreter(InterpRef I) {
   INTEROP_TRACE(I);
   if (!I)
     return INTEROP_RETURN(false);
 
   std::deque<InterpreterInfo>& Interps = GetInterpreters();
+  auto* Interp = unwrap<compat::Interpreter>(I);
   auto found =
-      std::find_if(Interps.begin(), Interps.end(),
-                   [&I](const auto& Info) { return Info.Interpreter == I; });
+      std::find_if(Interps.begin(), Interps.end(), [Interp](const auto& Info) {
+        return Info.Interpreter == Interp;
+      });
   if (found == Interps.end())
     return INTEROP_RETURN(false);
 
@@ -361,7 +332,7 @@ bool ActivateInterpreter(TInterp_t I) {
   return INTEROP_RETURN(true); // success
 }
 
-bool DeleteInterpreter(TInterp_t I /*=nullptr*/) {
+bool DeleteInterpreter(InterpRef I /*=nullptr*/) {
   INTEROP_TRACE(I);
   std::deque<InterpreterInfo>& Interps = GetInterpreters();
   if (Interps.empty())
@@ -372,9 +343,11 @@ bool DeleteInterpreter(TInterp_t I /*=nullptr*/) {
     return INTEROP_RETURN(true);
   }
 
+  auto* Interp = unwrap<compat::Interpreter>(I);
   auto found =
-      std::find_if(Interps.begin(), Interps.end(),
-                   [&I](const auto& Info) { return Info.Interpreter == I; });
+      std::find_if(Interps.begin(), Interps.end(), [Interp](const auto& Info) {
+        return Info.Interpreter == Interp;
+      });
   if (found == Interps.end())
     return INTEROP_RETURN(false); // failure
 
@@ -442,9 +415,9 @@ bool JitCall::AreArgumentsValid(void* result, ArgList args, void* self,
     assert(self && "Must pass the pointer to object");
     Valid &= (bool)self;
   }
-  const auto* FD = cast<FunctionDecl>((const Decl*)m_FD);
+  const auto* FD = cast<FunctionDecl>(unwrap<Decl>(m_FD));
   if (!FD->getReturnType()->isVoidType() && !result) {
-    assert(0 && "We are discarding the return type of the function!");
+    assert(0 && "We are discarding the return TyRef of the function!");
     Valid = false;
   }
   if (Cpp::IsConstructor(m_FD) && nary == 0UL) {
@@ -452,7 +425,7 @@ bool JitCall::AreArgumentsValid(void* result, ArgList args, void* self,
     Valid = false;
   }
   if (Cpp::IsConstructor(m_FD)) {
-    const auto* CD = cast<CXXConstructorDecl>((const Decl*)m_FD);
+    const auto* CD = cast<CXXConstructorDecl>(unwrap<Decl>(m_FD));
     if (CD->getMinRequiredArguments() != 0 && nary > 1) {
       assert(0 &&
              "Cannot pass initialization parameters to array new construction");
@@ -474,7 +447,7 @@ void CppInterOpTraceJitCallInvokeImpl(const JitCall* JC, void* result,
     return;
   std::string Name;
   llvm::raw_string_ostream OS(Name);
-  const auto* FD = static_cast<const FunctionDecl*>(JC->m_FD);
+  const auto* FD = unwrap<FunctionDecl>(JC->m_FD);
   FD->getNameForDiagnostic(OS, FD->getASTContext().getPrintingPolicy(),
                            /*Qualified=*/true);
   LLVM_DEBUG(dbgs() << "Run '" << Name << "', compiled at: "
@@ -495,7 +468,7 @@ void CppInterOpTraceJitCallInvokeDestructorImpl(const JitCall* JC, void* object,
     return;
   std::string Name;
   llvm::raw_string_ostream OS(Name);
-  const auto* FD = static_cast<const FunctionDecl*>(JC->m_FD);
+  const auto* FD = unwrap<FunctionDecl>(JC->m_FD);
   FD->getNameForDiagnostic(OS, FD->getASTContext().getPrintingPolicy(),
                            /*Qualified=*/true);
   LLVM_DEBUG(dbgs() << "Finish '" << Name
@@ -515,7 +488,7 @@ void CppInterOpTraceJitCallInvokeReturnImpl(const JitCall* JC, void* result) {
   auto* TI = CppInterOp::Tracing::TheTraceInfo;
   if (!TI || !result)
     return;
-  const auto* FD = static_cast<const FunctionDecl*>(JC->m_FD);
+  const auto* FD = unwrap<FunctionDecl>(JC->m_FD);
   bool RegisterPtr = isa<CXXConstructorDecl>(FD);
   if (!RegisterPtr) {
     QualType RT = FD->getReturnType();
@@ -599,51 +572,51 @@ static void InstantiateFunctionDefinition(Decl* D) {
   }
 }
 
-bool IsAggregate(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  Decl* D = static_cast<Decl*>(scope);
+bool IsAggregate(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
 
   // Aggregates are only arrays or tag decls.
-  if (ValueDecl* ValD = dyn_cast<ValueDecl>(D))
+  if (const auto* ValD = dyn_cast<ValueDecl>(D))
     if (ValD->getType()->isArrayType())
       return INTEROP_RETURN(true);
 
   // struct, class, union
-  if (CXXRecordDecl* CXXRD = dyn_cast<CXXRecordDecl>(D))
+  if (const auto* CXXRD = dyn_cast<CXXRecordDecl>(D))
     return INTEROP_RETURN(CXXRD->isAggregate());
 
   return INTEROP_RETURN(false);
 }
 
-bool IsNamespace(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  Decl* D = static_cast<Decl*>(scope);
+bool IsNamespace(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
   return INTEROP_RETURN(isa<NamespaceDecl>(D));
 }
 
-bool IsClass(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  Decl* D = static_cast<Decl*>(scope);
+bool IsClass(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
   return INTEROP_RETURN(isa<CXXRecordDecl>(D));
 }
 
-bool IsFunction(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  Decl* D = static_cast<Decl*>(scope);
+bool IsFunction(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
   return INTEROP_RETURN(isa<FunctionDecl>(D));
 }
 
-bool IsFunctionPointerType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsFunctionPointerType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->isFunctionPointerType());
 }
 
-bool IsClassPolymorphic(TCppScope_t klass) {
-  INTEROP_TRACE(klass);
-  Decl* D = static_cast<Decl*>(klass);
-  if (auto* CXXRD = llvm::dyn_cast<CXXRecordDecl>(D))
-    if (auto* CXXRDD = CXXRD->getDefinition())
+bool IsClassPolymorphic(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
+  if (const auto* CXXRD = llvm::dyn_cast<CXXRecordDecl>(D))
+    if (const auto* CXXRDD = CXXRD->getDefinition())
       return INTEROP_RETURN(CXXRDD->isPolymorphic());
   return INTEROP_RETURN(false);
 }
@@ -654,37 +627,37 @@ static SourceLocation GetValidSLoc(Sema& semaRef) {
 }
 
 // See TClingClassInfo::IsLoaded
-bool IsComplete(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  if (!scope)
+bool IsComplete(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  if (!DRef)
     return INTEROP_RETURN(false);
 
-  Decl* D = static_cast<Decl*>(scope);
+  const auto* D = unwrap<Decl>(DRef);
 
   if (isa<ClassTemplateSpecializationDecl>(D)) {
-    QualType QT = QualType::getFromOpaquePtr(GetTypeFromScope(scope));
+    QualType QT = QualType::getFromOpaquePtr(GetTypeFromScope(DRef).data);
     clang::Sema& S = getSema();
     SourceLocation fakeLoc = GetValidSLoc(S);
     compat::SynthesizingCodeRAII RAII(&getInterp());
     return INTEROP_RETURN(S.isCompleteType(fakeLoc, QT));
   }
 
-  if (auto* CXXRD = dyn_cast<CXXRecordDecl>(D))
+  if (const auto* CXXRD = dyn_cast<CXXRecordDecl>(D))
     return INTEROP_RETURN(CXXRD->hasDefinition());
-  else if (auto* TD = dyn_cast<TagDecl>(D))
+  else if (const auto* TD = dyn_cast<TagDecl>(D))
     return INTEROP_RETURN(TD->getDefinition());
 
   // Everything else is considered complete.
   return INTEROP_RETURN(true);
 }
 
-size_t SizeOf(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  assert(scope);
-  if (!IsComplete(scope))
+size_t SizeOf(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  assert(DRef);
+  if (!IsComplete(DRef))
     return INTEROP_RETURN(0);
 
-  if (auto* RD = dyn_cast<RecordDecl>(static_cast<Decl*>(scope))) {
+  if (const auto* RD = dyn_cast<RecordDecl>(unwrap<Decl>(DRef))) {
     ASTContext& Context = RD->getASTContext();
     const ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
     return INTEROP_RETURN(Layout.getSize().getQuantity());
@@ -693,9 +666,9 @@ size_t SizeOf(TCppScope_t scope) {
   return INTEROP_RETURN(0);
 }
 
-bool IsBuiltin(TCppConstType_t type) {
-  INTEROP_TRACE(type);
-  QualType Ty = QualType::getFromOpaquePtr(type);
+bool IsBuiltin(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType Ty = QualType::getFromOpaquePtr(TyRef.data);
   if (Ty->isBuiltinType() || Ty->isAnyComplexType())
     return INTEROP_RETURN(true);
   // Check for std::complex<T> specializations.
@@ -710,49 +683,49 @@ bool IsBuiltin(TCppConstType_t type) {
   return INTEROP_RETURN(false);
 }
 
-bool IsTemplate(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
+bool IsTemplate(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::TemplateDecl>(D));
 }
 
-bool IsTemplateSpecialization(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
+bool IsTemplateSpecialization(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   return INTEROP_RETURN(
       llvm::isa_and_nonnull<clang::ClassTemplateSpecializationDecl>(D));
 }
 
-bool IsTypedefed(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
+bool IsTypedefed(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::TypedefNameDecl>(D));
 }
 
-bool IsAbstract(TCppType_t klass) {
-  INTEROP_TRACE(klass);
-  auto* D = (clang::Decl*)klass;
-  if (auto* CXXRD = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(D))
+bool IsAbstract(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
+  if (const auto* CXXRD = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(D))
     return INTEROP_RETURN(CXXRD->isAbstract());
 
   return INTEROP_RETURN(false);
 }
 
-bool IsEnumScope(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
+bool IsEnumScope(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::EnumDecl>(D));
 }
 
-bool IsEnumConstant(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
+bool IsEnumConstant(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::EnumConstantDecl>(D));
 }
 
-bool IsEnumType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsEnumType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->isEnumeralType());
 }
 
@@ -778,7 +751,7 @@ static bool isSmartPointer(const RecordType* RT) {
   if (foundStarOperator && foundArrowOperator)
     return true;
 
-  const CXXRecordDecl* CXXRecord = dyn_cast<CXXRecordDecl>(Record);
+  const auto* CXXRecord = dyn_cast<CXXRecordDecl>(Record);
   if (!CXXRecord)
     return false;
 
@@ -798,12 +771,12 @@ static bool isSmartPointer(const RecordType* RT) {
   return !CXXRecord->forallBases(FindOverloadedOperators);
 }
 
-bool IsSmartPtrType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsSmartPtrType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (const RecordType* RT = QT->getAs<RecordType>()) {
     // Add quick checks for the std smart prts to cover most of the cases.
-    std::string typeString = GetTypeAsString(type);
+    std::string typeString = GetTypeAsString(TyRef);
     llvm::StringRef tsRef(typeString);
     if (tsRef.starts_with("std::unique_ptr") ||
         tsRef.starts_with("std::shared_ptr") ||
@@ -814,104 +787,104 @@ bool IsSmartPtrType(TCppType_t type) {
   return INTEROP_RETURN(false);
 }
 
-TCppType_t GetIntegerTypeFromEnumScope(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
-  if (auto* ED = llvm::dyn_cast_or_null<clang::EnumDecl>(D)) {
+TypeRef GetIntegerTypeFromEnumScope(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
+  if (const auto* ED = llvm::dyn_cast_or_null<clang::EnumDecl>(D)) {
     return INTEROP_RETURN(ED->getIntegerType().getAsOpaquePtr());
   }
 
   return INTEROP_RETURN(nullptr);
 }
 
-TCppType_t GetIntegerTypeFromEnumType(TCppType_t enum_type) {
+TypeRef GetIntegerTypeFromEnumType(ConstTypeRef enum_type) {
   INTEROP_TRACE(enum_type);
   if (!enum_type)
     return INTEROP_RETURN(nullptr);
 
-  QualType QT = QualType::getFromOpaquePtr(enum_type);
-  if (auto* ET = QT->getAs<EnumType>())
+  QualType QT = QualType::getFromOpaquePtr(enum_type.data);
+  if (const auto* ET = QT->getAs<EnumType>())
     return INTEROP_RETURN(ET->getDecl()->getIntegerType().getAsOpaquePtr());
 
   return INTEROP_RETURN(nullptr);
 }
 
-std::vector<TCppScope_t> GetEnumConstants(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
+std::vector<DeclRef> GetEnumConstants(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
 
-  if (auto* ED = llvm::dyn_cast_or_null<clang::EnumDecl>(D)) {
-    std::vector<TCppScope_t> enum_constants;
+  if (const auto* ED = llvm::dyn_cast_or_null<clang::EnumDecl>(D)) {
+    std::vector<DeclRef> enum_constants;
     for (auto* ECD : ED->enumerators()) {
-      enum_constants.push_back((TCppScope_t)ECD);
+      enum_constants.push_back(ECD);
     }
 
     return INTEROP_RETURN(enum_constants);
   }
 
-  return INTEROP_RETURN(std::vector<TCppScope_t>{});
+  return INTEROP_RETURN(std::vector<DeclRef>{});
 }
 
-TCppType_t GetEnumConstantType(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  if (!handle)
+TypeRef GetEnumConstantType(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  if (!DRef)
     return INTEROP_RETURN(nullptr);
 
-  auto* D = (clang::Decl*)handle;
-  if (auto* ECD = llvm::dyn_cast<clang::EnumConstantDecl>(D))
+  const auto* D = unwrap<clang::Decl>(DRef);
+  if (const auto* ECD = llvm::dyn_cast<clang::EnumConstantDecl>(D))
     return INTEROP_RETURN(ECD->getType().getAsOpaquePtr());
 
   return INTEROP_RETURN(nullptr);
 }
 
-TCppIndex_t GetEnumConstantValue(TCppScope_t handle) {
-  INTEROP_TRACE(handle);
-  auto* D = (clang::Decl*)handle;
-  if (auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
+size_t GetEnumConstantValue(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
+  if (const auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
     return INTEROP_RETURN(Val.getExtValue());
   }
   return INTEROP_RETURN(0);
 }
 
-size_t GetSizeOfType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+size_t GetSizeOfType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (const TagType* TT = QT->getAs<TagType>())
     return INTEROP_RETURN(SizeOf(TT->getDecl()));
 
-  // FIXME: Can we get the size of a non-tag type?
+  // FIXME: Can we get the size of a non-tag TyRef?
   auto TI = getSema().getASTContext().getTypeInfo(QT);
   size_t TypeSize = TI.Width;
   return INTEROP_RETURN(TypeSize / 8);
 }
 
-bool IsVariable(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  auto* D = (clang::Decl*)scope;
+bool IsVariable(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::VarDecl>(D));
 }
 
-std::string GetName(TCppType_t klass) {
-  INTEROP_TRACE(klass);
-  auto* D = (clang::NamedDecl*)klass;
+std::string GetName(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::NamedDecl>(DRef);
 
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
     return INTEROP_RETURN("");
   }
 
-  if (auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
+  if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
     return INTEROP_RETURN(ND->getNameAsString());
   }
 
   return INTEROP_RETURN("<unnamed>");
 }
 
-static std::string GetCompleteNameImpl(TCppType_t klass, bool qualified) {
+static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
   auto& C = getSema().getASTContext();
-  auto* D = (Decl*)klass;
+  const auto* D = unwrap<Decl>(DRef);
 
-  if (auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
+  if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
     PrintingPolicy Policy = C.getPrintingPolicy();
     Policy.SuppressUnwrittenScope = true;
     if (qualified) {
@@ -925,13 +898,13 @@ static std::string GetCompleteNameImpl(TCppType_t klass, bool qualified) {
       Policy.AlwaysIncludeTypeForTemplateArgument = true;
     }
 
-    if (auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
+    if (const auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
       std::string type_name;
-      QualType QT = C.Get_Tag_Type(TD);
+      QualType QT = compat::GetTypeFromDecl(TD);
       QT.getAsStringInternal(type_name, Policy);
       return type_name;
     }
-    if (auto* FD = llvm::dyn_cast<FunctionDecl>(ND)) {
+    if (const auto* FD = llvm::dyn_cast<FunctionDecl>(ND)) {
       std::string func_name;
       llvm::raw_string_ostream name_stream(func_name);
       FD->getNameForDiagnostic(name_stream, Policy, qualified);
@@ -949,15 +922,15 @@ static std::string GetCompleteNameImpl(TCppType_t klass, bool qualified) {
   return "<unnamed>";
 }
 
-std::string GetCompleteName(TCppType_t klass) {
-  INTEROP_TRACE(klass);
-  return INTEROP_RETURN(GetCompleteNameImpl(klass, /*qualified=*/false));
+std::string GetCompleteName(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  return INTEROP_RETURN(GetCompleteNameImpl(DRef, /*qualified=*/false));
 }
 
-std::string GetQualifiedName(TCppType_t klass) {
-  INTEROP_TRACE(klass);
-  auto* D = (Decl*)klass;
-  if (auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
+std::string GetQualifiedName(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
+  if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
     return INTEROP_RETURN(ND->getQualifiedNameAsString());
   }
 
@@ -968,14 +941,14 @@ std::string GetQualifiedName(TCppType_t klass) {
   return INTEROP_RETURN("<unnamed>");
 }
 
-std::string GetQualifiedCompleteName(TCppType_t klass) {
-  INTEROP_TRACE(klass);
-  return INTEROP_RETURN(GetCompleteNameImpl(klass, /*qualified=*/true));
+std::string GetQualifiedCompleteName(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  return INTEROP_RETURN(GetCompleteNameImpl(DRef, /*qualified=*/true));
 }
 
-std::string GetDoxygenComment(TCppScope_t scope, bool strip_comment_markers) {
-  INTEROP_TRACE(scope, strip_comment_markers);
-  auto* D = static_cast<Decl*>(scope);
+std::string GetDoxygenComment(ConstDeclRef DRef, bool strip_comment_markers) {
+  INTEROP_TRACE(DRef, strip_comment_markers);
+  const auto* D = unwrap<Decl>(DRef);
   if (!D)
     return INTEROP_RETURN("");
 
@@ -996,22 +969,22 @@ std::string GetDoxygenComment(TCppScope_t scope, bool strip_comment_markers) {
   return INTEROP_RETURN(RC->getFormattedText(SM, C.getDiagnostics()));
 }
 
-std::vector<TCppScope_t> GetUsingNamespaces(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  auto* D = (clang::Decl*)scope;
+std::vector<DeclRef> GetUsingNamespaces(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
 
-  if (auto* DC = llvm::dyn_cast_or_null<clang::DeclContext>(D)) {
-    std::vector<TCppScope_t> namespaces;
+  if (const auto* DC = llvm::dyn_cast_or_null<clang::DeclContext>(D)) {
+    std::vector<DeclRef> namespaces;
     for (auto UD : DC->using_directives()) {
-      namespaces.push_back((TCppScope_t)UD->getNominatedNamespace());
+      namespaces.push_back(UD->getNominatedNamespace());
     }
     return INTEROP_RETURN(namespaces);
   }
 
-  return INTEROP_RETURN(std::vector<TCppScope_t>{});
+  return INTEROP_RETURN(std::vector<DeclRef>{});
 }
 
-TCppScope_t GetGlobalScope() {
+DeclRef GetGlobalScope() {
   INTEROP_TRACE();
   return INTEROP_RETURN(
       getSema().getASTContext().getTranslationUnitDecl()->getFirstDecl());
@@ -1030,32 +1003,36 @@ static Decl* GetScopeFromType(QualType QT) {
   return 0;
 }
 
-TCppScope_t GetScopeFromType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
-  return INTEROP_RETURN((TCppScope_t)GetScopeFromType(QT));
+DeclRef GetScopeFromType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
+  return INTEROP_RETURN(GetScopeFromType(QT));
 }
 
-static clang::Decl* GetUnderlyingScope(clang::Decl* D) {
-  if (auto* TND = dyn_cast_or_null<TypedefNameDecl>(D)) {
+static const clang::Decl* GetUnderlyingScopeImpl(const clang::Decl* D) {
+  if (const auto* TND = dyn_cast_or_null<TypedefNameDecl>(D)) {
     if (auto* Scope = GetScopeFromType(TND->getUnderlyingType()))
       D = Scope;
-  } else if (auto* USS = dyn_cast_or_null<UsingShadowDecl>(D)) {
-    if (auto* Scope = USS->getTargetDecl())
+  } else if (const auto* USS = dyn_cast_or_null<UsingShadowDecl>(D)) {
+    if (const auto* Scope = USS->getTargetDecl())
       D = Scope;
   }
 
   return D->getCanonicalDecl();
 }
 
-TCppScope_t GetUnderlyingScope(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  if (!scope)
+DeclRef GetUnderlyingScope(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  if (!DRef)
     return INTEROP_RETURN(nullptr);
-  return INTEROP_RETURN(GetUnderlyingScope((clang::Decl*)scope));
+  // Strip const at the API boundary: GetUnderlyingScope is a CONST
+  // operation but returns a mutable DRef (callers may use the result
+  // for further operations).
+  return INTEROP_RETURN(const_cast<clang::Decl*>(
+      GetUnderlyingScopeImpl(unwrap<clang::Decl>(DRef))));
 }
 
-TCppScope_t GetScope(const std::string& name, TCppScope_t parent) {
+DeclRef GetScope(const std::string& name, ConstDeclRef parent) {
   INTEROP_TRACE(name, parent);
   // FIXME: GetScope should be replaced by a general purpose lookup
   // and filter function. The function should be like GetNamed but
@@ -1064,7 +1041,7 @@ TCppScope_t GetScope(const std::string& name, TCppScope_t parent) {
   if (name == "")
     return INTEROP_RETURN(GetGlobalScope());
 
-  auto* ND = (NamedDecl*)GetNamed(name, parent);
+  auto* ND = unwrap<NamedDecl>(GetNamed(name, parent));
 
   if (!ND || ND == (NamedDecl*)-1)
     return INTEROP_RETURN(nullptr);
@@ -1072,17 +1049,17 @@ TCppScope_t GetScope(const std::string& name, TCppScope_t parent) {
   if (llvm::isa<NamespaceDecl>(ND) || llvm::isa<RecordDecl>(ND) ||
       llvm::isa<ClassTemplateDecl>(ND) || llvm::isa<TypedefNameDecl>(ND) ||
       llvm::isa<TypeAliasTemplateDecl>(ND) || llvm::isa<TypeAliasDecl>(ND))
-    return INTEROP_RETURN((TCppScope_t)(ND->getCanonicalDecl()));
+    return INTEROP_RETURN(ND->getCanonicalDecl());
 
   return INTEROP_RETURN(nullptr);
 }
 
-TCppScope_t GetScopeFromCompleteName(const std::string& name) {
+DeclRef GetScopeFromCompleteName(const std::string& name) {
   INTEROP_TRACE(name);
   std::string delim = "::";
   size_t start = 0;
   size_t end = name.find(delim);
-  TCppScope_t curr_scope = 0;
+  DeclRef curr_scope = nullptr;
   while (end != std::string::npos) {
     curr_scope = GetScope(name.substr(start, end - start), curr_scope);
     start = end + delim.length();
@@ -1113,7 +1090,7 @@ clang::Scope* BuildSyntheticScopeChain(clang::Sema& S, clang::DeclContext* DC) {
   return Mine;
 }
 
-// RAII: build a synthetic scope chain for `Within`, install it as
+// RAII: build a synthetic DRef chain for `Within`, install it as
 // Sema::CurScope, restore + delete on destruction. CppLookupName is
 // read-only on Scope/Sema state (only getParent/getEntity/
 // getLookupEntity/isDeclScope reads, plus a stack-local
@@ -1182,7 +1159,7 @@ clang::NamedDecl* LookupUnqualified(clang::Sema& S,
 }
 
 // Cheap probe: does any namespace from `DC` up to TU carry at least
-// one using-directive? Gates the synthetic-scope-chain build below so
+// one using-directive? Gates the synthetic-DRef-chain build below so
 // the common case (no using-directives anywhere on the path) doesn't
 // pay the heap-allocation tax.
 bool HasReachableUsingDirective(const clang::DeclContext* DC) {
@@ -1197,13 +1174,11 @@ bool HasReachableUsingDirective(const clang::DeclContext* DC) {
 }
 } // namespace
 
-TCppScope_t GetNamed(const std::string& name,
-                     TCppScope_t parent /*= nullptr*/) {
+DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   INTEROP_TRACE(name, parent);
   clang::DeclContext* Within = 0;
   if (parent) {
-    auto* D = (clang::Decl*)parent;
-    D = GetUnderlyingScope(D);
+    auto* D = unwrap<clang::Decl>(GetUnderlyingScope(parent));
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
 #ifdef CPPINTEROP_USE_CLING
@@ -1212,32 +1187,35 @@ TCppScope_t GetNamed(const std::string& name,
 #endif
   compat::SynthesizingCodeRAII RAII(&getInterp());
 
-  // Fast path: qualified lookup. Cheap, no scope-chain allocation, and
+  // Fast path: qualified lookup. Cheap, no DRef-chain allocation, and
   // resolves every name not brought into `Within` via a using-directive.
   // Lookup::Named falls back to LookupName(R, TUScope) when Within is
   // null, so TU-level using-directives are already handled there.
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1)
-    return INTEROP_RETURN((TCppScope_t)(ND->getCanonicalDecl()));
+    return INTEROP_RETURN(ND->getCanonicalDecl());
 
   // Slow path: only when qualified lookup missed AND `Within` is a
   // namespace whose enclosing chain carries at least one using-directive
   // (the only reason qualified-vs-unqualified disagree at namespace
-  // scope per [basic.lookup.unqual] vs [basic.lookup.qual]).
+  // DRef per [basic.lookup.unqual] vs [basic.lookup.qual]).
   if (!Within || !llvm::isa<clang::NamespaceDecl>(Within) ||
       !HasReachableUsingDirective(Within))
     return INTEROP_RETURN(nullptr);
   clang::DeclarationName DName = &getSema().Context.Idents.get(name);
   ND = LookupUnqualified(getSema(), DName, Within);
   if (ND && ND != (clang::NamedDecl*)-1)
-    return INTEROP_RETURN((TCppScope_t)(ND->getCanonicalDecl()));
+    return INTEROP_RETURN(ND->getCanonicalDecl());
 
   return INTEROP_RETURN(nullptr);
 }
 
-TCppScope_t GetParentScope(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  auto* D = (clang::Decl*)scope;
+DeclRef GetParentScope(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  // const_cast: the returned DeclRef is a mutable DRef, so the caller may
+  // mutate the AST. Walking parents is logically const, but the return TyRef
+  // is the mutable DRef.
+  auto* D = const_cast<Decl*>(unwrap<clang::Decl>(DRef));
 
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
     return INTEROP_RETURN(nullptr);
@@ -1250,19 +1228,21 @@ TCppScope_t GetParentScope(TCppScope_t scope) {
   auto* P = clang::Decl::castFromDeclContext(ParentDC)->getCanonicalDecl();
 
   if (auto* TU = llvm::dyn_cast_or_null<TranslationUnitDecl>(P))
-    return INTEROP_RETURN((TCppScope_t)TU->getFirstDecl());
+    return INTEROP_RETURN(TU->getFirstDecl());
 
-  return INTEROP_RETURN((TCppScope_t)P);
+  return INTEROP_RETURN(P);
 }
 
-TCppIndex_t GetNumBases(TCppScope_t klass) {
-  INTEROP_TRACE(klass);
-  auto* D = (Decl*)klass;
+size_t GetNumBases(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<Decl>(DRef);
 
-  if (auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
+  if (const auto* CTSD =
+          llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
     if (!CTSD->hasDefinition())
-      compat::InstantiateClassTemplateSpecialization(getInterp(), CTSD);
-  if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+      compat::InstantiateClassTemplateSpecialization(
+          getInterp(), const_cast<ClassTemplateSpecializationDecl*>(CTSD));
+  if (const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     if (CXXRD->hasDefinition())
       return INTEROP_RETURN(CXXRD->getNumBases());
   }
@@ -1270,23 +1250,23 @@ TCppIndex_t GetNumBases(TCppScope_t klass) {
   return INTEROP_RETURN(0);
 }
 
-TCppScope_t GetBaseClass(TCppScope_t klass, TCppIndex_t ibase) {
-  INTEROP_TRACE(klass, ibase);
-  auto* D = (Decl*)klass;
-  auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
+DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
+  INTEROP_TRACE(DRef, ibase);
+  const auto* D = unwrap<Decl>(DRef);
+  const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
   if (!CXXRD || CXXRD->getNumBases() <= ibase)
     return INTEROP_RETURN(nullptr);
 
-  auto type = (CXXRD->bases_begin() + ibase)->getType();
-  if (auto RT = type->getAs<RecordType>())
-    return INTEROP_RETURN((TCppScope_t)RT->getDecl()->getCanonicalDecl());
+  auto TyRef = (CXXRD->bases_begin() + ibase)->getType();
+  if (const auto* RT = TyRef->getAs<RecordType>())
+    return INTEROP_RETURN(RT->getDecl()->getCanonicalDecl());
 
   return INTEROP_RETURN(nullptr);
 }
 
 // FIXME: Consider dropping this interface as it seems the same as
 // IsTypeDerivedFrom.
-bool IsSubclass(TCppScope_t derived, TCppScope_t base) {
+bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
   INTEROP_TRACE(derived, base);
   if (derived == base)
     return INTEROP_RETURN(true);
@@ -1294,14 +1274,14 @@ bool IsSubclass(TCppScope_t derived, TCppScope_t base) {
   if (!derived || !base)
     return INTEROP_RETURN(false);
 
-  auto* derived_D = (clang::Decl*)derived;
-  auto* base_D = (clang::Decl*)base;
+  const auto* derived_D = unwrap<clang::Decl>(derived);
+  const auto* base_D = unwrap<clang::Decl>(base);
 
   if (!isa<CXXRecordDecl>(derived_D) || !isa<CXXRecordDecl>(base_D))
     return INTEROP_RETURN(false);
 
-  auto Derived = cast<CXXRecordDecl>(derived_D);
-  auto Base = cast<CXXRecordDecl>(base_D);
+  const auto* Derived = cast<CXXRecordDecl>(derived_D);
+  const auto* Base = cast<CXXRecordDecl>(base_D);
   return INTEROP_RETURN(
       IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)));
 }
@@ -1354,19 +1334,19 @@ static unsigned ComputeBaseOffset(const ASTContext& Context,
   return NonVirtualOffset.getQuantity();
 }
 
-int64_t GetBaseClassOffset(TCppScope_t derived, TCppScope_t base) {
+int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base) {
   INTEROP_TRACE(derived, base);
   if (base == derived)
     return INTEROP_RETURN(0);
 
   assert(derived || base);
 
-  auto* DD = (Decl*)derived;
-  auto* BD = (Decl*)base;
+  const auto* DD = unwrap<Decl>(derived);
+  const auto* BD = unwrap<Decl>(base);
   if (!isa<CXXRecordDecl>(DD) || !isa<CXXRecordDecl>(BD))
     return INTEROP_RETURN(-1);
-  CXXRecordDecl* DCXXRD = cast<CXXRecordDecl>(DD);
-  CXXRecordDecl* BCXXRD = cast<CXXRecordDecl>(BD);
+  const auto* DCXXRD = cast<CXXRecordDecl>(DD);
+  const auto* BCXXRD = cast<CXXRecordDecl>(BD);
   // GCC's -Wmaybe-uninitialized false-positives here only under ASan:
   // -fsanitize=address keeps the SmallDenseMap's union storage live across
   // poison/unpoison calls and blocks the SROA pass that normally folds away
@@ -1390,22 +1370,31 @@ int64_t GetBaseClassOffset(TCppScope_t derived, TCppScope_t base) {
       ComputeBaseOffset(getSema().getASTContext(), DCXXRD, Paths.front()));
 }
 
-template <typename DeclType>
-static void GetClassDecls(TCppScope_t klass,
-                          std::vector<TCppFunction_t>& methods) {
-  if (!klass)
+template <typename DeclType, typename HandleType>
+static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
+  if (!DRef)
     return;
 
-  auto* D = (clang::Decl*)klass;
+  // Unwrap to mutable: ForceDeclarationOfImplicitMembers is a lazy-init
+  // operation on the AST, logically const for the caller.
+  Decl* D = const_cast<Decl*>(unwrap<clang::Decl>(DRef));
 
-  if (auto* TD = dyn_cast<TypedefNameDecl>(D))
-    D = GetScopeFromType(TD->getUnderlyingType());
+  if (auto* TD = dyn_cast<TypedefNameDecl>(D)) {
+    DeclRef Scope = GetScopeFromType(TD->getUnderlyingType());
+    D = unwrap<clang::Decl>(Scope);
+  }
 
   if (!D || !isa<CXXRecordDecl>(D))
     return;
 
   auto* CXXRD = dyn_cast<CXXRecordDecl>(D);
   compat::SynthesizingCodeRAII RAII(&getInterp());
+  if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(CXXRD)) {
+    QualType QT = compat::GetTypeFromDecl(CTSD);
+    if (!getSema().isCompleteType(CTSD->getLocation(), QT))
+      return; // Unsuccesfull instantiaton
+  }
+
   if (CXXRD->hasDefinition())
     CXXRD = CXXRD->getDefinition();
   getSema().ForceDeclarationOfImplicitMembers(CXXRD);
@@ -1439,47 +1428,47 @@ static void GetClassDecls(TCppScope_t klass,
   }
 }
 
-void GetClassMethods(TCppScope_t klass, std::vector<TCppFunction_t>& methods) {
-  INTEROP_TRACE(klass, INTEROP_OUT(methods));
-  GetClassDecls<CXXMethodDecl>(klass, methods);
+void GetClassMethods(ConstDeclRef DRef, std::vector<FuncRef>& methods) {
+  INTEROP_TRACE(DRef, INTEROP_OUT(methods));
+  GetClassDecls<CXXMethodDecl>(DRef, methods);
   return INTEROP_VOID_RETURN();
 }
 
-void GetFunctionTemplatedDecls(TCppScope_t klass,
-                               std::vector<TCppFunction_t>& methods) {
-  INTEROP_TRACE(klass, INTEROP_OUT(methods));
-  GetClassDecls<FunctionTemplateDecl>(klass, methods);
+void GetFunctionTemplatedDecls(ConstDeclRef DRef,
+                               std::vector<FuncRef>& methods) {
+  INTEROP_TRACE(DRef, INTEROP_OUT(methods));
+  GetClassDecls<FunctionTemplateDecl>(DRef, methods);
   return INTEROP_VOID_RETURN();
 }
 
-bool HasDefaultConstructor(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  auto* D = (clang::Decl*)scope;
+bool HasDefaultConstructor(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
 
-  if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D))
+  if (const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D))
     return INTEROP_RETURN(CXXRD->hasDefaultConstructor());
 
   return INTEROP_RETURN(false);
 }
 
-TCppFunction_t GetDefaultConstructor(compat::Interpreter& interp,
-                                     TCppScope_t scope) {
-  if (!HasDefaultConstructor(scope))
+FuncRef GetDefaultConstructor(compat::Interpreter& interp, DeclRef DRef) {
+  if (!HasDefaultConstructor(DRef))
     return nullptr;
 
-  auto* CXXRD = (clang::CXXRecordDecl*)scope;
+  auto* CXXRD = unwrap<clang::CXXRecordDecl>(DRef);
   compat::SynthesizingCodeRAII RAII(&getInterp());
   return interp.getCI()->getSema().LookupDefaultConstructor(CXXRD);
 }
 
-TCppFunction_t GetDefaultConstructor(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  return INTEROP_RETURN(GetDefaultConstructor(getInterp(), scope));
+FuncRef GetDefaultConstructor(DeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  return INTEROP_RETURN(GetDefaultConstructor(getInterp(), DRef));
 }
 
-TCppFunction_t GetDestructor(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  auto* D = (clang::Decl*)scope;
+FuncRef GetDestructor(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  // ForceDeclarationOfImplicitMembers is a lazy-init operation.
+  auto* D = const_cast<Decl*>(unwrap<clang::Decl>(DRef));
 
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     getSema().ForceDeclarationOfImplicitMembers(CXXRD);
@@ -1489,27 +1478,53 @@ TCppFunction_t GetDestructor(TCppScope_t scope) {
   return INTEROP_RETURN(nullptr);
 }
 
-void DumpScope(TCppScope_t scope) {
-  INTEROP_TRACE(scope);
-  auto* D = (clang::Decl*)scope;
+void DumpScope(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  const auto* D = unwrap<clang::Decl>(DRef);
   D->dump();
   return INTEROP_VOID_RETURN();
 }
 
-std::vector<TCppFunction_t> GetFunctionsUsingName(TCppScope_t scope,
-                                                  const std::string& name) {
-  INTEROP_TRACE(scope, name);
-  auto* D = (Decl*)scope;
+// Map an operator spelling (e.g. "operator==") to the CXXOperatorName its
+// overloads are stored under, since identifier lookup never matches them.
+// Returns an empty DeclarationName for non-operators (e.g. "operators_count"),
+// leaving the caller on the identifier path. We can't use LookupOperatorName
+// for this: it ignores class members, which this entry point must also find.
+static DeclarationName getCXXOperatorDeclName(ASTContext& Ctx,
+                                              llvm::StringRef name) {
+  static constexpr llvm::StringRef OperatorPrefix("operator");
+  if (!name.consume_front(OperatorPrefix) || name.empty() ||
+      clang::isAsciiIdentifierContinue(
+          static_cast<unsigned char>(name.front())))
+    return DeclarationName();
 
-  if (!scope || name.empty())
-    return INTEROP_RETURN(std::vector<TCppFunction_t>{});
+  llvm::StringRef Spelling = name.trim();
+#define OVERLOADED_OPERATOR(OpName, OpSpelling, Token, Unary, Binary,          \
+                            MemberOnly)                                        \
+  if (Spelling == (OpSpelling))                                                \
+    return Ctx.DeclarationNames.getCXXOperatorName(clang::OO_##OpName);
+#include "clang/Basic/OperatorKinds.def"
+#undef OVERLOADED_OPERATOR
+  return DeclarationName();
+}
 
-  D = GetUnderlyingScope(D);
+std::vector<FuncRef> GetFunctionsUsingName(ConstDeclRef DRef,
+                                           const std::string& name) {
+  INTEROP_TRACE(DRef, name);
 
-  std::vector<TCppFunction_t> funcs;
-  llvm::StringRef Name(name);
+  if (!DRef || name.empty())
+    return INTEROP_RETURN(std::vector<FuncRef>{});
+
+  const auto* D = unwrap<Decl>(GetUnderlyingScope(DRef));
+
+  std::vector<FuncRef> funcs;
   auto& S = getSema();
-  DeclarationName DName = &getASTContext().Idents.get(name);
+  auto& Ctx = getASTContext();
+
+  DeclarationName DName = getCXXOperatorDeclName(Ctx, name);
+  if (!DName)
+    DName = &Ctx.Idents.get(name);
+
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
 
@@ -1520,52 +1535,59 @@ std::vector<TCppFunction_t> GetFunctionsUsingName(TCppScope_t scope,
 
   R.resolveKind();
 
-  for (auto* Found : R)
+  for (auto* Found : R) {
     if (llvm::isa<FunctionDecl>(Found))
       funcs.push_back(Found);
+    else if (auto* USD = llvm::dyn_cast<UsingShadowDecl>(Found)) {
+      if (auto* FTD = llvm::dyn_cast<FunctionDecl>(USD->getTargetDecl()))
+        funcs.push_back(FTD);
+    }
+  }
 
   return INTEROP_RETURN(funcs);
 }
 
-TCppType_t GetFunctionReturnType(TCppFunction_t func) {
+TypeRef GetFunctionReturnType(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  auto* D = (clang::Decl*)func;
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D)) {
+  const auto* D = unwrap<clang::Decl>(func);
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D)) {
     QualType Type = FD->getReturnType();
     if (Type->isUndeducedAutoType()) {
       bool needInstantiation = false;
       if (IsTemplatedFunction(FD) && !FD->isDefined())
         needInstantiation = true;
-      if (auto* MD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
+      if (const auto* MD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
         if (IsTemplateSpecialization(MD->getParent()))
           needInstantiation = true;
       }
 
       if (needInstantiation) {
-        InstantiateFunctionDefinition(FD);
+        // Lazy AST instantiation — logically const for the caller.
+        InstantiateFunctionDefinition(
+            const_cast<Decl*>(static_cast<const Decl*>(FD)));
       }
       Type = FD->getReturnType();
     }
     return INTEROP_RETURN(Type.getAsOpaquePtr());
   }
 
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
     return INTEROP_RETURN(
         (FD->getTemplatedDecl())->getReturnType().getAsOpaquePtr());
 
   return INTEROP_RETURN(nullptr);
 }
 
-bool IsFunctionProtoType(TCppType_t typ) {
-  INTEROP_TRACE(typ);
-  QualType QT = QualType::getFromOpaquePtr(typ);
+bool IsFunctionProtoType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   const auto* T = QT.getTypePtr();
   return llvm::isa_and_nonnull<clang::FunctionProtoType>(T);
 }
 
-void GetFnTypeSignature(TCppType_t fn_type, std::vector<TCppType_t>& sig) {
+void GetFnTypeSignature(ConstTypeRef fn_type, std::vector<TypeRef>& sig) {
   INTEROP_TRACE(fn_type, INTEROP_OUT(sig));
-  QualType QT = QualType::getFromOpaquePtr(fn_type);
+  QualType QT = QualType::getFromOpaquePtr(fn_type.data);
   const auto* FPT = QT->getAs<clang::FunctionProtoType>();
   if (!FPT)
     return INTEROP_VOID_RETURN();
@@ -1575,37 +1597,46 @@ void GetFnTypeSignature(TCppType_t fn_type, std::vector<TCppType_t>& sig) {
   return INTEROP_VOID_RETURN();
 }
 
-TCppIndex_t GetFunctionNumArgs(TCppFunction_t func) {
+// A C++23 explicit object parameter (the `this Self self` of a "deducing this"
+// member function) is a real ParmVarDecl, but it binds to the object the method
+// is invoked on rather than being callee-supplied. Clang's getNumParams() /
+// getMinRequiredArguments() count it; the *NonObject* / *Explicit* variants
+// exclude it, which is what callers introspecting the argument list want.
+size_t GetFunctionNumArgs(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  auto* D = (clang::Decl*)func;
-  if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
-    return INTEROP_RETURN(FD->getNumParams());
+  const auto* D = unwrap<clang::Decl>(func);
+  if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
+    return INTEROP_RETURN(FD->getNumNonObjectParams());
 
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
-    return INTEROP_RETURN((FD->getTemplatedDecl())->getNumParams());
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    return INTEROP_RETURN(FD->getTemplatedDecl()->getNumNonObjectParams());
 
   return INTEROP_RETURN(0);
 }
 
-TCppIndex_t GetFunctionRequiredArgs(TCppConstFunction_t func) {
+size_t GetFunctionRequiredArgs(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  const auto* D = static_cast<const clang::Decl*>(func);
-  if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
-    return INTEROP_RETURN(FD->getMinRequiredArguments());
+  const auto* D = unwrap<clang::Decl>(func);
+  if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
+    return INTEROP_RETURN(FD->getMinRequiredExplicitArguments());
 
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
-    return INTEROP_RETURN((FD->getTemplatedDecl())->getMinRequiredArguments());
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    return INTEROP_RETURN(
+        FD->getTemplatedDecl()->getMinRequiredExplicitArguments());
 
   return INTEROP_RETURN(0);
 }
 
-TCppType_t GetFunctionArgType(TCppFunction_t func, TCppIndex_t iarg) {
+TypeRef GetFunctionArgType(ConstFuncRef func, size_t iarg) {
   INTEROP_TRACE(func, iarg);
-  auto* D = (clang::Decl*)func;
+  const auto* D = unwrap<clang::Decl>(func);
 
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D)) {
-    if (iarg < FD->getNumParams()) {
-      auto* PVD = FD->getParamDecl(iarg);
+  if (const auto* FTD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D)) {
+    if (iarg < FD->getNumNonObjectParams()) {
+      const auto* PVD = FD->getNonObjectParameter(iarg);
       return INTEROP_RETURN(PVD->getOriginalType().getAsOpaquePtr());
     }
   }
@@ -1613,17 +1644,23 @@ TCppType_t GetFunctionArgType(TCppFunction_t func, TCppIndex_t iarg) {
   return INTEROP_RETURN(nullptr);
 }
 
-std::string GetFunctionSignature(TCppFunction_t func) {
+bool IsTemplateParmType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  clang::QualType QT = clang::QualType::getFromOpaquePtr(TyRef.data);
+  return INTEROP_RETURN(QT->isTemplateTypeParmType());
+}
+
+std::string GetFunctionSignature(ConstFuncRef func) {
   INTEROP_TRACE(func);
   if (!func)
     return INTEROP_RETURN("<unknown>");
 
-  auto* D = (clang::Decl*)func;
-  clang::FunctionDecl* FD;
+  const auto* D = unwrap<clang::Decl>(func);
+  const clang::FunctionDecl* FD;
 
   if (llvm::dyn_cast<FunctionDecl>(D))
     FD = llvm::dyn_cast<FunctionDecl>(D);
-  else if (auto* FTD = llvm::dyn_cast<clang::FunctionTemplateDecl>(D))
+  else if (const auto* FTD = llvm::dyn_cast<clang::FunctionTemplateDecl>(D))
     FD = FTD->getTemplatedDecl();
   else
     return INTEROP_RETURN("<unknown>");
@@ -1643,12 +1680,12 @@ std::string GetFunctionSignature(TCppFunction_t func) {
 // Internal functions that are not needed outside the library are
 // encompassed in an anonymous namespace as follows.
 namespace {
-bool IsTemplatedFunction(Decl* D) {
+bool IsTemplatedFunction(const Decl* D) {
   return llvm::isa_and_nonnull<FunctionTemplateDecl>(D);
 }
 
-bool IsTemplateInstantiationOrSpecialization(Decl* D) {
-  if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
+bool IsTemplateInstantiationOrSpecialization(const Decl* D) {
+  if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
     auto TK = FD->getTemplatedKind();
     return TK ==
                FunctionDecl::TemplatedKind::TK_FunctionTemplateSpecialization ||
@@ -1661,16 +1698,15 @@ bool IsTemplateInstantiationOrSpecialization(Decl* D) {
 }
 } // namespace
 
-bool IsFunctionDeleted(TCppConstFunction_t function) {
+bool IsFunctionDeleted(ConstFuncRef function) {
   INTEROP_TRACE(function);
-  const auto* FD =
-      cast<const FunctionDecl>(static_cast<const clang::Decl*>(function));
+  const auto* FD = cast<FunctionDecl>(unwrap<clang::Decl>(function));
   return INTEROP_RETURN(FD->isDeleted());
 }
 
-bool IsTemplatedFunction(TCppFunction_t func) {
+bool IsTemplatedFunction(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  auto* D = (Decl*)func;
+  const auto* D = unwrap<Decl>(func);
   return INTEROP_RETURN(IsTemplatedFunction(D) ||
                         IsTemplateInstantiationOrSpecialization(D));
 }
@@ -1678,11 +1714,11 @@ bool IsTemplatedFunction(TCppFunction_t func) {
 // FIXME: This lookup is broken, and should no longer be used in favour of
 // `GetClassTemplatedMethods` If the candidate set returned is =1, that means
 // the template function exists and >1 means overloads
-bool ExistsFunctionTemplate(const std::string& name, TCppScope_t parent) {
+bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
   INTEROP_TRACE(name, parent);
-  DeclContext* Within = 0;
+  const DeclContext* Within = nullptr;
   if (parent) {
-    auto* D = (Decl*)parent;
+    const auto* D = unwrap<Decl>(parent);
     Within = llvm::dyn_cast<DeclContext>(D);
   }
 
@@ -1700,40 +1736,41 @@ bool ExistsFunctionTemplate(const std::string& name, TCppScope_t parent) {
 }
 
 // Looks up all constructors in the current DeclContext
-void LookupConstructors(const std::string& name, TCppScope_t parent,
-                        std::vector<TCppFunction_t>& funcs) {
+void LookupConstructors(const std::string& name, ConstDeclRef parent,
+                        std::vector<FuncRef>& funcs) {
   INTEROP_TRACE(name, parent, INTEROP_OUT(funcs));
-  auto* D = (Decl*)parent;
+  // ForceDeclarationOfImplicitMembers / LookupConstructors are lazy-init ops.
+  auto* D = const_cast<Decl*>(unwrap<Decl>(parent));
 
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     getSema().ForceDeclarationOfImplicitMembers(CXXRD);
     DeclContextLookupResult Result = getSema().LookupConstructors(CXXRD);
     // Obtaining all constructors when we intend to lookup a method under a
-    // scope can lead to crashes. We avoid that by accumulating constructors
+    // DRef can lead to crashes. We avoid that by accumulating constructors
     // only if the Decl matches the lookup name.
     for (auto* i : Result)
-      if (GetName(i) == name)
+      if (GetName(DeclRef(i)) == name)
         funcs.push_back(i);
   }
   return INTEROP_VOID_RETURN();
 }
 
-bool GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
-                              std::vector<TCppFunction_t>& funcs) {
+bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
+                              std::vector<FuncRef>& funcs) {
   INTEROP_TRACE(name, parent, INTEROP_OUT(funcs));
-  auto* D = (Decl*)parent;
+  const auto* D = unwrap<Decl>(parent);
   if (!D && name.empty())
     return INTEROP_RETURN(false);
 
   // Accumulate constructors
   LookupConstructors(name, parent, funcs);
   auto& S = getSema();
-  D = GetUnderlyingScope(D);
+  auto* DU = unwrap<Decl>(GetUnderlyingScope(parent));
   llvm::StringRef Name(name);
   DeclarationName DName = &getASTContext().Idents.get(name);
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
-  auto* DC = clang::Decl::castToDeclContext(D);
+  auto* DC = clang::Decl::castToDeclContext(DU);
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
   if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
@@ -1746,9 +1783,15 @@ bool GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
   }
   // Loop over overload set
   else if (R.getResultKind() == clang_LookupResult_Found_Overloaded) {
-    for (auto* Found : R)
+    for (auto* Found : R) {
       if (IsTemplatedFunction(Found))
         funcs.push_back(Found);
+      else if (auto* USD = llvm::dyn_cast<UsingShadowDecl>(Found)) {
+        if (auto* FTD =
+                llvm::dyn_cast<FunctionTemplateDecl>(USD->getTargetDecl()))
+          funcs.push_back(FTD);
+      }
+    }
   }
 
   // TODO: Handle ambiguously found LookupResult
@@ -1762,8 +1805,8 @@ bool GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
 }
 
 // Adapted from inner workings of Sema::BuildCallExpr
-TCppFunction_t
-BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
+FuncRef
+BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
                           const std::vector<TemplateArgInfo>& explicit_types,
                           const std::vector<TemplateArgInfo>& arg_types) {
   INTEROP_TRACE(candidates, explicit_types, arg_types);
@@ -1804,7 +1847,7 @@ BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
   for (auto explicit_type : explicit_types) {
     QualType ArgTy = QualType::getFromOpaquePtr(explicit_type.m_Type);
     if (explicit_type.m_IntegralValue) {
-      // We have a non-type template parameter. Create an integral value from
+      // We have a non-TyRef template parameter. Create an integral value from
       // the string representation.
       auto Res = llvm::APSInt(explicit_type.m_IntegralValue);
       Res = Res.extOrTrunc(C.getIntWidth(ArgTy));
@@ -1819,28 +1862,46 @@ BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
     ExplicitTemplateArgs.addArgument(
         S.getTrivialTemplateArgumentLoc(TA, QualType(), SourceLocation()));
 
-  OverloadCandidateSet Overloads(
-      SourceLocation(), OverloadCandidateSet::CandidateSetKind::CSK_Normal);
+  // ensure valid point of instantiation, SFINAE trap keeps any failure soft
+  SourceLocation Loc = SourceLocation::getFromRawEncoding(1);
+  Sema::SFINAETrap Trap(S, /*ForValidityCheck=*/true);
 
-  for (void* i : candidates) {
-    Decl* D = static_cast<Decl*>(i);
+  OverloadCandidateSet Overloads(
+      Loc, OverloadCandidateSet::CandidateSetKind::CSK_Normal);
+
+  for (auto i : candidates) {
+    auto* D = const_cast<Decl*>(unwrap<Decl>(i));
     if (auto* FD = dyn_cast<FunctionDecl>(D)) {
       S.AddOverloadCandidate(FD, DeclAccessPair::make(FD, FD->getAccess()),
                              Args, Overloads);
     } else if (auto* FTD = dyn_cast<FunctionTemplateDecl>(D)) {
-      // AddTemplateOverloadCandidate is causing a memory leak
-      // It is a known bug at clang
-      // call stack: AddTemplateOverloadCandidate -> MakeDeductionFailureInfo
-      // source:
-      // https://github.com/llvm/llvm-project/blob/release/19.x/clang/lib/Sema/SemaOverload.cpp#L731-L756
-      S.AddTemplateOverloadCandidate(
-          FTD, DeclAccessPair::make(FTD, FTD->getAccess()),
-          &ExplicitTemplateArgs, Args, Overloads);
+      auto* MD = dyn_cast<CXXMethodDecl>(FTD->getTemplatedDecl());
+      if (MD && MD->isExplicitObjectMemberFunction()) {
+        // The explicit object parameter isn't in Args, so deduce it via the
+        // method-template path with a synthesized receiver of the record type.
+        CXXRecordDecl* RD = MD->getParent();
+        QualType ObjectType = compat::GetTypeFromDecl(RD);
+        OpaqueValueExpr ObjectExpr(SourceLocation::getFromRawEncoding(1),
+                                   ObjectType, ExprValueKind::VK_LValue);
+        S.AddMethodTemplateCandidate(
+            FTD, DeclAccessPair::make(FTD, FTD->getAccess()), RD,
+            &ExplicitTemplateArgs, ObjectType, ObjectExpr.Classify(C), Args,
+            Overloads);
+      } else {
+        // AddTemplateOverloadCandidate is causing a memory leak
+        // It is a known bug at clang
+        // call stack: AddTemplateOverloadCandidate -> MakeDeductionFailureInfo
+        // source:
+        // https://github.com/llvm/llvm-project/blob/release/19.x/clang/lib/Sema/SemaOverload.cpp#L731-L756
+        S.AddTemplateOverloadCandidate(
+            FTD, DeclAccessPair::make(FTD, FTD->getAccess()),
+            &ExplicitTemplateArgs, Args, Overloads);
+      }
     }
   }
 
   OverloadCandidateSet::iterator Best;
-  Overloads.BestViableFunction(S, SourceLocation(), Best);
+  Overloads.BestViableFunction(S, Loc, Best);
 
   FunctionDecl* Result = Best != Overloads.end() ? Best->Function : nullptr;
   delete[] Exprs;
@@ -1849,70 +1910,72 @@ BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
 
 // Gets the AccessSpecifier of the function and checks if it is equal to
 // the provided AccessSpecifier.
-bool CheckMethodAccess(TCppFunction_t method, AccessSpecifier AS) {
-  auto* D = (Decl*)method;
-  if (auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
+bool CheckMethodAccess(ConstFuncRef method, AccessSpecifier AS) {
+  const auto* D = unwrap<Decl>(method);
+  if (const auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return CXXMD->getAccess() == AS;
   }
 
   return false;
 }
 
-bool IsMethod(TCppConstFunction_t method) {
+bool IsMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  return INTEROP_RETURN(
-      dyn_cast_or_null<CXXMethodDecl>(static_cast<const clang::Decl*>(method)));
+  const auto* D = unwrap<clang::Decl>(method);
+  if (const auto* FTD = dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  return INTEROP_RETURN(dyn_cast_or_null<CXXMethodDecl>(D));
 }
 
-bool IsPublicMethod(TCppFunction_t method) {
+bool IsPublicMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
   return INTEROP_RETURN(CheckMethodAccess(method, AccessSpecifier::AS_public));
 }
 
-bool IsProtectedMethod(TCppFunction_t method) {
+bool IsProtectedMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
   return INTEROP_RETURN(
       CheckMethodAccess(method, AccessSpecifier::AS_protected));
 }
 
-bool IsPrivateMethod(TCppFunction_t method) {
+bool IsPrivateMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
   return INTEROP_RETURN(CheckMethodAccess(method, AccessSpecifier::AS_private));
 }
 
-bool IsConstructor(TCppConstFunction_t method) {
+bool IsConstructor(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = static_cast<const Decl*>(method);
+  const auto* D = unwrap<Decl>(method);
   if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
     return INTEROP_RETURN(IsConstructor(FTD->getTemplatedDecl()));
   return INTEROP_RETURN(llvm::isa_and_nonnull<CXXConstructorDecl>(D));
 }
 
-bool IsDestructor(TCppConstFunction_t method) {
+bool IsDestructor(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = static_cast<const Decl*>(method);
+  const auto* D = unwrap<Decl>(method);
   return INTEROP_RETURN(llvm::isa_and_nonnull<CXXDestructorDecl>(D));
 }
 
-bool IsStaticMethod(TCppConstFunction_t method) {
+bool IsStaticMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = static_cast<const Decl*>(method);
+  const auto* D = unwrap<Decl>(method);
   if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
     D = FTD->getTemplatedDecl();
 
-  if (auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
+  if (const auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return INTEROP_RETURN(CXXMD->isStatic());
   }
 
   return INTEROP_RETURN(false);
 }
 
-bool IsExplicit(TCppConstFunction_t method) {
+bool IsExplicit(ConstFuncRef method) {
   INTEROP_TRACE(method);
   if (!method)
     return INTEROP_RETURN(false);
 
-  const auto* D = static_cast<const Decl*>(method);
+  const auto* D = unwrap<Decl>(method);
 
   if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
     D = FTD->getTemplatedDecl();
@@ -1929,7 +1992,7 @@ bool IsExplicit(TCppConstFunction_t method) {
   return INTEROP_RETURN(false);
 }
 
-TCppFuncAddr_t GetFunctionAddress(const char* mangled_name) {
+void* GetFunctionAddress(const char* mangled_name) {
   INTEROP_TRACE(mangled_name);
   auto& I = getInterp();
   auto FDAorErr = compat::getSymbolAddress(I, mangled_name);
@@ -1941,7 +2004,7 @@ TCppFuncAddr_t GetFunctionAddress(const char* mangled_name) {
   return INTEROP_RETURN(nullptr);
 }
 
-static TCppFuncAddr_t GetFunctionAddress(const FunctionDecl* FD) {
+static void* GetFunctionAddress(const FunctionDecl* FD) {
   const auto get_mangled_name = [](const FunctionDecl* FD) {
     auto MangleCtxt = getASTContext().createMangleContext();
 
@@ -1967,9 +2030,9 @@ static TCppFuncAddr_t GetFunctionAddress(const FunctionDecl* FD) {
   return 0;
 }
 
-TCppFuncAddr_t GetFunctionAddress(TCppFunction_t method) {
+void* GetFunctionAddress(FuncRef method) {
   INTEROP_TRACE(method);
-  auto* D = static_cast<Decl*>(method);
+  auto* D = unwrap<Decl>(method);
   if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
     if ((IsTemplateInstantiationOrSpecialization(FD) ||
          FD->getTemplatedKind() == FunctionDecl::TK_MemberSpecialization) &&
@@ -1983,19 +2046,301 @@ TCppFuncAddr_t GetFunctionAddress(TCppFunction_t method) {
   return INTEROP_RETURN(nullptr);
 }
 
-bool IsVirtualMethod(TCppFunction_t method) {
+bool IsVirtualMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  auto* D = (Decl*)method;
-  if (auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
+  const auto* D = unwrap<Decl>(method);
+  if (const auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return INTEROP_RETURN(CXXMD->isVirtual());
   }
 
   return INTEROP_RETURN(false);
 }
 
-void GetDatamembers(TCppScope_t scope, std::vector<TCppScope_t>& datamembers) {
-  INTEROP_TRACE(scope, INTEROP_OUT(datamembers));
-  auto* D = (Decl*)scope;
+// Vtable slot index of a virtual method in the target ABI's layout, or -1
+// if the method is not virtual. Clang's VTableContext yields the right index
+// for both Itanium (first user virtual after the destructor pair) and
+// Microsoft (single deleting-dtor slot).
+static int virtualMethodSlot(ConstFuncRef method) {
+  const auto* MD = llvm::dyn_cast_or_null<CXXMethodDecl>(unwrap<Decl>(method));
+  if (!MD || !MD->isVirtual())
+    return -1;
+
+  ASTContext& C = getASTContext();
+  if (C.getTargetInfo().getCXXABI().isMicrosoft()) {
+    auto* VTC = llvm::cast<MicrosoftVTableContext>(C.getVTableContext());
+    return (int)VTC->getMethodVFTableLocation(GlobalDecl(MD)).Index;
+  }
+  auto* VTC = llvm::cast<ItaniumVTableContext>(C.getVTableContext());
+  return (int)VTC->getMethodVTableIndex(GlobalDecl(MD));
+}
+
+// Number of vtable slots from the address point onward for a polymorphic
+// class (the count applyVTableOverlay copies): destructor slots plus every
+// virtual. -1 if DRef is not a polymorphic class.
+static int vtableMethodSlotCount(ConstDeclRef DRef) {
+  const auto* RD = llvm::dyn_cast_or_null<CXXRecordDecl>(unwrap<Decl>(DRef));
+  if (RD)
+    RD = RD->getDefinition();
+  if (!RD || !RD->isPolymorphic())
+    return -1;
+
+  ASTContext& C = getASTContext();
+  if (C.getTargetInfo().getCXXABI().isMicrosoft()) {
+    auto* VTC = llvm::cast<MicrosoftVTableContext>(C.getVTableContext());
+    const VTableLayout& L = VTC->getVFTableLayout(RD, CharUnits::Zero());
+    return (int)L.vtable_components().size();
+  }
+  auto* VTC = llvm::cast<ItaniumVTableContext>(C.getVTableContext());
+  const VTableLayout& L = VTC->getVTableLayout(RD);
+  unsigned AddrPoint = L.getAddressPointIndices()[0];
+  return (int)(L.vtable_components().size() - AddrPoint);
+}
+
+// True if \c RD's vtable layout is beyond the single-vptr overlay model:
+//  * multiple polymorphic direct bases -> secondary-base subobjects have
+//    their own vptrs that the overlay does not touch, so dispatch through
+//    a pointer to such a subobject would silently hit the original method;
+//  * any virtual base -> the primary vtable has vbase-offset entries
+//    before the address point, and the virtual-base subobject carries a
+//    vtable-in-derived with virtual thunks that the overlay does not
+//    retarget. Returns true so MakeVTableOverlay can refuse instead of
+//    quietly mis-overlaying.
+static bool hasComplexVTableLayout(const CXXRecordDecl* RD) {
+  if (RD->getNumVBases() > 0)
+    return true;
+  unsigned polymorphic_direct_bases = 0;
+  for (const auto& B : RD->bases()) {
+    const auto* BD = B.getType()->getAsCXXRecordDecl();
+    if (!BD)
+      continue;
+    BD = BD->getDefinition();
+    if (BD && BD->isPolymorphic() && ++polymorphic_direct_bases > 1)
+      return true;
+  }
+  return false;
+}
+
+// ABI-only prefix size (excludes the hidden self-pointer slot CppInterOp
+// interposes for dtor-hook routing). Itanium has 2 slots (offset-to-top,
+// type_info); MSVC has 1 (complete-object-locator).
+#ifdef _WIN32
+constexpr int kABIPrefixSize = 1;
+#else
+constexpr int kABIPrefixSize = 2;
+#endif
+static_assert(detail::kVTableOverlayPrefixSize == kABIPrefixSize + 1,
+              "public prefix size must equal ABI prefix + 1 hidden slot");
+
+// Single locus for vptr reads/writes and slot arithmetic in this file;
+// the public header's VTableOverlayExtraSlot covers the symmetric pun
+// thunks need on the read side. The owned block layout is:
+//
+//   [ user extras (N) ] [ hidden self-ptr ] [ ABI prefix ] [ methods ]
+//                                          ^               ^
+//                            address_point - kVTableOverlayPrefixSize
+//                                                          address_point
+//
+// The wrapper at the deleting-dtor slot recovers its VTableOverlay from
+// the hidden self-ptr slot via a fixed-offset load from `self`'s vptr.
+struct VTableOverlay {
+  void** block;         // owned, freed in ~VTableOverlay
+  void** original_vptr; // restored on caller-driven teardown
+  void* inst;           // object whose vptr was replaced
+  std::size_t n_extra_prefix_slots;
+  bool dtor_fired = false; // wrapper started -- skip vptr restore
+  // Dtor-hook fields. orig_dtor stays null when the caller passed
+  // on_destroy = nullptr; the wrapper is then not installed at all.
+  void (*orig_dtor)(void*) = nullptr;
+  VTableOverlayDtorHook cleanup = nullptr;
+  void* cleanup_data = nullptr;
+
+  VTableOverlay(void** block, void** orig_vptr, void* inst,
+                std::size_t n_extra)
+      : block(block), original_vptr(orig_vptr), inst(inst),
+        n_extra_prefix_slots(n_extra) {
+    // Stash self-pointer in the hidden slot before publishing the vptr;
+    // the wrapper reads it at fire time via a fixed offset from vptr.
+    *hidden_slot() = this;
+    WriteVPtr(inst, address_point());
+  }
+  ~VTableOverlay() {
+    if (!dtor_fired)
+      WriteVPtr(inst, original_vptr);
+    delete[] block;
+  }
+  VTableOverlay(const VTableOverlay&) = delete;
+  VTableOverlay& operator=(const VTableOverlay&) = delete;
+
+  void** address_point() const {
+    return block + n_extra_prefix_slots + detail::kVTableOverlayPrefixSize;
+  }
+  VTableOverlay** hidden_slot() const {
+    return reinterpret_cast<VTableOverlay**>(block + n_extra_prefix_slots);
+  }
+
+  // reinterpret_cast between function and void* is only conditionally
+  // supported per [expr.reinterpret.cast]/6; memcpy is the well-defined
+  // alternative on every platform CppInterOp targets.
+  template <class To, class From> static To BitCastFn(From f) noexcept {
+    static_assert(sizeof(To) == sizeof(From));
+    To to;
+    std::memcpy(&to, &f, sizeof(to));
+    return to;
+  }
+
+  static void** ReadVPtr(void* inst) {
+    return *reinterpret_cast<void***>(inst);
+  }
+  static void WriteVPtr(void* inst, void** new_vptr) {
+    *reinterpret_cast<void***>(inst) = new_vptr;
+  }
+};
+
+// Wrapper installed in the deleting-dtor slot when MakeVTableOverlay was
+// called with a non-null on_destroy. Recovers the owning VTableOverlay
+// from `self`'s vptr (hidden-slot fixed-offset load) and runs the
+// callback BEFORE the original destructor: `self` is alive at that
+// point so the callback can inspect it, and after the original
+// deleting-destructor returns memory has been freed.
+extern "C" void cppinteropVTableOverlayDtorWrapper(void* self) {
+  void** vptr = VTableOverlay::ReadVPtr(self);
+  VTableOverlay* ov = *reinterpret_cast<VTableOverlay**>(
+      vptr - detail::kVTableOverlayPrefixSize);
+  // Snapshot orig_dtor before user code runs: a misbehaving callback
+  // that destroys the overlay must not strand the C++ destructor.
+  auto orig_dtor = ov->orig_dtor;
+  ov->dtor_fired = true;
+  if (ov->cleanup)
+    ov->cleanup(self, ov->cleanup_data);
+  orig_dtor(self);
+}
+
+// Minimum slot count a polymorphic class can have from its address point:
+// Itanium emits the destructor pair (D1 + D0) so the count is at least 2;
+// Microsoft emits a single deleting-dtor slot so the count is at least 1.
+// vtableMethodSlotCount returns -1 for non-polymorphic scopes.
+#ifdef _WIN32
+constexpr int kMinVTableMethodSlots = 1;
+#else
+constexpr int kMinVTableMethodSlots = 2;
+#endif
+
+// Reflection-free pointer surgery: copy inst's vtable, overwrite slots with
+// fns, install the copy and return a DRef owning it. The slot indices and
+// count are resolved from reflection by the caller (MakeVTableOverlay).
+// n_extra_prefix_slots prepends nullptr-initialized void* slots before the
+// ABI prefix; the caller stashes per-instance data there and thunks read it
+// via vptr[-(kPrefix + 1 + i)].
+static VTableOverlay* applyVTableOverlay(void* inst, int total_method_slots,
+                                         const int* slots, void* const* fns,
+                                         std::size_t n,
+                                         std::size_t n_extra_prefix_slots) {
+  if (!inst || total_method_slots < kMinVTableMethodSlots)
+    return nullptr;
+  for (std::size_t i = 0; i < n; ++i) {
+    if (slots[i] < 0 || slots[i] >= total_method_slots)
+      return nullptr;
+  }
+
+  // Total block size = N user extras + 1 hidden self-ptr + ABI prefix
+  // + total_method_slots. The published vtable's address point is at
+  // block + n_extra_prefix_slots + detail::kVTableOverlayPrefixSize.
+  constexpr int kPrefix = detail::kVTableOverlayPrefixSize;
+  const std::size_t total = n_extra_prefix_slots + kPrefix + total_method_slots;
+
+  void** orig_vptr = VTableOverlay::ReadVPtr(inst);
+  // Zero-init so user-extra slots are nullptr (callers will populate).
+  // The hidden slot at block[n_extra_prefix_slots] is filled by the
+  // VTableOverlay ctor below. The memcpy then copies the original ABI
+  // prefix + methods into the remaining region.
+  void** block = new void*[total]();
+  std::memcpy(block + n_extra_prefix_slots + 1, orig_vptr - kABIPrefixSize,
+              (kABIPrefixSize + total_method_slots) * sizeof(void*));
+
+  for (std::size_t i = 0; i < n; ++i)
+    block[n_extra_prefix_slots + kPrefix + slots[i]] = fns[i];
+
+  // Per-instance install: the new vptr is written into *this* object only.
+  // Other live and future instances of the same TyRef continue to use the
+  // class's original vtable; ~VTableOverlay restores `inst`'s vptr.
+  return new VTableOverlay(block, orig_vptr, inst, n_extra_prefix_slots);
+}
+
+// Itanium emits the destructor pair (D1, D0) at slots 0 and 1; the
+// deleting-dtor (D0) at slot 1 is the path operator-delete takes for
+// heap-allocated objects -- the relevant hook for cppyy / binding proxies
+// whose Python wrapper drop triggers `delete cppobj`. MSVC emits a single
+// deleting dtor at slot 0.
+#ifdef _WIN32
+constexpr int kDeletingDtorSlot = 0;
+#else
+constexpr int kDeletingDtorSlot = 1;
+#endif
+
+VTableOverlay*
+MakeVTableOverlay(void* inst, ConstDeclRef base, const ConstFuncRef* methods,
+                  void* const* overlay_fns, std::size_t n_overlays,
+                  std::size_t n_extra_prefix_slots,
+                  VTableOverlayDtorHook on_destroy, void* cleanup_data) {
+  INTEROP_TRACE(inst, base, methods, overlay_fns, n_overlays,
+                n_extra_prefix_slots, on_destroy, cleanup_data);
+  // Refuse layouts the single-primary-vptr overlay cannot fully express,
+  // so the caller cannot silently produce mis-dispatching objects. Must run
+  // before vtableMethodSlotCount: on MSVC, getVFTableLayout(RD, offset 0)
+  // asserts when a virtual-inheritance class has no VFTable at that offset.
+  if (!inst)
+    return INTEROP_RETURN(nullptr);
+  const auto* RD = llvm::dyn_cast_or_null<CXXRecordDecl>(unwrap<Decl>(base));
+  if (RD)
+    RD = RD->getDefinition();
+  if (!RD || !RD->isPolymorphic() || hasComplexVTableLayout(RD))
+    return INTEROP_RETURN(nullptr);
+
+  int total_method_slots = vtableMethodSlotCount(base);
+  if (total_method_slots < kMinVTableMethodSlots)
+    return INTEROP_RETURN(nullptr);
+
+  llvm::SmallVector<int, 8> slots;
+  slots.reserve(n_overlays);
+  for (std::size_t i = 0; i < n_overlays; ++i) {
+    int slot = virtualMethodSlot(methods[i]);
+    if (slot < 0)
+      return INTEROP_RETURN(nullptr);
+    slots.push_back(slot);
+  }
+  auto* ov = applyVTableOverlay(inst, total_method_slots, slots.data(),
+                                overlay_fns, n_overlays,
+                                n_extra_prefix_slots);
+  if (!ov)
+    return INTEROP_RETURN(nullptr);
+
+  // Optional dtor hook: capture the original D0 (already copied into
+  // the block), wire the hook fields on the overlay, then publish the
+  // wrapper at the deleting-dtor slot. Ordering matters -- the fields
+  // must be set before the wrapper is reachable, otherwise a concurrent
+  // destruction could fire the wrapper with stale state.
+  if (on_destroy) {
+    void** vptr = ov->address_point();
+    ov->orig_dtor =
+        VTableOverlay::BitCastFn<void (*)(void*)>(vptr[kDeletingDtorSlot]);
+    ov->cleanup = on_destroy;
+    ov->cleanup_data = cleanup_data;
+    vptr[kDeletingDtorSlot] =
+        VTableOverlay::BitCastFn<void*>(&cppinteropVTableOverlayDtorWrapper);
+  }
+
+  return INTEROP_RETURN(ov);
+}
+
+void DestroyVTableOverlay(VTableOverlay* overlay) {
+  INTEROP_TRACE(overlay);
+  delete overlay; // ~VTableOverlay restores vptr if dtor hasn't fired.
+  return INTEROP_VOID_RETURN();
+}
+
+void GetDatamembers(DeclRef DRef, std::vector<DeclRef>& datamembers) {
+  INTEROP_TRACE(DRef, INTEROP_OUT(datamembers));
+  auto* D = unwrap<Decl>(DRef);
 
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     getSema().ForceDeclarationOfImplicitMembers(CXXRD);
@@ -2024,7 +2369,7 @@ void GetDatamembers(TCppScope_t scope, std::vector<TCppScope_t>& datamembers) {
             }
           }
         }
-        datamembers.push_back((TCppScope_t)D);
+        datamembers.push_back(D);
 
       } else if (auto* USD = llvm::dyn_cast<UsingShadowDecl>(D)) {
         if (llvm::isa<FieldDecl>(USD->getTargetDecl()))
@@ -2036,21 +2381,21 @@ void GetDatamembers(TCppScope_t scope, std::vector<TCppScope_t>& datamembers) {
   return INTEROP_VOID_RETURN();
 }
 
-void GetStaticDatamembers(TCppScope_t scope,
-                          std::vector<TCppScope_t>& datamembers) {
-  INTEROP_TRACE(scope, INTEROP_OUT(datamembers));
-  GetClassDecls<VarDecl>(scope, datamembers);
+void GetStaticDatamembers(ConstDeclRef DRef,
+                          std::vector<DeclRef>& datamembers) {
+  INTEROP_TRACE(DRef, INTEROP_OUT(datamembers));
+  GetClassDecls<VarDecl>(DRef, datamembers);
   return INTEROP_VOID_RETURN();
 }
 
-void GetEnumConstantDatamembers(TCppScope_t scope,
-                                std::vector<TCppScope_t>& datamembers,
+void GetEnumConstantDatamembers(ConstDeclRef DRef,
+                                std::vector<DeclRef>& datamembers,
                                 bool include_enum_class) {
-  INTEROP_TRACE(scope, INTEROP_OUT(datamembers), include_enum_class);
-  std::vector<TCppScope_t> EDs;
-  GetClassDecls<EnumDecl>(scope, EDs);
-  for (TCppScope_t i : EDs) {
-    auto* ED = static_cast<EnumDecl*>(i);
+  INTEROP_TRACE(DRef, INTEROP_OUT(datamembers), include_enum_class);
+  std::vector<DeclRef> EDs;
+  GetClassDecls<EnumDecl>(DRef, EDs);
+  for (DeclRef i : EDs) {
+    auto* ED = unwrap<EnumDecl>(i);
 
     bool is_class_tagged = ED->isScopedUsingClassTag();
     if (is_class_tagged && !include_enum_class)
@@ -2062,51 +2407,51 @@ void GetEnumConstantDatamembers(TCppScope_t scope,
   return INTEROP_VOID_RETURN();
 }
 
-TCppScope_t LookupDatamember(const std::string& name, TCppScope_t parent) {
+DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
   INTEROP_TRACE(name, parent);
-  clang::DeclContext* Within = 0;
+  const clang::DeclContext* Within = nullptr;
   if (parent) {
-    auto* D = (clang::Decl*)parent;
+    const auto* D = unwrap<clang::Decl>(parent);
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
 
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     if (llvm::isa_and_nonnull<clang::FieldDecl>(ND)) {
-      return INTEROP_RETURN((TCppScope_t)ND);
+      return INTEROP_RETURN(ND);
     }
   }
 
   return INTEROP_RETURN(nullptr);
 }
 
-bool IsLambdaClass(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsLambdaClass(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (auto* CXXRD = QT->getAsCXXRecordDecl()) {
     return INTEROP_RETURN(CXXRD->isLambda());
   }
   return INTEROP_RETURN(false);
 }
 
-TCppType_t GetVariableType(TCppScope_t var) {
+TypeRef GetVariableType(ConstDeclRef var) {
   INTEROP_TRACE(var);
-  auto* D = static_cast<Decl*>(var);
+  const auto* D = unwrap<Decl>(var);
 
-  if (auto DD = llvm::dyn_cast_or_null<DeclaratorDecl>(D)) {
+  if (const auto* DD = llvm::dyn_cast_or_null<DeclaratorDecl>(D)) {
     QualType QT = DD->getType();
 
-    // Check if the type is a typedef type
+    // Check if the TyRef is a typedef TyRef
     if (QT->isTypedefNameType()) {
       return INTEROP_RETURN(QT.getAsOpaquePtr());
     }
 
-    // Else, return the canonical type
+    // Else, return the canonical TyRef
     QT = QT.getCanonicalType();
     return INTEROP_RETURN(QT.getAsOpaquePtr());
   }
 
-  if (auto* ECD = llvm::dyn_cast_or_null<EnumConstantDecl>(D))
+  if (const auto* ECD = llvm::dyn_cast_or_null<EnumConstantDecl>(D))
     return INTEROP_RETURN(ECD->getType().getAsOpaquePtr());
 
   return INTEROP_RETURN(nullptr);
@@ -2153,7 +2498,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
         size_t num_bases = GetNumBases(RD);
         bool flag = false;
         for (size_t i = 0; i < num_bases; i++) {
-          auto* CRD = static_cast<CXXRecordDecl*>(GetBaseClass(RD, i));
+          auto* CRD = unwrap<CXXRecordDecl>(GetBaseClass(RD, i));
           direction[CRD] = RD;
           if (CRD == FieldParentRecordDecl) {
             flag = true;
@@ -2221,38 +2566,40 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
   return 0;
 }
 
-intptr_t GetVariableOffset(TCppScope_t var, TCppScope_t parent) {
+intptr_t GetVariableOffset(ConstDeclRef var, ConstDeclRef parent) {
   INTEROP_TRACE(var, parent);
-  auto* D = static_cast<Decl*>(var);
-  auto* RD = llvm::dyn_cast_or_null<CXXRecordDecl>(static_cast<Decl*>(parent));
+  // The internal overload may trigger JIT materialization — logically const.
+  auto* D = const_cast<Decl*>(unwrap<Decl>(var));
+  auto* RD = const_cast<CXXRecordDecl*>(
+      llvm::dyn_cast_or_null<CXXRecordDecl>(unwrap<Decl>(parent)));
   return INTEROP_RETURN(GetVariableOffset(getInterp(), D, RD));
 }
 
 // Check if the Access Specifier of the variable matches the provided value.
-bool CheckVariableAccess(TCppScope_t var, AccessSpecifier AS) {
-  auto* D = (Decl*)var;
+bool CheckVariableAccess(ConstDeclRef var, AccessSpecifier AS) {
+  const auto* D = unwrap<Decl>(var);
   return D->getAccess() == AS;
 }
 
-bool IsPublicVariable(TCppScope_t var) {
+bool IsPublicVariable(ConstDeclRef var) {
   INTEROP_TRACE(var);
   return INTEROP_RETURN(CheckVariableAccess(var, AccessSpecifier::AS_public));
 }
 
-bool IsProtectedVariable(TCppScope_t var) {
+bool IsProtectedVariable(ConstDeclRef var) {
   INTEROP_TRACE(var);
   return INTEROP_RETURN(
       CheckVariableAccess(var, AccessSpecifier::AS_protected));
 }
 
-bool IsPrivateVariable(TCppScope_t var) {
+bool IsPrivateVariable(ConstDeclRef var) {
   INTEROP_TRACE(var);
   return INTEROP_RETURN(CheckVariableAccess(var, AccessSpecifier::AS_private));
 }
 
-bool IsStaticVariable(TCppScope_t var) {
+bool IsStaticVariable(ConstDeclRef var) {
   INTEROP_TRACE(var);
-  auto* D = (Decl*)var;
+  const auto* D = unwrap<Decl>(var);
   if (llvm::isa_and_nonnull<VarDecl>(D)) {
     return INTEROP_RETURN(true);
   }
@@ -2260,26 +2607,26 @@ bool IsStaticVariable(TCppScope_t var) {
   return INTEROP_RETURN(false);
 }
 
-bool IsConstVariable(TCppScope_t var) {
+bool IsConstVariable(ConstDeclRef var) {
   INTEROP_TRACE(var);
-  auto* D = (clang::Decl*)var;
+  const auto* D = unwrap<clang::Decl>(var);
 
-  if (auto* VD = llvm::dyn_cast_or_null<ValueDecl>(D)) {
+  if (const auto* VD = llvm::dyn_cast_or_null<ValueDecl>(D)) {
     return INTEROP_RETURN(VD->getType().isConstQualified());
   }
 
   return INTEROP_RETURN(false);
 }
 
-bool IsRecordType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsRecordType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->isRecordType());
 }
 
-bool IsPODType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsPODType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
 
   if (QT.isNull())
     return INTEROP_RETURN(false);
@@ -2287,11 +2634,11 @@ bool IsPODType(TCppType_t type) {
   return INTEROP_RETURN(QT.isPODType(getASTContext()));
 }
 
-bool IsIntegerType(TCppType_t type, Signedness* s) {
-  INTEROP_TRACE(type, s);
-  if (!type)
+bool IsIntegerType(ConstTypeRef TyRef, Signedness* s) {
+  INTEROP_TRACE(TyRef, s);
+  if (!TyRef)
     return INTEROP_RETURN(false);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (!QT->hasIntegerRepresentation())
     return INTEROP_RETURN(false);
   if (s) {
@@ -2301,54 +2648,54 @@ bool IsIntegerType(TCppType_t type, Signedness* s) {
   return INTEROP_RETURN(true);
 }
 
-bool IsFloatingType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  if (!type)
+bool IsFloatingType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  if (!TyRef)
     return INTEROP_RETURN(false);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->hasFloatingRepresentation());
 }
 
-bool IsSameType(TCppType_t type_a, TCppType_t type_b) {
+bool IsSameType(ConstTypeRef type_a, ConstTypeRef type_b) {
   INTEROP_TRACE(type_a, type_b);
   if (!type_a || !type_b)
     return INTEROP_RETURN(false);
-  QualType QT1 = QualType::getFromOpaquePtr(type_a);
-  QualType QT2 = QualType::getFromOpaquePtr(type_b);
+  QualType QT1 = QualType::getFromOpaquePtr(type_a.data);
+  QualType QT2 = QualType::getFromOpaquePtr(type_b.data);
   return INTEROP_RETURN(getASTContext().hasSameType(QT1, QT2));
 }
 
-bool IsPointerType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsPointerType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->isPointerType());
 }
 
-bool IsVoidPointerType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  if (!type)
+bool IsVoidPointerType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  if (!TyRef)
     return INTEROP_RETURN(false);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->isVoidPointerType());
 }
 
-TCppType_t GetPointeeType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  if (!IsPointerType(type))
+TypeRef GetPointeeType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  if (!IsPointerType(TyRef))
     return INTEROP_RETURN(nullptr);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->getPointeeType().getAsOpaquePtr());
 }
 
-bool IsReferenceType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+bool IsReferenceType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT->isReferenceType());
 }
 
-ValueKind GetValueKind(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+ValueKind GetValueKind(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (QT->isRValueReferenceType())
     return INTEROP_RETURN(ValueKind::RValue);
   if (QT->isLValueReferenceType())
@@ -2356,15 +2703,15 @@ ValueKind GetValueKind(TCppType_t type) {
   return INTEROP_RETURN(ValueKind::None);
 }
 
-TCppType_t GetPointerType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+TypeRef GetPointerType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(getASTContext().getPointerType(QT).getAsOpaquePtr());
 }
 
-TCppType_t GetReferencedType(TCppType_t type, bool rvalue) {
-  INTEROP_TRACE(type, rvalue);
-  QualType QT = QualType::getFromOpaquePtr(type);
+TypeRef GetReferencedType(ConstTypeRef TyRef, bool rvalue) {
+  INTEROP_TRACE(TyRef, rvalue);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (rvalue)
     return INTEROP_RETURN(
         getASTContext().getRValueReferenceType(QT).getAsOpaquePtr());
@@ -2372,19 +2719,19 @@ TCppType_t GetReferencedType(TCppType_t type, bool rvalue) {
       getASTContext().getLValueReferenceType(QT).getAsOpaquePtr());
 }
 
-TCppType_t GetNonReferenceType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  if (!IsReferenceType(type))
+TypeRef GetNonReferenceType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  if (!IsReferenceType(TyRef))
     return INTEROP_RETURN(nullptr);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT.getNonReferenceType().getAsOpaquePtr());
 }
 
-TCppType_t GetUnderlyingType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  if (!type)
+TypeRef GetUnderlyingType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  if (!TyRef)
     return INTEROP_RETURN(nullptr);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   QT = QT->getCanonicalTypeUnqualified();
 
   // Recursively remove array dimensions
@@ -2392,7 +2739,7 @@ TCppType_t GetUnderlyingType(TCppType_t type) {
     QT = QualType(QT->getArrayElementTypeNoTypeQual(), 0);
 
   // Recursively reduce pointer depth till we are left with a pointerless
-  // type.
+  // TyRef.
   for (auto PT = QT->getPointeeType(); !PT.isNull();
        PT = QT->getPointeeType()) {
     QT = PT;
@@ -2401,9 +2748,9 @@ TCppType_t GetUnderlyingType(TCppType_t type) {
   return INTEROP_RETURN(QT.getAsOpaquePtr());
 }
 
-std::string GetTypeAsString(TCppType_t var) {
+std::string GetTypeAsString(ConstTypeRef var) {
   INTEROP_TRACE(var);
-  QualType QT = QualType::getFromOpaquePtr(var);
+  QualType QT = QualType::getFromOpaquePtr(var.data);
   PrintingPolicy Policy(getASTContext().getPrintingPolicy());
   Policy.Bool = true;               // Print bool instead of _Bool.
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
@@ -2412,20 +2759,20 @@ std::string GetTypeAsString(TCppType_t var) {
   return INTEROP_RETURN(QT.getAsString(Policy));
 }
 
-TCppType_t GetCanonicalType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  if (!type)
+TypeRef GetCanonicalType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  if (!TyRef)
     return INTEROP_RETURN(nullptr);
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   return INTEROP_RETURN(QT.getCanonicalType().getAsOpaquePtr());
 }
 
-bool HasTypeQualifier(TCppType_t type, QualKind qual) {
-  INTEROP_TRACE(type, qual);
-  if (!type)
+bool HasTypeQualifier(ConstTypeRef TyRef, QualKind qual) {
+  INTEROP_TRACE(TyRef, qual);
+  if (!TyRef)
     return INTEROP_RETURN(false);
 
-  QualType QT = QualType::getFromOpaquePtr(type);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (qual & QualKind::Const) {
     if (!QT.isConstQualified())
       return INTEROP_RETURN(false);
@@ -2441,12 +2788,12 @@ bool HasTypeQualifier(TCppType_t type, QualKind qual) {
   return INTEROP_RETURN(true);
 }
 
-TCppType_t RemoveTypeQualifier(TCppType_t type, QualKind qual) {
-  INTEROP_TRACE(type, qual);
-  if (!type)
-    return INTEROP_RETURN(type);
+TypeRef RemoveTypeQualifier(ConstTypeRef TyRef, QualKind qual) {
+  INTEROP_TRACE(TyRef, qual);
+  if (!TyRef)
+    return INTEROP_RETURN(nullptr);
 
-  auto QT = QualType(QualType::getFromOpaquePtr(type));
+  auto QT = QualType(QualType::getFromOpaquePtr(TyRef.data));
   if (qual & QualKind::Const)
     QT.removeLocalConst();
   if (qual & QualKind::Volatile)
@@ -2456,12 +2803,12 @@ TCppType_t RemoveTypeQualifier(TCppType_t type, QualKind qual) {
   return INTEROP_RETURN(QT.getAsOpaquePtr());
 }
 
-TCppType_t AddTypeQualifier(TCppType_t type, QualKind qual) {
-  INTEROP_TRACE(type, qual);
-  if (!type)
-    return INTEROP_RETURN(type);
+TypeRef AddTypeQualifier(ConstTypeRef TyRef, QualKind qual) {
+  INTEROP_TRACE(TyRef, qual);
+  if (!TyRef)
+    return INTEROP_RETURN(nullptr);
 
-  auto QT = QualType(QualType::getFromOpaquePtr(type));
+  auto QT = QualType(QualType::getFromOpaquePtr(TyRef.data));
   if (qual & QualKind::Const) {
     if (!QT.isConstQualified())
       QT.addConst();
@@ -2581,7 +2928,7 @@ static QualType findBuiltinType(llvm::StringRef typeName, ASTContext& Context) {
 
   return QualType(); // Return null if not a builtin
 }
-static std::optional<QualType> GetTypeInternal(Decl* D) {
+static std::optional<QualType> GetTypeInternal(const Decl* D) {
   if (!D)
     return {};
   // Even though typedefs derive from TypeDecl, their getTypeForDecl()
@@ -2589,20 +2936,16 @@ static std::optional<QualType> GetTypeInternal(Decl* D) {
   if (const auto* TND = llvm::dyn_cast_or_null<TypedefNameDecl>(D))
     return TND->getUnderlyingType();
 
-  if (auto* VD = dyn_cast<ValueDecl>(D))
+  if (const auto* VD = dyn_cast<ValueDecl>(D))
     return VD->getType();
 
   if (const auto* TD = llvm::dyn_cast_or_null<TypeDecl>(D))
-#if CLANG_VERSION_MAJOR < 22
-    return QualType(TD->getTypeForDecl(), 0);
-#else
-    return getASTContext().getTypeDeclType(TD);
-#endif
+    return compat::GetTypeFromDecl(TD);
 
   return {};
 }
 
-TCppType_t GetType(const std::string& name, TCppScope_t parent /*= nullptr*/) {
+TypeRef GetType(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   INTEROP_TRACE(name, parent);
   QualType builtin = findBuiltinType(name, getASTContext());
   if (!builtin.isNull())
@@ -2611,19 +2954,19 @@ TCppType_t GetType(const std::string& name, TCppScope_t parent /*= nullptr*/) {
   return INTEROP_RETURN(GetTypeFromScope(GetNamed(name, parent)));
 }
 
-TCppType_t GetComplexType(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType QT = QualType::getFromOpaquePtr(type);
+TypeRef GetComplexType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType QT = QualType::getFromOpaquePtr(TyRef.data);
 
   return INTEROP_RETURN(getASTContext().getComplexType(QT).getAsOpaquePtr());
 }
 
-TCppType_t GetTypeFromScope(TCppScope_t klass) {
-  INTEROP_TRACE(klass);
-  if (!klass)
+TypeRef GetTypeFromScope(ConstDeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  if (!DRef)
     return INTEROP_RETURN(nullptr);
 
-  if (auto QT = GetTypeInternal((Decl*)klass))
+  if (auto QT = GetTypeInternal(unwrap<Decl>(DRef)))
     return INTEROP_RETURN(QT->getAsOpaquePtr());
 
   return INTEROP_RETURN(nullptr);
@@ -2660,6 +3003,18 @@ void get_type_as_string(QualType QT, std::string& type_name, ASTContext& C,
                         PrintingPolicy Policy) {
   // TODO: Implement cling desugaring from utils::AST
   //       cling::utils::Transform::GetPartiallyDesugaredType()
+  // Desugar template type alias specializations (e.g. std::enable_if_t,
+  // std::remove_cvref_t). Their printed form can carry expression-level
+  // template arguments (variable-template references, SFINAE predicates)
+  // that PrintingPolicy::FullyQualifiedName does not propagate into, so the
+  // emitted text may reference identifiers like `is_constructible_v` without
+  // the `std::` qualifier and fail to compile in the wrapper. Regular
+  // typedefs (e.g. std::string) keep their sugared name.
+  while (const auto* TST = QT->getAs<TemplateSpecializationType>()) {
+    if (!TST->isTypeAlias())
+      break;
+    QT = TST->desugar();
+  }
   if (!QT->isTypedefNameType() || QT->isBuiltinType())
     QT = QT.getDesugaredType(C);
   Policy.Suppress_Elab = true;
@@ -2676,20 +3031,16 @@ static void GetDeclName(const clang::Decl* D, ASTContext& Context,
   Policy.SuppressTagKeyword = true;
   Policy.SuppressUnwrittenScope = true;
   Policy.Print_Canonical_Types = true;
-  if (const TypeDecl* TD = dyn_cast<TypeDecl>(D)) {
+  if (const auto* TD = dyn_cast<TypeDecl>(D)) {
     // This is a class, struct, or union member.
     QualType QT;
-    if (const TypedefDecl* Typedef = dyn_cast<const TypedefDecl>(TD)) {
+    if (const auto* Typedef = dyn_cast<const TypedefDecl>(TD)) {
       // Handle the typedefs to anonymous types.
       QT = Typedef->getTypeSourceInfo()->getType();
     } else
-#if CLANG_VERSION_MAJOR < 22
-      QT = {TD->getTypeForDecl(), 0};
-#else
-      QT = TD->getASTContext().getTypeDeclType(TD);
-#endif
+      QT = compat::GetTypeFromDecl(TD);
     get_type_as_string(QT, name, Context, Policy);
-  } else if (const NamedDecl* ND = dyn_cast<NamedDecl>(D)) {
+  } else if (const auto* ND = dyn_cast<NamedDecl>(D)) {
     // This is a namespace member.
     raw_string_ostream stream(name);
     ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
@@ -2703,7 +3054,7 @@ void collect_type_info(const FunctionDecl* FD, QualType& QT,
                        EReferenceType& refType, bool& isPointer,
                        int indent_level, bool forArgument) {
   //
-  //  Collect information about the type of a function parameter
+  //  Collect information about the TyRef of a function parameter
   //  needed for building the wrapper function.
   //
   ASTContext& C = FD->getASTContext();
@@ -2729,20 +3080,27 @@ void collect_type_info(const FunctionDecl* FD, QualType& QT,
       }
     }
   }
-  if (QT->isFunctionPointerType()) {
+  if (QT.getNonReferenceType()->isFunctionPointerType() ||
+      QT.getNonReferenceType()->isFunctionProtoType()) {
+    clang::QualType NRQT = QT.getNonReferenceType();
     std::string fp_typedef_name;
     {
       std::ostringstream nm;
       nm << "FP" << gWrapperSerial++;
       type_name = nm.str();
       raw_string_ostream OS(fp_typedef_name);
-      QT.print(OS, Policy, type_name);
+      NRQT.print(OS, Policy, type_name);
       OS.flush();
     }
 
     indent(typedefbuf, indent_level);
 
     typedefbuf << "typedef " << fp_typedef_name << ";\n";
+
+    if (QT->isRValueReferenceType())
+      refType = kRValueReference;
+    else
+      refType = kLValueReference;
     return;
   } else if (QT->isMemberPointerType()) {
     std::string mp_typedef_name;
@@ -2769,8 +3127,8 @@ void collect_type_info(const FunctionDecl* FD, QualType& QT,
       refType = kLValueReference;
     QT = cast<ReferenceType>(QT.getCanonicalType())->getPointeeType();
   }
-  // Fall through for the array type to deal with reference/pointer ro array
-  // type.
+  // Fall through for the array TyRef to deal with reference/pointer ro array
+  // TyRef.
   if (QT->isArrayType()) {
     std::string ar_typedef_name;
     {
@@ -2845,7 +3203,7 @@ void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
 }
 
 const DeclContext* get_non_transparent_decl_context(const FunctionDecl* FD) {
-  auto* DC = FD->getDeclContext();
+  const auto* DC = FD->getDeclContext();
   while (DC->isTransparentContext()) {
     DC = DC->getParent();
     assert(DC && "All transparent contexts should have a parent!");
@@ -2860,11 +3218,11 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
   //
   // Make a code string that follows this pattern:
   //
-  // ((<class>*)obj)-><method>(*(<arg-i-type>*)args[i], ...)
+  // ((<class>*)obj)-><method>(*(<arg-i-TyRef>*)args[i], ...)
   //
 
   // Sometimes it's necessary that we cast the function we want to call
-  // first to its explicit function type before calling it. This is supposed
+  // first to its explicit function TyRef before calling it. This is supposed
   // to prevent that we accidentally ending up in a function that is not
   // the one we're supposed to call here (e.g. because the C++ function
   // lookup decides to take another function that better fits). This method
@@ -2898,7 +3256,7 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
             indent(callbuf, indent_level + 1);
           }
         }
-        const ParmVarDecl* PVD = FD->getParamDecl(i);
+        const ParmVarDecl* PVD = FD->getNonObjectParameter(i);
         QualType Ty = PVD->getType();
         QualType QT = Ty.getCanonicalType();
         std::string arg_type;
@@ -2914,9 +3272,18 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
     callbuf << ")";
   }
 
-  if (const CXXMethodDecl* MD = dyn_cast<CXXMethodDecl>(FD)) {
+  if (const auto* MD = dyn_cast<CXXMethodDecl>(FD)) {
     // This is a class, struct, or union member.
-    if (MD->isConst())
+    // An rvalue-ref-qualified method must be called on an rvalue: bind the
+    // receiver with static_cast<T&&>. Covers `f() &&` and `this T&&` (the
+    // latter leaves getRefQualifier() == RQ_None).
+    bool rvalue_ref = MD->getRefQualifier() == clang::RQ_RValue ||
+                      (MD->hasCXXExplicitFunctionObjectParameter() &&
+                       MD->getParamDecl(0)->getType()->isRValueReferenceType());
+    if (rvalue_ref)
+      callbuf << "static_cast<" << class_name << "&&>(*(" << class_name
+              << "*)obj).";
+    else if (MD->isConst())
       callbuf << "((const " << class_name << "*)obj)->";
     else
       callbuf << "((" << class_name << "*)obj)->";
@@ -2943,13 +3310,13 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
       name = complete_name;
 
       // If a template has consecutive parameter packs, then it is impossible to
-      // use the explicit name in the wrapper, since the type deduction is what
+      // use the explicit name in the wrapper, since the TyRef deduction is what
       // determines the split of the packs. Instead, we'll revert to the
-      // non-templated function name and hope that the type casts in the wrapper
-      // will suffice.
+      // non-templated function name and hope that the TyRef casts in the
+      // wrapper will suffice.
       std::string simple_name = FD->getNameAsString();
       if (FD->isTemplateInstantiation() && FD->getPrimaryTemplate()) {
-        const FunctionTemplateDecl* FTDecl =
+        const auto* FTDecl =
             llvm::dyn_cast<FunctionTemplateDecl>(FD->getPrimaryTemplate());
         if (FTDecl) {
           auto* templateParms = FTDecl->getTemplateParameters();
@@ -2977,7 +3344,7 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
 
   callbuf << "(";
   for (unsigned i = 0U; i < N; ++i) {
-    const ParmVarDecl* PVD = FD->getParamDecl(i);
+    const ParmVarDecl* PVD = FD->getNonObjectParameter(i);
     QualType Ty = PVD->getType();
     QualType QT = Ty.getCanonicalType();
     std::string type_name;
@@ -3133,7 +3500,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
   //    (void)(((class_name*)obj)->func(args...));
   // }
   //
-  if (const CXXConstructorDecl* CD = dyn_cast<CXXConstructorDecl>(FD)) {
+  if (const auto* CD = dyn_cast<CXXConstructorDecl>(FD)) {
     if (N <= 1 && llvm::isa<UsingShadowDecl>(FD)) {
       auto SpecMemKind = I.getCI()->getSema().getSpecialMember(CD);
       if ((N == 0 && SpecMemKind == CXXSpecialMemberKind::DefaultConstructor) ||
@@ -3184,7 +3551,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
       indent(callbuf, indent_level);
       callbuf << "new (ret) ";
       //
-      //  Write the type part of the placement new.
+      //  Write the TyRef part of the placement new.
       //
       callbuf << "(" << type_name.c_str();
       if (refType != kNotReference) {
@@ -3335,7 +3702,7 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
     case FunctionDecl::TK_FunctionTemplateSpecialization: {
       // This function is the result of instantiating a function
       // template or possibly an explicit specialization of a
-      // function template.  Could be a namespace scope function or a
+      // function template.  Could be a namespace DRef function or a
       // member function.
       if (!FD->isTemplateInstantiation()) {
         // We are either TSK_Undeclared or
@@ -3540,7 +3907,7 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
     case FunctionDecl::TK_FunctionTemplateSpecialization: {
       // This function is the result of instantiating a function
       // template or possibly an explicit specialization of a
-      // function template.  Could be a namespace scope function or a
+      // function template.  Could be a namespace DRef function or a
       // member function.
       if (Definition->isDeleted()) {
         llvm::errs() << "TClingCallFunc::make_wrapper"
@@ -3600,15 +3967,18 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
     } break;
     }
   }
-  unsigned min_args = FD->getMinRequiredArguments();
-  unsigned num_params = FD->getNumParams();
+  // A C++23 explicit object parameter is bound via the `obj->` receiver of the
+  // emitted member call, not from the args[] array, so it is excluded from the
+  // wrapper's argument arity (see make_narg_call).
+  unsigned min_args = FD->getMinRequiredExplicitArguments();
+  unsigned num_params = FD->getNumNonObjectParams();
   //
   //  Make the wrapper name.
   //
   {
     std::ostringstream buf;
     buf << "__jc";
-    // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+    // const auto* ND = dyn_cast<NamedDecl>(FD);
     // std::string mn;
     // fInterp->maybeMangleDeclName(ND, mn);
     // buf << '_' << mn;
@@ -3633,7 +4003,7 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
          "__attribute__((annotate(\"__cling__ptrcheck(off)\")))\n"
          "extern \"C\" void ";
   buf << wrapper_name;
-  if (Cpp::IsConstructor(FD)) {
+  if (Cpp::IsConstructor(wrap<ConstFuncRef>(FD))) {
     buf << "(void* ret, unsigned long nary, unsigned long nargs, void** args, "
            "void* is_arena)\n"
            "{\n";
@@ -3737,7 +4107,7 @@ static std::string PrepareStructorWrapper(const Decl* D,
   {
     std::ostringstream buf;
     buf << wrapper_prefix;
-    // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+    // const auto* ND = dyn_cast<NamedDecl>(FD);
     // string mn;
     // fInterp->maybeMangleDeclName(ND, mn);
     // buf << '_dtor_' << mn;
@@ -3914,39 +4284,40 @@ static JitCall::DestructorCall make_dtor_wrapper(compat::Interpreter& interp,
 } // namespace
   // End of JitCall Helper Functions
 
-CPPINTEROP_API JitCall MakeFunctionCallable(TInterp_t I,
-                                            TCppConstFunction_t func) {
+CPPINTEROP_API JitCall MakeFunctionCallable(InterpRef I, ConstFuncRef func) {
   INTEROP_TRACE(I, func);
-  const auto* D = static_cast<const clang::Decl*>(func);
+  const auto* D = unwrap<clang::Decl>(func);
   if (!D)
     return INTEROP_RETURN(JitCall{});
 
-  auto* interp = static_cast<compat::Interpreter*>(I);
+  auto* interp = unwrap<compat::Interpreter>(I);
 
   // FIXME: Unify with make_wrapper.
   if (const auto* Dtor = dyn_cast<CXXDestructorDecl>(D)) {
     if (auto Wrapper = make_dtor_wrapper(*interp, Dtor->getParent()))
-      return INTEROP_RETURN(JitCall(JitCall::kDestructorCall, Wrapper, Dtor));
+      return INTEROP_RETURN(
+          JitCall(JitCall::kDestructorCall, Wrapper, wrap<ConstFuncRef>(Dtor)));
     // FIXME: else error we failed to compile the wrapper.
     return INTEROP_RETURN(JitCall{});
   }
 
   if (const auto* Ctor = dyn_cast<CXXConstructorDecl>(D)) {
     if (auto Wrapper = make_wrapper(*interp, cast<FunctionDecl>(D)))
-      return INTEROP_RETURN(JitCall(JitCall::kConstructorCall, Wrapper, Ctor));
+      return INTEROP_RETURN(JitCall(JitCall::kConstructorCall, Wrapper,
+                                    wrap<ConstFuncRef>(Ctor)));
     // FIXME: else error we failed to compile the wrapper.
     return INTEROP_RETURN(JitCall{});
   }
 
   if (auto Wrapper = make_wrapper(*interp, cast<FunctionDecl>(D))) {
-    return INTEROP_RETURN(
-        JitCall(JitCall::kGenericCall, Wrapper, cast<FunctionDecl>(D)));
+    return INTEROP_RETURN(JitCall(JitCall::kGenericCall, Wrapper,
+                                  wrap<ConstFuncRef>(cast<FunctionDecl>(D))));
   }
   // FIXME: else error we failed to compile the wrapper.
   return INTEROP_RETURN(JitCall{});
 }
 
-CPPINTEROP_API JitCall MakeFunctionCallable(TCppConstFunction_t func) {
+CPPINTEROP_API JitCall MakeFunctionCallable(ConstFuncRef func) {
   INTEROP_TRACE(func);
   return INTEROP_RETURN(MakeFunctionCallable(&getInterp(), func));
 }
@@ -4035,7 +4406,7 @@ std::string ExtractArgument(const std::vector<const char*>& Args,
 }
 } // namespace
 
-TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
+InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
                             const std::vector<const char*>& GpuArgs /*={}*/) {
   INTEROP_TRACE(Args, GpuArgs);
   std::string MainExecutableName = sys::fs::getMainExecutable(nullptr, nullptr);
@@ -4053,8 +4424,9 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
       (T.isOSDarwin() || T.isOSLinux()))
     ResourceDir = DetectResourceDir();
 
-  std::vector<const char*> ClingArgv = {"-resource-dir", ResourceDir.c_str(),
-                                        "-std=c++14"};
+  std::vector<const char*> ClingArgv = {"-std=c++14"};
+  if (!ResourceDir.empty())
+    ClingArgv.insert(ClingArgv.begin(), {"-resource-dir", ResourceDir.c_str()});
   ClingArgv.insert(ClingArgv.begin(), MainExecutableName.c_str());
 #ifdef _WIN32
   // FIXME : Workaround Sema::PushDeclContext assert on windows
@@ -4175,8 +4547,8 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
       reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueWithAlloc));
 #else
   // obtain mangled name
-  auto* D = static_cast<clang::Decl*>(
-      Cpp::GetNamed("__clang_Interpreter_SetValueWithAlloc"));
+  auto* D =
+      unwrap<Decl>(Cpp::GetNamed("__clang_Interpreter_SetValueWithAlloc"));
   if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
     auto GD = GlobalDecl(FD);
     std::string mangledName;
@@ -4194,7 +4566,7 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   return INTEROP_RETURN(I);
 }
 
-InterpreterLanguage GetLanguage(TInterp_t I /*=nullptr*/) {
+InterpreterLanguage GetLanguage(InterpRef I /*=nullptr*/) {
   INTEROP_TRACE(I);
   compat::Interpreter* interp = &getInterp(I);
   const auto& LO = interp->getCI()->getLangOpts();
@@ -4214,7 +4586,7 @@ InterpreterLanguage GetLanguage(TInterp_t I /*=nullptr*/) {
   return INTEROP_RETURN(lang);
 }
 
-InterpreterLanguageStandard GetLanguageStandard(TInterp_t I /*=nullptr*/) {
+InterpreterLanguageStandard GetLanguageStandard(InterpRef I /*=nullptr*/) {
   INTEROP_TRACE(I);
   compat::Interpreter* interp = &getInterp(I);
   const auto& LO = interp->getCI()->getLangOpts();
@@ -4360,24 +4732,85 @@ int Process(const char* code) {
   return INTEROP_RETURN(getInterp().process(code));
 }
 
-intptr_t Evaluate(const char* code, bool* IsValueInvalid /*=nullptr*/) {
-  INTEROP_TRACE(code, INTEROP_OUT(IsValueInvalid));
+// Classify the QualType of a successfully-evaluated value into a
+// Box::Kind. clang::Value's own ctor asserts on builtins the X-macro
+// doesn't list (`__int128`, `_BitInt`, `_Float16`, ...), so by the time
+// we get here QT is non-null and BT->getKind() is one of the enumerated
+// arms. Records, pointers and references fall through to K_PtrOrObj.
+// See memory/clang_value_wide_types_gap.md for the upstream follow-up
+// that would broaden Value's coverage.
+static Cpp::Box::Kind classifyByQualType(clang::QualType QT) {
+  if (const auto* BT = QT->getAs<clang::BuiltinType>()) {
+    switch (BT->getKind()) {
+    case clang::BuiltinType::Bool:
+      return Cpp::Box::K_Bool;
+    case clang::BuiltinType::Char_S:
+      return Cpp::Box::K_Char_S;
+    case clang::BuiltinType::Char_U:
+      // Platform-`unsigned`-char alias; share UChar storage so the
+      // X-macro doesn't need a duplicate Box::Create<T> specialization.
+      return Cpp::Box::K_UChar;
+    case clang::BuiltinType::SChar:
+      return Cpp::Box::K_SChar;
+    case clang::BuiltinType::UChar:
+      return Cpp::Box::K_UChar;
+    case clang::BuiltinType::Short:
+      return Cpp::Box::K_Short;
+    case clang::BuiltinType::UShort:
+      return Cpp::Box::K_UShort;
+    case clang::BuiltinType::Int:
+      return Cpp::Box::K_Int;
+    case clang::BuiltinType::UInt:
+      return Cpp::Box::K_UInt;
+    case clang::BuiltinType::Long:
+      return Cpp::Box::K_Long;
+    case clang::BuiltinType::ULong:
+      return Cpp::Box::K_ULong;
+    case clang::BuiltinType::LongLong:
+      return Cpp::Box::K_LongLong;
+    case clang::BuiltinType::ULongLong:
+      return Cpp::Box::K_ULongLong;
+    case clang::BuiltinType::Float:
+      return Cpp::Box::K_Float;
+    case clang::BuiltinType::Double:
+      return Cpp::Box::K_Double;
+    case clang::BuiltinType::LongDouble:
+      return Cpp::Box::K_LongDouble;
+    default:
+      llvm_unreachable(
+          "clang::Value asserts on builtins outside the X-macro set");
+    }
+  }
+  return Cpp::Box::K_PtrOrObj;
+}
+
+Box Evaluate(const char* code) {
+  INTEROP_TRACE(code);
   compat::Value V;
-
-  if (IsValueInvalid)
-    *IsValueInvalid = false;
-
   auto res = getInterp().evaluate(code, V);
   CPPINTEROP_MSAN_UNPOISON_VALUE(V);
-  // 0 is success; an unset V on success means convertTo would assert.
-  if (res != 0 || !V.hasValue()) {
-    if (IsValueInvalid)
-      *IsValueInvalid = true;
-    // FIXME: Make this return llvm::Expected
-    return INTEROP_RETURN(~0UL);
-  }
+  if (res != 0 || !V.hasValue())
+    return INTEROP_RETURN(Box{});
 
-  return INTEROP_RETURN(compat::convertTo<intptr_t>(V));
+  clang::QualType QT = V.getType();
+  void* qt = QT.getAsOpaquePtr();
+  switch (classifyByQualType(QT)) {
+#define X(TyRef, name)                                                         \
+  case Cpp::Box::K_##name:                                                     \
+    return INTEROP_RETURN(                                                     \
+        Cpp::Box::Create<TyRef>(compat::convertTo<TyRef>(V), qt));
+    CPP_BOX_BUILTIN_TYPES
+#undef X
+  case Cpp::Box::K_PtrOrObj:
+    return INTEROP_RETURN(compat::MakeValueBox(V, qt));
+  case Cpp::Box::K_Char_U:
+  case Cpp::Box::K_Void:
+  case Cpp::Box::K_Unspecified:
+    // classifyByQualType never produces these (Char_U folds to UChar;
+    // Void/Unspecified can't reach a hasValue=true path).
+    llvm_unreachable("Box::Kind not produced by classifyByQualType");
+  }
+  llvm_unreachable("classifyByQualType returned an unhandled Kind");
 }
 
 std::string LookupLibrary(const char* lib_name) {
@@ -4494,9 +4927,9 @@ bool InsertOrReplaceJitSymbol(const char* linker_mangled_name,
       InsertOrReplaceJitSymbol(getInterp(), linker_mangled_name, address));
 }
 
-std::string ObjToString(const char* type, void* obj) {
-  INTEROP_TRACE(type, obj);
-  return INTEROP_RETURN(getInterp().toString(type, obj));
+std::string ObjToString(const char* TyRef, void* obj) {
+  INTEROP_TRACE(TyRef, obj);
+  return INTEROP_RETURN(getInterp().toString(TyRef, obj));
 }
 
 static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
@@ -4533,7 +4966,7 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
     return R.get();
   }
 
-  // This will instantiate tape<T> type and return it.
+  // This will instantiate tape<T> TyRef and return it.
   SourceLocation noLoc;
 #if CLANG_VERSION_MAJOR < 22
   QualType TT = S.CheckTemplateIdType(TemplateName(TemplateD), noLoc, TLI);
@@ -4555,7 +4988,7 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
   // CSS.Extend(C, GetCladNamespace(), noLoc, noLoc);
   // NestedNameSpecifier* NS = CSS.getScopeRep();
 
-  // // Create elaborated type with namespace specifier,
+  // // Create elaborated TyRef with namespace specifier,
   // // i.e. class<T> -> clad::class<T>
   // return C.getElaboratedType(ETK_None, NS, TT);
 }
@@ -4572,10 +5005,9 @@ Decl* InstantiateTemplate(TemplateDecl* TemplateD,
   return InstantiateTemplate(TemplateD, TLI, S, instantiate_body);
 }
 
-TCppScope_t InstantiateTemplate(compat::Interpreter& I, TCppScope_t tmpl,
-                                const TemplateArgInfo* template_args,
-                                size_t template_args_size,
-                                bool instantiate_body) {
+DeclRef InstantiateTemplate(compat::Interpreter& I, DeclRef tmpl,
+                            const TemplateArgInfo* template_args,
+                            size_t template_args_size, bool instantiate_body) {
   auto& S = I.getSema();
   auto& C = S.getASTContext();
 
@@ -4584,7 +5016,7 @@ TCppScope_t InstantiateTemplate(compat::Interpreter& I, TCppScope_t tmpl,
   for (size_t i = 0; i < template_args_size; ++i) {
     QualType ArgTy = QualType::getFromOpaquePtr(template_args[i].m_Type);
     if (template_args[i].m_IntegralValue) {
-      // We have a non-type template parameter. Create an integral value from
+      // We have a non-TyRef template parameter. Create an integral value from
       // the string representation.
       auto Res = llvm::APSInt(template_args[i].m_IntegralValue);
       Res = Res.extOrTrunc(C.getIntWidth(ArgTy));
@@ -4594,25 +5026,22 @@ TCppScope_t InstantiateTemplate(compat::Interpreter& I, TCppScope_t tmpl,
     }
   }
 
-  TemplateDecl* TmplD = static_cast<TemplateDecl*>(tmpl);
+  auto* TmplD = unwrap<TemplateDecl>(tmpl);
   // We will create a new decl, push a transaction.
   compat::SynthesizingCodeRAII RAII(&getInterp());
   return InstantiateTemplate(TmplD, TemplateArgs, S, instantiate_body);
 }
 
-TCppScope_t InstantiateTemplate(TCppScope_t tmpl,
-                                const TemplateArgInfo* template_args,
-                                size_t template_args_size,
-                                bool instantiate_body) {
+DeclRef InstantiateTemplate(DeclRef tmpl, const TemplateArgInfo* template_args,
+                            size_t template_args_size, bool instantiate_body) {
   INTEROP_TRACE(tmpl, template_args, template_args_size, instantiate_body);
   return INTEROP_RETURN(InstantiateTemplate(
       getInterp(), tmpl, template_args, template_args_size, instantiate_body));
 }
 
-TCppScope_t
-InstantiateTemplate(TCppScope_t tmpl,
-                    const std::vector<TemplateArgInfo>& template_args,
-                    bool instantiate_body) {
+DeclRef InstantiateTemplate(DeclRef tmpl,
+                            const std::vector<TemplateArgInfo>& template_args,
+                            bool instantiate_body) {
   INTEROP_TRACE(tmpl, template_args, instantiate_body);
   // Forward to the static helper directly (not the deprecated public
   // overload) to avoid a nested INTEROP_TRACE.
@@ -4621,10 +5050,10 @@ InstantiateTemplate(TCppScope_t tmpl,
                           template_args.size(), instantiate_body));
 }
 
-void GetClassTemplateArgs(TCppScope_t templ_instance,
+void GetClassTemplateArgs(ConstDeclRef templ_instance,
                           std::vector<TemplateArgInfo>& args) {
   INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
-  auto* CTSD = static_cast<ClassTemplateSpecializationDecl*>(templ_instance);
+  const auto* CTSD = unwrap<ClassTemplateSpecializationDecl>(templ_instance);
   for (const auto& TA : CTSD->getTemplateArgs().asArray()) {
     // FIXME: Support cases with m_IntegralValue.
     args.push_back({TA.getAsType().getAsOpaquePtr()});
@@ -4632,10 +5061,10 @@ void GetClassTemplateArgs(TCppScope_t templ_instance,
   return INTEROP_VOID_RETURN();
 }
 
-void GetClassTemplateInstantiationArgs(TCppScope_t templ_instance,
+void GetClassTemplateInstantiationArgs(ConstDeclRef templ_instance,
                                        std::vector<TemplateArgInfo>& args) {
   INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
-  auto* CTSD = static_cast<ClassTemplateSpecializationDecl*>(templ_instance);
+  const auto* CTSD = unwrap<ClassTemplateSpecializationDecl>(templ_instance);
   for (const auto& TA : CTSD->getTemplateInstantiationArgs().asArray()) {
     switch (TA.getKind()) {
     default:
@@ -4658,8 +5087,7 @@ void GetClassTemplateInstantiationArgs(TCppScope_t templ_instance,
   return INTEROP_VOID_RETURN();
 }
 
-TCppFunction_t
-InstantiateTemplateFunctionFromString(const char* function_template) {
+FuncRef InstantiateTemplateFunctionFromString(const char* function_template) {
   INTEROP_TRACE(function_template);
   // FIXME: Drop this interface and replace it with the proper overload
   // resolution handling and template instantiation selection.
@@ -4670,29 +5098,29 @@ InstantiateTemplateFunctionFromString(const char* function_template) {
   std::string instance = "auto " + id + " = " + function_template + ";\n";
 
   if (!Cpp::Declare(instance.c_str(), /*silent=*/false)) {
-    VarDecl* VD = (VarDecl*)Cpp::GetNamed(id, 0);
+    auto* VD = unwrap<VarDecl>(Cpp::GetNamed(id, nullptr));
     DeclRefExpr* DRE = (DeclRefExpr*)VD->getInit()->IgnoreImpCasts();
     return INTEROP_RETURN(DRE->getDecl());
   }
   return INTEROP_RETURN(nullptr);
 }
 
-void GetAllCppNames(TCppScope_t scope, std::set<std::string>& names) {
-  INTEROP_TRACE(scope, INTEROP_OUT(names));
-  auto* D = (clang::Decl*)scope;
+void GetAllCppNames(ConstDeclRef DRef, std::set<std::string>& names) {
+  INTEROP_TRACE(DRef, INTEROP_OUT(names));
+  const auto* D = unwrap<clang::Decl>(DRef);
   clang::DeclContext* DC;
   clang::DeclContext::decl_iterator decl;
 
   compat::SynthesizingCodeRAII RAII(&getInterp());
 
-  if (auto* TD = dyn_cast_or_null<TagDecl>(D)) {
+  if (const auto* TD = dyn_cast_or_null<TagDecl>(D)) {
     DC = clang::TagDecl::castToDeclContext(TD);
     decl = DC->decls_begin();
     decl++;
-  } else if (auto* ND = dyn_cast_or_null<NamespaceDecl>(D)) {
+  } else if (const auto* ND = dyn_cast_or_null<NamespaceDecl>(D)) {
     DC = clang::NamespaceDecl::castToDeclContext(ND);
     decl = DC->decls_begin();
-  } else if (auto* TUD = dyn_cast_or_null<TranslationUnitDecl>(D)) {
+  } else if (const auto* TUD = dyn_cast_or_null<TranslationUnitDecl>(D)) {
     DC = clang::TranslationUnitDecl::castToDeclContext(TUD);
     decl = DC->decls_begin();
   } else {
@@ -4700,16 +5128,17 @@ void GetAllCppNames(TCppScope_t scope, std::set<std::string>& names) {
   }
 
   for (/* decl set above */; decl != DC->decls_end(); decl++) {
-    if (auto* ND = llvm::dyn_cast_or_null<NamedDecl>(*decl)) {
+    if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(*decl)) {
       names.insert(ND->getNameAsString());
     }
   }
   return INTEROP_VOID_RETURN();
 }
 
-void GetEnums(TCppScope_t scope, std::vector<std::string>& Result) {
-  INTEROP_TRACE(scope, INTEROP_OUT(Result));
-  auto* D = static_cast<clang::Decl*>(scope);
+void GetEnums(ConstDeclRef DRef, std::vector<std::string>& Result) {
+  INTEROP_TRACE(DRef, INTEROP_OUT(Result));
+  // collectAllContexts is non-const but logically read-only here.
+  auto* D = const_cast<clang::Decl*>(unwrap<clang::Decl>(DRef));
 
   if (!llvm::isa_and_nonnull<clang::DeclContext>(D))
     return INTEROP_VOID_RETURN();
@@ -4730,18 +5159,17 @@ void GetEnums(TCppScope_t scope, std::vector<std::string>& Result) {
   return INTEROP_VOID_RETURN();
 }
 
-// FIXME: On the CPyCppyy side the receiver is of type
-//        vector<long int> instead of vector<TCppIndex_t>
-std::vector<long int> GetDimensions(TCppType_t type) {
-  INTEROP_TRACE(type);
-  QualType Qual = QualType::getFromOpaquePtr(type);
+// FIXME: On the CPyCppyy side the receiver is of TyRef
+//        vector<long int> instead of vector<size_t>
+std::vector<long int> GetDimensions(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  QualType Qual = QualType::getFromOpaquePtr(TyRef.data);
   if (Qual.isNull())
     return INTEROP_RETURN(std::vector<long int>{});
   Qual = Qual.getCanonicalType();
   std::vector<long int> dims;
   if (Qual->isArrayType()) {
-    const clang::ArrayType* ArrayType =
-        dyn_cast<clang::ArrayType>(Qual.getTypePtr());
+    const auto* ArrayType = dyn_cast<clang::ArrayType>(Qual.getTypePtr());
     while (ArrayType) {
       if (const auto* CAT = dyn_cast_or_null<ConstantArrayType>(ArrayType)) {
         llvm::APSInt Size(CAT->getSize());
@@ -4759,33 +5187,33 @@ std::vector<long int> GetDimensions(TCppType_t type) {
   return INTEROP_RETURN(dims);
 }
 
-bool IsTypeDerivedFrom(TCppType_t derived, TCppType_t base) {
+bool IsTypeDerivedFrom(ConstTypeRef derived, ConstTypeRef base) {
   INTEROP_TRACE(derived, base);
   auto& S = getSema();
   auto fakeLoc = GetValidSLoc(S);
-  auto derivedType = clang::QualType::getFromOpaquePtr(derived);
-  auto baseType = clang::QualType::getFromOpaquePtr(base);
+  auto derivedType = clang::QualType::getFromOpaquePtr(derived.data);
+  auto baseType = clang::QualType::getFromOpaquePtr(base.data);
 
   compat::SynthesizingCodeRAII RAII(&getInterp());
   return INTEROP_RETURN(S.IsDerivedFrom(fakeLoc, derivedType, baseType));
 }
 
-std::string GetFunctionArgDefault(TCppFunction_t func,
-                                  TCppIndex_t param_index) {
+std::string GetFunctionArgDefault(ConstFuncRef func, size_t param_index) {
   INTEROP_TRACE(func, param_index);
-  auto* D = (clang::Decl*)func;
-  clang::ParmVarDecl* PI = nullptr;
+  const auto* D = unwrap<clang::Decl>(func);
+  const clang::ParmVarDecl* PI = nullptr;
 
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
-    PI = FD->getParamDecl(param_index);
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
+    PI = FD->getNonObjectParameter(param_index);
 
-  else if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
-    PI = (FD->getTemplatedDecl())->getParamDecl(param_index);
+  else if (const auto* FD =
+               llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    PI = (FD->getTemplatedDecl())->getNonObjectParameter(param_index);
 
   if (PI->hasDefaultArg()) {
     std::string Result;
     llvm::raw_string_ostream OS(Result);
-    Expr* DefaultArgExpr = nullptr;
+    const Expr* DefaultArgExpr = nullptr;
     compat::SynthesizingCodeRAII RAII(&getInterp());
     if (PI->hasUninstantiatedDefaultArg())
       DefaultArgExpr = PI->getUninstantiatedDefaultArg();
@@ -4810,27 +5238,28 @@ std::string GetFunctionArgDefault(TCppFunction_t func,
   return INTEROP_RETURN("");
 }
 
-bool IsConstMethod(TCppFunction_t method) {
+bool IsConstMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
   if (!method)
     return INTEROP_RETURN(false);
 
-  auto* D = (clang::Decl*)method;
-  if (auto* func = dyn_cast<CXXMethodDecl>(D))
+  const auto* D = unwrap<clang::Decl>(method);
+  if (const auto* func = dyn_cast<CXXMethodDecl>(D))
     return INTEROP_RETURN(func->getMethodQualifiers().hasConst());
 
   return INTEROP_RETURN(false);
 }
 
-std::string GetFunctionArgName(TCppFunction_t func, TCppIndex_t param_index) {
+std::string GetFunctionArgName(ConstFuncRef func, size_t param_index) {
   INTEROP_TRACE(func, param_index);
-  auto* D = (clang::Decl*)func;
-  clang::ParmVarDecl* PI = nullptr;
+  const auto* D = unwrap<clang::Decl>(func);
+  const clang::ParmVarDecl* PI = nullptr;
 
-  if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
-    PI = FD->getParamDecl(param_index);
-  else if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
-    PI = (FD->getTemplatedDecl())->getParamDecl(param_index);
+  if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
+    PI = FD->getNonObjectParameter(param_index);
+  else if (const auto* FD =
+               llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    PI = (FD->getTemplatedDecl())->getNonObjectParameter(param_index);
 
   return INTEROP_RETURN(PI->getNameAsString());
 }
@@ -4851,10 +5280,10 @@ Operator GetOperatorFromSpelling(const std::string& op) {
   return INTEROP_RETURN(Operator::OP_None);
 }
 
-OperatorArity GetOperatorArity(TCppFunction_t op) {
+OperatorArity GetOperatorArity(ConstFuncRef op) {
   INTEROP_TRACE(op);
-  Decl* D = static_cast<Decl*>(op);
-  if (auto* FD = llvm::dyn_cast<FunctionDecl>(D)) {
+  const auto* D = unwrap<Decl>(op);
+  if (const auto* FD = llvm::dyn_cast<FunctionDecl>(D)) {
     if (FD->isOverloadedOperator()) {
       switch (FD->getOverloadedOperator()) {
 #define OVERLOADED_OPERATOR(Name, Spelling, Token, Unary, Binary, MemberOnly)  \
@@ -4875,12 +5304,12 @@ OperatorArity GetOperatorArity(TCppFunction_t op) {
   return INTEROP_RETURN((OperatorArity)~0U);
 }
 
-void GetOperator(TCppScope_t scope, Operator op,
-                 std::vector<TCppFunction_t>& operators, OperatorArity kind) {
-  INTEROP_TRACE(scope, op, INTEROP_OUT(operators), kind);
-  Decl* D = static_cast<Decl*>(scope);
+void GetOperator(ConstDeclRef DRef, Operator op,
+                 std::vector<FuncRef>& operators, OperatorArity kind) {
+  INTEROP_TRACE(DRef, op, INTEROP_OUT(operators), kind);
+  const auto* D = unwrap<Decl>(DRef);
   compat::SynthesizingCodeRAII RAII(&getInterp());
-  if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+  if (const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     auto fn = [&operators, kind, op](const RecordDecl* RD) {
       ASTContext& C = RD->getASTContext();
       DeclContextLookupResult Result =
@@ -4894,7 +5323,7 @@ void GetOperator(TCppScope_t scope, Operator op,
     };
     fn(CXXRD);
     CXXRD->forallBases(fn);
-  } else if (auto* DC = llvm::dyn_cast_or_null<DeclContext>(D)) {
+  } else if (const auto* DC = llvm::dyn_cast_or_null<DeclContext>(D)) {
     ASTContext& C = getSema().getASTContext();
     DeclContextLookupResult Result =
         DC->lookup(C.DeclarationNames.getCXXOperatorName(
@@ -4908,33 +5337,34 @@ void GetOperator(TCppScope_t scope, Operator op,
   return INTEROP_VOID_RETURN();
 }
 
-TCppObject_t Allocate(TCppScope_t scope, TCppIndex_t count) {
-  INTEROP_TRACE(scope, count);
-  return INTEROP_RETURN(
-      (TCppObject_t)::operator new(Cpp::SizeOf(scope) * count));
+ObjectRef Allocate(DeclRef DRef, size_t count) {
+  INTEROP_TRACE(DRef, count);
+  return INTEROP_RETURN((ObjectRef)::operator new(Cpp::SizeOf(DRef) * count));
 }
 
-void Deallocate(TCppScope_t scope, TCppObject_t address, TCppIndex_t count) {
-  INTEROP_TRACE(scope, address, count);
-  size_t bytes = Cpp::SizeOf(scope) * count;
-  ::operator delete(address, bytes);
+void Deallocate(DeclRef DRef, ObjectRef address, size_t count) {
+  INTEROP_TRACE(DRef, address, count);
+  size_t bytes = Cpp::SizeOf(DRef) * count;
+  ::operator delete(address.data, bytes);
   return INTEROP_VOID_RETURN();
 }
 
 // FIXME: Add optional arguments to the operator new.
-TCppObject_t Construct(compat::Interpreter& interp, TCppScope_t scope,
-                       void* arena /*=nullptr*/, TCppIndex_t count /*=1UL*/) {
+ObjectRef Construct(compat::Interpreter& interp, DeclRef DRef,
+                    void* arena /*=nullptr*/, size_t count /*=1UL*/) {
 
-  if (!Cpp::IsConstructor(scope) && !Cpp::IsClass(scope))
+  // DRef may be either a class or a specific constructor declaration.
+  FuncRef ctorAsFunc = wrap<FuncRef>(DRef.data);
+  if (!Cpp::IsConstructor(ctorAsFunc) && !Cpp::IsClass(DRef))
     return nullptr;
-  if (Cpp::IsClass(scope) && !HasDefaultConstructor(scope))
+  if (Cpp::IsClass(DRef) && !HasDefaultConstructor(DRef))
     return nullptr;
 
-  TCppFunction_t ctor = nullptr;
-  if (Cpp::IsClass(scope))
-    ctor = Cpp::GetDefaultConstructor(scope);
+  FuncRef ctor = nullptr;
+  if (Cpp::IsClass(DRef))
+    ctor = Cpp::GetDefaultConstructor(DRef);
   else // a ctor
-    ctor = scope;
+    ctor = ctorAsFunc;
 
   if (JitCall JC = MakeFunctionCallable(&interp, ctor)) {
     // invoke the constructor (placement/heap) in one shot
@@ -4947,26 +5377,26 @@ TCppObject_t Construct(compat::Interpreter& interp, TCppScope_t scope,
   return nullptr;
 }
 
-TCppObject_t Construct(TCppScope_t scope, void* arena /*=nullptr*/,
-                       TCppIndex_t count /*=1UL*/) {
-  INTEROP_TRACE(scope, arena, count);
-  return INTEROP_RETURN(Construct(getInterp(), scope, arena, count));
+ObjectRef Construct(DeclRef DRef, void* arena /*=nullptr*/,
+                    size_t count /*=1UL*/) {
+  INTEROP_TRACE(DRef, arena, count);
+  return INTEROP_RETURN(Construct(getInterp(), DRef, arena, count));
 }
 
-bool Destruct(compat::Interpreter& interp, TCppObject_t This, const Decl* Class,
-              bool withFree, TCppIndex_t nary) {
+bool Destruct(compat::Interpreter& interp, ObjectRef This, const Decl* Class,
+              bool withFree, size_t nary) {
   if (auto wrapper = make_dtor_wrapper(interp, Class)) {
-    (*wrapper)(This, nary, withFree);
+    (*wrapper)(This.data, nary, withFree);
     return true;
   }
   return false;
   // FIXME: Enable stronger diagnostics
 }
 
-bool Destruct(TCppObject_t This, TCppConstScope_t scope,
-              bool withFree /*=true*/, TCppIndex_t count /*=0UL*/) {
-  INTEROP_TRACE(This, scope, withFree, count);
-  const auto* Class = static_cast<const Decl*>(scope);
+bool Destruct(ObjectRef This, DeclRef DRef, bool withFree /*=true*/,
+              size_t count /*=0UL*/) {
+  INTEROP_TRACE(This, DRef, withFree, count);
+  const auto* Class = unwrap<Decl>(DRef);
   return INTEROP_RETURN(Destruct(getInterp(), This, Class, withFree, count));
 }
 
@@ -5131,4 +5561,4 @@ int Undo(unsigned N) {
 #endif
 }
 
-} // namespace CppImpl
+} // namespace Cpp

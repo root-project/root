@@ -22,7 +22,7 @@ protected:
 #if defined(CPPINTEROP_USE_CLING) || defined(_WIN32)
     return; // FIXME: Enable for cling and Windows.
 #endif
-    auto *I = Cpp::CreateInterpreter({}, {"--cuda"});
+    auto I = Cpp::CreateInterpreter({}, {"--cuda"});
     if (!I)
       return;
     if (Cpp::Declare("__global__ void test_func() {}"
@@ -35,8 +35,9 @@ protected:
       Cpp::DeleteInterpreter(I);
       return;
     }
-    bool evalErr = false;
-    int cudaErr = (int)Cpp::Evaluate("(int)cudaGetLastError()", &evalErr);
+    Cpp::Box v = Cpp::Evaluate("(int)cudaGetLastError()");
+    bool evalErr = v.getKind() == Cpp::Box::K_Unspecified;
+    int cudaErr = evalErr ? -1 : v.unbox<int>();
     if (evalErr || cudaErr != 0)
       GTEST_LOG_(WARNING) << "CUDA Kernel execution failed (cudaError="
                           << cudaErr << "). Runtime tests will be skipped.";
@@ -113,10 +114,9 @@ TEST_F(CUDATest, CUDARuntime) {
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
   )"));
-  bool err = false;
-  intptr_t count = Cpp::Evaluate("deviceCount", &err);
-  EXPECT_FALSE(err);
-  EXPECT_GT((int)count, 0);
+  Cpp::Box count = Cpp::Evaluate("deviceCount");
+  EXPECT_NE(count.getKind(), Cpp::Box::K_Unspecified);
+  EXPECT_GT(count.unbox<int>(), 0);
 }
 
 TEST_F(CUDATest, Interpreter_GetLanguageCUDA) {
@@ -140,15 +140,15 @@ TEST_F(CUDATest, SimpleKernelExecution) {
     int kernelErr = (int)cudaGetLastError();
   )")) << "Failed to declare/launch kernel";
 
-  bool err = false;
-  int cudaErr = (int)Cpp::Evaluate("kernelErr", &err);
-  EXPECT_FALSE(err);
+  Cpp::Box kernelErrV = Cpp::Evaluate("kernelErr");
+  EXPECT_NE(kernelErrV.getKind(), Cpp::Box::K_Unspecified);
+  int cudaErr = kernelErrV.unbox<int>();
   EXPECT_EQ(cudaErr, 0) << "Simple kernel launch failed";
 
   if (cudaErr == 0) {
-    intptr_t result = Cpp::Evaluate("*d", &err);
-    EXPECT_FALSE(err);
-    EXPECT_EQ((int)result, 42);
+    Cpp::Box result = Cpp::Evaluate("*d");
+    EXPECT_NE(result.getKind(), Cpp::Box::K_Unspecified);
+    EXPECT_EQ(result.unbox<int>(), 42);
   }
 
   Cpp::Declare("cudaFree(d);");
@@ -195,16 +195,13 @@ TEST_F(CUDATest, CUB_BlockReduceWithDeviceFunction) {
     cudaError_t lastErr = cudaGetLastError();
   )")) << "Failed to launch kernel";
 
-  bool err = false;
-  EXPECT_EQ((int)Cpp::Evaluate("(int)syncErr", &err), 0);
-  EXPECT_FALSE(err);
-  EXPECT_EQ((int)Cpp::Evaluate("(int)lastErr", &err), 0);
-  EXPECT_FALSE(err);
+  EXPECT_EQ(Cpp::Evaluate("(int)syncErr").unbox<int>(), 0);
+  EXPECT_EQ(Cpp::Evaluate("(int)lastErr").unbox<int>(), 0);
 
   // read result directly from managed memory
-  intptr_t result = Cpp::Evaluate("*d_out", &err);
-  EXPECT_FALSE(err);
-  EXPECT_EQ((int)result, 5625216);
+  Cpp::Box result = Cpp::Evaluate("*d_out");
+  EXPECT_NE(result.getKind(), Cpp::Box::K_Unspecified);
+  EXPECT_EQ(result.unbox<int>(), 5625216);
 
   Cpp::Declare("cudaFree(d_in); cudaFree(d_out);");
 }

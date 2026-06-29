@@ -57,7 +57,7 @@ class TypedArg<APITypeKind kind, string type, string name,
 // The emitter reads these records instead of using a hardcoded table, so
 // adding support for a new type only requires a new def here.
 //
-//   CppType       — the C++ type string as it appears in Arg<> or ReturnType.
+//   TypeRef       — the C++ type string as it appears in Arg<> or ReturnType.
 //   CType         — the C-compatible type to use in the generated wrapper.
 //   ArgConversion — expression to convert a C argument to C++ before passing
 //                   to the Cpp:: function. Use $name as the placeholder for
@@ -76,7 +76,7 @@ class TypedArg<APITypeKind kind, string type, string name,
 //===----------------------------------------------------------------------===//
 class CTypeMap<string cpp, string c, string argconv = "", string retconv = "",
                string coll = "", string elem = ""> {
-  string CppType = cpp;
+  string TypeRef = cpp;
   string CType = c;
   string ArgConversion = argconv;
   string RetConversion = retconv;
@@ -97,17 +97,20 @@ def CMap_int64_t   : CTypeMap<"int64_t", "int64_t">;
 def CMap_uint64_t  : CTypeMap<"uint64_t", "uint64_t">;
 def CMap_boolp     : CTypeMap<"bool*", "bool*">;
 
-// Opaque pointer types — erase to void* at the C boundary.
-def CMap_TCppScope_t      : CTypeMap<"TCppScope_t", "void*">;
-def CMap_TCppConstScope_t : CTypeMap<"TCppConstScope_t", "const void*">;
-def CMap_TCppType_t       : CTypeMap<"TCppType_t", "void*">;
-def CMap_TCppConstType_t  : CTypeMap<"TCppConstType_t", "const void*">;
-def CMap_TCppFunction_t   : CTypeMap<"TCppFunction_t", "void*">;
-def CMap_TCppConstFunc_t  : CTypeMap<"TCppConstFunction_t", "const void*">;
-def CMap_TCppFuncAddr_t   : CTypeMap<"TCppFuncAddr_t", "void*">;
-def CMap_TInterp_t        : CTypeMap<"TInterp_t", "void*">;
-def CMap_TCppObject_t     : CTypeMap<"TCppObject_t", "void*">;
-def CMap_TCppIndex_t      : CTypeMap<"TCppIndex_t", "size_t">;
+// Opaque handle types. C consumers see these as the prefixed global
+// structs (CppDeclRef etc.) declared in CppInterOpTypes.h. C++ TUs that
+// include CXCppInterOp.h get `using CppDeclRef = Cpp::DeclRef;` aliases
+// from that header, so the same .inc declarations compile as either
+// language. C++ TUs that include only the C++ API (CppInterOp.h) never
+// see the CppDeclRef spelling at all.
+def CMap_DeclRef       : CTypeMap<"DeclRef", "CppDeclRef">;
+def CMap_TypeRef       : CTypeMap<"TypeRef", "CppTypeRef">;
+def CMap_FuncRef       : CTypeMap<"FuncRef", "CppFuncRef">;
+def CMap_InterpRef     : CTypeMap<"InterpRef", "CppInterpRef">;
+def CMap_ObjectRef     : CTypeMap<"ObjectRef", "CppObjectRef">;
+def CMap_ConstDeclRef  : CTypeMap<"ConstDeclRef", "CppConstDeclRef">;
+def CMap_ConstTypeRef  : CTypeMap<"ConstTypeRef", "CppConstTypeRef">;
+def CMap_ConstFuncRef  : CTypeMap<"ConstFuncRef", "CppConstFuncRef">;
 
 // String types — need conversion at the boundary.
 def CMap_string    : CTypeMap<"std::string", "char*",
@@ -118,7 +121,7 @@ def CMap_stringref : CTypeMap<"const std::string&", "const char*",
 
 // Enums — cast to/from the underlying integer type.
 // Conversions use Cpp:: qualification because the generated C wrappers
-// live outside the CppImpl namespace.
+// live outside the Cpp namespace.
 def CMap_QualKind       : CTypeMap<"QualKind", "unsigned",
     /*ArgConv=*/"static_cast<Cpp::QualKind>($name)",
     /*RetConv=*/"static_cast<unsigned>($result)">;
@@ -152,15 +155,17 @@ def CMap_TemplateArgInfoPtr : CTypeMap<"const TemplateArgInfo*",
 //===----------------------------------------------------------------------===//
 
 // Vector return types → CppInterOpArray.
-def CMap_VecScope_ret : CTypeMap<"std::vector<TCppScope_t>",
+def CMap_VecScope_ret : CTypeMap<"std::vector<DeclRef>",
     "CppInterOpArray", "", "", "return", "void*">;
-def CMap_VecFunc_ret  : CTypeMap<"std::vector<TCppFunction_t>",
+def CMap_VecFunc_ret  : CTypeMap<"std::vector<FuncRef>",
     "CppInterOpArray", "", "", "return", "void*">;
 
 // Vector out-param types → removed from C args, becomes CppInterOpArray return.
-def CMap_VecScope_out : CTypeMap<"std::vector<TCppScope_t>&",
+def CMap_VecScope_out : CTypeMap<"std::vector<DeclRef>&",
     "CppInterOpArray", "", "", "outparam", "void*">;
-def CMap_VecFunc_out  : CTypeMap<"std::vector<TCppFunction_t>&",
+def CMap_VecFunc_out  : CTypeMap<"std::vector<FuncRef>&",
+    "CppInterOpArray", "", "", "outparam", "void*">;
+def CMap_VecType_out  : CTypeMap<"std::vector<TypeRef>&",
     "CppInterOpArray", "", "", "outparam", "void*">;
 
 // String collection out-params → CppInterOpStringArray return.
@@ -172,7 +177,7 @@ def CMap_SetStr_out   : CTypeMap<"std::set<std::string>&",
 // Vector in-param types → expanded to (ptr, size) in C args.
 def CMap_VecCharPP_in : CTypeMap<"const std::vector<const char*>&",
     "const char**", "", "", "inparam", "const char*">;
-def CMap_VecFunc_in   : CTypeMap<"const std::vector<TCppFunction_t>&",
+def CMap_VecFunc_in   : CTypeMap<"const std::vector<FuncRef>&",
     "void**", "", "", "inparam", "void*">;
 def CMap_VecTAI_in    : CTypeMap<"const std::vector<TemplateArgInfo>&",
     "const TemplateArgInfo*", "", "", "inparam", "TemplateArgInfo">;
@@ -183,7 +188,7 @@ def CMap_VecTAI_in    : CTypeMap<"const std::vector<TemplateArgInfo>&",
 
 // Base class for all CppInterOp API functions.
 class CppInterOpAPI {
-  // The C++ function name as it appears in CppImpl::.
+  // The C++ function name as it appears in Cpp::.
   string CppName = NAME;
   // Return type.
   string ReturnType;
