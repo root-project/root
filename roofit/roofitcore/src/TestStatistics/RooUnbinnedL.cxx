@@ -141,7 +141,10 @@ ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone
    return {kahanProb, kahanWeight.Sum()};
 }
 
-// For now, almost exact copy of computeScalarFunc.
+// Similar to computeScalarFunc, but the probabilities were already evaluated
+// as a batch, and the weights are also retrieved as batches instead of looping
+// over RooAbsData::get(i), which loads every column of the dataset only to
+// then read a single weight.
 ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataClone, bool weightSq,
                                std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent)
 {
@@ -149,15 +152,19 @@ ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataC
    ROOT::Math::KahanSum<double> kahanProb;
    RooNaNPacker packedNaN(0.f);
 
-   for (auto i = firstEvent; i < lastEvent; i += stepSize) {
-      dataClone->get(i);
+   const std::size_t nEvents = lastEvent - firstEvent;
+   // Empty spans mean the dataset is unweighted, i.e. all weights are one.
+   std::span<const double> weights = dataClone->getWeightBatch(firstEvent, nEvents, /*sumW2=*/false);
+   std::span<const double> weightsSumW2 =
+      weightSq ? dataClone->getWeightBatch(firstEvent, nEvents, /*sumW2=*/true) : std::span<const double>{};
 
-      double weight = dataClone->weight();
+   for (auto i = firstEvent; i < lastEvent; i += stepSize) {
+      double weight = weights.empty() ? 1.0 : weights[i - firstEvent];
 
       if (0. == weight * weight)
          continue;
       if (weightSq)
-         weight = dataClone->weightSquared();
+         weight = weightsSumW2.empty() ? 1.0 : weightsSumW2[i - firstEvent];
 
       double logProba = std::log(probas[i]);
       const double term = -weight * logProba;
