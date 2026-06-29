@@ -17,13 +17,14 @@ class TPad;
 class TExec;
 class QWidget;
 class QCanvasWidget;
+class QPaintWidget;
 
 class TQt6Canvas : public TCanvasImp {
 
 protected:
 
    QCanvasWidget *fCanvasWidget = nullptr;
-   QWidget *fWidget = nullptr;
+   QPaintWidget *fPaintWidget = nullptr;
 
    Bool_t fFixedSize = kFALSE;      ///<! true when fixed-size canvas is configured
    UInt_t fClientBits = 0;          ///<! latest status bits from client like editor visible or not
@@ -40,14 +41,13 @@ public:
    TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    ~TQt6Canvas() override;
 
-
    Int_t InitWindow() override;
    void Close() override;
    void Show() override;
 
    UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
-
    void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h) override;
+   void ResizeCanvasWindow(Int_t ) override {}
 
 
    void ShowMenuBar(Bool_t show = kTRUE) override { }

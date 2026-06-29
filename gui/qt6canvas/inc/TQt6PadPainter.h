@@ -28,15 +28,20 @@ public:
 
    Bool_t   HasTTFonts() const override { return kTRUE; }
 
+   Bool_t   IsNative() const override { return kTRUE; }
+
+
    void     SetOpacity(Int_t percent) override;
 
    //2. "Off-screen management" part.
-   Int_t    CreateDrawable(UInt_t, UInt_t) override { return -1; }
+   // return non-zero value to let execute painting code
+   Int_t    CreateDrawable(UInt_t, UInt_t) override { return 223344; }
    void     ClearDrawable() override {}
    void     CopyDrawable(Int_t, Int_t, Int_t) override {}
    void     DestroyDrawable(Int_t) override {}
    void     SelectDrawable(Int_t) override {}
    void     SetDoubleBuffer(Int_t /* device */, Int_t /* mode */) override {}
+   void     SetCursor(Int_t /* win */, ECursor /* cursor */) override {}
 
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *, const char *, Int_t) const override;

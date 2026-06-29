@@ -142,6 +142,7 @@ void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float
 
 void TQt6PadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
 {
+   printf("DrawText %5.3f %5.3f %s\n", x, y, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +165,8 @@ void TQt6PadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, 
 
 void TQt6PadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode /*mode*/)
 {
+   printf("DrawTextNDC %5.3f %5.3f %s\n", u, v, text);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

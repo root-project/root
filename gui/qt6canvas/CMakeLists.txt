@@ -32,6 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     TQt6PadPainter.h
   SOURCES
     src/QCanvasWidget.cpp
+    src/QPaintWidget.cpp
     src/TQt6Canvas.cxx
     src/TQt6PadPainter.cxx
   LIBRARIES
@@ -40,3 +41,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     Core
     Gpad
 )
+
+target_include_directories(ROOTQt6Canvas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

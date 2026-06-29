@@ -101,6 +101,7 @@ Int_t TQt6Canvas::InitWindow()
 
 TVirtualPadPainter *TQt6Canvas::CreatePadPainter()
 {
+   printf("Create pad painter\n");
    return new TQt6PadPainter();
 }
 
@@ -249,9 +250,9 @@ void TQt6Canvas::ProcessExecs(TPad *pad, TExec *extra)
 void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
 {
    (void) wid;
-   if (fWidget) {
-      w = fWidget->width();
-      w = fWidget->height();
+   if (fPaintWidget) {
+      w = fPaintWidget->width();
+      h = fPaintWidget->height();
    } else {
       w = 780;
       h = 580;
@@ -264,12 +265,14 @@ void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
 
 UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   x = 0;
-   y = 0;
    if (fCanvasWidget) {
+      auto pos = fCanvasWidget->pos();
+      x = pos.x();
+      y = pos.y();
       w = fCanvasWidget->width();
       h = fCanvasWidget->height();
    } else {
+      x = y = 0;
       w = 800;
       h = 600;
    }
@@ -290,7 +293,7 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TQt6Canvas::PerformUpdate(Bool_t async)
 {
-   return kTRUE;
+   return kFALSE;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -332,21 +335,26 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
 
    auto widget = new QCanvasWidget();
-   widget->setWindowTitle(QString("QtWeb application, build with qt ") + QT_VERSION_STR);
+   widget->setWindowTitle(QString(c->GetTitle()));
+   widget->setGeometry(x, y, width, height);
    widget->show();
 
    auto imp = new TQt6Canvas(c, name, x, y, width, height);
 
    imp->fCanvasWidget = widget;
-   imp->fWidget = widget->GetCanvasWidget();
+   imp->fPaintWidget = widget->GetPaintWidget();
 
+   imp->fPaintWidget->SetCanvas(c);
+
+   // set all internal dimensions
+   c->Resize();
 
    // c->fWindowTopX = x;
    // c->fWindowTopY = y;
    // c->fWindowWidth = width;
    // c->fWindowHeight = height;
-   if (!gROOT->IsBatch() && (height > 25))
-      height -= 25;
+   // if (!gROOT->IsBatch() && (height > 25))
+   //   height -= 25;
    // c->fCw = width;
    // c->fCh = height;
 

@@ -41,7 +41,7 @@
         </widget>
       </item>
       <item row="1" column="0">
-        <widget class="QWidget" name="fCanvasWidget">
+        <widget class="QPaintWidget" name="fPaintWidget">
           <property name="sizePolicy" >
             <sizepolicy>
               <hsizetype>7</hsizetype>
@@ -136,4 +136,12 @@
     </layout>
   </widget>
   <layoutdefault spacing="3" margin="3" />
+  <customwidgets>
+    <customwidget>
+      <class>QPaintWidget</class>
+      <extends>QWidget</extends>
+      <header>QPaintWidget.h</header>
+      <container>0</container>
+    </customwidget>
+  </customwidgets>
 </ui>
