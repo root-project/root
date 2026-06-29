@@ -12,6 +12,11 @@
 
 #include "TCanvas.h"
 
+#include <QFont>
+#include <QRect>
+#include <QPainter>
+
+
 QPaintWidget::QPaintWidget(QWidget *parent) : QWidget(parent)
 {
    setObjectName("QPaintWidget");
@@ -35,9 +40,28 @@ QPaintWidget::~QPaintWidget()
 
 void QPaintWidget::resizeEvent(QResizeEvent *)
 {
+   printf("Call resize event\n");
    if (fCanvas) {
+
       fCanvas->Resize();
       fCanvas->Modified();
    }
 }
 
+void QPaintWidget::paintEvent(QPaintEvent *)
+{
+   printf("Call paint event\n");
+
+   try {
+      QPainter painter(this);
+
+      fPainter = &painter;
+
+      fCanvas->Paint();
+
+      fPainter = nullptr;
+
+   } catch(...) {
+      fPainter = nullptr;
+   }
+}
