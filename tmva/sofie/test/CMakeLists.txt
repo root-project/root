@@ -30,7 +30,6 @@ foreach(onnx_file ${ONNX_FILES})
 endforeach()
 string(REPLACE ";" ";\n" EMIT_CAPTURES "${ALL_CAPTURES}")
 configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
-configure_file(EmitFromRoot.cxx.in EmitFromRoot_all.cxx @ONLY)
 
 ROOTTEST_GENERATE_EXECUTABLE(emitFromONNX EmitFromONNX_all.cxx
                              LIBRARIES protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser
@@ -64,34 +63,7 @@ if (BLAS_FOUND)  # we need BLAS for compiling the models
   endif()
 endif()
 
-# For testing serialisation of RModel object
-
-ROOTTEST_GENERATE_EXECUTABLE(emitFromROOT EmitFromRoot_all.cxx
-    LIBRARIES protobuf::libprotobuf RIO ROOTTMVASofie ROOTTMVASofieParser
-    FIXTURES_SETUP sofie-compile-models-onnx-root
-)
-# silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
-target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bounds)
-
-# Automatic compilation of headers from root files
-ROOTTEST_ADD_TEST(SofieCompileModels_ROOT
-  COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
-  FIXTURES_REQUIRED sofie-compile-models-onnx-root
-  FIXTURES_SETUP sofie-compile-models-root
-)
-
 if (BLAS_FOUND)
-  # Creating a Google Test for Serialisation of RModel
-  ROOT_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
-    LIBRARIES
-      Core
-      GTest::gtest
-      GTest::gtest_main
-  )
-  ROOTTEST_ADD_TEST(TestCustomModelsFromROOT
-                    EXEC ./TestCustomModelsFromROOT
-                    FIXTURES_REQUIRED sofie-compile-models-root)
-
   if (clad)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
     ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS)
