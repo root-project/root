@@ -288,7 +288,7 @@ void TQt6PadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMod
    const Int_t px = gPad->XtoAbsPixel(x);
    const Int_t py = gPad->YtoAbsPixel(y);
 
-   PaintQString(px, py, text);
+   PaintQString(px, py, QString::fromLatin1(text));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +299,7 @@ void TQt6PadPainter::DrawTextUrl(Double_t x, Double_t y, const char *text, const
    const Int_t px = gPad->XtoAbsPixel(x);
    const Int_t py = gPad->YtoAbsPixel(y);
 
-   PaintQString(px, py, text);
+   PaintQString(px, py, QString::fromLatin1(text));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +321,7 @@ void TQt6PadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, EText
    const Int_t px = gPad->UtoAbsPixel(u);
    const Int_t py = gPad->VtoAbsPixel(v);
 
-   PaintQString(px, py, text);
+   PaintQString(px, py, QString::fromLatin1(text));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -556,7 +556,7 @@ void TQt6PadPainter::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t
    Int_t pixelsize = (Int_t) (size*kScale+0.5);
 
    QFontMetrics fm(QFont(family, pixelsize));
-   QRect rect = fm.boundingRect(mess);
+   QRect rect = fm.boundingRect(QString::fromLatin1(mess));
 
    w = rect.width();
    h = rect.height();
@@ -592,7 +592,7 @@ void TQt6PadPainter::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a,
    Int_t pixelsize = (Int_t) (size*kScale+0.5);
 
    QFontMetrics fm(QFont(family, pixelsize));
-   QRect rect = fm.boundingRect(mess);
+   QRect rect = fm.boundingRect(QString::fromLatin1(mess));
 
    a = -rect.top();
    d = rect.bottom();
@@ -627,5 +627,5 @@ UInt_t TQt6PadPainter::GetTextAdvance(Font_t font, Double_t size, const char *te
    Int_t pixelsize = (Int_t) (size*kScale+0.5);
 
    QFontMetrics fm(QFont(family, pixelsize));
-   return fm.horizontalAdvance(QString(text));
+   return fm.horizontalAdvance(QString::fromLatin1(text));
 }
