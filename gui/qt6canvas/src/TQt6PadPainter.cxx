@@ -28,6 +28,10 @@
 #include <QRect>
 #include <QPainter>
 
+
+// to scale fonts to the same size as in the TTF
+const Float_t kScale = 0.75 * 0.93376068;
+
 /** \class TQt6PadPainter
     \ingroup qt6canvas
     \brief Implement TVirtualPadPainter for Qt6 graphics
@@ -502,7 +506,10 @@ void TQt6PadPainter::PaintQString(int x, int y, const QString &s)
    if (family.isEmpty())
       return;
 
-   painter->setFont(QFont(family, att.GetTextSizePixels(*gPad)));
+   auto textsize = att.GetTextSizePixels(*gPad);
+   Int_t pixelsize = (Int_t) (textsize*kScale+0.5);
+
+   painter->setFont(QFont(family, pixelsize));
 
    painter->setPen(GetQColor(att.GetTextColor()));
 
@@ -546,7 +553,9 @@ void TQt6PadPainter::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t
    if (family.isEmpty())
       return;
 
-   QFontMetrics fm(QFont(family, size));
+   Int_t pixelsize = (Int_t) (size*kScale+0.5);
+
+   QFontMetrics fm(QFont(family, pixelsize));
    QRect rect = fm.boundingRect(mess);
 
    w = rect.width();
@@ -562,7 +571,9 @@ void TQt6PadPainter::GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t
    if (family.isEmpty())
       return;
 
-   QFontMetrics fm(QFont(family, size));
+   Int_t pixelsize = (Int_t) (size*kScale+0.5);
+
+   QFontMetrics fm(QFont(family, pixelsize));
    QRect rect = fm.boundingRect(QString::fromWCharArray(mess));
 
    w = rect.width();
@@ -578,7 +589,9 @@ void TQt6PadPainter::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a,
    if (family.isEmpty())
       return;
 
-   QFontMetrics fm(QFont(family, size));
+   Int_t pixelsize = (Int_t) (size*kScale+0.5);
+
+   QFontMetrics fm(QFont(family, pixelsize));
    QRect rect = fm.boundingRect(mess);
 
    a = -rect.top();
@@ -594,7 +607,9 @@ void TQt6PadPainter::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a,
    if (family.isEmpty())
       return;
 
-   QFontMetrics fm(QFont(family, size));
+   Int_t pixelsize = (Int_t) (size*kScale+0.5);
+
+   QFontMetrics fm(QFont(family, pixelsize));
    QRect rect = fm.boundingRect(QString::fromWCharArray(mess));
 
    a = -rect.top();
@@ -609,7 +624,8 @@ UInt_t TQt6PadPainter::GetTextAdvance(Font_t font, Double_t size, const char *te
    auto family = GetFontFamily(font);
    if (family.isEmpty())
       return 0;
+   Int_t pixelsize = (Int_t) (size*kScale+0.5);
 
-   QFontMetrics fm(QFont(family, size));
+   QFontMetrics fm(QFont(family, pixelsize));
    return fm.horizontalAdvance(QString(text));
 }
