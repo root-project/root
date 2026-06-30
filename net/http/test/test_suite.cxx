@@ -3,9 +3,9 @@ TString server_url;
 TString unix_socket;
 
 // submit requests to server
-std::string execute_request(const char *url, const char *post = nullptr)
+std::string execute_request(const char *url, const char *post = nullptr, bool isgzip = false)
 {
-   TString fname = TString::Format("http_server_%d.output", server_hash),
+   TString fname = TString::Format("http_server_%d.output%s", server_hash, isgzip ? ".gz" : ""),
            pname, exec;
 
    if (post) {
@@ -25,8 +25,19 @@ std::string execute_request(const char *url, const char *post = nullptr)
 
    if (gSystem->Exec(exec) != 0)
       res = "<fail>";
-   else
+   else if (isgzip) {
+      exec = TString::Format("gunzip %s", fname.Data());
+      printf("Execute %s\n", exec.Data());
+      if (gSystem->Exec(exec) != 0)
+         res = "<fail>";
+      else {
+         fname.Resize(fname.Length() - 3);
+         res = THttpServer::ReadFileContent(fname.Data());
+      }
+
+   } else {
       res = THttpServer::ReadFileContent(fname.Data());
+   }
 
    gSystem->Unlink(fname);
    if (!pname.IsNull())
@@ -56,6 +67,17 @@ void test_suite(THttpServer &serv)
                   "  \"fName\" : \"obj1\",\n"
                   "  \"fTitle\" : \"title1\"\n"
                   "}") << "result of root.json request";
+
+   // check GZIP JSON representation for the object
+   res = execute_request("/obj1/root.json.gz", nullptr, true);
+   EXPECT_EQ(res, "{\n"
+                  "  \"_typename\" : \"TNamed\",\n"
+                  "  \"fUniqueID\" : 0,\n"
+                  "  \"fBits\" : 8,\n"
+                  "  \"fName\" : \"obj1\",\n"
+                  "  \"fTitle\" : \"title1\"\n"
+                  "}") << "result of root.json,gz request";
+
 
    // check XML representation for the object
    res = execute_request("/obj1/root.xml");
@@ -88,6 +110,15 @@ void test_suite(THttpServer &serv)
                   "  \"_title\" : \"title1\"\n"
                   "}") << "result of item.json request";
 
+   // check item.json.gz request hierarchy request
+   res = execute_request("/obj1/item.json.gz", nullptr, true);
+
+   EXPECT_EQ(res, "{\n"
+                  "  \"_name\" : \"obj1\",\n"
+                  "  \"_root_version\" : " + std::to_string(gROOT->GetVersionCode()) + ",\n"
+                  "  \"_kind\" : \"ROOT.TNamed\",\n"
+                  "  \"_title\" : \"title1\"\n"
+                  "}") << "result of item.json.gz request";
 
    // check multi request to several objects
    res = execute_request("/multi.json?number=2", "/obj1/root.json\n/obj2/root.json\n");

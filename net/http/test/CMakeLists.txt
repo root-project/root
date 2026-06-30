@@ -14,10 +14,11 @@ if(WIN32)
   return()
 endif()
 
-# curl is required for tests
+# curl and gunzip are required for tests
 find_program(CURL_EXECUTABLE curl)
+find_program(GUNZIP_EXECUTABLE gunzip)
 
-if(NOT CURL_EXECUTABLE)
+if(NOT CURL_EXECUTABLE OR NOT GUNZIP_EXECUTABLE)
   return()
 endif()
 
