@@ -56,9 +56,8 @@ struct RDaosKey {
    AttributeKey_t fAkey;
 };
 
-/// \brief Pre-defined keys for object store. `kDistributionKeyDefault` is the distribution key for metadata and
-/// pagelist values; optionally it can be used for ntuple pages (if under the `kOidPerPage` mapping strategy).
-/// `kAttributeKeyDefault` is the attribute key for ntuple pages under `kOidPerPage`.
+/// \brief Pre-defined keys for object store. `kDistributionKeyDefault` is the distribution key for all objects,
+/// `kAttributeKeyDefault` is the attribute key for all objects but anchor, header, footer.
 /// `kAttributeKey{Anchor,Header,Footer}` are the respective attribute keys for anchor/header/footer metadata elements.
 static constexpr DistributionKey_t kDistributionKeyDefault = 0x5a3c69f0cafe4a11;
 static constexpr AttributeKey_t kAttributeKeyDefault = 0x4243544b53444229;
