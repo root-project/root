@@ -540,7 +540,7 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
       fLeft   = -1;
       if (!fBuffer) fBuffer = new char[nsize];
    } else {
-      fLeft = Int_t(bestfree->GetLast() - fSeekKey - nsize + 1);
+      fLeft = bestfree->GetLast() - fSeekKey - nsize + 1;
    }
 //*-*----------------- Case where new object fills exactly a deleted gap
    fNbytes = nsize;
@@ -554,11 +554,11 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
 //*-*----------------- Case where new object is placed in a deleted gap larger than itself
    if (fLeft > 0) {    // found a bigger segment
       if (!fBuffer) {
+         // We reserve space for the new free segment size marker but we don't fill the buffer yet.
+         // We have to check (on writing, i.e. when we do I/O) if we are writing into a large gap (>2GB),
+         // in which case we need to read the first link size first.
          fBuffer = new char[nsize+sizeof(Int_t)];
       }
-      char *buffer  = fBuffer+nsize;
-      Int_t nbytesleft = -fLeft;  // set header of remaining record
-      tobuf(buffer, nbytesleft);
       bestfree->SetFirst(fSeekKey+nsize);
    }
 
@@ -1606,6 +1606,74 @@ void TKey::Streamer(TBuffer &b)
    }
 }
 
+/// Fills zero, one, or two (rare) free segment header buffers into the provided `buffers` parameter.
+/// If the key fits exactly in a provided gap or is at the end of the file, no buffer is filled. Otherwise,
+/// the buffer for the integer immediately after the key data is filled with the size of the remaining, shortened gap.
+/// In rare cases, it can be necessary to fill the second buffer with another free segment link.
+/// Returns the number of buffers filled.
+UShort_t TKey::FillGapHeaderBuffers(TFile &f, GapHeaderBuf_t &buffers) const
+{
+   if (fLeft <= 0)
+      return 0;
+
+   // We must fill at least one free segment header
+
+   if (fLeft <= TFile::kMaxGapSize) {
+      char *pbuf = buffers[0].data();
+      tobuf(pbuf, -static_cast<Int_t>(fLeft));
+      return 1;
+   }
+
+   // Large gap, we need to read the free segment headers that are going to be overwritten by the key to find the
+   // first free segment header beyond the key. In fact, we must find a free segment header far enough beyond the
+   // key so that we can inject another, new free segment header between the key end and the existing one (which means
+   // key end + sizeof(int))
+   const auto newGapOffset = fSeekKey + fNbytes;
+   auto existingGapOffset = fSeekKey;
+   auto prevGapOffset = 0;
+   do {
+      char readBuf[sizeof(Int_t)];
+      Int_t header = 0;
+
+      f.Seek(existingGapOffset);
+      if (f.ReadBuffer(readBuf, sizeof(Int_t))) {
+         Error("FillGapHeaderBuffers", "cannot read free segment link size at %lld", existingGapOffset);
+         return 0;
+      }
+
+      char *pbuf = readBuf;
+      frombuf(pbuf, &header);
+      const Int_t gapSize = -header;
+      if (gapSize < static_cast<Int_t>(sizeof(Int_t)) || gapSize > TFile::kMaxGapSize ||
+          gapSize > (newGapOffset - existingGapOffset + fLeft)) {
+         Error("FillGapHeaderBuffers", "invalid free segment header size %d at %lld", gapSize, existingGapOffset);
+         return 0;
+      }
+
+      prevGapOffset = existingGapOffset;
+      existingGapOffset += gapSize;
+   } while (existingGapOffset <= newGapOffset + static_cast<Long64_t>(sizeof(Int_t)));
+
+   if ((prevGapOffset < newGapOffset) || (existingGapOffset - newGapOffset) <= TFile::kMaxGapSize) {
+      // Normal case: writing the new free segment header won't overwrite an existing one beyond the key.
+      // Rare case: the new free segment header will overwrite (part of) and existing one beyond the key.
+      //            We can then lengthen the gap beteween [prevGapOffset, newGapOffset] except if this has already
+      //            the maximum length.
+      char *pbuf = buffers[0].data();
+      tobuf(pbuf, -static_cast<Int_t>(existingGapOffset - newGapOffset));
+      return 1;
+   }
+
+   // Very rare case: we need two free segment headers after the key
+   char *pbuf = buffers[0].data();
+   tobuf(pbuf, -static_cast<Int_t>(sizeof(Int_t)));
+   const auto newGapSize = existingGapOffset - newGapOffset - sizeof(Int_t);
+   assert(newGapSize <= TFile::kMaxGapSize);
+   pbuf = buffers[1].data();
+   tobuf(pbuf, -static_cast<Int_t>(newGapSize));
+   return 2;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the encoded object supported by this key.
 /// The function returns the number of bytes committed to the file.
@@ -1624,9 +1692,21 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
       buffer = fBuffer;
    }
 
-   if (fLeft > 0) nsize += sizeof(Int_t);
+   GapHeaderBuf_t gapHeaderBuffers;
+   auto nGaps = FillGapHeaderBuffers(*f, gapHeaderBuffers);
+   assert(nGaps <= 2);
+   if (nGaps > 0) {
+      std::memcpy(fBuffer + fNbytes, gapHeaderBuffers[0].data(), sizeof(Int_t));
+      nsize += sizeof(Int_t);
+   }
+
    f->Seek(fSeekKey);
    Bool_t result = f->WriteBuffer(buffer,nsize);
+
+   if (nGaps == 2) {
+      f->WriteBuffer(gapHeaderBuffers[1].data(), sizeof(Int_t));
+      nsize += sizeof(Int_t);
+   }
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when they want.
    if (gDebug) {
@@ -1651,9 +1731,21 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
    Int_t nsize  = fNbytes;
    char *buffer = fBuffer;
 
-   if (fLeft > 0) nsize += sizeof(Int_t);
+   GapHeaderBuf_t gapHeaderBuffers;
+   auto nGaps = FillGapHeaderBuffers(*f, gapHeaderBuffers);
+   assert(nGaps <= 2);
+   if (nGaps > 0) {
+      std::memcpy(fBuffer + fNbytes, gapHeaderBuffers[0].data(), sizeof(Int_t));
+      nsize += sizeof(Int_t);
+   }
+
    f->Seek(fSeekKey);
    Bool_t result = f->WriteBuffer(buffer,nsize);
+
+   if (nGaps == 2) {
+      f->WriteBuffer(gapHeaderBuffers[1].data(), sizeof(Int_t));
+      nsize += sizeof(Int_t);
+   }
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when they want.
    if (gDebug) {
