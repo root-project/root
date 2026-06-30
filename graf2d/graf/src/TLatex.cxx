@@ -1778,10 +1778,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          return TLatexFormSize(0,0,0);
       }
       TextSpec_t newSpec = spec;
-      Char_t *url = new Char_t[opSquareCurly-opUrl-4];
-      strncpy(url,text+opUrl+5,opSquareCurly-opUrl-5);
-      fName = url;
-      delete[] url;
+      fName = TString(text + opUrl + 5, opSquareCurly - opUrl - 5);
       if (!fShow) {
          result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       } else {
