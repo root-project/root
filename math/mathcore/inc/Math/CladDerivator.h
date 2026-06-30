@@ -1074,6 +1074,7 @@ extern "C" void sgemm_(const char *transa, const char *transb, const int *m, con
 
 namespace clad::custom_derivatives {
 
+#ifdef R__HAS_TMVACPU
 namespace TMVA::Experimental::SOFIE {
 
 inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
@@ -1155,6 +1156,8 @@ inline void Relu_pullback(float *output, const float *input, int size, float *_d
 }
 
 } // namespace TMVA::Experimental::SOFIE
+
+#endif // R__HAS_TMVACPU
 
 } // namespace clad::custom_derivatives
 
