@@ -718,9 +718,7 @@ else()
   # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
   set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
   if(asan)
-    # Replace the semicolon with space so that the produced compiler invokation still makes sense
-    string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
-    set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
+    set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
   endif()
   if(ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES)
     # Only set the compiledata parameter if the CMake variable is 'true'

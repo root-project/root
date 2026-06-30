@@ -69,7 +69,7 @@ elseif(MSVC)
   endif()
 
   if(asan)
-    set(ASAN_EXTRA_CXX_FLAGS /fsanitize=address /wd5072)
+    set(ASAN_EXTRA_CXX_FLAGS "/fsanitize=address /wd5072")
     set(ASAN_EXTRA_SHARED_LINKER_FLAGS "/InferASanLibs /incremental:no /DEBUG")
     set(ASAN_EXTRA_EXE_LINKER_FLAGS "/InferASanLibs /incremental:no /DEBUG")
   endif()
