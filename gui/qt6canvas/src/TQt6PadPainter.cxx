@@ -13,10 +13,11 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TEnv.h"
-#include "TImage.h"
+#include "TMath.h"
 #include "TPad.h"
 #include "TROOT.h"
 #include "TColor.h"
+#include "RStipples.h"
 
 #include <memory>
 
@@ -25,7 +26,6 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QRect>
-#include <QBrush>
 #include <QPainter>
 
 /** \class TQt6PadPainter
@@ -119,11 +119,10 @@ void TQt6PadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    } else {
       // draw only fill
       painter->setPen(Qt::NoPen);
-      QBrush fillBrush(GetQColor(GetAttFill().GetFillColor())); // A solid flat green
-      painter->setBrush(fillBrush);
+      painter->setBrush(GetFillBrush());
    }
 
-   QRect rectangle(px1, py1, px2, py2);
+   QRect rectangle(TMath::Min(px1, px2), TMath::Min(py1, py2), TMath::Abs(px2 - px1), TMath::Abs(py2 - py1));
    painter->drawRect(rectangle);
 }
 
@@ -132,8 +131,18 @@ void TQt6PadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 
 void TQt6PadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-   if ((GetAttFill().GetFillStyle() <= 0) || (nPoints < 3))
+   auto painter = fPaintWidget->getPainter();
+
+   if (!painter || (GetAttFill().GetFillStyle() <= 0) || (nPoints < 3))
       return;
+
+   QList<QPointF> points;
+   for (Int_t n = 0; n < nPoints; ++n)
+      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+
+   painter->setPen(Qt::NoPen);
+   painter->setBrush(GetFillBrush());
+   painter->drawPolygon(points);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,9 +150,18 @@ void TQt6PadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Doubl
 
 void TQt6PadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   if ((GetAttFill().GetFillStyle() <= 0) || (nPoints < 3))
+   auto painter = fPaintWidget->getPainter();
+
+   if (!painter || (GetAttFill().GetFillStyle() <= 0) || (nPoints < 3))
       return;
 
+   QList<QPointF> points;
+   for (Int_t n = 0; n < nPoints; ++n)
+      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+
+   painter->setPen(Qt::NoPen);
+   painter->setBrush(GetFillBrush());
+   painter->drawPolygon(points);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -332,6 +350,32 @@ QPen TQt6PadPainter::GetLinePen()
 
    return customPen;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return QBrush for fill drawing drawing
+
+QBrush TQt6PadPainter::GetFillBrush()
+{
+   auto &att = GetAttFill();
+
+   Int_t style = att.GetFillStyle() / 1000;
+
+   if (style == 1)
+      return QBrush(GetQColor(att.GetFillColor()));
+
+   if (style == 3) {
+      Int_t fasi  = att.GetFillStyle() % 1000;
+      Int_t stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
+      QBitmap bitmap = QBitmap::fromData(QSize(16, 16), (uchar *)gStipples[stn]);
+      QImage image = bitmap.toImage();
+      image.setColor(0, qRgba(0, 0, 0, 0)); // transparent
+      image.setColor(1, GetQColor(att.GetFillColor()).rgba());
+      return QBrush(QPixmap::fromImage(image.copy()));
+   }
+
+   return QBrush(Qt::NoBrush);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return font family for specified ROOT font id
