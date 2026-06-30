@@ -60,6 +60,7 @@
 #@hastmvagpu@ R__HAS_TMVAGPU /**/
 #@hastmvacudnn@ R__HAS_CUDNN /**/
 #@haspymva@ R__HAS_PYMVA /**/
+#@hastmvasofie@ R__HAS_TMVASOFIE /*SOFIE is enabled*/
 
 #@hasuring@ R__HAS_URING /**/
 
