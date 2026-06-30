@@ -35,7 +35,7 @@ PyObject* CPyCppyy::CPPClassMethod::Call(CPPInstance*&
     if ((!self || (PyObject*)self == Py_None) && nargs) {
         PyObject* arg0 = CPyCppyy_PyArgs_GET_ITEM(args, 0);
         if (CPPInstance_Check(arg0) && fArgsRequired <= nargs - 1 &&
-            Cppyy::IsSubtype(reinterpret_cast<CPPInstance *>(arg0)->ObjectIsA(), GetScope())) {
+            Cppyy::IsSubclass(reinterpret_cast<CPPInstance *>(arg0)->ObjectIsA(), GetScope())) {
             args   += 1;     // drops first argument
             nargsf -= 1;
         }
