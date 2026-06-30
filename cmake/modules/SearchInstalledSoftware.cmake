@@ -245,6 +245,9 @@ if(unuran AND NOT builtin_unuran)
     endif()
   endif()
 endif()
+if (builtin_unuran)
+  add_subdirectory(builtins/unuran)
+endif()
 
 #---Check for Freetype---------------------------------------------------------------
 ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also outside of it (for "graf" target)
