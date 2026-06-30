@@ -229,8 +229,25 @@ void TQt6PadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Dou
 
 void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Double_t *x, const Double_t *y)
 {
-   if (nPoints < 1)
+   auto painter = fPaintWidget->getPainter();
+
+   if (!painter || nPoints < 1)
       return;
+
+   painter->setRenderHint(QPainter::Antialiasing);
+   painter->setPen(Qt::NoPen);
+   painter->setBrush(QBrush(GetQColor(GetAttMarker().GetMarkerColor())));
+
+   Int_t radius = GetAttMarker().GetMarkerSize();
+   if (radius < 2)
+      radius = 2;
+
+   // TODO: implement all markers types - once method exists
+   for (Int_t n = 0; n < nPoints; ++n) {
+      Int_t px = gPad->XtoAbsPixel(x[n]);
+      Int_t py = gPad->YtoAbsPixel(y[n]);
+      painter->drawEllipse({px, py}, radius, radius);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,8 +255,25 @@ void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Double_t *x, const Doub
 
 void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float_t *y)
 {
-   if (nPoints < 1)
+   auto painter = fPaintWidget->getPainter();
+
+   if (!painter || nPoints < 1)
       return;
+
+   painter->setRenderHint(QPainter::Antialiasing);
+   painter->setPen(Qt::NoPen);
+   painter->setBrush(QBrush(GetQColor(GetAttMarker().GetMarkerColor())));
+
+   Int_t radius = GetAttMarker().GetMarkerSize();
+   if (radius < 2)
+      radius = 2;
+
+   // TODO: implement all markers types - once method exists
+   for (Int_t n = 0; n < nPoints; ++n) {
+      Int_t px = gPad->XtoAbsPixel(x[n]);
+      Int_t py = gPad->YtoAbsPixel(y[n]);
+      painter->drawEllipse({px, py}, radius, radius);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
