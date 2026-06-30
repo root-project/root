@@ -50,6 +50,14 @@ The following people have contributed to this new version:
 * The inclusion by external projects of Makefile templates contained within ROOT is deprecated in 6.42, a warning will be raised if you use them. These files will be removed in ROOT 7.
 * The conversion from Python set to **RooArgSet** is deprecated and won't work anymore in ROOT 6.44. The problem is that Python sets are unordered while RooArgSets are ordered, and this mismatch can lead to subtle problems later on. Prefer conversion from Python lists or tuples, which are ordered too.
 
+## Build System
+
+### Moving from builtin dependencies to system-provided packages
+
+* The general direction of the ROOT project is to become more and more reliant on system packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism. This allows for timely updates and reduces the size of the installed binaries.
+* The previously vendored builtins `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `xxhash`, `pcre2`, should be installed in the system if possible. ROOT will not automatically fall-back to their builtin versions if these are not found: the user is informed of that with a helpful message. If installing these dependencies in the system is not possible, the CMake option `-Dbuiltin_XYZ=ON` has to be consciously chosen by the user.
+* For the builtin versions of `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, the source tarballs are now fetched from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as for the vast majority of ROOT's builtins.
+
 ## Python Interface
 
 ## I/O
