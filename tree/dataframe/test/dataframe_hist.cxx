@@ -31,6 +31,7 @@ public:
    RDFHist()
    {
       fDiag.optionalDiag(kWarning, "", "Filling RHist is experimental", /*matchFullMessage=*/false);
+      fDiag.optionalDiag(kWarning, "cling", "expected alignment (8 bytes) exceeds the actual alignment (4 bytes) [-Watomic-alignment]", false);
       if (GetParam())
          ROOT::EnableImplicitMT(4);
    }
