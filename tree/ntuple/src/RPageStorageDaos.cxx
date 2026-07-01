@@ -242,9 +242,9 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
       throw ROOT::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
 
    auto args = ParseDaosURI(fURI);
-   auto pool = std::make_shared<RDaosPool>(args.fPoolLabel);
+   auto pool = std::make_unique<RDaosPool>(args.fPoolLabel);
 
-   fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel, /*create =*/true);
+   fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel, /*create =*/true);
    fDaosContainer->SetDefaultObjectClass(oclass);
 
    auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
@@ -425,8 +425,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
    EnableDefaultMetrics("RPageSourceDaos");
 
    auto args = ParseDaosURI(uri);
-   auto pool = std::make_shared<RDaosPool>(args.fPoolLabel);
-   fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel);
+   auto pool = std::make_unique<RDaosPool>(args.fPoolLabel);
+   fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel);
 }
 
 ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos()
@@ -513,8 +513,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNT
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
-   auto clone = new RPageSourceDaos(fNTupleName, fURI, fOptions);
-   return std::unique_ptr<RPageSourceDaos>(clone);
+   return std::make_unique<RPageSourceDaos>(fNTupleName, fURI, fOptions);
 }
 
 std::vector<std::unique_ptr<RCluster>>
