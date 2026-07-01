@@ -117,23 +117,6 @@ RooAbsPdf *findConstraint(RooAbsArg *g)
    return nullptr;
 }
 
-std::string toString(TClass *c)
-{
-   if (!c) {
-      return "Const";
-   }
-   if (c == RooPoisson::Class()) {
-      return "Poisson";
-   }
-   if (c == RooGaussian::Class()) {
-      return "Gauss";
-   }
-   if (c == RooLognormal::Class()) {
-      return "Lognormal";
-   }
-   return "unknown";
-}
-
 inline std::string defaultGammaName(std::string const &sysname, std::size_t i)
 {
    return "gamma_" + sysname + "_bin_" + std::to_string(i);
@@ -172,10 +155,47 @@ std::string constraintName(std::string const &paramName)
    return paramName + "Constraint";
 }
 
+bool isLegacyConstraintType(std::string const &value)
+{
+   return value == "Gauss" || value == "Poisson" || value == "Const" || value == "Lognormal";
+}
+
+RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample)
+{
+   if (auto *constraint = tool.workspace()->pdf(constraintName)) {
+      return constraint;
+   }
+
+   try {
+      return tool.request<RooAbsPdf>(constraintName, sample);
+   } catch (RooJSONFactoryWSTool::DependencyMissingError const &err) {
+      if (err.child() != constraintName) {
+         throw;
+      }
+   }
+
+   return nullptr;
+}
+
+RooAbsPdf &createLegacyConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param,
+                                  std::string const &constraintType)
+{
+   if (constraintType == "Gauss") {
+      param.setError(1.0);
+      return getOrCreate<RooGaussian>(*tool.workspace(), constraintName(param.GetName()), param,
+                                      *tool.workspace()->var(std::string("nom_") + param.GetName()), 1.);
+   }
+
+   RooJSONFactoryWSTool::error("legacy constraint value '" + constraintType + "' for modifier '" +
+                               RooJSONFactoryWSTool::name(mod) +
+                               "' is a known constraint type, but it cannot be resolved in this context");
+}
+
 ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
                          const std::vector<std::string> &parnames, const std::vector<double> &vals,
                          RooJSONFactoryWSTool &tool, RooAbsCollection &constraints, const RooArgSet &observables,
-                         const std::string &constraintType, double gammaMin, double gammaMax, double minSigma)
+                         const std::string &constraintType, double gammaMin, double gammaMax, double minSigma,
+                         bool createConstraints = true)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -193,7 +213,9 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
 
    if (vals.size() > 0) {
-      if (constraintType != "Const") {
+      if (!createConstraints) {
+         configureConstrainedGammas(gammas, vals, minSigma);
+      } else if (constraintType != "Const") {
          auto constraintsInfo = createGammaConstraints(
             gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
          for (auto const &term : constraintsInfo.constraints) {
@@ -236,12 +258,10 @@ const JSONNode &findStaterror(const JSONNode &comp)
 RooAbsPdf &
 getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, const std::string &sample)
 {
-   if (auto constrName = mod.find("constraint_name")) {
+   JSONNode const *constrName = mod.find("constraint_name");
+   if (constrName) {
       auto constraint_name = constrName->val();
-      auto constraint = tool.workspace()->pdf(constraint_name);
-      if (!constraint) {
-         constraint = tool.request<RooAbsPdf>(constrName->val(), sample);
-      }
+      auto constraint = findNamedConstraint(tool, constraint_name, sample);
       if (!constraint) {
          RooJSONFactoryWSTool::error("unable to find definition of of constraint '" + constraint_name +
                                      "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
@@ -250,19 +270,35 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
          param.setError(gauss->getSigma().getVal());
       }
       return *constraint;
-   } else {
-      std::string constraint_type = "Gauss";
-      if (auto constrType = mod.find("constraint_type")) {
-         constraint_type = constrType->val();
-      }
-      if (constraint_type == "Gauss") {
-         param.setError(1.0);
-         return getOrCreate<RooGaussian>(*tool.workspace(), constraintName(param.GetName()), param,
-                                         *tool.workspace()->var(std::string("nom_") + param.GetName()), 1.);
-      }
-      RooJSONFactoryWSTool::error("unknown or invalid constraint for modifier '" + RooJSONFactoryWSTool::name(mod) +
-                                  "'");
    }
+
+   if (auto constr = mod.find("constraint")) {
+      std::string constraintValue = constr->val();
+      if (auto *constraint = findNamedConstraint(tool, constraintValue, sample)) {
+         if (auto gauss = dynamic_cast<RooGaussian *const>(constraint)) {
+            param.setError(gauss->getSigma().getVal());
+         }
+         return *constraint;
+      }
+
+      if (isLegacyConstraintType(constraintValue)) {
+         return createLegacyConstraint(tool, mod, param, constraintValue);
+      }
+
+      RooJSONFactoryWSTool::error("unable to resolve constraint value '" + constraintValue + "' for modifier '" +
+                                  RooJSONFactoryWSTool::name(mod) +
+                                  "': this looks like a legacy workspace where the 'constraint' field is neither a "
+                                  "constraint pdf name nor a supported legacy constraint type");
+   }
+
+   std::string constraint_type = "Gauss";
+   if (auto constrType = mod.find("constraint_type")) {
+      constraint_type = constrType->val();
+   }
+   if (isLegacyConstraintType(constraint_type)) {
+      return createLegacyConstraint(tool, mod, param, constraint_type);
+   }
+   RooJSONFactoryWSTool::error("unknown or invalid constraint for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
 }
 double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
 {
@@ -347,7 +383,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
             constrParam.setError(0.0);
             normElems.add(constrParam);
-            if (mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
+            if (mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
                // for norm factors, constraints are optional
                constraints.add(getOrCreateConstraint(tool, mod, constrParam, sampleName));
             }
@@ -410,11 +446,51 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname +
                                            "' with neither values nor parameters!");
             }
-            std::string constraint(mod.has_child("constraint_type") ? mod["constraint_type"].val()
-                                   : mod.has_child("constraint")    ? mod["constraint"].val()
-                                                                    : "unknown");
+            std::string constraint = "unknown";
+            std::vector<RooAbsPdf *> constraintPdfs;
+            bool const hasConstraintList = mod.has_child("constraints");
+            if (hasConstraintList) {
+               for (const auto &v : mod["constraints"].children()) {
+                  if (v.is_null()) {
+                     constraintPdfs.push_back(nullptr);
+                  } else {
+                     std::string constraintName = v.val();
+                     auto *constraintPdf = findNamedConstraint(tool, constraintName, sampleName);
+                     if (!constraintPdf) {
+                        RooJSONFactoryWSTool::error("unable to find definition of constraint '" + constraintName +
+                                                    "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
+                     }
+                     constraintPdfs.push_back(constraintPdf);
+                  }
+               }
+               std::size_t const nGammas = std::max(vals.size(), parnames.size());
+               if (constraintPdfs.size() != nGammas) {
+                  std::stringstream ss;
+                  ss << "modifier '" << RooJSONFactoryWSTool::name(mod) << "' has " << constraintPdfs.size()
+                     << " constraints, but " << nGammas << " parameters";
+                  RooJSONFactoryWSTool::error(ss.str());
+               }
+            } else if (mod.has_child("constraint_type")) {
+               constraint = mod["constraint_type"].val();
+            } else if (mod.has_child("constraint")) {
+               std::string constraintValue = mod["constraint"].val();
+               if (isLegacyConstraintType(constraintValue)) {
+                  constraint = constraintValue;
+               } else {
+                  RooJSONFactoryWSTool::error("unable to resolve constraint value '" + constraintValue +
+                                              "' for modifier '" + RooJSONFactoryWSTool::name(mod) +
+                                              "': this looks like a legacy workspace where the 'constraint' field is "
+                                              "not a supported legacy constraint type");
+               }
+            }
             shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
-                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty));
+                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty,
+                                     /*createConstraints=*/!hasConstraintList));
+            for (auto *constraintPdf : constraintPdfs) {
+               if (constraintPdf) {
+                  constraints.add(*constraintPdf);
+               }
+            }
          } else if (modtype == "custom") {
             RooAbsReal *obj = ws.function(sysname);
             if (!obj) {
@@ -707,6 +783,7 @@ struct HistoSys {
 struct ShapeSys {
    std::string name;
    std::vector<double> constraints;
+   std::vector<RooAbsPdf const *> constraintPdfs;
    std::vector<RooAbsReal *> parameters;
    RooAbsPdf const *constraint = nullptr;
    TClass *constraintType = RooGaussian::Class();
@@ -1099,16 +1176,22 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                }
                if (!constraint) {
                   sys.constraints.push_back(0.0);
+                  sys.constraintPdfs.push_back(nullptr);
                } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                   sys.constraints.push_back(1. / std::sqrt(poissonTau(*constraint_p, *g)));
+                  sys.constraintPdfs.push_back(constraint_p);
                   if (!sys.constraint) {
                      sys.constraintType = RooPoisson::Class();
                   }
                } else if (auto constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
                   sys.constraints.push_back(constraint_g->getSigma().getVal() / constraint_g->getMean().getVal());
+                  sys.constraintPdfs.push_back(constraint_g);
                   if (!sys.constraint) {
                      sys.constraintType = RooGaussian::Class();
                   }
+               } else {
+                  RooJSONFactoryWSTool::error(
+                     "currently, only RooPoisson and RooGaussian are supported as constraint types");
                }
             }
             sample.shapesys.emplace_back(std::move(sys));
@@ -1146,13 +1229,11 @@ void configureStatError(Channel &channel)
 
 bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
 {
-   // Write the constraint reference (either by name or by type) for any
-   // modifier that supports an external Gaussian/Poisson/etc. constraint.
+   // Write the constraint reference for any modifier that supports an
+   // external Gaussian/Poisson/etc. constraint.
    auto writeConstraint = [](JSONNode &mod, auto const &sys) {
       if (sys.constraint) {
-         mod["constraint_name"] << sys.constraint->GetName();
-      } else if (sys.constraintType) {
-         mod["constraint_type"] << toString(sys.constraintType);
+         mod["constraint"] << sys.constraint->GetName();
       }
    };
 
@@ -1173,7 +1254,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["parameter"] << nf.param->GetName();
          mod["type"] << "normfactor";
          if (nf.constraint) {
-            mod["constraint_name"] << nf.constraint->GetName();
+            mod["constraint"] << nf.constraint->GetName();
             tool->queueExport(*nf.constraint);
          }
       }
@@ -1218,6 +1299,17 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["type"] << "shapesys";
          optionallyExportGammaParameters(mod, sys.name, sys.parameters);
          writeConstraint(mod, sys);
+         if (std::any_of(sys.constraintPdfs.begin(), sys.constraintPdfs.end(),
+                         [](auto *pdf) { return pdf != nullptr; })) {
+            auto &constraintNames = mod["constraints"].set_seq();
+            for (auto *constraint : sys.constraintPdfs) {
+               if (constraint) {
+                  constraintNames.append_child() << constraint->GetName();
+               } else {
+                  constraintNames.append_child().set_null();
+               }
+            }
+         }
          auto &vals = mod["data"].set_map()["vals"];
          if (sys.constraint || sys.constraintType) {
             vals.fill_seq(sys.constraints);
@@ -1245,7 +1337,6 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << ::Literals::staterror;
          mod["type"] << ::Literals::staterror;
          optionallyExportGammaParameters(mod, "stat_" + channel.name, sample.staterrorParameters);
-         mod["constraint_type"] << toString(sample.barlowBeestonLightConstraintType);
       }
 
       if (!observablesWritten) {
@@ -1380,6 +1471,13 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       for (auto &modifier : sample.histosys) {
          if (modifier.constraint) {
             tool->queueExport(*modifier.constraint);
+         }
+      }
+      for (auto &modifier : sample.shapesys) {
+         for (auto *constraint : modifier.constraintPdfs) {
+            if (constraint) {
+               tool->queueExport(*constraint);
+            }
          }
       }
    }
