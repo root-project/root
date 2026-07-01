@@ -171,9 +171,9 @@ int ROOT::Experimental::Internal::RDaosEventQueue::WaitOnParentBarrier(daos_even
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Internal::RDaosContainer::RDaosContainer(std::shared_ptr<RDaosPool> pool,
+ROOT::Experimental::Internal::RDaosContainer::RDaosContainer(std::unique_ptr<RDaosPool> pool,
                                                              std::string_view containerId, bool create)
-   : fPool(pool)
+   : fPool(std::move(pool))
 {
    daos_cont_info_t containerInfo{};
 
