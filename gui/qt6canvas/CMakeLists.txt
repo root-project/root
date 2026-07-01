@@ -33,6 +33,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
   SOURCES
     src/QCanvasWidget.cpp
     src/QPaintWidget.cpp
+    src/QRootMethodDialog.cpp
     src/TQt6Canvas.cxx
     src/TQt6PadPainter.cxx
   LIBRARIES
