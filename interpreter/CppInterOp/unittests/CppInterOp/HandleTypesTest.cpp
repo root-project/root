@@ -122,7 +122,9 @@ TEST(HandleTypes, AbiCompatibleWithVoidPtr) {
     bool (*void_ptr_fn)(void*);
     bool (*handle_fn)(DeclRef);
   } pun{&void_ptr_takes_nonnull};
+
+  volatile auto handle_fn = pun.handle_fn;
   int x = 0;
-  EXPECT_TRUE(pun.handle_fn(DeclRef(&x)));
-  EXPECT_FALSE(pun.handle_fn(DeclRef{}));
+  EXPECT_TRUE(handle_fn(DeclRef(&x)));
+  EXPECT_FALSE(handle_fn(DeclRef{}));
 }
