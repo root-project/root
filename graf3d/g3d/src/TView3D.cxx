@@ -12,10 +12,10 @@
 #include "RConfigure.h"
 
 #include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TView3D.h"
 #include "TAxis3D.h"
 #include "TPolyLine3D.h"
-#include "TVirtualX.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TClass.h"
@@ -760,10 +760,9 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       gPad->SetTheta(90-newlatitude);
       gPad->Modified(kTRUE);
 
-      // Set line color, style and width
-      gVirtualX->SetLineColor(-1);
-      gVirtualX->SetLineStyle(-1);
-      gVirtualX->SetLineWidth(-1);
+      // reset line color, style and width
+      if (auto pp = gPad->GetPainter())
+         pp->SetAttLine({-1, -1, -1});
       break;
    }
 
