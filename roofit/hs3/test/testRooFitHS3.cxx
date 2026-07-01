@@ -6,6 +6,7 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooAddPdf.h>
+#include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
@@ -27,6 +28,7 @@
 #include <RooWorkspace.h>
 #include <RooFormulaVar.h>
 #include <RooFit/ModelConfig.h>
+#include <RooStats/HistFactory/ParamHistFunc.h>
 
 #include <cmath>
 
@@ -271,6 +273,30 @@ TEST(RooFitHS3, ParameterStepWidthsFallbackExcludesDataAxes)
    EXPECT_FALSE(ws2.var("x")->hasError());
 }
 
+TEST(RooFitHS3, FixedRangeParameterExportsConst)
+{
+   RooWorkspace ws{"ws_fixed_range"};
+   RooRealVar x{"x", "x", 0.0, -5.0, 5.0};
+   RooRealVar fixed{"fixed", "fixed", 1.0, 1.0, 1.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 10.0};
+   RooGaussian gauss{"gauss", "gauss", x, fixed, sigma};
+   fixed.setConstant(false);
+   ws.import(gauss, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   const auto fixedPos = json.find("\"const\":true,\"name\":\"fixed\"");
+   ASSERT_NE(fixedPos, std::string::npos) << json;
+   const auto fixedBegin = json.rfind("{", fixedPos);
+   ASSERT_NE(fixedBegin, std::string::npos) << json;
+   const auto fixedEnd = json.find("}", fixedPos);
+   ASSERT_NE(fixedEnd, std::string::npos) << json;
+   const std::string fixedNode = json.substr(fixedBegin, fixedEnd - fixedBegin);
+
+   EXPECT_NE(fixedNode.find("\"const\":true"), std::string::npos) << fixedNode;
+   EXPECT_EQ(fixedNode.find("\"min\""), std::string::npos) << fixedNode;
+   EXPECT_EQ(fixedNode.find("\"max\""), std::string::npos) << fixedNode;
+}
+
 TEST(RooFitHS3, ParameterStepWidthsImportAfterDefaultSnapshot)
 {
    const std::string json = R"({
@@ -425,6 +451,33 @@ TEST(RooFitHS3, RooGenericPdf)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, GenericExpressionCleanup)
+{
+   RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
+   RooFormulaVar formula{"formula",
+                         "formula",
+                         "TMath::Floor(x) + TMath::Ceil(x) + TMath::Abs(x) + TMath::Tan(x) + "
+                         "TMath::ASin(x / 2.) + TMath::ACos(x / 2.) + TMath::ATan(x) + TMath::Pi() + TMath::E()",
+                         RooArgList{x}};
+
+   RooWorkspace ws1{"ws_expr_cleanup"};
+   ws1.import(formula, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+
+   for (const char *token : {"floor", "ceil", "abs", "tan", "asin", "acos", "atan", "PI", "EULER"}) {
+      EXPECT_NE(json.find(token), std::string::npos) << json;
+   }
+   EXPECT_EQ(json.find("TMath::Pi"), std::string::npos) << json;
+   EXPECT_EQ(json.find("TMath::E"), std::string::npos) << json;
+
+   RooWorkspace ws2{"ws_expr_cleanup_2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *imported = ws2.function("formula");
+   ASSERT_NE(imported, nullptr);
+   ws2.var("x")->setVal(0.5);
+   EXPECT_DOUBLE_EQ(imported->getVal(), formula.getVal());
+}
+
 TEST(RooFitHS3, RooHistPdf)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
@@ -438,6 +491,73 @@ TEST(RooFitHS3, RooHistPdf)
 
    int status = validate(RooHistPdf{"histPdf", "histPdf", x, dataHist});
    EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+
+   RooDataHist dataHist{"dataHist", "dataHist", x};
+   dataHist.set(0, 2.0, -1);
+   dataHist.set(1, 4.0, -1);
+
+   RooHistFunc histFunc{"histFunc", "histFunc", x, dataHist};
+   RooBinWidthFunction binVolume{"binVolume", "binVolume", histFunc, false};
+   RooBinWidthFunction inverseBinVolume{"inverseBinVolume", "inverseBinVolume", histFunc, true};
+
+   RooWorkspace ws1{"ws_binvolume"};
+   ws1.import(binVolume, RooFit::Silence());
+   ws1.import(inverseBinVolume, RooFit::Silence(), RooFit::RecycleConflictNodes());
+
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   EXPECT_NE(json.find("\"type\":\"binvolume\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"type\":\"inverse_binvolume\""), std::string::npos) << json;
+   EXPECT_EQ(json.find("divideByBinWidth"), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"type\":\"binwidth\""), std::string::npos) << json;
+
+   RooWorkspace ws2{"ws_binvolume_2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *importedBinVolume = dynamic_cast<RooBinWidthFunction *>(ws2.function("binVolume"));
+   auto *importedInverseBinVolume = dynamic_cast<RooBinWidthFunction *>(ws2.function("inverseBinVolume"));
+   ASSERT_NE(importedBinVolume, nullptr);
+   ASSERT_NE(importedInverseBinVolume, nullptr);
+   EXPECT_FALSE(importedBinVolume->divideByBinWidth());
+   EXPECT_TRUE(importedInverseBinVolume->divideByBinWidth());
+}
+
+TEST(RooFitHS3, StepDispatchesToRooHistFuncAndParamHistFunc)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+
+   RooDataHist dataHist{"dataHist", "dataHist", x};
+   dataHist.set(0, 3.0, -1);
+   dataHist.set(1, 5.0, -1);
+
+   RooHistFunc histFunc{"histFunc", "histFunc", x, dataHist};
+   RooRealVar p0{"p0", "p0", 1.0};
+   RooRealVar p1{"p1", "p1", 2.0};
+   ParamHistFunc paramHistFunc{"paramHistFunc", "paramHistFunc", RooArgList{x}, RooArgList{p0, p1}};
+
+   RooWorkspace ws1{"ws_step"};
+   ws1.import(histFunc, RooFit::Silence());
+   ws1.import(paramHistFunc, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   EXPECT_NE(json.find("\"name\":\"histFunc\",\"type\":\"step\""), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"name\":\"histFunc\",\"type\":\"histogram\""), std::string::npos) << json;
+   const auto paramHistFuncPos = json.find("\"name\":\"paramHistFunc\"");
+   ASSERT_NE(paramHistFuncPos, std::string::npos) << json;
+   const auto paramHistFuncEnd = json.find("}", paramHistFuncPos);
+   ASSERT_NE(paramHistFuncEnd, std::string::npos) << json;
+   const std::string paramHistFuncNode = json.substr(paramHistFuncPos, paramHistFuncEnd - paramHistFuncPos);
+   EXPECT_NE(paramHistFuncNode.find("\"type\":\"step\""), std::string::npos) << paramHistFuncNode;
+
+   RooWorkspace ws2{"ws_step_2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_NE(dynamic_cast<RooHistFunc *>(ws2.function("histFunc")), nullptr);
+   EXPECT_NE(dynamic_cast<ParamHistFunc *>(ws2.function("paramHistFunc")), nullptr);
 }
 
 TEST(RooFitHS3, RooLandau)
@@ -894,6 +1014,83 @@ TEST(RooFitHS3, HistFactoryZeroYieldBin)
       EXPECT_TRUE(std::isfinite(rrv->getMin())) << "Non-finite gamma min for " << name;
       EXPECT_TRUE(std::isfinite(rrv->getMax())) << "Non-finite gamma max for " << name;
    }
+}
+
+TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
+{
+   const std::string jsonStr = R"({
+      "metadata": {"hs3_version": "0.1.90"},
+      "domains": [
+         {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2},
+               {"name": "nom_mu", "min": 1.0, "max": 1.0},
+               {"name": "sigma_mu", "min": 1.0, "max": 1.0}
+            ]
+         }
+      ],
+      "parameter_points": [
+         {
+            "name": "default_values",
+            "parameters": [
+               {"name": "nom_mu", "value": 1.0, "const": true},
+               {"name": "sigma_mu", "value": 1.0, "const": true}
+            ]
+         }
+      ],
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0]},
+                  "modifiers": [
+                     {
+                        "name": "mu",
+                        "parameter": "mu",
+                        "type": "normfactor",
+                        "constraint_name": "muConstraint"
+                     }
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "muConstraint",
+            "type": "gaussian_dist",
+            "x": "mu",
+            "mean": "nom_mu",
+            "sigma": "sigma_mu"
+         }
+      ],
+      "data": [
+         {
+            "name": "obsData_channel0",
+            "type": "binned",
+            "axes": [
+               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "contents": [10.0, 20.0]
+         }
+      ]
+   })";
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws_hf_constraint"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(jsonStr));
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find("\"constraint\":\"muConstraint\""), std::string::npos) << exported;
+   EXPECT_EQ(exported.find("constraint_name"), std::string::npos) << exported;
+   EXPECT_EQ(exported.find("constraint_type"), std::string::npos) << exported;
 }
 
 // Snapshot export must keep all variables that any pdf depends on, even when
