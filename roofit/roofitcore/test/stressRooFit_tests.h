@@ -1722,6 +1722,8 @@ public:
 
       // Plot decay_gm(dt|dterr) at various values of dterr
       RooPlot *frame = dt.frame(Title("Slices of decay(dt|dterr) at various dterr"));
+      // Sample dterr in 100 bins to select the slice values below with setBin()
+      dterr.setBins(100);
       for (int ibin = 0; ibin < 100; ibin += 20) {
          dterr.setBin(ibin);
          decay_gm.plotOn(frame, Normalization(5.), Name(Form("curve_slice_%d", ibin)));

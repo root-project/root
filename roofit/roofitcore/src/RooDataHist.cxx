@@ -798,6 +798,17 @@ void RooDataHist::initialize(const char* binningName, bool fillTree)
       }
     }
 
+    // If the variable has no binning explicitly set (the default for a
+    // freshly-constructed RooRealVar, which reports zero bins), materialize the
+    // historical default binning. _vars holds this dataset's own clones (see
+    // RooAbsData::initializeVars, which addClone's the input variables), so this
+    // does not affect the user's original variable.
+    if (RooRealVar* rrv = dynamic_cast<RooRealVar*>(_vars[i])) {
+      if (rrv->getBins() == 0) {
+        rrv->setBinning(RooUniformBinning(rrv->getMin(), rrv->getMax(), RooAbsRealLValue::DefaultNBins));
+      }
+    }
+
     auto lvarg = dynamic_cast<RooAbsLValue*>(_vars[i]);
     assert(lvarg);
     _lvvars.push_back(lvarg);
@@ -1485,7 +1496,14 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
     double xval = realX.getVal() ;
     double yval = realY.getVal() ;
 
-    RooAbsBinning const& binningY = realY.getBinning();
+    // Use the internal binning of the y variable, not the binning of the
+    // variable passed in `bin`. The latter may be a different object than the
+    // one owned by this RooDataHist (e.g. the histogram observable clone of a
+    // RooHistPdf), with an unrelated default binning. The bin indexing below
+    // relies on `_idxMult` and `centralIdx`, which are both expressed in terms
+    // of the internal binning, so the y binning must match it too. This mirrors
+    // what calcTreeIndex() and interpolateDim() do for the other dimensions.
+    RooAbsBinning const& binningY = static_cast<RooRealVar const&>(*_vars[varInfo.realVarIdx2]).getBinning();
 
     int ybinC = binningY.binNumber(yval) ;
     int ybinLo = ybinC-intOrder/2 - ((yval<binningY.binCenter(ybinC))?1:0) ;

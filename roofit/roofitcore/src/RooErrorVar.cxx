@@ -44,7 +44,7 @@ RooErrorVar::RooErrorVar(const char *name, const char *title, const RooRealVar& 
   RooAbsRealLValue(name,title),
   _realVar("realVar","RooRealVar with error",this,(RooAbsReal&)input)
 {
-  _binning = std::make_unique<RooUniformBinning>(-1,1,100) ;
+  _binning = std::make_unique<RooUniformBinning>(-1,1) ;
 }
 
 

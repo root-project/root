@@ -76,6 +76,12 @@ public:
   /// Get number of bins of currently defined range.
   /// \param name Optionally, request number of bins for range with given name.
   virtual Int_t getBins(const char* name=nullptr) const { return getBinning(name).numBins(); }
+
+  /// Historical default number of bins, injected by routines that need a
+  /// concrete bin count when a variable has no binning explicitly set
+  /// (i.e. when getBins() returns 0). Used for unbinned-data plotting,
+  /// generateBinned() and createHistogram().
+  static constexpr int DefaultNBins = 100;
   /// Get minimum of currently defined range.
   /// \param name Optionally, request minimum of range with given name.
   virtual double getMin(const char* name=nullptr) const { return getBinning(name).lowBound(); }
