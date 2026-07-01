@@ -20,7 +20,6 @@
 #include "TGaxis.h"
 #include "TAxisModLab.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TLine.h"
 #include "TArrow.h"
 #include "TLatex.h"
@@ -1039,7 +1038,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t ww, af, rne;
    Double_t xx, yy;
    Double_t xmnlog, x00, x11, h2, h2sav, axmul, y;
-   Float_t chupxvsav, chupyvsav;
    Double_t rtxw, rtyw;
    Int_t nlabels, nticks, nticks0 = 0, nticks1 = 0;
    Int_t i, j, k, l, decade;
@@ -1370,11 +1368,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t TitleColor = GetTextColor();
    Int_t TitleFont  = GetTextFont();
 
-   if (!gPad->IsBatch()) {
-      gVirtualX->GetCharacterUp(chupxvsav, chupyvsav);
-      gVirtualX->SetClipOFF(gPad->GetCanvasID());
-   }
-
 // Compute length of axis
    axis_length = TMath::Sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0));
    if (axis_length == 0) {
@@ -1578,16 +1571,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             }
          }
       }
-   }
-
-// Now determine orientation of labels on axis
-   if (!gPad->IsBatch()) {
-      if (cosphi > 0) gVirtualX->SetCharacterUp(-sinphi,cosphi);
-      else            gVirtualX->SetCharacterUp(sinphi,-cosphi);
-      if (x0 == x1)   gVirtualX->SetCharacterUp(0,1);
-      if (optionVert) gVirtualX->SetCharacterUp(0,1);
-      if (optionPara) gVirtualX->SetCharacterUp(-sinphi,cosphi);
-      if (optionDown) gVirtualX->SetCharacterUp(cosphi,sinphi);
    }
 
 // Now determine text alignment
