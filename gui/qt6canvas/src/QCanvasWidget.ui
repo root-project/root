@@ -59,13 +59,7 @@
         </widget>
       </item>
       <item row="2" column="0">
-        <widget class="QFrame" name="fStatusFrame">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
+        <widget class="QStatusBar" name="fStatusBar">
           <property name="sizePolicy" >
             <sizepolicy>
               <hsizetype>7</hsizetype>
@@ -80,58 +74,7 @@
               <height>10</height>
             </size>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <property name="spacing">
-            <number>1</number>
-           </property>
-           <property name="topMargin">
-            <number>2</number>
-           </property>
-           <property name="bottomMargin">
-            <number>2</number>
-           </property>
-           <item>
-             <widget class="QLabel" name="fStatusLabel1">
-               <property name="text" >
-                 <string>Label 1</string>
-               </property>
-               <property name="wordWrap" >
-                 <bool>false</bool>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QLabel" name="fStatusLabel2">
-               <property name="text" >
-                 <string>Label 2</string>
-               </property>
-               <property name="wordWrap" >
-                 <bool>false</bool>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QLabel" name="fStatusLabel3">
-               <property name="text" >
-                 <string>Label 3</string>
-               </property>
-               <property name="wordWrap" >
-                 <bool>false</bool>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QLabel" name="fStatusLabel4">
-               <property name="text" >
-                 <string>Label 4</string>
-               </property>
-               <property name="wordWrap" >
-                 <bool>false</bool>
-               </property>
-             </widget>
-           </item>
-          </layout>
-         </widget>
+        </widget>
       </item>
     </layout>
   </widget>
