@@ -132,15 +132,21 @@ void Domains::ProductDomain::readVariable(RooRealVar const &var)
 
 void Domains::ProductDomain::readBinning(ProductDomainElement &elem, RooAbsBinning const &binning)
 {
+   elem.hasNBins = false;
+   elem.nBins = 0;
+   elem.edges.clear();
+
+   const int nBins = binning.numBins();
+   if (nBins <= 0) {
+      return;
+   }
+
    if (binning.isUniform()) {
       elem.hasNBins = true;
-      elem.nBins = binning.numBins();
-      elem.edges.clear();
+      elem.nBins = nBins;
    } else {
-      elem.hasNBins = false;
-      elem.edges.clear();
       elem.edges.push_back(binning.binLow(0));
-      for (int i = 0; i < binning.numBins(); ++i) {
+      for (int i = 0; i < nBins; ++i) {
          elem.edges.push_back(binning.binHigh(i));
       }
    }
@@ -178,7 +184,7 @@ void Domains::ProductDomain::applyBinning(RooRealVar &var, ProductDomainElement 
          binning.addBoundary(edge);
       }
       var.setBinning(binning, name);
-   } else if (elem.hasNBins) {
+   } else if (elem.hasNBins && elem.nBins != 0) {
       var.setBins(elem.nBins, name);
    }
 }
@@ -190,7 +196,7 @@ void Domains::ProductDomain::writeBinning(RooFit::Detail::JSONNode &node, Produc
       for (double edge : elem.edges) {
          edges.append_child() << edge;
       }
-   } else if (elem.hasNBins) {
+   } else if (elem.hasNBins && elem.nBins != 0) {
       node["nbins"] << elem.nBins;
    }
 }
@@ -255,8 +261,8 @@ void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
             }
          }
       } else if (varNode.has_child("nbins")) {
-         elem.hasNBins = true;
          elem.nBins = varNode["nbins"].val_int();
+         elem.hasNBins = elem.nBins != 0;
          elem.edges.clear();
       }
    }
