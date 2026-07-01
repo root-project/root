@@ -63,6 +63,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <set>
+#include <string_view>
 
 using RooFit::Detail::JSONNode;
 
@@ -71,6 +73,11 @@ using RooFit::Detail::JSONNode;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
+bool isReservedExpressionIdentifier(const std::string &arg)
+{
+   return arg == "PI" || arg == "EULER" || arg == "TMath";
+}
+
 /**
  * Extracts arguments from a mathematical expression.
  *
@@ -110,14 +117,50 @@ std::set<std::string> extractArguments(std::string expr)
             }
             std::string arg(expr.substr(startidx, i - startidx));
             startidx = expr.size();
-            arguments.insert(arg);
+            if (!isReservedExpressionIdentifier(arg)) {
+               arguments.insert(arg);
+            }
          }
       }
    }
    if (startidx < expr.size()) {
-      arguments.insert(expr.substr(startidx));
+      std::string arg(expr.substr(startidx));
+      if (!isReservedExpressionIdentifier(arg)) {
+         arguments.insert(arg);
+      }
    }
    return arguments;
+}
+
+void replaceIdentifier(TString &expr, std::string_view identifier, std::string_view replacement)
+{
+   std::string in(expr.Data());
+   std::string out;
+   out.reserve(in.size());
+
+   for (std::size_t pos = 0; pos < in.size();) {
+      const bool matches = in.compare(pos, identifier.size(), identifier) == 0;
+      const bool beforeIdentifier =
+         pos > 0 && (std::isalnum(static_cast<unsigned char>(in[pos - 1])) || in[pos - 1] == '_');
+      const std::size_t end = pos + identifier.size();
+      const bool afterIdentifier =
+         end < in.size() && (std::isalnum(static_cast<unsigned char>(in[end])) || in[end] == '_');
+      if (matches && !beforeIdentifier && !afterIdentifier) {
+         out.append(replacement);
+         pos = end;
+      } else {
+         out.push_back(in[pos]);
+         ++pos;
+      }
+   }
+
+   expr = out.c_str();
+}
+
+void translateImportedExpression(TString &expr)
+{
+   replaceIdentifier(expr, "PI", "TMath::Pi()");
+   replaceIdentifier(expr, "EULER", "TMath::E()");
 }
 
 template <class RooArg_t>
@@ -130,6 +173,7 @@ public:
          RooJSONFactoryWSTool::error("no expression given for '" + name + "'");
       }
       TString formula(p["expression"].val());
+      translateImportedExpression(formula);
       RooArgList dependents;
       for (const auto &d : extractArguments(formula.Data())) {
          dependents.add(*tool->request<RooAbsReal>(d, name));
@@ -202,13 +246,14 @@ public:
    }
 };
 
+template <bool DivideByBinWidth>
 class RooBinWidthFunctionFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
-      tool->wsEmplace<RooBinWidthFunction>(name, *hf, p["divideByBinWidth"].val_bool());
+      tool->wsEmplace<RooBinWidthFunction>(name, *hf, DivideByBinWidth);
       return true;
    }
 };
@@ -265,6 +310,7 @@ public:
       return true;
    }
 };
+
 template <class RooArg_t>
 class RooPolynomialFactory : public RooFit::JSONIO::Importer {
 public:
@@ -550,6 +596,9 @@ class ParamHistFuncFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
+      if (!p.has_child("parameters")) {
+         return false;
+      }
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList varList = tool->requestArgList<RooRealVar>(p, "variables");
       if (!p.has_child("axes")) {
@@ -733,7 +782,7 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("data")) {
-         RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+         return false;
       }
       std::unique_ptr<RooDataHist> dataHist =
          RooJSONFactoryWSTool::readBinnedData(p["data"], name, RooJSONFactoryWSTool::readAxes(p["data"]));
@@ -762,9 +811,8 @@ public:
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
-      elem["type"] << key();
+      elem["type"] << (pdf->divideByBinWidth() ? "inverse_binvolume" : "binvolume");
       elem["histogram"] << pdf->histFunc().GetName();
-      elem["divideByBinWidth"] << pdf->divideByBinWidth();
       return true;
    }
 };
@@ -806,6 +854,17 @@ private:
       expr.ReplaceAll("TMath::Sqrt", "sqrt");
       expr.ReplaceAll("TMath::Power", "pow");
       expr.ReplaceAll("TMath::Erf", "erf");
+      expr.ReplaceAll("TMath::Floor", "floor");
+      expr.ReplaceAll("TMath::Ceil", "ceil");
+      expr.ReplaceAll("TMath::Abs", "abs");
+      expr.ReplaceAll("TMath::Tan", "tan");
+      expr.ReplaceAll("TMath::ASin", "asin");
+      expr.ReplaceAll("TMath::ACos", "acos");
+      expr.ReplaceAll("TMath::ATan", "atan");
+      expr.ReplaceAll("TMath::Pi()", "PI");
+      expr.ReplaceAll("TMath::Pi", "PI");
+      expr.ReplaceAll("TMath::E()", "EULER");
+      expr.ReplaceAll("TMath::E", "EULER");
    }
 };
 // Write the "x" reference and the coefficient list for polynomial-like
@@ -1155,27 +1214,27 @@ public:
 template <>
 DEFINE_EXPORTER_KEY(RooAddPdfStreamer<RooAddPdf>, "mixture_dist");
 template <>
-DEFINE_EXPORTER_KEY(RooAddPdfStreamer<RooAddModel>, "mixture_model");
+DEFINE_EXPORTER_KEY(RooAddPdfStreamer<RooAddModel>, "mixture_resolution_model");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
 DEFINE_EXPORTER_KEY(RooWrapperPdfStreamer, "density_function_dist");
-DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
+DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binvolume");
 template <>
 DEFINE_EXPORTER_KEY(RooPolynomialStreamer<RooLegacyExpPoly>, "legacy_exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooExponentialStreamer, "exponential_dist");
 template <>
-DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooFormulaVar>, "generic_function");
+DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooFormulaVar>, "generic");
 template <>
 DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooGenericPdf>, "generic_dist");
 template <>
-DEFINE_EXPORTER_KEY(RooHistStreamer<RooHistFunc>, "histogram");
+DEFINE_EXPORTER_KEY(RooHistStreamer<RooHistFunc>, "step");
 template <>
 DEFINE_EXPORTER_KEY(RooHistStreamer<RooHistPdf>, "histogram_dist");
 DEFINE_EXPORTER_KEY(RooLogNormalStreamer, "lognormal_dist");
 DEFINE_EXPORTER_KEY(RooMultiVarGaussianStreamer, "multivariate_normal_dist");
 DEFINE_EXPORTER_KEY(RooPoissonStreamer, "poisson_dist");
 DEFINE_EXPORTER_KEY(RooDecayStreamer, "decay_dist");
-DEFINE_EXPORTER_KEY(RooTruthModelStreamer, "truth_model_function");
-DEFINE_EXPORTER_KEY(RooGaussModelStreamer, "gauss_model_function");
+DEFINE_EXPORTER_KEY(RooTruthModelStreamer, "delta_resolution_model");
+DEFINE_EXPORTER_KEY(RooGaussModelStreamer, "gauss_resolution_model");
 template <>
 DEFINE_EXPORTER_KEY(RooPolynomialStreamer<RooPolynomial>, "polynomial_dist");
 template <>
@@ -1185,7 +1244,7 @@ DEFINE_EXPORTER_KEY(RooRealSumPdfStreamer, "weighted_sum_dist");
 DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
 DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 DEFINE_EXPORTER_KEY(RooDerivativeStreamer, "derivative");
-DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_conv_pdf");
+DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_convolution_dist");
 DEFINE_EXPORTER_KEY(RooExtendPdfStreamer, "rate_extended_dist");
 DEFINE_EXPORTER_KEY(ParamHistFuncStreamer, "step");
 DEFINE_EXPORTER_KEY(RooSplineStreamer, "spline");
@@ -1203,28 +1262,31 @@ STATIC_EXECUTE([]() {
    registerImporter<RooProdPdfFactory>("product_dist", false);
    registerImporter<RooAdditionFactory>("sum", false);
    registerImporter<RooAddPdfFactory>("mixture_dist", false);
-   registerImporter<RooAddModelFactory>("mixture_model", false);
+   registerImporter<RooAddModelFactory>("mixture_resolution_model", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
-   registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
+   registerImporter<RooBinWidthFunctionFactory<false>>("binvolume", false);
+   registerImporter<RooBinWidthFunctionFactory<true>>("inverse_binvolume", false);
    registerImporter<RooPolynomialFactory<RooLegacyExpPoly>>("legacy_exp_poly_dist", false);
    registerImporter<RooExponentialFactory>("exponential_dist", false);
+   registerImporter<RooFormulaArgFactory<RooFormulaVar>>("generic", false);
    registerImporter<RooFormulaArgFactory<RooFormulaVar>>("generic_function", false);
    registerImporter<RooFormulaArgFactory<RooGenericPdf>>("generic_dist", false);
    registerImporter<RooHistFactory<RooHistFunc>>("histogram", false);
+   registerImporter<RooHistFactory<RooHistFunc>>("step", false);
    registerImporter<RooHistFactory<RooHistPdf>>("histogram_dist", false);
    registerImporter<RooLogNormalFactory>("lognormal_dist", false);
    registerImporter<RooMultiVarGaussianFactory>("multivariate_normal_dist", false);
    registerImporter<RooPoissonFactory>("poisson_dist", false);
    registerImporter<RooDecayFactory>("decay_dist", false);
-   registerImporter<RooTruthModelFactory>("truth_model_function", false);
-   registerImporter<RooGaussModelFactory>("gauss_model_function", false);
+   registerImporter<RooTruthModelFactory>("delta_resolution_model", false);
+   registerImporter<RooGaussModelFactory>("gauss_resolution_model", false);
    registerImporter<RooPolynomialFactory<RooPolynomial>>("polynomial_dist", false);
    registerImporter<RooPolynomialFactory<RooPolyVar>>("polynomial", false);
    registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
    registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
    registerImporter<RooRealIntegralFactory>("integral", false);
    registerImporter<RooDerivativeFactory>("derivative", false);
-   registerImporter<RooFFTConvPdfFactory>("fft_conv_pdf", false);
+   registerImporter<RooFFTConvPdfFactory>("fft_convolution_dist", false);
    registerImporter<RooExtendPdfFactory>("extend_pdf", false);
    registerImporter<ParamHistFuncFactory>("step", false);
    registerImporter<RooSplineFactory>("spline", false);
