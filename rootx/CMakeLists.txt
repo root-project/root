@@ -15,14 +15,10 @@ if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(root PRIVATE util procstat)
 endif()
 
-generateHeader(root
-  ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/rootCommandLineOptionsHelp.h
-)
-
 target_include_directories(root PRIVATE
   ${CMAKE_SOURCE_DIR}/core/foundation/inc
   ${CMAKE_SOURCE_DIR}/core/base/inc
+  ${CMAKE_SOURCE_DIR}/core/base/res
   ${CMAKE_SOURCE_DIR}/core/clib/inc    # for snprintf.h
   ${CMAKE_SOURCE_DIR}/core/meta/inc    # for TGenericClassInfo.h
   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h and rootCommandLineOptionsHelp.h
