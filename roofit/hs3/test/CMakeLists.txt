@@ -6,7 +6,7 @@ if(test_roofit_hs3testsuite)
     FetchContent_Declare(
         hs3testsuite
         GIT_REPOSITORY https://github.com/hep-statistics-serialization-standard/HS3TestSuite.git
-        GIT_TAG 9d04e321ae6fddd283a35507f14ecf852eb7df61
+        GIT_TAG b2e5f19023025d03b7d2239154a02e69f43a1374
     )
     # suppress git interactive prompt so fetch fails fast if the repo is gone or unreachable
     set(ENV{GIT_TERMINAL_PROMPT} "0")
