@@ -76,7 +76,7 @@ else()
   # list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
   # list(APPEND _clad_extra_settings GIT_TAG v2.4)
   list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/SahilPatidar/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG clad-plugin)
+  list(APPEND _clad_extra_settings GIT_TAG fix_1819)
 endif()
 
 ## list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
