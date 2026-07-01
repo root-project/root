@@ -157,6 +157,8 @@ Bool_t TQt6Canvas::HasToolTips() const
 
 void TQt6Canvas::SetWindowPosition(Int_t x, Int_t y)
 {
+   if (fCanvasWidget)
+      fCanvasWidget->move(x, y);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +166,8 @@ void TQt6Canvas::SetWindowPosition(Int_t x, Int_t y)
 
 void TQt6Canvas::SetWindowSize(UInt_t w, UInt_t h)
 {
+   if (fCanvasWidget)
+      fCanvasWidget->resize(w, h);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -171,10 +175,12 @@ void TQt6Canvas::SetWindowSize(UInt_t w, UInt_t h)
 
 void TQt6Canvas::SetWindowTitle(const char *newTitle)
 {
+   if (fCanvasWidget)
+      fCanvasWidget->setWindowTitle(QString::fromLatin1(newTitle));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Set canvas size of web canvas
+/// Set canvas size
 
 void TQt6Canvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 {
@@ -194,6 +200,8 @@ void TQt6Canvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 
 void TQt6Canvas::Iconify()
 {
+   if (fCanvasWidget)
+      fCanvasWidget->showMinimized();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +209,11 @@ void TQt6Canvas::Iconify()
 
 void TQt6Canvas::RaiseWindow()
 {
+   if (fCanvasWidget) {
+      fCanvasWidget->showNormal();
+      fCanvasWidget->raise();
+      fCanvasWidget->activateWindow();
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -246,6 +259,8 @@ void TQt6Canvas::ProcessExecs(TPad *pad, TExec *extra)
    gVirtualX = savex;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Return canvas geometry
 
 void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
 {
@@ -285,12 +300,11 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    return 0;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// if canvas or any subpad was modified,
 /// invoke Qt update() which will redraw area
 
-Bool_t TQt6Canvas::PerformUpdate(Bool_t async)
+Bool_t TQt6Canvas::PerformUpdate(Bool_t /* async */)
 {
    if (Canvas()->IsModified())
       fPaintWidget->update();
@@ -409,9 +423,6 @@ TCanvas *TQt6Canvas::CreateQt6Canvas(const char *name, const char *title, UInt_t
       if (!l2->FindObject(canvas))
          l2->Add(canvas);
    }
-
-   // ensure creation of web window
-   // imp->CreateWebWindow();
 
    return canvas;
 }

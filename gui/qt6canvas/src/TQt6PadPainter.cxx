@@ -45,6 +45,36 @@ void TQt6PadPainter::SetOpacity(Int_t percent)
    fAttFill.SetFillStyle(4000 + percent);
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Set cursor
+
+void TQt6PadPainter::SetCursor(Int_t, ECursor cursor)
+{
+   switch(cursor) {
+      case kBottomLeft: fPaintWidget->setCursor(Qt::SizeBDiagCursor); break;
+      case kBottomRight: fPaintWidget->setCursor(Qt::SizeFDiagCursor); break;
+      case kTopLeft: fPaintWidget->setCursor(Qt::SizeFDiagCursor); break;
+      case kTopRight: fPaintWidget->setCursor(Qt::SizeBDiagCursor); break;
+      case kBottomSide: fPaintWidget->setCursor(Qt::SizeVerCursor); break;
+      case kLeftSide: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
+      case kTopSide: fPaintWidget->setCursor(Qt::SizeVerCursor); break;
+      case kRightSide: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
+      case kMove: fPaintWidget->setCursor(Qt::DragMoveCursor); break;
+      case kCross: fPaintWidget->setCursor(Qt::CrossCursor); break;
+      case kArrowHor: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
+      case kArrowVer: fPaintWidget->setCursor(Qt::UpArrowCursor); break;
+      case kHand: fPaintWidget->setCursor(Qt::OpenHandCursor); break;
+      case kRotate: fPaintWidget->setCursor(Qt::ClosedHandCursor); break;
+      case kPointer: fPaintWidget->setCursor(Qt::ArrowCursor); break;
+      case kArrowRight: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
+      case kCaret: fPaintWidget->setCursor(Qt::WaitCursor); break;
+      case kWatch: fPaintWidget->setCursor(Qt::WaitCursor); break;
+      case kNoDrop: fPaintWidget->setCursor(Qt::ForbiddenCursor); break;
+      default:
+         fPaintWidget->unsetCursor();
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
 
@@ -141,8 +171,11 @@ void TQt6PadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Doubl
       return;
 
    QList<QPointF> points;
-   for (Int_t n = 0; n < nPoints; ++n)
-      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+   for (Int_t n = 0; n < nPoints; ++n) {
+      auto px = gPad->XtoAbsPixel(xs[n]);
+      auto py = gPad->YtoAbsPixel(ys[n]);
+      points.push_back({(qreal) px, (qreal) py});
+   }
 
    painter->setPen(Qt::NoPen);
    painter->setBrush(GetFillBrush());
@@ -160,8 +193,11 @@ void TQt6PadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
       return;
 
    QList<QPointF> points;
-   for (Int_t n = 0; n < nPoints; ++n)
-      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+   for (Int_t n = 0; n < nPoints; ++n) {
+      auto px = gPad->XtoAbsPixel(xs[n]);
+      auto py = gPad->YtoAbsPixel(ys[n]);
+      points.push_back({(qreal) px, (qreal) py});
+   }
 
    painter->setPen(Qt::NoPen);
    painter->setBrush(GetFillBrush());
@@ -178,8 +214,11 @@ void TQt6PadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
       return;
 
    QList<QPointF> points;
-   for (Int_t n = 0; n < nPoints; ++n)
-      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+   for (Int_t n = 0; n < nPoints; ++n) {
+      auto px = gPad->XtoAbsPixel(xs[n]);
+      auto py = gPad->YtoAbsPixel(ys[n]);
+      points.push_back({(qreal) px, (qreal) py});
+   }
 
    painter->setPen(GetLinePen());
 
@@ -198,8 +237,11 @@ void TQt6PadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
       return;
 
    QList<QPointF> points;
-   for (Int_t n = 0; n < nPoints; ++n)
-      points.push_back({gPad->XtoAbsPixel(xs[n]), gPad->YtoAbsPixel(ys[n])});
+   for (Int_t n = 0; n < nPoints; ++n) {
+      auto px = gPad->XtoAbsPixel(xs[n]);
+      auto py = gPad->YtoAbsPixel(ys[n]);
+      points.push_back({(qreal) px, (qreal) py});
+   }
 
    painter->setPen(GetLinePen());
 
@@ -218,8 +260,11 @@ void TQt6PadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Dou
       return;
 
    QList<QPointF> points;
-   for (Int_t n = 0; n < nPoints; ++n)
-      points.push_back({gPad->UtoAbsPixel(u[n]), gPad->VtoAbsPixel(v[n])});
+   for (Int_t n = 0; n < nPoints; ++n) {
+      auto px = gPad->UtoAbsPixel(u[n]);
+      auto py = gPad->VtoAbsPixel(v[n]);
+      points.push_back({(qreal) px, (qreal) py});
+   }
 
    painter->setPen(GetLinePen());
 
@@ -339,7 +384,7 @@ void TQt6PadPainter::DrawTextNDC(Double_t  u, Double_t v, const wchar_t *text, E
 ////////////////////////////////////////////////////////////////////////////////
 /// Produce image
 
-void TQt6PadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t /* gtype */) const
+void TQt6PadPainter::SaveImage(TVirtualPad * /* pad */, const char * /* fileName */, Int_t /* gtype */) const
 {
 }
 
