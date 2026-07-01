@@ -50,20 +50,20 @@ public:
    void ResizeCanvasWindow(Int_t ) override {}
 
 
-   void ShowMenuBar(Bool_t show = kTRUE) override { }
-   void ShowStatusBar(Bool_t show = kTRUE) override {  }
-   void ShowEditor(Bool_t show = kTRUE) override {  }
-   void ShowToolBar(Bool_t show = kTRUE) override { }
-   void ShowToolTips(Bool_t show = kTRUE) override {  }
+   void ShowMenuBar(Bool_t = kTRUE) override { }
+   void ShowStatusBar(Bool_t = kTRUE) override { }
+   void ShowEditor(Bool_t = kTRUE) override {  }
+   void ShowToolBar(Bool_t = kTRUE) override { }
+   void ShowToolTips(Bool_t  = kTRUE) override { }
 
-   void   ForceUpdate() override;
+   void ForceUpdate() override;
 
-   void   SetWindowPosition(Int_t x, Int_t y) override;
-   void   SetWindowSize(UInt_t w, UInt_t h) override;
-   void   SetWindowTitle(const char *newTitle) override;
-   void   SetCanvasSize(UInt_t w, UInt_t h) override;
-   void   Iconify() override;
-   void   RaiseWindow() override;
+   void SetWindowPosition(Int_t x, Int_t y) override;
+   void SetWindowSize(UInt_t w, UInt_t h) override;
+   void SetWindowTitle(const char *newTitle) override;
+   void SetCanvasSize(UInt_t w, UInt_t h) override;
+   void Iconify() override;
+   void RaiseWindow() override;
 
    Bool_t HasEditor() const override;
    Bool_t HasMenuBar() const override;
