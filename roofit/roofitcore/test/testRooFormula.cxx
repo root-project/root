@@ -7,10 +7,15 @@
 #include <RooFormulaVar.h>
 #include <RooRealVar.h>
 #include <RooConstVar.h>
+#include <RooArgList.h>
+#include <RooUniformBinning.h>
+#include <RooHelpers.h>
 
 #include <ROOT/TestSupport.hxx>
 
 #include <gtest/gtest.h>
+
+#include <memory>
 
 /// Since TFormula does very surprising things,
 /// RooFit needs to do safety checks.
@@ -108,4 +113,30 @@ TEST(RooFormula, RooConstVarSafeSubstitution)
    RooConstVar troubleConst("3.4", "troubleConst", 2.1);
    ASSERT_ANY_THROW(RooFormulaVar f1("f1", "x + 0", {x, zero}))
       << "RooConst variables, if having numeric name, should have name value equal to actual value.";
+}
+
+// RooFormulaVar::setBinBoundaries() declares the formula to be piecewise
+// constant (flat) within bins of an observable, so that integration uses the
+// fast bin integrator instead of the generic numeric integrator.
+TEST(RooFormula, SetBinBoundaries)
+{
+   RooRealVar x("x", "x", 0., 10.);
+   RooRealVar h0("h0", "", 1.0), h1("h1", "", 3.0), h2("h2", "", 2.0), h3("h3", "", 4.0), h4("h4", "", 1.5);
+   const char *formula = "(floor(x/2)==0)*h0+(floor(x/2)==1)*h1+(floor(x/2)==2)*h2"
+                         "+(floor(x/2)==3)*h3+(floor(x/2)==4)*h4";
+   RooFormulaVar func("func", "", formula, RooArgList(x, h0, h1, h2, h3, h4));
+
+   func.setBinBoundaries(x, RooUniformBinning(0.0, 10.0, 5));
+   EXPECT_TRUE(func.isBinnedDistribution(RooArgSet(x)));
+
+   std::string integratorName;
+   double value = 0.0;
+   {
+      RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::NumericIntegration);
+      std::unique_ptr<RooAbsReal> integ{func.createIntegral(x)};
+      value = integ->getVal();
+      integratorName = hijack.str();
+   }
+   EXPECT_NE(integratorName.find("RooBinIntegrator"), std::string::npos) << integratorName;
+   EXPECT_DOUBLE_EQ(value, (1.0 + 3.0 + 2.0 + 4.0 + 1.5) * 2.0); // = 23
 }
