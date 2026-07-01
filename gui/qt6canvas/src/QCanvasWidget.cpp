@@ -26,6 +26,8 @@ QCanvasWidget::QCanvasWidget(QWidget *parent, const char *name) : QWidget(parent
 
    setObjectName(name);
 
+   fPaintWidget->SetStatusBar(fStatusBar);
+
 
    fMenuBar = new QMenuBar(fMenuFrame);
    fMenuBar->setMinimumWidth(50);
