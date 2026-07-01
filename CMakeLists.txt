@@ -729,6 +729,28 @@ if(LLVM_LINKER_IS_MOLD)
   endif()
 endif()
 
+if(asan)
+  # Now sanitize all executables that are not created with ROOT_EXECUTABLE()
+  # See core/sanitizer for details
+  function(sanitize_all_targets DIR_TO_SEARCH)
+    get_property(subdirs DIRECTORY "${DIR_TO_SEARCH}" PROPERTY SUBDIRECTORIES)
+    foreach(subdir IN LISTS subdirs)
+      sanitize_all_targets("${subdir}")
+    endforeach()
+
+    get_directory_property(directory_targets DIRECTORY "${DIR_TO_SEARCH}" BUILDSYSTEM_TARGETS)
+    foreach(target IN LISTS directory_targets)
+      get_target_property(target_type ${target} TYPE)
+      get_target_property(target_libs ${target} LINK_LIBRARIES)
+      if(target_type STREQUAL EXECUTABLE AND NOT target STREQUAL ROOTStaticSanitizerConfig AND NOT target_libs MATCHES "ROOTStaticSanitizerConfig")
+        target_link_libraries(${target} PRIVATE ROOTStaticSanitizerConfig)
+        message(VERBOSE "Adding sanitizer library to ${target} (not created via a ROOT macro): ${target_libs}")
+      endif()
+    endforeach()
+  endfunction()
+  sanitize_all_targets(${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
 cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
 
 message(STATUS "ROOT Configuration \n

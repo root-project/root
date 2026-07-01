@@ -18,10 +18,3 @@ target_link_libraries(${library} INTERFACE ${ASAN_EXTRA_EXE_LINKER_FLAGS})
 # Make it visible to the outside to sanitize e.g. roottest executables
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
 add_library(ROOT::${library} ALIAS ${library})
-
-# Now sanitize executables that are not created with ROOT_EXECUTABLE():
-foreach(target llvm-min-tblgen llvm-tblgen clang-tblgen cppinterop-tblgen)
-  if(TARGET ${target})
-    target_link_libraries(${target} PRIVATE ${library})
-  endif()
-endforeach()
