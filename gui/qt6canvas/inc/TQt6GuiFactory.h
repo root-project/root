@@ -32,7 +32,7 @@ public:
 
    TContextMenuImp *CreateContextMenuImp(TContextMenu *c, const char *name, const char *title) override;
 
-   ClassDefOverride(TQt6GuiFactory,0)  //Factory for ROOT GUI components
+   ClassDefOverride(TQt6GuiFactory,0)  //Factory for Qt6 GUI components
 };
 
 #endif

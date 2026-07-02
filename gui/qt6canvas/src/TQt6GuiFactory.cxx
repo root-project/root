@@ -10,7 +10,7 @@
 
 
 /** \class TQt6GuiFactory
-    \ingroup guiwidgets
+    \ingroup qt6canvas
 
 This class is a factory for ROOT GUI components. It overrides
 the member functions of the ABS TGuiFactory.
@@ -20,6 +20,7 @@ the member functions of the ABS TGuiFactory.
 
 #include "TQt6GuiFactory.h"
 #include "TQt6Canvas.h"
+#include "QRootContextMenu.h"
 
 #include <iostream>
 
@@ -63,7 +64,7 @@ TCanvasImp *TQt6GuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
 /// Create a ROOT native GUI version of TContextMenuImp
 
 TContextMenuImp *TQt6GuiFactory::CreateContextMenuImp(TContextMenu *c,
-                                             const char *name, const char *title)
+                                             const char *name, const char *)
 {
-   return TGuiFactory::CreateContextMenuImp(c, name, title);
+   return new QRootContextMenu(c, name);
 }

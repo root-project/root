@@ -53,7 +53,6 @@ public:
 /** \class TQt6Canvas
     \ingroup qt6canvas
     \brief Basic TCanvasImp ABI implementation for Qt6
-
 */
 
 using namespace std::string_literals;
