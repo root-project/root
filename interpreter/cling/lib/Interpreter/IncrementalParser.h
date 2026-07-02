@@ -46,6 +46,7 @@ namespace cling {
   class Transaction;
   class TransactionPool;
   class ASTTransformer;
+  class IncrementalAction;
 
   ///\brief Responsible for the incremental parsing and compilation of input.
   ///
@@ -60,10 +61,13 @@ namespace cling {
     Interpreter* m_Interpreter;
 
     // compiler instance.
-    std::unique_ptr<clang::CompilerInstance> m_CI;
+    clang::CompilerInstance *m_CI;
 
     // parser (incremental)
     std::unique_ptr<clang::Parser> m_Parser;
+
+    /// The FrontendAction
+    IncrementalAction *m_Act;
 
     /// Counts the number of direct user input lines that have been parsed.
     unsigned InputCount = 0;
@@ -112,8 +116,8 @@ namespace cling {
     };
     typedef llvm::PointerIntPair<Transaction*, 2, EParseResult>
       ParseResultTransaction;
-    IncrementalParser(Interpreter* interp, const char* llvmdir,
-                      const ModuleFileExtensions& moduleExtensions);
+    IncrementalParser(Interpreter* interp, clang::CompilerInstance* CI,
+                      IncrementalAction* Act);
     ~IncrementalParser();
 
     ///\brief Whether the IncrementalParser is valid.
@@ -124,7 +128,8 @@ namespace cling {
 
     bool Initialize(llvm::SmallVectorImpl<ParseResultTransaction>& result,
                     bool isChildInterpreter);
-    clang::CompilerInstance* getCI() const { return m_CI.get(); }
+    // clang::CompilerInstance* getCI() const { return m_CI.get(); }
+    clang::CompilerInstance* getCI() const { return m_CI; }
     clang::Parser* getParser() const { return m_Parser.get(); }
     clang::CodeGenerator* getCodeGenerator() const { return m_CodeGen; }
     bool hasCodeGenerator() const { return m_CodeGen; }

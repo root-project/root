@@ -18,6 +18,7 @@
 #include "DefinitionShadower.h"
 #include "DeviceKernelInliner.h"
 #include "DynamicLookup.h"
+#include "IncrementalAction.h"
 #include "NullDerefProtectionTransformer.h"
 #include "TransactionPool.h"
 #include "ValueExtractionSynthesizer.h"
@@ -36,13 +37,18 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
+#include "clang/CodeGen/CodeGenAction.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
+#include "clang/Frontend/FrontendOptions.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
 #include "clang/Frontend/MultiplexConsumer.h"
+#include "clang/FrontendTool/Utils.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
+#include "clang/Parse/ParseAST.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
@@ -235,109 +241,226 @@ namespace {
   };
 } // unnamed namespace
 
-static void HandlePlugins(CompilerInstance& CI,
-                         std::vector<std::unique_ptr<ASTConsumer>>& Consumers) {
-  // Copied from Frontend/FrontendAction.cpp.
-  // FIXME: Remove when we switch to a tools-based cling driver.
-
-  // If the FrontendPluginRegistry has plugins before loading any shared library
-  // this means we have linked our plugins. This is useful when cling runs in
-  // embedded mode (in a shared library). This is the only feasible way to have
-  // plugins if cling is in a single shared library which is dlopen-ed with
-  // RTLD_LOCAL. In that situation plugins can still find the cling, clang and
-  // llvm symbols opened with local visibility.
-  if (FrontendPluginRegistry::begin() == FrontendPluginRegistry::end()) {
-    for (const std::string& Path : CI.getFrontendOpts().Plugins) {
-      std::string Err;
-      if (llvm::sys::DynamicLibrary::LoadLibraryPermanently(Path.c_str(), &Err))
-        CI.getDiagnostics().Report(clang::diag::err_fe_unable_to_load_plugin)
-          << Path << Err;
-    }
-    // If we are not statically linked, we should register the pragmas ourselves
-    // because the dlopen happens after creating the clang::Preprocessor which
-    // calls RegisterBuiltinPragmas.
-    // FIXME: This can be avoided by refactoring our routine and moving it to
-    // the CIFactory. This requires an abstraction which allows us to
-    // conditionally create MultiplexingConsumers.
-
-    // Copied from Lex/Pragma.cpp
-    // Pragmas added by plugins
-    for (PragmaHandlerRegistry::iterator it = PragmaHandlerRegistry::begin(),
-           ie = PragmaHandlerRegistry::end(); it != ie; ++it)
-      CI.getPreprocessor().AddPragmaHandler(it->instantiate().release());
-  }
-
-  for (auto it = clang::FrontendPluginRegistry::begin(),
-         ie = clang::FrontendPluginRegistry::end();
-       it != ie; ++it) {
-    std::unique_ptr<clang::PluginASTAction> P(it->instantiate());
-
-    PluginASTAction::ActionType PluginActionType = P->getActionType();
-    assert(PluginActionType != clang::PluginASTAction::ReplaceAction);
-
-    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName().str()])) {
-      std::unique_ptr<ASTConsumer> PluginConsumer
-        = P->CreateASTConsumer(CI, /*InputFile*/ "");
-      if (PluginActionType == clang::PluginASTAction::AddBeforeMainAction)
-        Consumers.insert(Consumers.begin(), std::move(PluginConsumer));
-      else
-        Consumers.push_back(std::move(PluginConsumer));
-    }
-  }
-}
-
 namespace cling {
-  IncrementalParser::IncrementalParser(Interpreter* interp, const char* llvmdir,
-                                   const ModuleFileExtensions& moduleExtensions)
-      : m_Interpreter(interp) {
-    std::unique_ptr<cling::DeclCollector> consumer;
-    consumer.reset(m_Consumer = new cling::DeclCollector());
-    m_CI.reset(CIFactory::createCI("\n", interp->getOptions(), llvmdir,
-                                   std::make_optional(std::move(consumer)),
-                                   moduleExtensions));
 
-    if (!m_CI) {
-      cling::errs() << "Compiler instance could not be created.\n";
-      return;
+  IncrementalAction::IncrementalAction(CompilerInstance& CI,
+                                       llvm::LLVMContext& LLVMCtx,
+                                      //  Interpreter& m_Interp,
+                                       CompilerOptions COpts, llvm::Error& Err)
+      : WrapperFrontendAction([&]() {
+          llvm::ErrorAsOutParameter EAO(&Err);
+          std::unique_ptr<FrontendAction> Act;
+          switch (CI.getFrontendOpts().ProgramAction) {
+            default:
+              Err = llvm::createStringError(
+                  std::errc::state_not_recoverable,
+                  "Driver initialization failed. "
+                  "Incremental mode for action %d is not supported",
+                  CI.getFrontendOpts().ProgramAction);
+              return Act;
+            case frontend::ASTDump:
+            case frontend::ASTPrint:
+            case frontend::ParseSyntaxOnly:
+              Act = CreateFrontendAction(CI);
+              break;
+            case frontend::PluginAction:
+            case frontend::EmitAssembly:
+            case frontend::EmitBC:
+            case frontend::EmitObj:
+            case frontend::PrintPreprocessedInput:
+            case frontend::EmitLLVMOnly:
+              Act.reset(new EmitLLVMOnlyAction(&LLVMCtx));
+              break;
+          }
+          return Act;
+        }()),
+        CI(CI), // IncrParser(IncrParser),
+        // m_Interpreter(m_Interp), 
+        COpts(COpts) {}
+
+  class PCHGeneratorWrapper : public MultiplexConsumer {
+  public:
+    using MultiplexConsumer::MultiplexConsumer;
+
+    void HandleTranslationUnit(ASTContext&) override {
+      // Delay until Finalize().
     }
-    // Is the CompilerInstance being used to generate output only?
-    if (m_Interpreter->getOptions().CompilerOpts.HasOutput)
+
+    void Finalize(ASTContext& Ctx) {
+      MultiplexConsumer::HandleTranslationUnit(Ctx);
+    }
+  };
+
+  std::unique_ptr<ASTConsumer>
+  IncrementalAction::CreateMultiplexConsumer(CompilerInstance& CI,
+                                             StringRef InFile) {
+    std::vector<std::unique_ptr<ASTConsumer>> Consumers;
+    // With C++ modules, we now attach the consumers that will handle the
+    // generation of the PCM file itself in case we want to generate
+    // a C++ module with the current interpreter instance.
+    if (COpts.CxxModules && !COpts.ModuleName.empty()) {
+      // Code below from the (private) code in the GenerateModuleAction class.
+      llvm::SmallVector<char, 256> Output;
+      llvm::sys::path::append(Output, COpts.CachePath,
+                              COpts.ModuleName + ".pcm");
+      StringRef ModuleOutputFile = StringRef(Output.data(), Output.size());
+
+      std::unique_ptr<raw_pwrite_stream> OS =
+          CI.createOutputFile(ModuleOutputFile, /*Binary=*/true,
+                              /*RemoveFileOnSignal=*/false,
+                              /*useTemporary=*/true,
+                              /*CreateMissingDirectories=*/true);
+      assert(OS);
+
+      std::string Sysroot;
+
+      auto PCHBuff = std::make_shared<PCHBuffer>();
+
+      Consumers.push_back(std::make_unique<PCHGenerator>(
+          CI.getPreprocessor(), CI.getModuleCache(), ModuleOutputFile, Sysroot,
+          PCHBuff, CI.getFrontendOpts().ModuleFileExtensions,
+          /*AllowASTWithErrors=*/false,
+          /*IncludeTimestamps=*/
+          +CI.getFrontendOpts().BuildingImplicitModule));
+      Consumers.push_back(
+          CI.getPCHContainerWriter().CreatePCHContainerGenerator(
+              CI, "", ModuleOutputFile.str(), std::move(OS), PCHBuff));
+      std::unique_ptr<PCHGeneratorWrapper> PCHGenW =
+          std::make_unique<PCHGeneratorWrapper>(std::move(Consumers));
+      PCHGenWrapper = PCHGenW.get();
+      return PCHGenW;
+    }
+
+    return nullptr;
+  }
+
+  std::unique_ptr<ASTConsumer>
+  IncrementalAction::CreateASTConsumer(CompilerInstance& CI,
+                                       StringRef InFile) {
+    std::unique_ptr<ASTConsumer> C =
+        WrapperFrontendAction::CreateASTConsumer(CI, InFile);
+    auto DC = std::make_unique<cling::DeclCollector>();
+    DeclCollectorConsumer = DC.get();
+    DC->Setup(std::move(C), CI.getPreprocessor());
+    std::unique_ptr<ASTConsumer> MC = CreateMultiplexConsumer(CI, InFile);
+    if (MC) {
+      std::vector<std::unique_ptr<ASTConsumer>> Cs;
+      Cs.push_back(std::move(DC));
+      Cs.push_back(std::move(MC));
+      return std::make_unique<MultiplexConsumer>(std::move(Cs));
+    }
+    // DC->Setup(std::move(C), CI.getPreprocessor());
+    return DC;
+  }
+
+  void IncrementalAction::ExecuteAction() {
+    CompilerInstance& CI = getCompilerInstance();
+    if (!CI.hasPreprocessor())
       return;
 
+    // FIXME: Move the truncation aspect of this into Sema, we delayed this
+    // till here so the source manager would be initialized.
+    if (hasCodeCompletionSupport() &&
+        !CI.getFrontendOpts().CodeCompletionAt.FileName.empty())
+      CI.createCodeCompletionConsumer();
+
+    // Use a code completion consumer?
+    CodeCompleteConsumer* CompletionConsumer = nullptr;
+    if (CI.hasCodeCompletionConsumer())
+      CompletionConsumer = &CI.getCodeCompletionConsumer();
+
+    if (!CI.hasSema())
+      CI.createSema(getTranslationUnitKind(), CompletionConsumer);
+  }
+
+  bool IncrementalAction::BeginSourceFileAction(CompilerInstance& CI) {
+    if (COpts.CxxModules)
+      CIFactory::collectModule(CI);
+
+    if (COpts.CxxModules && !COpts.ModuleName.empty()) {
+      // Set the current module name for clang. With that clang doesn't start
+      // to build the current module on demand when we include a header
+      // from the current module.
+      CI.getLangOpts().CurrentModule = COpts.ModuleName;
+      CI.getLangOpts().setCompilingModule(LangOptions::CMK_ModuleMap);
+
+      SourceManager& SM = CI.getSourceManager();
+      // Push the current module to the build stack so that clang knows when
+      // we have a cyclic dependency.
+
+      SM.pushModuleBuildStack(COpts.ModuleName,
+                              FullSourceLoc(SourceLocation(), SM));
+    }
+
+    return WrapperFrontendAction::BeginSourceFileAction(CI);
+  }
+
+  std::unique_ptr<llvm::Module> IncrementalAction::GenModule() {
+    static unsigned ID = 0;
+    if (CodeGenerator* CG = getCodeGen()) {
+      // Clang's CodeGen is designed to work with a single llvm::Module. In
+      // many cases for convenience various CodeGen parts have a reference to
+      // the llvm::Module (TheModule or Module) which does not change when a
+      // new module is pushed. However, the execution engine wants to take
+      // ownership of the module which does not map well to CodeGen's design.
+      // To work this around we created an empty module to make CodeGen happy.
+      // We should make sure it always stays empty.
+      assert(((!CachedInCodeGenModule ||
+               !CI.getPreprocessorOpts().Includes.empty() ||
+               !CI.getPreprocessorOpts().ImplicitPCHInclude.empty()) ||
+              (CachedInCodeGenModule->empty() &&
+               CachedInCodeGenModule->global_empty() &&
+               CachedInCodeGenModule->alias_empty() &&
+               CachedInCodeGenModule->ifunc_empty())) &&
+             "CodeGen wrote to a readonly module");
+      std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
+      CG->StartModule("incr_module_" + std::to_string(ID++), M->getContext());
+      return M;
+    }
+    return nullptr;
+  }
+
+  void IncrementalAction::GenPCH(ASTContext &Ctx) {
+    static bool PCHGenerated = false;
+    assert(!IsTerminating && "Already finalized!");
+    assert(!PCHGenerated && "Already generated!");
+    if (PCHGenWrapper && !PCHGenerated)
+      PCHGenWrapper->Finalize(Ctx);
+    PCHGenerated = true;
+  }
+
+  CodeGenerator* IncrementalAction::getCodeGen() {
+    FrontendAction* WrappedAct = getWrapped();
+    return static_cast<CodeGenAction*>(WrappedAct)->getCodeGenerator();
+  }
+
+  void IncrementalAction::CacheCodeGenModule() { CachedInCodeGenModule = GenModule(); }
+
+  llvm::Module* IncrementalAction::getCachedCodeGenModule() const {
+    return CachedInCodeGenModule.get();
+  }
+
+  IncrementalParser::IncrementalParser(Interpreter* interp, CompilerInstance* CI,
+                      IncrementalAction* Act)
+      : m_Interpreter(interp), m_CI(CI), m_Act(Act) {
+    m_Consumer = m_Act->getDeclCollectorConsumer();
     if (!m_Consumer) {
       cling::errs() << "No AST consumer available.\n";
       return;
     }
 
-
-    std::vector<std::unique_ptr<ASTConsumer>> Consumers;
-    HandlePlugins(*m_CI, Consumers);
-    std::unique_ptr<ASTConsumer> WrappedConsumer;
-
-    DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
-      auto CG
-        = std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(Diag,
-                                                               makeModuleName(),
-                                                  &m_CI->getVirtualFileSystem(),
-                                                    m_CI->getHeaderSearchOpts(),
-                                                    m_CI->getPreprocessorOpts(),
-                                                         m_CI->getCodeGenOpts(),
-                                               *m_Interpreter->getLLVMContext())
-                                                );
-      m_CodeGen = CG.get();
+      if (m_Act->getCodeGen())
+        m_CodeGen = m_Act->getCodeGen();
+
       assert(m_CodeGen);
-      if (!Consumers.empty()) {
-        Consumers.push_back(std::move(CG));
-        WrappedConsumer.reset(new MultiplexConsumer(std::move(Consumers)));
-      }
-      else
-        WrappedConsumer = std::move(CG);
     }
 
-    // Initialize the DeclCollector and add callbacks keeping track of macros.
-    m_Consumer->Setup(this, std::move(WrappedConsumer), m_CI->getPreprocessor());
+    // Is the CompilerInstance being used to generate output only?
+    if (m_Interpreter->getOptions().CompilerOpts.HasOutput)
+      return;
 
+    DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     m_DiagConsumer.reset(new FilteringDiagConsumer(Diag, false));
 
     initializeVirtualFile();
@@ -347,31 +470,13 @@ namespace cling {
   IncrementalParser::Initialize(llvm::SmallVectorImpl<ParseResultTransaction>&
                                 result, bool isChildInterpreter) {
     m_TransactionPool.reset(new TransactionPool);
-    if (hasCodeGenerator())
-      getCodeGenerator()->Initialize(getCI()->getASTContext());
 
+    if (m_CI->getPreprocessor().TUKind != TU_Incremental)
+      return true; // This a one-time, non-incremental action.
+
+    Preprocessor& PP = m_CI->getPreprocessor();
     CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     Transaction* CurT = beginTransaction(CO);
-    Preprocessor& PP = m_CI->getPreprocessor();
-    DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
-
-    // Pull in PCH.
-    const std::string& PCHFileName
-      = m_CI->getInvocation().getPreprocessorOpts().ImplicitPCHInclude;
-    if (!PCHFileName.empty()) {
-      Transaction* PchT = beginTransaction(CO);
-      DiagnosticErrorTrap Trap(Diags);
-      m_CI->createPCHExternalASTSource(PCHFileName,
-                                       DisableValidationForModuleKind::All,
-                                       true /*AllowPCHWithCompilerErrors*/,
-                                       nullptr /*DeserializationListener*/,
-                                       true /*OwnsDeserializationListener*/);
-      result.push_back(endTransaction(PchT));
-      if (Trap.hasErrorOccurred()) {
-        result.push_back(endTransaction(CurT));
-        return false;
-      }
-    }
 
     addClingPragmas(*m_Interpreter);
 
@@ -702,7 +807,7 @@ namespace cling {
 
   void IncrementalParser::emitTransaction(Transaction* T) {
     for (auto DI = T->decls_begin(), DE = T->decls_end(); DI != DE; ++DI)
-      m_Consumer->HandleTopLevelDecl(DI->m_DGR);
+      m_CI->getSema().getASTConsumer().HandleTopLevelDecl(DI->m_DGR);
   }
 
   void IncrementalParser::codeGenTransaction(Transaction* T) {
@@ -830,8 +935,26 @@ namespace cling {
   // +---------------------+
   //
   void IncrementalParser::initializeVirtualFile() {
-    SourceManager& SM = getCI()->getSourceManager();
-    m_VirtualFileID = SM.getMainFileID();
+    SourceManager& SM = m_CI->getSourceManager();
+    FileManager& FM = m_CI->getFileManager();
+    // Build the virtual file, Give it a name that's likely not to ever
+    // be #included (so we won't get a clash in clang's cache).
+    const char* Filename = "<<< includer >>>";
+    FileEntryRef FE = FM.getVirtualFileRef(Filename, 1U << 15U, time(0));
+
+    // Tell ASTReader to create a FileID even if this file does not exist:
+    SM.setFileIsTransient(FE);
+
+    SourceLocation Result = SM.getLocForStartOfFile(SM.getMainFileID());
+    m_VirtualFileID = SM.createFileID(FE, Result, SrcMgr::C_User);
+
+    auto Buffer =
+        llvm::MemoryBuffer::getMemBufferCopy("/*CLING DEFAULT MEMBUF*/;\n");
+
+    SM.overrideFileContents(FE, std::move(Buffer));
+
+    // SourceManager& SM = getCI()->getSourceManager();
+    // m_VirtualFileID = SM.getMainFileID();
     if (m_VirtualFileID.isInvalid())
       cling::errs() << "VirtualFileID could not be created.\n";
   }
@@ -856,8 +979,8 @@ namespace cling {
   // Add the input to the memory buffer, parse it, and add it to the AST.
   IncrementalParser::EParseResult
   IncrementalParser::ParseInternal(llvm::StringRef input) {
-    if (input.empty()) return IncrementalParser::kSuccess;
-
+    if (input.empty())
+      return IncrementalParser::kSuccess;
     Sema& S = getCI()->getSema();
 
     // Recover resources if we crash before exiting this method.
@@ -962,7 +1085,7 @@ namespace cling {
     Sema::ModuleImportState ImportState;
     for (bool AtEOF = m_Parser->ParseFirstTopLevelDecl(ADecl, ImportState);
          !AtEOF; AtEOF = m_Parser->ParseTopLevelDecl(ADecl, ImportState)) {
-      if (ADecl && !m_Consumer->HandleTopLevelDecl(ADecl.get())) {
+      if (ADecl && !S.getASTConsumer().HandleTopLevelDecl(ADecl.get())) {
         m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
         return llvm::make_error<llvm::StringError>(
             "Parsing failed. "
@@ -983,7 +1106,7 @@ namespace cling {
     // Process any TopLevelDecls generated by #pragma weak.
     for (Decl* D : S.WeakTopLevelDecls()) {
       DeclGroupRef DGR(D);
-      m_Consumer->HandleTopLevelDecl(DGR);
+      S.getASTConsumer().HandleTopLevelDecl(DGR);
     }
 
     LocalInstantiations.perform();
