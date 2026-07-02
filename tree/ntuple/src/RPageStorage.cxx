@@ -1178,7 +1178,7 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 
 ROOT::DescriptorId_t
 ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
-                                                             std::span<const ENTupleColumnType> newRepresentation)
+                                                             std::span<const RColumnFormat> newRepresentation)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -1194,10 +1194,15 @@ ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldD
    fDescriptorBuilder.ShiftAliasColumns(newRepresentation.size());
 
    std::uint16_t columnIndex = 0; // index into the representation
-   for (auto columnType : newRepresentation) {
-      // Extending columns with variable bit width is currently unsupported.
-      const auto [rangeMin, rangeMax] = ROOT::Internal::RColumnElementBase::GetValidBitRange(columnType);
-      R__ASSERT(rangeMin == rangeMax);
+   for (auto columnRepr : newRepresentation) {
+      std::size_t bitsOnStorage = columnRepr.fBitWidth;
+      if (!bitsOnStorage) {
+         const auto [rangeMin, rangeMax] = ROOT::Internal::RColumnElementBase::GetValidBitRange(columnRepr.fType);
+         if (rangeMin != rangeMax) {
+            throw ROOT::RException(R__FAIL("bit width must be given for columns of variable bit width"));
+         }
+         bitsOnStorage = rangeMin;
+      }
 
       const ROOT::DescriptorId_t firstReprColumnId = field.GetLogicalColumnIds()[columnIndex];
       const auto &firstReprColumnRange = fOpenColumnRanges.at(firstReprColumnId);
@@ -1208,11 +1213,12 @@ ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldD
       columnBuilder.LogicalColumnId(columnId)
          .PhysicalColumnId(columnId)
          .FieldId(field.GetId())
-         .BitsOnStorage(rangeMax)
-         .Type(columnType)
+         .BitsOnStorage(bitsOnStorage)
+         .Type(columnRepr.fType)
          .Index(columnIndex)
          .FirstElementIndex(newReprFirstElemIndex)
-         .RepresentationIndex(reprIndex);
+         .RepresentationIndex(reprIndex)
+         .ValueRange(columnRepr.fValueRange);
       if (newReprFirstElemIndex)
          columnBuilder.SetSuppressedDeferred();
       fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
