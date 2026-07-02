@@ -156,38 +156,26 @@ TEST_F(RPageStorageDaos, Extended)
 TEST_F(RPageStorageDaos, Options)
 {
    std::string daosUri = RegisterLabel("ntuple-test-options");
-   const std::string_view ntupleName("ntuple");
-   {
-      auto model = RNTupleModel::Create();
 
-      RNTupleWriteOptionsDaos options;
-      options.SetObjectClass("UNKNOWN");
-      try {
-         auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
-         FAIL() << "unknown object class should throw";
-      } catch (const ROOT::RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("UNKNOWN"));
+   for (const auto oclass : {"UNKNOWN", "RP_XSF"}) {
+      {
+         auto model = RNTupleModel::Create();
+         model->MakeField<float>("pt");
+
+         RNTupleWriteOptionsDaos options;
+         options.SetObjectClass(oclass);
+         auto writer = RNTupleWriter::Recreate(std::move(model), oclass, daosUri, options);
+         writer->Fill();
       }
+
+      auto readOptions = RNTupleReadOptions();
+      ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(readOptions, 3);
+      ROOT::Experimental::Internal::RPageSourceDaos source(oclass, daosUri, readOptions);
+      source.Attach();
+      EXPECT_STREQ(oclass, source.GetObjectClass().c_str());
+      EXPECT_EQ(3U, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(source.GetReadOptions()));
+      EXPECT_EQ(1U, source.GetNEntries());
    }
-
-   {
-      auto model = RNTupleModel::Create();
-      model->MakeField<float>("pt");
-
-      RNTupleWriteOptionsDaos options;
-      options.SetObjectClass("RP_XSF");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
-      ntuple->Fill();
-      ntuple->CommitCluster();
-   }
-
-   auto readOptions = RNTupleReadOptions();
-   ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(readOptions, 3);
-   ROOT::Experimental::Internal::RPageSourceDaos source(ntupleName, daosUri, readOptions);
-   source.Attach();
-   EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
-   EXPECT_EQ(3U, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(source.GetReadOptions()));
-   EXPECT_EQ(1U, source.GetNEntries());
 }
 
 TEST_F(RPageStorageDaos, LoadSealedPage)

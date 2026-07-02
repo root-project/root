@@ -97,7 +97,6 @@ public:
       ObjClassId(daos_oclass_id_t cid) : fCid(cid) {}
       ObjClassId(const std::string &name) : fCid(daos_oclass_name2id(name.data())) {}
 
-      bool IsUnknown() const { return fCid == OC_UNKNOWN; }
       std::string ToString() const;
 
       /// This limit is currently not defined in any header and any call to
