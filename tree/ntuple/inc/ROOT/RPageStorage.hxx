@@ -555,8 +555,8 @@ public:
    /// API layers. In other words, you cannot use this with a Writer and write data through the regular Entry/Field
    /// API, as this function only modifies the descriptor.
    /// \return The physical id of the first newly added column.
-   ROOT::DescriptorId_t
-   AddColumnRepresentation(const ROOT::RFieldDescriptor &field, std::span<const ENTupleColumnType> newRepresentation);
+   ROOT::DescriptorId_t AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
+                                                std::span<const ROOT::Internal::RColumnFormat> newRepresentation);
 
    /// Adds a new alias column pointing to an existing column with the given physical id to the given field.
    void AddAliasColumn(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &field,

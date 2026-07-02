@@ -17,6 +17,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RFloat16.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 
 #include <Byteswap.h>
 #include <TError.h>
@@ -146,6 +147,13 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(ROOT::ENTupleCo
 
 template <>
 std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(ROOT::ENTupleColumnType onDiskType);
+
+struct RColumnFormat {
+   ENTupleColumnType fType = ENTupleColumnType::kUnknown;
+   // 0 means "use default". Only valid for fixed-bitwidth column types.
+   std::uint16_t fBitWidth = 0;
+   std::optional<RColumnDescriptor::RValueRange> fValueRange = std::nullopt;
+};
 
 } // namespace ROOT::Internal
 
