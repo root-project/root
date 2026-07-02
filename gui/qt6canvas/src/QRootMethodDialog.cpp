@@ -28,6 +28,7 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TObjString.h"
+#include "TContextMenu.h"
 
 #include <iostream>
 
@@ -79,24 +80,21 @@ QString QRootMethodDialog::getArg(int n)
 }
 
 
-void QRootMethodDialog::methodDialog(TObject *object, TMethod* method)
+void QRootMethodDialog::methodDialog(TContextMenu *menu, TObject *object, TFunction* func)
 {
-   if (!object || !method)
+   if (!menu || !object || !func)
       return;
 
-   setWindowTitle(TString::Format("%s:%s", object->GetName(), method->GetName()).Data());
+   setWindowTitle(menu->CreateDialogTitle(object, func));
 
    // iterate through all arguments and create appropriate input-data objects:
    // inputlines, option menus...
-   TIter next(method->GetListOfMethodArgs());
+   TIter next(func->GetListOfMethodArgs());
 
    while (auto argument = (TMethodArg *) next()) {
-      TString argTitle = TString::Format("(%s)  %s", argument->GetTitle(), argument->GetName());
-      TString argDflt = argument->GetDefault() ? argument->GetDefault() : "";
-      if (argDflt.Length() > 0)
-         argTitle += TString::Format(" [default: %s]", argDflt.Data());
+      TString argTitle = menu->CreateArgumentTitle(argument);
       TString type = argument->GetTypeName();
-      TDataType *datatype   = gROOT->GetType(type);
+      TDataType *datatype = gROOT->GetType(type);
       TString basictype;
 
       if (datatype) {
@@ -134,6 +132,7 @@ void QRootMethodDialog::methodDialog(TObject *object, TMethod* method)
          } else
          if ((basictype == "char") ||
              (basictype == "int")  ||
+             (basictype == "bool")  ||
              (basictype == "long") ||
              (basictype == "short")) {
             Long_t ldefval = 0;
@@ -154,6 +153,10 @@ void QRootMethodDialog::methodDialog(TObject *object, TMethod* method)
             addArg(argTitle.Data(), val.Data(), type.Data());
          }
       } else {    // if m not found ...
+         TString argDflt;
+         if (argument->GetDefault())
+            argDflt = argument->GetDefault();
+
          if ((argDflt.Length() > 1) &&
              (argDflt[0]=='\"') && (argDflt[argDflt.Length()-1]=='\"')) {
             // cut "" from the string argument
@@ -165,56 +168,14 @@ void QRootMethodDialog::methodDialog(TObject *object, TMethod* method)
       }
    }
 
-   if (exec() != QDialog::Accepted) return;
+   if (exec() != QDialog::Accepted)
+      return;
 
-   Bool_t deletion = kFALSE;
-
-   qDebug("DIAL executeMethod:  simple version\n");
-   TVirtualPad *psave =  gROOT->GetSelectedPad();
-
-   qDebug("DIAL saved pad: %s gPad:%s \n",psave->GetName(),gPad->GetName());
-
-   qDebug("DIAL obj:%s meth:%s \n", object->GetName(), method->GetName());
-
-   TObjArray tobjlist(method->GetListOfMethodArgs()->LastIndex() + 1);
-   for (int n = 0; n <= method->GetListOfMethodArgs()->LastIndex(); n++) {
+   TObjArray tobjlist(func->GetListOfMethodArgs()->LastIndex() + 1);
+   for (int n = 0; n <= func->GetListOfMethodArgs()->LastIndex(); n++) {
       QString s = getArg(n);
-      qDebug( "** QString values (first ) :%s \n", s.toLatin1().constData() );
       tobjlist.AddLast(new TObjString(s.toLatin1().constData()));
    }
 
-   // handle command if existing object
-   if(strcmp(method->GetName(),"Delete") == 0) {
-      // here call explicitly the dtor
-      qDebug(" DIAL obj name deleted :%s \n", object->GetName());
-      emit MenuCommandExecuted(object, "Delete");
-      delete object;
-      object = nullptr;
-      deletion = kTRUE;
-      qDebug(" DIAL deletion done closing ... \n");
-   } else {
-      // here call cint call
-      qDebug("TCint::Execute called !\n");
-
-      object->Execute(method, &tobjlist);
-
-      if (object->TestBit(TObject::kNotDeleted)) {
-         emit MenuCommandExecuted(object, method->GetName());
-      } else {
-        deletion = true;
-        object = nullptr;
-      }
-   }
-
-   if(!deletion ) {
-      qDebug("DIAL set saved pad: %s herit:%s gPad:%s\n",
-             psave->GetName(), psave->ClassName(), gPad->GetName());
-      gROOT->SetSelectedPad(psave);
-      gROOT->GetSelectedPad()->Modified();
-      gROOT->GetSelectedPad()->Update();
-      qDebug("DIAL update done on %s \n", gROOT->GetSelectedPad()->GetName());
-   } else {
-      gROOT->SetSelectedPad(gPad);
-      gROOT->GetSelectedPad()->Update();
-   }
+   menu->Execute(object, func, &tobjlist);
 }

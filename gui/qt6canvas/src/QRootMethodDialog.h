@@ -22,7 +22,8 @@
 class QLineEdit;
 class QVBoxLayout;
 class TObject;
-class TMethod;
+class TFunction;
+class TContextMenu;
 
 class QRootMethodDialog: public QDialog {
    Q_OBJECT
@@ -34,7 +35,7 @@ class QRootMethodDialog: public QDialog {
 
       QString getArg(int n);
 
-      void methodDialog(TObject *object, TMethod* method);
+      void methodDialog(TContextMenu *menu, TObject *object, TFunction* func);
 
    signals:
       void MenuCommandExecuted(TObject *obj, const char *method_name);
