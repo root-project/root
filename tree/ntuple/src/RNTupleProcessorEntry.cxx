@@ -72,7 +72,7 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string 
    if (valuePtr)
       value.BindRawPtr(valuePtr);
    fProcessorValues.emplace_back(RProcessorValue(std::move(field), qualifiedFieldName, std::move(value), provenance,
-                                                 isJoinField, /*isValid=*/true));
+                                                 isJoinField, /*isActive=*/true, /*isValid=*/true));
 
    return fieldIdx;
 }

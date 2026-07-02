@@ -102,16 +102,18 @@ private:
       ROOT::RFieldBase::RValue fValue;
       RNTupleProcessorProvenance fProcessorProvenance;
       const bool fIsJoinField;
+      bool fIsActive;
       bool fIsValid;
 
       RProcessorValue(std::unique_ptr<ROOT::RFieldBase> field, std::string_view qualifiedFieldName,
                       ROOT::RFieldBase::RValue &&value, RNTupleProcessorProvenance provenance, bool isJoinField,
-                      bool isValid)
+                      bool isActive, bool isValid)
          : fField(std::move(field)),
            fQualifiedFieldName(qualifiedFieldName),
            fValue(std::move(value)),
            fProcessorProvenance(provenance),
            fIsJoinField(isJoinField),
+           fIsActive(isActive),
            fIsValid(isValid)
       {
       }
@@ -128,6 +130,27 @@ public:
    {
       fProcessorValues.clear();
       fFieldName2Index.clear();
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief (De)activate reading of a field.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   /// \param[in] isActive The new status of the field.
+   void SetFieldIsActive(FieldIndex_t fieldIdx, bool isActive)
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      fProcessorValues[fieldIdx].fIsActive = isActive;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Check whether a field is activated for reading.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   bool IsActiveField(FieldIndex_t fieldIdx) const
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fIsActive;
    }
 
    /////////////////////////////////////////////////////////////////////////////

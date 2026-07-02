@@ -290,7 +290,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
       return kInvalidNTupleIndex;
 
    for (auto fieldIdx : fFieldIdxs) {
-      fEntry->ReadValue(fieldIdx, entryNumber);
+      if (fEntry->IsActiveField(fieldIdx))
+         fEntry->ReadValue(fieldIdx, entryNumber);
    }
 
    fNEntriesProcessed++;
@@ -693,7 +694,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    } else {
       SetAuxiliaryFieldValidity(true);
       for (const auto &fieldIdx : fAuxiliaryFieldIdxs) {
-         fEntry->ReadValue(fieldIdx, entryIdx);
+         if (fEntry->IsActiveField(fieldIdx))
+            fEntry->ReadValue(fieldIdx, entryIdx);
       }
    }
 
