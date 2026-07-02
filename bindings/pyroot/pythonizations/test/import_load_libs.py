@@ -80,6 +80,7 @@ class ImportLoadLibs(unittest.TestCase):
         "libatomic",
         # AddressSanitizer runtime and ROOT configuration
         "libclang_rt.asan-.*",
+        "libasan",
         "libROOTSanitizerConfig",
         "libjitterentropy",  # by libssl on openSUSE
         "libsandbox",  # Gentoo portage test environment
