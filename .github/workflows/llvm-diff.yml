@@ -34,5 +34,9 @@ jobs:
           for f in $(ls -A); do
             [ -e ../root/interpreter/llvm-project/$f ] || rm -r $f
           done
+          # Only compare what is already there in third-party
+          for f in $(ls -A third-party); do
+            [ -e ../root/interpreter/llvm-project/third-party/$f ] || rm -r third-party/$f
+          done
       - name: Compare
         run: diff -ur llvm-project/ root/interpreter/llvm-project/

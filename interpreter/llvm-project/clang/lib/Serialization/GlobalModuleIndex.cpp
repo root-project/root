@@ -24,6 +24,7 @@
 #include "llvm/Bitstream/BitstreamWriter.h"
 #include "llvm/Support/DJB.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/IOSandbox.h"
 #include "llvm/Support/LockFileManager.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/OnDiskHashTable.h"
@@ -250,6 +251,9 @@ GlobalModuleIndex::~GlobalModuleIndex() {
 
 std::pair<GlobalModuleIndex *, llvm::Error>
 GlobalModuleIndex::readIndex(StringRef Path) {
+  // This is a compiler-internal input/output, let's bypass the sandbox.
+  auto BypassSandbox = llvm::sys::sandbox::scopedDisable();
+
   // Load the index file, if it's there.
   llvm::SmallString<128> IndexPath;
   IndexPath += Path;
@@ -470,11 +474,12 @@ namespace {
     }
 
   public:
-    explicit GlobalModuleIndexBuilder(GlobalModuleIndex::UserDefinedInterestingIDs* ExternalIDs) {
+    explicit GlobalModuleIndexBuilder(
+        GlobalModuleIndex::UserDefinedInterestingIDs *ExternalIDs) {
       if (!ExternalIDs)
         return;
 
-      for (const auto & I : *ExternalIDs)
+      for (const auto &I : *ExternalIDs)
         for (auto J : I.getValue())
           if (J)
             InterestingIdentifiers[I.getKey()].push_back(
@@ -881,11 +886,11 @@ bool GlobalModuleIndexBuilder::writeIndex(llvm::BitstreamWriter &Stream) {
   return false;
 }
 
-llvm::Error
-GlobalModuleIndex::writeIndex(FileManager &FileMgr,
-                              const PCHContainerReader &PCHContainerRdr,
-                              StringRef Path,
-                       UserDefinedInterestingIDs *ExternalIDs /* = nullptr */) {
+llvm::Error GlobalModuleIndex::writeIndex(
+    FileManager &FileMgr, const PCHContainerReader &PCHContainerRdr,
+    StringRef Path, UserDefinedInterestingIDs *ExternalIDs /* = nullptr */) {
+  // This is a compiler-internal input/output, let's bypass the sandbox.
+  auto BypassSandbox = llvm::sys::sandbox::scopedDisable();
 
   llvm::SmallString<128> IndexPath;
   IndexPath += Path;
@@ -893,21 +898,20 @@ GlobalModuleIndex::writeIndex(FileManager &FileMgr,
 
   // Coordinate building the global index file with other processes that might
   // try to do the same.
-  llvm::LockFileManager Locked(IndexPath);
-  switch (Locked) {
-  case llvm::LockFileManager::LFS_Error:
+  llvm::LockFileManager Lock(IndexPath);
+  bool Owned;
+  if (llvm::Error Err = Lock.tryLock().moveInto(Owned)) {
+    llvm::consumeError(std::move(Err));
     return llvm::createStringError(std::errc::io_error, "LFS error");
-
-  case llvm::LockFileManager::LFS_Owned:
-    // We're responsible for building the index ourselves. Do so below.
-    break;
-
-  case llvm::LockFileManager::LFS_Shared:
+  }
+  if (!Owned) {
     // Someone else is responsible for building the index. We don't care
     // when they finish, so we're done.
     return llvm::createStringError(std::errc::device_or_resource_busy,
                                    "someone else is building the index");
   }
+
+  // We're responsible for building the index ourselves.
 
   // The module index builder.
   GlobalModuleIndexBuilder Builder(ExternalIDs);
@@ -915,8 +919,7 @@ GlobalModuleIndex::writeIndex(FileManager &FileMgr,
   if (!ExternalIDs) {
     // Load each of the module files.
     std::error_code EC;
-    for (llvm::sys::fs::directory_iterator D(Path, EC), DEnd;
-         D != DEnd && !EC;
+    for (llvm::sys::fs::directory_iterator D(Path, EC), DEnd; D != DEnd && !EC;
          D.increment(EC)) {
       // If this isn't a module file, we don't care.
       if (llvm::sys::path::extension(D->path()) != ".pcm") {
@@ -936,7 +939,8 @@ GlobalModuleIndex::writeIndex(FileManager &FileMgr,
         continue;
 
       // Load this module file.
-      if (auto Err = Builder.loadModuleFile(*ModuleFile, FileMgr, PCHContainerRdr))
+      if (auto Err =
+              Builder.loadModuleFile(*ModuleFile, FileMgr, PCHContainerRdr))
         return Err;
     }
   }

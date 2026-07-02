@@ -318,7 +318,7 @@ namespace utils {
     ///\param[in] Ctx - the AST Context to be used.
     ///\param[in] Namesp - the NamespaceDecl for which a NestedNameSpecifier
     /// is requested.
-    clang::NestedNameSpecifier*
+    clang::NestedNameSpecifier
     CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
                               const clang::NamespaceDecl* Namesp);
 
@@ -330,7 +330,7 @@ namespace utils {
     /// requested.
     ///\param[in] FullyQualify - Convert all template arguments into fully
     /// qualified names.
-    clang::NestedNameSpecifier*
+    clang::NestedNameSpecifier
     CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
                               const clang::TagDecl *TD, bool FullyQualify);
 
@@ -342,7 +342,7 @@ namespace utils {
     /// requested.
     ///\param[in] FullyQualify - Convert all template arguments (of possible
     /// parent scopes) into fully qualified names.
-    clang::NestedNameSpecifier*
+    clang::NestedNameSpecifier
     CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
                               const clang::TypedefNameDecl *TD,
                               bool FullyQualify);
@@ -355,11 +355,14 @@ namespace utils {
     /// requested.
     ///\param[in] FullyQualify - Convert all template arguments (of possible
     /// parent scopes) into fully qualified names.
-    clang::NestedNameSpecifier*
+    clang::NestedNameSpecifier
     CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
                               const clang::UsingShadowDecl *USD,
                               bool FullyQualify);
 
+    clang::QualType QualifyTypeUnderPrefix(const clang::ASTContext& Ctx,
+                                           clang::QualType QT,
+                                           clang::NestedNameSpecifier prefix);
   } // end namespace TypeName
 } // end namespace utils
 } // end namespace cling

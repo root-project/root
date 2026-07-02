@@ -157,7 +157,7 @@ namespace cling {
     // Not coming from the RecursiveASTVisitor
     void Visit(clang::QualType QT);
     void Visit(const clang::Type* T);
-    void VisitNestedNameSpecifier(const clang::NestedNameSpecifier* NNS);
+    void VisitNestedNameSpecifier(const clang::NestedNameSpecifier NNS);
     void VisitTemplateArgument(const clang::TemplateArgument& TA);
     void VisitTemplateName(const clang::TemplateName& TN);
 

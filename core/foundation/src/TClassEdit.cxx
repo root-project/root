@@ -452,6 +452,8 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
    //   do the same for all inside
    for (int i=1;i<narg; i++) {
+      if (fElements[i] == "__size_t") fElements[i] = "unsigned long";
+      else if (fElements[i] == "__ptrdiff_t") fElements[i] = "long";
       if (!strchr(fElements[i].c_str(),'<')) {
          if (mode&kResolveTypedef) {
             fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
@@ -895,6 +897,9 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
    }
 
    norm_name = std::string(name); // NOTE: Is that the shortest version?
+
+   if (norm_name == "__size_t") norm_name = "unsigned long";
+   else if (norm_name == "__ptrdiff_t") norm_name = "long";
 
    if (TClassEdit::IsArtificial(name)) {
       // If there is a @ symbol (followed by a version number) then this is a synthetic class name created
