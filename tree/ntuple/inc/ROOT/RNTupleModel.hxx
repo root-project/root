@@ -314,7 +314,7 @@ public:
    /// ~~~
    ///
    /// Creating projections for fields containing `std::variant` or fixed-size arrays is unsupported.
-   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
+   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const FieldMappingFunc_t &mapping);
 
    /// Transitions an RNTupleModel from the *building* state to the *frozen* state, disabling adding additional fields
    /// and enabling creating entries from it. Freezing an already-frozen model is a no-op. Throws an RException if the
@@ -418,7 +418,7 @@ struct RNTupleModelChangeset {
 
    /// \see RNTupleModel::AddProjectedField()
    ROOT::RResult<void>
-   AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
+   AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const RNTupleModel::FieldMappingFunc_t &mapping);
 };
 
 } // namespace Internal
@@ -459,7 +459,7 @@ public:
    void AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName = "");
 
    /// \see RNTupleModel::AddProjectedField()
-   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
+   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const FieldMappingFunc_t &mapping);
 };
 
 } // namespace ROOT

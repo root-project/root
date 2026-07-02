@@ -194,7 +194,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       const double xcont_min = fInterval->LowerLimit(*myparam);
       const double xcont_max = fInterval->UpperLimit(*myparam);
 
-      RooRealVar* myarg = static_cast<RooRealVar *>(newProfile->getVariables()->find(myparam->GetName()));
+      std::unique_ptr<RooArgSet> vars{newProfile->getVariables()};
+      RooRealVar *myarg = static_cast<RooRealVar *>(vars->find(myparam->GetName()));
       double x1 = myarg->getMin();
       double x2 = myarg->getMax();
 
@@ -336,13 +337,13 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       double cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
       cont_level = cont_level/2; // since we are plotting -log LR
 
-      RooArgList params(*newProfile->getVariables());
+      std::unique_ptr<RooArgSet> vars{newProfile->getVariables()};
+      RooArgList params(*vars);
       // set values and error for the POI to the best fit values
-      for (std::size_t i = 0; i < params.size(); ++i) {
-         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
-         RooRealVar * fitPar =  static_cast<RooRealVar *> (fInterval->GetBestFitParameters()->find(par.GetName() ) );
+      for (auto *par : static_range_cast<RooRealVar *>(params)) {
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fInterval->GetBestFitParameters()->find(par->GetName() ) );
          if (fitPar) {
-            par.setVal( fitPar->getVal() );
+            par->setVal( fitPar->getVal() );
          }
       }
       // do a profile evaluation to start from the best fit values of parameters

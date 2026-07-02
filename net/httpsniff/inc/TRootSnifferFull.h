@@ -14,13 +14,18 @@
 
 #include "TRootSniffer.h"
 #include <string>
+#include <memory>
+#include <map>
 
 class TMemFile;
+class TMethodCall;
+class TMethod;
 
 class TRootSnifferFull : public TRootSniffer {
 protected:
    TMemFile *fMemFile{nullptr}; ///<! file used to manage streamer infos
    TList *fSinfo{nullptr};      ///<! last produced streamer info
+   std::map<const TMethod *, std::unique_ptr<TMethodCall>> fExeCache; ///<! cache for exe.json invocation
 
    void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj) override;
 

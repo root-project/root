@@ -245,8 +245,8 @@ bool AsymptoticCalculator::Initialize() const {
    if (!fNominalAsimov) {
       if (verbose >= 0)
          oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << std::endl;
-      RooArgSet * tmp = (RooArgSet*) poiAlt.snapshot();
-      fAsimovData = MakeAsimovData( data, *GetNullModel(), poiAlt, fAsimovGlobObs,tmp);
+      std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet *>(poiAlt.snapshot())};
+      fAsimovData = MakeAsimovData(data, *GetNullModel(), poiAlt, fAsimovGlobObs, tmp.get());
    }
 
    else {

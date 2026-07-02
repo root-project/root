@@ -377,7 +377,7 @@ public:
    /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
    /// created.
    ///
-   /// \return An RNTupleProcessorOptionalPtr, which provides access to the field's value.
+   /// \return An RNTupleProcessorOptionalPtr of type `T`, which provides access to the field's value.
    ///
    /// \warning Provide a `valuePtr` with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
@@ -394,6 +394,29 @@ public:
       }
       auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Request access to a field for reading during processing.
+   ///
+   /// \param[in] fieldName Name of the requested field.
+   /// \param[in] typeName Type of the requested field.
+   /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
+   /// created.
+   ///
+   /// \return An void-type RNTupleProcessorOptionalPtr, which provides access to the field's value.
+   ///
+   /// \warning Provide a `valuePtr` with care! Values may not always be valid for every entry during processing, for
+   /// example when a field is not present in one of the chained processors or when during a join operation, no matching
+   /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
+   /// invalid data. After passing a pointer to `RequestField`, we *strongly* recommend only accessing its data through
+   /// the interface of the returned `RNTupleProcessorOptionalPtr`, to ensure that only valid data can be read.
+   RNTupleProcessorOptionalPtr<void>
+   RequestField(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr)
+   {
+      Initialize(fEntry);
+      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      return RNTupleProcessorOptionalPtr<void>(fEntry.get(), fieldIdx);
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -592,9 +615,8 @@ private:
    /// \brief Get the total number of entries in this processor.
    ROOT::NTupleSize_t GetNEntries() final
    {
-      Initialize();
       if (fNEntries == ROOT::kInvalidNTupleIndex)
-         Connect(fFieldIdxs);
+         Initialize();
       return fNEntries;
    }
 

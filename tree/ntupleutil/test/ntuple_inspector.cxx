@@ -862,3 +862,59 @@ TEST(RNTupleInspector, FieldTreeAsDot)
       "</b>int<br></br><b>Type: </b>std::int32_t<br></br><b>ID: </b>1<br></br>>]\n}";
    EXPECT_EQ(dot, expected);
 }
+
+TEST(RNTupleInspector, SchemaProfile)
+{
+   FileRaii fileGuard("test_schema_profile.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFloat1 = model->MakeField<float>("float1");
+      auto fieldInt = model->MakeField<std::int32_t>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (int i = 0; i < 10; ++i) {
+         *fieldFloat1 = 3.14f * i;
+         *fieldInt = 42 * i;
+         writer->Fill();
+      }
+   }
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   std::ostringstream schemaProfileStream;
+   inspector->PrintSchemaProfile(ROOT::Experimental::ESchemaProfileFormat::kSpeedscopeJSON, schemaProfileStream);
+   const std::string schemaProfile = schemaProfileStream.str();
+   const std::string expected = R"({
+   "$schema":"https://www.speedscope.app/file-format-schema.json",
+   "shared":{
+      "frames":[
+         { "name":"", "file":"Type: , Size: 80B" },
+         { "name":"float1", "file":"Type: float, Size: 40B" },
+         { "name":"float1 [col#0]", "file":"Type: SplitReal32, Size: 40B" },
+         { "name":"int", "file":"Type: std::int32_t, Size: 40B" },
+         { "name":"int [col#1]", "file":"Type: SplitInt32, Size: 40B" }
+      ]
+   },
+   "profiles":[
+      {
+         "type":"evented",
+         "name":"Flattened Timeline",
+         "unit":"bytes",
+         "startValue":0,
+         "endValue":80,
+         "events":[
+            {"type":"O","frame":0,"at":0},
+            {"type":"O","frame":1,"at":0},
+            {"type":"O","frame":2,"at":0},
+            {"type":"C","frame":2,"at":40},
+            {"type":"C","frame":1,"at":40},
+            {"type":"O","frame":3,"at":40},
+            {"type":"O","frame":4,"at":40},
+            {"type":"C","frame":4,"at":80},
+            {"type":"C","frame":3,"at":80},
+            {"type":"C","frame":0,"at":80}
+         ]
+      }
+   ]
+}
+)";
+   EXPECT_EQ(schemaProfile, expected);
+}

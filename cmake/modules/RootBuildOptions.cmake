@@ -148,7 +148,6 @@ ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGL
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
 ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires Qt6::WebEngineCore and Qt6::WebEngineWidgets)")
-ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ >= 4.3.5 built with -DENABLE_DRAFTS and cppzmq).")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 experimental components of ROOT")
@@ -168,7 +167,6 @@ ROOT_BUILD_OPTION(tmva-cpu ON "Build TMVA with CPU support for deep learning (re
 ROOT_BUILD_OPTION(tmva-cudnn ON "Enable support for cuDNN (default when CUDA is enabled)")
 ROOT_BUILD_OPTION(tmva-gpu OFF "Build TMVA with GPU support for deep learning (requires CUDA)")
 ROOT_BUILD_OPTION(tmva-pymva OFF "Enable usage of Python ML libraries in TMVA (requires NumPy, works only with TensorFlow<=2.15)")
-ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
 ROOT_BUILD_OPTION(tmva-sofie OFF "Build TMVA with support for sofie - fast inference code generation (requires protobuf 3)")
 ROOT_BUILD_OPTION(tpython ON "Build the TPython class that allows you to run Python code from C++")
 ROOT_BUILD_OPTION(unfold OFF "Enable the unfold package [GPL]")
@@ -191,8 +189,10 @@ option(gminimal "Enable only required options by default, but include X11/Cocoa"
 option(minimal "Enable only required options by default" OFF)
 option(rootbench "Build rootbench if rootbench exists in root or if it is a sibling directory (implies testing=ON)" OFF)
 option(roottest "Build roottest (implies testing=ON)" OFF)
+option(test_roofit_hs3testsuite "Setup and use the HS3 conformance test suite (requires network)" OFF)
 option(testing "Enable testing with CTest" OFF)
-option(asan "Build ROOT with address sanitizer instrumentation" OFF)
+option(asan "Build ROOT with address sanitizer instrumentation (only GCC is currently supported)" OFF)
+option(_wheel_build "ROOT is being packaged as a wheel, do not install .dist-info metadata" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
@@ -233,7 +233,6 @@ if(all)
  set(tmva_defvalue ON)
  set(tmva-cpu_defvalue ON)
  set(tmva-pymva_defvalue ON)
- set(tmva-rmva_defvalue ON)
  set(unuran_defvalue ON)
  set(vdt_defvalue ON)
  set(vecgeom_defvalue ON)
@@ -341,6 +340,10 @@ if(testing)
   set(testsupport ON CACHE BOOL "" FORCE)
 endif()
 
+#---running HS3 test suite requires both testing and pyroot, but testing globally disables tests
+if(testing AND test_roofit_hs3testsuite AND NOT pyroot)
+  message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
+endif()
 
 if(unfold AND NOT xml)
   message(STATUS "Cannot enable unfold without enabling xml: unfold is disabled.")
@@ -370,7 +373,8 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix castor c
         geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle proof pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
-        tcmalloc vmc xproofd mysql odbc pgsql builtin_cppzmq builtin_zeromq)
+        tcmalloc vmc xproofd mysql odbc pgsql builtin_cppzmq builtin_zeromq
+        r tmva-rmva)
   if(${opt})
     message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
   endif()

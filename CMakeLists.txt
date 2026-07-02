@@ -403,6 +403,7 @@ add_subdirectory (hist)
 add_subdirectory (tree)
 add_subdirectory (io)
 add_subdirectory (net)
+add_subdirectory (builtins/mathtext) # hard coded builtin for graf2d
 add_subdirectory (graf2d)
 add_subdirectory (graf3d)
 if(NOT minimal)
@@ -645,6 +646,9 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   if(http)
      install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR} ${DIR_PERMISSIONS})
   endif()
+  if(cefweb AND TARGET ROOTCefDisplay)
+     install(DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/   DESTINATION ${CMAKE_INSTALL_FRAMEWORKSDIR} ${DIR_PERMISSIONS})
+  endif()
   if(webgui)
      install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR} ${DIR_PERMISSIONS})
   endif()
@@ -686,6 +690,9 @@ endif()
 if(pyroot)
   set(PYTESTS_WILLFAIL WILLFAIL)
 endif()
+
+#---Insert Python metadata for ROOT import package----------------------------------------------
+include(InstallPythonMetadata)
 
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)

@@ -59,12 +59,14 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 
 # TColor-related pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
+ROOT_ADD_PYUNITTEST(regression_20018 regression_20018.py)
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1 th1.py)
 # The above tests a deadlock. It should complete in about 1s. If we don't reduce the timeout, we need to wait 1500 s.
 set_tests_properties(pyunittests-bindings-pyroot-pythonizations-pyroot-pyz-th1 PROPERTIES TIMEOUT 30)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_fillN th1_fillN.py PYTHON_DEPS numpy)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_addfunction th1_addfunction.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2_fillN th2_fillN.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th3 th3.py)
@@ -181,6 +183,8 @@ if (dataframe)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
+
+ROOT_ADD_PYUNITTEST(package_metadata package_metadata.py)
 
 if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
     # Test the conversion and low level views of interpreter-defined C++ arrays to NumPy

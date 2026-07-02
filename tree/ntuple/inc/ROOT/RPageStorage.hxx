@@ -135,8 +135,8 @@ public:
       SealedPageSequence_t::const_iterator fLast;
 
       RSealedPageGroup() = default;
-      RSealedPageGroup(ROOT::DescriptorId_t d, SealedPageSequence_t::const_iterator b,
-                       SealedPageSequence_t::const_iterator e)
+      RSealedPageGroup(ROOT::DescriptorId_t d, const SealedPageSequence_t::const_iterator &b,
+                       const SealedPageSequence_t::const_iterator &e)
          : fPhysicalColumnId(d), fFirst(b), fLast(e)
       {
       }
@@ -399,7 +399,7 @@ public:
    virtual void CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo) = 0;
 
    /// The registered callback is executed at the beginning of CommitDataset();
-   void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
+   void RegisterOnCommitDatasetCallback(const Callback_t &cb) { fOnDatasetCommitCallbacks.emplace_back(cb); }
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
    RNTupleLink CommitDataset();
 
@@ -484,6 +484,9 @@ protected:
 
    virtual void InitImpl(unsigned char *serializedHeader, std::uint32_t length) = 0;
 
+   /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
+   void InitImpl(RNTupleModel &model) final;
+
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) = 0;
    virtual RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
@@ -503,6 +506,9 @@ protected:
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
    virtual RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
+
+   /// \return The locator and length of the written anchor.
+   RNTupleLink CommitDatasetImpl() final;
 
    /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -531,8 +537,6 @@ public:
 
    ROOT::NTupleSize_t GetNEntries() const final { return fPrevClusterNEntries; }
 
-   /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
-   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) override;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
@@ -551,8 +555,6 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo) final;
-   /// \return The locator and length of the written anchor.
-   RNTupleLink CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off
@@ -567,6 +569,15 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+   /// Summarizes meta-data necessary to load a certain page. Used by LoadPageFromSummary().
+   struct RPageSummary {
+      ROOT::DescriptorId_t fClusterId = 0;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+      /// Location of the page on disk
+      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
+   };
+
 public:
    /// Used in SetEntryRange / GetEntryRange
    struct REntryRange {
@@ -616,52 +627,12 @@ public:
          fDescriptor.IncGeneration();
          fLock.unlock();
       }
+      ROOT::RNTupleDescriptor &operator*() const { return fDescriptor; }
       ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
       void MoveIn(ROOT::RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
    };
 
 private:
-   ROOT::RNTupleDescriptor fDescriptor;
-   mutable std::shared_mutex fDescriptorLock;
-   REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
-   bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
-   bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
-   bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
-
-   /// Remembers the last cluster id from which a page was requested
-   ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
-   /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
-   /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
-   /// previous clusters are evicted from the page pool. Pinned clusters won't be evicted.
-   std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
-
-   /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
-   /// and evict unused paged from the page pool of all previous clusters.
-   /// Must not be called when the descriptor guard is taken.
-   void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
-
-protected:
-   /// Default I/O performance counters that get registered in `fMetrics`
-   struct RCounters {
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNReadV;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNRead;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzReadPayload;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzReadOverhead;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzUnzip;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNClusterLoaded;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageRead;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageUnsealed;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallRead;
-      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallUnzip;
-      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuRead;
-      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuUnzip;
-      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthReadUncompressed;
-      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthReadCompressed;
-      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthUnzip;
-      ROOT::Experimental::Detail::RNTupleCalcPerf &fFractionReadOverhead;
-      ROOT::Experimental::Detail::RNTupleCalcPerf &fCompressionRatio;
-   };
-
    /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.
    /// When using alias columns (projected fields), physical columns may be requested multiple times.
    class RActivePhysicalColumns {
@@ -693,50 +664,111 @@ protected:
       }
    };
 
-   /// Summarizes cluster-level information that are necessary to load a certain page.
-   /// Used by LoadPageImpl().
-   struct RClusterInfo {
-      ROOT::DescriptorId_t fClusterId = 0;
-      /// Location of the page on disk
-      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
-      /// The first element number of the page's column in the given cluster
-      std::uint64_t fColumnOffset = 0;
-   };
+   ROOT::RNTupleDescriptor fDescriptor;
+   mutable std::shared_mutex fDescriptorLock;
+   REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
+   bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
+   bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
+   bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
-   std::unique_ptr<RCounters> fCounters;
-
-   ROOT::RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
+
+   /// The cluster pool asynchronously preloads the next few clusters. Note that derived classes should call
+   /// StopClusterPoolBackgroundThread() in their destructor so that the I/O background thread does not call
+   /// methods from the destructed derived class.
+   ROOT::Internal::RClusterPool fClusterPool;
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
+   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
+   /// Pages that are unzipped with IMT are staged into the page pool
+   ROOT::Internal::RPagePool fPagePool;
+
+   /// Remembers the last cluster id from which a page was requested
+   ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
+   /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
+   /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
+   /// previous clusters are evicted from the page pool. Pinned clusters won't be evicted.
+   std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
+
    /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
    /// Pages of pinned clusters won't be evicted from the page pool.
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
 
-   /// The cluster pool asynchronously preloads the next few clusters. Note that derived classes should call
-   /// fClusterPool.StopBackgroundThread() in their destructor so that the I/O background thread does not call
-   /// methods from the destructed derived class.
-   ROOT::Internal::RClusterPool fClusterPool;
-   /// Pages that are unzipped with IMT are staged into the page pool
-   ROOT::Internal::RPagePool fPagePool;
+   /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
+   /// and evict unused paged from the page pool of all previous clusters.
+   /// Must not be called when the descriptor guard is taken.
+   void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
 
+   // Common treatment of zero pages in LoadPageFromSummary()
+   ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
+   // Once the page is found to be missing in the page cache and all information about the page is collected,
+   // either using a global or a local element index, perform the common page loading tasks using the page summary.
+   // This includes zero page handling and prefetching the corresponding cluster.
+   ROOT::Internal::RPageRef LoadPageFromSummary(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
+
+protected:
+   /// Holds the uncompressed header and footer
+   struct RStructureBuffer {
+      std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
+      void *fPtrHeader = nullptr;               ///< either nullptr or points into fBuffer
+      void *fPtrFooter = nullptr;               ///< either nullptr or points into fBuffer
+
+      /// Called at the end of Attach(), i.e. when the header and footer are processed
+      void Reset()
+      {
+         RStructureBuffer empty;
+         std::swap(empty, *this);
+      }
+   };
+
+   /// Default I/O performance counters that get registered in `fMetrics`
+   struct RCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNReadV;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNRead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzReadPayload;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzReadOverhead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzUnzip;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNClusterLoaded;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageRead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageUnsealed;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallRead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallUnzip;
+      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuRead;
+      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuUnzip;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthReadUncompressed;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthReadCompressed;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthUnzip;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fFractionReadOverhead;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fCompressionRatio;
+   };
+
+   std::unique_ptr<RCounters> fCounters;
+   RStructureBuffer fStructureBuffer; ///< Populated by LoadStructureImpl(), reset at the end of Attach()
+
+   ROOT::RNTupleReadOptions fOptions;
+
+   /// Fills fStructureBuffer with the compressed header and footer
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
-   virtual ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
+   virtual ROOT::RNTupleDescriptor AttachImpl() = 0;
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
-   // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual ROOT::Internal::RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) = 0;
+   // Loads a page list into the provided buffer. The buffer parameter needs to point to a memory region
+   // that has space for at least locator.GetNBytesOnStorage() bytes to hold the compressed page list.
+   virtual void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) = 0;
+   // Returns a sealed page from storage without adding it to the page pool. The sealed pages buffer and buffer size
+   // is already initialized.
+   virtual void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
    /// commonly used as part of `LoadClusters()` in derived classes.
-   void PrepareLoadCluster(
-      const ROOT::Internal::RCluster::RKey &clusterKey, ROOT::Internal::ROnDiskPageMap &pageZeroMap,
-      std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
-         perPageFunc);
+   void PrepareLoadCluster(const ROOT::Internal::RCluster::RKey &clusterKey,
+                           ROOT::Internal::ROnDiskPageMap &pageZeroMap,
+                           const std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t,
+                                                    const ROOT::RClusterDescriptor::RPageInfo &)> &perPageFunc);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -748,6 +780,9 @@ protected:
 
    /// Note that the underlying lock is not recursive. See `GetSharedDescriptorGuard()` for further information.
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
+
+   // To be called in the destructor of derived classes
+   void StopClusterPoolBackgroundThread() { fClusterPool.StopBackgroundThread(); }
 
 public:
    RPageSource(std::string_view ntupleName, const ROOT::RNTupleReadOptions &fOptions);
@@ -804,8 +839,9 @@ public:
    void SetEntryRange(const REntryRange &range);
    REntryRange GetEntryRange() const { return fEntryRange; }
 
-   /// Allocates and fills a page that contains the index-th element. The default implementation searches
-   /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
+   /// Allocates and fills a page that contains the index-th element. Calls into the concrete page source
+   /// for loading the corresponding sealed page of cluster where necessary.
+   /// Returns a default-constructed RPage for suppressed columns.
    virtual ROOT::Internal::RPageRef LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
@@ -816,8 +852,7 @@ public:
    /// The `fSize` and `fNElements` member of the sealedPage parameters are always set. If `sealedPage.fBuffer` is
    /// `nullptr`, no data will be copied but the returned size information can be used by the caller to allocate a large
    /// enough buffer and call `LoadSealedPage` again.
-   virtual void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) = 0;
+   void LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage);
 
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.

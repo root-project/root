@@ -94,7 +94,15 @@ def main():
     if args.overrides is not None:
         print("Build option overrides from command line:")
         last_options = dict(options_dict)
-        options_dict.update((arg.split("=", maxsplit=1) for arg in args.overrides))
+        # `args.overrides` contains a list of ['key1=value1', 'key2=value2', ...]
+        # Neither keys nor values are allowed to contain whitespaces (as they get passed as separate arguments in
+        # that case).
+        # For cases where the value itself needs to have a space, we encode it as '@' in the yaml.
+        split_args = [arg.split("=", maxsplit=1) for arg in args.overrides]
+        for i in range(len(split_args)):
+            [k, v] = split_args[i]
+            split_args[i] = [k, v.replace('@', ' ')]
+        options_dict.update(split_args)
         build_utils.print_options_diff(options_dict, last_options)
 
     ctest_custom_flags = ""

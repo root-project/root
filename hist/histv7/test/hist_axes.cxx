@@ -251,6 +251,20 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
    }
 }
 
+TEST(RAxes, ComputeGlobalIndexForward)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   const RAxes axes({axis});
+
+   std::tuple<CopyArgument> args(1.5);
+   auto globalIndex = axes.ComputeGlobalIndex(args);
+   EXPECT_EQ(globalIndex.fIndex, 2);
+   EXPECT_TRUE(globalIndex.fValid);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+}
+
 TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
 {
    static constexpr std::size_t Bins = 20;

@@ -11,7 +11,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/CustomStruct.hxx
                               SOURCES CustomStruct.cxx
                               LINKDEF CustomStructLinkDef.h
-                              DEPENDENCIES RIO)
+                              DEPENDENCIES RIO ROOTVecOps)
 configure_file(CustomStruct.hxx . COPYONLY)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStruct POST_BUILD
@@ -174,6 +174,10 @@ if(daos OR daos_mock)
     set_property(SOURCE ntuple_storage_daos.cxx
             APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_MOCK=1)
   endif()
+endif()
+
+if(curl)
+  ROOT_ADD_GTEST(ntuple_storage_s3 ntuple_storage_s3.cxx LIBRARIES ROOTNTuple)
 endif()
 
 

@@ -14,7 +14,7 @@
 #include "RConfigure.h"
 #include "Rtypes.h"
 #include "snprintf.h"
-#include "rootCommandLineOptionsHelp.h"
+#include "TApplicationCmdlineHelp.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -153,11 +153,6 @@ static void WaitChild()
    exit(0);
 }
 
-static void PrintUsage()
-{
-   fprintf(stderr, kCommandLineOptionsHelp);
-}
-
 int main(int argc, char **argv)
 {
    char **argvv;
@@ -184,7 +179,7 @@ int main(int argc, char **argv)
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
-         PrintUsage();
+         fprintf(stderr, kCommandLineOptionsHelp);
          return 0;
       }
    }

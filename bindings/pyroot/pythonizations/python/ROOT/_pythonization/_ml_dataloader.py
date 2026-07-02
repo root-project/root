@@ -345,15 +345,7 @@ class _RDataLoader:
             np.zeros((self.batch_size)).reshape(-1, 1),
         )
 
-    def ConvertBatchToNumpy(self, batch) -> np.ndarray:
-        """Convert a RTensor into a NumPy array
-
-        Args:
-            batch (RTensor): Batch returned from the DataLoader
-
-        Returns:
-            np.ndarray: converted batch
-        """
+    def _get_raw_array(self, batch) -> np.ndarray:
         try:
             import numpy as np
         except ImportError:
@@ -361,19 +353,21 @@ class _RDataLoader:
 
         data = batch.GetData()
         batch_size, num_columns = tuple(batch.GetShape())
-
         data.reshape((batch_size * num_columns,))
 
-        return_data = np.asarray(data).reshape(batch_size, num_columns)
+        return np.asarray(data).reshape(batch_size, num_columns)
 
+    def _split_target_and_weights(
+        self, data: np.ndarray
+    ) -> np.ndarray | Tuple[np.ndarray, np.ndarray] | Tuple[np.ndarray, np.ndarray, np.ndarray]:
         # Splice target column from the data if target is given
         if self.target_given:
-            train_data = return_data[:, self.train_indices]
-            target_data = return_data[:, self.target_indices]
+            train_data = data[:, self.train_indices]
+            target_data = data[:, self.target_indices]
 
             # Splice weight column from the data if weight is given
             if self.weights_given:
-                weights_data = return_data[:, self.weights_index]
+                weights_data = data[:, self.weights_index]
 
                 if len(self.target_indices) == 1:
                     return train_data, target_data.reshape(-1, 1), weights_data.reshape(-1, 1)
@@ -385,66 +379,52 @@ class _RDataLoader:
 
             return train_data, target_data
 
-        return return_data
+        return data
 
-    def ConvertBatchToPyTorch(self, batch: Any, device=None) -> torch.Tensor:
-        """Convert a RTensor into a PyTorch tensor
+    def ConvertBatchToNumpy(self, batch) -> np.ndarray:
+        """Convert the batch into a NumPy array
 
         Args:
-            batch (RTensor): Batch returned from the DataLoader
+            batch: Batch returned from the DataLoader
+
+        Returns:
+            np.ndarray: converted batch
+        """
+        return self._split_target_and_weights(self._get_raw_array(batch))
+
+    def ConvertBatchToPyTorch(self, batch: Any, device=None) -> torch.Tensor:
+        """Convert the batch into a PyTorch tensor
+
+        Args:
+            batch: Batch returned from the DataLoader
 
         Returns:
             torch.Tensor: converted batch
         """
-        import numpy as np
         import torch
 
-        data = batch.GetData()
-        batch_size, num_columns = tuple(batch.GetShape())
-
-        data.reshape((batch_size * num_columns,))
-
-        return_data = torch.as_tensor(np.asarray(data), device=device).reshape(batch_size, num_columns)
-
-        # Splice target column from the data if target is given
-        if self.target_given:
-            train_data = return_data[:, self.train_indices]
-            target_data = return_data[:, self.target_indices]
-
-            # Splice weight column from the data if weight is given
-            if self.weights_given:
-                weights_data = return_data[:, self.weights_index]
-
-                if len(self.target_indices) == 1:
-                    return train_data, target_data.reshape(-1, 1), weights_data.reshape(-1, 1)
-
-                return train_data, target_data, weights_data.reshape(-1, 1)
-
-            if len(self.target_indices) == 1:
-                return train_data, target_data.reshape(-1, 1)
-
-            return train_data, target_data
-
-        return return_data
+        split = self._split_target_and_weights(self._get_raw_array(batch))
+        return (
+            tuple(torch.as_tensor(arr, device=device) for arr in split)
+            if isinstance(split, tuple)
+            else torch.as_tensor(split, device=device)
+        )
 
     def ConvertBatchToTF(self, batch: Any) -> Any:
         """
-        Convert a RTensor into a TensorFlow tensor
+        Convert the batch into a TensorFlow tensor
 
         Args:
-            batch (RTensor): Batch returned from the DataLoader
+            batch: Batch returned from the DataLoader
 
         Returns:
             tensorflow.Tensor: converted batch
         """
         import tensorflow as tf
 
-        data = batch.GetData()
-        batch_size, num_columns = tuple(batch.GetShape())
-
-        data.reshape((batch_size * num_columns,))
-
-        return_data = tf.constant(data, shape=(batch_size, num_columns))
+        arr = self._get_raw_array(batch)
+        batch_size = arr.shape[0]
+        return_data = tf.constant(arr)
 
         if batch_size != self.batch_size:
             return_data = tf.pad(return_data, tf.constant([[0, self.batch_size - batch_size], [0, 0]]))
@@ -463,6 +443,30 @@ class _RDataLoader:
             return train_data, target_data
 
         return return_data
+
+    def ConvertBatchToJAX(self, batch: Any, device=None) -> Any:
+        """
+        Convert the batch into a JAX array
+
+        Args:
+            batch: Batch returned from the DataLoader
+
+        Returns:
+            jax.Array: converted batch
+        """
+        import jax
+        import jax.numpy as jnp
+
+        split = self._split_target_and_weights(jnp.asarray(self._get_raw_array(batch)))
+
+        if isinstance(device, str):
+            device = jax.devices(device)[0]
+
+        return (
+            tuple(jax.device_put(arr, device=device) for arr in split)
+            if isinstance(split, tuple)
+            else jax.device_put(split, device=device)
+        )
 
     # Return a batch when available
     def GetTrainBatch(self) -> Any:
@@ -717,6 +721,11 @@ class RDataLoader:
         Args:
             device: If given, the returned tensors are moved to the specified device.
         """
+        try:
+            import torch  # noqa F401
+        except ImportError:
+            raise ImportError("Failed to import torch needed for the ML dataloader")
+
         self._ensure_created()
         conversion_fn = lambda batch: self._internal.ConvertBatchToPyTorch(batch, device)  # noqa: E731
         return FormattedLoader(self._internal, conversion_fn, self._is_training)
@@ -726,7 +735,10 @@ class RDataLoader:
         \ingroup Py_ML
         Return a tf.data.Dataset over batches as TensorFlow tensors.
         """
-        import tensorflow as tf
+        try:
+            import tensorflow as tf
+        except ImportError:
+            raise ImportError("Failed to import tensorflow needed for the ML dataloader")
 
         self._ensure_created()
 
@@ -755,6 +767,24 @@ class RDataLoader:
 
         loader = FormattedLoader(self._internal, self._internal.ConvertBatchToTF, self._is_training)
         return tf.data.Dataset.from_generator(lambda: loader, output_signature=batch_signature)
+
+    def as_jax(self, device: str | Any = None) -> FormattedLoader:
+        r"""
+        \ingroup Py_ML
+        Return an iterable that yields batches as JAX arrays.
+
+        Args:
+            device: If given, the returned arrays are moved to the specified device.
+                    Can be a string (e.g. "cpu", "gpu", "tpu") or any of JAX's device objects.
+        """
+        try:
+            import jax  # noqa F401
+        except ImportError:
+            raise ImportError("Failed to import jax needed for the ML dataloader")
+
+        self._ensure_created()
+        conversion_fn = lambda batch: self._internal.ConvertBatchToJAX(batch, device)  # noqa: E731
+        return FormattedLoader(self._internal, conversion_fn, self._is_training)
 
     @property
     def columns(self) -> list[str]:

@@ -19,7 +19,3 @@ endif()
 if(tpython)
   add_subdirectory(tpython)
 endif()
-
-if(r)
-  add_subdirectory(r)
-endif()

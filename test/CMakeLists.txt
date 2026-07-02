@@ -184,6 +184,13 @@ if(opengl AND TARGET TreeViewer)
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
   endif()
+  if(webgui AND TARGET ROOTCefDisplay)
+    ROOT_ADD_TEST(test-stressgraphics-cef
+                  RUN_SERIAL
+                  COMMAND stressGraphics -b -k -p=sgk --web=cef
+                  FAILREGEX "FAILED|Error in"
+                  LABELS longtest)
+  endif()
 endif()
 
 #--stressHistogram------------------------------------------------------------------------------------

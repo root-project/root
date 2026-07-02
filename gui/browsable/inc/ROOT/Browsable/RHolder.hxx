@@ -27,7 +27,6 @@ namespace Browsable {
 \brief Basic class for object holder of any kind. Could be used to transfer shared_ptr or unique_ptr or plain pointer
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-19
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RHolder {

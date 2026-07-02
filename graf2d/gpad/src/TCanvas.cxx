@@ -129,7 +129,7 @@ To ensure similar painting size for the canvas created with default size for bot
 ~~~ {.cpp}
    {
       auto c = new TCanvas("c", "c");
-      c->SetWindowSize(c->GetWindowWidth() + (c->GetWindowWidth() - c->GetWw()), c->GetWindowHeight() + (c->GetWindowHeight() - c->GetWh())); 
+      c->SetWindowSize(c->GetWindowWidth() + (c->GetWindowWidth() - c->GetWw()), c->GetWindowHeight() + (c->GetWindowHeight() - c->GetWh()));
    }
 ~~~
 
@@ -2353,7 +2353,13 @@ void TCanvas::Streamer(TBuffer &b)
       //in the buffer, do not add the list of colors to the list of primitives.
       TObjArray *colors = nullptr;
       TObjArray *CurrentColorPalette = nullptr;
-      if (TColor::DefinedColors()) {
+      // fPrimitives can be temporarily null while streaming a web-canvas
+      // snapshot (see TWebCanvas::CreatePadSnapshot). In that case colors and
+      // palette are delivered separately, so the list of colors must not be
+      // added here. The guard also avoids a null dereference that crashes when
+      // colors storage has been forced on via TColor::DefinedColors(1)
+      // (see https://github.com/root-project/root/issues/20018).
+      if (fPrimitives && TColor::DefinedColors()) {
          if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
             colors = (TObjArray*)gROOT->GetListOfColors();
             fPrimitives->Add(colors);
@@ -2720,14 +2726,14 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
       ext = "png";
    }
 
-   if (ext != "pdf" && ext != "ps" && ext != "root" && ext != "xml" && !hasArg) {
+   if (ext != "pdf" && ext != "ps" && ext != "root" && ext != "html" && ext != "xml" && !hasArg) {
       fname.Insert(p, "%d");
       hasArg = kTRUE;
    }
 
-   static std::vector<TString> webExtensions = { "png", "json", "svg", "pdf", "jpg", "jpeg", "webp" };
+   static std::vector<TString> webExtensions = { "png", "json", "html", "svg", "pdf", "jpg", "jpeg", "webp" };
 
-   if (gROOT->IsWebDisplay()) {
+   if (gROOT->IsWebDisplay() || (ext == "html")) {
       Bool_t isSupported = kFALSE;
       for (auto &wext : webExtensions) {
          if ((isSupported = (wext == ext)))
@@ -2735,7 +2741,7 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
       }
 
       if (isSupported) {
-         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\")", (size_t) &pads, fname.Data());
+         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\");", (size_t) &pads, fname.Data());
 
          return (Bool_t) gROOT->ProcessLine(cmd);
       }

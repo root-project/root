@@ -35,7 +35,10 @@ elseif(MSVC)
    set(CEF_LIBRARY ${CEF_RELEASE_DIR}/libcef.lib)
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/Release/libcef_dll_wrapper.lib)
    file(COPY ${CEF_RELEASE_DIR}/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-   file(COPY ${CEF_RESOURCES}/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   # copy dlls plus some extras to binary directory to let CEF find them without extra configuration
+   file(COPY ${CEF_RESOURCES}/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} PATTERN "locales" EXCLUDE)
+   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
+   file(COPY ${CEF_RESOURCES}/locales/ DESTINATION ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
 else()
    set(CEF_platform src/gui_handler_linux.cxx)
    set(CEF_RESOURCES ${CEF_root}/Resources)
@@ -44,7 +47,10 @@ else()
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/libcef_dll_wrapper.a)
    set(CEF_LIB_DEPENDENCY ${X11_LIBRARIES})
    file(COPY ${CEF_RELEASE_DIR}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-   file(COPY ${CEF_RESOURCES}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+   # copy shared libraries plus some extras to library directory to let CEF find them without extra configuration
+   file(COPY ${CEF_RESOURCES}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} PATTERN "locales" EXCLUDE)
+   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
+   file(COPY ${CEF_RESOURCES}/locales/ DESTINATION ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
    if(EXISTS ${CEF_RELEASE_DIR}/swiftshader)
       file(COPY ${CEF_RELEASE_DIR}/swiftshader DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
    endif()
@@ -55,10 +61,15 @@ set(CEF_MAIN src/cef_main.cxx)
 
 ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform}
                     LIBRARIES ${CMAKE_DL_LIBS} ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} ${CEF_LIB_DEPENDENCY}
-                    DEPENDENCIES RHTTP ROOTWebDisplay)
+                    DEPENDENCIES RHTTP ASImage ROOTWebDisplay)
 
 target_compile_definitions(${libname} PRIVATE NDEBUG)
 
 ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} CMAKENOEXPORT)
+
+if(ROOT_ARCHITECTURE MATCHES macosx)
+  set_property(TARGET ${libname} APPEND PROPERTY BUILD_RPATH "@loader_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Libraries")
+  set_property(TARGET cef_main APPEND PROPERTY BUILD_RPATH "@executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Libraries")
+endif()
 
 endif()

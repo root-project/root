@@ -434,7 +434,9 @@ namespace {
     }
 
     //Opts.Modules = 1;
+#ifndef __APPLE__
     Opts.BuiltinHeadersInSystemModules = 1;
+#endif
 
     // See test/CodeUnloading/PCH/VTables.cpp which implicitly compares clang
     // to cling lang options. They should be the same, we should not have to
@@ -729,18 +731,10 @@ namespace {
                             /*AllowModulemapOverride=*/ false);
 #elif __APPLE__
     if (Triple.isMacOSX()) {
-      if (CI.getTarget().getSDKVersion() < VersionTuple(14, 4)) {
-        maybeAppendOverlayEntry(stdIncLoc.str(),
-                                "std_darwin.MacOSX14.2.sdk.modulemap",
-                                clingIncLoc.str().str(), MOverlay,
-                                /*RegisterModuleMap=*/true,
-                                /*AllowModulemapOverride=*/false);
-      } else {
-        maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
-                                clingIncLoc.str().str(), MOverlay,
-                                /*RegisterModuleMap=*/ true,
-                                /*AllowModulemapOverride=*/ false);
-      }
+      maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
+                              clingIncLoc.str().str(), MOverlay,
+                              /*RegisterModuleMap=*/true,
+                              /*AllowModulemapOverride=*/false);
     }
 #else
     maybeAppendOverlayEntry(cIncLoc.str(), "libc.modulemap",

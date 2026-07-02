@@ -172,6 +172,8 @@ protected:
    /// If false, the RVec is in "memory adoption" mode, i.e. it is acting as a view on a memory buffer it does not own.
    bool Owns() const { return fCapacity != -1; }
 
+   void SetSizeUnchecked(std::size_t N) { fSize = N; }
+
 public:
    size_t size() const { return fSize; }
    size_t capacity() const noexcept { return Owns() ? fCapacity : fSize; }
@@ -192,7 +194,7 @@ public:
       if (N > capacity()) {
          throw std::runtime_error("Setting size to a value greater than capacity.");
       }
-      fSize = N;
+      SetSizeUnchecked(N);
    }
 };
 
@@ -219,7 +221,12 @@ class R__CLING_PTRCHECK(off) SmallVectorTemplateCommon : public SmallVectorBase 
    // Space after 'FirstEl' is clobbered, do not add any instance vars after it.
 
 protected:
-   SmallVectorTemplateCommon(size_t Size) : Base(getFirstEl(), Size) {}
+   SmallVectorTemplateCommon(size_t Size) : Base(nullptr, Size)
+   {
+      // We delay the initialization of fBeginX until the constructor of the derived class, to avoid doing pointer math
+      // on an object that is not yet fully constructed.
+      fBeginX = getFirstEl();
+   }
 
    void grow_pod(size_t MinSize, size_t TSize) { Base::grow_pod(getFirstEl(), MinSize, TSize); }
 
@@ -366,7 +373,7 @@ public:
       if (R__unlikely(this->size() >= this->capacity()))
          this->grow();
       ::new ((void *)this->end()) T(Elt);
-      this->set_size(this->size() + 1);
+      this->SetSizeUnchecked(this->size() + 1);
    }
 
    void push_back(T &&Elt)
@@ -374,12 +381,12 @@ public:
       if (R__unlikely(this->size() >= this->capacity()))
          this->grow();
       ::new ((void *)this->end()) T(::std::move(Elt));
-      this->set_size(this->size() + 1);
+      this->SetSizeUnchecked(this->size() + 1);
    }
 
    void pop_back()
    {
-      this->set_size(this->size() - 1);
+      this->SetSizeUnchecked(this->size() - 1);
       this->end()->~T();
    }
 };
@@ -487,10 +494,10 @@ public:
       if (R__unlikely(this->size() >= this->capacity()))
          this->grow();
       memcpy(reinterpret_cast<void *>(this->end()), &Elt, sizeof(T));
-      this->set_size(this->size() + 1);
+      this->SetSizeUnchecked(this->size() + 1);
    }
 
-   void pop_back() { this->set_size(this->size() - 1); }
+   void pop_back() { this->SetSizeUnchecked(this->size() - 1); }
 };
 
 /// Storage for the SmallVector elements.  This is specialized for the N=0 case
@@ -557,6 +564,7 @@ namespace VecOps {
 template <typename T>
 class R__CLING_PTRCHECK(off) RVecImpl : public Internal::VecOps::SmallVectorTemplateBase<T> {
    using SuperClass = Internal::VecOps::SmallVectorTemplateBase<T>;
+   static constexpr bool kIsNoExcept = std::is_nothrow_destructible_v<T> && std::is_nothrow_move_constructible_v<T>;
 
 public:
    using iterator = typename SuperClass::iterator;
@@ -595,13 +603,13 @@ public:
       if (N < this->size()) {
          if (this->Owns())
             this->destroy_range(this->begin() + N, this->end());
-         this->set_size(N);
+         this->SetSizeUnchecked(N);
       } else if (N > this->size()) {
          if (this->capacity() < N)
             this->grow(N);
          for (auto I = this->end(), E = this->begin() + N; I != E; ++I)
             new (&*I) T();
-         this->set_size(N);
+         this->SetSizeUnchecked(N);
       }
    }
 
@@ -610,12 +618,12 @@ public:
       if (N < this->size()) {
          if (this->Owns())
             this->destroy_range(this->begin() + N, this->end());
-         this->set_size(N);
+         this->SetSizeUnchecked(N);
       } else if (N > this->size()) {
          if (this->capacity() < N)
             this->grow(N);
          std::uninitialized_fill(this->end(), this->begin() + N, NV);
-         this->set_size(N);
+         this->SetSizeUnchecked(N);
       }
    }
 
@@ -632,7 +640,7 @@ public:
       }
       if (this->Owns())
          this->destroy_range(this->end() - NumItems, this->end());
-      this->set_size(this->size() - NumItems);
+      this->SetSizeUnchecked(this->size() - NumItems);
    }
 
    R__RVEC_NODISCARD T pop_back_val()
@@ -655,7 +663,7 @@ public:
          this->grow(this->size() + NumInputs);
 
       this->uninitialized_copy(in_start, in_end, this->end());
-      this->set_size(this->size() + NumInputs);
+      this->SetSizeUnchecked(this->size() + NumInputs);
    }
 
    /// Append \p NumInputs copies of \p Elt to the end.
@@ -665,7 +673,7 @@ public:
          this->grow(this->size() + NumInputs);
 
       std::uninitialized_fill_n(this->end(), NumInputs, Elt);
-      this->set_size(this->size() + NumInputs);
+      this->SetSizeUnchecked(this->size() + NumInputs);
    }
 
    void append(std::initializer_list<T> IL) { append(IL.begin(), IL.end()); }
@@ -679,7 +687,7 @@ public:
       clear();
       if (this->capacity() < NumElts)
          this->grow(NumElts);
-      this->set_size(NumElts);
+      this->SetSizeUnchecked(NumElts);
       std::uninitialized_fill(this->begin(), this->end(), Elt);
    }
 
@@ -731,7 +739,7 @@ public:
       // Drop the last elts.
       if (this->Owns())
          this->destroy_range(I, this->end());
-      this->set_size(I - this->begin());
+      this->SetSizeUnchecked(I - this->begin());
       return (N);
    }
 
@@ -755,7 +763,7 @@ public:
       ::new ((void *)this->end()) T(::std::move(this->back()));
       // Push everything else over.
       std::move_backward(I, this->end() - 1, this->end());
-      this->set_size(this->size() + 1);
+      this->SetSizeUnchecked(this->size() + 1);
 
       // If we just moved the element we're inserting, be sure to update
       // the reference.
@@ -786,7 +794,7 @@ public:
       ::new ((void *)this->end()) T(std::move(this->back()));
       // Push everything else over.
       std::move_backward(I, this->end() - 1, this->end());
-      this->set_size(this->size() + 1);
+      this->SetSizeUnchecked(this->size() + 1);
 
       // If we just moved the element we're inserting, be sure to update
       // the reference.
@@ -838,7 +846,7 @@ public:
 
       // Move over the elements that we're about to overwrite.
       T *OldEnd = this->end();
-      this->set_size(this->size() + NumToInsert);
+      this->SetSizeUnchecked(this->size() + NumToInsert);
       size_t NumOverwritten = OldEnd - I;
       this->uninitialized_move(I, OldEnd, this->end() - NumOverwritten);
 
@@ -895,7 +903,7 @@ public:
 
       // Move over the elements that we're about to overwrite.
       T *OldEnd = this->end();
-      this->set_size(this->size() + NumToInsert);
+      this->SetSizeUnchecked(this->size() + NumToInsert);
       size_t NumOverwritten = OldEnd - I;
       this->uninitialized_move(I, OldEnd, this->end() - NumOverwritten);
 
@@ -919,13 +927,13 @@ public:
       if (R__unlikely(this->size() >= this->capacity()))
          this->grow();
       ::new ((void *)this->end()) T(std::forward<ArgTypes>(Args)...);
-      this->set_size(this->size() + 1);
+      this->SetSizeUnchecked(this->size() + 1);
       return this->back();
    }
 
    RVecImpl &operator=(const RVecImpl &RHS);
 
-   RVecImpl &operator=(RVecImpl &&RHS);
+   RVecImpl &operator=(RVecImpl &&RHS) noexcept(kIsNoExcept);
 };
 
 template <typename T>
@@ -974,17 +982,17 @@ void RVecImpl<T>::swap(RVecImpl<T> &RHS)
    if (this->size() > RHS.size()) {
       size_t EltDiff = this->size() - RHS.size();
       this->uninitialized_copy(this->begin() + NumShared, this->end(), RHS.end());
-      RHS.set_size(RHS.size() + EltDiff);
+      RHS.SetSizeUnchecked(RHS.size() + EltDiff);
       if (this->Owns())
          this->destroy_range(this->begin() + NumShared, this->end());
-      this->set_size(NumShared);
+      this->SetSizeUnchecked(NumShared);
    } else if (RHS.size() > this->size()) {
       size_t EltDiff = RHS.size() - this->size();
       this->uninitialized_copy(RHS.begin() + NumShared, RHS.end(), this->end());
-      this->set_size(this->size() + EltDiff);
+      this->SetSizeUnchecked(this->size() + EltDiff);
       if (RHS.Owns())
          this->destroy_range(RHS.begin() + NumShared, RHS.end());
-      RHS.set_size(NumShared);
+      RHS.SetSizeUnchecked(NumShared);
    }
 }
 
@@ -1012,7 +1020,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(const RVecImpl<T> &RHS)
          this->destroy_range(NewEnd, this->end());
 
       // Trim.
-      this->set_size(RHSSize);
+      this->SetSizeUnchecked(RHSSize);
       return *this;
    }
 
@@ -1025,7 +1033,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(const RVecImpl<T> &RHS)
          // Destroy current elements.
          this->destroy_range(this->begin(), this->end());
       }
-      this->set_size(0);
+      this->SetSizeUnchecked(0);
       CurSize = 0;
       this->grow(RHSSize);
    } else if (CurSize) {
@@ -1037,12 +1045,12 @@ RVecImpl<T> &RVecImpl<T>::operator=(const RVecImpl<T> &RHS)
    this->uninitialized_copy(RHS.begin() + CurSize, RHS.end(), this->begin() + CurSize);
 
    // Set end.
-   this->set_size(RHSSize);
+   this->SetSizeUnchecked(RHSSize);
    return *this;
 }
 
 template <typename T>
-RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
+RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS) noexcept(kIsNoExcept)
 {
    // Avoid self-assignment.
    if (this == &RHS)
@@ -1075,7 +1083,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
       // Destroy excess elements and trim the bounds.
       if (this->Owns())
          this->destroy_range(NewEnd, this->end());
-      this->set_size(RHSSize);
+      this->SetSizeUnchecked(RHSSize);
 
       // Clear the RHS.
       RHS.clear();
@@ -1093,7 +1101,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
          // Destroy current elements.
          this->destroy_range(this->begin(), this->end());
       }
-      this->set_size(0);
+      this->SetSizeUnchecked(0);
       CurSize = 0;
       this->grow(RHSSize);
    } else if (CurSize) {
@@ -1105,7 +1113,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
    this->uninitialized_move(RHS.begin() + CurSize, RHS.end(), this->begin() + CurSize);
 
    // Set end.
-   this->set_size(RHSSize);
+   this->SetSizeUnchecked(RHSSize);
 
    RHS.clear();
    return *this;
@@ -1190,7 +1198,7 @@ public:
       return *this;
    }
 
-   RVecN(RVecN &&RHS) : Detail::VecOps::RVecImpl<T>(N)
+   RVecN(RVecN &&RHS) noexcept(false) : Detail::VecOps::RVecImpl<T>(N)
    {
       if (!RHS.empty())
          Detail::VecOps::RVecImpl<T>::operator=(::std::move(RHS));
@@ -1204,7 +1212,7 @@ public:
 
    RVecN(const std::vector<T> &RHS) : RVecN(RHS.begin(), RHS.end()) {}
 
-   RVecN &operator=(RVecN &&RHS)
+   RVecN &operator=(RVecN &&RHS) noexcept(std::is_nothrow_move_assignable_v<Detail::VecOps::RVecImpl<T>>)
    {
       Detail::VecOps::RVecImpl<T>::operator=(::std::move(RHS));
       return *this;
@@ -1399,7 +1407,7 @@ RVec<float> v2 {5.f,6.f,7.f,8.f};
 auto v3 = v1+v2;
 auto v4 = 3 * v1;
 ~~~
-The supported operators are 
+The supported operators are
  - +, -, *, /
  - +=, -=, *=, /=
  - <, >, ==, !=, <=, >=, &&, ||
@@ -1408,7 +1416,7 @@ The supported operators are
  - &=, |=, ^=
  - <<=, >>=
 
-The most common mathematical functions are supported. It is possible to invoke them passing 
+The most common mathematical functions are supported. It is possible to invoke them passing
 RVecs as arguments.
  - abs, fdim, fmod, remainder
  - floor, ceil, trunc, round, lround, llround
@@ -1558,9 +1566,9 @@ public:
       return *this;
    }
 
-   RVec(RVec &&RHS) : SuperClass(std::move(RHS)) {}
+   RVec(RVec &&RHS) noexcept(std::is_nothrow_move_constructible_v<SuperClass>) : SuperClass(std::move(RHS)) {}
 
-   RVec &operator=(RVec &&RHS)
+   RVec &operator=(RVec &&RHS) noexcept(std::is_nothrow_move_assignable_v<SuperClass>)
    {
       SuperClass::operator=(std::move(RHS));
       return *this;
@@ -3027,13 +3035,13 @@ Common_t Angle(T0 x1, T1 y1, T2 z1, T3 x2, T4 y2, T5 z2){
     const auto cx = y1 * z2 - y2 * z1;
     const auto cy = x1 * z2 - x2 * z1;
     const auto cz = x1 * y2 - x2 * y1;
-    
+
     // norm of cross product
     const auto c = std::sqrt(cx * cx + cy * cy + cz * cz);
-    
+
     // dot product
     const auto  d = x1 * x2 + y1 * y2 + z1 * z2;
-    
+
     return std::atan2(c, d);
 }
 
@@ -3057,7 +3065,7 @@ Common_t InvariantMasses_PxPyPzM(
          return (mass1 + mass2);
       if (p1_sq <= 0) {
          auto mm = mass1 + std::sqrt(mass2*mass2 + p2_sq);
-         auto m2 = mm*mm - p2_sq; 
+         auto m2 = mm*mm - p2_sq;
          if (m2 >= 0)
             return std::sqrt( m2 );
          else
@@ -3065,7 +3073,7 @@ Common_t InvariantMasses_PxPyPzM(
       }
       if (p2_sq <= 0) {
          auto mm = mass2 + std::sqrt(mass1*mass1 + p1_sq);
-         auto m2 = mm*mm - p1_sq; 
+         auto m2 = mm*mm - p1_sq;
          if (m2 >= 0)
             return std::sqrt( m2 );
          else
@@ -3142,11 +3150,11 @@ RVec<Common_t> InvariantMasses(
       const auto x1 = pt1[i] * std::cos(phi1[i]);
       const auto y1 = pt1[i] * std::sin(phi1[i]);
       const auto z1 = pt1[i] * std::sinh(eta1[i]);
-      
+
       const auto x2 = pt2[i] * std::cos(phi2[i]);
       const auto y2 = pt2[i] * std::sin(phi2[i]);
       const auto z2 = pt2[i] * std::sinh(eta2[i]);
-      
+
       // Numerically stable computation of Invariant Masses
       inv_masses[i] = InvariantMasses_PxPyPzM(x1, y1, z1, mass1[i], x2, y2, z2, mass2[i]);
    }
@@ -3300,11 +3308,11 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
     {
         return {};
     }
-    
+
     long double step = std::is_floating_point_v<Ret_t> ?
     (end - start) / static_cast<long double>(n - endpoint) :
     (end >= start ? static_cast<long double>(end - start) / (n - endpoint) : (static_cast<long double>(end) - start) / (n - endpoint));
-        
+
     RVec<Ret_t> temp(n);
     temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
     if constexpr (std::is_floating_point_v<Ret_t>)
@@ -3387,17 +3395,17 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
         return {};
     }
     RVec<Ret_t> temp(n);
-    
+
     long double start_c = start;
     long double end_c   = end;
     long double base_c  = base;
-    
+
     long double step = (end_c - start_c) / (n - endpoint);
-    
+
     temp[0] = std::is_floating_point_v<Ret_t> ?
     static_cast<Ret_t>(std::pow(base_c, start_c)) :
     std::floor(std::pow(base_c, start_c));
-     
+
     if constexpr (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
@@ -3414,7 +3422,7 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
             temp[i] = std::floor(std::pow(base_c, exponent));
         }
     }
-     
+
     return temp;
 }
 
@@ -3477,14 +3485,14 @@ template <typename T = double, typename Ret_t = std::conditional_t<std::is_float
 inline RVec<Ret_t> Arange(T start, T end, T step)
 {
     unsigned long long n = std::ceil(( end >= start ? (end - start) : static_cast<long double>(end)-start)/static_cast<long double>(step)); // Ensure floating-point division.
-    
+
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return {};
     }
-    
+
     RVec<Ret_t> temp(n);
-    
+
     long double start_c = start;
     long double step_c = step;
 

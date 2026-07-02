@@ -1,0 +1,638 @@
+From e6103ed6aea96e50dcd47554b12a8f59f24fc480 Mon Sep 17 00:00:00 2001
+From: ferdymercury <ferdymercury@users.noreply.github.com>
+Date: Thu, 16 Apr 2026 15:59:55 +0200
+Subject: [PATCH] allow compilation from CMake
+
+---
+ src/CMakeLists.txt                     |  421 ++++++
+ src/distr/discr.c                      |    1 +
+ src/distributions/d_geometric.c        |    1 +
+ src/distributions/d_logarithmic.c      |    1 +
+ src/distributions/d_negativebinomial.c |    1 +
+ src/distributions/d_poisson.c          |    1 +
+ src/distributions/d_zipf.c             |    1 +
+ src/methods/dari.c                     |    1 +
+ src/methods/dau.c                      |    1 +
+ src/methods/dgt.c                      |    1 +
+ src/methods/dss.c                      |    1 +
+ src/methods/dstd.c                     |    1 +
+ src/parser/stringparser.c              |    2 +
+ src/unur_source.h                      |    4 +-
+ src/urng/urng.c                        |    1 +
+ src/urng/urng_unuran.c                 |    1 +
+ 15 files changed, 436 insertions(+), 2 deletions(-)
+ create mode 100644 src/CMakeLists.txt
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+new file mode 100644
+index 00000000..69d8599f
+--- /dev/null
++++ b/src/CMakeLists.txt
+@@ -0,0 +1,421 @@
++cmake_minimum_required(VERSION 3.22)
++project(UNURAN VERSION 1.0) # The version does not matter here
++
++add_library(unuran STATIC)
++
++target_sources(unuran
++PRIVATE
++  distr/cemp.c
++  distr/condi.c
++  distr/cont.c
++  distr/corder.c
++  distr/cvec.c
++  distr/cvemp.c
++  distr/cxtrans.c
++  distr/deprecated_distr.c
++  distr/discr.c
++  distr/distr_info.c
++  distr/distr.c
++  distr/matr.c
++  distributions/c_beta_gen.c
++  distributions/c_beta.c
++  distributions/c_burr.c
++  distributions/c_cauchy.c
++  distributions/c_chi_gen.c
++  distributions/c_chi.c
++  distributions/c_chisquare.c
++  distributions/c_exponential_gen.c
++  distributions/c_exponential.c
++  distributions/c_extremeI.c
++  distributions/c_extremeII.c
++  distributions/c_F.c
++  distributions/c_gamma_gen.c
++  distributions/c_gamma.c
++  distributions/c_ghyp.c
++  distributions/c_gig_gen.c
++  distributions/c_gig.c
++  distributions/c_gig2.c
++  distributions/c_hyperbolic.c
++  distributions/c_ig.c
++  distributions/c_laplace.c
++  distributions/c_logistic.c
++  distributions/c_lognormal.c
++  distributions/c_lomax.c
++  distributions/c_meixner.c
++  distributions/c_normal_gen.c
++  distributions/c_normal.c
++  distributions/c_pareto.c
++  distributions/c_powerexponential_gen.c
++  distributions/c_powerexponential.c
++  distributions/c_rayleigh.c
++  distributions/c_slash_gen.c
++  distributions/c_slash.c
++  distributions/c_student_gen.c
++  distributions/c_student.c
++  distributions/c_triangular.c
++  distributions/c_uniform.c
++  distributions/c_vg.c
++  distributions/c_weibull.c
++  distributions/d_binomial_gen.c
++  distributions/d_binomial.c
++  distributions/d_geometric.c
++  distributions/d_hypergeometric_gen.c
++  distributions/d_hypergeometric.c
++  distributions/d_logarithmic_gen.c
++  distributions/d_logarithmic.c
++  distributions/d_negativebinomial.c
++  distributions/d_poisson_gen.c
++  distributions/d_poisson.c
++  distributions/d_zipf_gen.c
++  distributions/d_zipf.c
++  distributions/m_correlation.c
++  distributions/vc_copula.c
++  distributions/vc_multicauchy.c
++  distributions/vc_multiexponential.c
++  distributions/vc_multinormal_gen.c
++  distributions/vc_multinormal.c
++  distributions/vc_multistudent.c
++  methods/arou.c
++  methods/ars.c
++  methods/auto.c
++  methods/cext.c
++  methods/cstd.c
++  methods/dari.c
++  methods/dau.c
++  methods/deprecated_methods.c
++  methods/deprecated_vmt.c
++  methods/dext.c
++  methods/dgt.c
++  methods/dsrou.c
++  methods/dss.c
++  methods/dstd.c
++  methods/empk.c
++  methods/empl.c
++  methods/gibbs.c
++  methods/hinv.c
++  methods/hist.c
++  methods/hitro.c
++  methods/hrb.c
++  methods/hrd.c
++  methods/hri.c
++  methods/itdr.c
++  methods/mcorr.c
++  methods/mixt.c
++  methods/mvstd.c
++  methods/mvtdr.c
++  methods/ninv.c
++  methods/norta.c
++  methods/nrou.c
++  methods/pinv.c
++  methods/srou.c
++  methods/ssr.c
++  methods/tabl.c
++  methods/tdr.c
++  methods/unif.c
++  methods/utdr.c
++  methods/vempk.c
++  methods/vnrou.c
++  methods/x_gen.c
++  parser/functparser.c
++  parser/parser.c
++  parser/stringparser.c
++  specfunct/bessel_asympt.c
++  specfunct/cephes_gamma.c
++  specfunct/cephes_igam.c
++  specfunct/cephes_incbet.c
++  specfunct/cephes_ndtr.c
++  specfunct/cephes_ndtri.c
++  specfunct/cephes_polevl.c
++  specfunct/cgamma.c
++  specfunct/hypot.c
++  specfunct/log1p.c
++  tests/chi2test.c
++  tests/correlation.c
++  tests/countpdf.c
++  tests/counturn.c
++  tests/inverror.c
++  tests/moments.c
++  tests/printsample.c
++  tests/quantiles.c
++  tests/tests.c
++  tests/timing.c
++  uniform/fish.c
++  uniform/mrg31k3p.c
++  uniform/mstd.c
++  uniform/urng_builtin.c
++  uniform/urng_fvoid.c
++  uniform/urng_gsl.c
++  uniform/urng_gslqrng.c
++  uniform/urng_prng.c
++  uniform/urng_randomshift.c
++  uniform/urng_rngstreams.c
++  urng/urng_default.c
++  urng/urng_set.c
++  urng/urng_unuran.c
++  urng/urng.c
++  utils/debug.c
++  utils/eigensystem.c
++  utils/error.c
++  utils/fmax.c
++  utils/hooke.c
++  utils/lobatto.c
++  utils/matrix.c
++  utils/mrou_rectangle.c
++  utils/slist.c
++  utils/stream.c
++  utils/string.c
++  utils/umalloc.c
++  utils/umath.c
++  utils/unur_fp.c
++  utils/vector.c
++PUBLIC
++  FILE_SET HEADERS
++  BASE_DIRS ./ # distr distributions methods parser specfunct tests uniform urng utils
++  FILES
++    distr/cemp.h
++    distr/condi.h
++    distr/cont.h
++    distr/corder.h
++    distr/cvec.h
++    distr/cvemp.h
++    distr/cxtrans.h
++    distr/deprecated_distr.h
++    distr/discr.h
++    distr/distr_source.h
++    distr/distr_struct.h
++    distr/distr.h
++    distr/matr.h
++    distributions/unur_distributions_source.h
++    distributions/unur_distributions.h
++    distributions/unur_stddistr.h
++    methods/arou_struct.h
++    methods/arou.h
++    methods/ars_struct.h
++    methods/ars.h
++    methods/auto_struct.h
++    methods/auto.h
++    methods/cext_struct.h
++    methods/cext.h
++    methods/cstd_struct.h
++    methods/cstd.h
++    methods/dari_struct.h
++    methods/dari.h
++    methods/dau_struct.h
++    methods/dau.h
++    methods/deprecated_methods.h
++    methods/deprecated_tdrgw.h
++    methods/deprecated_vmt_struct.h
++    methods/deprecated_vmt.h
++    methods/dext_struct.h
++    methods/dext.h
++    methods/dgt_struct.h
++    methods/dgt.h
++    methods/dsrou_struct.h
++    methods/dsrou.h
++    methods/dss_struct.h
++    methods/dss.h
++    methods/dstd_struct.h
++    methods/dstd.h
++    methods/empk_struct.h
++    methods/empk.h
++    methods/empl_struct.h
++    methods/empl.h
++    methods/gibbs_struct.h
++    methods/gibbs.h
++    methods/hinv_struct.h
++    methods/hinv.h
++    methods/hist_struct.h
++    methods/hist.h
++    methods/hitro_struct.h
++    methods/hitro.h
++    methods/hrb_struct.h
++    methods/hrb.h
++    methods/hrd_struct.h
++    methods/hrd.h
++    methods/hri_struct.h
++    methods/hri.h
++    methods/itdr_struct.h
++    methods/itdr.h
++    methods/mcorr_struct.h
++    methods/mcorr.h
++    methods/mixt_struct.h
++    methods/mixt.h
++    methods/mvstd_struct.h
++    methods/mvstd.h
++    methods/mvtdr_struct.h
++    methods/mvtdr.h
++    methods/ninv_struct.h
++    methods/ninv.h
++    methods/norta_struct.h
++    methods/norta.h
++    methods/nrou_struct.h
++    methods/nrou.h
++    methods/pinv_struct.h
++    methods/pinv.h
++    methods/srou_struct.h
++    methods/srou.h
++    methods/ssr_struct.h
++    methods/ssr.h
++    methods/tabl_struct.h
++    methods/tabl.h
++    methods/tdr_struct.h
++    methods/tdr.h
++    methods/unif_struct.h
++    methods/unif.h
++    methods/unur_methods_source.h
++    methods/unur_methods.h
++    methods/utdr_struct.h
++    methods/utdr.h
++    methods/vempk_struct.h
++    methods/vempk.h
++    methods/vnrou_struct.h
++    methods/vnrou.h
++    methods/x_gen_source.h
++    methods/x_gen_struct.h
++    methods/x_gen.h
++    parser/functparser_source.h
++    parser/functparser_struct.h
++    parser/functparser_symbols.h
++    parser/parser_source.h
++    parser/parser.h
++    specfunct/cephes_source.h
++    specfunct/unur_specfunct_source.h
++    tests/unuran_tests.h
++    # uniform/unuran_urng_gsl.h # To enable this if GSL_LIBRARIES defined, add target_link_libraries(unuran PRIVATE ${GSL_LIBRARIES}) and add target_compile_definitions(unuran PUBLIC UNURAN_HAS_GSL)
++    # uniform/unuran_urng_prng.h
++    # uniform/unuran_urng_rngstreams.h
++    uniform/urng_builtin.h
++    uniform/urng_fvoid.h
++    uniform/urng_gsl.h
++    uniform/urng_gslqrng.h
++    uniform/urng_prng.h
++    uniform/urng_randomshift.h
++    uniform/urng_rngstreams.h
++    unur_cookies.h
++    unur_source.h
++    unur_struct.h
++    unur_typedefs.h
++    unuran_config.h
++    unuran.h
++    urng/urng_source.h
++    urng/urng_struct.h
++    urng/urng.h
++    utils/debug_source.h
++    utils/debug.h
++    utils/error_source.h
++    utils/error.h
++    utils/fmax_source.h
++    utils/hooke_source.h
++    utils/lobatto_source.h
++    utils/lobatto_struct.h
++    utils/matrix_source.h
++    utils/mrou_rectangle_source.h
++    utils/mrou_rectangle_struct.h
++    utils/slist_struct.h
++    utils/slist.h
++    utils/stream_source.h
++    utils/stream.h
++    utils/string_source.h
++    utils/string_struct.h
++    utils/umalloc_source.h
++    utils/umath_source.h
++    utils/umath.h
++    utils/unur_errno.h
++    utils/unur_fp_const_source.h
++    utils/unur_fp_source.h
++    utils/unur_math_source.h
++    utils/vector_source.h
++)
++
++target_compile_definitions(unuran PRIVATE
++  HAVE_DECL_HUGE_VAL=1
++  HAVE_DECL_SIGNAL=1
++  HAVE_DECL_SNPRINTF=1
++  HAVE_DECL_VSNPRINTF=1
++  HAVE_FLOAT_H=1
++  HAVE_FLOOR=1
++  HAVE_IEEE_COMPARISONS=1
++  HAVE_LIBM=1
++  HAVE_LIMITS_H=1
++  HAVE_POW=1
++  HAVE_SIGNAL=1
++  HAVE_SQRT=1
++  HAVE_STDLIB_H=1
++  HAVE_STRCHR=1
++  HAVE_STRING_H=1
++  HAVE_STRTOL=1
++  HAVE_STRTOUL=1
++  HAVE_SYS_STAT_H=1
++  HAVE_SYS_TYPES_H=1
++  #LT_OBJDIR=".libs/"
++  PACKAGE="unuran"
++  PACKAGE_BUGREPORT="unuran@statmath.wu.ac.at"
++  PACKAGE_NAME="unuran"
++  PACKAGE_STRING="unuran ${PROJECT_VERSION}"
++  PACKAGE_TARNAME="unuran"
++  PACKAGE_URL=""
++  PACKAGE_VERSION="${PROJECT_VERSION}"
++  STDC_HEADERS=1
++  UNUR_ENABLE_INFO=1
++  VERSION=${PROJECT_VERSION}
++)
++if(WIN32)
++target_compile_definitions(unuran PRIVATE
++  HAVE_MEMORY_H=1
++  inline=__inline
++  #log1p=_unur_log1p
++)
++else()
++target_compile_definitions(unuran PRIVATE
++  HAVE_ALARM=1
++  HAVE_DECL_ALARM=1
++  HAVE_DECL_DBL_MAX=1
++  HAVE_DECL_GETOPT=1
++  HAVE_DECL_HYPOT=1
++  HAVE_DECL_INFINITY=1
++  HAVE_DECL_ISFINITE=1
++  HAVE_DECL_ISINF=1
++  HAVE_DECL_ISNAN=1
++  HAVE_DECL_LOG1P=1
++  HAVE_DIVIDE_BY_ZERO=1
++  HAVE_DLFCN_H=1
++  HAVE_GETTIMEOFDAY=1
++  HAVE_INTTYPES_H=1
++  HAVE_LIBGSL=1
++  HAVE_LIBGSLCBLAS=1
++  HAVE_MEMSET=1
++  HAVE_STDINT_H=1
++  HAVE_STDIO_H=1
++  HAVE_STRCASECMP=1
++  HAVE_STRINGS_H=1
++  HAVE_SYS_TIME_H=1
++  HAVE_UNISTD_H=1
++)
++endif()
++
++#---Define special compiler settings for unuran-----------------------------------------------------
++if(ROOT_ARCHITECTURE MATCHES hpuxia64acc)
++  set(UNR_CFLAGS "+DD64 -Ae")
++elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
++  set(UNR_CFLAGS "-m64 -fPIC")
++elseif(ROOT_ARCHITECTURE MATCHES linuxx8664gcc)
++  set(UNR_CFLAGS "-m64 -fPIC")
++elseif(ROOT_ARCHITECTURE MATCHES linuxicc)
++  set(UNR_CFLAGS "-m32")
++elseif(ROOT_ARCHITECTURE MATCHES linuxx8664icc)
++  set(UNR_CFLAGS "-m64")
++elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
++  set(UNR_CFLAGS "-MD -G5 -GX")
++endif()
++if(CMAKE_OSX_SYSROOT)
++  set(UNR_CFLAGS "${UNR_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
++endif()
++set(CMAKE_C_FLAGS ${UNR_CFLAGS})
++
++target_include_directories(unuran PUBLIC ./)
++
++# Install the target and its file sets
++install(TARGETS unuran
++    FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_PREFIX}/include
++    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
++)
+diff --git a/src/distr/discr.c b/src/distr/discr.c
+index 938c17bc..ab3eb885 100644
+--- a/src/distr/discr.c
++++ b/src/distr/discr.c
+@@ -42,6 +42,7 @@
+ #include "distr_source.h"
+ #include "distr.h"
+ #include "discr.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ 
+diff --git a/src/distributions/d_geometric.c b/src/distributions/d_geometric.c
+index 5ec863c3..04ea1f33 100644
+--- a/src/distributions/d_geometric.c
++++ b/src/distributions/d_geometric.c
+@@ -54,6 +54,7 @@
+ #include "unur_distributions.h"
+ #include "unur_distributions_source.h"
+ #include "unur_stddistr.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ 
+diff --git a/src/distributions/d_logarithmic.c b/src/distributions/d_logarithmic.c
+index 147dfecf..284ec22c 100644
+--- a/src/distributions/d_logarithmic.c
++++ b/src/distributions/d_logarithmic.c
+@@ -54,6 +54,7 @@
+ #include "unur_distributions.h"
+ #include "unur_distributions_source.h"
+ #include "unur_stddistr.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ 
+diff --git a/src/distributions/d_negativebinomial.c b/src/distributions/d_negativebinomial.c
+index c1b5a79a..eb8e8899 100644
+--- a/src/distributions/d_negativebinomial.c
++++ b/src/distributions/d_negativebinomial.c
+@@ -55,6 +55,7 @@
+ #include "unur_distributions.h"
+ #include "unur_distributions_source.h"
+ #include "unur_stddistr.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ 
+diff --git a/src/distributions/d_poisson.c b/src/distributions/d_poisson.c
+index 5fe88215..f248bc82 100644
+--- a/src/distributions/d_poisson.c
++++ b/src/distributions/d_poisson.c
+@@ -54,6 +54,7 @@
+ #include "unur_distributions.h"
+ #include "unur_distributions_source.h"
+ #include "unur_stddistr.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ 
+diff --git a/src/distributions/d_zipf.c b/src/distributions/d_zipf.c
+index 5dc08f3f..4e793256 100644
+--- a/src/distributions/d_zipf.c
++++ b/src/distributions/d_zipf.c
+@@ -56,6 +56,7 @@
+ #include "unur_distributions.h"
+ #include "unur_distributions_source.h"
+ #include "unur_stddistr.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ 
+diff --git a/src/methods/dari.c b/src/methods/dari.c
+index e8cf2e9a..e0f3ca1b 100644
+--- a/src/methods/dari.c
++++ b/src/methods/dari.c
+@@ -62,6 +62,7 @@
+ #include "x_gen_source.h"
+ #include "dari.h"
+ #include "dari_struct.h"
++#include "limits.h"
+ 
+ #ifdef UNUR_ENABLE_INFO
+ #  include <tests/unuran_tests.h>
+diff --git a/src/methods/dau.c b/src/methods/dau.c
+index b95a3110..fc85527c 100644
+--- a/src/methods/dau.c
++++ b/src/methods/dau.c
+@@ -114,6 +114,7 @@
+ #include "x_gen_source.h"
+ #include "dau.h"
+ #include "dau_struct.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ /* Variants: none                                                            */
+diff --git a/src/methods/dgt.c b/src/methods/dgt.c
+index 89e9e7c9..62626d86 100644
+--- a/src/methods/dgt.c
++++ b/src/methods/dgt.c
+@@ -92,6 +92,7 @@
+ #include "x_gen_source.h"
+ #include "dgt.h"
+ #include "dgt_struct.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ /* Variants                                                                  */
+diff --git a/src/methods/dss.c b/src/methods/dss.c
+index 02d1feaa..36578c3a 100644
+--- a/src/methods/dss.c
++++ b/src/methods/dss.c
+@@ -62,6 +62,7 @@
+ #include "x_gen_source.h"
+ #include "dss.h"
+ #include "dss_struct.h"
++#include "limits.h"
+ 
+ /*---------------------------------------------------------------------------*/
+ /* Variants                                                                  */
+diff --git a/src/methods/dstd.c b/src/methods/dstd.c
+index c41307ff..5786d05e 100644
+--- a/src/methods/dstd.c
++++ b/src/methods/dstd.c
+@@ -85,6 +85,7 @@
+ #include "cstd.h"    /* required for UNUR_STDGEN_* macros */
+ #include "dstd.h"
+ #include "dstd_struct.h"
++#include "limits.h"
+ 
+ #ifdef UNUR_ENABLE_INFO
+ #  include <tests/unuran_tests.h>
+diff --git a/src/parser/stringparser.c b/src/parser/stringparser.c
+index 682213a9..caed8b16 100644
+--- a/src/parser/stringparser.c
++++ b/src/parser/stringparser.c
+@@ -182,6 +182,8 @@
+ #include <methods/vempk.h>
+ #include <methods/vnrou.h>
+ 
++#include "limits.h"
++
+ #if defined(UNUR_URNG_UNURAN) && defined(UNURAN_HAS_PRNG)
+ #include <uniform/urng_prng.h>
+ #endif
+diff --git a/src/unur_source.h b/src/unur_source.h
+index 6d9a04f6..3af5bd19 100644
+--- a/src/unur_source.h
++++ b/src/unur_source.h
+@@ -40,9 +40,9 @@
+ /* config file generated be autoconf                                         */
+ 
+ #ifdef HAVE_CONFIG_H
+-#  include <config.h>
++// #  include <config.h>
+ #else
+-#  error "config.h" required
++// #  error "config.h" required
+ #endif
+ 
+ /*---------------------------------------------------------------------------*/
+diff --git a/src/urng/urng.c b/src/urng/urng.c
+index 8f81ea3b..d843b469 100644
+--- a/src/urng/urng.c
++++ b/src/urng/urng.c
+@@ -33,6 +33,7 @@
+ /*---------------------------------------------------------------------------*/
+ #include <unur_source.h>
+ #include "urng.h"
++#include "limits.h"
+ /*---------------------------------------------------------------------------*/
+ 
+ /*****************************************************************************/
+diff --git a/src/urng/urng_unuran.c b/src/urng/urng_unuran.c
+index e1f04b04..1c29d3f5 100644
+--- a/src/urng/urng_unuran.c
++++ b/src/urng/urng_unuran.c
+@@ -33,6 +33,7 @@
+ /*---------------------------------------------------------------------------*/
+ #include <unur_source.h>
+ #include "urng.h"
++#include "limits.h"
+ /*---------------------------------------------------------------------------*/
+ #ifdef UNUR_URNG_UNURAN
+ /*---------------------------------------------------------------------------*/
+2.34.1

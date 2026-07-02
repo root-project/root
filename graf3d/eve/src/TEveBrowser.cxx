@@ -492,7 +492,7 @@ namespace
 enum EEveMenu_e {
    kNewMainFrameSlot, kNewTabSlot,
    kNewViewer,  kNewScene,
-   kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
+   kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor,
    kSel_PS_Ignore, kSel_PS_Element, kSel_PS_Projectable, kSel_PS_Compound,
    kSel_PS_PableCompound, kSel_PS_Master, kSel_PS_END,
    kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound,
@@ -526,7 +526,6 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fEvePopup->AddEntry("New &Canvas",         kNewCanvas);
    fEvePopup->AddEntry("New Canvas Ext",      kNewCanvasExt);
    fEvePopup->AddEntry("New Text &Editor",    kNewTextEditor);
-   // fEvePopup->AddEntry("New HTML Browser", kNewHtmlBrowser);
    fEvePopup->AddSeparator();
 
    {
@@ -626,18 +625,6 @@ void TEveBrowser::EveMenu(Int_t id)
          gROOT->ProcessLineFast(Form("new TGTextEditor((const char *)0, (const TGWindow *)0x%zx)", (size_t)gClient->GetRoot()));
          StopEmbedding();
          SetTabTitle("Editor", 1);
-         break;
-      }
-      case kNewHtmlBrowser: {
-         gSystem->Load("libGuiHtml");
-         if (gSystem->Load("libRHtml") >= 0)
-         {
-            StartEmbedding(1);
-            gROOT->ProcessLine(Form("new TGHtmlBrowser(\"https://root.cern/doc/master/classes.html\", \
-                              (const TGWindow *)0x%zx)", (size_t)gClient->GetRoot()));
-            StopEmbedding();
-            SetTabTitle("HTML", 1);
-         }
          break;
       }
       case kSel_PS_Ignore:

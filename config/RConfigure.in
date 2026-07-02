@@ -38,6 +38,7 @@
 #@hascocoa@ R__HAS_COCOA    /**/
 #@hasvdt@ R__HAS_VDT    /**/
 #@hasstdexperimentalsimd@ R__HAS_STD_EXPERIMENTAL_SIMD    /**/
+#@experimentalsimdpinavxabi@ R__EXPERIMENTAL_SIMD_PIN_AVX_ABI    /**/
 #@usecxxmodules@ R__USE_CXXMODULES   /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
@@ -59,7 +60,6 @@
 #@hastmvagpu@ R__HAS_TMVAGPU /**/
 #@hastmvacudnn@ R__HAS_CUDNN /**/
 #@haspymva@ R__HAS_PYMVA /**/
-#@hasrmva@ R__HAS_RMVA /**/
 
 #@hasuring@ R__HAS_URING /**/
 

@@ -119,12 +119,7 @@ if (runtime_cxxmodules)
 
   # We need to override the default modulemap because instead of producing a
   # single std.pcm, produces hundreds of pcms. This changed with MacOSX14.4.sdk
-  # To support macOS 13 with LLVM 18, we need to patch the modulemap from
-  # MacOSX14.2.sdk
   if (APPLE)
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.0.15000309)
-      set(custom_modulemaps ${custom_modulemaps} std_darwin.MacOSX14.2.sdk.modulemap)
-    else()
       set(GENERATED_MODULEMAP ${CMAKE_CURRENT_BINARY_DIR}/std_darwin.modulemap)
 
       add_custom_command(
@@ -137,7 +132,6 @@ if (runtime_cxxmodules)
       list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${GENERATED_MODULEMAP} ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap)
       list(APPEND files_to_copy ${GENERATED_MODULEMAP})
       install(FILES ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling)
-    endif()
   endif()
 
   if (NOT libcxx)

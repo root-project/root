@@ -78,9 +78,9 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(primaryNTuple, processorName);
+   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(std::move(primaryNTuple), processorName);
 
-   std::unique_ptr<RNTupleProcessor> auxProcessor = Create(auxNTuple);
+   std::unique_ptr<RNTupleProcessor> auxProcessor = Create(std::move(auxNTuple));
 
    return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, processorName);
 }
@@ -347,12 +347,23 @@ ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fi
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
-   ROOT::NTupleSize_t localEntryNumber = entryNumber;
-   std::size_t currProcessorNumber = 0;
+   // If the requested entry number is lower than the current entry number, we have to again localise the correct local
+   // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
+   // processor that is currently connected, which is much faster when the chain consists of many inner processors.
    if (entryNumber < fCurrentEntryNumber) {
       fCurrentProcessorNumber = 0;
       ConnectInnerProcessor(fCurrentProcessorNumber);
    }
+
+   std::size_t currProcessorNumber = fCurrentProcessorNumber;
+   ROOT::NTupleSize_t entriesSeen = 0;
+   for (unsigned i = 0; i < currProcessorNumber; ++i) {
+      if (fInnerNEntries[i] == kInvalidNTupleIndex) {
+         fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+      }
+      entriesSeen += fInnerNEntries[i];
+   }
+   ROOT::NTupleSize_t localEntryNumber = entryNumber - entriesSeen;
 
    // As long as the entry fails to load from the current processor, we decrement the local entry number with the number
    // of entries in this processor and try with the next processor until we find the correct local entry number.
@@ -397,24 +408,6 @@ void ROOT::Experimental::RNTupleChainProcessor::PrintStructureImpl(std::ostream 
 }
 
 //------------------------------------------------------------------------------
-
-namespace ROOT::Experimental::Internal {
-class RAuxiliaryProcessorField final : public ROOT::RRecordField {
-private:
-   using RFieldBase::GenerateColumns;
-   void GenerateColumns() final
-   {
-      throw RException(R__FAIL("RAuxiliaryProcessorField fields must only be used for reading"));
-   }
-
-public:
-   RAuxiliaryProcessorField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
-      : ROOT::RRecordField(fieldName, "RAuxiliaryProcessorField")
-   {
-      AttachItemFields(std::move(itemFields));
-   }
-};
-} // namespace ROOT::Experimental::Internal
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                                                                std::unique_ptr<RNTupleProcessor> auxProcessor,

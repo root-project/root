@@ -8,7 +8,7 @@
 # 7 Feb 2019, https://github.com/frankheckenbach/ftgl/releases/tag/v2.4.0
 set(ROOT_FTGL_VERSION 2.4.0)
 set(ROOT_FTGL_HASH "aa97da1c3442a8fd3941037655df18016d70b5266381c81d81e8b5335f196ea8")
-if (CMAKE_BUILD_TYPE MATCHES Debug)
+if (CMAKE_BUILD_TYPE MATCHES Debug OR (MSVC AND winrtdebug))
   set(ROOT_FTGL_POSTFIX d)
 endif()
 # Cherry-pick https://github.com/frankheckenbach/ftgl/commit/835f2ba7911a6c15a1a314d5e3267fa089b5a319 :
@@ -28,7 +28,7 @@ if (NOT DEFINED GIT_EXECUTABLE)
 endif()
 
 if(NOT EXISTS "${ROOT_FTGL_PREFIX}/src/BUILTIN_FTGL/._patched")
-  set(ROOT_FTGL_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace
+  set(ROOT_FTGL_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace
                 ${ROOT_FTGL_PATCH_FILE_1}
                 ${ROOT_FTGL_PATCH_FILE_2}
                 ${ROOT_FTGL_PATCH_FILE_3}
@@ -93,7 +93,7 @@ target_compile_definitions(FTGL::FTGL INTERFACE FTGL_LIBRARY_STATIC) # needed fo
 if(builtin_freetype)
   add_dependencies(BUILTIN_FTGL BUILTIN_FREETYPE)
 endif()
-if(builin_zlib)
+if(builtin_zlib)
   add_dependencies(BUILTIN_FTGL BUILTIN_ZLIB)
 endif()
 target_link_libraries(FTGL::FTGL INTERFACE Freetype::Freetype) # private: OpenGL::GL OpenGL::GLU ZLIB::ZLIB

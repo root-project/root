@@ -1181,6 +1181,8 @@ TObject *TGraph::FindObject(const TObject *obj) const
 /// "G"  | Uses the gradient implemented in `TF1::GradientPar` for the minimization. This allows to use Automatic Differentiation when it is supported by the provided TF1 function.
 /// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the X coordinates
 /// "ROB" | In case of linear fitting, compute the LTS regression coefficients (robust (resistant) regression), using the default fraction of good points "ROB=0.x" - compute the LTS regression coefficients, using 0.x as a fraction of good points
+/// "SERIAL" | Runs in serial mode. By default, if ROOT is built with MT support and MT is enabled, the fit is performed in multi-thread.
+/// "MULTITHREAD" | Forces usage of multi-thread execution whenever possible.
 ///
 ///
 /// This function is used for fitting also the derived TGraph classes such as TGraphErrors or TGraphAsymmErrors.

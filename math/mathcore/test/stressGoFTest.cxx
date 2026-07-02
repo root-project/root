@@ -12,17 +12,21 @@
 
 #include "TRandom3.h"
 
-#ifdef ROOT_HAS_R
-#include "TRInterface.h"
-#endif
-
 #include <iostream>
 
 #include <cassert>
 
-/*N.B.: The tests' expected values (expectedDn and expectedA2) were computed on Pcphsft54.cern.ch i386 GNU/Linux computer (slc4_ia32_gcc34)
+/*N.B.: The tests' expected values (expectedDn and expectedA2) were computed on Pcphsft54.cern.ch i386 GNU/Linux
+  computer (slc4_ia32_gcc34)
 
   LM. (16/9/14)  Expected values for AD2 test have been computed with R kSamples package
+
+  For the 1-sample tests (UnitTest3, UnitTest4, UnitTest5) the expected A2 and Dn
+  values quoted next to each test were obtained by running the corresponding R
+  commands (base R's ks.test and the goftest package's ad.test) on the very same
+  sample that the C++ code generates. To regenerate them, dump `sample` to a text
+  file from the test and run the R commands quoted in the inline comments on
+  `x <- scan("sample.txt")`.
 */
 struct GoFTStress {
 
@@ -185,20 +189,16 @@ struct GoFTStress {
       Double_t A2 =  goft.AndersonDarlingTest("t");
       Double_t pvalueAD = goft.AndersonDarlingTest();
 
-      Double_t expectedA2 = 1.09849;  // value computed using R below
-#ifdef ROOT_HAS_R
-      Double_t rA2 = R_ADTest(sample,"\"pnorm\", mean=300, sd=50");
-      if (rA2 != -999) expectedA2 = rA2;    
-#endif
+      // R: library(goftest); ad.test(x, "pnorm", mean=300, sd=50)$statistic
+      Double_t expectedA2 = 1.09849;
+
       Int_t result = PrintResultAD1Sample(A2, expectedA2, pvalueAD);
 
       Double_t Dn = goft.KolmogorovSmirnovTest("t");
       Double_t pvalueKS = goft.KolmogorovSmirnovTest();
 
+      // R: ks.test(x, "pnorm", mean=300, sd=50)$statistic
       Double_t expectedDn = 0.0328567;
-#ifdef ROOT_HAS_R
-      expectedDn = R_KSTest(sample,"\"pnorm\", mean=300, sd=50");
-#endif
 
       result += PrintResultKS(nsmps, Dn, expectedDn, pvalueKS);
       return result;
@@ -225,21 +225,17 @@ struct GoFTStress {
       Double_t A2 = goft.AndersonDarlingTest("t");
       Double_t pvalueAD = goft();
 
-      Double_t expectedA2 = 0.54466;  // value computed using R below
-#ifdef ROOT_HAS_R
-      Double_t rA2 = R_ADTest(sample,"\"pexp\", rate=1.54");
-      if (rA2 != -999) expectedA2 = rA2;
-#endif
+      // R: library(goftest); ad.test(x, "pexp", rate=1.54)$statistic
+      Double_t expectedA2 = 0.54466;
+
       Int_t result = PrintResultAD1Sample(A2, expectedA2, pvalueAD);
 
    //     Double_t Dn = goft->KolmogorovSmirnovTest("t");
       Double_t Dn = goft(ROOT::Math::GoFTest::kKS, "t");
       Double_t pvalueKS = goft.KolmogorovSmirnovTest();
 
+      // R: ks.test(x, "pexp", rate=1.54)$statistic
       Double_t expectedDn = 0.021343;
-#ifdef ROOT_HAS_R
-      expectedDn = R_KSTest(sample,"\"pexp\", rate=1.54");
-#endif
 
       result += PrintResultKS(nsmps, Dn, expectedDn, pvalueKS);
       return result;
@@ -271,11 +267,8 @@ Int_t UnitTest5() {
       Double_t A2 = goft(ROOT::Math::GoFTest::kAD, "t");
       Double_t pvalueAD = goft.AndersonDarlingTest();
 
+      // R: library(goftest); ad.test(x, "plnorm", meanlog=5, sdlog=2)$statistic
       Double_t expectedA2 = 0.458346;
-#ifdef ROOT_HAS_R
-      Double_t rA2 = R_ADTest(sample,"\"plnorm\", meanlog=5, sdlog=2");
-      if (rA2 != -999) expectedA2 = rA2;
-#endif
 
       Int_t result = PrintResultAD1Sample(A2, expectedA2, pvalueAD);
 
@@ -283,10 +276,9 @@ Int_t UnitTest5() {
    //     Double_t pvalueKS = goft->KolmogorovSmirnovTest();
       Double_t pvalueKS = goft(ROOT::Math::GoFTest::kKS);
 
+      // R: ks.test(x, "plnorm", meanlog=5, sdlog=2)$statistic
       Double_t expectedDn = 0.0214143;
-#ifdef ROOT_HAS_R
-      expectedDn = R_KSTest(sample,"\"plnorm\", meanlog=5, sdlog=2");  
-#endif
+
       result += PrintResultKS(nsmps, Dn, expectedDn, pvalueKS);
 
       return result;
@@ -446,42 +438,6 @@ Int_t UnitTest5() {
          return EXIT_FAILURE;
       }
    }
-
- private:
- 
-   // function to test using R interface
-#ifdef ROOT_HAS_R
-   ROOT::R::TRInterface &R = ROOT::R::TRInterface::Instance();
-   double R_KSTest(const std::vector<double> & sample, TString testDist) {
-      R["x"] = sample;
-      R << "result = ks.test(x," + testDist + ")";
-      R << "pval = result$p.value";
-      R << "stat = result$statistic";
-      double pvalue = R["pval"];
-      double  tstat = R["stat"];
-      if (GoFTStress::fgDebugLevel >= GoFTStress::kStandardDebug) {
-         std::cout << "R KS result : Dn = " << tstat << " pvalue = " << pvalue << std::endl;
-      }
-      return tstat;
-   }
-   double R_ADTest(const std::vector<double> & sample, TString testDist) {
-      R << "ret = library(\"goftest\", logical.return = TRUE)";
-      bool ok = R["ret"];
-      if (!ok) { 
-         return -999;
-      }
-      R["x"] = sample;
-      R << "result = ad.test(x," + testDist + ")";
-      R << "pval = result$p.value";
-      R << "stat = result$statistic";
-      double pvalue = R["pval"];
-      double  tstat = R["stat"];
-      if (GoFTStress::fgDebugLevel >= GoFTStress::kStandardDebug) {
-         std::cout << "R AD result : A2 = " << tstat << " pvalue = " << pvalue << std::endl;
-      }
-      return tstat;
-   }
-#endif
 };
 
 

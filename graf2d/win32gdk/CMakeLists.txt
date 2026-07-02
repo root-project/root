@@ -123,8 +123,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   DEPENDENCIES
     Core
     Graf
-  BUILTINS
-    FREETYPE
 )
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)

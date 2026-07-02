@@ -2,6 +2,7 @@
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldVisitor.hxx>
@@ -14,7 +15,7 @@
 
 namespace {
 
-std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr, ROOT::RFieldBase &itemField)
+std::vector<ROOT::RFieldBase::RValue> SplitVector(const std::shared_ptr<void> &valuePtr, ROOT::RFieldBase &itemField)
 {
    auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
    const auto itemSize = itemField.GetValueSize();
@@ -27,6 +28,39 @@ std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr
       result.emplace_back(itemField.BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * itemSize))));
    }
    return result;
+}
+
+std::size_t GetSizeOfVector()
+{
+   return sizeof(std::vector<char>);
+}
+
+std::size_t GetAlignOfVector()
+{
+   return alignof(std::vector<char>);
+}
+
+void ConstructVector(void *where, std::size_t alignOfValue)
+{
+   static_assert(ROOT::RVectorField::kMaxItemAlignment == 4096);
+   // clang-format off
+   switch (alignOfValue) {
+   case    1: new (where) std::vector<ROOT::Internal::RAlignedStorage<   1>>(); break;
+   case    2: new (where) std::vector<ROOT::Internal::RAlignedStorage<   2>>(); break;
+   case    4: new (where) std::vector<ROOT::Internal::RAlignedStorage<   4>>(); break;
+   case    8: new (where) std::vector<ROOT::Internal::RAlignedStorage<   8>>(); break;
+   case   16: new (where) std::vector<ROOT::Internal::RAlignedStorage<  16>>(); break;
+   case   32: new (where) std::vector<ROOT::Internal::RAlignedStorage<  32>>(); break;
+   case   64: new (where) std::vector<ROOT::Internal::RAlignedStorage<  64>>(); break;
+   case  128: new (where) std::vector<ROOT::Internal::RAlignedStorage< 128>>(); break;
+   case  256: new (where) std::vector<ROOT::Internal::RAlignedStorage< 256>>(); break;
+   case  512: new (where) std::vector<ROOT::Internal::RAlignedStorage< 512>>(); break;
+   case 1024: new (where) std::vector<ROOT::Internal::RAlignedStorage<1024>>(); break;
+   case 2048: new (where) std::vector<ROOT::Internal::RAlignedStorage<2048>>(); break;
+   case 4096: new (where) std::vector<ROOT::Internal::RAlignedStorage<4096>>(); break;
+   default: throw ROOT::RException(R__FAIL(std::string("Unsupported alignment: ") + std::to_string(alignOfValue)));
+   }
+   // clang-format on
 }
 
 } // anonymous namespace
@@ -135,8 +169,8 @@ void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayField::GetDeleter() const
 {
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
-      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RDeleter>();
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetAlignment(), GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RDeleter>(GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue &value) const
@@ -164,6 +198,11 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
+   if (itemField->GetAlignment() > sizeof(std::max_align_t)) {
+      // RVec uses malloc() and free()
+      throw RException(R__FAIL("RVec does not support over-aligned types"));
+   }
+
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
    if (!itemField->GetTypeAlias().empty())
@@ -477,6 +516,11 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
+   if (itemField->GetAlignment() > kMaxItemAlignment) {
+      throw RException(
+         R__FAIL(std::string("Unsupported vector item alignment: ") + std::to_string(itemField->GetAlignment())));
+   }
+
    if (emulatedFromType && !emulatedFromType->empty())
       fTraits |= kTraitEmulatedField;
 
@@ -538,9 +582,11 @@ void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t
    auto typedValue = static_cast<std::vector<char> *>(vec);
 
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
-   R__ASSERT(itemSize > 0);
+   assert(itemSize > 0);
    const auto oldNItems = typedValue->size() / itemSize;
    const auto availNItems = typedValue->capacity() / itemSize;
+   assert((typedValue->size() % itemSize == 0) && (typedValue->capacity() % itemSize == 0));
+
    const bool canRealloc = availNItems < nItems;
    bool allDeallocated = false;
    if (itemDeleter) {
@@ -549,7 +595,41 @@ void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t
          itemDeleter->operator()(typedValue->data() + (i * itemSize), true /* dtorOnly */);
       }
    }
-   typedValue->resize(nItems * itemSize);
+
+   // Resize the vector with correct alignment
+   const auto itemAlignment = itemField.GetAlignment();
+   const auto nbytes = nItems * itemSize;
+
+   auto fnAlignedResize = [](auto &vecOfAlignedStorage, std::size_t targetSize) {
+      constexpr auto valueTypeSize = sizeof(typename std::decay_t<decltype(vecOfAlignedStorage)>::value_type);
+      constexpr auto valueTypeAlignment = alignof(typename std::decay_t<decltype(vecOfAlignedStorage)>::value_type);
+      // Ensure that this function is used with RAlignedStorage as a template argument.
+      // In general, the actual (user-defined) item type may have larger size than alignment.
+      static_assert(valueTypeSize == valueTypeAlignment);
+      assert(targetSize % valueTypeAlignment == 0);
+      vecOfAlignedStorage.resize(targetSize / valueTypeSize);
+   };
+
+   static_assert(kMaxItemAlignment == 4096);
+   // clang-format off
+   switch (itemAlignment) {
+   case    1: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   1>> *>(vec), nbytes); break;
+   case    2: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   2>> *>(vec), nbytes); break;
+   case    4: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   4>> *>(vec), nbytes); break;
+   case    8: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<   8>> *>(vec), nbytes); break;
+   case   16: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<  16>> *>(vec), nbytes); break;
+   case   32: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<  32>> *>(vec), nbytes); break;
+   case   64: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<  64>> *>(vec), nbytes); break;
+   case  128: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage< 128>> *>(vec), nbytes); break;
+   case  256: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage< 256>> *>(vec), nbytes); break;
+   case  512: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage< 512>> *>(vec), nbytes); break;
+   case 1024: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<1024>> *>(vec), nbytes); break;
+   case 2048: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<2048>> *>(vec), nbytes); break;
+   case 4096: fnAlignedResize(*static_cast<std::vector<Internal::RAlignedStorage<4096>> *>(vec), nbytes); break;
+   default: throw RException(R__FAIL(std::string("Unsupported alignment: ") + std::to_string(itemAlignment)));
+   }
+   // clang-format on
+
    if (!(itemField.GetTraits() & kTraitTriviallyConstructible)) {
       for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
          CallConstructValueOn(itemField, typedValue->data() + (i * itemSize));
@@ -620,31 +700,80 @@ void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    EnsureMatchingOnDiskCollection(desc).ThrowOnError();
 }
 
+void ROOT::RVectorField::ConstructValue(void *where) const
+{
+   ConstructVector(where, fSubfields[0]->GetAlignment());
+}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter(std::size_t itemAlignment)
+   : RDeleter(GetAlignOfVector()), fItemAlignment(itemAlignment)
+{
+}
+
+ROOT::RVectorField::RVectorDeleter::RVectorDeleter(std::size_t itemSize, std::size_t itemAlignment,
+                                                   std::unique_ptr<RDeleter> itemDeleter)
+   : RDeleter(GetAlignOfVector()),
+     fItemSize(itemSize),
+     fItemAlignment(itemAlignment),
+     fItemDeleter(std::move(itemDeleter))
+{
+}
+
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
    if (fItemDeleter) {
-      R__ASSERT(fItemSize > 0);
-      R__ASSERT((vecPtr->size() % fItemSize) == 0);
+      assert(fItemSize > 0);
       auto nItems = vecPtr->size() / fItemSize;
+      assert((vecPtr->size() % fItemSize) == 0);
       for (std::size_t i = 0; i < nItems; ++i) {
          fItemDeleter->operator()(vecPtr->data() + (i * fItemSize), true /* dtorOnly */);
       }
    }
-   std::destroy_at(vecPtr);
+
+   static_assert(kMaxItemAlignment == 4096);
+   // clang-format off
+   switch (fItemAlignment) {
+   case    1: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<   1>> *>(objPtr)); break;
+   case    2: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<   2>> *>(objPtr)); break;
+   case    4: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<   4>> *>(objPtr)); break;
+   case    8: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<   8>> *>(objPtr)); break;
+   case   16: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<  16>> *>(objPtr)); break;
+   case   32: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<  32>> *>(objPtr)); break;
+   case   64: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<  64>> *>(objPtr)); break;
+   case  128: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage< 128>> *>(objPtr)); break;
+   case  256: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage< 256>> *>(objPtr)); break;
+   case  512: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage< 512>> *>(objPtr)); break;
+   case 1024: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<1024>> *>(objPtr)); break;
+   case 2048: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<2048>> *>(objPtr)); break;
+   case 4096: std::destroy_at(static_cast<std::vector<Internal::RAlignedStorage<4096>> *>(objPtr)); break;
+   default: throw ROOT::RException(R__FAIL(std::string("Unsupported alignment: ") + std::to_string(fItemAlignment)));
+   }
+   // clang-format on
+
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVectorField::GetDeleter() const
 {
    if (fItemDeleter)
-      return std::make_unique<RVectorDeleter>(fItemSize, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RVectorDeleter>();
+      return std::make_unique<RVectorDeleter>(fItemSize, fSubfields[0]->GetAlignment(), GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RVectorDeleter>(fSubfields[0]->GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValue &value) const
 {
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+std::size_t ROOT::RVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
 }
 
 void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -916,11 +1045,18 @@ void ROOT::RArrayAsVectorField::GenerateColumns()
    throw RException(R__FAIL("RArrayAsVectorField fields must only be used for reading"));
 }
 
+void ROOT::RArrayAsVectorField::ConstructValue(void *where) const
+{
+   ConstructVector(where, fSubfields[0]->GetAlignment());
+}
+
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsVectorField::GetDeleter() const
 {
-   if (fItemDeleter)
-      return std::make_unique<RVectorField::RVectorDeleter>(fItemSize, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RVectorField::RVectorDeleter>();
+   if (fItemDeleter) {
+      return std::make_unique<RVectorField::RVectorDeleter>(fItemSize, fSubfields[0]->GetAlignment(),
+                                                            GetDeleterOf(*fSubfields[0]));
+   }
+   return std::make_unique<RVectorField::RVectorDeleter>(fSubfields[0]->GetAlignment());
 }
 
 void ROOT::RArrayAsVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
@@ -971,6 +1107,16 @@ void ROOT::RArrayAsVectorField::ReconcileOnDiskField(const RNTupleDescriptor &de
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsVectorField::SplitValue(const ROOT::RFieldBase::RValue &value) const
 {
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
 }
 
 void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const

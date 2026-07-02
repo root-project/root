@@ -7,6 +7,7 @@
 #include "TLine.h"
 #include "Math/SMatrix.h"
 
+#include <iostream>
 #include <string>
 
 bool gUseCPUTime = false; //default use real time
@@ -19,7 +20,7 @@ const Int_t n=nx*ny;
 
 void kalman(std::string machine = "",int sym=1,int cut =6) {
 
-   cout << "loading lib smatrix" << std::endl;
+   std::cout << "loading lib smatrix" << std::endl;
    gSystem->Load("libSmatrix");
 
    std::string fname = "kalman";
@@ -125,7 +126,7 @@ void kalman_do(const char *machine,int sym, int cut) {
    ts.SetTextSize(0.031);
    tt.SetTextColor(kRed);
    tt.SetTextSize(0.031);
-   char text[20];
+   char text[21];
    ts.SetTextAlign(22);
    for (i=0;i<=nx;i++) {
       line.DrawLine(xmin+i*dx,ymin,xmin+i*dx,ymax);
@@ -250,3 +251,14 @@ void kalman_do(const char *machine,int sym, int cut) {
    tt.DrawText(xmin+(i+0.5)*dx,ylow+0.022,text);
 }
 
+int main(int argc, char *argv[]) {
+   if (argc == 2)
+      kalman(argv[1]);
+   else if (argc == 3)
+      kalman(argv[1], atoi(argv[2]));
+   else if (argc == 4)
+      kalman(argv[1], atoi(argv[2]), atoi(argv[3]));
+   else
+      kalman();
+  return 0;
+}

@@ -22,6 +22,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/Erf.ref.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
+#include "input_models/references/ConvWithDilation.ref.hxx"
 #include "input_models/references/ConvWithoutPadding.ref.hxx"
 #include "input_models/references/ConvWithAutopadSameLower.ref.hxx"
 #include "input_models/references/ConvWithAutopadSameUpper.ref.hxx"
@@ -32,6 +33,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/MaxPool2d.ref.hxx"
 #include "input_models/references/MaxPool2d_CeilMode.ref.hxx"
 #include "input_models/references/MaxPool3d.ref.hxx"
+#include "input_models/references/MaxPool2d_AsymPad.ref.hxx"
 #include "input_models/references/Max.ref.hxx"
 #include "input_models/references/MaxMultidirectionalBroadcast.ref.hxx"
 #include "input_models/references/MinMultidirectionalBroadcast.ref.hxx"
@@ -725,6 +727,27 @@ TEST(ONNX, ConvWithStridesPadding)
 }
 
 
+TEST(ONNX, ConvWithDilation)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(49);
+   std::iota(input.begin(), input.end(), 0.0f);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithDilation", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), std::size(ConvWithDilation_ExpectedOutput::all_ones));
+
+   float *correct = ConvWithDilation_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
 TEST(ONNX, ConvWithStridesNoPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -846,6 +869,25 @@ TEST(ONNX, MaxPool2d){
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 
+}
+
+TEST(ONNX, MaxPool2d_AsymPad)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // 1x1x4x4 input with values 0..15
+   std::vector<float> input({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool2d_AsymPad", input);
+
+   // pads=[0,1,0,1] (width padded, height not) gives a 1x1x3x5 output;
+   // the pre-fix code mis-read the pads and produced a 4x4 grid instead
+   EXPECT_EQ(output.size(), std::size(MaxPool2d_AsymPad_ExpectedOutput::output));
+
+   float *correct = MaxPool2d_AsymPad_ExpectedOutput::output;
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
 }
 
 TEST(ONNX, MaxPool2d_CeilMode)

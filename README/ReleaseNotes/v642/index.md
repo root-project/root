@@ -1,5 +1,5 @@
-% ROOT Version ?.?? Release Notes
-% 20??-??-??
+% ROOT Version 6.42 Release Notes
+% 2026-11-15
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -44,6 +44,12 @@ The following people have contributed to this new version:
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
+* The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
+* The bindings to the R programming language that are enabled with the `r=ON` or `tmva-rmva=ON` build options (`TRInterface`, RMVA, and friends) are removed, following deprecation in ROOT 6.40. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
+* Several enums that are redundant with `ROOT::ESTLType` are deprecated and will be removed in ROOT 6.44: `TClassEdit::ESTLType`, `TDictionary::ESTLType`, `TStreamerElement::ESTLType`. Please use `ROOT::ESTLType` instead.
+* The inclusion by external projects of Makefile templates contained within ROOT is deprecated in 6.42, a warning will be raised if you use them. These files will be removed in ROOT 7.
+* The conversion from Python set to **RooArgSet** is deprecated and won't work anymore in ROOT 6.44. The problem is that Python sets are unordered while RooArgSets are ordered, and this mismatch can lead to subtle problems later on. Prefer conversion from Python lists or tuples, which are ordered too.
+* The ROOT IO capability for the `TMVA::Experimental::SOFIE::RModel` has been removed. Users should not be encouraged to serialize models in experimental classes. For the serialization of ONNX models one can already use ONNX directly, and even serialize the ONNX bytes to a ROOT file if required.
 
 ## Python Interface
 
@@ -52,6 +58,20 @@ The following people have contributed to this new version:
 ## Core
 
 ## Histograms
+
+### Cumulative histograms in more than one dimension
+
+`TH1::GetCumulative()` now computes a true multi-dimensional cumulative for 2D
+(`TH2`) and 3D (`TH3`) histograms, using the inclusion-exclusion principle: each
+bin of the result holds the sum of all bins whose indices are no greater than
+(forward) or no less than (backward) those of the target bin along *every* axis.
+Previously the method accumulated a single running sum over the flattened bin
+iteration, which did not correspond to a meaningful cumulative distribution in
+more than one dimension.
+
+The behavior for one-dimensional histograms is unchanged. Code that relied on
+the previous 2D/3D output (for example to build per-axis selection efficiency
+maps) will now obtain different, mathematically consistent values.
 
 ## Math
 
@@ -71,10 +91,28 @@ If the vectorized backend does not work for a given use case, **please report it
 
 ## Graphics and GUI
 
+### Store canvas as HTML file
+
+Now canvas (or several canvases) can be stored in portable HTML file.
+Just call `c1->SaveAs("canvas.html")` or invoke correspondent menu item.
+To store several canvases in single HTML file one can use:
+```cpp
+   auto c1 = new TCanvas("c1", "c1", 4);
+   auto c2 = new TCanvas("c2", "c2", 4);
+   auto c3 = new TCanvas("c3", "c3", 4);
+   TCanvas::SaveAll({c1, c2, c3}, "canvases.html");
+```
+Produced HTML file will include canvas JSON data and JavaScript code to load and display canvas.
+Such file can be loaded locally in any web browser or send as attachment in email to colleagues.
+
 ## Geometry
 
 ## Documentation and Examples
 
 ## Build, Configuration and Testing
 
+## Versions of built-in packages
 
+The version of the following packages has been updated:
+
+ - xrootd: 5.9.5

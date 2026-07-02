@@ -134,67 +134,59 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad || !gPad->IsEditable()) return;
 
    constexpr Int_t kMaxDiff = 20;
-   static Int_t px1,px2,py1,py2,pxold,pyold;
    static Double_t oldX1, oldY1, oldX2, oldY2;
-   static Int_t selectPoint;
+   static Int_t pxold,pyold, selectPoint;
 
    auto &parent = *gPad;
 
    Bool_t opaque  = parent.OpaqueMoving();
 
-   auto action = [this, &parent](Int_t code, Int_t _x1, Int_t _y1, Int_t _x2 = 0, Int_t _y2 = 0) {
-      Double_t x1, y1, x2, y2;
+   auto paint = [this, &parent]() {
+      auto pp = parent.GetPainter();
+      pp->SetAttLine(*this);
+      if (TestBit(kLineNDC))
+         pp->DrawLineNDC(GetX1(), GetY1(), GetX2(), GetY2());
+      else
+         pp->DrawLine(parent.XtoPad(GetX1()), parent.YtoPad(GetY1()), parent.XtoPad(GetX2()), parent.YtoPad(GetY2()));
+   };
 
+   auto set_coord = [this](Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
       Bool_t isndc = TestBit(kLineNDC);
-
-      if (isndc) {
-         x1 = (1. * _x1 / parent.GetWw() - parent.GetAbsXlowNDC()) / parent.GetAbsWNDC();
-         y1 = ((1 - 1. * _y1 / parent.GetWh()) - parent.GetAbsYlowNDC()) / parent.GetAbsHNDC();
-         x2 = (1. * _x2 / parent.GetWw() - parent.GetAbsXlowNDC()) / parent.GetAbsWNDC();
-         y2 = ((1 - 1. * _y2 / parent.GetWh()) - parent.GetAbsYlowNDC()) / parent.GetAbsHNDC();
-      } else {
-         x1 = parent.AbsPixeltoX(_x1);
-         y1 = parent.AbsPixeltoY(_y1);
-         x2 = parent.AbsPixeltoX(_x2);
-         y2 = parent.AbsPixeltoY(_y2);
+      if (selectPoint & 1) {
+         SetX1(GetXCoord(_x1, isndc, kTRUE));
+         SetY1(GetYCoord(_y1, isndc, kTRUE));
       }
-      if (code == 0) {
-         auto pp = parent.GetPainter();
-         pp->SetAttLine(*this);
-         if (isndc)
-            pp->DrawLineNDC(x1, y1, x2, y2);
+      if (selectPoint & 2) {
+         SetX2(GetXCoord(_x2, isndc, kTRUE));
+         SetY2(GetYCoord(_y2, isndc, kTRUE));
+      }
+      if (TestBit(kVertical)) {
+         if (selectPoint & 1)
+            SetX2(GetX1());
          else
-            pp->DrawLine(x1, y1, x2, y2);
-      } else {
-         if (!isndc) {
-            x1 = parent.PadtoX(x1);
-            x2 = parent.PadtoX(x2);
-            y1 = parent.PadtoY(y1);
-            y2 = parent.PadtoY(y2);
-         }
-
-         if (code & 1) {
-            SetX1(x1);
-            SetY1(y1);
-         }
-         if (code & 2) {
-            SetX2(x2);
-            SetY2(y2);
-         }
-         if (TestBit(kVertical)) {
-            if (code & 1)
-               SetX2(GetX1());
-            else
-               SetX1(GetX2());
-         }
-         if (TestBit(kHorizontal)) {
-            if (code & 1)
-               SetY2(GetY1());
-            else
-               SetY1(GetY2());
-         }
+            SetX1(GetX2());
+      }
+      if (TestBit(kHorizontal)) {
+         if (selectPoint & 1)
+            SetY2(GetY1());
+         else
+            SetY1(GetY2());
       }
    };
+
+   Int_t px1, py1, px2, py2;
+
+   if (TestBit(kLineNDC)) {
+      px1 = parent.UtoAbsPixel(GetX1());
+      py1 = parent.VtoAbsPixel(GetY1());
+      px2 = parent.UtoAbsPixel(GetX2());
+      py2 = parent.VtoAbsPixel(GetY2());
+   } else {
+      px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
+      py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
+      px2 = parent.XtoAbsPixel(parent.XtoPad(GetX2()));
+      py2 = parent.YtoAbsPixel(parent.YtoPad(GetY2()));
+   }
 
    switch (event) {
 
@@ -207,25 +199,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       // No break !!!
 
-   case kMouseMotion:
-
-      if (TestBit(kLineNDC)) {
-         px1 = parent.UtoAbsPixel(GetX1());
-         py1 = parent.VtoAbsPixel(GetY1());
-         px2 = parent.UtoAbsPixel(GetX2());
-         py2 = parent.VtoAbsPixel(GetY2());
-      } else {
-         px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-         py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-         px2 = parent.XtoAbsPixel(parent.XtoPad(GetX2()));
-         py2 = parent.YtoAbsPixel(parent.YtoPad(GetY2()));
-      }
-
+   case kMouseMotion: {
       //simply take sum of pixels differences
-      if (abs(px1 - px) + abs(py1 - py) < kMaxDiff) { //*-*================>OK take point number 1
+      if (abs(px1 - px) + abs(py1 - py) < kMaxDiff) {
          selectPoint = 1;
          parent.SetCursor(kPointer);
-      } else if (abs(px2 - px) + abs(py2 - py) < kMaxDiff) { //*-*================>OK take point number 2
+      } else if (abs(px2 - px) + abs(py2 - py) < kMaxDiff) {
          selectPoint = 2;
          parent.SetCursor(kPointer);
       } else {
@@ -236,42 +215,38 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       break;
+   }
 
    case kArrowKeyRelease:
    case kButton1Motion:
       if (!opaque)
-         action(0, px1, py1, px2, py2);
+         paint();
       if (selectPoint == 1) {
-         px1 = px;
-         py1 = py;
+         set_coord(px, py, 0, 0);
       } else if (selectPoint == 2) {
+         set_coord(0, 0, px, py);
          px2 = px;
          py2 = py;
       } else if (selectPoint == 3) {
-         px1 += px - pxold;
-         py1 += py - pyold;
-         px2 += px - pxold;
-         py2 += py  -pyold;
+         set_coord(px1 + px - pxold, py1 + py - pyold, px2 + px - pxold, py2 + py - pyold);
          pxold = px;
          pyold = py;
       }
-      action(!opaque ? 0 : selectPoint, px1, py1, px2, py2);
-      if (opaque) {
-         if (selectPoint == 1) {
-            //check in which corner the BBox is edited
-            if (GetX1() > GetX2())
-               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '2' : '3', true);
-            else
-               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '1' : '4', true);
-         } else if (selectPoint == 2) {
-            //check in which corner the BBox is edited
-            if (GetX1() > GetX2())
-               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '4' : '1', true);
-            else
-               parent.ShowGuidelines(this, event, GetY1() > GetY2() ? '3' : '2', true);
-         } else if (selectPoint == 3) {
-            parent.ShowGuidelines(this, event, 'i', true);
+      if (!opaque)
+         paint();
+      else {
+         char guide = selectPoint == 3 ? 'i' : '\0';
+         if ((selectPoint == 1) || (selectPoint == 2))  {
+            static const char GUIDES[2][2][2] = {
+              { { '4', '1' }, { '3', '2' } },
+              { { '2', '3' }, { '1', '4' } }
+            };
+            int x_idx = GetX1() > GetX2() ? 1 : 0;
+            int y_idx = GetY1() > GetY2() ? 1 : 0;
+            guide = GUIDES[selectPoint-1][x_idx][y_idx];
          }
+         if (guide)
+            parent.ShowGuidelines(this, event, guide, true);
          parent.ModifiedUpdate();
       }
       break;
@@ -290,17 +265,14 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
          break;
       }
-      if (opaque) {
+      if (opaque)
          parent.ShowGuidelines(this, event);
-      } else {
-         action(selectPoint, px1, py1, px2, py2);
+      else
          parent.ModifiedUpdate();
-      }
       selectPoint = 0;
       break;
 
    case kButton1Locate:
-
       // Sergey: code is never used, has to be removed in ROOT7
       ExecuteEvent(kButton1Down, px, py);
       while (true) {
@@ -516,24 +488,24 @@ void TLine::Streamer(TBuffer &R__b)
 
 Rectangle_t TLine::GetBBox()
 {
-   Rectangle_t BBox{0, 0, 0, 0};
+   Rectangle_t bbox{0, 0, 0, 0};
    if (gPad) {
-      Int_t px1 = gPad->XtoPixel(fX1);
-      Int_t px2 = gPad->XtoPixel(fX2);
-      Int_t py1 = gPad->YtoPixel(fY1);
-      Int_t py2 = gPad->YtoPixel(fY2);
+      Int_t px1 = TestBit(kLineNDC) ? gPad->UtoPixel(fX1) : gPad->XtoPixel(fX1);
+      Int_t px2 = TestBit(kLineNDC) ? gPad->UtoPixel(fX2) : gPad->XtoPixel(fX2);
+      Int_t py1 = TestBit(kLineNDC) ? gPad->VtoPixel(fY1) : gPad->YtoPixel(fY1);
+      Int_t py2 = TestBit(kLineNDC) ? gPad->VtoPixel(fY2) : gPad->YtoPixel(fY2);
 
       if (px1 > px2)
          std::swap(px1, px2);
       if (py1 > py2)
          std::swap(py1, py2);
 
-      BBox.fX = px1;
-      BBox.fY = py1;
-      BBox.fWidth = px2 - px1;
-      BBox.fHeight = py2 - py1;
+      bbox.fX = px1;
+      bbox.fY = py1;
+      bbox.fWidth = px2 - px1;
+      bbox.fHeight = py2 - py1;
    }
-   return BBox;
+   return bbox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -263,7 +263,9 @@ namespace FitUtil {
       The effective chi2 uses the errors on the coordinates : W = 1/(sigma_y**2 + ( sigma_x_i * df/dx_i )**2 )
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
-  double EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints);
+  double EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints,
+                               ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
+                               unsigned nChunks = 0);
 
   /**
       evaluate the Chi2 gradient given a model function and the data at the point p.
@@ -363,7 +365,8 @@ namespace FitUtil {
                                     unsigned nChunks = 0);
 
       static double
-      EvalChi2Effective(const IModelFunctionTempl<Double_v> &, const BinData &, const double *, unsigned int &)
+      EvalChi2Effective(const IModelFunctionTempl<Double_v> &, const BinData &, const double *, unsigned int &,
+                        ::ROOT::EExecutionPolicy = ::ROOT::EExecutionPolicy::kSequential, unsigned = 0)
       {
          Error("FitUtil::Evaluate<T>::EvalChi2Effective", "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
          return -1.;
@@ -441,9 +444,10 @@ namespace FitUtil {
          return FitUtil::EvaluatePoissonLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
 
-      static double EvalChi2Effective(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int &nPoints)
+      static double EvalChi2Effective(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int &nPoints,
+                                      ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential, unsigned nChunks = 0)
       {
-         return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
+         return FitUtil::EvaluateChi2Effective(func, data, p, nPoints, executionPolicy, nChunks);
       }
       static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                    double *g, unsigned int &nPoints,

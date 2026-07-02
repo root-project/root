@@ -234,8 +234,8 @@ public:
    }
    bool UseVDT() const { return fUseVDT;}
 
-   // Use the ClassDef macro to allow definition of custom streaming
-   ClassDefNV(RModel, 4);
+   // RModel is an internal representation that doesn't support ROOT IO (if you need model IO, use ONNX directly).
+   ClassDefNV(RModel, 0);
 };
 
 // need to implement here templated member functions and its specialization

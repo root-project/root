@@ -41,7 +41,7 @@ b.setConstant()
 
 ratioSigEff = wspace["ratioSigEff"]  # get uncertain parameter to constrain
 ratioBkgEff = wspace["ratioBkgEff"]  # get uncertain parameter to constrain
-constrainedParams = {ratioSigEff, ratioBkgEff}  # need to constrain these in the fit (should change default behavior)
+constrainedParams = [ratioSigEff, ratioBkgEff]  # need to constrain these in the fit (should change default behavior)
 
 gSigEff = wspace["gSigEff"]  # global observables for signal efficiency
 gSigBkg = wspace["gSigBkg"]  # global obs for background efficiency
@@ -50,7 +50,7 @@ gSigBkg.setConstant()
 
 # Create an example dataset with 160 observed events
 obs.setVal(160.0)
-dataOrig = ROOT.RooDataSet("exampleData", "exampleData", {obs})
+dataOrig = ROOT.RooDataSet("exampleData", "exampleData", [obs])
 dataOrig.add(obs)
 
 # not necessary
@@ -59,10 +59,10 @@ modelWithConstraints.fitTo(dataOrig, Constrain=constrainedParams, PrintLevel=-1)
 # Now let's make some confidence intervals for s, our parameter of interest
 modelConfig = ROOT.RooStats.ModelConfig(wspace)
 modelConfig.SetPdf(modelWithConstraints)
-modelConfig.SetParametersOfInterest({s})
+modelConfig.SetParametersOfInterest(s)
 modelConfig.SetNuisanceParameters(constrainedParams)
 modelConfig.SetObservables(obs)
-modelConfig.SetGlobalObservables({gSigEff, gSigBkg})
+modelConfig.SetGlobalObservables([gSigEff, gSigBkg])
 modelConfig.SetName("ModelConfig")
 wspace.Import(modelConfig)
 wspace.Import(dataOrig)

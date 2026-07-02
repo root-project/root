@@ -9,7 +9,7 @@ runs:
   using: "composite"
   steps:
     - name: Build wheel
-      uses: pypa/cibuildwheel@v3.4.1
+      uses: pypa/cibuildwheel@v4.1.0
       env:
         CIBW_BUILD: ${{ inputs.build-tag }}
 

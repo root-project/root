@@ -203,8 +203,10 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
    CGContextRef ctx = drawable.fContext;
 
+   std::vector<TPoint> pnts;
+
    //Convert points to bottom-left system:
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
+   ConvertPointsROOTToCocoa(n, xy, pnts, drawable);
 
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
@@ -223,7 +225,7 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
    if (const TColorGradient * const gradient = dynamic_cast<const TColorGradient *>(fillColor)) {
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                          n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
+                                          pnts.size(), pnts.data(), kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
       if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, attfill)) {
@@ -233,7 +235,7 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
       // kFALSE - do not draw shadows.
       // last argument - fill style
-      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE, attfill);
+      Quartz::DrawFillArea(ctx, pnts.size(), pnts.data(), kFALSE, attfill);
    }
 }
 
@@ -316,11 +318,22 @@ void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
    if (!drawable0)
       return;
 
-   //Some checks first.
-   if ([drawable0 isDirectDraw])
-      return;
-
    auto &attline = GetAttLine(wctxt);
+
+   //Some checks first.
+   if ([drawable0 isDirectDraw]) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
+         if (!view) {
+             ::Warning("DrawPolyLineW", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         [view.fQuartzWindow addXorPolyLine: view : n : xy : attline ];
+      }
+
+      return;
+   }
 
    auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyLineW");
    if (!drawable)
@@ -339,13 +352,15 @@ void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
    Quartz::SetLineStyle(ctx, attline.GetLineStyle());
    Quartz::SetLineWidth(ctx, attline.GetLineWidth());
 
+   std::vector<TPoint> pnts;
+
    //Convert to bottom-left-corner system.
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
+   ConvertPointsROOTToCocoa(n, xy, pnts, drawable);
 
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   Quartz::DrawPolyLine(ctx, n, &fConvertedPoints[0]);
+   Quartz::DrawPolyLine(ctx, pnts.size(), pnts.data());
 
    // CTM (current transformation matrix) is restored by 'ctxGuard's dtor.
 }
@@ -372,57 +387,41 @@ void TGQuartz::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
 }
 
 //______________________________________________________________________________
-void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
+void TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
    auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
    if (!drawable0)
       return;
 
-   //Do some checks first.
-   if ([drawable0 isDirectDraw])
-      return;
-
    auto &attmark = GetAttMarker(wctxt);
 
+   if ([drawable0 isDirectDraw]) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
+         if (!view) {
+             ::Warning("DrawPolyMarkerW", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         [view.fQuartzWindow addXorMarker: view : n : xy : attmark ];
+      }
+
+      return;
+   }
    auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyMarkerW");
    if (!drawable)
       return;
+
+   std::vector<TPoint> pnts;
+
+   ConvertPointsROOTToCocoa(n, xy, pnts, drawable);
 
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   if (!Quartz::SetFillColor(ctx, attmark.GetMarkerColor())) {
-      Error("DrawPolyMarker", "Could not find TColor for index %d", attmark.GetMarkerColor());
-      return;
-   }
-
-   Quartz::SetLineColor(ctx, attmark.GetMarkerColor());//Can not fail (for coverity).
-   Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle()))));
-
-   ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
-
-   if (drawable.fScaleFactor > 1.)
-      CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
-
-   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(attmark.GetMarkerStyle());
-
-   // The fast pixel markers need to be treated separately
-   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
-       CGContextSetLineJoin(ctx, kCGLineJoinMiter);
-       CGContextSetLineCap(ctx, kCGLineCapButt);
-   } else {
-       CGContextSetLineJoin(ctx, kCGLineJoinRound);
-       CGContextSetLineCap(ctx, kCGLineCapRound);
-   }
-
-   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, markerstyle);
-
-   CGContextSetLineJoin(ctx, kCGLineJoinMiter);
-   CGContextSetLineCap(ctx, kCGLineCapButt);
+   Quartz::DrawPolyMarker(ctx, pnts.size(), pnts.data(), attmark, drawable.fScaleFactor);
 }
 
 //______________________________________________________________________________

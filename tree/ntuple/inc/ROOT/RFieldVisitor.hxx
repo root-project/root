@@ -56,6 +56,8 @@ As an example of a concrete use case, see Internal::RPrintSchemaVisitor.
 // clang-format on
 class RFieldVisitor {
 public:
+   virtual ~RFieldVisitor() = default;
+
    virtual void VisitField(const ROOT::RFieldBase &field) = 0;
    virtual void VisitFieldZero(const ROOT::RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const ROOT::RArrayField &field) { VisitField(field); }
@@ -90,6 +92,7 @@ public:
    virtual void VisitVectorField(const ROOT::RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const ROOT::RRVecField &field) { VisitField(field); }
+   virtual void VisitSoAField(const ROOT::Experimental::RSoAField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
 } // namespace Detail
@@ -198,7 +201,7 @@ private:
 public:
    RPrintValueVisitor(ROOT::RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options)
+      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
    {
    }
 
@@ -235,6 +238,7 @@ public:
    void VisitNullableField(const ROOT::RNullableField &field) final;
    void VisitEnumField(const ROOT::REnumField &field) final;
    void VisitAtomicField(const ROOT::RAtomicField &field) final;
+   void VisitSoAField(const ROOT::Experimental::RSoAField &field) final;
 };
 
 // clang-format off

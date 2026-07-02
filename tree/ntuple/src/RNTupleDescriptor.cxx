@@ -32,8 +32,6 @@
 #include <set>
 #include <utility>
 
-using ROOT::Internal::RNTupleSerializer;
-
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
@@ -143,7 +141,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
       return field;
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
-         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
+         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.what(),
                                                       ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
@@ -720,7 +718,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
          const auto cat = invalid.GetCategory();
          bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
-            throw invalid.GetError();
+            throw RException(R__FAIL(invalid.GetError()));
 
          // Not a hard error: skip the field and go on.
          continue;
@@ -931,8 +929,21 @@ ROOT::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTuple
                // `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the
                // field zero excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
-                  columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
-                  columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  if (c.GetRepresentationIndex() == 0) {
+                     columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
+                     columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  } else {
+                     // Deferred representations which are not the first cannot count on the number of elements being
+                     // equal to Entries * nRepetitions because they might have been added in a later cluster. But they
+                     // can rely on the first representation having the correct FirstElement/NElements (by definition
+                     // the first representation cannot be an "extended" one), therefore they can just copy the value
+                     // from it.
+                     const auto &field = desc.GetFieldDescriptor(fieldId);
+                     const auto firstReprColumnId = field.GetLogicalColumnIds()[c.GetIndex()];
+                     const auto &firstReprColumnRange = fCluster.fColumnRanges[firstReprColumnId];
+                     columnRange.SetFirstElementIndex(firstReprColumnRange.GetFirstElementIndex());
+                     columnRange.SetNElements(firstReprColumnRange.GetNElements());
+                  }
                   if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
@@ -1095,8 +1106,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
    fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
-                                                         const std::string_view description)
+void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(std::string_view name, std::string_view description)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
@@ -1300,9 +1310,9 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnD
 
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
-   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedColumn(columnDesc);
+   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
 
    return RResult<void>::Success();
 }
@@ -1349,6 +1359,14 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t o
       c.fLogicalColumnId += offset;
       R__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
       fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
+   }
+
+   // Patch up column ids in the header extension
+   if (auto &xHeader = fDescriptor.fHeaderExtension) {
+      for (auto &columnId : xHeader->fExtendedColumnRepresentations) {
+         if (columnId >= fDescriptor.GetNPhysicalColumns())
+            columnId += offset;
+      }
    }
 }
 

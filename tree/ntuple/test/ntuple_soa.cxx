@@ -1,6 +1,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldUtils.hxx>
+#include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleView.hxx>
@@ -15,6 +16,7 @@
 #include <TVirtualStreamerInfo.h>
 
 #include <memory>
+#include <sstream>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -263,4 +265,206 @@ TEST(RNTuple, SoASimpleSwapped)
    EXPECT_EQ(1u, v(0).size());
    EXPECT_FLOAT_EQ(1.0, v(0).at(0).fX);
    EXPECT_FLOAT_EQ(2.0, v(0).at(0).fY);
+}
+
+TEST(RNTuple, SoABasicWriteRead)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_write_read.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
+      model->AddField(std::make_unique<RSoAField>("empty", "SoA"));
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
+      auto emptySoA = writer->GetModel().GetDefaultEntry().GetPtr<SoA>("empty");
+
+      simpleSoA->fX.push_back(1.0);
+      simpleSoA->fY.push_back(2.0);
+      writer->Fill();
+      writer->CommitCluster();
+
+      simpleSoA->fX.clear();
+      simpleSoA->fY.clear();
+      writer->Fill();
+
+      simpleSoA->fX.push_back(3.0);
+      simpleSoA->fY.push_back(4.0);
+      simpleSoA->fX.push_back(5.0);
+      simpleSoA->fY.push_back(6.0);
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+   auto simpleSoA = reader->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(1U, simpleSoA->fX.size());
+   EXPECT_EQ(1U, simpleSoA->fY.size());
+   EXPECT_FLOAT_EQ(1.0, simpleSoA->fX[0]);
+   EXPECT_FLOAT_EQ(2.0, simpleSoA->fY[0]);
+
+   reader->LoadEntry(1);
+   EXPECT_TRUE(simpleSoA->fX.empty());
+   EXPECT_TRUE(simpleSoA->fY.empty());
+
+   reader->LoadEntry(2);
+   EXPECT_EQ(2U, simpleSoA->fX.size());
+   EXPECT_EQ(2U, simpleSoA->fY.size());
+   EXPECT_FLOAT_EQ(3.0, simpleSoA->fX[0]);
+   EXPECT_FLOAT_EQ(4.0, simpleSoA->fY[0]);
+   EXPECT_FLOAT_EQ(5.0, simpleSoA->fX[1]);
+   EXPECT_FLOAT_EQ(6.0, simpleSoA->fY[1]);
+}
+
+TEST(RNTuple, SoAReadAdopted)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_read_adopted.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
+
+      simpleSoA->fX.push_back(1.0);
+      simpleSoA->fY.push_back(2.0);
+      simpleSoA->fX.push_back(3.0);
+      simpleSoA->fY.push_back(4.0);
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+
+   auto viewSize = reader->GetView<ROOT::RNTupleCardinality<std::uint64_t>>("simple");
+   EXPECT_EQ(2u, viewSize(0));
+
+   float x[2] = {.0, .0};
+   float y[2] = {.0, .0};
+   SoASimple soa;
+   soa.fX = ROOT::RVec<float>(x, 2);
+   soa.fY = ROOT::RVec<float>(y, 2);
+   auto viewSoA = reader->GetView("simple", &soa, "SoASimple");
+   viewSoA(0);
+   EXPECT_FLOAT_EQ(1.0, x[0]);
+   EXPECT_FLOAT_EQ(2.0, y[0]);
+   EXPECT_FLOAT_EQ(3.0, x[1]);
+   EXPECT_FLOAT_EQ(4.0, y[1]);
+}
+
+TEST(RNTuple, SoAReadComplex)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_read_complex.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("complex", "SoAComplex"));
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto complexSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoAComplex>("complex");
+
+      complexSoA->fA.resize(2);
+      writer->Fill();
+      complexSoA->fA.clear();
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(2u, reader->GetNEntries());
+
+   auto complexSoA = reader->GetModel().GetDefaultEntry().GetPtr<SoAComplex>("complex");
+   ComplexMember::gNCallConstructor = 0;
+   ComplexMember::gNCallDestructor = 0;
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(2U, complexSoA->fA.size());
+   EXPECT_EQ(2, ComplexMember::gNCallConstructor);
+   EXPECT_EQ(0, ComplexMember::gNCallDestructor);
+
+   reader->LoadEntry(1);
+   EXPECT_TRUE(complexSoA->fA.empty());
+   EXPECT_EQ(2, ComplexMember::gNCallConstructor);
+   EXPECT_EQ(2, ComplexMember::gNCallDestructor);
+}
+
+TEST(RNTuple, SoAFromVector)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_from_vector.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto v = model->MakeField<std::vector<RecordSimple>>("simple");
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      v->emplace_back(RecordSimple{1.0, 2.0});
+
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   SoASimple soa;
+
+   // Until SoA schema evolution is implemented, the reading the vector as SoA will
+   try {
+      reader->GetView("simple", &soa, "SoASimple");
+      FAIL() << "reading a vector with a SoA field should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr(
+                               "in-memory field simple of type SoASimple is incompatible with on-disk field simple"));
+   }
+}
+
+TEST(RNTuple, SoAShow)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_show.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
+      model->AddField(std::make_unique<RSoAField>("empty", "SoA"));
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
+      auto emptySoA = writer->GetModel().GetDefaultEntry().GetPtr<SoA>("empty");
+
+      simpleSoA->fX.push_back(1.0);
+      simpleSoA->fY.push_back(2.0);
+      simpleSoA->fX.push_back(3.0);
+      simpleSoA->fY.push_back(4.0);
+      writer->Fill();
+
+      simpleSoA->fX.clear();
+      simpleSoA->fY.clear();
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+   reader->Show(1, os);
+
+   // clang-format off
+   std::string expected{
+R"({
+  "simple": {
+    "fX": [1, 3],
+    "fY": [2, 4]
+  },
+  "empty": {  }
+}
+{
+  "simple": {
+    "fX": [],
+    "fY": []
+  },
+  "empty": {  }
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expected, os.str());
 }

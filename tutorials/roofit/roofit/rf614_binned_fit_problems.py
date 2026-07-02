@@ -33,7 +33,7 @@ def generateBinnedAsimov(pdf, x, n_events):
     Unfortunately it has a problem: it also has the bin bias that this tutorial
     demonstrates, to if we would use it, the biases would cancel out.
     """
-    data_h = ROOT.RooDataHist("dataH", "dataH", {x})
+    data_h = ROOT.RooDataHist("dataH", "dataH", x)
     x_binning = x.getBinning()
 
     for i_bin in range(x.numBins()):

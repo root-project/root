@@ -65,6 +65,28 @@ protected:
    Double_t fE = 0.;                    ///< "e" value of the Current Transformation Matrix (CTM)
    Double_t fF = 0.;                    ///< "f" value of the Current Transformation Matrix (CTM)
 
+   // Transient scratch state for the in-flight Cell Array: only meaningful
+   // between a CellArrayBegin and the matching CellArrayEnd, never streamed,
+   // so every member below is marked transient (///<!).
+   Int_t fCellArrayW = 0;                    ///<! Cell array width in cells
+   Int_t fCellArrayH = 0;                    ///<! Cell array height in cells
+   Double_t fCellArrayXpdf = 0.;             ///<! PDF x of the image's left edge
+   Double_t fCellArrayYpdfBot = 0.;          ///<! PDF y of the image's bottom edge
+   Double_t fCellArrayWpdf = 0.;             ///<! PDF width of the image
+   Double_t fCellArrayHpdf = 0.;             ///<! PDF height of the image
+   std::vector<unsigned char> fCellArrayRGB; ///<! Pixel buffer (3 bytes per pixel, top-to-bottom)
+
+   /// A bitmap embedded as a PDF image XObject. Buffered until Close() because
+   /// a PDF object cannot be opened while a page content stream is still being
+   /// written; the page stream only carries a placement matrix and a "/ImN Do".
+   struct PDFImage {
+      Int_t fW = 0;                     ///< Width in pixels
+      Int_t fH = 0;                     ///< Height in pixels
+      Bool_t fFlate = kTRUE;            ///< True if fData is Flate-compressed
+      std::vector<unsigned char> fData; ///< 8-bit DeviceRGB samples (raw or Flate)
+   };
+   std::vector<PDFImage> fImageObjects; ///<! Embedded image XObjects, flushed in Close()
+
    static Int_t fgLineJoin; ///< Appearance of joining lines
    static Int_t fgLineCap;  ///< Appearance of line caps
 

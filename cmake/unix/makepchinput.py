@@ -251,11 +251,10 @@ def isDirForPCH(dirName, legacyPyROOT):
                            "math/fumili",
                            "math/mlp",
                            "math/quadp",
-                           "math/rtools",
                            "math/splot",
                            "math/unuran",
                            "math/vdt",
-                           "tmva/rmva"]
+                          ]
 
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)

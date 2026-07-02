@@ -235,10 +235,6 @@ void TGFileBrowser::CreateBrowser()
 
    fDblClick = kFALSE;
 
-   if (TClass::GetClass("TGHtmlBrowser"))
-      TQObject::Connect("TGHtmlBrowser", "Clicked(char*)",
-                        "TGFileBrowser", this, "Selected(char*)");
-
    TQObject::Connect("TPad", "Modified()",
                      "TGFileBrowser", this, "PadModified()");
 
@@ -253,8 +249,6 @@ void TGFileBrowser::CreateBrowser()
 
 TGFileBrowser::~TGFileBrowser()
 {
-   if (TClass::GetClass("TGHtmlBrowser"))
-      TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
    TQObject::Disconnect("TPad", "Modified()");
 
    delete fContextMenu;
@@ -627,20 +621,6 @@ void TGFileBrowser::RecursiveRemove(TObject *obj)
 void TGFileBrowser::Refresh(Bool_t /*force*/)
 {
    TTimer::SingleShot(200, "TGFileBrowser", this, "Update()");
-   return; // disable refresh for the time being...
-   // coverity[unreachable]
-   TCursorSwitcher cursorSwitcher(this, fListTree);
-   static UInt_t prev = 0;
-   UInt_t curr =  gROOT->GetListOfBrowsables()->GetSize();
-   if (!prev) prev = curr;
-
-   if (prev != curr) { // refresh gROOT
-      TGListTreeItem *sav = fListLevel;
-      fListLevel = 0;
-      BrowseObj(gROOT);
-      fListLevel = sav;
-      prev = curr;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1810,7 +1790,7 @@ void TGFileBrowser::RequestFilter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A ROOT File has been selected in TGHtmlBrowser.
+/// A ROOT File has been selected in TGFileBrowser.
 
 void TGFileBrowser::Selected(char *)
 {

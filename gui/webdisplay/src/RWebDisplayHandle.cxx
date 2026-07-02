@@ -1,6 +1,5 @@
 // Author: Sergey Linev <s.linev@gsi.de>
 // Date: 2018-10-17
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -821,8 +820,15 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
          std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
          // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
          // also disable question about upload of data
+         user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyBypassNotification\", true);" << std::endl;
          user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
          user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
+
+         // try to avoid any kind of dialogs on the start
+         user_js << "user_pref(\"app.update.auto\", false);" << std::endl;
+         user_js << "user_pref(\"browser.shell.checkDefaultBrowser\", false);" << std::endl;
+         user_js << "user_pref(\"browser.aboutwelcome.enabled\", false);" << std::endl;
+         user_js << "user_pref(\"browser.tabs.disableBackgroundLinkLoading\", true);" << std::endl;
 
          // try to ensure that window closes with last tab
          user_js << "user_pref(\"browser.tabs.closeWindowWithLastTab\", true);" << std::endl;
@@ -1099,6 +1105,8 @@ std::string RWebDisplayHandle::GetImageFormat(const std::string &fname)
       return "s.png"s;
    if (EndsWith(".png"))
       return "png"s;
+   if (EndsWith(".html") || EndsWith(".htm"))
+      return "html"s;
    if (EndsWith(".jpg") || EndsWith(".jpeg"))
       return "jpeg"s;
    if (EndsWith(".webp"))
@@ -1120,7 +1128,7 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce vector of file names for specified file pattern
-/// Depending from supported file forma
+/// Depending from supported file formats
 
 std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string &fname, unsigned nfiles)
 {
@@ -1135,7 +1143,7 @@ std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string
 
       bool has_quialifier = farg.find("%") != std::string::npos;
 
-      if (!has_quialifier && (nfiles > 1) && (fmt != "pdf")) {
+      if (!has_quialifier && (nfiles > 1) && (fmt != "pdf") && (fmt != "html")) {
          farg.insert(farg.rfind("."), "%d");
          has_quialifier = true;
       }
@@ -1145,7 +1153,7 @@ std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string
             auto expand_name = TString::Format(farg.c_str(), (int) n);
             fnames.emplace_back(expand_name.Data());
          } else if (n > 0)
-            fnames.emplace_back(""); // empty name is multiPdf
+            fnames.emplace_back(""); // empty name is multiPdf or multiHtml
          else
             fnames.emplace_back(fname);
       }
@@ -1174,16 +1182,106 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       return false;
 
    std::vector<std::string> fmts;
-   for (auto& fname : fnames)
-      fmts.emplace_back(GetImageFormat(fname));
+   unsigned num_non_empty_fmts = 0, num_non_empty_files = 0;
+   for (auto& fname : fnames) {
+      if (!fname.empty())
+         num_non_empty_files++;
+      std::string fmt = GetImageFormat(fname);
+      if (!fmt.empty())
+         num_non_empty_fmts++;
+      fmts.emplace_back(fmt);
+   }
 
    bool is_any_image = false;
+
+   const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
 
    for (unsigned n = 0; (n < fmts.size()) && (n < jsons.size()); n++) {
       if (fmts[n] == "json") {
          std::ofstream ofs(fnames[n]);
          ofs << jsons[n];
          fmts[n].clear();
+         ::Info("ProduceImages", "JSON file %s size %d bytes has been created", fnames[n].c_str(), (int) jsons[n].length());
+
+      } else if (fmts[n] == "html") {
+         bool is_multi_html = (num_non_empty_fmts == 1) && (num_non_empty_files == 1) && (jsons.size() > 1) && (n == 0);
+
+         std::string filejsrootsys;
+         if (jsrootsys)
+            filejsrootsys = jsrootsys;
+         if (filejsrootsys.empty() || ((filejsrootsys.find("http://") != 0) && (filejsrootsys.find("https://") != 0)))
+            filejsrootsys = "https://root.cern/js/latest";
+
+         std::ofstream ofs(fnames[n]);
+
+         ofs << "<!DOCTYPE html>\n"
+                "<html lang=\"en\">\n"
+                "<head>\n"
+                "  <meta charset=\"utf-8\">\n"
+                "  <title>Dsiplay of ROOT " << (is_multi_html ? "objects" : "object") << "</title>\n"
+                "  <link rel=\"shortcut icon\" href=\"" << filejsrootsys << "/img/RootIcon.ico\"/>\n"
+                "  <script type=\"importmap\">\n"
+                "    { \"imports\": { \"jsroot\": \"" << filejsrootsys << "/modules/main.mjs\" } }\n"
+                "  </script>\n"
+                "  <style>\n";
+         if (is_multi_html) {
+            ofs << "    .root-container {\n"
+                   "      display: flex;\n"
+                   "      flex-direction: column;\n"
+                   "      align-items: center;\n"
+                   "      gap: 20px;\n"
+                   "      width: 100%;\n"
+                   "    }\n";
+         } else {
+            ofs << "    body {\n"
+                   "      margin: 0;\n"
+                   "      padding: 0;\n"
+                   "      display: flex;\n"
+                   "      justify-content: center;\n"
+                   "      align-items: center;\n"
+                   "      min-height: 100vh;\n"
+                   "      background-color: #f0f0f0;\n"
+                   "    }\n";
+         }
+         ofs << "    .root-drawing {\n"
+                "      background-color: white;\n"
+                "      box-shadow: 0 4px 10px rgba(0,0,0,0.1);\n"
+                "    }\n"
+                "  </style>\n"
+                "</head>\n"
+                "<body>\n";
+         if (is_multi_html) {
+            ofs << "  <div class=\"root-container\">\n";
+            for (unsigned k = 0; k < jsons.size(); ++k)
+               ofs << "    <div id=\"drawing" << k << "\" class=\"root-drawing\""
+                      " style=\"width: " << widths[k] << "px;"
+                      " height: " << heights[k] << "px;\"></div>\n";
+            ofs << "  </div>\n";
+         } else {
+            ofs << "  <div id=\"drawing\" class=\"root-drawing\""
+                   " style=\"width: " << widths[n] << "px;"
+                   " min-height: " << heights[n] << "px;\"></div>\n";
+         }
+         ofs << "  <script type=\"module\">\n"
+                "    import { parse, draw } from \"jsroot\";\n";
+         if (is_multi_html) {
+            for (unsigned k = 0; k < jsons.size(); ++k) {
+               ofs << "    const obj" << k << " = parse(" << jsons[k] << ");\n"
+                      "    draw(\"drawing" << k << "\", obj" << k << ");\n";
+            }
+         } else {
+            ofs << "    const obj = parse(" << jsons[n] << ");\n"
+                   "    draw(\"drawing\", obj);\n";
+         }
+         ofs << "  </script>\n"
+                "</body>\n"
+                "</html>\n";
+
+         ::Info("ProduceImages", "HTML file %s size %d bytes has been created", fnames[n].c_str(), (int) ofs.tellp());
+
+         fmts[n].clear();
+         if (is_multi_html)
+            break;
       } else if (!fmts[n].empty())
          is_any_image = true;
    }
@@ -1197,7 +1295,6 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    else
       fdebug = TBufferJSON::ToJSON(&fnames, TBufferJSON::kNoSpaces);
 
-   const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
    TString jsrootsysdflt;
    if (!jsrootsys) {
       jsrootsysdflt = TROOT::GetDataDir() + "/js";
@@ -1208,7 +1305,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt5/Qt6 can be used here
+   RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt6 can be used here
    if (!CheckIfCanProduceImages(args)) {
       R__LOG_ERROR(WebGUILog()) << "Fail to detect supported browsers for image production";
       return false;

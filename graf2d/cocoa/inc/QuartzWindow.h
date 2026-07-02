@@ -19,6 +19,9 @@
 #include "X11Events.h"
 #include "GuiTypes.h"
 
+class TAttMarker;
+class TAttLine;
+
 namespace ROOT {
 namespace MacOSX {
 namespace X11 {
@@ -134,6 +137,8 @@ class Command;
 - (void) removeXorWindow;
 - (void) addXorLine : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
 - (void) addXorBox : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
+- (void) addXorPolyLine : (QuartzView *) view : (Int_t) n : (TPoint *) pnts : (const TAttLine &) att;
+- (void) addXorMarker : (QuartzView *) view : (Int_t) n : (TPoint *) pnts : (const TAttMarker &) att;
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
 - (TVirtualX::EDrawMode) getDrawMode;
 

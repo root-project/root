@@ -3715,7 +3715,9 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
             pp->SetAttFill({color, 1001}); // use fill color producing opacity
             pp->SetOpacity(style - 4000);
          }
-      } else if ((color == 10) && (style > 3000) && (style < 3100))
+      } else if ((style >= 4000) && (style <= 4100) && pp->IsCocoa() && (this == fMother))
+         style = 1001;
+      else if ((color == 10) && (style > 3000) && (style < 3100))
          color = 1;
 
       if (do_paint_box) {
@@ -5048,8 +5050,15 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    if (GetCanvas()->IsWeb() && GetPainter() &&
-       (strstr(opt,"svg") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
+       (strstr(opt,"svg") || strstr(opt,"html") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
       GetPainter()->SaveImage(this, psname.Data(), gtype);
+      return;
+   }
+
+   // to create HTML file web-based canvas functionality is invoked
+   if (strstr(opt, "html")) {
+      auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
+      gROOT->ProcessLine(cmd);
       return;
    }
 
@@ -5062,11 +5071,10 @@ void TPad::Print(const char *filename, Option_t *option)
          Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
          gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->Modified();
-         gPad->Update();
-         if (GetPainter()) {
-            GetPainter()->SelectDrawable(wid);
-            GetPainter()->SaveImage(this, psname.Data(), gtype);
+         gPad->ModifiedUpdate();
+         if (auto pp = GetPainter()) {
+            pp->SelectDrawable(wid);
+            pp->SaveImage(this, psname.Data(), gtype);
          }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "GIF file %s has been created", psname.Data());
@@ -5077,11 +5085,13 @@ void TPad::Print(const char *filename, Option_t *option)
       if (gtype != TImage::kUnknown) {
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
          gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->Modified();
-         gPad->Update();
+         gPad->ModifiedUpdate();
+         // GL canvas requires extra update to correctly flush image, fix #22157
+         if (gPad->GetCanvas()->UseGL())
+            gPad->UpdateAsync();
          gPad->GetCanvasImp()->UpdateDisplay(1, kTRUE);
-         if (GetPainter())
-            GetPainter()->SaveImage(this, psname, gtype);
+         if (auto pp = GetPainter())
+            pp->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }
@@ -5822,17 +5832,11 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"xml");
    else if (psname.EndsWith(".json"))
       ((TPad*)this)->Print(psname,"json");
+   else if (psname.EndsWith(".html"))
+      ((TPad*)this)->Print(psname,"html");
    else if (psname.EndsWith(".eps"))
       ((TPad*)this)->Print(psname,"eps");
-   else if (psname.EndsWith(".pdf"))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf["))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf]"))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf("))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf)"))
+   else if (psname.EndsWith(".pdf") || psname.EndsWith(".pdf[") || psname.EndsWith(".pdf]") || psname.EndsWith(".pdf("))
       ((TPad*)this)->Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
       ((TPad*)this)->Print(psname,"svg");
@@ -5842,9 +5846,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"xpm");
    else if (psname.EndsWith(".png"))
       ((TPad*)this)->Print(psname,"png");
-   else if (psname.EndsWith(".jpg"))
-      ((TPad*)this)->Print(psname,"jpg");
-   else if (psname.EndsWith(".jpeg"))
+   else if (psname.EndsWith(".jpg") || psname.EndsWith(".jpeg"))
       ((TPad*)this)->Print(psname,"jpg");
    else if (psname.EndsWith(".bmp"))
       ((TPad*)this)->Print(psname,"bmp");

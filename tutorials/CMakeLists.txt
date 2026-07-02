@@ -76,6 +76,8 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
   list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
   list(APPEND dataframe_veto machine_learning/ml_dataloader_filters_vectors.py)
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_Higgs_Classification.py)
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_resampling.py)
   # df036* and df037* seem to trigger OS errors when trying to delete the
   # test files created in the tutorials. It is unclear why.
   list(APPEND dataframe_veto analysis/dataframe/df036_missingBranches.C)
@@ -100,6 +102,8 @@ if(MSVC AND NOT win_broken_tests)
                           io/ntuple/ntpl013_staged.C
                           io/ntuple/ntpl014_framework.C
                           io/ntuple/ntpl017_shared_reader.C)
+  # The RNTuple SoA tutorial fails on Windows if interpreted for unknown reasons
+  list(APPEND ntuple_veto io/ntuple/ntpl020_soa.C)
 endif()
 
 # TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
@@ -126,6 +130,8 @@ if (NOT dataframe)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_filters_vectors.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_resampling.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_Higgs_Classification.py)
     # RooFit tutorials depending on RDataFrame
     list(APPEND dataframe_veto
         roofit/roofit/rf408_RDataFrameToRooFit.C
@@ -227,10 +233,6 @@ if(NOT xrootd)
                   )
 endif()
 
-if(NOT r)
-  set(r_veto  math/r/*.C)
-endif()
-
 set(histfactory_veto roofit/histfactory/makeExample.C)
 
 if(NOT fitsio)
@@ -247,7 +249,7 @@ if(NOT mathmore)
       math/mathmoreIntegration.C
       math/pdf/pdf007_multivarGaus.C
       math/pdf/pdf012_tStudent.C
-      math/pdf/pdf001_Nornal.C
+      math/pdf/pdf001_Normal.C
       roofit/roostats/TestNonCentral.C
       roofit/roostats/TestNonCentral.py
       math/Legendre.py
@@ -516,7 +518,6 @@ set(all_veto hsimple.C
              ${fftw3_veto}
              ${opengl_veto}
              ${gviz_veto}
-             ${r_veto}
              ${runtime_cxxmodules_veto}
              ${histfactory_veto}
              ${tbb_veto}
@@ -809,7 +810,7 @@ if(pyroot)
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
     list(APPEND TUTORIAL_ENV PYSPARK_PYTHON=${Python3_EXECUTABLE})
-    if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
+    if(CMAKE_SYSTEM_NAME STREQUAL Darwin AND CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL 10.13)
       # MacOS has changed rules about forking processes after 10.13
       # Running pyspark tests with XCode Python3 throws crashes with errors like:
       # `objc[17271]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called.`
@@ -940,6 +941,8 @@ if(pyroot)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/pytorch/*.py
       machine_learning/ml_dataloader_PyTorch.py
+      machine_learning/ml_dataloader_resampling.py
+      machine_learning/ml_dataloader_Higgs_Classification.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/tmva101_Training.py

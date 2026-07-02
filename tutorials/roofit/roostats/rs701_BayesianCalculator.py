@@ -27,8 +27,8 @@ priorPOI2 = w.factory("GenericPdf::priorPOI2('1/sqrt(@0)',s)")
 
 w.factory("n[3]")  # observed number of events
 # create a data set with n observed events
-data = ROOT.RooDataSet("data", "", {w["x"], w["n"]}, WeightVar="n")
-data.add({w["x"]}, w["n"].getVal())
+data = ROOT.RooDataSet("data", "", [w["x"], w["n"]], WeightVar="n")
+data.add([w["x"]], w["n"].getVal())
 
 # to suppress messages when pdf goes to zero
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
@@ -41,7 +41,7 @@ else:
 
 size = 1.0 - confLevel
 print("\nBayesian Result using a Flat prior ")
-bcalc = ROOT.RooStats.BayesianCalculator(data, model, {POI}, priorPOI, nuisPar)
+bcalc = ROOT.RooStats.BayesianCalculator(data, model, [POI], priorPOI, nuisPar)
 bcalc.SetTestSize(size)
 interval = bcalc.GetInterval()
 cl = bcalc.ConfidenceLevel()
@@ -58,7 +58,7 @@ plot.Draw()
 c1.Update()
 
 print("\nBayesian Result using a 1/sqrt(s) prior  ")
-bcalc2 = ROOT.RooStats.BayesianCalculator(data, model, {POI}, priorPOI2, nuisPar)
+bcalc2 = ROOT.RooStats.BayesianCalculator(data, model, [POI], priorPOI2, nuisPar)
 bcalc2.SetTestSize(size)
 interval2 = bcalc2.GetInterval()
 cl = bcalc2.ConfidenceLevel()

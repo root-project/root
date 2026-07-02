@@ -1,6 +1,5 @@
 // Author: Sergey Linev <S.Linev@gsi.de>
 // Date: 2021-02-11
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
@@ -85,7 +84,7 @@ void RWebBrowserImp::ShowWarning()
                 "ROOT comes with a web-based browser, which is now being started. \n"
                 "Revert to TBrowser by setting \"Browser.Name: TRootBrowser\" in rootrc file or\n"
                 "by starting \"root --web=off\"\n"
-                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n";
+                "Find more info on https://root.cern/doc/latest-stable/classROOT_1_1RBrowser.html\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

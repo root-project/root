@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import ROOT
 from ROOT._pythonization._rdataframe import _clone_asnumpyresult
-import os
+
 
 def make_tree(*dtypes):
     """
@@ -399,6 +399,26 @@ class RDataFrameAsNumpy(unittest.TestCase):
         self.assertTrue(array.shape[0] == n)
         self.assertTrue(all(isinstance(x, np.ndarray) for x in array))
         self.assertTrue(all(len(x) == i for i, x in enumerate(array)))
+
+    def test_rdataframe_as_numpy_char_col_as_uint8(self):
+        ROOT.gInterpreter.Declare(
+            r"""
+            #ifndef ROOT_TEST_RDataFrameAsNumpy_GH_22554
+            #define ROOT_TEST_RDataFrameAsNumpy_GH_22554
+            char make_char(ULong64_t i) {
+            return static_cast<char>(65 + (i % 26)); // A, B, C, ...
+            }
+            #endif
+            """
+        )
+
+        rdf = ROOT.RDataFrame(10).Define("mycol", "make_char(rdfentry_)")
+        with self.assertWarns(
+            UserWarning, msg="column 'mycol' has type 'char', which would be automatically converted"
+        ):
+            npy = rdf.AsNumpy(["mycol"])["mycol"]
+            self.assertEqual(npy.dtype, np.uint8)
+            self.assertTrue(all(npy == np.array([65 + (i % 26) for i in range(10)], dtype=np.uint8)))
 
 
 if __name__ == "__main__":

@@ -125,20 +125,6 @@ class RPageSourceFile : public RPageSource {
    friend class ROOT::RNTuple;
 
 private:
-   /// Holds the uncompressed header and footer
-   struct RStructureBuffer {
-      std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
-      void *fPtrHeader = nullptr;               ///< either nullptr or points into fBuffer
-      void *fPtrFooter = nullptr;               ///< either nullptr or points into fBuffer
-
-      /// Called at the end of Attach(), i.e. when the header and footer are processed
-      void Reset()
-      {
-         RStructureBuffer empty;
-         std::swap(empty, *this);
-      }
-   };
-
    /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
    std::optional<RNTuple> fAnchor;
    /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
@@ -149,8 +135,6 @@ private:
    ROOT::Internal::RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
-   /// Populated by LoadStructureImpl(), reset at the end of Attach()
-   RStructureBuffer fStructureBuffer;
    /// Tracks the last read offset for seek distance calculation
    std::uint64_t fLastOffset = 0;
 
@@ -176,12 +160,12 @@ private:
 
 protected:
    void LoadStructureImpl() final;
-   ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   ROOT::RNTupleDescriptor AttachImpl() final;
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
+   void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);
@@ -200,9 +184,6 @@ public:
 
    std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
                                                         const ROOT::RNTupleReadOptions &options = {}) final;
-
-   void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;

@@ -84,13 +84,17 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 #--- Search for packages that are absolutely necessary--------------------------
 
 #----------------------------------------------------------------------------
-# ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION)
+# ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION [MIN_REQUIRED_VERSION])
 # Search for a required dependency, unless it's meant to be a built-in.
 # A list of all missing required packages will be printed in case they could
 # not be found.
 macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
   if(NOT ${BUILTIN_CONFIG_OPTION})
-    find_package(${PACKAGE_NAME})
+    set(MIN_REQUIRED_VERSION "")
+    if (${ARGC} GREATER 2) # ARGC: extra arguments + named ones
+      set(MIN_REQUIRED_VERSION ${ARGV2}) # ARGV0 and ARGV1 are named required args
+    endif()
+    find_package(${PACKAGE_NAME} ${MIN_REQUIRED_VERSION})
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
@@ -125,18 +129,13 @@ ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
 ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
 ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
 ROOT_FIND_REQUIRED_DEP(xxHash builtin_xxhash)
+if (testing OR testsupport)
+  ROOT_FIND_REQUIRED_DEP(GTest builtin_gtest 1.10)
+endif()
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   message(FATAL_ERROR "The following packages need to be installed or enabled to build ROOT: ${MISSING_PACKAGES}")
 endif()
-
-#--- Redefine find_package for LLVM to pick up ROOT's builtins ----------------------
-# TODO: Make this only local to LLVM?
-macro(find_package)
-  if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS) # ROOT_BUILTINS are the variable names, not the same as ROOT_BUILTIN_TARGETS used for move-header dependency
-    _find_package(${ARGV})
-  endif()
-endmacro()
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -153,7 +152,6 @@ endif()
 
 #---Check for Zlib ------------------------------------------------------------------
 if(builtin_zlib)
-  list(APPEND ROOT_BUILTINS ZLIB)
   add_subdirectory(builtins/zlib)
 else()
   # If not built-in, check if this is zlib-ng
@@ -209,7 +207,6 @@ if(NOT builtin_nlohmannjson)
 endif()
 
 if(builtin_nlohmannjson)
-  list(APPEND ROOT_BUILTINS BUILTIN_NLOHMANN)
   add_subdirectory(builtins/nlohmann)
 endif()
 
@@ -248,11 +245,13 @@ if(unuran AND NOT builtin_unuran)
     endif()
   endif()
 endif()
+if (builtin_unuran)
+  add_subdirectory(builtins/unuran)
+endif()
 
 #---Check for Freetype---------------------------------------------------------------
 ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also outside of it (for "graf" target)
 if(builtin_freetype)
-  list(APPEND ROOT_BUILTINS BUILTIN_FREETYPE)
   add_subdirectory(builtins/freetype)
 elseif(NOT Freetype_VERSION AND FREETYPE_VERSION_STRING)
   # on mac brew installed freetype version_string is returned
@@ -292,18 +291,15 @@ endif()
 
 if(builtin_pcre)
   add_subdirectory(builtins/pcre)
-  list(APPEND ROOT_BUILTINS BUILTIN_PCRE)
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
 if(builtin_lzma)
-  list(APPEND ROOT_BUILTINS LZMA)
   add_subdirectory(builtins/lzma)
 endif()
 
 #---Check for xxHash-----------------------------------------------------------------
 if(builtin_xxhash)
-  list(APPEND ROOT_BUILTINS xxHash)
   add_subdirectory(builtins/xxhash)
 endif()
 
@@ -313,14 +309,11 @@ if(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
 endif()
 
 if(builtin_zstd)
-  list(APPEND ROOT_BUILTINS zstd)
-  list(APPEND ROOT_BUILTINS ZSTD)
   add_subdirectory(builtins/zstd)
 endif()
 
 #---Check for LZ4--------------------------------------------------------------------
 if(builtin_lz4)
-  list(APPEND ROOT_BUILTINS LZ4)
   add_subdirectory(builtins/lz4)
 endif()
 
@@ -380,6 +373,8 @@ if(asimage)
     get_target_property(TIFF_LIBRARY_LOCATION TIFF::TIFF IMPORTED_LOCATION)
   endif()
   list(APPEND ASEXTRA_LIBRARIES TIFF::TIFF)
+
+  add_subdirectory(builtins/libAfterImage) # It's a hard-coded builtin, was forked in 2008, system-wide version misses many patches
 endif()
 
 #---Check for Python installation-------------------------------------------------------
@@ -398,10 +393,37 @@ if(pyroot AND NOT (tpython OR tmva-pymva))
 elseif(tpython OR tmva-pymva)
   list(APPEND python_components Development)
 endif()
-if(tmva-pymva OR tmva-sofie)
+if(tmva-pymva)
   list(APPEND python_components NumPy)
 endif()
 find_package(Python3 3.10 COMPONENTS ${python_components})
+
+# Detect whether the found Python interpreter is a free-threaded build
+# (Py_GIL_DISABLED is defined in pyconfig.h). The limited C API is not
+# supported in free-threaded builds; including Python.h with Py_LIMITED_API
+# defined produces a hard error there
+# (https://docs.python.org/3/howto/free-threading-extensions.html).
+# Checking the preprocessor symbol directly is more reliable than asking the
+# interpreter (e.g. sysconfig.get_config_var may misreport, and
+# sys._is_gil_enabled() can be overridden at runtime via PYTHON_GIL=1).
+set(Python3_GIL_DISABLED FALSE)
+if(Python3_Development_FOUND OR Python3_Development.Module_FOUND)
+  include(CheckCXXSourceCompiles)
+  set(_old_required_includes ${CMAKE_REQUIRED_INCLUDES})
+  set(CMAKE_REQUIRED_INCLUDES ${Python3_INCLUDE_DIRS})
+  check_cxx_source_compiles("
+    #include <Python.h>
+    #ifndef Py_GIL_DISABLED
+    #error \"GIL is not disabled\"
+    #endif
+    int main() { return 0; }
+  " ROOT_PYTHON_GIL_DISABLED)
+  set(CMAKE_REQUIRED_INCLUDES ${_old_required_includes})
+  if(ROOT_PYTHON_GIL_DISABLED)
+    set(Python3_GIL_DISABLED TRUE)
+    message(STATUS "Python ${Python3_VERSION} is a free-threaded build (Py_GIL_DISABLED defined); the limited C API will not be used")
+  endif()
+endif()
 
 #---Check for OpenGL installation-------------------------------------------------------
 # OpenGL is required by various graf3d features that are enabled with opengl=ON,
@@ -446,7 +468,6 @@ if(opengl)
   ROOT_FIND_REQUIRED_DEP(gl2ps builtin_gl2ps)
   if (builtin_gl2ps)
     add_subdirectory(builtins/gl2ps)
-    list(APPEND ROOT_BUILTINS BUILTIN_GL2PS)
   endif()
 elseif(builtin_gl2ps)
   message(SEND_ERROR "gl2ps features enabled with \"builtin_gl2ps=ON\" require \"opengl=ON\"")
@@ -514,7 +535,6 @@ if(builtin_openssl)
     set(builtin_openssl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
     set(ssl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
   else()
-    list(APPEND ROOT_BUILTINS OpenSSL)
     add_subdirectory(builtins/openssl)
   endif()
 endif()
@@ -583,23 +603,7 @@ if(fftw3)
   endif()
 endif()
 if(builtin_fftw3)
-  set(FFTW_VERSION 3.3.10)
-  message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
-  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
-  ExternalProject_Add(
-    FFTW3
-    URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
-    URL_HASH SHA256=56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
-    BUILD_COMMAND make CFLAGS=-fPIC
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
-    TIMEOUT 600
-  )
-  set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(FFTW3_TARGET FFTW3)
+  add_subdirectory(builtins/fftw3)
   set(fftw3 ON CACHE BOOL "Enabled because builtin_fftw3 requested (${fftw3_description})" FORCE)
 endif()
 
@@ -692,7 +696,6 @@ if(builtin_xrootd)
   if(NOT ssl AND NOT builtin_openssl)
     message(FATAL_ERROR "Building XRootD ('builtin_xrootd'=On) requires ssl support ('ssl' or 'builtin_openssl').")
   endif()
-  list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
@@ -759,26 +762,9 @@ if(opengl)
   ROOT_FIND_REQUIRED_DEP(FTGL builtin_ftgl)
   if (builtin_ftgl)
     add_subdirectory(builtins/ftgl)
-    list(APPEND ROOT_BUILTINS BUILTIN_FTGL)
   endif()
 elseif(builtin_ftgl)
   message(SEND_ERROR "FTGL features enabled with \"builtin_ftgl=ON\" require \"opengl=ON\"")
-endif()
-
-#---Check for R/Rcpp/RInside--------------------------------------------------------------------
-#added search of R packages here to remove multiples searches
-if(r)
-  message(STATUS "Looking for R")
-  find_package(R COMPONENTS Rcpp RInside)
-  if(NOT R_FOUND)
-    if(fail-on-missing)
-       message(SEND_ERROR "R installation not found and is required ('r' option enabled)")
-    else()
-       message(STATUS "R installation not found. Set variable R_DIR to point to your R installation")
-       message(STATUS "For the time being switching OFF 'r' option")
-       set(r OFF CACHE BOOL "Disabled because R not found (${r_description})" FORCE)
-    endif()
-  endif()
 endif()
 
 #---Check for Davix library-----------------------------------------------------------
@@ -935,74 +921,7 @@ if(builtin_tbb)
 endif()
 
 if(builtin_tbb)
-  set(tbb_url ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
-  set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
-
-  if(MSVC)
-    if(CMAKE_GENERATOR MATCHES Ninja)
-      if(CMAKE_BUILD_TYPE MATCHES Debug)
-        set(tbbsuffix "_debug")
-      endif()
-    else()
-      set(tbb_build Release)
-      if(winrtdebug)
-        set(tbb_build Debug)
-        set(tbbsuffix "_debug")
-      endif()
-    endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
-    set(TBB_CXXFLAGS "-D__TBB_NO_IMPLICIT_LINKAGE=1")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
-  else()
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(tbbsuffix "_debug")
-    endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${tbbsuffix}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
-  endif()
-  if(tbb_build)
-    set(TBB_EXTRA_BUILD_ARGS --config ${tbb_build})
-  endif()
-
-  ExternalProject_Add(
-    TBB
-    URL ${tbb_url}
-    URL_HASH SHA256=${tbb_sha256}
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include
-               -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
-               -DTBBMALLOC_BUILD=OFF
-               -DTBBMALLOC_PROXY_BUILD=OFF
-               -DTBB_ENABLE_IPO=OFF
-               -DTBB_STRICT=OFF
-               -DTBB_TEST=OFF
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${TBB_EXTRA_BUILD_ARGS}
-    INSTALL_COMMAND ${CMAKE_COMMAND}  --install . ${TBB_EXTRA_BUILD_ARGS}
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_BYPRODUCTS ${TBB_LIBRARIES}
-    TIMEOUT 600
-  )
-
-  ExternalProject_Add_Step(
-     TBB tbb2externals
-     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${CMAKE_BINARY_DIR}/ginclude/tbb
-     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/oneapi ${CMAKE_BINARY_DIR}/ginclude/oneapi
-     DEPENDEES install
-  )
-  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
-  # The following line is needed to generate the proper dependency with: BUILTINS TBB (in Imt)
-  # and generated with this syntax: add_dependencies(${library} ${${arg1}_TARGET})
-  set(TBB_TARGET TBB)
+  add_subdirectory(builtins/tbb)
 endif()
 
 if(builtin_vdt)
@@ -1030,47 +949,7 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.6)
-    set(VDT_FOUND True)
-    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      BUILTIN_VDT
-      URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-        -DSSE=OFF # breaks on ARM without this
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-        -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_BYPRODUCTS ${VDT_LIBRARIES}
-      TIMEOUT 600
-    )
-    ExternalProject_Add_Step(
-       BUILTIN_VDT copy2externals
-       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
-       DEPENDEES install
-    )
-    set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
-    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-
-    add_library(VDT::VDT SHARED IMPORTED GLOBAL)
-    add_dependencies(VDT::VDT BUILTIN_VDT)
-    set_target_properties(VDT::VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
-    target_include_directories(VDT::VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
-
-    install(FILES ${VDT_LIBRARIES}
-            DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT::VDT)
-  else()
-    BUILD_ROOT_INCLUDE_PATH("${VDT_INCLUDE_DIR}")
+    add_subdirectory(builtins/vdt)
   endif()
 endif()
 
@@ -1229,38 +1108,7 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
       endif()
     endif()
   else()
-    set(gsl_version 2.8)
-    message(STATUS "Downloading and building GSL version ${gsl_version}")
-    foreach(l gsl gslcblas)
-      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
-    set(GSL_CBLAS_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gslcblas${CMAKE_STATIC_LIBRARY_SUFFIX})
-    if(CMAKE_OSX_SYSROOT)
-      set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
-      set(_gsl_ldflags  "-isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    ExternalProject_Add(
-      GSL
-      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
-      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-      URL_HASH SHA256=6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
-      SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-                        --libdir=<INSTALL_DIR>/lib
-                        --enable-shared=no --with-pic
-                        CC=${CMAKE_C_COMPILER}
-                        CFLAGS=${CMAKE_C_FLAGS}
-                        CPPFLAGS=${_gsl_cppflags}
-                        LDFLAGS=${_gsl_ldflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_BYPRODUCTS ${GSL_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(GSL_TARGET GSL)
-    # FIXME: one need to find better way to extract path with GSL include files
-    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
-    set(GSL_FOUND ON)
+    add_subdirectory(builtins/gsl)
     set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
   endif()
 endif()
@@ -1272,16 +1120,14 @@ if(tmva-cpu)
   add_library(ROOT::BLAS ALIAS Blas)
   if (NOT use_gsl_cblas AND BLAS_FOUND)
     target_link_libraries(Blas INTERFACE BLAS::BLAS)
-  elseif(use_gsl_cblas AND builtin_gsl)
-    message(STATUS "Using builtin GSL CBLAS for optional parts of TMVA")
-    add_dependencies(Blas GSL)
-    target_include_directories(Blas INTERFACE ${GSL_INCLUDE_DIR})
-    target_link_libraries(Blas INTERFACE ${GSL_CBLAS_LIBRARY})
-    target_compile_definitions(Blas INTERFACE -DR__USE_CBLAS)
   elseif(use_gsl_cblas AND GSL_FOUND)
-    message(STATUS "Using GSL CBLAS for optional parts of TMVA")
-    target_link_libraries(Blas INTERFACE GSL::gslcblas)
+    if (builtin_gsl)
+      message(STATUS "Using builtin GSL CBLAS for optional parts of TMVA")
+    else()
+      message(STATUS "Using system GSL CBLAS for optional parts of TMVA")
+    endif()
     target_compile_definitions(Blas INTERFACE -DR__USE_CBLAS)
+    target_link_libraries(Blas INTERFACE GSL::gslcblas)
   else()
     if(fail-on-missing)
       message(SEND_ERROR "tmva-cpu can't be built because BLAS was not found!")
@@ -1320,7 +1166,7 @@ if(tmva)
       endif()
     endif()
   endif()
-  if(tmva-pymva OR tmva-sofie)
+  if(tmva-pymva)
     if(fail-on-missing AND (NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND))
       message(SEND_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
                           " (python executable: ${Python3_EXECUTABLE})")
@@ -1329,18 +1175,10 @@ if(tmva)
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
   endif()
-  if (R_FOUND)
-    #Rmva is enable when r is found and tmva is on
-    set(tmva-rmva ON)
-  endif()
-  if(tmva-rmva AND NOT R_FOUND)
-    set(tmva-rmva  OFF CACHE BOOL "Disabled because R was not found (${tmva-rmva_description})"  FORCE)
-  endif()
 else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
-  set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
+  set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-cudnn_description})"  FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
-  set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
 endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------
@@ -1420,159 +1258,34 @@ endif (roofit_multiprocess)
 
 #---Check for googletest---------------------------------------------------------------
 if (testing OR testsupport)
-  if (NOT builtin_gtest)
-    if(fail-on-missing)
-      find_package(GTest 1.10 REQUIRED)
-    else()
-      find_package(GTest 1.10)
-      if(NOT GTEST_FOUND)
-        ROOT_CHECK_CONNECTION("testing=OFF")
-        if(NO_CONNECTION)
-          message(STATUS "GTest not found, and no internet connection. Disabling the 'testing' and 'testsupport' options.")
-          set(testing OFF CACHE BOOL "Disabled because testing requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
-          set(testsupport OFF CACHE BOOL "Disabled because testsupport requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
-        else()
-          message(STATUS "GTest not found, switching ON 'builtin_gtest' option.")
-          set(builtin_gtest ON CACHE BOOL "Enabled because testing requested and GTest not found (${builtin_gtest_description})" FORCE)
-        endif()
-      endif()
-    endif()
-  else()
+  if (builtin_gtest)
     ROOT_CHECK_CONNECTION("testing=OFF")
     if(NO_CONNECTION)
       message(STATUS "No internet connection, disabling the 'testing', 'testsupport' and 'builtin_gtest' options")
       set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
       set(testsupport OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
       set(builtin_gtest OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    else()
+      add_subdirectory(builtins/gtest)
     endif()
   endif()
 endif()
 
-if (builtin_gtest)
-  # Add googletest
-  # http://stackoverflow.com/questions/9689183/cmake-googletest
-
-  set(_gtest_byproduct_binary_dir
-    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build)
-  set(_gtest_byproducts
-    ${_gtest_byproduct_binary_dir}/lib/libgtest.a
-    ${_gtest_byproduct_binary_dir}/lib/libgtest_main.a
-    ${_gtest_byproduct_binary_dir}/lib/libgmock.a
-    ${_gtest_byproduct_binary_dir}/lib/libgmock_main.a
-    )
-
-  set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS}")
-  if(MSVC)
-     if(winrtdebug)
-      set(GTEST_BUILD_TYPE Debug)
-    else()
-      set(GTEST_BUILD_TYPE Release)
-    endif()
-    set(_gtest_byproducts
-      ${_gtest_byproduct_binary_dir}/lib/gtest.lib
-      ${_gtest_byproduct_binary_dir}/lib/gtest_main.lib
-      ${_gtest_byproduct_binary_dir}/lib/gmock.lib
-      ${_gtest_byproduct_binary_dir}/lib/gmock_main.lib
-    )
-    if(CMAKE_GENERATOR MATCHES Ninja)
-      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>")
-    else()
-      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${GTEST_BUILD_TYPE}")
-    endif()
-    if(asan)
-      if(NOT winrtdebug)
-        set(gtestbuild "RelWithDebInfo")
-      endif()
-      set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
-    endif()
-    set(EXTRA_GTEST_OPTS
-      -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
-      -Dgtest_force_shared_crt=ON
-      ${GTEST_BUILD_COMMAND})
-  else()
-    set(GTEST_BUILD_TYPE Release)
-  endif()
-  if(APPLE)
-    set(EXTRA_GTEST_OPTS
-      -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
-  endif()
-  set(ROOT_GOOGLETEST_VERSION 1.17.0) # https://github.com/google/googletest/releases/tag/v1.17.0 Date: Apr 30, 2025
-  set(ROOT_GOOGLETEST_HASH "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c")
-  ExternalProject_Add(
-    googletest
-    # GIT_REPOSITORY https://github.com/google/googletest.git
-    # GIT_SHALLOW 1
-    # GIT_TAG v1.17.0
-    URL ${lcgpackages}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
-    URL_HASH SHA256=${ROOT_GOOGLETEST_HASH}
-    UPDATE_COMMAND ""
-    # # Force separate output paths for debug and release builds to allow easy
-    # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
-    # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-    #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-    #            -Dgtest_force_shared_crt=ON
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-                  -DCMAKE_BUILD_TYPE=${GTEST_BUILD_TYPE}
-                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                  -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
-                  -DCMAKE_AR=${CMAKE_AR}
-                  -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                  ${EXTRA_GTEST_OPTS}
-    # Disable install step
-    INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS ${_gtest_byproducts}
-    # Wrap download, configure and build steps in a script to log output
-    LOG_DOWNLOAD ON LOG_CONFIGURE ON LOG_BUILD ON LOG_OUTPUT_ON_FAILURE ON
-    TIMEOUT 600
-  )
-
-  # Specify include dirs for gtest and gmock
-  ExternalProject_Get_Property(googletest source_dir)
-  set(GTEST_INCLUDE_DIR ${source_dir}/googletest/include)
-  set(GMOCK_INCLUDE_DIR ${source_dir}/googlemock/include)
-  # Create the directories. Prevents bug https://gitlab.kitware.com/cmake/cmake/issues/15052
-  file(MAKE_DIRECTORY ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
-
-  # Libraries
-  ExternalProject_Get_Property(googletest binary_dir)
-  set(_G_LIBRARY_PATH ${binary_dir}/lib/)
-
-  # Use gmock_main instead of gtest_main because it initializes gtest as well.
-  # Note: The libraries are listed in reverse order of their dependencies.
-  foreach(lib gtest gtest_main gmock gmock_main)
-    add_library(${lib} IMPORTED STATIC GLOBAL)
-    set_target_properties(${lib} PROPERTIES
-      IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    )
-    add_dependencies(${lib} googletest)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
-        ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
-      target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
+if (testing OR testsupport)
+  # Verify that all GTest subcomponents are installed
+  foreach(LIBNAME gtest_main gmock_main gtest gmock)
+    if(NOT TARGET GTest::${LIBNAME} AND NOT TARGET ${LIBNAME})
+      message(SEND_ERROR "Missing installation of GTest subcomponent ${LIBNAME}")
     endif()
   endforeach()
-  target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
-  target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
-
-  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+  # Starting from cmake 3.23, the GTest targets will have stable names.
+  # ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
+  foreach(LIBNAME gtest_main gmock_main gtest gmock)
+    if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
+      add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
+    endif()
+  endforeach()
 endif()
-
-# Starting from cmake 3.23, the GTest targets will have stable names.
-# ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
-foreach(LIBNAME gtest_main gmock_main gtest gmock)
-  if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
-    add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
-  endif()
-endforeach()
 
 #------------------------------------------------------------------------------------
 if(webgui AND NOT builtin_openui5)
@@ -1594,52 +1307,10 @@ if(webgui)
      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
         $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
   else()
-    if(builtin_openui5)
-      ExternalProject_Add(
-        OPENUI5
-        URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=b9e6495d8640302d9cf2fe3c99331311335aaab0f48794565ebd69ecc7449e58
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
-        TIMEOUT 600
-      )
-    else()
-      ExternalProject_Add(
-        OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.135.0/openui5-runtime-1.135.0.zip
-        URL_HASH SHA256=13acdb88a7f3f1d4afef6d1d500b53bccc4b593e7acf442721bb4e3da4e2690b
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
-        TIMEOUT 600
-      )
-    endif()
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+    add_subdirectory(builtins/openui5)
   endif()
-  ExternalProject_Add(
-    RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-2.0.tar.gz
-    URL_HASH SHA256=6bdcf70fbdec1f950057ab1df722775c468ad6894f8a364f15f589d58c326667
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
-    TIMEOUT 600
-  )
-  ExternalProject_Add(
-     MATHJAX
-     URL ${CMAKE_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
-     URL_HASH SHA256=c5e22e60430a65963a87ab4dcc8856b9be5bd434d3b3871f27ee65b584c3c3ea
-     CONFIGURE_COMMAND ""
-     BUILD_COMMAND ""
-     INSTALL_COMMAND ""
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
-     TIMEOUT 600
-  )
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+  add_subdirectory(builtins/rendercore)
+  add_subdirectory(builtins/mathjax)
 endif()
 
 #------------------------------------------------------------------------------------
@@ -1704,6 +1375,52 @@ else()
           return 0;
       }
   " ROOT_HAVE_EXPERIMENTAL_SIMD)
+endif()
+
+# On platforms with AVX-512, the libstdc++ implementation of
+# <experimental/simd> (from GCC up to at least 16) fails to compile with
+# non-GCC front ends (Clang, Intel icpx) because of a static_assert in the
+# _VecBltnBtmsk (AVX-512 mask) ABI that requires `long long` and `long` to be
+# the same type. The bug fires only for the AVX-512 mask ABI path, so we work
+# around it by pinning ROOT's simd alias (Math/Types.h) to the 256-bit AVX2
+# ABI variant instead of the platform-native ABI. That keeps the ABI of
+# Float_v/Double_v/... consistent across all TUs (no `-mno-avx512f` needed)
+# and lets the rest of ROOT keep its native AVX-512 codegen.
+set(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI FALSE CACHE INTERNAL
+    "Pin <experimental/simd> alias to the 256-bit ABI to dodge libstdc++ AVX-512 bug")
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  set(_simd_realistic_test "
+      #include <experimental/simd>
+      int main() {
+          std::experimental::native_simd<double> a(1.0), b(2.0);
+          where(a > b, a) = b;
+          return 0;
+      }
+  ")
+  check_cxx_source_compiles("${_simd_realistic_test}"
+                            ROOT_EXPERIMENTAL_SIMD_FULL_USAGE_OK)
+  if(NOT ROOT_EXPERIMENTAL_SIMD_FULL_USAGE_OK)
+    set(_simd_pinned_abi_test "
+        #include <experimental/simd>
+        namespace stx = std::experimental;
+        int main() {
+            stx::simd<double, stx::simd_abi::__avx> a(1.0), b(2.0);
+            where(a > b, a) = b;
+            return 0;
+        }
+    ")
+    check_cxx_source_compiles("${_simd_pinned_abi_test}"
+                              ROOT_EXPERIMENTAL_SIMD_AVX_ABI_OK)
+    if(ROOT_EXPERIMENTAL_SIMD_AVX_ABI_OK)
+      set(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI TRUE CACHE INTERNAL "" FORCE)
+      message(STATUS "Working around libstdc++ <experimental/simd> AVX-512 bug "
+                     "by pinning Math/Types.h to the 256-bit AVX ABI")
+    else()
+      message(STATUS "Disabling experimental/simd-based features: libstdc++ "
+                     "header fails to compile in this configuration")
+      set(ROOT_HAVE_EXPERIMENTAL_SIMD FALSE CACHE INTERNAL "" FORCE)
+    endif()
+  endif()
 endif()
 
 #------------------------------------------------------------------------------------

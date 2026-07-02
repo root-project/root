@@ -27,24 +27,25 @@
 using namespace ROOT::CmdLine;
 
 static const char *const kShortHelp = "usage: rootcp [-h] [-c COMPRESS] [--recreate] [-r|--recursive] [--replace] "
-                                      "[-v|--verbose] SOURCE [SOURCE ...] DEST\n";
+                                      "[-v|--verbose] [-a|--abort-on-failure] SOURCE [SOURCE ...] DEST\n";
 static const char *const kLongHelp = R"(
 Copy objects from ROOT files into another
 
 positional arguments:
-  SOURCE                Source file(s)
-  DEST                  Destination file
+  SOURCE                  Source file(s)
+  DEST                    Destination file
 
 options:
-  -h, --help            show this help message and exit
+  -h, --help              show this help message and exit
   -c, --compress COMPRESS
-                        change the compression settings of the destination file (if not already
-                        existing).
-  --recreate            recreate the destination file.
-  -r, --recursive       recurse inside directories
-  --replace             replace object if already existing
-  -v                    be verbose
-  -vv                   be even more verbose
+                          change the compression settings of the destination file (if not already
+                          existing).
+  --recreate              recreate the destination file.
+  -r, --recursive         recurse inside directories
+  --replace               replace object if already existing
+  -a, --abort-on-failure  abort if any object fails to be copied (instead of skipping such objects)
+  -v                      be verbose
+  -vv                     be even more verbose
 
 Note: If an object has been written to a file multiple times, rootcp will copy only the latest version of that object.
 
@@ -86,6 +87,7 @@ struct RootCpArgs {
    bool fRecreate = false;
    bool fReplace = false;
    bool fRecursive = false;
+   bool fAbortOnFailure = false;
    std::vector<std::string> fSources;
 };
 
@@ -100,6 +102,7 @@ static RootCpArgs ParseArgs(const char **args, int nArgs)
    opts.AddFlag({"--recreate"});
    opts.AddFlag({"--replace"});
    opts.AddFlag({"-r", "--recursive"});
+   opts.AddFlag({"-a", "--abort-on-failure"});
    opts.AddFlag({"-h", "--help"});
    opts.AddFlag({"-v"});
    opts.AddFlag({"-vv"});
@@ -124,6 +127,7 @@ static RootCpArgs ParseArgs(const char **args, int nArgs)
    outArgs.fRecursive = opts.GetSwitch("recursive");
    outArgs.fReplace = opts.GetSwitch("replace");
    outArgs.fRecreate = opts.GetSwitch("recreate");
+   outArgs.fAbortOnFailure = opts.GetSwitch("abort-on-failure");
 
    if (opts.GetSwitch("vv"))
       SetLogVerbosity(3);
@@ -143,7 +147,7 @@ static std::unique_ptr<TFile> OpenFile(const char *fileName, const char *mode)
    gErrorIgnoreLevel = kError;
    auto file = std::unique_ptr<TFile>(TFile::Open(fileName, mode));
    if (!file || file->IsZombie()) {
-      Err() << "File " << fileName << "does not exist.\n";
+      Err() << "File `" << fileName << "` does not exist.\n";
       return nullptr;
    }
    gErrorIgnoreLevel = origLv;
@@ -175,7 +179,9 @@ static std::pair<std::string_view, std::string_view> DecomposePath(std::string_v
 
 // Copies `nodeIdx`-th node from `src`'s object tree to the file in `dest`.
 // `nodeIdx` is assumed to be in range.
-static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeIdx_t nodeIdx, const RootCpArgs &args)
+// Returns true if the node was successfully copied.
+[[nodiscard]] static bool
+CopyNode(const RootSource &src, const RootCpDestination &dest, NodeIdx_t nodeIdx, const RootCpArgs &args)
 {
    TFile *srcfile = src.fObjectTree.fFile.get();
    // The file is guaranteed to be valid by ParseRootSource: if this crashes, it's a bug in there.
@@ -208,7 +214,7 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
 
    if (src.fFileName == dest.fFname && srcFullPath == destFullPath) {
       Err() << src.fFileName << ":" << srcFullPath << ": source and destination cannot be the same\n";
-      return;
+      return false;
    }
 
    Info(2) << "cp " << src.fFileName << ":" << srcFullPath << " -> " << dest.fFname << ":" << destFullPath << "\n";
@@ -229,33 +235,33 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
    if (destKey && !TClass::GetClass(destKey->GetClassName())->InheritsFrom("TDirectory") && !args.fReplace) {
       Err() << "an object of type '" << destKey->GetClassName() << "' already exists at " << dest.fFname << ':'
             << destFullPath << ". Use the --replace flag to overwrite existing objects.\n";
-      return;
+      return false;
    }
 
    // retrieve the object's key
    const TDirectory *srcDir = srcfile->GetDirectory(std::string(srcDirPath).c_str(), true);
    if (!srcDir) {
       Err() << "failed to get source directory '" << srcDirPath << "'\n";
-      return;
+      return false;
    }
    const TKey *srcKey = srcDir->GetKey(node.fName.c_str());
    if (!srcKey) {
       Err() << "failed to read key of object '" << srcFullPath << "'\n";
-      return;
+      return false;
    }
 
    // Verify that the class is known and supported.
    const std::string &className = node.fClassName;
    const TClass *cl = TClass::GetClass(className.c_str());
    if (!cl) {
-      Err() << "unknown object type: " << className << "; object will be skipped.\n";
-      return;
+      Err() << "unknown object type: '" << className << "'.\n";
+      return false;
    }
 
    Info(3) << "read object \"" << srcFullPath << "\" of type " << node.fClassName << "\n";
    if (!destDir) {
       Err() << "failed to create or get destination directory \"" << dest.fFname << ":" << destDirPath << "\"\n";
-      return;
+      return false;
    }
 
    // Delete previous object if we're replacing it
@@ -267,19 +273,24 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
    //
    if (cl->InheritsFrom("TObject")) {
       TObject *obj = node.fKey->ReadObj();
-      if (!obj) {
+      if (!obj || obj->IsZombie()) {
          Err() << "failed to read object \"" << srcFullPath << "\".\n";
-         return;
+         return false;
       }
 
       if (TTree *old = dynamic_cast<TTree *>(obj)) {
          // special case for TTree
          TDirectory::TContext ctx(gDirectory, destDir);
          obj = old->CloneTree(-1, "fast");
-         if (dest.fIsNewObject) {
-            static_cast<TTree *>(obj)->SetName(std::string(destBaseName).c_str());
+         if (!obj || obj->IsZombie()) {
+            Err() << "failed to clone tree '" << srcFullPath << "'.\n";
+            return false;
+         } else {
+            if (dest.fIsNewObject) {
+               static_cast<TTree *>(obj)->SetName(std::string(destBaseName).c_str());
+            }
+            obj->Write();
          }
-         obj->Write();
          old->Delete();
       } else if (cl->InheritsFrom("TDirectory")) {
          // directory
@@ -290,8 +301,11 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
             destDir->mkdir(node.fName.c_str(), srcKey->GetTitle(), true);
             RootCpDestination dest2 = dest;
             dest2.fPath = dest.fPath + (dest.fPath.empty() ? "" : "/") + node.fName;
-            for (auto childIdx = node.fFirstChild; childIdx < node.fFirstChild + node.fNChildren; ++childIdx)
-               CopyNode(src, dest2, childIdx, args);
+            for (auto childIdx = node.fFirstChild; childIdx < node.fFirstChild + node.fNChildren; ++childIdx) {
+               if (!CopyNode(src, dest2, childIdx, args) && args.fAbortOnFailure) {
+                  return false;
+               }
+            }
          }
       } else {
          // regular TObject
@@ -301,7 +315,10 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
    } else {
       Warn() << "object '" << node.fName << "' of type '" << node.fClassName
              << "' will not be copied, as its type is currently unsupported by rootcp.\n";
+      return false;
    }
+
+   return true;
 }
 
 int main(int argc, char **argv)
@@ -398,16 +415,28 @@ int main(int argc, char **argv)
    if (args.fCompression)
       destFile->SetCompressionSettings(*args.fCompression);
 
+   const auto DoNodeCopy = [](auto &&src, auto &&dst, auto nodeIdx, auto &&args_) {
+      bool ok = CopyNode(src, dst, nodeIdx, args_);
+      if (ok)
+         return true;
+
+      if (args_.fAbortOnFailure) {
+         Err() << "node failed to be copied. Aborting.\n";
+         return false;
+      } else {
+         Warn() << "node will be skipped. Use --abort-on-failure if you want to abort on failure.\n";
+         return true;
+      }
+   };
+
    const std::uint32_t flags = args.fRecursive * EGetMatchingPathsFlags::kRecursive;
-   bool errors = false;
    for (const auto &[srcFname, srcPattern] : sourcesFileAndPattern) {
       auto src = ROOT::CmdLine::GetMatchingPathsInFile(srcFname, srcPattern, flags);
       if (!src.fErrors.empty()) {
          for (const auto &err : src.fErrors)
             Err() << err << "\n";
 
-         errors = true;
-         break;
+         goto errors;
       }
 
       // We should never register files to the global list for performance reasons.
@@ -418,8 +447,7 @@ int main(int argc, char **argv)
          Err() << "multiple sources were specified but destination path \"" << destFname << ":" << destPath
                << "\" is not a directory.\n";
 
-         errors = true;
-         break;
+         goto errors;
       }
 
       // Iterate all objects we need to copy
@@ -429,24 +457,33 @@ int main(int argc, char **argv)
       dest.fIsNewObject = destIsNewObject;
       dest.fPath = destPath;
       for (auto nodeIdx : src.fObjectTree.fLeafList) {
-         CopyNode(src, dest, nodeIdx, args);
+         if (!DoNodeCopy(src, dest, nodeIdx, args) && args.fAbortOnFailure) {
+            goto errors;
+         }
       }
       for (auto nodeIdx : src.fObjectTree.fDirList) {
          if (nodeIdx == 0) {
-            // The root file node needs special treatment; for all other "top-level" directories, CopyNode handles them.
+            // The root file node needs special treatment; for all other "top-level" directories, CopyNode handles
+            // them.
             const auto &node = src.fObjectTree.fNodes[nodeIdx];
             for (auto childIdx = node.fFirstChild; childIdx < node.fFirstChild + node.fNChildren; ++childIdx)
-               CopyNode(src, dest, childIdx, args);
+               if (!DoNodeCopy(src, dest, childIdx, args) && args.fAbortOnFailure)
+                  goto errors;
          } else {
-            CopyNode(src, dest, nodeIdx, args);
+            if (!DoNodeCopy(src, dest, nodeIdx, args) && args.fAbortOnFailure)
+               goto errors;
          }
       }
    }
 
-   if (errors && !srcIsSameAsDstFile) {
+   // Success.
+   return 0;
+
+errors:
+   if (!srcIsSameAsDstFile) {
       // If the destination file was fresh, make sure we don't end up with a half-copied file in case of errors.
       gSystem->Unlink(std::string(destFname).c_str());
    }
 
-   return errors;
+   return 1;
 }

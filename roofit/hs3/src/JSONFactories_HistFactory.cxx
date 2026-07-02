@@ -765,12 +765,6 @@ std::vector<std::string> splitTopLevelProduct(const std::string &expr)
    return parts;
 }
 
-#include <regex>
-#include <string>
-#include <cctype>
-#include <cstdlib>
-#include <iostream>
-
 NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula)
 {
    static const std::regex pattern(
@@ -1412,8 +1406,7 @@ public:
    {
       std::vector<RooAbsPdf *> constraints;
       RooRealSumPdf *sumpdf = nullptr;
-      for (RooAbsArg *v : prodpdf->pdfList()) {
-         RooAbsPdf *pdf = static_cast<RooAbsPdf *>(v);
+      for (auto *pdf : static_range_cast<RooAbsPdf *>(prodpdf->pdfList())) {
          auto thispdf = dynamic_cast<RooRealSumPdf *>(pdf);
          if (thispdf) {
             if (!sumpdf)

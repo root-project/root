@@ -188,6 +188,17 @@ Cppyy::TCppType_t CPyCppyy::CPPInstance::GetSmartIsA() const
 }
 
 //----------------------------------------------------------------------------
+Cppyy::TCppType_t CPyCppyy::CPPInstance::GetSmartUnderlyingType() const
+{
+// The declared underlying type of the embedded smart pointer (e.g. 'Base' for
+// a std::unique_ptr<Base>). This is independent of any auto-down-cast applied
+// to the dereferenced object, and so is what must be used to decide whether the
+// smart pointer can be passed to a function expecting a particular smart type.
+    if (!IsSmart()) return (Cppyy::TCppType_t)0;
+    return SMART_CLS(this)->fUnderlyingType;
+}
+
+//----------------------------------------------------------------------------
 CPyCppyy::CI_DatamemberCache_t& CPyCppyy::CPPInstance::GetDatamemberCache()
 {
 // Return the cache for expensive data objects (and make extended as necessary)
@@ -1125,12 +1136,7 @@ PyTypeObject CPPInstance_Type = {
 #if PY_VERSION_HEX >= 0x03080000
     , 0                           // tp_vectorcall
 #endif
-#if PY_VERSION_HEX >= 0x030c0000
-    , 0                           // tp_watched
-#endif
-#if PY_VERSION_HEX >= 0x030d0000
-    , 0                           // tp_versions_used
-#endif
+    CPYCPPYY_PYTYPE_TAIL
 };
 
 } // namespace CPyCppyy

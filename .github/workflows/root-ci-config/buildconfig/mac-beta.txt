@@ -22,6 +22,5 @@ check_connection=ON
 cocoa=ON
 davix=OFF
 minuit2_omp=OFF
-r=OFF
 tmva-sofie=OFF
 x11=OFF

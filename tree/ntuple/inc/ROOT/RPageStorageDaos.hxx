@@ -150,30 +150,26 @@ class RPageSourceDaos : public ROOT::Internal::RPageSource {
 private:
    ntuple_index_t fNTupleIndex{0};
 
-   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
 
+   RDaosNTupleAnchor fAnchor;
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   ROOT::Internal::RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
+   void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 protected:
-   void LoadStructureImpl() final {}
-   ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   void LoadStructureImpl() final;
+   ROOT::RNTupleDescriptor AttachImpl() final;
    /// The cloned page source creates a new connection to the pool/container.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
 public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleReadOptions &options);
    ~RPageSourceDaos() override;
-
-   void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;

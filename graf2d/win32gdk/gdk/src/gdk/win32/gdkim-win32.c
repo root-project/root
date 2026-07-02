@@ -291,11 +291,15 @@ gint gdk_mbstowcs(GdkWChar * dest, const gchar * src, gint dest_max)
 
 /* A version that converts to wchar_t wide chars */
 
+/* ROOT's application manifest explicitly declares <activeCodePage>UTF-8</activeCodePage>,
+ * so strings entering the GDK backend are guaranteed to be valid UTF-8.
+ * Use explicit UTF-8 decoding instead of mbstowcs(), which would
+ * misinterpret the UTF-8 byte stream under the system's legacy ANSI code page. */
 gint
 gdk_nmbstowchar_ts(wchar_t * dest,
                    const gchar * src, gint src_len, gint dest_max)
 {
-#if 1
+#if 0
    return mbstowcs(dest, src, src_len);
 #else
    wchar_t *wcp;

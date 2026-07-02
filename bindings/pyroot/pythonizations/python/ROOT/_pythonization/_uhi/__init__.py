@@ -49,11 +49,8 @@ values_func_dict: dict[str, Callable] = {
     "TH1C": _values_by_copy,
     "TH2C": _values_by_copy,
     "TH3C": _values_by_copy,
-    "TH2K": _values_by_copy,
-    "TH3K": _values_by_copy,
     "TProfile": _values_by_copy,
     "TProfile2D": _values_by_copy,
-    "TProfile2Poly": _values_by_copy,
     "TProfile3D": _values_by_copy,
 }
 

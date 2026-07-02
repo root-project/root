@@ -4,8 +4,7 @@
 
 See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumembedded/cef)
 
-1. Current code tested with CEF3 branch 6998, Chromium 134 (April 2025)
-   Some older CEF versions (like 107 or 124) may also be supported.
+1. Current code tested with CEF3 branch 778, Chromium 148 (June 2026)
 
 2. Download binary code from [https://cef-builds.spotifycdn.com/index.html](https://cef-builds.spotifycdn.com/index.html)
    and unpack it in directory without spaces and special symbols:
@@ -13,8 +12,8 @@ See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumem
 ~~~
      $ mkdir /d/cef
      $ cd /d/cef/
-     $ wget https://cef-builds.spotifycdn.com/cef_binary_134.3.9%2Bg5dc6f2f%2Bchromium-134.0.6998.178_linux64_minimal.tar.bz2
-     $ tar xjf cef_binary_134.3.9+g5dc6f2f+chromium-134.0.6998.178_linux64_minimal.tar.bz2
+     $ wget https://cef-builds.spotifycdn.com/cef_binary_148.0.10%2Bg7ee53f5%2Bchromium-148.0.7778.218_linux64.tar.bz2
+     $ tar xjf cef_binary_148.0.10+g7ee53f5+chromium-148.0.7778.218_linux64.tar.bz2
 ~~~
 
 
@@ -24,7 +23,7 @@ See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumem
 4. Compile CEF to produce `libcef_dll_wrapper`:
 
 ~~~
-     $ cd cef_binary_134.3.9+g5dc6f2f+chromium-134.0.6998.178_linux64_minimal
+     $ cd xjf cef_binary_148.0.10+g7ee53f5+chromium-148.0.7778.218_linux64
      $ mkdir build
      $ cd build
      $ cmake ..
@@ -34,13 +33,10 @@ See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumem
 5. Set CEF_ROOT variable to unpacked directory:
 
 ~~~
-     $ export CEF_ROOT=/d/cef/cef_binary_134.3.9+g5dc6f2f+chromium-134.0.6998.178_linux64_minimal
+     $ export CEF_ROOT=/d/cef/xjf cef_binary_148.0.10+g7ee53f5+chromium-148.0.7778.218_linux64
 ~~~
 
-6. When configure ROOT compilation with `cmake -Dwebgui=ON -Dcefweb=ON ...`, CEF_ROOT shell variable should be set appropriately.
-   During compilation library `$ROOTSYS/lib/libROOTCefDisplay.so` and executable `$ROOTSYS/bin/cef_main`
-   should be created. Also check that several files like `icudtl.dat`, `v8_context_snapshot_blob.bin`, `snapshot_blob.bin`
-   copied into ROOT library directory
+6. When configure ROOT compilation with `cmake -Dwebgui=ON -Dcefweb=ON ...`, CEF_ROOT shell variable should be set appropriately. During compilation library `$ROOTSYS/lib/libROOTCefDisplay.so` and executable `$ROOTSYS/bin/cef_main` should be created. Also check that several files like `icudtl.dat`, `v8_context_snapshot_blob.bin`, `snapshot_blob.bin` copied into ROOT library directory
 
 7. Run ROOT with `--web=cef` argument to use CEF web display like:
 
@@ -51,7 +47,7 @@ See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumem
 
 ## Compile libcef_dll_wrapper on Windows
 
-1. Download binary win32 build like https://cef-builds.spotifycdn.com/cef_binary_95.7.12%2Bg99c4ac0%2Bchromium-95.0.4638.54_windows32.tar.bz2
+1. Download binary win32 build like [win64](https://cef-builds.spotifycdn.com/cef_binary_148.0.10%2Bg7ee53f5%2Bchromium-148.0.7778.218_windows64.tar.bz2)
 
 2. Extract in directory without spaces like `C:\Soft\cef`
 
@@ -62,45 +58,18 @@ See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumem
    $ cd C:\Soft\cef
    $ mkdir build
    $ cd build
-   $ cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 ..
+   $ cmake ..
    $ cmake --build . --config Release --target libcef_dll_wrapper
 ~~~
 
 5. Before compiling ROOT, `set CEF_ROOT=C:\Soft\cef` variable
 
 
-## Using plain CEF in ROOT batch mode on Linux
+## Using plain CEF in ROOT batch mode on Linux and Windows
 
-Default CEF builds, provided by [https://cef-builds.spotifycdn.com/index.html](https://cef-builds.spotifycdn.com/index.html), do
-not include support of Ozone framework, which the only support headless mode in CEF. To run ROOT in headless (or batch) made with such CEF distribution,
-one can use `Xvfb` server. Most simple way is to use `xvfb-run` utility like:
+Default CEF builds, provided by [https://cef-builds.spotifycdn.com/index.html](https://cef-builds.spotifycdn.com/index.html), now (June 2026) **INCLUDES!** support of Ozone framework, which allows to run CEF in headless mode on Linux and Windows. So one can run different ROOT macros and tests in batch mode like
 
 ~~~
-      $ xvfb-run --server-args='-screen 0, 1024x768x16'  root.exe --web=cef $ROOTSYS/tutorials/experimental/rcanvas/rline.cxx -q
+      $ cd $ROOTSYS/test
+      $ ./stressGraphics -b --web=cef
 ~~~
-
-Or run `Xvfb` before starting ROOT:
-
-~~~
-     $ Xvfb :99 &
-     $ export DISPLAY=:99
-     $ root.exe --web=cef $ROOTSYS/tutorials/experimental/rcanvas/rline.cxx -q
-~~~
-
-
-## Compile CEF with ozone support
-
-Since March 2019 one can compile [CEF without X11](https://bitbucket.org/chromiumembedded/cef/issues/2296/), but such builds not provided.
-Therefore to be able to use real headless mode in CEF, one should compile it from sources.
-On [CEF build tutorial](https://bitbucket.org/chromiumembedded/cef/wiki/AutomatedBuildSetup.md) one can find complete compilation documentation.
-Several Ubuntu distributions are supported by CEF, all others may require extra work. Once all depndencies are installed, CEF with ozone support can be compiled with following commands:
-
-~~~
-   $ export GN_DEFINES="is_official_build=true use_sysroot=true use_allocator=none symbol_level=1 is_cfi=false use_thin_lto=false use_ozone=true"
-   $ python automate-git.py --download-dir=/home/user/cef --branch=4638 --minimal-distrib --client-distrib --force-clean --x64-build --build-target=cefsimple
-~~~
-
-With little luck one get prepared tarballs in `/home/user/cef/chromium/src/cef/binary_distrib`.
-Just install it in the same way as described before in this document.
-ROOT will automatically detect that CEF build with `ozone` support and will use it for both interactive and headless modes.
-

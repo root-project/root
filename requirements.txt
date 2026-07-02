@@ -17,6 +17,9 @@ tensorflow ; python_version < "3.14"
 torch
 xgboost
 
+# RDataLoader
+jax
+
 # PyROOT: ROOT.Numba.Declare decorator
 numba
 cffi
@@ -44,3 +47,4 @@ mplhep
 nbconvert>=7.4.0
 pytest
 setuptools
+jsonschema # for RooFit HS3 validation (using HS3TestSuite)

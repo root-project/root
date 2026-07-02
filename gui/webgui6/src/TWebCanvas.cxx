@@ -1922,7 +1922,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          int filelen = -1;
 
-         if (filename.Index(".svg") != kNPOS) {
+         if ((filename.Index(".svg") != kNPOS) || (filename.Index(".html") != kNPOS)) {
             // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
             ofs << img;
             filelen = strlen(img);
@@ -2621,7 +2621,7 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png")))
+   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "html") || (fmt == "s.png")))
       return ROOT::RWebDisplayHandle::ProduceImage(fname.Data(), json.Data(), width, height);
 
    if (append_batch) {

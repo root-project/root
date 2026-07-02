@@ -382,9 +382,9 @@ std::string listVars(std::vector<std::string> const &alist, std::vector<bool> co
 std::string declareVarSpans(std::vector<std::string> const &alist)
 {
    std::stringstream ss;
-   for (std::size_t i = 0; i < alist.size(); ++i) {
+   for (auto const &elem : alist) {
       ss << "   "
-         << "std::span<const double> " << alist[i] << "Span = ctx.at(" << alist[i] << ");\n";
+         << "std::span<const double> " << elem << "Span = ctx.at(" << elem << ");\n";
    }
    return ss.str();
 }

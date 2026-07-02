@@ -435,3 +435,21 @@ TEST_F(TClingTests, UndeclaredIdentifierCrash)
    diagRAII.requiredDiag(kError, "cling", expectedError, false);
    gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
 }
+
+// https://github.com/root-project/root/issues/15818
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+TEST_F(TClingTests, VeryLongExpression)
+{
+   std::string expression = R"(
+namespace R_rdf {
+auto func0(const int var0){return var0 )";
+   for (unsigned short  i = 0; i < 4096; ++i)
+      expression += "+ var0 ";
+   expression += R"( > 0
+;}
+using func0_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(func0)>::ret_type;
+})";
+   auto res = gInterpreter->Declare(expression.c_str());
+   EXPECT_TRUE(res);
+}
+#endif

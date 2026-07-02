@@ -54,8 +54,8 @@ model_ctl = ROOT.RooAddPdf("model_ctl", "model_ctl", [gx_ctl, px_ctl], [f_ctl])
 # ---------------------------------------------------------------
 
 # Generate 1000 events in x and y from model
-data = model.generate({x}, 1000)
-data_ctl = model_ctl.generate({x}, 2000)
+data = model.generate(x, 1000)
+data_ctl = model_ctl.generate(x, 2000)
 
 # Create index category and join samples
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ sample.defineType("control")
 combData = ROOT.RooDataSet(
     "combData",
     "combined data",
-    {x},
+    x,
     Index=sample,
     Import={"physics": data, "control": data_ctl},
 )

@@ -229,6 +229,7 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 
 from __future__ import annotations
 
+import warnings
 from typing import Iterable, Optional
 
 from . import pythonization
@@ -296,6 +297,15 @@ def RDataFrameAsNumpy(
     result_ptrs = {}
     for column in columns:
         column_type = df.GetColumnType(column)
+        if column_type == "char":
+            column_type = "unsigned char"
+            warnings.warn(
+                f"RDataFrame.AsNumpy: column '{column}' has type 'char', which would be automatically converted to a "
+                "Python string. Interpreting as 'unsigned char' instead, which results in a numpy array of dtype uint8. "
+                "If you use this column for numeric values, consider migrating this column to a type other than 'char', "
+                "which is usually used for text. For example, migrate to 'signed char' or 'unsigned char' or, "
+                "preferrably, 'std::int8_t' or 'std::uint8_t'."
+            )
 
         # If the column type is a class, make sure cling knows about it
         tclass = ROOT.TClass.GetClass(column_type)

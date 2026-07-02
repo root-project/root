@@ -31,11 +31,12 @@ const char* __asan_default_options() {
          ":detect_container_overflow=1"
          ":alloc_dealloc_mismatch=0"
          DETECT_LEAKS
-         ":verify_asan_link_order=0";
+         ":verify_asan_link_order=0"
+         ":halt_on_error=0";
 }
 
 /// Default options when leak sanitizer starts up in ROOT executables.
-/// This is relevant when ROOT's build options `asan` is on.
+/// This is relevant when ROOT's build option `asan` is on.
 /// These can be overridden / augmented by the LSAN_OPTIONS environment variable.
 /// Using LSAN_OPTIONS=help=1 and starting an instrumented ROOT executable, available options will be printed.
 const char* __lsan_default_options() {

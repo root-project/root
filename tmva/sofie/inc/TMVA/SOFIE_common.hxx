@@ -312,49 +312,12 @@ public:
       return static_cast<T const *>(fData.get());
    }
 
-   void CastSharedToPersistent()
-   {
-      // We only calculate fSize here, because it is only used for IO to know
-      // the size of the persistent data.
-      fSize = 1;
-      for (std::size_t item : fShape) {
-         fSize *= static_cast<int>(item);
-      }
-      // get size in bytes
-      fSize *= GetTypeSize(fType);
-      fPersistentData = static_cast<char *>(fData.get());
-   }
-   void CastPersistentToShared()
-   {
-      // If there is no persistent data, do nothing
-      if (fSize == 0 || fPersistentData == nullptr) {
-         return;
-      }
-
-      // Nothing to be done if the pointed-to data is the same
-      if (fPersistentData == static_cast<char *>(fData.get())) {
-         return;
-      }
-
-      // Initialize the shared_ptr
-      fData = std::shared_ptr<void>{malloc(fSize), free};
-      std::memcpy(fData.get(), fPersistentData, fSize);
-
-      // Make sure the data read from disk doesn't leak and delete the
-      // persistent data
-      delete[] fPersistentData;
-      fPersistentData = nullptr;
-      fSize = 0;
-   }
-
 private:
    bool  fConstant = false;      ///< Flag specifying if tensor is a Constant one (coming from a Constant operator)
    bool  fIsNotWritable = false; ///< Flag to indicate that tensor values do not need to be written as weight or generated code
    ETensorType fType;               ///< Encodes the type of the data
    std::vector<std::size_t> fShape; ///< The shape of the data in terms of elements in each dimension
    std::shared_ptr<void> fData;     ///<! Transient shared data
-   int fSize = 0;                   ///< The size of the persistent data in bytes (not number of elements!)
-   char *fPersistentData = nullptr; ///<[fSize] Persistent version of the data
 };
 
 template <typename T>

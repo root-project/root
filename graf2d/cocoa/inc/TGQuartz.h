@@ -95,10 +95,6 @@ public:
 
 private:
 
-   //Unfortunately, I have to convert from
-   //top-left to bottom-left corner system.
-   std::vector<TPoint> fConvertedPoints;
-
    //Lines with AA can be quite different
    //from what we always had with X11.
    //Now this is a switch in our configuration file (system.rootrc),

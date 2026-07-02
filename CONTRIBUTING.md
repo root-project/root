@@ -4,7 +4,7 @@ Thank you for your interest in contributing to ROOT!  We strongly welcome and ap
 This short guide tries to make contributing as quick and painless as possible.
 
 > [!NOTE]
-> These guidelines should be applicable to most contributes. At the same time, these are not 'one-size-fits-all' rules,
+> These guidelines should be applicable to most contributions. At the same time, these are not 'one-size-fits-all' rules,
 > and there might be cases where diverging from these guidelines is warranted. If you are unsure about how to structure
 > your contribution, don't hesitate to reach out! We are always happy to provide help and feedback.
 
@@ -43,11 +43,11 @@ This allows us to revert changes when needed, without affecting anything else.
 
 > [!TIP]
 > Enable the CMake build option `dev=ON` to enable extra checks that are normally off. Most notably, this will turn
-> compiler warnings into errors, preventing you from accidentally push code that causes warnings.
+> compiler warnings into errors, preventing you from accidentally pushing code that causes warnings.
 
 ### Your Commit Message
 
-The commit summary (i.e. the first line of the commit message) should be preceded by the a tag indicating the scope of
+The commit summary (i.e. the first line of the commit message) should be preceded by a tag indicating the scope of
 ROOT that is affected by your commit, in square brackets. Most tags are self-describing (e.g., `[tree]` indicates a
 change to TTree, `[RF]` indicates a change to RooFit). If you are unsure about which scope tags to use, we are happy to
 point you in the right direction! See also the [commit log](https://github.com/root-project/root/commits/master/) for
@@ -93,6 +93,10 @@ Once a PR is created, a member of the ROOT team will review it as quickly as pos
 ROOT community, it may be beneficial to add a suggested reviewer to the PR in order to get quicker attention.
 Please ping people :wave: should you not get timely feedback, for instance with `@root-project/core ping!`
 
+> [!IMPORTANT]
+> For compatibility with our CI, you should create your PR with a **branch name different from `master`**.
+> The branch name should ideally reflect the work being done in the PR, but this is not a hard requirement.
+
 ## Tests
 
 As you contribute code, this code will likely fix an issue or add a feature.
@@ -132,3 +136,19 @@ Some tests are run only outside the PR testing system:
 we might come back to you with additional reports after your contribution was merged.
 
 Thank you for reading this; and even more: thank you :bouquet: for considering to contribute!
+
+## AI-assisted coding disclosure
+
+Contributors are required to disclose whether the proposed changes (code or otherwise) were, in part or completely, automatically generated
+by an LLM / "AI agent".
+
+The changes must in all cases have been *thoroughly reviewed and understood* by the contributor, who has full responsibility over them.
+
+Please avoid proposing LLM-generated changes as-is without a full review and understanding, as this disrespects
+the reviewers' time and may cause your future contributions to be automatically rejected if reiterated.
+
+Likewise, PR comments and any sort of engagement with other contributors must not be parroting LLMs or chatbots.
+At the reviewers' discretion, PRs suspected to contain low-effort copy-pasting from LLM tools may be closed.
+
+In short, a tacit agreement of mutual respect is expected from all parties involved.
+

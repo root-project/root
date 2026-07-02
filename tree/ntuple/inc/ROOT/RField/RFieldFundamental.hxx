@@ -28,13 +28,6 @@
 #include <type_traits>
 
 namespace ROOT {
-namespace Experimental {
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
-
-} // namespace Experimental
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for concrete C++ fundamental types
@@ -399,11 +392,11 @@ protected:
             fAvailableColumns.emplace_back(ROOT::Internal::RColumn::Create<T>(onDiskTypes[0], 0, representationIndex));
          if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Trunc) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
-            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[representationIndex]);
             column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
          } else if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Quant) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
-            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[representationIndex]);
             assert(coldesc.GetValueRange().has_value());
             const auto [valMin, valMax] = *coldesc.GetValueRange();
             column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
@@ -419,14 +412,13 @@ protected:
       fPrincipalColumn = fAvailableColumns[0].get();
    }
 
-   ~RRealField() override = default;
-
 public:
    using Base::SetColumnRepresentatives;
 
    RRealField(std::string_view name, std::string_view typeName) : RSimpleField<T>(name, typeName) {}
    RRealField(RRealField &&other) = default;
    RRealField &operator=(RRealField &&other) = default;
+   ~RRealField() override = default;
 
    /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
    /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.

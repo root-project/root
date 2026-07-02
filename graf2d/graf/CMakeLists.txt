@@ -96,6 +96,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     Matrix
     MathCore
     RIO
-  BUILTINS
-    FREETYPE
 )

@@ -768,6 +768,12 @@ public:
    /// All known feature flags.
    /// Note that the flag values represent the bit _index_, not the already-bitshifted integer.
    enum EFeatureFlags {
+      /// Signals that the RNTuple contains at least one deferred column that is part of a collection and was extended
+      /// (i.e. it appears in the footer). This can happen when merging two RNTuples that have the same collection field
+      /// backed by columns with different encoding, e.g. a vector<float> whose elements are represented by SplitReal32
+      /// in the first ntuple and by Real32 in the second.
+      /// Added in version 1.1.0.0 of the binary format.
+      kFeatureFlag_NestedDeferredColumns = 0,
       // Insert new feature flags here, with contiguous values. If at any point a "hole" appears in the valid feature
       // flags values, the check in RNTupleSerialize must be updated.
 
@@ -1763,7 +1769,7 @@ public:
                    std::uint16_t versionPatch);
    void SetVersionForWriting();
 
-   void SetNTuple(const std::string_view name, const std::string_view description);
+   void SetNTuple(std::string_view name, std::string_view description);
    /// Sets the `flag`-th bit of the feature flag to 1.
    /// Note that `flag` itself is not a bitmask, just the bit index of the flag to enable.
    void SetFeature(unsigned int flag);

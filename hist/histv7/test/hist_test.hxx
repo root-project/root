@@ -14,6 +14,7 @@
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RHistFillContext.hxx>
 #include <ROOT/RHistStats.hxx>
+#include <ROOT/RProfile.hxx>
 #include <ROOT/RRegularAxis.hxx>
 #include <ROOT/RSliceBinIndexMapper.hxx>
 #include <ROOT/RSliceSpec.hxx>
@@ -31,6 +32,7 @@ using ROOT::Experimental::RHistAutoAxisFiller;
 using ROOT::Experimental::RHistConcurrentFiller;
 using ROOT::Experimental::RHistEngine;
 using ROOT::Experimental::RHistStats;
+using ROOT::Experimental::RProfile;
 using ROOT::Experimental::RRegularAxis;
 using ROOT::Experimental::RSliceSpec;
 using ROOT::Experimental::RVariableBinAxis;
@@ -45,10 +47,33 @@ using ROOT::Experimental::Internal::RSliceBinIndexMapper;
 #include <thread>
 #include <vector>
 
+class CopyArgument final {
+   static int gCopies;
+
+   double fArgument;
+
+public:
+   CopyArgument(double argument) : fArgument(argument) {}
+   CopyArgument(const CopyArgument &) { gCopies++; }
+   CopyArgument(CopyArgument &&) = default;
+   CopyArgument &operator=(const CopyArgument &)
+   {
+      gCopies++;
+      return *this;
+   }
+   CopyArgument &operator=(CopyArgument &&) = default;
+
+   operator double() const { return fArgument; }
+
+   static bool HasBeenCopied() { return gCopies > 0; }
+};
+
+int CopyArgument::gCopies = 0;
+
 template <typename Work>
 void StressInParallel(std::size_t nThreads, Work &&w)
 {
-   std::atomic<bool> flag;
+   std::atomic<bool> flag = false;
 
    std::vector<std::thread> threads;
    for (std::size_t i = 0; i < nThreads; i++) {

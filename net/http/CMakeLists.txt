@@ -63,7 +63,7 @@ if(builtin_civetweb)
    target_include_directories(RHTTP PRIVATE civetweb)
 
   if(ssl)
-    target_include_directories(RHTTP SYSTEM PRIVATE ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries(RHTTP PRIVATE OpenSSL::SSL)
   endif()
 
   target_compile_definitions(RHTTP PRIVATE -DUSE_WEBSOCKET)

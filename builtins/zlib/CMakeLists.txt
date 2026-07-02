@@ -74,3 +74,9 @@ set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} PARENT_SCOPE)
 set(ZLIB_LIBRARIES ${ROOT_ZLIB_LIBRARY} PARENT_SCOPE)
 set(ZLIB_FOUND TRUE PARENT_SCOPE)
 set(ZLIB_VERSION ${ROOT_ZLIB_VERSION} PARENT_SCOPE)
+
+# The following variables can be set by users to override the behaviour of FindZLIB.cmake,
+# so packages executing their own find_package(ZLIB) will find the builtin library.
+# We use this to direct the zlib search of FindPNG to the builtin.
+set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR} PARENT_SCOPE)
+set(ZLIB_LIBRARY ${ROOT_ZLIB_LIBRARY} PARENT_SCOPE)

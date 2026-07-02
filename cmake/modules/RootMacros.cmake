@@ -198,13 +198,20 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+  elseif(TARGET ROOT::genreflex)
+    set(ROOT_genreflex_CMD $<TARGET_FILE:ROOT::genreflex>)
+  else()
+    set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
+  endif()
   add_custom_command(
-    OUTPUT ${gensrcdict} ${rootmapname}
     COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          ${ARG_OPTIONS}
          "-I$<JOIN:$<REMOVE_DUPLICATES:$<FILTER:${include_dirs},EXCLUDE,^$>>,;-I>"
          "$<$<BOOL:$<JOIN:${definitions},>>:-D$<JOIN:${definitions},;-D>>"
+    OUTPUT ${gensrcdict} ${rootmapname}
     DEPENDS ${headerfiles} ${selectionfile} ${ARG_DEPENDS}
 
     COMMAND_EXPAND_LISTS
@@ -616,22 +623,17 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
-      if(NOT TARGET G__${dep})
-        # This is a library that doesn't come with dictionary/pcm
-        continue()
-      endif()
-
+      # Whether <dep> provides a dictionary/pcm is decided at generation time
+      # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
+      # dependency below are independent of configuration order and expand to
+      # nothing for a dictionary-less library.
+      set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
-        if(TARGET ${dep})
-          get_target_property(_dep_pcm_filename ${dep} ROOT_PCM_FILENAME)
-          if(_dep_pcm_filename)
-            list(APPEND pcm_dependencies ${_dep_pcm_filename})
-          endif()
-        endif()
+        list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
       endif()
-      set(newargs ${newargs} -m  ${dependent_pcm})
+      set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
     endforeach()
   endif()
 
@@ -2748,8 +2750,6 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   else()
     set(CMAKE_ROOTTEST_NOROOTMAP OFF)
   endif()
-
-  set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
 
   ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictionary})
 

@@ -262,19 +262,20 @@ Int_t TH2::BufferEmpty(Int_t action)
 
    const bool xbinAuto = fXaxis.GetXmax() <= fXaxis.GetXmin();
    const bool ybinAuto = fYaxis.GetXmax() <= fYaxis.GetXmin();
-   if (CanExtendAllAxes() || xbinAuto || ybinAuto) {
+   const bool extend = CanExtendAllAxes();
+   if (extend || xbinAuto || ybinAuto) {
       //find min, max of entries in buffer
-      Double_t xmin = xbinAuto ? fBuffer[2] : fXaxis.GetXmin();
-      Double_t xmax = xbinAuto ? xmin : fXaxis.GetXmax();
-      Double_t ymin = ybinAuto ? fBuffer[3] :  fYaxis.GetXmin();
-      Double_t ymax = ybinAuto ? ymin : fYaxis.GetXmax();
+      Double_t xmin = xbinAuto || extend ? fBuffer[2] : fXaxis.GetXmin();
+      Double_t xmax = xbinAuto || extend ? xmin : fXaxis.GetXmax();
+      Double_t ymin = ybinAuto || extend ? fBuffer[3] :  fYaxis.GetXmin();
+      Double_t ymax = ybinAuto || extend ? ymin : fYaxis.GetXmax();
       for (Int_t i=1;i<nbentries;i++) {
-         if (CanExtendAllAxes() || xbinAuto) {
+         if (extend || xbinAuto) {
             Double_t x = fBuffer[3*i+2];
             if (x < xmin) xmin = x;
             if (x > xmax) xmax = x;
          }
-         if (CanExtendAllAxes() || ybinAuto) {
+         if (extend || ybinAuto) {
             Double_t y = fBuffer[3*i+3];
             if (y < ymin) ymin = y;
             if (y > ymax) ymax = y;

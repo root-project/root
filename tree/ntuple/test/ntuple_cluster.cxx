@@ -39,9 +39,10 @@ namespace {
 class RPageSourceMock : public RPageSource {
 protected:
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
+   RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
+   void LoadPageListImpl(const ROOT::RNTupleLocator &, unsigned char *) final {}
+   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
    void LoadStreamerInfo() final {}
    std::unique_ptr<ROOT::Internal::RPageSource>
    OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
@@ -75,7 +76,6 @@ public:
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
-   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {
       std::vector<std::unique_ptr<RCluster>> result;

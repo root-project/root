@@ -14,10 +14,11 @@ if(WIN32)
   return()
 endif()
 
-# curl is required for tests
+# curl and gunzip are required for tests
 find_program(CURL_EXECUTABLE curl)
+find_program(GUNZIP_EXECUTABLE gunzip)
 
-if(NOT CURL_EXECUTABLE)
+if(NOT CURL_EXECUTABLE OR NOT GUNZIP_EXECUTABLE)
   return()
 endif()
 
@@ -29,6 +30,13 @@ execute_process(
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
+if(ssl)
+  find_program(OPENSSL_EXECUTABLE openssl)
+  if(OPENSSL_EXECUTABLE)
+    ROOT_ADD_GTEST(testHttpsServer test_ssl_server.cxx LIBRARIES RHTTP RHTTPSniff Hist)
+  endif()
+endif()
 
 # only newer curl support websockets - so test version
 # curl introduce support from 8.11 but it works reliably only with 8.18

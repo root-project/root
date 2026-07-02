@@ -13,6 +13,7 @@
 #ifndef ROOT_RFieldBase
 #define ROOT_RFieldBase
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RCreateFieldOptions.hxx>
 #include <ROOT/RError.hxx>
@@ -21,6 +22,7 @@
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -107,12 +109,23 @@ protected:
    /// The deleter is operational without the field object and thus can be used to destruct/release a value after
    /// the field has been destructed.
    class RDeleter {
+      std::size_t fAlignment;
+      void DeleteAligned(void *objPtr) const; // outlined to make Windows happy
+
    public:
+      explicit RDeleter(std::size_t align) : fAlignment(align) { assert(Internal::IsValidAlignment(align)); }
       virtual ~RDeleter() = default;
       virtual void operator()(void *objPtr, bool dtorOnly)
       {
-         if (!dtorOnly)
+         if (dtorOnly)
+            return;
+
+         // Match operator new in RFieldBase::CreateObjectRawPtr()
+         if (fAlignment <= sizeof(std::max_align_t)) {
             operator delete(objPtr);
+         } else {
+            DeleteAligned(objPtr);
+         }
       }
    };
 
@@ -120,6 +133,7 @@ protected:
    template <typename T>
    class RTypedDeleter : public RDeleter {
    public:
+      RTypedDeleter() : RDeleter(alignof(T)) {}
       void operator()(void *objPtr, bool dtorOnly) final
       {
          std::destroy_at(static_cast<T *>(objPtr));
@@ -246,14 +260,15 @@ private:
          func(target);
    }
 
-   /// Translate an entry index to a column element index of the principal column and vice versa. These functions
-   /// take into account the role and number of repetitions on each level of the field hierarchy as follows:
+   /// Translate an entry index to a column element index of the principal column. This function
+   /// takes into account the role and number of repetitions on each level of the field hierarchy as follows:
    /// - Top level fields: element index == entry index
    /// - Record fields propagate their principal column index to the principal columns of direct descendant fields
    /// - Collection and variant fields set the principal column index of their children to 0
    ///
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
-   /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the innermost field.
+   /// field with type `std::array<std::array<float, 4>, 2>`, this function called with `globalIndex == 1`
+   /// returns 8 for the innermost field.
    ROOT::NTupleSize_t EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const;
 
    /// Flushes data from active columns
@@ -421,7 +436,7 @@ protected:
 
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' CreateValue().
    virtual void ConstructValue(void *where) const = 0;
-   virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(); }
+   virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(GetAlignment()); }
    /// Allow derived classes to call ConstructValue(void *) and GetDeleter() on other (sub)fields.
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
@@ -497,7 +512,7 @@ protected:
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
    /// Returns an index that can be used to remove the callback.
-   size_t AddReadCallback(ReadCallback_t func);
+   size_t AddReadCallback(const ReadCallback_t &func);
    void RemoveReadCallback(size_t idx);
 
    // Perform housekeeping tasks for global to cluster-local index translation
@@ -604,6 +619,8 @@ public:
    ///    auto ptr = field->CreateObject();
    ///    delete ptr.release();
    /// ~~~
+   /// Over-aligned types need to delete the returned pointer using the delete operator overload that specifies the
+   /// type's alignment.
    ///
    /// Note that CreateObject<void>() is supported. The returned `unique_ptr` has a custom deleter that reports an error
    /// if it is called. The intended use of the returned `unique_ptr<void>` is to call `release()`. In this way, the
@@ -623,10 +640,9 @@ public:
    /// correct `std::variant` or all the elements of a collection. The default implementation assumes no subvalues
    /// and returns an empty vector.
    virtual std::vector<RValue> SplitValue(const RValue &value) const;
-   /// The number of bytes taken by a value of the appropriate type
+   /// What sizeof(T) for this type returns
    virtual size_t GetValueSize() const = 0;
-   /// As a rule of thumb, the alignment is equal to the size of the type. There are, however, various exceptions
-   /// to this rule depending on OS and CPU architecture. So enforce the alignment to be explicitly spelled out.
+   /// What alignof(T) for this type returns
    virtual size_t GetAlignment() const = 0;
    std::uint32_t GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
@@ -763,7 +779,7 @@ private:
    std::shared_ptr<void> fObjPtr;
    mutable std::atomic<const std::type_info *> fTypeInfo = nullptr;
 
-   RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
+   RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(std::move(objPtr)) {}
 
 public:
    RValue(const RValue &other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
@@ -775,7 +791,7 @@ public:
       fTypeInfo = nullptr;
       return *this;
    }
-   RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue(RValue &&other) : fField(other.fField), fObjPtr(std::move(other.fObjPtr)) {}
    RValue &operator=(RValue &&other)
    {
       fField = other.fField;
@@ -814,7 +830,7 @@ public:
    void Read(ROOT::NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
    void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
 
-   void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
+   void Bind(std::shared_ptr<void> objPtr) { fObjPtr = std::move(objPtr); }
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
    void EmplaceNew() { fObjPtr = fField->CreateValue().GetPtr<void>(); }

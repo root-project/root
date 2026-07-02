@@ -475,6 +475,10 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
       assert(!fIterStack.empty());
       const std::size_t nesting = fIterStack.size() - 1;
 
+      // Skip key if it's the root dir itself
+      if (isDir && fullPath == fPattern)
+         continue;
+
       // Skip key if it's not a child of root dir
       if (!ROOT::StartsWith(fullPath, fPattern))
          continue;

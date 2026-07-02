@@ -201,6 +201,28 @@ public:
    std::uint64_t GetLocation() const { return fLocation; }
 };
 
+/// RNTupleLocator payload for the kTypeMulti locator (type 0x03). Used by storage
+/// backends that pack multiple pages into shared objects (e.g., S3 Mode A). The two
+/// 32-bit fields are written to disk as separate integers, so the on-disk layout is
+/// directly interpretable without any bit unpacking.
+class RNTupleLocatorMulti {
+private:
+   std::uint32_t fObjectId = 0;
+   std::uint32_t fOffset = 0;
+
+public:
+   RNTupleLocatorMulti() = default;
+   RNTupleLocatorMulti(std::uint32_t objectId, std::uint32_t offset) : fObjectId(objectId), fOffset(offset) {}
+
+   bool operator==(const RNTupleLocatorMulti &other) const
+   {
+      return fObjectId == other.fObjectId && fOffset == other.fOffset;
+   }
+
+   std::uint32_t GetObjectId() const { return fObjectId; }
+   std::uint32_t GetOffset() const { return fOffset; }
+};
+
 // Workaround missing return type overloading
 class RNTupleLocator;
 namespace Internal {
@@ -216,6 +238,11 @@ template <>
 struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
    static RNTupleLocatorObject64 Get(const RNTupleLocator &loc);
 };
+
+template <>
+struct RNTupleLocatorHelper<RNTupleLocatorMulti> {
+   static RNTupleLocatorMulti Get(const RNTupleLocator &loc);
+};
 } // namespace Internal
 
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
@@ -226,6 +253,7 @@ struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
 class RNTupleLocator {
    friend struct Internal::RNTupleLocatorHelper<std::uint64_t>;
    friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorObject64>;
+   friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorMulti>;
 
 public:
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
@@ -234,8 +262,9 @@ public:
       // The kTypeFile locator may translate to an on-disk standard locator (type 0x00) or a large locator (type 0x01),
       // if the size of the referenced data block is >2GB
       kTypeFile = 0x00,
-      kTypeDAOS = 0x02,
-      kTypeS3 = 0x03,
+      // The following locators are experimental and are not defined in the binary format specification.
+      kTypeObject64 = 0x02,
+      kTypeMulti = 0x03,
 
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
@@ -249,7 +278,7 @@ private:
    static constexpr std::uint64_t kMaskType = 0x07ULL << 61;
    static constexpr std::uint64_t kMaskReservedBit = 1ull << 60;
 
-   /// To save memory, we use the most significant bits to store the locator type (file, DAOS, zero page,
+   /// To save memory, we use the most significant bits to store the locator type (file, Object64, zero page,
    /// unkown, kTestLocatorType) as well as one "reserved bit" that can be used in future locators.
    /// Consequently, we can only store sizes up to 60 bits (1 EB), which in practice won't be an issue.
    std::uint64_t fFlagsAndNBytes = 0;
@@ -276,7 +305,8 @@ public:
    void SetType(ELocatorType type);
    void SetReserved(std::uint8_t reserved);
 
-   /// Note that for GetPosition() / SetPosition(), the locator type must correspond (kTypeFile, kTypeDAOS).
+   /// Note that for GetPosition() / SetPosition(), the locator type must correspond
+   /// (kTypeFile, kTypeObject64, ...).
 
    template <typename T>
    T GetPosition() const
@@ -286,6 +316,7 @@ public:
 
    void SetPosition(std::uint64_t position);
    void SetPosition(RNTupleLocatorObject64 position);
+   void SetPosition(RNTupleLocatorMulti position);
 };
 
 namespace Internal {

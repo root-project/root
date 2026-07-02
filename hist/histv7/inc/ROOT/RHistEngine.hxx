@@ -17,9 +17,12 @@
 #include "RWeight.hxx"
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <initializer_list>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -73,6 +76,8 @@ class RHistEngine final {
 
    // For slicing, RHist needs to call SliceImpl.
    friend class RHist<BinContentType>;
+
+   friend class RProfile;
 
    /// The axis configuration for this histogram. Relevant methods are forwarded from the public interface.
    Internal::RAxes fAxes;
@@ -406,6 +411,27 @@ public:
       }
    }
 
+   /// \}
+   // End the group to ensure that all contained member functions are public.
+
+private:
+   // Also used by RProfile::Fill(const A &...args) - similar to the variadic RHistEngine::Fill(const A &...args) below,
+   // is has all arguments in the forwarded std::tuple and needs to explicitly specify how many of them should be used
+   // by RAxes::ComputeGlobalIndexImpl<N>(args).
+   template <std::size_t N, typename... A, typename W>
+   void FillImpl(const std::tuple<A...> &args, const W &weight)
+   {
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         fBinContents[index.fIndex] += weight;
+      }
+   }
+
+public:
+   /// \name Filling
+   /// \{
+
    /// Fill an entry into the histogram with a user-defined weight.
    ///
    /// This overload is only available for user-defined bin content types.
@@ -429,11 +455,7 @@ public:
       if (sizeof...(A) != GetNDimensions()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
-      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
-      if (index.fValid) {
-         assert(index.fIndex < fBinContents.size());
-         fBinContents[index.fIndex] += weight;
-      }
+      FillImpl<sizeof...(A)>(args, weight);
    }
 
    /// Fill an entry into the histogram.
@@ -469,7 +491,7 @@ public:
          if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
             static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
             static constexpr std::size_t N = sizeof...(A) - 1;
-            if (N != fAxes.GetNDimensions()) {
+            if (N != GetNDimensions()) {
                throw std::invalid_argument("invalid number of arguments to Fill");
             }
             RWeight weight = std::get<N>(t);
@@ -499,7 +521,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicInc(&fBinContents[index.fIndex]);
+         Internal::AtomicIncRelease(&fBinContents[index.fIndex]);
       }
    }
 
@@ -523,7 +545,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+         Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight.fValue);
       }
    }
 
@@ -548,7 +570,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicAdd(&fBinContents[index.fIndex], weight);
+         Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight);
       }
    }
 
@@ -565,14 +587,14 @@ public:
          if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
             static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
             static constexpr std::size_t N = sizeof...(A) - 1;
-            if (N != fAxes.GetNDimensions()) {
+            if (N != GetNDimensions()) {
                throw std::invalid_argument("invalid number of arguments to Fill");
             }
             RWeight weight = std::get<N>(t);
             RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
             if (index.fValid) {
                assert(index.fIndex < fBinContents.size());
-               Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+               Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight.fValue);
             }
          } else {
             FillAtomic(t);
@@ -809,6 +831,47 @@ public:
    {
       std::vector<RSliceSpec> sliceSpecs{args...};
       return Slice(sliceSpecs);
+   }
+
+   /// Create an atomic snapshot of this histogram engine.
+   ///
+   /// A snapshot is a consistent copy of the histogram, during concurrent filling. It is guaranteed that the returned
+   /// copy represents a state between the begin and end of the snapshot operation.
+   ///
+   /// Snapshotting a histogram engine with many bins can be an expensive operation.
+   ///
+   /// \return the atomic snapshot
+   RHistEngine SnapshotAtomic() const
+   {
+      static_assert(std::is_trivially_copyable_v<BinContentType>,
+                    "snapshotting requires a trivially copyable bin content type");
+
+      RHistEngine snapshot(fAxes.Get());
+      // Do a first collect.
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         Internal::AtomicLoad(&fBinContents[i], &snapshot.fBinContents[i]);
+      }
+
+      // Now do another collect. If no change is detected, the snapshot is consistent. Otherwise update the bin contents
+      // and try again.
+      BinContentType tmp;
+      bool changed;
+      do {
+         // To guarantee correctness, we let the release operation(s) in FillAtomic synchronize with this acquire fence.
+         // This ensures that all previous writes become visible side-effects and the atomic loads will see them.
+         std::atomic_thread_fence(std::memory_order_acquire);
+
+         changed = false;
+         for (std::size_t i = 0; i < fBinContents.size(); i++) {
+            Internal::AtomicLoad(&fBinContents[i], &tmp);
+            if (std::memcmp(&tmp, &snapshot.fBinContents[i], sizeof(BinContentType))) {
+               std::memcpy(&snapshot.fBinContents[i], &tmp, sizeof(BinContentType));
+               changed = true;
+            }
+         }
+      } while (changed);
+
+      return snapshot;
    }
 
    /// \}

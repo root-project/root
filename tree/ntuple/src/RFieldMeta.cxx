@@ -14,6 +14,7 @@
 //  - RField<TObject>
 //  - RVariantField
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldUtils.hxx>
@@ -116,6 +117,12 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
+void EnsureValidAlignment(std::size_t alignment)
+{
+   if (!ROOT::Internal::IsValidAlignment(alignment))
+      throw ROOT::RException(R__FAIL(std::string("invalid alignment: ") + std::to_string(alignment)));
+}
+
 /// Create a comma-separated list of type names from the given fields. Uses either the real type names or the
 /// type aliases (if there are any, otherwise the actual type name). Used to construct template argument lists
 /// for templated types such as std::pair<...>, std::tuple<...>, std::variant<...>.
@@ -186,8 +193,7 @@ std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFie
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
    : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(source.fClass),
-     fSubfieldsInfo(source.fSubfieldsInfo),
-     fMaxAlignment(source.fMaxAlignment)
+     fSubfieldsInfo(source.fSubfieldsInfo)
 {
    for (const auto &f : source.GetConstSubfields()) {
       RFieldBase::Attach(f->Clone(f->GetFieldName()));
@@ -280,7 +286,6 @@ ROOT::RClassField::~RClassField()
 
 void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info)
 {
-   fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
    fSubfieldsInfo.push_back(info);
    RFieldBase::Attach(std::move(child));
 }
@@ -397,7 +402,7 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
       return idSourceMember;
 
    for (const auto &subFieldDesc : desc.GetFieldIterable(classFieldId)) {
-      const auto subFieldName = subFieldDesc.GetFieldName();
+      const auto &subFieldName = subFieldDesc.GetFieldName();
       if (subFieldName.length() > 2 && subFieldName[0] == ':' && subFieldName[1] == '_') {
          idSourceMember = LookupMember(desc, memberName, subFieldDesc.GetId());
          if (idSourceMember != ROOT::kInvalidDescriptorId)
@@ -603,6 +608,8 @@ void ROOT::RClassField::ConstructValue(void *where) const
    fClass->New(where);
 }
 
+ROOT::RClassField::RClassDeleter::RClassDeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fClass(cl) {}
+
 void ROOT::RClassField::RClassDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
@@ -622,9 +629,16 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RClassField::SplitValue(const RValue
    return result;
 }
 
-size_t ROOT::RClassField::GetValueSize() const
+std::size_t ROOT::RClassField::GetValueSize() const
 {
    return fClass->GetClassSize();
+}
+
+std::size_t ROOT::RClassField::GetAlignment() const
+{
+   const auto align = fClass->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
 }
 
 std::uint32_t ROOT::RClassField::GetTypeVersion() const
@@ -656,12 +670,15 @@ void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
    : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fSoAClass(source.fSoAClass),
-     fSoAMemberOffsets(source.fSoAMemberOffsets),
-     fMaxAlignment(source.fMaxAlignment)
+     fSoAMemberOffsets(source.fSoAMemberOffsets)
 {
    fTraits = source.GetTraits();
    Attach(source.fSubfields[0]->Clone(source.fSubfields[0]->GetFieldName()));
    fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
+   fRecordMemberDeleters.reserve(fRecordMemberFields.size());
+   for (const auto f : fRecordMemberFields)
+      fRecordMemberDeleters.emplace_back(GetDeleterOf(*f));
+   fLockSplitFields = std::make_unique<std::mutex>();
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string_view className)
@@ -700,6 +717,8 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
 
    std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
+   fRecordMemberDeleters.reserve(fRecordMemberFields.size());
+   recordFieldNameToIdx.reserve(fRecordMemberFields.size());
    for (std::size_t i = 0; i < fRecordMemberFields.size(); ++i) {
       const RFieldBase *f = fRecordMemberFields[i];
       assert(!f->GetFieldName().empty());
@@ -707,6 +726,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
          throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
       }
       recordFieldNameToIdx[f->GetFieldName()] = i;
+      fRecordMemberDeleters.emplace_back(GetDeleterOf(*f));
    }
 
    const auto *bases = fSoAClass->GetListOfBases();
@@ -756,8 +776,6 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
                                   leftType + " vs. " + rightType + ")"));
       }
 
-      fMaxAlignment = std::max(fMaxAlignment, vecField->GetAlignment());
-
       assert(itr->second < fSoAMemberOffsets.size());
       fSoAMemberOffsets[itr->second] = dataMember->GetOffset();
       nMembers++;
@@ -771,6 +789,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
       fTypeAlias = renormalizedAlias;
 
    fTraits |= kTraitSoACollection | kTraitTypeChecksum;
+   fLockSplitFields = std::make_unique<std::mutex>();
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::Experimental::RSoAField::CloneImpl(std::string_view newName) const
@@ -840,14 +859,37 @@ std::size_t ROOT::Experimental::RSoAField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t /* globalIndex */, void * /* to */)
+void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   throw RException(R__FAIL("not yet implemented"));
+   // Read collection info for this entry
+   ROOT::NTupleSize_t N;
+   RNTupleLocalIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &N);
+
+   const auto nSoAMembers = fSoAMemberOffsets.size();
+   for (std::size_t i = 0; i < nSoAMembers; ++i) {
+      RFieldBase *memberField = fRecordMemberFields[i];
+      const auto memberSize = memberField->GetValueSize();
+      void *rvecPtr = static_cast<unsigned char *>(to) + fSoAMemberOffsets[i];
+      auto begin = ROOT::RRVecField::ResizeRVec(rvecPtr, N, memberSize, memberField, fRecordMemberDeleters[i].get());
+
+      if (memberField->IsSimple() && N) {
+         GetPrincipalColumnOf(*memberField)->ReadV(collectionStart, N, begin);
+      } else {
+         for (std::size_t j = 0; j < N; ++j) {
+            CallReadOn(*memberField, collectionStart + j, begin + (j * memberSize));
+         }
+      }
+   }
 }
 
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
 {
    fSoAClass->New(where);
+}
+
+ROOT::Experimental::RSoAField::RSoADeleter::RSoADeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fSoAClass(cl)
+{
 }
 
 void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool dtorOnly)
@@ -856,13 +898,34 @@ void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool d
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue & /* value */) const
+std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue &value) const
 {
-   throw RException(R__FAIL("not yet implemented"));
-   return std::vector<RValue>();
+   const auto nSoAMembers = fSoAMemberOffsets.size();
+
+   {
+      std::lock_guard<std::mutex> lockGuard(*fLockSplitFields);
+      if (!fSplitFields) {
+         fSplitFields = std::make_unique<std::vector<std::unique_ptr<ROOT::RRVecField>>>();
+         fSplitFields->reserve(nSoAMembers);
+         for (std::size_t i = 0; i < nSoAMembers; ++i) {
+            const auto itemField = fRecordMemberFields[i];
+            fSplitFields->emplace_back(std::make_unique<RRVecField>(itemField->GetFieldName(), itemField->Clone("_0")));
+         }
+      }
+   }
+
+   auto valuePtr = value.GetPtr<void>();
+   auto soaPtr = static_cast<unsigned char *>(valuePtr.get());
+   std::vector<RValue> values;
+   values.reserve(nSoAMembers);
+   for (std::size_t i = 0; i < nSoAMembers; ++i) {
+      values.emplace_back(
+         (*fSplitFields)[i]->BindValue(std::shared_ptr<void>(valuePtr, soaPtr + fSoAMemberOffsets[i])));
+   }
+   return values;
 }
 
-size_t ROOT::Experimental::RSoAField::GetValueSize() const
+std::size_t ROOT::Experimental::RSoAField::GetValueSize() const
 {
    return fSoAClass->GetClassSize();
 }
@@ -877,6 +940,13 @@ std::uint32_t ROOT::Experimental::RSoAField::GetTypeChecksum() const
    return fSoAClass->GetCheckSum();
 }
 
+std::size_t ROOT::Experimental::RSoAField::GetAlignment() const
+{
+   const auto align = fSoAClass->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
+}
+
 const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() const
 {
    // TODO(jblomer): factor out
@@ -885,6 +955,11 @@ const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() co
       return nullptr;
    }
    return fSoAClass->GetTypeInfo();
+}
+
+void ROOT::Experimental::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitSoAField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -1173,6 +1248,22 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RProxiedCollectionField::GetDe
    return std::make_unique<RProxiedCollectionDeleter>(fProxy);
 }
 
+ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::RProxiedCollectionDeleter(
+   std::shared_ptr<TVirtualCollectionProxy> proxy)
+   : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()), fProxy(std::move(proxy))
+{
+}
+
+ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::RProxiedCollectionDeleter(
+   std::shared_ptr<TVirtualCollectionProxy> proxy, std::unique_ptr<RDeleter> itemDeleter, size_t itemSize)
+   : RDeleter(proxy->GetCollectionClass()->GetClassAlignment()),
+     fProxy(std::move(proxy)),
+     fItemDeleter(std::move(itemDeleter)),
+     fItemSize(itemSize)
+{
+   fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
+}
+
 void ROOT::RProxiedCollectionField::RProxiedCollectionDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    if (fItemDeleter) {
@@ -1195,6 +1286,18 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RProxiedCollectionField::SplitValue(
       result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr)));
    }
    return result;
+}
+
+std::size_t ROOT::RProxiedCollectionField::GetValueSize() const
+{
+   return fProxy->Sizeof();
+}
+
+std::size_t ROOT::RProxiedCollectionField::GetAlignment() const
+{
+   const auto align = fProxy->GetCollectionClass()->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
 }
 
 void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -1288,7 +1391,7 @@ private:
 
 public:
    TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
-      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(callbackStreamerInfo)
+      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(std::move(callbackStreamerInfo))
    {
    }
    void TagStreamerInfo(TVirtualStreamerInfo *info) final { fCallbackStreamerInfo(info); }
@@ -1386,6 +1489,11 @@ void ROOT::RStreamerField::ConstructValue(void *where) const
    fClass->New(where);
 }
 
+ROOT::RStreamerField::RStreamerFieldDeleter::RStreamerFieldDeleter(TClass *cl)
+   : RDeleter(cl->GetClassAlignment()), fClass(cl)
+{
+}
+
 void ROOT::RStreamerField::RStreamerFieldDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
@@ -1404,7 +1512,9 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RStreamerField::GetExtraTypeInfo() const
 
 std::size_t ROOT::RStreamerField::GetAlignment() const
 {
-   return std::min(alignof(std::max_align_t), GetValueSize()); // TODO(jblomer): fix me
+   const auto align = fClass->GetClassAlignment();
+   EnsureValidAlignment(align);
+   return align;
 }
 
 std::size_t ROOT::RStreamerField::GetValueSize() const
@@ -1785,7 +1895,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVariantField::GetDeleter() co
    for (const auto &f : fSubfields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, std::move(itemDeleters));
+   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, GetAlignment(), std::move(itemDeleters));
 }
 
 size_t ROOT::RVariantField::GetAlignment() const

@@ -6,7 +6,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/05/2026',
+version_date = '25/06/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -772,9 +772,9 @@ function parse(json) {
          return; // pair object is not counted in the objects map
       }
 
-     // prevent endless loop
-     if (map.indexOf(value) >= 0)
-      return;
+      // prevent endless loop
+      if (map.indexOf(value) >= 0)
+         return;
 
       // add object to object map
       map.push(value);

@@ -21,6 +21,27 @@ set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+
+# When ROOT provides zlib as a builtin, disable it in the bundled LLVM so it
+# cannot discover and link the *system* copy (mixing two versions in one
+# process). We cannot point LLVM at the zlib builtin instead: it probes it with
+# a configure-time compile check, but the builtin library is only produced
+# later at build time, so the check would always fail. For symmetry and to
+# preserve historic behavior, also disable ZSTD if we use the ROOT builtin,
+# even though LLVM doesn't do the configure-time compile check there. If no
+# builtins are used, we remove unnecessary degrees of freedom from the build by
+# setting the zlib/zstd flags to FORCE_ON, because zlib and zstd are hard
+# requirements of ROOT that are available anyway.
+if(builtin_zlib)
+  set(LLVM_ENABLE_ZLIB OFF CACHE STRING "Disabled because ROOT uses builtin zlib" FORCE)
+else()
+  set(LLVM_ENABLE_ZLIB FORCE_ON CACHE STRING "Always enabled because it's already a dependency of ROOT" FORCE)
+endif()
+if(builtin_zstd)
+  set(LLVM_ENABLE_ZSTD OFF CACHE STRING "Disabled because ROOT uses builtin zstd" FORCE)
+else()
+  set(LLVM_ENABLE_ZSTD FORCE_ON CACHE STRING "Always enabled because it's already a dependency of ROOT" FORCE)
+endif()
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
@@ -59,8 +80,6 @@ if(NOT experimental_adaptivecpp)
   set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 endif()
 
-# will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -252,6 +271,8 @@ if(builtin_llvm)
   set(CMAKE_CXX_STANDARD ${_cxx_standard})
   set(CMAKE_BUILD_TYPE ${_build_type})
 
+  # Needed to make Cling plugins (clad) find LLVM.
+  set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
     CACHE STRING "LLVM include directories."
@@ -275,7 +296,7 @@ if(builtin_llvm)
     set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
   endif()
 else()
-  find_package(LLVM REQUIRED CONFIG)
+  find_package(LLVM ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1 REQUIRED CONFIG)
   message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} in ${LLVM_CMAKE_DIR}")
 
   separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
@@ -319,13 +340,6 @@ else()
   include(TableGen)
   include(HandleLLVMOptions)
   include(VersionFromVCS)
-
-  set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.1(|\\.[0-9]+)")
-    message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
-  else()
-    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1.x")
-  endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
     set(LLVM_INCLUDE_TESTS ON)

@@ -687,7 +687,8 @@ RooArgList xRooNLLVar::xRooFitResult::ranknp(const char *poi, bool up, bool pref
       auto vv = static_cast<RooRealVar *>(out.at(out.size() - 1));
       vv->setVal(v);
       vv->removeError();
-      vv->removeMin();vv->removeMax();//vv->removeRange();
+      vv->removeMin();
+      vv->removeMax(); // vv->removeRange();
    }
    return out;
 }
@@ -712,7 +713,8 @@ xRooNLLVar::xRooFitResult xRooNLLVar::minimize(const std::shared_ptr<ROOT::Fit::
       // add pgof to the fit result
       const_cast<RooArgList &>(out->constPars()).addClone(RooRealVar(".pgof", "GoF p-value", pgof()));
       // and just main term
-      const_cast<RooArgList &>(out->constPars()).addClone(RooRealVar(".mainterm_pgof", "MainTerm GoF p-value", mainTermPgof()));
+      const_cast<RooArgList &>(out->constPars())
+         .addClone(RooRealVar(".mainterm_pgof", "MainTerm GoF p-value", mainTermPgof()));
    }
 
    return xRooFitResult(std::make_shared<xRooNode>(out, fPdf), std::make_shared<xRooNLLVar>(*this));
@@ -743,7 +745,7 @@ double xRooNLLVar::getEntryVal(size_t entry) const
    *std::unique_ptr<RooAbsCollection>(_pdf->getObservables(_data)) = *_data->get(entry);
    // if (auto s = dynamic_cast<RooSimultaneous*>(_pdf.get());s) return
    // -_data->weight()*s->getPdf(s->indexCat().getLabel())->getLogVal(_data->get());
-   return -_data->weight() * _pdf->getLogVal(_data->get());
+   return (_data->weight() == 0) ? 0 : (-_data->weight() * _pdf->getLogVal(_data->get()));
 }
 
 std::set<std::string> xRooNLLVar::binnedChannels() const
@@ -1469,7 +1471,7 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
             TString toyNum = sWhat(sWhat.Index("toys=") + 5, sWhat.Length());
             size_t nToys = toyNum.Atoi();
             size_t nToysAlt = (toyNum.Atof() - nToys) * nToys;
-            if (nToysAlt == 0 && !toyNum.Contains('.'))
+            if (nToysAlt == 0 && !toyNum.Contains('.') && !doNull)
                nToysAlt = nToys;
             if (nullToys.size() < nToys) {
                addNullToys(nToys - nullToys.size());
@@ -1593,7 +1595,15 @@ void xRooNLLVar::xRooHypoPoint::Print(Option_t *) const
       if (!std::isnan(v->getVal()))
          any_alt = true;
    }
-   std::cout << " , pllType: " << fPllType << std::endl;
+   std::cout << " , pllType: ";
+   switch (fPllType) {
+   case 0: std::cout << "tmu"; break;
+   case 1: std::cout << "qmu or qmutilde"; break; // should check for 'physical' to decide if is latter
+   case 2: std::cout << "q0"; break;
+   case 4: std::cout << "u0"; break;
+   default: std::cout << "unknown"; break;
+   }
+   std::cout << std::endl;
 
    if (fPllType == xRooFit::Asymptotics::Unknown) {
       std::cout << " obs ts: " << obs_ts << " +/- " << obs_ts_err << std::endl;
@@ -1765,6 +1775,14 @@ std::shared_ptr<xRooNLLVar::xRooHypoPoint> xRooNLLVar::xRooHypoPoint::asimov(boo
          // dynamic_cast<RooRealVar *>(p)->removeRange("physical"); -- can't use this as will modify shared property
          if (auto v = dynamic_cast<RooRealVar *>(p)) {
             v->deleteSharedProperties(); // effectively removes all custom ranges
+            if (v->getVal() == 0) {
+               // for discovery tests, we generate asimov at mu!=0 and then evaluate the two sided
+               // at some value of mu. Normally we would use mu=0 but if we have a bin
+               // with only signal contribution (no bkg) will get asimov data in that bin
+               // and no prediction ... the cfit(mu=0) will never succeed on this
+               // so lets move to half the alt value instead (the value used to generate)
+               v->setVal(theFit->constPars().getRealValue(v->GetName()) * 0.5);
+            }
          }
       }
 
@@ -1789,15 +1807,19 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pNull_asymp(double nSigma
    auto first_poi = dynamic_cast<RooRealVar *>(poi().first());
    if (!first_poi)
       return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
-   auto _sigma_mu = sigma_mu();
+   double lowBound = first_poi->getMin("physical");
+   double hiBound = first_poi->getMax("physical");
+   // don't need to calculate sigma_mu if physical boundaries at infinity, PValue doesn't depend on it
+   auto _sigma_mu =
+      (lowBound == -std::numeric_limits<double>::infinity() && hiBound == std::numeric_limits<double>::infinity())
+         ? std::pair<double, double>(0, 0)
+         : sigma_mu();
    double nom = xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first, fNullVal(), fNullVal(), _sigma_mu.first,
-                                             first_poi->getMin("physical"), first_poi->getMax("physical"));
-   double up =
-      xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first + ts_asymp(nSigma).second, fNullVal(), fNullVal(),
-                                   _sigma_mu.first, first_poi->getMin("physical"), first_poi->getMax("physical"));
-   double down =
-      xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first - ts_asymp(nSigma).second, fNullVal(), fNullVal(),
-                                   _sigma_mu.first, first_poi->getMin("physical"), first_poi->getMax("physical"));
+                                             lowBound, hiBound);
+   double up = xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first + ts_asymp(nSigma).second, fNullVal(),
+                                            fNullVal(), _sigma_mu.first, lowBound, hiBound);
+   double down = xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first - ts_asymp(nSigma).second, fNullVal(),
+                                              fNullVal(), _sigma_mu.first, lowBound, hiBound);
    return std::pair(nom, std::max(std::abs(up - nom), std::abs(down - nom)));
 }
 
@@ -2238,8 +2260,8 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::sigma_mu(bool readOnly)
    }
 
    auto out = asi->pll(readOnly);
-   return std::pair<double, double>(std::abs(fNullVal() - fAltVal()) / sqrt(out.first),
-                                    out.second * 0.5 * std::abs(fNullVal() - fAltVal()) /
+   return std::pair<double, double>(std::abs(asi->fNullVal() - fAltVal()) / sqrt(out.first),
+                                    out.second * 0.5 * std::abs(asi->fNullVal() - fAltVal()) /
                                        (out.first * sqrt(out.first)));
 }
 
@@ -2605,6 +2627,10 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
    AutoRestorer snap(*fFuncVars);
 
    out.nllVar = std::make_shared<xRooNLLVar>(*this);
+   // clear the underlying RooAbsReal, so that we don't accidentally alter it (e.g. setAttribute readOnly)
+   // and therefore alter the xRooNLLVar object we are creating this hypoPoint from
+   // basically ensure the hypoPoint has an independent version of the function
+   out.nllVar->reset();
    out.fData = getData();
 
    TStringToken pattern(poiValues, ",");
@@ -2635,14 +2661,7 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
    if (poiNames == "") {
       throw std::runtime_error("No poi");
    }
-   if (!std::isnan(alt_value)) {
-      std::unique_ptr<RooAbsCollection> thePoi(fFuncVars->selectByName(poiNames));
-      for (auto b : *thePoi) {
-         if (!static_cast<RooRealVar *>(b)->hasRange("physical")) {
-            static_cast<RooRealVar *>(b)->setRange("physical", 0, std::numeric_limits<double>::infinity());
-         }
-      }
-   }
+
    auto _snap = std::unique_ptr<RooAbsCollection>(fFuncVars->selectByAttrib("Constant", true))->snapshot();
    _snap->setAttribAll("poi", false);
    std::unique_ptr<RooAbsCollection> _poi(_snap->selectByName(poiNames));
@@ -2667,10 +2686,33 @@ xRooNLLVar::hypoPoint(const char *poiValues, double alt_value, const xRooFit::As
          _type = xRooFit::Asymptotics::OneSidedPositive;
       } else {
          _type = xRooFit::Asymptotics::Uncapped;
+         // for uncapped, should check min is not at physical boundary
+         for (auto b : out.poi()) {
+            if (auto r = dynamic_cast<RooRealVar *>(b)) {
+               if (r->hasRange("physical") && r->getMin() >= r->getMin("physical")) {
+                  ::Info(
+                     "xRooNLLVar::hypoPoint",
+                     "fitting min of %s is >= physical limit (%g), but using uncapped test-statistic, so will set to "
+                     "-max = %g",
+                     r->GetName(), r->getMin("physical"), -r->getMax());
+                  r->setMin(-r->getMax());
+               }
+            }
+         }
       }
    }
 
    out.fPllType = _type;
+
+   // if doing onesidedpositive with an alt value, will assume we need a physical boundary
+   if (!std::isnan(alt_value) && out.fPllType == xRooFit::Asymptotics::OneSidedPositive) {
+      std::unique_ptr<RooAbsCollection> thePoi(fFuncVars->selectByName(poiNames));
+      for (auto b : *thePoi) {
+         if (!static_cast<RooRealVar *>(b)->hasRange("physical")) {
+            static_cast<RooRealVar *>(b)->setRange("physical", 0, std::numeric_limits<double>::infinity());
+         }
+      }
+   }
 
    return out;
 }
@@ -3055,7 +3097,8 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
             dynamic_cast<RooRealVar *>(p)->setRange("physical", 0, std::numeric_limits<double>::infinity());
             Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [0,inf]", p->GetName());
          } else if (auto v = dynamic_cast<RooRealVar *>(p); v->hasRange("physical")) {
-            v->removeMin("physical"); v->removeMax("physical");//v->removeRange("physical");
+            v->removeMin("physical");
+            v->removeMax("physical"); // v->removeRange("physical");
             Info("xRooNLLVar::hypoSpace", "Removing physical range of %s", p->GetName());
          }
       }
@@ -3072,11 +3115,13 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
       if (nPoints > 0) {
          out.AddPoints(parName, nPoints, low, high);
       } else {
-         if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
-            for (auto p : out.poi()) {
-               dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+         // if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+         for (auto p : out.poi()) {
+            if (auto r = dynamic_cast<RooRealVar *>(p)) {
+               r->setRange("scan", std::isnan(low) ? r->getMin() : low, std::isnan(high) ? r->getMax() : high);
             }
          }
+         //}
       }
       return out;
    }
@@ -3085,11 +3130,13 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
    if (nPoints > 0)
       hs.AddPoints(parName, nPoints, low, high);
    else {
-      if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
-         for (auto p : hs.poi()) {
-            dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+      // if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+      for (auto p : hs.poi()) {
+         if (auto r = dynamic_cast<RooRealVar *>(p)) {
+            r->setRange("scan", std::isnan(low) ? r->getMin() : low, std::isnan(high) ? r->getMax() : high);
          }
       }
+      //}
    }
    return hs;
 }
@@ -3120,10 +3167,18 @@ xRooNLLVar::hypoSpace(const char *parName, const xRooFit::Asymptotics::PLLType &
       throw std::runtime_error("You must specify at least one POI for the hypoSpace");
    }*/
    s.fNlls[s.fPdfs.begin()->second] = std::make_shared<xRooNLLVar>(*this);
+   // clear the underlying RooAbsReal, so that we don't accidentally alter it (e.g. setAttribute readOnly)
+   // and therefore alter the xRooNLLVar object we are creating this hypoPoint from
+   // basically ensure the hypoPoint has an independent version of the function
+   s.fNlls[s.fPdfs.begin()->second]->reset();
    s.fTestStatType = pllType;
 
    for (auto poi : s.poi()) {
       poi->setStringAttribute("altVal", std::isnan(alt_value) ? nullptr : TString::Format("%f", alt_value));
+      // default scan range to range of poi
+      if (auto r = dynamic_cast<RooRealVar *>(poi)) {
+         r->setRange("scan", r->getMin(), r->getMax());
+      }
    }
 
    return s;
@@ -3299,13 +3354,15 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
    return out;
 }
 
-std::string cling::printValue(const xRooNLLVar::xValueWithError *v)
+END_XROOFIT_NAMESPACE
+
+std::string cling::printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError *v)
 {
    if (!v)
       return "xValueWithError: nullptr\n";
-   return Form("%f +/- %f", v->first, v->second);
+   return v->__repr__();
 }
-std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m)
+std::string cling::printValue(const std::map<std::string, XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError> *m)
 {
    if (!m)
       return "nullptr\n";
@@ -3316,5 +3373,3 @@ std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWith
    out += "}\n";
    return out;
 }
-
-END_XROOFIT_NAMESPACE

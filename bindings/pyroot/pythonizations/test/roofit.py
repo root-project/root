@@ -31,18 +31,19 @@ class TestRooAbsCollection(unittest.TestCase):
 
     def _test_addowned(self, collection_class):
         coll = collection_class()
-        if True:
-            x = ROOT.RooRealVar("x", "x", -10, 10)
-            coll.addOwned(x)
+        x = ROOT.RooRealVar("x", "x", -10, 10)
+        self.assertTrue(x.__python_owns__)
+        coll.addOwned(x)
+        self.assertFalse(x.__python_owns__)
         self.assertTrue("x" in coll)
 
     def _test_iterator(self, collection_class):
         a = ROOT.RooRealVar("a", "", 0)
         b = ROOT.RooRealVar("b", "", 0)
 
-        l = collection_class(a, b)
+        coll = collection_class(a, b)
 
-        it = iter(l)
+        it = iter(coll)
 
         self.assertEqual(next(it).GetName(), "a")
         self.assertEqual(next(it).GetName(), "b")
@@ -64,11 +65,11 @@ class TestRooAbsCollection(unittest.TestCase):
         self.assertTrue(var0 in coll)
         self.assertTrue("var0" in coll)
 
-        self.assertTrue(not var1 in coll)
-        self.assertTrue(not "var1" in coll)
+        self.assertTrue(var1 not in coll)
+        self.assertTrue("var1" not in coll)
 
         self.assertTrue(var2 in coll)
-        self.assertTrue(not "var2" in coll)
+        self.assertTrue("var2" not in coll)
 
         # ensure consistency with RooAbsCollection::find
         variables = [var0, var1, var2]
@@ -90,7 +91,6 @@ class TestRooAbsCollection(unittest.TestCase):
             self.assertEqual(found_by_name == vptr, vname in coll)
 
     def _test_getitem(self, collection_class):
-
         var0 = ROOT.RooRealVar("var0", "var0", 0)
         var1 = ROOT.RooRealVar("var1", "var1", 1)
 
@@ -246,8 +246,8 @@ class RooAbsRealPlotOn(unittest.TestCase):
     def test_frame(self):
         # test that kwargs can be passed
         # and lead to correct result
-        r1 = self.gauss.plotOn(self.xframe, ROOT.RooFit.LineColor(ROOT.kRed))
-        r2 = self.gauss.plotOn(self.xframe, LineColor=ROOT.kRed)
+        r1 = self.gauss.plotOn(self.xframe, ROOT.RooFit.LineColor(ROOT.kRed))  # noqa: F841
+        r2 = self.gauss.plotOn(self.xframe, LineColor=ROOT.kRed)  # noqa: F841
 
     def test_wrong_kwargs(self):
         # test that AttributeError is raised
@@ -259,15 +259,15 @@ class RooAbsRealPlotOn(unittest.TestCase):
         # as doing the same plot with passed ROOT objects
         dtframe = self.x.frame(ROOT.RooFit.Range(-5, 5), ROOT.RooFit.Title("dt distribution with custom binning"))
         binning = ROOT.RooBinning(20, -5, 5)
-        r1 = self.data.plotOn(dtframe, ROOT.RooFit.Binning(binning))
-        r2 = self.data.plotOn(dtframe, Binning=binning)
+        r1 = self.data.plotOn(dtframe, ROOT.RooFit.Binning(binning))  # noqa: F841
+        r2 = self.data.plotOn(dtframe, Binning=binning)  # noqa: F841
 
     def test_data(self):
         # test that no error is causes if python style and cpp style
         # args are provided to plotOn and that results are identical
         frame = self.x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title("Red Curve"), ROOT.RooFit.Bins(20))
-        res1_d1 = self.data.plotOn(frame, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
-        res2_d1 = self.data.plotOn(frame, DataError=ROOT.RooAbsData.SumW2)
+        res1_d1 = self.data.plotOn(frame, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))  # noqa: F841
+        res2_d1 = self.data.plotOn(frame, DataError=ROOT.RooAbsData.SumW2)  # noqa: F841
 
 
 class TestRooArgList(unittest.TestCase):
@@ -276,7 +276,6 @@ class TestRooArgList(unittest.TestCase):
     """
 
     def test_conversion_from_python_collection(self):
-
         # General check that the conversion from string or tuple works, using
         # constants to get compact test code.
         l1 = ROOT.RooArgList([1.0, 2.0, 3.0])
@@ -342,13 +341,12 @@ def args_equal(arg_1, arg_2):
     return same
 
 
-class TestRooArgList(unittest.TestCase):
+class TestRooCmdArg(unittest.TestCase):
     """
     Test for RooCmdArg pythonizations.
     """
 
     def test_constructor_eval(self):
-
         set_1 = ROOT.RooArgSet(x, y)
         set_2 = ROOT.RooArgSet(y, z)
 
@@ -371,7 +369,6 @@ class TestRooArgList(unittest.TestCase):
 
 
 class TestRooDataHistNumpy(unittest.TestCase):
-
     @staticmethod
     def _make_root_histo():
         # Create ROOT ROOT.TH1 filled with a Gaussian distribution
@@ -478,7 +475,7 @@ class TestRooDataSet(unittest.TestCase):
         gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
 
         data = gauss.generate(ROOT.RooArgSet(x), 10000)  # ROOT.RooDataSet
-        h1d = data.createHistogram("myname", x)
+        data.createHistogram("myname", x)
 
 
 class TestRooDataSetNumpy(unittest.TestCase):
@@ -657,7 +654,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         data = {"obs_1": val_cart_product[:, 0], "obs_2": val_cart_product[:, 1]}
 
         # To make sure the array is really not C-contiguous
-        assert data["obs_1"].flags["C_CONTIGUOUS"] == False
+        assert not data["obs_1"].flags["C_CONTIGUOUS"]
 
         dataset = ROOT.RooDataSet.from_numpy(data, ROOT.RooArgSet(obs_1, obs_2))
 
@@ -714,7 +711,7 @@ class TestRooGlobalFunc(unittest.TestCase):
     def test_minimizer(self):
         """C++ object returned by RooFit::Minimizer should not be double deleted"""
         # ROOT-9516
-        minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")
+        minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")  # noqa: F841
 
 
 class TestRooJSONFactoryWSTool(unittest.TestCase):
@@ -723,7 +720,6 @@ class TestRooJSONFactoryWSTool(unittest.TestCase):
     """
 
     def test_writedoc(self):
-
         ROOT.RooJSONFactoryWSTool.writedoc("roojsonfactorywstool_test_writedoc.tex")
 
 
@@ -760,7 +756,6 @@ class RooSimultaneous_test(unittest.TestCase):
 
     # Tests
     def test_construction_from_dict(self):
-
         x = ROOT.RooRealVar("x", "x", -10, 10)
 
         # Define model for each sample

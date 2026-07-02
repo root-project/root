@@ -91,22 +91,22 @@ namespace TClassEdit {
       kDropHash         = 1<<13 /* Drop the hash if applies to the collection */
    };
 
-   enum ESTLType {
-      kNotSTL            = ROOT::kNotSTL,
-      kVector            = ROOT::kSTLvector,
-      kList              = ROOT::kSTLlist,
-      kForwardlist       = ROOT::kSTLforwardlist,
-      kDeque             = ROOT::kSTLdeque,
-      kMap               = ROOT::kSTLmap,
-      kMultiMap          = ROOT::kSTLmultimap,
-      kSet               = ROOT::kSTLset,
-      kMultiSet          = ROOT::kSTLmultiset,
-      kUnorderedSet      = ROOT::kSTLunorderedset,
-      kUnorderedMultiSet = ROOT::kSTLunorderedmultiset,
-      kUnorderedMap      = ROOT::kSTLunorderedmap,
-      kUnorderedMultiMap = ROOT::kSTLunorderedmultimap,
-      kBitSet            = ROOT::kSTLbitset,
-      kEnd               = ROOT::kSTLend
+   enum R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") ESTLType {
+      kNotSTL            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kNotSTL,
+      kVector            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLvector,
+      kList              R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLlist,
+      kForwardlist       R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLforwardlist,
+      kDeque             R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLdeque,
+      kMap               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmap,
+      kMultiMap          R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmultimap,
+      kSet               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLset,
+      kMultiSet          R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmultiset,
+      kUnorderedSet      R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedset,
+      kUnorderedMultiSet R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmultiset,
+      kUnorderedMap      R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmap,
+      kUnorderedMultiMap R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmultimap,
+      kBitSet            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLbitset,
+      kEnd               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLend
    };
 
    enum class EComplexType : short {
@@ -236,12 +236,12 @@ namespace TClassEdit {
    {
       return 0 == name.compare(0, 17, "std::__pair_base<") || 0 == name.compare(0, 12, "__pair_base<");
    }
-   inline std::string GetUniquePtrType(std::string_view name)
+   inline std::string R__DEPRECATED(6, 46, "not needed anymore") GetUniquePtrType(std::string_view name)
    {
       // Find the first template parameter
       std::vector<std::string> v;
       int i;
-      GetSplit(name.data(), v, i);
+      GetSplit(std::string(name).c_str(), v, i);
       return v[1];
    }
    std::string GetNameForIO(const std::string& templateInstanceName,

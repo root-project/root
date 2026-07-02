@@ -1,0 +1,27 @@
+name: 'ROOT Docs Nightlies'
+
+on:
+  schedule:
+    - cron: '20 1 * * *'
+    - cron: '55 11 * * 1-5'
+
+jobs:
+  Docs_6-32:
+    if: ${{ github.event.schedule == '20 1 * * *' }}
+    uses: root-project/root/.github/workflows/root-docs-ci.yml@v6-32-00-patches
+    secrets: inherit
+
+  Docs_6-36:
+    if: ${{ github.event.schedule == '20 1 * * *' }}
+    uses: root-project/root/.github/workflows/root-docs-ci.yml@v6-36-00-patches
+    secrets: inherit
+
+  Docs_6-40:
+    if: ${{ github.event.schedule == '20 1 * * *' }}
+    uses: root-project/root/.github/workflows/root-docs-ci.yml@v6-40-00-patches
+    secrets: inherit
+
+  # Master also runs at lunch time during the week
+  Docs_Master:
+    uses: root-project/root/.github/workflows/root-docs-ci.yml@master
+    secrets: inherit

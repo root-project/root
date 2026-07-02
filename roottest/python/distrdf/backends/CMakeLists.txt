@@ -12,7 +12,7 @@ if(test_distrdf_pyspark)
     # Define environment variables needed in all pyspark tests
     set(PYSPARK_ENV_VARS PYSPARK_PYTHON=${Python3_EXECUTABLE})
 
-    if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
+    if(CMAKE_SYSTEM_NAME STREQUAL Darwin AND CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL 10.13)
         # MacOS has changed rules about forking processes after 10.13
         # Running pyspark tests with XCode Python3 throws crashes with errors like:
         # `objc[17271]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called.`
@@ -41,11 +41,7 @@ list(APPEND DISTRDF_ENVIRONMENT_VARS DISTRDF_BACKENDS_IN_USE=${DISTRDF_BACKENDS_
 # setting the property to 4. The test also locks a resource for the creation of
 # the clusters, depending on how many backends are active. The resource lock
 # is shared with the "common" folder and the tutorials of the main repository.
-ROOTTEST_ADD_TEST(test_all
-                    MACRO test_all.py
-                    ENVIRONMENT "${DISTRDF_ENVIRONMENT_VARS}"
-                    TIMEOUT 1200
-                    PROPERTIES PROCESSORS 4)
+ROOT_ADD_PYUNITTEST(test_all test_all.py GENERIC ENVIRONMENT "${DISTRDF_ENVIRONMENT_VARS}")
 
 # This test has to take multiple resource locks. This means that they should
 # be passed as a cmake list (semi-colon separated strings) after the
@@ -55,4 +51,6 @@ ROOTTEST_ADD_TEST(test_all
 # The safest and most reliable thing to do is to call the final cmake
 # function directly here, so we can be sure that the PROPERTIES argument
 # will be properly parsed.
-set_tests_properties(roottest-python-distrdf-backends-test_all PROPERTIES RESOURCE_LOCK "${DISTRDF_RESOURCE_LOCKS}")
+set_tests_properties(
+    pyunittests-roottest-python-distrdf-backends-all
+    PROPERTIES RESOURCE_LOCK "${DISTRDF_RESOURCE_LOCKS}" PROCESSORS 4 TIMEOUT 1200)

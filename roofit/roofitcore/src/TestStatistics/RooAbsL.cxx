@@ -129,7 +129,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    // ******************************************************************
 
    // Attach FUNC to data set
-   auto _funcObsSet = pdf_->getObservables(indata);
+   std::unique_ptr<RooArgSet> _funcObsSet{pdf_->getObservables(indata)};
 
    if (pdf_->getAttribute("BinnedLikelihood")) {
       pdf_->setAttribute("BinnedLikelihoodActive");

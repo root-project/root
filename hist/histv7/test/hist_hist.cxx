@@ -12,8 +12,8 @@
 // Mostly, RHist = RHistEngine + RHistStats which are tested individually. Here we mostly check that the forwarding
 // works correctly.
 
-static_assert(std::is_nothrow_move_constructible_v<RHistEngine<int>>);
-static_assert(std::is_nothrow_move_assignable_v<RHistEngine<int>>);
+static_assert(std::is_nothrow_move_constructible_v<RHist<int>>);
+static_assert(std::is_nothrow_move_assignable_v<RHist<int>>);
 
 TEST(RHist, Constructor)
 {
@@ -348,6 +348,28 @@ TEST(RHist, FillExceptionSafety)
    EXPECT_EQ(hist.GetStats().GetSumW2(), 1);
    EXPECT_EQ(hist.GetStats().GetDimensionStats(0).fSumWX, 1.5);
    EXPECT_EQ(hist.GetStats().GetDimensionStats(1).fSumWX, 2.5);
+}
+
+TEST(RHist, FillForward)
+{
+   static constexpr std::size_t Bins = 20;
+   RHist<float> hist(Bins, {0, Bins});
+
+   std::tuple<CopyArgument> args(1.5);
+   hist.Fill(args);
+   hist.Fill(args, RWeight(0.5));
+   EXPECT_EQ(hist.GetNEntries(), 2);
+   EXPECT_EQ(hist.GetBinContent(1), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
+
+   CopyArgument arg(2.5);
+   hist.Fill(arg);
+   hist.Fill(arg, RWeight(0.5));
+   EXPECT_EQ(hist.GetNEntries(), 4);
+   EXPECT_EQ(hist.GetBinContent(2), 1.5);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
 }
 
 TEST(RHist, Scale)

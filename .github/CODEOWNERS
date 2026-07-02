@@ -10,55 +10,56 @@
 # Coarse-grained ownership
 * @dpiparo
 /bindings/ @guitargeek @vepadulano
+/bindings/pyroot/cppyy @aaronj0 @guitargeek
 /core/ @dpiparo @pcanal
 /documentation/ @couet @dpiparo
-/fonts/ @bellenot
+/fonts/ @bellenot @linev
 /geom/ @agheata
-/graf2d/ @couet
-/graf3d/ @couet
-/gui/ @bellenot
-/hist/ @hageboeck
-/hist/histv7/ @hahnjo
-/hist/histv7util/ @hahnjo
-/icons/ @bellenot
-/interpreter/ @dpiparo
-/interpreter/llvm-project/ @vgvassilev
-interpreter/cling/tools/packaging @vgvassilev
-/io/ @pcanal
+/graf2d/ @couet @linev
+/graf3d/ @couet @linev
+/gui/ @bellenot @linev
+/hist/ @hageboeck @guitargeek
+/hist/histv7/ @hahnjo @hageboeck
+/hist/histv7util/ @hahnjo @hageboeck
+/icons/ @bellenot @linev
+/interpreter/ @dpiparo @hahnjo
+/interpreter/llvm-project/ @vgvassilev @hahnjo
+/interpreter/cling/tools/packaging/ @vgvassilev @hahnjo
+/interpreter/CppInterOp/ @aaronj0 @vgvassilev
+/io/ @pcanal @jblomer
 /io/xml/ @pcanal @linev
-/main/ @pcanal
-/math/ @hagebeck
-/math/minuit @guitargeek
-/math/minuit2 @guitargeek
-/math/vecops @dpiparo
-/misc/ @dpiparo
-/montecarlo/ @dpiparo
-/net/ @dpiparo
-/roofit/ @guitargeek
-/rootx/ @dpiparo
+/main/ @pcanal @dpiparo
+/math/ @hageboeck @guitargeek
+/math/minuit @guitargeek @hageboeck
+/math/minuit2 @guitargeek @hageboeck
+/math/vecops @dpiparo @hageboeck
+/misc/ @dpiparo @hageboeck
+/montecarlo/ @dpiparo @hageboeck
+/net/ @dpiparo @jblomer
+/roofit/ @guitargeek @hageboeck
+/rootx/ @dpiparo @guitargeek
 /sql/ @pcanal @linev
 /tmva/ @lmoneta
-/tree/ @pcanal
-/tutorials/ @couet
-/tree/dataframe/ @martamaja10 @vepadulano
+/tree/ @pcanal @jblomer
+/tutorials/ @couet @dpiparo
+/tree/dataframe/ @vepadulano @hageboeck
 /tree/ml/ @vepadulano @siliataider
-/tree/readspeed/ @martamaja10
-/tree/ntuple/ @jblomer
-/tree/ntuplebrowse/ @jblomer
-/tree/ntupleutil/ @jblomer
+/tree/readspeed/ @vepadulano @hageboeck
+/tree/ntuple/ @jblomer @silverweed
+/tree/ntuplebrowse/ @jblomer @silverweed
+/tree/ntupleutil/ @jblomer @silverweed
 /tutorials/sql/ @linev
 
 # Projects that span over several code modules:
-/bindings/r/ @dpiparo
-/core/imt/ @dpiparo
-/core/multiproc/ @dpiparo
-/graf2d/cocoa/ @couet
-/graf3d/eve/ @osschar
+/core/imt/ @dpiparo @hageboeck
+/core/multiproc/ @dpiparo @hageboeck
+/graf2d/cocoa/ @couet @linev
+/graf3d/eve/ @osschar @linev
 /graf3d/eve7/ @osschar @linev
-/tutorials/visualisation/eve/ @osschar
+/tutorials/visualisation/eve/ @osschar @linev
 /tutorials/visualisation/eve7/ @osschar @linev
 
-#different http/webgui components
+# Different http/webgui components
 /net/http/ @linev
 /net/httpsniff/ @linev
 /tutorials/http/ @linev
@@ -77,6 +78,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /tutorials/rcanvas/ @linev
 /tutorials/visualisation/webgui/ @linev
 
+# CMake infra
 /cmake/ @bellenot
 *.cmake @bellenot
 */CMakeLists.txt @bellenot
