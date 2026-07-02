@@ -47,7 +47,9 @@ public:
 
    Int_t GetNumAvailableThreads();
 
-   Int_t ChangeNumActiveThrerads(int cnt = 0);
+   Int_t ChangeNumActiveThreads(int cnt = 0);
+   /// \deprecated For backward compatibility
+   Int_t ChangeNumActiveThrerads(int cnt = 0) { return ChangeNumActiveThreads(cnt); }
 
    const char *GetTopName() const { return fTopName.Data(); }
 
