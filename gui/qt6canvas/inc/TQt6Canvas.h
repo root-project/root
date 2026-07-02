@@ -47,8 +47,8 @@ public:
 
    UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
    void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h) override;
-   void ResizeCanvasWindow(Int_t ) override {}
-
+   void ResizeCanvasWindow(Int_t) override {}
+   void UpdateDisplay(Int_t = 0, Bool_t = kFALSE) {}
 
    void ShowMenuBar(Bool_t = kTRUE) override { }
    void ShowStatusBar(Bool_t = kTRUE) override { }
