@@ -9,8 +9,6 @@
 /// \date July 2018
 /// \authors Enrico Guiraud, Danilo Piparo (CERN), Massimo Tumolo (Politecnico di Torino)
 
-
-
 void df021_createTGraph()
 {
    ROOT::EnableImplicitMT(2);
@@ -25,5 +23,5 @@ void df021_createTGraph()
    // This tutorial is ran with multithreading enabled. The order in which points are inserted is not known, so to have a meaningful representation points are sorted.
    graph->Sort();
    auto c = new TCanvas();
-   graph->DrawClone("APL");
+   graph->DrawClone("AL");
 }
