@@ -14,18 +14,12 @@
 
 #include "TCanvas.h"
 #include "TROOT.h"
-#include "TMethod.h"
 
-#include "QRootMethodDialog.h"
-
-#include <QtCore/QSignalMapper>
 #include <QtCore/QTimer>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMouseEvent>
 #include <QCloseEvent>
-#include <QMenu>
-#include <QAction>
 #include <QFont>
 #include <QRect>
 #include <QPainter>
@@ -102,50 +96,7 @@ void QPaintWidget::mousePressEvent( QMouseEvent *e )
         // emit PadClicked(pad, scaled.x(), scaled.y());
         break;
      case Qt::RightButton : {
-        TString selectedOpt;
-        if (pad) {
-           if (!pickobj) {
-              fCanvas->SetSelected(pad);
-              selected = pad;
-           } else if(!selected) {
-              selected    = pickobj->GetObject();
-              selectedOpt = pickobj->GetOption();
-           }
-           pad->cd();
-        }
-        fCanvas->SetSelectedPad(pad);
-        gROOT->SetSelectedPrimitive(selected);
-        fMousePosX = gPad->AbsPixeltoX(gPad->GetEventX());
-        fMousePosY = gPad->AbsPixeltoY(gPad->GetEventY());
-
-        QMenu menu;
-        QSignalMapper map;
-
-        QObject::connect(&map, &QSignalMapper::mappedInt,
-                         this, &QPaintWidget::executeMenu);
-        fMenuObj = selected;
-        fMenuMethods = new TList;
-        TClass *cl = fMenuObj->IsA();
-        int curId = -1;
-
-        QString buffer = TString::Format("%s::%s", cl->GetName(), fMenuObj->GetName()).Data();
-        addMenuAction(&menu, &map, buffer, curId++);
-
-        cl->GetMenuItems(fMenuMethods);
-        menu.addSeparator();
-
-        TIter iter(fMenuMethods);
-        while (auto method = dynamic_cast<TMethod*>(iter())) {
-           buffer = method->GetName();
-           addMenuAction(&menu, &map, buffer, curId++);
-        }
-
-        if (menu.exec(menu_pnt) == nullptr) {
-           fMenuObj = nullptr;
-           delete fMenuMethods;
-           fMenuMethods = nullptr;
-        }
-
+        fCanvas->HandleInput(kButton3Down, scaled.x(), scaled.y());
         break;
      }
      case Qt::MiddleButton :
@@ -249,77 +200,4 @@ void QPaintWidget::mouseDoubleClickEvent( QMouseEvent *e )
          break;
    }
     e->accept();
-}
-
-QAction* QPaintWidget::addMenuAction(QMenu* menu, QSignalMapper* map, const QString& text, int id)
-{
-   bool enabled = true;
-
-   QAction* act = new QAction(text, menu);
-
-   if (!enabled)
-      if ((text.compare("DrawClone") == 0) || (text.compare("DrawClass") == 0) || (text.compare("Inspect") == 0) ||
-          (text.compare("SetShowProjectionX") == 0) || (text.compare("SetShowProjectionY") == 0) ||
-          (text.compare("DrawPanel") == 0) || (text.compare("FitPanel") == 0))
-         act->setEnabled(false);
-
-   QObject::connect(act, &QAction::triggered, [id, map]() {
-      map->mappedInt(id);
-   });
-
-   menu->addAction(act);
-   map->setMapping(act, id);
-
-   return act;
-}
-
-void QPaintWidget::executeMenu(int id)
-{
-   QString text;
-   bool ok = false;
-   if (id >= 0) {
-
-      // save global to Pad before calling TObject::Execute()
-
-      TVirtualPad *psave = gROOT->GetSelectedPad();
-      TMethod *method = (TMethod *) fMenuMethods->At(id);
-
-      /// test: do this in any case!
-      fCanvas->HandleInput(kButton3Up, gPad->XtoAbsPixel(fMousePosX), gPad->YtoAbsPixel(fMousePosY));
-
-      // change current dir that all new histograms appear here
-      gROOT->cd();
-
-      if (method->GetListOfMethodArgs()->First()) {
-         QRootMethodDialog dlg;
-
-         dlg.methodDialog(fMenuObj, method);
-      } else {
-         gROOT->SetFromPopUp(kTRUE);
-         fMenuObj->Execute(method->GetName(), "");
-
-         if (fMenuObj->TestBit(TObject::kNotDeleted)) {
-            // emit MenuCommandExecuted(fMenuObj, method->GetName());
-         } else {
-            fMenuObj = nullptr;
-         }
-
-      }
-
-      fCanvas->GetPadSave()->Update();
-      fCanvas->GetPadSave()->Modified();
-
-      gROOT->SetSelectedPad(psave);
-
-      gROOT->GetSelectedPad()->Update();
-      gROOT->GetSelectedPad()->Modified();
-
-      fCanvas->Modified();
-      fCanvas->ForceUpdate();
-      gROOT->SetFromPopUp(kFALSE);
-    }
-
-   fMenuObj = nullptr;
-   delete fMenuMethods;
-   fMenuMethods = nullptr;
 }
