@@ -140,9 +140,9 @@ public:
    };
 
    RDaosObject() = delete;
-   /// Provides low-level access to an object. If `cid` is OC_UNKNOWN, the user is responsible for
-   /// calling `daos_obj_generate_oid()` to fill the reserved bits in `oid` before calling this constructor.
-   RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid = OC_UNKNOWN);
+   /// Provides low-level access to an object. The oid is assumed to have set only the user-editable bits.
+   /// DAOS will fill in the remaining, system bits using the given object class.
+   RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid);
    ~RDaosObject();
 
    int Fetch(FetchUpdateArgs &args);

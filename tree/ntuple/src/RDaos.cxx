@@ -107,10 +107,8 @@ daos_event_t *ROOT::Experimental::Internal::RDaosObject::FetchUpdateArgs::GetEve
 
 ROOT::Experimental::Internal::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid)
 {
-   if (!cid.IsUnknown())
-      daos_obj_generate_oid(container.fContainerHandle, &oid, DAOS_OT_MULTI_UINT64, cid.fCid,
-                            DAOS_OCH_RDD_DEF | DAOS_OCH_SHD_DEF, 0);
-
+   daos_obj_generate_oid(container.fContainerHandle, &oid, DAOS_OT_MULTI_UINT64, cid.fCid,
+                         DAOS_OCH_RDD_DEF | DAOS_OCH_SHD_DEF, 0);
    if (int err = daos_obj_open(container.fContainerHandle, oid, DAOS_OO_RW, &fObjectHandle, nullptr))
       throw RException(R__FAIL("daos_obj_open: error: " + std::string(d_errstr(err))));
 }
