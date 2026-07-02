@@ -41,6 +41,8 @@ public:
    TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    ~TQt6Canvas() override;
 
+   QPaintWidget *GetPaintWidget() const { return fPaintWidget; }
+
    Int_t InitWindow() override;
    void Close() override;
    void Show() override;
@@ -48,7 +50,7 @@ public:
    UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
    void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h) override;
    void ResizeCanvasWindow(Int_t) override {}
-   void UpdateDisplay(Int_t = 0, Bool_t = kFALSE) {}
+   void UpdateDisplay(Int_t = 0, Bool_t = kFALSE) override {}
 
    void ShowMenuBar(Bool_t = kTRUE) override { }
    void ShowStatusBar(Bool_t = kTRUE) override { }

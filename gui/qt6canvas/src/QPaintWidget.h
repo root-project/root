@@ -15,11 +15,8 @@
 
 class TCanvas;
 class TPad;
-class TObject;
-class TList;
 class TMethod;
 class QPainter;
-class QSignalMapper;
 class QStatusBar;
 
 class QPaintWidget : public QWidget {
@@ -39,9 +36,6 @@ public:
 
    void SetStatusBar(QStatusBar *bar) { fStatusBar = bar; }
 
-public slots:
-   void executeMenu(int id);
-
 protected:
    void resizeEvent(QResizeEvent *event) override;
 
@@ -51,8 +45,6 @@ protected:
    void mouseMoveEvent(QMouseEvent *event) override;
    void mouseReleaseEvent(QMouseEvent *event) override;
    void mouseDoubleClickEvent(QMouseEvent* event) override;
-
-   QAction* addMenuAction(QMenu *menu, QSignalMapper *map, const QString &text, int id);
 
    double scaledPosition(int p) { return (double) p * fQtScalingfactor; }
 
@@ -67,11 +59,6 @@ protected:
    QStatusBar  *fStatusBar = nullptr;
 
    bool              fMaskDoubleClick = false;
-   double            fMousePosX = 0;    // mouse position in user coordinate when activate menu
-   double            fMousePosY = 0;    // mouse position in user coordinate when activate menu
-
-   TObject          *fMenuObj = nullptr;      // object use to fill menu
-   TList            *fMenuMethods = nullptr;  // list of menu methods
    bool              fShowEventStatus = true;
 
 };
