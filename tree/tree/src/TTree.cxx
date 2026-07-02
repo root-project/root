@@ -4882,64 +4882,47 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
    return nullptr;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return the branch that correspond to the path 'branchname', which can
-/// include the name of the tree or the omitted name of the parent branches.
-/// In case of ambiguity, returns the first match.
-/// \sa TTree::GetBranch
-
-TBranch* TTree::FindBranch(const char* branchname)
+TBranch *TTree::FindBranchFromSelf(const char *branchName)
 {
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
-   if (kFindBranch & fFriendLockStatus) {
-      return nullptr;
-   }
-
-   if (!branchname)
-      return nullptr;
-
-   TBranch* branch = nullptr;
    // If the first part of the name match the TTree name, look for the right part in the
    // list of branches.
-   // This will allow the branchname to be preceded by
+   // This will allow the branchName to be preceded by
    // the name of this tree.
-   if (strncmp(fName.Data(),branchname,fName.Length())==0 && branchname[fName.Length()]=='.') {
-      branch = R__FindBranchHelper( GetListOfBranches(), branchname + fName.Length() + 1);
-      if (branch) return branch;
-   }
+   if (strncmp(fName.Data(), branchName, fName.Length()) == 0 && branchName[fName.Length()] == '.')
+      if (auto *br = R__FindBranchHelper(GetListOfBranches(), branchName + fName.Length() + 1))
+         return br;
+
    // If we did not find it, let's try to find the full name in the list of branches.
-   branch = R__FindBranchHelper(GetListOfBranches(), branchname);
-   if (branch) return branch;
+   if (auto *br = R__FindBranchHelper(GetListOfBranches(), branchName))
+      return br;
 
-   // If we still did not find, let's try to find it within each branch assuming it does not the branch name.
-   TIter next(GetListOfBranches());
-   while ((branch = (TBranch*) next())) {
-      TBranch* nestedbranch = branch->FindBranch(branchname);
-      if (nestedbranch) {
+   // If we still did not find, let's try to find it within each branch assuming it does not contain the branch name.
+   for (auto *branch : ROOT::Detail::TRangeStaticCast<TBranch>(*GetListOfBranches()))
+      if (auto *nestedbranch = branch->FindBranch(branchName))
          return nestedbranch;
-      }
-   }
 
-   // Search in list of friends.
+   return nullptr;
+}
+
+TBranch *TTree::FindBranchFromFriends(const char *branchName)
+{
    if (!fFriends) {
       return nullptr;
    }
+
    TFriendLock lock(this, kFindBranch);
-   TIter nextf(fFriends);
-   TFriendElement* fe = nullptr;
-   while ((fe = (TFriendElement*) nextf())) {
-      TTree* t = fe->GetTree();
+   for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fFriends)) {
+      TTree *t = frEl->GetTree();
       if (!t) {
          continue;
       }
       // If the alias is present replace it with the real name.
-      const char *subbranch = strstr(branchname, fe->GetName());
-      if (subbranch != branchname) {
+      const char *subbranch = strstr(branchName, frEl->GetName());
+      if (subbranch != branchName) {
          subbranch = nullptr;
       }
       if (subbranch) {
-         subbranch += strlen(fe->GetName());
+         subbranch += strlen(frEl->GetName());
          if (*subbranch != '.') {
             subbranch = nullptr;
          } else {
@@ -4950,13 +4933,38 @@ TBranch* TTree::FindBranch(const char* branchname)
       if (subbranch) {
          name << t->GetName() << "." << subbranch;
       } else {
-         name << branchname;
+         name << branchName;
       }
-      branch = t->FindBranch(name.str().c_str());
-      if (branch) {
-         return branch;
-      }
+      if (auto *br = t->FindBranch(name.str().c_str()))
+         return br;
    }
+
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the branch that correspond to the path 'branchname', which can
+/// include the name of the tree or the omitted name of the parent branches.
+/// In case of ambiguity, returns the first match.
+/// \sa TTree::GetBranch
+
+TBranch *TTree::FindBranch(const char *branchname)
+{
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kFindBranch & fFriendLockStatus) {
+      return nullptr;
+   }
+
+   if (!branchname)
+      return nullptr;
+
+   if (auto *br = FindBranchFromSelf(branchname))
+      return br;
+
+   if (auto *br = FindBranchFromFriends(branchname))
+      return br;
+
    return nullptr;
 }
 
@@ -6196,51 +6204,35 @@ TIterator* TTree::GetIteratorOnAllLeaves(bool dir)
    return new TTreeFriendLeafIter(this, dir);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the 1st Leaf named name in any Branch of this
-/// Tree or any branch in the list of friend trees.
-///
-/// The leaf name can contain the name of a friend tree with the
-/// syntax: friend_dir_and_tree.full_leaf_name
-/// the friend_dir_and_tree can be of the form:
-/// ~~~ {.cpp}
-///     TDirectoryName/TreeName
-/// ~~~
-
-TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
+TLeaf *TTree::GetLeafFromSelf(const char *branchName, const char *leafName)
 {
-   TLeaf *leaf = nullptr;
-   if (branchname) {
-      TBranch *branch = FindBranch(branchname);
-      if (branch) {
-         leaf = branch->GetLeaf(leafname);
-         if (leaf) {
+   if (branchName)
+      if (auto *br = FindBranchFromSelf(branchName))
+         if (auto *leaf = br->GetLeaf(leafName))
             return leaf;
-         }
-      }
-   }
-   TIter nextl(GetListOfLeaves());
-   while ((leaf = (TLeaf*)nextl())) {
-      if (strcmp(leaf->GetFullName(), leafname) != 0 && strcmp(leaf->GetName(), leafname) != 0)
-         continue; // leafname does not match GetName() nor GetFullName(), this is not the right leaf
-      if (branchname) {
-         // check the branchname is also a match
+
+   for (auto *leaf : ROOT::Detail::TRangeStaticCast<TLeaf>(*GetListOfLeaves())) {
+      if (strcmp(leaf->GetFullName(), leafName) != 0 && strcmp(leaf->GetName(), leafName) != 0)
+         continue; // leafName does not match GetName() nor GetFullName(), this is not the right leaf
+      if (branchName) {
+         // check the branchName is also a match
          TBranch *br = leaf->GetBranch();
          // if a quick comparison with the branch full name is a match, we are done
-         if (!strcmp(br->GetFullName(), branchname))
+         if (!strcmp(br->GetFullName(), branchName))
             return leaf;
-         UInt_t nbch = strlen(branchname);
+         UInt_t nbch = strlen(branchName);
          const char* brname = br->GetName();
          TBranch *mother = br->GetMother();
-         if (strncmp(brname,branchname,nbch)) {
+         if (strncmp(brname, branchName, nbch)) {
             if (mother != br) {
                const char *mothername = mother->GetName();
                UInt_t motherlen = strlen(mothername);
-               if (!strcmp(mothername, branchname)) {
+               if (!strcmp(mothername, branchName)) {
                   return leaf;
-               } else if (nbch > motherlen && strncmp(mothername,branchname,motherlen)==0 && (mothername[motherlen-1]=='.' || branchname[motherlen]=='.')) {
+               } else if (nbch > motherlen && strncmp(mothername, branchName, motherlen) == 0 &&
+                          (mothername[motherlen - 1] == '.' || branchName[motherlen] == '.')) {
                   // The left part of the requested name match the name of the mother, let's see if the right part match the name of the branch.
-                  if (strncmp(brname,branchname+motherlen+1,nbch-motherlen-1)) {
+                  if (strncmp(brname, branchName + motherlen + 1, nbch - motherlen - 1)) {
                      // No it does not
                      continue;
                   } // else we have match so we can proceed.
@@ -6262,35 +6254,65 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
       }
       return leaf;
    }
+
+   return nullptr;
+}
+
+TLeaf *TTree::GetLeafFromFriends(const char *branchName, const char *leafName)
+{
+   if (branchName)
+      if (auto *br = FindBranchFromFriends(branchName))
+         if (auto *leaf = br->GetLeaf(leafName))
+            return leaf;
+
    if (!fFriends) return nullptr;
-   TFriendLock lock(this,kGetLeaf);
-   TIter next(fFriends);
-   TFriendElement *fe;
-   while ((fe = (TFriendElement*)next())) {
-      TTree *t = fe->GetTree();
-      if (t) {
-         leaf = t->GetLeaf(branchname, leafname);
-         if (leaf) return leaf;
-      }
+   TFriendLock lock(this, kGetLeaf);
+
+   for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fFriends))
+      if (auto *t = frEl->GetTree())
+         if (auto *leaf = t->GetLeaf(branchName, leafName))
+            return leaf;
+
+   // Second pass in the list of friends when the leaf name is prefixed by the tree name
+   TString strippedArg;
+   for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fFriends)) {
+      TTree *t = frEl->GetTree();
+      if (!t) continue;
+      const char *subLeafName = strstr(leafName, frEl->GetName());
+      if (subLeafName != leafName)
+         continue;
+      Int_t l = strlen(frEl->GetName());
+      subLeafName += l;
+      if (*subLeafName != '.')
+         continue;
+      subLeafName++;
+      strippedArg += subLeafName;
+      if (auto *leaf = t->GetLeaf(branchName, subLeafName))
+         return leaf;
    }
 
-   //second pass in the list of friends when the leaf name
-   //is prefixed by the tree name
-   TString strippedArg;
-   next.Reset();
-   while ((fe = (TFriendElement*)next())) {
-      TTree *t = fe->GetTree();
-      if (!t) continue;
-      const char *subname = strstr(leafname,fe->GetName());
-      if (subname != leafname) continue;
-      Int_t l = strlen(fe->GetName());
-      subname += l;
-      if (*subname != '.') continue;
-      subname++;
-      strippedArg += subname;
-      leaf = t->GetLeaf(branchname,subname);
-      if (leaf) return leaf;
-   }
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the 1st Leaf named name in any Branch of this
+/// Tree or any branch in the list of friend trees.
+///
+/// The leaf name can contain the name of a friend tree with the
+/// syntax: friend_dir_and_tree.full_leaf_name
+/// the friend_dir_and_tree can be of the form:
+/// ~~~ {.cpp}
+///     TDirectoryName/TreeName
+/// ~~~
+
+TLeaf *TTree::GetLeafImpl(const char *branchname, const char *leafname)
+{
+   if (auto *leaf = GetLeafFromSelf(branchname, leafname))
+      return leaf;
+
+   if (auto *leaf = GetLeafFromFriends(branchname, leafname))
+      return leaf;
+
    return nullptr;
 }
 
@@ -6344,31 +6366,56 @@ TLeaf* TTree::GetLeaf(const char *name)
 /// if the Tree has an associated TEventList or TEntryList, the maximum
 /// is computed for the entries in this list.
 
-Double_t TTree::GetMaximum(const char* columname)
+Double_t TTree::GetMaximum(const char *columname)
 {
-   TLeaf* leaf = this->GetLeaf(columname);
-   if (!leaf) {
-      return 0;
-   }
+   constexpr auto errVal{std::numeric_limits<Double_t>::lowest()};
+   if (!columname || strcmp(columname, "") == 0)
+      return errVal;
 
-   // create cache if wanted
-   if (fCacheDoAutoInit)
-      SetCacheSizeAux();
+   // If the requested column is in this TTree, compute the maximum value directly
+   if (auto *leaf = GetLeafFromSelf(nullptr, columname)) {
 
-   TBranch* branch = leaf->GetBranch();
-   Double_t cmax = -DBL_MAX;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
-      branch->GetEntry(entryNumber);
-      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val > cmax) {
-            cmax = val;
+      // Ensure the TTree cursor is brought back to the current entry after computing the value
+      struct CurrentEntryRAII {
+
+         Long64_t fCurrentEntry;
+         TTree &fTree;
+
+         CurrentEntryRAII(TTree &tree) : fCurrentEntry(tree.GetReadEntry()), fTree(tree) {}
+
+         ~CurrentEntryRAII() { fTree.GetEntry(fCurrentEntry); }
+      } raii{*this};
+
+      // create cache if wanted
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux();
+
+      TBranch *branch = leaf->GetBranch();
+      Double_t cmax{errVal};
+      for (Long64_t i = 0; i < fEntries; ++i) {
+         Long64_t entryNumber = this->GetEntryNumber(i);
+         if (entryNumber < 0)
+            break;
+         branch->GetEntry(entryNumber);
+         for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+            Double_t val = leaf->GetValue(j);
+            if (val > cmax) {
+               cmax = val;
+            }
          }
       }
+      return cmax;
    }
-   return cmax;
+
+   // If there are any friends, look for the requested column name. If it is
+   // found in a friend, dispatch the calculation to the friend itself.
+   if (fFriends)
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends))
+         if (auto *tree = frEl->GetTree())
+            if (tree->GetLeaf(columname))
+               return tree->GetMaximum(columname);
+
+   return errVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6386,29 +6433,54 @@ Long64_t TTree::GetMaxTreeSize()
 
 Double_t TTree::GetMinimum(const char* columname)
 {
-   TLeaf* leaf = this->GetLeaf(columname);
-   if (!leaf) {
-      return 0;
-   }
+   constexpr auto errVal{std::numeric_limits<Double_t>::max()};
+   if (!columname || strcmp(columname, "") == 0)
+      return errVal;
 
-   // create cache if wanted
-   if (fCacheDoAutoInit)
-      SetCacheSizeAux();
+   // If the requested column is in this TTree, compute the minimum value directly
+   if (auto *leaf = GetLeafFromSelf(nullptr, columname)) {
 
-   TBranch* branch = leaf->GetBranch();
-   Double_t cmin = DBL_MAX;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
-      branch->GetEntry(entryNumber);
-      for (Int_t j = 0;j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val < cmin) {
-            cmin = val;
+      // Ensure the TTree cursor is brought back to the current entry after computing the value
+      struct CurrentEntryRAII {
+
+         Long64_t fCurrentEntry;
+         TTree &fTree;
+
+         CurrentEntryRAII(TTree &tree) : fCurrentEntry(tree.GetReadEntry()), fTree(tree) {}
+
+         ~CurrentEntryRAII() { fTree.GetEntry(fCurrentEntry); }
+      } raii{*this};
+
+      // create cache if wanted
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux();
+
+      TBranch *branch = leaf->GetBranch();
+      Double_t cmin{errVal};
+      for (Long64_t i = 0; i < fEntries; ++i) {
+         Long64_t entryNumber = this->GetEntryNumber(i);
+         if (entryNumber < 0)
+            break;
+         branch->GetEntry(entryNumber);
+         for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+            Double_t val = leaf->GetValue(j);
+            if (val < cmin) {
+               cmin = val;
+            }
          }
       }
+      return cmin;
    }
-   return cmin;
+
+   // If there are any friends, look for the requested column name. If it is
+   // found in a friend, dispatch the calculation to the friend itself.
+   if (fFriends)
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends))
+         if (auto *tree = frEl->GetTree())
+            if (tree->GetLeaf(columname))
+               return tree->GetMinimum(columname);
+
+   return errVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
