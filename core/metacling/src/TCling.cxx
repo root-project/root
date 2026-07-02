@@ -1588,7 +1588,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // Tell CppInterOp that the cling::Interpreter instance is managed externally by ROOT
    // Sets the interpreter by passing the fInterpreter handle as soon as TCling is initialized
-   Cpp::UseExternalInterpreter((Cpp::TInterp_t*)fInterpreter.get());
+   if (!IsFromRootCling())
+      Cpp::UseExternalInterpreter(fInterpreter.get());
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =

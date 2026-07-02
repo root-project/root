@@ -1,0 +1,432 @@
+"""Experimental Bazel build for CppInterOp. CMake is the supported build;
+this translates the CMake recipe to build libclangCppInterOp against a local
+LLVM tree (selected via the LLVM_DIR env var, see @cppyy_bazel//:llvm.bzl)."""
+
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@cppyy_bazel//:defs.bzl", "BASE_COPTS", "CPPINTEROP_COPTS", "DEFAULT_LTO_OPT_LEVEL", "LTO_OPT_LEVELS", "is_main_repo", "jit_cxx_interp_args", "llvm_linkopts", "llvm_lto_opt_linkopts", "llvm_system_libs", "llvm_tblgen_linkopts", "repo_rloc")
+load(
+    "@cppyy_bazel//:rules.bzl",
+    "cppinterop_buildinfo_inc",
+    "cppinterop_cc_test",
+    "cppinterop_cxx_shim",
+    "cppinterop_dispatch_cc_test",
+    "cppinterop_tblgen_inc_files",
+)
+
+# libclangCppInterOp is a sanitizer boundary: it's dlopen'd by a (possibly
+# non-instrumented) host interpreter and works directly with the non-sanitized
+# LLVM/clang libraries, so an asan/ubsan-instrumented build would die on
+# undefined __asan_* symbols at load. Opt the package out; harmless when the
+# consumer build isn't sanitized.
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "-asan",
+        "-ubsan",
+    ],
+)
+
+# LTO opt level for the .so link on an LTO/bitcode @llvm tree (no-op otherwise).
+# Governs clang's in-.so constexpr-evaluator stack frames; a heavy-JIT consumer
+# raises it (--@cppinterop//:lto_opt_level=2). See defs.bzl LTO_OPT_LEVELS.
+string_flag(
+    name = "lto_opt_level",
+    build_setting_default = DEFAULT_LTO_OPT_LEVEL,
+    values = LTO_OPT_LEVELS,
+)
+
+[
+    config_setting(
+        name = "lto_opt_O" + lvl,
+        flag_values = {":lto_opt_level": lvl},
+    )
+    for lvl in LTO_OPT_LEVELS
+]
+
+# The JIT C++ toolchain the unit tests need at RUN time (clang-repl compiles
+# in-process). Default empty -> standalone uses the host. A consumer without one
+# stages headers/clang into runfiles here, paired with :jit_cxx_interp_args:
+#   --@cppinterop//:jit_cxx_data=//my/pkg:cppjit_jit_cxx_data
+label_flag(
+    name = "jit_cxx_data",
+    build_setting_default = ":jit_cxx_data_default",
+)
+
+filegroup(
+    name = "jit_cxx_data_default",
+    srcs = [],
+)
+
+# The matching --gcc-toolchain / -stdlib++-isystem args (CPPINTEROP_JIT_CXX_ARGS
+# make-var, appended to the tests' interpreter env). Default empty; a consumer
+# staging :jit_cxx_data overrides with its own jit_cxx_interp_args() target:
+#   --@cppinterop//:jit_cxx_interp_args=//my/pkg:cppjit_jit_cxx_interp_args
+label_flag(
+    name = "jit_cxx_interp_args",
+    build_setting_default = ":jit_cxx_interp_args_default",
+)
+
+jit_cxx_interp_args(
+    name = "jit_cxx_interp_args_default",
+    args = "",
+)
+
+# LLVM's --system-libs (zlib/zstd) for the self-contained link. Default: bare -l
+# from the host; a hermetic consumer overrides with a cc_library shipping the .so's:
+#   --@cppinterop//:llvm_system_libs=@my_conda//:zlib_zstd
+# NOTE: cc_shared_library does NOT propagate a cc_library dep's bare -l linkopts
+# into the .so link (it does propagate .so-file srcs). So for the DEFAULT host
+# case the bare -l must ride on the solib's own user_link_flags -- see
+# :inline_system_libs below. This target still feeds the cc_binary/cc_test
+# consumers (tblgen, the unit tests), which DO honor cc_library linkopts.
+label_flag(
+    name = "llvm_system_libs",
+    build_setting_default = ":llvm_system_libs_default",
+)
+
+cc_library(
+    name = "llvm_system_libs_default",
+    linkopts = llvm_system_libs(),
+)
+
+# Whether to inline LLVM's bare -l --system-libs directly onto the solib's
+# user_link_flags. True (default) for a host build where -lz/-lzstd resolve from
+# the system. A hermetic consumer that ships those libs as .so files via the
+# :llvm_system_libs cc_library (which DOES propagate into cc_shared_library) sets
+# this False to avoid an unresolvable bare -l under remote execution:
+#   --@cppinterop//:inline_system_libs=false
+bool_flag(
+    name = "inline_system_libs",
+    build_setting_default = True,
+)
+
+config_setting(
+    name = "do_inline_system_libs",
+    flag_values = {":inline_system_libs": "True"},
+)
+
+# @llvm//:headers carries every LLVM/Clang header root (source + generated) with
+# the matching -isystem includes, mirroring CMake's
+# include_directories(SYSTEM ${LLVM/CLANG_INCLUDE_DIRS}).
+
+# utils/TableGen: the cppinterop-tblgen tool. CMake add_tablegen links
+# LLVM Support + TableGen; the broad llvm_linkopts() covers those.
+cc_binary(
+    name = "cppinterop-tblgen",
+    srcs = [
+        "utils/TableGen/CppInterOpEmitter.cpp",
+        "utils/TableGen/TableGen.cpp",
+    ],
+    # The static LLVM .a's the -l flags pull must be staged as link inputs.
+    additional_linker_inputs = ["@llvm//:lib_files"],
+    copts = CPPINTEROP_COPTS,
+    data = ["@llvm//:all_files"],
+    # A standalone tool using llvm::TableGen: needs the static components, not
+    # just the clang-cpp dylib.
+    linkopts = llvm_tblgen_linkopts(),
+    deps = [
+        ":llvm_system_libs",
+        "@llvm//:headers",
+    ],
+)
+
+# Run cppinterop-tblgen over CppInterOp.td -> the 4 generated .inc headers.
+cppinterop_tblgen_inc_files()
+
+filegroup(
+    name = "tblgen_inc_files",
+    srcs = [
+        "include/CppInterOp/CXCppInterOpDecl.inc",
+        "include/CppInterOp/CXCppInterOpImpl.inc",
+        "include/CppInterOp/CppInterOpAPI.inc",
+        "include/CppInterOp/CppInterOpDecl.inc",
+    ],
+)
+
+# configure_file(BuildInfo.inc.in -> include/CppInterOp/BuildInfo.inc).
+cppinterop_buildinfo_inc()
+
+# `c++` shim on PATH for Cpp::DetectSystemCompilerIncludePaths' popen().
+cppinterop_cxx_shim()
+
+# Public headers + generated .inc, consumed by the library and the tests.
+filegroup(
+    name = "headers",
+    srcs = glob(["include/**/*.h"]) + [
+        "include/CppInterOp/BuildInfo.inc",
+        ":tblgen_inc_files",
+    ],
+)
+
+# lib/CppInterOp private headers, needed when compiling the .cpp sources.
+filegroup(
+    name = "internal_headers",
+    srcs = glob(["lib/CppInterOp/*.h"]),
+)
+
+# lib/CppInterOp: the clangCppInterOp library (CPPINTEROP_USE_REPL backend,
+# non-EMSCRIPTEN sources from add_llvm_library(clangCppInterOp ...)).
+cc_library(
+    name = "lib",
+    srcs = [
+        "lib/CppInterOp/CXCppInterOp.cpp",
+        "lib/CppInterOp/CXCppInterOpGenerated.cpp",
+        "lib/CppInterOp/CppInterOp.cpp",
+        "lib/CppInterOp/CppInterOpDispatch.cpp",
+        "lib/CppInterOp/DynamicLibraryManager.cpp",
+        "lib/CppInterOp/DynamicLibraryManagerSymbol.cpp",
+        "lib/CppInterOp/ErrorInternal.cpp",
+        "lib/CppInterOp/Paths.cpp",
+        "lib/CppInterOp/Tracing.cpp",
+    ] + glob(["lib/CppInterOp/*.h"]),
+    hdrs = [":headers"],
+    # _CINDEX_LIB_: target_compile_definitions PUBLIC (CINDEX_LINKAGE).
+    # _GNU_SOURCE: top-level add_definitions(-D_GNU_SOURCE).
+    copts = CPPINTEROP_COPTS + [
+        "-D_CINDEX_LIB_",
+        "-D_GNU_SOURCE",
+    ],
+    data = ["@llvm//:all_files"],
+    includes = ["include"],
+    # :llvm_system_libs carries zlib/zstd (host -l flags by default; a hermetic
+    # consumer swaps in shipped .so's). It rides on :lib so it propagates into
+    # the solib link below and any direct cc_test linker.
+    deps = [
+        ":llvm_system_libs",
+        "@llvm//:headers",
+    ],
+)
+
+# libclangCppInterOp.so. The lib/ prefix in shared_lib_name matters for
+# downstream loaders that expect it under lib/. LLVM is linked here (the .so
+# boundary) -- not on :lib -- so the flags don't propagate into every
+# downstream consumer that only needs to link this .so dynamically.
+cc_shared_library(
+    name = "solib",
+    additional_linker_inputs = ["@llvm//:lib_files"],
+    shared_lib_name = "lib/libclangCppInterOp.so",
+    # Base LLVM link flags + the LTO codegen level selected via :lto_opt_level
+    # (a no-op on a non-LTO @llvm). Kept separate from llvm_linkopts() so the
+    # level can vary per consumer without a different llvm_linkopts() per build.
+    user_link_flags = llvm_linkopts() + select({
+        ":lto_opt_O" + lvl: llvm_lto_opt_linkopts(lvl)
+        for lvl in LTO_OPT_LEVELS
+    }) + select({
+        # Host build: inline the bare -l system libs (cc_shared_library drops a
+        # cc_library dep's linkopts, so they must be here). Hermetic consumer:
+        # empty here, ships the libs as .so files via :llvm_system_libs instead.
+        ":do_inline_system_libs": llvm_system_libs(),
+        "//conditions:default": [],
+    }),
+    deps = [":lib"],
+)
+
+# Everything a downstream consumer needs at runtime.
+filegroup(
+    name = "data",
+    srcs = [
+        ":headers",
+        ":solib",
+        "@llvm//:all_files",
+    ],
+)
+
+# ---------------------------------------------------------------------------
+# unittests/CppInterOp (native only; the EMSCRIPTEN branches are skipped).
+# ---------------------------------------------------------------------------
+
+# Tests transitively include clang/llvm headers (via Utils.h / CppInterOp.h);
+# the cppinterop_cc_test macro supplies @llvm//:headers (with its -isystem
+# roots) automatically, so tests need no per-target LLVM include wiring.
+
+# TestSharedLib: a helper DSO the unit tests dlopen and the VTableOverlay
+# bench links. (add_llvm_library(TestSharedLib SHARED ...))
+cc_library(
+    name = "test_lib",
+    srcs = ["unittests/CppInterOp/TestSharedLib/TestSharedLib.cpp"],
+    hdrs = ["unittests/CppInterOp/TestSharedLib/TestSharedLib.h"],
+    copts = BASE_COPTS,
+    includes = ["unittests/CppInterOp"],
+)
+
+cc_shared_library(
+    name = "test_solib",
+    shared_lib_name = "TestSharedLib.so",
+    deps = [":test_lib"],
+)
+
+# TestDownstreamLib: mirrors libcppyy-backend's contract -- uses the inline
+# <CppInterOp/Dispatch.h> path with its own slot storage and deliberately
+# does NOT link clangCppInterOp, so any unsatisfied inline-header UND ref
+# trips here. NDEBUG/-O2/-fno-exceptions/-fno-rtti = BASE_COPTS.
+cc_library(
+    name = "test_downstream_lib",
+    srcs = ["unittests/CppInterOp/TestDownstreamLib/TestDownstreamLib.cpp"],
+    hdrs = ["unittests/CppInterOp/TestDownstreamLib/TestDownstreamLib.h"] + [":headers"],
+    # NDEBUG (from BASE_COPTS) drops the JitCall asserts that call
+    # AreArgumentsValid; this DSO is deliberately NOT linked against
+    # clangCppInterOp, so leaving the asserts in would make that an undefined
+    # symbol. Mirrors cppyy's release backend.
+    copts = BASE_COPTS,
+    includes = [
+        "include",
+        "unittests/CppInterOp/TestDownstreamLib",
+    ],
+)
+
+cc_shared_library(
+    name = "test_downstream_solib",
+    shared_lib_name = "libTestDownstreamLib.so",
+    deps = [":test_downstream_lib"],
+)
+
+# TestDownstreamLoader: dlopens TestDownstreamLib (via TEST_DOWNSTREAM_LIB_PATH)
+# and takes argv[1] = the clangCppInterOp solib path. Not linked against
+# clangCppInterOp; -ldl for dlopen.
+cc_test(
+    name = "TestDownstreamLoader",
+    srcs = ["unittests/CppInterOp/TestDownstreamLoader.cpp"],
+    args = ["$(rootpath :solib)"],
+    copts = BASE_COPTS + [
+        "-DTEST_DOWNSTREAM_LIB_PATH=\\\"$(rootpath :test_downstream_solib)\\\"",
+    ],
+    data = [
+        ":solib",
+        ":test_downstream_solib",
+    ],
+    linkopts = ["-ldl"],
+)
+
+# CAPITestC: pure-C compile check of the generated C API. C-only flags;
+# must NOT inherit the C++ copts (GCC's C frontend rejects -fno-rtti etc).
+cc_library(
+    name = "CAPITestC",
+    srcs = ["unittests/CppInterOp/CAPITestC.c"],
+    hdrs = [":headers"],
+    copts = [
+        "-Werror",
+        "-Wall",
+        "-Wno-unused-command-line-argument",
+    ],
+    includes = ["include"],
+)
+
+# CppInterOpTests: the main gtest suite. Source list = CMake's
+# add_cppinterop_unittest(CppInterOpTests ...) plus the non-EMSCRIPTEN
+# target_sources additions (CUDATest, VTableOverlayTest) plus main.cpp.
+cppinterop_cc_test(
+    name = "CppInterOpTests",
+    srcs = [
+        "unittests/CppInterOp/CAPITest.cpp",
+        "unittests/CppInterOp/CUDATest.cpp",
+        "unittests/CppInterOp/CommentReflectionTest.cpp",
+        "unittests/CppInterOp/CppInterOpThunksTest.cpp",
+        "unittests/CppInterOp/EnumReflectionTest.cpp",
+        "unittests/CppInterOp/FunctionReflectionTest.cpp",
+        "unittests/CppInterOp/HandleTypesTest.cpp",
+        "unittests/CppInterOp/InterpreterTest.cpp",
+        "unittests/CppInterOp/JitTest.cpp",
+        "unittests/CppInterOp/ResultTest.cpp",
+        "unittests/CppInterOp/ScopeReflectionTest.cpp",
+        "unittests/CppInterOp/TypeReflectionTest.cpp",
+        "unittests/CppInterOp/Utils.cpp",
+        "unittests/CppInterOp/Utils.h",
+        "unittests/CppInterOp/VTableOverlayTest.cpp",
+        "unittests/CppInterOp/VariableReflectionTest.cpp",
+        "unittests/CppInterOp/main.cpp",
+    ],
+    # CMake sets -Wno-pedantic on VariableReflectionTest.cpp; applied suite-wide.
+    extra_copts = ["-Wno-pedantic"],
+    extra_deps = [":CAPITestC"],
+)
+
+# DynamicLibraryManagerTests: dlopens TestSharedLib at runtime (test_solib is
+# already shipped as data by the cppinterop_cc_test macro).
+cppinterop_cc_test(
+    name = "DynamicLibraryManagerTests",
+    srcs = [
+        "unittests/CppInterOp/DynamicLibraryManagerTest.cpp",
+        "unittests/CppInterOp/Utils.cpp",
+        "unittests/CppInterOp/Utils.h",
+        "unittests/CppInterOp/main.cpp",
+    ],
+)
+
+# TracingTests reads CppInterOp.h, the generated .inc, and lib/*.cpp at runtime,
+# relative to CPPINTEROP_DIR / CPPINTEROP_BINARY_DIR (the repo's runfiles root,
+# which is the test's cwd). repo_rloc self-corrects between the standalone build
+# (cppinterop is the main repo -> ".") and being an external dep (-> "../<canon>").
+# This BUILD is always @cppinterop, so is_main_repo() marks the self-reference.
+# No test-source changes needed.
+_CPPINTEROP_RUNFILES_DIR = repo_rloc(
+    "@cppinterop",
+    is_main_repo(repository_name()),
+)
+
+cppinterop_cc_test(
+    name = "TracingTests",
+    srcs = [
+        "unittests/CppInterOp/TracingTests.cpp",
+        "unittests/CppInterOp/Utils.cpp",
+        "unittests/CppInterOp/Utils.h",
+        "unittests/CppInterOp/main.cpp",
+    ],
+    data = glob(["lib/CppInterOp/*.cpp"]),
+    extra_copts = [
+        "-DCPPINTEROP_DIR=\\\"" + _CPPINTEROP_RUNFILES_DIR + "\\\"",
+        "-DCPPINTEROP_BINARY_DIR=\\\"" + _CPPINTEROP_RUNFILES_DIR + "\\\"",
+    ],
+)
+
+# DispatchTests: dlopens clangCppInterOp via RTLD_LOCAL; must NOT link it.
+cppinterop_dispatch_cc_test(
+    name = "CppInterOpTestsDispatch",
+    srcs = [
+        "unittests/CppInterOp/DispatchInit.cpp",
+        "unittests/CppInterOp/DispatchSmokeTest.cpp",
+        "unittests/CppInterOp/DispatchTest.cpp",
+        "unittests/CppInterOp/main.cpp",
+    ],
+)
+
+# Verify the dispatch binary is not linked against libclangCppInterOp -- if
+# it is, the dispatch tests are not truly exercising RTLD_LOCAL isolation.
+sh_test(
+    name = "CppInterOpTestsDispatch-isolation",
+    srcs = ["bazel-support/check_no_clangCppInterOp_link.sh"],
+    args = ["$(rootpath :CppInterOpTestsDispatch)"],
+    data = [":CppInterOpTestsDispatch"],
+)
+
+# VTableOverlayCrossTUBench: cross-TU dispatch-cost check; the dispatch loop
+# lives in TestSharedLib so the call site can't devirtualize here.
+# VTableOverlayCrossTUBench provides its own main() and only uses the
+# header-inline TestUtils::BitCastFn, so no main.cpp / Utils.cpp here.
+cppinterop_cc_test(
+    name = "VTableOverlayCrossTUBench",
+    srcs = [
+        "unittests/CppInterOp/PerfCompare.h",
+        "unittests/CppInterOp/TestSharedLib/TestSharedLib.h",
+        "unittests/CppInterOp/Utils.h",
+        "unittests/CppInterOp/VTableOverlayCrossTUBench.cpp",
+    ],
+    extra_deps = [
+        ":test_lib",
+        "@google_benchmark//:benchmark",
+    ],
+    extra_dynamic_deps = [":test_solib"],
+)
+
+# Cross-repo test_suite can't use wildcards; list every test target.
+test_suite(
+    name = "tests",
+    tests = [
+        ":CppInterOpTests",
+        ":CppInterOpTestsDispatch",
+        ":CppInterOpTestsDispatch-isolation",
+        ":DynamicLibraryManagerTests",
+        ":TestDownstreamLoader",
+        ":TracingTests",
+        ":VTableOverlayCrossTUBench",
+    ],
+)
