@@ -100,16 +100,19 @@ private:
       std::unique_ptr<ROOT::RFieldBase> fField;
       std::string fQualifiedFieldName;
       ROOT::RFieldBase::RValue fValue;
-      bool fIsValid;
       RNTupleProcessorProvenance fProcessorProvenance;
+      const bool fIsJoinField;
+      bool fIsValid;
 
       RProcessorValue(std::unique_ptr<ROOT::RFieldBase> field, std::string_view qualifiedFieldName,
-                      ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorProvenance provenance)
+                      ROOT::RFieldBase::RValue &&value, RNTupleProcessorProvenance provenance, bool isJoinField,
+                      bool isValid)
          : fField(std::move(field)),
            fQualifiedFieldName(qualifiedFieldName),
            fValue(std::move(value)),
-           fIsValid(isValid),
-           fProcessorProvenance(provenance)
+           fProcessorProvenance(provenance),
+           fIsJoinField(isJoinField),
+           fIsValid(isValid)
       {
       }
    };
@@ -128,11 +131,21 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Check whether a field is a join field
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   bool IsJoinField(FieldIndex_t fieldIdx) const
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fIsJoinField;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Set the validity of a field, i.e. whether it is possible to read its value in the current entry.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
    /// \param[in] isValid The new validity of the field.
-   void SetFieldValidity(FieldIndex_t fieldIdx, bool isValid)
+   void SetFieldIsValid(FieldIndex_t fieldIdx, bool isValid)
    {
       assert(fieldIdx < fProcessorValues.size());
       fProcessorValues[fieldIdx].fIsValid = isValid;
@@ -176,10 +189,11 @@ public:
    /// \param[in] valuePtr Pointer to an object corresponding to the field's type to bind to its value. If this is a
    /// `nullptr`, a pointer will be created.
    /// \param[in] provenance Processor provenance of the field.
+   /// \param[in] isJoinField Whether the field is a join field.
    ///
    /// \return The field index of the newly added field.
    FieldIndex_t AddField(const std::string &qualifiedFieldName, std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
-                         const RNTupleProcessorProvenance &provenance);
+                         const RNTupleProcessorProvenance &provenance, bool isJoinField);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Update a field in the entry, preserving the value pointer.

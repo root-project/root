@@ -54,7 +54,8 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string &qualifiedFieldName,
                                                               std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
-                                                              const RNTupleProcessorProvenance &provenance)
+                                                              const RNTupleProcessorProvenance &provenance,
+                                                              bool isJoinField)
 {
    auto fieldNameWithProcessorPrefix = qualifiedFieldName;
    if (const auto &processorPrefix = provenance.Get(); !processorPrefix.empty())
@@ -70,8 +71,8 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string 
    auto value = field->CreateValue();
    if (valuePtr)
       value.BindRawPtr(valuePtr);
-   fProcessorValues.emplace_back(
-      RProcessorValue(std::move(field), qualifiedFieldName, std::move(value), true, provenance));
+   fProcessorValues.emplace_back(RProcessorValue(std::move(field), qualifiedFieldName, std::move(value), provenance,
+                                                 isJoinField, /*isValid=*/true));
 
    return fieldIdx;
 }

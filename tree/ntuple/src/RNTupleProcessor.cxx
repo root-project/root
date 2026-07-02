@@ -201,7 +201,8 @@ ROOT::Experimental::RNTupleSingleProcessor::ConnectField(std::unique_ptr<ROOT::R
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                             void *valuePtr,
-                                                            const Internal::RNTupleProcessorProvenance &provenance)
+                                                            const Internal::RNTupleProcessorProvenance &provenance,
+                                                            bool isJoinField)
 {
    auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName);
    if (!fieldIdx) {
@@ -219,7 +220,7 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
                                   "processor is created from"));
       }
 
-      fieldIdx = fEntry->AddField(qualifiedFieldName, std::move(field), valuePtr, provenance);
+      fieldIdx = fEntry->AddField(qualifiedFieldName, std::move(field), valuePtr, provenance, isJoinField);
    }
 
    return *fieldIdx;
@@ -228,7 +229,8 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field,
                                                             const std::string &fieldName, void *valuePtr,
-                                                            const Internal::RNTupleProcessorProvenance &provenance)
+                                                            const Internal::RNTupleProcessorProvenance &provenance,
+                                                            bool isJoinField)
 {
    auto fieldIdx = fEntry->FindFieldIndex(fieldName, field->GetTypeName());
    if (!fieldIdx) {
@@ -246,7 +248,7 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(std::unique_ptr<ROOT
                                   "processor is created from"));
       }
 
-      fieldIdx = fEntry->AddField(qualifiedFieldName, std::move(field), valuePtr, provenance);
+      fieldIdx = fEntry->AddField(qualifiedFieldName, std::move(field), valuePtr, provenance, isJoinField);
    }
 
    return *fieldIdx;
@@ -411,17 +413,21 @@ void ROOT::Experimental::RNTupleChainProcessor::ConnectInnerProcessor(std::size_
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                            void *valuePtr,
-                                                           const Internal::RNTupleProcessorProvenance &provenance)
+                                                           const Internal::RNTupleProcessorProvenance &provenance,
+                                                           bool isJoinField)
 {
-   return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
+   return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance,
+                                                                     isJoinField);
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field,
                                                            const std::string &fieldName, void *valuePtr,
-                                                           const Internal::RNTupleProcessorProvenance &provenance)
+                                                           const Internal::RNTupleProcessorProvenance &provenance,
+                                                           bool isJoinField)
 {
-   return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(std::move(field), fieldName, valuePtr, provenance);
+   return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(std::move(field), fieldName, valuePtr, provenance,
+                                                                     isJoinField);
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::AddAllFieldsToEntry(
@@ -537,7 +543,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
          // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
          // composed join operations.
          auto fieldIdx = AddFieldToEntry(fProcessorName + ".R_rntproc_join_" + joinField, "std::uint64_t", nullptr,
-                                         Internal::RNTupleProcessorProvenance(fProcessorName));
+                                         Internal::RNTupleProcessorProvenance(fProcessorName), /*isJoinField=*/true);
          fJoinFieldIdxs.insert(fieldIdx);
       }
 
@@ -567,7 +573,8 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                           void *valuePtr,
-                                                          const Internal::RNTupleProcessorProvenance &provenance)
+                                                          const Internal::RNTupleProcessorProvenance &provenance,
+                                                          bool isJoinField)
 {
    auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
    if (auxProvenance.IsPresentInFieldName(fieldName)) {
@@ -583,12 +590,12 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
                                   "\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
       }
 
-      auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, auxProvenance);
+      auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, auxProvenance, isJoinField);
       if (fieldIdx)
          fAuxiliaryFieldIdxs.insert(fieldIdx);
       return fieldIdx;
    } else {
-      auto fieldIdx = fPrimaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
+      auto fieldIdx = fPrimaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, provenance, isJoinField);
       if (fieldIdx)
          fFieldIdxs.insert(fieldIdx);
       return fieldIdx;
@@ -598,7 +605,8 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field,
                                                           const std::string &fieldName, void *valuePtr,
-                                                          const Internal::RNTupleProcessorProvenance &provenance)
+                                                          const Internal::RNTupleProcessorProvenance &provenance,
+                                                          bool isJoinField)
 {
    auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
    if (auxProvenance.IsPresentInFieldName(fieldName)) {
@@ -614,12 +622,14 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(std::unique_ptr<ROOT::
                                   "\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
       }
 
-      auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(std::move(field), fieldName, valuePtr, auxProvenance);
+      auto fieldIdx =
+         fAuxiliaryProcessor->AddFieldToEntry(std::move(field), fieldName, valuePtr, auxProvenance, isJoinField);
       if (fieldIdx)
          fAuxiliaryFieldIdxs.insert(fieldIdx);
       return fieldIdx;
    } else {
-      auto fieldIdx = fPrimaryProcessor->AddFieldToEntry(std::move(field), fieldName, valuePtr, provenance);
+      auto fieldIdx =
+         fPrimaryProcessor->AddFieldToEntry(std::move(field), fieldName, valuePtr, provenance, isJoinField);
       if (fieldIdx)
          fFieldIdxs.insert(fieldIdx);
       return fieldIdx;
@@ -638,7 +648,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAllFieldsToEntry(
 void ROOT::Experimental::RNTupleJoinProcessor::SetAuxiliaryFieldValidity(bool isValid)
 {
    for (const auto &fieldIdx : fAuxiliaryFieldIdxs) {
-      fEntry->SetFieldValidity(fieldIdx, isValid);
+      fEntry->SetFieldIsValid(fieldIdx, isValid);
    }
 }
 
@@ -646,7 +656,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
 {
    if (fPrimaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
       for (auto fieldIdx : fFieldIdxs) {
-         fEntry->SetFieldValidity(fieldIdx, false);
+         fEntry->SetFieldIsValid(fieldIdx, false);
       }
       SetAuxiliaryFieldValidity(false);
       return kInvalidNTupleIndex;

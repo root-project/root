@@ -340,11 +340,11 @@ protected:
    /// In case the field was already present in the entry, the index of the existing field is returned.
    virtual Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) = 0;
+                   const Internal::RNTupleProcessorProvenance &provenance, bool isJoinField) = 0;
 
    virtual Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) = 0;
+                   const Internal::RNTupleProcessorProvenance &provenance, bool isJoinField) = 0;
 
    // TODO docs
    virtual void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool addPrefixProvenance,
@@ -435,7 +435,8 @@ public:
          return RNTupleProcessorOptionalPtr<T>(fEntry.get(), *fieldIdx);
       }
 
-      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      auto fieldIdx =
+         AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance(), /*isJoinField=*/false);
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
    }
 
@@ -458,7 +459,8 @@ public:
    RequestField(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
-      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      auto fieldIdx =
+         AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance(), /*isJoinField=*/false);
       return RNTupleProcessorOptionalPtr<void>(fEntry.get(), fieldIdx);
    }
 
@@ -675,13 +677,14 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+   Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
+                   bool isJoinField = false) final;
 
    Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) final;
+                   const Internal::RNTupleProcessorProvenance &provenance, bool isJoinField = false) final;
 
    void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool addPrefixProvenance,
                             bool includeSubfields) final;
@@ -777,13 +780,14 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+   Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
+                   bool isJoinField = false) final;
 
    Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) final;
+                   const Internal::RNTupleProcessorProvenance &provenance, bool isJoinField = false) final;
 
    void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool addPrefixProvenance,
                             bool includeSubfields) final;
@@ -884,13 +888,14 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+   Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
+                   bool isJoinField = false) final;
 
    Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) final;
+                   const Internal::RNTupleProcessorProvenance &provenance, bool isJoinField = false) final;
 
    void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool addPrefixProvenance,
                             bool includeSubfields) final;

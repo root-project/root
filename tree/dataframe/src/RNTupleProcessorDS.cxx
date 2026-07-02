@@ -370,7 +370,7 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
       fColumnNames.emplace_back(cardinalityFieldName);
       fColumnTypes.emplace_back(cardinalityField->GetTypeName());
       fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
+                                  Internal::RNTupleProcessorProvenance(), /*isJoinField=*/false);
    }
 
    fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
@@ -380,8 +380,8 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
 
    // Add nested fields explicitly to the entry, because they may be mapped differently.
    if (fieldInfos.size() > 1) {
-      fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
+      fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr, Internal::RNTupleProcessorProvenance(),
+                                  /*isJoinField=*/false);
    }
 }
 
@@ -481,7 +481,8 @@ ROOT::Experimental::RDF::RNTupleProcessorDS::GetColumnReaders(unsigned int /* sl
    newField->SetOnDiskId(field.GetOnDiskId());
 
    try {
-      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, Internal::RNTupleProcessorProvenance());
+      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, Internal::RNTupleProcessorProvenance(),
+                                  /*isJoinField=*/false);
    } catch (const ROOT::RException &) {
       std::string msg = "RNTupleProcessorDS: invalid type \"" + requestedType + "\" for column \"" + strName +
                         "\" with on-disk type \"" + field.GetTypeName() + "\"";
