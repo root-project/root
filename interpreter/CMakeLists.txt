@@ -437,7 +437,7 @@ if (builtin_clang)
     ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
-  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
+  set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
