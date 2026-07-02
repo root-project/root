@@ -268,9 +268,10 @@ static void DefaultProcessCrashHandler(void*) {
   llvm::sys::Process::Exit(/*RetCode=*/1, /*NoCleanup=*/false);
 }
 
-static void RegisterInterpreter(compat::Interpreter* I, bool Owned) {
+static void RegisterInterpreter(compat::Interpreter* I, bool Owned,
+                                std::vector<std::string> ArgvStorage = {}) {
   std::deque<InterpreterInfo>& Interps = GetInterpreters(Owned);
-  Interps.emplace_back(I, Owned);
+  Interps.emplace_back(I, Owned, std::move(ArgvStorage));
   InstallDiagConsumer(&Interps.back());
 }
 
@@ -4476,7 +4477,13 @@ std::string ExtractArgument(const std::vector<const char*>& Args,
 InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
                             const std::vector<const char*>& GpuArgs /*={}*/) {
   INTEROP_TRACE(Args, GpuArgs);
-  std::string MainExecutableName = sys::fs::getMainExecutable(nullptr, nullptr);
+  // The interpreter keeps the raw argv pointers for its whole lifetime (e.g.
+  // in cling::CompilerOptions::Remaining), so the strings backing them must
+  // outlive it: collect owned copies of every argument in ArgvStorage, which
+  // is handed over to this interpreter's InterpreterInfo registry entry
+  // below. ClingArgv only holds pointers into ArgvStorage.
+  std::vector<std::string> ArgvStorage;
+  ArgvStorage.push_back(sys::fs::getMainExecutable(nullptr, nullptr));
   // In some systems, CppInterOp cannot manually detect the correct resource.
   // Then the -resource-dir passed by the user is assumed to be the correct
   // location. Prioritising it over detecting it within CppInterOp. Extracting
@@ -4491,20 +4498,21 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
       (T.isOSDarwin() || T.isOSLinux()))
     ResourceDir = DetectResourceDir();
 
-  std::vector<const char*> ClingArgv = {"-std=c++14"};
-  if (!ResourceDir.empty())
-    ClingArgv.insert(ClingArgv.begin(), {"-resource-dir", ResourceDir.c_str()});
-  ClingArgv.insert(ClingArgv.begin(), MainExecutableName.c_str());
+  if (!ResourceDir.empty()) {
+    ArgvStorage.push_back("-resource-dir");
+    ArgvStorage.push_back(ResourceDir);
+  }
+  ArgvStorage.push_back("-std=c++14");
 #ifdef _WIN32
   // FIXME : Workaround Sema::PushDeclContext assert on windows
-  ClingArgv.push_back("-fno-delayed-template-parsing");
+  ArgvStorage.push_back("-fno-delayed-template-parsing");
 #endif
 #if __has_feature(memory_sanitizer)
   // Match the host stdlib (msan setup is libc++ end to end; the
   // in-process clang otherwise defaults to libstdc++ on Linux and
   // JIT'd `std::__cxx11::*` won't resolve against the host's
   // `std::__1::*`). User Args appended below can override.
-  ClingArgv.push_back("-stdlib=libc++");
+  ArgvStorage.push_back("-stdlib=libc++");
   // -stdlib=libc++ alone misses <install>/include/c++/v1: in-process
   // clang derives Driver::Dir from /proc/self/exe (= host binary),
   // not argv[0], so the force-include of `<new>` SIGSEGVs in
@@ -4512,7 +4520,6 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   // cell. Gating on memory_sanitizer (not _LIBCPP_VERSION) keeps
   // this away from generic libc++ builds where the cell-derived
   // path may not be the libc++ the host actually uses.
-  std::string LibcxxIncDir;
   if (!ResourceDir.empty()) {
     SmallString<256> P(ResourceDir);
     sys::path::remove_filename(P);
@@ -4520,13 +4527,12 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
     sys::path::remove_filename(P);
     sys::path::append(P, "include", "c++", "v1");
     if (sys::fs::is_directory(P)) {
-      LibcxxIncDir = P.str().str();
-      ClingArgv.push_back("-cxx-isystem");
-      ClingArgv.push_back(LibcxxIncDir.c_str());
+      ArgvStorage.push_back("-cxx-isystem");
+      ArgvStorage.push_back(P.str().str());
     }
   }
 #endif
-  ClingArgv.insert(ClingArgv.end(), Args.begin(), Args.end());
+  ArgvStorage.insert(ArgvStorage.end(), Args.begin(), Args.end());
   // To keep the Interpreter creation interface between cling and clang-repl
   // to some extent compatible we should put Args and GpuArgs together. On the
   // receiving end we should check for -xcuda to know.
@@ -4539,22 +4545,23 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
       return INTEROP_RETURN(nullptr);
     }
   }
-  ClingArgv.insert(ClingArgv.end(), GpuArgs.begin(), GpuArgs.end());
+  ArgvStorage.insert(ArgvStorage.end(), GpuArgs.begin(), GpuArgs.end());
 
   // Process externally passed arguments if present.
-  std::vector<std::string> ExtraArgs;
   auto EnvOpt = llvm::sys::Process::GetEnv("CPPINTEROP_EXTRA_INTERPRETER_ARGS");
   if (EnvOpt) {
     StringRef Env(*EnvOpt);
     while (!Env.empty()) {
       StringRef Arg;
       std::tie(Arg, Env) = Env.split(' ');
-      ExtraArgs.push_back(Arg.str());
+      ArgvStorage.push_back(Arg.str());
     }
   }
-  std::transform(ExtraArgs.begin(), ExtraArgs.end(),
-                 std::back_inserter(ClingArgv),
-                 [&](const std::string& str) { return str.c_str(); });
+
+  std::vector<const char*> ClingArgv;
+  ClingArgv.reserve(ArgvStorage.size());
+  for (const std::string& Arg : ArgvStorage)
+    ClingArgv.push_back(Arg.c_str());
 
   // Force global process initialization.
   (void)GetInterpreters();
@@ -4601,7 +4608,7 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   )");
   }
 
-  RegisterInterpreter(I, /*Owned=*/true);
+  RegisterInterpreter(I, /*Owned=*/true, std::move(ArgvStorage));
 
 // Define runtime symbols in the JIT dylib for clang-repl
 #if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)

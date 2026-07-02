@@ -25,6 +25,9 @@
 
 #include <deque>
 #include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Cpp {
 
@@ -40,12 +43,17 @@ struct InterpreterInfo {
   // A deque keeps element addresses stable so DiagnosticRef::data
   // survives push_back.
   std::deque<StoredDiagView> StoredDiags;
+  // Owns the string arguments passed to clang during creation, since the
+  // interpreter keeps the raw argv pointers for its whole lifetime
+  std::vector<std::string> ArgvStorage;
 
-  InterpreterInfo(compat::Interpreter* I, bool Owned)
-      : Interpreter(I), isOwned(Owned) {}
+  InterpreterInfo(compat::Interpreter* I, bool Owned,
+                  std::vector<std::string> ArgvStrs = {})
+      : Interpreter(I), isOwned(Owned), ArgvStorage(std::move(ArgvStrs)) {}
 
   InterpreterInfo(InterpreterInfo&& Other) noexcept
-      : Interpreter(Other.Interpreter), isOwned(Other.isOwned) {
+      : Interpreter(Other.Interpreter), isOwned(Other.isOwned),
+        ArgvStorage(std::move(Other.ArgvStorage)) {
     Other.Interpreter = nullptr;
     Other.isOwned = false;
   }
@@ -55,6 +63,7 @@ struct InterpreterInfo {
         delete Interpreter;
       Interpreter = Other.Interpreter;
       isOwned = Other.isOwned;
+      ArgvStorage = std::move(Other.ArgvStorage);
       Other.Interpreter = nullptr;
       Other.isOwned = false;
     }
