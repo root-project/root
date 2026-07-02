@@ -369,8 +369,9 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
          (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + "_R_rdf_sizeof_") + std::string(colName);
       fColumnNames.emplace_back(cardinalityFieldName);
       fColumnTypes.emplace_back(cardinalityField->GetTypeName());
-      fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
-                                  Internal::RNTupleProcessorProvenance(), /*isJoinField=*/false);
+      auto fieldIdx = fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
+                                                  Internal::RNTupleProcessorProvenance(), /*isJoinField=*/false);
+      fProcessor->GetEntry().SetFieldIsActive(fieldIdx, false);
    }
 
    fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
@@ -380,8 +381,10 @@ void ROOT::Experimental::RDF::RNTupleProcessorDS::AddField(const ROOT::RFieldBas
 
    // Add nested fields explicitly to the entry, because they may be mapped differently.
    if (fieldInfos.size() > 1) {
-      fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr, Internal::RNTupleProcessorProvenance(),
-                                  /*isJoinField=*/false);
+      auto fieldIdx = fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
+                                                  Internal::RNTupleProcessorProvenance(),
+                                                  /*isJoinField=*/false);
+      fProcessor->GetEntry().SetFieldIsActive(fieldIdx, false);
    }
 }
 
@@ -392,11 +395,14 @@ ROOT::Experimental::RDF::RNTupleProcessorDS::RNTupleProcessorDS(
    // Do not add the subfields now, this is handled by AddField.
    fProcessor->AddAllFieldsToEntry(Internal::RNTupleProcessorProvenance(), /*addPrefixProvenance=*/false,
                                    /*includeSubfields=*/false);
-   const auto &entry = fProcessor->GetEntry();
+   auto &entry = fProcessor->GetEntry();
    for (auto fieldIdx : entry.GetFieldIndices()) {
-      const auto &field = entry.GetValue(fieldIdx).GetField();
-      AddField(field, entry.GetQualifiedFieldName(fieldIdx), entry.GetFieldProvenance(fieldIdx),
-               std::vector<ROOT::Experimental::RDF::RNTupleProcessorDS::RFieldInfo>());
+      if (!entry.IsJoinField(fieldIdx)) {
+         const auto &field = entry.GetValue(fieldIdx).GetField();
+         AddField(field, entry.GetQualifiedFieldName(fieldIdx), entry.GetFieldProvenance(fieldIdx),
+                  std::vector<ROOT::Experimental::RDF::RNTupleProcessorDS::RFieldInfo>());
+         entry.SetFieldIsActive(fieldIdx, false);
+      }
    }
 }
 
@@ -417,7 +423,8 @@ ROOT::Experimental::RDF::RNTupleProcessorDS::GetColumnReaders(unsigned int /* sl
 
    // First check if a field with the requested type already exists. If that is the case, we can immediately create a
    // column reader for it.
-   if (fProcessor->GetEntry().FindFieldIndex(name, requestedType)) {
+   if (auto fieldIdx = fProcessor->GetEntry().FindFieldIndex(name, requestedType)) {
+      fProcessor->GetEntry().SetFieldIsActive(*fieldIdx, true);
       auto valuePtr = fProcessor->RequestField(std::string(name), requestedType);
       auto reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(*fProcessor, valuePtr);
       fActiveColumnReaders.emplace_back(reader.get());
@@ -442,6 +449,7 @@ ROOT::Experimental::RDF::RNTupleProcessorDS::GetColumnReaders(unsigned int /* sl
       }
    }
 
+   fProcessor->GetEntry().SetFieldIsActive(*fieldIdx, true);
    const auto &field = fProcessor->GetEntry().GetField(*fieldIdx);
    const std::string strName = std::string(name);
    std::unique_ptr<ROOT::RFieldBase> newField;

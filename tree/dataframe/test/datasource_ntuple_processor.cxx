@@ -386,6 +386,47 @@ TEST(RNTupleProcessorDS, JoinUnaligned)
    EXPECT_FLOAT_EQ(7.5, jetSum.GetValue());
 }
 
+TEST(RNTupleProcessorDS, JoinIgnoreMissingValues)
+{
+   FileRAII guardFile1("RNTupleProcessorDS_test_join_ignore_missing_values_1.root");
+   FileRAII guardFile2("RNTupleProcessorDS_test_join_ignore_missing_values_2.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldId = model->MakeField<std::uint32_t>("idx");
+      auto fldElectron = model->MakeField<Electron>("electrons");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "primary", guardFile1.GetPath());
+      for (unsigned i = 0; i < 3; ++i) {
+         *fldId = i;
+         fldElectron->pt = static_cast<float>(i);
+         writer->Fill();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto fldId = model->MakeField<std::uint32_t>("idx");
+      auto fldJets = model->MakeField<std::vector<float>>("jets");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "auxiliary", guardFile2.GetPath());
+      // fill only the second event
+      *fldId = 2;
+      *fldJets = {.1f, .2f};
+      writer->Fill();
+   }
+
+   auto proc =
+      RNTupleProcessor::CreateJoin({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {"idx"});
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
+
+   // Even though the auxiliary ntuple misses some events, no error should be raised unless columns from that ntuple are
+   // actually requested.
+
+   auto count = df.Count();
+   EXPECT_EQ(3, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 1.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(1, electronFilterCount.GetValue());
+}
+
 // #ifdef R__USE_IMT
 // struct IMTRAII {
 //    IMTRAII() { ROOT::EnableImplicitMT(); }
