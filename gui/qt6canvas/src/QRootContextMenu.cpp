@@ -248,8 +248,10 @@ void QRootContextMenu::Dialog(TObject *object, TMethod *method)
 /// prompts for the arguments of "function".
 /// function may be a global function or a method
 
-void QRootContextMenu::Dialog(TObject * /* object */, TFunction * /* function */)
+void QRootContextMenu::Dialog(TObject * object, TFunction * func)
 {
+   QRootMethodDialog dlg;
+   dlg.methodDialog(fContextMenu, object, func);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
