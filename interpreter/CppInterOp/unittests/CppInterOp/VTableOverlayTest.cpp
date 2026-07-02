@@ -5,30 +5,17 @@
 #include "gtest/gtest.h"
 
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 namespace {
 
-// Replacement functions installed into vtable slots. The leading self
-// parameter matches the implicit `this` of the virtual they replace.
-extern "C" int repl_negate(void* /*self*/, int x) { return -x; }
-extern "C" int repl_double(void* /*self*/, int x) { return x * 2; }
-
-// Replacement that reads the object via `this`: layout is { vptr, int value }
-// on every ABI we target, so the data member sits at sizeof(void*).
-extern "C" int repl_read_value(void* self, int x) {
-  int v = *reinterpret_cast<int*>(static_cast<char*>(self) + sizeof(void*));
-  return v + x;
-}
-
 // Parallel test-TU definitions of A / B used by the OverlayThroughHierarchy
 // test. Layout and ABI come from the host compiler here; the same struct
 // shape is declared at interpreter level inside the test so reflection
-// computes matching vtable slot indices. foo / bar access the object's
-// data members via typed static_cast on the self pointer the vtable slot
-// hands them -- exactly the pattern a language binding's adapter writes.
-// Virtual destructors keep the vtable layout in line with the other tests
-// here (Itanium D1/D0 pair before user virtuals; MSVC single deleting-dtor).
+// computes matching vtable slot indices. Virtual destructors keep the
+// vtable layout in line with the other tests here (Itanium D1/D0 pair
+// before user virtuals; MSVC single deleting-dtor).
 struct A {
   int m_x;
   A(int x) : m_x(x) {}
@@ -42,17 +29,41 @@ struct B : A {
   int method() override { return static_cast<int>(m_d); }
 };
 
-extern "C" int foo(void* self) {
-  return static_cast<A*>(self)->m_x + 10;
+// Replacement functions installed into vtable slots.
+struct Repl {
+  int negate(int x) { return -x; }
+  int twice(int x) { return x * 2; }
+  // Reads the object via `this`: layout is { vptr, int value } on every
+  // ABI we target, so the data member sits at sizeof(void*).
+  int read_value(int x) {
+    return *reinterpret_cast<int*>(reinterpret_cast<char*>(this) +
+                                   sizeof(void*)) +
+           x;
+  }
+  int foo() { return reinterpret_cast<A*>(this)->m_x + 10; }
+  int bar() {
+    B* b = reinterpret_cast<B*>(this);
+    return static_cast<int>(b->m_x + b->m_d);
+  }
+};
+
+template <class MFP> void* MethodAddr(MFP mfp) {
+  static_assert(sizeof(MFP) >= sizeof(void*), "unexpected MFP layout");
+  void* addr;
+  std::memcpy(&addr, &mfp, sizeof(addr));
+  return addr;
 }
-extern "C" int bar(void* self) {
-  return static_cast<int>(static_cast<B*>(self)->m_x +
-                          static_cast<B*>(self)->m_d);
-}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+#  define CPPINTEROP_VTABLE_SLOT_CC __thiscall
+#else
+#  define CPPINTEROP_VTABLE_SLOT_CC
+#endif
 
 int call_slot_no_arg(void* inst, int slot) {
   void** vptr = *reinterpret_cast<void***>(inst);
-  return TestUtils::BitCastFn<int (*)(void*)>(vptr[slot])(inst);
+  return TestUtils::BitCastFn<int (CPPINTEROP_VTABLE_SLOT_CC *)(void*)>(
+      vptr[slot])(inst);
 }
 
 // OverlayB declared through the interpreter so the overlay runs against
@@ -85,7 +96,8 @@ Cpp::FuncRef Method(Cpp::DeclRef scope, const char* name) {
 // reading the slot tests what the overlay actually installs.
 int call_slot(void* inst, int slot, int arg) {
   void** vptr = *reinterpret_cast<void***>(inst);
-  return TestUtils::BitCastFn<int (*)(void*, int)>(vptr[slot])(inst, arg);
+  return TestUtils::BitCastFn<int (CPPINTEROP_VTABLE_SLOT_CC *)(void*, int)>(
+      vptr[slot])(inst, arg);
 }
 
 #ifdef _WIN32
@@ -103,7 +115,7 @@ TEST(VTableOverlay, ReplacesSlotPreservingOthers) {
   void* inst = Cpp::Construct(B).data;
   ASSERT_NE(inst, nullptr);
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, B, {{Method(B, "beta"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+      inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kBeta, 5), -5);  // overlaid
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 15); // preserved: alpha -> x+10
@@ -125,7 +137,7 @@ TEST(VTableOverlay, PreservesPrefixAndUnrelatedSlots) {
 #endif
   void* alpha_slot = aot[kAlpha];
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, B, {{Method(B, "beta"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+      inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
   void** now = *reinterpret_cast<void***>(inst);
   EXPECT_EQ(now[-1], prefix_m1);
@@ -144,7 +156,7 @@ TEST(VTableOverlay, RestoresOnDestroy) {
   void* aot = *reinterpret_cast<void**>(inst);
   {
     auto ov = Cpp::MakeUniqueVTableOverlay(
-        inst, B, {{Method(B, "beta"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+        inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
     ASSERT_TRUE(ov);
     EXPECT_NE(*reinterpret_cast<void**>(inst), aot);
   }
@@ -159,8 +171,8 @@ TEST(VTableOverlay, ReplacesMultipleSlots) {
   ASSERT_NE(inst, nullptr);
   auto ov = Cpp::MakeUniqueVTableOverlay(
       inst, B,
-      {{Method(B, "alpha"), TestUtils::BitCastFn<void*>(&repl_negate)},
-       {Method(B, "beta"), TestUtils::BitCastFn<void*>(&repl_double)}});
+      {{Method(B, "alpha"), MethodAddr(&Repl::negate)},
+       {Method(B, "beta"), MethodAddr(&Repl::twice)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kAlpha, 5), -5);
   EXPECT_EQ(call_slot(inst, kBeta, 5), 10);
@@ -174,7 +186,7 @@ TEST(VTableOverlay, RejectsInvalidInput) {
   ASSERT_NE(inst, nullptr);
   Cpp::ConstFuncRef beta = Method(B, "beta");
   Cpp::ConstFuncRef none = nullptr;
-  void* fn = TestUtils::BitCastFn<void*>(&repl_negate);
+  void* fn = MethodAddr(&Repl::negate);
 
   EXPECT_EQ(Cpp::MakeVTableOverlay(nullptr, B, &beta, &fn, 1), nullptr); // inst
   EXPECT_EQ(Cpp::MakeVTableOverlay(inst, nullptr, &beta, &fn, 1),
@@ -194,7 +206,7 @@ TEST(VTableOverlay, OverlayIsPerInstance) {
   void* b_vptr_before = *reinterpret_cast<void**>(b);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      a, B, {{Method(B, "beta"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+      a, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
 
   EXPECT_NE(*reinterpret_cast<void**>(a), b_vptr_before); // a swapped
@@ -224,7 +236,7 @@ TEST(VTableOverlay, ThunkReadsThisAndDataMember) {
   ASSERT_NE(inst, nullptr);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, T, {{Method(T, "frob"), TestUtils::BitCastFn<void*>(&repl_read_value)}});
+      inst, T, {{Method(T, "frob"), MethodAddr(&Repl::read_value)}});
   ASSERT_TRUE(ov);
 
   // First user virtual lives at kAlpha (Itanium D1/D0 prefix; MSVC single
@@ -254,7 +266,7 @@ TEST(VTableOverlay, DerivedClassWithOverride) {
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 7);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, D, {{Method(D, "frob"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+      inst, D, {{Method(D, "frob"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kAlpha, 5), -5);
   ov.reset();
@@ -276,7 +288,7 @@ TEST(VTableOverlay, MultiLevelInheritance) {
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 8); // MlC::frob: x+3
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, C, {{Method(C, "frob"), TestUtils::BitCastFn<void*>(&repl_double)}});
+      inst, C, {{Method(C, "frob"), MethodAddr(&Repl::twice)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 10); // overlay: x*2
   ov.reset();
@@ -302,7 +314,7 @@ TEST(VTableOverlay, RejectsMultipleInheritance) {
   ASSERT_NE(inst, nullptr);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, C, {{Method(C, "af"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+      inst, C, {{Method(C, "af"), MethodAddr(&Repl::negate)}});
   EXPECT_FALSE(ov); // refuses the layout
 
   Cpp::Destruct(inst, C);
@@ -323,7 +335,7 @@ TEST(VTableOverlay, RejectsNonPolymorphicBase) {
   void* inst = Cpp::Construct(NP).data;
   ASSERT_NE(inst, nullptr);
   Cpp::ConstFuncRef dummy = Method(PH, "dummy");
-  void* fn = TestUtils::BitCastFn<void*>(&repl_negate);
+  void* fn = MethodAddr(&Repl::negate);
   EXPECT_EQ(Cpp::MakeVTableOverlay(inst, NP, &dummy, &fn, 1), nullptr);
   Cpp::Destruct(inst, NP);
 }
@@ -357,7 +369,7 @@ TEST(VTableOverlay, RejectsOutOfRangeMethodSlot) {
   void* inst = Cpp::Construct(Small).data;
   ASSERT_NE(inst, nullptr);
   Cpp::ConstFuncRef v10 = Method(Large, "v10");
-  void* fn = TestUtils::BitCastFn<void*>(&repl_negate);
+  void* fn = MethodAddr(&Repl::negate);
   EXPECT_EQ(Cpp::MakeVTableOverlay(inst, Small, &v10, &fn, 1), nullptr);
   Cpp::Destruct(inst, Small);
 }
@@ -395,11 +407,11 @@ TEST(VTableOverlay, OverlayThroughHierarchyAccessesDataMembers) {
 
   auto ov_a = Cpp::MakeUniqueVTableOverlay(
       &a, A_scope,
-      {{Method(A_scope, "method"), TestUtils::BitCastFn<void*>(&foo)}});
+      {{Method(A_scope, "method"), MethodAddr(&Repl::foo)}});
   ASSERT_TRUE(ov_a);
   auto ov_b = Cpp::MakeUniqueVTableOverlay(
       &b, B_scope,
-      {{Method(B_scope, "method"), TestUtils::BitCastFn<void*>(&bar)}});
+      {{Method(B_scope, "method"), MethodAddr(&Repl::bar)}});
   ASSERT_TRUE(ov_b);
 
   EXPECT_EQ(call_slot_no_arg(&a, kAlpha), 15); // foo: A::m_x(5) + 10
@@ -431,7 +443,7 @@ TEST(VTableOverlay, RejectsVirtualInheritance) {
   ASSERT_NE(inst, nullptr);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, D, {{Method(D, "frob"), TestUtils::BitCastFn<void*>(&repl_negate)}});
+      inst, D, {{Method(D, "frob"), MethodAddr(&Repl::negate)}});
   EXPECT_FALSE(ov); // refuses the layout
 
   Cpp::Destruct(inst, D);
@@ -576,7 +588,7 @@ TEST(VTableOverlay, SetsExtraPrefixSlots) {
   void* inst = Cpp::Construct(B).data;
   ASSERT_NE(inst, nullptr);
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, B, {{Method(B, "beta"), TestUtils::BitCastFn<void*>(&repl_negate)}},
+      inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}},
       /*n_extra_prefix_slots=*/2);
   ASSERT_TRUE(ov);
   void*& slot0 = Cpp::VTableOverlayExtraSlot(inst, 0);

@@ -2150,7 +2150,13 @@ struct VTableOverlay {
   bool dtor_fired = false; // wrapper started -- skip vptr restore
   // Dtor-hook fields. orig_dtor stays null when the caller passed
   // on_destroy = nullptr; the wrapper is then not installed at all.
+
+  // On 32-bit MSVC the vtable's vector-deleting-dtor slot uses __thiscall
+#if defined(_MSC_VER) && defined(_M_IX86)
+  void (__thiscall *orig_dtor)(void*, int) = nullptr;
+#else
   void (*orig_dtor)(void*) = nullptr;
+#endif
   VTableOverlayDtorHook cleanup = nullptr;
   void* cleanup_data = nullptr;
 
@@ -2202,10 +2208,56 @@ struct VTableOverlay {
 // callback BEFORE the original destructor: `self` is alive at that
 // point so the callback can inspect it, and after the original
 // deleting-destructor returns memory has been freed.
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+namespace {
+struct VTableOverlayDtorHost {
+  // Called through a vtable slot the object being destroyed owns
+  void Wrapper(int flags) {
+    void* self = static_cast<void*>(this);
+    std::fprintf(stderr,
+                 "[cppinterop] dtorWrapper enter self=%p flags=%d\n",
+                 self, flags);
+    void** vptr = VTableOverlay::ReadVPtr(self);
+    VTableOverlay* ov = *reinterpret_cast<VTableOverlay**>(
+        vptr - detail::kVTableOverlayPrefixSize);
+    std::fprintf(stderr,
+                 "[cppinterop] dtorWrapper ov=%p orig_dtor=%p cleanup=%p\n",
+                 (void*)ov, (void*)ov->orig_dtor, (void*)ov->cleanup);
+    // Snapshot orig_dtor before user code runs: a misbehaving callback
+    // that destroys the overlay must not strand the C++ destructor.
+    auto orig_dtor = ov->orig_dtor;
+    ov->dtor_fired = true;
+    if (ov->cleanup)
+      ov->cleanup(self, ov->cleanup_data);
+    std::fprintf(
+        stderr,
+        "[cppinterop] dtorWrapper about to call orig_dtor self=%p flags=%d\n",
+        self, flags);
+    orig_dtor(self, flags);
+    std::fprintf(stderr,
+                 "[cppinterop] dtorWrapper returned from orig_dtor\n");
+  }
+};
+static void* GetVTableOverlayDtorWrapperAddress() {
+  // Non-virtual member of a class with no bases: MSVC represents the mfp
+  // as a single code address in a 32-bit slot
+  union {
+    void (VTableOverlayDtorHost::*mfp)(int);
+    void* raw;
+  } u{};
+  u.mfp = &VTableOverlayDtorHost::Wrapper;
+  return u.raw;
+}
+} // namespace
+#else
 extern "C" void cppinteropVTableOverlayDtorWrapper(void* self) {
+  std::fprintf(stderr, "[cppinterop] dtorWrapper enter self=%p\n", self);
   void** vptr = VTableOverlay::ReadVPtr(self);
   VTableOverlay* ov = *reinterpret_cast<VTableOverlay**>(
       vptr - detail::kVTableOverlayPrefixSize);
+  std::fprintf(stderr, "[cppinterop] dtorWrapper ov=%p orig_dtor=%p\n",
+               (void*)ov, (void*)ov->orig_dtor);
   // Snapshot orig_dtor before user code runs: a misbehaving callback
   // that destroys the overlay must not strand the C++ destructor.
   auto orig_dtor = ov->orig_dtor;
@@ -2213,7 +2265,9 @@ extern "C" void cppinteropVTableOverlayDtorWrapper(void* self) {
   if (ov->cleanup)
     ov->cleanup(self, ov->cleanup_data);
   orig_dtor(self);
+  std::fprintf(stderr, "[cppinterop] dtorWrapper returned from orig_dtor\n");
 }
+#endif
 
 // Minimum slot count a polymorphic class can have from its address point:
 // Itanium emits the destructor pair (D1 + D0) so the count is at least 2;
@@ -2321,12 +2375,25 @@ MakeVTableOverlay(void* inst, ConstDeclRef base, const ConstFuncRef* methods,
   // destruction could fire the wrapper with stale state.
   if (on_destroy) {
     void** vptr = ov->address_point();
-    ov->orig_dtor =
-        VTableOverlay::BitCastFn<void (*)(void*)>(vptr[kDeletingDtorSlot]);
+    // decltype picks up the per-platform signature of orig_dtor (32-bit MSVC variant is __thiscall(void*, int))
+    ov->orig_dtor = VTableOverlay::BitCastFn<decltype(ov->orig_dtor)>(
+        vptr[kDeletingDtorSlot]);
     ov->cleanup = on_destroy;
     ov->cleanup_data = cleanup_data;
+    // On 32-bit MSVC the wrapper is a __thiscall member of a helper class
+    // (MSVC forbids __thiscall on free functions); extract the code
+    // address via a member-function-pointer pun. Everywhere else the
+    // wrapper is a plain function whose address bitcasts to void* directly.
+#if defined(_MSC_VER) && defined(_M_IX86)
+    vptr[kDeletingDtorSlot] = GetVTableOverlayDtorWrapperAddress();
+#else
     vptr[kDeletingDtorSlot] =
         VTableOverlay::BitCastFn<void*>(&cppinteropVTableOverlayDtorWrapper);
+#endif
+    std::fprintf(stderr,
+                 "[cppinterop] MakeVTableOverlay wired hook: inst=%p "
+                 "orig_dtor=%p wrapper=%p\n",
+                 inst, (void*)ov->orig_dtor, vptr[kDeletingDtorSlot]);
   }
 
   return INTEROP_RETURN(ov);
