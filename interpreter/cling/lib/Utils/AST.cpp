@@ -1722,6 +1722,14 @@ namespace utils {
       }
       QT = etype_input->getNamedType();
     }
+
+    // We don't consider the alias introduced by `using a::X` as a new type.
+    // The qualified name is still a::X.
+    if (const auto* UT = QT->getAs<UsingType>()) {
+      QT = Ctx.getQualifiedType(UT->getUnderlyingType(), prefix_qualifiers);
+      return GetFullyQualifiedType(QT, Ctx);
+    }
+
     if (prefix == nullptr) {
       // Create a nested name specifier if needed (i.e. if the decl context
       // is not the global scope.
