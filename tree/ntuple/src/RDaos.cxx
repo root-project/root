@@ -107,10 +107,8 @@ daos_event_t *ROOT::Experimental::Internal::RDaosObject::FetchUpdateArgs::GetEve
 
 ROOT::Experimental::Internal::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid)
 {
-   if (!cid.IsUnknown())
-      daos_obj_generate_oid(container.fContainerHandle, &oid, DAOS_OT_MULTI_UINT64, cid.fCid,
-                            DAOS_OCH_RDD_DEF | DAOS_OCH_SHD_DEF, 0);
-
+   daos_obj_generate_oid(container.fContainerHandle, &oid, DAOS_OT_MULTI_UINT64, cid.fCid,
+                         DAOS_OCH_RDD_DEF | DAOS_OCH_SHD_DEF, 0);
    if (int err = daos_obj_open(container.fContainerHandle, oid, DAOS_OO_RW, &fObjectHandle, nullptr))
       throw RException(R__FAIL("daos_obj_open: error: " + std::string(d_errstr(err))));
 }
@@ -171,9 +169,9 @@ int ROOT::Experimental::Internal::RDaosEventQueue::WaitOnParentBarrier(daos_even
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Internal::RDaosContainer::RDaosContainer(std::shared_ptr<RDaosPool> pool,
+ROOT::Experimental::Internal::RDaosContainer::RDaosContainer(std::unique_ptr<RDaosPool> pool,
                                                              std::string_view containerId, bool create)
-   : fPool(pool)
+   : fPool(std::move(pool))
 {
    daos_cont_info_t containerInfo{};
 

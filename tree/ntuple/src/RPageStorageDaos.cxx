@@ -56,9 +56,8 @@ struct RDaosKey {
    AttributeKey_t fAkey;
 };
 
-/// \brief Pre-defined keys for object store. `kDistributionKeyDefault` is the distribution key for metadata and
-/// pagelist values; optionally it can be used for ntuple pages (if under the `kOidPerPage` mapping strategy).
-/// `kAttributeKeyDefault` is the attribute key for ntuple pages under `kOidPerPage`.
+/// \brief Pre-defined keys for object store. `kDistributionKeyDefault` is the distribution key for all objects,
+/// `kAttributeKeyDefault` is the attribute key for all objects but anchor, header, footer.
 /// `kAttributeKey{Anchor,Header,Footer}` are the respective attribute keys for anchor/header/footer metadata elements.
 static constexpr DistributionKey_t kDistributionKeyDefault = 0x5a3c69f0cafe4a11;
 static constexpr AttributeKey_t kAttributeKeyDefault = 0x4243544b53444229;
@@ -70,7 +69,11 @@ static constexpr AttributeKey_t kAttributeKeyFooter = 0x4243544b5344422c;
 static constexpr decltype(daos_obj_id_t::lo) kOidLowMetadata = -1;
 static constexpr decltype(daos_obj_id_t::lo) kOidLowPageList = -2;
 
-static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
+/// Because the object class becomes part of the object ID (encoded in the system-reserved 32 bits), we have to
+/// hard-code the object class for the anchor.  Otherwise, we would need ask the user to specify the correct object
+/// class in the RNTupleReadOptions when trying to open a previously written data set, which is not really acceptable.
+/// The object class set in the RNTupleWriteOptions thus applies to all objects except the anchor.
+static constexpr daos_oclass_id_t kCidAnchor = OC_UNKNOWN;
 
 RDaosKey GetPageDaosKey(ROOT::Experimental::Internal::ntuple_index_t ntplId, long unsigned pageCount)
 {
@@ -139,7 +142,7 @@ struct RDaosContainerNTupleLocator {
 
       buffer = MakeUninitArray<unsigned char>(anchorSize);
       if ((err = cont.ReadSingleAkey(buffer.get(), anchorSize, oidMetadata, kDistributionKeyDefault,
-                                     kAttributeKeyAnchor, kCidMetadata))) {
+                                     kAttributeKeyAnchor, kCidAnchor))) {
          return err;
       }
 
@@ -238,15 +241,12 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
 {
    auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
-   auto oclass = RDaosObject::ObjClassId(fNTupleAnchor.fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
 
    auto args = ParseDaosURI(fURI);
-   auto pool = std::make_shared<RDaosPool>(args.fPoolLabel);
+   auto pool = std::make_unique<RDaosPool>(args.fPoolLabel);
 
-   fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel, /*create =*/true);
-   fDaosContainer->SetDefaultObjectClass(oclass);
+   fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel, /*create =*/true);
+   fDaosContainer->SetDefaultObjectClass(fNTupleAnchor.fObjClass);
 
    auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
    fNTupleIndex = locator.GetIndex();
@@ -357,10 +357,14 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned cha
       RNTupleCompressor::Zip(serializedPageList, length, GetWriteOptions().GetCompression(), bufPageListZip.get());
 
    auto offsetData = fClusterGroupId.fetch_add(1);
+   // clang-format off
    fDaosContainer->WriteSingleAkey(
-      bufPageListZip.get(), szPageListZip,
-      daos_obj_id_t{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)}, kDistributionKeyDefault,
-      offsetData, kCidMetadata);
+      bufPageListZip.get(),
+      szPageListZip,
+      daos_obj_id_t{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
+      kDistributionKeyDefault,
+      offsetData);
+   // clang-format on
    RNTupleLocator result;
    result.SetType(RNTupleLocator::kTypeObject64);
    result.SetNBytesOnStorage(szPageListZip);
@@ -386,7 +390,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleHeader(const void *
 {
    fDaosContainer->WriteSingleAkey(
       data, nbytes, daos_obj_id_t{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
-      kDistributionKeyDefault, kAttributeKeyHeader, kCidMetadata);
+      kDistributionKeyDefault, kAttributeKeyHeader);
    fNTupleAnchor.fLenHeader = lenHeader;
    fNTupleAnchor.fNBytesHeader = nbytes;
 }
@@ -395,7 +399,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleFooter(const void *
 {
    fDaosContainer->WriteSingleAkey(
       data, nbytes, daos_obj_id_t{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
-      kDistributionKeyDefault, kAttributeKeyFooter, kCidMetadata);
+      kDistributionKeyDefault, kAttributeKeyFooter);
    fNTupleAnchor.fLenFooter = lenFooter;
    fNTupleAnchor.fNBytesFooter = nbytes;
 }
@@ -407,7 +411,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
    fNTupleAnchor.Serialize(buffer.get());
    fDaosContainer->WriteSingleAkey(
       buffer.get(), ntplSize, daos_obj_id_t{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
-      kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
+      kDistributionKeyDefault, kAttributeKeyAnchor, kCidAnchor);
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>
@@ -426,8 +430,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
    EnableDefaultMetrics("RPageSourceDaos");
 
    auto args = ParseDaosURI(uri);
-   auto pool = std::make_shared<RDaosPool>(args.fPoolLabel);
-   fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel);
+   auto pool = std::make_unique<RDaosPool>(args.fPoolLabel);
+   fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel);
 }
 
 ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos()
@@ -447,10 +451,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadStructureImpl()
    fAnchor = *ntupleLocator.fAnchor;
    fNTupleIndex = ntupleLocator.GetIndex();
 
-   auto oclass = RDaosObject::ObjClassId(fAnchor.fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("LoadStructureImpl: unknown object class " + fAnchor.fObjClass));
-   fDaosContainer->SetDefaultObjectClass(oclass);
+   fDaosContainer->SetDefaultObjectClass(fAnchor.fObjClass);
 
    // Reserve enough space for the compressed and the uncompressed header/footer (see AttachImpl)
    const auto bufSize =
@@ -463,12 +464,12 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadStructureImpl()
    daos_obj_id_t oidMetadata{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
 
    if ((err = fDaosContainer->ReadSingleAkey(fStructureBuffer.fPtrHeader, fAnchor.fNBytesHeader, oidMetadata,
-                                             kDistributionKeyDefault, kAttributeKeyHeader, kCidMetadata))) {
+                                             kDistributionKeyDefault, kAttributeKeyHeader))) {
       throw ROOT::RException(R__FAIL("LoadStructureImpl: cannot load header: " + std::to_string(err)));
    }
 
    if ((err = fDaosContainer->ReadSingleAkey(fStructureBuffer.fPtrFooter, fAnchor.fNBytesFooter, oidMetadata,
-                                             kDistributionKeyDefault, kAttributeKeyFooter, kCidMetadata))) {
+                                             kDistributionKeyDefault, kAttributeKeyFooter))) {
       throw ROOT::RException(R__FAIL("LoadStructureImpl: cannot load footer: " + std::to_string(err)));
    }
 }
@@ -496,7 +497,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadPageListImpl(const RNTup
 {
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
    fDaosContainer->ReadSingleAkey(buffer, locator.GetNBytesOnStorage(), oidPageList, kDistributionKeyDefault,
-                                  locator.GetPosition<RNTupleLocatorObject64>().GetLocation(), kCidMetadata);
+                                  locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 }
 
 std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() const
@@ -514,8 +515,12 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNT
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
-   auto clone = new RPageSourceDaos(fNTupleName, fURI, fOptions);
-   return std::unique_ptr<RPageSourceDaos>(clone);
+   auto clone = std::make_unique<RPageSourceDaos>(fNTupleName, fURI, fOptions);
+   clone->fAnchor = fAnchor;
+   clone->fNTupleIndex = fNTupleIndex;
+   if (!fAnchor.fObjClass.empty())
+      clone->fDaosContainer->SetDefaultObjectClass(fAnchor.fObjClass);
+   return clone;
 }
 
 std::vector<std::unique_ptr<RCluster>>
