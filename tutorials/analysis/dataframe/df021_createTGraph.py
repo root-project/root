@@ -22,7 +22,7 @@ graph = dd.Graph("x", "y")
 # This tutorial is ran with multithreading enabled. The order in which points are inserted is not known, so to have a meaningful representation points are sorted.
 c = ROOT.TCanvas()
 graph.Sort()
-graph.Draw("APL")
+graph.Draw("AL")
 c.SaveAs("df021_createTGraph.png")
 
 print("Saved figure to df021_createTGraph.png")

@@ -14,6 +14,7 @@
 /// Note that RTrivialDS is only a demo data source implementation and superior alternatives
 /// typically exist for production use (e.g. constructing an empty RDataFrame as `RDataFrame(nEntries)`).
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \date September 2017
