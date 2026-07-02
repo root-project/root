@@ -235,7 +235,7 @@ private:
    uuid_t fContainerUuid{};
    std::string fContainerLabel{};
    std::unique_ptr<RDaosPool> fPool;
-   ObjClassId_t fDefaultObjectClass{OC_SX};
+   ObjClassId_t fDefaultObjectClass{OC_UNKNOWN};
 
    /**
      \brief Perform a vector read/write operation on different objects.
