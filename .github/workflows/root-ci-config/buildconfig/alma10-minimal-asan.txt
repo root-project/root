@@ -1,8 +1,9 @@
 CMAKE_BUILD_TYPE=Debug
 CMAKE_CXX_FLAGS_DEBUG="-Og -g"
 asan=ON
-ccache=ON
 builtin_vdt=ON
+ccache=ON
+dataframe=ON
 fail-on-missing=ON
 minimal=ON
 roottest=ON
