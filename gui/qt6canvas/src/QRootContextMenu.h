@@ -15,6 +15,8 @@
 #include <QString>
 #include "TContextMenuImp.h"
 #include "TObject.h"
+#include "TList.h"
+#include <map>
 
 class QSignalMapper;
 class TList;
@@ -28,13 +30,11 @@ public slots:
    void executeMenu(int id);
 
 protected:
-   int            fMousePosX = 0;    // mouse position in user coordinate when activate menu
-   int            fMousePosY = 0;    // mouse position in user coordinate when activate menu
+   TObject       *fMenuObj = nullptr;      // object use to fill menu
 
-   TObject          *fMenuObj = nullptr;      // object use to fill menu
-   TList            *fMenuMethods = nullptr;  // list of menu methods
-
-   QAction* addMenuAction(QMenu *menu, QSignalMapper *map, const QString &text, int id);
+   TList     fTrash;
+   std::map<int, void*> fCustomArg;
+   QAction* addMenuAction(QMenu *menu, QSignalMapper *map, const QString &text, int id, void *arg = nullptr);
 
 public:
    QRootContextMenu(TContextMenu *c = nullptr, const char *name = "ROOT Context Menu");
