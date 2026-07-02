@@ -1500,8 +1500,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
-   // Construct an RNTuple with a single float field "pt". The field has a single representation for the
+   // Construct an RNTuple with a float field "pt" and a projection to it. The field has a single representation for the
    // first cluster and then gets extended by another representation that is active in the second cluster.
+   // The projected field gets its only column in the extended header.
 
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
@@ -1525,6 +1526,16 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
                         .Type(ROOT::ENTupleColumnType::kReal16)
                         .MakeDescriptor()
                         .Unwrap());
+   // add a projected field to "pt"
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(10)
+                       .ProjectionSourceId(5)
+                       .FieldName("pt_proj")
+                       .TypeName("float")
+                       .Structure(ROOT::ENTupleStructure::kPlain)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 10);
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
    auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
@@ -1543,6 +1554,22 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
 
    builder.BeginHeaderExtension();
+
+   // Add a new column representation
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(1)
+                        .PhysicalColumnId(0)
+                        .FieldId(10)
+                        .BitsOnStorage(16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
+                        .RepresentationIndex(0)
+                        .FirstElementIndex(1)
+                        .SetSuppressedDeferred()
+                        .MakeDescriptor()
+                        .Unwrap());
+
+   // We are about to add a new physical column, so we need to shift the already-existing alias column.
+   builder.ShiftAliasColumns(1);
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
                         .PhysicalColumnId(1)
@@ -1592,6 +1619,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt"));
    const auto &columnIds = fieldDesc.GetLogicalColumnIds();
    EXPECT_EQ(2u, columnIds.size());
+   const auto &fieldProjDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt_proj"));
+   const auto &columnProjIds = fieldProjDesc.GetLogicalColumnIds();
+   EXPECT_EQ(1u, columnProjIds.size());
 
    auto &clusterDesc0 = desc.GetClusterDescriptor(0);
    EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
