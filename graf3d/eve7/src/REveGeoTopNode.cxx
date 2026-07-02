@@ -510,6 +510,22 @@ std::string REveGeoTopNodeViz::GetHighlightTooltip(const std::set<int> & set) co
          }
          i++;
       }
+
+      // print complete path to stdcout for debug info
+      std::string topName = fGeoData->fDesc.GetGeoManager()->GetTopNode()->GetName();
+      // strip "_1",  TGeoNodeInterator does not hold _1 in the top node
+      if (topName.rfind("_1") != std::string::npos) {
+         topName = topName.substr(0, topName.size() - 2);
+         std::cout << topName << "/";
+      }
+      auto prefix = fGeoData->fDesc.GetApexPath();
+
+      for (size_t f = 0; f < prefix.size(); ++f) {
+         std::cout << prefix[f];
+         std::cout << "/";
+      }
+      std::cout << res << "\n";
+
       return res;
    }
 }
