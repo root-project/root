@@ -30,12 +30,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
   HEADERS
     TQt6Canvas.h
     TQt6PadPainter.h
+    TQt6GuiFactory.h
   SOURCES
     src/QCanvasWidget.cpp
     src/QPaintWidget.cpp
     src/QRootMethodDialog.cpp
     src/TQt6Canvas.cxx
     src/TQt6PadPainter.cxx
+    src/TQt6GuiFactory.cxx
   LIBRARIES
     Qt6::Widgets
   DEPENDENCIES

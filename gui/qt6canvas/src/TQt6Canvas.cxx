@@ -348,10 +348,12 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
       timer->TurnOn();
    }
 
-
    auto widget = new QCanvasWidget();
    widget->setWindowTitle(QString(c->GetTitle()));
-   widget->setGeometry(x, y, width, height);
+   if ((x < 0) && (y < 0))
+      widget->resize(width, height);
+   else
+      widget->setGeometry(x, y, width, height);
    widget->show();
 
    auto imp = new TQt6Canvas(c, name, x, y, width, height);
