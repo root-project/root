@@ -547,6 +547,22 @@ public:
    [[nodiscard]] std::unique_ptr<RNTupleModel>
    InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
 
+   /// Adds a new column representation to the given field. It is NOT marked as suppressed.
+   /// The first element index of the added column will be computed as the sum of the first element index of the
+   /// 0th representation's column range plus `addedFirstElementIndex` (which must be non-negative).
+   /// This can only be legally done at cluster boundary (i.e. immediately after committing a cluster or before
+   /// writing any entry). This is NOT checked for you.
+   /// `newRepresentation` must have a number of elements equal to the field's cardinality and must contain
+   /// compatible column types.
+   /// \return The physical id of the first newly added column.
+   ROOT::DescriptorId_t AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
+                                                std::span<const ROOT::Internal::RColumnFormat> newRepresentation,
+                                                std::uint32_t addedFirstElementIndex);
+
+   /// Adds a new alias column pointing to an existing column with the given physical id to the given field.
+   void AddAliasColumn(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &field,
+                       ROOT::DescriptorId_t physicalId);
+
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
