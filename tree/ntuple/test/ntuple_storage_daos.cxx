@@ -81,6 +81,38 @@ TEST_F(RPageStorageDaos, Basics)
    }
 }
 
+TEST_F(RPageStorageDaos, Show)
+{
+   std::string daosUri = RegisterLabel("ntuple-test-show");
+   const std::string_view ntupleName("ntuple");
+   auto model = RNTupleModel::Create();
+   auto wrPt = model->MakeField<float>("pt");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri);
+
+      *wrPt = 42.0;
+      writer->Fill();
+   }
+
+   ROOT::RNTupleReadOptions opts;
+   opts.SetClusterCache(ROOT::RNTupleReadOptions::EClusterCache::kOff);
+   auto reader = RNTupleReader::Open(ntupleName, daosUri);
+   EXPECT_EQ(1U, reader->GetNEntries());
+
+   std::ostringstream os;
+   // Exercises RPageSourceDaos::CloneImpl() because the display reader is cloned
+   reader->Show(0, os);
+   // clang-format off
+   std::string expect{
+R"({
+  "pt": 42
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expect, os.str());
+}
+
 TEST_F(RPageStorageDaos, Extended)
 {
    std::string daosUri = RegisterLabel("ntuple-test-extended");
