@@ -357,7 +357,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
    // Due to --web accepting 0 or 1 arguments we can't process it with RCmdLineOpts, so do a preprocessing for it.
    for (int i = 1; i < *argc; ++i) {
-      if (strncmp(argv[i], "--web", 5) != 0)
+      if (strcmp(argv[i], "--web") != 0)
          continue;
 
       Warning("TApplication", "Flag `--web` without arguments is deprecated, use `--web=on` instead.");
@@ -390,6 +390,11 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    opts.AddFlag({"-splash"}); // this option is ignored.
    opts.AddFlag({"-config", "--config"});
    opts.AddFlag({"-h", "-?", "--help"});
+   // This is a hack to disallow `--web on` and similar, which cannot be disambiguated easily with the arg-less `--web`.
+   // This way we force --web to be called with the equal sign like `--web=on` and no space in between (like it was
+   // before using the optparse lib).
+   // Downside: this makes `--web==on` legal, but that's not really a big deal.
+   opts.AddFlag({"--web="}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagPrefixArg);
    opts.AddFlag({"--version"});
 
    opts.Parse(argv + 1, *argc - 1);
@@ -445,6 +450,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    }
    if (opts.GetSwitch("splash")) {
       Warning("TApplication", "Flag `-splash` is deprecated and ignored.");
+   }
+
+   if (auto web = opts.GetFlagValue("web="); !web.empty()) {
+      gROOT->SetWebDisplay(std::string(web).c_str());
    }
 
    for (auto cmd : opts.GetFlagValues("e")) {
