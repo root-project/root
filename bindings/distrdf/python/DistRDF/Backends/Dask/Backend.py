@@ -104,6 +104,20 @@ class DaskBackend(Base.BaseBackend):
         # N is the number of cores on the local machine.
         self.client = (daskclient if daskclient is not None else
                        Client(LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1, processes=True)))
+        
+        workers = self.client.scheduler_info().get("workers", None)
+
+        if workers is None:
+            return
+
+        for worker in workers.values():
+            threads = worker.get("nthreads", 1)
+
+            if threads > 1:
+                raise RuntimeError(
+                    "DistRDF with Dask does not support threaded workers. "
+                    "Please use processes=True and threads_per_worker=1."
+                )
 
     def optimize_npartitions(self) -> int:
         """
