@@ -12,6 +12,10 @@ add_subdirectory(guihtml)
 add_subdirectory(recorder)
 add_subdirectory(treemap)
 
+if(qt6canv)
+  add_subdirectory(qt6canvas)
+endif()
+
 if(webgui)
    if(cefweb)
       add_subdirectory(cefdisplay)
