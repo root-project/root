@@ -270,6 +270,9 @@ int daos_oclass_id2name(daos_oclass_id_t oc_id, char *name)
    case OC_RP_XSF:
       strcpy(name, "RP_XSF"); // NOLINT
       return 0;
+   case OC_UNKNOWN:
+      strcpy(name, "UNKNOWN"); // NOLINT
+      return 0;
    }
    return -1;
 }

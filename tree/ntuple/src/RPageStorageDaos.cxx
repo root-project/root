@@ -237,15 +237,12 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
 {
    auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
-   auto oclass = RDaosObject::ObjClassId(fNTupleAnchor.fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
 
    auto args = ParseDaosURI(fURI);
    auto pool = std::make_unique<RDaosPool>(args.fPoolLabel);
 
    fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel, /*create =*/true);
-   fDaosContainer->SetDefaultObjectClass(oclass);
+   fDaosContainer->SetDefaultObjectClass(fNTupleAnchor.fObjClass);
 
    auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
    fNTupleIndex = locator.GetIndex();
@@ -446,10 +443,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadStructureImpl()
    fAnchor = *ntupleLocator.fAnchor;
    fNTupleIndex = ntupleLocator.GetIndex();
 
-   auto oclass = RDaosObject::ObjClassId(fAnchor.fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("LoadStructureImpl: unknown object class " + fAnchor.fObjClass));
-   fDaosContainer->SetDefaultObjectClass(oclass);
+   fDaosContainer->SetDefaultObjectClass(fAnchor.fObjClass);
 
    // Reserve enough space for the compressed and the uncompressed header/footer (see AttachImpl)
    const auto bufSize =
