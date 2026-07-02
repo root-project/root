@@ -136,7 +136,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    if (!serv)
       return;
 
-   engine->ChangeNumActiveThrerads(1);
+   engine->ChangeNumActiveThreads(1);
 
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
@@ -177,7 +177,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
 
    serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
 
-   engine->ChangeNumActiveThrerads(-1);
+   engine->ChangeNumActiveThreads(-1);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -280,12 +280,9 @@ struct TEngineHolder {
    TEngineHolder(TCivetweb *engine)
    {
       fEngine = engine;
-      fEngine->ChangeNumActiveThrerads(1);
+      fEngine->ChangeNumActiveThreads(1);
    }
-   ~TEngineHolder()
-   {
-      fEngine->ChangeNumActiveThrerads(-1);
-   }
+   ~TEngineHolder() { fEngine->ChangeNumActiveThreads(-1); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -577,7 +574,7 @@ Int_t TCivetweb::GetNumAvailableThreads()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns number of actively used threads
 
-Int_t TCivetweb::ChangeNumActiveThrerads(int cnt)
+Int_t TCivetweb::ChangeNumActiveThreads(int cnt)
 {
    std::lock_guard<std::mutex> guard(fMutex);
    fNumActiveThreads += cnt;
