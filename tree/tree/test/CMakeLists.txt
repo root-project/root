@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 
-ROOT_GENERATE_DICTIONARY(ElementStructDict ElementStruct.h LINKDEF ElementStructLinkDef.h OPTIONS -inlineInputHeader)
+ROOT_GENERATE_DICTIONARY(ElementStructDict ElementStruct.h LINKDEF ElementStructLinkDef.h OPTIONS --inlineInputHeader)
 ROOT_ADD_GTEST(testTOffsetGeneration TOffsetGeneration.cxx ElementStruct.cxx ElementStructDict.cxx
   LIBRARIES RIO Tree MathCore
 )
@@ -42,6 +42,6 @@ ROOT_ADD_GTEST(evolution evolution.cxx LIBRARIES RIO Tree)
 ROOT_GENERATE_DICTIONARY(EvolutionStruct ${CMAKE_CURRENT_SOURCE_DIR}/EvolutionStruct.hxx
                          MODULE evolution
                          LINKDEF EvolutionStructLinkDef.h
-                         OPTIONS -inlineInputHeader
+                         OPTIONS --inlineInputHeader
                          DEPENDENCIES RIO)
 
