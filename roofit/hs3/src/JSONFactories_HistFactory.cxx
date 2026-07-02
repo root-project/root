@@ -255,7 +255,11 @@ const JSONNode &findStaterror(const JSONNode &comp)
 RooAbsPdf &
 getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, const std::string &sample)
 {
-   if (auto constrName = mod.find("constraint_name")) {
+   JSONNode const *constrName = mod.find("constraint");
+   if (!constrName) {
+      constrName = mod.find("constraint_name");
+   }
+   if (constrName) {
       auto constraint_name = constrName->val();
       auto constraint = tool.workspace()->pdf(constraint_name);
       if (!constraint) {
@@ -335,7 +339,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
          } else if (modtype == "normfactor") {
             RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
             normElems.add(constrParam);
-            if (mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
+            if (mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
                // for norm factors, constraints are optional
                constraints.add(getOrCreateConstraint(tool, mod, constrParam, sampleName));
             }
@@ -398,9 +402,16 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname +
                                            "' with neither values nor parameters!");
             }
-            std::string constraint(mod.has_child("constraint_type") ? mod["constraint_type"].val()
-                                   : mod.has_child("constraint")    ? mod["constraint"].val()
-                                                                    : "unknown");
+            std::string constraint = "unknown";
+            if (mod.has_child("constraint_type")) {
+               constraint = mod["constraint_type"].val();
+            } else if (mod.has_child("constraint")) {
+               std::string constraintValue = mod["constraint"].val();
+               if (constraintValue == "Gauss" || constraintValue == "Poisson" || constraintValue == "Const" ||
+                   constraintValue == "Lognormal") {
+                  constraint = constraintValue;
+               }
+            }
             shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
                                      defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty));
          } else if (modtype == "custom") {
@@ -1134,13 +1145,11 @@ void configureStatError(Channel &channel)
 
 bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
 {
-   // Write the constraint reference (either by name or by type) for any
-   // modifier that supports an external Gaussian/Poisson/etc. constraint.
+   // Write the constraint reference for any modifier that supports an
+   // external Gaussian/Poisson/etc. constraint.
    auto writeConstraint = [](JSONNode &mod, auto const &sys) {
       if (sys.constraint) {
-         mod["constraint_name"] << sys.constraint->GetName();
-      } else if (sys.constraintType) {
-         mod["constraint_type"] << toString(sys.constraintType);
+         mod["constraint"] << sys.constraint->GetName();
       }
    };
 
@@ -1161,7 +1170,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["parameter"] << nf.param->GetName();
          mod["type"] << "normfactor";
          if (nf.constraint) {
-            mod["constraint_name"] << nf.constraint->GetName();
+            mod["constraint"] << nf.constraint->GetName();
             tool->queueExport(*nf.constraint);
          }
       }
@@ -1233,7 +1242,6 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << ::Literals::staterror;
          mod["type"] << ::Literals::staterror;
          optionallyExportGammaParameters(mod, "stat_" + channel.name, sample.staterrorParameters);
-         mod["constraint_type"] << toString(sample.barlowBeestonLightConstraintType);
       }
 
       if (!observablesWritten) {
