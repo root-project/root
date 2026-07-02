@@ -136,7 +136,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    if (!serv)
       return;
 
-   engine->ChangeNumActiveThrerads(1);
+   engine->ChangeNumActiveThreads(1);
 
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
@@ -177,7 +177,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
 
    serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
 
-   engine->ChangeNumActiveThrerads(-1);
+   engine->ChangeNumActiveThreads(-1);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -280,12 +280,9 @@ struct TEngineHolder {
    TEngineHolder(TCivetweb *engine)
    {
       fEngine = engine;
-      fEngine->ChangeNumActiveThrerads(1);
+      fEngine->ChangeNumActiveThreads(1);
    }
-   ~TEngineHolder()
-   {
-      fEngine->ChangeNumActiveThrerads(-1);
-   }
+   ~TEngineHolder() { fEngine->ChangeNumActiveThreads(-1); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -463,15 +460,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       case THttpCallArg::kZipAlways: dozip = kTRUE; break;
       }
 
-      #ifdef _EXTERNAL_CIVETWEB
-      // with external civeweb one gets failure R__memcompress
-      // while it is not critical, try to avoid for now
-      // to be tested later
-      (void) dozip;
-      #else
       if (dozip)
          arg->CompressWithGzip();
-      #endif
 
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
@@ -511,7 +501,9 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 THttpEngine implementation, based on civetweb embedded server
 
 It is default kind of engine, created for THttpServer
-Currently v1.15 from https://github.com/civetweb/civetweb is used
+When `builtin_civetweb=ON` (default), the release is grabbed from https://github.com/civetweb/civetweb corresponding
+to the version defined in https://github.com/root-project/root/blob/master/builtins/civetweb/CMakeLists.txt
+Switching to `builtin_civetweb=OFF` in order to use system-packages only works if the package was compiled with ROOT-mandatory features active.
 
 Additional options can be specified:
 
@@ -582,7 +574,7 @@ Int_t TCivetweb::GetNumAvailableThreads()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns number of actively used threads
 
-Int_t TCivetweb::ChangeNumActiveThrerads(int cnt)
+Int_t TCivetweb::ChangeNumActiveThreads(int cnt)
 {
    std::lock_guard<std::mutex> guard(fMutex);
    fNumActiveThreads += cnt;
