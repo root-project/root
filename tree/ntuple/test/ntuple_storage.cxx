@@ -1263,7 +1263,8 @@ TEST(RPageSink, AddColumnRepresentation)
    const auto fId = sink->GetDescriptor().FindFieldId("int");
    const auto &desc = sink->GetDescriptor();
    const auto &fdesc = desc.GetFieldDescriptor(fId);
-   sink->AddColumnRepresentation(fdesc, {ROOT::ENTupleColumnType::kSplitInt16});
+   std::vector<ROOT::Internal::RColumnFormat> newRepr{{ROOT::ENTupleColumnType::kSplitInt16}};
+   sink->AddColumnRepresentation(fdesc, newRepr);
 
    EXPECT_EQ(fdesc.GetColumnCardinality(), 1);
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 2);
