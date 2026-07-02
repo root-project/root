@@ -751,7 +751,10 @@ protected:
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
    virtual ROOT::RNTupleDescriptor AttachImpl() = 0;
-   /// Returns a new, unattached page source for the same data set
+   /// Returns a new, unattached page source for the same data set. If the origin data source was attached, the
+   /// base class Clone() method will as an optimization not call LoadStructureImpl() and AttachImpl() again
+   /// but simply clone the existing descriptor. This means that CloneImpl(), for an attached page source, needs to
+   /// redo any operation other than loading the descriptor that may be done in LoadStructureImpl() and AttachImpl().
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
