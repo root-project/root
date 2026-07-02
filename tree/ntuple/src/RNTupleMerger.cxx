@@ -342,10 +342,10 @@ struct RColReprMapping {
 };
 
 /// A column extension that needs to be added to an output field.
-/// Note that this also adds a mapping for the new representation, which is why this inherits RColReprMapping.
+/// Note that this also adds a mapping for each new representation, which is why it inherits RColReprMapping.
 struct RColReprExtension : RColReprMapping {
-   /// The new representation to be added
-   ROOT::RFieldBase::ColumnRepresentation_t fSourceRepr;
+   /// The new representations to be added
+   std::vector<ROOT::Internal::RColumnFormat> fSourceRepr;
 };
 
 static std::optional<std::uint32_t>
@@ -532,11 +532,15 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
          } else if (matchingRepr < 0) {
             // this representation was not found in the destination
             assert(dstNColReprs < std::numeric_limits<std::uint32_t>::max());
-            ROOT::RFieldBase::ColumnRepresentation_t newRepr;
+            std::vector<ROOT::Internal::RColumnFormat> newRepr;
+            newRepr.reserve(srcColCardinality);
             for (auto reprColIdx = 0u; reprColIdx < srcColCardinality; ++reprColIdx) {
                const auto srcColId = srcColumns[srcReprIdx * srcColCardinality + reprColIdx];
                const auto &srcCol = srcDesc.GetColumnDescriptor(srcColId);
-               newRepr.push_back(srcCol.GetType());
+               auto &reprElement = newRepr.emplace_back();
+               reprElement.fType = srcCol.GetType();
+               reprElement.fBitWidth = srcCol.GetBitsOnStorage();
+               reprElement.fValueRange = srcCol.GetValueRange();
             }
             RColReprExtension extension{{srcReprIdx, static_cast<std::uint32_t>(dstNColReprs)}, newRepr};
             result.fColReprExtensions[&dstField].push_back(extension);
