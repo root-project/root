@@ -513,7 +513,12 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNT
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
-   return std::make_unique<RPageSourceDaos>(fNTupleName, fURI, fOptions);
+   auto clone = std::make_unique<RPageSourceDaos>(fNTupleName, fURI, fOptions);
+   clone->fAnchor = fAnchor;
+   clone->fNTupleIndex = fNTupleIndex;
+   if (!fAnchor.fObjClass.empty())
+      clone->fDaosContainer->SetDefaultObjectClass(fAnchor.fObjClass);
+   return clone;
 }
 
 std::vector<std::unique_ptr<RCluster>>
