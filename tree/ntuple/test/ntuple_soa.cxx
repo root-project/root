@@ -476,10 +476,41 @@ TEST(RNTuple, SoANested)
    {
       auto model = ROOT::RNTupleModel::Create();
       try {
-         model->AddField(std::make_unique<RSoAField>("dot", "SoADot"));
-         FAIL() << "nested SoA structs should fail";
+         model->AddField(std::make_unique<RSoAField>("dot", "SoADotBadNestedType"));
+         FAIL() << "SoADotBadNestedType should fail";
       } catch (const ROOT::RException &e) {
-         EXPECT_THAT(e.what(), testing::HasSubstr("nested SoA members currently unsupported"));
+         EXPECT_THAT(e.what(), testing::HasSubstr("nested SoA field fProperties [SoA] does not match underlying type "
+                                                  "RecordProperties"));
       }
+
+      model->AddField(std::make_unique<RSoAField>("dot", "SoADot"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto dotSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoADot>("dot");
+      dotSoA->fX = {1.0, 2.0};
+      dotSoA->fY = {3.0, 4.0};
+      dotSoA->fProperties.fColor = {5, 6};
+      dotSoA->fProperties.fSize = {7.0, 8.0};
+      writer->Fill();
    }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+
+   // clang-format off
+   std::string expected{
+R"({
+  "dot": {
+    "fX": [1, 2],
+    "fY": [3, 4],
+    "fProperties": {
+      "fColor": [5, 6],
+      "fSize": [7, 8]
+    }
+  }
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expected, os.str());
 }

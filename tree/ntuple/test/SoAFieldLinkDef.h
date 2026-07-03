@@ -29,5 +29,6 @@
 #pragma link C++ class RecordDot+;
 #pragma link C++ options=rntupleSoARecord(RecordProperties) class SoAProperties+;
 #pragma link C++ options=rntupleSoARecord(RecordDot) class SoADot+;
+#pragma link C++ options=rntupleSoARecord(RecordDot) class SoADotBadNestedType+;
 
 #endif // __CLING__
