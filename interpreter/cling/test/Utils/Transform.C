@@ -210,16 +210,36 @@ Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str()
 // The above result is not quite want we want, so the client must using
 // the following:
 // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
-// This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
-// strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+// In LLVM22 (and before), SuppressUnwrittenScope suppresses anonymous namespaces. Inline namespace suppression is separately
+// controlled by SuppressInlineNamespace, which we probably don't want to be suppressed.
 clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
+Policy.SuppressUnwrittenScope = true; // Strip anonymous namespace names
 Policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-Policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
 Policy.SplitTemplateClosers = true; // Print a<b<c> >' rather than 'a<b<c>>'.
 std::string name;
 Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsStringInternal(name,Policy);
 name.c_str()
 // CHECK: ({{[^)]+}}) "InsideAnonymous"
+
+// Test the behavior for a class inside an inline namespace.
+lookup.findScope("NS1::NS2::NS3::InsideInline", diags, &t);
+QT = clang::QualType(t, 0);
+
+// SuppressUnwrittenScope=true should not strip inline namespace qualifiers.
+clang::PrintingPolicy PolicyWithInline(Policy);
+PolicyWithInline.SuppressInlineNamespace = false;
+std::string nameWithInline;
+QT.getAsStringInternal(nameWithInline, PolicyWithInline);
+nameWithInline.c_str()
+// CHECK: ({{[^)]+}}) "NS1::NS2::NS3::InlinedNamespace::InsideInline"
+
+// With SuppressInlineNamespace=true, inline namespace qualifiers should be stripped.
+clang::PrintingPolicy PolicyNoInline(Policy);
+PolicyNoInline.SuppressInlineNamespace = true;
+std::string nameNoInline;
+QT.getAsStringInternal(nameNoInline, PolicyNoInline);
+nameNoInline.c_str()
+// CHECK: ({{[^)]+}}) "NS1::NS2::NS3::InsideInline"
 
 // Test desugaring pointers types:
 QT = lookup.findType("Int_t*", diags);
