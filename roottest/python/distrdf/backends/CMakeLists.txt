@@ -54,3 +54,8 @@ ROOT_ADD_PYUNITTEST(test_all test_all.py GENERIC ENVIRONMENT "${DISTRDF_ENVIRONM
 set_tests_properties(
     pyunittests-roottest-python-distrdf-backends-all
     PROPERTIES RESOURCE_LOCK "${DISTRDF_RESOURCE_LOCKS}" PROCESSORS 4 TIMEOUT 1200)
+
+ROOT_ADD_PYUNITTEST(test_standalone_fromspec test_standalone_fromspec.py GENERIC ENVIRONMENT "${DISTRDF_ENVIRONMENT_VARS}")
+set_tests_properties(
+    pyunittests-roottest-python-distrdf-backends-standalone-fromspec
+    PROPERTIES RESOURCE_LOCK "${DISTRDF_RESOURCE_LOCKS}" PROCESSORS 4)
