@@ -14,20 +14,21 @@ import ROOT
 
 logger = logging.getLogger(__name__)
 
-class SerializableRSample():
-    
-    def __init__(self, sample: ROOT.RDF.Experimental.RSample):
-        self._sample = sample
-    
-    def __getstate__(self):
-        return {"samplenames" : self._sample.GetSampleName(), "treenames" : self._sample.GetTreeNames() , "filenames" : self._sample.GetFileNameGlobs(), "metadata" : ROOT.Internal.RDF.ExportJSON(self._sample.GetMetaData())}
 
-        
-    def __setstate__(self, state):
-        _metadata = ROOT.RDF.Experimental.RMetaData()
-        ROOT.Internal.RDF.ImportJSON(_metadata, state["metadata"])
-        self._sample = ROOT.RDF.Experimental.RSample(state["samplenames"], state["treenames"], state["filenames"], _metadata)
-    
+class SerializableRSample:
+    """
+    Stores the information relative to an RSample, removing knowledge of C++ types such that cppyy is not involved
+    during serialization/deserialization.
+    """
+    def __init__(self, sample: ROOT.RDF.Experimental.RSample):
+        self.name: str = sample.GetSampleName()
+        self.treenames: list[str] = [str(treename)
+                                     for treename in sample.GetTreeNames()]
+        self.filenames: list[str] = [str(filename)
+                                     for filename in sample.GetFileNameGlobs()]
+        self.metadata: str = ROOT.Internal.RDF.ExportJSON(sample.GetMetaData())
+
+
 @dataclass
 class DataRange:
     """

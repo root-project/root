@@ -766,33 +766,36 @@ class RDatasetSpecHeadNode(HeadNode):
                 fileids_cluster.append(fileid)
                 treesInFileMap.update({fileid : treename})
 
-            # Making sure we don't double count samples  
-            unique_samples = [] 
+            # Making sure we don't double count samples
+            unique_samples = []
             samplenames = []
-            
+
             for sample in clustered_range.samples:
-                mysample = sample._sample
-                samplename = mysample.GetSampleName()
+                samplename = sample.name
                 if samplename not in samplenames:
-                    unique_samples.append(mysample)
+                    unique_samples.append(sample)
                     samplenames.append(samplename)
-            
+
             # Core: matching files with samples and adding samples to the spec that will be processed
-            for mysample in unique_samples:
+            for sample in unique_samples:
                 sample_fileids = [
                     filenameglob + "/" + treename
-                    for filenameglob, treename in zip(mysample.GetFileNameGlobs(), mysample.GetTreeNames())
+                    for filenameglob, treename in zip(sample.filenames, sample.treenames)
                 ]
-                    
-                good_files = list((Counter(filenames_cluster) & Counter(mysample.GetFileNameGlobs())).elements())
-                good_fileids = list((Counter(fileids_cluster) & Counter(sample_fileids)).elements()) 
 
-                good_trees =[
+                good_files = list((Counter(filenames_cluster)
+                                  & Counter(sample.filenames)).elements())
+                good_fileids = list(
+                    (Counter(fileids_cluster) & Counter(sample_fileids)).elements())
+
+                good_trees = [
                     treesInFileMap.get(fileid) for fileid in good_fileids
                 ]
-                
-                ds.AddSample((mysample.GetSampleName(), good_trees, good_files, mysample.GetMetaData()))
-                
+
+                rmetadata = ROOT.RDF.Experimental.RMetaData()
+                ROOT.Internal.RDF.ImportJSON(rmetadata, sample.metadata)
+                ds.AddSample((sample.name, good_trees, good_files, rmetadata))
+
             ds.WithGlobalRange(
                 (clustered_range.globalstart, clustered_range.globalend))
             
