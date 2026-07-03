@@ -688,19 +688,29 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string
 
 void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 {
-   auto recordSubFields = fSubfields[0]->GetMutableSubfields();
+   std::vector<RFieldBase *> realRecordMemberFields;
+   unsigned int nDirectRecordSubfields = 0;
+   for (auto itr = fSubfields[0]->begin(), iEnd = fSubfields[0]->end(); itr != iEnd; ++itr) {
+      if (itr->GetParent() == fSubfields[0].get())
+         nDirectRecordSubfields++;
+      realRecordMemberFields.emplace_back(&(*itr));
+   }
 
-   for (const auto f : recordSubFields) {
+   for (const auto f : realRecordMemberFields) {
       if (f->GetFieldName()[0] == ':') {
          throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
       }
    }
 
-   // Build map name --> index in recordSubFields vector
+   // Build map name --> index in realRecordMemberFields vector. Cut the name prefix up to the collection subfields
+   // so that it matches the data member name
    std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
-   recordFieldNameToIdx.reserve(recordSubFields.size());
-   for (std::size_t i = 0; i < recordSubFields.size(); ++i) {
-      recordFieldNameToIdx[recordSubFields[i]->GetFieldName()] = i;
+   {
+      recordFieldNameToIdx.reserve(realRecordMemberFields.size());
+      const auto lenFieldNamePrefix = GetFieldName().length() + strlen("._0.");
+      for (std::size_t i = 0; i < realRecordMemberFields.size(); ++i) {
+         recordFieldNameToIdx[realRecordMemberFields[i]->GetQualifiedFieldName().substr(lenFieldNamePrefix)] = i;
+      }
    }
 
    const auto *bases = fSoAClass->GetListOfBases();
@@ -716,6 +726,9 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 
    unsigned int nMembers = 0;
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
+      // NOTE: ReconstructSplitFields() will also traverse the data members and need to apply the same rules for
+      // skipping members
+
       if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())
          continue;
 
@@ -730,10 +743,27 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
       if (itr == recordFieldNameToIdx.end()) {
          throw RException(R__FAIL(std::string("unexpected SoA member: ") + dmField->GetFieldName()));
       }
-      auto underlyingField = recordSubFields[itr->second];
+      auto underlyingField = realRecordMemberFields[itr->second];
+      assert(dmField->GetFieldName() == underlyingField->GetFieldName());
 
-      if (dynamic_cast<RSoAField *>(dmField.get())) {
-         throw RException(R__FAIL("nested SoA members currently unsupported"));
+      if (auto soaField = dynamic_cast<RSoAField *>(dmField.get())) {
+         if (ROOT::Internal::GetRNTupleSoARecord(soaField->fSoAClass) != underlyingField->GetTypeName()) {
+            throw RException(R__FAIL(std::string("nested SoA field ") + soaField->GetQualifiedFieldName() + " [" +
+                                     soaField->GetTypeName() + "] does not match underlying type " +
+                                     underlyingField->GetTypeName()));
+         }
+
+         const auto lenFieldNamePrefix = soaField->GetFieldName().length() + strlen("._0.");
+
+         for (std::size_t i = 0; i < soaField->fRecordMemberFields.size(); ++i) {
+            const auto f = soaField->fRecordMemberFields[i];
+            const auto fieldNameForMatching =
+               dmField->GetFieldName() + "." + f->GetQualifiedFieldName().substr(lenFieldNamePrefix);
+
+            fRecordMemberFields.emplace_back(realRecordMemberFields[recordFieldNameToIdx[fieldNameForMatching]]);
+            fRecordMemberDeleters.emplace_back(GetDeleterOf(*soaField->fRecordMemberFields[i]));
+            fSoAMemberOffsets.emplace_back(dataMember->GetOffset() + soaField->fSoAMemberOffsets[i]);
+         }
       } else if (auto vecField = dynamic_cast<RRVecField *>(dmField.get())) {
          if (vecField->begin()->GetTypeName() != underlyingField->GetTypeName() ||
              vecField->begin()->GetTypeAlias() != underlyingField->GetTypeAlias()) {
@@ -756,7 +786,7 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 
       nMembers++;
    }
-   if (recordFieldNameToIdx.size() != nMembers) {
+   if (nDirectRecordSubfields != nMembers) {
       throw RException(R__FAIL("missing SoA members"));
    }
 }
@@ -906,29 +936,37 @@ void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool d
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
+void ROOT::Experimental::RSoAField::ReconstructSplitFields() const
+{
+   std::lock_guard<std::mutex> lockGuard(*fLockSplitFields);
+   if (fSplitFields)
+      return;
+
+   fSplitFields = std::make_unique<std::vector<std::unique_ptr<ROOT::RFieldBase>>>();
+   fSplitOffsets = std::make_unique<std::vector<std::size_t>>();
+
+   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
+      if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())
+         continue;
+
+      const std::string typeName{dataMember->GetTrueTypeName()};
+      auto dmField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
+      fSplitFields->emplace_back(std::move(dmField));
+      fSplitOffsets->emplace_back(dataMember->GetOffset());
+   }
+}
+
 std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue &value) const
 {
-   const auto nSoAMembers = fSoAMemberOffsets.size();
-
-   {
-      std::lock_guard<std::mutex> lockGuard(*fLockSplitFields);
-      if (!fSplitFields) {
-         fSplitFields = std::make_unique<std::vector<std::unique_ptr<ROOT::RRVecField>>>();
-         fSplitFields->reserve(nSoAMembers);
-         for (std::size_t i = 0; i < nSoAMembers; ++i) {
-            const auto itemField = fRecordMemberFields[i];
-            fSplitFields->emplace_back(std::make_unique<RRVecField>(itemField->GetFieldName(), itemField->Clone("_0")));
-         }
-      }
-   }
+   ReconstructSplitFields();
+   const auto nSplitFields = fSplitFields->size();
 
    auto valuePtr = value.GetPtr<void>();
    auto soaPtr = static_cast<unsigned char *>(valuePtr.get());
    std::vector<RValue> values;
-   values.reserve(nSoAMembers);
-   for (std::size_t i = 0; i < nSoAMembers; ++i) {
-      values.emplace_back(
-         (*fSplitFields)[i]->BindValue(std::shared_ptr<void>(valuePtr, soaPtr + fSoAMemberOffsets[i])));
+   values.reserve(nSplitFields);
+   for (std::size_t i = 0; i < nSplitFields; ++i) {
+      values.emplace_back((*fSplitFields)[i]->BindValue(std::shared_ptr<void>(valuePtr, soaPtr + (*fSplitOffsets)[i])));
    }
    return values;
 }

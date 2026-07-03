@@ -144,4 +144,12 @@ struct SoADot {
    ClassDefNV(SoADot, 2);
 };
 
+struct SoADotBadNestedType {
+   ROOT::RVec<float> fX;
+   ROOT::RVec<float> fY;
+   SoA fProperties;
+
+   ClassDefNV(SoADotBadNestedType, 2);
+};
+
 #endif // ROOT_RNTuple_Test_SoAField
