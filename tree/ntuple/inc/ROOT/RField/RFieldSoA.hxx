@@ -66,9 +66,9 @@ class RSoAField : public RFieldBase {
    /// Direct access to the member fields of the underlying record. In case of a nested SoA type, this vector
    /// contains the contents of the inner fRecordMemberFields, too. Effectively, this record will contain all the
    /// fields of the underlying record type that correspond to terminal RVec members in a nested SoA type.
+   /// Pointers in this vector point into the field hierarchy owned by fSubfields[0].
    std::vector<RFieldBase *> fRecordMemberFields;
    /// The offset of the RVec members in the SoA type in the same order as fRecordMemberFields.
-   /// In particular, the order is not necessarily the same then the order of RVec members in the SoA class.
    std::vector<std::size_t> fSoAMemberOffsets;
    ///< A deleter returned by each record member's GetDeleter()
    std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
@@ -78,7 +78,11 @@ class RSoAField : public RFieldBase {
    /// SoA object are used directly with the subfields of the underlying record type. For splitting a SoA class object
    /// (SplitValue()), however, we need actual RRVecFields so that we can recursively split the in-memory SoA value.
    /// The split fields are created only when SplitField() is called.
-   mutable std::unique_ptr<std::vector<std::unique_ptr<ROOT::RRVecField>>> fSplitFields;
+   /// In general, the number of split fields is different from the number of record member fields because there is
+   /// one split field for every _direct_ member of the SoA class. Because nested SoA structs can have transient
+   /// members, we can also not reuse fSoAMemberOffsets but we need to store the data member offsets.
+   mutable std::unique_ptr<std::vector<std::unique_ptr<ROOT::RFieldBase>>> fSplitFields;
+   mutable std::unique_ptr<std::vector<std::size_t>> fSplitOffsets;
    mutable std::unique_ptr<std::mutex> fLockSplitFields; ///< protects the fSplitFields member.
 
    RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
@@ -86,6 +90,8 @@ class RSoAField : public RFieldBase {
 
    /// Called during construction, picks up the (nested) member fields of the underlying record type(s)
    void CollectRecordMemberFields();
+
+   void ReconstructSplitFields() const;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
