@@ -4259,7 +4259,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             case kfmod : pos--; tab[pos-1] = fmod_local(tab[pos-1],tab[pos]); continue;
             case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
             case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
-            case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
+            case ksqrt : tab[pos-1] = TMath::Sqrt(tab[pos-1]); continue;
 
             case kstrstr : pos2 -= 2; pos++;if (strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
                                             else tab[pos-1]=0;
