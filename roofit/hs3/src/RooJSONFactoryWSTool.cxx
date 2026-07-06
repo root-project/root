@@ -984,6 +984,37 @@ bool RooJSONFactoryWSTool::isValidName(const std::string &str)
 bool RooJSONFactoryWSTool::allowExportInvalidNames(true);
 bool RooJSONFactoryWSTool::allowSanitizeNames(true);
 bool RooJSONFactoryWSTool::importNoDomainParametersAsRooConstVars(true);
+
+bool RooJSONFactoryWSTool::getAllowExportInvalidNames()
+{
+   return allowExportInvalidNames;
+}
+
+void RooJSONFactoryWSTool::setAllowExportInvalidNames(bool allow)
+{
+   allowExportInvalidNames = allow;
+}
+
+bool RooJSONFactoryWSTool::getAllowSanitizeNames()
+{
+   return allowSanitizeNames;
+}
+
+void RooJSONFactoryWSTool::setAllowSanitizeNames(bool allow)
+{
+   allowSanitizeNames = allow;
+}
+
+bool RooJSONFactoryWSTool::getImportNoDomainParametersAsRooConstVars()
+{
+   return importNoDomainParametersAsRooConstVars;
+}
+
+void RooJSONFactoryWSTool::setImportNoDomainParametersAsRooConstVars(bool val)
+{
+    importNoDomainParametersAsRooConstVars = val;
+}
+
 bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceError)
 {
    if (!RooJSONFactoryWSTool::isValidName(name)) {

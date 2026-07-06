@@ -54,6 +54,15 @@ public:
 
    ~RooJSONFactoryWSTool();
 
+   static bool getAllowExportInvalidNames();
+   static void setAllowExportInvalidNames(bool allow);
+
+   static bool getAllowSanitizeNames();
+   static void setAllowSanitizeNames(bool allow);
+
+   static bool getImportNoDomainParametersAsRooConstVars();
+   static void setImportNoDomainParametersAsRooConstVars(bool val);
+
    static std::string name(const RooFit::Detail::JSONNode &n);
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &str, bool forcError);
