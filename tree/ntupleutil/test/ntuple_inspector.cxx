@@ -886,7 +886,6 @@ TEST(RNTupleInspector, SchemaProfile)
    "$schema":"https://www.speedscope.app/file-format-schema.json",
    "shared":{
       "frames":[
-         { "name":"", "file":"Type: , Size: 80B" },
          { "name":"float1", "file":"Type: float, Size: 40B" },
          { "name":"float1 [col#0]", "file":"Type: SplitReal32, Size: 40B" },
          { "name":"int", "file":"Type: std::int32_t, Size: 40B" },
@@ -903,14 +902,12 @@ TEST(RNTupleInspector, SchemaProfile)
          "events":[
             {"type":"O","frame":0,"at":0},
             {"type":"O","frame":1,"at":0},
-            {"type":"O","frame":2,"at":0},
-            {"type":"C","frame":2,"at":40},
             {"type":"C","frame":1,"at":40},
+            {"type":"C","frame":0,"at":40},
+            {"type":"O","frame":2,"at":40},
             {"type":"O","frame":3,"at":40},
-            {"type":"O","frame":4,"at":40},
-            {"type":"C","frame":4,"at":80},
             {"type":"C","frame":3,"at":80},
-            {"type":"C","frame":0,"at":80}
+            {"type":"C","frame":2,"at":80}
          ]
       }
    ]

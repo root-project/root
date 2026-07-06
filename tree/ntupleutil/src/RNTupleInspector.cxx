@@ -686,7 +686,11 @@ void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile(ESchemaProfileForm
       return subTreeSize;
    };
 
-   visitFieldsRecursive(visitFieldsRecursive, rootFieldDescriptor);
+   const auto &topLevelIds = rootFieldDescriptor.GetLinkIds();
+   for (const auto &childId : topLevelIds) {
+      const auto &childFieldDescriptor = tupleDescriptor.GetFieldDescriptor(childId);
+      visitFieldsRecursive(visitFieldsRecursive, childFieldDescriptor);
+   }
 
    PrintSpeedscopeFrames(frames, output);
 }
