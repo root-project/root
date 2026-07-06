@@ -12,6 +12,8 @@
 
 #include "Domains.h"
 
+#include <RooAbsBinning.h>
+#include <RooBinning.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooNumber.h>
 #include <RooRealVar.h>
@@ -24,6 +26,28 @@ namespace JSONIO {
 namespace Detail {
 
 constexpr static auto defaultDomainName = "default_domain";
+
+namespace {
+
+double readBound(RooFit::Detail::JSONNode const &node, const char *key, double defaultValue)
+{
+   if (!node.has_child(key)) {
+      return defaultValue;
+   }
+   auto const &bound = node[key];
+   return bound.is_null() ? defaultValue : bound.val_double();
+}
+
+void writeBound(RooFit::Detail::JSONNode &node, double value)
+{
+   if (RooNumber::isInfinite(value)) {
+      node.set_null();
+   } else {
+      node << value;
+   }
+}
+
+} // namespace
 
 void Domains::populate(RooWorkspace &ws) const
 {
@@ -49,12 +73,12 @@ void Domains::readVariable(const char *name, double min, double max, const char 
 
 void Domains::readVariable(RooRealVar const &var)
 {
-   readVariable(var.GetName(), var.getMin(), var.getMax(), defaultDomainName);
+   _map[defaultDomainName].readVariable(var.GetName(), var.getBinning());
    for (const auto &bname : var.getBinningNames()) {
       if (bname.empty())
          continue;
       auto &binning = var.getBinning(bname.c_str());
-      readVariable(var.GetName(), binning.lowBound(), binning.highBound(), bname.c_str());
+      _map[bname].readVariable(var.GetName(), binning);
    }
 }
 
@@ -91,25 +115,89 @@ void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
    }
 }
 
+bool Domains::hasVariable(const char *name) const
+{
+   for (auto const &domain : _map) {
+      if (domain.second.hasVariable(name)) {
+         return true;
+      }
+   }
+   return false;
+}
+
 void Domains::ProductDomain::readVariable(RooRealVar const &var)
 {
-   readVariable(var.GetName(), var.getMin(), var.getMax());
+   readVariable(var.GetName(), var.getBinning());
+}
+
+void Domains::ProductDomain::readBinning(ProductDomainElement &elem, RooAbsBinning const &binning)
+{
+   elem.hasNBins = false;
+   elem.nBins = 0;
+   elem.edges.clear();
+
+   const int nBins = binning.numBins();
+   if (nBins <= 0) {
+      return;
+   }
+
+   if (binning.isUniform()) {
+      elem.hasNBins = true;
+      elem.nBins = nBins;
+   } else {
+      elem.edges.push_back(binning.binLow(0));
+      for (int i = 0; i < nBins; ++i) {
+         elem.edges.push_back(binning.binHigh(i));
+      }
+   }
+}
+
+void Domains::ProductDomain::readVariable(const char *name, RooAbsBinning const &binning)
+{
+   auto &elem = _map[name];
+
+   elem.hasMin = true;
+   elem.min = binning.lowBound();
+   elem.hasMax = true;
+   elem.max = binning.highBound();
+   readBinning(elem, binning);
 }
 
 void Domains::ProductDomain::readVariable(const char *name, double min, double max)
 {
-   if (RooNumber::isInfinite(min) && RooNumber::isInfinite(max))
-      return;
-
    auto &elem = _map[name];
 
-   if (!RooNumber::isInfinite(min)) {
-      elem.hasMin = true;
-      elem.min = min;
+   elem.hasMin = true;
+   elem.min = min;
+   elem.hasMax = true;
+   elem.max = max;
+   elem.hasNBins = false;
+   elem.nBins = 0;
+   elem.edges.clear();
+}
+
+void Domains::ProductDomain::applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name)
+{
+   if (!elem.edges.empty()) {
+      RooBinning binning(elem.edges.front(), elem.edges.back());
+      for (double edge : elem.edges) {
+         binning.addBoundary(edge);
+      }
+      var.setBinning(binning, name);
+   } else if (elem.hasNBins && elem.nBins != 0) {
+      var.setBins(elem.nBins, name);
    }
-   if (!RooNumber::isInfinite(max)) {
-      elem.hasMax = true;
-      elem.max = max;
+}
+
+void Domains::ProductDomain::writeBinning(RooFit::Detail::JSONNode &node, ProductDomainElement const &elem)
+{
+   if (!elem.edges.empty()) {
+      auto &edges = node["edges"].set_seq();
+      for (double edge : elem.edges) {
+         edges.append_child() << edge;
+      }
+   } else if (elem.hasNBins && elem.nBins != 0) {
+      node["nbins"] << elem.nBins;
    }
 }
 void Domains::ProductDomain::writeVariable(RooRealVar &var) const
@@ -117,12 +205,29 @@ void Domains::ProductDomain::writeVariable(RooRealVar &var) const
    auto found = _map.find(var.GetName());
    if (found != _map.end()) {
       auto const &elem = found->second;
-      if (elem.hasMin)
-         var.setMin(elem.min);
-      if (elem.hasMax)
-         var.setMax(elem.max);
+      if (elem.hasMin) {
+         if (RooNumber::isInfinite(elem.min)) {
+            var.removeMin();
+         } else {
+            var.setMin(elem.min);
+         }
+      }
+      if (elem.hasMax) {
+         if (RooNumber::isInfinite(elem.max)) {
+            var.removeMax();
+         } else {
+            var.setMax(elem.max);
+         }
+      }
+      applyBinning(var, elem);
    }
 }
+
+bool Domains::ProductDomain::hasVariable(const char *name) const
+{
+   return _map.find(name) != _map.end();
+}
+
 void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
    if (!node.has_child("type") || node["type"].val() != "product_domain") {
@@ -132,12 +237,33 @@ void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
       auto &elem = _map[RooJSONFactoryWSTool::name(varNode)];
 
       if (varNode.has_child("min")) {
-         elem.min = varNode["min"].val_double();
+         elem.min = readBound(varNode, "min", -RooNumber::infinity());
          elem.hasMin = true;
       }
       if (varNode.has_child("max")) {
-         elem.max = varNode["max"].val_double();
+         elem.max = readBound(varNode, "max", RooNumber::infinity());
          elem.hasMax = true;
+      }
+      if (varNode.has_child("edges")) {
+         elem.hasNBins = false;
+         elem.edges.clear();
+         for (auto const &edge : varNode["edges"].children()) {
+            elem.edges.push_back(edge.val_double());
+         }
+         if (!elem.edges.empty()) {
+            if (!elem.hasMin) {
+               elem.min = elem.edges.front();
+               elem.hasMin = true;
+            }
+            if (!elem.hasMax) {
+               elem.max = elem.edges.back();
+               elem.hasMax = true;
+            }
+         }
+      } else if (varNode.has_child("nbins")) {
+         elem.nBins = varNode["nbins"].val_int();
+         elem.hasNBins = elem.nBins != 0;
+         elem.edges.clear();
       }
    }
 }
@@ -152,21 +278,22 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    for (auto const &item : _map) {
       auto const &elem = item.second;
       RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
-      if (elem.hasMin)
-         varnode["min"] << elem.min;
-      if (elem.hasMax)
-         varnode["max"] << elem.max;
+      writeBound(varnode["min"], elem.hasMin ? elem.min : -RooNumber::infinity());
+      writeBound(varnode["max"], elem.hasMax ? elem.max : RooNumber::infinity());
+      writeBinning(varnode, elem);
    }
 }
 void Domains::ProductDomain::populate(RooWorkspace &ws) const
 {
    for (auto const &item : _map) {
       const auto &name = item.first;
-      if (!ws.var(name)) {
+      if (!ws.arg(name)) {
          const auto &elem = item.second;
          const double vMin = elem.hasMin ? elem.min : -RooNumber::infinity();
          const double vMax = elem.hasMax ? elem.max : RooNumber::infinity();
-         ws.import(RooRealVar{name.c_str(), name.c_str(), vMin, vMax});
+         RooRealVar var{name.c_str(), name.c_str(), vMin, vMax};
+         applyBinning(var, elem);
+         ws.import(var);
       }
    }
 }
@@ -176,7 +303,10 @@ void Domains::ProductDomain::registerBinnings(const char *name, RooWorkspace &ws
       auto *var = ws.var(item.first);
       if (!var)
          continue;
-      var->setRange(name, item.second.min, item.second.max);
+      const double vMin = item.second.hasMin ? item.second.min : -RooNumber::infinity();
+      const double vMax = item.second.hasMax ? item.second.max : RooNumber::infinity();
+      var->setRange(name, vMin, vMax);
+      applyBinning(*var, item.second, name);
    }
 }
 

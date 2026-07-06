@@ -162,6 +162,26 @@ struct Var {
    Var(int n) : nbins(n), min(0), max(n) {}
 };
 
+void exportAxis(JSONNode &obsNode, RooRealVar const &var)
+{
+   std::string name = var.GetName();
+   RooJSONFactoryWSTool::testValidName(name, false);
+   obsNode["name"] << name;
+
+   auto const &binning = var.getBinning();
+   if (binning.isUniform()) {
+      obsNode["min"] << var.getMin();
+      obsNode["max"] << var.getMax();
+      obsNode["nbins"] << var.getBins();
+   } else {
+      auto &edges = obsNode["edges"].set_seq();
+      edges.append_child() << binning.binLow(0);
+      for (int i = 0; i < binning.numBins(); ++i) {
+         edges.append_child() << binning.binHigh(i);
+      }
+   }
+}
+
 /**
  * @brief Check if a string represents a valid number.
  *
@@ -519,9 +539,6 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
       node = &RooJSONFactoryWSTool::getRooFitInternal(rootnode, "attributes").set_map()[arg->GetName()].set_map();
    };
 
-   // RooConstVars are not a thing in HS3, and also for RooFit they are not
-   // that important: they are just constants. So we don't need to remember
-   // any information about them.
    if (dynamic_cast<RooConstVar const *>(arg)) {
       return;
    }
@@ -966,6 +983,7 @@ bool RooJSONFactoryWSTool::isValidName(const std::string &str)
 
 bool RooJSONFactoryWSTool::allowExportInvalidNames(true);
 bool RooJSONFactoryWSTool::allowSanitizeNames(true);
+bool RooJSONFactoryWSTool::importNoDomainParametersAsRooConstVars(true);
 bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceError)
 {
    if (!RooJSONFactoryWSTool::isValidName(name)) {
@@ -1032,6 +1050,8 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
       return var;
+   if (RooAbsReal *retval = _workspace.function(objname))
+      return retval;
    auto it = _functionsByName.find(objname);
    if (it != _functionsByName.end()) {
       this->importFunction(*it->second, true);
@@ -1072,7 +1092,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bo
       var["value"] << rrv->getVal();
       if (rrv->isConstant() && storeConstant) {
          var["const"] << rrv->isConstant();
-      } else {
+      } else if (storeBins) {
          var["min"] << rrv->getMin();
          var["max"] << rrv->getMax();
       }
@@ -1642,7 +1662,11 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this really is an unbinned dataset
    output["type"] << "unbinned";
-   exportVariables(variables, output["axes"], false, true);
+   auto &observablesNode = output["axes"].set_seq();
+   for (auto *var : static_range_cast<RooRealVar *>(variables)) {
+      _domains->readVariable(*var);
+      exportAxis(observablesNode.append_child().set_map(), *var);
+   }
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
@@ -1769,7 +1793,7 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
    std::string name(RooJSONFactoryWSTool::name(p));
    RooJSONFactoryWSTool::testValidName(name, true);
 
-   if (_workspace.var(name))
+   if (_workspace.arg(name))
       return;
    if (!p.is_map()) {
       std::stringstream ss;
@@ -1777,14 +1801,12 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
       oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
       return;
    }
-   if (_attributesNode) {
-      if (auto *attrNode = _attributesNode->find(name)) {
-         // We should not create RooRealVar objects for RooConstVars!
-         if (attrNode->has_child("is_const_var") && (*attrNode)["is_const_var"].val_int() == 1) {
-            wsEmplace<RooConstVar>(name, p["value"].val_double());
-            return;
-         }
+   if (importNoDomainParametersAsRooConstVars && !_domains->hasVariable(name.c_str())) {
+      if (!p.has_child("value")) {
+         RooJSONFactoryWSTool::error("cannot instantiate RooConstVar '" + name + "' without \"value\"!");
       }
+      wsEmplace<RooConstVar>(name, p["value"].val_double());
+      return;
    }
    configureVariable(*_domains, p, wsEmplace<RooRealVar>(name, 1.));
 }
@@ -2240,15 +2262,15 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
       error(ss.str());
    }
 
+   _rootnodeInput = &n;
+
+   _attributesNode = findRooFitInternal(*_rootnodeInput, "attributes");
+
    _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    if (auto domains = n.find("domains")) {
       _domains->readJSON(*domains);
    }
    _domains->populate(_workspace);
-
-   _rootnodeInput = &n;
-
-   _attributesNode = findRooFitInternal(*_rootnodeInput, "attributes");
 
    // Build name-keyed indices over the "functions" and "distributions"
    // sequences. Without these, every cross-reference resolved during import

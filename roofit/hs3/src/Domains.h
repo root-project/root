@@ -17,6 +17,7 @@
 #include <map>
 #include <vector>
 
+class RooAbsBinning;
 class RooRealVar;
 class RooWorkspace;
 
@@ -42,16 +43,21 @@ public:
    void readJSON(RooFit::Detail::JSONNode const &);
    void writeJSON(RooFit::Detail::JSONNode &) const;
 
+   bool hasVariable(const char *name) const;
+
    void populate(RooWorkspace &ws) const;
 
    class ProductDomain {
    public:
       void readVariable(const RooRealVar &);
+      void readVariable(const char *name, RooAbsBinning const &binning);
       void readVariable(const char *name, double min, double max);
       void writeVariable(RooRealVar &) const;
 
       void readJSON(RooFit::Detail::JSONNode const &);
       void writeJSON(RooFit::Detail::JSONNode &) const;
+
+      bool hasVariable(const char *name) const;
 
       void populate(RooWorkspace &ws) const;
       void registerBinnings(const char *name, RooWorkspace &ws) const;
@@ -62,7 +68,14 @@ public:
          bool hasMax = false;
          double min = 0.0;
          double max = 0.0;
+         bool hasNBins = false;
+         int nBins = 0;
+         std::vector<double> edges;
       };
+
+      static void applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name = nullptr);
+      static void readBinning(ProductDomainElement &elem, RooAbsBinning const &binning);
+      static void writeBinning(RooFit::Detail::JSONNode &node, ProductDomainElement const &elem);
 
       std::map<std::string, ProductDomainElement> _map;
    };

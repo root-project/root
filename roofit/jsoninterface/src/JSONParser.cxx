@@ -183,6 +183,11 @@ bool TJSONTree::Node::is_seq() const
    return node->get().is_array();
 }
 
+bool TJSONTree::Node::is_null() const
+{
+   return node->get().is_null();
+}
+
 namespace {
 
 // To check whether it's allowed to reset the type of an object. We allow
@@ -228,6 +233,12 @@ TJSONTree::Node &TJSONTree::Node::set_seq()
       throw std::runtime_error("cannot declare \"" + this->key() + "\" to be of seq - type, already of type " +
                                node->get().type_name());
    }
+   return *this;
+}
+
+TJSONTree::Node &TJSONTree::Node::set_null()
+{
+   node->get() = nullptr;
    return *this;
 }
 

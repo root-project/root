@@ -123,6 +123,11 @@ TRYMLTree::Node &TRYMLTree::Node::set_seq()
    return *this;
 }
 
+TRYMLTree::Node &TRYMLTree::Node::set_null()
+{
+   throw std::logic_error("Function not yet implemented");
+}
+
 void TRYMLTree::Node::clear()
 {
    throw std::logic_error("Function not yet implemented");
@@ -225,6 +230,11 @@ bool TRYMLTree::Node::is_seq() const
 {
    // return true if this node is a sequence (JSON array)
    return node->get().is_seq();
+}
+
+bool TRYMLTree::Node::is_null() const
+{
+   return !node->get().has_val() && node->get().num_children() == 0;
 }
 
 std::string TRYMLTree::Node::key() const

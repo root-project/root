@@ -282,9 +282,9 @@ public:
          // As long as the coefficients match the default coefficients in
          // RooFit, we don't have to instantiate RooFit objects but can
          // increase the lowestOrder flag.
-         if (order == 0 && coef.val() == "1.0") {
+         if (order == 0 && (coef.val() == "1.0" || coef.val() == "1")) {
             ++lowestOrder;
-         } else if (coefs.empty() && coef.val() == "0.0") {
+         } else if (coefs.empty() && (coef.val() == "0.0" || coef.val() == "0")) {
             ++lowestOrder;
          } else {
             coefs.add(*tool->request<RooAbsReal>(coef.val(), name));
@@ -817,7 +817,7 @@ void writePolynomialBody(const Pdf *pdf, JSONNode &elem)
    elem["x"] << pdf->x().GetName();
    auto &coefs = elem["coefficients"].set_seq();
    for (int i = 0; i < pdf->lowestOrder(); ++i) {
-      coefs.append_child() << (i == 0 ? "1.0" : "0.0");
+      coefs.append_child() << (i == 0 ? 1.0 : 0.0);
    }
    for (const auto &coef : pdf->coefList()) {
       coefs.append_child() << coef->GetName();
