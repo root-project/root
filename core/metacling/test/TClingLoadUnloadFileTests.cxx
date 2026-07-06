@@ -75,9 +75,6 @@ void remove_n_library_artifacts(const std::string &basename, unsigned int n)
 
 TEST(TClingLoadUnloadFile, ConcurrentLoadUnloadSameLib)
 {
-   GTEST_SKIP() << "fails sporadically, see "
-                << "https://github.com/root-project/root/issues/14121";
-
    ROOT::EnableThreadSafety();
 
    std::string basename{"concurrent_load_unload_same_lib"};
@@ -102,9 +99,6 @@ TEST(TClingLoadUnloadFile, ConcurrentLoadUnloadSameLib)
 
 TEST(TClingLoadUnloadFile, ConcurrentLoadUnloadOneLibPerThread)
 {
-   GTEST_SKIP() << "fails sporadically, see "
-                << "https://github.com/root-project/root/issues/14121";
-
    ROOT::EnableThreadSafety();
 
    std::string basename{"concurrent_load_unload_one_lib_per_thread"};
