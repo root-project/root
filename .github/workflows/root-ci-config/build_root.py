@@ -419,24 +419,11 @@ def cmake_configure(options, buildtype):
     options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
 
     result = subprocess_with_log(f"""
-        cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
+        cmake --fresh -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
 
     if result != 0:
         die(result, "Failed cmake generation step")
-
-
-@github_log_group("Dump existing configuration")
-def cmake_dump_config():
-    # Print CMake cached config
-    srcdir = os.path.join(WORKDIR, "src")
-    builddir = os.path.join(WORKDIR, "build")
-    result = subprocess_with_log(f"""
-        cmake -S '{srcdir}' -B '{builddir}' -N -L
-    """)
-
-    if result != 0:
-        die(result, "Failed cmake cache print step")
 
 
 @github_log_group("Dump requested build configuration")
@@ -466,10 +453,7 @@ def build(options, buildtype):
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
-        cmake_configure(options, buildtype)
-    else:
-        cmake_dump_config()
+    cmake_configure(options, buildtype)
 
     dump_requested_config(options)
 
