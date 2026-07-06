@@ -124,7 +124,7 @@
 | TMVA_SOFIE_Keras_HiggsModel.C | | Run the SOFIE parser on the Keras model obtaining running TMVA_Higgs_Classification.C. You need to run that macro before this one. |
 | | TMVA_SOFIE_Models.py | Inference with SOFIE using a set of models trained with Keras. |
 | TMVA_SOFIE_ONNX.C | | Parsing of ONNX files into RModel object and further generating the .hxx header files for inference. |
-| TMVA_SOFIE_PyTorch.C | | Parsing of PyTorch .pt file into RModel object and further generating the .hxx header files for inference. |
+| | TMVA_SOFIE_PyTorch.py | Parsing of PyTorch .pt file into RModel object and further generating the .hxx header files for inference. |
 | TMVA_SOFIE_RDataFrame.C | TMVA_SOFIE_RDataFrame.py | Inference with SOFIE and RDataFrame, of a model trained with Keras. |
 | TMVA_SOFIE_RDataFrame_JIT.C | | Using a trained model with Keras and make inference using SOFIE and RDataFrame. |
 | TMVA_SOFIE_RSofieReader.C | | Using a trained model with Keras and make inference using SOFIE with the RSofieReader class. |

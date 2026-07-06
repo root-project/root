@@ -373,7 +373,7 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
   endif()
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.py)
   endif()
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.py)
@@ -943,6 +943,7 @@ if(pyroot)
       machine_learning/ml_dataloader_PyTorch.py
       machine_learning/ml_dataloader_resampling.py
       machine_learning/ml_dataloader_Higgs_Classification.py
+      machine_learning/TMVA_SOFIE_PyTorch.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/tmva101_Training.py
