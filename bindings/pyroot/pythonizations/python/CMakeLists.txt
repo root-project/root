@@ -83,7 +83,9 @@ if(tmva)
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/sigmoid.py
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/softmax.py
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/swish.py
-        ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/tanh.py)
+        ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/tanh.py
+        ROOT/_pythonization/_tmva/_sofie/_parser/_pytorch/__init__.py
+        ROOT/_pythonization/_tmva/_sofie/_parser/_pytorch/parser.py)
 endif()
 
 set(py_sources
