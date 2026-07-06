@@ -283,6 +283,36 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
                                   "'");
    }
 }
+double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
+{
+   auto const *mean = dynamic_cast<RooProduct const *>(&constraint.getMean());
+   if (!mean) {
+      RooJSONFactoryWSTool::error("Poisson gamma constraint mean is not a RooProduct: " +
+                                  std::string(constraint.GetName()));
+   }
+
+   for (RooAbsArg *arg : mean->servers()) {
+      if (arg == &gamma) {
+         continue;
+      }
+
+      if (auto const *tau = dynamic_cast<RooConstVar const *>(arg)) {
+         return tau->getVal();
+      }
+
+      // Imported workspaces can sometimes represent
+      // constants as constant RooRealVars.
+      if (auto const *real = dynamic_cast<RooAbsReal const *>(arg)) {
+         if (real->isConstant() || endsWith(std::string(real->GetName()), "_tau")) {
+            return real->getVal();
+         }
+      }
+   }
+
+   RooJSONFactoryWSTool::error("Could not find tau component in Poisson gamma constraint mean: " +
+                               std::string(constraint.GetName()));
+   return std::numeric_limits<double>::quiet_NaN();
+}
 
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
@@ -334,6 +364,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             // this is dealt with at a different place, ignore it for now
          } else if (modtype == "normfactor") {
             RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
+            constrParam.setError(0.0);
             normElems.add(constrParam);
             if (mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
                // for norm factors, constraints are optional
@@ -1054,7 +1085,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                if (constraint) {
                   sample.barlowBeestonLightConstraintType = constraint->IsA();
                   if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
-                     double erel = 1. / std::sqrt(constraint_p->getX().getVal());
+                     double erel = 1. / std::sqrt(poissonTau(*constraint_p, *g));
                      channel.rel_errors[idx] = erel;
                   } else if (RooGaussian *constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
                      double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
@@ -1088,7 +1119,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                if (!constraint) {
                   sys.constraints.push_back(0.0);
                } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
-                  sys.constraints.push_back(1. / std::sqrt(constraint_p->getX().getVal()));
+                  sys.constraints.push_back(1. / std::sqrt(poissonTau(*constraint_p, *g)));
                   if (!sys.constraint) {
                      sys.constraintType = RooPoisson::Class();
                   }

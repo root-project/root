@@ -41,6 +41,7 @@ public:
    static constexpr bool useListsInsteadOfDicts = true;
    static bool allowExportInvalidNames;
    static bool allowSanitizeNames;
+   static bool importNoDomainParametersAsRooConstVars;
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
    static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
