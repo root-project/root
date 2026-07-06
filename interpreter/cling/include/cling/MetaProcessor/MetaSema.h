@@ -37,7 +37,6 @@ namespace cling {
     bool m_IsQuitRequested;
 
     llvm::DenseMap<const clang::FileEntry*, const Transaction*> m_FEToTransaction;
-    llvm::DenseMap<const Transaction*, const clang::FileEntry*> m_TransactionToFE;
   public:
     enum SwitchMode {
       kOff = 0,
