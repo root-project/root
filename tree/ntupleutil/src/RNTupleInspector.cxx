@@ -670,8 +670,8 @@ void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile(ESchemaProfileForm
          std::size_t columnSize = columnInfo.GetCompressedSize();
 
          SpeedscopeFrame columnSpeedscopeFrame;
-         columnSpeedscopeFrame.fPrimaryString = tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId()) +
-                                                " [col#" + std::to_string(columnDescriptor.GetPhysicalId()) + "]";
+         columnSpeedscopeFrame.fPrimaryString = "[col#" + std::to_string(columnDescriptor.GetPhysicalId()) + "]" +
+                                                tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId());
          columnSpeedscopeFrame.fSecondaryString =
             ROOT::Internal::RColumnElementBase::GetColumnTypeName(columnDescriptor.GetType());
          columnSpeedscopeFrame.fOpeningPosition = positionCursor;

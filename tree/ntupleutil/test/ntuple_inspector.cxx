@@ -887,9 +887,9 @@ TEST(RNTupleInspector, SchemaProfile)
    "shared":{
       "frames":[
          { "name":"float1", "file":"Type: float, Size: 40B" },
-         { "name":"float1 [col#0]", "file":"Type: SplitReal32, Size: 40B" },
+         { "name":"[col#0]float1", "file":"Type: SplitReal32, Size: 40B" },
          { "name":"int", "file":"Type: std::int32_t, Size: 40B" },
-         { "name":"int [col#1]", "file":"Type: SplitInt32, Size: 40B" }
+         { "name":"[col#1]int", "file":"Type: SplitInt32, Size: 40B" }
       ]
    },
    "profiles":[
