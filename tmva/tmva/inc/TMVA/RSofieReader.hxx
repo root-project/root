@@ -120,26 +120,25 @@ public:
          parserPythonCode += "model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse('" + path + "'," + batch_size + ")\n";
       }
       else if (type == kPt) {
-         // use PyTorch direct parser
-         if (gSystem->Load("libROOTTMVASofiePyParsers") < 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since libROOTTMVASofiePyParsers is missing");
-         }
+         // use PyTorch Python parser
          if (inputShapes.size() == 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since the input tensor shape is missing and is needed by the PyTorch parser");
          }
-         std::string inputShapesStr = "{";
+         std::string inputShapesStr = "[";
          for (unsigned int i = 0; i < inputShapes.size(); i++) {
-            inputShapesStr += "{ ";
+            inputShapesStr += "[";
             for (unsigned int j = 0; j < inputShapes[i].size(); j++) {
                inputShapesStr += ROOT::Math::Util::ToString(inputShapes[i][j]);
                if (j < inputShapes[i].size()-1) inputShapesStr += ", ";
             }
-            inputShapesStr += "}";
+            inputShapesStr += "]";
             if (i < inputShapes.size()-1) inputShapesStr += ", ";
          }
-         inputShapesStr += "}";
-         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyTorch::Parse(\"" + path + "\", "
-                    + inputShapesStr + "); \n";
+         inputShapesStr += "]";
+         parserPythonCode += "\"\"\"\n";
+         parserPythonCode += "import ROOT\n";
+         parserPythonCode +=
+            "model = ROOT.TMVA.Experimental.SOFIE.PyTorch.Parse('" + path + "', " + inputShapesStr + ")\n";
       }
       else if (type == kROOT) {
          // use  parser from ROOT
@@ -155,7 +154,8 @@ public:
        // add custom operators if needed
       if (fCustomOperators.size() > 0) {
          if (!parserPythonCode.empty())
-            throw std::runtime_error("Cannot use Custom operator with a Python parser (e.g. from a Keras model)");
+            throw std::runtime_error(
+               "Cannot use Custom operator with a Python parser (e.g. from a Keras or PyTorch model)");
 
          for (auto & op : fCustomOperators) {
             parserCode += "{ auto p = new TMVA::Experimental::SOFIE::ROperator_Custom<float>(\""
