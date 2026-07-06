@@ -72,15 +72,12 @@ endif()
 
 # Look for needed Python modules
 ROOT_FIND_PYTHON_MODULE(torch)
-ROOT_FIND_PYTHON_MODULE(keras)
-
-
 
 # onnx 1.19.0 has a bug that makes this version unusable:
 # https://github.com/onnx/onnx/issues/7249
 # 1.19.1 instead could be used
-# In that case, we have to disable the "TestSofieModels" and
-# "TestRModelParserPyTorch" tests, which import onnx indirectly via torch.onnx
+# In that case, we have to disable the "TestSofieModels" test,
+# which imports onnx indirectly via torch.onnx
 ROOT_FIND_PYTHON_MODULE(onnx)
 if (ROOT_ONNX_FOUND AND DEFINED ROOT_ONNX_VERSION)
   if(ROOT_ONNX_VERSION VERSION_EQUAL "1.19.0")
@@ -108,44 +105,6 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
     )
   endif()
 endif()
-
-# Any features that link against libpython are disabled if built with tpython=OFF
-if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND BLAS_FOUND AND NOT broken_onnx)
-  configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
-
-  # Test RModelParser_PyTorch
-  ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
-        LIBRARIES
-        ROOTTMVASofie
-        TMVA
-        Python3::Python
-        BLAS::BLAS
-        INCLUDE_DIRS
-        SYSTEM
-        ${CMAKE_CURRENT_BINARY_DIR}
-  )
-endif()
-
-
-# Any features that link against libpython are disabled if built with tpython=OFF
-if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
-
-   configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
-   configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
-
-   ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
-       LIBRARIES
-       ROOTTMVASofie
-       Python3::Python
-       BLAS::BLAS
-       INCLUDE_DIRS
-       SYSTEM
-       ${CMAKE_CURRENT_BINARY_DIR}
-       ENVIRONMENT PYTHONPATH=${localruntimedir}
-   )
-
-endif()
-
 
 ROOT_EXECUTABLE(emitGNN GNN/EmitGNN.cxx LIBRARIES ROOTTMVASofie)
 ROOT_ADD_TEST(tmva-sofie-EmitGNN COMMAND emitGNN)

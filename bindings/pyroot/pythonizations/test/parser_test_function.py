@@ -41,7 +41,9 @@ def is_channels_first_supported() :
 
       return True
 
-def generate_and_test_inference(model_file_path: str, generated_header_file_dir: str = None, batch_size=1):
+def generate_and_test_inference(
+    model_file_path: str, generated_header_file_dir: str = None, batch_size=1, input_tensors=None, atol=1e-2
+):
 
     import keras
     import numpy as np
@@ -71,11 +73,12 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     inference_session = sofie_model_namespace.Session(generated_header_file_path.removesuffix(".hxx") + ".dat")
     keras_model = keras.models.load_model(model_file_path)
 
-    input_tensors = []
-    for model_input in keras_model.inputs:
-      input_shape = list(model_input.shape)
-      input_shape[0] = batch_size
-      input_tensors.append(np.ones(input_shape, dtype='float32'))
+    if input_tensors is None:
+        input_tensors = []
+        for model_input in keras_model.inputs:
+            input_shape = list(model_input.shape)
+            input_shape[0] = batch_size
+            input_tensors.append(np.ones(input_shape, dtype="float32"))
     sofie_inference_result = inference_session.infer(*input_tensors)
     sofie_output_tensor_shape = list(rmodel.GetTensorShape(rmodel.GetOutputTensorNames()[0]))   # get output shape
                                                                                                 # from SOFIE
@@ -90,6 +93,6 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     np.testing.assert_allclose(
         np.asarray(sofie_inference_result).flatten(),
         np.asarray(keras_inference_result).flatten(),
-        atol=1e-2,
-        rtol=0.  # explicitly disable relative tolerance (NumPy uses |a - b| <= atol + rtol * |b|)
+        atol=atol,
+        rtol=0.0,  # explicitly disable relative tolerance (NumPy uses |a - b| <= atol + rtol * |b|)
     )
