@@ -568,8 +568,7 @@ void ROOT::Experimental::RNTupleInspector::PrintFieldTreeAsDot(const ROOT::RFiel
 namespace {
 
 struct SpeedscopeFrame {
-   std::string fPrimaryString;
-   std::string fSecondaryString;
+   std::string fString;
    std::uint64_t fOpeningPosition = 0;
    std::uint64_t fClosingPosition = 0;
 };
@@ -582,10 +581,7 @@ static void PrintSpeedscopeFrames(const std::vector<SpeedscopeFrame> &frames, st
    output << "      \"frames\":[\n";
 
    for (std::size_t i = 0; i < frames.size(); ++i) {
-      output << "         { \"name\":\"" << frames[i].fPrimaryString
-             << "\", \"file\":\"Type: " << frames[i].fSecondaryString
-             << ", Size: " << frames[i].fClosingPosition - frames[i].fOpeningPosition << "B\" }"
-             << (i + 1 < frames.size() ? ",\n" : "\n");
+      output << "         { \"name\":\"" << frames[i].fString << "\" }" << (i + 1 < frames.size() ? ",\n" : "\n");
    }
 
    output << "      ]\n";
@@ -650,12 +646,12 @@ void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile(ESchemaProfileForm
    // Returns size of the visited field
    auto visitFieldsRecursive = [&](auto &self, const ROOT::RFieldDescriptor &fieldDescriptor) -> std::size_t {
       SpeedscopeFrame fieldSpeedscopeFrame;
-      fieldSpeedscopeFrame.fPrimaryString = tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId());
-      fieldSpeedscopeFrame.fSecondaryString = fieldDescriptor.GetTypeName();
+      fieldSpeedscopeFrame.fString =
+         tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId()) + " (" + fieldDescriptor.GetTypeName() + ")";
       fieldSpeedscopeFrame.fOpeningPosition = positionCursor;
       frames.push_back(fieldSpeedscopeFrame);
 
-      const std::size_t fieldSpeedscopeFrameIndex = frames.size() - 1;
+      std::size_t fieldSpeedscopeFrameIndex = frames.size() - 1;
 
       std::size_t subTreeSize = 0;
       const auto &childIds = fieldDescriptor.GetLinkIds();
@@ -670,10 +666,10 @@ void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile(ESchemaProfileForm
          std::size_t columnSize = columnInfo.GetCompressedSize();
 
          SpeedscopeFrame columnSpeedscopeFrame;
-         columnSpeedscopeFrame.fPrimaryString = "[col#" + std::to_string(columnDescriptor.GetPhysicalId()) + "]" +
-                                                tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId());
-         columnSpeedscopeFrame.fSecondaryString =
-            ROOT::Internal::RColumnElementBase::GetColumnTypeName(columnDescriptor.GetType());
+         columnSpeedscopeFrame.fString =
+            "[col#" + std::to_string(columnDescriptor.GetPhysicalId()) + "] " +
+            tupleDescriptor.GetQualifiedFieldName(fieldDescriptor.GetId()) + " (" +
+            ROOT::Internal::RColumnElementBase::GetColumnTypeName(columnDescriptor.GetType()) + ")";
          columnSpeedscopeFrame.fOpeningPosition = positionCursor;
          positionCursor += columnSize;
          columnSpeedscopeFrame.fClosingPosition = positionCursor;

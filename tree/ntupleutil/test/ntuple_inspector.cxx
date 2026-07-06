@@ -882,14 +882,14 @@ TEST(RNTupleInspector, SchemaProfile)
    std::ostringstream schemaProfileStream;
    inspector->PrintSchemaProfile(ROOT::Experimental::ESchemaProfileFormat::kSpeedscopeJSON, schemaProfileStream);
    const std::string schemaProfile = schemaProfileStream.str();
-   const std::string expected = R"({
+   const std::string expected = R"foo({
    "$schema":"https://www.speedscope.app/file-format-schema.json",
    "shared":{
       "frames":[
-         { "name":"float1", "file":"Type: float, Size: 40B" },
-         { "name":"[col#0]float1", "file":"Type: SplitReal32, Size: 40B" },
-         { "name":"int", "file":"Type: std::int32_t, Size: 40B" },
-         { "name":"[col#1]int", "file":"Type: SplitInt32, Size: 40B" }
+         { "name":"float1 (float)" },
+         { "name":"[col#0] float1 (SplitReal32)" },
+         { "name":"int (std::int32_t)" },
+         { "name":"[col#1] int (SplitInt32)" }
       ]
    },
    "profiles":[
@@ -912,6 +912,6 @@ TEST(RNTupleInspector, SchemaProfile)
       }
    ]
 }
-)";
+)foo";
    EXPECT_EQ(schemaProfile, expected);
 }
