@@ -21,6 +21,7 @@
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string_view>
@@ -88,8 +89,13 @@ class RSoAField : public RFieldBase {
    RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
    RSoAField(std::string_view fieldName, TClass *clSoA);
 
-   /// Called during construction, picks up the (nested) member fields of the underlying record type(s)
+   /// Called during construction, picks up the (nested) member fields of the underlying record type(s) and its
+   /// base classes.
    void CollectRecordMemberFields();
+   /// For a nested SoA struct (either as a member of as a base class), use their fRecordMemberFields in this class,
+   /// i.e. "unroll" the vectors in the nested SoA struct into the SoA base class.
+   void GraftNestedMemberFields(const RSoAField &nestedSoA, std::size_t offsetInParent,
+                                std::function<RFieldBase *(const std::string &)> fnRecordFieldFinder);
 
    void ReconstructSplitFields() const;
 

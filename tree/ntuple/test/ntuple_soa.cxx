@@ -71,22 +71,6 @@ TEST(RNTuple, SoACheck)
    }
 
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoAOnDerivedRecord");
-      FAIL() << "creating SoA field on derived record should fail";
-   } catch (const ROOT::RException &e) {
-      EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA fields with inheritance are currently unsupported"));
-   }
-   try {
-      auto f = std::make_unique<RSoAField>("f", "SoADerivedOnBaseRecord");
-      FAIL() << "creating a derived SoA field should fail";
-   } catch (const ROOT::RException &e) {
-      EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA fields with inheritance are currently unsupported"));
-   }
-   {
-      EXPECT_NO_THROW(auto f = std::make_unique<RSoAField>("f", "SoABase"));
-   }
-
-   try {
       auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
       FAIL() << "creating SoA field with arrays fail";
    } catch (const ROOT::RException &e) {
@@ -508,6 +492,84 @@ R"({
       "fColor": [5, 6],
       "fSize": [7, 8]
     }
+  }
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expected, os.str());
+}
+
+TEST(RNTuple, SoADerived)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_derived.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      try {
+         model->AddField(std::make_unique<RSoAField>("x", "SoADerivedFail1"));
+         FAIL() << "SoADerivedFail1 should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(),
+                     testing::HasSubstr("inheritance of SoA class x does not match its underlying record type"));
+      }
+      try {
+         model->AddField(std::make_unique<RSoAField>("x", "SoADerivedFail2"));
+         FAIL() << "SoADerivedFail2 should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(), testing::HasSubstr("missing SoA members"));
+      }
+
+      model->AddField(std::make_unique<RSoAField>("derived", "SoADerived"));
+      model->AddField(std::make_unique<RSoAField>("multi", "SoADerivedMulti"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto derivedSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoADerived>("derived");
+      derivedSoA->fBase = {1.0, 2.0};
+      derivedSoA->fDerived = {3.0, 4.0};
+
+      auto derivedMultiSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoADerivedMulti>("multi");
+      derivedMultiSoA->fBase = {5.0, 6.0};
+      derivedMultiSoA->fDerived = {7.0, 8.0};
+      derivedMultiSoA->fX = {9.0, 10.0};
+      derivedMultiSoA->fY = {11.0, 12.0};
+      derivedMultiSoA->fProperties.fColor = {13, 14};
+      derivedMultiSoA->fProperties.fSize = {15.0, 16.0};
+      derivedMultiSoA->fMulti = {17.0, 18.0};
+
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+
+   // clang-format off
+   std::string expected{
+R"({
+  "derived": {
+    ":_0": {
+      "fBase": [1, 2]
+    },
+    "fDerived": [3, 4]
+  },
+  "multi": {
+    ":_0": {
+      ":_0": {
+        "fBase": [5, 6]
+      },
+      "fDerived": [7, 8]
+    },
+    ":_1": {
+      "fX": [9, 10],
+      "fY": [11, 12],
+      "fProperties": {
+        "fColor": [13, 14],
+        "fSize": [15, 16]
+      }
+    },
+    "fMulti": [17, 18]
   }
 }
 )" };
