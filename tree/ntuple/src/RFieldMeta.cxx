@@ -686,42 +686,116 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string
 {
 }
 
+void ROOT::Experimental::RSoAField::GraftNestedMemberFields(
+   const RSoAField &nestedSoA, std::size_t offsetInParent,
+   std::function<RFieldBase *(const std::string &)> fnRecordFieldFinder)
+{
+   const std::size_t nNestedRecordMemberFields = nestedSoA.fRecordMemberFields.size();
+
+   // The qualified field name of fields in nestedSoA->fRecordMemberFields will have a "<field name>._0."
+   // prefix because these fields are rooted in a collection named after the nested SoA field.
+   //
+   // E.g., in the following example:
+   //
+   // struct SoA_A {                                   struct Record_A {
+   //   SoA_B fB;                                         Record_B fB;
+   // };                                               };
+   //
+   // struct SoA_B {                                   struct Record_B {
+   //   ROOT::RVec<float> fX;                             float fX;
+   // };                                               };
+   //
+   // The on-disk schema of SoA_A is "collection of Record_A", and the on-disk schema of SoA_B is
+   // "collection of Record_B".
+   // The qualified field name of fX in the subfield hiararchy of SoA_A is <field name>._0.fB.fX.
+   // The qualified field name of fX in the subfield hiararchy of SoA_B is <field name>._0.fX.
+   const auto lenPrefix = nestedSoA.GetFieldName().length() + strlen("._0.");
+
+   for (std::size_t i = 0; i < nNestedRecordMemberFields; ++i) {
+      const auto fieldNameForMatching =
+         nestedSoA.GetFieldName() + "." + nestedSoA.fRecordMemberFields[i]->GetQualifiedFieldName().substr(lenPrefix);
+
+      fRecordMemberFields.emplace_back(fnRecordFieldFinder(fieldNameForMatching));
+      fRecordMemberDeleters.emplace_back(GetDeleterOf(*nestedSoA.fRecordMemberFields[i]));
+      fSoAMemberOffsets.emplace_back(offsetInParent + nestedSoA.fSoAMemberOffsets[i]);
+   }
+}
+
 void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 {
-   std::vector<RFieldBase *> realRecordMemberFields;
+   // Build a map of all subfields (nested) of the underlying record type. Map the fully qualified name of the
+   // subfields to their field pointer, so that we can later match the subfields of the SoA class to their corresponding
+   // fields in the underlying record type. Note that the members of the SoA class and the underlying record type
+   // can have different ordering. However, the base classes of the SoA class and the underlying record type must match
+   // in order.
+
+   std::vector<RFieldBase *> realRecordMemberFields; // Contains all subfields of the underlying record type
+   // Qualified field name --> index in realRecordMemberFields
+   std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
+
+   // Count the top-level subfields of the underlying record type for cross-check with the SoA type
    unsigned int nDirectRecordSubfields = 0;
+   unsigned int nDirectRecordBases = 0;
+
    for (auto itr = fSubfields[0]->begin(), iEnd = fSubfields[0]->end(); itr != iEnd; ++itr) {
-      if (itr->GetParent() == fSubfields[0].get())
-         nDirectRecordSubfields++;
+      if (itr->GetParent() == fSubfields[0].get()) {
+         if (itr->GetFieldName()[0] == ':') {
+            nDirectRecordBases++;
+         } else {
+            nDirectRecordSubfields++;
+         }
+      }
+
+      // Build the qualified field name for matching. We root the qualified field name at the underlying record type.
+      auto qualifiedName = itr->GetFieldName();
+      auto parent = itr->GetParent();
+      while (parent != fSubfields[0].get()) {
+         qualifiedName = parent->GetFieldName() + "." + qualifiedName;
+         parent = parent->GetParent();
+      }
+      recordFieldNameToIdx[qualifiedName] = realRecordMemberFields.size();
+
       realRecordMemberFields.emplace_back(&(*itr));
    }
 
-   for (const auto f : realRecordMemberFields) {
-      if (f->GetFieldName()[0] == ':') {
-         throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
-      }
+   // Base classes are treated as unrolled nested SoA classes
+   const auto *soaBases = fSoAClass->GetListOfBases();
+   if (soaBases->GetSize() != static_cast<Int_t>(nDirectRecordBases)) {
+      throw RException(R__FAIL(std::string("number of base classes don't match between SoA class ") + GetFieldName() +
+                               " and its underlying record type"));
    }
-
-   // Build map name --> index in realRecordMemberFields vector. Cut the name prefix up to the collection subfields
-   // so that it matches the data member name
-   std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
-   {
-      recordFieldNameToIdx.reserve(realRecordMemberFields.size());
-      const auto lenFieldNamePrefix = GetFieldName().length() + strlen("._0.");
-      for (std::size_t i = 0; i < realRecordMemberFields.size(); ++i) {
-         recordFieldNameToIdx[realRecordMemberFields[i]->GetQualifiedFieldName().substr(lenFieldNamePrefix)] = i;
-      }
-   }
-
-   const auto *bases = fSoAClass->GetListOfBases();
-   assert(bases);
-   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*bases)) {
-      if (baseClass->GetDelta() < 0) {
+   unsigned int baseIdx = 0;
+   for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fSoAClass->GetListOfBases())) {
+      if (base->GetDelta() < 0) {
          throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + GetTypeName() +
-                                  " virtually inherits from " + baseClass->GetName()));
+                                  " virtually inherits from " + base->GetName()));
       }
-      // At a later point, we will support inheritance
-      throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
+      TClass *cl = base->GetClassPointer();
+
+      const auto baseFieldName = std::string(":_") + std::to_string(baseIdx);
+
+      // SoA class `A` is allowed to inherit from a SoA class `B` whose underlying record type is `X` if and only if
+      // the underlying record type of `A` inherits from a type `X`.
+      const auto underlyingBaseTypeName = ROOT::Internal::GetRNTupleSoARecord(cl);
+      auto recordBaseField = realRecordMemberFields[recordFieldNameToIdx[baseFieldName]];
+      if (underlyingBaseTypeName != recordBaseField->GetTypeName()) {
+         throw RException(R__FAIL(std::string("inheritance of SoA class ") + GetFieldName() +
+                                  " does not match its underlying record type"));
+      }
+
+      std::unique_ptr<RSoAField> soaBaseField;
+      try {
+         soaBaseField = std::make_unique<RSoAField>(baseFieldName, cl->GetName());
+      } catch (const RException &e) {
+         throw RException(R__FAIL(std::string("invalid field type in base class: ") + cl->GetName() + " of SoA field " +
+                                  GetFieldName() + " (" + e.what() + ")"));
+      }
+
+      GraftNestedMemberFields(*soaBaseField, base->GetDelta(), [&](const std::string &name) {
+         return realRecordMemberFields[recordFieldNameToIdx[name]];
+      });
+
+      baseIdx++;
    }
 
    unsigned int nMembers = 0;
@@ -753,17 +827,9 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
                                      underlyingField->GetTypeName()));
          }
 
-         const auto lenFieldNamePrefix = soaField->GetFieldName().length() + strlen("._0.");
-
-         for (std::size_t i = 0; i < soaField->fRecordMemberFields.size(); ++i) {
-            const auto f = soaField->fRecordMemberFields[i];
-            const auto fieldNameForMatching =
-               dmField->GetFieldName() + "." + f->GetQualifiedFieldName().substr(lenFieldNamePrefix);
-
-            fRecordMemberFields.emplace_back(realRecordMemberFields[recordFieldNameToIdx[fieldNameForMatching]]);
-            fRecordMemberDeleters.emplace_back(GetDeleterOf(*soaField->fRecordMemberFields[i]));
-            fSoAMemberOffsets.emplace_back(dataMember->GetOffset() + soaField->fSoAMemberOffsets[i]);
-         }
+         GraftNestedMemberFields(*soaField, dataMember->GetOffset(), [&](const std::string &name) {
+            return realRecordMemberFields[recordFieldNameToIdx[name]];
+         });
       } else if (auto vecField = dynamic_cast<RRVecField *>(dmField.get())) {
          if (vecField->begin()->GetTypeName() != underlyingField->GetTypeName() ||
              vecField->begin()->GetTypeAlias() != underlyingField->GetTypeAlias()) {
@@ -944,6 +1010,15 @@ void ROOT::Experimental::RSoAField::ReconstructSplitFields() const
 
    fSplitFields = std::make_unique<std::vector<std::unique_ptr<ROOT::RFieldBase>>>();
    fSplitOffsets = std::make_unique<std::vector<std::size_t>>();
+
+   unsigned int baseIdx = 0;
+   for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fSoAClass->GetListOfBases())) {
+      TClass *cl = base->GetClassPointer();
+      auto baseField = RFieldBase::Create(std::string(":_" + std::to_string(baseIdx)), cl->GetName()).Unwrap();
+      fSplitFields->emplace_back(std::move(baseField));
+      fSplitOffsets->emplace_back(base->GetDelta());
+      baseIdx++;
+   }
 
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
       if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())

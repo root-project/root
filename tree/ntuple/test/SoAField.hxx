@@ -23,26 +23,6 @@ struct SoAVersionMismatch {
    ClassDefNV(SoAVersionMismatch, 4);
 };
 
-struct RecordBase {
-   ClassDefNV(RecordBase, 2);
-};
-
-struct RecordDerived : public RecordBase {
-   ClassDefNV(RecordDerived, 2);
-};
-
-struct SoABase {
-   ClassDefNV(SoABase, 2);
-};
-
-struct SoAOnDerivedRecord {
-   ClassDefNV(SoAOnDerivedRecord, 2);
-};
-
-struct SoADerivedOnBaseRecord : public SoABase {
-   ClassDefNV(SoADerivedOnBaseRecord, 2);
-};
-
 struct RecordSimple {
    float fX;
    float fY;
@@ -150,6 +130,44 @@ struct SoADotBadNestedType {
    SoA fProperties;
 
    ClassDefNV(SoADotBadNestedType, 2);
+};
+
+struct RecordBase {
+   float fBase;
+   ClassDefNV(RecordBase, 2);
+};
+
+struct SoABase {
+   ROOT::RVec<float> fBase;
+   ClassDefNV(SoABase, 2);
+};
+
+struct RecordDerived : public RecordBase {
+   float fDerived;
+   ClassDefNV(RecordDerived, 2);
+};
+
+struct SoADerived : public SoABase {
+   ROOT::RVec<float> fDerived;
+   ClassDefNV(SoADerived, 2);
+};
+
+struct RecordDerivedMulti : public RecordDerived, RecordDot {
+   float fMulti;
+   ClassDefNV(RecordDerivedMulti, 2);
+};
+
+struct SoADerivedMulti : public SoADerived, SoADot {
+   ROOT::RVec<float> fMulti;
+   ClassDefNV(SoADerivedMulti, 2);
+};
+
+struct SoADerivedFail1 : public RecordDerived {
+   ClassDefNV(SoADerivedFail1, 2);
+};
+
+struct SoADerivedFail2 : public SoABase {
+   ClassDefNV(SoADerivedFail2, 2);
 };
 
 #endif // ROOT_RNTuple_Test_SoAField
