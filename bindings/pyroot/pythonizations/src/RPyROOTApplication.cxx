@@ -47,7 +47,7 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
 
       if (ignoreCmdLineOpts) {
          // Last argv must be null (see https://en.cppreference.com/cpp/language/main_function)
-         argv = new char *[argc + 1]{};
+         argv = new char *[argc + 1] {};
       } else {
          // Retrieve sys.argv list from Python
          PyObject *argl = PySys_GetObject("argv");
@@ -59,7 +59,7 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
          }
 
          // Last argv must be null (see https://en.cppreference.com/cpp/language/main_function)
-         argv = new char *[argc + 1]{};
+         argv = new char *[argc + 1] {};
 
          for (int i = 1; i < argc; ++i) {
             PyObject *item = PyList_GetItem(argl, i);
