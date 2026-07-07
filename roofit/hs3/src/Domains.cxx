@@ -62,15 +62,6 @@ void Domains::populate(RooWorkspace &ws) const
    }
 }
 
-void Domains::readVariable(const char *name, double min, double max)
-{
-   readVariable(name, min, max, defaultDomainName);
-}
-void Domains::readVariable(const char *name, double min, double max, const char *domain)
-{
-   _map[domain].readVariable(name, min, max);
-}
-
 void Domains::readVariable(RooRealVar const &var)
 {
    _map[defaultDomainName].readVariable(var.GetName(), var.getBinning());
@@ -161,19 +152,6 @@ void Domains::ProductDomain::readVariable(const char *name, RooAbsBinning const 
    elem.hasMax = true;
    elem.max = binning.highBound();
    readBinning(elem, binning);
-}
-
-void Domains::ProductDomain::readVariable(const char *name, double min, double max)
-{
-   auto &elem = _map[name];
-
-   elem.hasMin = true;
-   elem.min = min;
-   elem.hasMax = true;
-   elem.max = max;
-   elem.hasNBins = false;
-   elem.nBins = 0;
-   elem.edges.clear();
 }
 
 void Domains::ProductDomain::applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name)

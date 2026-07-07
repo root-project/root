@@ -35,6 +35,7 @@ class Domains;
 namespace RooStats {
 class ModelConfig;
 }
+class RooRealVar;
 
 class RooJSONFactoryWSTool {
 public:
@@ -187,6 +188,8 @@ public:
    {
       return node.get("misc", "ROOT_internal", keys...);
    }
+
+   static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
