@@ -1054,33 +1054,12 @@ public:
       elem["type"] << key();
       RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
       RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
-      writeBinningInfo(pdf, elem);
-      return true;
-   }
-
-private:
-   void writeBinningInfo(const ParamHistFunc *pdf, JSONNode &elem) const
-   {
       auto &observablesNode = elem["axes"].set_seq();
       // axes have to be ordered to get consistent bin indices
       for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
-         std::string name = var->GetName();
-         RooJSONFactoryWSTool::testValidName(name, false);
-         JSONNode &obsNode = observablesNode.append_child().set_map();
-         obsNode["name"] << name;
-         auto const &binning = var->getBinning();
-         if (binning.isUniform()) {
-            obsNode["min"] << var->getMin();
-            obsNode["max"] << var->getMax();
-            obsNode["nbins"] << var->getBins();
-         } else {
-            auto &edges = obsNode["edges"].set_seq();
-            edges.append_child() << binning.binLow(0);
-            for (int i = 0; i < binning.numBins(); ++i) {
-               edges.append_child() << binning.binHigh(i);
-            }
-         }
+         RooJSONFactoryWSTool::exportAxis(observablesNode.append_child().set_map(), *var);
       }
+      return true;
    }
 };
 

@@ -143,46 +143,6 @@ bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneo
 }
 
 /**
- * @struct Var
- * @brief Structure to store variable information.
- *
- * This structure represents variable information such as the number of bins, minimum and maximum values,
- * and a vector of binning edges for a variable.
- */
-struct Var {
-   int nbins;                 // Number of bins
-   double min;                // Minimum value
-   double max;                // Maximum value
-   std::vector<double> edges; // Vector of edges
-
-   /**
-    * @brief Constructor for Var.
-    * @param n Number of bins.
-    */
-   Var(int n) : nbins(n), min(0), max(n) {}
-};
-
-void exportAxis(JSONNode &obsNode, RooRealVar const &var)
-{
-   std::string name = var.GetName();
-   RooJSONFactoryWSTool::testValidName(name, false);
-   obsNode["name"] << name;
-
-   auto const &binning = var.getBinning();
-   if (binning.isUniform()) {
-      obsNode["min"] << var.getMin();
-      obsNode["max"] << var.getMax();
-      obsNode["nbins"] << var.getBins();
-   } else {
-      auto &edges = obsNode["edges"].set_seq();
-      edges.append_child() << binning.binLow(0);
-      for (int i = 0; i < binning.numBins(); ++i) {
-         edges.append_child() << binning.binHigh(i);
-      }
-   }
-}
-
-/**
  * @brief Check if a string represents a valid number.
  *
  * This function checks whether the provided string 'str' represents a valid number.
@@ -1412,6 +1372,33 @@ void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool im
 }
 
 /**
+ * @brief Export the name and binning of a RooRealVar to a JSONNode.
+ *
+ * @param obsNode The JSONNode to which the axis information will be exported.
+ * @param var The RooRealVar representing the axis to be exported.
+ * @return void
+ */
+void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
+{
+   std::string name = var.GetName();
+   RooJSONFactoryWSTool::testValidName(name, false);
+   obsNode["name"] << name;
+
+   auto const &binning = var.getBinning();
+   if (binning.isUniform()) {
+      obsNode["min"] << var.getMin();
+      obsNode["max"] << var.getMax();
+      obsNode["nbins"] << var.getBins();
+   } else {
+      auto &edges = obsNode["edges"].set_seq();
+      edges.append_child() << binning.binLow(0);
+      for (int i = 0; i < binning.numBins(); ++i) {
+         edges.append_child() << binning.binHigh(i);
+      }
+   }
+}
+
+/**
  * @brief Export histogram data to a JSONNode.
  *
  * This function exports histogram data, represented by the provided variables and contents, to a JSONNode.
@@ -1428,24 +1415,7 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
    auto &observablesNode = output["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(vars)) {
-      std::string name = var->GetName();
-      RooJSONFactoryWSTool::testValidName(name, false);
-      JSONNode &obsNode = observablesNode.append_child().set_map();
-      obsNode["name"] << name;
-      if (var->getBinning().isUniform()) {
-         obsNode["min"] << var->getMin();
-         obsNode["max"] << var->getMax();
-         obsNode["nbins"] << var->getBins();
-      } else {
-         auto &edges = obsNode["edges"];
-         edges.set_seq();
-         double val = var->getBinning().binLow(0);
-         edges.append_child() << val;
-         for (int i = 0; i < var->getBinning().numBins(); ++i) {
-            val = var->getBinning().binHigh(i);
-            edges.append_child() << val;
-         }
-      }
+      exportAxis(observablesNode.append_child().set_map(), *var);
    }
 
    return exportArray(n, contents, output["contents"]);

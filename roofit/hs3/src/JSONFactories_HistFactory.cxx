@@ -46,25 +46,6 @@ using namespace RooStats::HistFactory::Detail::MagicConstants;
 
 namespace {
 
-inline void writeAxis(JSONNode &axis, RooRealVar const &obs)
-{
-   auto &binning = obs.getBinning();
-   if (binning.isUniform()) {
-      axis["nbins"] << obs.numBins();
-      axis["min"] << obs.getMin();
-      axis["max"] << obs.getMax();
-   } else {
-      auto &edges = axis["edges"];
-      edges.set_seq();
-      double val = binning.binLow(0);
-      edges.append_child() << val;
-      for (int i = 0; i < binning.numBins(); ++i) {
-         val = binning.binHigh(i);
-         edges.append_child() << val;
-      }
-   }
-}
-
 double round_prec(double d, int nSig)
 {
    if (d == 0.0)
@@ -1270,11 +1251,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       if (!observablesWritten) {
          auto &output = elem["axes"].set_seq();
          for (auto *obs : static_range_cast<RooRealVar *>(*channel.varSet)) {
-            auto &out = output.append_child().set_map();
-            std::string name = obs->GetName();
-            RooJSONFactoryWSTool::testValidName(name, false);
-            out["name"] << name;
-            writeAxis(out, *obs);
+            RooJSONFactoryWSTool::exportAxis(output.append_child().set_map(), *obs);
          }
          observablesWritten = true;
       }
