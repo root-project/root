@@ -981,47 +981,13 @@ bool RooJSONFactoryWSTool::isValidName(const std::string &str)
    return true;
 }
 
-bool RooJSONFactoryWSTool::allowExportInvalidNames(true);
-bool RooJSONFactoryWSTool::allowSanitizeNames(true);
-bool RooJSONFactoryWSTool::importNoDomainParametersAsRooConstVars(true);
-
-bool RooJSONFactoryWSTool::getAllowExportInvalidNames()
-{
-   return allowExportInvalidNames;
-}
-
-void RooJSONFactoryWSTool::setAllowExportInvalidNames(bool allow)
-{
-   allowExportInvalidNames = allow;
-}
-
-bool RooJSONFactoryWSTool::getAllowSanitizeNames()
-{
-   return allowSanitizeNames;
-}
-
-void RooJSONFactoryWSTool::setAllowSanitizeNames(bool allow)
-{
-   allowSanitizeNames = allow;
-}
-
-bool RooJSONFactoryWSTool::getImportNoDomainParametersAsRooConstVars()
-{
-   return importNoDomainParametersAsRooConstVars;
-}
-
-void RooJSONFactoryWSTool::setImportNoDomainParametersAsRooConstVars(bool val)
-{
-    importNoDomainParametersAsRooConstVars = val;
-}
-
 bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceError)
 {
    if (!RooJSONFactoryWSTool::isValidName(name)) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() name '" << name << "' is not valid!" << std::endl
-         << "Sanitize names by setting RooJSONFactoryWSTool::allowSanitizeNames = True." << std::endl;
-      if (RooJSONFactoryWSTool::allowExportInvalidNames && !forceError) {
+         << "Sanitize names by setting RooJSONFactoryWSTool::config().allowSanitizeNames = true." << std::endl;
+      if (RooJSONFactoryWSTool::config().allowExportInvalidNames && !forceError) {
          RooJSONFactoryWSTool::warning(ss.str());
          return false;
       } else {
@@ -1832,7 +1798,7 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
       oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
       return;
    }
-   if (importNoDomainParametersAsRooConstVars && !_domains->hasVariable(name.c_str())) {
+   if (config().importNoDomainParametersAsRooConstVars && !_domains->hasVariable(name.c_str())) {
       if (!p.has_child("value")) {
          RooJSONFactoryWSTool::error("cannot instantiate RooConstVar '" + name + "' without \"value\"!");
       }
@@ -2549,7 +2515,7 @@ void RooJSONFactoryWSTool::error(const char *s)
 std::string RooJSONFactoryWSTool::sanitizeName(const std::string str)
 {
    std::string result;
-   if (RooJSONFactoryWSTool::allowSanitizeNames) {
+   if (RooJSONFactoryWSTool::config().allowSanitizeNames) {
       for (char c : str) {
          switch (c) {
          case '[':
@@ -2620,6 +2586,12 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
    }
 
    return tmpWS;
+}
+
+RooJSONFactoryWSTool::Config &RooJSONFactoryWSTool::config()
+{
+   static Config conf;
+   return conf;
 }
 
 // Sanitize all names in the workspace to be HS3 compliant

@@ -39,9 +39,15 @@ class ModelConfig;
 class RooJSONFactoryWSTool {
 public:
    static constexpr bool useListsInsteadOfDicts = true;
-   static bool allowExportInvalidNames;
-   static bool allowSanitizeNames;
-   static bool importNoDomainParametersAsRooConstVars;
+
+   struct Config {
+      bool allowExportInvalidNames = true;
+      bool allowSanitizeNames = true;
+      bool importNoDomainParametersAsRooConstVars = true;
+   };
+
+   static Config &config();
+
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
    static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
@@ -53,15 +59,6 @@ public:
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
    ~RooJSONFactoryWSTool();
-
-   static bool getAllowExportInvalidNames();
-   static void setAllowExportInvalidNames(bool allow);
-
-   static bool getAllowSanitizeNames();
-   static void setAllowSanitizeNames(bool allow);
-
-   static bool getImportNoDomainParametersAsRooConstVars();
-   static void setImportNoDomainParametersAsRooConstVars(bool val);
 
    static std::string name(const RooFit::Detail::JSONNode &n);
    static bool isValidName(const std::string &str);

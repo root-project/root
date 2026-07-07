@@ -169,12 +169,15 @@ std::string defaultDomainAxesNode(std::string const &json)
 class ScopedNoDomainConstVarImportFlag {
 public:
    explicit ScopedNoDomainConstVarImportFlag(bool value)
-      : _oldValue{RooJSONFactoryWSTool::getImportNoDomainParametersAsRooConstVars()}
+      : _oldValue{RooJSONFactoryWSTool::config().importNoDomainParametersAsRooConstVars}
    {
-      RooJSONFactoryWSTool::setImportNoDomainParametersAsRooConstVars(value);
+      RooJSONFactoryWSTool::config().importNoDomainParametersAsRooConstVars = value;
    }
 
-   ~ScopedNoDomainConstVarImportFlag() { RooJSONFactoryWSTool::setImportNoDomainParametersAsRooConstVars(_oldValue); }
+   ~ScopedNoDomainConstVarImportFlag()
+   {
+      RooJSONFactoryWSTool::config().importNoDomainParametersAsRooConstVars = _oldValue;
+   }
 
 private:
    bool _oldValue;
