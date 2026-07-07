@@ -1303,9 +1303,16 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    const char* c;
 
    for(c=typeDesc;*c;c++) {
-      if (c[0]==' ') {
+      if (std::isspace(c[0])) {
          if (kbl)       continue;
          if (!isalnum(c[ 1]) && c[ 1] !='_')    continue;
+         if (c[0] != ' ') {
+            // Significant whitespace other than ' ' (e.g. \n in a multi-line
+            // class name from a selection XML) is replaced by a plain space.
+            result += ' ';
+            kbl = 1;
+            continue;
+         }
       }
       if (kbl && (mode>=2 || parensStack.empty())) { //remove "const' etc...
          int done = 0;
