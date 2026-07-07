@@ -1,0 +1,29 @@
+From ad04089d03ae1eee9173e56dbd5d1f8331ac0abc Mon Sep 17 00:00:00 2001
+From: Devajith Valaparambil Sreeramaswamy
+ <devajith.valaparambil.sreeramaswamy@cern.ch>
+Date: Thu, 2 Jul 2026 15:29:27 +0200
+Subject: [PATCH] [cmake] Guard `-Wno-macro-redefined` behind `NOT MSVC`
+
+When building clad as an external project, MSVC does not recognise -W flags
+and errors out with:
+
+```
+  cl : command line error D8021: invalid numeric argument '/Wno-macro-redefined'
+```
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 77a42b330..8c56d9758 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -192,7 +192,7 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
+   # LLVM 22 sets _GLIBCXX_USE_CXX11_ABI twice (HandleLLVMOptions +
+   # LLVMConfig), which trips -Werror=macro-redefined. Suppress that
+   # specific warning -- it's an upstream duplication, not a code bug.
+-  if (LLVM_VERSION_MAJOR GREATER_EQUAL 22)
++  if (LLVM_VERSION_MAJOR GREATER_EQUAL 22 AND NOT MSVC)
+     add_compile_options(-Wno-macro-redefined)
+   endif()
+ 
