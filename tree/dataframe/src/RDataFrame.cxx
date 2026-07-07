@@ -522,7 +522,7 @@ For example, to fill a histogram with the "pt" of selected particles for each ev
 
 ~~~{.cpp}
 // h is filled with all the elements of `good_pts`, for each event
-auto h = df.Define("good_pts", [](const ROOT::RVecF &pt) { return pt[pt > 0]; })
+auto h = df.Define("good_pts", [](const ROOT::RVecF &pt) { return pt[pt > 0]; }, {"pt"})
            .Histo1D("good_pts");
 ~~~
 
