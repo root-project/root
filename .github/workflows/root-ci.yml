@@ -417,7 +417,7 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=20"]
           # Asan build
           - image: alma10
-            platform_config: alma10-minimal
+            platform_config: alma10-asan
             is_special: true
             property: "asan"
             overrides: ["ROOT_CTEST_CUSTOM_FLAGS=-E@\\(^tutorial-\\|cppinterop-CppInterOpTest\\|roottest-cling-specialobj-runf02$\\|roottest-root-collection-DeleteWarning$\\|roottest-root-io-evolution-fixarr2$\\|roottest-root-meta-rlibmap$\\|roottest-root-treeproxy-vectorint-vectorint$\\)"]
