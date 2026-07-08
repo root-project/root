@@ -79,7 +79,7 @@ namespace cling {
     ///
     bool differentContent(const std::string& file1, const std::string& file2,
                           const char* type = nullptr, bool verbose = false,
-               const llvm::SmallVectorImpl<llvm::StringRef>* ignores = nullptr) const;
+               const llvm::SmallVectorImpl<std::string>* ignores = nullptr) const;
 
     ///\brief Return the llvm::Module this state is bound too.
     ///

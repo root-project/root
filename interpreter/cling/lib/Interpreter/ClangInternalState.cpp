@@ -139,20 +139,20 @@ namespace cling {
                                             m_Module, m_CodeGen, name));
     std::string differences = "";
     // Ignore the builtins
-    llvm::SmallVector<llvm::StringRef, 1024> builtinNames;
+    llvm::SmallVector<std::string, 1024> builtinNames;
     const clang::Builtin::Context& BuiltinCtx = m_ASTContext.BuiltinInfo;
     for (auto i = clang::Builtin::NotBuiltin+1;
          i != clang::Builtin::FirstTSBuiltin; ++i) {
-      llvm::StringRef Name(BuiltinCtx.getName(i));
-      if (Name.starts_with("__builtin"))
-        builtinNames.emplace_back(Name);
+      std::string Name = BuiltinCtx.getName(i);
+      if (Name.rfind("__builtin", 0) == 0)
+        builtinNames.emplace_back(std::move(Name));
     }
 
     for (const auto& Shard : m_ASTContext.getTargetInfo().getTargetBuiltins()) {
       for (const auto& BuiltinInfo : Shard.Infos) {
-        llvm::StringRef Name(BuiltinInfo.getName(Shard));
-        if (!Name.starts_with("__builtin"))
-          builtinNames.emplace_back(Name);
+        std::string Name = BuiltinInfo.getName(Shard);
+        if (Name.rfind("__builtin", 0) != 0)
+          builtinNames.emplace_back(std::move(Name));
 #ifndef NDEBUG
         else // Make sure it's already in the list
           assert(std::find(builtinNames.begin(), builtinNames.end(), Name) ==
@@ -171,7 +171,7 @@ namespace cling {
                      "lookup tables", verbose, &builtinNames);
 
     // We create a virtual file for each input line in the format input_line_N.
-    llvm::SmallVector<llvm::StringRef, 2> input_lines;
+    llvm::SmallVector<std::string, 2> input_lines;
     input_lines.push_back("input_line_[0-9].*");
     differentContent(m_IncludedFilesFile, m_DiffPair->m_IncludedFilesFile,
                      "included files", verbose, &input_lines);
@@ -198,11 +198,11 @@ namespace cling {
                                             const std::string& file2,
                                             const char* type,
                                             bool verbose,
-            const llvm::SmallVectorImpl<llvm::StringRef>* ignores/*=0*/) const {
+            const llvm::SmallVectorImpl<std::string>* ignores/*=0*/) const {
 
     std::string diffCall = m_DiffCommand;
     if (ignores) {
-      for (const llvm::StringRef& ignore : *ignores) {
+      for (const std::string& ignore : *ignores) {
         diffCall += " --ignore-matching-lines=\".*";
         diffCall += ignore;
         diffCall += ".*\"";
