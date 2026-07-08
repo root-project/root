@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <cstring>
 #include <memory>
 #include <cassert>
 #include <iostream>
@@ -155,6 +156,45 @@ struct ExtractDataFromTP<int64_t> {
    }
 };
 
+#ifndef R__BYTESWAP
+namespace {
+
+// Copy nbytes from source to dest, byte-swapping each N-byte element. The
+// temporary avoids misaligned loads from the protobuf string buffer and makes
+// in-place swapping (dest == source) valid.
+template <std::size_t N>
+void CopyBswap(void *dest, const void *source, std::size_t nbytes)
+{
+   using value_type = typename RByteSwap<N>::value_type;
+   auto dst = static_cast<unsigned char *>(dest);
+   auto src = static_cast<const unsigned char *>(source);
+   for (std::size_t k = 0; k < nbytes; k += N) {
+      value_type v;
+      std::memcpy(&v, src + k, N);
+      v = RByteSwap<N>::bswap(v);
+      std::memcpy(dst + k, &v, N);
+   }
+}
+
+// Copy a buffer of little-endian tensor elements to host (big-endian) byte order
+void CopyLEToHost(void *dest, const void *source, std::size_t nbytes, ETensorType tensor_type)
+{
+   switch (GetTypeSize(tensor_type)) {
+   case 1:
+      if (dest != source)
+         std::memcpy(dest, source, nbytes);
+      break;
+   case 2: CopyBswap<2>(dest, source, nbytes); break;
+   case 4: CopyBswap<4>(dest, source, nbytes); break;
+   case 8: CopyBswap<8>(dest, source, nbytes); break;
+   default:
+      throw std::runtime_error("Data type " + ConvertTypeToString(tensor_type) + " in tensor is not supported!\n");
+   }
+}
+
+} // anonymous namespace
+#endif
+
 std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t tensor_size, ETensorType tensor_type)
 {
 
@@ -172,34 +212,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
          std::memcpy(data.get(), tensorproto->raw_data().c_str(), tensor_size);
 #else
          // big-endian architectures - need to swap bytes
-         switch (tensor_type) {
-            case ETensorType::FLOAT:
-               for (std::size_t k = 0; k < tensor_size / sizeof(float); ++k)
-                  (reinterpret_cast<typename RByteSwap<sizeof(float)>::value_type *>(data.get()))[k] =
-                     RByteSwap<sizeof(float)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(float)>::value_type *>(
-                        tensorproto->raw_data().c_str()))[k]);
-               break;
-            case ETensorType::DOUBLE:
-               for (std::size_t k = 0; k < tensor_size / sizeof(double); ++k)
-                  (reinterpret_cast<typename RByteSwap<sizeof(double)>::value_type *>(data.get()))[k] =
-                     RByteSwap<sizeof(double)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(double)>::value_type *>(
-                        tensorproto->raw_data().c_str()))[k]);
-               break;
-            case ETensorType::INT32:
-               for (std::size_t k = 0; k < tensor_size / sizeof(int32_t); ++k)
-                  (reinterpret_cast<typename RByteSwap<sizeof(int32_t)>::value_type *>(data.get()))[k] =
-                     RByteSwap<sizeof(int32_t)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(int32_t)>::value_type *>(
-                        tensorproto->raw_data().c_str()))[k]);
-               break;
-            case ETensorType::INT64:
-               for (std::size_t k = 0; k < tensor_size / sizeof(int64_t); ++k)
-                  (reinterpret_cast<typename RByteSwap<sizeof(int64_t)>::value_type *>(data.get()))[k] =
-                     RByteSwap<sizeof(int64_t)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(int64_t)>::value_type *>(
-                        tensorproto->raw_data().c_str()))[k]);
-               break;
-            default:
-               throw std::runtime_error("Data type " + ConvertTypeToString(tensor_type) + " in tensor is not supported!\n");
-         }
+         CopyLEToHost(data.get(), tensorproto->raw_data().c_str(), tensor_size, tensor_type);
 #endif
       } else {
          // case tensor data are stored as specific types and not in raw_data
@@ -262,6 +275,10 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
 
       fDataFile.seekg(offset);
       fDataFile.read(reinterpret_cast<char *>(data.get()), buffer_size);
+#ifndef R__BYTESWAP
+      // external data is stored little-endian like raw_data - swap in place
+      CopyLEToHost(data.get(), data.get(), buffer_size, tensor_type);
+#endif
    }
 
    return data;
