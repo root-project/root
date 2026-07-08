@@ -31,6 +31,7 @@ extra libraries (Histogram, display, etc).
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -274,6 +275,48 @@ void TTreePlayer::DeleteSelectorFromFile()
    fSelectorClass = nullptr;
 }
 
+namespace {
+
+// TTree::Draw can take the name of a C++ script file (optionally with an
+// ACLiC mode suffix and arguments, e.g. "myscript.C+(2)") instead of a
+// TTreeFormula expression for both the variable expression and the
+// selection; see "Drawing a user function accessing the TTree data directly"
+// in the TTree::Draw documentation. Determine whether 'expression' names
+// such a script file.
+//
+// Besides checking that the file exists, we require that the candidate has an
+// extension: TTreeProxyGenerator::WriteProxy() needs one to derive the name of
+// the function to call. This avoids misinterpreting an expression like "abs(x)"
+// as the script "abs" called with argument "(x)" whenever an unrelated file
+// with that name happens to exist in the current directory (JIRA ROOT-8000).
+
+bool IsScriptFile(const char *expression)
+{
+   if (!expression || !expression[0])
+      return false;
+
+   const TString candidate = expression;
+
+   // These tokens only appear in TTreeFormula expressions, never in the name of
+   // a script file, so their presence rules out a script file.
+   static const std::vector<TString> formulaTokens = {
+      "Alt$", "Entries$", "LocalEntries$", "Length$",    "Entry$", "LocalEntry$", "Min$",
+      "Max$", "MinIf$",   "MaxIf$",        "Iteration$", "Sum$",   ">",           "<"};
+   for (const TString &token : formulaTokens)
+      if (candidate.Index(token) >= 0)
+         return false;
+
+   TString aclicMode, arguments, io;
+   const TString realname = gSystem->SplitAclicMode(candidate, aclicMode, arguments, io);
+   const Ssiz_t dot_pos = realname.Last('.');
+   if (dot_pos == kNPOS || dot_pos < realname.Last('/'))
+      return false;
+
+   return gSystem->IsFileInIncludePath(candidate);
+}
+
+} // anonymous namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the result of a C++ script.
 ///
@@ -357,44 +400,24 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    // Let's see if we have a filename as arguments instead of
    // a TTreeFormula expression.
 
-   TString possibleFilename = varexp0;
-   Ssiz_t dot_pos = possibleFilename.Last('.');
-   if ( dot_pos != kNPOS
-       && possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
-       && possibleFilename.Index("LocalEntries$")<0
-       && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
-       && possibleFilename.Index("LocalEntry$")<0
-       && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
-       && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
-       && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
-       && possibleFilename.Index(">")<0 && possibleFilename.Index("<")<0
-       && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
+   if (IsScriptFile(varexp0)) {
 
-      if (selection && strlen(selection) && !gSystem->IsFileInIncludePath(selection)) {
+      if (selection && strlen(selection) && !IsScriptFile(selection)) {
          Error("DrawSelect",
-               "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
+               "Drawing using a C++ macro currently requires that both the expression and the selection are "
+               "files\n\t\"%s\" is not a file",
                selection);
          return 0;
       }
       return DrawScript("generatedSel",varexp0,selection,option,nentries,firstentry);
 
-   } else {
-      possibleFilename = selection;
-      if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
-          && possibleFilename.Index("LocalEntries$")<0
-          && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
-          && possibleFilename.Index("LocalEntry$")<0
-          && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
-          && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
-          && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
-          && possibleFilename.Index(">")<0 && possibleFilename.Index("<")<0
-          && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
+   } else if (IsScriptFile(selection)) {
 
-         Error("DrawSelect",
-               "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
-               varexp0);
-         return 0;
-      }
+      Error("DrawSelect",
+            "Drawing using a C++ macro currently requires that both the expression and the selection are "
+            "files\n\t\"%s\" is not a file",
+            varexp0);
+      return 0;
    }
 
    Long64_t oldEstimate  = fTree->GetEstimate();

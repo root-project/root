@@ -359,6 +359,71 @@ TEST(TTreeReaderRegressions, ValueFastTuple)
    EXPECT_NEAR(total, 866026269930.1345215, 100);
 }
 
+// ROOT-8000 https://its.cern.ch/jira/browse/ROOT-8000
+// An unrelated file lying around in the current directory whose name matches
+// the leading part of a formula (e.g. a file named "abs") must not make
+// TTree::Draw interpret the formula as the name of a C++ script called with
+// arguments: only files with an extension qualify as scripts.
+TEST(TTreeDrawRegressions, ExpressionNotShadowedByFile)
+{
+   ROOT::TestSupport::FileRaii shadowingFile{"abs"};
+   {
+      std::ofstream f(shadowingFile.GetPath());
+      f << "This is a text file, not a C++ script.\n";
+   }
+
+   TTree t("t", "t");
+   double x;
+   int id;
+   t.Branch("x", &x);
+   t.Branch("id", &id);
+   for (int i = 0; i < 100; ++i) {
+      x = i - 50;
+      id = (i % 2) ? 531 : -531;
+      t.Fill();
+   }
+
+   // These formulas end with a parenthesized part, which used to be stripped
+   // as ACLiC-style arguments, leaving "abs" to be found as a file.
+   EXPECT_EQ(t.Draw("abs(x)", "", "goff"), 100);
+   EXPECT_EQ(t.Draw("x", "abs(id)", "goff"), 100);
+   // The dot in "0.5" used to make the varexp pass the extension check.
+   EXPECT_EQ(t.Draw("abs(x + 0.5)", "abs(id) == 531", "goff"), 100);
+   EXPECT_EQ(t.Draw("x", "abs(id) == id", "goff"), 50);
+}
+
+// ROOT-8000 https://its.cern.ch/jira/browse/ROOT-8000
+// The flip side of the test above: a *real* macro whose name matches the
+// leading part of a formula must still be recognized as a script, precisely
+// because it has an extension. We check this without paying for the ACLiC
+// compilation of the macro: when the variable expression is a script file but
+// the selection is a plain formula (not a file), DrawSelect must reject the
+// combination with its "both must be files" error. That error is only reached
+// if "abs.C" was taken as a script - a bare "abs" would be treated as a formula
+// and the error above ("... is not a file" for the selection) would never fire.
+TEST(TTreeDrawRegressions, MacroWithExtensionRecognizedAsScript)
+{
+   ROOT::TestSupport::FileRaii macroFile{"abs.C"};
+   {
+      std::ofstream f(macroFile.GetPath());
+      f << "double abs()\n{\n   return x;\n}\n";
+   }
+
+   TTree t("t", "t");
+   double x;
+   t.Branch("x", &x);
+   for (int i = 0; i < 100; ++i) {
+      x = i - 50;
+      t.Fill();
+   }
+
+   ROOT::TestSupport::CheckDiagsRAII diags{kError, "TTreePlayer::DrawSelect",
+                                           "Drawing using a C++ macro currently requires that both the expression and "
+                                           "the selection are files",
+                                           /*matchFullMessage=*/false};
+   EXPECT_EQ(t.Draw("abs.C", "x > 0", "goff"), 0);
+}
+
 // https://github.com/root-project/root/issues/20226
 TEST(TTreeScan, IntOverflow)
 {
