@@ -2148,7 +2148,8 @@ void TROOT::InitSystem()
       }
 
       // read default files
-      gEnv = new TEnv(".rootrc");
+      const auto useLocalEnv = gSystem->Getenv("ROOTENV_USE_LOCAL");
+      gEnv = new TEnv(".rootrc", /*disableLocalLevel=*/!useLocalEnv || !useLocalEnv[0]);
 
       ROOT::Internal::SetErrorSystemMsgHandler([](){ return gSystem->GetError(); });
       SetErrorHandler(DefaultErrorHandler);

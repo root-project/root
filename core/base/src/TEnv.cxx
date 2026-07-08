@@ -17,6 +17,10 @@ Three types of config files are read: global, user and local files. The
 global file is `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`)
 the user file is `$HOME/<name>` and the local file is `./<name>`.
 
+For gEnv, the local level is disabled to prevent environment poisoning.
+The behavior can be changed to be backwards-compatible by setting
+`ROOTENV_USE_LOCAL=1`.
+
 By setting the shell variable `ROOTENV_NO_HOME=1` the reading of
 the `$HOME/<name>` resource file will be skipped. This might be useful
 in case the home directory resides on an auto-mounted remote file
@@ -413,13 +417,19 @@ const char *TEnv::GetUserDirectory() const
 /// In case the environment variable ROOTENV_USER_PATH is specified,
 /// and ROOTENV_NO_HOME is not set, then `$ROOTENV_USER_PATH/<name>`
 /// is considered instead of `$HOME/<name>`.
+/// The file corresponding to `kEnvLocal` is read only if the local level
+/// is not disabled. The local level is disabled by default for gEnv but
+/// not for other instances of TEnv. Setting the `ROOTENV_USE_LOCAL`
+/// environment variable to a non-empty value will enable the local level for
+/// gEnv.
 /// If environment variables have to be avoided, a `rootlogon.C` script
 /// can be created where where the environment can be set through an
 /// invocation of TEnv::ReadFile.
 
-TEnv::TEnv(const char *name)
+TEnv::TEnv(const char *name, bool disableLocalLevel)
 {
    fIgnoreDup = kFALSE;
+   fIsLocalLevelDisabled = disableLocalLevel;
 
    if (!name || !name[0] || !gSystem)
       fTable = nullptr;
@@ -436,10 +446,12 @@ TEnv::TEnv(const char *name)
          gSystem->PrependPathName(GetUserDirectory(), temp);
          ReadFile(temp.Data(), kEnvUser);
          if (strcmp(GetUserDirectory(), gSystem->WorkingDirectory())) {
-            ReadFile(name, kEnvLocal);
+            if (!IsLocalLevelDisabled())
+               ReadFile(name, kEnvLocal);
          }
       } else {
-         ReadFile(name, kEnvLocal);
+         if (!IsLocalLevelDisabled())
+            ReadFile(name, kEnvLocal);
       }
    }
 }
@@ -616,6 +628,11 @@ Int_t TEnv::ReadFile(const char *fname, EEnvLevel level)
       return -1;
    }
 
+   if (IsLocalLevelDisabled() && (level == kEnvLocal)) {
+      Error("ReadFile", "local level disabled, won't read");
+      return -1;
+   }
+
    FILE *ifp;
    if ((ifp = fopen(fname, "r"))) {
       TReadEnvParser rp(this, ifp, level);
@@ -673,7 +690,8 @@ void TEnv::Save()
       return;
    }
 
-   SaveLevel(kEnvLocal);  // Be default, new items will be put into Local.
+   if (!IsLocalLevelDisabled())
+      SaveLevel(kEnvLocal); // By default, new items will be put into Local.
    SaveLevel(kEnvUser);
    SaveLevel(kEnvGlobal);
 }
@@ -690,6 +708,11 @@ void TEnv::SaveLevel(EEnvLevel level)
 
    if (!fTable) {
       Error("SaveLevel", "TEnv table is empty");
+      return;
+   }
+
+   if (IsLocalLevelDisabled() && (level == kEnvLocal)) {
+      Error("SaveLevel", "local level disabled, won't save");
       return;
    }
 
@@ -753,6 +776,11 @@ void TEnv::SaveLevel(EEnvLevel level)
 void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
                     const char *type)
 {
+   if (IsLocalLevelDisabled() && (level == kEnvLocal)) {
+      Error("SetValue", "local level disabled, won't set or change value");
+      return;
+   }
+
    if (!fTable)
       fTable  = new THashList(1000);
 

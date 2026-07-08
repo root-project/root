@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
 
+#include "ROOT/TestSupport.hxx"
+
 #include "TEnv.h"
 #include "TString.h"
 #include "TSystem.h"
@@ -80,4 +82,32 @@ TEST_F(TEnvTest, ROOTENV_USER_PATH)
    EXPECT_FALSE(gSystem->AccessPathName(fLocalConfig.Data()));
    EXPECT_FALSE(gSystem->AccessPathName(fUserConfig.Data()));
    EXPECT_TRUE(gSystem->AccessPathName(homeConfig.Data()));
+}
+
+TEST_F(TEnvTest, DisableLocalLevel)
+{
+   EXPECT_TRUE(gEnv->IsLocalLevelDisabled());
+
+   gEnv->WriteFile(fLocalConfig.Data());
+   EXPECT_FALSE(gSystem->AccessPathName(fLocalConfig.Data()));
+
+   TEnv env(fRcName, /*disableLocalLevel=*/true);
+   {
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kError, "TEnv::ReadFile", "local level disabled, won't read", /*matchFullMessage=*/false);
+      EXPECT_EQ(-1, env.ReadFile(fLocalConfig.Data(), kEnvLocal));
+   }
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kError, "TEnv::SaveLevel", "local level disabled, won't save", /*matchFullMessage=*/false);
+      env.SaveLevel(kEnvLocal);
+      EXPECT_TRUE(gSystem->AccessPathName(fRcName));
+   }
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kError, "TEnv::SetValue", "local level disabled", /*matchFullMessage=*/false);
+      env.SetValue("xyz", kEnvLocal);
+   }
 }
