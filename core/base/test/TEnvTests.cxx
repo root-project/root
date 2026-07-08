@@ -71,4 +71,13 @@ TEST_F(TEnvTest, ROOTENV_USER_PATH)
    EXPECT_TRUE(gSystem->AccessPathName(fLocalConfig.Data()));
    EXPECT_FALSE(gSystem->AccessPathName(fUserConfig.Data()));
    EXPECT_TRUE(gSystem->AccessPathName(homeConfig.Data()));
+
+   TString pwd = gSystem->pwd();
+   EXPECT_TRUE(gSystem->cd(fLocalDir.Data()));
+   env.SaveLevel(kEnvLocal);
+   EXPECT_TRUE(gSystem->cd(pwd.Data()));
+
+   EXPECT_FALSE(gSystem->AccessPathName(fLocalConfig.Data()));
+   EXPECT_FALSE(gSystem->AccessPathName(fUserConfig.Data()));
+   EXPECT_TRUE(gSystem->AccessPathName(homeConfig.Data()));
 }
