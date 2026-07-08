@@ -359,6 +359,39 @@ TEST(TTreeReaderRegressions, ValueFastTuple)
    EXPECT_NEAR(total, 866026269930.1345215, 100);
 }
 
+// ROOT-8000 https://its.cern.ch/jira/browse/ROOT-8000
+// An unrelated file lying around in the current directory whose name matches
+// the leading part of a formula (e.g. a file named "abs") must not make
+// TTree::Draw interpret the formula as the name of a C++ script called with
+// arguments: only files with an extension qualify as scripts.
+TEST(TTreeDrawRegressions, ExpressionNotShadowedByFile)
+{
+   ROOT::TestSupport::FileRaii shadowingFile{"abs"};
+   {
+      std::ofstream f(shadowingFile.GetPath());
+      f << "This is a text file, not a C++ script.\n";
+   }
+
+   TTree t("t", "t");
+   double x;
+   int id;
+   t.Branch("x", &x);
+   t.Branch("id", &id);
+   for (int i = 0; i < 100; ++i) {
+      x = i - 50;
+      id = (i % 2) ? 531 : -531;
+      t.Fill();
+   }
+
+   // These formulas end with a parenthesized part, which used to be stripped
+   // as ACLiC-style arguments, leaving "abs" to be found as a file.
+   EXPECT_EQ(t.Draw("abs(x)", "", "goff"), 100);
+   EXPECT_EQ(t.Draw("x", "abs(id)", "goff"), 100);
+   // The dot in "0.5" used to make the varexp pass the extension check.
+   EXPECT_EQ(t.Draw("abs(x + 0.5)", "abs(id) == 531", "goff"), 100);
+   EXPECT_EQ(t.Draw("x", "abs(id) == id", "goff"), 50);
+}
+
 // https://github.com/root-project/root/issues/20226
 TEST(TTreeScan, IntOverflow)
 {
