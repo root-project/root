@@ -824,7 +824,10 @@ Int_t TBufferFile::ReadArray(Int_t *&ii)
 
    if (ShouldNotReadCollection(l, n)) return 0;
 
-   if (!ii) ii = new Int_t[n];
+   // Allocate a buffer for this array if the caller hasn't done so.
+   // Note: Offset arrays require one more element than n claims, so we need to overallocate.
+   if (!ii)
+      ii = new Int_t[n + 1];
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
