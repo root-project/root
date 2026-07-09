@@ -715,7 +715,7 @@ private:
 
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
-   std::set<unsigned int> fFeatureFlags;
+   std::set<unsigned int> fFeatureFlags; // needs to be ordered
    std::unordered_map<ROOT::DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<ROOT::DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
 
