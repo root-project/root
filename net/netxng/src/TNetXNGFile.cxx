@@ -177,8 +177,11 @@ TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, cons
    fReadvIorMax = 2097136;
    fReadvIovMax = 1024;
 
-   if (ParseOpenMode(mode, fOption, fMode, kTRUE)<0) {
-      Error("Open", "could not parse open mode %s", mode);
+   if (ParseOpenMode(mode, fOption, fMode, kFALSE) < 0) {
+      Error(
+         "Open",
+         "Error parsing open mode \"%s\". Valid values are: \"CREATE\", \"NEW\", \"READ\", \"RECREATE\", \"UPDATE\".",
+         mode);
       MakeZombie();
       return;
    }
