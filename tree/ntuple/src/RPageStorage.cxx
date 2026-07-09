@@ -23,8 +23,12 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
+#include <ROOT/StringUtils.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
+#endif
+#ifdef R__ENABLE_S3
+#include <ROOT/RPageStorageS3.hxx>
 #endif
 
 #include <Compression.h>
@@ -187,6 +191,9 @@ ROOT::Internal::RPageSource::Create(std::string_view ntupleName, std::string_vie
 #else
       throw RException(R__FAIL("This RNTuple build does not support DAOS."));
 #endif
+
+   if (ROOT::StartsWith(location, "ntpl+s3+http://") || ROOT::StartsWith(location, "ntpl+s3+https://"))
+      throw RException(R__FAIL("S3 read support is not yet implemented."));
 
    return std::make_unique<ROOT::Internal::RPageSourceFile>(ntupleName, location, options);
 }
@@ -917,6 +924,15 @@ ROOT::Internal::RPagePersistentSink::Create(std::string_view ntupleName, std::st
       return std::make_unique<ROOT::Experimental::Internal::RPageSinkDaos>(ntupleName, location, options);
 #else
       throw RException(R__FAIL("This RNTuple build does not support DAOS."));
+#endif
+   }
+
+   if (ROOT::StartsWith(location, "ntpl+s3+http://") || ROOT::StartsWith(location, "ntpl+s3+https://")) {
+#ifdef R__ENABLE_S3
+      return std::make_unique<ROOT::Experimental::Internal::RPageSinkS3>(ntupleName, location, options);
+#else
+      throw RException(R__FAIL("This RNTuple build does not support S3. Rebuild ROOT with the 'curl' "
+                               "cmake option enabled (-Dcurl=ON) to enable the S3 backend."));
 #endif
    }
 

@@ -9,6 +9,11 @@
 # @author Jakob Blomer CERN
 ############################################################################
 
+# RNTuple optionally writes to S3-compatible object storage via libcurl (RCurlHttp).
+if(curl)
+  set(ROOTNTuple_OPTIONAL_DEPENDENCIES RCurlHttp)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
 HEADERS
   ROOT/RCluster.hxx
@@ -100,6 +105,7 @@ DEPENDENCIES
   Imt
   RIO
   ROOTVecOps
+  ${ROOTNTuple_OPTIONAL_DEPENDENCIES}
 )
 
 target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
@@ -125,6 +131,7 @@ endif()
 if(curl)
   set(ROOTNTuple_EXTRA_HEADERS ${ROOTNTuple_EXTRA_HEADERS} ROOT/RPageStorageS3.hxx)
   target_sources(ROOTNTuple PRIVATE src/RPageStorageS3.cxx)
+  target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_S3)
   target_link_libraries(ROOTNTuple PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
