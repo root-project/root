@@ -1169,9 +1169,17 @@ void ROOT::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
+   auto element = columnHandle.fColumn->GetElement();
+   RPageStorage::RSealedPage sealedPage;
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
+      sealedPage = SealPage(page, *element);
+   }
+   fCounters->fSzZip.Add(page.GetNBytes());
+
    ROOT::RClusterDescriptor::RPageInfo pageInfo;
    pageInfo.SetNElements(page.GetNElements());
-   pageInfo.SetLocator(CommitPageImpl(columnHandle, page));
+   pageInfo.SetLocator(CommitSealedPageImpl(columnHandle.fPhysicalId, sealedPage));
    pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
    fOpenPageRanges.at(columnHandle.fPhysicalId).GetPageInfos().emplace_back(pageInfo);
 }
