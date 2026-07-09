@@ -1,0 +1,61 @@
+InheritParentConfig: 'True'
+
+CheckOptions:
+  - key:             bugprone-assert-side-effect.AssertMacros
+    value:           'R__ASSERT'
+  - key:             misc-const-correctness.AnalyzeValues
+    value:           false
+  - key:             misc-const-correctness.AnalyzePointers
+    value:           false
+  - key:             misc-include-cleaner.IgnoreHeaders
+    value:           'RSpan.hxx'
+  - key:             misc-override-with-different-visibility.DisallowedVisibilityChange
+    value:           'widening'
+
+Checks: 'bugprone-*,
+   -bugprone-assignment-in-if-condition,
+   -bugprone-branch-clone,
+   -bugprone-derived-method-shadowing-base-method,
+   -bugprone-easily-swappable-parameters,
+   -bugprone-implicit-widening-of-multiplication-result,
+   -bugprone-incorrect-enable-if,
+   -bugprone-macro-parentheses,
+   -bugprone-multi-level-implicit-pointer-conversion,
+   -bugprone-narrowing-conversions,
+   -bugprone-not-null-terminated-result,
+   -bugprone-random-generator-seed,
+   -bugprone-reserved-identifier,
+   -bugprone-signed-char-misuse,
+   -bugprone-std-namespace-modification,
+   -bugprone-switch-missing-default-case,
+   -bugprone-throwing-static-initialization,
+   -bugprone-too-small-loop-variable,
+   -bugprone-unchecked-optional-access,
+   -bugprone-unhandled-self-assignment,
+   -bugprone-unused-return-value,
+   -bugprone-virtual-near-miss,
+   cppcoreguidelines-virtual-class-destructor,
+   -clang-analyzer-optin.core.EnumCastOutOfRange,
+   misc-*,
+   -misc-non-private-member-variables-in-classes,
+   -misc-include-cleaner,
+   -misc-misplaced-const,
+   -misc-multiple-inheritance,
+   -misc-no-recursion,
+   -misc-non-private-member-variables-in-classes,
+   -misc-predictable-rand,
+   -misc-unconventional-assign-operator,
+   -misc-use-anonymous-namespace,
+   performance-*,
+   -performance-enum-size,
+   -performance-inefficient-string-concatenation,
+   -performance-no-int-to-ptr,
+   -performance-noexcept-swap,
+   -performance-noexcept-move-constructor,
+   readability-duplicate-include,
+   readability-delete-null-pointer,
+   readability-misleading-indentation,
+   readability-redundant-control-flow,
+   readability-redundant-declaration,
+   readability-redundant-function-ptr-dereference,
+   readability-reference-to-constructed-temporary'
