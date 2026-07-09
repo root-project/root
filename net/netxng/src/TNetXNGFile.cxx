@@ -33,6 +33,8 @@
 #include <XrdVersion.hh>
 #include <iostream>
 
+#include <ROOT/StringUtils.hxx>
+
 namespace {
 
 Int_t ParseOpenMode(Option_t *in, TString &modestr, int &mode, Bool_t assumeRead);
@@ -177,7 +179,7 @@ TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, cons
    fReadvIorMax = 2097136;
    fReadvIovMax = 1024;
 
-   if (ParseOpenMode(mode, fOption, fMode, kTRUE)<0) {
+   if (ParseOpenMode(mode, fOption, fMode, kTRUE) < 0) {
       Error("Open", "could not parse open mode %s", mode);
       MakeZombie();
       return;
@@ -708,19 +710,31 @@ Int_t ParseOpenMode(Option_t *in, TString &modestr, int &mode, Bool_t assumeRead
    using namespace XrdCl;
    modestr = ToUpper(TString(in));
 
-   if (modestr == "NEW" || modestr == "CREATE")  mode = OpenFlags::New;
-   else if (modestr == "RECREATE")               mode = OpenFlags::Delete;
-   else if (modestr == "UPDATE")                 mode = OpenFlags::Update;
-   else if (modestr == "READ")                   mode = OpenFlags::Read;
-   else {
-      if (!assumeRead) {
-         return -1;
+   const static std::unordered_map<std::string, OpenFlags::Flags> strToFlagMap{{"CREATE", OpenFlags::New},
+                                                                               {"NEW", OpenFlags::New},
+                                                                               {"READ", OpenFlags::Read},
+                                                                               {"RECREATE", OpenFlags::Delete},
+                                                                               {"UPDATE", OpenFlags::Update}};
+
+   const auto tokens = ROOT::Split(modestr, "_ ", /*skipEmpty*/ true);
+   for (const auto &token : tokens) {
+      if (auto it = strToFlagMap.find(token); it != strToFlagMap.end()) {
+         // Though unnecessary, we substitute the current value of modestr with the specific valid value just found.
+         // This is done for backwards compatibility: some other code in TFile may rely on the open mode to be exactly
+         // one of the valid values.
+         modestr = token;
+         mode = it->second;
+         return 0;
       }
-      modestr = "READ";
-      mode = OpenFlags::Read;
    }
 
-   return 0;
+   if (assumeRead) {
+      modestr = "READ";
+      mode = OpenFlags::Read;
+      return 0;
+   }
+
+   return -1;
 }
 
 } // namespace
