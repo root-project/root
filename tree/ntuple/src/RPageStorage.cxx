@@ -46,8 +46,6 @@ using ROOT::Internal::RColumn;
 using ROOT::Internal::RColumnDescriptorBuilder;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
-using ROOT::Internal::RFieldDescriptorBuilder;
-using ROOT::Internal::RNTupleSerializer;
 
 using ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder;
 
