@@ -537,19 +537,15 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
 }
 
 class RPageSinkTestLocator : public RPageSinkFile {
-   ROOT::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage & /* sealedPage */, std::size_t)
+   // CommitPage() seals the page in the base class and routes it here; we return a page locator with an
+   // unknown type (without writing any data, since the test never reads the page back).
+   ROOT::RNTupleLocator CommitSealedPageImpl(ROOT::DescriptorId_t /* physicalColumnId */,
+                                             const RPageStorage::RSealedPage & /* sealedPage */) override
    {
       RNTupleLocator result;
       result.SetType(ROOT::Internal::kTestLocatorType);
       // Don't set position and nbytes, we won't read it back anyway
       return result;
-   }
-
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override
-   {
-      auto element = columnHandle.fColumn->GetElement();
-      RPageStorage::RSealedPage sealedPage = SealPage(page, *element);
-      return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
    }
 
 public:

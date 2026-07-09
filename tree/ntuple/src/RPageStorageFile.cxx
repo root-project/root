@@ -149,20 +149,6 @@ ROOT::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage::RSealedPage &
    return result;
 }
 
-ROOT::RNTupleLocator
-ROOT::Internal::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page)
-{
-   auto element = columnHandle.fColumn->GetElement();
-   RPageStorage::RSealedPage sealedPage;
-   {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
-      sealedPage = SealPage(page, *element);
-   }
-
-   fCounters->fSzZip.Add(page.GetNBytes());
-   return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
-}
-
 ROOT::RNTupleLocator ROOT::Internal::RPageSinkFile::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
                                                                          const RPageStorage::RSealedPage &sealedPage)
 {
