@@ -55,10 +55,6 @@
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
-using ROOT::Internal::RNTupleCompressor;
-using ROOT::Internal::RNTupleDecompressor;
-using ROOT::Internal::RNTupleSerializer;
-
 namespace {
 
 // The following types are used to read and write the TFile binary format
