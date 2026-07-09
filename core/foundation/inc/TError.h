@@ -103,7 +103,12 @@ extern void SysError(const char *location, const char *msgfmt, ...)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
-extern void Fatal(const char *location, const char *msgfmt, ...)
+#ifdef __clang_analyzer__
+// The __attribute__((analyzer_noreturn)) is still very new and possibly not available
+[[noreturn]] void Fatal(const char *location, const char *msgfmt, ...)
+#else
+void Fatal(const char *location, const char *msgfmt, ...)
+#endif
 #if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
