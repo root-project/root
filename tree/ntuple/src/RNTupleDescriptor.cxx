@@ -925,11 +925,12 @@ ROOT::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTuple
                // Fixup the RColumnRange and RPageRange in deferred columns. We know what the first element index and
                // number of elements should have been if the column was not deferred; fix those and let
                // `ExtendToFitColumnRange()` synthesize RPageInfos accordingly.
-               // Note that a deferred column (i.e, whose first element index is > 0) already met the criteria of
-               // `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the
-               // field zero excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
                   if (c.GetRepresentationIndex() == 0) {
+                     // Note that a deferred column (i.e, whose first element index is > 0) for the 0th representation
+                     // index already met the criteria of `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a
+                     // principal column reachable from the field zero excluding subfields of collection and variant
+                     // fields.
                      columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
                      columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
                   } else {
