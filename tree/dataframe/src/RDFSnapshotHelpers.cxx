@@ -971,10 +971,13 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
    fFillContexts.clear();
    // Then destroy the RNTupleParallelWriter and write the metadata.
    fWriter.reset();
-   // Finally, destroy the output TFile to ensure it's properly written to disk.
-   fOutputFile.reset();
+   // Finally, close the output TFile to ensure it's properly written to disk. We don't destroy it to avoid triggering
+   // a warning about the lazy Snapshot not being triggered
+   fOutputFile->Close();
+
    // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
-   fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
+   const auto fullNTupleName = fDirName.empty() ? fNTupleName : fDirName + '/' + fNTupleName;
+   fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fullNTupleName, fFileName));
 }
 
 /**
