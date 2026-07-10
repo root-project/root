@@ -135,9 +135,11 @@ class TTFhandle {
       UInt_t         CharToUnicode(UInt_t code);
       void           ComputeTrailingBlanksWidth(Int_t n);
 
-      static FT_Library InitClose(Int_t direction = 0);
-
       Int_t          SelectFontHandle(Int_t arg, const char *name = nullptr);
+
+      /// Thread-local wrapper to the FreeType library
+      struct FT_Library_Wrapper;
+      static thread_local FT_Library_Wrapper fFT_Library;
 
    public:
       TTFhandle();

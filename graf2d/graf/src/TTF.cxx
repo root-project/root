@@ -47,40 +47,46 @@ struct TTFontHandle {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Thread-local wrapper to the freetype library.
+/// The library gets initialised on demand when Get() is called.
+/// It auto-destructs when the thread exits.
+struct TTFhandle::FT_Library_Wrapper {
+   FT_Library _library = nullptr;
+   FT_Library_Wrapper() = default;
+   FT_Library_Wrapper(FT_Library_Wrapper const &) = delete;
+   FT_Library_Wrapper(FT_Library_Wrapper &&) = delete;
+   FT_Library_Wrapper &operator=(FT_Library_Wrapper const &) = delete;
+   FT_Library_Wrapper &operator=(FT_Library_Wrapper &&) = delete;
 
-TTFhandle::TTFhandle()
-{
-   InitClose(1);
-}
+   FT_Library Get()
+   {
+      if (!_library && FT_Init_FreeType(&_library) != 0) {
+         Error("TTF.cxx", "error initializing FreeType");
+         _library = nullptr;
+      }
+      return _library;
+   }
 
+   bool InitCompleted() const { return _library != nullptr; }
+
+   ~FT_Library_Wrapper()
+   {
+      if (_library)
+         FT_Done_FreeType(_library);
+   }
+};
+
+thread_local TTFhandle::FT_Library_Wrapper TTFhandle::fFT_Library;
+
+////////////////////////////////////////////////////////////////////////////////
+
+TTFhandle::TTFhandle() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TTFhandle::~TTFhandle()
 {
    CleanupGlyphs();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize or close FreeType library
-/// If argument is 0 - just return current handle
-/// Library initialized per thread
-
-FT_Library TTFhandle::InitClose(Int_t direction)
-{
-   thread_local FT_Library _library = nullptr;
-   if ((direction > 0) || !_library) {
-      if (FT_Init_FreeType(&_library)) {
-         Error("TTFhandle::InitClose", "error initializing FreeType");
-         _library = nullptr;
-      }
-   } else if ((direction < 0) && _library) {
-      // SelectFontHandle(-1); // delete all font handles
-      FT_Done_FreeType(_library);
-      _library = nullptr;
-   }
-
-   return _library;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,7 +278,7 @@ FT_BitmapGlyph TTFhandle::GetGlyphBitmap(UInt_t n, Bool_t smooth)
 
 void TTFhandle::CleanupGlyphs()
 {
-   bool is_lib = InitClose() != nullptr;
+   bool is_lib = fFT_Library.InitCompleted();
 
    for(auto &glyph : fGlyphs) {
       // clear existing image if there is one
@@ -437,7 +443,7 @@ Int_t TTFhandle::SetTextFont(const char *fontname, Int_t italic)
    if (fFont->face)
       return 0;
 
-   auto lib = InitClose();
+   auto lib = fFT_Library.Get();
    if (!lib) {
       Error("SetTextFont", "no free type library initialized");
       return 1;
@@ -578,7 +584,7 @@ Bool_t TTFhandle::SetTextSize(Float_t textsize)
 
 void TTFhandle::Version(Int_t &major, Int_t &minor, Int_t &patch)
 {
-   FT_Library_Version(InitClose(), &major, &minor, &patch);
+   FT_Library_Version(fFT_Library.Get(), &major, &minor, &patch);
 }
 
 
@@ -586,7 +592,7 @@ void TTFhandle::Version(Int_t &major, Int_t &minor, Int_t &patch)
 
 Bool_t TTFhandle::Init()
 {
-   return InitClose(1) != nullptr;
+   return fFT_Library.Get() != nullptr;
 }
 
 
@@ -634,10 +640,7 @@ thread_local std::unique_ptr<TTFhandle> fgHandle; // static handle, destroyed au
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup TTF environment.
 
-TTF::~TTF()
-{
-   TTFhandle::InitClose(-1);
-}
+TTF::~TTF() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Init TTF environment.
