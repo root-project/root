@@ -41,6 +41,8 @@ public:
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
 
+   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
+
    std::string GetClassName() const override { return "RooUnbinnedL"; }
 
 private:
