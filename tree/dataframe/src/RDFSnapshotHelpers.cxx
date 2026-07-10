@@ -1021,7 +1021,6 @@ struct SnapshotOutputWriter {
    std::unordered_map<std::string, unsigned int> fBranchToVariationMapping;
    // The corresponding ROOT dictionary is declared in core/clingutils/src
    std::unordered_map<std::string, std::pair<std::string, unsigned int>> fBranchToBitmaskMapping;
-   unsigned int fNBits = 0;
 
    SnapshotOutputWriter(TFile *file) : fFile{file} { assert(fFile); }
    ~SnapshotOutputWriter()
@@ -1069,7 +1068,6 @@ struct SnapshotOutputWriter {
       }
 
       // Neither branch nor systematic are known, so a new entry needs to be created
-      fNBits = std::max(fNBits, variationIndex);
       const auto vectorIndex = variationIndex / 64u;
       const auto bitIndex = variationIndex % 64u;
 
@@ -1110,7 +1108,7 @@ struct SnapshotOutputWriter {
    void Write() const
    {
       if (!fTree)
-         throw std::runtime_error("The TTree associated to the Snapshot action doesn't exist, any more.");
+         throw std::runtime_error("The TTree associated to the Snapshot action doesn't exist anymore.");
 
       for (auto const &mask : fBitMasks) {
          *mask.branchBuffer = mask.bitset.to_ullong();
