@@ -1103,6 +1103,16 @@ namespace utils {
         QT = Ty->desugar();
         return true;
       }
+      case Type::PredefinedSugar: {
+        // e.g. "__size_t", "__signed_size_t", "__ptrdiff_t" are
+        // synthetic sugar names with no corresponding declaration, so they
+        // cannot legally appear as bare identifiers in generated code and
+        // must always be desugared to the underlying builtin type.
+        // See: https://github.com/llvm/llvm-project/commit/7c402b8
+        const PredefinedSugarType* Ty = llvm::cast<PredefinedSugarType>(QTy);
+        QT = Ty->desugar();
+        return true;
+      }
       case Type::TypeOf: {
         const TypeOfType* Ty = llvm::cast<TypeOfType>(QTy);
         QT = Ty->desugar();
