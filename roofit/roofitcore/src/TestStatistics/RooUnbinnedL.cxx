@@ -97,6 +97,27 @@ bool RooUnbinnedL::setApplyWeightSquared(bool flag)
    return false;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+
+/// With the vectorizing evaluation backends, the pdf is compiled for a fixed
+/// normalization set and evaluated outside of the RooFit data store, so the
+/// constant term optimization is not applicable. Attempting it anyway is not
+/// only useless: caching constant branches means snapshotting parts of the
+/// compiled computation graph into the data store, which classes like
+/// RooFit::Detail::RooNormalizedPdf don't support. Refuse the request instead.
+void RooUnbinnedL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
+{
+   if (evaluator_) {
+      oocoutW((TObject *)nullptr, Optimization)
+         << "RooUnbinnedL::constOptimizeTestStatistic(" << GetName()
+         << ") the constant term optimization only applies to likelihoods evaluated with EvalBackend::Legacy(), "
+            "ignoring the request"
+         << std::endl;
+      return;
+   }
+   RooAbsL::constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+}
+
 namespace {
 
 using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
