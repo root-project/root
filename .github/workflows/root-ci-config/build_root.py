@@ -372,6 +372,12 @@ def run_ctest(extra_ctest_flags: str) -> int:
         {setupROOTEnv}
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
+    if WINDOWS and ctest_result != 0:
+        ctest_result = subprocess_with_log(f"""
+            cd '{builddir}'
+            {setupROOTEnv}
+            ctest --output-on-failure --rerun-failed --output-junit TestResults.xml {extra_ctest_flags}
+        """)
 
     return ctest_result
 
