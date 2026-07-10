@@ -57,9 +57,9 @@ def main():
     if pull_request:
         # We check whether the PR is done from a branch that has the same name of
         # the target branch in the ROOT repository using base_ref and head_ref:
-        # - The base_ref is e.g. "master" or "v6-38-00-patches" 
+        # - The base_ref is e.g. "master" or "v6-38-00-patches"
         # - The head_ref for PRs is formatted as <PR branch>:<Fork branch> e.g. "refs/pull/20742/head:cppyy_fixup"
-        if not ":" in args.head_ref:
+        if ":" not in args.head_ref:
             build_utils.print_error(f"This has been identified as a PR build. However, the head-ref is {args.head_ref}.")
         branch_in_fork = args.head_ref.split(":")[-1]
         if branch_in_fork == args.base_ref:
@@ -85,7 +85,7 @@ def main():
 
     if "minimal" in platform_options and platform_options["minimal"] == "ON":
         options_dict = platform_options
-        print(f"Minimal build detected in the platform options. Ignoring global configuration.")
+        print("Minimal build detected in the platform options. Ignoring global configuration.")
     else:
         options_dict.update(platform_options)
         print(f"Build option overrides for {args.platform_config}:")
