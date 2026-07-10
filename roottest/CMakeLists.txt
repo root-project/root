@@ -118,5 +118,10 @@ include(SearchInstalledSoftwareRoottest)
 ROOTTEST_COMPILE_MACRO(scripts/utils.cc
                        FIXTURES_SETUP roottest-scripts-utils-fixture)
 
+if(NOT MSVC)
+  # roottest contains a ton of test classes that have unused members
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-private-field")
+endif()
+
 message("-- Scanning subdirectories for tests...")
 ROOTTEST_ADD_TESTDIRS()
