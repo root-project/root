@@ -27,13 +27,13 @@ private:
 template <class T>
 class myClass3{
 public:
-   void myMethod(T a){};
+   void myMethod(T ){};
 };
 
 template <class T>
 class myClass4{
 public:
-   void myMethod(const T*const**&& a){}; // Unluky signature but interesting for this test ;-)
+   void myMethod(const T*const**&& ){}; // Unluky signature but interesting for this test ;-)
 };
 
 //--------------------
