@@ -41,7 +41,6 @@
 | TMVAClassificationApplication.C | Using the trained classifiers within an analysis module. |
 | TMVAClassificationCategoryApplication.C | Using the trained classifiers (with categories) within an analysis module. |
 | TMVACrossValidationApplication.C | Using TMVA for k-folds cross evaluation in application. |
-| TMVAMulticlassApplication.C | Using trained multiclass classifiers within an analysis module. |
 | TMVARegressionApplication.C | Using the trained regression MVAs within an analysis module. |
 
 \anchor other
