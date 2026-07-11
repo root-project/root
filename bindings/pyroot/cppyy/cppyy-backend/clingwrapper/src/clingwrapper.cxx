@@ -568,7 +568,11 @@ bool Cppyy::AppendTypesSlow(const std::string& name,
       types.emplace_back(type.data);
       return false;
     }
-    return true;
+    if (!parent || parent == Cpp::GetGlobalScope())
+      return true;
+    // Fall through: the name may live in a scope enclosing `parent` (e.g.
+    // "RVecF" from within ROOT::RDF::RInterface<...> resolves to
+    // ROOT::RVecF); the trampoline below applies real unqualified lookup.
   }
 
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
@@ -579,20 +583,46 @@ bool Cppyy::AppendTypesSlow(const std::string& name,
   if (!struct_count)
     Cpp::Declare(code.c_str(), /*silent=*/true); // initialize the trampoline
 
-  // The trampoline declares its variable in the global scope, so a name
-  // written relative to a parent (e.g. "vector<int>" looked up in std)
-  // won't resolve. Try the name as given, then qualified by the parent.
+  // Perform the lookup from within the innermost (reopenable) namespace
+  // enclosing `parent` -- `parent` itself if it is a namespace, else the
+  // namespace its class chain lives in -- by reopening that namespace around
+  // the trampoline declaration: the compiler then applies real C++ name
+  // lookup, walking outward with proper shadowing of outer names, which a
+  // global declaration with a parent-qualified fallback cannot emulate (e.g.
+  // "RVecF" from within ROOT::RDF::RInterface<...> resolves to ROOT::RVecF).
+  std::string lookup_ns;
+  TCppScope_t lookup_scope = nullptr;
+  for (TCppScope_t s = parent; s && s != Cpp::GetGlobalScope();
+       s = Cpp::GetParentScope(s)) {
+    if (!Cpp::IsNamespace(s))
+      continue;
+    std::string qname = Cpp::GetQualifiedName(s);
+    if (!qname.empty() && qname.find('(') == std::string::npos) {  // unnamed?
+      lookup_ns = qname;
+      lookup_scope = s;
+    }
+    break;
+  }
+
+  // The reopened namespace doesn't see names nested in a class parent, so a
+  // name written relative to it (e.g. a nested type) won't resolve. Try the
+  // name as given, then qualified by the parent.
   std::vector<std::string> candidates = {resolved_name};
-  if (parent && parent != Cpp::GetGlobalScope() &&
+  if (parent && parent != Cpp::GetGlobalScope() && parent != lookup_scope &&
       (Cppyy::IsNamespace(parent) || Cppyy::IsClass(parent)))
     candidates.push_back(Cpp::GetQualifiedCompleteName(parent) + "::" + resolved_name);
 
   for (const std::string& candidate : candidates) {
     std::string var = "__Cppyy_s" + std::to_string(struct_count++);
-    if (!Cpp::Declare(("__Cppyy_AppendTypesSlow<" + candidate + "> " + var + ";\n").c_str(), /*silent=*/true)) {
-      TCppType_t varN =
-          Cpp::GetVariableType(Cpp::GetNamed(var.c_str(), /*parent=*/nullptr));
+    std::string decl = "__Cppyy_AppendTypesSlow<" + candidate + "> " + var + ";\n";
+    if (!lookup_ns.empty())
+      decl = "namespace " + lookup_ns + " { " + decl + "}\n";
+    if (!Cpp::Declare(decl.c_str(), /*silent=*/true)) {
+      TCppType_t varN = Cpp::GetVariableType(Cpp::GetNamed(
+          var.c_str(), lookup_ns.empty() ? nullptr : lookup_scope));
       TCppScope_t instance_class = Cpp::GetScopeFromType(varN);
+      if (!instance_class)
+        continue; // recovered-but-broken decl; try next candidate or split path
       size_t oldSize = types.size();
       Cpp::GetClassTemplateInstantiationArgs(instance_class, types);
       return oldSize == types.size();
@@ -613,9 +643,20 @@ bool Cppyy::AppendTypesSlow(const std::string& name,
     const char* integral_value = nullptr;
     Cppyy::TCppType_t type = nullptr;
 
-    type = GetType(i, /*enable_slow_lookup=*/true);
-    if (!type && parent && (Cppyy::IsNamespace(parent) || Cppyy::IsClass(parent))) {
+    if (!lookup_ns.empty()) {
+      // resolve from within the parent namespace, honouring C++ name lookup
+      // and shadowing (see the trampoline declaration above)
+      std::string id = "__Cppyy_s" + std::to_string(struct_count++);
+      if (!Cpp::Declare(("namespace " + lookup_ns + " { using " + id +
+                         " = __typeof__(" + i + "); }\n").c_str(),
+                        /*silent=*/true))
+        type = Cpp::GetCanonicalType(
+            Cpp::GetTypeFromScope(Cpp::GetNamed(id, lookup_scope)));
+    } else {
+      type = GetType(i, /*enable_slow_lookup=*/true);
+      if (!type && parent && (Cppyy::IsNamespace(parent) || Cppyy::IsClass(parent))) {
         type = Cppyy::GetTypeFromScope(Cppyy::GetNamed(resolved_name, parent));
+      }
     }
 
     if (!type) {
