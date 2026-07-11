@@ -165,10 +165,10 @@ target_include_directories(
     Minuit2
     PUBLIC
     $<BUILD_INTERFACE:${Minuit2_SOURCE_DIR}/inc>
-    $<INSTALL_INTERFACE:include/Minuit2>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Minuit2>
     )
 
-target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
+target_compile_features(Minuit2 PUBLIC cxx_std_17)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 
 target_link_libraries(Minuit2 PUBLIC Minuit2Math Minuit2Common)
@@ -179,4 +179,4 @@ install(TARGETS Minuit2
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
 
-install(FILES ${MINUIT2_HEADERS} DESTINATION include/Minuit2/Minuit2)
+install(FILES ${MINUIT2_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Minuit2/Minuit2)
