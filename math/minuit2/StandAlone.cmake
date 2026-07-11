@@ -1,9 +1,10 @@
 # Use the minimum C++ standard of ROOT by default
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "")
-set(CMAKE_CXX_EXTENSIONS OFF FALSE CACHE BOOL "")
+set(CMAKE_CXX_EXTENSIONS OFF CACHE BOOL "")
 
 include(FeatureSummary)
 include(CMakeDependentOption)
+include(GNUInstallDirs)
 
 # Check to see if we are inside ROOT and set a smart default
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../rootx/src/rootx.cxx")
@@ -45,7 +46,7 @@ include(copy_standalone.cmake)
 set(SPAN_HEADERS RSpan.hxx span.hxx)
 copy_standalone(SOURCE ../../core/foundation/inc/ROOT DESTINATION inc/ROOT OUTPUT SPAN_HEADERS
                 FILES ${SPAN_HEADERS})
-install(FILES ${SPAN_HEADERS} DESTINATION include/Minuit2/ROOT)
+install(FILES ${SPAN_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Minuit2/ROOT)
 
 
 # Copy these files in if needed
@@ -120,28 +121,27 @@ write_basic_package_version_file(
 # Now, install the Interface targets
 install(TARGETS Minuit2Common
         EXPORT Minuit2Targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         )
 
 # Install the export set
 install(EXPORT Minuit2Targets
         FILE Minuit2Targets.cmake
         NAMESPACE Minuit2::
-        DESTINATION lib/cmake/Minuit2
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Minuit2
         )
 
 # Adding the Minuit2Config file
 configure_file(Minuit2Config.cmake.in Minuit2Config.cmake @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Minuit2Config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/Minuit2ConfigVersion.cmake"
-        DESTINATION lib/cmake/Minuit2
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Minuit2
         )
 
 # Allow build directory to work for CMake import
 export(TARGETS Minuit2Common Minuit2Math Minuit2 NAMESPACE Minuit2:: FILE Minuit2Targets.cmake)
-export(PACKAGE Minuit2)
 
 # Only add tests and docs if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
