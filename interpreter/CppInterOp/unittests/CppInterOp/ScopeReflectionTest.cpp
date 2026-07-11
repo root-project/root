@@ -1312,6 +1312,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   Cpp::GetClassTemplateInstantiationArgs(v3_class, instance_types);
   EXPECT_TRUE(instance_types.size() == 0);
+
+  // Null or non-specialization decls must degrade to "no args", not crash
+  // (a silently-failed trampoline instantiation reaches here with null).
+  instance_types.clear();
+  Cpp::GetClassTemplateInstantiationArgs(nullptr, instance_types);
+  EXPECT_TRUE(instance_types.empty());
+  Cpp::GetClassTemplateInstantiationArgs(v1, instance_types); // a VarDecl
+  EXPECT_TRUE(instance_types.empty());
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IncludeVector) {
