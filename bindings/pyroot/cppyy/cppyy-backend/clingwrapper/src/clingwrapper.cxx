@@ -593,6 +593,8 @@ bool Cppyy::AppendTypesSlow(const std::string& name,
       TCppType_t varN =
           Cpp::GetVariableType(Cpp::GetNamed(var.c_str(), /*parent=*/nullptr));
       TCppScope_t instance_class = Cpp::GetScopeFromType(varN);
+      if (!instance_class)
+        continue; // recovered-but-broken decl; try next candidate or split path
       size_t oldSize = types.size();
       Cpp::GetClassTemplateInstantiationArgs(instance_class, types);
       return oldSize == types.size();
