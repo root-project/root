@@ -5391,7 +5391,10 @@ void GetClassTemplateArgs(ConstDeclRef templ_instance,
 void GetClassTemplateInstantiationArgs(ConstDeclRef templ_instance,
                                        std::vector<TemplateArgInfo>& args) {
   INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
-  const auto* CTSD = unwrap<ClassTemplateSpecializationDecl>(templ_instance);
+  const auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+      unwrap<Decl>(templ_instance));
+  if (!CTSD)
+    return INTEROP_VOID_RETURN();
   for (const auto& TA : CTSD->getTemplateInstantiationArgs().asArray()) {
     switch (TA.getKind()) {
     default:
