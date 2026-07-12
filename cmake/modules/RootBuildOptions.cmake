@@ -84,7 +84,7 @@ ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build CFITSIO internally (requires networ
 ROOT_BUILD_OPTION(builtin_clang ON "Build bundled copy of Clang")
 ROOT_BUILD_OPTION(builtin_cling ON "Build bundled copy of Cling. Only build with an external cling if you know what you are doing: associating ROOT commits with cling commits is tricky.")
 MARK_AS_ADVANCED(builtin_cling)
-ROOT_BUILD_OPTION(builtin_civetweb ON "Use civetweb distributed with ROOT")
+ROOT_BUILD_OPTION(builtin_civetweb OFF "Build civetweb internally (requires network).") # If system-package was built with -DCIVETWEB_ENABLE_WEBSOCKETS=OFF -DCIVETWEB_ENABLE_X_DOM_SOCKET=OFF -DCIVETWEB_ENABLE_ZLIB=OFF, builtin option will be force-enabled
 ROOT_BUILD_OPTION(builtin_fftw3 OFF "Build FFTW3 internally (requires network) [GPL]")
 ROOT_BUILD_OPTION(builtin_freetype OFF "Build bundled copy of freetype")
 ROOT_BUILD_OPTION(builtin_ftgl OFF "Build bundled copy of FTGL")

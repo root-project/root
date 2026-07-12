@@ -1,4 +1,5 @@
 CMAKE_CXX_STANDARD=23
+builtin_civetweb=ON
 experimental_adaptivecpp=ON
 pythia8=ON
 roofit_multiprocess=ON
