@@ -122,7 +122,9 @@ public:
             fShapeY = fShapeX1;
          } else  {
             // Y is the common shape of A and B
-            fShapeY = UTILITY::UnidirectionalBroadcastShape(fShapeX1, fShapeX2);
+            auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeX1, fShapeX2);
+            fBroadcastFlag = ret.first;
+            fShapeY = ret.second;
             broadcastX1 = !UTILITY::AreSameShape(fShapeX1, fShapeY);
             broadcastX2 = !UTILITY::AreSameShape(fShapeX2, fShapeY);
          }
