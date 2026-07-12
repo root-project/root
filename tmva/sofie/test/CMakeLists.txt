@@ -39,7 +39,7 @@ ROOTTEST_GENERATE_EXECUTABLE(emitFromONNX EmitFromONNX_all.cxx
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
 ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
-  COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
+  COMMAND ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
   FIXTURES_REQUIRED sofie-compile-models-onnx-build
   FIXTURES_SETUP sofie-compile-models-onnx
 )
