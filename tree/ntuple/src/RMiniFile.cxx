@@ -617,6 +617,8 @@ struct RTFileControlBlock {
 /// on some platforms.
 class RKeyBlob : public TKey { // NOLINT(misc-use-internal-linkage)
 public:
+   using TKey::GapHeaderBuf_t;
+
    RKeyBlob() = default;
 
    explicit RKeyBlob(TFile *file) : TKey(file)
@@ -633,7 +635,7 @@ public:
       *seekKey = fSeekKey;
    }
 
-   bool WasAllocatedInAFreeSlot() const { return fLeft > 0; }
+   using TKey::FillGapHeaderBuffers;
 
    ClassDefInlineOverride(RKeyBlob, 0)
 };
@@ -1188,11 +1190,10 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::ReserveBlobKey(T &caller, TFile
       caller.Write(localKeyBuffer, kBlobKeyLen, offsetKey);
    }
 
-   if (keyBlob.WasAllocatedInAFreeSlot()) {
-      // If the key was allocated in a free slot, the last 4 bytes of its buffer contain the new size
-      // of the remaining free slot and we need to write it to disk before the key gets destroyed at the end of the
-      // function.
-      caller.Write(keyBlob.GetBuffer() + nbytes, sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes);
+   RKeyBlob::GapHeaderBuf_t buffers;
+   auto nGaps = keyBlob.FillGapHeaderBuffers(file, buffers);
+   for (unsigned int i = 0; i < nGaps; ++i) {
+      caller.Write(buffers[i].data(), sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes + i * sizeof(Int_t));
    }
 
    auto offsetData = offsetKey + kBlobKeyLen;
