@@ -39,15 +39,33 @@ float Linear_16_outer_wrapper(TMVA_SOFIE_Linear_16::Session const &session, floa
    return Linear_16_wrapper(session, input);
 }
 
+// Separate evaluation function for the numeric differentiation that
+// accumulates in double: with a float accumulator, the rounding error of the
+// output sum is comparable to the eps-induced change that the central
+// difference measures, so the numeric derivative would be dominated by
+// cancellation noise.
+double Linear_16_num_eval(TMVA_SOFIE_Linear_16::Session const &session, float const *input)
+{
+   float out[160]{};
+   double output_sum = 0.0;
+
+   TMVA_SOFIE_Linear_16::doInfer(session, input, out);
+
+   for (std::size_t i = 0; i < std::size(out); ++i) {
+      output_sum += out[i];
+   }
+   return output_sum;
+}
+
 float Linear_16_wrapper_num_diff(TMVA_SOFIE_Linear_16::Session const &session, float *input, std::size_t i)
 {
    const float origVal = input[i];
 
    const float eps = 1e-3;
    input[i] = origVal - eps;
-   float funcValDown = Linear_16_wrapper(session, input);
+   double funcValDown = Linear_16_num_eval(session, input);
    input[i] = origVal + eps;
-   float funcValUp = Linear_16_wrapper(session, input);
+   double funcValUp = Linear_16_num_eval(session, input);
    input[i] = origVal;
 
    return (funcValUp - funcValDown) / (2 * eps);
