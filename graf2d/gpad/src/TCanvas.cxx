@@ -148,6 +148,27 @@ Following example shows how to proceed.
       c->SetWindowSize(500, 500);
    }
 ~~~
+
+\since **ROOT version 6.41/02:**
+
+When SetCanvasSizeIsDrawingArea(kTRUE) is enabled, the width and height passed to the TCanvas
+constructor define the size of the drawable area, rather than the full window size.
+
+Enabling this option makes the canvas behave consistently with typical image/output use cases,
+where the requested size should match the final rendered content.
+
+Example:
+~~~ {.cpp}
+{
+   gStyle->SetCanvasSizeIsDrawingArea(kTRUE);
+   Double_t w = 600;
+   Double_t h = 600;
+   auto c = new TCanvas("c", "c", w, h);
+   c->SaveAs("c.png");
+}
+~~~
+
+In this example, the saved PNG will have exactly 600×600 pixels of drawable content.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -675,6 +696,10 @@ void TCanvas::Build()
       if (TestBit(kShowToolBar))     fCanvasImp->ShowToolBar(kTRUE);
       if (TestBit(kShowEditor))      fCanvasImp->ShowEditor(kTRUE);
       if (TestBit(kShowToolTips))    fCanvasImp->ShowToolTips(kTRUE);
+   }
+   if (gStyle->GetCanvasSizeIsDrawingArea()) {
+      SetWindowSize(fWindowWidth  + (fWindowWidth  - GetWw()),
+                    fWindowHeight + (fWindowHeight - GetWh()));
    }
 }
 
