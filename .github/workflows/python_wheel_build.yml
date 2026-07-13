@@ -70,6 +70,7 @@ jobs:
             source root_build_env/bin/activate
             pip install --upgrade pip setuptools wheel build
             cd root
+            pip install -r requirements.txt
             python3 -m build --wheel
       - name: Install Kerberos utilities
         run: sudo apt-get install -y krb5-user
