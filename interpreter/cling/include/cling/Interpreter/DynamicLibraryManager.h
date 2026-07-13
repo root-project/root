@@ -10,6 +10,7 @@
 #ifndef CLING_DYNAMIC_LIBRARY_MANAGER_H
 #define CLING_DYNAMIC_LIBRARY_MANAGER_H
 
+#include "llvm/ExecutionEngine/Orc/Shared/LibraryResolver.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
@@ -65,6 +66,8 @@ namespace cling {
     InterpreterCallbacks* m_Callbacks = nullptr;
 
     Dyld* m_Dyld = nullptr;
+
+    std::unique_ptr<llvm::orc::LibraryResolutionDriver> m_DyldController;
 
     ///\brief Concatenates current include paths and the system include paths
     /// and performs a lookup for the filename.
@@ -128,6 +131,10 @@ namespace cling {
               return;
           auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
           m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
+          if (m_DyldController)
+            m_DyldController->addScanPath(dir.str(),
+                                          isUser ? llvm::orc::PathType::User
+                                                 : llvm::orc::PathType::System);
        }
     }
 
@@ -188,6 +195,11 @@ namespace cling {
     ///
     std::string searchLibrariesForSymbol(llvm::StringRef mangledName,
                                          bool searchSystem = true) const;
+
+    void
+    searchLibrariesForSymbol(llvm::ArrayRef<llvm::StringRef> Symbols,
+                             llvm::orc::LibraryResolver::OnSearchComplete OnCompletion,
+                             bool searchSystem = true) const;
 
     void dump(llvm::raw_ostream* S = nullptr) const;
 
