@@ -225,7 +225,7 @@ int execResolveTypedef()
 
    testing("unsigned int", TClassEdit::ResolveTypedef("SG::sgkey_t"));
    testing("unsigned int", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetTrueTypeName());
-   testing("uint32_t", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetFullTypeName());
+   testing("unsigned int", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetFullTypeName());
    testing("RT::EX::ClusterSize", TClassEdit::ResolveTypedef("RT::EX::ClusterSize_t"));
    return 0;
 }

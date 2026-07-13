@@ -1725,8 +1725,8 @@ namespace utils {
 
     // We don't consider the alias introduced by `using a::X` as a new type.
     // The qualified name is still a::X.
-    if (const auto* UT = QT->getAs<UsingType>()) {
-      QT = Ctx.getQualifiedType(UT->getUnderlyingType(), prefix_qualifiers);
+    if (QT->getAs<UsingType>()) {
+      QT = Ctx.getQualifiedType(QT.getCanonicalType(), prefix_qualifiers);
       return GetFullyQualifiedType(QT, Ctx);
     }
 
