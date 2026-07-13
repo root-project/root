@@ -1,16 +1,16 @@
 /// \file
 /// \ingroup tutorial_ml
 /// \notebook -nodraw
-/// This macro provides an example of using a trained model with Keras
+/// This macro provides an example of using a trained model with PyTorch
 /// and make inference using SOFIE and RDataFrame
-/// This macro uses as input a Keras model generated with the
-/// Python tutorial TMVA_SOFIE_Keras_HiggsModel.py
-/// You need to run that macro before to generate the trained Keras model
+/// This macro uses as input an ONNX model generated with the
+/// Python tutorial TMVA_SOFIE_PyTorch_HiggsModel.py
+/// You need to run that macro before to generate the trained PyTorch model
 /// and also the  corresponding header file with SOFIE which can then be used for inference
 ///
 /// Execute in this order:
 /// ```
-/// python3 TMVA_SOFIE_Keras_HiggsModel.py
+/// python3 TMVA_SOFIE_PyTorch_HiggsModel.py
 /// root TMVA_SOFIE_RDataFrame.C
 /// ```
 ///
