@@ -62,6 +62,24 @@ TEST(RDataFrameHistoModels, Histo1D)
    CheckBins(h2edgesd->GetXaxis(), edgesd);
 }
 
+TEST(RDataFrameHistoModels, BarChart)
+{
+   ROOT::RDataFrame tdf(6);
+   std::vector<std::string> labels{"a", "b", "a", "c", "b", "a"};
+   auto i = 0u;
+   auto d = tdf.Define("x", [&i, &labels]() { return labels[i++]; });
+   auto h = d.BarChart("x");
+
+   ASSERT_EQ(h->GetNbinsX(), 3);
+   EXPECT_STREQ(h->GetXaxis()->GetBinLabel(1), "a");
+   EXPECT_STREQ(h->GetXaxis()->GetBinLabel(2), "b");
+   EXPECT_STREQ(h->GetXaxis()->GetBinLabel(3), "c");
+   EXPECT_DOUBLE_EQ(h->GetBinContent(1), 3);
+   EXPECT_DOUBLE_EQ(h->GetBinContent(2), 2);
+   EXPECT_DOUBLE_EQ(h->GetBinContent(3), 1);
+}
+
+
 TEST(RDataFrameHistoModels, Prof1D)
 {
    ROOT::RDataFrame tdf(10);
