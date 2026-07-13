@@ -531,9 +531,9 @@ struct Limits {
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator wfirst);
 
-   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = nullptr) { return RMS<T>(n,a,w); } /// Same as RMS
-   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); } /// Same as RMS
-   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } /// Same as RMS
+   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = nullptr) { return RMS<T>(n,a,w); } ///< Same as RMS
+   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); } ///< Same as RMS
+   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } ///< Same as RMS
 
    template <typename T> Double_t Median(Long64_t n, const T *a, const Double_t *w=nullptr, Long64_t *work=nullptr);
    template <typename T> Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr);
