@@ -1,11 +1,13 @@
 ### \file
 ### \ingroup tutorial_ml
 ### \notebook -nodraw
-### Example of inference with SOFIE using a set of models trained with PyTorch
-### and exported to ONNX.
-### This tutorial shows how to store several models in a single header file and
-### the weights in a ROOT binary file.
-### The models are then evaluated using the RDataFrame
+### This macro trains a simple deep neural network on the Higgs dataset with
+### PyTorch, exports the model to ONNX and runs the SOFIE parser on it to
+### generate and compile C++ inference code.
+###
+### The trained model is saved as HiggsModel.onnx and is used as input by
+### other SOFIE tutorials (e.g. TMVA_SOFIE_RDataFrame.C), so this macro needs
+### to be run before them.
 ###
 ### The PyTorch export and ROOT's SOFIE parser are both linked against protobuf,
 ### but usually against different versions, so loading them in the same process
@@ -14,7 +16,6 @@
 ###
 ### \macro_code
 ### \macro_output
-### \author Lorenzo Moneta
 
 import os
 import subprocess
@@ -23,12 +24,10 @@ import sys
 import numpy as np
 import ROOT
 
-## generate and train PyTorch models with different architectures
-
 # The PyTorch training and ONNX export, as a small standalone script run in its
 # own process. It takes as arguments the .npz file with the training data and
-# the names of the models to train, and writes a <modelName>.onnx file for each
-# of them.
+# the model name, and writes <modelName>.onnx together with the PyTorch
+# predictions for the validation inputs in <modelName>_torch_output.npy.
 TRAIN_SCRIPT = r"""
 import sys
 import inspect
@@ -40,7 +39,7 @@ import torch
 import torch.nn as nn
 
 dataFile = sys.argv[1]
-modelNames = sys.argv[2:]
+modelName = sys.argv[2]
 
 
 @contextlib.contextmanager
@@ -67,7 +66,7 @@ def expect_warning(category, message):
 def CreateModel(nlayers=4, nunits=64):
     layers = []
     ninputs = 7
-    for i in range(nlayers):
+    for i in range(1, nlayers):
         layers += [nn.Linear(ninputs, nunits), nn.ReLU()]
         ninputs = nunits
     layers += [nn.Linear(ninputs, 1), nn.Sigmoid()]
@@ -133,10 +132,16 @@ def ExportModel(model, modelName):
 
 
 data = np.load(dataFile)
-for modelName in modelNames:
-    model = CreateModel(4, 64)
-    TrainModel(model, data["x_train"], data["y_train"])
-    ExportModel(model, modelName)
+
+# create dense model with 3 layers of 64 units and train it
+model = CreateModel(3, 64)
+TrainModel(model, data["x_train"], data["y_train"])
+ExportModel(model, modelName)
+
+# evaluate the trained model on the validation inputs, for comparison with SOFIE
+with torch.no_grad():
+    y = model(torch.from_numpy(data["x_check"])).numpy()
+np.save(modelName + "_torch_output.npy", y)
 """
 
 
@@ -177,154 +182,76 @@ def PrepareData():
     return x_train, y_train, x_test, y_test
 
 
-def TrainModels(x_train, y_train, modelNames):
-    # train the models with PyTorch and export them to ONNX
+def TrainModel(x_train, y_train, x_check, name):
+    # train the model with PyTorch and export it to ONNX
     # (done in a separate process to avoid the protobuf clash, see above)
-    dataFile = "Higgs_Model_train_data.npz"
-    np.savez(dataFile, x_train=x_train, y_train=y_train)
+    dataFile = name + "_train_data.npz"
+    np.savez(dataFile, x_train=x_train, y_train=y_train, x_check=x_check)
 
-    subprocess.run([sys.executable, "-c", TRAIN_SCRIPT, dataFile] + modelNames, check=True)
+    modelFile = name + ".onnx"
+    torchOutputFile = name + "_torch_output.npy"
+    subprocess.run([sys.executable, "-c", TRAIN_SCRIPT, dataFile, name], check=True)
     os.remove(dataFile)
+    if not os.path.exists(modelFile) or not os.path.exists(torchOutputFile):
+        raise RuntimeError("ONNX model could not be exported")
 
-    modelFiles = [name + ".onnx" for name in modelNames]
-    for modelFile in modelFiles:
-        if not os.path.exists(modelFile):
-            raise RuntimeError("ONNX model " + modelFile + " could not be exported")
-    return modelFiles
-
-
-### run the models
-
-x_train, y_train, x_test, y_test = PrepareData()
-
-## create models and train them
-
-# All three models use the same small architecture (4 layers of 64 units) to
-# keep the tutorial runtime under control, whatever their names suggest.
-modelNames = ["Higgs_Model_4L_50", "Higgs_Model_4L_200", "Higgs_Model_2L_500"]
-model1, model2, model3 = TrainModels(x_train, y_train, modelNames)
-
-# evaluate with SOFIE the 3 trained models
+    ytorch = np.load(torchOutputFile)
+    os.remove(torchOutputFile)
+    return modelFile, ytorch
 
 
-def GenerateModelCode(modelFile, generatedHeaderFile):
+def GenerateCode(modelFile="model.onnx"):
+
+    # check if the input file exists
+    if not os.path.exists(modelFile):
+        raise FileNotFoundError("Input model file is missing. The PyTorch training did not produce " + modelFile)
+
+    # parse the input ONNX model into an RModel object
     parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
     model = parser.Parse(modelFile)
 
-    print("Generating inference code for the ONNX model from ", modelFile, "in the header ", generatedHeaderFile)
-    # Generating inference code using a ROOT binary file
-    model.Generate(ROOT.TMVA.Experimental.SOFIE.Options.kRootBinaryWeightFile)
-    # add option to append to the same file the generated headers (pass True for append flag)
-    model.OutputGenerated(generatedHeaderFile, True)
-    # model.PrintGenerated()
-    return generatedHeaderFile
+    # Generating inference code
+    model.Generate()
+    model.OutputGenerated()
+
+    modelName = modelFile.replace(".onnx", "")
+    return modelName
 
 
-generatedHeaderFile = "Higgs_Model.hxx"
-# need to remove existing header file since we are appending on same one
-if os.path.exists(generatedHeaderFile):
-    print("removing existing file", generatedHeaderFile)
-    os.remove(generatedHeaderFile)
+###################################################################
+## Step 1 : Create and train the model, export it to ONNX
+###################################################################
 
-weightFile = "Higgs_Model.root"
-if os.path.exists(weightFile):
-    print("removing existing file", weightFile)
-    os.remove(weightFile)
+x_train, y_train, x_test, y_test = PrepareData()
+# validate the exported model on the first test events
+x_check = x_test[:10]
+modelFile, ytorch = TrainModel(x_train, y_train, x_check, "HiggsModel")
 
-GenerateModelCode(model1, generatedHeaderFile)
-GenerateModelCode(model2, generatedHeaderFile)
-GenerateModelCode(model3, generatedHeaderFile)
+###################################################################
+## Step 2 : Parse model and generate inference code with SOFIE
+###################################################################
 
-# compile the generated code
+modelName = GenerateCode(modelFile)
+modelHeaderFile = modelName + ".hxx"
 
-ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
+###################################################################
+## Step 3 : Compile the generated C++ model code
+###################################################################
 
+ROOT.gInterpreter.Declare('#include "' + modelHeaderFile + '"')
 
-# run the inference on the test data
-session1 = ROOT.TMVA_SOFIE_Higgs_Model_4L_50.Session("Higgs_Model.root")
-session2 = ROOT.TMVA_SOFIE_Higgs_Model_4L_200.Session("Higgs_Model.root")
-session3 = ROOT.TMVA_SOFIE_Higgs_Model_2L_500.Session("Higgs_Model.root")
+###################################################################
+## Step 4: Evaluate the model
+###################################################################
 
-hs1 = ROOT.TH1D("hs1", "Signal result 4L 50", 100, 0, 1)
-hs2 = ROOT.TH1D("hs2", "Signal result 4L 200", 100, 0, 1)
-hs3 = ROOT.TH1D("hs3", "Signal result 2L 500", 100, 0, 1)
+# get first the SOFIE session namespace
+sofie = getattr(ROOT, "TMVA_SOFIE_" + modelName)
+session = sofie.Session()
 
-hb1 = ROOT.TH1D("hb1", "Background result 4L 50", 100, 0, 1)
-hb2 = ROOT.TH1D("hb2", "Background result 4L 200", 100, 0, 1)
-hb3 = ROOT.TH1D("hb3", "Background result 2L 500", 100, 0, 1)
+for i in range(x_check.shape[0]):
+    y = session.infer(x_check[i])
+    print("input to model is ", x_check[i], "\n\t -> output using SOFIE = ", y[0], " using PyTorch = ", ytorch[i, 0])
+    if abs(y[0] - ytorch[i, 0]) > 0.01:
+        raise RuntimeError("ERROR: Result is different between SOFIE and PyTorch")
 
-
-def EvalModel(session, x):
-    result = session.infer(x)
-    return result[0]
-
-
-for i in range(0, x_test.shape[0]):
-    result1 = EvalModel(session1, x_test[i, :])
-    result2 = EvalModel(session2, x_test[i, :])
-    result3 = EvalModel(session3, x_test[i, :])
-    if y_test[i] == 1:
-        hs1.Fill(result1)
-        hs2.Fill(result2)
-        hs3.Fill(result3)
-    else:
-        hb1.Fill(result1)
-        hb2.Fill(result2)
-        hb3.Fill(result3)
-
-
-def PlotHistos(hs, hb):
-    hs.SetLineColor("kRed")
-    hb.SetLineColor("kBlue")
-    hs.Draw()
-    hb.Draw("same")
-
-
-c1 = ROOT.TCanvas()
-c1.Divide(1, 3)
-c1.cd(1)
-PlotHistos(hs1, hb1)
-c1.cd(2)
-PlotHistos(hs2, hb2)
-c1.cd(3)
-PlotHistos(hs3, hb3)
-c1.Draw()
-
-## draw also ROC curves
-
-
-def GetContent(h):
-    n = h.GetNbinsX()
-    x = ROOT.std.vector["float"](n)
-    w = ROOT.std.vector["float"](n)
-    for i in range(0, n):
-        x[i] = h.GetBinCenter(i + 1)
-        w[i] = h.GetBinContent(i + 1)
-    return x, w
-
-
-def MakeROCCurve(hs, hb):
-    xs, ws = GetContent(hs)
-    xb, wb = GetContent(hb)
-    roc = ROOT.TMVA.ROCCurve(xs, xb, ws, wb)
-    print("ROC integral for ", hs.GetName(), roc.GetROCIntegral())
-    curve = roc.GetROCCurve()
-    curve.SetName(hs.GetName())
-    return roc, curve
-
-
-c2 = ROOT.TCanvas()
-
-r1, curve1 = MakeROCCurve(hs1, hb1)
-curve1.SetLineColor("kRed")
-curve1.Draw("AC")
-
-r2, curve2 = MakeROCCurve(hs2, hb2)
-curve2.SetLineColor("kBlue")
-curve2.Draw("C")
-
-r3, curve3 = MakeROCCurve(hs3, hb3)
-curve3.SetLineColor("kGreen")
-curve3.Draw("C")
-
-c2.Draw()
+print("OK")

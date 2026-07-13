@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_ml
 /// \notebook -nodraw
-/// This macro provides an example of using a trained model with Keras
+/// This macro provides an example of using a trained model with PyTorch
 /// and make inference using SOFIE and RDataFrame
-/// This macro uses as input a Keras model generated with the
-/// TMVA_Higgs_Classification.C tutorial
+/// This macro uses as input the SOFIE header generated from the ONNX model
+/// with the TMVA_SOFIE_PyTorch_HiggsModel.py tutorial
 /// You need to run that macro before this one.
 /// In this case we are parsing the input file and then run the inference in the same
 /// macro making use of the ROOT JITing capability
@@ -43,8 +43,9 @@ void TMVA_SOFIE_RDataFrame_JIT(std::string modelName = "HiggsModel"){
     // check if the input file exists
     std::string modelHeaderFile = modelName + ".hxx";
     if (gSystem->AccessPathName(modelHeaderFile.c_str())) {
-        Info("TMVA_SOFIE_RDataFrame","You need to run TMVA_SOFIE_Keras_Higgs_Model.py to generate the SOFIE header for the Keras trained model");
-        return;
+       Info("TMVA_SOFIE_RDataFrame", "You need to run TMVA_SOFIE_PyTorch_HiggsModel.py to generate the SOFIE header "
+                                     "for the PyTorch trained model");
+       return;
     }
 
     // check that also weigh file exists

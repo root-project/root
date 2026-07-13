@@ -1,10 +1,10 @@
 ### \file
 ### \ingroup tutorial_ml
 ### \notebook -nodraw
-### This macro provides an example of using a trained model with Keras
+### This macro provides an example of using a trained model with PyTorch
 ### and make inference using SOFIE directly from Numpy
-### This macro uses as input a Keras model generated with the
-### TMVA_Higgs_Classification.C tutorial
+### This macro uses as input an ONNX model generated with the
+### TMVA_SOFIE_PyTorch_HiggsModel.py tutorial
 ### You need to run that macro before this one.
 ### In this case we are parsing the input file and then run the inference in the same
 ### macro making use of the ROOT JITing capability
@@ -20,31 +20,27 @@ import numpy as np
 import ROOT
 
 # check if the input file exists
-modelFile = "HiggsModel.keras"
+modelFile = "HiggsModel.onnx"
 
 if not exists(modelFile):
-    raise FileNotFoundError("You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
+    raise FileNotFoundError("You need to run TMVA_SOFIE_PyTorch_HiggsModel.py to generate the ONNX trained model")
 
 
-# parse the input Keras model into RModel object
-model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
+# parse the input ONNX model into RModel object
+parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
+model = parser.Parse(modelFile)
 
-generatedHeaderFile = modelFile.replace(".keras",".hxx")
-print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
+generatedHeaderFile = modelFile.replace(".onnx", ".hxx")
+print("Generating inference code for the ONNX model from ", modelFile, "in the header ", generatedHeaderFile)
 #Generating inference code
 model.Generate()
 model.OutputGenerated(generatedHeaderFile)
 model.PrintGenerated()
 
 # now compile using ROOT JIT trained model
-modelName = modelFile.replace(".keras","")
+modelName = modelFile.replace(".onnx", "")
 print("compiling SOFIE model ", modelName)
 ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
-
-
-generatedHeaderFile = modelFile.replace(".keras",".hxx")
-print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
-#Generating inference
 
 inputFileName = "Higgs_data.root"
 inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/" + inputFileName

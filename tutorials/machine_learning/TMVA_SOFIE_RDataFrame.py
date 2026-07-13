@@ -1,8 +1,8 @@
 ### \file
 ### \ingroup tutorial_ml
 ### \notebook -nodraw
-### Example of inference with SOFIE and RDataFrame, of a model trained with Keras.
-### First, generate the input model by running `TMVA_Higgs_Classification.C`.
+### Example of inference with SOFIE and RDataFrame, of a model trained with PyTorch.
+### First, generate the input ONNX model by running `TMVA_SOFIE_PyTorch_HiggsModel.py`.
 ###
 ### This tutorial parses the input model and runs the inference using ROOT's JITing capability.
 ###
@@ -15,14 +15,15 @@ from os.path import exists
 import ROOT
 
 # check if the input file exists
-modelFile = "HiggsModel.keras"
+modelFile = "HiggsModel.onnx"
 modelName = "HiggsModel"
 
 if not exists(modelFile):
-    raise FileNotFoundError("You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
+    raise FileNotFoundError("You need to run TMVA_SOFIE_PyTorch_HiggsModel.py to generate the ONNX trained model")
 
-# parse the input Keras model into RModel object
-model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
+# parse the input ONNX model into RModel object
+parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
+model = parser.Parse(modelFile)
 
 # generating inference code
 model.Generate()

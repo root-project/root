@@ -370,20 +370,20 @@ else()
   # These SOFIE tutorials take models trained via PyMVA-PyKeras as input
   if (NOT tmva-sofie OR NOT ROOT_KERAS_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras_HiggsModel.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
   endif()
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.py)
   endif()
+  # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
   endif()
   #veto this tutorial since it is added directly
   list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
@@ -655,7 +655,7 @@ set (machine_learning-tmva004_RStandardScaler-depends tutorial-machine_learning-
 set (machine_learning-pytorch-ApplicationClassificationPyTorch-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-pytorch-RegressionPyTorch-depends tutorial-machine_learning-pytorch-ApplicationClassificationPyTorch-py)
 set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
-set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_Keras_HiggsModel-py)
+set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_PyTorch_HiggsModel-py)
 set (machine_learning-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame)
 set (machine_learning-TMVA_SOFIE_RSofieReader-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame_JIT)
 set (machine_learning-TMVA_SOFIE_Inference-depends tutorial-machine_learning-TMVA_SOFIE_RSofieReader)
@@ -848,8 +848,8 @@ if(pyroot)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
 
-  if (ROOT_KERAS_FOUND)
-    set (machine_learning-TMVA_SOFIE_RDataFrame-py-depends tutorial-machine_learning-TMVA_SOFIE_Keras_HiggsModel)
+  if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND)
+    set (machine_learning-TMVA_SOFIE_RDataFrame-py-depends tutorial-machine_learning-TMVA_SOFIE_PyTorch_HiggsModel)
   endif()
 
   if(NOT tmva-pymva)
@@ -947,9 +947,6 @@ if(pyroot)
       roofit/roofit/rf409_NumPyPandasToRooFit.py)
 
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      machine_learning/TMVA_SOFIE_Inference.py
-      machine_learning/TMVA_SOFIE_Models.py
-      machine_learning/TMVA_SOFIE_RDataFrame.py
       machine_learning/keras/*.py
   )
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -957,7 +954,9 @@ if(pyroot)
       machine_learning/ml_dataloader_PyTorch.py
       machine_learning/ml_dataloader_resampling.py
       machine_learning/ml_dataloader_Higgs_Classification.py
+      machine_learning/TMVA_SOFIE_Models.py
       machine_learning/TMVA_SOFIE_PyTorch.py
+      machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/tmva101_Training.py
@@ -966,7 +965,6 @@ if(pyroot)
       roofit/roofit/rf618_mixture_models.py
   )
   file(GLOB requires_sklearn RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      machine_learning/TMVA_SOFIE_Models.py
       machine_learning/tmva101_Training.py # uses the xgboost sklearn plugin
       machine_learning/tmva102_Testing.py # requires tmva101_Training.py
       machine_learning/ml_dataloader_XGBoost.py
