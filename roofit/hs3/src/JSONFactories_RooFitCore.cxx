@@ -845,26 +845,34 @@ public:
 private:
    void cleanExpression(TString &expr) const
    {
-      expr.ReplaceAll("TMath::Exp", "exp");
-      expr.ReplaceAll("TMath::Min", "min");
-      expr.ReplaceAll("TMath::Max", "max");
-      expr.ReplaceAll("TMath::Log", "log");
-      expr.ReplaceAll("TMath::Cos", "cos");
-      expr.ReplaceAll("TMath::Sin", "sin");
-      expr.ReplaceAll("TMath::Sqrt", "sqrt");
-      expr.ReplaceAll("TMath::Power", "pow");
-      expr.ReplaceAll("TMath::Erf", "erf");
-      expr.ReplaceAll("TMath::Floor", "floor");
-      expr.ReplaceAll("TMath::Ceil", "ceil");
-      expr.ReplaceAll("TMath::Abs", "abs");
-      expr.ReplaceAll("TMath::Tan", "tan");
-      expr.ReplaceAll("TMath::ASin", "asin");
-      expr.ReplaceAll("TMath::ACos", "acos");
-      expr.ReplaceAll("TMath::ATan", "atan");
-      expr.ReplaceAll("TMath::Pi()", "PI");
-      expr.ReplaceAll("TMath::Pi", "PI");
-      expr.ReplaceAll("TMath::E()", "EULER");
-      expr.ReplaceAll("TMath::E", "EULER");
+      // Plain substring replacement would also hit longer identifiers that
+      // share a prefix (e.g. "TMath::Tan" in "TMath::TanH", or "TMath::Pi" in
+      // "TMath::PiOver2"), corrupting the exported expression. Identifiers
+      // without a replacement are kept as-is.
+      replaceIdentifier(expr, "TMath::Exp", "exp");
+      replaceIdentifier(expr, "TMath::Min", "min");
+      replaceIdentifier(expr, "TMath::Max", "max");
+      replaceIdentifier(expr, "TMath::Log", "log");
+      replaceIdentifier(expr, "TMath::Log10", "log10");
+      replaceIdentifier(expr, "TMath::Cos", "cos");
+      replaceIdentifier(expr, "TMath::CosH", "cosh");
+      replaceIdentifier(expr, "TMath::Sin", "sin");
+      replaceIdentifier(expr, "TMath::SinH", "sinh");
+      replaceIdentifier(expr, "TMath::Sqrt", "sqrt");
+      replaceIdentifier(expr, "TMath::Power", "pow");
+      replaceIdentifier(expr, "TMath::Erf", "erf");
+      replaceIdentifier(expr, "TMath::Erfc", "erfc");
+      replaceIdentifier(expr, "TMath::Floor", "floor");
+      replaceIdentifier(expr, "TMath::Ceil", "ceil");
+      replaceIdentifier(expr, "TMath::Abs", "abs");
+      replaceIdentifier(expr, "TMath::Tan", "tan");
+      replaceIdentifier(expr, "TMath::TanH", "tanh");
+      replaceIdentifier(expr, "TMath::ASin", "asin");
+      replaceIdentifier(expr, "TMath::ACos", "acos");
+      replaceIdentifier(expr, "TMath::ATan", "atan");
+      replaceIdentifier(expr, "TMath::ATan2", "atan2");
+      replaceIdentifier(expr, "TMath::Pi()", "PI");
+      replaceIdentifier(expr, "TMath::E()", "EULER");
    }
 };
 // Write the "x" reference and the coefficient list for polynomial-like
