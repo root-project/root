@@ -100,6 +100,11 @@ struct RNTupleMergeOptions {
    bool fExtraVerbose = false;
 };
 
+struct RAttrSetMergeData {
+   std::unique_ptr<ROOT::Internal::RPageSink> fSink;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
+};
+
 // clang-format off
 /**
  * \class ROOT::Experimental::Internal::RNTupleMerger
@@ -109,9 +114,21 @@ struct RNTupleMergeOptions {
  */
 // clang-format on
 class RNTupleMerger final {
+public:
+   // When merging Attributes we need to reseal (not just recompress) the pages of the _rangeStart column, since we
+   // need to patch up the offset of each attribute entry. To do so, we pass a resealing function to the merging
+   // pipeline, which causes the unsealing of the pages and runs the provided function before sealing it again.
+   // Note that we actually pass a higher order function that optionally returns the resealing function only for the
+   // correct column.
+   using PageResealingFn_t = std::function<void(ROOT::Internal::RPage &)>;
+   using GetPageResealingFn_t = std::function<std::optional<PageResealingFn_t>(const RColumnMergeInfo &)>;
+
+private:
    friend class ROOT::RNTuple;
 
    std::unique_ptr<ROOT::Internal::RPagePersistentSink> fDestination;
+   // Mapping { attrSetName => data needed to merge it }
+   std::unordered_map<std::string, RAttrSetMergeData> fAttributesMergeData;
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
@@ -122,12 +139,17 @@ class RNTupleMerger final {
                       std::span<RColumnMergeInfo> commonColumns,
                       const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
                       RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
-                      ROOT::Internal::RPageAllocator &pageAlloc);
+                      ROOT::Internal::RPageAllocator &pageAlloc, const GetPageResealingFn_t &getResealingFn);
 
    [[nodiscard]]
    ROOT::RResult<void>
    MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
-                       std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+                       std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData,
+                       const GetPageResealingFn_t &resealingFn);
+
+   [[nodiscard]]
+   ROOT::RResult<void> MergeSourceAttributes(ROOT::Internal::RPageSource &source, RNTupleMergeData &mergeData,
+                                             ROOT::NTupleSize_t nDstEntriesAtPrevSource);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
