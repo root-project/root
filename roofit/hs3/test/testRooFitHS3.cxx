@@ -738,6 +738,31 @@ TEST(RooFitHS3, GenericExpressionCleanup)
    EXPECT_DOUBLE_EQ(imported->getVal(), formula.getVal());
 }
 
+// The expression cleanup must not corrupt identifiers that merely share a
+// prefix with a replaced one, like TMath::PiOver2 ("TMath::Pi") or
+// TMath::TanH ("TMath::Tan").
+TEST(RooFitHS3, GenericExpressionCleanupKeepsLongerIdentifiers)
+{
+   RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
+   RooFormulaVar formula{"formula", "formula",
+                         "TMath::PiOver2() + TMath::TanH(x) + TMath::SinH(x) + TMath::Log10(2. + x)", RooArgList{x}};
+
+   RooWorkspace ws1{"ws_expr_cleanup_prefixes"};
+   ws1.import(formula, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+
+   for (const char *token : {"PIOver2", "tanH", "sinH"}) {
+      EXPECT_EQ(json.find(token), std::string::npos) << json;
+   }
+
+   RooWorkspace ws2{"ws_expr_cleanup_prefixes_2"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *imported = ws2.function("formula");
+   ASSERT_NE(imported, nullptr);
+   ws2.var("x")->setVal(0.5);
+   EXPECT_DOUBLE_EQ(imported->getVal(), formula.getVal());
+}
+
 TEST(RooFitHS3, RooHistPdf)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
