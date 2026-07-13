@@ -1046,19 +1046,26 @@ void TBasket::Streamer(TBuffer &b)
          if (fNevBuf) {
             // Alas, ReadArray will read the number of elements to store into fEntryOffset from the file, but it
             // has no way of knowing whether we're passing a large-enough array.
-            // Therefore we prevent the problem altogether by ignoring fNevBufSize and just having ReadArray allocate
-            // the buffer for us. This way we are sure that it will be of the correct size even if the file contains
-            // corrupted data.
-            fEntryOffset = nullptr;
-            auto nElemsRead = b.ReadArray(fEntryOffset);
-            if (nElemsRead != fNevBuf) {
+            // Therefore we prevent the problem altogether by ignoring fNevBufSize and peeking into the buffer to
+            // know the number of elements to allocate beforehand.
+            // This way we are sure that fEntryOffset will be of the correct size even if the file contains corrupted
+            // data.
+            Int_t entryOffsetSize;
+            auto buf = b.GetCurrent();
+            frombuf(buf, &entryOffsetSize);
+            if (entryOffsetSize != fNevBuf) {
                Error("Streamer",
                      "Inconsistent length for the entry offset buffer (expected %d elements, read %d). The basket is "
                      "corrupted and not usable.",
-                     fNevBufSize, nElemsRead);
+                     fNevBuf, entryOffsetSize);
                MakeZombie();
                return;
             }
+            // We need to allocate an extra element due to the offset/size conversion happening during writing
+            // (see WriteBuffer)
+            fEntryOffset = new Int_t[fNevBuf + 1];
+            [[maybe_unused]] auto nElemsRead = b.ReadArray(fEntryOffset);
+            assert(nElemsRead == entryOffsetSize);
             fNevBufSize = fNevBuf;
          } else {
             fEntryOffset = new Int_t[fNevBufSize];
