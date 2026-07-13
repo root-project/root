@@ -69,7 +69,6 @@ jobs:
             python3 -m venv root_build_env 
             source root_build_env/bin/activate
             pip install --upgrade pip setuptools wheel build
-            git clone --recursive https://github.com/root-project/root.git
             cd root
             python3 -m build --wheel
       - name: Install Kerberos utilities
