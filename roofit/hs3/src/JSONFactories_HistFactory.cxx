@@ -744,7 +744,6 @@ struct NormFactor {
    std::string name;
    RooAbsReal const *param = nullptr;
    RooAbsPdf const *constraint = nullptr;
-   TClass *constraintType = RooGaussian::Class();
    NormFactor(RooAbsReal const &par, const RooAbsPdf *constr = nullptr)
       : name{par.GetName()}, param{&par}, constraint{constr}
    {
@@ -758,10 +757,9 @@ struct NormSys {
    double high = 1.;
    int interpolationCode = 4;
    RooAbsPdf const *constraint = nullptr;
-   TClass *constraintType = RooGaussian::Class();
    NormSys() {};
    NormSys(const std::string &n, RooAbsReal *const p, double h, double l, int i, const RooAbsPdf *c)
-      : name(n), param(p), low(l), high(h), interpolationCode(i), constraint(c), constraintType(c->IsA())
+      : name(n), param(p), low(l), high(h), interpolationCode(i), constraint(c)
    {
    }
 };
@@ -772,9 +770,8 @@ struct HistoSys {
    std::vector<double> low;
    std::vector<double> high;
    RooAbsPdf const *constraint = nullptr;
-   TClass *constraintType = RooGaussian::Class();
    HistoSys(const std::string &n, RooAbsReal *const p, RooHistFunc *l, RooHistFunc *h, const RooAbsPdf *c)
-      : name(n), param(p), constraint(c), constraintType(c->IsA())
+      : name(n), param(p), constraint(c)
    {
       low.assign(l->dataHist().weightArray(), l->dataHist().weightArray() + l->dataHist().numEntries());
       high.assign(h->dataHist().weightArray(), h->dataHist().weightArray() + h->dataHist().numEntries());
@@ -785,8 +782,6 @@ struct ShapeSys {
    std::vector<double> constraints;
    std::vector<RooAbsPdf const *> constraintPdfs;
    std::vector<RooAbsReal *> parameters;
-   RooAbsPdf const *constraint = nullptr;
-   TClass *constraintType = RooGaussian::Class();
    ShapeSys(const std::string &n) : name{n} {}
 };
 
@@ -942,7 +937,6 @@ struct Sample {
    std::vector<GenericElement> otherElements;
    bool useBarlowBeestonLight = false;
    std::vector<RooAbsReal *> staterrorParameters;
-   TClass *barlowBeestonLightConstraintType = RooPoisson::Class();
    Sample(const std::string &n) : name{n} {}
 };
 
@@ -1141,7 +1135,6 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                channel.tot_yield[idx] += sample.hist[idx - 1];
                channel.tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
                if (constraint) {
-                  sample.barlowBeestonLightConstraintType = constraint->IsA();
                   if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                      double erel = 1. / std::sqrt(poissonTau(*constraint_p, *g));
                      channel.rel_errors[idx] = erel;
@@ -1180,15 +1173,9 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                   sys.constraints.push_back(1. / std::sqrt(poissonTau(*constraint_p, *g)));
                   sys.constraintPdfs.push_back(constraint_p);
-                  if (!sys.constraint) {
-                     sys.constraintType = RooPoisson::Class();
-                  }
                } else if (auto constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
                   sys.constraints.push_back(constraint_g->getSigma().getVal() / constraint_g->getMean().getVal());
                   sys.constraintPdfs.push_back(constraint_g);
-                  if (!sys.constraint) {
-                     sys.constraintType = RooGaussian::Class();
-                  }
                } else {
                   RooJSONFactoryWSTool::error(
                      "currently, only RooPoisson and RooGaussian are supported as constraint types");
@@ -1298,7 +1285,6 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "shapesys";
          optionallyExportGammaParameters(mod, sys.name, sys.parameters);
-         writeConstraint(mod, sys);
          if (std::any_of(sys.constraintPdfs.begin(), sys.constraintPdfs.end(),
                          [](auto *pdf) { return pdf != nullptr; })) {
             auto &constraintNames = mod["constraints"].set_seq();
@@ -1310,12 +1296,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
                }
             }
          }
-         auto &vals = mod["data"].set_map()["vals"];
-         if (sys.constraint || sys.constraintType) {
-            vals.fill_seq(sys.constraints);
-         } else {
-            vals.fill_seq(std::vector<double>(sys.parameters.size(), 0.0));
-         }
+         mod["data"].set_map()["vals"].fill_seq(sys.constraints);
       }
 
       for (const auto &other : sample.otherElements) {
