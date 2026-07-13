@@ -558,13 +558,6 @@ namespace TypeName {
     Qualifiers PrefixQualifiers = QT.getLocalQualifiers();
     QT = QualType(QT.getTypePtr(), 0);
 
-    // We don't consider the alias introduced by `using a::X` as a new type.
-    // The qualified name is still a::X.
-    if (const auto *UT = QT->getAs<UsingType>()) {
-      QT = Ctx.getQualifiedType(UT->desugar(), PrefixQualifiers);
-      return getFullyQualifiedType(QT, Ctx, WithGlobalNsPrefix);
-    }
-
     // Create a nested name specifier if needed.
     NestedNameSpecifier Prefix = createNestedNameSpecifierForScopeOf(
         Ctx, QT.getTypePtr(), true /*FullyQualified*/, WithGlobalNsPrefix);
@@ -583,6 +576,10 @@ namespace TypeName {
       QT = Ctx.getTypedefType(
           TT->getKeyword(), Prefix, TT->getDecl(),
           getFullyQualifiedType(TT->desugar(), Ctx, WithGlobalNsPrefix));
+    } else if (const auto* UT = dyn_cast<UsingType>(QT.getTypePtr())) {
+      QT = Ctx.getUsingType(UT->getKeyword(), Prefix, UT->getDecl(),
+                            getFullyQualifiedType(UT->desugar(), Ctx,
+                                                  WithGlobalNsPrefix));
     } else {
       assert(!Prefix && "Unhandled type node");
     }
@@ -674,6 +671,11 @@ namespace utils {
       QT = Ctx.getTypedefType(TT->getKeyword(), prefix, TT->getDecl(),
                               TypeName::getFullyQualifiedType(
                                   TT->desugar(), Ctx, WithGlobalNsPrefix));
+    } else if (const auto* UT = dyn_cast<UsingType>(QT.getTypePtr())) {
+      QT =
+          Ctx.getUsingType(UT->getKeyword(), prefix, UT->getDecl(),
+                           getFullyQualifiedType(UT->desugar(), Ctx,
+                                                 WithGlobalNsPrefix));
     }
     return QT;
   }
