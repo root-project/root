@@ -1,24 +1,0 @@
-
-onnx-example:µ
-@
-inputA
-inputBoutput"Einsum*
-equation"abcd,abed->abce EinsumGraphZ 
-inputA
-
-
-
-
-Z 
-inputB
-
-
-
-
-b 
-output
-
-
-
-
-B

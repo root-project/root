@@ -2,8 +2,6 @@ constexpr auto modelHeaderSuffix = "_FromONNX_unoptimized.hxx";
 constexpr auto modelDataSuffix = "_FromONNX_unoptimized.dat";
 #include "test_helpers.h"
 
-#include "input_models/references/Linear_16.ref.hxx"
-
 #include "gtest/gtest.h"
 
 // Test differentiating a fully-connected neural network with Clad.
@@ -12,9 +10,9 @@ TEST(ONNXClad, Linear16)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   // Preparing the standard all-ones input
-   std::vector<float> input(1600);
-   std::fill_n(input.data(), input.size(), 1.0f);
+   SofieReference ref = readReference("Linear_16");
+   // Mutable copy: the numeric differentiation below perturbs the input values
+   std::vector<float> input = ref.f32("input0");
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_16", input);
 
@@ -135,13 +133,5 @@ float Linear_16_wrapper_num_diff(TMVA_SOFIE_Linear_16::Session const &session, f
       ADD_FAILURE() << "Further mismatches suppressed (total mismatches: " << mismatchCount << ")";
    }
 
-   // Checking output size
-   EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
-
-   float *correct = Linear_16_ExpectedOutput::all_ones;
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-   }
+   expectNear(output, ref.f32("output0"), TOLERANCE);
 }
