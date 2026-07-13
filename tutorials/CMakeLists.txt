@@ -384,11 +384,18 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
   endif()
-  if (NOT tmva-sofie)
+  if (NOT tmva-sofie OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.C)
   else()
-    #copy ONNX file needed for the tutorial
-    configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/machine_learning/Linear_16.onnx COPYONLY)
+    #generate ONNX file needed for the tutorial
+    execute_process(
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tmva/sofie/test/generate_input_models.py
+              --no-references --outdir ${CMAKE_BINARY_DIR}/tutorials/machine_learning Linear_16
+      RESULT_VARIABLE _sofie_onnx_gen_status)
+    if (NOT _sofie_onnx_gen_status EQUAL 0)
+      message(WARNING "Could not generate Linear_16.onnx: the TMVA_SOFIE_ONNX.C tutorial will be disabled.")
+      list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.C)
+    endif()
   endif()
 
 endif()
