@@ -1,16 +1,16 @@
 /// \file
 /// \ingroup tutorial_ml
 /// \notebook -nodraw
-/// This macro provides an example of using a trained model with Keras
+/// This macro provides an example of using a trained model with PyTorch
 /// and make inference using SOFIE with the RSofieReader class
-/// This macro uses as input a Keras model generated with the
-/// TMVA_Higgs_Classification.C tutorial
-/// You need to run that macro before to generate the trained Keras model
+/// This macro uses as input an ONNX model generated with the
+/// TMVA_SOFIE_PyTorch_HiggsModel.py tutorial
+/// You need to run that macro before to generate the trained PyTorch model
 ///
 ///
 /// Execute in this order:
 /// ```
-/// root TMVA_Higgs_Classification.C
+/// python3 TMVA_SOFIE_PyTorch_HiggsModel.py
 /// root TMVA_SOFIE_RSofieReader.C
 /// ```
 ///
@@ -22,9 +22,7 @@ using namespace TMVA::Experimental;
 
 void TMVA_SOFIE_RSofieReader(){
 
-   RSofieReader model("HiggsModel.keras", {}, true );
-   // for debugging
-   //RSofieReader model("Higgs_trained_model.keras", {}, true);
+   RSofieReader model("HiggsModel.onnx", {}, true);
 
    // the input shape for this model is a tensor with shape (1,7)
 
