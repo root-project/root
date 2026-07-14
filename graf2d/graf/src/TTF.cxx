@@ -83,7 +83,11 @@ thread_local TTFhandle::FT_Library_Wrapper TTFhandle::fFT_Library;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TTFhandle::TTFhandle() = default;
+TTFhandle::TTFhandle()
+{
+   // Ensure that there's a freetype library in our thread
+   fFT_Library.Get();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
