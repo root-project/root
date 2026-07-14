@@ -1469,6 +1469,15 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
       }
       if (CXXCD->isDeleted())
         continue;
+      // Do not expose the base's parameterless default/copy/move
+      // constructors: callers (e.g. cppyy) treat the class' own special
+      // members as authoritative, and the call layer refuses to invoke
+      // special members injected by a using declaration (see
+      // make_narg_call_with_return). Note that a constructor with defaulted
+      // parameters, e.g. Base(int n = 0), must stay: its non-default form is
+      // a genuinely inherited constructor.
+      if (CXXCD->getNumParams() == 0 || CXXCD->isCopyOrMoveConstructor())
+        continue;
 
       // Result is appended to the decls, i.e. CXXRD, iterator
       // non-shadowed decl will be push_back later
