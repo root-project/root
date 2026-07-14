@@ -1966,8 +1966,24 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
     return INTEROP_RETURN(IsTemplatedFunction(ND) ||
                           IsTemplateInstantiationOrSpecialization(ND));
 
-  // FIXME: Cycle through the Decls and check if there is a templated function
-  return INTEROP_RETURN(true);
+  // The name is ambiguous, i.e. an overload set: cycle through the found
+  // decls and check if any of them is a templated function. Blindly
+  // returning true here would present any function with two or more
+  // non-template overloads as a template.
+  auto& S = getSema();
+  auto& Ctx = getASTContext();
+  clang::LookupResult R(S, &Ctx.Idents.get(name), SourceLocation(),
+                        Sema::LookupOrdinaryName,
+                        RedeclarationKind::ForVisibleRedeclaration);
+  CppInternal::utils::Lookup::Named(&S, R, Within);
+  for (const NamedDecl* Found : R) {
+    const Decl* D = Found;
+    if (const auto* USD = llvm::dyn_cast<UsingShadowDecl>(Found))
+      D = USD->getTargetDecl();
+    if (IsTemplatedFunction(D) || IsTemplateInstantiationOrSpecialization(D))
+      return INTEROP_RETURN(true);
+  }
+  return INTEROP_RETURN(false);
 }
 
 // Looks up all constructors in the current DeclContext
