@@ -728,7 +728,7 @@ namespace Internal {
    /// | TEfficiency           | Yes                                        | No                                 |
    /// | TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
    /// | TEntryList            | No, but planned for 6.42                   | No                                 |
-   /// | TEventList            | No, but planned for 6.42                   | No                                 |
+   /// | TEventList            | Yes                                        | No                                 |
    /// | TFunction             | No, but work in progress                   | No                                 |
    ///
    /// ## Setting defaults
