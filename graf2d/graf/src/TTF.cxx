@@ -35,6 +35,11 @@ const Float_t kScale = 0.93376068;
 Bool_t TTFhandle::fgHinting = kFALSE;
 Bool_t TTFhandle::fgSmoothing = kTRUE;
 
+/// Free all resources of this glyph.
+TTF::TTGlyph::~TTGlyph()
+{
+   FT_Done_Glyph(fImage);
+}
 
 struct TTFontHandle {
    std::string name;
@@ -66,8 +71,6 @@ struct TTFhandle::FT_Library_Wrapper {
       }
       return _library;
    }
-
-   bool InitCompleted() const { return _library != nullptr; }
 
    ~FT_Library_Wrapper()
    {
@@ -278,15 +281,6 @@ FT_BitmapGlyph TTFhandle::GetGlyphBitmap(UInt_t n, Bool_t smooth)
 
 void TTFhandle::CleanupGlyphs()
 {
-   bool is_lib = fFT_Library.InitCompleted();
-
-   for(auto &glyph : fGlyphs) {
-      // clear existing image if there is one
-      if (glyph.fImage && is_lib) {
-         FT_Done_Glyph(glyph.fImage);
-         glyph.fImage = nullptr;
-      }
-   }
    fGlyphs.clear();
 }
 
