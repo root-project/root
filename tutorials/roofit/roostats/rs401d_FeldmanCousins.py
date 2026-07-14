@@ -194,7 +194,7 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
     # --------------------------------------------
     # show use of MCMCCalculator utility in RooStats
-    mcInt = ROOT.kNone
+    mcInt = ROOT.nullptr
 
     if doMCMC:
         # turn some messages back on
@@ -255,7 +255,7 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
             forContour.SetLineColor(ROOT.kRed)
             forContour.Draw("cont2,same")
 
-    mcPlot = ROOT.kNone
+    mcPlot = ROOT.nullptr
     if mcInt:
         print(f"MCMC actual confidence level: ", mcInt.GetActualConfidenceLevel())
         mcPlot = ROOT.RooStats.MCMCIntervalPlot(mcInt)

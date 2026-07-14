@@ -286,7 +286,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             ROOT.Info("StandardHypoTestInvDemo", "detailed output will be written in output result file")
 
         # write result in a file
-        if r != ROOT.kNone and self.mWriteResult:
+        if r != ROOT.nullptr and self.mWriteResult:
 
             # write to a file the results
             calcType = "Freq" if (calculatorType == 0) else ("Hybr" if (calculatorType == 1) else "Asym")
@@ -689,7 +689,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             return 0
 
         # set the test statistic
-        testStat = 0
+        testStat = ROOT.nullptr
         if testStatType == 0:
             testStat = slrts
         if testStatType == 1 or testStatType == 11:
@@ -701,7 +701,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
         if testStatType == 6:
             testStat = nevtts
 
-        if testStat == 0:
+        if testStat == ROOT.nullptr:
             Error(
                 "StandardHypoTestInvDemo",
                 "Invalid - test statistic type = {testStatType} supported values are only :\n\t\t\t 0 (SLR) "
@@ -1103,7 +1103,7 @@ def StandardHypoTestInvDemo(
     w = file.Get(wsName)
     r = 0
     print(w, "\t", filename)
-    if w != ROOT.kNone:
+    if w != ROOT.nullptr:
         r = calc.RunInverter(
             w,
             modelSBName,

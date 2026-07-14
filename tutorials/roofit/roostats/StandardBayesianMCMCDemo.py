@@ -158,7 +158,7 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
         c2.Divide(nx, ny)
 
     # draw a scatter plot of chain results for poi vs each nuisance parameters
-    nuis = ROOT.kNone
+    nuis = ROOT.nullptr
     iPad = 1  # iPad, that's funny
 
     for nuis in mc.GetNuisanceParameters():

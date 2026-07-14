@@ -443,7 +443,7 @@ def StandardHypoTestDemo(
         writeResult = True
         ROOT.Info("StandardHypoTestDemo", "Detailed output will be written in output result file")
 
-    if htr != ROOT.kNone and writeResult:
+    if htr != ROOT.nullptr and writeResult:
 
         # write to a file the results
         calcTypeName = "Freq" if (calcType == 0) else ("Hybr" if (calcType == 1) else ("Asym"))
