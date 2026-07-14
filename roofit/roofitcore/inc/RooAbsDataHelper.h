@@ -143,9 +143,10 @@ public:
    void Exec(unsigned int slot, ColumnTypes... values)
    {
       std::vector<double> &vector = _events[slot];
-      for (auto &&val : {static_cast<double>(values)...}) {
-         vector.push_back(val);
-      }
+      // A fold expression is used instead of iterating over a
+      // std::initializer_list so that this compiles also with an empty pack
+      // (an instantiation that RDataFrame requires to be well-formed).
+      (vector.push_back(static_cast<double>(values)), ...);
 
       ExecImpl(sizeof...(values), vector);
    }
