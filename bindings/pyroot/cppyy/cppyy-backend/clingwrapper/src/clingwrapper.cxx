@@ -1380,17 +1380,39 @@ std::vector<Cppyy::TCppScope_t> Cppyy::GetUsingNamespaces(TCppScope_t scope)
     return Cpp::GetUsingNamespaces(scope);
 }
 
+// Normalize a type or scope name to cppyy's canonical form: no space after
+// the commas separating template arguments, and pointers/references attached
+// to the type. This is the form CPyCppyy itself constructs (e.g. when
+// looking up cached template instantiations by name, see
+// Utility::ConstructTemplateArgs) and the convention that user code and the
+// test suite inherited from upstream cppyy; clang's printer instead emits
+// "a, b", "T *" and "T &".
+static std::string cppyy_normalize_name(std::string name)
+{
+    std::string::size_type pos = 0;
+    while ((pos = name.find(", ", pos)) != std::string::npos)
+        name.erase(pos + 1, 1);
+    pos = 0;
+    while ((pos = name.find(" *", pos)) != std::string::npos)
+        name.erase(pos, 1);
+    pos = 0;
+    while ((pos = name.find(" &", pos)) != std::string::npos)
+        name.erase(pos, 1);
+    return name;
+}
+
 // class reflection information ----------------------------------------------
 std::string Cppyy::GetFinalName(TCppScope_t klass)
 {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-  return Cpp::GetCompleteName(Cpp::GetUnderlyingScope(klass));
+  return cppyy_normalize_name(
+      Cpp::GetCompleteName(Cpp::GetUnderlyingScope(klass)));
 }
 
 std::string Cppyy::GetScopedFinalName(TCppScope_t klass)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-    return Cpp::GetQualifiedCompleteName(klass);
+    return cppyy_normalize_name(Cpp::GetQualifiedCompleteName(klass));
 }
 
 bool Cppyy::HasVirtualDestructor(TCppScope_t scope)
@@ -1549,7 +1571,7 @@ std::string Cppyy::GetName(TCppScope_t method)
 std::string Cppyy::GetFullName(TCppScope_t method)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-    return Cpp::GetCompleteName(method);
+    return cppyy_normalize_name(Cpp::GetCompleteName(method));
 }
 
 Cppyy::TCppType_t Cppyy::GetMethodReturnType(TCppMethod_t method)
@@ -1655,7 +1677,7 @@ std::string Cppyy::GetMethodSignature(TCppMethod_t method, bool show_formal_args
     int nArgs = GetMethodNumArgs(method);
     if (max_args != (TCppIndex_t)-1) nArgs = std::min(nArgs, (int)max_args);
     for (int iarg = 0; iarg < nArgs; ++iarg) {
-        sig << Cppyy::GetMethodArgTypeAsString(method, iarg);
+        sig << cppyy_normalize_name(Cppyy::GetMethodArgTypeAsString(method, iarg));
         if (show_formal_args) {
             std::string argname = Cppyy::GetMethodArgName(method, iarg);
             if (!argname.empty()) sig << " " << argname;
