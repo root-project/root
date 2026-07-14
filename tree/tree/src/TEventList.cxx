@@ -50,24 +50,10 @@ the TEventList object created in the above commands:
 #include "TBuffer.h"
 #include "TCut.h"
 #include "TDirectory.h"
-#include "TList.h"
-#include "TMath.h"
-#include "strlcpy.h"
-#include "snprintf.h"
+#include "TCollection.h"
+#include "TMathBase.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor for a EventList.
-
-TEventList::TEventList(): TNamed()
-{
-   fN          = 0;
-   fSize       = 100;
-   fDelta      = 100;
-   fList       = nullptr;
-   fDirectory  = nullptr;
-   fReapply    = false;
-}
+#include <algorithm>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a EventList.
@@ -75,31 +61,25 @@ TEventList::TEventList(): TNamed()
 /// This Eventlist is added to the list of objects in current directory.
 
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
-  :TNamed(name,title), fReapply(false)
+   : TNamed(name, title), fSize(std::max(100, initsize)), fDelta(std::max(100, delta))
 {
-   fN = 0;
-   if (initsize > 100) fSize  = initsize;
-   else                fSize  = 100;
-   if (delta > 100)    fDelta = delta;
-   else                fDelta = 100;
-   fList       = nullptr;
-   fDirectory  = gDirectory;
-   if (fDirectory) fDirectory->Append(this);
+   fDirectory = gDirectory;
+   if (fDirectory)
+      fDirectory->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TEventList::TEventList(const TEventList &list) : TNamed(list)
+TEventList::TEventList(const TEventList &list)
+   : TNamed(list),
+     fN(list.fN),
+     fSize(list.fSize),
+     fDelta(list.fDelta),
+     fReapply(list.fReapply),
+     fList(new Long64_t[fSize])
 {
-   fN     = list.fN;
-   fSize  = list.fSize;
-   fDelta = list.fDelta;
-   fList  = new Long64_t[fSize];
-   for (Int_t i=0; i<fN; i++)
-      fList[i] = list.fList[i];
-   fReapply = list.fReapply;
-   fDirectory = nullptr;
+   std::copy(list.fList, list.fList + list.fN, fList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,9 +87,9 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
 
 TEventList::~TEventList()
 {
-   delete [] fList;  fList = nullptr;
-   if (fDirectory) fDirectory->Remove(this);
-   fDirectory  = nullptr;
+   delete[] fList;
+   if (fDirectory)
+      fDirectory->Remove(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
