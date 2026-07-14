@@ -886,7 +886,21 @@ Cppyy::TCppScope_t Cppyy::GetNamed(const std::string& name,
                                    TCppScope_t parent_scope)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-    return Cpp::GetNamed(name, parent_scope);
+    if (TCppScope_t named = Cpp::GetNamed(name, parent_scope))
+        return named;
+
+    // "gROOT" is a macro expanding to ROOT::GetROOT(); ROOT master exposed it
+    // to cppyy as a TGlobalMappedFunction, a mechanism this backend does not
+    // consult. Resolve it to the underlying variable instead (making sure it
+    // has been initialized first).
+    if (name == "gROOT" &&
+        (!parent_scope || parent_scope == Cpp::GetGlobalScope())) {
+        ROOT::GetROOT();
+        return Cpp::GetNamed("gROOTLocal",
+            Cpp::GetNamed("Internal", Cpp::GetNamed("ROOT", nullptr)));
+    }
+
+    return nullptr;
 }
 
 Cppyy::TCppScope_t Cppyy::GetParentScope(TCppScope_t scope)
