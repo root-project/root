@@ -827,9 +827,24 @@ Cppyy::TCppScope_t Cppyy::GetScope(const std::string& name,
 
     if (Cppyy::TCppScope_t scope = Cpp::GetScope(name, parent_scope))
       return scope;
-    if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
+    if (!parent_scope || parent_scope == Cpp::GetGlobalScope()) {
       if (Cppyy::TCppScope_t scope = Cpp::GetScopeFromCompleteName(name))
         return scope;
+    } else if (name.find('<') == std::string::npos) {
+      // Qualified name relative to a non-global parent (e.g. "B::C" looked up
+      // in namespace A): Cpp::GetScope only handles single identifiers, so
+      // walk the components. Skip templated names: "::" inside template
+      // arguments cannot be split naively (they take the branch below).
+      TCppScope_t curr = parent_scope;
+      size_t start = 0, end;
+      while (curr && (end = name.find("::", start)) != std::string::npos) {
+        curr = Cpp::GetScope(name.substr(start, end - start), curr);
+        start = end + 2;
+      }
+      if (curr && curr != parent_scope)
+        if (Cppyy::TCppScope_t scope = Cpp::GetScope(name.substr(start), curr))
+          return scope;
+    }
 
     // FIXME: avoid string parsing here
     if (name.find('<') != std::string::npos) {
