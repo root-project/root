@@ -910,7 +910,35 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
     if (const auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
       std::string type_name;
       QualType QT = compat::GetTypeFromDecl(TD);
+      if (!qualified) {
+        // The name must be unqualified only for the tag itself; template
+        // arguments have to keep their scopes (SuppressScope would strip
+        // those too). Print fully qualified, then strip the enclosing scope
+        // prefix of the tag: everything up to the last "::" at angle-bracket
+        // depth zero.
+        Policy.SuppressScope = false;
+        Policy.FullyQualifiedName = true;
+        Policy.Suppress_Elab = true;
+        Policy.SuppressDefaultTemplateArgs = true;
+      }
       QT.getAsStringInternal(type_name, Policy);
+      if (!qualified) {
+        int depth = 0;
+        size_t strip = 0;
+        for (size_t i = 0; i < type_name.size(); ++i) {
+          char c = type_name[i];
+          if (c == '<')
+            ++depth;
+          else if (c == '>')
+            --depth;
+          else if (depth == 0 && c == ':' && i + 1 < type_name.size() &&
+                   type_name[i + 1] == ':') {
+            strip = i + 2;
+            ++i;
+          }
+        }
+        type_name.erase(0, strip);
+      }
       return type_name;
     }
     if (const auto* FD = llvm::dyn_cast<FunctionDecl>(ND)) {
