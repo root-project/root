@@ -242,6 +242,7 @@ neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerc
 #include "TH2.h"
 #include "TGraph.h"
 #include "TLegend.h"
+#include "TMatrixD.h"
 #include "TMultiGraph.h"
 #include "TDirectory.h"
 #include "TSystem.h"

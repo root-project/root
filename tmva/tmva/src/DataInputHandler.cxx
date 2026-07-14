@@ -36,11 +36,8 @@ Class that contains all the data information.
 #include "TMVA/DataLoader.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
-#include "TEventList.h"
 #include "TCut.h"
 #include "TTree.h"
-
-#include "TMVA/Configurable.h"
 
 #include <vector>
 #include <fstream>
