@@ -612,7 +612,7 @@ inline Double_t TMath::Tan(Double_t x)
    { return tan(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the hyperbolic sine of `x.
+/// Returns the hyperbolic sine of `x`.
 
 inline Double_t TMath::SinH(Double_t x)
    { return sinh(x); }
@@ -916,7 +916,7 @@ inline Double_t TMath::QuietNaN() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a signaling NaN as defined by IEEE 754](http://en.wikipedia.org/wiki/NaN#Signaling_NaN).
+/// Returns a signaling NaN [as defined by IEEE 754](http://en.wikipedia.org/wiki/NaN#Signaling_NaN).
 
 inline Double_t TMath::SignalingNaN() {
    return std::numeric_limits<Double_t>::signaling_NaN();
@@ -934,7 +934,7 @@ inline Double_t TMath::Infinity() {
 
 template<typename T>
 inline T TMath::Limits<T>::Min() {
-   return (std::numeric_limits<T>::min)();    //N.B. use this signature to avoid class with macro min() on Windows
+   return (std::numeric_limits<T>::min)();    //N.B. use this signature to avoid clashes with macro min() on Windows
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -942,7 +942,7 @@ inline T TMath::Limits<T>::Min() {
 
 template<typename T>
 inline T TMath::Limits<T>::Max() {
-   return (std::numeric_limits<T>::max)();  //N.B. use this signature to avoid class with macro max() on Windows
+   return (std::numeric_limits<T>::max)();  //N.B. use this signature to avoid clashes with macro max() on Windows
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1516,7 +1516,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
       const size_t N = std::ceil(n * 0.5);
       const size_t start = jMin;
       const size_t stop = start + n - N + 1; // +1 since we use < and not <=
-      // Find sequentally what v_range is smallest by sliding the half-window
+      // Find sequentially what v_range is smallest by sliding the half-window
       for (size_t i = start; i < stop; i++) {
          Double_t range = values[i + N - 1] - values[i];
          if (range < min_v_range) {
