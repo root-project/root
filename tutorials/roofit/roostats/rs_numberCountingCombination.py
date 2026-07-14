@@ -118,7 +118,7 @@ def rs_numberCountingCombination_expected():
 
     # Step 6, Use the Calculator to get a HypoTestResult
     htr = plc.GetHypoTest()
-    assert htr != 0
+    assert htr != ROOT.nullptr
     print("-------------------------------------------------")
     print("The p-value for the null is ", htr.NullPValue())
     print("Corresponding to a significance of ", htr.Significance())
