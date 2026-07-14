@@ -75,6 +75,7 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
@@ -2865,15 +2866,70 @@ TypeRef GetVariableType(ConstDeclRef var) {
   return INTEROP_RETURN(nullptr);
 }
 
+// Materialize the value of a constant array variable from its evaluated
+// AST initializer into a per-decl host-side buffer, and return the buffer
+// address. This serves variables whose symbol exists in no loaded binary,
+// e.g. const data in a Windows DLL: bindexplib deliberately does not
+// export read-only data, but when the dictionary provides the
+// initializer, its value can be reproduced host-side (the same idea as
+// the integral getRawData early-return in GetVariableOffset). Only
+// arrays of arithmetic/enum elements are handled; element values are
+// stored little-endian, matching all supported hosts.
+static intptr_t MaterializeConstArrayValue(const ASTContext& C,
+                                           const VarDecl* VD,
+                                           const APValue& Val) {
+  if (!Val.isArray())
+    return 0;
+  const ConstantArrayType* CAT = C.getAsConstantArrayType(VD->getType());
+  if (!CAT)
+    return 0;
+  QualType ElemTy = CAT->getElementType();
+  if (!ElemTy->isIntegralOrEnumerationType() && !ElemTy->isFloatingType())
+    return 0;
+  size_t ElemSize = C.getTypeSizeInChars(ElemTy).getQuantity();
+  uint64_t NElem = CAT->getSize().getZExtValue();
+  if (ElemSize == 0 || ElemSize > sizeof(uint64_t) || NElem == 0)
+    return 0;
+
+  // The buffer must live as long as any offset handed out for the decl.
+  static llvm::DenseMap<const VarDecl*, std::unique_ptr<char[]>> Cache;
+  const VarDecl* Key = VD->getCanonicalDecl();
+  auto Found = Cache.find(Key);
+  if (Found != Cache.end())
+    return (intptr_t)Found->second.get();
+
+  auto Buf = std::make_unique<char[]>(ElemSize * NElem);
+  char* Data = Buf.get();
+  uint64_t NInit = Val.getArrayInitializedElts();
+  for (uint64_t i = 0; i < NElem; ++i) {
+    if (i >= NInit && !Val.hasArrayFiller())
+      return 0;
+    const APValue& Elem =
+        i < NInit ? Val.getArrayInitializedElt(i) : Val.getArrayFiller();
+    uint64_t Word = 0;
+    if (Elem.isInt())
+      Word = Elem.getInt().getZExtValue();
+    else if (Elem.isFloat())
+      Word = Elem.getFloat().bitcastToAPInt().getZExtValue();
+    else
+      return 0;
+    std::memcpy(Data + i * ElemSize, &Word, ElemSize);
+  }
+
+  intptr_t Addr = (intptr_t)Data;
+  Cache[Key] = std::move(Buf);
+  return Addr;
+}
+
 intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
                            CXXRecordDecl* BaseCXXRD) {
   if (!D)
     return 0;
 
   auto& C = I.getSema().getASTContext();
-  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   if (auto* FD = llvm::dyn_cast<FieldDecl>(D)) {
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     clang::RecordDecl* FieldParentRecordDecl = FD->getParent();
     intptr_t offset = C.toCharUnitsFromBits(C.getFieldOffset(FD)).getQuantity();
     while (FieldParentRecordDecl->isAnonymousStructOrUnion()) {
@@ -2938,35 +2994,84 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     auto GD = GlobalDecl(VD);
     std::string mangledName;
     compat::maybeMangleDeclName(GD, mangledName);
-    void* address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
-        mangledName.c_str());
+    void* address = nullptr;
+    {
+      // scoped: the final symbol lookup and the evaluate fallback below must
+      // run outside of any nested transaction, or execution is deferred
+      compat::SynthesizingCodeRAII RAII(&getInterp());
+      address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
+          mangledName.c_str());
 
-    if (!address)
-      address = I.getAddressOfGlobal(GD);
-    if (!address) {
-      if (!VD->hasInit()) {
-        compat::SynthesizingCodeRAII RAII(&getInterp());
-        getSema().InstantiateVariableDefinition(SourceLocation(), VD);
-        VD = VD->getDefinition();
-      }
-      if (VD->hasInit() &&
-          (VD->isConstexpr() || VD->getType().isConstQualified())) {
-        if (const APValue* val = VD->evaluateValue()) {
-          if (VD->getType()->isIntegralType(C)) {
-            return (intptr_t)val->getInt().getRawData();
+      if (!address)
+        address = I.getAddressOfGlobal(GD);
+      if (!address) {
+        if (!VD->hasInit()) {
+          // Only variables instantiated from a template pattern (variable
+          // template specializations, static data members of class
+          // templates) can be instantiated here: for a plain declaration,
+          // InstantiateVariableDefinition dereferences a null instantiation
+          // pattern (its assert is compiled out in release builds), e.g. for
+          // an extern const array whose definition lives in an unloaded or
+          // non-exporting binary.
+          if (VD->getTemplateInstantiationPattern())
+            getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+          // An extern declaration whose definition lives in a binary that
+          // does not export it has no definition in the AST (e.g. const
+          // data in a Windows DLL: bindexplib deliberately does not export
+          // read-only data). Keep the declaration in that case.
+          if (VarDecl* Def = VD->getDefinition())
+            VD = Def;
+        }
+        if (VD->hasInit() &&
+            (VD->isConstexpr() || VD->getType().isConstQualified())) {
+          if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralType(C)) {
+              return (intptr_t)val->getInt().getRawData();
+            }
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(C, VD, *val))
+              return ArrAddr;
           }
         }
       }
-    }
-    if (!address) {
-      auto Linkage = C.GetGVALinkageForVariable(VD);
-      if (isDiscardableGVALinkage(Linkage))
-        ForceCodeGen(VD, I);
+      if (!address) {
+        // Emit variables that CodeGen deferred (inline/constexpr,
+        // discardable linkage), and also strong definitions whose
+        // initializer is available in the AST but whose home binary does
+        // not export the symbol: e.g. on Windows, bindexplib deliberately
+        // does not export read-only data from DLLs, but the dictionary
+        // provides the initializer, so an emitted copy has the same value.
+        // Writable globals are exported and found above, so they cannot end
+        // up with a diverging JIT copy here.
+        auto Linkage = C.GetGVALinkageForVariable(VD);
+        if (isDiscardableGVALinkage(Linkage) ||
+            (VD->isThisDeclarationADefinition() && VD->hasInit()))
+          ForceCodeGen(VD, I);
+      }
     }
     auto VDAorErr = compat::getSymbolAddress(I, StringRef(mangledName));
     if (!VDAorErr) {
-      llvm::logAllUnhandledErrors(VDAorErr.takeError(), llvm::errs(),
-                                  "Failed to GetVariableOffset:");
+      // Last resort: ODR-use the variable in an interpreter-evaluated
+      // expression. This forces CodeGen to emit inline/constexpr variables
+      // that exist in no loaded library (e.g. std::nullopt) and that the
+      // deferred-decl handling above did not emit. Mirrors what
+      // TClingDataMemberInfo::Offset does in ROOT.
+      // This can only work when CodeGen can emit the variable, i.e. when its
+      // definition or at least an initializer is available in the AST (e.g.
+      // std::ios_base::__noreplace, a static const member initialized in the
+      // class). For a variable defined in a binary that does not export it,
+      // the emitted reference could never be resolved, and executing the
+      // expression would be undefined behavior.
+      llvm::consumeError(VDAorErr.takeError());
+      if (VD->getDefinition() || VD->hasInit()) {
+        compat::Value V;
+        const std::string addr_of =
+            "&::" + VD->getQualifiedNameAsString() + ";";
+        if (I.evaluate(addr_of.c_str(), V) == compat::Interpreter::kSuccess &&
+            V.hasValue())
+          return (intptr_t)compat::convertTo<void*>(V);
+      }
+      llvm::errs() << "Failed to GetVariableOffset: symbol '" << mangledName
+                   << "' not found and its definition is not available\n";
       return 0;
     }
     return (intptr_t)jitTargetAddressToPointer<void*>(VDAorErr.get());
