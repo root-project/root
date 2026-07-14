@@ -1512,17 +1512,32 @@ ptrdiff_t Cppyy::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
 }
 
 // method/function reflection information ------------------------------------
+// deleted functions are not callable and must not enter Python-visible
+// overload sets: a deleted overload would add a bogus conversion error to
+// every failed call report and break the "all failures raised the same C++
+// exception" consolidation in Utility::SetDetailedException
+static void remove_deleted_methods(std::vector<Cppyy::TCppMethod_t>& methods)
+{
+    methods.erase(std::remove_if(methods.begin(), methods.end(),
+        [](Cppyy::TCppMethod_t m) { return Cpp::IsFunctionDeleted(m); }),
+        methods.end());
+}
+
 void Cppyy::GetClassMethods(TCppScope_t scope, std::vector<Cppyy::TCppMethod_t> &methods)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     Cpp::GetClassMethods(scope, methods);
+    remove_deleted_methods(methods);
 }
 
 std::vector<Cppyy::TCppMethod_t> Cppyy::GetMethodsFromName(
     TCppScope_t scope, const std::string& name)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-    return Cpp::GetFunctionsUsingName(scope, name);
+    std::vector<Cppyy::TCppMethod_t> methods =
+        Cpp::GetFunctionsUsingName(scope, name);
+    remove_deleted_methods(methods);
+    return methods;
 }
 
 std::string Cppyy::GetName(TCppScope_t method)
