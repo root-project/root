@@ -629,7 +629,9 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(
     // __cpp_name__ and/or __name__ is rather expensive)
         } else {
             if (!AddTypeName(tmpl_name, tn, (args ? PyTuple_GET_ITEM(args, i) : nullptr), pref, pcnt)) {
-                PyErr_SetString(PyExc_SyntaxError,
+            // TypeError, not SyntaxError: the type-based variant below and
+            // ConstructTemplateArgs both raise TypeError for this failure
+                PyErr_SetString(PyExc_TypeError,
                     "could not construct C++ name from provided template argument.");
                 return "";
             }
