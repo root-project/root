@@ -714,8 +714,12 @@ bool IsTypedefed(ConstDeclRef DRef) {
 bool IsAbstract(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<clang::Decl>(DRef);
+  // isAbstract() reads the definition data, which a forward-declared class
+  // does not have; asking whether an incomplete class is abstract must not
+  // crash (answer: not known to be, i.e. false)
   if (const auto* CXXRD = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(D))
-    return INTEROP_RETURN(CXXRD->isAbstract());
+    return INTEROP_RETURN(CXXRD->hasDefinition() &&
+                          CXXRD->getDefinition()->isAbstract());
 
   return INTEROP_RETURN(false);
 }
