@@ -31,15 +31,15 @@ class TCollection;
 class TEventList : public TNamed {
 
 protected:
-   Int_t            fN;           ///<  Number of elements in the list
-   Int_t            fSize;        ///<  Size of array
-   Int_t            fDelta;       ///<  Increment size
-   bool             fReapply;     ///<  If true, TTree::Draw will 'reapply' the original cut
-   Long64_t        *fList;        ///<[fN]Array of elements
-   TDirectory      *fDirectory;   ///<! Pointer to directory holding this tree
+   Int_t fN = 0;                     ///<  Number of elements in the list
+   Int_t fSize = 100;                ///<  Size of array
+   Int_t fDelta = 100;               ///<  Increment size
+   bool fReapply = false;            ///<  If true, TTree::Draw will 'reapply' the original cut
+   Long64_t *fList = nullptr;        ///<[fN]Array of elements
+   TDirectory *fDirectory = nullptr; ///<! Pointer to directory holding this tree
 
 public:
-   TEventList();
+   TEventList() = default;
    TEventList(const char *name, const char *title="",Int_t initsize=0, Int_t delta = 0);
    TEventList(const TEventList &list);
              ~TEventList() override;
