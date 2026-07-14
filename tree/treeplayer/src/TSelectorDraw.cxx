@@ -401,11 +401,20 @@ void TSelectorDraw::Begin(TTree *tree)
                return;
             }
             if (!enlist) {
+               if (hnameplus) {
+                  Warning(
+                     "TSelectorDraw",
+                     "TTree::Draw was asked to append to TEntryList '%s', but it was not found in the current "
+                     "directory."
+                     "Did you forget to call entryList->SetDirectory(gDirectory) or similar? Creating a new list now.",
+                     hname);
+               }
                if (optEnlistArray) {
                   enlist = new TEntryListArray(hname, realSelection.GetTitle());
                } else {
                   enlist = new TEntryList(hname, realSelection.GetTitle());
                }
+               enlist->SetDirectory(gDirectory); // TTree::Draw documentation promises it shows up in gDirectory
             }
             if (enlist) {
                if (!hnameplus) {
@@ -417,6 +426,7 @@ void TSelectorDraw::Begin(TTree *tree)
                      } else {
                         inElist = new TEntryList(*enlist);
                      }
+                     inElist->SetDirectory(gDirectory); // TTree::Draw documentation promises it shows up in gDirectory
                      fCleanElist = true;
                      fTree->SetEntryList(inElist);
                   }
@@ -439,7 +449,16 @@ void TSelectorDraw::Begin(TTree *tree)
                return;
             }
             if (!evlist) {
+               if (hnameplus) {
+                  Warning(
+                     "TSelectorDraw",
+                     "TTree::Draw was asked to append to TEventList '%s', but it was not found in the current "
+                     "directory."
+                     "Did you forget to call eventList->SetDirectory(gDirectory) or similar? Creating a new list now.",
+                     hname);
+               }
                evlist = new TEventList(hname, realSelection.GetTitle(), 1000, 0);
+               evlist->SetDirectory(gDirectory); // TTree::Draw documentation promises it shows up in gDirectory
             }
             if (evlist) {
                if (!hnameplus) {
