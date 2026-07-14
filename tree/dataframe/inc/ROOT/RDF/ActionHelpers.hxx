@@ -483,66 +483,6 @@ public:
    }
 };
 
-// BarChartHelper: fills a TH1D from string/categorical columns via TH1D::Fill(const char*).
-// FillHelper<TH1D>::Exec cannot do this: std::string has no implicit conversion to const char*,
-// so its non-container Exec overload's decltype(Fill(x...)) SFINAEs out, and std::string is
-// explicitly excluded from IsDataContainer (see Utils.hxx), so the container-fill overload
-// SFINAEs out too -- FillHelper<TH1D> simply won't compile for a std::string column.
-class R__CLING_PTRCHECK(off) BarChartHelper : public RActionImpl<BarChartHelper> {
-   std::vector<::TH1D *> fObjects;
-
-public:
-   BarChartHelper(BarChartHelper &&) = default;
-   BarChartHelper(const BarChartHelper &) = delete;
-
-   BarChartHelper(const std::shared_ptr<::TH1D> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
-   {
-      fObjects[0] = h.get();
-      for (unsigned int i = 1; i < nSlots; ++i) {
-         fObjects[i] = new ::TH1D(*fObjects[0]);
-         UnsetDirectoryIfPossible(fObjects[i]);
-      }
-   }
-
-   void InitTask(TTreeReader *, unsigned int) {}
-
-   void Exec(unsigned int slot, const std::string &label) { fObjects[slot]->Fill(label.c_str(), 1.0); }
-
-   void Exec(unsigned int slot, const ROOT::VecOps::RVec<char> &label)
-   {
-      fObjects[slot]->Fill(std::string(label.begin(), label.end()).c_str(), 1.0);
-   }
-
-   void Initialize() { /* noop */ }
-
-   void Finalize()
-   {
-      if (fObjects.size() > 1) {
-         TList l;
-         for (auto it = ++fObjects.begin(); it != fObjects.end(); ++it)
-            l.Add(*it);
-         fObjects[0]->Merge(&l);
-
-         for (auto it = ++fObjects.begin(); it != fObjects.end(); ++it)
-            delete *it;
-      }
-      fObjects[0]->LabelsDeflate("X");
-   }
-
-   ::TH1D &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
-
-   std::string GetActionName() { return std::string("BarChart\n") + fObjects[0]->GetName(); }
-
-   BarChartHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
-   {
-      auto &result = *static_cast<std::shared_ptr<::TH1D> *>(newResult);
-      ResetIfPossible(result.get());
-      UnsetDirectoryIfPossible(result.get());
-      return BarChartHelper(result, fObjects.size());
-   }
-};
-
-
 #ifdef R__HAS_ROOT7
 template <typename BinContentType, bool WithWeight = false>
 class R__CLING_PTRCHECK(off) RHistFillHelper

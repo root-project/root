@@ -824,18 +824,6 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
    EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
 }
 
-TEST(RDFSimpleTests, AutomaticNamesOfBarChart)
-{
-   auto df = RDataFrame(1).Define("x", []() { return std::string("a"); });
-   auto hx = df.BarChart("x");
-
-   EXPECT_STREQ(hx->GetName(), "x");
-   EXPECT_STREQ(hx->GetTitle(), "x");
-   EXPECT_STREQ(hx->GetXaxis()->GetTitle(), "x");
-   EXPECT_STREQ(hx->GetYaxis()->GetTitle(), "count");
-}
-
-
 TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
 {
    const auto filename = "DifferentTreesInDifferentThreads.root";

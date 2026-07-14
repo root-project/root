@@ -87,7 +87,6 @@ public:
 /// This namespace defines types to be used for tag dispatching in RInterface.
 namespace ActionTags {
 struct Histo1D{};
-struct BarChart{};
 struct Histo2D{};
 struct Histo3D{};
 struct HistoND{};
@@ -153,18 +152,6 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
    }
 }
-
-// BarChart filling: always uses BarChartHelper (labels have no numeric axis limits to check)
-template <typename... ColTypes, typename PrevNodeType>
-std::unique_ptr<RActionBase>
-BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::BarChart, const RColumnRegister &colRegister)
-{
-   using Helper_t = BarChartHelper;
-   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
-}
-
 
 // Action for Histo3D, where thread safe filling might be supported to save memory
 template <typename... ColTypes, typename ActionResultType, typename PrevNodeType>
