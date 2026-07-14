@@ -104,6 +104,13 @@ def generate_keras_functional(dst_dir):
     model = models.Model(inp, out)
     train_and_save(model, "Conv2D_padding_same_dilation")
 
+    # Conv2D padding_same with an asymmetric (non-square) kernel, so that the height and width
+    # padding amounts differ.
+    inp = layers.Input(shape=(8, 8, 3))
+    out = layers.Conv2D(4, (3, 5), padding='same', data_format='channels_last', activation='relu')(inp)
+    model = models.Model(inp, out)
+    train_and_save(model, "Conv2D_padding_same_asymmetric_kernel")
+
     # Conv2D padding_valid
     inp = layers.Input(shape=(8, 8, 3))
     out = layers.Conv2D(4, (3, 3), padding='valid', data_format='channels_last', activation='elu')(inp)

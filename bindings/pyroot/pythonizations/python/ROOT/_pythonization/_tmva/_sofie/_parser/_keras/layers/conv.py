@@ -64,7 +64,7 @@ def MakeKerasConv(layer):
         padding_bottom = padding_height - padding_top
         padding_left = math.floor(padding_width / 2)
         padding_right = padding_width - padding_left
-        fAttrPads = [padding_top, padding_bottom, padding_left, padding_right]
+        fAttrPads = [padding_top, padding_left, padding_bottom, padding_right]
     else:
         raise RuntimeError(
             "TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding

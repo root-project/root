@@ -23,6 +23,7 @@ models = [
     "Conv2D_channels_first_padding_same_stride2",
     "Conv2D_padding_same",
     "Conv2D_padding_same_dilation",
+    "Conv2D_padding_same_asymmetric_kernel",
     "Conv2D_padding_valid",
     "Dense",
     "ELU",
