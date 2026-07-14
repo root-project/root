@@ -1500,35 +1500,6 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-  /// \brief Fill and return a one-dimensional histogram with the values of a categorical/string column (*lazy action*).
-  /// \tparam V The type of the column used to fill the histogram (must be std::string).
-  /// \param[in] vName The name of the column that will fill the histogram.
-  /// \param[in] name The name of the returned histogram. Defaults to the column name.
-  /// \param[in] title The title of the returned histogram. Defaults to "<name>;<name>;count".
-  /// \return the bar chart histogram wrapped in a RResultPtr, one bin per distinct label encountered.
-  ///
-  /// The returned TH1D has an extendable axis (TH1::kAllAxes) that grows a new bin for each
-  /// previously-unseen label; bins are ordered by first-encounter order, not sorted.
-  ///
-  /// ### Example usage:
-  /// ~~~{.cpp}
-  /// auto h = myDf.BarChart("Nation");
-  /// ~~~
-  template <typename V = RDFDetail::RInferredType>
-  RResultPtr<::TH1D> BarChart(std::string_view vName, std::string_view name = "", std::string_view title = "")
-  {
-     const auto h_name = name.empty() ? std::string(vName) : std::string(name);
-     const auto h_title = title.empty() ? (h_name + ";" + h_name + ";count") : std::string(title);
-     const auto userColumns = ColumnNames_t({std::string(vName)});
-     const auto validatedColumns = GetValidatedColumnNames(1, userColumns);
-
-     std::shared_ptr<::TH1D> h(new ::TH1D(h_name.c_str(), h_title.c_str(), 1, 0., 1.));
-     h->SetCanExtend(::TH1::kAllAxes);
-     return CreateAction<RDFInternal::ActionTags::BarChart, V>(validatedColumns, h, h, fProxiedPtr);
-  }
-
-
-   ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*).
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
