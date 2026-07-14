@@ -68,6 +68,7 @@ public:
       FT_Vector  fPos;          ///< position of glyph origin
       FT_Glyph   fImage{nullptr}; ///< glyph image
       TTGlyph(UInt_t indx = 0) : fIndex(indx) {}
+      ~TTGlyph();
    };
 
    TTF() {}
