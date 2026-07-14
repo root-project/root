@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: root
-          ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}
+#          ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}
       - name: Make wheel
         env:
             MACOSX_DEPLOYMENT_TARGET: 26.0 
