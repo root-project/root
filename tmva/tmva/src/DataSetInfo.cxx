@@ -31,14 +31,8 @@ Class that contains all the data information.
 
 */
 
-#include <vector>
-
-#include "TEventList.h"
 #include "TH2.h"
-#include "TRandom3.h"
 #include "TMatrixF.h"
-#include "TVectorF.h"
-#include "TROOT.h"
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
@@ -49,6 +43,8 @@ Class that contains all the data information.
 
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
+
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

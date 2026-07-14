@@ -15,8 +15,8 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TObjArray.h"
-#include "TMatrixD.h"
 #include "TNeuron.h"
+#include "TMatrixDfwd.h"
 
 class TTree;
 class TEventList;

@@ -71,26 +71,23 @@ evaluation phases.
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
-#include <list>
-#include <bitset>
-#include <set>
 
 #include "TMVA/Types.h"
 
 #include "TROOT.h"
 #include "TFile.h"
-#include "TLeaf.h"
-#include "TEventList.h"
 #include "TH2.h"
 #include "TGraph.h"
 #include "TStyle.h"
-#include "TMatrixF.h"
-#include "TMatrixDSym.h"
-#include "TMultiGraph.h"
 #include "TPrincipal.h"
 #include "TMath.h"
 #include "TSystem.h"
 #include "TCanvas.h"
+#include "TMultiGraph.h"
+
+#include <bitset>
+#include <list>
+#include <set>
 
 const Int_t MinNoTrainingEvents = 10;
 // const Int_t  MinNoTestEvents     = 1;
