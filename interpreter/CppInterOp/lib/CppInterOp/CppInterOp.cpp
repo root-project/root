@@ -3730,7 +3730,10 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
       callbuf << "if (nary > 1) {\n";
       indent(callbuf, indent_level);
       callbuf << "(*(" << class_name << "**)ret) = ";
-      callbuf << "(is_arena) ? new (*(" << class_name << "**)ret) ";
+      // Use ::new to construct in the arena: a class-scope operator new
+      // (e.g. a custom allocator with no matching placement form) would
+      // otherwise hide the global placement operator new.
+      callbuf << "(is_arena) ? ::new (*(" << class_name << "**)ret) ";
       make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level,
                      true);
 
@@ -3754,7 +3757,8 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
     // : new ClassName(args...);
     indent(callbuf, indent_level);
     callbuf << "(*(" << class_name << "**)ret) = ";
-    callbuf << "(is_arena) ? new (*(" << class_name << "**)ret) ";
+    // ::new for the same reason as in the array branch above.
+    callbuf << "(is_arena) ? ::new (*(" << class_name << "**)ret) ";
     make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
 
     callbuf << ": new ";
@@ -3845,7 +3849,9 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
       //  Write the placement part of the placement new.
       //
       indent(callbuf, indent_level);
-      callbuf << "new (ret) ";
+      // ::new so that a class-scope operator new cannot hide the global
+      // placement form used to construct the return value in `ret`.
+      callbuf << "::new (ret) ";
       //
       //  Write the TyRef part of the placement new.
       //
