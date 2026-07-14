@@ -52,7 +52,7 @@ on:
         default: "00"
 
 jobs:
-  check-tag:
+  Build_Wheel:
     runs-on: macos-26 
     steps:
       - name: Checkout the official ROOT repo
@@ -70,23 +70,13 @@ jobs:
             source root_build_env/bin/activate
             pip install --upgrade pip setuptools wheel build
             cd root
-            pip install -r requirements.txt
-            python3 -m build --wheel
-      - name: Install Kerberos utilities
-        run: sudo apt-get install -y krb5-user
-      - name: Install XRootD client
-        run: sudo apt-get -y install xrootd-client
-      - name: Copy Wheel to EOS
-        env:
-          RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
-          KT_FILE_NAME: /tmp/decoded.keytab
-          EOS_PATH: /eos/project/r/root-eos/website/download
-          EOS_ENDPOINT: root://eosproject-r.cern.ch
-          KRB5CCNAME: /tmp/krb5cc
-        run: |
-          ls
-          mkdir wheel_creation
-          ls
-          echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
-          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-          xrdcp -rf dist/*.whl ${EOS_ENDPOINT}/${EOS_PATH}/
+            mkdir dist
+            touch dist/foo.whl
+            echo pip install -r requirements.txt
+            echo python3 -m build --wheel
+      - name: Upload_wheel
+        uses: actions/upload-artifact@v6
+        with:
+          name: Wheel upload
+          path: /github/home/wheel_creation/root/dist/*.whl
+          if-no-files-found: error
