@@ -52,6 +52,7 @@ def pythonize_generic(klass, name):
     exclude = [
         "std::string",
         "std::basic_string<char>",
+        "std::basic_string<char,std::char_traits<char>,std::allocator<char> >",
         "std::basic_string<char, std::char_traits<char>, std::allocator<char> >",
     ]
 
