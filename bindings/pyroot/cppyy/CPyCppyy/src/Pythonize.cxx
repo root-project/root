@@ -637,9 +637,6 @@ PyObject* VectorData(PyObject* self, PyObject*)
 }
 
 
-// This function implements __array__, added to std::vector python proxies and causes
-// a bug (see explanation at Utility::AddToClass(pyclass, "__array__"...) in CPyCppyy::Pythonize)
-#if 0
 //---------------------------------------------------------------------------
 PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -650,7 +647,6 @@ PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_DECREF(pydata);
     return newarr;
 }
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -1981,9 +1977,6 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
             Utility::AddToClass(pyclass, "__real_data", "data");
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
-        // numpy array conversion (disabled: buggy for multi-dim vectors)
-        //    Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
-
         // checked getitem
             if (HasAttrDirect(pyclass, PyStrings::gLen)) {
                 Utility::AddToClass(pyclass, "_getitem__unchecked", "__getitem__");
@@ -1999,6 +1992,15 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
         // helpers for iteration
             Cppyy::TCppType_t value_type = Cppyy::GetTypeFromScope(Cppyy::GetNamed("value_type", scope));
             Cppyy::TCppType_t vtype = Cppyy::ResolveType(value_type);
+
+        // numpy array conversion; only for vectors of non-class types:
+        // data() on a vector of class instances hands back a proxy of the
+        // first element, so forwarding __array__ to it would yield that
+        // element instead of the full vector (numpy's generic sequence
+        // protocol handles such vectors correctly on its own)
+            if (vtype && !Cppyy::GetScopeFromType(vtype))
+                Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
+
             if (vtype) {    // actually resolved?
                 PyObject* pyvalue_type = PyLong_FromVoidPtr(vtype.data);
                 PyObject_SetAttr(pyclass, PyStrings::gValueTypePtr, pyvalue_type);
