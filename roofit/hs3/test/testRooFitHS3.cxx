@@ -110,7 +110,7 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
          x1->setBin(i);
          x2->setBin(i);
          const double val1 = r1->getVal(nset1);
-         const double val2 = r1->getVal(nset2);
+         const double val2 = r2->getVal(nset2);
          allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
       }
 
@@ -1163,25 +1163,25 @@ TEST(RooFitHS3, RegisterExporterByClassName)
 
    // 1. Add new exporter by class pointer with top priority.
    //    We expect this to get used.
-   registerExporter<TestExporter<1>>(klass, /*topPriotiry=*/true);
+   registerExporter<TestExporter<1>>(klass, /*topPriority=*/true);
    RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_EQ(TestExporter<1>::callCounter()--, 1);
 
    // 2. Add new exporter by class pointer with bottom priority.
    //    We expect the previous TestExporter<1> to still be used.
-   registerExporter<TestExporter<2>>(klass, /*topPriotiry=*/false);
+   registerExporter<TestExporter<2>>(klass, /*topPriority=*/false);
    RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_EQ(TestExporter<1>::callCounter()--, 1);
 
    // 3. Add new exporter by name with top priority.
    //    We expect this to get used.
-   registerExporter<TestExporter<3>>(std::string{className}, /*topPriotiry=*/true);
+   registerExporter<TestExporter<3>>(std::string{className}, /*topPriority=*/true);
    RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_EQ(TestExporter<3>::callCounter()--, 1);
 
    // 4. Add new exporter by name with bottom priority.
    //    We expect the previous TestExporter<3> to still be used.
-   registerExporter<TestExporter<4>>(std::string{className}, /*topPriotiry=*/false);
+   registerExporter<TestExporter<4>>(std::string{className}, /*topPriority=*/false);
    RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_EQ(TestExporter<3>::callCounter()--, 1);
 
