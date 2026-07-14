@@ -72,7 +72,7 @@ TEST(RNTuple, SoACheck)
 
    try {
       auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
-      FAIL() << "creating SoA field with arrays fail";
+      FAIL() << "creating SoA field with arrays should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("unsupported array type in SoA class: fY"));
    }
@@ -109,7 +109,7 @@ TEST(RNTuple, SoACheck)
       auto f = std::make_unique<ROOT::RField<SoA>>("f");
       FAIL() << "creating an RClassField on a SoA type should fail";
    } catch (const ROOT::RException &e) {
-      EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA is a SoA field and connot be used through RClassField"));
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA is a SoA field and cannot be used through RClassField"));
    }
 }
 
