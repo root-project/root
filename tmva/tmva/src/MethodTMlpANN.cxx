@@ -46,7 +46,6 @@ for details on this ANN.
 #include "TMVA/MethodTMlpANN.h"
 
 #include "TMVA/Config.h"
-#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/IMethod.h"
@@ -58,8 +57,6 @@ for details on this ANN.
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Tools.h"
 
-#include "TLeaf.h"
-#include "TEventList.h"
 #include "TROOT.h"
 #include "TMultiLayerPerceptron.h"
 #include "ThreadLocalStorage.h"
