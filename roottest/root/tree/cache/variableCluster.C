@@ -220,26 +220,13 @@ Long64_t checkBoundary(TTree *tree, Long64_t entry)
    TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
    fEntryCurrent = clusterIter();
    fEntryNext = clusterIter.GetNextEntry();
-   
+
 //   fprintf(stdout,"finds = %lld %lld\n",fEntryCurrent,fEntryNext);
-   
+
    if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
-   
-   // Check if owner has a TEventList set. If yes we optimize for this
-   // Special case reading only the baskets containing entries in the
-   // list.
-//   TEventList *elist = fOwner->GetEventList();
-//   Long64_t chainOffset = 0;
-//   if (elist) {
-//      if (fOwner->IsA() ==TChain::Class()) {
-//         TChain *chain = (TChain*)fOwner;
-//         Int_t t = chain->GetTreeNumber();
-//         chainOffset = chain->GetTreeOffset()[t];
-//      }
-//   }
-   
+
    Int_t flushIntervals = 0;
    Long64_t minEntry = fEntryCurrent;
    Long64_t prevNtot;
