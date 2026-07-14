@@ -1077,15 +1077,15 @@ T *TMath::Laplacian(const Long64_t n, T *f, const double h)
    T *result = new T[n];
 
    // Forward difference
-   result[0] = (4 * f[2] + 2 * f[0] - 5 * f[1] - f[3]) / (4 * h * h);
+   result[0] = (4 * f[2] + 2 * f[0] - 5 * f[1] - f[3]) / (h * h);
 
    // Central difference
    while (i < n - 1) {
-      result[i] = (f[i + 1] + f[i - 1] - 2 * f[i]) / (4 * h * h);
+      result[i] = (f[i + 1] + f[i - 1] - 2 * f[i]) / (h * h);
       i++;
    }
    // Backward difference
-   result[i] = (2 * f[i] - 5 * f[i - 1] + 4 * f[i - 2] - f[i - 3]) / (4 * h * h);
+   result[i] = (2 * f[i] - 5 * f[i - 1] + 4 * f[i - 2] - f[i - 3]) / (h * h);
    return result;
 }
 
