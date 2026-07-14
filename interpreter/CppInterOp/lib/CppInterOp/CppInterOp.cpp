@@ -4417,12 +4417,13 @@ JitCall::GenericCall make_wrapper(compat::Interpreter& I,
   //
   //   Compile the wrapper code.
   //
-  bool withAccessControl = true;
-  // We should be able to call private default constructors.
-  if (auto Ctor = dyn_cast<CXXConstructorDecl>(FD))
-    withAccessControl = !Ctor->isDefaultConstructor();
-  void* wrapper =
-      compile_wrapper(I, wrapper_name, wrapper_code, withAccessControl);
+  // Access control must be off, matching cppyy-backend's TClingCallFunc: the
+  // callee was already selected (and public-filtered) by the caller, and
+  // compiling the call may lazily instantiate template bodies that are only
+  // valid with checks relaxed (e.g. a member template accessing a private
+  // member of another specialization of its own class template).
+  void* wrapper = compile_wrapper(I, wrapper_name, wrapper_code,
+                                  /*withAccessControl=*/false);
   if (wrapper) {
     WrapperStore.insert(std::make_pair(FD, wrapper));
   } else {
