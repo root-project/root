@@ -4041,8 +4041,12 @@ public:
         gf["const std::wstring &"] =        gf["std::wstring"];
         gf["const " WSTRING1 " &"] =        gf["std::wstring"];
         gf["const " WSTRING2 " &"] =        gf["std::wstring"];
-        // VoidPtrRefConverter should only be used for const references to pointers
-        gf["const void*&"] =                (cf_t)+[](cdims_t) { static VoidPtrRefConverter c{};     return &c; };
+        // void*& is deliberately exempt from the general ban on non-const
+        // pointer references (T*&): passing an object through an opaque
+        // void*& handle is a long-standing supported pattern (the callee
+        // updates the proxy's held pointer, without type confusion).
+        gf["void*&"] =                      (cf_t)+[](cdims_t) { static VoidPtrRefConverter c{};     return &c; };
+        gf["const void*&"] =                gf["void*&"];
         gf["void**"] =                      (cf_t)+[](cdims_t d) { return new VoidPtrPtrConverter{d}; };
         gf["void ptr"] =                    gf["void**"];
         gf["PyObject*"] =                   (cf_t)+[](cdims_t) { static PyObjectConverter c{};       return &c; };
