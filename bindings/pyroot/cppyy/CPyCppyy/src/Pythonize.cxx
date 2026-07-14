@@ -2135,6 +2135,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
 // the canonical class name (with default template args, with spaces) is returned, so
 // we additionally recognise that shape here.
     else if (name == "std::basic_string<char>" ||
+             name == "std::basic_string<char,std::char_traits<char>,std::allocator<char> >" ||
              name == "std::basic_string<char, std::char_traits<char>, std::allocator<char> >" ||
              name == "std::__1::basic_string<char>" || // libc++ inline namespace
              name == "std::string") { // typedef preserved by GetScopedFinalName on libc++
@@ -2163,6 +2164,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
     }
 
     else if (name == "std::basic_string_view<char>" ||
+             name == "std::basic_string_view<char,std::char_traits<char> >" ||
              name == "std::basic_string_view<char, std::char_traits<char> >" ||
              name == "std::__1::basic_string_view<char>" || // libc++ inline namespace
              name == "std::string_view") { // typedef preserved by GetScopedFinalName on libc++
