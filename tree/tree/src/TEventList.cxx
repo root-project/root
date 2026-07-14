@@ -53,6 +53,7 @@ the TEventList object created in the above commands:
 #include "TDirectory.h"
 #include "TCollection.h"
 #include "TMathBase.h"
+#include "TROOT.h"
 
 #include <algorithm>
 
@@ -64,9 +65,11 @@ the TEventList object created in the above commands:
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
    : TNamed(name, title), fSize(std::max(100, initsize)), fDelta(std::max(100, delta))
 {
-   fDirectory = gDirectory;
-   if (fDirectory)
-      fDirectory->Append(this);
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled()) {
+      fDirectory = gDirectory;
+      if (fDirectory)
+         fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
