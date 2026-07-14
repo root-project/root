@@ -17,6 +17,7 @@
 // Standard
 #include <algorithm>
 #include <complex>
+#include <deque>
 #include <set>
 #include <stdexcept>
 #include <sstream>
@@ -1760,8 +1761,68 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
 // the attribute must be a CPyCppyy overload, otherwise the check gives false
 // positives in the case where the class has a non-function attribute that is
 // called "size".
-    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true)) {
-        Utility::AddToClass(pyclass, "__len__", "size");
+    {
+    // only pythonize as __len__ if the class actually models a container,
+    // i.e. it is iterable (begin/end) or indexable (operator[]), and size()
+    // returns an integral value; e.g. a size() returning a custom dimension
+    // object must not become __len__ (len() would fail on a valid object).
+    // The size method and the container interface may come from a base class
+    // (checked with PyObject_HasAttr), as long as at least one of them is
+    // freshly declared here (else the base's __len__ is inherited via the
+    // normal MRO and there is nothing to do).
+        bool sizeDirect = HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true);
+        bool ifaceDirect =
+            (HasAttrDirect(pyclass, PyStrings::gBegin) &&
+             HasAttrDirect(pyclass, PyStrings::gEnd)) ||
+            HasAttrDirect(pyclass, PyStrings::gGetItem);
+        PyObject* size_attr = (sizeDirect || ifaceDirect) ?
+            PyObject_GetAttr(pyclass, PyStrings::gSize) : nullptr;
+        if (!size_attr)
+            PyErr_Clear();
+        else if (!CPPOverload_Check(size_attr)) {
+        // non-function attribute called "size": not pythonizable
+            Py_DECREF(size_attr); size_attr = nullptr;
+        }
+        bool isContainer = size_attr &&
+            PyObject_HasAttr(pyclass, PyStrings::gBegin) &&
+            PyObject_HasAttr(pyclass, PyStrings::gEnd);
+        if (size_attr && !isContainer) {
+        // indexable via a real C++ operator[]? (every class "has" __getitem__
+        // through the CPPInstance defaults, so require an actual overload)
+            PyObject* gi = PyObject_GetAttr(pyclass, PyStrings::gGetItem);
+            if (gi) {
+                isContainer = CPPOverload_Check(gi);
+                Py_DECREF(gi);
+            } else
+                PyErr_Clear();
+        }
+        if (isContainer) {
+            auto isIntegral = [](const std::string& tn) {
+                static const char* const integrals[] = {
+                    "char", "signed char", "unsigned char",
+                    "short", "unsigned short", "int", "unsigned int",
+                    "long", "unsigned long", "long long", "unsigned long long"};
+                for (const char* i : integrals)
+                    if (tn == i) return true;
+                return false;
+            };
+        // find the scope (this class or a base) that declares size()
+            std::vector<Cppyy::TCppMethod_t> sizes;
+            std::deque<Cppyy::TCppScope_t> todo{klass->fCppType};
+            while (sizes.empty() && !todo.empty()) {
+                Cppyy::TCppScope_t s = todo.front(); todo.pop_front();
+                sizes = Cppyy::GetMethodsFromName(s, "size");
+                for (Cppyy::TCppIndex_t i = 0; i < Cppyy::GetNumBases(s); ++i)
+                    todo.push_back(Cppyy::GetBaseScope(s, i));
+            }
+            for (Cppyy::TCppMethod_t m : sizes) {
+                if (isIntegral(Cppyy::GetMethodReturnTypeAsString(m))) {
+                    Utility::AddToClass(pyclass, "__len__", "size");
+                    break;
+                }
+            }
+        }
+        Py_XDECREF(size_attr);
     }
 
     if (HasAttrDirect(pyclass, PyStrings::gContains)) {
