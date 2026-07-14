@@ -2750,6 +2750,16 @@ TypeRef GetVariableType(ConstDeclRef var) {
   if (const auto* DD = llvm::dyn_cast_or_null<DeclaratorDecl>(D)) {
     QualType QT = DD->getType();
 
+    // For an array of unknown bound (e.g. `extern std::string arr[];`),
+    // prefer the defining declaration's complete type, which carries the
+    // actual dimension.
+    if (QT->isIncompleteArrayType()) {
+      if (const auto* VD = llvm::dyn_cast<VarDecl>(DD)) {
+        if (const VarDecl* Def = VD->getDefinition())
+          QT = Def->getType();
+      }
+    }
+
     // Check if the TyRef is a typedef TyRef
     if (QT->isTypedefNameType()) {
       return INTEROP_RETURN(QT.getAsOpaquePtr());
