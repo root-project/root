@@ -2172,6 +2172,34 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
   Overloads.BestViableFunction(S, Loc, Best);
 
   FunctionDecl* Result = Best != Overloads.end() ? Best->Function : nullptr;
+
+  // If the winner is a not-yet-instantiated template specialization, force
+  // the instantiation of its body now, with diagnostics suppressed, and
+  // reject the match if the body turns out to be ill-formed. Callers use
+  // this function to probe whether a valid instantiation exists (e.g.
+  // CPyCppyy's __cppyy_internal::is_equal fallback for comparison
+  // operators), so an ill-formed body must surface as "no viable function"
+  // here rather than as a hard error when the wrapper is compiled at call
+  // time. This mirrors cling's LookupHelper::overloadFunctionSelector. Note
+  // that probing with an expression-SFINAE helper instead is not equivalent:
+  // C++20 rewritten (reversed) operator candidates make comparisons like a
+  // member operator==(const Base&) ambiguous, which is a hard substitution
+  // failure in a SFINAE context but only a warning in a function body.
+  // DefinitionRequired stays false: a pattern without a body (defined in a
+  // library) is still a valid match.
+  if (Result && Result->isTemplateInstantiation() && !Result->isDefined()) {
+    DiagnosticsEngine& Diags = S.getDiagnostics();
+    bool OldSuppress = Diags.getSuppressAllDiagnostics();
+    Diags.setSuppressAllDiagnostics(true);
+    S.InstantiateFunctionDefinition(Loc, Result, /*Recursive=*/true);
+    Diags.setSuppressAllDiagnostics(OldSuppress);
+    if (Result->isInvalidDecl()) {
+      Diags.Reset(/*soft=*/true);
+      Diags.getClient()->clear();
+      Result = nullptr;
+    }
+  }
+
   delete[] Exprs;
   return INTEROP_RETURN(Result);
 }
@@ -5348,6 +5376,11 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
       // FIXME: Diagnose what happened.
       (void)Result;
     }
+    // Never hand out a specialization whose (attempted) instantiation turned
+    // out to be ill-formed, e.g. one rejected by BestOverloadFunctionMatch:
+    // any use of it, such as compiling a call wrapper, can only fail.
+    if (Specialization && Specialization->isInvalidDecl())
+      return nullptr;
     if (instantiate_body)
       InstantiateFunctionDefinition(Specialization);
     return Specialization;
