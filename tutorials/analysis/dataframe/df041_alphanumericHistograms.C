@@ -69,7 +69,7 @@ void df041_alphanumericHistograms()
    // ROOT::VecOps::RVec<char>. Converting it to a real std::string column
    // makes it fillable through the AlphaNumHist adapter above.
    auto df = df0.Define("NationStr", [](const ROOT::VecOps::RVec<char> &c) { return std::string(c.begin(), c.end()); },
-                         {"Nation"});
+                        {"Nation"});
 
    AlphaNumHist model("hNation", "Staff by nation;Nation;Count");
    auto h = df.Fill<std::string>(model, {"NationStr"});
