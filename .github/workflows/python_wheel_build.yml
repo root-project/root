@@ -70,11 +70,8 @@ jobs:
             source root_build_env/bin/activate
             pip install --upgrade pip setuptools wheel build
             cd root
-            mkdir dist
-            touch dist/foo.whl
-            pwd
-            echo pip install -r requirements.txt
-            echo python3 -m build --wheel
+            pip install -r requirements.txt
+            python3 -m build --wheel
       - name: Upload_wheel
         uses: actions/upload-artifact@v6
         with:
