@@ -350,6 +350,8 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    // build event lists for signal and background
    TEventList* signal_list = new TEventList("__tmpSig_MLPA");
    TEventList* bg_list     = new TEventList("__tmpBkg_MLPA");
+   signal_list->SetDirectory(gDirectory);
+   bg_list->SetDirectory(gDirectory);
    data->Draw(">>__tmpSig_MLPA",signal,"goff");
    data->Draw(">>__tmpBkg_MLPA",bg,"goff");
 
