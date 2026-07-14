@@ -100,7 +100,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   std::vector<Cpp::FuncRef> methods3;
   Cpp::GetClassMethods(Decls[4], methods3);
 
-  EXPECT_EQ(methods3.size(), 9);
+  // the parameterless default/copy/move constructors of B, though nominally
+  // inherited by the using declaration, are not exposed: C's own special
+  // members are authoritative (and the call layer refuses to invoke special
+  // members injected by a using declaration)
+  EXPECT_EQ(methods3.size(), 7);
   EXPECT_EQ(get_method_name(methods3[0]), "inline C::C()");
   EXPECT_EQ(get_method_name(methods3[1]), "inline constexpr C::C(const C &)");
   EXPECT_EQ(get_method_name(methods3[2]), "inline constexpr C::C(C &&)");
@@ -108,7 +112,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   EXPECT_EQ(get_method_name(methods3[4]), "inline C &C::operator=(C &&)");
   EXPECT_EQ(get_method_name(methods3[5]), "inline C::~C()");
   EXPECT_EQ(get_method_name(methods3[6]), "inline C::B(int)");
-  EXPECT_EQ(get_method_name(methods3[7]), "inline constexpr C::B(const B &)");
 
   // Should not crash.
   std::vector<Cpp::FuncRef> methods4;
