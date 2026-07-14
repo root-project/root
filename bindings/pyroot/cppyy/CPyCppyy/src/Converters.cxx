@@ -3315,6 +3315,22 @@ static inline CPyCppyy::Converter* selectInstanceCnv(Cppyy::TCppScope_t klass,
     return result;
 }
 
+//- helper for the T*& ban below ---------------------------------------------
+static inline bool isMutablePtrRef(const std::string& resolvedType)
+{
+// True for references through which the callee can rebind the pointer (T*&);
+// false for T* const& (and cv variants), where the pointer itself is const.
+// Note that TypeManip::compound() strips const, so both arrive as cpd "*&".
+    std::string::size_type ref = resolvedType.rfind('&');
+    if (ref == std::string::npos || ref == 0)
+        return false;
+    std::string::size_type i = resolvedType.find_last_not_of(" \t", ref-1);
+    if (i != std::string::npos && 4 <= i &&
+            resolvedType.compare(i-4, 5, "const") == 0)
+        return false;
+    return true;
+}
+
 //- factories ----------------------------------------------------------------
 CPYCPPYY_EXPORT
 CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdims_t dims)
@@ -3355,7 +3371,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
         return (h->second)(dims);
 
 // mutable pointer references (T*&) are incompatible with Python's object model
-    if (!isConst && cpd == "*&") {
+    if (!isConst && cpd == "*&" && isMutablePtrRef(resolvedType)) {
         return new NotImplementedConverter{PyExc_TypeError,
             "argument type '" + resolvedType + "' is not supported: non-const references to pointers (T*&) allow a"
             " function to replace the pointer itself. Python cannot represent this safely. Consider changing the"
@@ -3560,7 +3576,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(Cppyy::TCppType_t type, cdims_t d
         return (h->second)(dims);
 
 // mutable pointer references (T*&) are incompatible with Python's object model
-    if (!isConst && cpd == "*&") {
+    if (!isConst && cpd == "*&" && isMutablePtrRef(resolvedTypeStr)) {
         return new NotImplementedConverter{PyExc_TypeError,
             "argument type '" + resolvedTypeStr + "' is not supported: non-const references to pointers (T*&) allow a"
             " function to replace the pointer itself. Python cannot represent this safely. Consider changing the"
