@@ -52,6 +52,7 @@ the TEventList object created in the above commands:
 #include "TDirectory.h"
 #include "TCollection.h"
 #include "TMathBase.h"
+#include "TROOT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a EventList.
@@ -65,8 +66,11 @@ TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_
    if (delta > 100)    fDelta = delta;
    else                fDelta = 100;
    fList       = nullptr;
-   fDirectory  = gDirectory;
-   if (fDirectory) fDirectory->Append(this);
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled()) {
+      fDirectory = gDirectory;
+      if (fDirectory)
+         fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
