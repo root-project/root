@@ -459,12 +459,12 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
    {
-      TDirectory::TContext ctxt;
+      TDirectory::TContext ctxt{nullptr};
       fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
    }
    fTrainingOwner = true;
    {
-      TDirectory::TContext ctxt;
+      TDirectory::TContext ctxt{nullptr};
       fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
    }
    fTestOwner = true;
@@ -479,8 +479,12 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fManager = nullptr;
    if (data) {
       BuildNetwork();
+      fTraining->SetDirectory(gDirectory);
+      fTest->SetDirectory(gDirectory);
       data->Draw(Form(">>fTrainingList_%zu",(size_t)this),training,"goff");
       data->Draw(Form(">>fTestList_%zu",(size_t)this),(const char *)testcut,"goff");
+      fTraining->SetDirectory(nullptr);
+      fTest->SetDirectory(nullptr);
       AttachData();
    }
    else {
@@ -538,12 +542,12 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
    {
-      TDirectory::TContext ctxt;
+      TDirectory::TContext ctxt{nullptr};
       fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
    }
    fTrainingOwner = true;
    {
-      TDirectory::TContext ctxt;
+      TDirectory::TContext ctxt{nullptr};
       fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
    }
    fTestOwner = true;
@@ -558,8 +562,12 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fManager = nullptr;
    if (data) {
       BuildNetwork();
+      fTraining->SetDirectory(gDirectory);
+      fTest->SetDirectory(gDirectory);
       data->Draw(Form(">>fTrainingList_%zu",(size_t)this),training,"goff");
       data->Draw(Form(">>fTestList_%zu",(size_t)this),(const char *)testcut,"goff");
+      fTraining->SetDirectory(nullptr);
+      fTest->SetDirectory(nullptr);
       AttachData();
    }
    else {
@@ -646,12 +654,14 @@ void TMultiLayerPerceptron::SetTrainingDataSet(const char * train)
 {
    if(fTraining && fTrainingOwner) delete fTraining;
    {
-      TDirectory::TContext ctxt;
+      TDirectory::TContext ctxt{nullptr};
       fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
    }
    fTrainingOwner = true;
    if (fData) {
+      fTraining->SetDirectory(gDirectory);
       fData->Draw(Form(">>fTrainingList_%zu",(size_t)this),train,"goff");
+      fTraining->SetDirectory(nullptr);
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -673,7 +683,9 @@ void TMultiLayerPerceptron::SetTestDataSet(const char * test)
    }
    fTestOwner = true;
    if (fData) {
+      fTraining->SetDirectory(gDirectory);
       fData->Draw(Form(">>fTestList_%zu",(size_t)this),test,"goff");
+      fTraining->SetDirectory(nullptr);
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
