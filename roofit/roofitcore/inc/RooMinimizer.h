@@ -133,7 +133,6 @@ public:
 
    ~RooMinimizer() override;
 
-   enum Strategy { Speed = 0, Balance = 1, Robustness = 2 };
    enum PrintLevel { None = -1, Reduced = 0, Normal = 1, ExtraForProblem = 2, Maximum = 3 };
 
    // Setters on _theFitter
