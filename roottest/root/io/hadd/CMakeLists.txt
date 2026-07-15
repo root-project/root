@@ -270,3 +270,14 @@ ROOTTEST_ADD_TEST(test_hadd_regr_20872_2
                   PASSREGEX "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root cannot be both the target and an input!"
 )
 endif()
+
+# Verify that the hadd (or rather, the RNTupleMerger) is able to cope with RNTuples written before schema version
+# 1.0.0.1 (meaning they have the wrong type name normalization)
+configure_file(test_hadd_merge_rntuple_634_1.root . COPYONLY)
+configure_file(test_hadd_merge_rntuple_634_2.root . COPYONLY)
+configure_file(check_merge_rntuple_634.C . COPYONLY)
+ROOTTEST_ADD_TEST(test_hadd_merge_rntuple_634,
+                  PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_merge_rntuple_634_merged.root
+                  COMMAND ${ROOT_hadd_CMD} -f test_hadd_merge_rntuple_634_merged.root test_hadd_merge_rntuple_634_1.root test_hadd_merge_rntuple_634_2.root
+                  POSTCMD ${ROOT_root_CMD} -q check_merge_rntuple_634.C
+                  PASSRC 0)
