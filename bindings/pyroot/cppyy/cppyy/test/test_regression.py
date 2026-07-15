@@ -380,7 +380,6 @@ class TestREGRESSION:
         sizeit = cppyy.gbl.vec_vs_init.sizeit
         assert sizeit(list(range(10))) == 10
 
-    @mark.xfail(strict=True)
     def test16_iterable_enum(self):
         """Use template to iterate over an enum"""
       # from: https://stackoverflow.com/questions/52459530/pybind11-emulate-python-enum-behaviour
@@ -473,7 +472,6 @@ class TestREGRESSION:
 
         assert a != b             # derived class' C++ operator!= called
 
-    @mark.xfail(strict=True)
     def test18_operator_plus_overloads(self):
         """operator+(string, string) should return a string"""
 
@@ -485,7 +483,8 @@ class TestREGRESSION:
         assert a == 'a'
         assert b == 'b'
 
-        assert type(a+b) == cppyy.gbl.std.string
+    # patched to expect str instead of cppyy.gbl.std.string, due to ROOT patch 
+        assert type(a+b) == str
         assert a+b == 'ab'
 
     def test19_std_string_hash(self):
@@ -783,7 +782,6 @@ class TestREGRESSION:
         null = cppyy.gbl.exception_as_shared_ptr.get_shared_null()
         assert not null
 
-    @mark.xfail(strict=True)
     def test29_callback_pointer_values(self, capfd):
         """Make sure pointer comparisons in callbacks work as expected"""
 
@@ -893,7 +891,6 @@ class TestREGRESSION:
         assert ns.TTest(True).fT == True
         assert type(ns.TTest(True).fT) == bool
 
-    @mark.xfail(strict=True)
     def test31_enum_in_dir(self):
         """Failed to pick up enum data"""
 
@@ -916,7 +913,6 @@ class TestREGRESSION:
         required = {'prod', 'a', 'b', 'smth', 'my_enum'}
         assert all_names.intersection(required) == required
 
-    @mark.xfail(strict=True)
     def test32_typedef_class_enum(self):
         """Use of class enum with typedef'd type"""
 
@@ -954,7 +950,6 @@ class TestREGRESSION:
             assert o.x == Foo.BAZ
             assert o.y == 1
 
-    @mark.xfail(strict=True)
     def test33_explicit_template_in_namespace(self):
         """Lookup of explicit template in namespace"""
 

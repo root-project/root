@@ -2,6 +2,7 @@
 #include "CPyCppyy.h"
 #include "Dispatcher.h"
 #include "CPPScope.h"
+#include "Cppyy.h"
 #include "PyStrings.h"
 #include "ProxyWrappers.h"
 #include "TypeManip.h"
@@ -19,14 +20,14 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
     using namespace CPyCppyy;
 
 // method declaration
-    std::string retType = Cppyy::GetMethodResultType(method);
+    std::string retType = Cppyy::GetMethodReturnTypeAsString(method);
     code << "  " << retType << " " << mtCppName << "(";
 
 // build out the signature with predictable formal names
     Cppyy::TCppIndex_t nArgs = Cppyy::GetMethodNumArgs(method);
     std::vector<std::string> argtypes; argtypes.reserve(nArgs);
     for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
-        argtypes.push_back(Cppyy::GetMethodArgType(method, i));
+        argtypes.push_back(Cppyy::GetMethodArgCanonTypeAsString(method, i));
         if (i != 0) code << ", ";
         code << argtypes.back() << " arg" << i;
     }
@@ -39,11 +40,11 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
 // program shutdown); note that this means that the actual result will be the default
 // and the caller may need to act on that, but that's still an improvement over a
 // possible crash
-    code << "    PyObject* iself = (PyObject*)_internal_self;\n"
+    code << "    CPyCppyy::PythonGILRAII python_gil_raii;\n" // acquire GIL
+            "    PyObject* iself = (PyObject*)_internal_self;\n"
             "    if (!iself || iself == Py_None) {\n"
-            "      PyGILState_STATE state = PyGILState_Ensure();\n"
-            "      PyErr_Warn(PyExc_RuntimeWarning, (char*)\"Call attempted on deleted python-side proxy\");\n"
-            "      PyGILState_Release(state);\n"
+            "      PyErr_Warn(PyExc_RuntimeWarning, (char*)\"Call attempted on "
+            "deleted python-side proxy\");\n"
             "      return";
     if (retType != "void") {
         if (retType.back() != '*')
@@ -52,19 +53,14 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
             code << " nullptr";
     }
     code << ";\n"
-            "    }\n";
+            "    }\n"
+            "    Py_INCREF(iself);\n";
 
 // start actual function body
     Utility::ConstructCallbackPreamble(retType, argtypes, code);
 
-    code << "    Py_INCREF(iself);\n";
-
 // perform actual method call
-#if PY_VERSION_HEX < 0x03000000
-    code << "    PyObject* mtPyName = PyString_FromString(\"" << mtCppName << "\");\n" // TODO: intern?
-#else
     code << "    PyObject* mtPyName = PyUnicode_FromString(\"" << mtCppName << "\");\n"
-#endif
             "    PyObject* pyresult = PyObject_CallMethodObjArgs(iself, mtPyName";
     for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i)
         code << ", pyargs[" << i << "]";
@@ -77,9 +73,9 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
 //----------------------------------------------------------------------------
 namespace {
     struct BaseInfo {
-        BaseInfo(Cppyy::TCppType_t t, std::string&& bn, std::string&& bns) :
+        BaseInfo(Cppyy::TCppScope_t t, std::string&& bn, std::string&& bns) :
             btype(t), bname(bn), bname_scoped(bns) {}
-        Cppyy::TCppType_t btype;
+        Cppyy::TCppScope_t btype;
         std::string bname;
         std::string bname_scoped;
     };
@@ -120,7 +116,7 @@ static void build_constructors(
             size_t offset = (i != 0 ? arg_tots[i-1] : 0);
             for (size_t j = 0; j < nArgs; ++j) {
                 if (i != 0 || j != 0) code << ", ";
-                code << Cppyy::GetMethodArgType(cinfo.first, j) << " a" << (j+offset);
+                code << Cppyy::GetMethodArgCanonTypeAsString(cinfo.first, j) << " a" << (j+offset);
             }
         }
         code << ") : ";
@@ -133,7 +129,7 @@ static void build_constructors(
             for (size_t j = first; j < arg_tots[i]; ++j) {
                 if (j != first) code << ", ";
                 bool isRValue = CPyCppyy::TypeManip::compound(\
-                    Cppyy::GetMethodArgType(methods[i].first, j-first)) == "&&";
+                    Cppyy::GetMethodArgCanonTypeAsString(methods[i].first, j-first)) == "&&";
                 if (isRValue) code << "std::move(";
                 code << "a" << j;
                 if (isRValue) code << ")";
@@ -149,14 +145,14 @@ namespace {
 using namespace Cppyy;
 
 static inline
-std::vector<TCppIndex_t> FindBaseMethod(TCppScope_t tbase, const std::string mtCppName)
+std::vector<TCppMethod_t> FindBaseMethod(TCppScope_t tbase, const std::string mtCppName)
 {
 // Recursively walk the inheritance tree to find the overloads of the named method
-    std::vector<TCppIndex_t> result;
-    result = GetMethodIndicesFromName(tbase, mtCppName);
+    std::vector<TCppMethod_t> result;
+    result = GetMethodsFromName(tbase, mtCppName);
     if (result.empty()) {
         for (TCppIndex_t ibase = 0; ibase < GetNumBases(tbase); ++ibase) {
-            TCppScope_t b = GetScope(GetBaseName(tbase, ibase));
+            TCppScope_t b = Cppyy::GetBaseScope(tbase, ibase);
             result = FindBaseMethod(b, mtCppName);
             if (!result.empty())
                 break;
@@ -189,7 +185,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
         if (!CPPScope_Check(PyTuple_GET_ITEM(bases, ibase)))
             continue;
 
-        Cppyy::TCppType_t basetype = ((CPPScope*)PyTuple_GET_ITEM(bases, ibase))->fCppType;
+        Cppyy::TCppScope_t basetype = ((CPPScope*)PyTuple_GET_ITEM(bases, ibase))->fCppType;
 
         if (!basetype) {
             err << "base class is incomplete";
@@ -242,7 +238,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 // object goes before the C++ one, only __del__ is called)
     if (PyMapping_HasKeyString(dct, (char*)"__destruct__")) {
         code << "  virtual ~" << derivedName << "() {\n"
-                "PyGILState_STATE state = PyGILState_Ensure();\n"
+                "    CPyCppyy::PythonGILRAII python_gil_raii;\n"
                 "    PyObject* iself = (PyObject*)_internal_self;\n"
                 "    if (!iself || iself == Py_None)\n"
                 "      return;\n"      // safe, as destructor always returns void
@@ -255,7 +251,6 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
     // magic C++ exception ...
         code << "      if (!pyresult) PyErr_Print();\n"
                 "      else { Py_DECREF(pyresult); }\n"
-                "      PyGILState_Release(state);\n"
                 "  }\n";
     } else
         code << "  virtual ~" << derivedName << "() {}\n";
@@ -283,18 +278,18 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
     for (BaseInfos_t::size_type ibase = 0; ibase < base_infos.size(); ++ibase) {
         const auto& binfo = base_infos[ibase];
 
-        const Cppyy::TCppIndex_t nMethods = Cppyy::GetNumMethods(binfo.btype);
+        std::vector<Cppyy::TCppMethod_t> methods;
+        Cppyy::GetClassMethods(binfo.btype, methods);
         bool cctor_found = false, default_found = false, any_ctor_found = false;
-        for (Cppyy::TCppIndex_t imeth = 0; imeth < nMethods; ++imeth) {
-            Cppyy::TCppMethod_t method = Cppyy::GetMethod(binfo.btype, imeth);
-
+        for (auto &method : methods) {
             if (Cppyy::IsConstructor(method)) {
                 any_ctor_found = true;
-                if (Cppyy::IsPublicMethod(method) || Cppyy::IsProtectedMethod(method)) {
+                if ((Cppyy::IsPublicMethod(method) || Cppyy::IsProtectedMethod(method)) &&
+                    !Cppyy::IsDeletedMethod(method)) {
                     Cppyy::TCppIndex_t nreq = Cppyy::GetMethodReqArgs(method);
                     if (nreq == 0) default_found = true;
                     else if (!cctor_found && nreq == 1) {
-                        const std::string& argtype = Cppyy::GetMethodArgType(method, 0);
+                        const std::string& argtype = Cppyy::GetMethodArgCanonTypeAsString(method, 0);
                         if (TypeManip::compound(argtype) == "&" && TypeManip::clean_type(argtype, false) == binfo.bname_scoped)
                             cctor_found = true;
                     }
@@ -303,7 +298,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
                 continue;
             }
 
-            std::string mtCppName = Cppyy::GetMethodName(method);
+            std::string mtCppName = Cppyy::GetName(Cppyy::TCppScope_t(method.data));
             PyObject* key = CPyCppyy_PyText_FromString(mtCppName.c_str());
             int contains = PyDict_Contains(dct, key);
             if (contains == -1) PyErr_Clear();
@@ -315,18 +310,21 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
                 if (Cppyy::IsProtectedMethod(method)) {
                     protected_names.insert(mtCppName);
 
-                    code << "  " << Cppyy::GetMethodResultType(method) << " " << mtCppName << "(";
+                    code << "  " << Cppyy::GetMethodReturnTypeAsString(method) << " " << mtCppName << "(";
                     Cppyy::TCppIndex_t nArgs = Cppyy::GetMethodNumArgs(method);
                     for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
                         if (i != 0) code << ", ";
-                        code << Cppyy::GetMethodArgType(method, i) << " arg" << i;
+                        code << Cppyy::GetMethodArgCanonTypeAsString(method, i) << " arg" << i;
                     }
                     code << ") ";
                     if (Cppyy::IsConstMethod(method)) code << "const ";
                     code << "{\n    return " << binfo.bname << "::" << mtCppName << "(";
                     for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
                         if (i != 0) code << ", ";
-                        code << "arg" << i;
+                        if (Cppyy::IsRValueReferenceType(Cppyy::GetMethodArgType(method, i)))
+                            code << "std::move(arg" << i << ")";
+                        else
+                            code << "arg" << i;
                     }
                     code << ");\n  }\n";
                 }
@@ -343,9 +341,10 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 
     // support for templated ctors in single inheritance (TODO: also multi possible?)
         if (base_infos.size() == 1) {
-            const Cppyy::TCppIndex_t nTemplMethods = Cppyy::GetNumTemplatedMethods(binfo.btype);
-            for (Cppyy::TCppIndex_t imeth = 0; imeth < nTemplMethods; ++imeth) {
-                if (Cppyy::IsTemplatedConstructor(binfo.btype, imeth)) {
+                std::vector<Cppyy::TCppMethod_t> templ_methods;
+                Cppyy::GetTemplatedMethods(binfo.btype, templ_methods);
+                for (auto &method : templ_methods) {
+                if (Cppyy::IsConstructor(method)) {
                     any_ctor_found = true;
                     has_tmpl_ctors += 1;
                     break;        // one suffices to map as argument packs are used
@@ -364,18 +363,18 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
         if (PyDict_Size(clbs)) {
             size_t nbases = Cppyy::GetNumBases(binfo.btype);
             for (size_t ibase = 0; ibase < nbases; ++ibase) {
-                Cppyy::TCppScope_t tbase = (Cppyy::TCppScope_t)Cppyy::GetScope( \
-                    Cppyy::GetBaseName(binfo.btype, ibase));
+                Cppyy::TCppScope_t tbase =
+                    (Cppyy::TCppScope_t) Cppyy::GetBaseScope(binfo.btype, ibase);
 
                 PyObject* keys = PyDict_Keys(clbs);
                 for (Py_ssize_t i = 0; i < PyList_GET_SIZE(keys); ++i) {
                 // TODO: should probably invert this looping; but that makes handling overloads clunky
                     PyObject* key = PyList_GET_ITEM(keys, i);
                     std::string mtCppName = CPyCppyy_PyText_AsString(key);
-                    const auto& v = FindBaseMethod(tbase, mtCppName);
-                    for (auto idx : v)
-                        InjectMethod(Cppyy::GetMethod(tbase, idx), mtCppName, code);
-                    if (!v.empty()) {
+                    const auto& methods = FindBaseMethod(tbase, mtCppName);
+                    for (auto method : methods)
+                        InjectMethod(method, mtCppName, code);
+                    if (!methods.empty()) {
                         if (PyDict_DelItem(clbs, key) != 0) PyErr_Clear();
                     }
                 }
@@ -416,12 +415,13 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 // pull in data members that are protected
     bool setPublic = false;
     for (const auto& binfo : base_infos) {
-        Cppyy::TCppIndex_t nData = Cppyy::GetNumDatamembers(binfo.btype);
-        for (Cppyy::TCppIndex_t idata = 0; idata < nData; ++idata) {
-            if (Cppyy::IsProtectedData(binfo.btype, idata)) {
-                const std::string dm_name = Cppyy::GetDatamemberName(binfo.btype, idata);
+        std::vector<Cppyy::TCppScope_t> datamems;
+        Cppyy::GetDatamembers(binfo.btype, datamems);
+        for (auto data : datamems) {
+            if (Cppyy::IsProtectedData(data)) {
+                const std::string dm_name = Cppyy::GetFinalName(data);
                 if (dm_name != "_internal_self") {
-                    const std::string& dname = Cppyy::GetDatamemberName(binfo.btype, idata);
+                    const std::string& dname = Cppyy::GetFinalName(data);
                     protected_names.insert(dname);
                     if (!setPublic) {
                         code << "public:\n";
@@ -438,7 +438,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
     code << "public:\n  static void _init_dispatchptr(" << derivedName << "* inst, PyObject* self) {\n";
     if (1 < base_infos.size()) {
         for (const auto& binfo : base_infos) {
-             if (Cppyy::GetDatamemberIndex(binfo.btype, "_internal_self") != (Cppyy::TCppIndex_t)-1) {
+             if (Cppyy::CheckDatamember(binfo.btype, "_internal_self")) {
                  code << "    " << binfo.bname << "::_init_dispatchptr(inst, self);\n";
                  disp_inited += 1;
              }
@@ -456,11 +456,9 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 
 // provide an accessor to re-initialize after round-tripping from C++ (internal)
     code << "\n  static PyObject* _get_dispatch(" << derivedName << "* inst) {\n"
-            "    PyGILState_STATE state = PyGILState_Ensure();\n"
+            "    CPyCppyy::PythonGILRAII python_gil_raii;\n"
             "    PyObject* res = (PyObject*)inst->_internal_self;\n"
-            "    Py_XINCREF(res);\n"
-            "    PyGILState_Release(state);\n"
-            "    return res;\n  }";
+            "    Py_XINCREF(res); return res;\n  }";
 
 // finish class declaration
     code << "};\n}";
@@ -473,7 +471,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 
 // keep track internally of the actual C++ type (this is used in
 // CPPConstructor to call the dispatcher's one instead of the base)
-    Cppyy::TCppScope_t disp = Cppyy::GetScope("__cppyy_internal::"+derivedName);
+    Cppyy::TCppScope_t disp = Cppyy::GetFullScope("__cppyy_internal::"+derivedName);
     if (!disp) {
         err << "failed to retrieve the internal dispatcher";
         return false;
@@ -484,7 +482,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 // that are part of the hierarchy in Python, so create it, which will cache it for
 // later use by e.g. the MemoryRegulator
     unsigned int flags = (unsigned int)(klass->fFlags & CPPScope::kIsMultiCross);
-    PyObject* disp_proxy = CPyCppyy::CreateScopeProxy(disp, flags);
+    PyObject* disp_proxy = CPyCppyy::CreateScopeProxy(disp, 0, flags);
     if (flags) ((CPPScope*)disp_proxy)->fFlags |= CPPScope::kIsMultiCross;
     ((CPPScope*)disp_proxy)->fFlags |= CPPScope::kIsPython;
 

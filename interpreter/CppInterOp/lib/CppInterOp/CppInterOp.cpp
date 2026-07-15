@@ -666,6 +666,7 @@ size_t SizeOf(ConstDeclRef DRef) {
     return INTEROP_RETURN(0);
 
   if (const auto* RD = dyn_cast<RecordDecl>(unwrap<Decl>(DRef))) {
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     ASTContext& Context = RD->getASTContext();
     const ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
     return INTEROP_RETURN(Layout.getSize().getQuantity());
@@ -850,7 +851,11 @@ size_t GetEnumConstantValue(ConstDeclRef DRef) {
   const auto* D = unwrap<clang::Decl>(DRef);
   if (const auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
-    return INTEROP_RETURN(Val.getExtValue());
+    if (Val.isRepresentableByInt64())
+      return INTEROP_RETURN(Val.getExtValue());
+    llvm::SmallString<40> StrVal;
+    Val.toString(StrVal);
+    return INTEROP_RETURN(std::stoul(StrVal.c_str()));
   }
   return INTEROP_RETURN(0);
 }
@@ -1049,6 +1054,7 @@ DeclRef GetScope(const std::string& name, ConstDeclRef parent) {
   if (name == "")
     return INTEROP_RETURN(GetGlobalScope());
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = unwrap<NamedDecl>(GetNamed(name, parent));
 
   if (!ND || ND == (NamedDecl*)-1)
@@ -1244,6 +1250,7 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
 size_t GetNumBases(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<Decl>(DRef);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   if (const auto* CTSD =
           llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
@@ -1259,6 +1266,8 @@ size_t GetNumBases(ConstDeclRef DRef) {
 }
 
 DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   INTEROP_TRACE(DRef, ibase);
   const auto* D = unwrap<Decl>(DRef);
   const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
@@ -1272,6 +1281,7 @@ DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
   return INTEROP_RETURN(nullptr);
 }
 
+
 // FIXME: Consider dropping this interface as it seems the same as
 // IsTypeDerivedFrom.
 bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
@@ -1284,6 +1294,8 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
 
   const auto* derived_D = unwrap<clang::Decl>(derived);
   const auto* base_D = unwrap<clang::Decl>(base);
+
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   if (!isa<CXXRecordDecl>(derived_D) || !isa<CXXRecordDecl>(base_D))
     return INTEROP_RETURN(false);
@@ -1301,6 +1313,9 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
 static unsigned ComputeBaseOffset(const ASTContext& Context,
                                   const CXXRecordDecl* DerivedRD,
                                   const CXXBasePath& Path) {
+
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   CharUnits NonVirtualOffset = CharUnits::Zero();
 
   unsigned NonVirtualStart = 0;
@@ -1349,6 +1364,8 @@ int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base) {
 
   assert(derived || base);
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   const auto* DD = unwrap<Decl>(derived);
   const auto* BD = unwrap<Decl>(base);
   if (!isa<CXXRecordDecl>(DD) || !isa<CXXRecordDecl>(BD))
@@ -1384,6 +1401,8 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
     return;
 
   // Unwrap to mutable: ForceDeclarationOfImplicitMembers is a lazy-init
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   // operation on the AST, logically const for the caller.
   Decl* D = const_cast<Decl*>(unwrap<clang::Decl>(DRef));
 
@@ -1396,7 +1415,6 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
     return;
 
   auto* CXXRD = dyn_cast<CXXRecordDecl>(D);
-  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(CXXRD)) {
     QualType QT = compat::GetTypeFromDecl(CTSD);
     if (!getSema().isCompleteType(CTSD->getLocation(), QT))
@@ -1535,8 +1553,13 @@ std::vector<FuncRef> GetFunctionsUsingName(ConstDeclRef DRef,
 
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
-
-  CppInternal::utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
+  auto* Within = Decl::castToDeclContext(D);
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    Within->getPrimaryContext()->buildLookup();
+#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+  CppInternal::utils::Lookup::Named(&S, R, Within);
 
   if (R.empty())
     return INTEROP_RETURN(funcs);
@@ -1905,6 +1928,11 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
     Within = llvm::dyn_cast<DeclContext>(D);
   }
 
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    const_cast<DeclContext*>(Within->getPrimaryContext())->buildLookup();
+#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
 
   if ((intptr_t)ND == (intptr_t)0)
@@ -1953,7 +1981,12 @@ bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
   DeclarationName DName = &getASTContext().Idents.get(name);
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* DC = clang::Decl::castToDeclContext(DU);
+#ifdef CPPINTEROP_USE_CLING
+  if (DC)
+    DC->getPrimaryContext()->buildLookup();
+#endif
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
   if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
@@ -2636,6 +2669,11 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
 
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    const_cast<DeclContext*>(Within->getPrimaryContext())->buildLookup();
+#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     if (llvm::isa_and_nonnull<clang::FieldDecl>(ND)) {
@@ -2648,6 +2686,7 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
 
 bool IsLambdaClass(ConstTypeRef TyRef) {
   INTEROP_TRACE(TyRef);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (auto* CXXRD = QT->getAsCXXRecordDecl()) {
     return INTEROP_RETURN(CXXRD->isLambda());
@@ -2684,6 +2723,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     return 0;
 
   auto& C = I.getSema().getASTContext();
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   if (auto* FD = llvm::dyn_cast<FieldDecl>(D)) {
     clang::RecordDecl* FieldParentRecordDecl = FD->getParent();
@@ -2932,6 +2972,8 @@ TypeRef GetPointerType(ConstTypeRef TyRef) {
 
 TypeRef GetReferencedType(ConstTypeRef TyRef, bool rvalue) {
   INTEROP_TRACE(TyRef, rvalue);
+  if (!TyRef.data)
+    return INTEROP_RETURN(nullptr);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (rvalue)
     return INTEROP_RETURN(
@@ -2972,7 +3014,8 @@ TypeRef GetUnderlyingType(ConstTypeRef TyRef) {
 std::string GetTypeAsString(ConstTypeRef var) {
   INTEROP_TRACE(var);
   QualType QT = QualType::getFromOpaquePtr(var.data);
-  PrintingPolicy Policy(getASTContext().getPrintingPolicy());
+  // FIXME: Get the default printing policy from the ASTContext.
+  PrintingPolicy Policy((LangOptions()));
   Policy.Bool = true;               // Print bool instead of _Bool.
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
   Policy.Suppress_Elab = true;
@@ -3367,6 +3410,33 @@ void collect_type_info(const FunctionDecl* FD, QualType& QT,
   get_type_as_string(QT, type_name, C, Policy);
 }
 
+static bool IsCopyConstructorDeleted(QualType QT) {
+  CXXRecordDecl* RD = QT->getAsCXXRecordDecl();
+  if (!RD) {
+    // For types that are not C++ records (such as PODs), we assume that they
+    // are copyable, ie their copy constructor is not deleted.
+    return false;
+  }
+
+  RD = RD->getDefinition();
+  assert(RD && "expecting a definition");
+
+  if (RD->hasSimpleCopyConstructor())
+    return false;
+
+  for (auto* Ctor : RD->ctors()) {
+    if (Ctor->isCopyConstructor()) {
+      return Ctor->isDeleted();
+    }
+  }
+
+  assert(0 && "did not find a copy constructor?");
+  // Should never happen and the return value is somewhat arbitrary, but we did
+  // not see a deleted copy ctor. The user will be told if the generated code
+  // doesn't compile.
+  return false;
+}
+
 void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
                     std::ostringstream& typedefbuf, std::ostringstream& callbuf,
                     const std::string& class_name, int indent_level,
@@ -3411,7 +3481,18 @@ void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
       } else if (isPointer) {
         callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
       } else {
+        // By-value construction: Figure out if the type can be
+        // copy-constructed. This is tricky and cannot be done in a fully
+        // reliable way, also because std::vector<T> always defines a copy
+        // constructor, even if the type T is only moveable. As a heuristic, we
+        // only check if the copy constructor is deleted, or would be if
+        // implicit.
+        bool Move = IsCopyConstructorDeleted(QT);
+        if (Move)
+          callbuf << "static_cast<" << type_name << "&&>(";
         callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+        if (Move)
+          callbuf << ")";
       }
     }
     callbuf << ")";
@@ -3509,8 +3590,6 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
     else
       callbuf << "((" << class_name << "*)obj)->";
 
-    if (op_flag)
-      callbuf << class_name << "::";
   } else if (isa<NamedDecl>(get_non_transparent_decl_context(FD))) {
     // This is a namespace member.
     if (op_flag || N <= 1)
@@ -3737,7 +3816,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
     make_narg_ctor_with_return(FD, N, class_name, buf, indent_level);
     return;
   }
-  QualType QT = FD->getReturnType();
+  QualType QT = FD->getReturnType().getCanonicalType();
   if (QT->isVoidType()) {
     std::ostringstream typedefbuf;
     std::ostringstream callbuf;
@@ -5316,7 +5395,10 @@ void GetClassTemplateArgs(ConstDeclRef templ_instance,
 void GetClassTemplateInstantiationArgs(ConstDeclRef templ_instance,
                                        std::vector<TemplateArgInfo>& args) {
   INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
-  const auto* CTSD = unwrap<ClassTemplateSpecializationDecl>(templ_instance);
+  const auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+      unwrap<Decl>(templ_instance));
+  if (!CTSD)
+    return INTEROP_VOID_RETURN();
   for (const auto& TA : CTSD->getTemplateInstantiationArgs().asArray()) {
     switch (TA.getKind()) {
     default:

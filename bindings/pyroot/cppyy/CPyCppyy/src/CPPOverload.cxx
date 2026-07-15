@@ -2,12 +2,8 @@
 #include "CPyCppyy.h"
 #include "CPyCppyy/Reflex.h"
 #include "structmember.h"    // from Python
-#if PY_VERSION_HEX >= 0x02050000
 #if PY_VERSION_HEX <  0x030b0000
 #include "code.h"            // from Python
-#endif
-#else
-#include "compile.h"         // from Python
 #endif
 #ifndef CO_NOFREE
 // python2.2 does not have CO_NOFREE defined
@@ -103,7 +99,6 @@ public:
     PyObject* Call(CPPInstance*& self,
             CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* /* ctxt = 0 */) override {
 
-#if PY_VERSION_HEX >= 0x03080000
         if (self) {
             if (nargsf & PY_VECTORCALL_ARGUMENTS_OFFSET) {      // mutation allowed?
                 std::swap(((PyObject**)args-1)[0], (PyObject*&)self);
@@ -130,25 +125,6 @@ public:
                 std::swap(((PyObject**)args-1)[0], (PyObject*&)self);
             else PyMem_Free((void*)args);
         }
-#else
-        PyObject* newArgs = nullptr;
-        if (self) {
-            Py_ssize_t nargs = PyTuple_Size(args);
-            newArgs = PyTuple_New(nargs+1);
-            Py_INCREF(self);
-            PyTuple_SET_ITEM(newArgs, 0, (PyObject*)self);
-            for (Py_ssize_t iarg = 0; iarg < nargs; ++iarg) {
-                PyObject* pyarg = PyTuple_GET_ITEM(args, iarg);
-                Py_INCREF(pyarg);
-                PyTuple_SET_ITEM(newArgs, iarg+1, pyarg);
-            }
-        } else {
-            Py_INCREF(args);
-            newArgs = args;
-        }
-        PyObject* result = PyObject_Call(fCallable, newArgs, kwds);
-        Py_DECREF(newArgs);
-#endif
         return result;
     }
 };
@@ -396,83 +372,12 @@ static PyObject* mp_func_closure(CPPOverload* /* pymeth */, void*)
     Py_RETURN_NONE;
 }
 
-// To declare a variable as unused only when compiling for Python 3.
-#if PY_VERSION_HEX < 0x03000000
-#define CPyCppyy_Py3_UNUSED(name) name
-#else
-#define CPyCppyy_Py3_UNUSED(name)
-#endif
-
 //----------------------------------------------------------------------------
-static PyObject* mp_func_code(CPPOverload* CPyCppyy_Py3_UNUSED(pymeth), void*)
+static PyObject* mp_func_code(CPPOverload*, void*)
 {
 // Code details are used in module inspect to fill out interactive help()
-#if PY_VERSION_HEX < 0x03000000
-    CPPOverload::Methods_t& methods = pymeth->fMethodInfo->fMethods;
-
-// collect arguments only if there is just 1 overload, otherwise put in a
-// fake *args (see below for co_varnames)
-    PyObject* co_varnames = methods.size() == 1 ? methods[0]->GetCoVarNames() : nullptr;
-    if (!co_varnames) {
-    // TODO: static methods need no 'self' (but is harmless otherwise)
-        co_varnames = PyTuple_New(1 /* self */ + 1 /* fake */);
-        PyTuple_SET_ITEM(co_varnames, 0, CPyCppyy_PyText_FromString("self"));
-        PyTuple_SET_ITEM(co_varnames, 1, CPyCppyy_PyText_FromString("*args"));
-    }
-
-    int co_argcount = (int)PyTuple_Size(co_varnames);
-
-// for now, code object representing the statement 'pass'
-    PyObject* co_code = PyString_FromStringAndSize("d\x00\x00S", 4);
-
-// tuples with all the const literals used in the function
-    PyObject* co_consts = PyTuple_New(0);
-    PyObject* co_names = PyTuple_New(0);
-
-// names, freevars, and cellvars go unused
-    PyObject* co_unused = PyTuple_New(0);
-
-// filename is made-up
-    PyObject* co_filename = PyString_FromString("cppyy.py");
-
-// name is the function name, also through __name__ on the function itself
-    PyObject* co_name = PyString_FromString(pymeth->GetName().c_str());
-
-// firstlineno is the line number of first function code in the containing scope
-
-// lnotab is a packed table that maps instruction count and line number
-    PyObject* co_lnotab = PyString_FromString("\x00\x01\x0c\x01");
-
-    PyObject* code = (PyObject*)PyCode_New(
-        co_argcount,                             // argcount
-        co_argcount+1,                           // nlocals
-        2,                                       // stacksize
-        CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE, // flags
-        co_code,                                 // code
-        co_consts,                               // consts
-        co_names,                                // names
-        co_varnames,                             // varnames
-        co_unused,                               // freevars
-        co_unused,                               // cellvars
-        co_filename,                             // filename
-        co_name,                                 // name
-        1,                                       // firstlineno
-        co_lnotab);                              // lnotab
-
-    Py_DECREF(co_lnotab);
-    Py_DECREF(co_name);
-    Py_DECREF(co_unused);
-    Py_DECREF(co_filename);
-    Py_DECREF(co_varnames);
-    Py_DECREF(co_names);
-    Py_DECREF(co_consts);
-    Py_DECREF(co_code);
-
-    return code;
-#else
 // not important for functioning of most code, so not implemented for p3 for now (TODO)
     Py_RETURN_NONE;
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -646,17 +551,9 @@ static PyGetSetDef mp_getset[] = {
 };
 
 //= CPyCppyy method proxy function behavior ==================================
-#if PY_VERSION_HEX >= 0x03080000
 static PyObject* mp_vectorcall(
     CPPOverload* pymeth, PyObject* const *args, size_t nargsf, PyObject* kwds)
-#else
-static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
-#endif
 {
-#if PY_VERSION_HEX < 0x03080000
-    size_t nargsf = PyTuple_GET_SIZE(args);
-#endif
-
 // Call the appropriate overload of this method.
 
 // If called from a descriptor, then this could be a bound function with
@@ -823,15 +720,6 @@ static CPPOverload* mp_descr_get(CPPOverload* pymeth, CPPInstance* pyobj, PyObje
 //     py3.8 <=       | vector calls no longer call the descriptor, so when it is
 //                    |  called, the method is likely stored, so should be new object
 
-#if PY_VERSION_HEX < 0x03080000
-    if (!pyobj || (PyObject*)pyobj == Py_None /* from unbound TemplateProxy */) {
-        Py_XDECREF(pymeth->fSelf); pymeth->fSelf = nullptr;
-        pymeth->fFlags |= CallContext::kCallDirect | CallContext::kFromDescr;
-        Py_INCREF(pymeth);
-        return pymeth;       // unbound, e.g. free functions
-    }
-#endif
-
 // create a new method object
     bool gc_track = false;
     CPPOverload* newPyMeth = free_list;
@@ -850,7 +738,6 @@ static CPPOverload* mp_descr_get(CPPOverload* pymeth, CPPInstance* pyobj, PyObje
     *pymeth->fMethodInfo->fRefCount += 1;
     newPyMeth->fMethodInfo = pymeth->fMethodInfo;
 
-#if PY_VERSION_HEX >= 0x03080000
     newPyMeth->fVectorCall = pymeth->fVectorCall;
 
     if (pyobj && (PyObject*)pyobj != Py_None) {
@@ -865,17 +752,6 @@ static CPPOverload* mp_descr_get(CPPOverload* pymeth, CPPInstance* pyobj, PyObje
 // vector calls don't get here, unless a method is looked up on an instance, for
 // e.g. class methods (C++ static); notify downstream to expect a 'self'
     newPyMeth->fFlags |= CallContext::kFromDescr;
-
-#else
-// new method is to be bound to current object
-    Py_INCREF((PyObject*)pyobj);
-    newPyMeth->fSelf = pyobj;
-
-// reset flags of the new method, as there is a self (which may or may not have
-// come in through direct call syntax, but that's now impossible to know, so this
-// is the safer choice)
-    newPyMeth->fFlags = CallContext::kNone;
-#endif
 
     if (gc_track)
         PyObject_GC_Track(newPyMeth);
@@ -1028,11 +904,7 @@ PyTypeObject CPPOverload_Type = {
     sizeof(CPPOverload),               // tp_basicsize
     0,                                 // tp_itemsize
     (destructor)mp_dealloc,            // tp_dealloc
-#if PY_VERSION_HEX >= 0x03080000
     offsetof(CPPOverload, fVectorCall),
-#else
-    0,                                 // tp_vectorcall_offset / tp_print
-#endif
     0,                                 // tp_getattr
     0,                                 // tp_setattr
     0,                                 // tp_as_async / tp_compare
@@ -1041,20 +913,13 @@ PyTypeObject CPPOverload_Type = {
     0,                                 // tp_as_sequence
     0,                                 // tp_as_mapping
     (hashfunc)mp_hash,                 // tp_hash
-#if PY_VERSION_HEX >= 0x03080000
     (ternaryfunc)PyVectorcall_Call,    // tp_call
-#else
-    (ternaryfunc)mp_call,              // tp_call
-#endif
     (reprfunc)mp_str,                  // tp_str
     0,                                 // tp_getattro
     0,                                 // tp_setattro
     0,                                 // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC
-#if PY_VERSION_HEX >= 0x03080000
-        | Py_TPFLAGS_HAVE_VECTORCALL | Py_TPFLAGS_METHOD_DESCRIPTOR
-#endif
-    ,                                  // tp_flags
+        | Py_TPFLAGS_HAVE_VECTORCALL | Py_TPFLAGS_METHOD_DESCRIPTOR, // tp_flags
     (char*)"cppyy method proxy (internal)", // tp_doc
     (traverseproc)mp_traverse,         // tp_traverse
     (inquiry)mp_clear,                 // tp_clear
@@ -1079,19 +944,11 @@ PyTypeObject CPPOverload_Type = {
     0,                                 // tp_mro
     0,                                 // tp_cache
     0,                                 // tp_subclasses
-    0                                  // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                                // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                                // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                                // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                                // tp_vectorcall
-#endif
+    0,                                 // tp_weaklist
+    0,                                 // tp_del
+    0,                                 // tp_version_tag
+    0,                                 // tp_finalize
+    0                                  // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
@@ -1124,9 +981,7 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
         }
     }
 
-#if PY_VERSION_HEX >= 0x03080000
     fVectorCall = (vectorcallfunc)mp_vectorcall;
-#endif
 }
 
 //----------------------------------------------------------------------------

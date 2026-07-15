@@ -45,16 +45,24 @@ __all__ = [
     'typeid',                 # typeid of a C++ type
     'multi',                  # helper for multiple inheritance
     'add_include_path',       # add a path to search for headers
-    'add_library_path',       # add a path to search for headers
+    'add_library_path',       # add a path to search for libraries
     'add_autoload_map',       # explicitly include an autoload map
     'set_debug',              # enable/disable debug output
     ]
 
-import ctypes
-import os
-import sys
-import sysconfig
-import warnings
+import ctypes, os, sys, sysconfig, warnings
+
+if not 'CLING_STANDARD_PCH' in os.environ:
+    def _set_pch():
+        try:
+            import cppyy_backend as cpb
+            local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
+            if os.path.exists(local_pch):
+                os.putenv('CLING_STANDARD_PCH', local_pch)
+                os.environ['CLING_STANDARD_PCH'] = local_pch
+        except (ImportError, AttributeError):
+            pass
+    _set_pch(); del _set_pch
 
 try:
     import __pypy__
@@ -77,6 +85,15 @@ else:
 #- allow importing from gbl --------------------------------------------------
 sys.modules['cppyy.gbl'] = gbl
 sys.modules['cppyy.gbl.std'] = gbl.std
+
+
+#- force creation of std.exception -------------------------------------------------------
+_e = gbl.std.exception
+
+
+#- enable auto-loading -------------------------------------------------------
+try:    gbl.cling.runtime.gCling.EnableAutoLoading()
+except: pass
 
 
 #- external typemap ----------------------------------------------------------
@@ -113,15 +130,21 @@ def _standard_pythonizations(pyclass, name):
             raise IndexError(idx)
         pyclass.__getitem__ = tuple_getitem
 
-  # pythonization of std::string; placed here because it's simpler to write the
+  # pythonization of std::basic_string<char>; placed here because it's simpler to write the
   # custom "npos" object (to allow easy result checking of find/rfind) in Python
-    elif pyclass.__cpp_name__ == "std::string":
-        class NPOS(0x3000000 <= sys.hexversion and int or long):
+    elif pyclass.__cpp_name__ in (
+            "std::basic_string<char>",
+            "std::basic_string<char, std::char_traits<char>, std::allocator<char> >",
+        ):
+        class NPOS(int):
+            def __init__(self, npos):
+                self.__cpp_npos = npos
             def __eq__(self, other):
-                return other == -1 or  int(self) == other
+                return other == -1 or  other == self.__cpp_npos
             def __ne__(self, other):
-                return other != -1 and int(self) != other
-        del pyclass.__class__.npos          # drop b/c is const data
+                return other != -1 and other != self.__cpp_npos
+        if hasattr(pyclass.__class__, 'npos'):
+            del pyclass.__class__.npos          # drop b/c is const data
         pyclass.npos = NPOS(pyclass.npos)
 
     return True
@@ -164,44 +187,34 @@ class make_smartptr(object):
 
 gbl.std.make_shared = make_smartptr(gbl.std.shared_ptr, gbl.std.make_shared)
 gbl.std.make_unique = make_smartptr(gbl.std.unique_ptr, gbl.std.make_unique)
+gbl.gInterpreter = gbl.TInterpreter.Instance()
 del make_smartptr
 
 
 #--- interface to Cling ------------------------------------------------------
 class _stderr_capture(object):
     def __init__(self):
-        self._capture = not gbl.gDebug and True or False
-        self.err = ""
+       self._capture = not gbl.Cpp.IsDebugOutputEnabled()
+       self.err = ""
 
     def __enter__(self):
         if self._capture:
-            _begin_capture_stderr()
+           _begin_capture_stderr()
         return self
 
     def __exit__(self, tp, val, trace):
         if self._capture:
             self.err = _end_capture_stderr()
 
-def _cling_report(msg, errcode, msg_is_error=False):
-  # errcode should be authorative, but at least on MacOS, Cling does not report an
-  # error when it should, so also check for the typical compilation signature that
-  # Cling puts out as an indicator than an error occurred
-    if 'input_line' in msg:
-        if 'warning' in msg and not 'error' in msg:
-            warnings.warn(msg, SyntaxWarning)
-            msg_is_error=False
-
-        if 'error' in msg:
-            errcode = 1
-
-    if errcode or (msg and msg_is_error):
-        raise SyntaxError('Failed to parse the given C++ code%s' % msg)
-
-def cppdef(src):
+def cppdef(src, verbose = True):
     """Declare C++ source <src> to Cling."""
     with _stderr_capture() as err:
-        errcode = gbl.gInterpreter.Declare(src)
-    _cling_report(err.err, int(not errcode), msg_is_error=True)
+        errcode = gbl.Cpp.Declare(src, not verbose)
+    if not errcode == 0 or err.err:
+        if 'warning' in err.err.lower() and not 'error' in err.err.lower():
+            warnings.warn(err.err, SyntaxWarning)
+            return True
+        raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
     return True
 
 def cppexec(stmt):
@@ -209,22 +222,29 @@ def cppexec(stmt):
     if stmt and stmt[-1] != ';':
         stmt += ';'
 
-  # capture stderr, but note that ProcessLine could legitimately be writing to
+  # capture stderr, but note that Process could legitimately be writing to
   # std::cerr, in which case the captured output needs to be printed as normal
     with _stderr_capture() as err:
         errcode = ctypes.c_int(0)
         try:
-            gbl.gInterpreter.ProcessLine(stmt, ctypes.pointer(errcode))
+            errcode = gbl.Cpp.Process(stmt)
         except Exception as e:
             sys.stderr.write("%s\n\n" % str(e))
-            if not errcode.value:
-                errcode.value = 1
+            if not errcode.value: errcode.value = 1
 
-    _cling_report(err.err, errcode.value)
-    if err.err and err.err[1:] != '\n':
+    if not errcode == 0:
+        raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
+    elif err.err and err.err[1:] != '\n':
         sys.stderr.write(err.err[1:])
 
     return True
+
+def evaluate(input):
+    box = gbl.Cpp.Evaluate(input)
+    # Truthy sentinel: skips Box::convertTo's UB-on-K_Unspecified arm.
+    if box.getKind() == gbl.Cpp.Box.K_Unspecified:
+        return ~0
+    return box.convertTo['long']()
 
 def macro(cppm):
     """Attempt to evalute a C/C++ pre-processor macro as a constant"""
@@ -255,23 +275,24 @@ def load_library(name):
         if 0x3080000 <= sys.hexversion and 'win32' in sys.platform and os.path.isabs(name):
             return ctypes.CDLL(name, ctypes.RTLD_GLOBAL, winmode=0)  # raises on error
         raise RuntimeError('Unable to load library "%s"%s' % (name, err.err))
+
     return True
 
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
     with _stderr_capture() as err:
-        errcode = gbl.gInterpreter.Declare('#include "%s"' % header)
-    if not errcode:
+        errcode = gbl.Cpp.Declare('#include "%s"' % header, False)
+    if not errcode == 0:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
     return True
 
 def c_include(header):
     """Load (and JIT) header file <header> into Cling."""
     with _stderr_capture() as err:
-        errcode = gbl.gInterpreter.Declare("""extern "C" {
-#include "%s"
-}""" % header)
-    if not errcode:
+        errcode = gbl.Cpp.Declare("""extern "C" {
+                                    #include "%s"
+                                    }""" % header, False)
+    if not errcode == 0:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
     return True
 
@@ -279,7 +300,7 @@ def add_include_path(path):
     """Add a path to the include paths available to Cling."""
     if not os.path.isdir(path):
         raise OSError('No such directory: %s' % path)
-    gbl.gInterpreter.AddIncludePath(path)
+    gbl.Cpp.AddIncludePath(path)
 
 def add_library_path(path):
     """Add a path to the library search paths available to Cling."""
@@ -300,20 +321,15 @@ elif ispypy:
 if os.getenv('CONDA_PREFIX'):
   # MacOS, Linux
     include_path = os.path.join(os.getenv('CONDA_PREFIX'), 'include')
-    if os.path.exists(include_path):
-        add_include_path(include_path)
+    if os.path.exists(include_path): add_include_path(include_path)
 
   # Windows
     include_path = os.path.join(os.getenv('CONDA_PREFIX'), 'Library', 'include')
-    if os.path.exists(include_path):
-        add_include_path(include_path)
+    if os.path.exists(include_path): add_include_path(include_path)
 
-# assuming that we are in PREFIX/lib/python/site-packages/cppyy,
-# add PREFIX/include to the search path
-include_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), *(4*[os.path.pardir]+['include'])))
-if os.path.exists(include_path):
-    add_include_path(include_path)
+# assuming that we are in PREFIX/lib/python/site-packages/cppyy, add PREFIX/include to the search path
+include_path = os.path.abspath(os.path.join(os.path.dirname(__file__), *(4*[os.path.pardir]+['include'])))
+if os.path.exists(include_path): add_include_path(include_path)
 
 del include_path, apipath, ispypy
 
@@ -321,14 +337,11 @@ def add_autoload_map(fname):
     """Add the entries from a autoload (.rootmap) file to Cling."""
     if not os.path.isfile(fname):
         raise OSError("no such file: %s" % fname)
-    gbl.gInterpreter.LoadLibraryMap(fname)
+    gbl.cling.runtime.gCling.LoadLibraryMap(fname)
 
 def set_debug(enable=True):
     """Enable/disable debug output."""
-    if enable:
-        gbl.gDebug = 10
-    else:
-        gbl.gDebug =  0
+    gbl.Cpp.EnableDebugOutput(enable)
 
 def _get_name(tt):
     if isinstance(tt, str):
@@ -350,7 +363,17 @@ def sizeof(tt):
         try:
             sz = ctypes.sizeof(tt)
         except TypeError:
-            sz = gbl.gInterpreter.ProcessLine("sizeof(%s);" % (_get_name(tt),))
+            # Route through evaluate() so the Box-returning Cpp::Evaluate
+            # is unboxed in one place (see the shim above). Cpp::SizeOf
+            # would be faster but its sibling Cpp::GetNamed does not
+            # traverse `Foo::Bar`-style qualified names, so handing it a
+            # nested `tt.__cpp_name__` resolves to a null scope and the
+            # subsequent SizeOf hangs/aborts. Stick with the legacy
+            # interpreter round-trip until we add a qualified-name
+            # resolver (or an overload of SizeOf that takes a name).
+            sz = evaluate("sizeof(%s)" % (_get_name(tt),))
+            #scope = gbl.Cpp.GetNamed(_get_name(tt))
+            #sz = gbl.Cpp.SizeOf(scope)
         _sizes[tt] = sz
         return sz
 
@@ -363,7 +386,7 @@ def typeid(tt):
         return _typeids[tt]
     except KeyError:
         tidname = 'typeid_'+str(len(_typeids))
-        gbl.gInterpreter.ProcessLine(
+        cppexec(
             "namespace _cppyy_internal { auto* %s = &typeid(%s); }" %\
             (tidname, _get_name(tt),))
         tid = getattr(gbl._cppyy_internal, tidname)
@@ -373,9 +396,15 @@ def typeid(tt):
 def multi(*bases):      # after six, see also _typemap.py
     """Resolve metaclasses for multiple inheritance."""
   # contruct a "no conflict" meta class; the '_meta' is needed by convention
-    nc_meta = type.__new__(
-            type, 'cppyy_nc_meta', tuple(type(b) for b in bases if type(b) is not type), {})
+    nc_meta = type.__new__(type, 'cppyy_nc_meta', tuple(type(b) for b in bases if type(b) is not type), {})
     class faux_meta(type):
         def __new__(mcs, name, this_bases, d):
             return nc_meta(name, bases, d)
     return type.__new__(faux_meta, 'faux_meta', (), {})
+
+
+#- workaround (TODO: may not be needed with Clang9) --------------------------
+if 'win32' in sys.platform:
+    cppdef("""template<>
+    std::basic_ostream<char, std::char_traits<char>>& __cdecl std::endl<char, std::char_traits<char>>(
+        std::basic_ostream<char, std::char_traits<char>>&);""")

@@ -1,8 +1,12 @@
 #ifndef CPYCPPYY_CALLCONTEXT_H
 #define CPYCPPYY_CALLCONTEXT_H
 
+#include "Python.h"
+#include "Cppyy.h"
+
 // Standard
 #include <vector>
+#include <cstdint>
 
 #include <sys/types.h>
 
@@ -50,7 +54,7 @@ struct Parameter {
 
 // extra call information
 struct CallContext {
-    CallContext() : fCurScope(0), fPyContext(nullptr), fFlags(0),
+    CallContext() : fCurScope(nullptr), fPyContext(nullptr), fFlags(0),
         fArgsVec(nullptr), fNArgs(0), fTemps(nullptr) {}
     CallContext(const CallContext&) = delete;
     CallContext& operator=(const CallContext&) = delete;

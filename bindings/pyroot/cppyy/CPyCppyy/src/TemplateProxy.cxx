@@ -6,6 +6,7 @@
 #include "CPPFunction.h"
 #include "CPPMethod.h"
 #include "CPPOverload.h"
+#include "Cppyy.h"
 #include "PyCallable.h"
 #include "PyStrings.h"
 #include "Utility.h"
@@ -15,6 +16,12 @@
 
 
 namespace CPyCppyy {
+
+static inline std::string targs2str(TemplateProxy* pytmpl)
+{
+    if (!pytmpl || !pytmpl->fTemplateArgs) return "";
+    return CPyCppyy_PyText_AsString(pytmpl->fTemplateArgs);
+}
 
 //----------------------------------------------------------------------------
 TemplateInfo::TemplateInfo() : fPyClass(nullptr), fNonTemplated(nullptr),
@@ -75,8 +82,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
 // Instantiate (and cache) templated methods, return method if any
     std::string proto = "";
 
-#if PY_VERSION_HEX >= 0x03080000
-// adjust arguments for self if this is a rebound (global) function
+// adjust arguments for self if this is a rebound global function
     bool isNS = (((CPPScope*)fTI->fPyClass)->fFlags & CPPScope::kIsNamespace);
     if (!isNS && CPyCppyy_PyArgs_GET_SIZE(args, nargsf) && \
             (!fSelf ||
@@ -84,7 +90,6 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         args   += 1;
         nargsf -= 1;
     }
-#endif
 
     Py_ssize_t argc = CPyCppyy_PyArgs_GET_SIZE(args, nargsf);
     if (argc != 0) {
@@ -95,8 +100,14 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             bool bArgSet = false;
 
         // special case for arrays
-            PyObject* pytc = PyObject_GetAttr(itemi, PyStrings::gTypeCode);
-            if (pytc) {
+            if (TemplateProxy_CheckExact(itemi)) {
+                TemplateProxy *tn = (TemplateProxy*)itemi;
+                PyObject *f = PyUnicode_FromFormat("%s%s", tn->fTI->fCppName.c_str(), targs2str(tn).c_str());
+                PyTuple_SET_ITEM(tpArgs, i, f);
+                bArgSet = true;
+            }
+            PyObject* pytc;
+            if (!bArgSet && (pytc = PyObject_GetAttr(itemi, PyStrings::gTypeCode))) {
                 Py_buffer bufinfo;
                 memset(&bufinfo, 0, sizeof(Py_buffer));
                 std::string ptrdef;
@@ -142,12 +153,6 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             } else
                 PyErr_Clear();
 
-            if (!bArgSet && (Py_TYPE(itemi) == &TemplateProxy_Type)) {
-                TemplateProxy *tp = (TemplateProxy*)itemi;
-                PyObject *tmpl_name = CPyCppyy_PyText_FromFormat("decltype(%s%s)", tp->fTI->fCppName.c_str(), tp->fTemplateArgs ? CPyCppyy_PyText_AsString(tp->fTemplateArgs) : "");
-                PyTuple_SET_ITEM(tpArgs, i, tmpl_name);
-                bArgSet = true;
-            }
             if (!bArgSet) {
             // normal case (may well fail)
                 PyErr_Clear();
@@ -157,17 +162,12 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             }
         }
 
-#if PY_VERSION_HEX >= 0x03080000
         PyObject* pyargs = PyTuple_New(argc);
         for (Py_ssize_t i = 0; i < argc; ++i) {
             PyObject* item = CPyCppyy_PyArgs_GET_ITEM(args, i);
             Py_INCREF(item);
             PyTuple_SET_ITEM(pyargs, i, item);
         }
-#else
-        Py_INCREF(args);
-        PyObject* pyargs = args;
-#endif
         const std::string& name_v1 = \
             Utility::ConstructTemplateArgs(nullptr, tpArgs, pyargs, pref, 0, pcnt);
 
@@ -199,7 +199,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     // TODO: this caches the lookup method before the call, meaning that failing overloads
     // can add already existing overloads to the set of methods.
 
-        std::string resname = Cppyy::GetMethodFullName(cppmeth);
+        std::string resname = Cppyy::GetFullName(Cppyy::TCppScope_t(cppmeth.data));
 
     // An initializer_list is preferred for the argument types, but should not leak into
     // the argument types. If it did, replace with vector and lookup anew.
@@ -215,7 +215,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             // replace if the new method with vector was found; otherwise just continue
             // with the previously found method with initializer_list.
                 cppmeth = m2;
-                resname = Cppyy::GetMethodFullName(cppmeth);
+                resname = Cppyy::GetFullName(Cppyy::TCppScope_t(cppmeth.data));
             }
         }
 
@@ -282,9 +282,8 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             Py_DECREF(pyol);
             pyol = (PyObject*)CPPOverload_New(fname, meth);      // takes ownership
         }
-    // Case 6: pre-existing object is not a CPPOverload nor TemplateProxy
-    // we do not cache it
-    // as this might be a pythonization (monkey-patched func/method)
+        // Case 6: pre-existing object is not a CPPOverload nor TemplateProxy
+        // we do not cache it, as this might be a pythonization (monkey-patched func/method)
         else {
             Py_DECREF(pyol);
             pyol = (PyObject*)CPPOverload_New(fname, meth);
@@ -435,12 +434,6 @@ static int tpp_doc_set(TemplateProxy* pytmpl, PyObject *val, void *)
 { errors.clear();                                                            \
   return result; }
 
-static inline std::string targs2str(TemplateProxy* pytmpl)
-{
-    if (!pytmpl || !pytmpl->fTemplateArgs) return "";
-    return CPyCppyy_PyText_AsString(pytmpl->fTemplateArgs);
-}
-
 static inline void UpdateDispatchMap(TemplateProxy* pytmpl, bool use_targs, uint64_t sighash, CPPOverload* pymeth)
 {
 // Memoize a method in the dispatch map after successful call; replace old if need be (may be
@@ -514,12 +507,8 @@ static inline PyObject* CallMethodImp(TemplateProxy* pytmpl, PyObject*& pymeth,
     return result;
 }
 
-#if PY_VERSION_HEX >= 0x03080000
 static PyObject* tpp_vectorcall(
     TemplateProxy* pytmpl, PyObject* const *args, size_t nargsf, PyObject* kwds)
-#else
-static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
-#endif
 {
 // Dispatcher to the actual member method, several uses possible; in order:
 //
@@ -548,10 +537,6 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
 //
 
 // TODO: should previously instantiated templates be considered first?
-
-#if PY_VERSION_HEX < 0x03080000
-    size_t nargsf = PyTuple_GET_SIZE(args);
-#endif
 
     PyObject *pymeth = nullptr, *result = nullptr;
 
@@ -604,7 +589,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
     // attempt call if found (this may fail if there are specializations)
         if (CPPOverload_Check(pymeth)) {
         // since the template args are fully explicit, allow implicit conversion of arguments
-            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, true, sighash);
+            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, /*impOK=*/true, sighash);
             if (result) {
                 Py_DECREF(pyfullname);
                 TPPCALL_RETURN;
@@ -627,7 +612,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
             CPyCppyy_PyText_AsString(pyfullname), args, nargsf, Utility::kNone);
         if (pymeth) {
         // attempt actual call; same as above, allow implicit conversion of arguments
-            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, true, sighash);
+            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, /*impOK=*/true, sighash);
             if (result) {
                 Py_DECREF(pyfullname);
                 TPPCALL_RETURN;
@@ -664,7 +649,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
         pymeth = pytmpl->Instantiate(pytmpl->fTI->fCppName, args, nargsf, pref, &pcnt);
         if (pymeth) {
         // attempt actual call; even if argument based, allow implicit conversions, for example for non-template arguments
-            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, true, sighash);
+            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, /*impOK=*/true, sighash);
             if (result) TPPCALL_RETURN;
         }
         Utility::FetchError(errors);
@@ -710,9 +695,7 @@ static TemplateProxy* tpp_descr_get(TemplateProxy* pytmpl, PyObject* pyobj, PyOb
 // copy name, class, etc. pointers
     new (&newPyTmpl->fTI) std::shared_ptr<TemplateInfo>{pytmpl->fTI};
 
-#if PY_VERSION_HEX >= 0x03080000
     newPyTmpl->fVectorCall = pytmpl->fVectorCall;
-#endif
 
     return newPyTmpl;
 }
@@ -795,9 +778,7 @@ void TemplateProxy::Set(const std::string& cppname, const std::string& pyname, P
     fTI->fTemplated    = CPPOverload_New(pyname, dummy);
     fTI->fLowPriority  = CPPOverload_New(pyname, dummy);
 
-#if PY_VERSION_HEX >= 0x03080000
     fVectorCall = (vectorcallfunc)tpp_vectorcall;
-#endif
 }
 
 
@@ -810,8 +791,8 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
     PyObject* sigarg_tuple = nullptr;
     int want_const = -1;
 
-    Cppyy::TCppScope_t scope = (Cppyy::TCppScope_t) 0;
-    Cppyy::TCppMethod_t cppmeth = (Cppyy::TCppMethod_t) 0;
+    Cppyy::TCppScope_t scope = nullptr;
+    Cppyy::TCppMethod_t cppmeth = nullptr;
     std::string proto;
 
     if (PyArg_ParseTuple(args, const_cast<char*>("s|i:__overload__"), &sigarg, &want_const)) {
@@ -914,11 +895,7 @@ PyTypeObject TemplateProxy_Type = {
     sizeof(TemplateProxy),             // tp_basicsize
     0,                                 // tp_itemsize
     (destructor)tpp_dealloc,           // tp_dealloc
-#if PY_VERSION_HEX >= 0x03080000
     offsetof(TemplateProxy, fVectorCall),
-#else
-    0,                                 // tp_vectorcall_offset / tp_print
-#endif
     0,                                 // tp_getattr
     0,                                 // tp_setattr
     0,                                 // tp_as_async / tp_compare
@@ -927,20 +904,13 @@ PyTypeObject TemplateProxy_Type = {
     0,                                 // tp_as_sequence
     &tpp_as_mapping,                   // tp_as_mapping
     (hashfunc)tpp_hash,                // tp_hash
-#if PY_VERSION_HEX >= 0x03080000
     (ternaryfunc)PyVectorcall_Call,    // tp_call
-#else
-    (ternaryfunc)tpp_call,             // tp_call
-#endif
     0,                                 // tp_str
     0,                                 // tp_getattro
     0,                                 // tp_setattro
     0,                                 // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC
-#if PY_VERSION_HEX >= 0x03080000
-        | Py_TPFLAGS_HAVE_VECTORCALL | Py_TPFLAGS_METHOD_DESCRIPTOR
-#endif
-        ,                              // tp_flags
+        | Py_TPFLAGS_HAVE_VECTORCALL | Py_TPFLAGS_METHOD_DESCRIPTOR, // tp_flags
     (char*)"cppyy template proxy (internal)",     // tp_doc
     (traverseproc)tpp_traverse,        // tp_traverse
     (inquiry)tpp_clear,                // tp_clear
@@ -965,19 +935,11 @@ PyTypeObject TemplateProxy_Type = {
     0,                                 // tp_mro
     0,                                 // tp_cache
     0,                                 // tp_subclasses
-    0                                  // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                                // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                                // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                                // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                                // tp_vectorcall
-#endif
+    0,                                 // tp_weaklist
+    0,                                 // tp_del
+    0,                                 // tp_version_tag
+    0,                                 // tp_finalize
+    0                                  // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
