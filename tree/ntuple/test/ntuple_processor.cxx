@@ -811,16 +811,10 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
 // with the RNTuple join mechanism.
 class GH16805ProcessorTest : public testing::Test {
 protected:
-   const std::vector<std::string> fStepZeroFiles{
-      "gh16805_rntuple_stepzero_0.root",
-      "gh16805_rntuple_stepzero_1.root"
-   };
+   const std::vector<std::string> fStepZeroFiles{"gh16805_rntuple_stepzero_0.root", "gh16805_rntuple_stepzero_1.root"};
 
-   const std::vector<std::string> fJoinFiles{
-      "gh16805_rntuple_join_0.root",
-      "gh16805_rntuple_join_1.root",
-      "gh16805_rntuple_join_2.root"
-   };
+   const std::vector<std::string> fJoinFiles{"gh16805_rntuple_join_0.root", "gh16805_rntuple_join_1.root",
+                                             "gh16805_rntuple_join_2.root"};
    const std::string fStepOneFile = "gh16805_rntuple_stepone.root";
 
    void WriteStepZero(const std::string &fileName, int begin, int end)
@@ -895,43 +889,22 @@ protected:
 
 TEST_F(GH16805ProcessorTest, JoinReading)
 {
-   std::vector<RNTupleOpenSpec> stepOneSpecs{
-      {"stepone", fStepOneFile}
-   };
+   std::vector<RNTupleOpenSpec> stepOneSpecs{{"stepone", fStepOneFile}};
 
-   std::vector<RNTupleOpenSpec> stepZeroSpecs{
-      {"stepzero", fStepZeroFiles[0]},
-      {"stepzero", fStepZeroFiles[1]}
-   };
+   std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
    std::vector<RNTupleOpenSpec> joinSpecs{
-      {"topLevelJoin", fJoinFiles[0]},
-      {"topLevelJoin", fJoinFiles[1]},
-      {"topLevelJoin", fJoinFiles[2]}
-   };
+      {"topLevelJoin", fJoinFiles[0]}, {"topLevelJoin", fJoinFiles[1]}, {"topLevelJoin", fJoinFiles[2]}};
 
-   auto stepOneProc =
-      RNTupleProcessor::CreateChain(stepOneSpecs, "stepone");
+   auto stepOneProc = RNTupleProcessor::CreateChain(stepOneSpecs, "stepone");
 
-   auto stepZeroProc =
-      RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
+   auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
 
-   auto joinProc =
-      RNTupleProcessor::CreateChain(joinSpecs, "topLevelJoin");
+   auto joinProc = RNTupleProcessor::CreateChain(joinSpecs, "topLevelJoin");
 
-   auto joinedWithJoin =
-      RNTupleProcessor::CreateJoin(
-         std::move(stepOneProc),
-         std::move(joinProc),
-         {}
-      );
+   auto joinedWithJoin = RNTupleProcessor::CreateJoin(std::move(stepOneProc), std::move(joinProc), {});
 
-   auto joinedAll =
-      RNTupleProcessor::CreateJoin(
-         std::move(joinedWithJoin),
-         std::move(stepZeroProc),
-         {}
-      );
+   auto joinedAll = RNTupleProcessor::CreateJoin(std::move(joinedWithJoin), std::move(stepZeroProc), {});
 
    auto stepOneBr1 = joinedAll->RequestField<int>("stepOneBr1");
    auto joinBr1 = joinedAll->RequestField<int>("topLevelJoin.joinBr1");
@@ -965,11 +938,8 @@ using GH20033ProcessorConfig = std::tuple<bool, bool, bool, bool>;
 
 class GH20033ProcessorTest : public testing::TestWithParam<GH20033ProcessorConfig> {
 protected:
-
-   const std::array<std::string, 2> fStepZeroFiles{
-      "gh20033_rntuple_stepzero_0.root",
-      "gh20033_rntuple_stepzero_1.root"
-   };
+   const std::array<std::string, 2> fStepZeroFiles{"gh20033_rntuple_stepzero_0.root",
+                                                   "gh20033_rntuple_stepzero_1.root"};
 
    const std::string fStepOneFile = "gh20033_rntuple_stepone.root";
    const std::string fStepTwoFile = "gh20033_rntuple_steptwo.root";
