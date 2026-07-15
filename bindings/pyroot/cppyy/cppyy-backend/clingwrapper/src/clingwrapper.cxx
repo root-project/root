@@ -117,7 +117,7 @@ static bool gEnableFastPath = true;
 // global initialization -----------------------------------------------------
 namespace {
 
-const int kMAXSIGNALS = 16;
+//const int kMAXSIGNALS = 16;
 
 // names copied from TUnixSystem
 #ifdef WIN32
@@ -133,6 +133,7 @@ const int SIGUSR1  = 0;
 const int SIGUSR2  = 0;
 #endif
 
+#if 0
 static struct Signalmap_t {
    int               fCode;
    const char       *fSigName;
@@ -154,6 +155,7 @@ static struct Signalmap_t {
    { SIGUSR1,   "user-defined signal 1" },
    { SIGUSR2,   "user-defined signal 2" }
 };
+#endif
 
 static inline
 void push_tokens_from_string(char *s, std::vector <const char*> &tokens) {
@@ -1099,7 +1101,7 @@ static inline
 bool WrapperCall(Cppyy::TCppMethod_t method, size_t nargs, void* args_, void* self, void* result)
 {
     Parameter* args = (Parameter*)args_;
-    bool is_direct = nargs & DIRECT_CALL;
+    //bool is_direct = nargs & DIRECT_CALL;
     nargs = CALL_NARGS(nargs);
 
     // if (!is_ready(wrap, is_direct))
@@ -1195,7 +1197,7 @@ char* Cppyy::CallS(
 }
 
 Cppyy::TCppObject_t Cppyy::CallConstructor(
-    TCppMethod_t method, TCppScope_t klass, size_t nargs, void* args)
+    TCppMethod_t method, TCppScope_t /*klass*/, size_t nargs, void* args)
 {
     void* obj = nullptr;
     WrapperCall(method, nargs, args, nullptr, &obj);
@@ -1218,7 +1220,7 @@ Cppyy::TCppObject_t Cppyy::CallO(TCppMethod_t method,
     return TCppObject_t{};
 }
 
-Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_enabled)
+Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool /*check_enabled*/)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     return Cpp::GetFunctionAddress(method);
@@ -1319,8 +1321,7 @@ bool Cppyy::IsVariable(TCppScope_t scope)
 //             --tpl_open;
 //
 //     // collect name up to "::"
-//         else if (tpl_open == 0 && \
-//                  c == ':' && pos+1 < name.size() && name[pos+1] == ':') {
+//         else if (tpl_open == 0 && c == ':' && pos+1 < name.size() && name[pos+1] == ':') {
 //         // found the extend of the scope ... done
 //             return name.substr(0, pos-1);
 //         }
@@ -1343,15 +1344,17 @@ bool Cppyy::IsVariable(TCppScope_t scope)
 //     return name.substr(0, std::min(first_templ, first_scope));
 // }
 //
-// #define FILL_COLL(type, filter) {                                             \
-//     TIter itr{coll};                                                          \
-//     type* obj = nullptr;                                                      \
-//     while ((obj = (type*)itr.Next())) {                                       \
-//         const char* nm = obj->GetName();                                      \
-//         if (nm && nm[0] != '_' && !(obj->Property() & (filter))) {            \
-//             if (gInitialNames.find(nm) == gInitialNames.end())                \
-//                 cppnames.insert(nm);                                          \
-//     }}}
+#if 0
+#define FILL_COLL(type, filter) {                                             \
+    TIter itr{coll};                                                          \
+    type* obj = nullptr;                                                      \
+    while ((obj = (type*)itr.Next())) {                                       \
+        const char* nm = obj->GetName();                                      \
+        if (nm && nm[0] != '_' && !(obj->Property() & (filter))) {            \
+            if (gInitialNames.find(nm) == gInitialNames.end())                \
+                cppnames.insert(nm);                                          \
+    }}}
+#endif
 //
 // static inline
 // void cond_add(Cppyy::TCppScope_t scope, const std::string& ns_scope,
@@ -1532,7 +1535,7 @@ bool Cppyy::GetSmartPtrInfo(
 
 // type offsets --------------------------------------------------------------
 ptrdiff_t Cppyy::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
-    TCppObject_t address, int direction, bool rerror)
+    TCppObject_t /*address*/, int direction, bool rerror)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     // Either base or derived class is incomplete, treat silently
@@ -1655,7 +1658,7 @@ std::string Cppyy::GetMethodArgDefault(TCppMethod_t method, TCppIndex_t iarg)
     return Cpp::GetFunctionArgDefault(method, iarg);
 }
 
-Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t method, TCppIndex_t iarg, const std::string &req_type)
+Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t /*method*/, TCppIndex_t /*iarg*/, const std::string & /*req_type*/)
 {
     // if (method) {
     //     TFunction* f = m2f(method);
@@ -1760,7 +1763,7 @@ void Cppyy::GetTemplatedMethods(TCppScope_t scope, std::vector<Cppyy::TCppMethod
     Cpp::GetFunctionTemplatedDecls(scope, methods);
 }
 
-Cppyy::TCppIndex_t Cppyy::GetNumTemplatedMethods(TCppScope_t scope, bool accept_namespace)
+Cppyy::TCppIndex_t Cppyy::GetNumTemplatedMethods(TCppScope_t scope, bool /*accept_namespace*/)
 {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     std::vector<Cppyy::TCppMethod_t> mc;
