@@ -62,8 +62,9 @@ jobs:
 #          ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}
       - name: Make wheel
         env:
-            MACOSX_DEPLOYMENT_TARGET: 26.0 
+            MACOSX_DEPLOYMENT_TARGET: 26.5
         run: |
+            ln -s /Applications/Xcode_${{MACOSX_DEPLOYMENT_TARGET}}.app /Applications/Xcode.app
             mkdir wheel_creation && cd wheel_creation
             cp -r ../root .
             python3 -m venv root_build_env 
