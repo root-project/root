@@ -1331,8 +1331,7 @@ bool Cppyy::IsVariable(TCppScope_t scope)
 //             --tpl_open;
 //
 //     // collect name up to "::"
-//         else if (tpl_open == 0 && \
-//                  c == ':' && pos+1 < name.size() && name[pos+1] == ':') {
+//         else if (tpl_open == 0 && c == ':' && pos+1 < name.size() && name[pos+1] == ':') {
 //         // found the extend of the scope ... done
 //             return name.substr(0, pos-1);
 //         }
@@ -1355,15 +1354,17 @@ bool Cppyy::IsVariable(TCppScope_t scope)
 //     return name.substr(0, std::min(first_templ, first_scope));
 // }
 //
-// #define FILL_COLL(type, filter) {                                             \
-//     TIter itr{coll};                                                          \
-//     type* obj = nullptr;                                                      \
-//     while ((obj = (type*)itr.Next())) {                                       \
-//         const char* nm = obj->GetName();                                      \
-//         if (nm && nm[0] != '_' && !(obj->Property() & (filter))) {            \
-//             if (gInitialNames.find(nm) == gInitialNames.end())                \
-//                 cppnames.insert(nm);                                          \
-//     }}}
+#if 0
+#define FILL_COLL(type, filter) {                                             \
+    TIter itr{coll};                                                          \
+    type* obj = nullptr;                                                      \
+    while ((obj = (type*)itr.Next())) {                                       \
+        const char* nm = obj->GetName();                                      \
+        if (nm && nm[0] != '_' && !(obj->Property() & (filter))) {            \
+            if (gInitialNames.find(nm) == gInitialNames.end())                \
+                cppnames.insert(nm);                                          \
+    }}}
+#endif
 //
 // static inline
 // void cond_add(Cppyy::TCppScope_t scope, const std::string& ns_scope,
@@ -1645,7 +1646,7 @@ std::string Cppyy::GetMethodArgDefault(TCppMethod_t method, TCppIndex_t iarg)
     return Cpp::GetFunctionArgDefault(method, iarg);
 }
 
-Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t /*method*/, TCppIndex_t iarg, const std::string &req_type)
+Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t /*method*/, TCppIndex_t /*iarg*/, const std::string & /*req_type*/)
 {
     // if (method) {
     //     TFunction* f = m2f(method);
