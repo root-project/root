@@ -393,8 +393,7 @@ void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::
    for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
       const auto &innerProc = fInnerProcessors[i];
       // TODO can this be done (more) lazily? I.e. only when a match cannot be found in the current inner proc?
-      // At this stage, we don't want to fully initialize (i.e. set the entry of) the inner processor yet
-      innerProc->Initialize(nullptr);
+      innerProc->Initialize(fEntry);
       innerProc->AddEntriesToJoinTable(joinTable, entryOffset);
       entryOffset += innerProc->GetNEntries();
    }
@@ -556,9 +555,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
       SetAuxiliaryFieldValidity(false);
    } else {
       SetAuxiliaryFieldValidity(true);
-      for (const auto &fieldIdx : fAuxiliaryFieldIdxs) {
-         fEntry->ReadValue(fieldIdx, entryIdx);
-      }
+      fAuxiliaryProcessor->LoadEntry(entryIdx);
    }
 
    return entryNumber;
