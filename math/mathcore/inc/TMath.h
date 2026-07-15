@@ -446,8 +446,10 @@ struct Limits {
    template <typename Iterator> Iterator LocMax(Iterator first, Iterator last);
 
    // Derivatives of an array
-   template <typename T> T *Gradient(Long64_t n, T *f, double h = 1);
-   template <typename T> T *Laplacian(Long64_t n, T *f, double h = 1);
+   template <typename T>
+   T *Gradient(Long64_t n, T const *f, double h = 1);
+   template <typename T>
+   T *Laplacian(Long64_t n, T const *f, double h = 1);
 
    // Hashing
    ULong_t Hash(const void *txt, Int_t ntxt);
@@ -1014,19 +1016,21 @@ Iterator TMath::LocMin(Iterator first, Iterator last) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Calculate the one-dimensional gradient of an array with length n.
+/// \brief Calculate the one-dimensional finite gradient of an array with length n.
+/// It is assumed that the values in the array are spaced uniformly in "x", which
+/// would amount to taking the derivative w.r.t. x with an infinitesimal step size `h`.
+///
 /// The first value in the returned array is a forward difference,
 /// the next n-2 values are central differences, and the last is a backward difference.
 ///
-/// \note Function leads to undefined behavior if n does not match the length of f
 /// \param n the number of points in the array
-/// \param f the array of points.
-/// \param h the step size. The default step size is 1.
+/// \param f the array of points.  It is assumed that these are spaced uniformly in "x".
+/// \param h the distance between the points in `f`.
 /// \return an array of size n with the gradient. Returns nullptr if n < 2 or f empty. Ownership is transferred to the
 /// caller.
 
 template <typename T>
-T *TMath::Gradient(const Long64_t n, T *f, const double h)
+T *TMath::Gradient(const Long64_t n, T const *f, const double h)
 {
    if (!f) {
       ::Error("TMath::Gradient", "Input parameter f is empty.");
@@ -1052,25 +1056,27 @@ T *TMath::Gradient(const Long64_t n, T *f, const double h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Calculate the Laplacian of an array with length n.
-/// The first value in the returned array is a forward difference,
-/// the next n-2 values are central differences, and the last is a backward difference.
+/// \brief Calculate second-order finite differences of an array with length n at second-order accuracy.
+/// It is assumed that the values in the array are spaced uniformly in "x", where
+/// the spacing is represented by the argument `h`.
 ///
-/// \note Function leads to undefined behavior if n does not match the length of f
+/// The first value in the returned array is a forward difference at 2nd order accuracy,
+/// the next n-2 values are central differences, and the last is the backward difference.
+///
 /// \param n the number of points in the array
-/// \param f the array of points.
-/// \param h the step size. The default step size is 1.
+/// \param f the array of points. It is assumed that these are spaced uniformly in "x".
+/// \param h the distance between the points in `f`.
 /// \return an array of size n with the laplacian. Returns nullptr if n < 4 or f empty. Ownership is transferred to the
 /// caller.
 
 template <typename T>
-T *TMath::Laplacian(const Long64_t n, T *f, const double h)
+T *TMath::Laplacian(const Long64_t n, T const *f, const double h)
 {
    if (!f) {
       ::Error("TMath::Laplacian", "Input parameter f is empty.");
       return nullptr;
    } else if (n < 4) {
-      ::Error("TMath::Laplacian", "Input parameter n=%lld is smaller than 4.", n);
+      ::Error("TMath::Laplacian", "Need at least four elements, got %lld", n);
       return nullptr;
    }
    Long64_t i = 1;
