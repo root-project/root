@@ -73,9 +73,13 @@ jobs:
             cd root
             pip install -r requirements.txt
             python3 -m build --wheel
+            pip install delocate 
+            mkdir fixed_wheels
+            delocate-wheel -v -w fixed_wheels/ dist/*.whl
+
       - name: Upload_wheel
         uses: actions/upload-artifact@v6
         with:
           name: Wheel upload
-          path: /Users/runner/work/root/root/wheel_creation/root/dist/*.whl
+          path: /Users/runner/work/root/root/wheel_creation/root/fixed_wheels/*.whl
           if-no-files-found: error
