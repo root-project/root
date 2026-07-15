@@ -1136,7 +1136,7 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RO
       }
 
       // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
-      assert(srcFieldDesc.GetTypeNameForComparison() == dstFieldDesc.GetTypeName());
+      assert(srcDesc.GetTypeNameForComparison(srcFieldDesc) == dstFieldDesc.GetTypeName());
       info.fInMemoryType = ColumnInMemoryType(srcFieldDesc.GetTypeName(), info.fColumnType);
       columns.emplace_back(info);
    }
