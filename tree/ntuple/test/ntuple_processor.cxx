@@ -556,6 +556,91 @@ TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
+TEST(RNTupleProcessor, JoinedChainCrossedEntries)
+{
+   FileRaii fileGuard1("ntuple_processor_test_chained_join_crossed1.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldI = model->MakeField<std::uint32_t>("i");
+      auto fldX = model->MakeField<float>("x");
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+
+      *fldI = 0;
+      *fldX = 0.f;
+      writer->Fill();
+
+      *fldI = 1;
+      *fldX = 1.f;
+      writer->Fill();
+   }
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldI = model->MakeField<std::uint32_t>("i");
+      auto fldY = model->MakeField<float>("y");
+
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard1.GetPath().c_str(), "UPDATE"));
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), "ntuple_aux", *file);
+
+      *fldI = 0;
+      *fldY = 0.f;
+      writer->Fill();
+
+      *fldI = 2;
+      *fldY = 2.f;
+      writer->Fill();
+   }
+
+   FileRaii fileGuard2("ntuple_processor_test_chained_join_crossed2.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldI = model->MakeField<std::uint32_t>("i");
+      auto fldX = model->MakeField<float>("x");
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+
+      *fldI = 2;
+      *fldX = 2.f;
+      writer->Fill();
+
+      *fldI = 3;
+      *fldX = 3.f;
+      writer->Fill();
+   }
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldI = model->MakeField<std::uint32_t>("i");
+      auto fldY = model->MakeField<float>("y");
+
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard2.GetPath().c_str(), "UPDATE"));
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), "ntuple_aux", *file);
+
+      *fldI = 1;
+      *fldY = 1.f;
+      writer->Fill();
+
+      *fldI = 3;
+      *fldY = 3.f;
+      writer->Fill();
+   }
+
+   auto chain_primary =
+      RNTupleProcessor::CreateChain({{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}});
+   auto chain_auxiliary =
+      RNTupleProcessor::CreateChain({{"ntuple_aux", fileGuard1.GetPath()}, {"ntuple_aux", fileGuard2.GetPath()}});
+   auto proc = RNTupleProcessor::CreateJoin(std::move(chain_primary), std::move(chain_auxiliary), {"i"});
+
+   auto x = proc->RequestField<float>("x");
+   auto y = proc->RequestField<float>("ntuple_aux.y");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx, static_cast<int>(*x));
+      EXPECT_FLOAT_EQ(*x, *y);
+   }
+
+   EXPECT_EQ(proc->GetNEntriesProcessed(), 4);
+}
+
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 {
    auto primaryProc =
