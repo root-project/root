@@ -49,6 +49,7 @@ class RColumnElementBase;
 }
 
 class RNTupleDescriptor;
+class RFieldDescriptor;
 
 namespace Internal {
 class RColumnDescriptorBuilder;
@@ -65,6 +66,8 @@ struct RNTupleClusterBoundaries {
 };
 
 std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
+
+void FixupFieldTypeName(ROOT::RFieldDescriptor &fieldDesc);
 } // namespace Internal
 
 namespace Experimental {
@@ -121,6 +124,7 @@ class RNTupleAttrSetDescriptorIterable;
 class RFieldDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend class Internal::RFieldDescriptorBuilder;
+   friend void Internal::FixupFieldTypeName(ROOT::RFieldDescriptor &fieldDesc);
 
 private:
    ROOT::DescriptorId_t fFieldId = ROOT::kInvalidDescriptorId;
@@ -767,6 +771,12 @@ private:
    /// to create a new RNTuple with the same schema as this one but not necessarily the same clustering. This is used
    /// when merging two RNTuples.
    RNTupleDescriptor CloneSchema() const;
+
+   /// ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
+   /// This function returns true if this descriptor has a version prior to 1.0.0.1 and may therefore contain such
+   /// fields. This is only valid to call after SetVersion() or SetVersionForWriting() has been called on this
+   /// descriptor.
+   bool FieldTypeNamesMayNeedFixup() const;
 
 public:
    /// All known feature flags.
