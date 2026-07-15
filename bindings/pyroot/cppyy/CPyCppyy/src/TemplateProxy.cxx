@@ -81,6 +81,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
 {
 // Instantiate (and cache) templated methods, return method if any
     std::string proto = "";
+    std::string protoPair = "";
 
 // adjust arguments for self if this is a rebound global function
     bool isNS = (((CPPScope*)fTI->fPyClass)->fFlags & CPPScope::kIsNamespace);
@@ -171,6 +172,56 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         const std::string& name_v1 = \
             Utility::ConstructTemplateArgs(nullptr, tpArgs, pyargs, pref, 0, pcnt);
 
+    // A Python 2-tuple is typed above as std::initializer_list, but it may equally
+    // represent a std::pair, to which an initializer_list can not convert; construct
+    // an alternative prototype to retry the lookup with if the first one fails
+        if (!PyErr_Occurred()) {
+            bool has2Tuple = false;
+            for (Py_ssize_t i = 0; i < argc; ++i) {
+                PyObject* itemi = CPyCppyy_PyArgs_GET_ITEM(args, i);
+                if (PyTuple_CheckExact(itemi) && PyTuple_GET_SIZE(itemi) == 2) {
+                    has2Tuple = true;
+                    break;
+                }
+            }
+
+            if (has2Tuple) {
+                PyObject* tpArgsPair = PyTuple_New(argc);
+                for (Py_ssize_t i = 0; i < argc; ++i) {
+                    PyObject* itemi = CPyCppyy_PyArgs_GET_ITEM(args, i);
+                    PyObject* entry = nullptr;
+                    if (PyTuple_CheckExact(itemi) && PyTuple_GET_SIZE(itemi) == 2) {
+                        PyObject* subtypes = PyTuple_New(2);
+                        for (Py_ssize_t j = 0; j < 2; ++j) {
+                            PyObject* tp = (PyObject*)Py_TYPE(PyTuple_GET_ITEM(itemi, j));
+                            Py_INCREF(tp);
+                            PyTuple_SET_ITEM(subtypes, j, tp);
+                        }
+                        const std::string& sub = \
+                            Utility::ConstructTemplateArgs(nullptr, subtypes, itemi, pref, 0, nullptr);
+                        Py_DECREF(subtypes);
+                        if (!PyErr_Occurred() && 2 < sub.size())
+                            entry = CPyCppyy_PyText_FromString(("std::pair" + sub).c_str());
+                        else
+                            PyErr_Clear();
+                    }
+                    if (!entry) {
+                        entry = PyTuple_GET_ITEM(tpArgs, i);
+                        Py_INCREF(entry);
+                    }
+                    PyTuple_SET_ITEM(tpArgsPair, i, entry);
+                }
+
+                const std::string& name_v2 = \
+                    Utility::ConstructTemplateArgs(nullptr, tpArgsPair, pyargs, pref, 0, nullptr);
+                Py_DECREF(tpArgsPair);
+                if (!PyErr_Occurred() && name_v2.size())
+                    protoPair = name_v2.substr(1, name_v2.size()-2);
+                else
+                    PyErr_Clear();
+            }
+        }
+
         Py_DECREF(pyargs);
         Py_DECREF(tpArgs);
 
@@ -187,6 +238,11 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
 // the following causes instantiation as necessary
     Cppyy::TCppScope_t scope = ((CPPClass*)fTI->fPyClass)->fCppType;
     Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(scope, fname, proto);
+    if (!cppmeth && !protoPair.empty() && protoPair != proto) {
+    // retry with 2-tuples typed as std::pair instead of std::initializer_list
+        cppmeth = Cppyy::GetMethodTemplate(scope, fname, protoPair);
+        if (cppmeth) proto = protoPair;
+    }
     if (cppmeth) {    // overload stops here
     // A successful instantiation needs to be cached to pre-empt future instantiations. There
     // are two names involved, the original asked (which may be partial) and the received.
