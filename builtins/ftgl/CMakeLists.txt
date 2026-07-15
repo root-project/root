@@ -44,11 +44,17 @@ foreach(var FTGL_LIBRARIES FTGL_LIBRARY FTGL_LIBRARY_DEBUG FTGL_LIBRARY_RELEASE 
   unset(${var} CACHE)
 endforeach()
 
-if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  if(winrtdebug)
-    set(ROOT_FTGL_BUILD_COMMAND_FLAGS "--config Debug")
-  else()
-    set(ROOT_FTGL_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+set(FTGL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+if(WIN32)
+  if(NOT CMAKE_GENERATOR MATCHES Ninja)
+    if(winrtdebug)
+      set(ROOT_FTGL_BUILD_COMMAND_FLAGS "--config Debug")
+    else()
+      set(ROOT_FTGL_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+    endif()
+  endif()
+  if(asan)
+    set(FTGL_CXX_FLAGS "${FTGL_CXX_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
   endif()
 endif()
 
@@ -70,6 +76,7 @@ ExternalProject_Add(BUILTIN_FTGL
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     -DCMAKE_C_COMPILER:STRING=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}
+    -DCMAKE_CXX_FLAGS=${FTGL_CXX_FLAGS}
     -DBUILD_SHARED_LIBS:BOOL=FALSE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5

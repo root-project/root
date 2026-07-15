@@ -29,9 +29,7 @@ if(MSVC)
     set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${GTEST_BUILD_TYPE}")
   endif()
   if(asan)
-    if(NOT winrtdebug)
-      set(gtestbuild "RelWithDebInfo")
-    endif()
+    set(GTEST_CXX_FLAGS "${GTEST_CXX_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
   endif()
   set(EXTRA_GTEST_OPTS
     -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
