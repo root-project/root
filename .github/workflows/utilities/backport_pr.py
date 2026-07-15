@@ -331,7 +331,7 @@ def principal():
                 thePR.postComment(prComment)
 
     if bpPRUrlBranch == []:
-        Exception('The PR was not ported to any branch!')
+        raise Exception('The PR was not ported to any branch!')
 
     # Let's write a clear message as a comment to communicate everything went well
     prComment = 'This PR has been backported to'
