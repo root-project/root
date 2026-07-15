@@ -25,7 +25,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hbook
     minicern
   DEPENDENCIES
     Hist
-    Matrix
     Tree
     Graf
     TreePlayer

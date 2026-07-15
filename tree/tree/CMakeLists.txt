@@ -10,7 +10,7 @@
 ############################################################################
 
 if (imt)
-  list(APPEND TREE_EXTRA_DEPENDENCIES Imt)
+  list(APPEND TREE_EXTRA_LIBRARIES Imt)
 endif(imt)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Tree
@@ -124,12 +124,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
-    ${TREE_EXTRA_DEPENDENCIES}
     Net
     RIO
-    MathCore
   LIBRARIES
     ${ROOT_ATOMIC_LIBS}
+    ${TREE_EXTRA_LIBRARIES}
+    Thread
+    MathCore
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
