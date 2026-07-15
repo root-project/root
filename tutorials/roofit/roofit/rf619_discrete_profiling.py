@@ -166,6 +166,11 @@ for i in range(nMeanPoints):
     minim.minimize("Minuit2", "Migrad")
     profileGraph.SetPoint(i, meanVal, nll.getVal())
 
+# The fit objects are not needed anymore. Delete them already before the
+# plotting phase, so that the NLL evaluation machinery is not torn down at
+# interpreter shutdown, where the order of cleanups is less controlled.
+del minim
+del nll
 
 c = ROOT.TCanvas("c_rf619", "NLL vs Mean for Different Discrete Combinations", 1200, 400)
 c.Divide(3, 1)
