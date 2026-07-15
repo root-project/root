@@ -496,12 +496,12 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 # try to see if model has nuisance parameters first
                 constrPdf = RooStats.MakeNuisancePdf(sbModel, "nuisanceConstraintPdf_sbmodel")
                 if constrPdf:
-                    Warning(
+                    ROOT.Warning(
                         "StandardHypoTestInvDemo",
                         "Model %s has nuisance parameters but no global observables associated",
                         sbModel.GetName(),
                     )
-                    Warning(
+                    ROOT.Warning(
                         "StandardHypoTestInvDemo",
                         "\tThe effect of the nuisance parameters will not be treated correctly ",
                     )
@@ -565,7 +565,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             )
 
             if fitres.status() != 0:
-                Warning(
+                ROOT.Warning(
                     "StandardHypoTestInvDemo",
                     "Fit to the model failed - try with strategy 1 and perform first an Hesse computation",
                 )
@@ -582,7 +582,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 )
 
             if fitres.status() != 0:
-                Warning("StandardHypoTestInvDemo", " Fit still failed - continue anyway.....")
+                ROOT.Warning("StandardHypoTestInvDemo", " Fit still failed - continue anyway.....")
 
             print("StandardHypoTestInvDemo - Best Fit value : ", poi.GetName(), " = ", poihat, " +/- ", poi.getError())
             print(f"Time for fitting : ")
@@ -715,7 +715,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             # look if pdf is number counting or extended
             if sbModel.GetPdf().canBeExtended():
                 if useNumberCounting:
-                    Warning("StandardHypoTestInvDemo", "Pdf is extended: but number counting flag is set: ignore it ")
+                    ROOT.Warning("StandardHypoTestInvDemo", "Pdf is extended: but number counting flag is set: ignore it ")
             else:
                 # for not extended pdf
                 if not useNumberCounting:
@@ -745,7 +745,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             toymcs.SetUseMultiGen(self.mOptimize)
 
             if self.mGenerateBinned and sbModel.GetObservables().getSize() > 2:
-                Warning(
+                ROOT.Warning(
                     "StandardHypoTestInvDemo",
                     (
                         "generate binned is activated but the number of observable is {}. Too much "
@@ -819,7 +819,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 )
                 npnuisPdf.getObservables(nuisParams)
                 if np.getSize() == 0:
-                    Warning(
+                    ROOT.Warning(
                         "StandardHypoTestInvDemo",
                         "Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range",
                     )
@@ -831,7 +831,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             if testStatType == 3:
                 hc.SetOneSided(True)
             if testStatType != 2 and testStatType != 3:
-                Warning(
+                ROOT.Warning(
                     "StandardHypoTestInvDemo",
                     "Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL",
                 )
