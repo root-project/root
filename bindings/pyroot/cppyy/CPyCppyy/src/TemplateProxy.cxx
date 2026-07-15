@@ -106,7 +106,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
                 PyTuple_SET_ITEM(tpArgs, i, f);
                 bArgSet = true;
             }
-            PyObject* pytc;
+            PyObject* pytc = nullptr;
             if (!bArgSet && (pytc = PyObject_GetAttr(itemi, PyStrings::gTypeCode))) {
                 Py_buffer bufinfo;
                 memset(&bufinfo, 0, sizeof(Py_buffer));
