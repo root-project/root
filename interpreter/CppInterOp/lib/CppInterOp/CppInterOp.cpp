@@ -1240,6 +1240,30 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   if (ND && ND != (clang::NamedDecl*)-1)
     return INTEROP_RETURN(ND->getCanonicalDecl());
 
+  // Lookup::Named performs a redeclaration-style lookup, which for a class
+  // stops at the class itself, whereas [class.qual] lookup of an existing
+  // member name also searches the base classes (e.g. the `type` member
+  // typedef of libstdc++'s recursively implemented std::tuple_element lives
+  // in a base of the queried specialization). Retry accordingly.
+  if (!ND && Within) {
+    if (auto* RD = llvm::dyn_cast<clang::CXXRecordDecl>(Within)) {
+      if (clang::CXXRecordDecl* Def = RD->getDefinition()) {
+        auto& S = getSema();
+        clang::DeclarationName DName = &S.Context.Idents.get(name);
+        clang::LookupResult R(S, DName, clang::SourceLocation(),
+                              clang::Sema::LookupOrdinaryName,
+                              RedeclarationKind::NotForRedeclaration);
+        R.suppressDiagnostics();
+        S.LookupQualifiedName(R, Def);
+        if (!R.empty()) {
+          R.resolveKind();
+          if (R.isSingleResult())
+            return INTEROP_RETURN(R.getFoundDecl()->getCanonicalDecl());
+        }
+      }
+    }
+  }
+
   // Slow path: only when qualified lookup missed AND `Within` is a
   // namespace whose enclosing chain carries at least one using-directive
   // (the only reason qualified-vs-unqualified disagree at namespace
