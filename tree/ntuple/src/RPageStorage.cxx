@@ -1108,6 +1108,7 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 {
    // Create new descriptor
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
+   // This is needed to be able to use GetTypeNameForComparison()
    fDescriptorBuilder.SetVersionForWriting();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 

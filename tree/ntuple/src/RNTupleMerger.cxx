@@ -604,7 +604,8 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
 
       // Require that fields types match
       // TODO(gparolini): allow non-identical but compatible types
-      const auto &srcTyName = field.fSrc->GetTypeName();
+      const auto &srcTyName = ROOT::Internal::GetRenormalizedTypeName(field.fSrc->GetTypeName());
+      // This is already renormalized by construction (see RNTupleDescriptorBuilder::SetSchemaFromExisting)
       const auto &dstTyName = field.fDst->GetTypeName();
       if (srcTyName != dstTyName) {
          std::stringstream ss;
@@ -1250,8 +1251,8 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RO
       }
 
       // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
-      assert(srcFieldDesc.GetTypeName() == dstFieldDesc.GetTypeName());
-      info.fInMemoryType = ColumnInMemoryType(srcFieldDesc.GetTypeName(), columnType);
+      assert(srcDesc.GetTypeNameForComparison(srcFieldDesc) == dstFieldDesc.GetTypeName());
+      info.fInMemoryType = ColumnInMemoryType(dstFieldDesc.GetTypeName(), columnType);
       columns.emplace_back(info);
    }
 
