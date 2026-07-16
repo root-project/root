@@ -2403,7 +2403,7 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
  */
 std::ostream &RooJSONFactoryWSTool::warning(std::string const &str)
 {
-   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::ERROR, RooFit::IO) << str << std::endl;
+   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::IO) << str << std::endl;
 }
 
 /**
