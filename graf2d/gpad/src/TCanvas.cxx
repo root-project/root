@@ -620,6 +620,7 @@ void TCanvas::Build()
    } else {
       //normal mode with a screen window
       // Set default physical canvas attributes
+      if (!fPainter) return;
       fPainter->SelectDrawable(fCanvasID);
       fPainter->SetAttFill({1, 1001});    //Set color index for fill area
       fPainter->SetAttLine({1, 1, 1});    //Set color index for lines
