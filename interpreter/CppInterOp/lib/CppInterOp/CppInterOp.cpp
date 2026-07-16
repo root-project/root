@@ -900,6 +900,15 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
   if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
     PrintingPolicy Policy = C.getPrintingPolicy();
     Policy.SuppressUnwrittenScope = true;
+    // Keep scope and type names platform-independent: always drop inline
+    // namespaces (libc++'s std::__1, libstdc++'s std::__cxx11) instead of
+    // relying on the lookup-based "redundant qualifier" heuristic, and do
+    // not substitute preferred names (libc++ tags basic_string<char> with
+    // preferred_name(string)). cppyy matches these names against string
+    // keys and uses them as Python scope paths.
+    Policy.SuppressInlineNamespace =
+        llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::All);
+    Policy.UsePreferredNames = false;
     if (qualified) {
       Policy.FullyQualifiedName = true;
       Policy.Suppress_Elab = true;
@@ -956,7 +965,14 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
       return func_name;
     }
 
-    return qualified ? ND->getQualifiedNameAsString() : ND->getNameAsString();
+    if (qualified) {
+      std::string qual_name;
+      llvm::raw_string_ostream OS(qual_name);
+      ND->printQualifiedName(OS, Policy);
+      OS.flush();
+      return qual_name;
+    }
+    return ND->getNameAsString();
   }
 
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
@@ -3141,6 +3157,15 @@ std::string GetTypeAsString(ConstTypeRef var) {
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
   Policy.Suppress_Elab = true;
   Policy.FullyQualifiedName = true;
+  // Type names are matched against string keys on the cppyy side (e.g. the
+  // std::string return-value executor), so their spelling must not depend on
+  // the platform: always drop inline namespaces (libc++'s std::__1,
+  // libstdc++'s std::__cxx11) instead of relying on the lookup-based
+  // "redundant qualifier" heuristic, and do not substitute preferred names
+  // (libc++ tags basic_string<char> with preferred_name(string)).
+  Policy.SuppressInlineNamespace =
+      llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::All);
+  Policy.UsePreferredNames = false;
   return INTEROP_RETURN(QT.getAsString(Policy));
 }
 
