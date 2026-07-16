@@ -39,6 +39,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 
@@ -154,35 +155,12 @@ bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneo
  */
 bool isNumber(const std::string &str)
 {
-   bool seen_digit = false;
-   bool seen_dot = false;
-   bool seen_e = false;
-   bool after_e = false;
-   bool sign_allowed = true;
-
-   for (size_t i = 0; i < str.size(); ++i) {
-      char c = str[i];
-
-      if (std::isdigit(c)) {
-         seen_digit = true;
-         sign_allowed = false;
-      } else if ((c == '+' || c == '-') && sign_allowed) {
-         // Sign allowed at the beginning or right after 'e'/'E'
-         sign_allowed = false;
-      } else if (c == '.' && !seen_dot && !after_e) {
-         seen_dot = true;
-         sign_allowed = false;
-      } else if ((c == 'e' || c == 'E') && seen_digit && !seen_e) {
-         seen_e = true;
-         after_e = true;
-         sign_allowed = true; // allow sign immediately after 'e'
-         seen_digit = false;  // reset: we now expect digits after e
-      } else {
-         return false;
-      }
-   }
-
-   return seen_digit;
+   // Parse with the same mechanism as toDouble() and require that the whole string is consumed, so that isNumber(s) is
+   // true exactly when toDouble(s) can turn the entire string into a value. (std::from_chars for floating-point types
+   // is not portably available on all platforms ROOT supports, so we rely on the stream extraction instead.)
+   std::istringstream stream(str);
+   double value = 0.0;
+   return (stream >> value) && stream.eof();
 }
 
 /**
