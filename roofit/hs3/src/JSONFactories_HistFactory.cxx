@@ -331,6 +331,20 @@ double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
    return std::numeric_limits<double>::quiet_NaN();
 }
 
+// Returns the relative uncertainty encoded by a gamma constraint pdf. Only RooPoisson (via its tau) and RooGaussian
+// (via sigma/mean) are supported; anything else raises an error.
+double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
+{
+   if (auto constraintP = dynamic_cast<RooPoisson const *>(&constraint)) {
+      return 1. / std::sqrt(poissonTau(*constraintP, gamma));
+   }
+   if (auto constraintG = dynamic_cast<RooGaussian const *>(&constraint)) {
+      return constraintG->getSigma().getVal() / constraintG->getMean().getVal();
+   }
+   RooJSONFactoryWSTool::error("currently, only RooPoisson and RooGaussian are supported as constraint types");
+   return std::numeric_limits<double>::quiet_NaN();
+}
+
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
                       RooArgSet &constraints)
@@ -1138,16 +1152,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                channel.tot_yield[idx] += sample.hist[idx - 1];
                channel.tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
                if (constraint) {
-                  if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
-                     double erel = 1. / std::sqrt(poissonTau(*constraint_p, *g));
-                     channel.rel_errors[idx] = erel;
-                  } else if (RooGaussian *constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
-                     double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
-                     channel.rel_errors[idx] = erel;
-                  } else {
-                     RooJSONFactoryWSTool::error(
-                        "currently, only RooPoisson and RooGaussian are supported as constraint types");
-                  }
+                  channel.rel_errors[idx] = constraintRelError(*constraint, *g);
                }
             }
             sample.useBarlowBeestonLight = true;
@@ -1173,15 +1178,9 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                if (!constraint) {
                   sys.constraints.push_back(0.0);
                   sys.constraintPdfs.push_back(nullptr);
-               } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
-                  sys.constraints.push_back(1. / std::sqrt(poissonTau(*constraint_p, *g)));
-                  sys.constraintPdfs.push_back(constraint_p);
-               } else if (auto constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
-                  sys.constraints.push_back(constraint_g->getSigma().getVal() / constraint_g->getMean().getVal());
-                  sys.constraintPdfs.push_back(constraint_g);
                } else {
-                  RooJSONFactoryWSTool::error(
-                     "currently, only RooPoisson and RooGaussian are supported as constraint types");
+                  sys.constraints.push_back(constraintRelError(*constraint, *g));
+                  sys.constraintPdfs.push_back(constraint);
                }
             }
             sample.shapesys.emplace_back(std::move(sys));
