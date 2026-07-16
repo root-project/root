@@ -202,7 +202,7 @@ namespace TClassEdit {
 
    void        Init(TClassEdit::TInterpreterLookupHelper *helper);
 
-   std::string CleanType (const char *typeDesc,int mode = 0,const char **tail = nullptr);
+   std::string CleanType (std::string_view typeDesc,int mode = 0,const char **tail = nullptr);
    inline bool IsArtificial(std::string_view name) { return name.find('@') != name.npos; }
    bool        IsDefAlloc(const char *alloc, const char *classname);
    bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);

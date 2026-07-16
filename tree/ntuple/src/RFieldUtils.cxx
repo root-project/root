@@ -463,7 +463,7 @@ std::string GetRenormalizedDemangledTypeName(std::string_view demangledName, boo
 std::string ROOT::Internal::GetCanonicalTypePrefix(std::string_view typeName)
 {
    // Remove outer cv qualifiers and extra white spaces
-   const std::string cleanedType = TClassEdit::CleanType(std::string(typeName).c_str(), /*mode=*/1);
+   const std::string cleanedType = TClassEdit::CleanType(typeName, /*mode=*/1);
 
    // Can happen when called from RFieldBase::Create() and is caught there
    if (cleanedType.empty())
