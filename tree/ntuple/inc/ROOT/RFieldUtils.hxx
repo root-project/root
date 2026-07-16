@@ -27,10 +27,10 @@ namespace Internal {
 /// template arguments (hence "Prefix").
 /// Furthermore, if the type is a C-style array, rules are applied to the base type and the C style array
 /// is then mapped to an std::array.
-std::string GetCanonicalTypePrefix(const std::string &typeName);
+std::string GetCanonicalTypePrefix(std::string_view typeName);
 
 /// Given a type name normalized by ROOT meta, renormalize it for RNTuple. E.g., insert std::prefix.
-std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
+std::string GetRenormalizedTypeName(std::string_view metaNormalizedName);
 
 /// Given a type info ask ROOT meta to demangle it, then renormalize the resulting type name for RNTuple. Useful to
 /// ensure that e.g. fundamental types are normalized to the type used by RNTuple (e.g. int -> std::int32_t).
@@ -42,18 +42,18 @@ std::string GetRenormalizedTypeName(const std::type_info &ti);
 /// to ensure correct reconstruction of objects from disk.
 /// If the function returns true, renormalizedAlias contains the RNTuple normalized name that should be used as
 /// type alias.
-bool NeedsMetaNameAsAlias(const std::string &metaNormalizedName, std::string &renormalizedAlias,
+bool NeedsMetaNameAsAlias(std::string_view metaNormalizedName, std::string &renormalizedAlias,
                           bool isArgInTemplatedUserClass = false /* used in recursion */);
 
 /// Applies all RNTuple type normalization rules except typedef resolution.
-std::string GetNormalizedUnresolvedTypeName(const std::string &origName);
+std::string GetNormalizedUnresolvedTypeName(std::string_view origName);
 
 /// Appends 'll' or 'ull' to the where necessary and strips the suffix if not needed.
-std::string GetNormalizedInteger(const std::string &intTemplateArg);
+std::string GetNormalizedInteger(std::string_view intTemplateArg);
 std::string GetNormalizedInteger(long long val);
 std::string GetNormalizedInteger(unsigned long long val);
-long long ParseIntTypeToken(const std::string &intToken);
-unsigned long long ParseUIntTypeToken(const std::string &uintToken);
+long long ParseIntTypeToken(std::string_view intToken);
+unsigned long long ParseUIntTypeToken(std::string_view uintToken);
 
 /// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
 enum class ERNTupleSerializationMode {

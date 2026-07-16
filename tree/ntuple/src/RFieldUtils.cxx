@@ -27,7 +27,7 @@
 
 namespace {
 
-std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, bool renormalizeStdString);
+std::string GetRenormalizedDemangledTypeName(std::string_view demangledName, bool renormalizeStdString);
 
 const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"Bool_t", "bool"},
@@ -66,7 +66,7 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 // Any types used as a template argument of user classes will keep [U]Long64_t template arguments for the type alias,
 // e.g. MyClass<std::vector<Long64_t>> will normalize to `MyClass<std::vector<std::int64_t>>` but keep the original
 // spelling in the type alias.
-bool IsUserClass(const std::string &typeName)
+bool IsUserClass(std::string_view typeName)
 {
    return typeName.rfind("std::", 0) != 0 && typeName.rfind("ROOT::VecOps::RVec<", 0) != 0;
 }
@@ -148,7 +148,7 @@ std::string GetNormalizedTemplateArg(const std::string &arg, bool keepQualifier,
 }
 
 using AnglePos = std::pair<std::string::size_type, std::string::size_type>;
-std::vector<AnglePos> FindTemplateAngleBrackets(const std::string &typeName)
+std::vector<AnglePos> FindTemplateAngleBrackets(std::string_view typeName)
 {
    std::vector<AnglePos> result;
    std::string::size_type currentPos = 0;
@@ -391,7 +391,7 @@ void NormalizeTemplateArguments(std::string &templatedTypeName, int maxTemplateA
 }
 
 // Given a type name normalized by ROOT Meta, return the type name normalized according to the RNTuple rules.
-std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
+std::string GetRenormalizedMetaTypeName(std::string_view metaNormalizedName)
 {
    auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
    // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
@@ -412,7 +412,7 @@ std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
 
 // Given a demangled name ("normalized by the compiler"), return the type name normalized according to the
 // RNTuple rules.
-std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, bool renormalizeStdString)
+std::string GetRenormalizedDemangledTypeName(std::string_view demangledName, bool renormalizeStdString)
 {
    std::string tn{demangledName};
    RemoveSpaceBefore(tn, '[');
@@ -446,7 +446,7 @@ std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, b
    }
 
    std::string normName{canonicalTypePrefix};
-   NormalizeTemplateArguments(normName, maxTemplateArgs, [renormalizeStdString](const std::string &n) {
+   NormalizeTemplateArguments(normName, maxTemplateArgs, [renormalizeStdString](std::string_view n) {
       return GetRenormalizedDemangledTypeName(n, renormalizeStdString);
    });
    // In RenormalizeStdString(), we normalize the demangled type name of `std::string`,
@@ -460,10 +460,10 @@ std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, b
 
 } // namespace
 
-std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
+std::string ROOT::Internal::GetCanonicalTypePrefix(std::string_view typeName)
 {
    // Remove outer cv qualifiers and extra white spaces
-   const std::string cleanedType = TClassEdit::CleanType(typeName.c_str(), /*mode=*/1);
+   const std::string cleanedType = TClassEdit::CleanType(std::string(typeName).c_str(), /*mode=*/1);
 
    // Can happen when called from RFieldBase::Create() and is caught there
    if (cleanedType.empty())
@@ -529,12 +529,12 @@ std::string ROOT::Internal::GetRenormalizedTypeName(const std::type_info &ti)
    return GetRenormalizedDemangledTypeName(GetRawDemangledTypeName(ti), true /* renormalizeStdString */);
 }
 
-std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
+std::string ROOT::Internal::GetRenormalizedTypeName(std::string_view metaNormalizedName)
 {
    return GetRenormalizedMetaTypeName(metaNormalizedName);
 }
 
-bool ROOT::Internal::NeedsMetaNameAsAlias(const std::string &metaNormalizedName, std::string &renormalizedAlias,
+bool ROOT::Internal::NeedsMetaNameAsAlias(std::string_view metaNormalizedName, std::string &renormalizedAlias,
                                           bool isArgInTemplatedUserClass)
 {
    const auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
@@ -566,11 +566,11 @@ bool ROOT::Internal::NeedsMetaNameAsAlias(const std::string &metaNormalizedName,
    return result;
 }
 
-std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
+std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(std::string_view origName)
 {
    const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
       TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
-   TClassEdit::TSplitType splitname(origName.c_str(), modType);
+   TClassEdit::TSplitType splitname(std::string(origName).c_str(), modType);
    std::string shortType;
    splitname.ShortType(shortType, modType);
    auto canonicalTypePrefix = GetCanonicalTypePrefix(shortType);
@@ -648,7 +648,7 @@ std::string ROOT::Internal::GetNormalizedInteger(unsigned long long val)
    return std::to_string(val);
 }
 
-std::string ROOT::Internal::GetNormalizedInteger(const std::string &intTemplateArg)
+std::string ROOT::Internal::GetNormalizedInteger(std::string_view intTemplateArg)
 {
    R__ASSERT(!intTemplateArg.empty());
    if (intTemplateArg[0] == '-')
@@ -656,46 +656,46 @@ std::string ROOT::Internal::GetNormalizedInteger(const std::string &intTemplateA
    return GetNormalizedInteger(ParseUIntTypeToken(intTemplateArg));
 }
 
-long long ROOT::Internal::ParseIntTypeToken(const std::string &intToken)
+long long ROOT::Internal::ParseIntTypeToken(std::string_view intToken)
 {
    std::size_t nChars = 0;
-   long long res = std::stoll(intToken, &nChars);
+   long long res = std::stoll(std::string(intToken), &nChars);
    if (nChars == intToken.size())
       return res;
 
    assert(nChars < intToken.size());
    if (nChars == 0) {
-      throw RException(R__FAIL("invalid integer type token: " + intToken));
+      throw RException(R__FAIL("invalid integer type token: " + std::string(intToken)));
    }
 
-   auto suffix = intToken.substr(nChars);
+   auto suffix = std::string(intToken.substr(nChars));
    std::transform(suffix.begin(), suffix.end(), suffix.begin(), ::toupper);
    if (suffix == "L" || suffix == "LL")
       return res;
    if (res >= 0 && (suffix == "U" || suffix == "UL" || suffix == "ULL"))
       return res;
 
-   throw RException(R__FAIL("invalid integer type token: " + intToken));
+   throw RException(R__FAIL("invalid integer type token: " + std::string(intToken)));
 }
 
-unsigned long long ROOT::Internal::ParseUIntTypeToken(const std::string &uintToken)
+unsigned long long ROOT::Internal::ParseUIntTypeToken(std::string_view uintToken)
 {
    std::size_t nChars = 0;
-   unsigned long long res = std::stoull(uintToken, &nChars);
+   unsigned long long res = std::stoull(std::string(uintToken), &nChars);
    if (nChars == uintToken.size())
       return res;
 
    assert(nChars < uintToken.size());
    if (nChars == 0) {
-      throw RException(R__FAIL("invalid integer type token: " + uintToken));
+      throw RException(R__FAIL("invalid integer type token: " + std::string(uintToken)));
    }
 
-   auto suffix = uintToken.substr(nChars);
+   auto suffix = std::string(uintToken.substr(nChars));
    std::transform(suffix.begin(), suffix.end(), suffix.begin(), ::toupper);
    if (suffix == "U" || suffix == "L" || suffix == "LL" || suffix == "UL" || suffix == "ULL")
       return res;
 
-   throw RException(R__FAIL("invalid integer type token: " + uintToken));
+   throw RException(R__FAIL("invalid integer type token: " + std::string(uintToken)));
 }
 
 ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializationMode(const TClass *cl)
