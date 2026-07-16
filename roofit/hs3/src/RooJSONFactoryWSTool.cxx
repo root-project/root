@@ -2041,18 +2041,6 @@ bool RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
 }
 
 /**
- * @brief Import the workspace from a YML string.
- *
- * @param s The YML string containing the workspace data.
- * @return bool Returns true on successful import, false otherwise.
- */
-bool RooJSONFactoryWSTool::importYMLfromString(const std::string &s)
-{
-   std::stringstream ss(s);
-   return importYML(ss);
-}
-
-/**
  * @brief Export the workspace to a JSON string.
  *
  * @return std::string The JSON string representing the exported workspace.
@@ -2061,18 +2049,6 @@ std::string RooJSONFactoryWSTool::exportJSONtoString()
 {
    std::stringstream ss;
    exportJSON(ss);
-   return ss.str();
-}
-
-/**
- * @brief Export the workspace to a YML string.
- *
- * @return std::string The YML string representing the exported workspace.
- */
-std::string RooJSONFactoryWSTool::exportYMLtoString()
-{
-   std::stringstream ss;
-   exportYML(ss);
    return ss.str();
 }
 
@@ -2129,35 +2105,6 @@ bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
    if (!out.is_open())
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid output file '" + filename + "'.");
    return this->exportJSON(out);
-}
-
-/**
- * @brief Export the workspace to YML format and write to the output stream.
- *
- * @param os The output stream to write the YML data to.
- * @return bool Returns true on successful export, false otherwise.
- */
-bool RooJSONFactoryWSTool::exportYML(std::ostream &os)
-{
-   std::unique_ptr<JSONTree> tree = createNewJSONTree();
-   JSONNode &n = tree->rootnode();
-   this->exportAllObjects(n);
-   n.writeYML(os);
-   return true;
-}
-
-/**
- * @brief Export the workspace to YML format and write to the specified file.
- *
- * @param filename The name of the YML file to create and write the data to.
- * @return bool Returns true on successful export, false otherwise.
- */
-bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
-{
-   std::ofstream out(filename.c_str());
-   if (!out.is_open())
-      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid output file '" + filename + "'.");
-   return this->exportYML(out);
 }
 
 bool RooJSONFactoryWSTool::hasAttribute(const std::string &obj, const std::string &attrib)
@@ -2364,37 +2311,6 @@ bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
    if (!infile.is_open())
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid input file '" + filename + "'.");
    return this->importJSON(infile);
-}
-
-/**
- * @brief Imports a YML file from the given input stream to the workspace.
- *
- * @param is The input stream containing the YML data.
- * @return bool Returns true on successful import, false otherwise.
- */
-bool RooJSONFactoryWSTool::importYML(std::istream &is)
-{
-   // import a YML file to the workspace
-   std::unique_ptr<JSONTree> tree = JSONTree::create(is);
-   JSONNode const &rootnode = tree->rootnode();
-   this->importAllNodes(rootnode);
-   importParameterStepWidths(*this->workspace(), rootnode);
-   return true;
-}
-
-/**
- * @brief Imports a YML file from the given filename to the workspace.
- *
- * @param filename The name of the YML file to import.
- * @return bool Returns true on successful import, false otherwise.
- */
-bool RooJSONFactoryWSTool::importYML(std::string const &filename)
-{
-   // import a YML file to the workspace
-   std::ifstream infile(filename.c_str());
-   if (!infile.is_open())
-      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid input file '" + filename + "'.");
-   return this->importYML(infile);
 }
 
 void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std::string &jsonString)

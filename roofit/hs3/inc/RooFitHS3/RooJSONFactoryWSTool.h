@@ -145,18 +145,12 @@ public:
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
-   bool importYML(std::string const &filename);
    bool importJSON(std::istream &os);
-   bool importYML(std::istream &os);
    bool exportJSON(std::string const &fileName);
-   bool exportYML(std::string const &fileName);
    bool exportJSON(std::ostream &os);
-   bool exportYML(std::ostream &os);
 
    std::string exportJSONtoString();
-   std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
-   bool importYMLfromString(const std::string &s);
    void importJSONElement(const std::string &name, const std::string &jsonString);
    void importVariableElement(const RooFit::Detail::JSONNode &n);
 
