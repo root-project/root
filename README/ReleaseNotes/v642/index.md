@@ -77,6 +77,10 @@ maps) will now obtain different, mathematically consistent values.
 
 ## RooFit
 
+### Small changes
+
+* The `RooMinimizer::Strategy` enum has been removed. It named the Minuit strategies that are usually referred to just by integers, but caused confusion because it didn't include the unnamed "Strategy 3". Since people usually set the strategy with integer values anyway, it was decided that the simplest solution to avoid the confusion was simply to remove the `RooMinimizer::Strategy` enum
+
 ### Removal of the the constant term optimization for legacy test statistic classes
 
 The **RooFit::Optimize()** option (constant term optimization) has been deprecated in ROOT 6.40 its functionality was now removed.
