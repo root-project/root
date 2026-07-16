@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <define/>
+  <materials>
+    <element Z="26" formula="FE" name="Iron0xaaa"><atom unit="g/mole" value="55.845"/></element>
+    <element Z="28" formula="NI" name="Nickel0xbbb"><atom unit="g/mole" value="58.693"/></element>
+    <material name="Iron0xccc" state="solid">
+      <D unit="g/cm3" value="7.87"/><fraction n="1" ref="Iron0xaaa"/>
+    </material>
+    <material name="Alloy0xddd" state="solid">
+      <D unit="g/cm3" value="8.2"/>
+      <fraction n="0.5" ref="Iron0xaaa"/><fraction n="0.5" ref="Nickel0xbbb"/>
+    </material>
+  </materials>
+  <solids>
+    <box lunit="mm" name="world0x1a" x="1000" y="1000" z="1000"/>
+    <box lunit="mm" name="cube0x1b" x="100" y="100" z="100"/>
+  </solids>
+  <structure>
+    <volume name="ironVol0x2a"><materialref ref="Iron0xccc"/><solidref ref="cube0x1b"/></volume>
+    <volume name="World0x2c"><materialref ref="Alloy0xddd"/><solidref ref="world0x1a"/>
+      <physvol name="ironPV"><volumeref ref="ironVol0x2a"/></physvol></volume>
+  </structure>
+  <setup name="Default" version="1.0"><world ref="World0x2c"/></setup>
+</gdml>
