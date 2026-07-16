@@ -1,14 +1,14 @@
+#include <TMath.h>
+#include <TError.h>
+
+#include <array>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <cstring>
 #include <typeinfo>
 
-#include <TMath.h>
-#include <TError.h>
-
 using std::cout, std::endl, std::vector, std::sort;
-using namespace TMath;
 
 bool showVector = true;
 
@@ -38,35 +38,45 @@ void testNormCross()
 }
 
 template <typename T>
-void testArrayDerivatives()
+bool testArrayDerivatives()
 {
-   const Long64_t n = 10;
-   const double h = 0.1;
-   T sa[n] = {18, 47, 183, 98, 56, 74, 28, 75, 10, 89};
-   T *gradient = TMath::Gradient(n, sa, h);
-   T *laplacian = TMath::Laplacian(n, sa, h);
+   bool failure = false;
+   constexpr Long64_t n = 10;
+   constexpr double h = 0.1;
+   constexpr std::array<T, n> sa = {18, 47, 183, 98, 56, 74, 28, 75, 10, 89};
+   T *gradient = TMath::Gradient(sa.size(), sa.data(), h);
+   T *laplacian = TMath::Laplacian(sa.size(), sa.data(), h);
 
-   const T gradienta[n] = {290, 825, 255, -635, -120, -140, 5, -90, 70, 790};
-   const T laplaciana[n] = {10875, 2675, -5525, 1075, 1500, -1600, 2325, -2800, 3600, 10000};
+   // see https://en.wikipedia.org/wiki/Finite_difference_coefficient
+   constexpr std::array<int, n> gradienta = {290, 825, 255, -635, -120, -140, 5, -90, 70, 790};
+   // central differences are e.g. (sa[x-1] - 2* sa[x] + sa[x+1]) / h^2
+   constexpr std::array<int, n> laplaciana = {43500, 10700, -22100, 4300, 6000, -6400, 9300, -11200, 14400, 40000};
 
    // test results
-
    for (Long64_t i = 0; i < n; i++) {
-      if (gradient[i] != gradienta[i])
+      if (gradient[i] != gradienta[i]) {
          Error("testArrayDerivatives", "For Gradient, different values found at i = %lld", i);
+         failure = true;
+      }
 
-      if (laplacian[i] != laplaciana[i])
-         Error("testArrayDerivatives", "For Laplacian, different values found at i = %lld", i);
+      // We have to allow a bit of rounding errors, because TMath internally computes in floating-point:
+      if (abs(static_cast<int>(laplacian[i]) - laplaciana[i]) > 1) {
+         Error("testArrayDerivatives", "For Laplacian, different values found at i = %lld.", i);
+         std::cerr << laplacian[i] << " " << laplaciana[i] << "\n";
+         failure = true;
+      }
    }
 
    delete [] gradient;
    delete [] laplacian;
 
+   return failure;
 }
 
 template <typename T, typename U>
 void testArrayFunctions()
 {
+   using namespace TMath;
    const U n = 10;
    const U k = 3;
    U index[n];
@@ -106,6 +116,7 @@ void testArrayFunctions()
 template <typename T>
 void testIteratorFunctions()
 {
+   using namespace TMath;
    const Long64_t n = 10;
    vector<Int_t> index(n);
    Long64_t is;
@@ -148,9 +159,7 @@ void testPoints(T x, T y)
 
    T dx[4] = {0, 0, 2, 2};
    T dy[4] = {0, 2, 2, 0};
-   cout << "Point(" << x << "," << y << ") IsInside?: "
-        << IsInside( x, y, n, dx, dy) << endl;
-
+   cout << "Point(" << x << "," << y << ") IsInside?: " << TMath::IsInside(x, y, n, dx, dy) << endl;
 }
 
 template <typename T>
@@ -160,7 +169,7 @@ void testPlane()
    T dp2[3] = {1,0,0};
    T dp3[3] = {0,1,0};
    T dn[3];
-   Normal2Plane(dp1, dp2, dp3, dn);
+   TMath::Normal2Plane(dp1, dp2, dp3, dn);
    cout << "Normal: ("
         << dn[0] << ", "
         << dn[1] << ", "
@@ -178,7 +187,8 @@ void testBreitWignerRelativistic()
 
   for (Int_t i=0;i<=nPoints;i++) {
     Double_t currentX = xMinimum+i*xStepSize;
-    cout << "BreitWignerRelativistic(" << currentX << "," << median << "," << gamma << ") = " << BreitWignerRelativistic(currentX,median,gamma) << endl;
+    cout << "BreitWignerRelativistic(" << currentX << "," << median << "," << gamma
+         << ") = " << TMath::BreitWignerRelativistic(currentX, median, gamma) << endl;
   }
 }
 
@@ -244,8 +254,12 @@ void testHalfSampleMode()
    R__ASSERT(TMath::ModeHalfSample(testdata7_n, testdata7, weightdata7) == -1);
 }
 
-void testTMath()
+int main()
 {
+   // TODO: Warning, many tests don't yet return any success or failure information,
+   // so don't trust that they will be red.
+   bool failure = false;
+
    cout << "Starting tests on TMath..." << endl;
 
    cout << "\nNormCross tests: " << endl;
@@ -265,12 +279,11 @@ void testTMath()
 
    cout << "\nArray derivative tests: " << endl;
 
-   testArrayDerivatives<Short_t>();
-   testArrayDerivatives<Int_t>();
-   testArrayDerivatives<Float_t>();
-   testArrayDerivatives<Double_t>();
-   testArrayDerivatives<Long_t>();
-   testArrayDerivatives<Long64_t>();
+   failure |= testArrayDerivatives<Int_t>();
+   failure |= testArrayDerivatives<Float_t>();
+   failure |= testArrayDerivatives<Double_t>();
+   failure |= testArrayDerivatives<Long_t>();
+   failure |= testArrayDerivatives<Long64_t>();
 
    cout << "\nIterator functions tests: " << endl;
 
@@ -298,11 +311,6 @@ void testTMath()
 
    cout << "\nHalfSampleMode tests: " << endl;
    testHalfSampleMode();
-}
 
-int main()
-{
-   testTMath();
-
-   return 0;
+   return failure ? 1 : 0;
 }
