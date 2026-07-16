@@ -58,7 +58,7 @@ namespace {
 
 TClass *EnsureValidClass(std::string_view className)
 {
-   auto cl = TClass::GetClass(std::string(className).c_str());
+   auto cl = TClass::GetClass(className);
    if (cl == nullptr) {
       throw ROOT::RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
    }
