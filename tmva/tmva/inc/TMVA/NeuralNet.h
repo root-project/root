@@ -55,8 +55,6 @@
 namespace TMVA
 {
 
-  class IPythonInteractive;
-
    namespace DNN
    {
 
@@ -1270,22 +1268,6 @@ namespace TMVA
          size_t m_sizeInput; ///< input size of this DNN
          size_t m_sizeOutput; ///< output size of this DNN
          std::vector<Layer> m_layers; ///< layer-structure-data
-
-      protected:
-         // variables for JsMVA (interactive training in jupyter notebook)
-         IPythonInteractive *fInteractive = nullptr;
-         bool * fExitFromTraining = nullptr;
-         UInt_t *fIPyMaxIter = nullptr, *fIPyCurrentIter = nullptr;
-
-      public:
-
-        // setup ipython interactive variables
-        void SetIpythonInteractive(IPythonInteractive* fI, bool* fE, UInt_t *M, UInt_t *C){
-          fInteractive = fI;
-          fExitFromTraining = fE;
-          fIPyMaxIter = M;
-          fIPyCurrentIter = C;
-        }
       };
 
 

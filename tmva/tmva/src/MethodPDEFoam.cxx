@@ -468,7 +468,6 @@ void TMVA::MethodPDEFoam::Train( void )
       if(fFoam.at(i))
          fFoam.at(i)->DeleteBinarySearchTree();
    }
-   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

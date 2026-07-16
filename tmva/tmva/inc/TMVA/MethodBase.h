@@ -65,18 +65,6 @@ class TDirectory;
 class TSpline;
 class TH1F;
 class TH1D;
-class TMultiGraph;
-
-/*! \class TMVA::IPythonInteractive
-\ingroup TMVA
-
-This class is needed by JsMVA, and it's a helper class for tracking errors during
-the training in Jupyter notebook. It’s only initialized in Jupyter notebook context.
-In initialization we specify some title, and a TGraph will be created for every title.
-We can add new data points easily to all TGraphs. These graphs are added to a
-TMultiGraph, and during an interactive training we get this TMultiGraph object
-and plot it with JsROOT.
-*/
 
 namespace TMVA {
 
@@ -90,23 +78,6 @@ namespace TMVA {
    class Classification;
    }
    class TrainingHistory;
-
-   class IPythonInteractive {
-   public:
-       IPythonInteractive();
-       ~IPythonInteractive();
-       void Init(std::vector<TString>& graphTitles);
-       void ClearGraphs();
-       void AddPoint(Double_t x, Double_t y1, Double_t y2);
-       void AddPoint(std::vector<Double_t>& dat);
-       inline TMultiGraph* Get() {return fMultiGraph;}
-       inline bool NotInitialized(){ return fNumGraphs==0;};
-   private:
-       TMultiGraph* fMultiGraph;
-       std::vector<TGraph*> fGraphs;
-       Int_t fNumGraphs;
-       Int_t fIndex;
-   };
 
    class MethodBase : virtual public IMethod, public Configurable {
 
@@ -447,43 +418,6 @@ namespace TMVA {
     protected:
       mutable const Event *fTmpEvent; ///<! temporary event when testing on a different DataSet than the own one
       DataSet *fTmpData =  nullptr; ///<! temporary dataset used when evaluating on a different data (used by MethodCategory::GetMvaValues)
-       // helper variables for JsMVA
-       IPythonInteractive *fInteractive = nullptr;
-       bool fExitFromTraining = false;
-       UInt_t fIPyMaxIter = 0, fIPyCurrentIter = 0;
-
-    public:
-
-      // initializing IPythonInteractive class (for JsMVA only)
-      inline void InitIPythonInteractive(){
-        if (fInteractive) delete fInteractive;
-        fInteractive = new IPythonInteractive();
-      }
-
-      // get training errors (for JsMVA only)
-      inline TMultiGraph* GetInteractiveTrainingError(){return fInteractive->Get();}
-
-      // stop's the training process (for JsMVA only)
-      inline void ExitFromTraining(){
-        fExitFromTraining = true;
-      }
-
-      // check's if the training ended (for JsMVA only)
-      inline bool TrainingEnded(){
-        if (fExitFromTraining && fInteractive){
-          delete fInteractive;
-          fInteractive = nullptr;
-        }
-        return fExitFromTraining;
-      }
-
-      // get fIPyMaxIter
-      inline UInt_t GetMaxIter(){ return fIPyMaxIter; }
-
-      // get fIPyCurrentIter
-      inline UInt_t GetCurrentIter(){ return fIPyCurrentIter; }
-
-   protected:
 
       // ---------- protected accessors -------------------------------------------
 
