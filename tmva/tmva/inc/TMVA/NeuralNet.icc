@@ -718,9 +718,6 @@ template <typename LAYERDATA>
 //        std::cout << "START TRAINING" << std::endl;
             settings.startTrainCycle ();
 
-            // JsMVA progress bar maximum (100%)
-            if (fIPyMaxIter) *fIPyMaxIter = 100;
-
             settings.pads (4);
             settings.create ("trainErrors", 100, 0, 100, 100, 0,1);
             settings.create ("testErrors", 100, 0, 100, 100, 0,1);
@@ -889,13 +886,6 @@ template <typename LAYERDATA>
                 settings.plot ("trainErrors", "C", 1, kBlue);
                 settings.plot ("testErrors", "C", 1, kMagenta);
 
-
-                // setup error plots and progress bar variables for JsMVA
-                if (fInteractive){
-                  fInteractive->AddPoint(cycleCount, trainError, testError);
-                  if (*fExitFromTraining) break;
-                  *fIPyCurrentIter = 100*(double)settings.maxConvergenceCount () /(double)settings.convergenceSteps ();
-                }
 
                 if (hasConverged)
                     break;

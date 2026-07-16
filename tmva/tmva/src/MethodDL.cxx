@@ -1421,15 +1421,13 @@ void MethodDL::TrainDeepNet()
             << optimParametersString()
             << " Learning rate = " << settings.learningRate << " regularization " << (char)settings.regularization
             << " minimum error = " << minValError << Endl;
-      if (!fInteractive) {
-         std::string separator(62, '-');
-         Log() << separator << Endl;
-         Log() << std::setw(10) << "Epoch"
-               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err." << std::setw(12)
-               << "t(s)/epoch" << std::setw(12) << "t(s)/Loss" << std::setw(12) << "nEvents/s" << std::setw(12)
-               << "Conv. Steps" << Endl;
-         Log() << separator << Endl;
-      }
+      std::string separator(62, '-');
+      Log() << separator << Endl;
+      Log() << std::setw(10) << "Epoch"
+            << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err." << std::setw(12)
+            << "t(s)/epoch" << std::setw(12) << "t(s)/Loss" << std::setw(12) << "nEvents/s" << std::setw(12)
+            << "Conv. Steps" << Endl;
+      Log() << separator << Endl;
 
       // set up generator for shuffling the batches
       // if seed is zero we have always a different order in the batches
@@ -1657,11 +1655,6 @@ void MethodDL::TrainDeepNet()
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::Train()
 {
-   if (fInteractive) {
-      Log() << kFATAL << "Not implemented yet" << Endl;
-      return;
-   }
-
    // using for training same scalar type defined for the prediction
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU

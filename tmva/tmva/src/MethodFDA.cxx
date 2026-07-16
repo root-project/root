@@ -410,7 +410,6 @@ void TMVA::MethodFDA::Train( void )
       delete fConvergerFitter;
       fConvergerFitter = 0;
    }
-   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
