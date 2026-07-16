@@ -38,6 +38,9 @@
 #include <RooWorkspace.h>
 
 #include <cmath>
+#include <memory>
+#include <string_view>
+#include <vector>
 
 #include <TROOT.h>
 
@@ -189,6 +192,90 @@ public:
 private:
    bool _oldValue;
 };
+
+// Runs `action` and returns everything that was logged at the given message level and topic while it ran.
+template <class Action>
+std::string captureMessages(RooFit::MsgLevel level, RooFit::MsgTopic topic, Action &&action)
+{
+   RooHelpers::HijackMessageStream stream{level, topic};
+   action();
+   return stream.str();
+}
+
+// Counts the number of (non-overlapping) occurrences of `needle` in `haystack`.
+std::size_t countOccurrences(std::string_view haystack, std::string_view needle)
+{
+   std::size_t result = 0;
+   for (std::size_t pos = 0; (pos = haystack.find(needle, pos)) != std::string_view::npos; pos += needle.size()) {
+      ++result;
+   }
+   return result;
+}
+
+// Asserts that exporting `ws` to HS3 throws and logs an error message containing `expectedReason`.
+void expectExportThrowsWithError(RooWorkspace &ws, std::string const &expectedReason)
+{
+   bool threw = false;
+   std::string exported;
+   const std::string errors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+      try {
+         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      } catch (const std::runtime_error &) {
+         threw = true;
+      }
+   });
+
+   EXPECT_TRUE(threw);
+   EXPECT_TRUE(exported.empty()) << "A HistFactory object was returned despite incompatible duplicate modifiers";
+   EXPECT_NE(errors.find(expectedReason), std::string::npos) << errors;
+}
+
+// Builds a single-bin-observable RooDataHist filled with the given bin contents. Returns an owning pointer so that it
+// can be handed to the RooHistFunc constructor that takes ownership (the const-reference overload keeps only an unowned
+// pointer, which would dangle for a temporary).
+std::unique_ptr<RooDataHist> makeDataHist(std::string const &name, RooRealVar &obs, std::vector<double> const &contents)
+{
+   auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), RooArgList{obs});
+   for (std::size_t i = 0; i < contents.size(); ++i) {
+      dh->set(i, contents[i], -1.0);
+   }
+   return dh;
+}
+
+// Imports a "model_channel0" RooRealSumPdf with a single sample whose shape carries two histosys variations sharing the
+// same parameter (i.e. a duplicate histosys). The first variation always lives on a 2-bin observable "x"; the second
+// variation lives on `obs2` if given, or on the same "x" otherwise. Used to check that incompatible duplicates are
+// rejected on export.
+void importDuplicateHistoSysModel(RooWorkspace &ws, int interpCode, std::vector<double> const &low2Contents,
+                                  std::vector<double> const &high2Contents, RooRealVar *obs2 = nullptr)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooRealVar &var2Obs = obs2 ? *obs2 : x;
+
+   RooHistFunc nominal{"nominal", "nominal", RooArgSet{x}, makeDataHist("nominalData", x, {10.0, 20.0})};
+   RooHistFunc low1{"low1", "low1", RooArgSet{x}, makeDataHist("lowData1", x, {8.0, 18.0})};
+   RooHistFunc high1{"high1", "high1", RooArgSet{x}, makeDataHist("highData1", x, {12.0, 22.0})};
+   RooHistFunc low2{"low2", "low2", RooArgSet{var2Obs}, makeDataHist("lowData2", var2Obs, low2Contents)};
+   RooHistFunc high2{"high2", "high2", RooArgSet{var2Obs}, makeDataHist("highData2", var2Obs, high2Contents)};
+
+   RooRealVar alphaShape{"alpha_shape", "alpha_shape", 0.0, -5.0, 5.0};
+   alphaShape.setConstant(true);
+   RooArgList parameters;
+   parameters.add(alphaShape);
+   parameters.add(alphaShape);
+   RooArgList lowVariations{low1, low2};
+   RooArgList highVariations{high1, high2};
+   PiecewiseInterpolation interpolation{"duplicate_shape", "duplicate_shape", nominal,
+                                        lowVariations,     highVariations,    parameters};
+   interpolation.setAllInterpCodes(interpCode);
+
+   RooProduct sampleShapes{"sample_shapes", "sample_shapes", RooArgList{interpolation}};
+   RooConstVar sampleScale{"sample_scale", "sample_scale", 1.0};
+   RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
+
+   ws.import(model, RooFit::Silence());
+}
 
 } // namespace
 
@@ -1383,12 +1470,9 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
 
    std::string exported;
-   std::string warnings;
-   {
-      RooHelpers::HijackMessageStream warningMessages{RooFit::WARNING, RooFit::IO};
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
       exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
-      warnings = warningMessages.str();
-   }
+   });
 
    EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'norm' of type 'normsys'"), std::string::npos)
       << warnings;
@@ -1397,16 +1481,9 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'shape' of type 'histosys'"), std::string::npos)
       << warnings;
 
-   auto count = [&](std::string_view text) {
-      std::size_t result = 0;
-      for (std::size_t pos = 0; (pos = exported.find(text, pos)) != std::string::npos; pos += text.size()) {
-         ++result;
-      }
-      return result;
-   };
-   EXPECT_EQ(count("\"name\":\"norm\""), 1u) << exported;
-   EXPECT_EQ(count("\"name\":\"poly\""), 1u) << exported;
-   EXPECT_EQ(count("\"name\":\"shape\""), 1u) << exported;
+   EXPECT_EQ(countOccurrences(exported, "\"name\":\"norm\""), 1u) << exported;
+   EXPECT_EQ(countOccurrences(exported, "\"name\":\"poly\""), 1u) << exported;
+   EXPECT_EQ(countOccurrences(exported, "\"name\":\"shape\""), 1u) << exported;
 
    RooWorkspace ws2{"ws_duplicate_modifiers_roundtrip"};
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
@@ -1473,9 +1550,10 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    }
 
    // The operation must be logged as a warning, not as an error.
-   RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
-   RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel");
-   EXPECT_TRUE(errorMessages.str().empty()) << errorMessages.str();
+   const std::string sentinelErrors = captureMessages(RooFit::ERROR, RooFit::IO, [] {
+      RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel");
+   });
+   EXPECT_TRUE(sentinelErrors.empty()) << sentinelErrors;
 }
 
 struct IncompatibleModifierCase {
@@ -1538,22 +1616,7 @@ TEST_P(HistFactoryIncompatibleDuplicateModifiers, ExportFails)
    RooWorkspace ws{"ws_incompatible_duplicate_modifiers"};
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeIncompatibleModifierWorkspace(testCase)));
 
-   bool threw = false;
-   std::string exported;
-   std::string errors;
-   {
-      RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
-      try {
-         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-      } catch (const std::runtime_error &) {
-         threw = true;
-      }
-      errors = errorMessages.str();
-   }
-
-   EXPECT_TRUE(threw);
-   EXPECT_TRUE(exported.empty()) << "A HistFactory object was returned despite incompatible duplicate modifiers";
-   EXPECT_NE(errors.find(testCase.expectedReason), std::string::npos) << errors;
+   expectExportThrowsWithError(ws, testCase.expectedReason);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -1615,132 +1678,21 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithDifferentBinningFails)
 {
-   RooRealVar x{"x", "x", 0.0, 2.0};
-   x.setBins(2);
    RooRealVar y{"y", "y", 0.0, 3.0};
    y.setBins(3);
 
-   RooDataHist nominalData{"nominalData", "nominalData", RooArgList{x}};
-   nominalData.set(0, 10.0);
-   nominalData.set(1, 20.0);
-   RooDataHist lowData1{"lowData1", "lowData1", RooArgList{x}};
-   lowData1.set(0, 8.0);
-   lowData1.set(1, 18.0);
-   RooDataHist highData1{"highData1", "highData1", RooArgList{x}};
-   highData1.set(0, 12.0);
-   highData1.set(1, 22.0);
-   RooDataHist lowData2{"lowData2", "lowData2", RooArgList{y}};
-   RooDataHist highData2{"highData2", "highData2", RooArgList{y}};
-   for (int i = 0; i < 3; ++i) {
-      lowData2.set(i, 7.0 + i);
-      highData2.set(i, 13.0 + i);
-   }
-
-   RooHistFunc nominal{"nominal", "nominal", RooArgSet{x}, nominalData};
-   RooHistFunc low1{"low1", "low1", RooArgSet{x}, lowData1};
-   RooHistFunc high1{"high1", "high1", RooArgSet{x}, highData1};
-   RooHistFunc low2{"low2", "low2", RooArgSet{y}, lowData2};
-   RooHistFunc high2{"high2", "high2", RooArgSet{y}, highData2};
-
-   RooRealVar alphaShape{"alpha_shape", "alpha_shape", 0.0, -5.0, 5.0};
-   alphaShape.setConstant(true);
-   RooArgList parameters;
-   parameters.add(alphaShape);
-   parameters.add(alphaShape);
-   RooArgList lowVariations{low1, low2};
-   RooArgList highVariations{high1, high2};
-   PiecewiseInterpolation interpolation{"duplicate_shape", "duplicate_shape", nominal, lowVariations,
-                                        highVariations, parameters};
-   interpolation.setAllInterpCodes(4);
-
-   RooProduct sampleShapes{"sample_shapes", "sample_shapes", RooArgList{interpolation}};
-   RooConstVar sampleScale{"sample_scale", "sample_scale", 1.0};
-   RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
-
    RooWorkspace ws{"ws_incompatible_histosys_binning"};
-   ws.import(model, RooFit::Silence());
+   importDuplicateHistoSysModel(ws, /*interpCode=*/4, /*low2=*/{7.0, 8.0, 9.0}, /*high2=*/{13.0, 14.0, 15.0}, &y);
 
-   bool threw = false;
-   std::string exported;
-   std::string errors;
-   {
-      RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
-      try {
-         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-      } catch (const std::runtime_error &) {
-         threw = true;
-      }
-      errors = errorMessages.str();
-   }
-
-   EXPECT_TRUE(threw);
-   EXPECT_TRUE(exported.empty());
-   EXPECT_NE(errors.find("histogram binning differs"), std::string::npos) << errors;
+   expectExportThrowsWithError(ws, "histogram binning differs");
 }
 
 TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithNonDefaultInterpolationFails)
 {
-   RooRealVar x{"x", "x", 0.0, 2.0};
-   x.setBins(2);
-
-   RooDataHist nominalData{"nominalData", "nominalData", RooArgList{x}};
-   nominalData.set(0, 10.0);
-   nominalData.set(1, 20.0);
-   RooDataHist lowData1{"lowData1", "lowData1", RooArgList{x}};
-   lowData1.set(0, 8.0);
-   lowData1.set(1, 18.0);
-   RooDataHist highData1{"highData1", "highData1", RooArgList{x}};
-   highData1.set(0, 12.0);
-   highData1.set(1, 22.0);
-   RooDataHist lowData2{"lowData2", "lowData2", RooArgList{x}};
-   lowData2.set(0, 9.0);
-   lowData2.set(1, 16.0);
-   RooDataHist highData2{"highData2", "highData2", RooArgList{x}};
-   highData2.set(0, 11.0);
-   highData2.set(1, 24.0);
-
-   RooHistFunc nominal{"nominal", "nominal", RooArgSet{x}, nominalData};
-   RooHistFunc low1{"low1", "low1", RooArgSet{x}, lowData1};
-   RooHistFunc high1{"high1", "high1", RooArgSet{x}, highData1};
-   RooHistFunc low2{"low2", "low2", RooArgSet{x}, lowData2};
-   RooHistFunc high2{"high2", "high2", RooArgSet{x}, highData2};
-
-   RooRealVar alphaShape{"alpha_shape", "alpha_shape", 0.0, -5.0, 5.0};
-   alphaShape.setConstant(true);
-   RooArgList parameters;
-   parameters.add(alphaShape);
-   parameters.add(alphaShape);
-   RooArgList lowVariations{low1, low2};
-   RooArgList highVariations{high1, high2};
-   PiecewiseInterpolation interpolation{"duplicate_shape", "duplicate_shape", nominal,
-                                        lowVariations,     highVariations,    parameters};
-   interpolation.setAllInterpCodes(2);
-
-   RooProduct sampleShapes{"sample_shapes", "sample_shapes", RooArgList{interpolation}};
-   RooConstVar sampleScale{"sample_scale", "sample_scale", 1.0};
-   RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
-
    RooWorkspace ws{"ws_incompatible_histosys_interpolation"};
-   ws.import(model, RooFit::Silence());
+   importDuplicateHistoSysModel(ws, /*interpCode=*/2, /*low2=*/{9.0, 16.0}, /*high2=*/{11.0, 24.0});
 
-   bool threw = false;
-   std::string exported;
-   std::string errors;
-   {
-      RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
-      try {
-         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-      } catch (const std::runtime_error &) {
-         threw = true;
-      }
-      errors = errorMessages.str();
-   }
-
-   EXPECT_TRUE(threw);
-   EXPECT_TRUE(exported.empty());
-   EXPECT_NE(errors.find("non-default interpolation cannot currently be represented by the HS3 exporter"),
-             std::string::npos)
-      << errors;
+   expectExportThrowsWithError(ws, "non-default interpolation cannot currently be represented by the HS3 exporter");
 }
 
 TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
