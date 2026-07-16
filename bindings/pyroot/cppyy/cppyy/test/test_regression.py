@@ -473,7 +473,6 @@ class TestREGRESSION:
 
         assert a != b             # derived class' C++ operator!= called
 
-    @mark.xfail(strict=True)
     def test18_operator_plus_overloads(self):
         """operator+(string, string) should return a string"""
 
@@ -485,7 +484,10 @@ class TestREGRESSION:
         assert a == 'a'
         assert b == 'b'
 
-        assert type(a+b) == cppyy.gbl.std.string
+        # Expect same return type as other funcs returning a std::string in
+        # C++, which might be different from gbl.std.string on the Python side
+        # depending on the enabled Pythonizations.
+        assert type(a + b) == type(cppyy.gbl.std.to_string(42))
         assert a+b == 'ab'
 
     def test19_std_string_hash(self):
