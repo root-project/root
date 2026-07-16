@@ -16,15 +16,6 @@ with other statistical frameworks, and also ease of manipulation, it
 may be useful to store statistical models in text form. This library
 sets out to achieve exactly that, exporting to and importing from JSON.
 
-### Backend
-
-The default backend for this is the `nlohmann` JSON implementation,
-which ships with ROOT as a builtin dependency and will import from and
-export to JSON.
-In the past, RapidYAML (`RYML`) was supported, but the effort to keep
-this implementation up to date was too high. YML users could use YML to
-JSON converters to migrate.
-
 ### Usage
 
 The main class providing import from and export to JSON is the

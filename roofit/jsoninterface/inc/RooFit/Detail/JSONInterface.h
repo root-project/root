@@ -210,17 +210,7 @@ public:
    static std::unique_ptr<JSONTree> create(std::istream &is);
    static std::unique_ptr<JSONTree> create(std::string const &str);
 
-   static std::string getBackend();
-   static void setBackend(std::string const &name);
-
-   static bool hasBackend(std::string const &name);
-
 private:
-   // Internally, we store the backend type with an enum to be more memory efficient.
-   enum class Backend { NlohmannJson, Ryml };
-
-   static Backend &getBackendEnum();
-
    template <typename... Args>
    static std::unique_ptr<JSONTree> createImpl(Args &&...args);
 };
