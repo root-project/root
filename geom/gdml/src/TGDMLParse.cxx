@@ -1310,7 +1310,6 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    TGeoMixture *mix = nullptr;
    TGeoMaterial *mat = nullptr;
    TString tempconst = "";
-   TString matname;
    Bool_t composite = kFALSE;
 
    if (z == 1) {
@@ -1546,17 +1545,21 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
       Double_t weight;
 
       for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
-         matname = f->first;
-         matname = NameShort(matname);
+         TGeoMaterial *mattmp = nullptr;
+         auto material = fmatmap.find(f->first);
+         if (material != fmatmap.end())
+            mattmp = (TGeoMaterial *)material->second;
+         else {
+            auto mixture = fmixmap.find(f->first);
+            if (mixture != fmixmap.end())
+               mattmp = (TGeoMixture *)mixture->second;
+         }
+         auto element = felemap.find(f->first);
 
-         TGeoMaterial *mattmp = (TGeoMaterial *)gGeoManager->GetListOfMaterials()->FindObject(matname);
-
-         if (mattmp || (felemap.find(f->first) != felemap.end())) {
+         if ((composite && element != felemap.end()) || (!composite && (mattmp || element != felemap.end()))) {
             if (composite) {
                natoms = (Int_t)f->second;
-
-               mix->AddElement(felemap[f->first], natoms);
-
+               mix->AddElement((TGeoElement *)element->second, natoms);
             }
 
             else {
@@ -1564,7 +1567,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
                if (mattmp) {
                   mix->AddElement(mattmp, weight);
                } else {
-                  mix->AddElement(felemap[f->first], weight);
+                  mix->AddElement((TGeoElement *)element->second, weight);
                }
             }
          }
@@ -1573,13 +1576,16 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
    medid = medid + 1;
 
+   if (mixflag == 1)
+      fmixmap[local_name.Data()] = mix;
+   else if (mixflag == 0)
+      fmatmap[local_name.Data()] = mat;
+
    TGeoMedium *med = mgr->GetMedium(NameShort(name));
    if (!med) {
       if (mixflag == 1) {
-         fmixmap[local_name.Data()] = mix;
          med = new TGeoMedium(NameShort(name), medid, mix);
       } else if (mixflag == 0) {
-         fmatmap[local_name.Data()] = mat;
          med = new TGeoMedium(NameShort(name), medid, mat);
       }
    } else if (gDebug >= 2) {

@@ -6,8 +6,12 @@
 
 if(gdml)
   configure_file(no_extrusion.gdml no_extrusion.gdml COPYONLY)
+  configure_file(material_name_collision.gdml material_name_collision.gdml COPYONLY)
   ROOT_ADD_GTEST(material_units
     test_material_units.cxx
+    LIBRARIES Geom)
+  ROOT_ADD_GTEST(gdml_material_name_collision
+    test_gdml_material_name_collision.cxx
     LIBRARIES Geom)
   ROOT_ADD_GTEST(boolean_extrusion
     test_boolean_extrusion.cxx
