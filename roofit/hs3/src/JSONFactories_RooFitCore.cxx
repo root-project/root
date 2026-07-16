@@ -232,7 +232,10 @@ template <bool DivideByBinWidth>
 bool importBinWidthFunction(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-   RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
+   RooHistFunc *hf = dynamic_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
+   if (!hf) {
+      RooJSONFactoryWSTool::error("histogram '" + p["histogram"].val() + "' of '" + name + "' is not a RooHistFunc");
+   }
    tool->wsEmplace<RooBinWidthFunction>(name, *hf, DivideByBinWidth);
    return true;
 }
@@ -325,6 +328,9 @@ bool importDecay(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooRealVar *t = tool->requestArg<RooRealVar>(p, "t");
    RooAbsReal *tau = tool->requestArg<RooAbsReal>(p, "tau");
    RooResolutionModel *model = dynamic_cast<RooResolutionModel *>(tool->requestArg<RooAbsPdf>(p, "resolutionModel"));
+   if (!model) {
+      RooJSONFactoryWSTool::error("resolutionModel of '" + name + "' is not a RooResolutionModel");
+   }
    RooDecay::DecayType decayType = static_cast<RooDecay::DecayType>(p["decayType"].val_int());
    tool->wsEmplace<RooDecay>(name, *t, *tau, *model, decayType);
    return true;
