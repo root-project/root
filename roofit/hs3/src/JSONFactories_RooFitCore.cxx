@@ -924,7 +924,6 @@ bool exportRealIntegral(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode 
    auto *integral = static_cast<const RooRealIntegral *>(func);
    elem["type"] << key;
    std::string integrand = integral->integrand().GetName();
-   // elem["integrand"] << RooJSONFactoryWSTool::sanitizeName(integrand);
    elem["integrand"] << integrand;
    if (integral->intRange()) {
       elem["domain"] << integral->intRange();

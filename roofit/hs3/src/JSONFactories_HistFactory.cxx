@@ -973,12 +973,6 @@ void addNormFactor(RooRealVar const *par, Sample &sample, RooWorkspace *ws)
       sample.normfactors.emplace_back(*par);
 }
 
-namespace {
-
-bool verbose = false;
-
-}
-
 struct Channel {
    std::string name;
    std::vector<Sample> samples;
@@ -1548,17 +1542,11 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 {
    // some preliminary checks
    if (!sumpdf) {
-      if (verbose) {
-         std::cout << pdfname << " is not a sumpdf" << std::endl;
-      }
       return false;
    }
 
    for (RooAbsArg *sample : sumpdf->funcList()) {
       if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
-         if (verbose)
-            std::cout << "sample " << sample->GetName() << " is no RooProduct or RooRealSumPdf in " << pdfname
-                      << std::endl;
          return false;
       }
    }
