@@ -667,7 +667,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
    std::string const pdfName = pdfNameNode ? pdfNameNode->val() : "simPdf";
 
-   RooAbsPdf *pdf = static_cast<RooSimultaneous *>(workspace.pdf(pdfName));
+   RooAbsPdf *pdf = workspace.pdf(pdfName);
 
    if (!pdf) {
       // if there is no simultaneous pdf, we can check whether there is only one pdf in the list
@@ -686,7 +686,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
          }
          RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, indexCat};
          workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-         pdf = static_cast<RooSimultaneous *>(workspace.pdf(simPdfName));
+         pdf = workspace.pdf(simPdfName);
       }
    }
 
