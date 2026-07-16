@@ -493,7 +493,7 @@ ROOT::RFieldBase::Create(std::string_view fieldName, std::string_view typeName,
       }
 
       if (!result) {
-         auto cl = TClass::GetClass(std::string(typeName).c_str());
+         auto cl = TClass::GetClass(typeName);
 
          if (cl && cl->GetState() > TClass::kForwardDeclared) {
             createContextGuard.AddClassToStack(resolvedType);

@@ -88,6 +88,8 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TThreadSlots.h"
 #include "ThreadLocalStorage.h"
 
+#include <ROOT/StringUtils.hxx>
+
 #include <cstdio>
 #include <cctype>
 #include <set>
@@ -2991,26 +2993,28 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 /// (to anything) or set the `rootrc` key `Root.TClass.GetClass.AutoParsing` to
 /// `false`.
 
-TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
+TClass *TClass::GetClass(std::string_view name, Bool_t load, Bool_t silent)
 {
    return TClass::GetClass(name, load, silent, 0, 0);
 }
 
-TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size)
+TClass *TClass::GetClass(std::string_view name, Bool_t load, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size)
 {
-   if (!name || !name[0]) return nullptr;
+   if (name.empty()) return nullptr;
 
-   if (strstr(name, "(anonymous)")) return nullptr;
-   if (strstr(name, "(unnamed)")) return nullptr;
-   if (strncmp(name,"class ",6)==0) name += 6;
-   if (strncmp(name,"struct ",7)==0) name += 7;
+   if (name.find("(anonymous)") != std::string_view::npos) return nullptr;
+   if (name.find("(unnamed)") != std::string_view::npos) return nullptr;
+   if (ROOT::StartsWith(name, "class ")) name = name.substr(6);
+   if (ROOT::StartsWith(name, "struct ")) name = name.substr(7);
 
    if (!gROOT->GetListOfClasses())  return nullptr;
 
+   std::string nameStr = std::string(name);
+   
    // FindObject will take the read lock before actually getting the
    // TClass pointer so we will need not get a partially initialized
    // object.
-   TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(nameStr.c_str());
 
    // Early return to release the lock without having to execute the
    // long-ish normalization.
@@ -3022,7 +3026,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    // Now that we got the write lock, another thread may have constructed the
    // TClass while we were waiting, so we need to do the checks again.
 
-   cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   cl = (TClass*)gROOT->GetListOfClasses()->FindObject(nameStr.c_str());
    if (cl) {
       if (cl->IsLoaded() || cl->TestBit(kUnloading))
          return cl;
@@ -3058,7 +3062,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
 
    // To avoid spurious auto parsing, let's check if the name as-is is
    // known in the TClassTable.
-   if (DictFuncPtr_t dict = TClassTable::GetDictNorm(name)) {
+   if (DictFuncPtr_t dict = TClassTable::GetDictNorm(nameStr.c_str())) {
       // The name is normalized, so the result of the first search is
       // authoritative.
       if (!cl && !load)
@@ -3094,7 +3098,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       // First look at known types but without triggering any loads
       {
          THashTable *typeTable = dynamic_cast<THashTable *>(gROOT->GetListOfTypes());
-         TDataType *type = (TDataType *)typeTable->THashTable::FindObject(name);
+         TDataType *type = (TDataType *)typeTable->THashTable::FindObject(nameStr.c_str());
          if (type) {
             if (type->GetType() > 0)
                // This is a numerical type
@@ -3282,13 +3286,13 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
          gInterpreter->GetInterpreterTypeName(normalizedName.c_str(), alternative, kTRUE);
          if (alternative.empty())
             return nullptr;
-         const char *altname = alternative.c_str();
-         if (strncmp(altname, "std::", 5) == 0) {
+         std::string_view altname = alternative;
+         if (ROOT::StartsWith(altname, "std::")) {
             // For namespace (for example std::__1), GetInterpreterTypeName does
             // not strip std::, so we must do it explicitly here.
-            altname += 5;
+            altname = altname.substr(5);
          }
-         if (altname != normalizedName && strcmp(altname, name) != 0) {
+         if (altname != normalizedName && altname != name) {
             // altname now contains the full name of the class including a possible
             // namespace if there has been a using namespace statement.
 
