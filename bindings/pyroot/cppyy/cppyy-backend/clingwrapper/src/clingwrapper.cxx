@@ -9,6 +9,10 @@
 #include "cpp_cppyy.h"
 #include "callcontext.h"
 
+#include <atomic>
+#include <cstdio>
+#include <cstdlib>
+
 // ROOT
 #include "TBaseClass.h"
 #include "TClass.h"
@@ -1103,6 +1107,15 @@ bool WrapperCall(Cppyy::TCppMethod_t method, size_t nargs, void* args_, void* se
     Parameter* args = (Parameter*)args_;
     //bool is_direct = nargs & DIRECT_CALL;
     nargs = CALL_NARGS(nargs);
+
+    static const bool traceCalls = getenv("CPPYY_TRACE_CALLS") != nullptr;
+    if (traceCalls) {
+        static std::atomic<int> callCounter{0};
+        fprintf(stderr, "[JITCALL %d] %s%s\n", ++callCounter,
+                Cppyy::GetScopedFinalName(Cppyy::TCppScope_t(method.data)).c_str(),
+                Cppyy::GetMethodSignature(method, false).c_str());
+        fflush(stderr);
+    }
 
     // if (!is_ready(wrap, is_direct))
     //     return false;        // happens with compilation error
