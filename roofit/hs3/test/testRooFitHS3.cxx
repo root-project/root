@@ -26,11 +26,15 @@
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
+#include <RooProduct.h>
 #include <RooRealIntegral.h>
+#include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooSpline.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
+#include <RooStats/HistFactory/FlexibleInterpVar.h>
+#include <RooStats/HistFactory/PiecewiseInterpolation.h>
 #include <RooWorkspace.h>
 
 #include <cmath>
@@ -1306,6 +1310,437 @@ TEST(RooFitHS3, HistFactoryZeroYieldBin)
       EXPECT_TRUE(std::isfinite(rrv->getMin())) << "Non-finite gamma min for " << name;
       EXPECT_TRUE(std::isfinite(rrv->getMax())) << "Non-finite gamma max for " << name;
    }
+}
+
+TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
+{
+   const std::string jsonStr = R"({
+      "metadata": {"hs3_version": "0.1.90"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [
+               {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0]},
+                  "modifiers": [
+                     {
+                        "name": "norm",
+                        "parameter": "alpha_norm",
+                        "type": "normsys",
+                        "interpolation": 1,
+                        "data": {"lo": 0.8, "hi": 1.2}
+                     },
+                     {
+                        "name": "norm",
+                        "parameter": "alpha_norm",
+                        "type": "normsys",
+                        "interpolation": 1,
+                        "data": {"lo": 0.9, "hi": 1.1}
+                     },
+                     {
+                        "name": "poly",
+                        "parameter": "alpha_poly",
+                        "type": "normsys",
+                        "data": {"lo": 0.8, "hi": 1.2}
+                     },
+                     {
+                        "name": "poly",
+                        "parameter": "alpha_poly",
+                        "type": "normsys",
+                        "data": {"lo": 0.75, "hi": 1.25}
+                     },
+                     {
+                        "name": "shape_input_1",
+                        "parameter": "alpha_shape",
+                        "type": "histosys",
+                        "data": {
+                           "lo": {"contents": [8.0, 18.0]},
+                           "hi": {"contents": [12.0, 22.0]}
+                        }
+                     },
+                     {
+                        "name": "shape_input_2",
+                        "parameter": "alpha_shape",
+                        "type": "histosys",
+                        "data": {
+                           "lo": {"contents": [9.0, 16.0]},
+                           "hi": {"contents": [11.0, 24.0]}
+                        }
+                     }
+                  ]
+               }
+            ]
+         }
+      ]
+   })";
+
+   RooWorkspace ws1{"ws_duplicate_modifiers"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
+
+   std::string exported;
+   std::string warnings;
+   {
+      RooHelpers::HijackMessageStream warningMessages{RooFit::WARNING, RooFit::IO};
+      exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+      warnings = warningMessages.str();
+   }
+
+   EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'norm' of type 'normsys'"), std::string::npos)
+      << warnings;
+   EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'poly' of type 'normsys'"), std::string::npos)
+      << warnings;
+   EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'shape' of type 'histosys'"), std::string::npos)
+      << warnings;
+
+   auto count = [&](std::string_view text) {
+      std::size_t result = 0;
+      for (std::size_t pos = 0; (pos = exported.find(text, pos)) != std::string::npos; pos += text.size()) {
+         ++result;
+      }
+      return result;
+   };
+   EXPECT_EQ(count("\"name\":\"norm\""), 1u) << exported;
+   EXPECT_EQ(count("\"name\":\"poly\""), 1u) << exported;
+   EXPECT_EQ(count("\"name\":\"shape\""), 1u) << exported;
+
+   RooWorkspace ws2{"ws_duplicate_modifiers_roundtrip"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+
+   auto *normInterp = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws2.function("sig_channel0_epsilon"));
+   ASSERT_NE(normInterp, nullptr);
+   ASSERT_EQ(normInterp->variables().size(), 2u);
+   for (std::size_t i = 0; i < normInterp->variables().size(); ++i) {
+      const std::string parameterName = normInterp->variables().at(i)->GetName();
+      if (parameterName == "alpha_norm") {
+         EXPECT_DOUBLE_EQ(normInterp->low()[i], 0.8 * 0.9);
+         EXPECT_DOUBLE_EQ(normInterp->high()[i], 1.2 * 1.1);
+         EXPECT_EQ(normInterp->interpolationCodes()[i], 1);
+      } else if (parameterName == "alpha_poly") {
+         EXPECT_DOUBLE_EQ(normInterp->low()[i], 0.8 * 0.75);
+         EXPECT_DOUBLE_EQ(normInterp->high()[i], 1.2 * 1.25);
+         EXPECT_EQ(normInterp->interpolationCodes()[i], 4);
+      } else {
+         FAIL() << "Unexpected normsys parameter " << parameterName;
+      }
+   }
+
+   auto *shapeInterp = dynamic_cast<PiecewiseInterpolation *>(ws2.function("histoSys_model_channel0_sig"));
+   ASSERT_NE(shapeInterp, nullptr);
+   ASSERT_EQ(shapeInterp->paramList().size(), 1u);
+   EXPECT_EQ(shapeInterp->interpolationCodes()[0], 4);
+   auto *shapeLow = dynamic_cast<RooHistFunc *>(shapeInterp->lowList().at(0));
+   auto *shapeHigh = dynamic_cast<RooHistFunc *>(shapeInterp->highList().at(0));
+   ASSERT_NE(shapeLow, nullptr);
+   ASSERT_NE(shapeHigh, nullptr);
+   EXPECT_DOUBLE_EQ(shapeLow->dataHist().weight(0), 7.0);
+   EXPECT_DOUBLE_EQ(shapeLow->dataHist().weight(1), 14.0);
+   EXPECT_DOUBLE_EQ(shapeHigh->dataHist().weight(0), 13.0);
+   EXPECT_DOUBLE_EQ(shapeHigh->dataHist().weight(1), 26.0);
+
+   auto samplePrediction = [](RooWorkspace &ws, int bin, double norm, double poly, double shape) {
+      auto &x = *ws.var("x");
+      x.setBin(bin);
+      ws.var("alpha_norm")->setVal(norm);
+      ws.var("alpha_poly")->setVal(poly);
+      ws.var("alpha_shape")->setVal(shape);
+      auto &shapeFunction = *ws.function("model_channel0_sig_shapes");
+      auto &scaleFunction = *ws.function("model_channel0_sig_scaleFactors");
+      RooArgSet observables{x};
+      return shapeFunction.getVal(observables) * scaleFunction.getVal();
+   };
+
+   struct ParameterPoint {
+      double norm;
+      double poly;
+      double shape;
+   };
+   // The code-4 normsys product is exactly representable by its combined
+   // anchors at -1, 0, and +1. The code-1 normsys and additive histosys are
+   // also tested away from their anchors.
+   const ParameterPoint points[]{{-0.6, -1.0, 0.35}, {0.8, 0.0, -0.4}, {1.3, 1.0, 1.2}};
+   for (const auto &point : points) {
+      for (int bin = 0; bin < 2; ++bin) {
+         const double before = samplePrediction(ws1, bin, point.norm, point.poly, point.shape);
+         const double after = samplePrediction(ws2, bin, point.norm, point.poly, point.shape);
+         EXPECT_NEAR(after, before, std::abs(before) * 1e-13)
+            << "bin=" << bin << ", norm=" << point.norm << ", poly=" << point.poly << ", shape=" << point.shape;
+      }
+   }
+
+   // The operation must be logged as a warning, not as an error.
+   RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
+   RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel");
+   EXPECT_TRUE(errorMessages.str().empty()) << errorMessages.str();
+}
+
+struct IncompatibleModifierCase {
+   std::string name;
+   std::string modifiers;
+   std::string extraDistributions;
+   std::string expectedReason;
+};
+
+std::string makeIncompatibleModifierWorkspace(const IncompatibleModifierCase &testCase)
+{
+   return R"({
+      "metadata": {"hs3_version": "0.1.90"},
+      "domains": [
+         {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+               {"name": "alpha_dup", "min": -5.0, "max": 5.0},
+               {"name": "dup", "min": -5.0, "max": 5.0}
+            ]
+         }
+      ],
+      "parameter_points": [
+         {
+            "name": "default_values",
+            "parameters": [
+               {"name": "alpha_dup", "value": 0.0},
+               {"name": "dup", "value": 0.0}
+            ]
+         }
+      ],
+      "distributions": [)" +
+          testCase.extraDistributions + R"(
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [
+               {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}
+            ],
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0]},
+                  "modifiers": [)" +
+          testCase.modifiers + R"(
+                  ]
+               }
+            ]
+         }
+      ]
+   })";
+}
+
+class HistFactoryIncompatibleDuplicateModifiers : public testing::TestWithParam<IncompatibleModifierCase> {};
+
+TEST_P(HistFactoryIncompatibleDuplicateModifiers, ExportFails)
+{
+   const auto &testCase = GetParam();
+   RooWorkspace ws{"ws_incompatible_duplicate_modifiers"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeIncompatibleModifierWorkspace(testCase)));
+
+   bool threw = false;
+   std::string exported;
+   std::string errors;
+   {
+      RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
+      try {
+         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      } catch (const std::runtime_error &) {
+         threw = true;
+      }
+      errors = errorMessages.str();
+   }
+
+   EXPECT_TRUE(threw);
+   EXPECT_TRUE(exported.empty()) << "A HistFactory object was returned despite incompatible duplicate modifiers";
+   EXPECT_NE(errors.find(testCase.expectedReason), std::string::npos) << errors;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+   HistFactory, HistFactoryIncompatibleDuplicateModifiers,
+   testing::Values(IncompatibleModifierCase{"Parameter",
+                                            R"(
+            {
+               "name": "input_1", "parameter": "alpha_dup", "type": "normsys", "constraint": "sharedConstraint",
+               "interpolation": 1, "data": {"lo": 0.8, "hi": 1.2}
+            },
+            {
+               "name": "input_2", "parameter": "dup", "type": "normsys", "constraint": "sharedConstraint",
+               "interpolation": 1, "data": {"lo": 0.9, "hi": 1.1}
+            })",
+                                            R"(
+            {
+               "name": "sharedConstraint", "type": "gaussian_dist", "x": "alpha_dup", "mean": "dup", "sigma": 1.0
+            },)",
+                                            "parameter metadata differs"},
+                   IncompatibleModifierCase{"Interpolation",
+                                            R"(
+            {
+               "name": "input_1", "parameter": "alpha_dup", "type": "normsys",
+               "interpolation": 1, "data": {"lo": 0.8, "hi": 1.2}
+            },
+            {
+               "name": "input_2", "parameter": "alpha_dup", "type": "normsys",
+               "interpolation": 4, "data": {"lo": 0.9, "hi": 1.1}
+            })",
+                                            "", "interpolation codes differ"},
+                   IncompatibleModifierCase{"Constraint",
+                                            R"(
+            {
+               "name": "input_1", "parameter": "alpha_dup", "type": "normsys",
+               "interpolation": 1, "data": {"lo": 0.8, "hi": 1.2}
+            },
+            {
+               "name": "input_2", "parameter": "dup", "type": "normsys",
+               "interpolation": 1, "data": {"lo": 0.9, "hi": 1.1}
+            })",
+                                            "", "constraint metadata differs"},
+                   IncompatibleModifierCase{"UnrepresentableNormFactor",
+                                            R"(
+            {"name": "mu", "type": "normfactor"},
+            {"name": "mu", "type": "normfactor"})",
+                                            "", "cannot be combined without changing its meaning"},
+                   IncompatibleModifierCase{"LinearSpaceNormSys",
+                                            R"(
+            {
+               "name": "input_1", "parameter": "alpha_dup", "type": "normsys",
+               "interpolation": 0, "data": {"lo": 0.8, "hi": 1.2}
+            },
+            {
+               "name": "input_2", "parameter": "alpha_dup", "type": "normsys",
+               "interpolation": 0, "data": {"lo": 0.9, "hi": 1.1}
+            })",
+                                            "", "multiplicative combination is only valid for log-space"}),
+   [](const testing::TestParamInfo<IncompatibleModifierCase> &paramInfo) { return paramInfo.param.name; });
+
+TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithDifferentBinningFails)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooRealVar y{"y", "y", 0.0, 3.0};
+   y.setBins(3);
+
+   RooDataHist nominalData{"nominalData", "nominalData", RooArgList{x}};
+   nominalData.set(0, 10.0);
+   nominalData.set(1, 20.0);
+   RooDataHist lowData1{"lowData1", "lowData1", RooArgList{x}};
+   lowData1.set(0, 8.0);
+   lowData1.set(1, 18.0);
+   RooDataHist highData1{"highData1", "highData1", RooArgList{x}};
+   highData1.set(0, 12.0);
+   highData1.set(1, 22.0);
+   RooDataHist lowData2{"lowData2", "lowData2", RooArgList{y}};
+   RooDataHist highData2{"highData2", "highData2", RooArgList{y}};
+   for (int i = 0; i < 3; ++i) {
+      lowData2.set(i, 7.0 + i);
+      highData2.set(i, 13.0 + i);
+   }
+
+   RooHistFunc nominal{"nominal", "nominal", RooArgSet{x}, nominalData};
+   RooHistFunc low1{"low1", "low1", RooArgSet{x}, lowData1};
+   RooHistFunc high1{"high1", "high1", RooArgSet{x}, highData1};
+   RooHistFunc low2{"low2", "low2", RooArgSet{y}, lowData2};
+   RooHistFunc high2{"high2", "high2", RooArgSet{y}, highData2};
+
+   RooRealVar alphaShape{"alpha_shape", "alpha_shape", 0.0, -5.0, 5.0};
+   alphaShape.setConstant(true);
+   RooArgList parameters;
+   parameters.add(alphaShape);
+   parameters.add(alphaShape);
+   RooArgList lowVariations{low1, low2};
+   RooArgList highVariations{high1, high2};
+   PiecewiseInterpolation interpolation{"duplicate_shape", "duplicate_shape", nominal, lowVariations,
+                                        highVariations, parameters};
+   interpolation.setAllInterpCodes(4);
+
+   RooProduct sampleShapes{"sample_shapes", "sample_shapes", RooArgList{interpolation}};
+   RooConstVar sampleScale{"sample_scale", "sample_scale", 1.0};
+   RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
+
+   RooWorkspace ws{"ws_incompatible_histosys_binning"};
+   ws.import(model, RooFit::Silence());
+
+   bool threw = false;
+   std::string exported;
+   std::string errors;
+   {
+      RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
+      try {
+         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      } catch (const std::runtime_error &) {
+         threw = true;
+      }
+      errors = errorMessages.str();
+   }
+
+   EXPECT_TRUE(threw);
+   EXPECT_TRUE(exported.empty());
+   EXPECT_NE(errors.find("histogram binning differs"), std::string::npos) << errors;
+}
+
+TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithNonDefaultInterpolationFails)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+
+   RooDataHist nominalData{"nominalData", "nominalData", RooArgList{x}};
+   nominalData.set(0, 10.0);
+   nominalData.set(1, 20.0);
+   RooDataHist lowData1{"lowData1", "lowData1", RooArgList{x}};
+   lowData1.set(0, 8.0);
+   lowData1.set(1, 18.0);
+   RooDataHist highData1{"highData1", "highData1", RooArgList{x}};
+   highData1.set(0, 12.0);
+   highData1.set(1, 22.0);
+   RooDataHist lowData2{"lowData2", "lowData2", RooArgList{x}};
+   lowData2.set(0, 9.0);
+   lowData2.set(1, 16.0);
+   RooDataHist highData2{"highData2", "highData2", RooArgList{x}};
+   highData2.set(0, 11.0);
+   highData2.set(1, 24.0);
+
+   RooHistFunc nominal{"nominal", "nominal", RooArgSet{x}, nominalData};
+   RooHistFunc low1{"low1", "low1", RooArgSet{x}, lowData1};
+   RooHistFunc high1{"high1", "high1", RooArgSet{x}, highData1};
+   RooHistFunc low2{"low2", "low2", RooArgSet{x}, lowData2};
+   RooHistFunc high2{"high2", "high2", RooArgSet{x}, highData2};
+
+   RooRealVar alphaShape{"alpha_shape", "alpha_shape", 0.0, -5.0, 5.0};
+   alphaShape.setConstant(true);
+   RooArgList parameters;
+   parameters.add(alphaShape);
+   parameters.add(alphaShape);
+   RooArgList lowVariations{low1, low2};
+   RooArgList highVariations{high1, high2};
+   PiecewiseInterpolation interpolation{"duplicate_shape", "duplicate_shape", nominal,
+                                        lowVariations,     highVariations,    parameters};
+   interpolation.setAllInterpCodes(2);
+
+   RooProduct sampleShapes{"sample_shapes", "sample_shapes", RooArgList{interpolation}};
+   RooConstVar sampleScale{"sample_scale", "sample_scale", 1.0};
+   RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
+
+   RooWorkspace ws{"ws_incompatible_histosys_interpolation"};
+   ws.import(model, RooFit::Silence());
+
+   bool threw = false;
+   std::string exported;
+   std::string errors;
+   {
+      RooHelpers::HijackMessageStream errorMessages{RooFit::ERROR, RooFit::IO};
+      try {
+         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      } catch (const std::runtime_error &) {
+         threw = true;
+      }
+      errors = errorMessages.str();
+   }
+
+   EXPECT_TRUE(threw);
+   EXPECT_TRUE(exported.empty());
+   EXPECT_NE(errors.find("non-default interpolation cannot currently be represented by the HS3 exporter"),
+             std::string::npos)
+      << errors;
 }
 
 TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
