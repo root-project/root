@@ -862,6 +862,8 @@ size_t GetEnumConstantValue(ConstDeclRef DRef) {
 
 size_t GetSizeOfType(ConstTypeRef TyRef) {
   INTEROP_TRACE(TyRef);
+  if (!TyRef)
+    return INTEROP_RETURN(0);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (const TagType* TT = QT->getAs<TagType>())
     return INTEROP_RETURN(SizeOf(TT->getDecl()));
