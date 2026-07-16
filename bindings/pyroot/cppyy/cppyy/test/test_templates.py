@@ -1142,7 +1142,6 @@ class TestTEMPLATES:
         assert ns.testptr
         assert cppyy.gbl.std.vector[ns.testptr]
 
-    @mark.xfail(strict=True)
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
 
@@ -1160,7 +1159,10 @@ class TestTEMPLATES:
 
         ns = cppyy.gbl.CStringTemplateArg
 
-        assert type(ns.stringify("Alice")) == cppyy.gbl.std.string
+        # Expect same return type as other funcs returning a std::string in
+        # C++, which might be different from gbl.std.string on the Python side
+        # depending on the enabled Pythonizations.
+        assert type(ns.stringify("Alice")) == type(cppyy.gbl.std.to_string(42))
         assert ns.stringify("Alice", "Bob")                          == "Alice Bob "
         assert ns.stringify(1, 2, 3)                                 == "1 2 3 "
         assert ns.stringify["const char*"]("Aap")                    == "Aap "
