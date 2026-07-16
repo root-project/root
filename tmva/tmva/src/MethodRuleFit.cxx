@@ -457,7 +457,6 @@ void TMVA::MethodRuleFit::Train( void )
    }
    fRuleFit.GetRuleEnsemblePtr()->ClearRuleMap();
    TMVA::DecisionTreeNode::SetIsTraining(false);
-   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

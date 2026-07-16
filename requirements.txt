@@ -35,9 +35,6 @@ pyspark # Spark backend
 dask>=2022.08.1 # Dask backend
 distributed>=2022.08.1 # Dask backend
 
-# JsMVA: Jupyter notebook magic for TMVA
-ipywidgets
-
 # Unified Histogram Interface (UHI)
 uhi
 matplotlib

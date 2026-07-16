@@ -1154,12 +1154,6 @@ void TMVA::MethodBDT::Train()
       fNTrees = 1;
    }
 
-   if (fInteractive && fInteractive->NotInitialized()){
-     std::vector<TString> titles = {"Boost weight", "Error Fraction"};
-     fInteractive->Init(titles);
-   }
-   fIPyMaxIter = fNTrees;
-   fExitFromTraining = false;
 
    // HHV (it's been here since looong but I really don't know why we cannot handle
    // normalized variables in BDTs...  todo
@@ -1267,8 +1261,6 @@ void TMVA::MethodBDT::Train()
    //for (int itree=0; itree<fNTrees; itree++) {
 
    while (itree < fNTrees && continueBoost){
-     if (fExitFromTraining) break;
-     fIPyCurrentIter = itree;
       timer.DrawProgressBar( itree );
       // Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
       // TH1 *hxx = new TH1F(TString::Format("swdist%d",itree),TString::Format("swdist%d",itree),10000,0,15);
@@ -1363,9 +1355,6 @@ void TMVA::MethodBDT::Train()
          nNodesAfterPruningCount += nNodesAfterPruning;
          nodesAfterPruningVsTree->SetBinContent(itree+1,nNodesAfterPruning);
 
-         if (fInteractive){
-           fInteractive->AddPoint(itree, fBoostWeight, fErrorFraction);
-         }
          fITree = itree;
          fMonitorNtuple->Fill();
          if (fDoBoostMonitor){
@@ -1408,8 +1397,6 @@ void TMVA::MethodBDT::Train()
    fEventSample.clear();
    fValidationSample.clear();
 
-   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
-   ExitFromTraining();
 }
 
 
