@@ -64,7 +64,10 @@ jobs:
         env:
             MACOSX_DEPLOYMENT_TARGET: 26.5
         run: |
+            ls /Applications/
             ln -s /Applications/Xcode_${MACOSX_DEPLOYMENT_TARGET}.app /Applications/Xcode.app
+            echo ln -s /Applications/Xcode_${MACOSX_DEPLOYMENT_TARGET}.app /Applications/Xcode.app
+            ls /Applications/
             mkdir wheel_creation && cd wheel_creation
             cp -r ../root .
             python3 -m venv root_build_env 
