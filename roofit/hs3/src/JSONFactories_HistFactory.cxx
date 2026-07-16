@@ -769,9 +769,12 @@ struct HistoSys {
    RooAbsReal const *param = nullptr;
    std::vector<double> low;
    std::vector<double> high;
+   // Used to validate duplicate RooFit modifiers. This is intentionally not serialized until HS3 defines the
+   // structured histosys interpolation representation.
+   int interpolationCode = 4;
    RooAbsPdf const *constraint = nullptr;
-   HistoSys(const std::string &n, RooAbsReal *const p, RooHistFunc *l, RooHistFunc *h, const RooAbsPdf *c)
-      : name(n), param(p), constraint(c)
+   HistoSys(const std::string &n, RooAbsReal *const p, RooHistFunc *l, RooHistFunc *h, int i, const RooAbsPdf *c)
+      : name(n), param(p), interpolationCode(i), constraint(c)
    {
       low.assign(l->dataHist().weightArray(), l->dataHist().weightArray() + l->dataHist().numEntries());
       high.assign(h->dataHist().weightArray(), h->dataHist().weightArray() + h->dataHist().numEntries());
@@ -904,7 +907,7 @@ NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula
    return sys;
 }
 
-void collectElements(RooArgSet &elems, RooAbsArg *arg)
+void collectElements(RooArgList &elems, RooAbsArg *arg)
 {
    if (auto prod = dynamic_cast<RooProduct *>(arg)) {
       for (const auto &e : prod->components()) {
@@ -1085,7 +1088,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
          }
       };
 
-      RooArgSet elems;
+      RooArgList elems;
       collectElements(elems, func);
       collectElements(elems, sumpdf->coefList().at(sampleidx));
       processElements(elems, processElements);
@@ -1113,7 +1116,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   if (!constraint && !var->isConstant()) {
                      RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
                   } else {
-                     sample.histosys.emplace_back(sysname, var, lo, hi, constraint);
+                     sample.histosys.emplace_back(sysname, var, lo, hi, pip->interpolationCodes()[i], constraint);
                   }
                }
             }
@@ -1192,6 +1195,154 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
 
    sortByName(channel.samples);
    return channel;
+}
+
+bool hasSameMetadata(const RooAbsArg *lhs, const RooAbsArg *rhs)
+{
+   if (!lhs || !rhs) {
+      return lhs == rhs;
+   }
+   return std::string{lhs->GetName()} == rhs->GetName() && lhs->IsA() == rhs->IsA();
+}
+
+[[noreturn]] void duplicateModifierError(const Channel &channel, const Sample &sample, std::string_view type,
+                                         std::string_view name, std::string_view reason)
+{
+   std::stringstream ss;
+   ss << "cannot combine duplicate modifier '" << name << "' of type '" << type << "' in sample '" << sample.name
+      << "' of channel '" << channel.name << "': " << reason;
+   RooJSONFactoryWSTool::error(ss.str().c_str());
+}
+
+void warnDuplicateModifiersCombined(const Channel &channel, const Sample &sample, std::string_view type,
+                                    std::string_view name, std::size_t count)
+{
+   std::stringstream ss;
+   ss << "combined " << count << " duplicate modifiers named '" << name << "' of type '" << type << "' in sample '"
+      << sample.name << "' of channel '" << channel.name << "'";
+   RooJSONFactoryWSTool::warning(ss.str());
+}
+
+// Multiplicatively combining two normsys is only faithful when the interpolation is done in log-space, so that
+// f1(alpha) * f2(alpha) is again representable by a single normsys with the multiplied lo/hi factors. This holds for
+// the piecewise-exponential code 1 (exact everywhere) and for the default code 4 (exact at the +-1 sigma anchors and in
+// the exponential extrapolation region). The linear-space codes (e.g. 0 and 2) would turn the product into a shape that
+// cannot be represented by a single normsys, so those must not be merged.
+bool normSysSupportsMultiplicativeMerge(int interpolationCode)
+{
+   return interpolationCode == 1 || interpolationCode == 4;
+}
+
+// Combines runs of adjacent modifiers that share the same name (the container is sorted by name beforehand) into a
+// single modifier. The shared metadata (constraint, parameter and interpolation code) must be identical across the
+// duplicates; the type-specific `combine` callable performs the actual merge and any additional validation.
+template <class Modifiers, class CombineFn>
+void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modifiers &modifiers,
+                             std::string_view type, CombineFn combine)
+{
+   Modifiers mergedModifiers;
+   mergedModifiers.reserve(modifiers.size());
+
+   for (std::size_t begin = 0; begin < modifiers.size();) {
+      std::size_t end = begin + 1;
+      while (end < modifiers.size() && modifiers[end].name == modifiers[begin].name) {
+         ++end;
+      }
+
+      auto merged = modifiers[begin];
+      for (std::size_t i = begin + 1; i < end; ++i) {
+         const auto &modifier = modifiers[i];
+         if (!hasSameMetadata(merged.constraint, modifier.constraint)) {
+            duplicateModifierError(channel, sample, type, merged.name, "constraint metadata differs");
+         }
+         if (!hasSameMetadata(merged.param, modifier.param)) {
+            duplicateModifierError(channel, sample, type, merged.name, "parameter metadata differs");
+         }
+         if (merged.interpolationCode != modifier.interpolationCode) {
+            duplicateModifierError(channel, sample, type, merged.name, "interpolation codes differ");
+         }
+         combine(merged, modifier);
+      }
+
+      if (end - begin > 1) {
+         warnDuplicateModifiersCombined(channel, sample, type, merged.name, end - begin);
+      }
+      mergedModifiers.emplace_back(std::move(merged));
+      begin = end;
+   }
+
+   modifiers = std::move(mergedModifiers);
+}
+
+void mergeDuplicateNormSys(const Channel &channel, Sample &sample)
+{
+   mergeDuplicateModifiers(channel, sample, sample.normsys, "normsys",
+                           [&](NormSys &merged, const NormSys &modifier) {
+                              if (!normSysSupportsMultiplicativeMerge(merged.interpolationCode)) {
+                                 duplicateModifierError(
+                                    channel, sample, "normsys", merged.name,
+                                    "multiplicative combination is only valid for log-space interpolation codes");
+                              }
+                              merged.low *= modifier.low;
+                              merged.high *= modifier.high;
+                           });
+}
+
+void mergeDuplicateHistoSys(const Channel &channel, Sample &sample)
+{
+   const std::size_t nBins = sample.hist.size();
+   mergeDuplicateModifiers(channel, sample, sample.histosys, "histosys",
+                           [&](HistoSys &merged, const HistoSys &modifier) {
+                              if (merged.interpolationCode != 4) {
+                                 duplicateModifierError(
+                                    channel, sample, "histosys", merged.name,
+                                    "non-default interpolation cannot currently be represented by the HS3 exporter");
+                              }
+                              if (merged.low.size() != nBins || merged.high.size() != nBins ||
+                                  modifier.low.size() != nBins || modifier.high.size() != nBins) {
+                                 duplicateModifierError(channel, sample, "histosys", merged.name,
+                                                        "histogram binning differs");
+                              }
+                              for (std::size_t bin = 0; bin < nBins; ++bin) {
+                                 merged.low[bin] += modifier.low[bin] - sample.hist[bin];
+                                 merged.high[bin] += modifier.high[bin] - sample.hist[bin];
+                              }
+                           });
+}
+
+void ensureUniqueModifiers(const Channel &channel, const Sample &sample)
+{
+   std::set<std::pair<std::string, std::string>> seen;
+   auto add = [&](std::string type, const std::string &name) {
+      if (!seen.emplace(type, name).second) {
+         duplicateModifierError(channel, sample, type, name,
+                                "this modifier type cannot be combined without changing its meaning");
+      }
+   };
+
+   for (const auto &modifier : sample.normfactors)
+      add("normfactor", modifier.name);
+   for (const auto &modifier : sample.normsys)
+      add("normsys", modifier.name);
+   for (const auto &modifier : sample.histosys)
+      add("histosys", modifier.name);
+   for (const auto &modifier : sample.shapesys)
+      add("shapesys", modifier.name);
+   for (const auto &modifier : sample.otherElements)
+      add("custom", modifier.name);
+   for (const auto &modifier : sample.tmpElements)
+      add("custom", modifier.name);
+   if (sample.useBarlowBeestonLight)
+      add(::Literals::staterror, ::Literals::staterror);
+}
+
+void canonicalizeModifiers(Channel &channel)
+{
+   for (auto &sample : channel.samples) {
+      mergeDuplicateNormSys(channel, sample);
+      mergeDuplicateHistoSys(channel, sample);
+      ensureUniqueModifiers(channel, sample);
+   }
 }
 
 void configureStatError(Channel &channel)
@@ -1423,6 +1574,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          return false;
       }
    }
+
+   canonicalizeModifiers(channel);
 
    // stat error handling
    configureStatError(channel);
