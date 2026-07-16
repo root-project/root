@@ -1081,7 +1081,6 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
  */
 void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames)
 {
-   // const std::string name = sanitizeName(func.GetName());
    std::string name = func.GetName();
 
    // if this element was already exported, skip
@@ -1618,7 +1617,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
       coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
-      std::string datasetName = data.GetName();
       if (data.isWeighted()) {
          weightVals.push_back(data.weight());
          if (data.weight() != 1.)
