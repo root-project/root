@@ -59,7 +59,7 @@ private:
 
 public:
    RNTupleOpenSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
-   RNTupleOpenSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
+   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(std::string(s)) {}
 
    std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource() const;
 };
@@ -353,7 +353,7 @@ protected:
    ///
    /// In case the field was already present in the entry, the index of the existing field is returned.
    virtual Internal::RNTupleProcessorEntry::FieldIndex_t
-   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr,
+   AddFieldToEntry(std::string_view fieldName, std::string_view typeName, void *valuePtr,
                    const Internal::RNTupleProcessorProvenance &provenance) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -410,7 +410,7 @@ public:
    /// invalid data. After passing a pointer to `RequestField`, we *strongly* recommend only accessing its data through
    /// the interface of the returned `RNTupleProcessorOptionalPtr`, to ensure that only valid data can be read.
    template <typename T>
-   RNTupleProcessorOptionalPtr<T> RequestField(const std::string &fieldName, void *valuePtr = nullptr)
+   RNTupleProcessorOptionalPtr<T> RequestField(std::string_view fieldName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
       std::string typeName{};
@@ -437,7 +437,7 @@ public:
    /// invalid data. After passing a pointer to `RequestField`, we *strongly* recommend only accessing its data through
    /// the interface of the returned `RNTupleProcessorOptionalPtr`, to ensure that only valid data can be read.
    RNTupleProcessorOptionalPtr<void>
-   RequestField(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr)
+   RequestField(std::string_view fieldName, std::string_view typeName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
       auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
@@ -617,7 +617,7 @@ private:
    /// \return The newly created field.
    /// \throws ROOT::RException In case the requested field cannot be found on disk.
    std::unique_ptr<ROOT::RFieldBase>
-   CreateAndConnectField(const std::string &qualifiedFieldName, const std::string &typeName);
+   CreateAndConnectField(std::string_view qualifiedFieldName, std::string_view typeName);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
@@ -662,7 +662,7 @@ private:
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+      std::string_view fieldName, std::string_view typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -763,7 +763,7 @@ private:
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+      std::string_view fieldName, std::string_view typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -867,7 +867,7 @@ private:
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+      std::string_view fieldName, std::string_view typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////

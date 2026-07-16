@@ -164,7 +164,7 @@ protected:
    ROOT::DescriptorId_t LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName,
                                      ROOT::DescriptorId_t classFieldId) const;
    /// Sets fStagingClass according to the given name and version
-   void SetStagingClass(const std::string &className, unsigned int classVersion);
+   void SetStagingClass(std::string_view className, unsigned int classVersion);
    /// If there are rules with inputs (source members), create the staging area according to the TClass instance
    /// that corresponds to the on-disk field.
    void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,
@@ -578,7 +578,7 @@ namespace Internal {
 /// type renormalization of the demangled type name T. The failure case, however, needs to additionally check for
 /// ROOT-specific special cases.
 template <class T>
-bool IsMatchingFieldType(const std::string &actualTypeName)
+bool IsMatchingFieldType(std::string_view actualTypeName)
 {
    return IsMatchingFieldType(actualTypeName, ROOT::RField<T>::TypeName(), typeid(T));
 }

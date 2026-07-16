@@ -216,14 +216,14 @@ ROOT::DescriptorId_t ROOT::RRuleField::LookupMember(const ROOT::RNTupleDescripto
    return ROOT::kInvalidDescriptorId;
 }
 
-void ROOT::RRuleField::SetStagingClass(const std::string &className, unsigned int classVersion)
+void ROOT::RRuleField::SetStagingClass(std::string_view className, unsigned int classVersion)
 {
-   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
+   TClass::GetClass(std::string(className).c_str())->GetStreamerInfo(classVersion);
    if (classVersion != GetTypeVersion() || className != GetTypeName()) {
-      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+      fStagingClass = TClass::GetClass((std::string(className) + std::string("@@") + std::to_string(classVersion)).c_str());
       if (!fStagingClass) {
          // For a rename rule, we may simply ask for the old class name
-         fStagingClass = TClass::GetClass(className.c_str());
+         fStagingClass = TClass::GetClass(std::string(className).c_str());
       }
    } else {
       fStagingClass = fClass;
