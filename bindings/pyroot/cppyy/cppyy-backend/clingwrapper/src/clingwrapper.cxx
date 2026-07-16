@@ -1226,7 +1226,16 @@ void Cppyy::CallDestructor(TCppScope_t scope, TCppObject_t self)
 Cppyy::TCppObject_t Cppyy::CallO(TCppMethod_t method,
     TCppObject_t self, size_t nargs, void* args, TCppType_t result_type)
 {
-    void* obj = ::operator new(Cppyy::SizeOfType(result_type));
+    size_t size = Cppyy::SizeOfType(result_type);
+    if (size == 0) {
+        // Without a valid, complete return type the return buffer cannot be
+        // sized and the call below would corrupt the heap.
+        fprintf(stderr, "Cppyy::CallO: cannot determine return type size for %s%s\n",
+                Cppyy::GetScopedFinalName(TCppScope_t(method.data)).c_str(),
+                Cppyy::GetMethodSignature(method, false).c_str());
+        return TCppObject_t{};
+    }
+    void* obj = ::operator new(size);
     if (WrapperCall(method, nargs, args, self.data, obj))
         return (TCppObject_t)obj;
     ::operator delete(obj);
