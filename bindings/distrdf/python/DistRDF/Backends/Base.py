@@ -187,6 +187,19 @@ class BaseBackend(ABC):
     shared_libraries = set()
     strings_to_declare = dict()
 
+    def __init__(self):
+        # Enable ROOT thread safety on the client side. Distributed backends
+        # drive ROOT from more than one thread in the user's process: besides
+        # the main thread, the scheduler client (e.g. the Dask IO loop thread)
+        # deserializes the ROOT result objects coming back from the workers.
+        # That deserialization goes through the cling interpreter (TClass,
+        # wrapper compilation, ...), so it can run concurrently with interpreter
+        # activity on the main thread. Without thread safety enabled the
+        # unsynchronized access corrupts the interpreter state and leads to
+        # sporadic crashes. This mirrors the ROOT.EnableThreadSafety() call done
+        # on the workers in setup_mapper().
+        ROOT.EnableThreadSafety()
+
     @classmethod
     def register_initialization(cls, fun, *args, **kwargs):
         """
