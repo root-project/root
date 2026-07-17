@@ -6,8 +6,10 @@ ROOTTEST_ADD_TEST(write
 ROOTTEST_COMPILE_MACRO(Simple.cxx
                        FIXTURES_SETUP root-treeformula-casting-Simple-fixture)
 
-ROOTTEST_ADD_TEST(run
-                  MACRO Run.C
-                  OUTREF Simple.ref
-                  FIXTURES_REQUIRED root-treeformula-casting-write-fixture
-                                    root-treeformula-casting-Simple-fixture)
+if(geom)
+  ROOTTEST_ADD_TEST(run
+                    MACRO Run.C
+                    OUTREF Simple.ref
+                    FIXTURES_REQUIRED root-treeformula-casting-write-fixture
+                                      root-treeformula-casting-Simple-fixture)
+endif()
