@@ -474,6 +474,36 @@ static inline CPyCppyy::CPPInstance* ConvertImplicit(Cppyy::TCppScope_t klass,
     if (IsConstructor(ctxt->fFlags) && klass == ctxt->fCurScope && ctxt->GetSize() == 1)
         return nullptr;
 
+// never attempt implicit conversion to standard library implementation
+// details (leading underscore, e.g. MSVC's std::_Swc_base, the base of its
+// random engines, which has an unconstrained generator constructor that
+// accepts anything): no user-facing API expects them, and every failed
+// attempt JIT-compiles a constructor wrapper, which is prohibitively slow
+// when it happens per call in overload resolution (seen as pyunittests
+// timeouts on the Windows CI). The one legitimate case is a conversion
+// between instantiations of the _same_ implementation-detail template,
+// e.g. libc++'s iterator to const_iterator (std::__wrap_iter<char*> to
+// std::__wrap_iter<const char*>), which uses a converting constructor.
+    {
+        const std::string& clName = Cppyy::GetScopedFinalName(klass);
+        if (clName.compare(0, 6, "std::_") == 0 ||
+                (!clName.empty() && clName[0] == '_')) {
+            bool sameTemplate = false;
+            if (CPPInstance_Check(pyobject)) {
+                Cppyy::TCppScope_t src = ((CPPInstance*)pyobject)->ObjectIsA();
+                if (src && src != klass) {
+                    const std::string& srcName = Cppyy::GetScopedFinalName(src);
+                    std::string::size_type lt = clName.find('<');
+                    sameTemplate = lt != std::string::npos &&
+                        srcName.size() > lt && srcName[lt] == '<' &&
+                        srcName.compare(0, lt, clName, 0, lt) == 0;
+                }
+            }
+            if (!sameTemplate)
+                return nullptr;
+        }
+    }
+
 // only proceed if implicit conversions are allowed (in "round 2") or if the
 // argument is exactly a tuple or list, as these are the equivalent of
 // initializer lists and thus "syntax" not a conversion
