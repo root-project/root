@@ -272,16 +272,28 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
             f"The template instantiation '{instantiation}' cannot be properly pythonized. Please report this as a bug."
         )
 
+    import cppyy.types
+
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
-        if str(var_value).startswith("<class cppyy.gbl.") and not hasattr(var_value, "__cpp_template__"):
-            # It's a class proxy. Exclude template instantiations, because they
-            # will be traversed in the next step.
-            pythonize_if_match(var_name, var_value)
-
-        if str(var_value).startswith("<cppyy.Template"):
-            # If this is a template, pythonize the instances. Note that in
-            # older cppyy, template instantiations are cached by
+        if isinstance(var_value, type):
+            if str(var_value).startswith("<class cppyy.gbl.") and not hasattr(var_value, "__cpp_template__"):
+                # It's a class proxy (possibly a template instantiation cached
+                # in the namespace).
+                pythonize_if_match(var_name, var_value)
+        elif isinstance(var_value, cppyy.types.Instance):
+            # Never call str() on a bound C++ *instance* (e.g. cppyy.gbl holds
+            # the gInterpreter instance): its string conversion triggers C++
+            # overload resolution for operator<<, which can JIT-compile
+            # candidate implicit conversions.
+            continue
+        elif str(var_value).startswith("<cppyy.Template"):
+            # Template proxies are not Python types and cannot be reliably
+            # detected with isinstance (cppyy.types.Template is the backend
+            # proxy class, which the cppyy.Template wrapper does not derive
+            # from), so they are recognized by their repr instead.
+            # Pythonize the cached instantiations of the template. Note that
+            # in older cppyy, template instantiations are cached by
             # fully-qualified name directly in the namespace, so they are
             # covered by the code branch above.
             instantiations = getattr(var_value, "_instantiations", {})
