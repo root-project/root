@@ -17,6 +17,8 @@ if (opengl)
 endif()
 
 if(geom)
+  add_subdirectory(TGeometry)
+
   if(opengl)
     add_subdirectory(eve)
     add_subdirectory(gviz3d)

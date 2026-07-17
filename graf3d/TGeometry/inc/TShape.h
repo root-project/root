@@ -26,7 +26,6 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAtt3D.h"
-#include "X3DBuffer.h"
 
 class TBuffer3D;
 class TMaterial;
