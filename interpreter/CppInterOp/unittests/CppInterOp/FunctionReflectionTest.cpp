@@ -1619,6 +1619,40 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_TemplatedOperatorArrow) {
+  // Model of MSVC's std::shared_ptr::operator->, which is a member template
+  // with a defaulted template parameter (SFINAE-constrained on the element
+  // type). Smart-pointer detection has to instantiate it with no call
+  // arguments to determine the pointee type.
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct TheData { int fData; };
+    template <class T> struct SmartLike {
+      T* ptr;
+      template <class U = T> U* operator->() { return ptr; }
+    };
+    SmartLike<TheData> gSmart{nullptr};
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  Cpp::DeclRef Scope =
+      Cpp::GetScopeFromType(Cpp::GetVariableType(Cpp::GetNamed("gSmart")));
+  ASSERT_TRUE(Scope.data);
+
+  std::vector<Cpp::FuncRef> ops;
+  Cpp::GetOperator(Scope, Cpp::Operator::OP_Arrow, ops);
+  ASSERT_EQ(ops.size(), 1);
+  EXPECT_TRUE(Cpp::IsTemplatedFunction(ops[0]));
+
+  Cpp::FuncRef Deref = Cpp::BestOverloadFunctionMatch(ops, {}, {});
+  ASSERT_TRUE(Deref);
+  // The match is an instantiation with the defaulted template parameter, not
+  // the template pattern itself: its return type is concrete.
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(Deref)),
+            "TheData *");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
            FunctionReflection_BestOverloadFunctionMatch4) {
   std::vector<Decl*> Decls, SubDecls;
   std::string code = R"(
