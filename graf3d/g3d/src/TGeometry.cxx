@@ -9,14 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
+#include "TGeometry.h"
+#include "TMaterial.h"
+#include "TNode.h"
+#include "TRotMatrix.h"
+#include "TShape.h"
+
+#include "TBrowser.h"
 #include "TBuffer.h"
 #include "THashList.h"
 #include "TObjArray.h"
-#include "TGeometry.h"
-#include "TNode.h"
-#include "TMaterial.h"
-#include "TBrowser.h"
+#include "TROOT.h"
 
 TGeometry *gGeometry = nullptr;
 
