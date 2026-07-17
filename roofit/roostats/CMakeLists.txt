@@ -22,8 +22,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/CombinedCalculator.h
     RooStats/ConfidenceBelt.h
     RooStats/ConfInterval.h
-    RooStats/DebuggingSampler.h
-    RooStats/DebuggingTestStat.h
     RooStats/DetailedOutputAggregator.h
     RooStats/FeldmanCousins.h
     RooStats/FrequentistCalculator.h
