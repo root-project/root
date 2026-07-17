@@ -171,7 +171,7 @@ if(NOT experimental_genvectorx)
 endif()
 
 if(NOT geom)
-  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/shapes.* legacy/g3d/na49view.*)
+  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/*)
 endif()
 
 if(NOT spectrum)
