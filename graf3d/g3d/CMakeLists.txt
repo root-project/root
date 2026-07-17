@@ -11,72 +11,22 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
   HEADERS
     TAxis3D.h
-    TBRIK.h
-    TCONE.h
-    TCONS.h
-    TCTUB.h
-    TELTU.h
-    TGeometry.h
     TGeometryTransformer.h
-    TGTRA.h
-    THelix.h
-    THYPE.h
     TMarker3DBox.h
-    TMaterial.h
-    TMixture.h
-    TNodeDiv.h
-    TNode.h
-    TPARA.h
-    TPCON.h
-    TPGON.h
     TPoints3DABC.h
     TPointSet3D.h
     TPolyLine3D.h
     TPolyMarker3D.h
-    TRotMatrix.h
-    TShape.h
-    TSPHE.h
-    TTRAP.h
-    TTRD1.h
-    TTRD2.h
-    TTUBE.h
-    TTUBS.h
     TView3D.h
-    TXTRU.h
     X3DBuffer.h
   SOURCES
     TAxis3D.cxx
-    TBRIK.cxx
-    TCONE.cxx
-    TCONS.cxx
-    TCTUB.cxx
-    TELTU.cxx
-    TGeometry.cxx
-    TGTRA.cxx
-    THelix.cxx
-    THYPE.cxx
     TMarker3DBox.cxx
-    TMaterial.cxx
-    TMixture.cxx
-    TNode.cxx
-    TNodeDiv.cxx
-    TPARA.cxx
-    TPCON.cxx
-    TPGON.cxx
     TPoints3DABC.cxx
     TPointSet3D.cxx
     TPolyLine3D.cxx
     TPolyMarker3D.cxx
-    TRotMatrix.cxx
-    TShape.cxx
-    TSPHE.cxx
-    TTRAP.cxx
-    TTRD1.cxx
-    TTRD2.cxx
-    TTUBE.cxx
-    TTUBS.cxx
     TView3D.cxx
-    TXTRU.cxx
     X3DBuffer.c
   DEPENDENCIES
     Gpad

@@ -52,4 +52,3 @@ TELTU::TELTU(const char *name, const char *title, const char *material, Float_t 
 TELTU::~TELTU()
 {
 }
-
