@@ -73,6 +73,7 @@ public:
   double defaultErrorLevel() const override ;
 
   void setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness = true);
+  const RooAbsBinning *getBinning(const RooAbsRealLValue &obs) const;
   bool removeBinning(const RooAbsRealLValue &obs);
 
   bool isBinnedDistribution(const RooArgSet &obs) const override;

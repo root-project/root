@@ -177,6 +177,17 @@ void RooGenericPdf::setBinning(const RooAbsRealLValue &obs, const RooAbsBinning 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the binning previously declared with setBinning() for observable
+/// `obs`, or nullptr if no binning was declared. The observable is matched to a
+/// formula variable by name, consistently with setBinning().
+
+const RooAbsBinning *RooGenericPdf::getBinning(const RooAbsRealLValue &obs) const
+{
+   auto found = _binnings.find(_actualVars.index(obs.GetName()));
+   return found != _binnings.end() ? found->second.get() : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Remove a binning previously declared with setBinning() for observable `obs`,
 /// reverting to the generic numeric integrator for it. Returns true if a binning
 /// was removed, false if none was set for `obs`.
@@ -240,13 +251,12 @@ std::list<double> *RooGenericPdf::binBoundaries(RooAbsRealLValue &obs, double xl
 
 std::list<double> *RooGenericPdf::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-   auto found = _binnings.find(_actualVars.index(obs.GetName()));
-   if (found == _binnings.end()) {
+   const RooAbsBinning *binning = getBinning(obs);
+   if (!binning) {
       return nullptr;
    }
-   const RooAbsBinning &binning = *found->second;
    return RooCurve::plotSamplingHintForBinBoundaries(
-      {binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo, xhi);
+      {binning->array(), static_cast<std::size_t>(binning->numBoundaries())}, xlo, xhi);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

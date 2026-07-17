@@ -1230,8 +1230,8 @@ bool normSysSupportsMultiplicativeMerge(int interpolationCode)
 // single modifier. The shared metadata (constraint, parameter and interpolation code) must be identical across the
 // duplicates; the type-specific `combine` callable performs the actual merge and any additional validation.
 template <class Modifiers, class CombineFn>
-void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modifiers &modifiers,
-                             std::string_view type, CombineFn combine)
+void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modifiers &modifiers, std::string_view type,
+                             CombineFn combine)
 {
    Modifiers mergedModifiers;
    mergedModifiers.reserve(modifiers.size());
@@ -1269,38 +1269,34 @@ void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modif
 
 void mergeDuplicateNormSys(const Channel &channel, Sample &sample)
 {
-   mergeDuplicateModifiers(channel, sample, sample.normsys, "normsys",
-                           [&](NormSys &merged, const NormSys &modifier) {
-                              if (!normSysSupportsMultiplicativeMerge(merged.interpolationCode)) {
-                                 duplicateModifierError(
-                                    channel, sample, "normsys", merged.name,
-                                    "multiplicative combination is only valid for log-space interpolation codes");
-                              }
-                              merged.low *= modifier.low;
-                              merged.high *= modifier.high;
-                           });
+   mergeDuplicateModifiers(channel, sample, sample.normsys, "normsys", [&](NormSys &merged, const NormSys &modifier) {
+      if (!normSysSupportsMultiplicativeMerge(merged.interpolationCode)) {
+         duplicateModifierError(channel, sample, "normsys", merged.name,
+                                "multiplicative combination is only valid for log-space interpolation codes");
+      }
+      merged.low *= modifier.low;
+      merged.high *= modifier.high;
+   });
 }
 
 void mergeDuplicateHistoSys(const Channel &channel, Sample &sample)
 {
    const std::size_t nBins = sample.hist.size();
-   mergeDuplicateModifiers(channel, sample, sample.histosys, "histosys",
-                           [&](HistoSys &merged, const HistoSys &modifier) {
-                              if (merged.interpolationCode != 4) {
-                                 duplicateModifierError(
-                                    channel, sample, "histosys", merged.name,
-                                    "non-default interpolation cannot currently be represented by the HS3 exporter");
-                              }
-                              if (merged.low.size() != nBins || merged.high.size() != nBins ||
-                                  modifier.low.size() != nBins || modifier.high.size() != nBins) {
-                                 duplicateModifierError(channel, sample, "histosys", merged.name,
-                                                        "histogram binning differs");
-                              }
-                              for (std::size_t bin = 0; bin < nBins; ++bin) {
-                                 merged.low[bin] += modifier.low[bin] - sample.hist[bin];
-                                 merged.high[bin] += modifier.high[bin] - sample.hist[bin];
-                              }
-                           });
+   mergeDuplicateModifiers(
+      channel, sample, sample.histosys, "histosys", [&](HistoSys &merged, const HistoSys &modifier) {
+         if (merged.interpolationCode != 4) {
+            duplicateModifierError(channel, sample, "histosys", merged.name,
+                                   "non-default interpolation cannot currently be represented by the HS3 exporter");
+         }
+         if (merged.low.size() != nBins || merged.high.size() != nBins || modifier.low.size() != nBins ||
+             modifier.high.size() != nBins) {
+            duplicateModifierError(channel, sample, "histosys", merged.name, "histogram binning differs");
+         }
+         for (std::size_t bin = 0; bin < nBins; ++bin) {
+            merged.low[bin] += modifier.low[bin] - sample.hist[bin];
+            merged.high[bin] += modifier.high[bin] - sample.hist[bin];
+         }
+      });
 }
 
 void ensureUniqueModifiers(const Channel &channel, const Sample &sample)

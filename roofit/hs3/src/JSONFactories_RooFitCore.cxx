@@ -41,6 +41,7 @@
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooPolyVar.h>
+#include <RooAbsRealLValue.h>
 #include <RooRealSumFunc.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -52,6 +53,7 @@
 #include <RooWorkspace.h>
 #include <RooRealIntegral.h>
 #include <RooSpline.h>
+#include <RooUniformBinning.h>
 #include <TSpline.h>
 
 #include <TF1.h>
@@ -62,9 +64,14 @@
 #include "static_execute.h"
 
 #include <algorithm>
+#include <charconv>
 #include <cctype>
+#include <cmath>
+#include <limits>
+#include <memory>
 #include <set>
 #include <string_view>
+#include <vector>
 
 using RooFit::Detail::JSONNode;
 
@@ -163,6 +170,101 @@ void translateImportedExpression(TString &expr)
    replaceIdentifier(expr, "EULER", "TMath::E()");
 }
 
+int readPositiveInteger(const JSONNode &node, const std::string &context)
+{
+   const std::string value = node.val();
+   int out = 0;
+   const auto result = std::from_chars(value.data(), value.data() + value.size(), out);
+   if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || out <= 0) {
+      RooJSONFactoryWSTool::error("\"nbins\" in " + context + " must be a positive integer");
+   }
+   return out;
+}
+
+std::unique_ptr<RooAbsBinning>
+readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const std::string &formulaName)
+{
+   const std::string context = "axis '" + axisName + "' of generic formula '" + formulaName + "'";
+   const bool hasEdges = axis.has_child("edges");
+   const bool hasMin = axis.has_child("min");
+   const bool hasMax = axis.has_child("max");
+   const bool hasNBins = axis.has_child("nbins");
+
+   if (hasEdges && (hasMin || hasMax || hasNBins)) {
+      RooJSONFactoryWSTool::error(context + " must use either \"edges\" or \"min\"/\"max\"/\"nbins\"");
+   }
+
+   if (hasEdges) {
+      const JSONNode &edgesNode = axis["edges"];
+      if (!edgesNode.is_seq()) {
+         RooJSONFactoryWSTool::error("\"edges\" in " + context + " must be a sequence");
+      }
+
+      std::vector<double> edges;
+      edges.reserve(edgesNode.num_children());
+      for (const JSONNode &edgeNode : edgesNode.children()) {
+         const double edge = edgeNode.val_double();
+         if (!std::isfinite(edge)) {
+            RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain only finite values");
+         }
+         if (!edges.empty() && edge <= edges.back()) {
+            RooJSONFactoryWSTool::error("\"edges\" in " + context + " must be strictly increasing");
+         }
+         edges.push_back(edge);
+      }
+      if (edges.size() < 2) {
+         RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain at least two values");
+      }
+      return std::make_unique<RooBinning>(static_cast<int>(edges.size() - 1), edges.data());
+   }
+
+   if (!hasMin || !hasMax || !hasNBins) {
+      RooJSONFactoryWSTool::error(context + " must define \"min\", \"max\", and \"nbins\"");
+   }
+
+   const double min = axis["min"].val_double();
+   const double max = axis["max"].val_double();
+   if (!std::isfinite(min) || !std::isfinite(max) || max <= min) {
+      RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must be finite and increasing");
+   }
+   return std::make_unique<RooUniformBinning>(min, max, readPositiveInteger(axis["nbins"], context));
+}
+
+template <class RooArg_t>
+void importFormulaBinnings(RooArg_t &arg, const JSONNode &node)
+{
+   if (!node.has_child("axes")) {
+      return;
+   }
+
+   const JSONNode &axes = node["axes"];
+   if (!axes.is_seq()) {
+      RooJSONFactoryWSTool::error("\"axes\" in generic formula '" + std::string(arg.GetName()) +
+                                  "' must be a sequence");
+   }
+
+   std::set<std::string> axisNames;
+   for (const JSONNode &axis : axes.children()) {
+      if (!axis.is_map() || !axis.has_child("name")) {
+         RooJSONFactoryWSTool::error("each axis in generic formula '" + std::string(arg.GetName()) +
+                                     "' must be a map with a \"name\"");
+      }
+      const std::string axisName = axis["name"].val();
+      if (!axisNames.insert(axisName).second) {
+         RooJSONFactoryWSTool::error("duplicate axis '" + axisName + "' in generic formula '" + arg.GetName() + "'");
+      }
+
+      auto *observable = dynamic_cast<RooAbsRealLValue *>(arg.getParameter(axisName.c_str()));
+      if (!observable) {
+         RooJSONFactoryWSTool::error(
+            "axis '" + axisName + "' is not a real-valued formula variable of generic formula '" + arg.GetName() + "'");
+      }
+
+      std::unique_ptr<RooAbsBinning> binning = readFormulaAxisBinning(axis, axisName, arg.GetName());
+      arg.setBinning(*observable, *binning, /*checkFlatness=*/false);
+   }
+}
+
 template <class RooArg_t>
 bool importFormulaArg(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
@@ -176,7 +278,9 @@ bool importFormulaArg(RooJSONFactoryWSTool *tool, const JSONNode &p)
    for (const auto &d : extractArguments(formula.Data())) {
       dependents.add(*tool->request<RooAbsReal>(d, name));
    }
-   tool->wsImport(RooArg_t{name.c_str(), formula, dependents});
+   RooArg_t arg{name.c_str(), formula, dependents};
+   importFormulaBinnings(arg, p);
+   tool->wsImport(arg);
    return true;
 }
 
@@ -774,6 +878,25 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
       expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
    }
    elem["expression"] << expression.Data();
+
+   for (const RooAbsArg *dependent : pdf->dependents()) {
+      auto const *observable = dynamic_cast<const RooAbsRealLValue *>(dependent);
+      if (!observable) {
+         continue;
+      }
+      const RooAbsBinning *binning = pdf->getBinning(*observable);
+      if (!binning) {
+         continue;
+      }
+
+      auto &axes = elem["axes"];
+      if (!axes.is_seq()) {
+         axes.set_seq();
+      }
+      auto &axis = axes.append_child().set_map();
+      axis["name"] << observable->GetName();
+      writeAxisBinning(axis, *binning);
+   }
    return true;
 }
 

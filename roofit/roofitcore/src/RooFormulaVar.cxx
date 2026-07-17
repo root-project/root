@@ -274,6 +274,17 @@ void RooFormulaVar::setBinning(const RooAbsRealLValue &obs, const RooAbsBinning 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the binning previously declared with setBinning() for observable
+/// `obs`, or nullptr if no binning was declared. This reports only binnings
+/// owned by this formula, not binning hints forwarded by its servers.
+
+const RooAbsBinning *RooFormulaVar::getBinning(const RooAbsRealLValue &obs) const
+{
+   auto found = _binnings.find(_actualVars.index(obs.GetName()));
+   return found != _binnings.end() ? found->second.get() : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Remove a binning previously declared with setBinning() for observable `obs`,
 /// reverting to the generic numeric integrator for it. Returns true if a binning
 /// was removed, false if none was set for `obs`.
@@ -348,11 +359,9 @@ std::list<double>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, double xl
 
 std::list<double>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-   auto found = _binnings.find(_actualVars.index(obs.GetName()));
-   if (found != _binnings.end()) {
-      const RooAbsBinning &binning = *found->second;
+   if (const RooAbsBinning *binning = getBinning(obs)) {
       return RooCurve::plotSamplingHintForBinBoundaries(
-         {binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo, xhi);
+         {binning->array(), static_cast<std::size_t>(binning->numBoundaries())}, xlo, xhi);
    }
 
   for (const auto par : _actualVars) {

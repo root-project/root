@@ -153,10 +153,13 @@ TEST(GenericPdf, BinnedRemoveBinning)
 
    pdf.setBinning(x, RooUniformBinning(0.0, 10.0, 5));
    ASSERT_TRUE(pdf.isBinnedDistribution(RooArgSet(x)));
+   ASSERT_NE(pdf.getBinning(x), nullptr);
+   EXPECT_TRUE(pdf.getBinning(x)->isUniform());
 
    // Removing the binning returns true and reverts to the generic integrator.
    EXPECT_TRUE(pdf.removeBinning(x));
    EXPECT_FALSE(pdf.isBinnedDistribution(RooArgSet(x)));
+   EXPECT_EQ(pdf.getBinning(x), nullptr);
 
    std::string integratorName;
    const double value = integrate(pdf, x, integratorName);
@@ -203,6 +206,12 @@ TEST(GenericPdf, BinnedIntegrationNonUniformBinning)
    pdf.setBinning(x, RooBinning(4, boundaries));
 
    EXPECT_TRUE(pdf.isBinnedDistribution(RooArgSet(x)));
+   const RooAbsBinning *storedBinning = pdf.getBinning(x);
+   ASSERT_NE(storedBinning, nullptr);
+   ASSERT_EQ(storedBinning->numBoundaries(), 5);
+   for (int i = 0; i < storedBinning->numBoundaries(); ++i) {
+      EXPECT_DOUBLE_EQ(storedBinning->array()[i], boundaries[i]);
+   }
 
    std::string integratorName;
    const double value = integrate(pdf, x, integratorName);
@@ -290,10 +299,30 @@ TEST(GenericPdf, BinnedLookupBySameNamedVariable)
    EXPECT_NE(&xStandIn, pdf.getParameter("x"));
 
    EXPECT_TRUE(pdf.isBinnedDistribution(RooArgSet(xStandIn)));
+   EXPECT_EQ(pdf.getBinning(xStandIn), pdf.getBinning(x));
 
    std::unique_ptr<std::list<double>> boundaries{pdf.binBoundaries(xStandIn, 0.0, 10.0)};
    ASSERT_NE(boundaries, nullptr);
    EXPECT_EQ(boundaries->size(), 6u); // 5 bins -> 6 boundaries
+}
+
+TEST(GenericPdf, FormulaVarBinningAccessor)
+{
+   RooRealVar x("x", "x", 0., 10.);
+   RooFormulaVar formula("formula", "floor(x)", RooArgList(x));
+   const double boundaries[] = {-1.0, 1.0, 4.0, 11.0};
+   formula.setBinning(x, RooBinning(3, boundaries), /*checkFlatness=*/false);
+
+   RooRealVar xStandIn("x", "x", 0., 10.);
+   const RooAbsBinning *storedBinning = formula.getBinning(xStandIn);
+   ASSERT_NE(storedBinning, nullptr);
+   ASSERT_EQ(storedBinning->numBoundaries(), 4);
+   for (int i = 0; i < storedBinning->numBoundaries(); ++i) {
+      EXPECT_DOUBLE_EQ(storedBinning->array()[i], boundaries[i]);
+   }
+
+   EXPECT_TRUE(formula.removeBinning(xStandIn));
+   EXPECT_EQ(formula.getBinning(x), nullptr);
 }
 
 TEST(GenericPdf, BinnedMultipleObservables)
