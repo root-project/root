@@ -54,12 +54,10 @@
 #pragma link C++ class RooStats::DetailedOutputAggregator+;
 
 #pragma link C++ class RooStats::TestStatSampler+; // interface, not concrete
-#pragma link C++ class RooStats::DebuggingSampler+;
 #pragma link C++ class RooStats::ToyMCSampler+;
 #pragma link C++ class RooStats::ToyMCImportanceSampler+;
 
 #pragma link C++ class RooStats::TestStatistic+; // interface
-#pragma link C++ class RooStats::DebuggingTestStat+;
 #pragma link C++ class RooStats::ProfileLikelihoodTestStat+;
 #pragma link C++ class RooStats::RatioOfProfiledLikelihoodsTestStat+;
 #pragma link C++ class RooStats::NumEventsTestStat+;
