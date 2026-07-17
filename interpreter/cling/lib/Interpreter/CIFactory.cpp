@@ -366,7 +366,39 @@ namespace {
       }
 
   #ifdef CLING_OSX_SYSROOT
-    sArguments.addArgument("-isysroot", CLING_OSX_SYSROOT);
+      std::string cling_osx_sysroot = CLING_OSX_SYSROOT;
+      if (!llvm::sys::fs::exists(cling_osx_sysroot)) {
+        // Fallback: try to find the correct SDK directory
+        std::array<char, 128> buffer;
+        std::string cling_osx_sysroot_str;
+        const std::string xcrun_cmd = "xcrun  --show-sdk-path";
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(
+            ::popen(xcrun_cmd.c_str(), "r"), pclose);
+        if (!pipe) {
+          cling::errs() << "The sysroot directory set at build time, "
+                        << cling_osx_sysroot
+                        << ", could not be found. The command " << xcrun_cmd
+                        << " was tried to figure out the path of the SDK on "
+                           "the local system, however, the invocation through "
+                           "popen() failed.\n";
+        } else {
+          // Read the output block by block
+          while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            cling_osx_sysroot_str += buffer.data();
+          }
+          if (!cling_osx_sysroot_str.empty()) {
+            cling_osx_sysroot_str.pop_back();
+            cling_osx_sysroot = cling_osx_sysroot_str;
+          } else {
+            cling::errs() << "The sysroot directory set at build time, "
+                        << cling_osx_sysroot
+                        << ", could not be found. The command " << xcrun_cmd
+                        << " was tried to figure out the path of the SDK on "
+                           "the local system, however, no valid path was returned.\n";
+          }
+        }
+      }
+    sArguments.addArgument("-isysroot", cling_osx_sysroot);
   #endif
 
 #endif // _MSC_VER
