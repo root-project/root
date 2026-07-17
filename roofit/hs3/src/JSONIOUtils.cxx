@@ -1,5 +1,7 @@
 #include "JSONIOUtils.h"
 
+#include <RooAbsBinning.h>
+
 #include <string>
 
 using RooFit::Detail::JSONNode;
@@ -81,4 +83,20 @@ std::unique_ptr<RooFit::Detail::JSONTree> varJSONString(const JSONNode &treeRoot
    }
 
    return jsonDict;
+}
+
+void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
+{
+   if (binning.isUniform()) {
+      node["min"] << binning.lowBound();
+      node["max"] << binning.highBound();
+      node["nbins"] << binning.numBins();
+      return;
+   }
+
+   auto &edges = node["edges"].set_seq();
+   edges.append_child() << binning.binLow(0);
+   for (int i = 0; i < binning.numBins(); ++i) {
+      edges.append_child() << binning.binHigh(i);
+   }
 }

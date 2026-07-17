@@ -32,6 +32,7 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooSpline.h>
+#include <RooUniformBinning.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
@@ -39,6 +40,7 @@
 
 #include <cmath>
 #include <memory>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -50,6 +52,23 @@ namespace {
 
 // If the JSON files should be written out for debugging purpose.
 const bool writeJsonFiles = false;
+
+RooFit::Detail::JSONNode *findMutableNamedChild(RooFit::Detail::JSONNode &node, std::string const &name)
+{
+   for (RooFit::Detail::JSONNode &child : node.children()) {
+      if (child.has_child("name") && child["name"].val() == name) {
+         return &child;
+      }
+   }
+   return nullptr;
+}
+
+std::string jsonString(RooFit::Detail::JSONTree &tree)
+{
+   std::ostringstream stream;
+   tree.rootnode().writeJSON(stream);
+   return stream.str();
+}
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -802,11 +821,228 @@ TEST(RooFitHS3, RooGenericPdf)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, BinnedGenericPdfUniformRoundTrip)
+{
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooGenericPdf pdf{"binnedPdf", "binnedPdf", "floor(x / 2.0) + 1.0", RooArgList{x}};
+   pdf.setBinning(x, RooUniformBinning{0.0, 10.0, 5}, /*checkFlatness=*/false);
+
+   RooWorkspace source{"source"};
+   source.import(pdf, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{source}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *pdfNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "binnedPdf");
+   ASSERT_NE(pdfNode, nullptr);
+   ASSERT_TRUE(pdfNode->has_child("axes"));
+   auto const *axis = RooJSONFactoryWSTool::findNamedChild((*pdfNode)["axes"], "x");
+   ASSERT_NE(axis, nullptr);
+   EXPECT_DOUBLE_EQ((*axis)["min"].val_double(), 0.0);
+   EXPECT_DOUBLE_EQ((*axis)["max"].val_double(), 10.0);
+   EXPECT_EQ((*axis)["nbins"].val_int(), 5);
+   EXPECT_FALSE(axis->has_child("edges"));
+
+   RooWorkspace imported{"imported"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedPdf = dynamic_cast<RooGenericPdf *>(imported.pdf("binnedPdf"));
+   ASSERT_NE(importedPdf, nullptr);
+   auto *importedX = imported.var("x");
+   ASSERT_NE(importedX, nullptr);
+   ASSERT_TRUE(importedPdf->isBinnedDistribution(RooArgSet{*importedX}));
+   const RooAbsBinning *binning = importedPdf->getBinning(*importedX);
+   ASSERT_NE(binning, nullptr);
+   EXPECT_TRUE(binning->isUniform());
+   EXPECT_EQ(binning->numBins(), 5);
+   EXPECT_DOUBLE_EQ(binning->lowBound(), 0.0);
+   EXPECT_DOUBLE_EQ(binning->highBound(), 10.0);
+}
+
+TEST(RooFitHS3, BinnedFormulaVarUniformRoundTripAndTypeAliases)
+{
+   RooRealVar x{"x", "x", 0.0, 6.0};
+   RooFormulaVar formula{"binnedFunction", "binnedFunction", "floor(x / 2.0)", RooArgList{x}};
+   formula.setBinning(x, RooUniformBinning{0.0, 6.0, 3}, /*checkFlatness=*/false);
+
+   RooWorkspace source{"source"};
+   source.import(formula, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{source}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto *formulaNode = findMutableNamedChild(tree->rootnode()["functions"], "binnedFunction");
+   ASSERT_NE(formulaNode, nullptr);
+   EXPECT_EQ((*formulaNode)["type"].val(), "generic");
+   ASSERT_TRUE(formulaNode->has_child("axes"));
+
+   RooWorkspace legacyImport{"legacyImport"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{legacyImport}.importJSONfromString(json));
+   auto *legacyFormula = dynamic_cast<RooFormulaVar *>(legacyImport.function("binnedFunction"));
+   ASSERT_NE(legacyFormula, nullptr);
+   ASSERT_NE(legacyFormula->getBinning(*legacyImport.var("x")), nullptr);
+
+   (*formulaNode)["type"].clear();
+   (*formulaNode)["type"] << "generic_function";
+   RooWorkspace standardImport{"standardImport"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{standardImport}.importJSONfromString(jsonString(*tree)));
+   auto *standardFormula = dynamic_cast<RooFormulaVar *>(standardImport.function("binnedFunction"));
+   ASSERT_NE(standardFormula, nullptr);
+   auto *standardX = standardImport.var("x");
+   ASSERT_NE(standardX, nullptr);
+   ASSERT_TRUE(standardFormula->isBinnedDistribution(RooArgSet{*standardX}));
+   ASSERT_NE(standardFormula->getBinning(*standardX), nullptr);
+   EXPECT_EQ(standardFormula->getBinning(*standardX)->numBins(), 3);
+}
+
+TEST(RooFitHS3, BinnedGenericPdfMultipleAxesAndExplicitEdgesRoundTrip)
+{
+   RooRealVar x{"x", "x", 2.0, 8.0};
+   RooRealVar y{"y", "y", 0.0, 6.0};
+   RooGenericPdf pdf{"binnedPdf", "binnedPdf", "floor(x) + floor(y)", RooArgList{x, y}};
+
+   const double xEdges[] = {1.0, 3.0, 5.0, 9.0};
+   pdf.setBinning(x, RooBinning{3, xEdges}, /*checkFlatness=*/false);
+   pdf.setBinning(y, RooUniformBinning{0.0, 6.0, 3}, /*checkFlatness=*/false);
+
+   RooWorkspace source{"source"};
+   source.import(pdf, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{source}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *pdfNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "binnedPdf");
+   ASSERT_NE(pdfNode, nullptr);
+   ASSERT_TRUE(pdfNode->has_child("axes"));
+   ASSERT_EQ((*pdfNode)["axes"].num_children(), 2u);
+   auto const *xAxis = RooJSONFactoryWSTool::findNamedChild((*pdfNode)["axes"], "x");
+   ASSERT_NE(xAxis, nullptr);
+   ASSERT_TRUE(xAxis->has_child("edges"));
+   ASSERT_EQ((*xAxis)["edges"].num_children(), 4u);
+   for (std::size_t i = 0; i < 4; ++i) {
+      EXPECT_DOUBLE_EQ((*xAxis)["edges"].child(i).val_double(), xEdges[i]);
+   }
+
+   RooWorkspace imported{"imported"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedPdf = dynamic_cast<RooGenericPdf *>(imported.pdf("binnedPdf"));
+   ASSERT_NE(importedPdf, nullptr);
+   auto *importedX = imported.var("x");
+   auto *importedY = imported.var("y");
+   ASSERT_NE(importedX, nullptr);
+   ASSERT_NE(importedY, nullptr);
+   EXPECT_DOUBLE_EQ(importedX->getMin(), 2.0);
+   EXPECT_DOUBLE_EQ(importedX->getMax(), 8.0);
+   EXPECT_TRUE(importedPdf->isBinnedDistribution(RooArgSet{*importedX, *importedY}));
+
+   const RooAbsBinning *xBinning = importedPdf->getBinning(*importedX);
+   ASSERT_NE(xBinning, nullptr);
+   ASSERT_EQ(xBinning->numBoundaries(), 4);
+   for (int i = 0; i < xBinning->numBoundaries(); ++i) {
+      EXPECT_DOUBLE_EQ(xBinning->array()[i], xEdges[i]);
+   }
+   EXPECT_DOUBLE_EQ(xBinning->lowBound(), 1.0);
+   EXPECT_DOUBLE_EQ(xBinning->highBound(), 9.0);
+}
+
+TEST(RooFitHS3, GenericFormulaWithoutBinningHasNoAxes)
+{
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooGenericPdf pdf{"ordinaryPdf", "ordinaryPdf", "floor(x) + 1.0", RooArgList{x}};
+   RooFormulaVar function{"ordinaryFunction", "ordinaryFunction", "floor(x)", RooArgList{x}};
+
+   RooWorkspace source{"source"};
+   source.import(pdf, RooFit::Silence());
+   source.import(function, RooFit::Silence());
+   auto tree = RooFit::Detail::JSONTree::create(RooJSONFactoryWSTool{source}.exportJSONtoString());
+
+   auto const *pdfNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "ordinaryPdf");
+   auto const *functionNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "ordinaryFunction");
+   ASSERT_NE(pdfNode, nullptr);
+   ASSERT_NE(functionNode, nullptr);
+   EXPECT_FALSE(pdfNode->has_child("axes"));
+   EXPECT_FALSE(functionNode->has_child("axes"));
+}
+
+TEST(RooFitHS3, BinnedGenericRejectsMalformedAxes)
+{
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooGenericPdf pdf{"binnedPdf", "binnedPdf", "floor(x)", RooArgList{x}};
+   pdf.setBinning(x, RooUniformBinning{0.0, 10.0, 5}, /*checkFlatness=*/false);
+
+   RooWorkspace source{"source"};
+   source.import(pdf, RooFit::Silence());
+   const std::string validJson = RooJSONFactoryWSTool{source}.exportJSONtoString();
+
+   auto expectRejected = [&](auto configure) {
+      auto tree = RooFit::Detail::JSONTree::create(validJson);
+      auto *pdfNode = findMutableNamedChild(tree->rootnode()["distributions"], "binnedPdf");
+      ASSERT_NE(pdfNode, nullptr);
+      configure(*pdfNode);
+
+      RooWorkspace imported{"imported"};
+      RooJSONFactoryWSTool tool{imported};
+      EXPECT_THROW(tool.importJSONfromString(jsonString(*tree)), std::runtime_error);
+   };
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      pdfNode["axes"].clear();
+      pdfNode["axes"] << "not-a-sequence";
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &duplicate = pdfNode["axes"].append_child().set_map();
+      duplicate["name"] << "x";
+      duplicate["min"] << 0.0;
+      duplicate["max"] << 10.0;
+      duplicate["nbins"] << 5;
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis["name"].clear();
+      axis["name"] << "notADependency";
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis["nbins"].clear();
+      axis["nbins"] << 2.5;
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis["nbins"].clear();
+      axis["nbins"] << 0;
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis["max"].clear();
+      axis["max"] << 0.0;
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis.clear();
+      axis.set_map();
+      axis["name"] << "x";
+      auto &edges = axis["edges"].set_seq();
+      edges.append_child() << 0.0;
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis.clear();
+      axis.set_map();
+      axis["name"] << "x";
+      auto &edges = axis["edges"].set_seq();
+      edges.append_child() << 0.0;
+      edges.append_child() << 2.0;
+      edges.append_child() << 1.0;
+   });
+}
+
 TEST(RooFitHS3, GenericExpressionCleanup)
 {
    RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
-   RooFormulaVar formula{"formula",
-                         "formula",
+   RooFormulaVar formula{"formula", "formula",
                          "TMath::Floor(x) + TMath::Ceil(x) + TMath::Abs(x) + TMath::Tan(x) + "
                          "TMath::ASin(x / 2.) + TMath::ACos(x / 2.) + TMath::ATan(x) + TMath::Pi() + TMath::E()",
                          RooArgList{x}};
@@ -1470,9 +1706,8 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
 
    std::string exported;
-   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
-      exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
-   });
+   const std::string warnings =
+      captureMessages(RooFit::WARNING, RooFit::IO, [&] { exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString(); });
 
    EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'norm' of type 'normsys'"), std::string::npos)
       << warnings;
@@ -1550,9 +1785,8 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    }
 
    // The operation must be logged as a warning, not as an error.
-   const std::string sentinelErrors = captureMessages(RooFit::ERROR, RooFit::IO, [] {
-      RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel");
-   });
+   const std::string sentinelErrors = captureMessages(
+      RooFit::ERROR, RooFit::IO, [] { RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel"); });
    EXPECT_TRUE(sentinelErrors.empty()) << sentinelErrors;
 }
 
