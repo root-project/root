@@ -1309,6 +1309,15 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
   }
   auto* ParentDC = D->getDeclContext();
 
+  // A linkage spec (`extern "C++" { ... }`) or C++20 `export` block is not a
+  // scope, skip to the enclosing scope. E.g. on Windows the canonical
+  // declaration of namespace std comes from an `extern "C++"` block in the
+  // MSVC CRT headers, which would otherwise become an "<unnamed>" parent of
+  // std.
+  while (ParentDC && (llvm::isa<LinkageSpecDecl>(ParentDC) ||
+                      llvm::isa<ExportDecl>(ParentDC)))
+    ParentDC = ParentDC->getParent();
+
   if (!ParentDC)
     return INTEROP_RETURN(nullptr);
 
