@@ -131,7 +131,32 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char *name, const char *tit
   TRACE_CREATE;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a new interpolation and set the interpolation code for each
+/// parameter by position.
+/// \param name Name of the object.
+/// \param title Title (for e.g. plotting).
+/// \param nominal Nominal value of the function.
+/// \param lowSet Set of down variations.
+/// \param highSet Set of up variations.
+/// \param paramSet Parameters that control the interpolation.
+/// \param interpolationCodes Interpolation code for each parameter.
+PiecewiseInterpolation::PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal,
+                                               const RooArgList &lowSet, const RooArgList &highSet,
+                                               const RooArgList &paramSet, const std::vector<int> &interpolationCodes)
+   : PiecewiseInterpolation(name, title, nominal, lowSet, highSet, paramSet)
+{
+   if (interpolationCodes.size() != _paramSet.size()) {
+      coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName()
+                            << ") ERROR: interpolation code vector should have the same length as the parameter list"
+                            << std::endl;
+      RooErrorHandler::softAbort();
+      return;
+   }
+   for (std::size_t i = 0; i < interpolationCodes.size(); ++i) {
+      setInterpCodeForParam(i, interpolationCodes[i]);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor

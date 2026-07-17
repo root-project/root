@@ -101,3 +101,22 @@ TEST(PiecewiseInterpolation, AdditiveOrMultiplicative)
       }
    }
 }
+
+TEST(PiecewiseInterpolation, ConstructWithPerParameterCodes)
+{
+   RooRealVar nominal{"nominal", "nominal", 1.0};
+   RooRealVar parameter{"parameter", "parameter", 0.0, -2.0, 2.0};
+   RooRealVar low1{"low1", "low1", 0.8};
+   RooRealVar low2{"low2", "low2", 0.7};
+   RooRealVar high1{"high1", "high1", 1.2};
+   RooRealVar high2{"high2", "high2", 1.4};
+
+   // Repeating a parameter is supported by PiecewiseInterpolation, so codes
+   // need to be assigned by position rather than by looking up the parameter.
+   RooArgList parameters{parameter, parameter};
+   RooArgList lows{low1, low2};
+   RooArgList highs{high1, high2};
+   PiecewiseInterpolation interpolation{"interpolation", "", nominal, lows, highs, parameters, {0, 2}};
+
+   EXPECT_EQ(interpolation.interpolationCodes(), (std::vector<int>{0, 2}));
+}
