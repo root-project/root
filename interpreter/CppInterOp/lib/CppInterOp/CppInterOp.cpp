@@ -3827,17 +3827,14 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
               << type_name.c_str() << "*)args[" << i << "]";
     } else if (isPointer) {
       callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
-    } else if (rtdecl &&
-               (rtdecl->hasTrivialCopyConstructor() &&
-                !rtdecl->hasSimpleCopyConstructor()) &&
-               rtdecl->hasMoveConstructor()) {
+    } else if (rtdecl && IsCopyConstructorDeleted(QT)) {
       // By-value construction; this may either copy or move, but there is no
       // information here in terms of intent. Thus, simply assume that the
       // intent is to move if there is no viable copy constructor (ie. if the
-      // code would otherwise fail to even compile). There does not appear to be
-      // a simple way of determining whether a viable copy constructor exists,
-      // so check for the most common case: the trivial one, but not uniquely
-      // available, while there is a move constructor.
+      // code would otherwise fail to even compile). Checking the actual copy
+      // constructor is reliable across standard libraries, unlike triviality
+      // bits (MSVC's std::unique_ptr has a non-trivial deleted copy
+      // constructor, libstdc++'s a trivial one).
 
       // Move construction as needed for classes (note that this is
       // implicit). Emit `std::move`'s expansion directly rather than the
