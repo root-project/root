@@ -14,6 +14,7 @@
 #include "TNode.h"
 #include "TRotMatrix.h"
 #include "TShape.h"
+#include "TGeometryTransformer.h"
 
 #include "TBrowser.h"
 #include "TBuffer.h"
@@ -23,6 +24,15 @@
 
 TGeometry *gGeometry = nullptr;
 
+namespace {
+// When a TGeometry is active, classes like TPolyline3D and similar transform their points.
+// This function executes this transformation, and allowed for moving TGeometry out of graf3d.
+void transformLocalToMasterWithCurrentGeometry(double *local, double *master)
+{
+   assert(gGeometry);
+   gGeometry->Local2Master(local, master);
+}
+} // namespace
 
 /** \class TGeometry
 \ingroup g3d
@@ -106,6 +116,7 @@ TGeometry::TGeometry()
    fMatrixPointer   = nullptr;
    fShapePointer    = nullptr;
    gGeometry = this;
+   ROOT::Internal::currentTGeometryTransformer = &transformLocalToMasterWithCurrentGeometry;
    fBomb            = 1;
    fMatrix          = nullptr;
    fX=fY=fZ         =0.0;
@@ -127,6 +138,7 @@ TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
    fMatrixPointer   = nullptr;
    fShapePointer    = nullptr;
    gGeometry = this;
+   ROOT::Internal::currentTGeometryTransformer = &transformLocalToMasterWithCurrentGeometry;
    fBomb            = 1;
    fMatrix          = nullptr;
    fX=fY=fZ         =0.0;
@@ -225,6 +237,8 @@ TGeometry::~TGeometry()
       gGeometry = (TGeometry*) gROOT->GetListOfGeometries()->First();
       if (gGeometry == this)
          gGeometry = (TGeometry*) gROOT->GetListOfGeometries()->After(gGeometry);
+      if (gGeometry)
+         ROOT::Internal::currentTGeometryTransformer = nullptr;
    }
    gROOT->GetListOfGeometries()->Remove(this);
 }

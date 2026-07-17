@@ -17,6 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
     TCTUB.h
     TELTU.h
     TGeometry.h
+    TGeometryTransformer.h
     TGTRA.h
     THelix.h
     THYPE.h
