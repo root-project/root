@@ -73,7 +73,7 @@ fi
 newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
-rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
+rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lTGeometry -lGpad -lROOTVecOps -lTree -lTreePlayer\
           -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lROOTNTuple -lROOTNTupleUtil"
 
 # MultiProc is not supported on Windows
