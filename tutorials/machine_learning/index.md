@@ -137,5 +137,6 @@
 | ml_dataloader_PyTorch.py | Loading batches of events from a ROOT dataset into a basic PyTorch workflow. |
 | ml_dataloader_TensorFlow.py | Loading batches of events from a ROOT dataset into a basic TensorFlow workflow. |
 | ml_dataloader_Higgs_Classification.py | Loading batches of events from different files for a data-normalization workflow. |
-| ml_dataloader_resampling.py | Loading batches of events from an imbalanced ROOT dataset and balancing them. | 
+| ml_dataloader_resampling.py | Loading batches of events from an imbalanced ROOT dataset and balancing them. |
+| ml_dataloader_XGBoost.py | Training classifier models directly from remote ROOT files, shown with an XGBoost example. |
 
