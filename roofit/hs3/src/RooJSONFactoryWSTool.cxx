@@ -1232,18 +1232,7 @@ void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
    RooJSONFactoryWSTool::testValidName(name, false);
    obsNode["name"] << name;
 
-   auto const &binning = var.getBinning();
-   if (binning.isUniform()) {
-      obsNode["min"] << var.getMin();
-      obsNode["max"] << var.getMax();
-      obsNode["nbins"] << var.getBins();
-   } else {
-      auto &edges = obsNode["edges"].set_seq();
-      edges.append_child() << binning.binLow(0);
-      for (int i = 0; i < binning.numBins(); ++i) {
-         edges.append_child() << binning.binHigh(i);
-      }
-   }
+   writeAxisBinning(obsNode, var.getBinning());
 }
 
 /**
