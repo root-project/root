@@ -33,6 +33,9 @@ public:
   PiecewiseInterpolation() ;
   PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal, const RooArgList &lowSet,
                          const RooArgList &highSet, const RooArgList &paramSet);
+  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal, const RooArgList &lowSet,
+                         const RooArgList &highSet, const RooArgList &paramSet,
+                         const std::vector<int> &interpolationCodes);
   ~PiecewiseInterpolation() override ;
 
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char *name = nullptr);

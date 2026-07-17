@@ -33,7 +33,12 @@
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
 
+#include <charconv>
+#include <iterator>
+#include <map>
+#include <optional>
 #include <regex>
+#include <tuple>
 
 #include "static_execute.h"
 #include "JSONIOUtils.h"
@@ -61,6 +66,209 @@ double round_prec(double d, int nSig)
 // sync.
 namespace Literals {
 constexpr auto staterror = "staterror";
+}
+
+struct Interpolation {
+   std::string type;
+   std::string in;
+   std::optional<std::string> out;
+
+   bool operator==(const Interpolation &other) const
+   {
+      return std::tie(type, in, out) == std::tie(other.type, other.in, other.out);
+   }
+
+   bool operator!=(const Interpolation &other) const { return !(*this == other); }
+
+   bool operator<(const Interpolation &other) const
+   {
+      return std::tie(type, in, out) < std::tie(other.type, other.in, other.out);
+   }
+};
+
+const Interpolation additivePiecewiseLinear{"add", "poly1", std::nullopt};
+const Interpolation multiplicativePiecewiseExponential{"mult", "exp", std::nullopt};
+const Interpolation additiveQuadraticLinear{"add", "poly2", "poly1"};
+const Interpolation additivePolynomialLinear{"add", "poly6", "poly1"};
+const Interpolation multiplicativePolynomialExponential{"mult", "poly6", "exp"};
+const Interpolation multiplicativePolynomialLinear{"mult", "poly6", "poly1"};
+
+std::string interpolationString(const Interpolation &interpolation)
+{
+   std::stringstream ss;
+   ss << R"({"type":")" << interpolation.type << R"(","in":")" << interpolation.in << R"(","out":)";
+   if (interpolation.out) {
+      ss << '"' << *interpolation.out << '"';
+   } else {
+      ss << "null";
+   }
+   ss << '}';
+   return ss.str();
+}
+
+bool isInterpolationFunction(std::string_view function)
+{
+   return function == "poly1" || function == "poly2" || function == "poly6" || function == "exp";
+}
+
+Interpolation readInterpolation(const JSONNode &node, const std::string &context)
+{
+   if (!node.is_map()) {
+      RooJSONFactoryWSTool::error(context + " must be a struct with components 'type', 'in', and 'out'");
+   }
+   for (const char *component : {"type", "in", "out"}) {
+      if (!node.has_child(component)) {
+         RooJSONFactoryWSTool::error(context + " does not define the required '" + component + "' component");
+      }
+   }
+
+   const auto &typeNode = node["type"];
+   const auto &inNode = node["in"];
+   const auto &outNode = node["out"];
+   if (typeNode.is_container() || typeNode.is_null() || inNode.is_container() || inNode.is_null()) {
+      RooJSONFactoryWSTool::error(context + " components 'type' and 'in' must be strings");
+   }
+
+   Interpolation interpolation{typeNode.val(), inNode.val(), std::nullopt};
+   if (interpolation.type != "add" && interpolation.type != "mult") {
+      RooJSONFactoryWSTool::error(context + " has unknown interpolation type '" + interpolation.type + "'");
+   }
+   if (!isInterpolationFunction(interpolation.in)) {
+      RooJSONFactoryWSTool::error(context + " has unknown interpolation function '" + interpolation.in + "'");
+   }
+
+   if (!outNode.is_null()) {
+      if (outNode.is_container()) {
+         RooJSONFactoryWSTool::error(context + " component 'out' must be a string or null");
+      }
+      interpolation.out = outNode.val();
+      if (!isInterpolationFunction(*interpolation.out)) {
+         RooJSONFactoryWSTool::error(context + " has unknown extrapolation function '" + *interpolation.out + "'");
+      }
+   }
+
+   return interpolation;
+}
+
+void writeInterpolation(JSONNode &node, const Interpolation &interpolation)
+{
+   node.set_map();
+   node["type"] << interpolation.type;
+   node["in"] << interpolation.in;
+   if (interpolation.out) {
+      node["out"] << *interpolation.out;
+   } else {
+      node["out"].set_null();
+   }
+}
+
+int readLegacyInterpolationCode(const JSONNode &node, const std::string &context)
+{
+   if (node.is_container() || node.is_null() || !node.has_val()) {
+      RooJSONFactoryWSTool::error(context + " must be a structured interpolation or a legacy integer code");
+   }
+
+   const std::string value = node.val();
+   int code = 0;
+   const auto result = std::from_chars(value.data(), value.data() + value.size(), code);
+   if (result.ec != std::errc{} || result.ptr != value.data() + value.size()) {
+      RooJSONFactoryWSTool::error(context + " has invalid legacy interpolation code '" + value + "'");
+   }
+   return code;
+}
+
+Interpolation interpolationFromPiecewiseCode(int code, const std::string &context)
+{
+   switch (code) {
+   case 0: return additivePiecewiseLinear;
+   case 1: return multiplicativePiecewiseExponential;
+   case 2:
+   case 3: return additiveQuadraticLinear;
+   case 4: return additivePolynomialLinear;
+   case 5: return multiplicativePolynomialExponential;
+   case 6: return multiplicativePolynomialLinear;
+   default:
+      RooJSONFactoryWSTool::error(context + " has unsupported PiecewiseInterpolation code " + std::to_string(code));
+   }
+}
+
+Interpolation interpolationFromFlexibleCode(int code, const std::string &context)
+{
+   switch (code) {
+   case 0: return additivePiecewiseLinear;
+   case 1: return multiplicativePiecewiseExponential;
+   case 2:
+   case 3: return additiveQuadraticLinear;
+   case 4:
+   case 5: return multiplicativePolynomialExponential;
+   default: RooJSONFactoryWSTool::error(context + " has unsupported FlexibleInterpVar code " + std::to_string(code));
+   }
+}
+
+int piecewiseCodeFromInterpolation(const Interpolation &interpolation, const std::string &context)
+{
+   if (interpolation == additivePiecewiseLinear)
+      return 0;
+   if (interpolation == multiplicativePiecewiseExponential)
+      return 1;
+   if (interpolation == additiveQuadraticLinear)
+      return 2;
+   if (interpolation == additivePolynomialLinear)
+      return 4;
+   if (interpolation == multiplicativePolynomialExponential)
+      return 5;
+   if (interpolation == multiplicativePolynomialLinear)
+      return 6;
+   RooJSONFactoryWSTool::error(context + " " + interpolationString(interpolation) +
+                               " cannot be represented by PiecewiseInterpolation");
+}
+
+int flexibleCodeFromInterpolation(const Interpolation &interpolation, const std::string &context)
+{
+   if (interpolation == additivePiecewiseLinear)
+      return 0;
+   if (interpolation == multiplicativePiecewiseExponential)
+      return 1;
+   if (interpolation == additiveQuadraticLinear)
+      return 2;
+   if (interpolation == multiplicativePolynomialExponential)
+      return 4;
+   RooJSONFactoryWSTool::error(context + " " + interpolationString(interpolation) +
+                               " cannot be represented by FlexibleInterpVar");
+}
+
+enum class InterpolationClass {
+   Piecewise,
+   Flexible
+};
+
+int interpolationCode(const JSONNode &modifier, const std::optional<Interpolation> &defaultInterpolation,
+                      InterpolationClass interpolationClass, const std::string &context)
+{
+   const auto toCode = [&](const Interpolation &interpolation) {
+      return interpolationClass == InterpolationClass::Piecewise
+                ? piecewiseCodeFromInterpolation(interpolation, context)
+                : flexibleCodeFromInterpolation(interpolation, context);
+   };
+
+   if (const auto *interpolationNode = modifier.find("interpolation")) {
+      if (interpolationNode->is_map()) {
+         return toCode(readInterpolation(*interpolationNode, context));
+      }
+      const int legacyCode = readLegacyInterpolationCode(*interpolationNode, context);
+      const Interpolation interpolation = interpolationClass == InterpolationClass::Piecewise
+                                             ? interpolationFromPiecewiseCode(legacyCode, context)
+                                             : interpolationFromFlexibleCode(legacyCode, context);
+      return toCode(interpolation);
+   }
+   if (defaultInterpolation) {
+      return toCode(*defaultInterpolation);
+   }
+
+   // Before structured interpolation was introduced, both modifier classes
+   // used the integer code 4 as their implicit default. The meaning of code 4
+   // is class-dependent.
+   return 4;
 }
 
 void erasePrefix(std::string &str, std::string_view prefix)
@@ -347,7 +555,7 @@ double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
 
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
-                      RooArgSet &constraints)
+                      const std::optional<Interpolation> &defaultInterpolation, RooArgSet &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -382,6 +590,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
       RooArgList histNps;
       RooArgList histoLo;
       RooArgList histoHi;
+      std::vector<int> histoInterp;
 
       int idx = 0;
       for (const auto &mod : p["modifiers"].children()) {
@@ -408,17 +617,16 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
             overall_nps.add(par);
             auto &data = mod["data"];
-            int interp = 4;
-            if (mod.has_child("interpolation")) {
-               interp = mod["interpolation"].val_int();
-            }
+            const std::string context = "interpolation for normsys modifier '" + sysname + "' in sample '" +
+                                        sampleName + "' of channel '" + channelName + "'";
+            const int interp = interpolationCode(mod, defaultInterpolation, InterpolationClass::Flexible, context);
             double low = data["lo"].val_double();
             double high = data["hi"].val_double();
 
             // the below contains a a hack to cut off variations that go below 0
-            // this is needed because with interpolation code 4, which is the default, interpolation is done in
-            // log-space. hence, values <= 0 result in NaN which propagate throughout the model and cause evaluations to
-            // fail if you know a nicer way to solve this, please go ahead and fix the lines below
+            // This is needed because FlexibleInterpVar code 4 interpolates in log-space. Hence, values <= 0 result in
+            // NaN, which propagates throughout the model and causes evaluations to fail. If you know a nicer way to
+            // solve this, please go ahead and fix the lines below.
             if (interp == 4 && low <= 0)
                low = std::numeric_limits<double>::epsilon();
             if (interp == 4 && high <= 0)
@@ -442,6 +650,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             histoHi.add(tool.wsEmplace<RooHistFunc>(
                sysname + "High_" + prefixedName, varlist,
                RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
+            const std::string context = "interpolation for histosys modifier '" + sysname + "' in sample '" +
+                                        sampleName + "' of channel '" + channelName + "'";
+            histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context));
             constraints.add(getOrCreateConstraint(tool, mod, par, sampleName));
          } else if (modtype == "shapesys" || modtype == "shapefactor") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
@@ -527,9 +738,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
          normElems.add(v);
       }
       if (!histNps.empty()) {
-         auto &v = tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps);
+         auto &v = tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps,
+                                                          histoInterp);
          v.setPositiveDefinite();
-         v.setAllInterpCodes(4); // default interpCode for HistFactory
          shapeElems.add(v);
       } else {
          shapeElems.add(hf);
@@ -556,6 +767,11 @@ public:
       }
       double statErrThresh = 0;
       std::string statErrType = "Poisson";
+      std::optional<Interpolation> defaultInterpolation;
+      if (p.has_child("default_interpolation")) {
+         defaultInterpolation =
+            readInterpolation(p["default_interpolation"], "default_interpolation of channel '" + name + "'");
+      }
       if (p.has_child(::Literals::staterror)) {
          auto &staterr = p[::Literals::staterror];
          if (staterr.has_child("relThreshold"))
@@ -622,7 +838,8 @@ public:
       RooArgList funcs;
       RooArgList coefs;
       for (const auto &comp : p["samples"].children()) {
-         importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, constraints);
+         importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, defaultInterpolation,
+                          constraints);
          ++idx;
 
          std::string const &compName = RooJSONFactoryWSTool::name(comp);
@@ -769,11 +986,11 @@ struct NormSys {
    RooAbsReal const *param = nullptr;
    double low = 1.;
    double high = 1.;
-   int interpolationCode = 4;
+   Interpolation interpolation = multiplicativePolynomialExponential;
    RooAbsPdf const *constraint = nullptr;
    NormSys() {};
-   NormSys(const std::string &n, RooAbsReal *const p, double h, double l, int i, const RooAbsPdf *c)
-      : name(n), param(p), low(l), high(h), interpolationCode(i), constraint(c)
+   NormSys(const std::string &n, RooAbsReal *const p, double h, double l, Interpolation i, const RooAbsPdf *c)
+      : name(n), param(p), low(l), high(h), interpolation(std::move(i)), constraint(c)
    {
    }
 };
@@ -783,12 +1000,11 @@ struct HistoSys {
    RooAbsReal const *param = nullptr;
    std::vector<double> low;
    std::vector<double> high;
-   // Used to validate duplicate RooFit modifiers. This is intentionally not serialized until HS3 defines the
-   // structured histosys interpolation representation.
-   int interpolationCode = 4;
+   Interpolation interpolation = additivePolynomialLinear;
    RooAbsPdf const *constraint = nullptr;
-   HistoSys(const std::string &n, RooAbsReal *const p, RooHistFunc *l, RooHistFunc *h, int i, const RooAbsPdf *c)
-      : name(n), param(p), interpolationCode(i), constraint(c)
+   HistoSys(const std::string &n, RooAbsReal *const p, RooHistFunc *l, RooHistFunc *h, Interpolation i,
+            const RooAbsPdf *c)
+      : name(n), param(p), interpolation(std::move(i)), constraint(c)
    {
       low.assign(l->dataHist().weightArray(), l->dataHist().weightArray() + l->dataHist().numEntries());
       high.assign(h->dataHist().weightArray(), h->dataHist().weightArray() + h->dataHist().numEntries());
@@ -913,8 +1129,8 @@ NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula
          sys.low = -sign * p2->getVal();
       }
 
-      // interpolation code 1 means linear, which is what we have here
-      sys.interpolationCode = 1;
+      // Preserve the legacy export behaviour for recognized explicit formulae.
+      sys.interpolation = multiplicativePiecewiseExponential;
 
       erasePrefix(sys.name, "alpha_");
    }
@@ -1045,8 +1261,11 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   if (!constraint && !var->isConstant()) {
                      RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
                   } else {
+                     const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
+                                                 "' of channel '" + channel.name + "'";
                      sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i],
-                                                 fip->interpolationCodes()[i], constraint);
+                                                 interpolationFromFlexibleCode(fip->interpolationCodes()[i], context),
+                                                 constraint);
                   }
                }
             } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
@@ -1124,7 +1343,11 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   if (!constraint && !var->isConstant()) {
                      RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
                   } else {
-                     sample.histosys.emplace_back(sysname, var, lo, hi, pip->interpolationCodes()[i], constraint);
+                     const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
+                                                 "' of channel '" + channel.name + "'";
+                     sample.histosys.emplace_back(sysname, var, lo, hi,
+                                                  interpolationFromPiecewiseCode(pip->interpolationCodes()[i], context),
+                                                  constraint);
                   }
                }
             }
@@ -1221,13 +1444,13 @@ void warnDuplicateModifiersCombined(const Channel &channel, const Sample &sample
 // the piecewise-exponential code 1 (exact everywhere) and for the default code 4 (exact at the +-1 sigma anchors and in
 // the exponential extrapolation region). The linear-space codes (e.g. 0 and 2) would turn the product into a shape that
 // cannot be represented by a single normsys, so those must not be merged.
-bool normSysSupportsMultiplicativeMerge(int interpolationCode)
+bool normSysSupportsMultiplicativeMerge(const Interpolation &interpolation)
 {
-   return interpolationCode == 1 || interpolationCode == 4;
+   return interpolation == multiplicativePiecewiseExponential || interpolation == multiplicativePolynomialExponential;
 }
 
 // Combines runs of adjacent modifiers that share the same name (the container is sorted by name beforehand) into a
-// single modifier. The shared metadata (constraint, parameter and interpolation code) must be identical across the
+// single modifier. The shared metadata (constraint, parameter and interpolation behaviour) must be identical across the
 // duplicates; the type-specific `combine` callable performs the actual merge and any additional validation.
 template <class Modifiers, class CombineFn>
 void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modifiers &modifiers, std::string_view type,
@@ -1251,8 +1474,8 @@ void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modif
          if (!hasSameMetadata(merged.param, modifier.param)) {
             duplicateModifierError(channel, sample, type, merged.name, "parameter metadata differs");
          }
-         if (merged.interpolationCode != modifier.interpolationCode) {
-            duplicateModifierError(channel, sample, type, merged.name, "interpolation codes differ");
+         if (merged.interpolation != modifier.interpolation) {
+            duplicateModifierError(channel, sample, type, merged.name, "interpolation behaviours differ");
          }
          combine(merged, modifier);
       }
@@ -1270,9 +1493,9 @@ void mergeDuplicateModifiers(const Channel &channel, const Sample &sample, Modif
 void mergeDuplicateNormSys(const Channel &channel, Sample &sample)
 {
    mergeDuplicateModifiers(channel, sample, sample.normsys, "normsys", [&](NormSys &merged, const NormSys &modifier) {
-      if (!normSysSupportsMultiplicativeMerge(merged.interpolationCode)) {
+      if (!normSysSupportsMultiplicativeMerge(merged.interpolation)) {
          duplicateModifierError(channel, sample, "normsys", merged.name,
-                                "multiplicative combination is only valid for log-space interpolation codes");
+                                "multiplicative combination is only valid for log-space interpolation");
       }
       merged.low *= modifier.low;
       merged.high *= modifier.high;
@@ -1282,21 +1505,24 @@ void mergeDuplicateNormSys(const Channel &channel, Sample &sample)
 void mergeDuplicateHistoSys(const Channel &channel, Sample &sample)
 {
    const std::size_t nBins = sample.hist.size();
-   mergeDuplicateModifiers(
-      channel, sample, sample.histosys, "histosys", [&](HistoSys &merged, const HistoSys &modifier) {
-         if (merged.interpolationCode != 4) {
-            duplicateModifierError(channel, sample, "histosys", merged.name,
-                                   "non-default interpolation cannot currently be represented by the HS3 exporter");
-         }
-         if (merged.low.size() != nBins || merged.high.size() != nBins || modifier.low.size() != nBins ||
-             modifier.high.size() != nBins) {
-            duplicateModifierError(channel, sample, "histosys", merged.name, "histogram binning differs");
-         }
-         for (std::size_t bin = 0; bin < nBins; ++bin) {
-            merged.low[bin] += modifier.low[bin] - sample.hist[bin];
-            merged.high[bin] += modifier.high[bin] - sample.hist[bin];
-         }
-      });
+   mergeDuplicateModifiers(channel, sample, sample.histosys, "histosys",
+                           [&](HistoSys &merged, const HistoSys &modifier) {
+                              if (merged.interpolation != additivePolynomialLinear) {
+                                 duplicateModifierError(
+                                    channel, sample, "histosys", merged.name,
+                                    "this interpolation cannot currently be combined for duplicate histosys "
+                                    "modifiers");
+                              }
+                              if (merged.low.size() != nBins || merged.high.size() != nBins ||
+                                  modifier.low.size() != nBins || modifier.high.size() != nBins) {
+                                 duplicateModifierError(channel, sample, "histosys", merged.name,
+                                                        "histogram binning differs");
+                              }
+                              for (std::size_t bin = 0; bin < nBins; ++bin) {
+                                 merged.low[bin] += modifier.low[bin] - sample.hist[bin];
+                                 merged.high[bin] += modifier.high[bin] - sample.hist[bin];
+                              }
+                           });
 }
 
 void ensureUniqueModifiers(const Channel &channel, const Sample &sample)
@@ -1354,6 +1580,32 @@ void configureStatError(Channel &channel)
    }
 }
 
+std::optional<Interpolation> defaultInterpolation(const Channel &channel)
+{
+   std::map<Interpolation, std::size_t> counts;
+   for (const auto &sample : channel.samples) {
+      for (const auto &modifier : sample.normsys) {
+         ++counts[modifier.interpolation];
+      }
+      for (const auto &modifier : sample.histosys) {
+         ++counts[modifier.interpolation];
+      }
+   }
+   if (counts.empty()) {
+      return std::nullopt;
+   }
+
+   auto best = counts.begin();
+   for (auto current = std::next(counts.begin()); current != counts.end(); ++current) {
+      if (current->second > best->second ||
+          (current->second == best->second && current->first == multiplicativePolynomialExponential &&
+           best->first != multiplicativePolynomialExponential)) {
+         best = current;
+      }
+   }
+   return best->first;
+}
+
 bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
 {
    // Write the constraint reference for any modifier that supports an
@@ -1364,10 +1616,14 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       }
    };
 
+   elem["type"] << "histfactory_dist";
+   const auto channelDefaultInterpolation = defaultInterpolation(channel);
+   if (channelDefaultInterpolation) {
+      writeInterpolation(elem["default_interpolation"], *channelDefaultInterpolation);
+   }
+
    bool observablesWritten = false;
    for (const auto &sample : channel.samples) {
-
-      elem["type"] << "histfactory_dist";
 
       auto &s = RooJSONFactoryWSTool::appendNamedChild(elem["samples"], sample.name);
 
@@ -1392,8 +1648,8 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "normsys";
          mod["parameter"] << sys.param->GetName();
-         if (sys.interpolationCode != 4) {
-            mod["interpolation"] << sys.interpolationCode;
+         if (!channelDefaultInterpolation || sys.interpolation != *channelDefaultInterpolation) {
+            writeInterpolation(mod["interpolation"], sys.interpolation);
          }
          writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
@@ -1407,6 +1663,9 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "histosys";
          mod["parameter"] << sys.param->GetName();
+         if (!channelDefaultInterpolation || sys.interpolation != *channelDefaultInterpolation) {
+            writeInterpolation(mod["interpolation"], sys.interpolation);
+         }
          writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          if (channel.nBins != sys.low.size() || channel.nBins != sys.high.size()) {
