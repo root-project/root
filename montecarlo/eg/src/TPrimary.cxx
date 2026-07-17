@@ -17,15 +17,16 @@ Old version of a  dynamic particle class created by event generators.
 This class is now obsolete. Use TParticle instead.
 */
 
-#include "TObject.h"
-#include "Rtypes.h"
-#include "TString.h"
-#include "TAttParticle.h"
 #include "TPrimary.h"
-#include "TView.h"
+
+#include "Rtypes.h"
+#include "TAttParticle.h"
 #include "TMath.h"
-#include "TVirtualPad.h"
 #include "TPolyLine3D.h"
+#include "TString.h"
+#include "TView.h"
+#include "TVirtualPad.h"
+#include "X3DBuffer.h"
 #include "snprintf.h"
 
 
