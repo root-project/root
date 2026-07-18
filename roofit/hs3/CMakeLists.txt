@@ -11,10 +11,12 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
+    RooFit/Detail/JSONInterface.h
     RooFitHS3/JSONIO.h
     RooFitHS3/RooJSONFactoryWSTool.h
   SOURCES
     src/Domains.cxx
+    src/JSONInterface.cxx
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
     src/JSONFactories_RooFitCore.cxx
@@ -26,7 +28,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     HistFactory
     RooFit
     RooFitCore
-    RooFitJSONInterface
 )
+
+target_link_libraries(RooFitHS3 PRIVATE nlohmann_json::nlohmann_json)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
