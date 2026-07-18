@@ -282,6 +282,76 @@ struct IMTRAII {
    ~IMTRAII() { ROOT::DisableImplicitMT(); }
 };
 
+TEST_F(RNTupleDSTest, GlobalRangeTailScheduling)
+{
+   IMTRAII _;
+   FileRAII f("GlobalRangeSingleFileTail.root");
+   FileRAII m("SecondTestFile.root");
+   FileRAII p("ThirdTestFile.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "tail", f.GetPath());
+      for (int i = 0; i < 1 << 20; i++) {
+         *ptrX = i;
+         writer->Fill();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "tail", m.GetPath());
+      for (int i = 0; i < 1 << 10; i++) {
+         *ptrX = i;
+         writer->Fill();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "tail", p.GetPath());
+      for (int i = 0; i < 1 << 14; i++) {
+         *ptrX = i;
+         writer->Fill();
+      }
+   }
+   ROOT::RDF::Experimental::RDatasetSpec spec;
+   ROOT::RDF::Experimental::RSample sample("smpl", "tail", f.GetPath());
+   ROOT::RDF::Experimental::RSample sample2("smpl2", "tail", m.GetPath());
+   ROOT::RDF::Experimental::RSample sample3("smpl3", "tail", p.GetPath());
+
+   spec.AddSample(sample);
+   spec.AddSample(sample2);
+   spec.AddSample(sample3);
+
+   spec.WithGlobalRange({3, 11});
+   ROOT::RDataFrame df_short(spec);
+   auto s = df_short.Sum<int>("x");
+
+   spec.WithGlobalRange({5000, 10000});
+   ROOT::RDataFrame df_long(spec);
+   auto q = df_long.Sum<int>("x");
+
+   spec.WithGlobalRange({1048576, 1048776});
+   ROOT::RDataFrame df_secondfile(spec);
+   auto h = df_secondfile.Sum<int>("x");
+
+   spec.WithGlobalRange({1038576, 1048596});
+   ROOT::RDataFrame df_multifile(spec);
+   auto a = df_multifile.Count();
+   auto b = df_multifile.Filter([](int x) { return x < 1040575; }, {"x"}).Count();
+
+   spec.WithGlobalRange({40000, 1050000});
+   ROOT::RDataFrame df_allfiles(spec);
+   auto c = df_allfiles.Count();
+
+   EXPECT_EQ(*c, 1010000);
+   EXPECT_EQ(*a, 10020);
+   EXPECT_EQ(*b, 2019);
+   EXPECT_EQ(*h, 19900);
+   EXPECT_EQ(*q, 37497500);
+   EXPECT_EQ(*s, 52);
+}
 TEST_F(RNTupleDSTest, ReadMT)
 {
    IMTRAII _;
