@@ -233,7 +233,13 @@ def cppexec(stmt):
             sys.stderr.write("%s\n\n" % str(e))
             if not errcode.value: errcode.value = 1
 
-    if not errcode == 0:
+  # the return code of Process does not cover errors raised while executing a
+  # wrapped expression: with dynamic scopes, a failed lookup compiles fine and
+  # fails at runtime, reported through an exception from the JIT that on
+  # Windows cannot cross the JITed wrapper frame (so nothing is raised and the
+  # return code stays 0); check the captured diagnostics as well, like the
+  # reference cppyy implementation does
+    if not errcode == 0 or ('input_line' in err.err and 'error' in err.err):
         raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
     elif err.err and err.err[1:] != '\n':
         sys.stderr.write(err.err[1:])
