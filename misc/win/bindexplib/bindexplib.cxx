@@ -346,7 +346,17 @@ public:
                   // skip symbols containing a dot
                   if (symbol.find('.') == std::string::npos) {
                      if (!pSymbolTable->Type && (SectChar & IMAGE_SCN_MEM_WRITE)) {
-                        // Read only (i.e. constants) must be excluded
+                        this->DataSymbols.insert(symbol);
+                     } else if (!pSymbolTable->Type &&
+                                (SectChar & IMAGE_SCN_MEM_READ) &&
+                                !(SectChar & IMAGE_SCN_MEM_EXECUTE) &&
+                                symbol.compare(0, 3, "??_") != 0) {
+                        // Named read-only data (const globals): export them
+                        // as DATA so they can be resolved at runtime, e.g. by
+                        // the interpreter looking up a global whose value it
+                        // cannot reconstruct otherwise. Compiler-generated
+                        // read-only symbols (vtables ??_7, RTTI ??_R, string
+                        // literals ??_C, ...) are still excluded.
                         this->DataSymbols.insert(symbol);
                      } else {
                         if (pSymbolTable->Type || !(SectChar & IMAGE_SCN_MEM_READ) ||
