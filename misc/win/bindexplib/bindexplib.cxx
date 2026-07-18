@@ -350,13 +350,18 @@ public:
                      } else if (!pSymbolTable->Type &&
                                 (SectChar & IMAGE_SCN_MEM_READ) &&
                                 !(SectChar & IMAGE_SCN_MEM_EXECUTE) &&
+                                symbol[0] == '?' &&
                                 symbol.compare(0, 3, "??_") != 0) {
-                        // Named read-only data (const globals): export them
-                        // as DATA so they can be resolved at runtime, e.g. by
-                        // the interpreter looking up a global whose value it
-                        // cannot reconstruct otherwise. Compiler-generated
-                        // read-only symbols (vtables ??_7, RTTI ??_R, string
-                        // literals ??_C, ...) are still excluded.
+                        // C++-mangled read-only data (const globals): export
+                        // them as DATA so they can be resolved at runtime,
+                        // e.g. by the interpreter looking up a global whose
+                        // value it cannot reconstruct otherwise. Restricting
+                        // to '?' keeps out compiler-generated constants
+                        // (__real@/__xmm@ FP pools, _CT*/_TI* throw info),
+                        // whose names the cdecl '@'-truncation above garbles
+                        // into symbols that do not exist (e.g. '_real'), and
+                        // the '??_' check keeps out vtables (??_7), RTTI
+                        // (??_R) and string literals (??_C).
                         this->DataSymbols.insert(symbol);
                      } else {
                         if (pSymbolTable->Type || !(SectChar & IMAGE_SCN_MEM_READ) ||
