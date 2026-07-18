@@ -86,7 +86,6 @@ public:
 
 public:
    virtual void writeJSON(std::ostream &os) const = 0;
-   virtual void writeYML(std::ostream &) const { throw std::runtime_error("YML not supported"); }
 
 public:
    virtual JSONNode &operator<<(std::string const &s) = 0;
