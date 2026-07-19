@@ -333,12 +333,21 @@ CPyCppyy::PyCallable* CPyCppyy::Utility::FindBinaryOperator(
     }
     if (scope)
         pyfunc = BuildOperator(lcname, rcname, op, scope, reverse);
-    if (!pyfunc)
-        if ((scope = Cppyy::GetScope(TypeManip::extract_namespace(lcname))))
-            pyfunc = BuildOperator(lcname, rcname, op, scope, reverse);
 
-    if (!pyfunc && scope != Cppyy::GetGlobalScope())// search in global scope anyway
+// search the global scope before the namespace of the left operand: a user
+// operator for these exact types defined at global scope is what C++ overload
+// resolution would select over a generic template found through ADL. MSVC's
+// std::ostream rvalue-stream-inserter template (ostream&&, const _Ty&) is
+// greedy enough to match any (ostream, T) pair, and searching std first made
+// it shadow global-scope operator<< overloads (advancedcpp test25).
+    if (!pyfunc && scope != Cppyy::GetGlobalScope())
         pyfunc = BuildOperator(lcname, rcname, op, Cppyy::GetGlobalScope(), reverse);
+
+    if (!pyfunc) {
+        Cppyy::TCppScope_t lcscope = Cppyy::GetScope(TypeManip::extract_namespace(lcname));
+        if (lcscope && lcscope != scope && lcscope != Cppyy::GetGlobalScope())
+            pyfunc = BuildOperator(lcname, rcname, op, lcscope, reverse);
+    }
 
     if (!pyfunc) {
     // For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
