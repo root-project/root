@@ -390,6 +390,54 @@ RooArgList RooFormula::usedVariables() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reindex the formula expression to map only the variables that are actually in use.
+/// Return the processed formula string with the `x[i]` positional indices
+/// remapped to each variable's position in usedVariables() (the pruned list of
+/// actually-used servers) instead of the full original list. This keeps the
+/// persisted pair (formula string, actualDependents()) self-consistent, so a
+/// RooFormulaVar or RooGenericPdf survives a write/read cycle even when unused
+/// parameters were pruned. See https://github.com/root-project/root/issues/21371
+/// \return A new formula string with reindexed variable placeholders.
+std::string RooFormula::reindexedFormulaForUsedVars() const
+{
+   const std::string processedFormula(_tFormula->GetTitle());
+
+   int unUsedCount = 0;
+   std::vector<int> newIndex;
+   newIndex.reserve(_varIsUsed.size());
+   // Map each original index to its position among the used variables;
+   // pruned entries get -1 and are never looked up (they don't appear in the formula).
+   for (std::size_t i = 0; i < _varIsUsed.size(); ++i) {
+      if (!_varIsUsed[i]) {
+         unUsedCount++;
+         newIndex.push_back(-1);
+      } else {
+         newIndex.push_back(static_cast<int>(i) - unUsedCount);
+      }
+   }
+
+   static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
+
+   std::string result;
+   std::size_t lastPos = 0;
+   result.reserve(processedFormula.size());
+   // Single pass: rewrite every x[old] to x[newIndex[old]].
+   for (sregex_iterator matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), newOrdinalRegex);
+        matchIt != sregex_iterator(); ++matchIt) {
+      std::smatch match = *matchIt;
+
+      result.append(processedFormula, lastPos, match.position() - lastPos);
+      const int oldIdx = std::stoi(match[1].str());
+      result += "x[" + std::to_string(newIndex[oldIdx]) + "]";
+
+      lastPos = match.position() + match.length();
+   }
+   result.append(processedFormula, lastPos, std::string::npos);
+
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change used variables to those with the same name in given list.
 /// \param[in] newDeps New dependents to replace the old ones.
 /// \param[in] mustReplaceAll Will yield an error if one dependent does not have a replacement.

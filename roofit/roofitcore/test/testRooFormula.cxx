@@ -2,11 +2,13 @@
 // Authors: Stephan Hageboeck, CERN  2020
 //          Jonas Rembser, CERN 2023
 //          Andrea Germinario, CERN 2025
+#include <TFile.h>
 
 #include "../src/RooFormula.h"
 #include <RooFormulaVar.h>
 #include <RooRealVar.h>
 #include <RooConstVar.h>
+#include <RooWorkspace.h>
 
 #include <ROOT/TestSupport.hxx>
 
@@ -90,6 +92,31 @@ TEST(RooFormula, UndefinedVariables)
    ASSERT_ANY_THROW(RooFormulaVar f1("f1", "r + B + x", {r, B}))  << "Formulae with missing x in arg list cannot work.";
    ASSERT_ANY_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B}))  << "Formulae with missing (x,)y in arg list cannot work.";
    ASSERT_NO_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B, y})) << "Formula with specified y must work.";
+}
+
+// Regression test for https://github.com/root-project/root/issues/21371:
+// an unused parameter (b) is pruned, so the persisted @N indices must be
+// remapped or the formula silently mismaps after a write/read cycle.
+TEST(RooFormula, SerializationWithUnusedParam)
+{
+   RooWorkspace w("w");
+   w.factory("a[2,-10,10]");
+   w.factory("b[99,-10,10]");
+   w.factory("c[3,-10,10]");
+   w.factory("d[4,-10,10]");
+   w.factory("expr::f('@0*@2+d', a, b, c, d)");
+
+   TString fn = "RooFormulaSerialization.root";
+   w.writeToFile(fn);
+   TFile fin(fn);
+   RooWorkspace *w2 = nullptr;
+   fin.GetObject("w", w2);
+   ASSERT_NE(w2, nullptr);
+   auto *f = static_cast<RooAbsReal *>(w2->function("f"));
+
+   // If @2 still maps to c, changing c updates f = a*c + d = 2*5 + 4 = 14.
+   static_cast<RooRealVar *>(w2->var("c"))->setVal(5.0);
+   EXPECT_DOUBLE_EQ(f->getVal(), 2.0 * 5.0 + 4.0);
 }
 
 TEST(RooFormula, RooConstVarSafeSubstitution)
