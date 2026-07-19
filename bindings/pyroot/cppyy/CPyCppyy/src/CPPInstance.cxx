@@ -14,6 +14,8 @@
 
 // Standard
 #include <algorithm>
+#include <atomic>
+#include <cstdio>
 #include <sstream>
 
 
@@ -502,6 +504,46 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     if (!binop) {
         binop = op == Py_EQ ? klass->fOperators->fNe : klass->fOperators->fEq;
         if (binop) flipit = true;
+    }
+    if (!binop) {
+    // an operator== defined on a base class is proxied into the base's dict only
+    // and cached on the base at its pythonization; consult the mro before doing
+    // a (much more expensive, and possibly failing) lazy lookup: the base class
+    // method is what C++ overload resolution would select anyway (e.g. MSVC's
+    // STL iterators define operator== on the const_iterator base class only)
+        PyObject* mro = ((PyTypeObject*)klass)->tp_mro;
+        for (Py_ssize_t i = 1; mro && i < PyTuple_GET_SIZE(mro); ++i) {
+            PyObject* base = PyTuple_GET_ITEM(mro, i);
+        // static types such as CPPInstance_Type pass CPPScope_Check (their
+        // metatype is CPPScope_Type), but are plain PyTypeObjects without the
+        // CPPScope layout; only heap types created through the metatype carry
+        // fOperators, so reading it from anything else is out of bounds
+            if (!CPPScope_Check(base) ||
+                    !PyType_HasFeature((PyTypeObject*)base, Py_TPFLAGS_HEAPTYPE) ||
+                    !((CPPClass*)base)->fOperators)
+                continue;
+            PyOperators* bops = ((CPPClass*)base)->fOperators;
+            PyObject* bop = op == Py_EQ ? bops->fEq : bops->fNe;
+            if (bop && bop != Py_None) {
+                binop = bop;
+                break;
+            }
+            bop = op == Py_EQ ? bops->fNe : bops->fEq;
+            if (bop && bop != Py_None) {
+                binop = bop;
+                flipit = true;
+                break;
+            }
+        }
+        if (binop) {
+        // cache on this class so the mro walk happens only once; a flipped
+        // operator goes into the slot of the op it actually implements, which
+        // is what the slot-based flip logic above expects on the next call
+            Py_INCREF(binop);
+            bool asEq = (op == Py_EQ) != flipit;
+            if (asEq) klass->fOperators->fEq = binop;
+            else klass->fOperators->fNe = binop;
+        }
     }
     if (!binop) {
         const char* cppop = op == Py_EQ ? "==" : "!=";
