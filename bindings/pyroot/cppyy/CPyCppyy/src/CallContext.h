@@ -155,6 +155,16 @@ inline bool UseStrictOwnership() {
     return !(CC::GlobalPolicyFlags() & CC::kUseHeuristics);
 }
 
+// kImplicitSmartPtrConversion is a global policy (set through
+// cppyy.SetImplicitSmartPointerConversion), but it can also be requested for a
+// single call through the call context, so check both words - as is done for
+// kProtected in CPPMethod::Execute.
+inline bool AllowImplicitSmartPtrConversion(CallContext* ctxt) {
+    using CC = CPyCppyy::CallContext;
+    return (CC::GlobalPolicyFlags() & CC::kImplicitSmartPtrConversion) ||
+           (ctxt && (ctxt->fFlags & CC::kImplicitSmartPtrConversion));
+}
+
 template<CallContext::ECallFlags F>
 class CallContextRAII {
 public:
