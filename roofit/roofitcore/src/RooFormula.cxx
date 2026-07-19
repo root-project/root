@@ -519,6 +519,14 @@ void RooFormula::doEval(RooArgList const &actualVars, RooFit::EvalContext &ctx) 
    std::vector<double> pars(nPars);
    for (size_t i = 0; i < output.size(); i++) {
       for (int j = 0; j < nPars; j++) {
+         // Dependents that are not used by the formula have no entry in
+         // actualVars and keep an empty span, which must not be dereferenced.
+         // Their pars slot stays 0.0 and is never read: the JIT-compiled
+         // TFormula code only references the x[i] appearing in the formula
+         // string.
+         if (inputSpans[j].empty()) {
+            continue;
+         }
          pars[j] = inputSpans[j].size() > 1 ? inputSpans[j][i] : inputSpans[j][0];
       }
       output[i] = _tFormula->EvalPar(pars.data());
