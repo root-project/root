@@ -5,6 +5,7 @@
 #include <TFile.h>
 
 #include "../src/RooFormula.h"
+#include <RooFit/Evaluator.h>
 #include <RooFormulaVar.h>
 #include <RooRealVar.h>
 #include <RooConstVar.h>
@@ -13,6 +14,9 @@
 #include <ROOT/TestSupport.hxx>
 
 #include <gtest/gtest.h>
+
+#include <span>
+#include <vector>
 
 /// Since TFormula does very surprising things,
 /// RooFit needs to do safety checks.
@@ -135,4 +139,25 @@ TEST(RooFormula, RooConstVarSafeSubstitution)
    RooConstVar troubleConst("3.4", "troubleConst", 2.1);
    ASSERT_ANY_THROW(RooFormulaVar f1("f1", "x + 0", {x, zero}))
       << "RooConst variables, if having numeric name, should have name value equal to actual value.";
+}
+
+// Regression test for a crash in batch evaluation: RooFormula::doEval
+// dereferenced the empty input span of a dependent that is not used by the
+// formula, segfaulting the batch evaluation backend for e.g.
+// RooFormulaVar("f", "x*p", {x, p, q}).
+TEST(RooFormula, UnusedDependentBatchEval)
+{
+   RooRealVar x("x", "x", 5.0, 0.0, 10.0);
+   RooRealVar p("p", "p", 2.0, 0.1, 3.0);
+   RooRealVar q("q", "q", 1.5, 0.1, 3.0); // not used by the formula
+   RooFormulaVar f("f", "x*p", {x, p, q});
+
+   const std::vector<double> xData{1.0, 2.0, 3.0, 4.0, 5.0};
+   RooFit::Evaluator ev(f);
+   ev.setInput("x", {xData.data(), xData.size()}, false);
+   std::span<const double> out = ev.run();
+   ASSERT_EQ(out.size(), xData.size());
+   for (std::size_t i = 0; i < xData.size(); ++i) {
+      EXPECT_DOUBLE_EQ(out[i], xData[i] * 2.0) << "event " << i;
+   }
 }
