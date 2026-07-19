@@ -1391,8 +1391,45 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
 
   const auto* Derived = cast<CXXRecordDecl>(derived_D);
   const auto* Base = cast<CXXRecordDecl>(base_D);
-  return INTEROP_RETURN(
-      IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)));
+
+  // This interface historically ignores access specifiers: interactive and
+  // binding use cases pass derived objects where a base is expected also
+  // for non-public bases. The exception is when both classes are
+  // instantiations of the same class template: there, non-public
+  // derivation is a recursive implementation detail (e.g. MSVC's
+  // std::tuple derives privately from the tuple of its tail elements) and
+  // accepting the derived instantiation for its base instantiation would
+  // silently reinterpret the object - a tuple must never be passed as its
+  // own tail. Require a public path in that case only.
+  if (!IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)))
+    return INTEROP_RETURN(false);
+
+  const auto* DerivedCTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(Derived);
+  const auto* BaseCTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(Base);
+  if (!DerivedCTSD || !BaseCTSD ||
+      DerivedCTSD->getSpecializedTemplate()->getCanonicalDecl() !=
+          BaseCTSD->getSpecializedTemplate()->getCanonicalDecl())
+    return INTEROP_RETURN(true);
+
+  // distinct handles may refer to the same class (Sema::IsDerivedFrom above
+  // accepts identical types, the base-path walk below would not)
+  if (Derived->getCanonicalDecl() == Base->getCanonicalDecl())
+    return INTEROP_RETURN(true);
+
+  const CXXRecordDecl* Def = Derived->getDefinition();
+  if (!Def)
+    return INTEROP_RETURN(false);
+
+  CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
+                     /*DetectVirtual=*/false);
+  if (!Def->isDerivedFrom(Base, Paths))
+    return INTEROP_RETURN(false);
+
+  for (const CXXBasePath& Path : Paths)
+    if (Path.Access == AS_public)
+      return INTEROP_RETURN(true);
+
+  return INTEROP_RETURN(false);
 }
 
 // Copied from VTableBuilder.cpp
