@@ -1521,6 +1521,18 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
       if (!MD)
         continue;
 
+      // The shadow is resolved to its target below, which loses the
+      // using-declaration's access. Only forward publicly re-exposed
+      // targets: a target that is public in its own class keeps looking
+      // public to callers, and a non-public target re-exposed publicly is
+      // recognizable to callers by its foreign parent scope (e.g. MSVC's
+      // std::shared_ptr does `public: using _Ptr_base<T>::get;` with a
+      // protected base method). Shadows in non-public sections are dropped:
+      // exposing their target with the target's own (possibly public)
+      // access would wrongly widen access.
+      if (USD->getAccess() != AccessSpecifier::AS_public)
+        continue;
+
       auto* CUSD = dyn_cast<ConstructorUsingShadowDecl>(DI);
       if (!CUSD) {
         methods.push_back(MD);
