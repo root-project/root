@@ -357,6 +357,51 @@ TEST(ONNX, MaxPool3d)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, AveragePool1d_CeilMode)
+{
+   SofieReference ref = readReference("AveragePool1d_CeilMode");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool1d_CeilMode", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_CeilMode)
+{
+   SofieReference ref = readReference("AveragePool2d_CeilMode");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_CeilMode", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_CeilMode_CountIncludePad)
+{
+   SofieReference ref = readReference("AveragePool2d_CeilMode_CountIncludePad");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_CeilMode_CountIncludePad", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_Pads_CountIncludePad)
+{
+   SofieReference ref = readReference("AveragePool2d_Pads_CountIncludePad");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_Pads_CountIncludePad", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool3d_CeilMode)
+{
+   SofieReference ref = readReference("AveragePool3d_CeilMode");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool3d_CeilMode", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, AvgPool)
 {
    SofieReference ref = readReference("AvgPool");
