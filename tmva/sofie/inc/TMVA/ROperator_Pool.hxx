@@ -331,6 +331,21 @@ public:
       for ( auto & e : fAttrPads)
          doPadding |= (e > 0);
 
+      // An AveragePool window can cover fewer cells than the kernel area either because it overlaps the
+      // padding region or because ceil_mode lets the last window overhang the input. In both cases the
+      // divisor has to be computed per window instead of being the constant kernel area.
+      bool dynamicDivisor = doPadding || fAttrCeilMode;
+      // Number of cells the window starting at "var" covers along one dimension: the kernel extent
+      // clipped to [0, size) when count_include_pad = 0, and to the padded input [-padBegin, size +
+      // padEnd) otherwise. The lower bound needs no clipping in the latter case, since "var" starts at
+      // -padBegin. Note that the cells the window overhangs past the padded input are never counted.
+      auto windowExtent = [this](const std::string &var, const std::string &kern, size_t size, size_t padEnd) {
+         std::string hi = std::to_string(fAttrCountIncludePad ? size + padEnd : size);
+         std::string lo = fAttrCountIncludePad ? var : "(" + var + " > 0 ? " + var + " : 0)";
+         return "((" + var + " + " + kern + " < " + hi + " ? " + var + " + " + kern + " : " + hi + ")"
+                " - " + lo + ")";
+      };
+
 
       if(fDim==1){
          // loop on batches and channels
@@ -343,9 +358,10 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP << SP << SP << SP << "int nsum = 0;\n";
-            else // in case we count the pad values in average
+            if (dynamicDivisor)
+               out << SP << SP << SP << SP << "const int nsum = "
+                   << windowExtent("i", "kh", fShapeX[2], fAttrPads[fDim]) << ";\n";
+            else // every window is full, so the divisor is the kernel area
                out << SP << SP << SP << SP << "constexpr int nsum = kh;\n";
          }
          // loop on rows of filtered region
@@ -359,9 +375,6 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
           out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
          if (fPoolMode == AveragePool) {
@@ -386,9 +399,11 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP << SP << SP << SP << "int nsum = 0;\n";
-            else // in case we count the pad values in average
+            if (dynamicDivisor)
+               out << SP << SP << SP << SP << "const int nsum = "
+                   << windowExtent("i", "kh", fShapeX[2], fAttrPads[fDim]) << " * "
+                   << windowExtent("j", "kw", fShapeX[3], fAttrPads[fDim + 1]) << ";\n";
+            else // every window is full, so the divisor is the kernel area
                out << SP << SP << SP << SP << "constexpr int nsum = kw*kh;\n";
          }
          // loop on rows of filtered region
@@ -405,9 +420,6 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
          out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
@@ -433,9 +445,12 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP << SP << SP << SP << "int nsum = 0;\n";
-            else // in case we count the pad values in average
+            if (dynamicDivisor)
+               out << SP << SP << SP << SP << "const int nsum = "
+                   << windowExtent("i", "kh", fShapeX[2], fAttrPads[fDim]) << " * "
+                   << windowExtent("j", "kw", fShapeX[3], fAttrPads[fDim + 1]) << " * "
+                   << windowExtent("k", "kd", fShapeX[4], fAttrPads[fDim + 2]) << ";\n";
+            else // every window is full, so the divisor is the kernel area
                out << SP << SP << SP << SP << "constexpr int nsum = kw*kh*kd;\n";
          }
          // loop on rows of filtered region
@@ -456,9 +471,6 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
          out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n";

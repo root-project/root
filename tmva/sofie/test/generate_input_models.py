@@ -244,6 +244,133 @@ def make_AddBroadcast7():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_AveragePool1d_CeilMode():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[3],
+            strides=[2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool1d_ceil',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_CeilMode():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_ceil',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_CeilMode_CountIncludePad():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            count_include_pad=1,
+            kernel_shape=[2, 2],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_ceil_cip',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_Pads_CountIncludePad():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            count_include_pad=1,
+            kernel_shape=[3, 3],
+            pads=[1, 1, 1, 1],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_pads_cip',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool3d_CeilMode():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2, 2],
+            strides=[2, 2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool3d_ceil',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 4, 4]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 2, 2]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
 def make_AvgPool():
     """Ops: AveragePool"""
     nodes = [
@@ -4740,6 +4867,11 @@ MODELS = {
     'AddBroadcast5': make_AddBroadcast5,
     'AddBroadcast6': make_AddBroadcast6,
     'AddBroadcast7': make_AddBroadcast7,
+    'AveragePool1d_CeilMode': make_AveragePool1d_CeilMode,
+    'AveragePool2d_CeilMode': make_AveragePool2d_CeilMode,
+    'AveragePool2d_CeilMode_CountIncludePad': make_AveragePool2d_CeilMode_CountIncludePad,
+    'AveragePool2d_Pads_CountIncludePad': make_AveragePool2d_Pads_CountIncludePad,
+    'AveragePool3d_CeilMode': make_AveragePool3d_CeilMode,
     'AvgPool': make_AvgPool,
     'Cast': make_Cast,
     'Clip': make_Clip,
@@ -4943,6 +5075,11 @@ TEST_INPUTS = {
         f32([-0.4216483533382416, -0.6176707744598389, -0.6877889633178711, -1.1417591571807861, 0.6320437788963318, -0.6063031554222107], (2, 1, 3, 1)),
         f32([1.4051986932754517, -0.2876608669757843, 0.0749375969171524, 1.2207484245300293, -0.48621267080307007, -0.688210129737854, -0.6774346828460693, 0.3670888841152191, 0.0008057440281845629, -0.2080310881137848, 0.9697791337966919, 0.7583738565444946], (1, 1, 3, 4)),
     ],
+    'AveragePool1d_CeilMode': [f32(np.arange(1, 7), (1, 1, 6))],
+    'AveragePool2d_CeilMode': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool2d_CeilMode_CountIncludePad': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool2d_Pads_CountIncludePad': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool3d_CeilMode': [f32(np.arange(1, 81), (1, 1, 5, 4, 4))],
     'AvgPool': [f32([0.4763999879360199, -0.19760000705718994, 1.6505999565124512, -0.24210000038146973, 0.6412000060081482, 1.9984999895095825, 0.3937999904155731, 0.1347000002861023, 0.22040000557899475, -0.7502999901771545, 0.21389999985694885, 0.7285000085830688, -0.020999999716877937, -0.4584999978542328, -1.5333000421524048, -0.4772000014781952, 0.5559999942779541, 0.6323000192642212, -2.5371999740600586, 1.4905999898910522, -1.1061999797821045, -0.970300018787384, 0.23659999668598175, -0.91839998960495, 0.30140000581741333, 0.7985000014305115, -0.6840999722480774, -2.285399913787842, -2.7727999687194824, -1.2805999517440796, -1.0946999788284302, -0.5989999771118164, -0.30329999327659607, -1.9041999578475952, -0.5403000116348267, 0.23319999873638153, 0.921500027179718, -0.15489999949932098, 0.05570000037550926, -0.5566999912261963, -1.4970999956130981, 0.5386000275611877, -0.2921999990940094, 0.4860000014305115, -0.39730000495910645, -0.46239998936653137, 0.4514000117778778, 0.23849999904632568, 0.3783000111579895, -1.0499999523162842], (1, 1, 5, 10))],
     'Cast': [i64([1, 2, 3, 4, 5, 6], (2, 3))],
     'ComplexTopK': [f32([9.0, 8.0, 4.5, 1.7000000476837158, 2.9000000953674316, 3.200000047683716, 4.0, 2.5999999046325684, 7.400000095367432, 3.5, 5.599999904632568, 7.099999904632568, 9.800000190734863, 1.100000023841858, 3.299999952316284, 6.199999809265137, 8.399999618530273, 0.699999988079071, 2.200000047683716, 3.299999952316284, 4.400000095367432, 5.5, 6.599999904632568, 7.699999809265137, 8.800000190734863, 9.899999618530273, 1.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 5.0, 4.0, 3.0, 2.0, 1.0, 6.0, 7.0, 8.0, 9.0], (2, 3, 9))],
