@@ -244,6 +244,57 @@ def make_AddBroadcast7():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_AveragePool1d_CeilMode_Overhang():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2],
+            strides=[3],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool1d_ceil_overhang',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 2]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_CeilMode_Pads():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2],
+            pads=[1, 1, 1, 1],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_ceil_pads',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
 def make_AveragePool1d_CeilMode():
     """Ops: AveragePool"""
     nodes = [
@@ -3455,6 +3506,57 @@ def make_MaxPool2d_CeilMode():
     return _model(graph, opset=11, ir_version=6)
 
 
+def make_MaxPool1d_CeilMode_Overhang():
+    """Ops: MaxPool"""
+    nodes = [
+        helper.make_node(
+            'MaxPool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2],
+            strides=[3],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'maxpool1d_ceil_overhang',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 2]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_MaxPool2d_CeilMode_Pads():
+    """Ops: MaxPool"""
+    nodes = [
+        helper.make_node(
+            'MaxPool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2],
+            pads=[1, 1, 1, 1],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'maxpool2d_ceil_pads',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
 def make_MaxPool3d():
     """Ops: MaxPool"""
     nodes = [
@@ -4868,7 +4970,9 @@ MODELS = {
     'AddBroadcast6': make_AddBroadcast6,
     'AddBroadcast7': make_AddBroadcast7,
     'AveragePool1d_CeilMode': make_AveragePool1d_CeilMode,
+    'AveragePool1d_CeilMode_Overhang': make_AveragePool1d_CeilMode_Overhang,
     'AveragePool2d_CeilMode': make_AveragePool2d_CeilMode,
+    'AveragePool2d_CeilMode_Pads': make_AveragePool2d_CeilMode_Pads,
     'AveragePool2d_CeilMode_CountIncludePad': make_AveragePool2d_CeilMode_CountIncludePad,
     'AveragePool2d_Pads_CountIncludePad': make_AveragePool2d_Pads_CountIncludePad,
     'AveragePool3d_CeilMode': make_AveragePool3d_CeilMode,
@@ -4955,7 +5059,9 @@ MODELS = {
     'MaxPool1d': make_MaxPool1d,
     'MaxPool2d': make_MaxPool2d,
     'MaxPool2d_AsymPad': make_MaxPool2d_AsymPad,
+    'MaxPool1d_CeilMode_Overhang': make_MaxPool1d_CeilMode_Overhang,
     'MaxPool2d_CeilMode': make_MaxPool2d_CeilMode,
+    'MaxPool2d_CeilMode_Pads': make_MaxPool2d_CeilMode_Pads,
     'MaxPool3d': make_MaxPool3d,
     'MeanMultidirectionalBroadcast': make_MeanMultidirectionalBroadcast,
     'MinMultidirectionalBroadcast': make_MinMultidirectionalBroadcast,
@@ -5076,7 +5182,9 @@ TEST_INPUTS = {
         f32([1.4051986932754517, -0.2876608669757843, 0.0749375969171524, 1.2207484245300293, -0.48621267080307007, -0.688210129737854, -0.6774346828460693, 0.3670888841152191, 0.0008057440281845629, -0.2080310881137848, 0.9697791337966919, 0.7583738565444946], (1, 1, 3, 4)),
     ],
     'AveragePool1d_CeilMode': [f32(np.arange(1, 7), (1, 1, 6))],
+    'AveragePool1d_CeilMode_Overhang': [f32(np.arange(1, 7), (1, 1, 6))],
     'AveragePool2d_CeilMode': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool2d_CeilMode_Pads': [f32(np.arange(1, 26), (1, 1, 5, 5))],
     'AveragePool2d_CeilMode_CountIncludePad': [f32(np.arange(1, 26), (1, 1, 5, 5))],
     'AveragePool2d_Pads_CountIncludePad': [f32(np.arange(1, 26), (1, 1, 5, 5))],
     'AveragePool3d_CeilMode': [f32(np.arange(1, 81), (1, 1, 5, 4, 4))],
@@ -5184,6 +5292,8 @@ TEST_INPUTS = {
     'MaxPool1d': [f32([0.09070000052452087, 0.10289999842643738, 0.814300000667572, 1.4496999979019165, -0.7785000205039978, 0.3824999928474426, -0.3763999938964844, 1.5785000324249268, -0.08349999785423279, 0.16220000386238098, 1.5866999626159668, 0.9822999835014343, -0.882099986076355, 0.4438999891281128, -0.13779999315738678, -0.2273000031709671, -0.01979999989271164, -2.0230000019073486, 0.09049999713897705, 0.6674000024795532, -1.4290000200271606, -1.309999942779541, -0.9438999891281128, -0.08330000191926956, -0.19189999997615814, 0.6886000037193298, 0.9388999938964844, -1.2913999557495117, -1.3583999872207642, -2.03410005569458, -0.32690000534057617, 0.1703999936580658, 1.1776000261306763, 1.3971999883651733, -1.8874000310897827, -1.533400058746338, 1.154099941253662, 0.3010999858379364, 0.6568999886512756, -2.350399971008301, 0.4032999873161316, 0.11420000344514847, 2.284600019454956, -1.3947999477386475, -0.8572999835014343, 0.5756000280380249, -1.086400032043457, 0.22830000519752502, 0.8946999907493591, 1.7626999616622925, -0.1657000035047531, 0.0649000033736229, -1.606600046157837, 0.41620001196861267, -1.152500033378601, -0.8184000253677368, 1.1324000358581543, -1.1086000204086304, 0.10610000044107437, 1.007099986076355], (1, 6, 10))],
     'MaxPool2d': [f32([0.6266000270843506, 0.1656000018119812, 0.275299996137619, -0.45579999685287476, -1.4592000246047974, 0.9284999966621399, -1.340999960899353, 1.3222999572753906, -0.5935999751091003, -1.364799976348877, -0.2989000082015991, 0.5900999903678894, -0.8845000267028809, -0.043299999088048935, 0.8313999772071838, -1.71589994430542, -0.5764999985694885, 0.8677999973297119, 1.0256999731063843, 0.7846999764442444, -0.34209999442100525, -1.2364000082015991, -0.5805000066757202, 0.44209998846054077, 1.218400001525879, 0.5042999982833862, 1.6822999715805054, -1.04830002784729, -2.2797999382019043, -1.892699956893921, 0.7716000080108643, 0.04050000011920929, 0.31209999322891235, -0.3010999858379364, -0.32659998536109924, -1.965999960899353, 1.0836999416351318, 0.23170000314712524, 0.9083999991416931, -0.32850000262260437, -0.9398000240325928, -0.20649999380111694, -0.9498999714851379, -0.9739000201225281, -0.12880000472068787, -0.13750000298023224, -1.261199951171875, 0.8809999823570251, 0.850600004196167, 0.445499986410141], (1, 1, 5, 10))],
     'MaxPool2d_AsymPad': [f32([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0], (1, 1, 4, 4))],
+    'MaxPool1d_CeilMode_Overhang': [f32(np.arange(1, 7), (1, 1, 6))],
+    'MaxPool2d_CeilMode_Pads': [f32(np.arange(1, 26), (1, 1, 5, 5))],
     'MaxPool2d_CeilMode': [f32(np.arange(25), (1, 1, 5, 5))],
     'MaxPool3d': [f32([-2.649600028991699, 1.0476000308990479, -0.5152999758720398, 0.37709999084472656, 0.41290000081062317, -0.3077000081539154, -0.8716999888420105, -0.8040000200271606, -0.35249999165534973, -0.17649999260902405, -0.33640000224113464, 0.8737000226974487, -0.23810000717639923, -0.8296999931335449, 0.4666000008583069, 0.6984000205993652, -0.6759999990463257, 0.629800021648407, 1.3832999467849731, 0.11010000109672546, 0.20389999449253082, -0.5476999878883362, 0.23409999907016754, 0.9180999994277954, 0.38420000672340393, 0.24279999732971191, 1.7924000024795532], (1, 1, 3, 3, 3))],
     'MeanMultidirectionalBroadcast': [
