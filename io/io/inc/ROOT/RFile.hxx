@@ -254,11 +254,11 @@ class RFile final {
    friend TFile *Internal::GetRFileTFile(RFile &rfile);
 
    /// Flags used in PutInternal()
-   enum PutFlags {
+   enum EPutFlags {
       /// When encountering an object at the specified path, overwrite it with the new one instead of erroring out.
-      kPutAllowOverwrite = 0x1,
+      kPutFlag_AllowOverwrite = 0x1,
       /// When overwriting an object, preserve the existing one and create a new cycle, rather than removing it.
-      kPutOverwriteKeepCycle = 0x2,
+      kPutFlag_OverwriteKeepCycle = 0x2,
    };
 
    std::unique_ptr<TFile> fFile;
@@ -328,21 +328,24 @@ public:
    /// Retrieves an object from the file.
    /// `path` should be a string such that `IsValidPath(path) == true`, otherwise an exception will be thrown.
    /// See \ref ValidateAndNormalizePath() for info about valid path names.
-   /// If the object is not there returns a null pointer.
+   /// \return A copy of the object at `path`, or `nullptr` if there is no object of type `T` at the specified path.
    template <typename T>
    std::unique_ptr<T> Get(std::string_view path) const
    {
       void *obj = GetUntyped(path, typeid(T));
       return std::unique_ptr<T>(static_cast<T *>(obj));
    }
-
-   /// Puts an object into the file.
-   /// The application retains ownership of the object.
+  
+   /// Puts object `obj` into the file.
+   /// The object will be effectively copied into the file, so any further modifications won't be seen by the object
+   /// inside the file.
+   /// Note that the object is not necessarily written to storage until the RFile is closed or `Flush()` is called.
+   ///
    /// `path` should be a string such that `IsValidPath(path) == true`, otherwise an exception will be thrown.
    /// See \ref ValidateAndNormalizePath() for info about valid path names.
    ///
-   /// Throws a RException if `path` already identifies a valid object or directory.
-   /// Throws a RException if the file was opened in read-only mode.
+   /// \throws ROOT::RException if `path` already identifies a valid object or directory.
+   /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
    void Put(std::string_view path, const T &obj)
    {
@@ -350,23 +353,25 @@ public:
    }
 
    /// Puts an object into the file, overwriting any previously-existing object at that path.
-   /// The application retains ownership of the object.
+   /// See Put for more details.
    ///
-   /// If an object already exists at that path, it is kept as a backup cycle unless `backupPrevious` is false.
-   /// Note that even if `backupPrevious` is false, any existing cycle except the latest will be preserved.
+   /// If an object already exists at that path,AND it has type `T`, it is kept as a backup cycle
+   /// unless `createNewCycle` is false.
+   /// If the existing object's type differs from `T`, an exception is thrown.
+   /// Note that even if `createNewCycle` is false only the *latest* cycle will be deleted.
    ///
-   /// Throws a RException if `path` is already the path of a directory.
-   /// Throws a RException if the file was opened in read-only mode.
+   /// \throws ROOT::RException if `path` is already the path of a directory.
+   /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
-   void Overwrite(std::string_view path, const T &obj, bool backupPrevious = true)
+   void Overwrite(std::string_view path, const T &obj, bool createNewCycle = true)
    {
-      std::uint32_t flags = kPutAllowOverwrite;
-      flags |= backupPrevious * kPutOverwriteKeepCycle;
+      std::uint32_t flags = kPutFlag_AllowOverwrite;
+      flags |= createNewCycle * kPutFlag_OverwriteKeepCycle;
       PutInternal(path, obj, flags);
    }
 
    /// Writes all objects and the file structure to disk.
-   /// Returns the number of bytes written.
+   /// \return the number of bytes written.
    size_t Flush();
 
    /// Flushes the RFile if needed and closes it, disallowing any further reading or writing.
@@ -374,6 +379,8 @@ public:
 
    /// Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
    /// `basePath` (defaulting to include the content of all subdirectories).
+   /// The iterable yields values of type ROOT::Experimental::RKeyInfo.
+   ///
    /// By default, keys referring to directories are not returned: only those referring to leaf objects are.
    /// If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
    /// If `basePath` is the path of a directory, it won't appear in the listing.
@@ -386,17 +393,17 @@ public:
    /// Example usage:
    /// ~~~{.cpp}
    /// for (RKeyInfo key : file->ListKeys()) {
-   ///     /* iterate over all objects in the RFile */
+   ///     // iterate over all objects in the RFile
    ///     cout << key.GetPath() << ";" << key.GetCycle() << " of type " << key.GetClassName() << "\n";
    /// }
    /// for (RKeyInfo key : file->ListKeys("", kListDirs|kListObjects|kListRecursive)) {
-   ///     /* iterate over all objects and directories in the RFile */
+   ///     // iterate over all objects and directories in the RFile
    /// }
    /// for (RKeyInfo key : file->ListKeys("a/b", kListObjects)) {
-   ///     /* iterate over all objects that are immediate children of directory "a/b" */
+   ///     // iterate over all objects that are immediate children of directory "a/b"
    /// }
    /// for (RKeyInfo key : file->ListKeys("foo", kListDirs|kListRecursive)) {
-   ///     /* iterate over all directories under directory "foo", recursively */
+   ///     // iterate over all directories under directory "foo", recursively
    /// }
    /// ~~~
    RFileKeyIterable ListKeys(std::string_view basePath = "", std::uint32_t flags = kListObjects | kListRecursive) const
