@@ -17,6 +17,7 @@
 #include "Fit/FitResult.h"
 #include "Math/IParamFunction.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <utility>
@@ -121,45 +122,43 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 
    //std::cout << "creating Fit Data from histogram " << hfit->GetName() << std::endl;
 
-   int hxfirst = hfit->GetXaxis()->GetFirst();
-   int hxlast  = hfit->GetXaxis()->GetLast();
-
-   int hyfirst = hfit->GetYaxis()->GetFirst();
-   int hylast  = hfit->GetYaxis()->GetLast();
-
-   int hzfirst = hfit->GetZaxis()->GetFirst();
-   int hzlast  = hfit->GetZaxis()->GetLast();
-
    // function by default has same range (use that one if requested otherwise use data one)
 
 
    //  get the range (add the function range ??)
    // to check if inclusion/exclusion at end/point
    const DataRange & range = dv.Range();
-   if (range.Size(0) != 0) {
-      HFitInterface::ExamineRange( hfit->GetXaxis(), range(0), hxfirst, hxlast);
-      if (range.Size(0) > 1  ) {
-         Warning("ROOT::Fit::FillData","support only one range interval for X coordinate");
+
+   // Several disjoint ranges can be defined for each coordinate. Translate them
+   // once per axis into the list of selected bins. A coordinate without any
+   // range selects the full axis.
+   auto selectedBins = [&range](const TAxis *axis, unsigned int icoord, bool useRange) {
+      std::vector<int> bins;
+      const unsigned int nRanges = useRange ? range.Size(icoord) : 0;
+      for (unsigned int i = 0; i < std::max(nRanges, 1u); ++i) {
+         int first = axis->GetFirst();
+         int last = axis->GetLast();
+         if (nRanges != 0)
+            HFitInterface::ExamineRange(axis, range(icoord, i), first, last);
+         // The ranges are disjoint and sorted, but ExamineRange() selects the
+         // bin of a range that lies within a single bin even if the range does
+         // not cover the bin center. Two ranges can therefore select the same
+         // bin, which must not be taken twice.
+         if (!bins.empty())
+            first = std::max(first, bins.back() + 1);
+         for (int bin = first; bin <= last; ++bin)
+            bins.push_back(bin);
       }
-   }
+      return bins;
+   };
+   const std::vector<int> xbins = selectedBins(hfit->GetXaxis(), 0, true);
+   const std::vector<int> ybins = selectedBins(hfit->GetYaxis(), 1, hfit->GetDimension() > 1);
+   const std::vector<int> zbins = selectedBins(hfit->GetZaxis(), 2, hfit->GetDimension() > 2);
 
-   if (hfit->GetDimension() > 1 && range.Size(1) != 0) {
-      HFitInterface::ExamineRange( hfit->GetYaxis(), range(1), hyfirst, hylast);
-      if (range.Size(1) > 1  )
-         Warning("ROOT::Fit::FillData","support only one range interval for Y coordinate");
-   }
-
-   if (hfit->GetDimension() > 2 && range.Size(2) != 0) {
-      HFitInterface::ExamineRange( hfit->GetZaxis(), range(2), hzfirst, hzlast);
-      if (range.Size(2) > 1  )
-         Warning("ROOT::Fit::FillData","support only one range interval for Z coordinate");
-   }
-
-
-   int n = (hxlast-hxfirst+1)*(hylast-hyfirst+1)*(hzlast-hzfirst+1);
+   int n = static_cast<int>(xbins.size() * ybins.size() * zbins.size());
 
 #ifdef DEBUG
-   std::cout << "THFitInterface: ifirst = " << hxfirst << " ilast =  " << hxlast
+   std::cout << "THFitInterface: bins in x = " << xbins.size()
              << " total bins  " << n
              << std::endl;
 #endif
@@ -180,15 +179,11 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    double x[3];
    double s[3];
 
-   int binx = 0;
-   int biny = 0;
-   int binz = 0;
-
    const TAxis *xaxis  = hfit->GetXaxis();
    const TAxis *yaxis  = hfit->GetYaxis();
    const TAxis *zaxis  = hfit->GetZaxis();
 
-   for ( binx = hxfirst; binx <= hxlast; ++binx) {
+   for (int binx : xbins) {
       if (useBinEdges) {
          x[0] = xaxis->GetBinLowEdge(binx);
          s[0] = xaxis->GetBinUpEdge(binx);
@@ -197,7 +192,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
          x[0] = xaxis->GetBinCenter(binx);
 
 
-      for ( biny = hyfirst; biny <= hylast; ++biny) {
+      for (int biny : ybins) {
          if (useBinEdges) {
             x[1] = yaxis->GetBinLowEdge(biny);
             s[1] = yaxis->GetBinUpEdge(biny);
@@ -205,7 +200,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
          else
             x[1] = yaxis->GetBinCenter(biny);
 
-         for ( binz = hzfirst; binz <= hzlast; ++binz) {
+         for (int binz : zbins) {
             if (useBinEdges) {
                x[2] = zaxis->GetBinLowEdge(binz);
                s[2] = zaxis->GetBinUpEdge(binz);
