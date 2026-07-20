@@ -16,7 +16,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
-
+#include "X3DBuffer.h"
 
 /** \class TPCON
 \ingroup g3d
