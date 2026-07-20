@@ -1,15 +1,13 @@
 #!/usr/bin/python3
 
-### generate COnv2d model using Pytorch
-
-import argparse
-import sys
+### generate Linear model using Pytorch
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-result = []
+from ModelGeneratorUtils import make_parser, model_name, export_onnx, write_reference_output
+
 
 class Net(nn.Module):
 
@@ -20,8 +18,6 @@ class Net(nn.Module):
         self.nl = nl
         self.use_bn = use_bn
 
-        nout = 50
-        if (nl == 1) : nout = nc
         self.out0 = nn.Linear(in_features=nd, out_features=50)
         if (self.use_bn): self.bn1 = nn.BatchNorm1d(50)
         self.out1 = nn.Linear(in_features=50, out_features=100)
@@ -44,40 +40,25 @@ class Net(nn.Module):
 
       return x
 
+
 def main():
 
-   parser = argparse.ArgumentParser(description='PyTorch model generator')
-   parser.add_argument('params', type=int, nargs='+',
-                    help='parameters for the Dense network : batchSize , inputChannels, nlayers ')
-   parser.add_argument('--bn', action='store_true', default=False,
-                        help='For using batch norm layer')
-   parser.add_argument('--v', action='store_true', default=False,
-                        help='For verbose mode')
-
-
+   parser = make_parser('parameters for the Dense network : batchSize , inputChannels, nlayers ')
    args = parser.parse_args()
 
-
-   bsize = 1
-   d = 10
    nlayers = 4
    noutput = 4
 
-   np = len(args.params)
-   if (np < 2) : exit()
+   if (len(args.params) < 2) : exit()
    bsize = args.params[0]
    d = args.params[1]
-   if (np > 2) : nlayers = args.params[2]
-
+   if (len(args.params) > 2) : nlayers = args.params[2]
 
    print ("using batch-size =",bsize,"input dim =",d,"nlayers =",nlayers)
 
    use_bn = args.bn
    if (use_bn) : print("using batch normalization layer")
 
-   verbose = args.v
-
-   xinput  = torch.zeros([])
    for ib in range(0,bsize):
       xa = torch.ones([1,d]) * (ib+1)
       #concatenate tensors
@@ -97,73 +78,20 @@ def main():
            else :
                xinput = torch.cat((xinput,xa),1)
 
-   #if (verbose):
    print("input data",xinput.shape)
    print(xinput)
 
-   name = "LinearModel"
-   if (use_bn): name += "_BN"
-   name += "_B" + str(bsize)
-
-   saveOnnx=True
-   loadModel=False
-   savePtModel = False
-
+   name = model_name("LinearModel", bsize, use_bn)
 
    model = Net(d,noutput,nlayers,use_bn)
 
    model(xinput)
-   model.forward(xinput)
 
+   export_onnx(model, xinput, name, use_bn)
 
-   if savePtModel :
-      torch.save({'model_state_dict':model.state_dict()}, name + ".pt")
-
-
-   if saveOnnx:
-      # dynamo export doesn't work on Python 3.14
-      dynamo_export = (sys.version_info.major, sys.version_info.minor) != (3, 14)
-
-      #new ONNX exporter does not work for batchmorm
-      if (use_bn): dynamo_export=False
-
-      #check torch version
-      v = torch.__version__
-      print("using torch version: ",v)
-      from packaging.version import Version
-      if (Version(v) >= Version("2.5.0")) :
-         torch.onnx.export(
-            model,
-            xinput,
-            name + ".onnx",
-            export_params=True,
-            dynamo=dynamo_export,
-            external_data=False
-         )
-      else :
-         torch.onnx.export(model, xinput,name + ".onnx", export_params=True)
-
-
-   if loadModel :
-        print('Loading model from file....')
-        checkpoint = torch.load(name + ".pt")
-        model.load_state_dict(checkpoint['model_state_dict'])
-
-   #set model in evaluation format
-   model.eval()
-   y = model.forward(xinput_test)
-
-   print("output data : shape, ",y.shape)
-   print(y)
-
-   outSize = y.nelement()
-   yvec = y.reshape([outSize])
-
-
-   f = open(name + ".out", "w")
-   for i in range(0,outSize):
-        f.write(str(float(yvec[i].detach()))+" ")
-
+   # the expected output is evaluated on the test input, which differs from the
+   # training input when batch normalization is used
+   write_reference_output(model, xinput_test, name)
 
 
 if __name__ == '__main__':
