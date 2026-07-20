@@ -127,6 +127,15 @@ BinnedLOutput getBinnedL(RooAbsPdf const &pdf);
 
 void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out);
 
+/// Check that `function` is constant (flat) inside each bin defined by the
+/// sorted `boundaries` when scanning the observable `obs`. Several interior
+/// points are sampled per bin and compared to the bin's first sample; if any
+/// of them deviates by more than `relTol` (relative to the value scale), the
+/// function is not flat and false is returned. The value of `obs` is restored
+/// on return.
+bool isFunctionFlatInBins(const RooAbsReal &function, RooAbsRealLValue &obs, std::span<const double> boundaries,
+                          double relTol = 1e-9);
+
 } // namespace RooHelpers
 
 namespace RooFit::Detail {

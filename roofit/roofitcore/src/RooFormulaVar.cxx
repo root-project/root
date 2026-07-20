@@ -55,7 +55,7 @@
 #include "RooAbsRealLValue.h"
 #include "RooAbsBinning.h"
 #include "RooCurve.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
@@ -319,8 +319,14 @@ std::list<double>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, double xl
    auto found = _binnings.find(_actualVars.index(obs.GetName()));
    if (found != _binnings.end()) {
       const RooAbsBinning &binning = *found->second;
-      return RooHelpers::binBoundariesInRange({binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo,
-                                              xhi);
+      auto hint = new std::list<double>;
+      for (int i = 0; i < binning.numBoundaries(); ++i) {
+         const double boundary = binning.array()[i];
+         if (boundary >= xlo && boundary <= xhi) {
+            hint->push_back(boundary);
+         }
+      }
+      return hint;
    }
 
   for (const auto par : _actualVars) {
