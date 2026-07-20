@@ -15,6 +15,7 @@
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 #include "TMath.h"
+#include "X3DBuffer.h"
 
 #include <iostream>
 #include <iomanip>
