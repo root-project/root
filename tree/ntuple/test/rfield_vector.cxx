@@ -203,6 +203,39 @@ TEST(RNTuple, RVec)
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
 
+TEST(RNTuple, RVecResizeSmall)
+{
+   FileRaii fileGuard("test_ntuple_rvec_small.root");
+
+   constexpr int N = 260; // more elements than fit in any small vector storage
+
+   {
+      auto model = RNTupleModel::Create();
+      auto v = model->MakeField<ROOT::RVec<int>>("v");
+      for (int i = 0; i < N; ++i) {
+         v->push_back(i);
+      }
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+
+   ROOT::RVec<int> v;
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsSmall(v));
+   auto e = reader->CreateEntry();
+   e->BindRawPtr("v", &v);
+
+   reader->LoadEntry(0, *e);
+   ASSERT_EQ(v.size(), N);
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsSmall(v));
+   for (int i = 0; i < N; ++i) {
+      EXPECT_EQ(i, v[i]);
+   }
+}
+
 TEST(RNTuple, RVecTypeErased)
 {
    FileRaii fileGuard("test_ntuple_rvec_typeerased.root");
