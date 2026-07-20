@@ -190,7 +190,7 @@ TEST(ONNX, LinearWithLeakyRelu)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithLeakyRelu", ref.f32("input0"));
 
-   expectNear(output, ref.f32("output0"), 1);
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
 
@@ -1000,15 +1000,7 @@ TEST(ONNX, Concat0D) {
    std::vector<float> expected_output({1.40519865e+00, -2.87660856e-01, 1.40519865e+00, -2.87660856e-01});
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Concat_0D", input);
 
-   // Checking the output size
-   EXPECT_EQ(expected_output.size(), expected_output.size());
-
-   float* correct = expected_output.data();
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); i++) {
-      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-   }
+   expectNear(output, expected_output, TOLERANCE);
 }
 
 TEST(ONNX, LayerNormalization2d)
@@ -1373,7 +1365,7 @@ TEST(ONNX, Einsum_3)
    std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12};
    std::vector<float> correct_output {66. , 87. , 108., 498.,  555., 612. };
 
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "Einsum_3", "\"Einsum_dotprod_FromONNX.dat\"", input1, input2);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_3", input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), 6);
