@@ -377,8 +377,8 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
       }
    }
 
-   const bool allowOverwrite = (flags & kPutAllowOverwrite) != 0;
-   const bool backupCycle = (flags & kPutOverwriteKeepCycle) != 0;
+   const bool allowOverwrite = (flags & kPutFlag_AllowOverwrite) != 0;
+   const bool backupCycle = (flags & kPutFlag_OverwriteKeepCycle) != 0;
    const Option_t *writeOpts = "";
    if (!allowOverwrite) {
       const TKey *existing = dir->GetKey(tokens[tokens.size() - 1].c_str());
