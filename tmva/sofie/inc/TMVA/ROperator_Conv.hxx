@@ -458,29 +458,13 @@ public:
       // trick for speed is using caffe im2col and output a matrix which contains filtered values as rows.
       // By doing this one has consecutive memory reads and writes
       // Resulting matrix op_xcol is (input channels * filter_h * filter_w , output_h * output_w)
-      if (fDim ==1) {
-         if (fAttrPads[0] != fAttrPads[1] ) {
-            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
-                      << std::endl;
-            fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
-         }
-         fAttrPads[1] = 0;
+      // fAttrPads holds the begin pads in [0, fDim) and the end pads in [fDim, 2 * fDim),
+      // which is the layout Im2col expects. They may differ: ONNX allows it through the
+      // "pads" attribute, and SAME_UPPER / SAME_LOWER produce it whenever the total
+      // padding along an axis is odd (an even kernel size).
+      if (fDim == 1) {
+         // the 1d case is emitted as a 2d one of height 1, for which stride_h is 1
          fAttrStrides[1] = 1;
-      }
-      if (fDim == 2) {
-         if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
-            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
-            fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
-            fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
-         }
-      }
-      if (fDim == 3) {
-         if (fAttrPads[0] != fAttrPads[3] || fAttrPads[1] != fAttrPads[4] || fAttrPads[2] != fAttrPads[5]) {
-            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
-            fAttrPads[0] = (fAttrPads[0] + fAttrPads[3]) / 2;
-            fAttrPads[1] = (fAttrPads[1] + fAttrPads[4]) / 2;
-            fAttrPads[2] = (fAttrPads[2] + fAttrPads[5]) / 2;
-         }
       }
       out << SP << SP << "size_t out_offset = n * " << outputBatchStride  << ";\n";
 
@@ -491,15 +475,16 @@ public:
          if (fDim < 3) {
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
                 << " + x_offset,"
-                //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
-                //  dilation_w,
+                //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin,
+                //  pad_w_end, stride_h, stride_w, dilation_h, dilation_w,
                 //
                 << fShapeW[1] << "," << iHeight << "," << iWidth << ",";
             if (fDim == 1)
-               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                   << fAttrDilations[0];
+               out << "1, " << fAttrKernelShape[0] << ",0,0," << fAttrPads[0] << "," << fAttrPads[1] << ",1,"
+                   << fAttrStrides[0] << ",1," << fAttrDilations[0];
             else // dim ==2
-               out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+               out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << ","
+                   << fAttrPads[2] << "," << fAttrPads[1] << "," << fAttrPads[3]
                    << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                    << fAttrDilations[1];
             out << "," << "tensor_" <<fNX << "_xcol);\n\n ";
@@ -507,12 +492,13 @@ public:
             // 3d im2col
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
                 << " + x_offset,"
-                //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-                //  dilation_d, dilation_h, dilation_w,
+                //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
+                //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
                 //
                 << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << ","
                 << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << ","
-                << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrPads[2] << ","
+                << fAttrPads[0] << "," << fAttrPads[3] << "," << fAttrPads[1] << "," << fAttrPads[4] << ","
+                << fAttrPads[2] << "," << fAttrPads[5] << ","
                 << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
                 << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
                 << "tensor_" << fNX << "_xcol);\n\n ";
@@ -549,15 +535,16 @@ public:
          if (fDim < 3) {
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
                 << " + x_offset,"
-                //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
-                //  dilation_w,
+                //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin,
+                //  pad_w_end, stride_h, stride_w, dilation_h, dilation_w,
                 //
                 << fShapeW[1] << "," << iHeight << "," << iWidth << ",";
             if (fDim == 1)
-               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                   << fAttrDilations[0];
+               out << "1, " << fAttrKernelShape[0] << ",0,0," << fAttrPads[0] << "," << fAttrPads[1] << ",1,"
+                   << fAttrStrides[0] << ",1," << fAttrDilations[0];
             else // dim ==2
-               out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+               out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << ","
+                   << fAttrPads[2] << "," << fAttrPads[1] << "," << fAttrPads[3]
                    << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                    << fAttrDilations[1];
             out << ", tensor_" << fNX << "_xcol);\n\n ";
@@ -565,12 +552,13 @@ public:
             // 3d im2col
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
                 << " + x_offset,"
-                //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-                //  dilation_d, dilation_h, dilation_w,
+                //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
+                //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
                 //
                 << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << "," << fAttrKernelShape[0] << ","
-                << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                << "," << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2]
+                << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3]
+                << "," << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5]
+                << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2]
                 << "," << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX
                 << "_xcol);\n\n ";
          }

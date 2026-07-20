@@ -769,7 +769,8 @@ def make_ConvWithAsymmetricPadding():
             _vi('W', FLOAT, [1, 1, 3, 3]),
         ],
         outputs=[
-            _vi('y', FLOAT, [1, 1, 5, 5]),
+            # h: (7 + 1 + 1 - 3) / 2 + 1 = 4, w: (5 + 0 + 0 - 3) / 2 + 1 = 2
+            _vi('y', FLOAT, [1, 1, 4, 2]),
         ],
         initializer=[
             _tensor('W', FLOAT, [1, 1, 3, 3], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
@@ -887,6 +888,110 @@ def make_ConvWithDynShapeStride():
         ],
     )
     return _model(graph, opset=13, ir_version=13)
+
+
+# The models below have a different padding at the beginning and at the end of
+# the same axis. This is what ONNX produces for the SAME_UPPER / SAME_LOWER
+# autopad modes whenever the total padding is odd, i.e. for an even kernel size,
+# and what the "pads" attribute can express directly. They cover the three code
+# paths of ROperator_Conv (1d, 2d and 3d) plus the grouped one.
+
+def make_ConvSameUpperEvenKernel():
+    """Ops: Conv"""
+    # 4 - 1 + 2 - 4 = 1 total pad -> begin 0, end 1
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2, 2], auto_pad='SAME_UPPER', strides=[1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvSameUpperEvenKernel',
+        inputs=[_vi('x', FLOAT, [1, 1, 4, 4]), _vi('W', FLOAT, [1, 1, 2, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2, 2], [1.0, 2.0, 3.0, 4.0])],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvSameLowerEvenKernel():
+    """Ops: Conv"""
+    # same as above but the extra pad goes at the beginning -> begin 1, end 0
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2, 2], auto_pad='SAME_LOWER', strides=[1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvSameLowerEvenKernel',
+        inputs=[_vi('x', FLOAT, [1, 1, 4, 4]), _vi('W', FLOAT, [1, 1, 2, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2, 2], [1.0, 2.0, 3.0, 4.0])],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPads1d():
+    """Ops: Conv"""
+    # 1d path: pads = [begin, end] = [0, 1]
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2], pads=[0, 1], strides=[1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPads1d',
+        inputs=[_vi('x', FLOAT, [1, 1, 5]), _vi('W', FLOAT, [1, 1, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 5])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2], [1.0, 2.0])],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPads2d():
+    """Ops: Conv"""
+    # pads = [begin_h, begin_w, end_h, end_w] = [1, 0, 0, 1]
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[3, 3], pads=[1, 0, 0, 1], strides=[1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPads2d',
+        inputs=[_vi('x', FLOAT, [1, 1, 5, 5]), _vi('W', FLOAT, [1, 1, 3, 3])],
+        outputs=[_vi('y', FLOAT, [1, 1, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 3, 3], [1.0] * 9)],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPads3d():
+    """Ops: Conv"""
+    # pads = [begin_d, begin_h, begin_w, end_d, end_h, end_w] = [0, 0, 0, 1, 1, 1]
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2, 2, 2], pads=[0, 0, 0, 1, 1, 1],
+                         strides=[1, 1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPads3d',
+        inputs=[_vi('x', FLOAT, [1, 1, 3, 3, 3]), _vi('W', FLOAT, [1, 1, 2, 2, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 3, 3, 3])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2, 2, 2], [1.0] * 8)],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPadsGrouped():
+    """Ops: Conv"""
+    # same as ConvAsymmetricPads2d, but through the group != 1 code path
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[3, 3], pads=[1, 0, 0, 1], strides=[1, 1],
+                         group=2),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPadsGrouped',
+        inputs=[_vi('x', FLOAT, [1, 2, 5, 5]), _vi('W', FLOAT, [2, 1, 3, 3])],
+        outputs=[_vi('y', FLOAT, [1, 2, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [2, 1, 3, 3], [1.0] * 9 + [2.0] * 9)],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
 
 
 def make_ConvWithPadding():
@@ -4990,6 +5095,12 @@ MODELS = {
     'ConvTransposeBias2d': make_ConvTransposeBias2d,
     'ConvTransposeBias2dBatched': make_ConvTransposeBias2dBatched,
     'ConvWithAsymmetricPadding': make_ConvWithAsymmetricPadding,
+    'ConvSameUpperEvenKernel': make_ConvSameUpperEvenKernel,
+    'ConvSameLowerEvenKernel': make_ConvSameLowerEvenKernel,
+    'ConvAsymmetricPads1d': make_ConvAsymmetricPads1d,
+    'ConvAsymmetricPads2d': make_ConvAsymmetricPads2d,
+    'ConvAsymmetricPads3d': make_ConvAsymmetricPads3d,
+    'ConvAsymmetricPadsGrouped': make_ConvAsymmetricPadsGrouped,
     'ConvWithAutopadSameLower': make_ConvWithAutopadSameLower,
     'ConvWithAutopadSameUpper': make_ConvWithAutopadSameUpper,
     'ConvWithDilation': make_ConvWithDilation,
@@ -5199,6 +5310,12 @@ TEST_INPUTS = {
     'ConvTransposeBias2d': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTransposeBias2dBatched': [f32(np.arange(0.0, 18.0), (2, 1, 3, 3))],
     'ConvWithAsymmetricPadding': [f32(np.arange(0.0, 35.0), (1, 1, 7, 5))],
+    'ConvSameUpperEvenKernel': [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
+    'ConvSameLowerEvenKernel': [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
+    'ConvAsymmetricPads1d': [f32(np.arange(0.0, 5.0), (1, 1, 5))],
+    'ConvAsymmetricPads2d': [f32(np.arange(0.0, 25.0), (1, 1, 5, 5))],
+    'ConvAsymmetricPads3d': [f32(np.arange(0.0, 27.0), (1, 1, 3, 3, 3))],
+    'ConvAsymmetricPadsGrouped': [f32(np.arange(0.0, 50.0), (1, 2, 5, 5))],
     'ConvWithAutopadSameLower': [f32(np.arange(0.0, 25.0), (1, 1, 5, 5))],
     'ConvWithAutopadSameUpper': [f32(np.arange(0.0, 25.0), (1, 1, 5, 5))],
     'ConvWithDilation': [f32(np.arange(0.0, 49.0), (1, 1, 7, 7))],
