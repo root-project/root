@@ -231,7 +231,7 @@ public:
    template <typename T>
    void BindRawPtr(std::string_view fieldName, T *rawPtr)
    {
-      BindRawPtr<void>(GetToken(fieldName), rawPtr);
+      BindRawPtr<T>(GetToken(fieldName), rawPtr);
    }
 
    /// Get the (typed) pointer to the value for the field referenced by `token`.

@@ -782,6 +782,12 @@ TEST(REntry, Basics)
    EXPECT_EQ("float", e->GetTypeName("pt"));
    EXPECT_EQ("float", e->GetTypeName(model->GetToken("pt")));
 
+   float rawPt;
+   double wrongType;
+   e->BindRawPtr("pt", &rawPt);
+   EXPECT_EQ(&rawPt, e->GetPtr<float>("pt").get());
+   EXPECT_THROW(e->BindRawPtr("pt", &wrongType), ROOT::RException);
+
    auto ptrPt = std::make_shared<float>();
    e->BindValue("pt", ptrPt);
    EXPECT_EQ(ptrPt.get(), e->GetPtr<float>("pt").get());
