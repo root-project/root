@@ -38,10 +38,11 @@ bool ROOT::Experimental::Internal::RNTupleAnchorS3::operator==(const RNTupleAnch
    return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
           fVersionMajor == other.fVersionMajor && fVersionMinor == other.fVersionMinor &&
           fVersionPatch == other.fVersionPatch && fUrlTemplate == other.fUrlTemplate &&
-          fHeaderObjId == other.fHeaderObjId && fHeaderOffset == other.fHeaderOffset &&
-          fNBytesHeader == other.fNBytesHeader && fLenHeader == other.fLenHeader &&
-          fFooterObjId == other.fFooterObjId && fFooterOffset == other.fFooterOffset &&
-          fNBytesFooter == other.fNBytesFooter && fLenFooter == other.fLenFooter;
+          fCloneTemplate == other.fCloneTemplate && fHeaderObjId == other.fHeaderObjId &&
+          fHeaderOffset == other.fHeaderOffset && fNBytesHeader == other.fNBytesHeader &&
+          fLenHeader == other.fLenHeader && fFooterObjId == other.fFooterObjId &&
+          fFooterOffset == other.fFooterOffset && fNBytesFooter == other.fNBytesFooter &&
+          fLenFooter == other.fLenFooter;
 }
 
 /// Serialize the anchor to a pretty-printed JSON string (2-space indent).
@@ -56,6 +57,7 @@ std::string ROOT::Experimental::Internal::RNTupleAnchorS3::ToJSON() const
    jsonAnchor["formatVersionMinor"] = fVersionMinor;
    jsonAnchor["formatVersionPatch"] = fVersionPatch;
    jsonAnchor["urlTemplate"] = fUrlTemplate;
+   jsonAnchor["cloneTemplate"] = fCloneTemplate;
    jsonAnchor["headerObjId"] = fHeaderObjId;
    jsonAnchor["headerOffset"] = fHeaderOffset;
    jsonAnchor["nBytesHeader"] = fNBytesHeader;
@@ -101,6 +103,7 @@ ROOT::Experimental::Internal::RNTupleAnchorS3::CreateFromJSON(const std::string 
       anchor.fVersionMinor = jsonAnchor.at("formatVersionMinor").get<std::uint16_t>();
       anchor.fVersionPatch = jsonAnchor.at("formatVersionPatch").get<std::uint16_t>();
       anchor.fUrlTemplate = jsonAnchor.at("urlTemplate").get<std::string>();
+      anchor.fCloneTemplate = jsonAnchor.at("cloneTemplate").get<std::string>();
       anchor.fHeaderObjId = jsonAnchor.at("headerObjId").get<std::uint64_t>();
       anchor.fHeaderOffset = jsonAnchor.at("headerOffset").get<std::uint64_t>();
       anchor.fNBytesHeader = jsonAnchor.at("nBytesHeader").get<std::uint64_t>();
@@ -320,8 +323,17 @@ std::unique_ptr<ROOT::Internal::RPageSink>
 ROOT::Experimental::Internal::RPageSinkS3::CloneAsHidden(std::string_view name,
                                                          const ROOT::RNTupleWriteOptions &opts) const
 {
-   // The hidden (attribute-set) ntuple is stored under a reserved "_clone" sub-prefix so its objects and
-   // anchor can never collide with the main ntuple's numeric object keys ($baseurl/0, $baseurl/1, ...).
-   std::string cloneBaseUrl = fBaseUrl + "/_clone/" + std::string(name);
+   // Resolve the clone template so the hidden ntuple's objects and anchor live under a sub-prefix
+   // that cannot collide with the main ntuple's numeric object keys.
+   std::string cloneBaseUrl = fAnchor.fCloneTemplate;
+
+   auto pos = cloneBaseUrl.find("${baseurl}");
+   if (pos != std::string::npos)
+      cloneBaseUrl.replace(pos, std::strlen("${baseurl}"), fBaseUrl);
+
+   pos = cloneBaseUrl.find("${name}");
+   if (pos != std::string::npos)
+      cloneBaseUrl.replace(pos, std::strlen("${name}"), name);
+
    return std::unique_ptr<ROOT::Internal::RPageSink>(new RPageSinkS3(name, cloneBaseUrl, opts, RFromBaseUrl{}));
 }
