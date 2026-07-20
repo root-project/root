@@ -258,9 +258,9 @@ class RFile final {
    /// Flags used in PutInternal()
    enum EPutFlags {
       /// When encountering an object at the specified path, overwrite it with the new one instead of erroring out.
-      kPutFlag_AllowOverwrite = 0x1,
+      kPutFlag_AllowOverwrite = BIT(0),
       /// When overwriting an object, preserve the existing one and create a new cycle, rather than removing it.
-      kPutFlag_OverwriteKeepCycle = 0x2,
+      kPutFlag_OverwriteKeepCycle = BIT(1),
    };
 
    std::unique_ptr<TFile> fFile;
