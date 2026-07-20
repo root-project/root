@@ -2,13 +2,15 @@
 // Authors: Stephan Hageboeck, CERN  05/2019
 //          Jonas Rembser, CERN 06/2022
 
-#include <RooRealVar.h>
-#include <RooGenericPdf.h>
-#include <RooProduct.h>
 #include <RooArgList.h>
 #include <RooBinning.h>
-#include <RooUniformBinning.h>
+#include <RooFormulaVar.h>
+#include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooHistPdf.h>
+#include <RooProduct.h>
+#include <RooRealVar.h>
+#include <RooUniformBinning.h>
 #include <RooWorkspace.h>
 
 #include <gtest/gtest.h>
@@ -339,4 +341,48 @@ TEST(GenericPdf, BinnedBoundariesSurviveRename)
    const double value = integrate(pdf, RooArgSet(x), integratorName);
    EXPECT_NE(integratorName.find("RooBinIntegrator"), std::string::npos) << integratorName;
    EXPECT_DOUBLE_EQ(value, piecewiseFlatIntegral);
+}
+
+// Ensure the implementation of RooGenericPdf::binBoundaries() (and
+// RooFormulaVar::binBoundaries()) is consistent with equivalent RooHistPdf.
+TEST(GenericPdf, BinnedBoundariesConsistentWithHistPdf)
+{
+   int nBins = 5;
+
+   RooRealVar x{"x", "x", 0, 0, 5};
+   x.setBins(nBins);
+
+   RooDataHist dh{"dh", "", x};
+
+   RooHistPdf hpdf{"hpdf", "", x, dh};
+   RooGenericPdf gpdf{"gpdf", "x[0] - x[0] + 1", {x}}; // uniform dummy
+   gpdf.setBinning(x, x.getBinning());
+
+   RooFormulaVar fvar{"fvar", "x[0] - x[0] + 1", {x}}; // uniform dummy
+   fvar.setBinning(x, x.getBinning());
+
+   // intentionally beyond the bin boundaries
+   double lo = -10;
+   double hi = 10;
+
+   std::unique_ptr<std::list<double>> boundsHistPdf{hpdf.binBoundaries(x, lo, hi)};
+   std::unique_ptr<std::list<double>> boundsGenericPdf{gpdf.binBoundaries(x, lo, hi)};
+   std::unique_ptr<std::list<double>> boundsFormulaVar{fvar.binBoundaries(x, lo, hi)};
+
+   EXPECT_EQ(boundsHistPdf->size(), nBins + 1);
+   EXPECT_EQ(boundsGenericPdf->size(), nBins + 1);
+   EXPECT_EQ(boundsFormulaVar->size(), nBins + 1);
+
+   auto iterHistPdf = boundsHistPdf->begin();
+   auto iterGenericPdf = boundsGenericPdf->begin();
+   auto iterFormulaVar = boundsFormulaVar->begin();
+
+   for (int i = 0; i < nBins + 1; ++i) {
+      EXPECT_EQ(*iterHistPdf, static_cast<double>(i));
+      EXPECT_EQ(*iterGenericPdf, static_cast<double>(i));
+      EXPECT_EQ(*iterFormulaVar, static_cast<double>(i));
+      iterHistPdf++;
+      iterGenericPdf++;
+      iterFormulaVar++;
+   }
 }

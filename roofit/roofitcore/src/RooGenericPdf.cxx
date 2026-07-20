@@ -51,7 +51,7 @@ the names of the arguments are not hard coded.
 #include "RooAbsRealLValue.h"
 #include "RooAbsBinning.h"
 #include "RooCurve.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 using std::istream, std::ostream, std::endl;
 
@@ -223,8 +223,14 @@ std::list<double> *RooGenericPdf::binBoundaries(RooAbsRealLValue &obs, double xl
       return nullptr;
    }
    const RooAbsBinning &binning = *found->second;
-   return RooHelpers::binBoundariesInRange({binning.array(), static_cast<std::size_t>(binning.numBoundaries())}, xlo,
-                                           xhi);
+   auto hint = new std::list<double>;
+   for (int i = 0; i < binning.numBoundaries(); ++i) {
+      const double boundary = binning.array()[i];
+      if (boundary >= xlo && boundary <= xhi) {
+         hint->push_back(boundary);
+      }
+   }
+   return hint;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
