@@ -264,10 +264,7 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
       }
 
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
-      if (owns) {
-         // *beginPtr points to the array of item values (allocated in an earlier call by the following malloc())
-         free(*beginPtr);
-      }
+      Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
       *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
