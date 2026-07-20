@@ -1,15 +1,13 @@
 #!/usr/bin/python3
 
-### generate COnv2d model using Pytorch
-
-import argparse
-import sys
+### generate Conv2d model using Pytorch
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-result = []
+from ModelGeneratorUtils import make_parser, model_name, export_onnx, write_reference_output
+
 
 class Net(nn.Module):
 
@@ -47,36 +45,20 @@ class Net(nn.Module):
       if (self.nl == 1) : return x
       x = self.conv1(x)
       x = F.relu(x)
-      #print(x)
       x = self.conv2(x)
       x = F.relu(x)
       x = self.conv3(x)
 
       return x
 
+
 def main():
 
-   #print(arguments)
-   parser = argparse.ArgumentParser(description='PyTorch model generator')
-   parser.add_argument('params', type=int, nargs='+',
-                    help='parameters for the Conv network : batchSize , inputChannels, inputImageSize, nGroups, nLayers ')
-
-   parser.add_argument('--bn', action='store_true', default=False,
-                        help='For using batch norm layer')
-   parser.add_argument('--maxpool', action='store_true', default=False,
-                        help='For using max pool layer')
-   parser.add_argument('--avgpool', action='store_true', default=False,
-                        help='For using average pool layer')
-   parser.add_argument('--v', action='store_true', default=False,
-                        help='For verbose mode')
-
-
+   parser = make_parser('parameters for the Conv network : batchSize , inputChannels, inputImageSize, nGroups, nLayers ',
+                        pooling=True)
    args = parser.parse_args()
 
-   #args.params = (4,2,4,1,4)
-
-   np = len(args.params)
-   if (np < 5) : exit()
+   if (len(args.params) < 5) : exit()
    bsize = args.params[0]
    nc = args.params[1]
    d = args.params[2]
@@ -90,8 +72,6 @@ def main():
    if (use_bn): print("using batch normalization layer")
    if (use_maxpool): print("using maxpool  layer")
 
-    #sample = torch.zeros([2,1,5,5])
-   input  = torch.zeros([])
    for ib in range(0,bsize):
       xa = torch.ones([1, 1, d, d]) * (ib+1)
       if (nc > 1) :
@@ -112,74 +92,16 @@ def main():
    print("input data",xinput.shape)
    print(xinput)
 
-   name = "Conv2dModel"
-   if (use_bn): name += "_BN"
-   if (use_maxpool): name += "_MAXP"
-   if (use_avgpool): name += "_AVGP"
-   name += "_B" + str(bsize)
-
-   saveOnnx=True
-   loadModel=False
-   savePtModel = False
-
+   name = model_name("Conv2dModel", bsize, use_bn, use_maxpool, use_avgpool)
 
    model = Net(nc,ngroups,nlayers, use_bn, use_maxpool, use_avgpool)
    print(model)
 
    model(xinput)
 
-   model.forward(xinput)
+   export_onnx(model, xinput, name, use_bn)
 
-   if savePtModel :
-      torch.save({'model_state_dict':model.state_dict()}, name + ".pt")
-
-
-   if saveOnnx:
-      # dynamo export doesn't work on Python 3.14
-      dynamo_export = (sys.version_info.major, sys.version_info.minor) != (3, 14)
-
-      #new ONNX exporter does not work for batchmorm
-      if (use_bn): dynamo_export=False
-
-      #check torch version
-      v = torch.__version__
-      from packaging.version import Version
-      if (Version(v) >= Version("2.5.0")) :
-         torch.onnx.export(
-            model,
-            xinput,
-            name + ".onnx",
-            export_params=True,
-            dynamo=dynamo_export,
-            external_data=False
-         )
-      else :
-         torch.onnx.export(model, xinput,name + ".onnx", export_params=True)
-
-
-
-   if loadModel :
-        print('Loading model from file....')
-        checkpoint = torch.load(name + ".pt")
-        model.load_state_dict(checkpoint['model_state_dict'])
-
-   # evaluate model in test mode
-   model.eval()
-   y = model.forward(xinput)
-
-   print("output data : shape, ",y.shape)
-   print(y)
-
-   outSize = y.nelement()
-   yvec = y.reshape([outSize])
-   # for i in range(0,outSize):
-   #      print(float(yvec[i]))
-
-   f = open(name + ".out", "w")
-   for i in range(0,outSize):
-        f.write(str(float(yvec[i].detach()))+" ")
-
-
+   write_reference_output(model, xinput, name)
 
 
 if __name__ == '__main__':
