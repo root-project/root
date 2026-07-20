@@ -51,6 +51,9 @@ struct RNTupleAnchorS3 {
    /// ${objid} with the numeric object ID. Defaults to the scheme this writer uses; the reader
    /// overrides it from the stored anchor.
    std::string fUrlTemplate = "${baseurl}/${objid}";
+   /// Pattern for resolving clone (attribute-set) names to base URLs.
+   /// ${baseurl} is replaced with the anchor URL, ${name} with the clone name.
+   std::string fCloneTemplate = "${baseurl}/_clone/${name}";
    /// Object ID and byte offset of the compressed header within the S3 object
    std::uint64_t fHeaderObjId = 0;
    std::uint64_t fHeaderOffset = 0;

@@ -31,6 +31,7 @@ TEST(RNTupleAnchorS3, RoundTrip)
    orig.fVersionMinor = 2;
    orig.fVersionPatch = 0;
    orig.fUrlTemplate = "https://bucket.s3.us-east-1.amazonaws.com/data/${objid}";
+   orig.fCloneTemplate = "${baseurl}/clones/${name}";
    orig.fHeaderObjId = 1;
    orig.fHeaderOffset = 0;
    orig.fNBytesHeader = 1200;
@@ -54,6 +55,7 @@ TEST(RNTupleAnchorS3, RoundTrip)
    EXPECT_EQ(2u, parsed.fVersionMinor);
    EXPECT_EQ(0u, parsed.fVersionPatch);
    EXPECT_EQ("https://bucket.s3.us-east-1.amazonaws.com/data/${objid}", parsed.fUrlTemplate);
+   EXPECT_EQ("${baseurl}/clones/${name}", parsed.fCloneTemplate);
    EXPECT_EQ(1u, parsed.fHeaderObjId);
    EXPECT_EQ(0u, parsed.fHeaderOffset);
    EXPECT_EQ(1200u, parsed.fNBytesHeader);
@@ -241,6 +243,10 @@ TEST(RNTupleAnchorS3, Equality)
    EXPECT_EQ(a, b);
 
    b.fHeaderObjId = 99;
+   EXPECT_FALSE(a == b);
+
+   b = a;
+   b.fCloneTemplate = "${baseurl}/other/${name}";
    EXPECT_FALSE(a == b);
 }
 
