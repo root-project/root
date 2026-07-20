@@ -89,11 +89,11 @@ public:
    TRotMatrix       *GetCurrentPosition(Float_t *x,Float_t *y,Float_t *z) const;
    Bool_t            GetCurrentReflection() const;
    Bool_t            IsFolder() const override {return kTRUE;}
-   virtual void      Local2Master(Double_t *local, Double_t *master);
-   virtual void      Local2Master(Float_t *local, Float_t *master);
+   virtual void      Local2Master(Double_t const *local, Double_t *master) const;
+   virtual void      Local2Master(Float_t const *local, Float_t *master) const;
    void      ls(Option_t *option="rsn2") const override;
-   virtual void      Master2Local(Double_t *master, Double_t *local);
-   virtual void      Master2Local(Float_t *master, Float_t *local);
+   virtual void      Master2Local(Double_t const *master, Double_t *local) const;
+   virtual void      Master2Local(Float_t const *master, Float_t *local) const;
    virtual void      Node(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0
                         , const char *matrixname="", Option_t *option="");
    virtual Int_t     PushLevel(){return fGeomLevel++;}

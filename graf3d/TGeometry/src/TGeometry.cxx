@@ -420,12 +420,12 @@ TShape *TGeometry::GetShapeByNumber(Int_t number) const
 ///  This is automatically done by the Paint functions.
 ///  Otherwise TNode::UpdateMatrix should be called before.
 
-void TGeometry::Local2Master(Double_t *local, Double_t *master)
+void TGeometry::Local2Master(Double_t const *local, Double_t *master) const
 {
    if (GeomLevel()) {
       Double_t x,y,z;
       Double_t bomb = GetBomb();
-      Double_t *matrix = &fRotMatrix[GeomLevel()][0];
+      Double_t const *matrix = &fRotMatrix[GeomLevel()][0];
       x = bomb*fX
         + local[0]*matrix[0]
         + local[1]*matrix[3]
@@ -454,13 +454,13 @@ void TGeometry::Local2Master(Double_t *local, Double_t *master)
 ///  This is automatically done by the Paint functions.
 ///  Otherwise TNode::UpdateMatrix should be called before.
 
-void TGeometry::Local2Master(Float_t *local, Float_t *master)
+void TGeometry::Local2Master(Float_t const *local, Float_t *master) const
 {
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
 
-      Double_t *matrix = &fRotMatrix[GeomLevel()][0];
+      Double_t const *matrix = &fRotMatrix[GeomLevel()][0];
 
       x = bomb*fX
         + local[0]*matrix[0]
@@ -516,12 +516,12 @@ void TGeometry::ls(Option_t *option) const
 ///  This is automatically done by the Paint functions.
 ///  Otherwise TNode::UpdateMatrix should be called before.
 
-void TGeometry::Master2Local(Double_t *master, Double_t *local)
+void TGeometry::Master2Local(Double_t const *master, Double_t *local) const
 {
    if (GeomLevel()) {
       Double_t x,y,z;
       Double_t bomb = GetBomb();
-      Double_t *matrix = &fRotMatrix[GeomLevel()][0];
+      Double_t const *matrix = &fRotMatrix[GeomLevel()][0];
 
       Double_t xms = master[0] - bomb*fX;
       Double_t yms = master[1] - bomb*fY;
@@ -545,13 +545,13 @@ void TGeometry::Master2Local(Double_t *master, Double_t *local)
 ///  This is automatically done by the Paint functions.
 ///  Otherwise TNode::UpdateMatrix should be called before.
 
-void TGeometry::Master2Local(Float_t *master, Float_t *local)
+void TGeometry::Master2Local(Float_t const *master, Float_t *local) const
 {
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
 
-      Double_t *matrix = &fRotMatrix[GeomLevel()][0];
+      Double_t const *matrix = &fRotMatrix[GeomLevel()][0];
 
       Double_t xms = master[0] - bomb*fX;
       Double_t yms = master[1] - bomb*fY;
