@@ -948,6 +948,33 @@ TEST(ONNX, LayerNormalization4d)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, InstanceNormalization)
+{
+   SofieReference ref = readReference("InstanceNormalization");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "InstanceNormalization", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, InstanceNormalization3d)
+{
+   SofieReference ref = readReference("InstanceNormalization3d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "InstanceNormalization3d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, InstanceNormalizationEpsilon)
+{
+   SofieReference ref = readReference("InstanceNormalizationEpsilon");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "InstanceNormalizationEpsilon", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, Equal)
 {
    SofieReference ref = readReference("Equal");
