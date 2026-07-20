@@ -84,6 +84,7 @@ extern ParserFuncSignature ParseExpand;
 extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
+extern ParserFuncSignature ParseInstanceNormalization;
 extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseGatherND;
 extern ParserFuncSignature ParseErf;
@@ -377,6 +378,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Tile", ParseTile);
    RegisterOperator("Split", ParseSplit);
    RegisterOperator("If", ParseIf);
+   RegisterOperator("InstanceNormalization", ParseInstanceNormalization);
    RegisterOperator("Pad", ParsePad);
    RegisterOperator("Where", ParseWhere);
    RegisterOperator("Einsum", ParseEinsum);

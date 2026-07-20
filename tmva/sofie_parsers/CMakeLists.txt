@@ -53,6 +53,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseErf.cxx
     src/ParseRange.cxx
     src/ParseLayerNormalization.cxx
+    src/ParseInstanceNormalization.cxx
     src/ParseExpand.cxx
     src/ParseGather.cxx
     src/ParseGatherND.cxx
