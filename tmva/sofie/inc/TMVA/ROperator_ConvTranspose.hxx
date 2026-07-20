@@ -502,12 +502,13 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
          throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not yet supported");
          out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
              << " + x_offset,"
-             //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-             //  dilation_d, dilation_h, dilation_w,
+             //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
+             //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
              //
              << fShapeX[1] << "," << oDepth << "," << oHeight << "," << oWidth << "," << fAttrKernelShape[0] << ","
-             << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1] << ","
-             << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
+             << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3] << ","
+             << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5] << ","
+             << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
              << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX
              << "_xcol);\n\n ";
       }
@@ -555,12 +556,13 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
 
          out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
              << " + x_offset,"
-             //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-             //  dilation_d, dilation_h, dilation_w,
+             //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
+             //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
              //
              << fShapeX[1] << "," << oDepth << "," << oHeight << "," << oWidth << "," << fAttrKernelShape[0] << ","
-             << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1] << ","
-             << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
+             << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3] << ","
+             << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5] << ","
+             << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
              << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << "," << "tensor_" << fNX
              << "_xcol);\n\n ";
       }

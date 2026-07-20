@@ -299,12 +299,69 @@ TEST(ONNX, ConvWithDynShapeStride)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
-// Disables test (asymmetric padding not supported)
-TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
+TEST(ONNX, ConvWithAsymmetricPadding)
 {
    SofieReference ref = readReference("ConvWithAsymmetricPadding");
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithAsymmetricPadding", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The models below pad differently at the beginning and at the end of the same
+// axis, which is what SAME_UPPER / SAME_LOWER produce for an even kernel size.
+// They cover the 1d, 2d, 3d and grouped code paths of ROperator_Conv.
+
+TEST(ONNX, ConvSameUpperEvenKernel)
+{
+   SofieReference ref = readReference("ConvSameUpperEvenKernel");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvSameUpperEvenKernel", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvSameLowerEvenKernel)
+{
+   SofieReference ref = readReference("ConvSameLowerEvenKernel");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvSameLowerEvenKernel", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPads1d)
+{
+   SofieReference ref = readReference("ConvAsymmetricPads1d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPads1d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPads2d)
+{
+   SofieReference ref = readReference("ConvAsymmetricPads2d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPads2d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPads3d)
+{
+   SofieReference ref = readReference("ConvAsymmetricPads3d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPads3d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPadsGrouped)
+{
+   SofieReference ref = readReference("ConvAsymmetricPadsGrouped");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPadsGrouped", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
