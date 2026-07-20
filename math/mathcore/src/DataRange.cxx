@@ -162,18 +162,22 @@ void DataRange::Clear(unsigned int icoord ) {
 }
 
 
-void DataRange::CleanRangeSet(unsigned int icoord, double xmin, double xmax) {
-   //  remove all the existing ranges between xmin and xmax
-   //  called when a new range is inserted
+void DataRange::CleanRangeSet(unsigned int icoord, double & xmin, double & xmax) {
+   //  remove all the existing ranges overlapping with [xmin,xmax] and widen
+   //  [xmin,xmax] to cover them. Called when a new range is inserted, so that
+   //  the resulting range set stays a set of disjoint intervals.
 
    // loop on existing ranges
    RangeSet & ranges = fRanges[icoord];
-   for (RangeSet::iterator itr = ranges.begin(); itr != ranges.end(); ++itr) {
-      // delete included ranges
-      if ( itr->first >= xmin && itr->second <= xmax) {
+   for (RangeSet::iterator itr = ranges.begin(); itr != ranges.end();) {
+      // The two ranges overlap: one contains the other, they overlap
+      // partially, or they just touch. Merge them.
+      if (itr->first <= xmax && xmin <= itr->second) {
+         xmin = std::min(itr->first, xmin);
+         xmax = std::max(itr->second, xmax);
          itr = ranges.erase(itr);
-         // itr goes to next element, so go back before adding
-         --itr;
+      } else {
+         ++itr;
       }
    }
 
