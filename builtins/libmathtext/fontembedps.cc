@@ -16,28 +16,40 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#include "../inc/fontembed.h"
+#include <mathtext/fontembed.h>
+#include <algorithm>
 #include <cstring>
 #include <cstdio>
-#include <algorithm>
-#ifdef WIN32
-#define snprintf _snprintf
+#if defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define bswap_16 OSSwapInt16
+#define bswap_32 OSSwapInt32
+#elif defined(_WIN32)
+#define bswap_16(x) _byteswap_ushort(x)
+#define bswap_32(x) _byteswap_ulong(x)
+#else
+#include <byteswap.h>
 #endif
 
-// ROOT integration
-#include <ROOT/RConfig.hxx>
-#ifdef R__BYTESWAP
-#ifndef LITTLE_ENDIAN
-#define LITTLE_ENDIAN 1
-#endif // LITTLE_ENDIAN
-#else // R__BYTESWAP
-#ifdef LITTLE_ENDIAN
-#undef LITTLE_ENDIAN
-#endif // LITTLE_ENDIAN
-#endif // R__BYTESWAP
-#include "Byteswap.h"
-#define bswap_16(x)   Rbswap_16((x))
-#define bswap_32(x)   Rbswap_32((x))
+#ifdef _WIN32
+// https://stackoverflow.com/questions/52988769/writing-own-memmem-for-windows
+void *memmem(const void *haystack, size_t haystack_len, 
+    const void * const needle, const size_t needle_len)
+{
+    if (haystack == nullptr || haystack_len == 0) return nullptr;
+    if (needle == nullptr || needle_len == 0) return (void *)haystack;
+    if (haystack_len < needle_len) return nullptr;
+    
+    for (const char *h = (const char *)haystack;
+            haystack_len >= needle_len;
+            ++h, --haystack_len) {
+        if (!memcmp(h, needle, needle_len)) {
+            return (void *)h;
+        }
+    }
+    return nullptr;
+}
+#endif
 
 // References:
 //
@@ -254,7 +266,6 @@ namespace mathtext {
             segment_header.length =
             bswap_32(segment_header.length);
 #endif // LITTLE_ENDIAN
-            const char *match = "/FontName";
             char *buffer = new char[segment_header.length];
             char *fname;
 
@@ -276,8 +287,9 @@ namespace mathtext {
                      buffer[segment_header.length - 1] = '\n';
                   }
                   ret.append(buffer, segment_header.length);
-                  fname = std::search(buffer, buffer+segment_header.length,
-                                      match, match+9);
+
+                  fname = (char*)memmem(buffer, segment_header.length,
+                                        "/FontName", 9);
                   if (fname) {
                      fname += 9;
                      while (fname < buffer + segment_header.length &&
@@ -410,7 +422,7 @@ namespace mathtext {
          unsigned int glyph_index = cid_map[code_point];
 
          if (char_strings[glyph_index] != ".notdef" &&
-             !char_strings[glyph_index].empty()) {
+             char_strings[glyph_index] != "") {
             snprintf(linebuf, BUFSIZ, "dup %u /%s put\n",
                      code_point,
                      char_strings[glyph_index].c_str());
@@ -443,8 +455,9 @@ namespace mathtext {
 
       unsigned int char_strings_count = 0;
 
-      for (std::vector<std::string>::const_iterator iterator = char_strings.begin(); iterator < char_strings.end();
-           ++iterator) {
+      for (std::vector<std::string>::const_iterator iterator =
+           char_strings.begin();
+           iterator < char_strings.end(); iterator++) {
          if (!iterator->empty()) {
             char_strings_count++;
          }
