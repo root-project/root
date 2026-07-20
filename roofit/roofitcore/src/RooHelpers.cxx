@@ -29,8 +29,6 @@
 #include <ROOT/StringUtils.hxx>
 #include <TClass.h>
 
-#include <algorithm>
-#include <cmath>
 #include <unordered_map>
 
 namespace RooHelpers {
@@ -168,62 +166,6 @@ bool setAllConstant(const RooAbsCollection &coll, bool constant)
       }
    }
    return changed;
-}
-
-bool isFunctionFlatInBins(const RooAbsReal &function, RooAbsRealLValue &obs, std::span<const double> boundaries,
-                          double relTol)
-{
-   // Fractions of the bin width at which the function is sampled. They are kept
-   // strictly inside the bin (away from the boundaries) so that the evaluation
-   // is not affected by which side of a boundary a step function jumps.
-   const double fractions[] = {0.04, 0.27, 0.5, 0.73, 0.96};
-
-   const double savedVal = obs.getVal();
-
-   bool isFlat = true;
-   for (std::size_t i = 0; i + 1 < boundaries.size() && isFlat; ++i) {
-      const double lo = boundaries[i];
-      const double hi = boundaries[i + 1];
-      double reference = 0.0;
-      bool first = true;
-      for (double frac : fractions) {
-         obs.setVal(lo + frac * (hi - lo));
-         const double val = function.getVal();
-         if (first) {
-            reference = val;
-            first = false;
-            continue;
-         }
-         const double scale = std::max(std::abs(reference), 1e-12);
-         if (std::abs(val - reference) > relTol * scale) {
-            isFlat = false;
-            break;
-         }
-      }
-   }
-
-   obs.setVal(savedVal);
-   return isFlat;
-}
-
-std::list<double> *binBoundariesInRange(std::span<const double> boundaries, double xlo, double xhi)
-{
-   auto out = new std::list<double>;
-
-   // Small tolerance so that boundaries numerically coinciding with the range
-   // limits are not duplicated by the explicit xlo/xhi endpoints below.
-   const double delta = (xhi - xlo) * 1e-8;
-
-   for (double boundary : boundaries) {
-      if (boundary > xlo + delta && boundary < xhi - delta) {
-         out->push_back(boundary);
-      }
-   }
-
-   out->push_front(xlo);
-   out->push_back(xhi);
-
-   return out;
 }
 
 } // namespace RooHelpers
