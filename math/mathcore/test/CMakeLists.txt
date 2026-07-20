@@ -76,6 +76,8 @@ ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx)
 ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
 ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
 ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx LIBRARIES Core MathCore)
+
+ROOT_ADD_GTEST(testRange test_Range.cxx LIBRARIES MathCore)
 ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore Hist)
 ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
