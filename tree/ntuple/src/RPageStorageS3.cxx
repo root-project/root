@@ -21,6 +21,7 @@
 #include <ROOT/StringUtils.hxx>
 
 #include <nlohmann/json.hpp>
+#include <xxhash.h>
 
 #include <cctype>
 #include <cstring>
@@ -31,8 +32,7 @@
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 
-/// Field-by-field equality check across all 14 anchor members.
-/// Used to verify round-trip correctness in tests.
+/// Field-by-field equality check across all data members.
 bool ROOT::Experimental::Internal::RNTupleAnchorS3::operator==(const RNTupleAnchorS3 &other) const
 {
    return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
@@ -45,8 +45,8 @@ bool ROOT::Experimental::Internal::RNTupleAnchorS3::operator==(const RNTupleAnch
 }
 
 /// Serialize the anchor to a pretty-printed JSON string (2-space indent).
-/// nlohmann/json handles type conversion, string escaping, and uint64 precision.
-/// The output is suitable for direct upload to S3 as the anchor object.
+/// The checksum is computed over the compact canonical form of the data fields;
+/// the stored JSON uses pretty-printing for readability.
 std::string ROOT::Experimental::Internal::RNTupleAnchorS3::ToJSON() const
 {
    nlohmann::json jsonAnchor;
@@ -64,6 +64,9 @@ std::string ROOT::Experimental::Internal::RNTupleAnchorS3::ToJSON() const
    jsonAnchor["footerOffset"] = fFooterOffset;
    jsonAnchor["nBytesFooter"] = fNBytesFooter;
    jsonAnchor["lenFooter"] = fLenFooter;
+
+   auto canonical = jsonAnchor.dump(-1);
+   jsonAnchor["checksum"] = XXH3_64bits(canonical.data(), canonical.size());
    return jsonAnchor.dump(2);
 }
 
@@ -109,6 +112,23 @@ ROOT::Experimental::Internal::RNTupleAnchorS3::CreateFromJSON(const std::string 
    } catch (const nlohmann::json::exception &e) {
       return R__FAIL("missing or invalid field in S3 anchor: " + std::string(e.what()));
    }
+
+   if (!jsonAnchor.contains("checksum"))
+      return R__FAIL("missing 'checksum' field in S3 anchor");
+
+   std::uint64_t storedChecksum;
+   try {
+      storedChecksum = jsonAnchor.at("checksum").get<std::uint64_t>();
+   } catch (const nlohmann::json::exception &e) {
+      return R__FAIL("invalid 'checksum' field in S3 anchor: " + std::string(e.what()));
+   }
+
+   jsonAnchor.erase("checksum");
+   auto canonical = jsonAnchor.dump(-1);
+   auto computedChecksum = XXH3_64bits(canonical.data(), canonical.size());
+
+   if (storedChecksum != computedChecksum)
+      return R__FAIL("S3 anchor checksum mismatch");
 
    return anchor;
 }
