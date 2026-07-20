@@ -1642,6 +1642,61 @@ def make_HardSwish():
     return _model(graph, opset=14, ir_version=13)
 
 
+def _instance_normalization(shape, scale, bias, **kwargs):
+    """InstanceNormalization graph over an input of the given shape. scale and
+    B are per-channel initializers of length shape[1]."""
+    channels = shape[1]
+    nodes = [
+        helper.make_node('InstanceNormalization', ['X', 'scale', 'B'], ['Y'], **kwargs),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'InstanceNormalization',
+        inputs=[
+            _vi('X', FLOAT, shape),
+            _vi('scale', FLOAT, [channels]),
+            _vi('B', FLOAT, [channels]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, shape),
+        ],
+        initializer=[
+            _tensor('scale', FLOAT, [channels], scale),
+            _tensor('B', FLOAT, [channels], bias),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_InstanceNormalization():
+    """Ops: InstanceNormalization"""
+    # Batch and channel size both > 1, so that a wrong per-instance offset or a
+    # scale/bias indexed by the wrong axis does not go unnoticed.
+    return _instance_normalization([2, 3, 4, 5],
+                                   scale=[0.5, 1.0, -2.0],
+                                   bias=[0.0, 0.25, -1.5])
+
+
+def make_InstanceNormalization3d():
+    """Ops: InstanceNormalization"""
+    # Rank 3 (N, C, D): exercises a spatial size that is not a product of
+    # several dimensions.
+    return _instance_normalization([2, 2, 6],
+                                   scale=[1.5, -0.5],
+                                   bias=[1.0, 2.0])
+
+
+def make_InstanceNormalizationEpsilon():
+    """Ops: InstanceNormalization"""
+    # Non-default epsilon, combined with the small-variance input in
+    # TEST_INPUTS, so that the attribute dominates the result and a parser that
+    # ignored it would be caught.
+    return _instance_normalization([1, 2, 3, 3],
+                                   scale=[1.0, 1.0],
+                                   bias=[0.0, 0.0],
+                                   epsilon=0.01)
+
+
 def make_IsInf():
     """Ops: IsInf"""
     nodes = [
@@ -4741,6 +4796,9 @@ MODELS = {
     'GreaterOrEqual': make_GreaterOrEqual,
     'HardSigmoid': make_HardSigmoid,
     'HardSwish': make_HardSwish,
+    'InstanceNormalization': make_InstanceNormalization,
+    'InstanceNormalization3d': make_InstanceNormalization3d,
+    'InstanceNormalizationEpsilon': make_InstanceNormalizationEpsilon,
     'IsInf': make_IsInf,
     'LSTMBatchwise': make_LSTMBatchwise,
     'LSTMBidirectional': make_LSTMBidirectional,
@@ -4940,6 +4998,21 @@ TEST_INPUTS = {
     ],
     'HardSigmoid': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     'HardSwish': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    # Per (n, c) slice a different mean and variance, so that a normalization
+    # that mixed up instances or channels would not cancel out.
+    'InstanceNormalization': [
+        f32(np.arange(120.0) * 0.1 - 6.0 + (np.arange(120.0) % 7), (2, 3, 4, 5)),
+    ],
+    'InstanceNormalization3d': [
+        f32([1.0, 2.0, 3.0, 4.0, 5.0, 6.0,
+             -1.0, -3.0, 0.0, 2.0, -2.0, 4.0,
+             10.0, 10.0, 10.0, 10.0, 10.0, 11.0,
+             0.5, -0.5, 1.5, -1.5, 2.5, -2.5], (2, 2, 6)),
+    ],
+    # Small variance (~2e-3), comparable to the model's epsilon of 0.01.
+    'InstanceNormalizationEpsilon': [
+        f32((np.arange(18.0) % 5 - 2.0) * 0.025, (1, 2, 3, 3)),
+    ],
     'LSTMBatchwise': [f32(np.arange(1.0, 7.0), (3, 1, 2))],
     'LSTMBidirectional': [f32(np.arange(1.0, 7.0), (3, 1, 2))],
     'LSTMDefaults': [f32(np.arange(1.0, 7.0), (3, 1, 2))],
