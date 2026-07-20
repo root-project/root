@@ -46,7 +46,8 @@ preview: export DOXYGEN_INPUT_FILTER :=
 preview: htmlfooter
 	echo "INPUT = ./mainpage.md ../.." > Doxyfile_INPUT
 	doxygen Doxyfile
-	echo "Your preview is in $(DOXYGEN_OUTPUT_DIRECTORY)"
+	rm -f Doxyfile_INPUT
+	echo "Your preview is in $(DOXYGEN_OUTPUT_DIRECTORY). Browse it at file://$(DOXYGEN_OUTPUT_DIRECTORY)/html/index.html"
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
