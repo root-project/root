@@ -631,7 +631,8 @@ static void PrintSpeedscopeFrames(const std::vector<SpeedscopeFrame> &frames, st
 }
 } // namespace
 
-void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile(ESchemaProfileFormat format, std::ostream &output) const
+void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile([[maybe_unused]] ESchemaProfileFormat format,
+                                                              std::ostream &output) const
 {
    // There is only one format at the moment
    assert(format == ESchemaProfileFormat::kSpeedscopeJSON);
