@@ -15,6 +15,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     TApplicationRemote.h
     TApplicationServer.h
     TFileStager.h
+    TGrid.h
+    TGridCollection.h
+    TGridJDL.h
+    TGridJob.h
+    TGridJobStatus.h
+    TGridJobStatusList.h
+    TGridResult.h
     TMessage.h
     TMonitor.h
     TParallelMergingFile.h
@@ -34,6 +41,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     src/NetErrors.cxx
     src/TApplicationRemote.cxx
     src/TApplicationServer.cxx
+    src/TGrid.cxx
+    src/TGridJDL.cxx
+    src/TGridJob.cxx
+    src/TGridJobStatus.cxx
+    src/TGridJobStatusList.cxx
+    src/TGridResult.cxx
     src/TFileStager.cxx
     src/TMessage.cxx
     src/TMonitor.cxx
