@@ -22,8 +22,6 @@
 
 #include "TList.h"
 
-namespace ROOT::Deprecated {
-
 class TGridJobStatusList : public TList {
 
 protected:
@@ -37,12 +35,5 @@ public:
 };
 
 R__EXTERN TGridJobStatusList *gGridJobStatusList;
-
-} // namespace ROOT::Deprecated
-
-using TGridJobStatusList R__DEPRECATED(6, 42, "TGridJobStatusList is expected to be unused and thus deprecated") =
-   ROOT::Deprecated::TGridJobStatusList;
-R__EXTERN ROOT::Deprecated::TGridJobStatusList *&gGridJobStatusList
-   R__DEPRECATED(6, 42, "gGridJobStatusList is expected to be unused and thus deprecated");
 
 #endif
