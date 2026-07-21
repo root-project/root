@@ -27,11 +27,10 @@ class TFile;
 class TEntryList;
 class TList;
 class TDSet;
+class TGridResult;
 class TFileCollection;
 
 namespace ROOT::Deprecated {
-
-class TGridResult;
 
 class TGridCollection : public TObject {
 public:

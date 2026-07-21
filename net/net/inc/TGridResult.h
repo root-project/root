@@ -27,7 +27,6 @@
 
 class TEntryList;
 
-namespace ROOT::Deprecated {
 
 class TGridResult : public TList {
 
@@ -52,10 +51,5 @@ public:
 
    ClassDefOverride(TGridResult,1)  // ABC defining interface to GRID result set
 };
-
-} // namespace ROOT::Deprecated
-
-using TGridResult R__DEPRECATED(6, 42, "TGridResult is expected to be unused and thus deprecated") =
-   ROOT::Deprecated::TGridResult;
 
 #endif
