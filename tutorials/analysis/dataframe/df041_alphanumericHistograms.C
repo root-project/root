@@ -1,18 +1,12 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// Fill and draw a bar chart from a categorical/string column with RDataFrame.
+/// Fill and draw a bar chart from a categorical column with RDataFrame.
 ///
 /// RDataFrame has no dedicated action for categorical/string columns, but the
 /// generic RDataFrame::Fill() action can fill any user-provided object that
 /// exposes Fill() and Merge() methods. This shows how to use it to build and
-/// draw a bar chart from a string column, reusing the "Nation" column of the
-/// classic CERN staff dataset also used in hist006_TH1_bar_charts.C.
-///
-/// Classic ROOT trees often store short strings in fixed-size char[] branches
-/// (leaf type "C"), which RDataFrame reads as ROOT::VecOps::RVec<char> rather
-/// than std::string. A one-line Define() converts such a column into a real
-/// std::string column before filling.
+/// draw a bar chart from a string column.
 ///
 /// \macro_image
 /// \macro_code
@@ -27,15 +21,15 @@
 // const char*, so RDataFrame can't call it directly on a plain TH1D. Wrapping
 // it in a class with our own Fill(const std::string&) sidesteps both issues.
 struct AlphaNumHist {
-   TH1D h;
+   TH1D histo;
 
-   AlphaNumHist(const char *name, const char *title) : h(name, title, 1, 0, 1)
+   AlphaNumHist(const char *name, const char *title) : histo(name, title, 1, 0, 1)
    {
-      h.GetXaxis()->SetAlphanumeric(true);
-      h.SetCanExtend(TH1::kAllAxes);
+      histo.GetXaxis()->SetAlphanumeric(true);
+      histo.SetCanExtend(TH1::kAllAxes);
    }
 
-   void Fill(const std::string &s) { h.Fill(s.c_str(), 1.); }
+   void Fill(const std::string &s) { histo.Fill(s.c_str(), 1.); }
 
    // Required so RDataFrame can merge partial per-slot results when run with
    // implicit multi-threading enabled.
@@ -43,39 +37,35 @@ struct AlphaNumHist {
    {
       TList l;
       for (auto *o : others)
-         l.Add(&o->h);
-      h.Merge(&l);
+         l.Add(&o->histo);
+      histo.Merge(&l);
    }
 };
 
+void writeData(std::string_view datasetName, std::string_view fileName)
+{
+   std::random_device rd;
+   std::mt19937 gen{rd()};
+   std::uniform_int_distribution<int> distrib{0, 2};
+
+   const std::vector<std::string> colours{"RED", "GREEN", "BLUE"};
+
+   ROOT::RDataFrame df{100};
+   df.Define("colour", [&]() { return colours[distrib(gen)]; }).Snapshot(datasetName, fileName);
+}
+
+auto canvas = std::make_unique<TCanvas>("c");
+
 void df041_alphanumericHistograms()
 {
-   // Reuse the same "cernstaff.root" dataset as hist006_TH1_bar_charts.C,
-   // generating it first if it doesn't already exist.
-   TString filedir = gROOT->GetTutorialDir();
-   filedir += TString("/io/tree/");
-   TString filename = "cernstaff.root";
-   bool fileNotFound = gSystem->AccessPathName(filename);
-   if (fileNotFound) {
-      TString macroName = filedir + "tree500_cernbuild.C";
-      if (!gInterpreter->IsLoaded(macroName))
-         gInterpreter->LoadMacro(macroName);
-      gROOT->ProcessLineFast("tree500_cernbuild()");
-   }
+   writeData("tree", "df041_alphanumericHistograms.root");
 
-   ROOT::RDataFrame df0("T", filename.Data());
+   ROOT::RDataFrame df("tree", "df041_alphanumericHistograms.root");
 
-   // "Nation" is a classic char[] branch, read by RDataFrame as
-   // ROOT::VecOps::RVec<char>. Converting it to a real std::string column
-   // makes it fillable through the AlphaNumHist adapter above.
-   auto df = df0.Define("NationStr", [](const ROOT::VecOps::RVec<char> &c) { return std::string(c.begin(), c.end()); },
-                        {"Nation"});
+   AlphaNumHist model("hColour", "Entries by colour;Colour;Count");
+   auto result = df.Fill<std::string>(model, {"colour"});
+   result->histo.LabelsDeflate("X");
 
-   AlphaNumHist model("hNation", "Staff by nation;Nation;Count");
-   auto h = df.Fill<std::string>(model, {"NationStr"});
-   h->h.LabelsDeflate("X");
-
-   auto c1 = new TCanvas("c1", "Bar chart from RDataFrame", 700, 500);
-   h->h.SetFillColor(45);
-   h->h.DrawCopy("bar2");
+   result->histo.SetFillColor(45);
+   result->histo.DrawCopy("bar2");
 }
