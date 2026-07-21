@@ -28,7 +28,6 @@
 #include "TString.h"
 #include "TMap.h"
 
-namespace ROOT::Deprecated {
 
 class TGridJDL : public TObject {
 protected:
@@ -75,10 +74,5 @@ public:
 
    ClassDefOverride(TGridJDL,1)  // ABC defining interface JDL generator
 };
-
-} // namespace ROOT::Deprecated
-
-using TGridJDL R__DEPRECATED(6, 42, "TGridJDL is expected to be unused and thus deprecated") =
-   ROOT::Deprecated::TGridJDL;
 
 #endif
