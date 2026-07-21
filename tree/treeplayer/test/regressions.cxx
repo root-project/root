@@ -759,3 +759,21 @@ TEST(TTreeScan, ULong64Precision)
       scanToString("col=21ld:21ld:21ld");
    }
 }
+
+// https://github.com/root-project/root/issues/22755
+// sqrt() of a negative argument used to evaluate to sqrt(abs(x)) instead of NaN
+TEST(TTreeFormulaRegressions, SqrtOfNegative)
+{
+   TTree t("t", "t");
+   int x = 0;
+   t.Branch("x", &x, "x/I");
+   t.Fill();
+   t.GetEntry(0);
+
+   TTreeFormula tf("tf", "sqrt(-4.0)", &t);
+   EXPECT_TRUE(std::isnan(tf.EvalInstance()));
+   TTreeFormula tf2("tf2", "sqrt(x - 4)", &t);
+   EXPECT_TRUE(std::isnan(tf2.EvalInstance()));
+   TTreeFormula tf3("tf3", "sqrt(x + 9)", &t);
+   EXPECT_FLOAT_EQ(tf3.EvalInstance(), 3.);
+}

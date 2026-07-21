@@ -76,6 +76,18 @@ maps) will now obtain different, mathematically consistent values.
 
 ## Math
 
+## Trees
+
+### Behavior change: `sqrt()` of negative arguments in TTreeFormula now returns NaN
+
+Since its introduction in 1995, the formula engine used by `TTree::Draw()`, `TTree::Scan()` and `TTreeFormula`
+silently evaluated `sqrt(x)` as `sqrt(abs(x))` for negative arguments (or as `0` in the optimized evaluation path
+of the legacy `ROOT::v5::TFormula`). This could produce silently wrong results, e.g. in selections involving
+`sqrt` of an expression that can become negative. `sqrt()` now returns NaN for negative arguments, consistent
+with `TMath::Sqrt()`, the standard C `sqrt()`, and the modern `TFormula` used by `TF1`.
+Note that in a selection, a NaN evaluates as `false`, so entries where the `sqrt` argument is negative now fail
+the cut instead of being selected based on `sqrt(abs(x))`.
+
 ## RooFit
 
 ### Removal of the the constant term optimization for legacy test statistic classes
