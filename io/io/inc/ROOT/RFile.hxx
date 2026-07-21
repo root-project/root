@@ -272,13 +272,14 @@ class RFile final {
                                   std::variant<const char *, std::reference_wrapper<const std::type_info>> type) const;
 
    /// Writes `obj` to file, without taking its ownership.
-   void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags);
+   void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags,
+                   std::string_view title);
 
    /// \see Put
    template <typename T>
-   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags)
+   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags, std::string_view title = "")
    {
-      PutUntyped(path, typeid(T), &obj, flags);
+      PutUntyped(path, typeid(T), &obj, flags, title);
    }
 
    /// Given `path`, returns the TKey corresponding to the object at that path (assuming the path is fully split, i.e.
