@@ -336,8 +336,8 @@ public:
       void *obj = GetUntyped(path, typeid(T));
       return std::unique_ptr<T>(static_cast<T *>(obj));
    }
-  
-   /// Puts object `obj` into the file.
+
+   /// Puts object `obj` into the file, optionally giving it a title.
    /// The object will be effectively copied into the file, so any further modifications won't be seen by the object
    /// inside the file.
    /// Note that the object is not necessarily written to storage until the RFile is closed or `Flush()` is called.
@@ -348,9 +348,9 @@ public:
    /// \throws ROOT::RException if `path` already identifies a valid object or directory.
    /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
-   void Put(std::string_view path, const T &obj)
+   void Put(std::string_view path, const T &obj, std::string_view title = "")
    {
-      PutInternal(path, obj, /* flags = */ 0);
+      PutInternal(path, obj, /* flags = */ 0, title);
    }
 
    /// Puts an object into the file, overwriting any previously-existing object at that path.
@@ -366,9 +366,16 @@ public:
    template <typename T>
    void Overwrite(std::string_view path, const T &obj, bool createNewCycle = true)
    {
+      Overwrite(path, obj, "", createNewCycle);
+   }
+
+   /// Like Overwrite(std::string_view, const T&, bool) but allows giving a title to the object.
+   template <typename T>
+   void Overwrite(std::string_view path, const T &obj, std::string_view title, bool createNewCycle = true)
+   {
       std::uint32_t flags = kPutFlag_AllowOverwrite;
       flags |= createNewCycle * kPutFlag_OverwriteKeepCycle;
-      PutInternal(path, obj, flags);
+      PutInternal(path, obj, flags, title);
    }
 
    /// Writes all objects and the file structure to disk.
