@@ -37,11 +37,10 @@
 class TGridResult;
 class TGridJDL;
 class TGridJob;
+class TGridCollection;
 class TGridJobStatusList;
 
 namespace ROOT::Deprecated {
-
-class TGridCollection;
 
 class TGrid : public TObject {
 
