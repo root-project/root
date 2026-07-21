@@ -36,13 +36,11 @@
 #pragma link C++ class TGridJob+;
 #pragma link C++ class TGridJobStatus+;
 #pragma link C++ class TGridJobStatusList+;
-#pragma link C++ class ROOT::Deprecated::TGridCollection+;
+#pragma link C++ class TGridCollection+;
 #pragma link C++ class TFileStager;
 #pragma link C++ class TApplicationRemote;
 #pragma link C++ class TApplicationServer;
 #pragma link C++ class TUDPSocket;
 #pragma link C++ class TParallelMergingFile+;
-
-#pragma read sourceClass="TGridCollection" version="[-1]" targetClass="ROOT::Deprecated::TGridCollection"
 
 #endif
