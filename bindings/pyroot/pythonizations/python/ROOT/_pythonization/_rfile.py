@@ -120,7 +120,7 @@ class _RFile_Put:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, name, obj):
+    def __call__(self, name, obj, title = ""):
         """
         Non-templated Put()
         """
@@ -132,7 +132,7 @@ class _RFile_Put:
             raise TypeError(f"type {objType} is not supported by ROOT I/O")
         else:
             className = objType.__cpp_name__
-        self._rfile.Put[className](name, obj)
+        self._rfile.Put[className](name, obj, title)
 
     def __getitem__(self, template_arg):
         """
