@@ -55,40 +55,10 @@ class TestClassDATATYPES:
         arr[N-1] = val
         assert arr[N-1] == np_arr[N-1] == val
 
-    def test02_boolarray2cpp(self):
-        '''
-        Pass an bool array to a C++ function taking a bool*
-        Fixes ROOT-10731
-        '''
-        import numpy as np
-        import cppyy
-        cppyy.cppdef('int convert(bool* x) { return x[0]; }')
-        x1 = np.array([True], '?') # bool
-        x2 = np.array([True], 'b') # signed char, treated as bool before
-        y1 = cppyy.gbl.convert(x1)
-        y2 = cppyy.gbl.convert(x2)
-        assert y1 == 1
-        assert y2 == 1
-
-    def test03_arraydatamember_lifeline(self):
-        """Test setting of lifeline for array data members"""
-        # 7501
-
-        import numpy as np
-        import cppyy
-        cppyy.cppdef("""
-        class array_ll {
-        public:
-            float *v1 = nullptr;
-            float *v2 = nullptr;
-        };
-        """)
-        a = cppyy.gbl.array_ll()
-        a.v1 = np.array([1, 2], dtype=np.float32)
-        a.v2 = np.array([3, 4], dtype=np.float32)
-
-        assert a.v1[0] == 1
-        assert a.v1[1] == 2
+    # NOTE: former test02_boolarray2cpp (ROOT-10731) and
+    # test03_arraydatamember_lifeline (#7501) were removed: they are covered
+    # upstream by cppyy's test_lowlevel.py::test09_numpy_bool_array and
+    # test_datatypes.py::test44_buffer_memory_handling respectively.
 
 
 ## actual test run

@@ -10,23 +10,15 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from math import exp
 import ROOT
-from ROOT import TF1, TH1F, TMinuit, gROOT
+from ROOT import TF1, TH1F, TMinuit
 from common import *
 import ctypes
 
 __all__ = [
    'Func1CallFunctionTestCase',
    'Func2FitFunctionTestCase',
-   'Func3GlobalCppFunctionTestCase',
-   'Func4GlobalCppFunctionAsMethodTestCase',
    'Func5MinuitTestCase'
 ]
-
-if not os.path.exists('InstallableFunction.C'):
-    os.chdir(os.path.dirname(__file__))
-
-# needs to be early to prevent "ifunc_table overflow!"
-gROOT.LoadMacro( "InstallableFunction.C+" )
 
 
 ### helpers for general test cases -------------------------------------------
@@ -132,77 +124,11 @@ class Func2FitFunctionTestCase( MyTestCase ):
       self.assertEqual( round( result[2] - 1., 1), 0 )  # s.d.
 
 
-### calling a global function ================================================
-class Func3GlobalCppFunctionTestCase( MyTestCase ):
-   def test1CallGlobalCppFunction( self ):
-      """Test calling of an interpreted C++ global function"""
-
-      gROOT.LoadMacro( "GlobalFunction.C" )
-      InterpDivideByTwo = ROOT.InterpDivideByTwo
-      
-
-      self.assertEqual( round( InterpDivideByTwo( 4. ) - 4./2., 8), 0 )
-      self.assertEqual( round( InterpDivideByTwo( 7. ) - 7./2., 8), 0 )
-
-   def test2CallNameSpacedGlobalFunction( self ):
-      """Test calling of an interpreted C++ namespaced global function"""
-
-      InterpMyNameSpace = ROOT.InterpMyNameSpace
-
-      self.assertEqual( round( InterpMyNameSpace.InterpNSDivideByTwo( 4. ) - 4./2., 8), 0 )
-      self.assertEqual( round( InterpMyNameSpace.InterpNSDivideByTwo( 7. ) - 7./2., 8), 0 )
-
-   def test3CallGlobalCppFunction( self ):
-      """Test calling of a compiled C++ global function"""
-
-      gROOT.LoadMacro( "GlobalFunction2.C+" )
-      DivideByTwo = ROOT.DivideByTwo
-
-      self.assertEqual( round( DivideByTwo( 4. ) - 4./2., 8), 0 )
-      self.assertEqual( round( DivideByTwo( 7. ) - 7./2., 8), 0 )
-
-   def test4CallNameSpacedGlobalFunction( self ):
-      """Test calling of a compiled C++ namespaced global function"""
-
-    # functions come in from GlobalFunction2.C, loaded in previous test3
-      MyNameSpace = ROOT.MyNameSpace
-
-      self.assertEqual( round( MyNameSpace.NSDivideByTwo( 4. ) - 4./2., 8), 0 )
-      self.assertEqual( round( MyNameSpace.NSDivideByTwo( 7. ) - 7./2., 8), 0 )
-
-   def test5CallAnotherNameSpacedGlobalFunction( self ):
-      """Test namespace update after adding a global function"""
-
-      gROOT.LoadMacro( "GlobalFunction3.C+" )
-      MyNameSpace = ROOT.MyNameSpace
-
-      self.assertEqual( round( MyNameSpace.NSDivideByTwo_v2( 4. ) - 4./2., 8), 0 )
-      self.assertEqual( round( MyNameSpace.NSDivideByTwo_v2( 7. ) - 7./2., 8), 0 )
-
-
-### using a global function as python class member ===========================
-class Func4GlobalCppFunctionAsMethodTestCase( MyTestCase ):
-   def test1InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
-      """Test installing and calling global C++ function as python method"""
-      
-      InstallableFunc = ROOT.InstallableFunc
-      FuncLess = ROOT.FuncLess
-
-      FuncLess.InstallableFunc = InstallableFunc
-
-      a = FuncLess( 1234 )
-      self.assertEqual( a.m_int, a.InstallableFunc().m_int );
-
-   def test2InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
-      """Test installing and calling namespaced C++ function as python method"""
-      
-      FuncLess = ROOT.FuncLess
-      FunctionNS = ROOT.FunctionNS
-
-      FuncLess.InstallableFunc2 = FunctionNS.InstallableFunc
-
-      a = FuncLess( 1234 )
-      self.assertEqual( a.m_int, a.InstallableFunc2().m_int );
+# NOTE: the former Func3GlobalCppFunctionTestCase and
+# Func4GlobalCppFunctionAsMethodTestCase were removed: their coverage is
+# upstream in the cppyy test suite (bindings/pyroot/cppyy/cppyy/test/), see
+# test_pythonify.py (test08_global_functions, test15_installable_function)
+# and test_advancedcpp.py (test03_namespaces, test03a_namespace_lookup_on_update).
 
 
 ### test minuit callback functionality and fit results =======================
