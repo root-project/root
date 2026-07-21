@@ -993,6 +993,12 @@ Cppyy::TCppScope_t Cppyy::GetActualClass(TCppScope_t klass, TCppObject_t obj) {
     std::string demangled_name = Cpp::Demangle(mangled_name);
 #endif
 
+    // A type in an anonymous namespace cannot be named in injected code and
+    // has no dictionary, so looking it up would fail; worse, its unspellable
+    // name crashes the interpreter in AppendTypesSlow. Keep the base type.
+    if (demangled_name.find("anonymous namespace") != std::string::npos)
+        return klass;
+
     if (TCppScope_t scope = Cppyy::GetScope(demangled_name)) {
     // Only return the derived type if theres a complete definition in the
     // interpreter. internal classes like TCling have no public header and
