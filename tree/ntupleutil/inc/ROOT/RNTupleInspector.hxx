@@ -502,7 +502,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Print a string that represents the tree of the (sub)fields and columns of an RNTuple in a format which a
    /// performance profile visualizer can render
-   void PrintSchemaProfile([[maybe_unused]] ESchemaProfileFormat format, std::ostream &output = std::cout) const;
+   void PrintSchemaProfile(ESchemaProfileFormat format, std::ostream &output = std::cout) const;
 };
 } // namespace Experimental
 } // namespace ROOT
