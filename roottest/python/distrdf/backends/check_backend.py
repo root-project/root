@@ -163,10 +163,10 @@ class TestInitialization:
         ):
             df = ROOT.RDataFrame(1, executor=connection)
 
-        df = df.Define("u", "userValue").Histo1D(("name", "title", 1, 100, 130), "u")
+            df = df.Define("u", "userValue").Histo1D(("name", "title", 1, 100, 130), "u")
 
-        h = df.GetValue()
-        assert h.GetMean() == 123
+            h = df.GetValue()
+            assert h.GetMean() == 123
 
 
 class TestEmptyTreeError:
