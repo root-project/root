@@ -22,6 +22,11 @@
 
 #include "TList.h"
 
+#include "TGridJob.h"
+
+
+class TGridJob;
+
 class TGridJobStatusList : public TList {
 
 protected:
