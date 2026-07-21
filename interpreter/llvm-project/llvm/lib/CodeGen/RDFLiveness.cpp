@@ -511,7 +511,7 @@ void Liveness::computePhiInfo() {
         uint16_t F = A.Addr->getFlags();
         if ((F & (NodeAttrs::Undef | NodeAttrs::PhiRef)) == 0) {
           RegisterRef R = A.Addr->getRegRef(DFG);
-          RealUses[R.Reg].insert({A.Id, R.Mask});
+          RealUses[R.Id].insert({A.Id, R.Mask});
         }
         UN = A.Addr->getSibling();
       }
@@ -603,11 +603,8 @@ void Liveness::computePhiInfo() {
       for (NodeAddr<DefNode *> D : Ds) {
         if (D.Addr->getFlags() & NodeAttrs::PhiRef) {
           NodeId RP = D.Addr->getOwner(DFG).Id;
-          std::map<NodeId, RegisterAggr> &M = PhiUp[PUA.Id];
-          auto F = M.find(RP);
-          if (F == M.end())
-            M.insert(std::make_pair(RP, DefRRs));
-          else
+          auto [F, Inserted] = PhiUp[PUA.Id].try_emplace(RP, DefRRs);
+          if (!Inserted)
             F->second.insert(DefRRs);
         }
         DefRRs.insert(D.Addr->getRegRef(DFG));
@@ -688,10 +685,8 @@ void Liveness::computePhiInfo() {
 
         if (MidDefs.hasCoverOf(UR))
           continue;
-        if (Subs.find(MidDefs) == Subs.end()) {
-          Subs.insert({MidDefs, SubMap(1, RefHash(), RefEqual(PRI))});
-        }
-        SubMap &SM = Subs.at(MidDefs);
+        SubMap &SM = Subs.try_emplace(MidDefs, 1, RefHash(), RefEqual(PRI))
+                         .first->second;
 
         // General algorithm:
         //   for each (R,U) : U is use node of R, U is reached by PA
@@ -711,8 +706,8 @@ void Liveness::computePhiInfo() {
             LaneBitmask M = R.Mask & V.second;
             if (M.none())
               continue;
-            if (RegisterRef SS = ClearIn(RegisterRef(R.Reg, M), MidDefs, SM)) {
-              NodeRefSet &RS = RealUseMap[P.first][SS.Reg];
+            if (RegisterRef SS = ClearIn(RegisterRef(R.Id, M), MidDefs, SM)) {
+              NodeRefSet &RS = RealUseMap[P.first][SS.Id];
               Changed |= RS.insert({V.first, SS.Mask}).second;
             }
           }
@@ -762,11 +757,11 @@ void Liveness::computeLiveIns() {
     auto F1 = MDF.find(&B);
     if (F1 == MDF.end())
       continue;
-    SetVector<MachineBasicBlock *> IDFB(F1->second.begin(), F1->second.end());
+    SetVector<MachineBasicBlock *> IDFB(llvm::from_range, F1->second);
     for (unsigned i = 0; i < IDFB.size(); ++i) {
       auto F2 = MDF.find(IDFB[i]);
       if (F2 != MDF.end())
-        IDFB.insert(F2->second.begin(), F2->second.end());
+        IDFB.insert_range(F2->second);
     }
     // Add B to the IDF(B). This will put B in the IIDF(B).
     IDFB.insert(&B);
@@ -844,7 +839,7 @@ void Liveness::computeLiveIns() {
               RegisterAggr TA(PRI);
               TA.insert(D.Addr->getRegRef(DFG)).intersect(S);
               LaneBitmask TM = TA.makeRegRef().Mask;
-              LOX[S.Reg].insert({D.Id, TM});
+              LOX[S.Id].insert({D.Id, TM});
             }
           }
         }
@@ -904,7 +899,7 @@ void Liveness::resetLiveIns() {
     // Add the newly computed live-ins.
     const RegisterAggr &LiveIns = LiveMap[&B];
     for (RegisterRef R : LiveIns.refs())
-      B.addLiveIn({MCPhysReg(R.Reg), R.Mask});
+      B.addLiveIn({R.asMCReg(), R.Mask});
   }
 }
 
@@ -1051,7 +1046,7 @@ void Liveness::traverse(MachineBasicBlock *B, RefMap &LiveIn) {
 
   for (const std::pair<const RegisterId, NodeRefSet> &LE : LiveInCopy) {
     RegisterRef LRef(LE.first);
-    NodeRefSet &NewDefs = LiveIn[LRef.Reg]; // To be filled.
+    NodeRefSet &NewDefs = LiveIn[LRef.Id]; // To be filled.
     const NodeRefSet &OldDefs = LE.second;
     for (NodeRef OR : OldDefs) {
       // R is a def node that was live-on-exit
@@ -1134,7 +1129,7 @@ void Liveness::traverse(MachineBasicBlock *B, RefMap &LiveIn) {
       RegisterRef RR = UA.Addr->getRegRef(DFG);
       for (NodeAddr<DefNode *> D : getAllReachingDefs(UA))
         if (getBlockWithRef(D.Id) != B)
-          LiveIn[RR.Reg].insert({D.Id, RR.Mask});
+          LiveIn[RR.Id].insert({D.Id, RR.Mask});
     }
   }
 
