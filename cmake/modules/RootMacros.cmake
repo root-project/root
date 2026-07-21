@@ -36,7 +36,7 @@ endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
   set(GeneratorNeedsResourecLock False)
-  set(GeneratorNeedsBuildSerialization True)
+  set(GeneratorNeedsBuildSerialization False)
   if(winrtdebug)
     set(build_config "--config Debug")
   else()
@@ -2364,7 +2364,7 @@ if(CMAKE_GENERATOR MATCHES Makefiles)
   set(always-make --always-make)
 endif()
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  set(always-make -v:m)
+  set(always-make -v:m -clp:Summary -p:BuildProjectReferences=false)
 endif()
 #-------------------------------------------------------------------------------
 #
