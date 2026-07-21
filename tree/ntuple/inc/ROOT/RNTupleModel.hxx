@@ -213,8 +213,8 @@ public:
    /// Creates a "bare model", i.e. an RNTupleModel with no default entry, with the given field zero.
    static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
-   /// Creates a new field given a `name` or `{name, description}` pair and a
-   /// corresponding, default-constructed value that is managed by a shared pointer.
+   /// Given a `name` and an optional description, creates a new field with a
+   /// corresponding default-constructed value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
