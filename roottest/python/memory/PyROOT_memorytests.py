@@ -12,7 +12,7 @@ if not os.path.exists('MemTester.C'):
     os.chdir(os.path.dirname(__file__))
 
 import ROOT
-from ROOT import gROOT, TH1F
+from ROOT import gROOT
 
 
 __all__ = [
@@ -60,90 +60,11 @@ class Memory1TestCase( MyTestCase ):
       del b, c
       self.assertEqual( MemTester.counter, 0 )
 
-   def test3ObjectCallHeuristics( self ):
-      """Test memory mgmt heuristics for object calls"""
-
-      MemTester = ROOT.MemTester
-
-    # This unit test assumes that the global memory policy is set to
-    # "heuristics" at the beginning, so let's make sure of that.
-      old_memory_policy = ROOT.SetHeuristicMemoryPolicy(True)
-
-    # reference calls should not give up ownership
-      a = MemTester()
-      self.assertEqual( MemTester.counter, 1 )
-      MemTester.CallRef( a );
-      self.assertEqual( MemTester.counter, 1 )
-
-      del a
-      self.assertEqual( MemTester.counter, 0 )
-
-      MemTester.CallConstRef( MemTester() )
-      self.assertEqual( MemTester.counter, 0 )
-
-    # give up ownership in case of non-const pointer call only, unless overridden
-      MemTester.CallConstPtr( MemTester() )
-      self.assertEqual( MemTester.counter, 0 )
-
-      b2 = MemTester()
-      counter = 1
-      self.assertEqual( MemTester.counter, counter )
-      ROOT.SetHeuristicMemoryPolicy(False)
-      MemTester.CallPtr( b2 );
-      self.assertEqual( MemTester.counter, counter )
-      del b2
-      counter -= 1
-      self.assertEqual( MemTester.counter, counter )
-
-      b3 = MemTester()
-      counter += 1
-      self.assertEqual( MemTester.counter, counter )
-      ROOT.SetHeuristicMemoryPolicy(True)
-      MemTester.CallPtr( b3 );
-      self.assertEqual( MemTester.counter, counter )
-      del b3
-      self.assertEqual( MemTester.counter, counter )
-
-    # test explicit destruction
-      ROOT.SetHeuristicMemoryPolicy(True)
-      MemTester().counter = 1      # silly way of setting it to 0
-      self.assertEqual( MemTester.counter, 0 )
-      c = MemTester()
-      self.assertEqual( MemTester.counter, 1 )
-      MemTester.CallPtr( c );
-      self.assertEqual( MemTester.counter, 1 )
-      klass = gROOT.GetClass( 'MemTester' )
-      klass.Destructor( c )
-      self.assertEqual( MemTester.counter, 0 )
-      del c             # c not derived from TObject, no notification
-      self.assertEqual( MemTester.counter, 0 )
-
-      ROOT.SetHeuristicMemoryPolicy(old_memory_policy)
-
-   def test4DestructionOfDerivedClass( self ):
-      """Derived classes should call base dtor automatically"""
-
-      MemTester = ROOT.MemTester
-
-      class D1( MemTester ):
-         def __init__( self ):
-            MemTester.__init__( self )
-
-      self.assertEqual( MemTester.counter, 0 )
-      d = D1()
-      self.assertEqual( MemTester.counter, 1 )
-      del d
-      self.assertEqual( MemTester.counter, 0 )
-
-      class D2( MemTester ):
-         def __init__( self ):
-            super( D2, self ).__init__()
-
-      self.assertEqual( MemTester.counter, 0 )
-      d = D2()
-      self.assertEqual( MemTester.counter, 1 )
-      del d
-      self.assertEqual( MemTester.counter, 0 )
+   # NOTE: the former test3ObjectCallHeuristics and
+   # test4DestructionOfDerivedClass were removed: they are covered upstream in
+   # the cppyy test suite by test_regression.py::test44_heuristic_mem_policy
+   # and test_crossinheritance.py (test12a_counter_test,
+   # test13_virtual_dtors_and_del) respectively.
 
 
 

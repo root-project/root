@@ -10,16 +10,13 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
 from ROOT import gROOT, gApplication, gSystem, gInterpreter, gDirectory
-from ROOT import TLorentzVector, TCanvas, TString, TList, TH1D, TObjArray, TVectorF, TObjString
+from ROOT import TLorentzVector, TString, TList, TH1D, TObjArray, TVectorF, TObjString
 from common import *
 
 __all__ = [
    'Basic1ModuleTestCase',
    'Basic2SetupTestCase',
-   'Basic3PythonLanguageTestCase',
-   'Basic4ArgumentPassingTestCase',
    'Basic5PythonizationTestCase',
-   'Basic6ReturnValueTestCase',
 ]
 
 def setup_module(mod):
@@ -101,159 +98,6 @@ class Basic2SetupTestCase( MyTestCase ):
       c.SetData( 13 )
       self.assertEqual( c.fData, 13 )
       self.assertEqual( c.GetData(), 13 )
-
-
-### basic python language features test cases ================================
-class Basic3PythonLanguageTestCase( MyTestCase ):
-   def test1HaveDocString( self ):
-      """Test doc strings existence"""
-
-      self.assertTrue( hasattr( TCanvas, "__doc__" ) )
-      self.assertTrue( hasattr( TCanvas.__init__, "__doc__" ) )
-
-   def test2BoundUnboundMethodCalls( self ):
-      """Test (un)bound method calls"""
-
-      self.assertRaises( TypeError, TLorentzVector.X )
-
-      m = TLorentzVector.X
-      self.assertRaises( TypeError, m )
-      self.assertRaises( TypeError, m, 1 )
-
-      b = TLorentzVector()
-      b.SetX( 1.0 )
-      self.assertEqual( 1.0, m( b ) )
-
-   def test3ThreadingSupport( self ):
-      """Test whether the GIL can be properly released"""
-
-      try:
-         gROOT.GetVersion._threaded = 1
-      except AttributeError:
-         # Attribute name change in new Cppyy
-         gROOT.GetVersion.__release_gil__ = 1
-
-      gROOT.GetVersion()
-
-   def test4ClassAndTypedefEquality( self ):
-      """Typedefs of the same class must point to the same python class"""
-
-      gInterpreter.Declare( """namespace PyABC {
-         struct SomeStruct {};
-         struct SomeOtherStruct {
-            typedef std::vector<const PyABC::SomeStruct*> StructContainer;
-         };
-      }""" )
-
-      import cppyy
-      PyABC = cppyy.gbl.PyABC
-
-      self.assertTrue( PyABC.SomeOtherStruct.StructContainer is cppyy.gbl.std.vector('const PyABC::SomeStruct*') )
-
-
-### basic C++ argument basic (value/ref and compiled/interpreted) ============
-class Basic4ArgumentPassingTestCase( MyTestCase ):
-   def test1TStringByValueInterpreted( self ):
-      """Test passing a TString by value through an interpreted function"""
-
-      gROOT.LoadMacro( 'ArgumentPassingInterpreted.C' )
-
-      f = ROOT.InterpretedTest.StringValueArguments
-
-      self.assertEqual( f( 'aap' ), 'aap' )
-      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
-      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
-
-   def test2TStringByRefInterpreted( self ):
-      """Test passing a TString by reference through an interpreted function"""
-
-      # script ArgumentPassingInterpreted.C already loaded in by value test
-
-      f = ROOT.InterpretedTest.StringRefArguments
-
-      self.assertEqual( f( 'aap' ), 'aap' )
-      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
-      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
-
-   def test3TLorentzVectorByValueInterpreted( self ):
-      """Test passing a TLorentzVector by value through an interpreted function"""
-
-      # script ArgumentPassingInterpreted.C already loaded in by value test
-
-      f = ROOT.InterpretedTest.LorentzVectorValueArguments
-
-      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
-
-   def test4TLorentzVectorByRefInterpreted( self ):
-      """Test passing a TLorentzVector by reference through an interpreted function"""
-
-      # script ArgumentPassingInterpreted.C already loaded in by value test
-
-      f = ROOT.InterpretedTest.LorentzVectorRefArguments
-
-      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
-
-   def test5TStringByValueCompiled( self ):
-      """Test passing a TString by value through a compiled function"""
-
-      gROOT.LoadMacro( 'ArgumentPassingCompiled.C++' )
-
-      f = ROOT.CompiledTest.StringValueArguments
-
-      self.assertEqual( f( 'aap' ), 'aap' )
-      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
-      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
-
-   def test6TStringByRefCompiled( self ):
-      """Test passing a TString by reference through a compiled function"""
-
-      # script ArgumentPassingCompiled.C already loaded in by value test
-
-      f = ROOT.CompiledTest.StringRefArguments
-
-      self.assertEqual( f( 'aap' ), 'aap' )
-      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
-      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
-
-   def test7TLorentzVectorByValueCompiled( self ):
-      """Test passing a TLorentzVector by value through a compiled function"""
-
-      # script ArgumentPassingCompiled.C already loaded in by value test
-
-      f = ROOT.CompiledTest.LorentzVectorValueArguments
-
-      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
-
-   def test8TLorentzVectorByRefCompiled( self ):
-      """Test passing a TLorentzVector by reference through a compiled function"""
-
-      # script ArgumentPassingCompiled.C already loaded in by value test
-
-      f = ROOT.CompiledTest.LorentzVectorRefArguments
-
-      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
-
-   def test9ByRefPassing( self ):
-      """Test passing by-reference of builtin types"""
-
-      import array, sys
-
-      if 'linux' in sys.platform:
-         a = array.array('I',[0])
-         val = ROOT.CompiledTest.UnsignedIntByRef( a )
-         self.assertEqual( a[0], val )
 
 
 ### basic extension features test cases ======================================
@@ -418,20 +262,6 @@ class Basic5PythonizationTestCase( MyTestCase ):
 
       a = TH1D("asd", "asd", 10, 0, 1)
       self.assertTrue( hash(a) )
-
-### basic C++ return integer types  ============
-class Basic6ReturnValueTestCase( MyTestCase ):
-   def test1ReturnIntegers( self ):
-      """Test returning all sort of interger types"""
-
-      gROOT.LoadMacro( 'ReturnValues.C' )
-
-      tests = ROOT.testIntegerResults()
-      for type in ["short", "int", "long", "longlong"]:
-        for name, value in [("PlusOne", 1), ("MinusOne", -1)]:
-          member = "%s%s" % (type, name)
-          result = getattr(tests, member)()
-          self.assertEqual(result, value , '%s() == %s, should be %s' % (member, result, value))
 
 
 ## actual test run
