@@ -25,9 +25,10 @@
 #include "TObject.h"
 #include "TString.h"
 
-namespace ROOT::Deprecated {
 
 class TGridJobStatus;
+
+namespace ROOT::Deprecated {
 
 class TGridJob : public TObject {
 
