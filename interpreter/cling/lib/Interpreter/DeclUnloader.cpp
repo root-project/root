@@ -493,6 +493,20 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
+    // LLVM22 introduced UnsubstitutedConstraintSatisfactionCache:
+    // https://github.com/llvm/llvm-project/commit/e9972de
+    //
+    // This causes some stale results to persist across transactions
+    // For example, evaluating is_default_constructible_v<Inner<int>> for an
+    // incomplete Inner<int> caches the 'false' value here.
+    // Completing Inner<int> in the next transaction will see the cached 'false'
+    // instead of re-evaluating.
+    //
+    // Assuming rollback of this is a rare event.
+    // There is a TODO in clang to make this a private member, so this solution
+    // is not ideal.
+    // TODO: Look for a better solution.
+    m_Sema->UnsubstitutedConstraintSatisfactionCache.clear();
     SourceManager& SM = m_Sema->getSourceManager();
     for (FileIDs::iterator I = m_FilesToUncache.begin(),
            E = m_FilesToUncache.end(); I != E; ++I) {
@@ -513,6 +527,16 @@ namespace cling {
 
   bool DeclUnloader::VisitDecl(Decl* D) {
     assert(D && "The Decl is null");
+    if (auto* TLSD = dyn_cast<TopLevelStmtDecl>(D)) {
+      if (!TLSD->getStmt()) {
+        // Special case for TopLevelStmt. The change llvm/llvm-project@4b70d17bcf
+        // caused an invalid TopLevelStatement to be added to the AST, which
+        // can trigger assertions.
+        if (DeclContext *DC = TLSD->getDeclContext())
+          DC->removeDecl(TLSD); // unlink from TU
+        return true;
+      }
+    }
     CollectFilesToUncache(D->getBeginLoc());
 
     DeclContext* DC = D->getLexicalDeclContext();
@@ -857,8 +881,9 @@ namespace cling {
   }
 
   bool DeclUnloader::VisitRecordDecl(RecordDecl* RD) {
-    if (RD->isInjectedClassName())
-      return true;
+    if (auto *R = dyn_cast_or_null<CXXRecordDecl>(RD))
+      if (R->isInjectedClassName())
+        return true;
 
     /// The injected class name in C++ is the name of the class that
     /// appears inside the class itself. For example:
@@ -874,11 +899,17 @@ namespace cling {
     // The test show it can be either:
     // ... <- InjectedC <- C <- ..., i.e previous decl or
     // ... <- C <- InjectedC <- ...
+
+    bool isInjected = false;
     RecordDecl* InjectedRD = RD->getPreviousDecl();
-    if (!(InjectedRD && InjectedRD->isInjectedClassName())) {
+
+    if (auto *R = dyn_cast_or_null<CXXRecordDecl>(InjectedRD))
+      if (R->isInjectedClassName())
+        isInjected = true;
+    if (!(InjectedRD && isInjected)) {
       InjectedRD = RD->getMostRecentDecl();
       while (InjectedRD) {
-        if (InjectedRD->isInjectedClassName()
+        if (isInjected
             && InjectedRD->getPreviousDecl() == RD)
           break;
         InjectedRD = InjectedRD->getPreviousDecl();
@@ -887,7 +918,7 @@ namespace cling {
 
     bool Successful = true;
     if (InjectedRD) {
-      assert(InjectedRD->isInjectedClassName() && "Not injected classname?");
+      assert(isInjected && "Not injected classname?");
       Successful &= VisitRedeclarable(InjectedRD, InjectedRD->getDeclContext());
     }
 

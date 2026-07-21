@@ -676,7 +676,7 @@ static std::string callPrintValue(const Value& V, const void* Val) {
     name += "_callPrintValue";
     clang::DeclarationName DeclName = &Ctx.Idents.get(name);
     clang::QualType FnTy
-      = Ctx.getFunctionType(clang::QualType(StdStringTD->getTypeForDecl(), 0), {},
+      = Ctx.getFunctionType(StdStringTD->getASTContext().getTypeDeclType(StdStringTD), {},
                             clang::FunctionProtoType::ExtProtoInfo());
     clang::FunctionDecl *WrapperFD
       = clang::FunctionDecl::Create(Ctx,
@@ -876,7 +876,7 @@ static std::string printUnpackedClingValue(const Value &V) {
     if (CXXRD->isLambda())
       return printAddress(V.getPtr(), '@');
 
-    std::string Str = printStringType(V, CXXRD->getTypeForDecl());
+    std::string Str = printStringType(V, C.getCanonicalTagType(CXXRD).getTypePtr());
     if (!Str.empty())
       return Str;
   } else if (const clang::BuiltinType *BT

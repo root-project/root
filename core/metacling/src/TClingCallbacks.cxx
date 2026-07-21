@@ -531,7 +531,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       const ROOT::TMetaUtils::TNormalizedCtxt* tNormCtxt = nullptr;
       TCling__GetNormalizedContext(tNormCtxt);
       ROOT::TMetaUtils::GetNormalizedName(Name,
-                                          C.getTypeDeclType(RD),
+                                          C.getCanonicalTagType(RD),
                                           *m_Interpreter,
                                           *tNormCtxt);
       // Autoparse implies autoload

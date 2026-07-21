@@ -394,12 +394,6 @@ namespace cling {
     const cling::runtime::RuntimeOptions& getRuntimeOptions() const { return m_RuntimeOptions; }
     cling::runtime::RuntimeOptions& getRuntimeOptions() { return m_RuntimeOptions; }
 
-    const llvm::LLVMContext* getLLVMContext() const {
-      return TSCtx->getContext();
-    }
-
-    llvm::LLVMContext* getLLVMContext() { return TSCtx->getContext(); }
-
     LookupHelper& getLookupHelper() const { return *m_LookupHelper; }
 
     const clang::Parser& getParser() const;
@@ -872,6 +866,15 @@ namespace cling {
                         llvm::raw_ostream* logs = nullptr,
                         IgnoreFilesFunc_t ignoreFiles =
                           [](const clang::PresumedLoc&) { return false;}) const;
+
+    // Forward to TSCtx->WithContextDo
+    template <typename Func> decltype(auto) withLLVMContextDo(Func&& F) {
+      return TSCtx->withContextDo(std::forward<Func>(F));
+    }
+
+    template <typename Func> decltype(auto) withLLVMContextDo(Func&& F) const {
+      return TSCtx->withContextDo(std::forward<Func>(F));
+    }
 
     friend class runtime::internal::LifetimeHandler;
   };
