@@ -470,7 +470,7 @@ bool importExponential(RooJSONFactoryWSTool *tool, const JSONNode &p)
    //  },
    //  {
    //      "name": "c_exponential_inverted",    // transformation function created on-the-fly on export
-   //      "type": "generic_function",
+   //      "type": "generic",
    //      "expression": "-c"
    //  }
    //
@@ -1140,7 +1140,7 @@ STATIC_EXECUTE([]() {
    registerExporter<exportPolynomial<RooPolyVar>>(RooPolyVar::Class(), "polynomial", false);
    registerExporter<exportRealSumFunc>(RooRealSumFunc::Class(), "weighted_sum", false);
    registerExporter<exportRealSumPdf>(RooRealSumPdf::Class(), "weighted_sum_dist", false);
-   registerExporter<exportTFnBinding>(RooTFnBinding::Class(), "generic_function", false);
+   registerExporter<exportTFnBinding>(RooTFnBinding::Class(), "generic", false);
    registerExporter<exportRealIntegral>(RooRealIntegral::Class(), "integral", false);
    registerExporter<exportDerivative>(RooDerivative::Class(), "derivative", false);
    registerExporter<exportFFTConvPdf>(RooFFTConvPdf::Class(), "fft_convolution_dist", false);

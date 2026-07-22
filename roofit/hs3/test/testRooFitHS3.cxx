@@ -35,6 +35,7 @@
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooTFnBinding.h>
 #include <RooWorkspace.h>
 
 #include <cmath>
@@ -42,6 +43,7 @@
 #include <string_view>
 #include <vector>
 
+#include <TF3.h>
 #include <TROOT.h>
 
 #include <gtest/gtest.h>
@@ -802,11 +804,36 @@ TEST(RooFitHS3, RooGenericPdf)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, GenericTypeNames)
+{
+   RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
+   RooRealVar y{"y", "y", 0.5, -1.0, 1.0};
+   RooRealVar z{"z", "z", 0.5, -1.0, 1.0};
+   RooRealVar c{"c", "c", -0.1};
+   RooFormulaVar formula{"formula", "x + y", RooArgList{x, y}};
+   RooGenericPdf genericPdf{"genericPdf", "x + 2.0", RooArgList{x}};
+   TF3 tf3{"tf3", "x + y + z", -1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
+   RooTFnBinding binding{"binding", "binding", &tf3, RooArgList{x, y, z}};
+   RooExponential exponential{"exponential", "exponential", x, c};
+
+   RooWorkspace ws{"ws_generic_types"};
+   ws.import(formula, RooFit::Silence());
+   ws.import(genericPdf, RooFit::Silence(), RooFit::RecycleConflictNodes());
+   ws.import(binding, RooFit::Silence(), RooFit::RecycleConflictNodes());
+   ws.import(exponential, RooFit::Silence(), RooFit::RecycleConflictNodes());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(json.find("\"name\":\"formula\",\"type\":\"generic\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"name\":\"genericPdf\",\"type\":\"generic_dist\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"name\":\"binding\",\"type\":\"generic\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"name\":\"c_exponential_inverted\",\"type\":\"generic\""), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"type\":\"generic_function\""), std::string::npos) << json;
+}
+
 TEST(RooFitHS3, GenericExpressionCleanup)
 {
    RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
-   RooFormulaVar formula{"formula",
-                         "formula",
+   RooFormulaVar formula{"formula", "formula",
                          "TMath::Floor(x) + TMath::Ceil(x) + TMath::Abs(x) + TMath::Tan(x) + "
                          "TMath::ASin(x / 2.) + TMath::ACos(x / 2.) + TMath::ATan(x) + TMath::Pi() + TMath::E()",
                          RooArgList{x}};
@@ -1470,9 +1497,8 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
 
    std::string exported;
-   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
-      exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
-   });
+   const std::string warnings =
+      captureMessages(RooFit::WARNING, RooFit::IO, [&] { exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString(); });
 
    EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'norm' of type 'normsys'"), std::string::npos)
       << warnings;
@@ -1550,9 +1576,8 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    }
 
    // The operation must be logged as a warning, not as an error.
-   const std::string sentinelErrors = captureMessages(RooFit::ERROR, RooFit::IO, [] {
-      RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel");
-   });
+   const std::string sentinelErrors = captureMessages(
+      RooFit::ERROR, RooFit::IO, [] { RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel"); });
    EXPECT_TRUE(sentinelErrors.empty()) << sentinelErrors;
 }
 
