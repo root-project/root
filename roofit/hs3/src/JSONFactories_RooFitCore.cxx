@@ -64,7 +64,6 @@
 #include "static_execute.h"
 
 #include <algorithm>
-#include <charconv>
 #include <cctype>
 #include <cmath>
 #include <limits>
@@ -172,13 +171,15 @@ void translateImportedExpression(TString &expr)
 
 int readPositiveInteger(const JSONNode &node, const std::string &context)
 {
-   const std::string value = node.val();
-   int out = 0;
-   const auto result = std::from_chars(value.data(), value.data() + value.size(), out);
-   if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || out <= 0) {
+   // Read through val_double() so an integer encoded as a JSON float (e.g. 1e6,
+   // whose textual form is "1e+06") is accepted like elsewhere in HS3, while
+   // fractional, non-finite, out-of-range or non-numeric values are rejected.
+   const double value = node.is_number() ? node.val_double() : std::numeric_limits<double>::quiet_NaN();
+   if (!std::isfinite(value) || value < 1.0 || value != std::floor(value) ||
+       value > static_cast<double>(std::numeric_limits<int>::max())) {
       RooJSONFactoryWSTool::error("\"nbins\" in " + context + " must be a positive integer");
    }
-   return out;
+   return static_cast<int>(value);
 }
 
 std::unique_ptr<RooAbsBinning>
