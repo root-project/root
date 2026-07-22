@@ -711,6 +711,7 @@ void stress7()
    char cutname[20];
    TEventList *el[10];
    TEventList *elistall = new TEventList("elistall","Sum of all cuts");
+   elistall->SetDirectory(gDirectory);
    for (i=0;i<10;i++) {
       snprintf(elistname,20,">>elist%d",i);
       snprintf(cutname,20,"i 10 == %d",i); cutname[1] ='%';
