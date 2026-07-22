@@ -1016,7 +1016,11 @@ bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &node)
 
    bool selfNormalized = false;
 
-   if (auto sn = node.find("selfNormalized"))
+   auto sn = node.find("self_normalized");
+   // ROOT previously exported this key without an underscore.
+   if (!sn)
+      sn = node.find("selfnormalized");
+   if (sn)
       selfNormalized = sn->val_bool();
 
    tool->wsEmplace<RooWrapperPdf>(name, *func, selfNormalized);
@@ -1039,7 +1043,7 @@ bool exportWrapperPdf(RooJSONFactoryWSTool *, const RooAbsArg *arg, JSONNode &no
 
    node["function"] << funcProxy->absArg()->GetName();
    if (pdf->selfNormalized())
-      node["selfnormalized"] << true;
+      node["self_normalized"] << true;
 
    return true;
 }

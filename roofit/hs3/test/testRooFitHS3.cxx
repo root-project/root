@@ -35,6 +35,7 @@
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooWrapperPdf.h>
 #include <RooWorkspace.h>
 
 #include <cmath>
@@ -210,6 +211,17 @@ std::size_t countOccurrences(std::string_view haystack, std::string_view needle)
       ++result;
    }
    return result;
+}
+
+std::string makeWrapperPdfJson(bool selfNormalized)
+{
+   RooRealVar x{"x", "x", 0.5, 0.0, 1.0};
+   RooFormulaVar function{"function", "1.0 + 0.0 * x", RooArgList{x}};
+   RooWrapperPdf pdf{"pdf", "pdf", function, selfNormalized};
+
+   RooWorkspace workspace;
+   workspace.import(pdf, RooFit::Silence());
+   return RooJSONFactoryWSTool{workspace}.exportJSONtoString();
 }
 
 // Asserts that exporting `ws` to HS3 throws and logs an error message containing `expectedReason`.
@@ -800,6 +812,76 @@ TEST(RooFitHS3, RooGenericPdf)
    status = validate({"m_001_mu[1.0, 0.1, 10]", "x[0, 5]", "m_003_mu[5]",
                       "EXPR::genericPdf4('@0   *  2  *      @1 +   @2', {m_001_mu, x, m_003_mu})"});
    EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooWrapperPdfSelfNormalizedRoundTrip)
+{
+   const std::string json = makeWrapperPdfJson(true);
+   EXPECT_NE(json.find("\"self_normalized\":true"), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"selfnormalized\""), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"selfNormalized\""), std::string::npos) << json;
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *pdf = dynamic_cast<RooWrapperPdf *>(imported.pdf("pdf"));
+   ASSERT_NE(pdf, nullptr);
+   EXPECT_TRUE(pdf->selfNormalized());
+
+   const std::string defaultJson = makeWrapperPdfJson(false);
+   EXPECT_EQ(defaultJson.find("self_normalized"), std::string::npos) << defaultJson;
+
+   RooWorkspace importedDefault;
+   ASSERT_TRUE(RooJSONFactoryWSTool{importedDefault}.importJSONfromString(defaultJson));
+   auto *defaultPdf = dynamic_cast<RooWrapperPdf *>(importedDefault.pdf("pdf"));
+   ASSERT_NE(defaultPdf, nullptr);
+   EXPECT_FALSE(defaultPdf->selfNormalized());
+}
+
+TEST(RooFitHS3, RooWrapperPdfSelfNormalizedLegacyCompatibility)
+{
+   std::string legacyJson = makeWrapperPdfJson(true);
+   const auto canonicalPos = legacyJson.find("self_normalized");
+   ASSERT_NE(canonicalPos, std::string::npos) << legacyJson;
+   legacyJson.replace(canonicalPos, std::string{"self_normalized"}.size(), "selfnormalized");
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(legacyJson));
+   auto *pdf = dynamic_cast<RooWrapperPdf *>(imported.pdf("pdf"));
+   ASSERT_NE(pdf, nullptr);
+   EXPECT_TRUE(pdf->selfNormalized());
+
+   const std::string canonicalJson = RooJSONFactoryWSTool{imported}.exportJSONtoString();
+   EXPECT_NE(canonicalJson.find("\"self_normalized\":true"), std::string::npos) << canonicalJson;
+   EXPECT_EQ(canonicalJson.find("\"selfnormalized\""), std::string::npos) << canonicalJson;
+}
+
+TEST(RooFitHS3, RooWrapperPdfSelfNormalizedCanonicalKeyTakesPrecedence)
+{
+   std::string json = makeWrapperPdfJson(true);
+   const std::string canonicalField = "\"self_normalized\":true";
+   const auto canonicalPos = json.find(canonicalField);
+   ASSERT_NE(canonicalPos, std::string::npos) << json;
+   json.replace(canonicalPos, canonicalField.size(), "\"self_normalized\":false,\"selfnormalized\":true");
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *pdf = dynamic_cast<RooWrapperPdf *>(imported.pdf("pdf"));
+   ASSERT_NE(pdf, nullptr);
+   EXPECT_FALSE(pdf->selfNormalized());
+}
+
+TEST(RooFitHS3, RooWrapperPdfSelfNormalizedCamelCaseKeyIsIgnored)
+{
+   std::string json = makeWrapperPdfJson(true);
+   const auto canonicalPos = json.find("self_normalized");
+   ASSERT_NE(canonicalPos, std::string::npos) << json;
+   json.replace(canonicalPos, std::string{"self_normalized"}.size(), "selfNormalized");
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *pdf = dynamic_cast<RooWrapperPdf *>(imported.pdf("pdf"));
+   ASSERT_NE(pdf, nullptr);
+   EXPECT_FALSE(pdf->selfNormalized());
 }
 
 TEST(RooFitHS3, GenericExpressionCleanup)
