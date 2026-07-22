@@ -1058,6 +1058,35 @@ TEST(RooFitHS3, BinnedGenericRejectsMalformedAxes)
    });
 }
 
+TEST(RooFitHS3, BinnedGenericAcceptsFloatEncodedNBins)
+{
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooGenericPdf pdf{"binnedPdf", "binnedPdf", "floor(x)", RooArgList{x}};
+   pdf.setBinning(x, RooUniformBinning{0.0, 10.0, 5}, /*checkFlatness=*/false);
+
+   RooWorkspace source{"source"};
+   source.import(pdf, RooFit::Silence());
+
+   auto tree = RooFit::Detail::JSONTree::create(RooJSONFactoryWSTool{source}.exportJSONtoString());
+   auto *pdfNode = findMutableNamedChild(tree->rootnode()["distributions"], "binnedPdf");
+   ASSERT_NE(pdfNode, nullptr);
+
+   // Encode an integer bin count as a JSON float; its textual form is "1e+06",
+   // which the previous strict integer parser wrongly rejected.
+   auto &axis = (*pdfNode)["axes"].child(0);
+   axis["nbins"].clear();
+   axis["nbins"] << 1000000.0;
+
+   RooWorkspace imported{"imported"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(jsonString(*tree)));
+   auto *importedPdf = dynamic_cast<RooGenericPdf *>(imported.pdf("binnedPdf"));
+   ASSERT_NE(importedPdf, nullptr);
+   const RooAbsBinning *binning = importedPdf->getBinning(*imported.var("x"));
+   ASSERT_NE(binning, nullptr);
+   EXPECT_TRUE(binning->isUniform());
+   EXPECT_EQ(binning->numBins(), 1000000);
+}
+
 TEST(RooFitHS3, GenericExpressionCleanup)
 {
    RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
