@@ -249,21 +249,6 @@ decltype(auto) GetNthElement(Ts &&...args)
    return std::get<N>(tuple);
 }
 
-#if __cplusplus >= 201703L
-template <class... Ts>
-using Disjunction = std::disjunction<Ts...>;
-#else
-template <class...>
-struct Disjunction : std::false_type {
-};
-template <class B1>
-struct Disjunction<B1> : B1 {
-};
-template <class B1, class... Bn>
-struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunction<Bn...>> {
-};
-#endif
-
 bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec);
 
 /// Return a vector with all elements of v1 and v2 and duplicates removed.
