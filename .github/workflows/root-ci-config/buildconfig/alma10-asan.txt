@@ -1,0 +1,10 @@
+CMAKE_BUILD_TYPE=RelWithDebugInfo
+asan=ON
+builtin_vdt=ON
+ccache=ON
+fail-on-missing=ON
+minimal=ON
+roottest=ON
+testing=ON
+LSAN_OPTIONS=verbosity=1:log_threads=1
+ROOT_CTEST_CUSTOM_FLAGS="-E \(cppinterop-CppInterOpTest\|gtest-core-metacling-TClingTest$\|roottest-cling-specialobj-runf02$\|roottest-root-collection-DeleteWarning$\|roottest-root-io-evolution-fixarr2$\|roottest-root-meta-rlibmap$\|roottest-root-tree-cloning-runtreeCloneTest2$\|roottest-root-treeproxy-vectorint-vectorint$\)"
