@@ -200,6 +200,7 @@ void TTreeTableInterface::SyncFormulas()
 void TTreeTableInterface::InitEntries()
 {
    TEntryList *entrylist = new TEntryList(fTree);
+   entrylist->SetDirectory(fTree->GetDirectory());
 
    UInt_t ui = 0;
    Int_t i = 0;
