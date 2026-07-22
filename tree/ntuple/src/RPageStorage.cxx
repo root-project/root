@@ -1180,7 +1180,8 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 
 ROOT::DescriptorId_t
 ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldDescriptor &field,
-                                                             std::span<const RColumnFormat> newRepresentation)
+                                                             std::span<const RColumnFormat> newRepresentation,
+                                                             std::uint64_t clusterOffset)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -1209,7 +1210,8 @@ ROOT::Internal::RPagePersistentSink::AddColumnRepresentation(const ROOT::RFieldD
       const ROOT::DescriptorId_t firstReprColumnId = field.GetLogicalColumnIds()[columnIndex];
       const auto &firstReprColumnRange = fOpenColumnRanges.at(firstReprColumnId);
       const ROOT::DescriptorId_t columnId = firstPhysicalIndex + columnIndex;
-      const std::uint64_t newReprFirstElemIndex = firstReprColumnRange.GetFirstElementIndex();
+      // NOTE: this is always non-negative because it's the sum of two unsigned integers.
+      const std::uint64_t newReprFirstElemIndex = firstReprColumnRange.GetFirstElementIndex() + clusterOffset;
 
       RColumnDescriptorBuilder columnBuilder;
       columnBuilder.LogicalColumnId(columnId)
