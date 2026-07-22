@@ -727,7 +727,7 @@ namespace Internal {
    /// | RooPlot               | Yes                                        | RooPlot::addDirectoryStatus()      |
    /// | TEfficiency           | Yes                                        | No                                 |
    /// | TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
-   /// | TEntryList            | No, but planned for 6.42                   | No                                 |
+   /// | TEntryList (+ derived)| Yes                                        | No                                 |
    /// | TEventList            | Yes                                        | No                                 |
    /// | TFunction             | No, but work in progress                   | No                                 |
    ///

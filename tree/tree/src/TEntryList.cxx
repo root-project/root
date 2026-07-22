@@ -160,7 +160,7 @@ End_Macro
 #include "TRegexp.h"
 #include "TSystem.h"
 #include "TObjString.h"
-
+#include "TROOT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default c-tor
@@ -172,10 +172,11 @@ TEntryList::TEntryList() = default;
 
 TEntryList::TEntryList(const char *name, const char *title) : TNamed(name, title)
 {
-
-   fDirectory  = gDirectory;
-   if (fDirectory)
-      fDirectory->Append(this);
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled()) {
+      fDirectory = gDirectory;
+      if (fDirectory)
+         fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,9 +186,11 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree) :
 {
    TEntryList::SetTree(tree);
 
-   fDirectory  = gDirectory;
-   if (fDirectory)
-      fDirectory->Append(this);
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled()) {
+      fDirectory = gDirectory;
+      if (fDirectory)
+         fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,9 +201,11 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
 {
    SetTree(treename, filename);
 
-   fDirectory  = gDirectory;
-   if (fDirectory)
-      fDirectory->Append(this);
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled()) {
+      fDirectory = gDirectory;
+      if (fDirectory)
+         fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,9 +215,11 @@ TEntryList::TEntryList(const TTree *tree)
 {
    SetTree(tree);
 
-   fDirectory  = gDirectory;
-   if (fDirectory)
-      fDirectory->Append(this);
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled()) {
+      fDirectory = gDirectory;
+      if (fDirectory)
+         fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
