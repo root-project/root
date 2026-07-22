@@ -50,6 +50,8 @@ on:
         - "30"
         required: true
         default: "00"
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   Build_Wheel:
@@ -57,8 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [cp310-macosx_x86_64, cp311-macosx_x86_64, cp312-macosx_x86_64, cp313-macosx_x86_64, cp314-macosx_x86_64,
-                 cp310-macosx_arm64, cp311-macosx_arm64, cp312-macosx_arm64, cp313-macosx_arm64, cp314-macosx_arm64]
+        target: [cp310-macosx_arm64, cp311-macosx_arm64, cp312-macosx_arm64, cp313-macosx_arm64, cp314-macosx_arm64]
     name: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v6
