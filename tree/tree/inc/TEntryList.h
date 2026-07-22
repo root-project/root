@@ -28,27 +28,27 @@ class TEntryList: public TNamed
    TEntryList& operator=(const TEntryList&); // Not implemented
 
  protected:
-   TList      *fLists;                  ///<  a list of underlying entry lists for each tree of a chain
-   TEntryList *fCurrent;                ///<! currently filled entry list
+   TList *fLists = nullptr;        ///<  a list of underlying entry lists for each tree of a chain
+   TEntryList *fCurrent = nullptr; ///<! currently filled entry list
 
-   Int_t            fNBlocks;           ///<  number of TEntryListBlocks
-   TObjArray       *fBlocks;            ///<  blocks with indices of passing events (TEntryListBlocks)
-   Long64_t         fN;                 ///<  number of entries in the list
-   Long64_t         fEntriesToProcess;  ///<  used on proof to set the number of entries to process in a packet
-   TString          fTreeName;          ///<  name of the tree
-   TString          fFileName;          ///<  name of the file, where the tree is
-   ULong_t          fStringHash;        ///<! Hash value of a string of treename and filename
-   Int_t            fTreeNumber;        ///<! the index of the tree in the chain (used when the entry
-                                        ///<  list is used as input (TTree::SetEntryList())
+   Int_t fNBlocks = 0;             ///<  number of TEntryListBlocks
+   TObjArray *fBlocks = nullptr;   ///<  blocks with indices of passing events (TEntryListBlocks)
+   Long64_t fN = 0;                ///<  number of entries in the list
+   Long64_t fEntriesToProcess = 0; ///<  used on proof to set the number of entries to process in a packet
+   TString fTreeName;              ///<  name of the tree
+   TString fFileName;              ///<  name of the file, where the tree is
+   ULong_t fStringHash = 0;        ///<! Hash value of a string of treename and filename
+   Int_t fTreeNumber = -1;         ///<! the index of the tree in the chain (used when the entry
+                                   ///<  list is used as input (TTree::SetEntryList())
 
-   Long64_t         fLastIndexQueried;  ///<! used to optimize GetEntry() function from a loop
-   Long64_t         fLastIndexReturned; ///<! used to optimize GetEntry() function from a loop
-   bool             fShift;             ///<! true when some sub-lists don't correspond to trees
-                                        ///<  (when the entry list is used as input in TChain)
-   TDirectory      *fDirectory;         ///<! Pointer to directory holding this tree
-   bool             fReapply;           ///<  If true, TTree::Draw will 'reapply' the original cut
+   Long64_t fLastIndexQueried = -1; ///<! used to optimize GetEntry() function from a loop
+   Long64_t fLastIndexReturned = 0; ///<! used to optimize GetEntry() function from a loop
+   bool fShift = false;             ///<! true when some sub-lists don't correspond to trees
+                                    ///<  (when the entry list is used as input in TChain)
+   TDirectory *fDirectory = nullptr; ///<! Pointer to directory holding this tree
+   bool fReapply = false;           ///<  If true, TTree::Draw will 'reapply' the original cut
 
-   void             GetFileName(const char *filename, TString &fn, bool * = nullptr);
+   void GetFileName(const char *filename, TString &fn, bool * = nullptr);
 
  public:
    enum {kBlockSize = 64000}; //number of entries in each block (not the physical size).
