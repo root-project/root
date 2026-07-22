@@ -35,8 +35,8 @@ A specialized TSelector for TTree::Draw.
 #include "TStyle.h"
 #include "TClass.h"
 #include "TColor.h"
-#include "strlcpy.h"
 
+#include <string>
 
 const Int_t kCustomHistogram = BIT(17);
 
@@ -119,7 +119,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
    TString  opt, abrt;
    char *hdefault = (char *)"htemp";
-   char *varexp = nullptr;
+   std::string varexp;
    Int_t i, j, hkeep;
    opt = option;
    opt.ToLower();
@@ -213,9 +213,7 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    //   char *hname = (char*)strstr(varexp0,">>");
    if (hname) {
-      hkeep  = 1;
-      varexp = new char[i+1];
-      varexp[0] = 0; //necessary if i=0
+      hkeep = 1;
       bool hnameplus = false;
       while (*hname == ' ') hname++;
       if (*hname == '+') {
@@ -231,7 +229,7 @@ void TSelectorDraw::Begin(TTree *tree)
       }
 
       if (i) {
-         strlcpy(varexp,varexp0,i+1);
+         varexp = std::string(varexp0, i); // everything before ">>"
 
          Int_t mustdelete = 0;
          SetBit(kCustomHistogram);
@@ -378,7 +376,6 @@ void TSelectorDraw::Begin(TTree *tree)
          if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
-            delete[] varexp;
             return;
          }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
@@ -401,7 +398,6 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
-               delete[] varexp;
                return;
             }
             if (!enlist) {
@@ -440,7 +436,6 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
-               delete[] varexp;
                return;
             }
             if (!evlist) {
@@ -452,7 +447,6 @@ void TSelectorDraw::Begin(TTree *tree)
                      // We have been asked to reset the input list!!
                      // Let's set it aside for now ...
                      Abort("Input and output lists are the same!");
-                     delete[] varexp;
                      return;
                   }
                   evlist->Reset();
@@ -469,9 +463,7 @@ void TSelectorDraw::Begin(TTree *tree)
    } else { // if (hname)
       hname  = hdefault;
       hkeep  = 0;
-      const size_t varexpLen = strlen(varexp0) + 1;
-      varexp = new char[varexpLen];
-      strlcpy(varexp, varexp0, varexpLen);
+      varexp = varexp0;
       if (gDirectory) {
          fOldHistogram = (TH1*)gDirectory->Get(hname);
          if (fOldHistogram) { fOldHistogram->Delete(); fOldHistogram = nullptr;}
@@ -479,27 +471,24 @@ void TSelectorDraw::Begin(TTree *tree)
    }
 
    // Decode varexp and selection
-   if (!CompileVariables(varexp, realSelection.GetTitle())) {
-      abrt.Form("Variable compilation failed: {%s,%s}", varexp, realSelection.GetTitle());
+   if (!CompileVariables(varexp.c_str(), realSelection.GetTitle())) {
+      abrt.Form("Variable compilation failed: {%s,%s}", varexp.c_str(), realSelection.GetTitle());
       Abort(abrt);
-      delete[] varexp;
       return;
    }
    if (fDimension > 4 && !(optpara || optcandle || opt5d || opt.Contains("goff"))) {
       Abort("Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
-      delete[] varexp;
       return;
    }
    if (fDimension < 2 && (optpara || optcandle)) {
       Abort("The options \"para\" and \"candle\" require at least 2 variables.");
-      delete[] varexp;
       return;
    }
 
    // In case fOldHistogram exists, check dimensionality
    Int_t nsel = strlen(selection);
    if (nsel > 1) {
-      htitle.Form("%s {%s}", varexp, selection);
+      htitle.Form("%s {%s}", varexp.c_str(), selection);
    } else {
       htitle = varexp;
    }
@@ -535,7 +524,6 @@ void TSelectorDraw::Begin(TTree *tree)
       gROOT->MakeDefCanvas();
       if (!gPad) {
          Abort("Creation of default canvas failed");
-         delete[] varexp;
          return;
       }
    }
@@ -915,7 +903,6 @@ void TSelectorDraw::Begin(TTree *tree)
       else if (opt5d) fAction = 8;
       else            fAction = 6;
    }
-   if (varexp) delete[] varexp;
    for (i = 0; i < fValSize; ++i)
       fVarMultiple[i] = false;
    fSelectMultiple = false;
