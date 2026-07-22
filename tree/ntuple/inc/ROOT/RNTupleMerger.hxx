@@ -120,7 +120,7 @@ class RNTupleMerger final {
    ROOT::RResult<void>
    MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
                       std::span<RColumnMergeInfo> commonColumns,
-                      const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
+                      const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
                       RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
                       ROOT::Internal::RPageAllocator &pageAlloc);
 

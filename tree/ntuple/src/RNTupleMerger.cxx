@@ -885,12 +885,12 @@ ROOT::RResult<void>
 RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
                                   const ROOT::RClusterDescriptor &clusterDesc,
                                   std::span<RColumnMergeInfo> commonColumns,
-                                  const RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
-                                  RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
-                                  ROOT::Internal::RPageAllocator &pageAlloc)
+                                  const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
+                                  const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc)
 {
-   assert(nCommonColumnsInCluster == commonColumnSet.size());
+   const auto nCommonColumnsInCluster = commonColumnSet.size();
    assert(nCommonColumnsInCluster <= commonColumns.size());
+
    if (nCommonColumnsInCluster == 0)
       return ROOT::RResult<void>::Success();
 
@@ -1096,8 +1096,8 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       }
 
       RSealedPageMergeData sealedPageData;
-      auto res = MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, nCommonColumnsInCluster,
-                                    sealedPageData, mergeData, *fPageAlloc);
+      auto res = MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, sealedPageData, mergeData,
+                                    *fPageAlloc);
       if (!res)
          return R__FORWARD_ERROR(res);
 
