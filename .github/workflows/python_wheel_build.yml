@@ -54,31 +54,16 @@ on:
 jobs:
   Build_Wheel:
     runs-on: macos-26 
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [cp310-macosx_x86_64, cp311-macosx_x86_64, cp312-macosx_x86_64, cp313-macosx_x86_64, cp314-macosx_x86_64,
+                 cp310-macosx_arm64, cp311-macosx_arm64, cp312-macosx_arm64, cp313-macosx_arm64, cp314-macosx_arm64]
+    name: ${{ matrix.target }}
     steps:
-      - name: Checkout the official ROOT repo
-        uses: actions/checkout@v6
-        with:
-          path: root
-#          ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}
-      - name: Make wheel
+      - uses: actions/checkout@v6
+      - uses: ./.github/workflows/cibuildwheel-impl
         env:
             MACOSX_DEPLOYMENT_TARGET: 26.5
-        run: |
-            mkdir wheel_creation && cd wheel_creation
-            cp -r ../root .
-            python3 -m venv root_build_env 
-            source root_build_env/bin/activate
-            pip install --upgrade pip setuptools wheel build
-            cd root
-            pip install -r requirements.txt
-            python3 -m build --wheel
-            pip install delocate 
-            mkdir fixed_wheels
-            delocate-wheel -v -w fixed_wheels/ dist/*.whl
-
-      - name: Upload_wheel
-        uses: actions/upload-artifact@v6
         with:
-          name: Wheel upload
-          path: /Users/runner/work/root/root/wheel_creation/root/fixed_wheels/*.whl
-          if-no-files-found: error
+          build-tag: ${{ matrix.target }}
