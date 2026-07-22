@@ -5,6 +5,7 @@ ROOTTEST_ADD_TEST(assertGPad
 
 ROOTTEST_ADD_TEST(stlwrite
                   MACRO write.C
+                  FIXTURES_SETUP cling-specialobj-stlwrite
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(argtwice
@@ -14,7 +15,7 @@ ROOTTEST_ADD_TEST(argtwice
 ROOTTEST_ADD_TEST(stlProxies
                   MACRO runstlProxies.C
                   OUTREF stlProxies.ref
-                  DEPENDS stlwrite
+                  FIXTURES_REQUIRED cling-specialobj-stlwrite
                   LABELS roottest regression cling)
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386.*")
