@@ -13,12 +13,6 @@
 #ifndef ROOT_RVEC
 #define ROOT_RVEC
 
-#if __cplusplus > 201402L
-#define R__RVEC_NODISCARD [[nodiscard]]
-#else
-#define R__RVEC_NODISCARD
-#endif
-
 #ifdef _WIN32
    #ifndef M_PI
       #ifndef _USE_MATH_DEFINES
@@ -178,7 +172,7 @@ public:
    size_t size() const { return fSize; }
    size_t capacity() const noexcept { return Owns() ? fCapacity : fSize; }
 
-   R__RVEC_NODISCARD bool empty() const { return !fSize; }
+   [[nodiscard]] bool empty() const { return !fSize; }
 
    /// Set the array size to \p N, which the current array must have enough
    /// capacity for.
@@ -643,7 +637,7 @@ public:
       this->SetSizeUnchecked(this->size() - NumItems);
    }
 
-   R__RVEC_NODISCARD T pop_back_val()
+   [[nodiscard]] T pop_back_val()
    {
       T Result = ::std::move(this->back());
       this->pop_back();
