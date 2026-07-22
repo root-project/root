@@ -35,7 +35,6 @@
 // *******************Deleting the data files****************************
 // **********************************************************************
 
-#include <map>
 #include <list>
 #include <array>
 #include <functional>
@@ -52,7 +51,6 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TError.h"
-#include "snprintf.h"
 
 Int_t stressEntryList(Int_t nentries = 10000, Int_t nfiles = 10);
 void MakeTrees(Int_t nentries, Int_t nfiles);
@@ -219,8 +217,10 @@ Bool_t Test2()
    TCut cut1("cut1", "x>0");
    TCut cut2("cut2", "y<0.1 && y>-0.1");
    TEntryList *elist1 = new TEntryList("elist1", "elist1");
-   chain->Draw(">>elist1", cut1, "entrylist");
    TEntryList *elist2 = new TEntryList("elist2", "elist2");
+   elist1->SetDirectory(gDirectory);
+   elist2->SetDirectory(gDirectory);
+   chain->Draw(">>elist1", cut1, "entrylist");
    chain->Draw(">>elist2", cut2, "entrylist");
 
    //add those 2 lists (1+2)
@@ -229,6 +229,7 @@ Bool_t Test2()
    elistsum->Add(elist2);
 
    TEntryList *elistcheck = new TEntryList("elistcheck", "elistcheck");
+   elistcheck->SetDirectory(gDirectory);
    chain->Draw(">>elistcheck", cut1 || cut2, "entrylist");
 
    Int_t n=elistcheck->GetN();
@@ -264,6 +265,7 @@ Bool_t Test2()
 
    //add by using "+" in TTree::Draw
    TEntryList *elistsum3 = new TEntryList("elistsum3", "elistsum3");
+   elistsum3->SetDirectory(gDirectory);
    chain->Draw(">>elistsum3", cut1, "entrylist");
    chain->Draw(">>+elistsum3", cut2, "entrylist");
    wrongentries3 = 0;
@@ -282,6 +284,7 @@ Bool_t Test2()
    elistsum->Subtract(elist2);
    n = elistsum->GetN();
    TEntryList *elistcheck2 = new TEntryList("elistcheck2","elistcheck2");
+   elistcheck2->SetDirectory(gDirectory);
    chain->Draw(">>elistcheck2", cut1 && !cut2, "entrylist");
 
    wrongentries4 = 0;
