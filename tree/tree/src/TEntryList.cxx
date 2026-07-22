@@ -165,136 +165,71 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// default c-tor
 
-TEntryList::TEntryList() : fEntriesToProcess(0)
-{
-   fLists = nullptr;
-   fCurrent = nullptr;
-   fBlocks = nullptr;
-   fN = 0;
-   fNBlocks = 0;
-   fTreeName = "";
-   fFileName = "";
-   fStringHash = 0;
-   fTreeNumber = -1;
-   fDirectory = nullptr;
-   fReapply = false;
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
-   fShift = false;
-}
+TEntryList::TEntryList() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor with name and title
 
-TEntryList::TEntryList(const char *name, const char *title) :
-   TNamed(name, title),
-   fEntriesToProcess(0)
+TEntryList::TEntryList(const char *name, const char *title) : TNamed(name, title)
 {
-   fLists = nullptr;
-   fCurrent = nullptr;
-   fBlocks = nullptr;
-   fN = 0;
-   fNBlocks = 0;
-   fTreeName = "";
-   fFileName = "";
-   fStringHash = 0;
-   fTreeNumber = -1;
-   fReapply = false;
 
    fDirectory  = gDirectory;
-   if (fDirectory) fDirectory->Append(this);
-
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
-   fShift = false;
+   if (fDirectory)
+      fDirectory->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor with name and title, which also sets the tree
 
-TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):TNamed(name, title)
+TEntryList::TEntryList(const char *name, const char *title, const TTree *tree) : TNamed(name, title)
 {
-   fLists = nullptr;
-   fCurrent = nullptr;
-   fBlocks = nullptr;
-   fN = 0;
-   fNBlocks = 0;
-   fTreeNumber = -1;
    TEntryList::SetTree(tree);
-   fReapply = false;
 
    fDirectory  = gDirectory;
-   if (fDirectory) fDirectory->Append(this);
-
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
-   fShift = false;
+   if (fDirectory)
+      fDirectory->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor with name and title, which also sets the treename and the filename
 
-TEntryList::TEntryList(const char *name, const char *title, const char *treename, const char *filename) : TNamed(name, title),fEntriesToProcess(0)
+TEntryList::TEntryList(const char *name, const char *title, const char *treename, const char *filename)
+   : TNamed(name, title)
 {
-   fLists = nullptr;
-   fCurrent = nullptr;
-   fBlocks = nullptr;
-   fNBlocks = 0;
-   fN = 0;
    SetTree(treename, filename);
-   fTreeNumber = -1;
-   fReapply = false;
 
    fDirectory  = gDirectory;
-   if (fDirectory) fDirectory->Append(this);
-
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
-   fShift = false;
+   if (fDirectory)
+      fDirectory->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// c-tor, which sets the tree
 
-TEntryList::TEntryList(const TTree *tree) : fEntriesToProcess(0)
+TEntryList::TEntryList(const TTree *tree)
 {
-   fLists = nullptr;
-   fCurrent = nullptr;
-   fBlocks = nullptr;
-   fNBlocks = 0;
-   fN = 0;
-
    SetTree(tree);
-   fTreeNumber = -1;
 
-   fReapply = false;
    fDirectory  = gDirectory;
-   if (fDirectory) fDirectory->Append(this);
-
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
-   fShift = false;
+   if (fDirectory)
+      fDirectory->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// copy c-tor
 
-TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
+TEntryList::TEntryList(const TEntryList &elist)
+   : TNamed(elist),
+     fNBlocks(elist.fNBlocks),
+     fN(elist.fN),
+     fEntriesToProcess(elist.fEntriesToProcess),
+     fTreeName(elist.fTreeName),
+     fFileName(elist.fFileName),
+     fStringHash(elist.fStringHash),
+     fTreeNumber(elist.fTreeNumber),
+     fShift(elist.fShift),
+     fReapply(elist.fReapply)
 {
-   fNBlocks = elist.fNBlocks;
-   fTreeName = elist.fTreeName;
-   fFileName = elist.fFileName;
-   fStringHash = elist.fStringHash;
-   fTreeNumber = elist.fTreeNumber;
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
-   fN = elist.fN;
-   fShift = elist.fShift;
-   fLists = nullptr;
-   fBlocks = nullptr;
-   fReapply = elist.fReapply;
-   fCurrent = nullptr;
-   fEntriesToProcess = elist.fEntriesToProcess;
    if (elist.fLists){
       fLists = new TList();
       TEntryList *el1 = nullptr;
@@ -320,8 +255,6 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
       }
       fCurrent = this;
    }
-   fDirectory  = nullptr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
