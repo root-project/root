@@ -1247,10 +1247,11 @@ TEST(RNTupleMerger, MultipleRepresentations)
 {
    // verify that we properly handle ntuples with multiple column representations
    FileRaii fileGuard1("test_ntuple_merge_multirep_in_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_multirep_in_2.root");
 
    {
       auto model = RNTupleModel::Create();
-      auto fldPx = RFieldBase::Create("px", "float").Unwrap();
+      auto fldPx = std::make_unique<RField<float>>("px");
       fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
       model->AddField(std::move(fldPx));
       auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
@@ -1263,14 +1264,29 @@ TEST(RNTupleMerger, MultipleRepresentations)
       *ptrPx = 2.0;
       writer->Fill();
    }
+   {
+      auto model = RNTupleModel::Create();
+      auto fldPx = std::make_unique<RField<float>>("px");
+      fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}, {ROOT::ENTupleColumnType::kReal32}});
+      model->AddField(std::move(fldPx));
+      auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      *ptrPx = 1.0;
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
+      *ptrPx = 2.0;
+      writer->Fill();
+   }
 
    // Now merge the inputs
-   FileRaii fileGuard2("test_ntuple_merge_multirep_out.root");
+   FileRaii fileGuardOut("test_ntuple_merge_multirep_out.root");
    {
       // Gather the input sources
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
-      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath()));
       std::vector<RPageSource *> sourcePtrs;
       for (const auto &s : sources) {
          sourcePtrs.push_back(s.get());
@@ -1279,19 +1295,95 @@ TEST(RNTupleMerger, MultipleRepresentations)
       auto sourcePtrs2 = sourcePtrs;
 
       {
-         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard2.GetPath(), RNTupleWriteOptions());
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
          auto opts = RNTupleMergeOptions();
-         opts.fCompressionSettings = 0;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         // TODO(gparolini): we want to support this in the future
-         // XXX: this currently fails because of a mismatch in the number of columns of dst vs src.
-         // Is this correct? Anyway the situation will likely change once we properly support different representation
-         // indices...
-         EXPECT_FALSE(bool(res));
-         // EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res));
       }
    }
+}
+
+TEST(RNTupleMerger, MultipleRepresentations2)
+{
+   // Like MultipleRepresentations but using fields with increased cardinality
+   FileRaii fileGuard1("test_ntuple_merge_multirep2_in_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_multirep2_in_2.root");
+
+   using Tuple_t = std::tuple<std::int32_t, std::int64_t, std::int8_t>;
+   {
+      auto model = RNTupleModel::Create();
+      auto fldStr = std::make_unique<RField<std::string>>("str");
+      auto fldTuple = std::make_unique<RField<Tuple_t>>("tuple");
+      fldStr->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kIndex64, ROOT::ENTupleColumnType::kChar}});
+      model->AddField(std::move(fldStr));
+      model->AddField(std::move(fldTuple));
+      auto ptrStr = model->GetDefaultEntry().GetPtr<std::string>("str");
+      auto ptrTuple = model->GetDefaultEntry().GetPtr<Tuple_t>("tuple");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      *ptrStr = "1";
+      *ptrTuple = {32, 64, 8};
+      writer->Fill();
+      writer->CommitCluster();
+      *ptrStr = "2";
+      *ptrTuple = {64, 128, 16};
+      writer->Fill();
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto fldStr = std::make_unique<RField<std::string>>("str");
+      auto fldTuple = std::make_unique<RField<Tuple_t>>("tuple");
+      fldStr->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitIndex64, ROOT::ENTupleColumnType::kChar}});
+      model->AddField(std::move(fldStr));
+      model->AddField(std::move(fldTuple));
+      auto ptrStr = model->GetDefaultEntry().GetPtr<std::string>("str");
+      auto ptrTuple = model->GetDefaultEntry().GetPtr<Tuple_t>("tuple");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      *ptrStr = "3";
+      *ptrTuple = {96, 192, 24};
+      writer->Fill();
+      writer->CommitCluster();
+      *ptrStr = "4";
+      *ptrTuple = {128, 256, 32};
+      writer->Fill();
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuardOut("test_ntuple_merge_multirep2_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto sourcePtrs2 = sourcePtrs;
+
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         auto opts = RNTupleMergeOptions();
+         RNTupleMerger merger{std::move(destination)};
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_TRUE(bool(res));
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 4);
+   auto viewStr = reader->GetView<std::string>("str");
+   auto viewTuple = reader->GetView<Tuple_t>("tuple");
+   EXPECT_EQ(viewStr(0), "1");
+   EXPECT_EQ(viewStr(1), "2");
+   EXPECT_EQ(viewStr(2), "3");
+   EXPECT_EQ(viewStr(3), "4");
+   auto t = [](auto a, auto b, auto c) { return std::make_tuple(a, b, c); };
+   EXPECT_EQ(viewTuple(0), t(32, 64, 8));
+   EXPECT_EQ(viewTuple(1), t(64, 128, 16));
+   EXPECT_EQ(viewTuple(2), t(96, 192, 24));
+   EXPECT_EQ(viewTuple(3), t(128, 256, 32));
 }
 
 TEST(RNTupleMerger, Double32)
@@ -2771,7 +2863,7 @@ TEST(RNTupleMerger, MergeDeferredAdvanced2)
       }
       auto updater = writer2->CreateModelUpdater();
       auto field = std::make_unique<RField<float>>("flt");
-      field->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
+      field->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kSplitReal32}});
       updater->BeginUpdate();
       updater->AddField(std::move(field));
       updater->CommitUpdate();
@@ -2780,6 +2872,11 @@ TEST(RNTupleMerger, MergeDeferredAdvanced2)
          *pInt = 10 + i;
          *pFlt2 = 10 + i;
          writer2->Fill();
+         if (i == 7) {
+            writer2->CommitCluster();
+            auto &fld = const_cast<ROOT::RFieldBase &>(writer2->GetModel().GetConstField("flt"));
+            ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(fld, 1);
+         }
       }
    }
 
