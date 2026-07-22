@@ -1,3 +1,4 @@
+#include "TEventList.h"
 #include "TEntryListArray.h"
 
 #include "TChain.h"
@@ -270,6 +271,7 @@ TEST(TTreeReaderBasic, EntryList) {
    auto tree = MakeTree();
    EXPECT_EQ(9, tree->Draw(">>negZ","three.z<0", "entrylistarray"));
    TEntryListArray* selected = (TEntryListArray*)gDirectory->Get("negZ");
+   ASSERT_NE(selected, nullptr);
    TTreeReader aReader(tree.get(), selected);
 
    EXPECT_EQ(9, aReader.GetEntries(false));
@@ -572,6 +574,43 @@ TEST(TTreeReaderBasic, ZeroEntriesTreeCheckValueStatus)
    }
 }
 
+template <typename T>
+void TTreeDrawTest()
+{
+   constexpr auto optionString = std::is_same_v<T, TEntryList>        ? "entrylist"
+                                 : std::is_same_v<T, TEntryListArray> ? "entrylistarray"
+                                                                      : "";
+   auto tree = MakeTree();
+   tree->Draw(">>elist", "z>2.", optionString);
+   auto eventList = gDirectory->Get<T>("elist");
+   ASSERT_NE(eventList, nullptr);
+   eventList->SetDirectory(nullptr);
+   delete eventList;
+
+   auto elistUnreg = std::make_unique<T>("elistUnreg", "Unregistered entry/event list");
+   elistUnreg->SetDirectory(nullptr);
+   ROOT_EXPECT_WARNING_PARTIAL(tree->Draw(">>+elistUnreg", "z>2.", optionString), "TSelectorDraw",
+                               "TTree::Draw was asked to append to");
+   auto elistPost = gDirectory->Get("elistUnreg");
+   EXPECT_NE(elistPost, nullptr);
+   EXPECT_NE(elistUnreg.get(), elistPost);
+   delete elistPost;
+}
+
+TEST(TTreeDraw, TEventList)
+{
+   TTreeDrawTest<TEventList>();
+}
+
+TEST(TTreeDraw, TEntryList)
+{
+   TTreeDrawTest<TEntryList>();
+}
+
+TEST(TTreeDraw, TEntryListArray)
+{
+   TTreeDrawTest<TEntryListArray>();
+}
 
 #ifdef R__USE_IMT
 // Check the warning emitted to address ROOT-10972
