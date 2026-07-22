@@ -101,6 +101,7 @@ public:
    virtual bool is_map() const = 0;
    virtual bool is_seq() const = 0;
    virtual bool is_null() const = 0;
+   virtual bool is_number() const;
    virtual JSONNode &set_map() = 0;
    virtual JSONNode &set_seq() = 0;
    virtual JSONNode &set_null() = 0;

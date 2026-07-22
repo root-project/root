@@ -203,6 +203,9 @@ readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const 
       std::vector<double> edges;
       edges.reserve(edgesNode.num_children());
       for (const JSONNode &edgeNode : edgesNode.children()) {
+         if (!edgeNode.is_number()) {
+            RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain only finite values");
+         }
          const double edge = edgeNode.val_double();
          if (!std::isfinite(edge)) {
             RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain only finite values");
@@ -222,6 +225,9 @@ readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const 
       RooJSONFactoryWSTool::error(context + " must define \"min\", \"max\", and \"nbins\"");
    }
 
+   if (!axis["min"].is_number() || !axis["max"].is_number()) {
+      RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must be finite and increasing");
+   }
    const double min = axis["min"].val_double();
    const double max = axis["max"].val_double();
    if (!std::isfinite(min) || !std::isfinite(max) || max <= min) {
