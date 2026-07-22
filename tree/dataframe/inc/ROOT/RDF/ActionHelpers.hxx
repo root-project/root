@@ -396,14 +396,14 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    // no container arguments
-   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
+   template <typename... ValTypes, std::enable_if_t<!std::disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
    auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
       fObjects[slot]->Fill(x...);
    }
 
    // at least one container argument
-   template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
+   template <typename... Xs, std::enable_if_t<std::disjunction<IsDataContainer<Xs>...>::value, int> = 0>
    auto Exec(unsigned int slot, const Xs &...xs) -> decltype(fObjects[slot]->Fill(*MakeBegin(xs)...), void())
    {
       // array of bools keeping track of which inputs are containers
@@ -836,7 +836,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    // no container arguments
-   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
+   template <typename... ValTypes, std::enable_if_t<!std::disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
    void Exec(unsigned int slot, const ValTypes &...x)
    {
       const auto localSlot = slot % fObjects.size();
@@ -844,7 +844,7 @@ public:
    }
 
    // at least one container argument
-   template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
+   template <typename... Xs, std::enable_if_t<std::disjunction<IsDataContainer<Xs>...>::value, int> = 0>
    void Exec(unsigned int slot, const Xs &...xs)
    {
       // array of bools keeping track of which inputs are containers
