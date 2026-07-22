@@ -942,7 +942,7 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
 {
    std::string newname = std::string(original->GetName()) + suffix;
    RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_rootnodeOutput)["functions"], newname);
-   trafo_node["type"] << "generic_function";
+   trafo_node["type"] << "generic";
    trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
    this->setAttribute(newname, "roofit_skip"); // this function should not be imported back in
    return newname;
