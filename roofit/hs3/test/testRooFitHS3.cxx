@@ -36,6 +36,7 @@
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooTFnBinding.h>
 #include <RooWorkspace.h>
 
 #include <cmath>
@@ -44,6 +45,7 @@
 #include <string_view>
 #include <vector>
 
+#include <TF3.h>
 #include <TROOT.h>
 
 #include <gtest/gtest.h>
@@ -2299,4 +2301,30 @@ TEST(RooFitHS3, SimultaneousFit)
    // todo: also check the modelconfig for equality
 
    EXPECT_TRUE(res2->isIdentical(*res1));
+}
+
+TEST(RooFitHS3, GenericTypeNames)
+{
+   RooRealVar x{"x", "x", 0.5, -1.0, 1.0};
+   RooRealVar y{"y", "y", 0.5, -1.0, 1.0};
+   RooRealVar z{"z", "z", 0.5, -1.0, 1.0};
+   RooRealVar c{"c", "c", -0.1};
+   RooFormulaVar formula{"formula", "x + y", RooArgList{x, y}};
+   RooGenericPdf genericPdf{"genericPdf", "x + 2.0", RooArgList{x}};
+   TF3 tf3{"tf3", "x + y + z", -1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
+   RooTFnBinding binding{"binding", "binding", &tf3, RooArgList{x, y, z}};
+   RooExponential exponential{"exponential", "exponential", x, c};
+
+   RooWorkspace ws{"ws_generic_types"};
+   ws.import(formula, RooFit::Silence());
+   ws.import(genericPdf, RooFit::Silence(), RooFit::RecycleConflictNodes());
+   ws.import(binding, RooFit::Silence(), RooFit::RecycleConflictNodes());
+   ws.import(exponential, RooFit::Silence(), RooFit::RecycleConflictNodes());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(json.find("\"name\":\"formula\",\"type\":\"generic\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"name\":\"genericPdf\",\"type\":\"generic_dist\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"name\":\"binding\",\"type\":\"generic\""), std::string::npos) << json;
+   EXPECT_NE(json.find("\"name\":\"c_exponential_inverted\",\"type\":\"generic\""), std::string::npos) << json;
+   EXPECT_EQ(json.find("\"type\":\"generic_function\""), std::string::npos) << json;
 }
