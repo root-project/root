@@ -54,6 +54,7 @@ public:
       bool is_map() const override;
       bool is_seq() const override;
       bool is_null() const override;
+      bool is_number() const override;
       Node &set_map() override;
       Node &set_seq() override;
       Node &set_null() override;

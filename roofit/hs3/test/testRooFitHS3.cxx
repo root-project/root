@@ -1037,6 +1037,25 @@ TEST(RooFitHS3, BinnedGenericRejectsMalformedAxes)
       edges.append_child() << 2.0;
       edges.append_child() << 1.0;
    });
+
+   // Non-numeric bounds must be rejected cleanly rather than throwing a
+   // backend-specific exception or being silently coerced to zero.
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis["min"].clear();
+      axis["min"] << "not-a-number";
+   });
+
+   expectRejected([](RooFit::Detail::JSONNode &pdfNode) {
+      auto &axis = pdfNode["axes"].child(0);
+      axis.clear();
+      axis.set_map();
+      axis["name"] << "x";
+      auto &edges = axis["edges"].set_seq();
+      edges.append_child() << "not-a-number";
+      edges.append_child() << 1.0;
+      edges.append_child() << 2.0;
+   });
 }
 
 TEST(RooFitHS3, GenericExpressionCleanup)

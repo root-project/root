@@ -188,6 +188,11 @@ bool TJSONTree::Node::is_null() const
    return node->get().is_null();
 }
 
+bool TJSONTree::Node::is_number() const
+{
+   return node->get().is_number();
+}
+
 namespace {
 
 // To check whether it's allowed to reset the type of an object. We allow

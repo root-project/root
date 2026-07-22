@@ -56,6 +56,28 @@ double JSONNode::val_double() const
    return out;
 }
 
+// Default fallback for backends that don't provide native type introspection:
+// a node is considered numeric if its textual value parses completely as a
+// floating-point number. Containers, null and non-numeric scalars (strings,
+// booleans) are rejected.
+bool JSONNode::is_number() const
+{
+   if (is_container() || is_null()) {
+      return false;
+   }
+   const std::string text = val();
+   if (text.empty()) {
+      return false;
+   }
+   try {
+      std::size_t consumed = 0;
+      std::stod(text, &consumed);
+      return consumed == text.size();
+   } catch (...) {
+      return false;
+   }
+}
+
 JSONNode::children_view JSONNode::children()
 {
    return {child_iterator(std::make_unique<::ChildItImpl<JSONNode>>(*this, 0)),
