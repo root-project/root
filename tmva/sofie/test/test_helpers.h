@@ -96,6 +96,17 @@ void expectNear(std::vector<T> const &output, std::vector<U> const &expected, fl
          << "at output index " << i;
 }
 
+/// Element-wise |output - expected| <= tolerance, for models with several outputs
+template <typename T, typename U>
+void expectNear(std::vector<std::vector<T>> const &output, std::vector<std::vector<U>> const &expected, float tolerance)
+{
+   ASSERT_EQ(output.size(), expected.size());
+   for (std::size_t i = 0; i < output.size(); ++i) {
+      SCOPED_TRACE("output tensor " + std::to_string(i));
+      expectNear(output[i], expected[i], tolerance);
+   }
+}
+
 /// Element-wise exact equality
 template <typename T, typename U>
 void expectEqual(std::vector<T> const &output, std::vector<U> const &expected)
@@ -103,6 +114,17 @@ void expectEqual(std::vector<T> const &output, std::vector<U> const &expected)
    ASSERT_EQ(output.size(), expected.size());
    for (std::size_t i = 0; i < output.size(); ++i)
       EXPECT_EQ(static_cast<int64_t>(output[i]), static_cast<int64_t>(expected[i])) << "at output index " << i;
+}
+
+/// Element-wise exact equality, for models with several outputs
+template <typename T, typename U>
+void expectEqual(std::vector<std::vector<T>> const &output, std::vector<std::vector<U>> const &expected)
+{
+   ASSERT_EQ(output.size(), expected.size());
+   for (std::size_t i = 0; i < output.size(); ++i) {
+      SCOPED_TRACE("output tensor " + std::to_string(i));
+      expectEqual(output[i], expected[i]);
+   }
 }
 
 bool includeModel(std::string const &modelName)

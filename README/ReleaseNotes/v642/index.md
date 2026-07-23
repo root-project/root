@@ -123,6 +123,10 @@ Such file can be loaded locally in any web browser or send as attachment in emai
 
 ## Geometry
 
+The [TGeometry](https://root.cern/doc/master/classTGeometry.html) classes (Geant 3 shapes) have been moved out of Graf3D into their own library.
+To link to these classes, use the cmake target `TGeometry` (preferred), `root-config --libs`, or link with `-lTGeometry`.
+When ROOT is configured with `-Dgeom=Off`, these classes are now off as well.
+
 ## Documentation and Examples
 
 ## Build, Configuration and Testing

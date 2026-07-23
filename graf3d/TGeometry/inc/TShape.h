@@ -23,13 +23,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
-#include "TMaterial.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAtt3D.h"
-#include "X3DBuffer.h"
 
 class TBuffer3D;
+class TMaterial;
 class TNode;
 
 class TShape : public TNamed, public TAttLine, public TAttFill, public TAtt3D {

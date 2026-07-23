@@ -122,12 +122,12 @@ if (BLAS_FOUND)
 endif()
 
 if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
-  configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
-  configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
-  configure_file(Conv3dModelGenerator.py  Conv3dModelGenerator.py COPYONLY)
-  configure_file(ConvTrans2dModelGenerator.py  ConvTrans2dModelGenerator.py COPYONLY)
-  configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
-  configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
+  # ModelGeneratorUtils.py holds the code shared by the generators below, so it
+  # has to be copied next to them.
+  configure_file(ModelGeneratorUtils.py ModelGeneratorUtils.py COPYONLY)
+  foreach(generator Conv1d Conv2d Conv3d ConvTrans2d Linear Recurrent)
+    configure_file(${generator}ModelGenerator.py ${generator}ModelGenerator.py COPYONLY)
+  endforeach()
 
   if (BLAS_FOUND)
     ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx

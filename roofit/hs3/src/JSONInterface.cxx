@@ -10,13 +10,91 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "JSONParser.h"
-
-#include <sstream>
+#include <RooFit/Detail/JSONInterface.h>
 
 #include <nlohmann/json.hpp>
 
+#include <istream>
+#include <list>
+#include <memory>
+#include <sstream>
+
+// This is the only translation unit where the JSON parsing library is used.
+// Hence, the JSON engine backing the RooFit::Detail::JSONTree could in
+// principle be swapped out by changing only this file.
+
 namespace {
+
+class TJSONTree : public RooFit::Detail::JSONTree {
+public:
+   class Node : public RooFit::Detail::JSONNode {
+   protected:
+      TJSONTree *tree;
+      class Impl;
+      template <class Nd, class NdType, class json_it>
+      class ChildItImpl;
+      friend TJSONTree;
+      std::unique_ptr<Impl> node;
+
+      const TJSONTree *get_tree() const { return tree; }
+      TJSONTree *get_tree() { return tree; }
+      const Impl &get_node() const;
+      Impl &get_node();
+
+   public:
+      void writeJSON(std::ostream &os) const override;
+
+      Node(TJSONTree *t, std::istream &is);
+      Node(TJSONTree *t, Impl &other);
+      Node(TJSONTree *t);
+      Node(const Node &other);
+      virtual ~Node();
+      Node &operator<<(std::string const &s) override;
+      Node &operator<<(int i) override;
+      Node &operator<<(double d) override;
+      Node &operator<<(bool b) override;
+      const Node &operator>>(std::string &v) const override;
+      Node &operator[](std::string const &k) override;
+      const Node &operator[](std::string const &k) const override;
+      bool is_container() const override;
+      bool is_map() const override;
+      bool is_seq() const override;
+      bool is_null() const override;
+      bool is_number() const override;
+      Node &set_map() override;
+      Node &set_seq() override;
+      Node &set_null() override;
+      void clear() override;
+      std::string key() const override;
+      std::string val() const override;
+      int val_int() const override;
+      double val_double() const override;
+      bool val_bool() const override;
+      bool has_key() const override;
+      bool has_val() const override;
+      bool has_child(std::string const &) const override;
+      Node &append_child() override;
+      size_t num_children() const override;
+      Node &child(size_t pos) override;
+      const Node &child(size_t pos) const override;
+
+      children_view children() override;
+      const_children_view children() const override;
+   };
+
+protected:
+   Node root;
+   std::list<Node> _nodecache;
+
+public:
+   TJSONTree();
+   ~TJSONTree() override;
+   TJSONTree(std::istream &is);
+   TJSONTree::Node &incache(const TJSONTree::Node &n);
+
+   Node &rootnode() override { return root; }
+};
+
 inline nlohmann::json parseWrapper(std::istream &is)
 {
    try {
@@ -25,7 +103,6 @@ inline nlohmann::json parseWrapper(std::istream &is)
       throw std::runtime_error(ex.what());
    }
 }
-} // namespace
 
 // TJSONTree methods
 
@@ -52,11 +129,6 @@ const TJSONTree::Node::Impl &TJSONTree::Node::get_node() const
 TJSONTree::Node::Impl &TJSONTree::Node::get_node()
 {
    return *node;
-}
-
-void TJSONTree::clearcache()
-{
-   TJSONTree::_nodecache.clear();
 }
 
 // TJSONTree::Node implementation
@@ -188,7 +260,10 @@ bool TJSONTree::Node::is_null() const
    return node->get().is_null();
 }
 
-namespace {
+bool TJSONTree::Node::is_number() const
+{
+   return node->get().is_number();
+}
 
 // To check whether it's allowed to reset the type of an object. We allow
 // this for nodes that have no type yet, or nodes with an empty string.
@@ -206,7 +281,6 @@ bool isResettingPossible(nlohmann::json const &node)
    }
    return false;
 }
-} // namespace
 
 TJSONTree::Node &TJSONTree::Node::set_map()
 {
@@ -385,3 +459,109 @@ RooFit::Detail::JSONNode::const_children_view TJSONTree::Node::children() const
    return {const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::POS::BEGIN)),
            const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::POS::END))};
 }
+
+// Iterator implementation that is agnostic of the JSON parsing backend, used
+// for the default implementation of JSONNode::children().
+template <class Node_t>
+class ChildItImpl final : public RooFit::Detail::JSONNode::child_iterator_t<Node_t>::Impl {
+public:
+   using child_iterator = RooFit::Detail::JSONNode::child_iterator_t<Node_t>;
+   ChildItImpl(Node_t &n, size_t p) : node(n), pos(p) {}
+   ChildItImpl(const ChildItImpl &other) : node(other.node), pos(other.pos) {}
+   std::unique_ptr<typename child_iterator::Impl> clone() const override
+   {
+      return std::make_unique<ChildItImpl>(node, pos);
+   }
+   void forward() override { ++pos; }
+   void backward() override { --pos; }
+   Node_t &current() override { return node.child(pos); }
+   bool equal(const typename child_iterator::Impl &other) const override
+   {
+      auto it = dynamic_cast<const ChildItImpl<Node_t> *>(&other);
+      return it && &(it->node) == &(this->node) && (it->pos) == this->pos;
+   }
+
+private:
+   Node_t &node;
+   size_t pos;
+};
+
+} // namespace
+
+namespace RooFit {
+namespace Detail {
+
+template class JSONNode::child_iterator_t<JSONNode>;
+template class JSONNode::child_iterator_t<const JSONNode>;
+
+double JSONNode::val_double() const
+{
+   double out;
+   std::stringstream ss{val()};
+   ss >> out;
+   return out;
+}
+
+// Default fallback for backends that don't provide native type introspection:
+// a node is considered numeric if its textual value parses completely as a
+// floating-point number. Containers, null and non-numeric scalars (strings,
+// booleans) are rejected.
+bool JSONNode::is_number() const
+{
+   if (is_container() || is_null()) {
+      return false;
+   }
+   const std::string text = val();
+   if (text.empty()) {
+      return false;
+   }
+   try {
+      std::size_t consumed = 0;
+      std::stod(text, &consumed);
+      return consumed == text.size();
+   } catch (...) {
+      return false;
+   }
+}
+
+JSONNode::children_view JSONNode::children()
+{
+   return {child_iterator(std::make_unique<::ChildItImpl<JSONNode>>(*this, 0)),
+           child_iterator(std::make_unique<::ChildItImpl<JSONNode>>(*this, this->num_children()))};
+}
+JSONNode::const_children_view JSONNode::children() const
+{
+   return {const_child_iterator(std::make_unique<::ChildItImpl<const JSONNode>>(*this, 0)),
+           const_child_iterator(std::make_unique<::ChildItImpl<const JSONNode>>(*this, this->num_children()))};
+}
+
+std::ostream &operator<<(std::ostream &os, JSONNode const &s)
+{
+   s.writeJSON(os);
+   return os;
+}
+
+template <typename... Args>
+std::unique_ptr<JSONTree> JSONTree::createImpl(Args &&...args)
+{
+   return std::make_unique<TJSONTree>(std::forward<Args>(args)...);
+}
+
+std::unique_ptr<JSONTree> JSONTree::create()
+{
+   return createImpl();
+}
+
+std::unique_ptr<JSONTree> JSONTree::create(std::istream &is)
+{
+   return createImpl(is);
+}
+
+std::unique_ptr<JSONTree> JSONTree::create(std::string const &str)
+{
+   std::stringstream ss{str};
+   return JSONTree::create(ss);
+}
+
+} // namespace Detail
+} // namespace RooFit

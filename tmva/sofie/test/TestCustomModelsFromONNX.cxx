@@ -190,7 +190,7 @@ TEST(ONNX, LinearWithLeakyRelu)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithLeakyRelu", ref.f32("input0"));
 
-   expectNear(output, ref.f32("output0"), 1);
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
 
@@ -296,18 +296,72 @@ TEST(ONNX, ConvWithDynShapeStride)
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ConvWithDynShapeStride",
                                        "\"ConvWithDynShapeStride_FromONNX.dat\", 7", 7, input);
 
-   EXPECT_EQ(output.size(), correct_output.size());
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
-// Disables test (asymmetric padding not supported)
-TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
+TEST(ONNX, ConvWithAsymmetricPadding)
 {
    SofieReference ref = readReference("ConvWithAsymmetricPadding");
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithAsymmetricPadding", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The models below pad differently at the beginning and at the end of the same
+// axis, which is what SAME_UPPER / SAME_LOWER produce for an even kernel size.
+// They cover the 1d, 2d, 3d and grouped code paths of ROperator_Conv.
+
+TEST(ONNX, ConvSameUpperEvenKernel)
+{
+   SofieReference ref = readReference("ConvSameUpperEvenKernel");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvSameUpperEvenKernel", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvSameLowerEvenKernel)
+{
+   SofieReference ref = readReference("ConvSameLowerEvenKernel");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvSameLowerEvenKernel", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPads1d)
+{
+   SofieReference ref = readReference("ConvAsymmetricPads1d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPads1d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPads2d)
+{
+   SofieReference ref = readReference("ConvAsymmetricPads2d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPads2d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPads3d)
+{
+   SofieReference ref = readReference("ConvAsymmetricPads3d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPads3d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConvAsymmetricPadsGrouped)
+{
+   SofieReference ref = readReference("ConvAsymmetricPadsGrouped");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvAsymmetricPadsGrouped", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
@@ -348,11 +402,92 @@ TEST(ONNX, MaxPool2d_CeilMode)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, MaxPool1d_CeilMode_Overhang)
+{
+   SofieReference ref = readReference("MaxPool1d_CeilMode_Overhang");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool1d_CeilMode_Overhang", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, MaxPool2d_CeilMode_Pads)
+{
+   SofieReference ref = readReference("MaxPool2d_CeilMode_Pads");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool2d_CeilMode_Pads", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, MaxPool3d)
 {
    SofieReference ref = readReference("MaxPool3d");
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool3d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool1d_CeilMode)
+{
+   SofieReference ref = readReference("AveragePool1d_CeilMode");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool1d_CeilMode", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool1d_CeilMode_Overhang)
+{
+   SofieReference ref = readReference("AveragePool1d_CeilMode_Overhang");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool1d_CeilMode_Overhang", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_CeilMode)
+{
+   SofieReference ref = readReference("AveragePool2d_CeilMode");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_CeilMode", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_CeilMode_Pads)
+{
+   SofieReference ref = readReference("AveragePool2d_CeilMode_Pads");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_CeilMode_Pads", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_CeilMode_CountIncludePad)
+{
+   SofieReference ref = readReference("AveragePool2d_CeilMode_CountIncludePad");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_CeilMode_CountIncludePad", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool2d_Pads_CountIncludePad)
+{
+   SofieReference ref = readReference("AveragePool2d_Pads_CountIncludePad");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool2d_Pads_CountIncludePad", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AveragePool3d_CeilMode)
+{
+   SofieReference ref = readReference("AveragePool3d_CeilMode");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AveragePool3d_CeilMode", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
@@ -390,9 +525,7 @@ TEST(ONNX, FMod_ConstantFolding)
    // fmod([10, 7, 5], [3, 3, 3]) = [1, 1, 2]
    std::vector<float> correct_output = {1, 1, 2};
    ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "FMod_ConstantFolding");
-   EXPECT_EQ(output.size(), correct_output.size());
-   for (size_t i = 0; i < output.size(); ++i)
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Mod_ConstantFolding)
@@ -401,9 +534,7 @@ TEST(ONNX, Mod_ConstantFolding)
    // [10, 7, 5] % [3, 3, 3] = [1, 1, 2]
    std::vector<int64_t> correct_output = {1, 1, 2};
    ASSERT_INCLUDE_AND_RUN_0(std::vector<int64_t>, "Mod_ConstantFolding");
-   EXPECT_EQ(output.size(), correct_output.size());
-   for (size_t i = 0; i < output.size(); ++i)
-      EXPECT_EQ(output[i], correct_output[i]);
+   expectEqual(output, correct_output);
 }
 
    TEST(ONNX, ReduceMean)
@@ -424,10 +555,7 @@ TEST(ONNX, ReduceMean_kFirst)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMean_kFirst", input);
 
-   EXPECT_EQ(output.size(), correct_output.size());
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
    TEST(ONNX, ReduceProd)
@@ -440,9 +568,6 @@ TEST(ONNX, ReduceMean_kFirst)
 }
 
 TEST(ONNX, ReduceSum){
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
-
    // Preparing the standard  input
    std::vector<float> input({
       5, 2, 3,
@@ -454,21 +579,12 @@ TEST(ONNX, ReduceSum){
    // output tensod is shape [1,1,1] and value = 24 (sum of all elements)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceSum", input);
-   // Checking output size
-   EXPECT_EQ(output.size(), 1);
+   std::vector<float> correct{24};
 
-   float correct[] = {24};
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-   }
+   expectNear(output, correct, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, ReduceSumSquare){
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
-
    // Preparing the standard  input
    std::vector<float> input({
       5, 2, 3,
@@ -480,15 +596,9 @@ TEST(ONNX, ReduceSumSquare){
 
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceSumSquare", input);
-   // Checking output size
-   EXPECT_EQ(output.size(), 2);
+   std::vector<float> correct{38, 66};
 
-   float correct[] = {38, 66};
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-   }
+   expectNear(output, correct, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Max)
@@ -912,22 +1022,12 @@ TEST(ONNX, AddBroadcast7)
 }
 
 TEST(ONNX, Concat0D) {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
    // input
    std::vector<float> input({1.40519865e+00, -2.87660856e-01});
    std::vector<float> expected_output({1.40519865e+00, -2.87660856e-01, 1.40519865e+00, -2.87660856e-01});
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Concat_0D", input);
 
-   // Checking the output size
-   EXPECT_EQ(expected_output.size(), expected_output.size());
-
-   float* correct = expected_output.data();
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); i++) {
-      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-   }
+   expectNear(output, expected_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, LayerNormalization2d)
@@ -1172,13 +1272,7 @@ TEST(ONNX, Pad) {
        4, 0, 0, 0, 0, 0, 0, 0};
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pad", input);
 
-   // Checking the output size
-   EXPECT_EQ(output.size(), correct.size());
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); i++) {
-      EXPECT_EQ(output[i], correct[i]);
-   }
+   expectEqual(output, correct);
 }
 TEST(ONNX, Where) {
    // test of Where using [[1,2]] and [[3,4],[5,6],[7,8]] with condition [[true],[false],[true]] -> [[1,2],[5,6],[1,2]]
@@ -1189,19 +1283,11 @@ TEST(ONNX, Where) {
    std::vector<float> correct = {1,2,5,6,1,2};
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Where", input1, input2, cond);
 
-   // Checking the output size
-   EXPECT_EQ(output.size(), correct.size());
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); i++) {
-      EXPECT_EQ(output[i], correct[i]);
-   }
+   expectEqual(output, correct);
 }
 
 TEST(ONNX, Sin)
 {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
    // Preparing some random input
    std::vector<float> input({
      -0.786738,-0.197796,-0.187787,0.142758,0.876096,-0.653239,0.145444,-1.107658,2.259171,-0.947054,-0.506689,1.801250
@@ -1209,19 +1295,15 @@ TEST(ONNX, Sin)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sin", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), input.size());
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::sin(x));
 
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - std::sin(input[i])), TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Cos)
 {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
    // Preparing the random input
    std::vector<float> input({
      1.152504,-1.459324,0.691594,0.347690,-1.307323,1.832516,-1.261772,0.014224,1.311477,1.147405,-0.567206,-0.530606
@@ -1229,53 +1311,45 @@ TEST(ONNX, Cos)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Cos", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), input.size());
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::cos(x));
 
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - std::cos(input[i])), TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Abs)
 {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
    // Preparing the random input
    std::vector<float> input({1.,-2.,-3,4,-5.,6});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Abs", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), input.size());
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::abs(x));
 
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - std::abs(input[i])), TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Softplus)
 {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
    // Inputs spanning stable region, threshold boundary, and overflow-prone range
    std::vector<float> input({0.1f, -0.2f, 100.0f, 89.0f, 0.0f, 50.0f});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softplus", input);
 
-   EXPECT_EQ(output.size(), input.size());
+   ASSERT_EQ(output.size(), input.size());
 
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_FALSE(std::isinf(output[i])) << "Inf at input=" << input[i];
       EXPECT_FALSE(std::isnan(output[i])) << "NaN at input=" << input[i];
       // For large positive x (>= 20.0), softplus(x) ≈ x
       if (input[i] >= 20.0f) {
-         EXPECT_NEAR(output[i], input[i], TOLERANCE);
+         EXPECT_NEAR(output[i], input[i], DEFAULT_TOLERANCE);
       } else {
          float exp_value = std::log1p(std::exp(input[i]));
-         EXPECT_LE(std::abs(output[i] - exp_value), TOLERANCE);
+         EXPECT_LE(std::abs(output[i] - exp_value), DEFAULT_TOLERANCE);
       }
    }
 }
@@ -1288,12 +1362,7 @@ TEST(ONNX, Einsum_matmul)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_matmul", input1, input2);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), 4);
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i], correct_output[i]);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 // test dot prod using Einsum
 TEST(ONNX, Einsum_dotprod)
@@ -1304,12 +1373,7 @@ TEST(ONNX, Einsum_dotprod)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_dotprod", input1, input2);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), 1);
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i], correct_output[i]);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 // test tensor contraction of rank 3 tensors
 TEST(ONNX, Einsum_3)
@@ -1319,14 +1383,9 @@ TEST(ONNX, Einsum_3)
    std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12};
    std::vector<float> correct_output {66. , 87. , 108., 498.,  555., 612. };
 
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "Einsum_3", "\"Einsum_dotprod_FromONNX.dat\"", input1, input2);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_3", input1, input2);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), 6);
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i], correct_output[i]);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 // test tensor contraction of rank 4 tensors
 TEST(ONNX, Einsum_4)
@@ -1339,12 +1398,7 @@ TEST(ONNX, Einsum_4)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_4", input1, input2);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), 12);
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i], correct_output[i]);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 TEST(ONNX, RandomUniform)
 {
@@ -1353,12 +1407,7 @@ TEST(ONNX, RandomUniform)
 
    ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomUniform");
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, RandomNormal)
@@ -1368,12 +1417,7 @@ TEST(ONNX, RandomNormal)
 
    ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomNormal");
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Split_0)
@@ -1384,14 +1428,7 @@ TEST(ONNX, Split_0)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_0", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      for (size_t j = 0; j < output[i].size(); ++j) {
-         EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
-      }
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Split_1)
@@ -1402,14 +1439,7 @@ TEST(ONNX, Split_1)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_1", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      for (size_t j = 0; j < output[i].size(); ++j) {
-         EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
-      }
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Split_2)
@@ -1420,14 +1450,7 @@ TEST(ONNX, Split_2)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_2", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      for (size_t j = 0; j < output[i].size(); ++j) {
-         EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
-      }
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, ScatterElements)
@@ -1440,12 +1463,7 @@ TEST(ONNX, ScatterElements)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterElements", input, indices, updates);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, MatMul_Stacked)
@@ -1459,12 +1477,7 @@ TEST(ONNX, MatMul_Stacked)
    // model is dynamic , use N = 2
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked", "\"MatMul_Stacked_FromONNX.dat\", 2", 2, input1, input2);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, MatMul_Stacked2)
@@ -1478,12 +1491,7 @@ TEST(ONNX, MatMul_Stacked2)
    // model is dynamic , use N = 2
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked2", "\"MatMul_Stacked2_FromONNX.dat\", 2", 2, input1, input2);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, GatherND_1)
@@ -1497,12 +1505,7 @@ TEST(ONNX, GatherND_1)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherND_1", input, indices);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, GatherND_2)
@@ -1516,12 +1519,7 @@ TEST(ONNX, GatherND_2)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherND_2", input, indices);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, GatherND_3)
@@ -1536,12 +1534,7 @@ TEST(ONNX, GatherND_3)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherND_3", input, indices);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, NonZero)
@@ -1553,12 +1546,7 @@ TEST(ONNX, NonZero)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "NonZero", input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, NonZero_Constant)
@@ -1569,12 +1557,7 @@ TEST(ONNX, NonZero_Constant)
 
    ASSERT_INCLUDE_AND_RUN_0(std::vector<int64_t>, "NonZero_Constant");
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 TEST(ONNX, IsInf)
 {
@@ -1585,12 +1568,7 @@ TEST(ONNX, IsInf)
    // not cannot use input.size() in string because input symbol  will not be visible when running inference
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<uint8_t>, "IsInf",std::string("\"\", ") + std::to_string(input.size()), input.size(),input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, NotIsNaN)
@@ -1601,12 +1579,7 @@ TEST(ONNX, NotIsNaN)
 
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<uint8_t>, "NotIsNaN",std::string("\"\", ") + std::to_string(input.size()), input.size(),input);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_EQ(output[i] , correct_output[i]);
-   }
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, ScatterND_1)
@@ -1619,12 +1592,7 @@ TEST(ONNX, ScatterND_1)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterND_1", input, indices, updates);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, ScatterND_2)
@@ -1637,12 +1605,7 @@ TEST(ONNX, ScatterND_2)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterND_2", input, indices, updates);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, ScatterND_3)
@@ -1655,12 +1618,7 @@ TEST(ONNX, ScatterND_3)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterND_3", input, indices, updates);
 
-   // Checking output size
-   EXPECT_EQ(output.size(), correct_output.size());
-   // Checking output
-   for (size_t i = 0; i < output.size(); ++i) {
-      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
-   }
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Clip)
@@ -1672,18 +1630,9 @@ TEST(ONNX, Clip)
 
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<std::vector<float>>, "Clip", "\"Clip_FromONNX.dat\", 2", 2, input);
 
-   // Checking output size
-
-   EXPECT_EQ(output.size(), 2);
-   EXPECT_EQ(output[0].size(), correct_output1.size());
-   EXPECT_EQ(output[1].size(), correct_output2.size());
-   // Checking output
-   for (size_t i = 0; i < output[0].size(); ++i) {
-      EXPECT_LE(std::abs(output[0][i] - correct_output1[i]), DEFAULT_TOLERANCE);
-   }
-   for (size_t i = 0; i < output[1].size(); ++i) {
-      EXPECT_LE(std::abs(output[1][i] - correct_output2[i]), DEFAULT_TOLERANCE);
-   }
+   ASSERT_EQ(output.size(), 2u);
+   expectNear(output[0], correct_output1, DEFAULT_TOLERANCE);
+   expectNear(output[1], correct_output2, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, Gelu)
@@ -1735,13 +1684,10 @@ TEST(ONNX, ComparisonBroadcast)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<uint8_t>>, "Comparison_broadcast", input_A, input_B);
 
+   ASSERT_EQ(output.size(), 3u);
    const std::vector<uint8_t> &output_less = output[2];
 
-   EXPECT_EQ(output_less.size(), expected_output_less.size());
-
-   for (size_t i = 0; i < output_less.size(); ++i) {
-      EXPECT_EQ(output_less[i], expected_output_less[i]);
-   }
+   expectEqual(output_less, expected_output_less);
 }
 
 TEST(ONNX, ComparisonBroadcast3d)

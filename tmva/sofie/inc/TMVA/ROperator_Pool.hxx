@@ -171,14 +171,17 @@ public:
       size_t input2 = (fDim > 1) ? input[0][3] : 1;
       size_t input3 = (fDim > 2) ? input[0][4] : 1;
 
-      // use ceiling division when ceil_mode=1, floor otherwise
-      auto poolOutDim = [this](size_t in, size_t pad, size_t kern, size_t stride) -> size_t {
-         size_t n = in + pad - kern;
-         return (fAttrCeilMode ? (n + stride - 1) / stride : n / stride) + 1;
+      // use ceiling division when ceil_mode=1, floor otherwise. With ceil_mode the rounding up can add
+      // a window that starts past the end of the input (i.e. entirely in the right padding or in the
+      // overhang region); ONNX ignores such a window, so clip to the number of valid window starts.
+      auto poolOutDim = [this](size_t in, size_t padBegin, size_t padEnd, size_t kern, size_t stride) -> size_t {
+         size_t n = in + padBegin + padEnd - kern;
+         if (!fAttrCeilMode)
+            return n / stride + 1;
+         return std::min((n + stride - 1) / stride, (in - 1 + padBegin) / stride) + 1;
       };
 
-      size_t pad1 = fAttrPads[0] + fAttrPads[i1];
-      size_t output1 = poolOutDim(input1, pad1, fAttrKernelShape[0], fAttrStrides[0]);
+      size_t output1 = poolOutDim(input1, fAttrPads[0], fAttrPads[i1], fAttrKernelShape[0], fAttrStrides[0]);
 
       size_t batch_size = input[0][0];        // first element in input tensor
       size_t output_channels = input[0][1];   // first element in output tensor
@@ -188,15 +191,13 @@ public:
       if (fDim == 1)
          return ret;
 
-      size_t pad2 = fAttrPads[1] + fAttrPads[i2];
-      size_t output2 = poolOutDim(input2, pad2, fAttrKernelShape[1], fAttrStrides[1]);
+      size_t output2 = poolOutDim(input2, fAttrPads[1], fAttrPads[i2], fAttrKernelShape[1], fAttrStrides[1]);
       // output is N x C x OH x OW
       ret[0].push_back(output2);
       if (fDim == 2)
          return ret;
 
-      size_t pad3 = fAttrPads[2] + fAttrPads[i3];
-      size_t output3 = poolOutDim(input3, pad3, fAttrKernelShape[2], fAttrStrides[2]);
+      size_t output3 = poolOutDim(input3, fAttrPads[2], fAttrPads[i3], fAttrKernelShape[2], fAttrStrides[2]);
 
       // output is N x C x OH x OW x OD
       ret[0].push_back(output3);
@@ -284,15 +285,22 @@ public:
       assert(fShapeX[1] == fShapeY[1]);
       assert(fAttrPads.size() == 6);
       assert(fAttrKernelShape.size() == 3);
+      // A window must start inside the input: with ceil_mode the loop bound below can otherwise run one
+      // window too far, which ONNX ignores. This mirrors the clipping done in ShapeInference.
+      auto clipToInput = [this](int upper, size_t size) {
+         return (fAttrCeilMode && upper > (int)size) ? (int)size : upper;
+      };
       // find lower bounds of filtered area
       int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
       // use stride instead of 1 when ceil_mode=1, so the loop covers the extra partial window
-      int hmax = fShapeX[2] + fAttrPads[fDim] - fAttrKernelShape[0] + (fAttrCeilMode ? (int)fAttrStrides[0] : 1);
+      int hmax = clipToInput(fShapeX[2] + fAttrPads[fDim] - fAttrKernelShape[0] + (fAttrCeilMode ? (int)fAttrStrides[0] : 1),
+                             fShapeX[2]);
       int wmin,wmax,dmin,dmax;
 
       if(fDim >= 2){
          wmin = -fAttrPads[1]; // minimum lower bound value of filter area
-         wmax = fShapeX[3] + fAttrPads[fDim + 1] - fAttrKernelShape[1] + (fAttrCeilMode ? (int)fAttrStrides[1] : 1);
+         wmax = clipToInput(fShapeX[3] + fAttrPads[fDim + 1] - fAttrKernelShape[1] + (fAttrCeilMode ? (int)fAttrStrides[1] : 1),
+                            fShapeX[3]);
       }
       else{
          wmin=1;
@@ -300,7 +308,8 @@ public:
       }
       if(fDim == 3){
          dmin = -fAttrPads[2]; // minimum lower bound value of filter area
-         dmax = fShapeX[4] + fAttrPads[fDim + 2] - fAttrKernelShape[2] + (fAttrCeilMode ? (int)fAttrStrides[2] : 1);
+         dmax = clipToInput(fShapeX[4] + fAttrPads[fDim + 2] - fAttrKernelShape[2] + (fAttrCeilMode ? (int)fAttrStrides[2] : 1),
+                            fShapeX[4]);
       }
       else{
          dmin=1;
@@ -331,6 +340,21 @@ public:
       for ( auto & e : fAttrPads)
          doPadding |= (e > 0);
 
+      // An AveragePool window can cover fewer cells than the kernel area either because it overlaps the
+      // padding region or because ceil_mode lets the last window overhang the input. In both cases the
+      // divisor has to be computed per window instead of being the constant kernel area.
+      bool dynamicDivisor = doPadding || fAttrCeilMode;
+      // Number of cells the window starting at "var" covers along one dimension: the kernel extent
+      // clipped to [0, size) when count_include_pad = 0, and to the padded input [-padBegin, size +
+      // padEnd) otherwise. The lower bound needs no clipping in the latter case, since "var" starts at
+      // -padBegin. Note that the cells the window overhangs past the padded input are never counted.
+      auto windowExtent = [this](const std::string &var, const std::string &kern, size_t size, size_t padEnd) {
+         std::string hi = std::to_string(fAttrCountIncludePad ? size + padEnd : size);
+         std::string lo = fAttrCountIncludePad ? var : "(" + var + " > 0 ? " + var + " : 0)";
+         return "((" + var + " + " + kern + " < " + hi + " ? " + var + " + " + kern + " : " + hi + ")"
+                " - " + lo + ")";
+      };
+
 
       if(fDim==1){
          // loop on batches and channels
@@ -343,9 +367,10 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP << SP << SP << SP << "int nsum = 0;\n";
-            else // in case we count the pad values in average
+            if (dynamicDivisor)
+               out << SP << SP << SP << SP << "const int nsum = "
+                   << windowExtent("i", "kh", fShapeX[2], fAttrPads[fDim]) << ";\n";
+            else // every window is full, so the divisor is the kernel area
                out << SP << SP << SP << SP << "constexpr int nsum = kh;\n";
          }
          // loop on rows of filtered region
@@ -359,9 +384,6 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
           out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
          if (fPoolMode == AveragePool) {
@@ -386,9 +408,11 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP << SP << SP << SP << "int nsum = 0;\n";
-            else // in case we count the pad values in average
+            if (dynamicDivisor)
+               out << SP << SP << SP << SP << "const int nsum = "
+                   << windowExtent("i", "kh", fShapeX[2], fAttrPads[fDim]) << " * "
+                   << windowExtent("j", "kw", fShapeX[3], fAttrPads[fDim + 1]) << ";\n";
+            else // every window is full, so the divisor is the kernel area
                out << SP << SP << SP << SP << "constexpr int nsum = kw*kh;\n";
          }
          // loop on rows of filtered region
@@ -405,9 +429,6 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
          out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
@@ -433,9 +454,12 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP << SP << SP << SP << "int nsum = 0;\n";
-            else // in case we count the pad values in average
+            if (dynamicDivisor)
+               out << SP << SP << SP << SP << "const int nsum = "
+                   << windowExtent("i", "kh", fShapeX[2], fAttrPads[fDim]) << " * "
+                   << windowExtent("j", "kw", fShapeX[3], fAttrPads[fDim + 1]) << " * "
+                   << windowExtent("k", "kd", fShapeX[4], fAttrPads[fDim + 2]) << ";\n";
+            else // every window is full, so the divisor is the kernel area
                out << SP << SP << SP << SP << "constexpr int nsum = kw*kh*kd;\n";
          }
          // loop on rows of filtered region
@@ -456,9 +480,6 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
          out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n";

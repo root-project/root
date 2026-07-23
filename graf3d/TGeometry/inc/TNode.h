@@ -21,14 +21,14 @@
 #ifndef ROOT_TNode
 #define ROOT_TNode
 
-#include "TShape.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAtt3D.h"
-
-#include "TRotMatrix.h"
+#include "TNamed.h"
 
 class TBrowser;
+class TShape;
+class TRotMatrix;
 
 class TNode : public TNamed , public TAttLine, public TAttFill, public TAtt3D {
 

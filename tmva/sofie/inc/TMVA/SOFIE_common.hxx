@@ -537,25 +537,29 @@ inline bool is_a_ge_zero_and_a_lt_b(int a, int b) {
 ///     ( a1 a2 a3 0  b1 b2 b3  0 c1 c2 c3  0  0  0  0  0  )     for k4
 ///
 
+/// The padding at the beginning and at the end of an axis can differ, as ONNX
+/// allows for the "pads" attribute and as the SAME_UPPER / SAME_LOWER autopad
+/// modes produce whenever the total padding is odd.
 template <typename T>
 void Im2col(const T *data_im, const int channels, const int height, const int width, const int kernel_h,
-                const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w,
+                const int kernel_w, const int pad_h_begin, const int pad_h_end, const int pad_w_begin,
+                const int pad_w_end, const int stride_h, const int stride_w,
                 const int dilation_h, const int dilation_w, T *data_col)
 {
-   const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-   const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+   const int output_h = (height + pad_h_begin + pad_h_end - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+   const int output_w = (width + pad_w_begin + pad_w_end - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
    const int channel_size = height * width;
    for (int channel = channels; channel--; data_im += channel_size) {
       for (int kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
          for (int kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
-            int input_row = -pad_h + kernel_row * dilation_h;
+            int input_row = -pad_h_begin + kernel_row * dilation_h;
             for (int output_rows = output_h; output_rows; output_rows--) {
                if (!is_a_ge_zero_and_a_lt_b(input_row, height)) {
                   for (int output_cols = output_w; output_cols; output_cols--) {
                      *(data_col++) = 0;
                   }
                } else {
-                  int input_col = -pad_w + kernel_col * dilation_w;
+                  int input_col = -pad_w_begin + kernel_col * dilation_w;
                   for (int output_col = output_w; output_col; output_col--) {
                      if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
                         *(data_col++) = data_im[input_row * width + input_col];
@@ -577,20 +581,21 @@ template <typename T>
 void Im2col_3d(const T *data_im, const int channels,
             const int depth, const int height, const int width,
             const int kernel_d, const int kernel_h, const int kernel_w,
-            const int pad_d, const int pad_h, const int pad_w,
+            const int pad_d_begin, const int pad_d_end, const int pad_h_begin, const int pad_h_end,
+            const int pad_w_begin, const int pad_w_end,
             const int stride_d, const int stride_h, const int stride_w,
             const int dilation_d, const int dilation_h,  const int dilation_w, T *data_col)
 {
-   const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-   const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-   const int output_d = (depth + 2 * pad_d - (dilation_d * (kernel_d - 1) + 1)) / stride_d + 1;
+   const int output_h = (height + pad_h_begin + pad_h_end - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+   const int output_w = (width + pad_w_begin + pad_w_end - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+   const int output_d = (depth + pad_d_begin + pad_d_end - (dilation_d * (kernel_d - 1) + 1)) / stride_d + 1;
    const int channel_size = height * width * depth;
    // assume data are c x d x h x w
    for (int channel = channels; channel--; data_im += channel_size) {
       for (int kernel_depth = 0; kernel_depth < kernel_d; kernel_depth++) {
          for (int kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
             for (int kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
-               int input_dep = -pad_d + kernel_depth * dilation_d;
+               int input_dep = -pad_d_begin + kernel_depth * dilation_d;
                for (int output_dep = output_d; output_dep; output_dep--) {
                   if (!is_a_ge_zero_and_a_lt_b(input_dep, depth)) {
                      for (int output_rows = output_h; output_rows; output_rows--) {
@@ -599,14 +604,14 @@ void Im2col_3d(const T *data_im, const int channels,
                         }
                      }
                   } else {
-                     int input_row = -pad_h + kernel_row * dilation_h;
+                     int input_row = -pad_h_begin + kernel_row * dilation_h;
                      for (int output_rows = output_h; output_rows; output_rows--) {
                         if (!is_a_ge_zero_and_a_lt_b(input_row, height)) {
                            for (int output_cols = output_w; output_cols; output_cols--) {
                               *(data_col++) = 0;
                            }
                         } else {
-                           int input_col = -pad_w + kernel_col * dilation_w;
+                           int input_col = -pad_w_begin + kernel_col * dilation_w;
                            for (int output_col = output_w; output_col; output_col--) {
                               if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
                                  *(data_col++) = data_im[input_dep * width * height + input_row * width + input_col];

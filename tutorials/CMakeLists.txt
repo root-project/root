@@ -105,6 +105,11 @@ if(MSVC AND NOT win_broken_tests)
                           io/ntuple/ntpl017_shared_reader.C)
   # The RNTuple SoA tutorial fails on Windows if interpreted for unknown reasons
   list(APPEND ntuple_veto io/ntuple/ntpl020_soa.C)
+  # The SQliteDependencyOverVersion tutorial fails on Windows due to unresolved symbols
+  # with Visual Studio 2026
+  if(MSVC_VERSION GREATER_EQUAL 1951)
+    list(APPEND dataframe_veto analysis/dataframe/df027_SQliteDependencyOverVersion.C)
+  endif()
 endif()
 
 # TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
@@ -173,7 +178,7 @@ if(NOT experimental_genvectorx)
 endif()
 
 if(NOT geom)
-  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/shapes.* legacy/g3d/na49view.*)
+  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/*)
 endif()
 
 if(NOT spectrum)

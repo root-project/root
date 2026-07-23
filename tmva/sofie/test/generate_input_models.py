@@ -244,6 +244,184 @@ def make_AddBroadcast7():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_AveragePool1d_CeilMode_Overhang():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2],
+            strides=[3],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool1d_ceil_overhang',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 2]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_CeilMode_Pads():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2],
+            pads=[1, 1, 1, 1],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_ceil_pads',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool1d_CeilMode():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[3],
+            strides=[2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool1d_ceil',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_CeilMode():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_ceil',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_CeilMode_CountIncludePad():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            count_include_pad=1,
+            kernel_shape=[2, 2],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_ceil_cip',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool2d_Pads_CountIncludePad():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            count_include_pad=1,
+            kernel_shape=[3, 3],
+            pads=[1, 1, 1, 1],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool2d_pads_cip',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_AveragePool3d_CeilMode():
+    """Ops: AveragePool"""
+    nodes = [
+        helper.make_node(
+            'AveragePool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2, 2],
+            strides=[2, 2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'averagepool3d_ceil',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 4, 4]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 2, 2]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
 def make_AvgPool():
     """Ops: AveragePool"""
     nodes = [
@@ -591,7 +769,8 @@ def make_ConvWithAsymmetricPadding():
             _vi('W', FLOAT, [1, 1, 3, 3]),
         ],
         outputs=[
-            _vi('y', FLOAT, [1, 1, 5, 5]),
+            # h: (7 + 1 + 1 - 3) / 2 + 1 = 4, w: (5 + 0 + 0 - 3) / 2 + 1 = 2
+            _vi('y', FLOAT, [1, 1, 4, 2]),
         ],
         initializer=[
             _tensor('W', FLOAT, [1, 1, 3, 3], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
@@ -709,6 +888,110 @@ def make_ConvWithDynShapeStride():
         ],
     )
     return _model(graph, opset=13, ir_version=13)
+
+
+# The models below have a different padding at the beginning and at the end of
+# the same axis. This is what ONNX produces for the SAME_UPPER / SAME_LOWER
+# autopad modes whenever the total padding is odd, i.e. for an even kernel size,
+# and what the "pads" attribute can express directly. They cover the three code
+# paths of ROperator_Conv (1d, 2d and 3d) plus the grouped one.
+
+def make_ConvSameUpperEvenKernel():
+    """Ops: Conv"""
+    # 4 - 1 + 2 - 4 = 1 total pad -> begin 0, end 1
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2, 2], auto_pad='SAME_UPPER', strides=[1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvSameUpperEvenKernel',
+        inputs=[_vi('x', FLOAT, [1, 1, 4, 4]), _vi('W', FLOAT, [1, 1, 2, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2, 2], [1.0, 2.0, 3.0, 4.0])],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvSameLowerEvenKernel():
+    """Ops: Conv"""
+    # same as above but the extra pad goes at the beginning -> begin 1, end 0
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2, 2], auto_pad='SAME_LOWER', strides=[1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvSameLowerEvenKernel',
+        inputs=[_vi('x', FLOAT, [1, 1, 4, 4]), _vi('W', FLOAT, [1, 1, 2, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2, 2], [1.0, 2.0, 3.0, 4.0])],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPads1d():
+    """Ops: Conv"""
+    # 1d path: pads = [begin, end] = [0, 1]
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2], pads=[0, 1], strides=[1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPads1d',
+        inputs=[_vi('x', FLOAT, [1, 1, 5]), _vi('W', FLOAT, [1, 1, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 5])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2], [1.0, 2.0])],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPads2d():
+    """Ops: Conv"""
+    # pads = [begin_h, begin_w, end_h, end_w] = [1, 0, 0, 1]
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[3, 3], pads=[1, 0, 0, 1], strides=[1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPads2d',
+        inputs=[_vi('x', FLOAT, [1, 1, 5, 5]), _vi('W', FLOAT, [1, 1, 3, 3])],
+        outputs=[_vi('y', FLOAT, [1, 1, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 3, 3], [1.0] * 9)],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPads3d():
+    """Ops: Conv"""
+    # pads = [begin_d, begin_h, begin_w, end_d, end_h, end_w] = [0, 0, 0, 1, 1, 1]
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[2, 2, 2], pads=[0, 0, 0, 1, 1, 1],
+                         strides=[1, 1, 1]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPads3d',
+        inputs=[_vi('x', FLOAT, [1, 1, 3, 3, 3]), _vi('W', FLOAT, [1, 1, 2, 2, 2])],
+        outputs=[_vi('y', FLOAT, [1, 1, 3, 3, 3])],
+        initializer=[_tensor('W', FLOAT, [1, 1, 2, 2, 2], [1.0] * 8)],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
+
+
+def make_ConvAsymmetricPadsGrouped():
+    """Ops: Conv"""
+    # same as ConvAsymmetricPads2d, but through the group != 1 code path
+    nodes = [
+        helper.make_node('Conv', ['x', 'W'], ['y'], kernel_shape=[3, 3], pads=[1, 0, 0, 1], strides=[1, 1],
+                         group=2),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvAsymmetricPadsGrouped',
+        inputs=[_vi('x', FLOAT, [1, 2, 5, 5]), _vi('W', FLOAT, [2, 1, 3, 3])],
+        outputs=[_vi('y', FLOAT, [1, 2, 4, 4])],
+        initializer=[_tensor('W', FLOAT, [2, 1, 3, 3], [1.0] * 9 + [2.0] * 9)],
+    )
+    return _model(graph, opset=14, ir_version=7, producer_name='python_script')
 
 
 def make_ConvWithPadding():
@@ -3328,6 +3611,57 @@ def make_MaxPool2d_CeilMode():
     return _model(graph, opset=11, ir_version=6)
 
 
+def make_MaxPool1d_CeilMode_Overhang():
+    """Ops: MaxPool"""
+    nodes = [
+        helper.make_node(
+            'MaxPool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2],
+            strides=[3],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'maxpool1d_ceil_overhang',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 2]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
+def make_MaxPool2d_CeilMode_Pads():
+    """Ops: MaxPool"""
+    nodes = [
+        helper.make_node(
+            'MaxPool',
+            ['X'],
+            ['Y'],
+            ceil_mode=1,
+            kernel_shape=[2, 2],
+            pads=[1, 1, 1, 1],
+            strides=[2, 2],
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'maxpool2d_ceil_pads',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 5, 5]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 3, 3]),
+        ],
+    )
+    return _model(graph, opset=11, ir_version=6)
+
+
 def make_MaxPool3d():
     """Ops: MaxPool"""
     nodes = [
@@ -4740,6 +5074,13 @@ MODELS = {
     'AddBroadcast5': make_AddBroadcast5,
     'AddBroadcast6': make_AddBroadcast6,
     'AddBroadcast7': make_AddBroadcast7,
+    'AveragePool1d_CeilMode': make_AveragePool1d_CeilMode,
+    'AveragePool1d_CeilMode_Overhang': make_AveragePool1d_CeilMode_Overhang,
+    'AveragePool2d_CeilMode': make_AveragePool2d_CeilMode,
+    'AveragePool2d_CeilMode_Pads': make_AveragePool2d_CeilMode_Pads,
+    'AveragePool2d_CeilMode_CountIncludePad': make_AveragePool2d_CeilMode_CountIncludePad,
+    'AveragePool2d_Pads_CountIncludePad': make_AveragePool2d_Pads_CountIncludePad,
+    'AveragePool3d_CeilMode': make_AveragePool3d_CeilMode,
     'AvgPool': make_AvgPool,
     'Cast': make_Cast,
     'Clip': make_Clip,
@@ -4754,6 +5095,12 @@ MODELS = {
     'ConvTransposeBias2d': make_ConvTransposeBias2d,
     'ConvTransposeBias2dBatched': make_ConvTransposeBias2dBatched,
     'ConvWithAsymmetricPadding': make_ConvWithAsymmetricPadding,
+    'ConvSameUpperEvenKernel': make_ConvSameUpperEvenKernel,
+    'ConvSameLowerEvenKernel': make_ConvSameLowerEvenKernel,
+    'ConvAsymmetricPads1d': make_ConvAsymmetricPads1d,
+    'ConvAsymmetricPads2d': make_ConvAsymmetricPads2d,
+    'ConvAsymmetricPads3d': make_ConvAsymmetricPads3d,
+    'ConvAsymmetricPadsGrouped': make_ConvAsymmetricPadsGrouped,
     'ConvWithAutopadSameLower': make_ConvWithAutopadSameLower,
     'ConvWithAutopadSameUpper': make_ConvWithAutopadSameUpper,
     'ConvWithDilation': make_ConvWithDilation,
@@ -4823,7 +5170,9 @@ MODELS = {
     'MaxPool1d': make_MaxPool1d,
     'MaxPool2d': make_MaxPool2d,
     'MaxPool2d_AsymPad': make_MaxPool2d_AsymPad,
+    'MaxPool1d_CeilMode_Overhang': make_MaxPool1d_CeilMode_Overhang,
     'MaxPool2d_CeilMode': make_MaxPool2d_CeilMode,
+    'MaxPool2d_CeilMode_Pads': make_MaxPool2d_CeilMode_Pads,
     'MaxPool3d': make_MaxPool3d,
     'MeanMultidirectionalBroadcast': make_MeanMultidirectionalBroadcast,
     'MinMultidirectionalBroadcast': make_MinMultidirectionalBroadcast,
@@ -4943,6 +5292,13 @@ TEST_INPUTS = {
         f32([-0.4216483533382416, -0.6176707744598389, -0.6877889633178711, -1.1417591571807861, 0.6320437788963318, -0.6063031554222107], (2, 1, 3, 1)),
         f32([1.4051986932754517, -0.2876608669757843, 0.0749375969171524, 1.2207484245300293, -0.48621267080307007, -0.688210129737854, -0.6774346828460693, 0.3670888841152191, 0.0008057440281845629, -0.2080310881137848, 0.9697791337966919, 0.7583738565444946], (1, 1, 3, 4)),
     ],
+    'AveragePool1d_CeilMode': [f32(np.arange(1, 7), (1, 1, 6))],
+    'AveragePool1d_CeilMode_Overhang': [f32(np.arange(1, 7), (1, 1, 6))],
+    'AveragePool2d_CeilMode': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool2d_CeilMode_Pads': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool2d_CeilMode_CountIncludePad': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool2d_Pads_CountIncludePad': [f32(np.arange(1, 26), (1, 1, 5, 5))],
+    'AveragePool3d_CeilMode': [f32(np.arange(1, 81), (1, 1, 5, 4, 4))],
     'AvgPool': [f32([0.4763999879360199, -0.19760000705718994, 1.6505999565124512, -0.24210000038146973, 0.6412000060081482, 1.9984999895095825, 0.3937999904155731, 0.1347000002861023, 0.22040000557899475, -0.7502999901771545, 0.21389999985694885, 0.7285000085830688, -0.020999999716877937, -0.4584999978542328, -1.5333000421524048, -0.4772000014781952, 0.5559999942779541, 0.6323000192642212, -2.5371999740600586, 1.4905999898910522, -1.1061999797821045, -0.970300018787384, 0.23659999668598175, -0.91839998960495, 0.30140000581741333, 0.7985000014305115, -0.6840999722480774, -2.285399913787842, -2.7727999687194824, -1.2805999517440796, -1.0946999788284302, -0.5989999771118164, -0.30329999327659607, -1.9041999578475952, -0.5403000116348267, 0.23319999873638153, 0.921500027179718, -0.15489999949932098, 0.05570000037550926, -0.5566999912261963, -1.4970999956130981, 0.5386000275611877, -0.2921999990940094, 0.4860000014305115, -0.39730000495910645, -0.46239998936653137, 0.4514000117778778, 0.23849999904632568, 0.3783000111579895, -1.0499999523162842], (1, 1, 5, 10))],
     'Cast': [i64([1, 2, 3, 4, 5, 6], (2, 3))],
     'ComplexTopK': [f32([9.0, 8.0, 4.5, 1.7000000476837158, 2.9000000953674316, 3.200000047683716, 4.0, 2.5999999046325684, 7.400000095367432, 3.5, 5.599999904632568, 7.099999904632568, 9.800000190734863, 1.100000023841858, 3.299999952316284, 6.199999809265137, 8.399999618530273, 0.699999988079071, 2.200000047683716, 3.299999952316284, 4.400000095367432, 5.5, 6.599999904632568, 7.699999809265137, 8.800000190734863, 9.899999618530273, 1.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 5.0, 4.0, 3.0, 2.0, 1.0, 6.0, 7.0, 8.0, 9.0], (2, 3, 9))],
@@ -4954,6 +5310,12 @@ TEST_INPUTS = {
     'ConvTransposeBias2d': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTransposeBias2dBatched': [f32(np.arange(0.0, 18.0), (2, 1, 3, 3))],
     'ConvWithAsymmetricPadding': [f32(np.arange(0.0, 35.0), (1, 1, 7, 5))],
+    'ConvSameUpperEvenKernel': [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
+    'ConvSameLowerEvenKernel': [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
+    'ConvAsymmetricPads1d': [f32(np.arange(0.0, 5.0), (1, 1, 5))],
+    'ConvAsymmetricPads2d': [f32(np.arange(0.0, 25.0), (1, 1, 5, 5))],
+    'ConvAsymmetricPads3d': [f32(np.arange(0.0, 27.0), (1, 1, 3, 3, 3))],
+    'ConvAsymmetricPadsGrouped': [f32(np.arange(0.0, 50.0), (1, 2, 5, 5))],
     'ConvWithAutopadSameLower': [f32(np.arange(0.0, 25.0), (1, 1, 5, 5))],
     'ConvWithAutopadSameUpper': [f32(np.arange(0.0, 25.0), (1, 1, 5, 5))],
     'ConvWithDilation': [f32(np.arange(0.0, 49.0), (1, 1, 7, 7))],
@@ -4988,9 +5350,11 @@ TEST_INPUTS = {
     'GatherAxis3': [f32(np.arange(0.0, 120.0), (5, 4, 3, 2))],
     'GatherNegativeIndices': [f32(np.arange(0.0, 10.0), (10,))],
     'Gelu': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    # Note: the second operand must produce a mix of true and false results,
+    # otherwise a constant implementation would pass the test.
     'Greater': [
         f32([1.0, 2.0, 3.0], (3,)),
-        f32([4.0, 2.0, 6.0], (3,)),
+        f32([4.0, 2.0, 1.0], (3,)),
     ],
     'GreaterOrEqual': [
         f32([1.0, 2.0, 3.0], (3,)),
@@ -5024,9 +5388,11 @@ TEST_INPUTS = {
         f32([1.0, 2.0, 3.0], (3,)),
         f32([4.0, 2.0, 6.0], (3,)),
     ],
+    # Note: the second operand must produce a mix of true and false results,
+    # otherwise a constant implementation would pass the test.
     'LessOrEqual': [
         f32([1.0, 2.0, 3.0], (3,)),
-        f32([4.0, 2.0, 6.0], (3,)),
+        f32([4.0, 2.0, 1.0], (3,)),
     ],
     'LinearWithLeakyRelu': [f32([0.43689998984336853, -0.6881999969482422, 1.030900001525879, -1.0262999534606934, -0.15189999341964722, 1.2237000465393066, -0.7053999900817871, -0.1762000024318695, -0.6811000108718872, -2.259700059890747, 1.0388000011444092, -0.7993000149726868, 0.1467999964952469, 1.325700044631958, -0.4713999927043915, -0.0957999974489212, 0.7056999802589417, -0.3749000132083893, -0.3310000002384186, 0.09860000014305115, -0.13699999451637268, 0.08320000022649765, -1.6464999914169312, -0.2793000042438507], (24,))],
     'LinearWithSelu': [f32(np.full(48, 1.0), (2, 24))],
@@ -5047,6 +5413,8 @@ TEST_INPUTS = {
     'MaxPool1d': [f32([0.09070000052452087, 0.10289999842643738, 0.814300000667572, 1.4496999979019165, -0.7785000205039978, 0.3824999928474426, -0.3763999938964844, 1.5785000324249268, -0.08349999785423279, 0.16220000386238098, 1.5866999626159668, 0.9822999835014343, -0.882099986076355, 0.4438999891281128, -0.13779999315738678, -0.2273000031709671, -0.01979999989271164, -2.0230000019073486, 0.09049999713897705, 0.6674000024795532, -1.4290000200271606, -1.309999942779541, -0.9438999891281128, -0.08330000191926956, -0.19189999997615814, 0.6886000037193298, 0.9388999938964844, -1.2913999557495117, -1.3583999872207642, -2.03410005569458, -0.32690000534057617, 0.1703999936580658, 1.1776000261306763, 1.3971999883651733, -1.8874000310897827, -1.533400058746338, 1.154099941253662, 0.3010999858379364, 0.6568999886512756, -2.350399971008301, 0.4032999873161316, 0.11420000344514847, 2.284600019454956, -1.3947999477386475, -0.8572999835014343, 0.5756000280380249, -1.086400032043457, 0.22830000519752502, 0.8946999907493591, 1.7626999616622925, -0.1657000035047531, 0.0649000033736229, -1.606600046157837, 0.41620001196861267, -1.152500033378601, -0.8184000253677368, 1.1324000358581543, -1.1086000204086304, 0.10610000044107437, 1.007099986076355], (1, 6, 10))],
     'MaxPool2d': [f32([0.6266000270843506, 0.1656000018119812, 0.275299996137619, -0.45579999685287476, -1.4592000246047974, 0.9284999966621399, -1.340999960899353, 1.3222999572753906, -0.5935999751091003, -1.364799976348877, -0.2989000082015991, 0.5900999903678894, -0.8845000267028809, -0.043299999088048935, 0.8313999772071838, -1.71589994430542, -0.5764999985694885, 0.8677999973297119, 1.0256999731063843, 0.7846999764442444, -0.34209999442100525, -1.2364000082015991, -0.5805000066757202, 0.44209998846054077, 1.218400001525879, 0.5042999982833862, 1.6822999715805054, -1.04830002784729, -2.2797999382019043, -1.892699956893921, 0.7716000080108643, 0.04050000011920929, 0.31209999322891235, -0.3010999858379364, -0.32659998536109924, -1.965999960899353, 1.0836999416351318, 0.23170000314712524, 0.9083999991416931, -0.32850000262260437, -0.9398000240325928, -0.20649999380111694, -0.9498999714851379, -0.9739000201225281, -0.12880000472068787, -0.13750000298023224, -1.261199951171875, 0.8809999823570251, 0.850600004196167, 0.445499986410141], (1, 1, 5, 10))],
     'MaxPool2d_AsymPad': [f32([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0], (1, 1, 4, 4))],
+    'MaxPool1d_CeilMode_Overhang': [f32(np.arange(1, 7), (1, 1, 6))],
+    'MaxPool2d_CeilMode_Pads': [f32(np.arange(1, 26), (1, 1, 5, 5))],
     'MaxPool2d_CeilMode': [f32(np.arange(25), (1, 1, 5, 5))],
     'MaxPool3d': [f32([-2.649600028991699, 1.0476000308990479, -0.5152999758720398, 0.37709999084472656, 0.41290000081062317, -0.3077000081539154, -0.8716999888420105, -0.8040000200271606, -0.35249999165534973, -0.17649999260902405, -0.33640000224113464, 0.8737000226974487, -0.23810000717639923, -0.8296999931335449, 0.4666000008583069, 0.6984000205993652, -0.6759999990463257, 0.629800021648407, 1.3832999467849731, 0.11010000109672546, 0.20389999449253082, -0.5476999878883362, 0.23409999907016754, 0.9180999994277954, 0.38420000672340393, 0.24279999732971191, 1.7924000024795532], (1, 1, 3, 3, 3))],
     'MeanMultidirectionalBroadcast': [
@@ -5102,9 +5470,11 @@ TEST_INPUTS = {
     'Softmax3d': [f32([-0.8938999772071838, -0.36739999055862427, 0.17630000412464142, 1.580399990081787, -0.46869999170303345, 1.2252999544143677, -1.3487999439239502, -0.10000000149011612, -0.12620000541210175, 0.49619999527931213, 1.0870000123977661, 0.690500020980835, -0.3450999855995178, -1.698099970817566, -0.46880000829696655, 0.44679999351501465, -0.5479000210762024, 0.06499999761581421, 1.044600009918213, -1.624899983406067, -0.718999981880188, -1.7519999742507935, 3.7753000259399414, -1.493899941444397], (2, 3, 4))],
     'Softmax4d': [f32([-0.586899995803833, -1.4271999597549438, -0.15459999442100525, 0.009600000455975533, 0.17059999704360962, 0.03880000114440918, -0.3483999967575073, -0.7828999757766724, 1.113800048828125, -0.5644000172615051, -0.6263999938964844, -1.1890000104904175, 1.6741000413894653, -0.7129999995231628, 0.9592000246047974, 1.7476999759674072, -0.47749999165534973, 1.3407000303268433, -0.3882000148296356, -0.4560000002384186, 1.0384999513626099, -0.16689999401569366, 0.5540000200271606, -1.0789999961853027, -0.6152999997138977, -0.6273999810218811, -1.2303999662399292, -0.6757000088691711, 1.017799973487854, -0.2379000037908554, -0.7911999821662903, -0.016499999910593033, -0.5422999858856201, 0.14589999616146088, 1.3585000038146973, -0.5005000233650208, -0.21870000660419464, -1.8180999755859375, -0.6642000079154968, 0.028699999675154686, -1.9103000164031982, 0.7983999848365784, -0.7860000133514404, 1.5133999586105347, 1.3873000144958496, -0.6462000012397766, -0.6353999972343445, -0.13349999487400055], (2, 3, 4, 2))],
     'Sqrt': [f32([0.8343999981880188, 0.4715999960899353, 0.6226000189781189, 0.8447999954223633, 0.2483000010251999, 0.9466999769210815], (2, 3))],
+    # Note: the operands are asymmetric and give distinct results, so that an
+    # implementation swapping them or returning a constant would be caught.
     'Sub': [
-        f32([1.0, 2.0], (2,)),
-        f32([0.0, 1.0], (2,)),
+        f32([1.5, 2.0], (2,)),
+        f32([0.25, -1.0], (2,)),
     ],
     'SumMultidirectionalBroadcast': [
         f32([0.35974153876304626, -2.2087337970733643, 0.957462728023529], (3, 1)),
