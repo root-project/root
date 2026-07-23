@@ -4172,9 +4172,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///          // 100 bins in x-direction; lower limit on x-axis is 10; upper limit is 60
 ///          //  50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5
 /// ~~~
-/// By default, the specified histogram is reset.
-/// To continue to append data to an existing histogram, use "+" in front
-/// of the histogram name.
+/// By default, if a histogram with the same name is already registered to the current
+/// ROOT directory, the specified histogram is reset. To continue to append data to an
+/// existing histogram, use "+" in front of the histogram name.
 ///
 /// A '+' in front of the histogram name is ignored, when the name is followed by
 /// binning information as described in the previous paragraph.
@@ -4183,6 +4183,15 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~
 /// will not reset `hsqrt`, but will continue filling. This works for 1-D, 2-D
 /// and 3-D histograms.
+///
+/// Note that when the automatic registration of histograms is off (see \ref DisableObjectAutoRegistration() ),
+/// external histogram are not visible to TTree::Draw unless they are registered to the current directory explicitly.
+/// ~~~ {.cpp}
+///     auto histo = new TH1D("histo", ...);
+///     histo->SetDirectory(gDirectory);
+///     tree.Draw("sqrt(x)>>histo","y>0")
+/// ~~~
+/// When auto-registration is off, histograms created by TTree::Draw will still be registered to the current directory.
 ///
 /// ### Accessing collection objects
 ///
@@ -4433,6 +4442,14 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~
 /// will not reset yplus, but will enter the selected entries at the end
 /// of the existing list.
+///
+/// Note that when the automatic registration of event lists is off (see \ref DisableObjectAutoRegistration() ),
+/// they are not visible to TTree::Draw unless they are registered to the current directory explicitly.
+/// ~~~ {.cpp}
+///     auto elist = new TEventList("elist", ...);
+///     elist->SetDirectory(gDirectory);
+///     tree.Draw(">>+elist","y>0")
+/// ~~~
 ///
 /// ### Using a TEventList, TEntryList or TEntryListArray as Input
 ///
