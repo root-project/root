@@ -33,7 +33,8 @@
 ///
 ///  Classes derived from RooResolutionModel implement
 ///  \f[
-///     R_k(x,\bar{b},\bar{c}) = \int \mathrm{basis}_k(x', \bar{b}) \cdot \mathrm{resModel}(x-x',\bar{c}) \; \mathrm{d}x',
+///     R_k(x,\bar{b},\bar{c}) = \int \mathrm{basis}_k(x', \bar{b}) \cdot \mathrm{resModel}(x-x',\bar{c}) \;
+///     \mathrm{d}x',
 ///  \f]
 ///
 ///  which RooAbsAnaConvPdf uses to construct the pdf for [ Phys (x) R ] :
@@ -59,6 +60,40 @@
 ///  advertise the coefficient integration capabilities and implement them respectively.
 ///  Please see RooAbsPdf for additional details. Advertised analytical integrals must be
 ///  valid for all coefficients.
+///
+///  ### The resolution model is a configuration object, not a graph node
+///
+///  The resolution model passed to the constructor is **not** a node of the
+///  computation graph of the RooAbsAnaConvPdf. It is never evaluated directly;
+///  it only serves as a *configuration* object that specifies which resolution
+///  model should be convolved with the basis functions. From it, the
+///  RooAbsAnaConvPdf builds its own internal \f$ \mathrm{basis}_k \otimes
+///  \mathrm{resModel} \f$ convolution objects (one per declared basis function),
+///  and it is *those* convolutions that are the actual value servers of the pdf
+///  and that get evaluated.
+///
+///  Consequently, the resolution model itself is not a server of the
+///  RooAbsAnaConvPdf. It remains accessible via getModel() (for example for
+///  serialization), but it does not appear in the pdf's `servers()` list, in
+///  `getParameters()` / `getVariables()`, or in the printed computation graph.
+///
+///  \note **Behavior change in ROOT 6.42:** in earlier releases the resolution
+///  model was kept as a (non-value, non-shape) server of the RooAbsAnaConvPdf.
+///  As a side effect, importing a RooAbsAnaConvPdf into a RooWorkspace also
+///  dragged the original resolution model into the workspace (and into HS3/JSON
+///  exports), even though it played no role in the computation. As of ROOT 6.42
+///  this is no longer the case: a resolution model that is only used as the
+///  configuration of a RooAbsAnaConvPdf is not imported into the workspace on
+///  its own anymore.
+///
+///  Objects written with older ROOT versions are read back correctly via schema
+///  evolution: the resolution model is dropped as a server, so the *pdf's*
+///  computation graph is the same as for a freshly constructed one. Note,
+///  however, that if such an old file already stored the resolution model as a
+///  standalone RooWorkspace member (which used to happen on import), that member
+///  is *not* retroactively removed from the workspace on read-back -- it simply
+///  is no longer wired into the RooAbsAnaConvPdf. Only newly created workspaces
+///  are guaranteed to be free of the standalone resolution model.
 
 #include "RooAbsAnaConvPdf.h"
 
@@ -93,33 +128,37 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 /// Constructor. The supplied resolution model must be constructed with the same
 /// convoluted variable as this physics model ('convVar')
 
-RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
-               const RooResolutionModel& model, RooRealVar& cVar) :
-  RooAbsPdf(name,title), _isCopy(false),
-  _model("!model","Original resolution model",this,(RooResolutionModel&)model,false,false),
-  _convVar("!convVar","Convolution variable",this,cVar,false,false),
-  _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
-  _coefNormMgr(this,10),
-  _codeReg(10)
+RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, const RooResolutionModel &model,
+                                   RooRealVar &cVar)
+   : RooAbsPdf(name, title),
+     _isCopy(false),
+     _model{static_cast<RooResolutionModel *>(model.clone(model.GetName()))},
+     _ownModel{true},
+     _convVar("!convVar", "Convolution variable", this, cVar, false, false),
+     _convSet("!convSet", "Set of resModel X basisFunc convolutions", this),
+     _coefNormMgr(this, 10),
+     _codeReg(10)
 {
-  _model.absArg()->setAttribute("NOCacheAndTrack") ;
+   _model->setAttribute("NOCacheAndTrack");
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) :
-  RooAbsPdf(other,name), _isCopy(true),
-  _model("!model",this,other._model),
-  _convVar("!convVar",this,other._convVar),
-  _convSet("!convSet",this,other._convSet),
-  _coefNormMgr(other._coefNormMgr,this),
-  _codeReg(other._codeReg)
+RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf &other, const char *name)
+   : RooAbsPdf(other, name),
+     _isCopy(true),
+     _model{other._model ? static_cast<RooResolutionModel *>(other._model->clone(other._model->GetName())) : nullptr},
+     _ownModel{true},
+     _convVar("!convVar", this, other._convVar),
+     _convSet("!convSet", this, other._convSet),
+     _coefNormMgr(other._coefNormMgr, this),
+     _codeReg(other._codeReg)
 {
   // Copy constructor
-  if (_model.absArg()) {
-    _model.absArg()->setAttribute("NOCacheAndTrack") ;
+  if (_model) {
+     _model->setAttribute("NOCacheAndTrack");
   }
   other._basisList.snapshot(_basisList);
 }
@@ -140,8 +179,53 @@ RooAbsAnaConvPdf::~RooAbsAnaConvPdf()
     }
   }
 
+  if (_ownModel) {
+     delete _model;
+  }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Forward server redirection to the original resolution model. The resolution
+/// model is not a server of this pdf (it is only used to build the convolutions
+/// and for generation), so it is not redirected by the standard machinery. We
+/// keep its servers in sync here, analogous to RooResolutionModel forwarding
+/// the redirection to its basis function.
+
+bool RooAbsAnaConvPdf::redirectServersHook(const RooAbsCollection &newServerList, bool mustReplaceAll, bool nameChange,
+                                           bool isRecursive)
+{
+   if (_model) {
+      // Pass mustReplaceAll=false: the model may legitimately reference servers
+      // that are not part of this particular redirection, and it is never
+      // evaluated as part of the computation graph anyway.
+      _model->redirectServers(newServerList, false, nameChange);
+   }
+
+   return RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Second-pass schema evolution, called by the RooWorkspace after reading.
+///
+/// In class version <= 3, the original resolution model was held in a
+/// RooRealProxy and was therefore a (non-value, non-shape) server of this pdf.
+/// The schema evolution read rule (see LinkDef.h) already recovered the model
+/// pointer into _model, but the stale server link is also restored from the
+/// file via the RooAbsArg server list. We remove it here, once the full graph
+/// is live, so that an object read from an old file has the same clean server
+/// structure as a freshly constructed one. This is safe because there is no
+/// longer a proxy that could resurrect the server link on copy.
+
+void RooAbsAnaConvPdf::ioStreamerPass2()
+{
+   RooAbsPdf::ioStreamerPass2();
+
+   // Force removal (the link may have been added with a reference count > 1):
+   // the model must be completely severed from the server list.
+   if (_model && findServer(*_model)) {
+      removeServer(*_model, true);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Declare a basis function for use in this physics model. The string expression
@@ -165,11 +249,10 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   }
 
   // Resolution model must support declared basis
-  if (!(static_cast<RooResolutionModel*>(_model.absArg()))->isBasisSupported(expression)) {
-    coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model "
-           << _model.absArg()->GetName()
-           << " doesn't support basis function " << expression << std::endl ;
-    return -1 ;
+  if (!_model->isBasisSupported(expression)) {
+     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model "
+                           << _model->GetName() << " doesn't support basis function " << expression << std::endl;
+     return -1;
   }
 
   // Instantiate basis function
@@ -188,7 +271,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   basisFunc->setOperMode(operMode()) ;
 
   // Instantiate resModel x basisFunc convolution
-  RooAbsReal* conv = static_cast<RooResolutionModel*>(_model.absArg())->convolution(basisFunc.get(),this);
+  RooAbsReal *conv = _model->convolution(basisFunc.get(), this);
   _basisList.addOwned(std::move(basisFunc));
   if (!conv) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '"
@@ -228,14 +311,15 @@ bool RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   _convSet.removeAll() ;
   _convSet.addOwned(std::move(newConvSet));
 
-  const std::string attrib = std::string("ORIGNAME:") + _model->GetName();
-  const bool oldAttrib = newModel.getAttribute(attrib.c_str());
-  const_cast<RooResolutionModel&>(newModel).setAttribute(attrib.c_str());
-
-  redirectServers(RooArgSet{newModel}, false, true);
-
-  // reset temporary attribute for server redirection
-  const_cast<RooResolutionModel&>(newModel).setAttribute(attrib.c_str(), oldAttrib);
+  // Replace the stored original resolution model. Since it is not a server of
+  // this pdf, it cannot (and need not) be redirected via redirectServers(): we
+  // simply own a fresh clone of the new model.
+  if (_ownModel) {
+     delete _model;
+  }
+  _model = static_cast<RooResolutionModel *>(newModel.clone(newModel.GetName()));
+  _ownModel = true;
+  _model->setAttribute("NOCacheAndTrack");
 
   return false ;
 }
@@ -254,7 +338,7 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
                       const RooArgSet* auxProto, bool verbose) const
 {
   // Check if the resolution model specifies a special context to be used.
-  RooResolutionModel* conv = dynamic_cast<RooResolutionModel*>(_model.absArg());
+  RooResolutionModel *conv = _model;
   assert(conv);
 
   std::unique_ptr<RooArgSet> modelDep {_model->getObservables(&vars)};
@@ -296,9 +380,8 @@ bool RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 {
 
   // All direct generation of convolution arg if model is truth model
-  if (!TString(_convVar.absArg()->GetName()).CompareTo(arg.GetName()) &&
-      dynamic_cast<RooTruthModel*>(_model.absArg())) {
-    return true ;
+  if (!TString(_convVar.absArg()->GetName()).CompareTo(arg.GetName()) && dynamic_cast<RooTruthModel *>(_model)) {
+     return true;
   }
 
   return RooAbsPdf::isDirectGenSafe(arg) ;

@@ -105,6 +105,21 @@ As a result, plotting, generating binned data and creating histograms from a def
 Code that reads `getBins()`/`numBins()` of a bare variable and expected the value `100` should either set the binning explicitly,
 or read the bin count from the relevant histogram or plot frame instead.
 
+### Resolution models are no longer imported into the workspace as standalone objects
+
+When a `RooResolutionModel` (like `RooGaussModel` or `RooTruthModel`) is used wi th a
+`RooAbsAnaConvPdf` (like `RooDecay`, `RooBDecay`, etc.), it acts as a *configuration* object that specifies which model to convolve the basis functions with, rather than as a nod
+e of the pdf's computation graph.
+The `RooAbsAnaConvPdf` builds its own internal basis-function convolutions from it and evaluates *those*.
+
+Until now, the resolution model was nevertheless kept as a (non-value, non-shape) server of the `RooAbsAnaConvPdf`.
+As a side effect, importing such a pdf into a `RooWorkspace` also imported the original resolution model as a standalone workspace object, and it leaked into HS3/JSON exports, even though it played no role in the computation.
+
+Starting with ROOT 6.42, a resolution model that is only used as the configurati on of a `RooAbsAnaConvPdf` is no longer a server of that pdf, and is therefore not imported into the
+workspace on its own anymore. The model remains accessible via `RooAbsAnaConvPdf::getModel()`.
+
+This is not expected to affect typical usage, since the resolution model was never part of the actual likelihood. Workspaces written with older ROOT versions are read back correctly via schema evolution.
+
 ## Graphics and GUI
 
 ### Store canvas as HTML file
