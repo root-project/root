@@ -63,6 +63,7 @@ opengl=ON
 pyroot=ON
 pythia8=OFF
 qt6web=OFF
+qt6canv=OFF
 roofit=ON
 roofit_multiprocess=OFF
 root7=ON
