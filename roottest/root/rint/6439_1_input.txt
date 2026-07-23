@@ -1,0 +1,4 @@
+ROOT::RDataFrame(10).Define("x", [] { return 42; }).Snapshot<int>("t", "f.root");
+ROOT::RDataFrame(10).Define("x", [] { return 42; }).Snapshot<int>("t", "f.root");
+.q
+
