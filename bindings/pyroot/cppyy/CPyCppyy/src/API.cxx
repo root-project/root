@@ -1,5 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
+#include "Dimensions.h"
 #define CPYCPPYY_INTERNAL 1
 #include "CPyCppyy/API.h"
 #undef CPYCPPYY_INTERNAL
@@ -461,4 +462,29 @@ void CPyCppyy::Prompt() {
 
 // enter i/o interactive mode
     PyRun_InteractiveLoop(stdin, const_cast<char*>("\0"));
+}
+
+//-----------------------------------------------------------------------------
+PyObject* CPyCppyy::CreatePyValueFromMemory(
+    const std::string& typeName, void* address, dim_t ndim, const dim_t* dims)
+{
+// Build a Python value from a memory address using a Converter. See the
+// declaration in CPyCppyy/API.h for the full semantics.
+    Dimensions shape(ndim, dims);
+    Converter* cnv = CreateConverter(typeName, shape);
+    if (!cnv) {
+        PyErr_Format(PyExc_TypeError, "no converter available for type '%s'", typeName.c_str());
+        return nullptr;
+    }
+
+    PyObject* result = nullptr;
+    if (ndim) {
+    // Array converter: FromMemory expects the address of the data pointer.
+        result = cnv->FromMemory(&address);
+    } else {
+    // Scalar converter: FromMemory expects the address of the value.
+        result = cnv->FromMemory(address);
+    }
+    DestroyConverter(cnv);
+    return result;
 }
