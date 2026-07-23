@@ -2019,6 +2019,9 @@ public:
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \return the histogram wrapped in a RResultPtr.
    ///
+   /// The column can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container, and the container can also be nested.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
    ///
@@ -2043,6 +2046,11 @@ public:
    /// \param[in] axes The returned histogram will be constructed using these axes.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
@@ -2072,6 +2080,11 @@ public:
    /// \param[in] h The histogram that should be filled.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
@@ -2109,6 +2122,11 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    /// \return the histogram wrapped in a RResultPtr.
    ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
    ///
@@ -2135,6 +2153,11 @@ public:
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    /// \param[in] wName The name of the column that will provide the weights.
    /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
@@ -2171,6 +2194,11 @@ public:
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    /// \param[in] wName The name of the column that will provide the weights.
    /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
@@ -2215,6 +2243,11 @@ public:
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    /// \return the histogram wrapped in a RResultPtr.
    ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
    ///
@@ -2248,6 +2281,11 @@ public:
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    /// \param[in] wName The name of the column that will provide the weights.
    /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the histogram is filled with
+   /// each one of the elements of the container. In case multiple columns of container type are provided, they must
+   /// have the same length for each event (but possibly different lengths between events). Containers can be nested,
+   /// in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
