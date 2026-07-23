@@ -1,0 +1,8 @@
+.rawInput
+std::vector<short> getV() { return {42}; }
+.rawInput
+getV()[0].foo()
+getV()[0]
+
+.q
+
