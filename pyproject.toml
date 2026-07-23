@@ -79,6 +79,7 @@ mathmore="ON"
 # Expose the ROOT cli as an executable command via _rootcli wrapper 
 [project.scripts]
 root = "ROOT._rootcli:main"
+export_cmake = "ROOT._export_cmake:main"
 
 [tool.cibuildwheel]
 build-frontend = { name = "build" }
