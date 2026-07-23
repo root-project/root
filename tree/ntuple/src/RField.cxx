@@ -1027,6 +1027,7 @@ void *ROOT::RUniquePtrField::PrepareRead(void *to, bool hasOnDiskValue)
    if (isValidValue && !hasOnDiskValue) {
       ptr->release();
       fItemDeleter->operator()(valuePtr, false /* dtorOnly */);
+      valuePtr = nullptr;
    } else if (!isValidValue && hasOnDiskValue) {
       valuePtr = CallCreateObjectRawPtrOn(*fSubfields[0]);
       ptr->reset(reinterpret_cast<char *>(valuePtr));

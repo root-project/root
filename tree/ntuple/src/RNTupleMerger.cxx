@@ -1261,15 +1261,14 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
-#define SKIP_OR_ABORT(errMsg)                                                         \
-   do {                                                                               \
-      if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                 \
-         R__LOG_WARNING(NTupleMergeLog()) << "Skipping RNTuple due to: " << (errMsg); \
-         continue;                                                                    \
-      } else {                                                                        \
-         return R__FAIL(errMsg);                                                      \
-      }                                                                               \
-   } while (0)
+   // NOTE: don't wrap this in a do {} while (0)! It uses continue!
+#define SKIP_OR_ABORT(errMsg)                                                      \
+   if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                 \
+      R__LOG_WARNING(NTupleMergeLog()) << "Skipping RNTuple due to: " << (errMsg); \
+      continue;                                                                    \
+   } else {                                                                        \
+      return R__FAIL(errMsg);                                                      \
+   }
 
    // Merge main loop
    for (RPageSource *source : sources) {
@@ -1305,7 +1304,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
-                       descCmpRes.GetError()->GetReport());
+                       descCmpRes.GetError()->GetReport())
       }
       auto descCmp = descCmpRes.Unwrap();
 
@@ -1316,7 +1315,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          for (const auto *field : descCmp.fExtraDstFields) {
             msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
          }
-         SKIP_OR_ABORT(msg);
+         SKIP_OR_ABORT(msg)
       }
 
       // handle extra src fields
@@ -1332,7 +1331,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
             for (const auto *field : descCmp.fExtraSrcFields) {
                msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
             }
-            SKIP_OR_ABORT(msg);
+            SKIP_OR_ABORT(msg)
          }
       }
 

@@ -956,11 +956,11 @@ ROOT::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer, std::
    if (bufSize < minEnvelopeSize)
       return R__FAIL("invalid envelope buffer, too short");
 
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   auto base = bytes;
+   const auto *bytes = reinterpret_cast<const unsigned char *>(buffer);
+   const auto *base = bytes;
 
    std::uint64_t typeAndSize;
-   bytes += DeserializeUInt64(bytes, typeAndSize);
+   DeserializeUInt64(bytes, typeAndSize);
 
    std::uint16_t envelopeType = typeAndSize & 0xFFFF;
    if (envelopeType != expectedType) {
