@@ -5,8 +5,11 @@
 1. Let store canvas as html file via context menu
 1. Improve `TGraph` update
 1. When draw TH2/TF2 with "surf same" draw option, only lines are drawn
+1. Use "JSROOT" label for main pad button, hide it after 5 seconds from the drawing
+1. Add `@vite-ignore` comment to dynamic imports to suppress Vite/Rollup analysis warnings
 1. Fix - prevent very long header in context menu
 1. Fix - draw 3d contours in "surf3" twice https://root-forum.cern.ch/t/64910
+1. Fix - check evaluated value of TF1
 
 
 ## Changes in 7.11.0

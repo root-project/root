@@ -3212,7 +3212,7 @@ class HierarchyPainter extends BasePainter {
          case 'draw_tree': return import('../draw/TTree.mjs');
          case 'hierarchy': return { HierarchyPainter, markAsStreamerInfo };
       }
-      return import(/* webpackIgnore: true */ module);
+      return import(/* webpackIgnore: true */ /* @vite-ignore */ module);
    }
 
    /** @summary set cached object for gui drawing
