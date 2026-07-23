@@ -11,7 +11,7 @@ configure_file(RootcpReplaceEntireFileCheck.C . COPYONLY)
 # We should explicitly use the Python executable from the Python version that
 # was used to build ROOT. Otherwise, we risk picking up a different Python
 # version at test time.
-set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE} ${ROOT_BINDIR})
+set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE_DEV} ${ROOT_BINDIR})
 set(TOOLS_PREFIX ${ROOT_BINDIR})
 
 if(MSVC)
@@ -519,7 +519,7 @@ if(pyroot)
 set(test_env PYTHONWARNINGS=ignore)
 
 ############################## PATTERN TESTS ############################
-set (TESTPATTERN_EXE ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
+set (TESTPATTERN_EXE ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
 ROOTTEST_ADD_TEST(SimplePattern1
                   COMMAND ${TESTPATTERN_EXE} test.root
                   OUTREF SimplePattern.ref
