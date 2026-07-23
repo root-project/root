@@ -238,10 +238,27 @@ namespace TStreamerInfoActions
 
    struct TConfStreamerLoop : public TConfiguration {
       bool fIsPtrPtr = false; // Which are we, an array of objects or an array of pointers to objects?
+      Longptr_t fCounterOffset = 0; // Offset of the '//[n]' counter, relative to the streamed object.
 
       TConfStreamerLoop(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, bool isPtrPtr)
-         : TConfiguration(info, id, compinfo, offset), fIsPtrPtr(isPtrPtr)
+         : TConfiguration(info, id, compinfo, offset), fIsPtrPtr(isPtrPtr),
+           fCounterOffset((Longptr_t)compinfo->fMethod)
       {
+      }
+
+      void AddToOffset(Int_t delta) override
+      {
+         // Add the (potentially negative) delta to the configuration's offsets.  This is used by
+         // TBranchElement in the case of a split sub-object and by the member-wise streaming of a
+         // base class, where the whole action sequence of the base is shifted by the base-class
+         // offset.  The counter of the variable-size array lives in the same class as the array,
+         // so its offset must be shifted by the same delta as fOffset; it cannot be taken from
+         // the shared fCompInfo->fMethod, which stays relative to the declaring (base) class.
+
+         if (fOffset != TVirtualStreamerInfo::kMissing) {
+            fOffset += delta;
+            fCounterOffset += delta;
+         }
       }
 
       TConfiguration *Copy() override { return new TConfStreamerLoop(*this); };
@@ -1572,7 +1589,7 @@ namespace TStreamerInfoActions
          UInt_t ioffset = actionConfig->fOffset;
          // Get any private streamer which was set for the data member.
          TMemberStreamer* pstreamer = actionConfig->fCompInfo->fStreamer;
-         Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + actionConfig->fCompInfo->fMethod /*counter offset*/);
+         Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + ((const TConfStreamerLoop*)actionConfig)->fCounterOffset /*counter offset*/);
          // And call the private streamer, passing it the buffer, the object, and the counter.
          (*pstreamer)(buf, (char *) addr /*entry pointer*/ + ioffset /*object offset*/, *counter);
          return 0;
@@ -1586,7 +1603,7 @@ namespace TStreamerInfoActions
          bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
 
          // Get the counter for the varying length array.
-         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + config->fCompInfo->fMethod /*counter offset*/));
+         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
 
          //b << vlen;
          if (vlen) {
@@ -1629,7 +1646,7 @@ namespace TStreamerInfoActions
          bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
 
          // Get the counter for the varying length array.
-         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + config->fCompInfo->fMethod /*counter offset*/));
+         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
          //b << vlen;
          if (vlen) {
             // Get a pointer to the array of pointers.
@@ -1723,7 +1740,7 @@ namespace TStreamerInfoActions
 
          // Get the counter for the varying length array.
          Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
-                                 config->fCompInfo->fMethod /*counter offset*/));
+                                 ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
          // Int_t realLen;
          // b >> realLen;
          // if (realLen != vlen) {
@@ -1821,7 +1838,7 @@ namespace TStreamerInfoActions
 
          // Get the counter for the varying length array.
          Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
-                                 config->fCompInfo->fMethod /*counter offset*/));
+                                 ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
          // Int_t realLen;
          // b >> realLen;
          // if (realLen != vlen) {
