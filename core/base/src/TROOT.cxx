@@ -295,24 +295,20 @@ namespace {
       return moduleHeaderInfoBuffer;
    }
 
+   /// State helper for object auto registration.
    enum class AutoReg : unsigned char {
       kNotInitialised = 0,
       kOn,
       kOff,
    };
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// \brief Test if various objects (such as TH1-derived classes) should automatically register
-   /// themselves (ROOT 6 mode) or not (ROOT 7 mode).
-   /// A default can be set in a .rootrc using e.g. "Root.ObjectAutoRegistration: 1" or setting
-   /// the environment variable "ROOT_OBJECT_AUTO_REGISTRATION=0".
-   AutoReg &ObjectAutoRegistrationEnabledImpl()
+   /// Set up the default state for object auto registration by inspecting the environment.
+   /// This state is used to initialise the auto-registration state for each thread that starts.
+   AutoReg ObjectAutoRegistrationDefault()
    {
       static constexpr auto rcName = "Root.ObjectAutoRegistration";    // Update the docs if this is changed
       static constexpr auto envName = "ROOT_OBJECT_AUTO_REGISTRATION"; // Update the docs if this is changed
-      thread_local static AutoReg tlsState = AutoReg::kNotInitialised;
-
-      static const AutoReg defaultState = []() {
+      static const AutoReg defaultFromEnvironment = []() {
          AutoReg autoReg = AutoReg::kOn; // ROOT 6 default
          std::stringstream infoMessage;
 
@@ -356,10 +352,18 @@ namespace {
          return autoReg;
       }();
 
-      if (tlsState == AutoReg::kNotInitialised) {
-         assert(defaultState != AutoReg::kNotInitialised);
-         tlsState = defaultState;
-      }
+      return defaultFromEnvironment;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Test if various objects (such as TH1-derived classes) should automatically register
+   /// themselves (ROOT 6 mode) or not (ROOT 7 mode).
+   /// A default can be set in a .rootrc using e.g. "Root.ObjectAutoRegistration: 1" or setting
+   /// the environment variable "ROOT_OBJECT_AUTO_REGISTRATION=0".
+   AutoReg &ObjectAutoRegistrationEnabledImpl()
+   {
+      thread_local static AutoReg tlsState = ObjectAutoRegistrationDefault();
+      assert(tlsState != AutoReg::kNotInitialised);
 
       return tlsState;
    }
@@ -727,16 +731,26 @@ namespace Internal {
    /// | RooPlot               | Yes                                        | RooPlot::addDirectoryStatus()      |
    /// | TEfficiency           | Yes                                        | No                                 |
    /// | TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
-   /// | TEntryList            | No, but planned for 6.42                   | No                                 |
-   /// | TEventList            | No, but planned for 6.42                   | No                                 |
+   /// | TEntryList (+ derived)| Yes                                        | No                                 |
+   /// | TEventList            | Yes                                        | No                                 |
    /// | TFunction             | No, but work in progress                   | No                                 |
    ///
    /// ## Setting defaults
    ///
-   /// A default can be set in a .rootrc using e.g. `Root.ObjectAutoRegistration: 1` or setting
-   /// the environment variable `ROOT_OBJECT_AUTO_REGISTRATION=0`. Note that this default affects
-   /// all the threads that get started.
-   /// When a default is set using one of these methods, ROOT will notify with an Info message.
+   /// A default can be set (in order of precedence):
+   /// 1. Setting the environment variable `ROOT_OBJECT_AUTO_REGISTRATION=[01]`
+   /// 2. Setting `Root.ObjectAutoRegistration: [01]` in a .rootrc file.
+   ///
+   /// To do this programmatically, one can use
+   /// \code{.cpp}
+   /// setenv("ROOT_OBJECT_AUTO_REGISTRATION", 1);
+   /// // or using ROOT's TEnv:
+   /// gEnv->SetValue("Root.ObjectAutoRegistration", 1);
+   /// \endcode
+   /// This has to be done *before* the first object with auto-registration is created. Once this is done,
+   /// every thread starts with the same default. A running thread's behaviour can only be changed using
+   /// Enable/DisableObjectAutoRegistration().
+   /// When the default state is changed using the environment or .rootrc, ROOT issues a reminder.
    ///
    /// ## Difference to TH1::AddDirectoryStatus()
    ///
@@ -765,6 +779,7 @@ namespace Internal {
       assert(state != AutoReg::kNotInitialised);
       return state == AutoReg::kOn;
    }
+
    } // namespace Experimental
 } // end of ROOT namespace
 
