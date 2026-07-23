@@ -123,5 +123,5 @@ public:
    void Close(Option_t *option = "") final;
 
    ClassDefOverride(TMPIFile, 0)
-};
+} R__DEPRECATED(6, 44, "TMPIFile is unmaintained. Write one file per process and merge with hadd/TFileMerger, or use ROOT::TBufferMerger instead.");
 #endif
