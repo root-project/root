@@ -27,7 +27,9 @@
 // ROOT-10702
 TEST(TTreeReaderRegressions, CompositeTypeWithNameClash)
 {
-   struct Int { int x; };
+   struct Int {
+      int x;
+   };
    gInterpreter->Declare("struct Int { int x; };");
 
    const auto fname = "ttreereader_compositetypewithnameclash.root";
@@ -196,7 +198,7 @@ TEST(TSelectorDrawRegressions, TernaryOperator)
    t.Draw("(1?2:3)>>h1(12345,0,20)");
    auto h = gROOT->Get<TH1>("h1");
    ASSERT_EQ(h->GetXaxis()->GetNbins(), 12345); // was ignored before and set to the default 100
-   ASSERT_EQ(h->GetBinContent(1235), 1); // FindBin(2) is at 1235
+   ASSERT_EQ(h->GetBinContent(1235), 1);        // FindBin(2) is at 1235
 }
 
 // ROOT-4012 (JIRA)
@@ -215,7 +217,10 @@ TEST(TTreeFormulaRegressions, ConstantAlias)
 }
 
 // ROOT-8577 (JIRA)
-#define MYSTRUCT struct MyS { int x; };
+#define MYSTRUCT \
+   struct MyS {  \
+      int x;     \
+   };
 MYSTRUCT
 TEST(TTreeFormulaRegressions, WrongName)
 {
@@ -758,4 +763,97 @@ TEST(TTreeScan, ULong64Precision)
       scanToString("colsize=21 col=ld:ld:ld");
       scanToString("col=21ld:21ld:21ld");
    }
+}
+
+// https://github.com/root-project/root/issues/19290 (originally JIRA ROOT-8726)
+// TTreeFormula gave wrong results when a vector-type branch was used as the index
+// of a vector-of-vectors branch.  For vv1[v2][0] (v2 a vector used as the index of
+// the outer dimension of the vector-of-vectors vv1) the number of instances was
+// computed as the total/summed size of all the sub-vectors of vv1 instead of the
+// length of v2, and out-of-bounds errors were emitted.  The companion case
+// vv1[0][v2] (constant outer index, vector inner index) silently dropped its last
+// instance.
+namespace {
+
+// Evaluate a TTreeFormula on the (single) current entry of the tree and return
+// all of its instances.
+std::vector<double> GH19290EvalAll(TTree &tree, const char *expr)
+{
+   TTreeFormula formula("formula", expr, &tree);
+   EXPECT_FALSE(formula.GetTree() == nullptr) << "could not compile formula " << expr;
+
+   std::vector<double> result;
+   const Int_t ndata = formula.GetNdata();
+   result.reserve(ndata);
+   for (Int_t i = 0; i < ndata; ++i)
+      result.push_back(formula.EvalInstance(i));
+   return result;
+}
+
+} // namespace
+
+struct GH19290 : public ::testing::Test {
+   TTree fTree{"t", "t"};
+
+   int fN = 1;
+   // The branch addresses must outlive SetUp(), so keep the objects and the
+   // pointers used by TTree::Branch as data members.
+   std::vector<int> fV1{5, 7};
+   std::vector<std::vector<int>> fVV1{{2, 1}, {3, 4}};
+   std::vector<int> fV2{0, 1, 0};
+   std::vector<int> *fV1Ptr = &fV1;
+   std::vector<std::vector<int>> *fVV1Ptr = &fVV1;
+   std::vector<int> *fV2Ptr = &fV2;
+
+   void SetUp() override
+   {
+      gInterpreter->GenerateDictionary("vector<vector<int>>");
+
+      fTree.Branch("n", &fN);
+      fTree.Branch("v1", &fV1Ptr);
+      fTree.Branch("vv1", &fVV1Ptr);
+      fTree.Branch("v2", &fV2Ptr);
+      fTree.Fill();
+      fTree.GetEntry(0);
+   }
+};
+
+// Sanity: indexing a plain vector with a vector index already worked.
+TEST_F(GH19290, VectorIndexIntoVector)
+{
+   // v1[v2] loops over v2 == {0,1,0} -> {v1[0], v1[1], v1[0]}
+   EXPECT_EQ(GH19290EvalAll(fTree, "v1[v2]"), (std::vector<double>{5, 7, 5}));
+}
+
+// Constant outer index, vector inner index. Used to drop the last instance.
+TEST_F(GH19290, ConstantOuterVectorInner)
+{
+   // vv1[0][v2] loops over v2 -> {vv1[0][0], vv1[0][1], vv1[0][0]}
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[0][v2]"), (std::vector<double>{2, 1, 2}));
+}
+
+// Vector outer index, constant inner index. Used to over-count (length was the
+// summed size of all sub-vectors) and emit out-of-bounds errors.
+TEST_F(GH19290, VectorOuterConstantInner)
+{
+   // vv1[v2][0] loops over v2 -> {vv1[0][0], vv1[1][0], vv1[0][0]}
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[v2][0]"), (std::vector<double>{2, 3, 2}));
+}
+
+// Scalar indices into a vector of vectors (these always worked).
+TEST_F(GH19290, ScalarIndices)
+{
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[n][0]"), (std::vector<double>{3})); // vv1[1][0]
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[0][n]"), (std::vector<double>{1})); // vv1[0][1]
+}
+
+// A few related expressions that must keep working (no regressions).
+TEST_F(GH19290, NoRegressions)
+{
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[0]"), (std::vector<double>{2, 1}));
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[1]"), (std::vector<double>{3, 4}));
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[0][1]"), (std::vector<double>{1}));
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1[1][1]"), (std::vector<double>{4}));
+   EXPECT_EQ(GH19290EvalAll(fTree, "vv1"), (std::vector<double>{2, 1, 3, 4}));
+   EXPECT_EQ(GH19290EvalAll(fTree, "v1[n]"), (std::vector<double>{7}));
 }
