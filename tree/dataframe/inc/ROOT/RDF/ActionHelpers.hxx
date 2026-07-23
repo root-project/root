@@ -524,8 +524,8 @@ public:
 
 #ifdef R__HAS_ROOT7
 template <typename BinContentType, bool WithWeight = false>
-class R__CLING_PTRCHECK(off) RHistFillHelper
-   : public ROOT::Detail::RDF::RActionImpl<RHistFillHelper<BinContentType, WithWeight>> {
+class R__CLING_PTRCHECK(off) RHistFillHelper : public RActionImpl<RHistFillHelper<BinContentType, WithWeight>>,
+                                               public ExecLoopTrait<RHistFillHelper<BinContentType, WithWeight>> {
 public:
    using Result_t = ROOT::Experimental::RHist<BinContentType>;
 
@@ -563,7 +563,7 @@ public:
    }
 
    template <typename... ColumnTypes>
-   void Exec(unsigned int slot, const ColumnTypes &...columnValues)
+   void ExecSingle(unsigned int slot, const ColumnTypes &...columnValues)
    {
       if constexpr (WithWeight) {
          auto t = std::forward_as_tuple(columnValues...);
@@ -592,7 +592,8 @@ public:
 
 template <typename BinContentType, bool WithWeight = false>
 class R__CLING_PTRCHECK(off) RHistEngineFillHelper
-   : public ROOT::Detail::RDF::RActionImpl<RHistEngineFillHelper<BinContentType, WithWeight>> {
+   : public RActionImpl<RHistEngineFillHelper<BinContentType, WithWeight>>,
+     public ExecLoopTrait<RHistEngineFillHelper<BinContentType, WithWeight>> {
 public:
    using Result_t = ROOT::Experimental::RHistEngine<BinContentType>;
 
@@ -622,7 +623,7 @@ public:
    }
 
    template <typename... ColumnTypes>
-   void Exec(unsigned int, const ColumnTypes &...columnValues)
+   void ExecSingle(unsigned int, const ColumnTypes &...columnValues)
    {
       if constexpr (WithWeight) {
          auto t = std::forward_as_tuple(columnValues...);
