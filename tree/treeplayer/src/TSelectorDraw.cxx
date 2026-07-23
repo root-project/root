@@ -378,6 +378,12 @@ void TSelectorDraw::Begin(TTree *tree)
             Abort(abrt);
             return;
          }
+         if (!fOldHistogram && hnameplus) {
+            Warning("TSelectorDraw",
+                    "TTree::Draw was asked to fill the histogram '%s', but it was not found in the current directory."
+                    "Did you forget to call histogram->SetDirectory(gDirectory) or similar?",
+                    hname);
+         }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 
          if (mustdelete) {
