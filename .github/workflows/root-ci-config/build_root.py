@@ -150,7 +150,8 @@ def main():
             build_utils.print_warning(f'Failed to download: {err}')
             args.incremental = False
 
-    git_pull("src", args.repository, args.base_ref)
+    if not args.source_dir:
+        git_pull("src", args.repository, args.base_ref)
 
     benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'] == "ON"
     if benchmark:
@@ -173,7 +174,10 @@ def main():
         # Delete all the .gcda files produces by an artefact.
         build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
-    build(options, args.buildtype)
+    if args.source_dir:
+        build(options, args.buildtype, source_dir=args.source_dir)
+    else:
+        build(options, args.buildtype)
 
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
@@ -234,6 +238,7 @@ def parse_args():
     parser.add_argument("--pull_repository", default="",        help="Url to the pull request incoming repository")
     parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
     parser.add_argument("--head_sha",        default=None,      help="Sha of commit that triggered the event")
+    parser.add_argument("--source_dir",       default=None,      help="Don't check out. Just use the source dir provided here.")
     parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
@@ -249,7 +254,7 @@ def parse_args():
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
     args.upload_artifacts = args.upload_artifacts.lower() in ('yes', 'true', '1', 'on')
 
-    if not args.base_ref:
+    if not args.base_ref and not args.source_dir:
         die(os.EX_USAGE, "base_ref not specified")
 
     if not args.platform_config: # If nothing special, we take the standard platform configuration, called as the platform
@@ -409,8 +414,11 @@ def archive_and_upload(archive_name, prefix):
 
 
 @github_log_group("Configure")
-def cmake_configure(options, buildtype):
-    srcdir = os.path.join(WORKDIR, "src")
+def cmake_configure(options, buildtype, **kwargs):
+    if 'source_dir' in kwargs:
+        srcdir = kwargs['source_dir']
+    else:
+        srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
 
     # Add a private option to make the CI build faster by not changing the
@@ -458,16 +466,16 @@ def cmake_build(buildtype):
         die(result, "Failed to build")
 
 
-def build(options, buildtype):
+def build(options, buildtype, **kwargs):
     if not os.path.isdir(os.path.join(WORKDIR, "build")):
         builddir = os.path.join(WORKDIR, "build")
-        result = subprocess_with_log(f"mkdir {builddir}")
+        result = subprocess_with_log(f"mkdir -p {builddir}")
 
         if result != 0:
             die(result, "Failed to create build directory")
 
     if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
-        cmake_configure(options, buildtype)
+        cmake_configure(options, buildtype, **kwargs)
     else:
         cmake_dump_config()
 
