@@ -159,10 +159,10 @@ function getTF1Value(func, x, skip_eval = undefined) {
 
    if (func.evalPar && !iserr) {
       try {
-         return func.evalPar(x);
+         const res = func.evalPar(x);
+         if (Number.isFinite(res))
+            return res;
       } catch {
-         /* eslint-disable-next-line  no-useless-assignment */
-         iserr = true;
       }
    }
 
