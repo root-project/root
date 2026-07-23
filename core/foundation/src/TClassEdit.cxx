@@ -1286,7 +1286,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 ///      CleanType(" A<B, C< D, E> > *,F,G>") returns "A<B,C<D,E> >*"
 ////////////////////////////////////////////////////////////////////////////
 
-string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
+string TClassEdit::CleanType(std::string_view typeDesc, int mode, const char **tail)
 {
    constexpr static std::array<const char *, 3> remove{"class", "const", "volatile"};
    constexpr static auto lengths = []() constexpr {
@@ -1297,12 +1297,13 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    }();
 
    string result;
-   result.reserve(strlen(typeDesc)*2);
+   result.reserve(typeDesc.size()*2);
    int kbl=1;
    std::vector<char> parensStack;
-   const char* c;
+   const char* c = nullptr;
 
-   for(c=typeDesc;*c;c++) {
+   for(auto i = 0u; i < typeDesc.size(); ++i) {
+      c = typeDesc.data() + i;
       if (std::isspace(c[0])) {
          if (kbl)       continue;
          if (!isalnum(c[ 1]) && c[ 1] !='_')    continue;
@@ -1328,7 +1329,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
             // make sure that the 'keyword' is not part of a longer indentifier
             if (isalnum(c[rlen]) || c[rlen]=='_' ||  c[rlen]=='$') continue;
 
-            c+=rlen-1; done = 1; break;
+            c+=rlen-1; i+=rlen-1; done = 1; break;
          }
          if (done) continue;
       }

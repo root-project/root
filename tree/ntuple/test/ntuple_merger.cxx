@@ -1862,7 +1862,7 @@ TEST_P(RNTupleMergerCheckEncoding, CorrectEncoding)
       fileMerger.AddFile(nt2.get());
       // If `useDefaultComp` is true, it's as if we were calling hadd without a -f* flag
       if (useDefaultComp)
-         fileMerger.SetMergeOptions(TString("DefaultCompression"));
+         fileMerger.SetMergeOptions("DefaultCompression");
       fileMerger.Merge();
 
       EXPECT_TRUE(VerifyPageCompression(fileGuard3.GetPath(), expectedComp));
@@ -1948,7 +1948,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
          fileMerger.AddFile(nt1.get());
          fileMerger.AddFile(nt2.get());
-         fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Filter"));
+         fileMerger.SetMergeOptions("rntuple.MergingMode=Filter");
          CheckDiagsRAII diags;
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
          diags.requiredDiag(kError, "ROOT.NTuple.Merge", "missing the following field", false);
@@ -1964,7 +1964,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
          fileMerger.AddFile(nt1.get());
          fileMerger.AddFile(nt2.get());
-         fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Strict"));
+         fileMerger.SetMergeOptions("rntuple.MergingMode=Strict");
          CheckDiagsRAII diags;
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
          diags.requiredDiag(kError, "ROOT.NTuple.Merge", "missing the following field", false);
@@ -1980,7 +1980,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
          fileMerger.AddFile(nt1.get());
          fileMerger.AddFile(nt2.get());
-         fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+         fileMerger.SetMergeOptions("rntuple.MergingMode=Union");
          CheckDiagsRAII diags;
          diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
@@ -2672,7 +2672,7 @@ TEST(RNTupleMerger, MergeIncrementalLMExt)
    {
       TFileMerger merger(kFALSE, kFALSE);
       merger.OutputFile(fileGuard.GetPath().c_str(), "RECREATE", compression);
-      merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+      merger.SetMergeOptions("rntuple.MergingMode=Union");
 
       for (int i = 0; i < nInputs; ++i) {
          auto tfile = std::unique_ptr<TFile>(TFile::Open(inputFiles[i].GetPath().c_str(), "READ"));
@@ -2791,7 +2791,7 @@ TEST(RNTupleMerger, MergeIncrementalLMExtMemFile)
    {
       TFileMerger merger(kFALSE, kFALSE);
       merger.OutputFile(fileGuard.GetPath().c_str(), "RECREATE", compression);
-      merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+      merger.SetMergeOptions("rntuple.MergingMode=Union");
 
       for (int i = 0; i < nInputs; ++i) {
          merger.AddFile(inputFiles[i].get());
@@ -3416,7 +3416,7 @@ TEST(RNTupleMerger, MergeStaggeredIncremental)
    // Merge the files
    TFileMerger merger(false, false);
    merger.OutputFile(fileGuardMerged.GetPath().c_str(), "RECREATE", 505);
-   merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+   merger.SetMergeOptions("rntuple.MergingMode=Union");
    for (const auto &f : fileGuardsIn) {
       auto file = std::unique_ptr<TFile>(TFile::Open(f.GetPath().c_str(), "UPDATE"));
       merger.AddFile(file.get());
@@ -3673,7 +3673,7 @@ TEST(RNTupleMerger, GenerateZeroPagesIncremental)
 
    {
       TFileMerger merger(kFALSE, kTRUE);
-      merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+      merger.SetMergeOptions("rntuple.MergingMode=Union");
       merger.OutputFile(fileGuardOut.GetPath().c_str(), "RECREATE",
                         ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
 
