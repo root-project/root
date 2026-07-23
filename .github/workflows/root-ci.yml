@@ -112,6 +112,7 @@ jobs:
 
     env:
       VIRTUAL_ENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'mac-beta' && '27' || '' }} # Problems with gfortran falling back 18 (unsupported)
 
     strategy:
       fail-fast: false
