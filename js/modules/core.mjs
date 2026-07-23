@@ -6,7 +6,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '25/06/2026',
+version_date = '23/07/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1137,7 +1137,7 @@ async function injectCode(code) {
       }).then(_fs => {
          fs = _fs;
          fs.writeFileSync(name, code);
-         return import(/* webpackIgnore: true */ 'file://' + name);
+         return import(/* webpackIgnore: true */ /* @vite-ignore */ 'file://' + name);
       }).finally(() => fs.unlinkSync(name));
    }
 
@@ -1179,7 +1179,7 @@ async function loadModules(arg) {
       arg = arg.split(';');
    if (!arg.length)
       return true;
-   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
+   return import(/* webpackIgnore: true */ /* @vite-ignore */ arg.shift()).then(() => loadModules(arg));
 }
 
 /** @summary Load script or CSS file into the browser
@@ -1218,7 +1218,7 @@ async function loadScript(url) {
       if (url.indexOf('./') === 0)
          return import('fs').then(fs => injectCode(fs.readFileSync(url)));
 
-      return import(/* webpackIgnore: true */ url);
+      return import(/* webpackIgnore: true */ /* @vite-ignore */ url);
    }
 
    const match_url = src => {

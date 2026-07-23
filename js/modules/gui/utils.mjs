@@ -242,18 +242,27 @@ const ToolbarIcons = {
             'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z ' +
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
+   logo: {
+      szx: 500, szy: 160,
+      paths: [{
+         d: 'M5,30l25,-25h440l25,25v100l-25,25h-440l-25,-25v-100z',
+         s: 'fill:#E6F1FB;stroke:#378ADD;stroke-width:2.5px'
+      }],
+      txt: { x:250, y:80, 'text-anchor': 'middle', 'dominant-baseline':'central', 'font-family': 'monospace', 'font-weight': 700, 'font-size': 130, fill: '#0C447C' }
+   },
 
    /* eslint-enable @stylistic/js/key-spacing */
    /* eslint-enable @stylistic/js/comma-spacing */
    /* eslint-enable @stylistic/js/object-curly-spacing */
 
    createSVG(group, btn, size, title, arg) {
-      const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
+      const scale = btn.szx && btn.szy ? btn.szx / btn.szy : 1,
+            use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
             opacity0 = (arg === 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
             svg = group.append('svg:svg')
-                     .attr('width', size + 'px')
+                     .attr('width', Math.round(size * scale) + 'px')
                      .attr('height', size + 'px')
-                     .attr('viewBox', '0 0 512 512')
+                     .attr('viewBox', `0 0 ${btn.szx ?? 512} ${btn.szy ?? 512}`)
                      .style('overflow', 'hidden')
                      .style('cursor', 'pointer')
                      .style('fill', use_dark ? 'rgba(255, 224, 160)' : 'steelblue')
@@ -275,20 +284,27 @@ const ToolbarIcons = {
                            func();
                      });
 
-      if ('recs' in btn) {
+      if (btn.recs) {
          const rec = {};
-         for (let n = 0; n < btn.recs.length; ++n) {
-            Object.assign(rec, btn.recs[n]);
+         btn.recs.forEach(elem => {
+            Object.assign(rec, elem);
             svg.append('rect').attr('x', rec.x).attr('y', rec.y)
                .attr('width', rec.w).attr('height', rec.h)
                .style('fill', rec.f);
+         });
+      } else if (btn.paths) {
+         btn.paths.forEach(elem => {
+            svg.append('path').attr('d', elem.d).attr('style', elem.s);
+         });
+         if (btn.txt) {
+            const el = svg.append('text').text('JSROOT');
+            Object.entries(btn.txt).forEach(([k, v]) => el.attr(k, v));
          }
       } else
          svg.append('svg:path').attr('d', btn.path);
 
-
       //  special rect to correctly get mouse events for whole button area
-      svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', 512).attr('height', 512)
+      svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', Math.round(scale * 512)).attr('height', 512)
          .style('opacity', 0).style('fill', 'none').style('pointer-events', 'visibleFill')
          .append('svg:title').text(title);
 

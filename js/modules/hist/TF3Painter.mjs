@@ -165,10 +165,16 @@ class TF3Painter extends TH2Painter {
                let z = 0;
 
                try {
-                  for (let k = 0; k < npz; ++k)
+                  for (let k = 0; k < npz; ++k) {
                      arrv[k] = func.evalPar(x, y, arrz[k]);
+                     if (!Number.isFinite(arrv[k])) {
+                        iserror = true;
+                        break;
+                     }
+                  }
 
-                  z = findZValue(arrz, arrv);
+                  if (!iserror)
+                     z = findZValue(arrz, arrv);
                } catch {
                   iserror = true;
                }

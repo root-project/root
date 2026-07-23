@@ -175,12 +175,14 @@ class TF1Painter extends TH1Painter {
             let y = 0;
             try {
                y = tf1.evalPar(x);
+               if (!Number.isFinite(y))
+                  iserror = true;
             } catch {
                iserror = true;
             }
 
             if (!iserror)
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+               hist.setBinContent(n + 1, y);
          }
 
          if (iserror)

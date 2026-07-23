@@ -843,10 +843,12 @@ class JSRootMenu {
    addSettingsMenu(with_hierarchy, alone, handle_func) {
       if (!isFunc(handle_func))
          handle_func = () => {};
-      if (alone)
-         this.header('Settings');
-      else
+      if (!alone)
          this.sub('Settings');
+      else if (isStr(alone))
+         this.header(alone, 'https://root.cern/js/');
+      else
+         this.header('Settings');
 
       this.sub('Files');
 

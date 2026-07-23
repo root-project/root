@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '25/06/2026',
+version_date = '23/07/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1145,7 +1145,7 @@ async function injectCode(code) {
       }).then(_fs => {
          fs = _fs;
          fs.writeFileSync(name, code);
-         return import(/* webpackIgnore: true */ 'file://' + name);
+         return import(/* webpackIgnore: true */ /* @vite-ignore */ 'file://' + name);
       }).finally(() => fs.unlinkSync(name));
    }
 
@@ -1187,7 +1187,7 @@ async function loadModules(arg) {
       arg = arg.split(';');
    if (!arg.length)
       return true;
-   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
+   return import(/* webpackIgnore: true */ /* @vite-ignore */ arg.shift()).then(() => loadModules(arg));
 }
 
 /** @summary Load script or CSS file into the browser
@@ -1226,7 +1226,7 @@ async function loadScript(url) {
       if (url.indexOf('./') === 0)
          return import('fs').then(fs => injectCode(fs.readFileSync(url)));
 
-      return import(/* webpackIgnore: true */ url);
+      return import(/* webpackIgnore: true */ /* @vite-ignore */ url);
    }
 
    const match_url = src => {
@@ -80471,18 +80471,27 @@ const ToolbarIcons = {
             'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z ' +
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
+   logo: {
+      szx: 500, szy: 160,
+      paths: [{
+         d: 'M5,30l25,-25h440l25,25v100l-25,25h-440l-25,-25v-100z',
+         s: 'fill:#E6F1FB;stroke:#378ADD;stroke-width:2.5px'
+      }],
+      txt: { x:250, y:80, 'text-anchor': 'middle', 'dominant-baseline':'central', 'font-family': 'monospace', 'font-weight': 700, 'font-size': 130, fill: '#0C447C' }
+   },
 
    /* eslint-enable @stylistic/js/key-spacing */
    /* eslint-enable @stylistic/js/comma-spacing */
    /* eslint-enable @stylistic/js/object-curly-spacing */
 
    createSVG(group, btn, size, title, arg) {
-      const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
+      const scale = btn.szx && btn.szy ? btn.szx / btn.szy : 1,
+            use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
             opacity0 = (arg === 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
             svg = group.append('svg:svg')
-                     .attr('width', size + 'px')
+                     .attr('width', Math.round(size * scale) + 'px')
                      .attr('height', size + 'px')
-                     .attr('viewBox', '0 0 512 512')
+                     .attr('viewBox', `0 0 ${btn.szx ?? 512} ${btn.szy ?? 512}`)
                      .style('overflow', 'hidden')
                      .style('cursor', 'pointer')
                      .style('fill', use_dark ? 'rgba(255, 224, 160)' : 'steelblue')
@@ -80504,20 +80513,27 @@ const ToolbarIcons = {
                            func();
                      });
 
-      if ('recs' in btn) {
+      if (btn.recs) {
          const rec = {};
-         for (let n = 0; n < btn.recs.length; ++n) {
-            Object.assign(rec, btn.recs[n]);
+         btn.recs.forEach(elem => {
+            Object.assign(rec, elem);
             svg.append('rect').attr('x', rec.x).attr('y', rec.y)
                .attr('width', rec.w).attr('height', rec.h)
                .style('fill', rec.f);
+         });
+      } else if (btn.paths) {
+         btn.paths.forEach(elem => {
+            svg.append('path').attr('d', elem.d).attr('style', elem.s);
+         });
+         if (btn.txt) {
+            const el = svg.append('text').text('JSROOT');
+            Object.entries(btn.txt).forEach(([k, v]) => el.attr(k, v));
          }
       } else
          svg.append('svg:path').attr('d', btn.path);
 
-
       //  special rect to correctly get mouse events for whole button area
-      svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', 512).attr('height', 512)
+      svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', Math.round(scale * 512)).attr('height', 512)
          .style('opacity', 0).style('fill', 'none').style('pointer-events', 'visibleFill')
          .append('svg:title').text(title);
 
@@ -81758,10 +81774,12 @@ class JSRootMenu {
    addSettingsMenu(with_hierarchy, alone, handle_func) {
       if (!isFunc(handle_func))
          handle_func = () => {};
-      if (alone)
-         this.header('Settings');
-      else
+      if (!alone)
          this.sub('Settings');
+      else if (isStr(alone))
+         this.header(alone, 'https://root.cern/js/');
+      else
+         this.header('Settings');
 
       this.sub('Files');
 
@@ -89512,7 +89530,7 @@ const PadButtonsHandler = {
       let state = btn.property('buttons_state');
 
       if (btn.property('timout_handler')) {
-         if (action !== 'timeout')
+         if ((action !== 'timeout') && (action !== 'timeout2'))
             clearTimeout(btn.property('timout_handler'));
          btn.property('timout_handler', null);
       }
@@ -89526,8 +89544,14 @@ const PadButtonsHandler = {
          case 'enterbtn':
             this.btns_active_flag = true;
             return; // do nothing, just cleanup timeout
+         case 'hidemain':
          case 'timeout':
+            if (!browser.touches)
+               btn.property('timout_handler', setTimeout(() => this.toggleButtonsVisibility('timeout2'), 5000));
             break;
+         case 'timeout2':
+            btn.style('opacity', 0); // hide JSROOT button, but keep handling
+            return;
          case 'toggle':
             state = !state;
             btn.property('buttons_state', state);
@@ -89544,20 +89568,25 @@ const PadButtonsHandler = {
       group.selectAll('svg').each(function() {
          if (this !== btn.node())
             select(this).style('display', is_visible ? '' : 'none');
+         else if (is_visible)
+            btn.style('opacity', null); // default opacity
       });
    },
 
 
    alignButtons(btns, width, height) {
-      const sz0 = this.getButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0;
+      const isfast = this.isFastDrawing(),
+            isvert = btns.property('vertical'),
+            sz0x = isfast || isvert ? this.getButtonSize(1.25) : this.$first_button_width,
+            nextx = (btns.property('nextx') || 0) + sz0x;
       let btns_x, btns_y;
 
-      if (btns.property('vertical')) {
-         btns_x = btns.property('leftside') ? 2 : (width - sz0);
+      if (isvert) {
+         btns_x = btns.property('leftside') ? 2 : (width - sz0x);
          btns_y = height - nextx;
       } else {
          btns_x = btns.property('leftside') ? 2 : (width - nextx);
-         btns_y = height - sz0;
+         btns_y = height - this.getButtonSize(1.25);
       }
 
       makeTranslate(btns, btns_x, btns_y);
@@ -89593,20 +89622,39 @@ const PadButtonsHandler = {
       if (!this._buttons)
          return;
 
-      const istop = this.isTopPad(), y = 0;
-      let ctrl, x = group.property('leftside') ? this.getButtonSize(1.25) : 0;
+      const istop = this.isTopPad(),
+            isfast = this.isFastDrawing(),
+            y = 0;
+      this.$first_button_width = this.getButtonSize(isfast || !istop ? 1.25 : 3.5);
+      let ctrl, x = group.property('leftside') ? this.$first_button_width : 0;
 
-      if (this.isFastDrawing()) {
+      if (isfast) {
          ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, this.getButtonSize(), 'enlargePad', false)
                             .attr('name', 'Enlarge').attr('x', 0).attr('y', 0)
                             .on('click', evnt => this.clickPadButton('enlargePad', evnt));
       } else {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, this.getButtonSize(), 'Toggle tool buttons', false)
+         ctrl = ToolbarIcons.createSVG(group, istop ? ToolbarIcons.logo : ToolbarIcons.rect, this.getButtonSize(), istop ? `JSROOT version: ${version}` : `Toggle buttons on ${this.getPadName()}`, false)
                             .attr('name', 'Toggle').attr('x', 0).attr('y', 0)
                             .property('buttons_state', (settings.ToolBar !== 'popup') || browser.touches)
+                            .property('pointer-events', 'visibleFill')
                             .on('click', evnt => this.toggleButtonsVisibility('toggle', evnt));
+
          ctrl.node()._mouseenter = () => this.toggleButtonsVisibility('enable');
          ctrl.node()._mouseleave = () => this.toggleButtonsVisibility('disable');
+
+         if (istop && settings.ContextMenu) {
+            ctrl.on('contextmenu', evnt => {
+               evnt.preventDefault();
+               evnt.stopPropagation();
+               createMenu(evnt).then(menu => {
+                  menu.addSettingsMenu(false, 'JSROOT', arg => {
+                     if (arg === 'dark')
+                        this.changeDarkMode();
+                  });
+                  menu.show();
+               });
+            });
+         }
 
          for (let k = 0; k < this._buttons.length; ++k) {
             const item = this._buttons[k];
@@ -89645,6 +89693,9 @@ const PadButtonsHandler = {
          ctrl.attr('y', x);
       else if (!group.property('leftside'))
          ctrl.attr('x', x);
+
+      if (!browser.touches)
+         this.toggleButtonsVisibility('hidemain');
    },
 
    assign(painter) {
@@ -104716,10 +104767,10 @@ function getTF1Value(func, x, skip_eval = undefined) {
 
    if (func.evalPar && !iserr) {
       try {
-         return func.evalPar(x);
+         const res = func.evalPar(x);
+         if (Number.isFinite(res))
+            return res;
       } catch {
-         /* eslint-disable-next-line  no-useless-assignment */
-         iserr = true;
       }
    }
 
@@ -169516,7 +169567,7 @@ class HierarchyPainter extends BasePainter {
          case 'draw_tree': return Promise.resolve().then(function () { return TTree; });
          case 'hierarchy': return { HierarchyPainter, markAsStreamerInfo };
       }
-      return import(/* webpackIgnore: true */ module);
+      return import(/* webpackIgnore: true */ /* @vite-ignore */ module);
    }
 
    /** @summary set cached object for gui drawing
@@ -175515,12 +175566,14 @@ class TF1Painter extends TH1Painter$2 {
             let y = 0;
             try {
                y = tf1.evalPar(x);
+               if (!Number.isFinite(y))
+                  iserror = true;
             } catch {
                iserror = true;
             }
 
             if (!iserror)
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+               hist.setBinContent(n + 1, y);
          }
 
          if (iserror)
@@ -177308,12 +177361,14 @@ class TF2Painter extends TH2Painter {
 
                try {
                   z = func.evalPar(x, y);
+                  if (!Number.isFinite(z))
+                     iserror = true;
                } catch {
                   iserror = true;
                }
 
                if (!iserror)
-                  hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
+                  hist.setBinContent(hist.getBin(i + 1, j + 1), z);
             }
          }
 
@@ -177673,10 +177728,16 @@ class TF3Painter extends TH2Painter {
                let z = 0;
 
                try {
-                  for (let k = 0; k < npz; ++k)
+                  for (let k = 0; k < npz; ++k) {
                      arrv[k] = func.evalPar(x, y, arrz[k]);
+                     if (!Number.isFinite(arrv[k])) {
+                        iserror = true;
+                        break;
+                     }
+                  }
 
-                  z = findZValue(arrz, arrv);
+                  if (!iserror)
+                     z = findZValue(arrz, arrv);
                } catch {
                   iserror = true;
                }

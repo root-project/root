@@ -1,4 +1,4 @@
-import { gStyle, settings, constants, browser, source_dir, version_id, internals, BIT,
+import { gStyle, settings, constants, browser, source_dir, version_id, version, internals, BIT,
          create, toJSON, isBatchMode, loadModules, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr, clTObjArray, clTColor, clTPad, clTFrame, clTStyle, clTLegend,
          clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle, clTList, urlClassPrefix } from '../core.mjs';
@@ -40,7 +40,7 @@ const PadButtonsHandler = {
       let state = btn.property('buttons_state');
 
       if (btn.property('timout_handler')) {
-         if (action !== 'timeout')
+         if ((action !== 'timeout') && (action !== 'timeout2'))
             clearTimeout(btn.property('timout_handler'));
          btn.property('timout_handler', null);
       }
@@ -54,8 +54,14 @@ const PadButtonsHandler = {
          case 'enterbtn':
             this.btns_active_flag = true;
             return; // do nothing, just cleanup timeout
+         case 'hidemain':
          case 'timeout':
+            if (!browser.touches)
+               btn.property('timout_handler', setTimeout(() => this.toggleButtonsVisibility('timeout2'), 5000));
             break;
+         case 'timeout2':
+            btn.style('opacity', 0); // hide JSROOT button, but keep handling
+            return;
          case 'toggle':
             state = !state;
             btn.property('buttons_state', state);
@@ -72,20 +78,25 @@ const PadButtonsHandler = {
       group.selectAll('svg').each(function() {
          if (this !== btn.node())
             d3_select(this).style('display', is_visible ? '' : 'none');
+         else if (is_visible)
+            btn.style('opacity', null); // default opacity
       });
    },
 
 
    alignButtons(btns, width, height) {
-      const sz0 = this.getButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0;
+      const isfast = this.isFastDrawing(),
+            isvert = btns.property('vertical'),
+            sz0x = isfast || isvert ? this.getButtonSize(1.25) : this.$first_button_width,
+            nextx = (btns.property('nextx') || 0) + sz0x;
       let btns_x, btns_y;
 
-      if (btns.property('vertical')) {
-         btns_x = btns.property('leftside') ? 2 : (width - sz0);
+      if (isvert) {
+         btns_x = btns.property('leftside') ? 2 : (width - sz0x);
          btns_y = height - nextx;
       } else {
          btns_x = btns.property('leftside') ? 2 : (width - nextx);
-         btns_y = height - sz0;
+         btns_y = height - this.getButtonSize(1.25);
       }
 
       makeTranslate(btns, btns_x, btns_y);
@@ -121,20 +132,39 @@ const PadButtonsHandler = {
       if (!this._buttons)
          return;
 
-      const istop = this.isTopPad(), y = 0;
-      let ctrl, x = group.property('leftside') ? this.getButtonSize(1.25) : 0;
+      const istop = this.isTopPad(),
+            isfast = this.isFastDrawing(),
+            y = 0;
+      this.$first_button_width = this.getButtonSize(isfast || !istop ? 1.25 : 3.5);
+      let ctrl, x = group.property('leftside') ? this.$first_button_width : 0;
 
-      if (this.isFastDrawing()) {
+      if (isfast) {
          ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, this.getButtonSize(), 'enlargePad', false)
                             .attr('name', 'Enlarge').attr('x', 0).attr('y', 0)
                             .on('click', evnt => this.clickPadButton('enlargePad', evnt));
       } else {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, this.getButtonSize(), 'Toggle tool buttons', false)
+         ctrl = ToolbarIcons.createSVG(group, istop ? ToolbarIcons.logo : ToolbarIcons.rect, this.getButtonSize(), istop ? `JSROOT version: ${version}` : `Toggle buttons on ${this.getPadName()}`, false)
                             .attr('name', 'Toggle').attr('x', 0).attr('y', 0)
                             .property('buttons_state', (settings.ToolBar !== 'popup') || browser.touches)
+                            .property('pointer-events', 'visibleFill')
                             .on('click', evnt => this.toggleButtonsVisibility('toggle', evnt));
+
          ctrl.node()._mouseenter = () => this.toggleButtonsVisibility('enable');
          ctrl.node()._mouseleave = () => this.toggleButtonsVisibility('disable');
+
+         if (istop && settings.ContextMenu) {
+            ctrl.on('contextmenu', evnt => {
+               evnt.preventDefault();
+               evnt.stopPropagation();
+               createMenu(evnt).then(menu => {
+                  menu.addSettingsMenu(false, 'JSROOT', arg => {
+                     if (arg === 'dark')
+                        this.changeDarkMode();
+                  });
+                  menu.show();
+               });
+            });
+         }
 
          for (let k = 0; k < this._buttons.length; ++k) {
             const item = this._buttons[k];
@@ -173,6 +203,9 @@ const PadButtonsHandler = {
          ctrl.attr('y', x);
       else if (!group.property('leftside'))
          ctrl.attr('x', x);
+
+      if (!browser.touches)
+         this.toggleButtonsVisibility('hidemain');
    },
 
    assign(painter) {
