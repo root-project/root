@@ -55,18 +55,18 @@ void getTracks(unsigned int mu, FourVectors& tracks) {
 // This makes the example stand-alone
 void FillTree(const char* filename, const char* treeName) {
    if (!gSystem->AccessPathName(filename)) return;
-   TFile f(filename,"RECREATE");
-   TTree t(treeName,treeName);
+   auto f = std::make_unique<TFile>(filename, "RECREATE");
+   auto t = std::make_unique<TTree>(treeName, treeName);
    double b1;
    int b2;
    std::vector<FourVector> tracks;
    std::vector<double> dv {-1,2,3,4};
    std::list<int> sl {1,2,3,4};
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   t.Branch("tracks", &tracks);
-   t.Branch("dv", &dv);
-   t.Branch("sl", &sl);
+   t->Branch("b1", &b1);
+   t->Branch("b2", &b2);
+   t->Branch("tracks", &tracks);
+   t->Branch("dv", &dv);
+   t->Branch("sl", &sl);
 
    int nevts = 16000;
    for(int i = 0; i < nevts; ++i) {
@@ -77,11 +77,9 @@ void FillTree(const char* filename, const char* treeName) {
 
       dv.emplace_back(i);
       sl.emplace_back(i);
-      t.Fill();
+      t->Fill();
    }
-   t.Write();
-   f.Close();
-   return;
+   f->Write();
 }
 
 auto fileName = "testIMT.root";
