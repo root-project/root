@@ -119,10 +119,8 @@
 |          **Tutorial**          || **Description** |
 |---------------|-----------------|-----------------|
 | | TMVA_SOFIE_Inference.py | Using a trained model with PyTorch and make inference using SOFIE directly from Numpy. |
-| TMVA_SOFIE_Keras.C | | Parsing of Keras .h5 file into RModel object and further generating the .hxx header files for inference. |
 | | TMVA_SOFIE_Models.py | Inference with SOFIE using a set of models trained with PyTorch. |
 | TMVA_SOFIE_ONNX.C | | Parsing of ONNX files into RModel object and further generating the .hxx header files for inference. |
-| | TMVA_SOFIE_PyTorch.py | Parsing of PyTorch .pt file into RModel object and further generating the .hxx header files for inference. |
 | | TMVA_SOFIE_PyTorch_HiggsModel.py | Train a model on the Higgs dataset with PyTorch, export it to ONNX and run the SOFIE parser on it to generate the C++ inference code used by the other Higgs SOFIE tutorials. |
 | TMVA_SOFIE_RDataFrame.C | TMVA_SOFIE_RDataFrame.py | Inference with SOFIE and RDataFrame, of a model trained with PyTorch. |
 | TMVA_SOFIE_RDataFrame_JIT.C | | Using a trained model with PyTorch and make inference using SOFIE and RDataFrame. |
