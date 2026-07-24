@@ -12,6 +12,7 @@
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/Preprocessor.h"
 
 #include <utility>
 
@@ -443,7 +444,24 @@ cling::utils::isUnnamedMacro(llvm::StringRef source,
   return std::string::npos;
 }
 
-
+size_t cling::utils::isUnnamedMacro(llvm::StringRef source,
+                                    clang::SourceManager& sm,
+                                    clang::Preprocessor& pp) {
+  std::unique_ptr<llvm::MemoryBuffer> buf =
+      llvm::MemoryBuffer::getMemBufferCopy(source,
+                                           "unnamed_macro_candidate_buffer");
+  clang::FileID fid = sm.createFileID(std::move(buf));
+  pp.EnterSourceFile(fid, nullptr, clang::SourceLocation());
+  clang::Token tok;
+  do {
+    pp.Lex(tok); // Lexes while expanding macros and skipping false #if paths
+                 // automatically
+    if (tok.is(clang::tok::l_brace)) {
+      return sm.getFileOffset(sm.getFileLoc(tok.getLocation()));
+    }
+  } while (tok.isNot(clang::tok::eof));
+  return std::string::npos;
+}
 
 size_t cling::utils::getWrapPoint(std::string& source,
                                   const clang::LangOptions& LangOpts) {

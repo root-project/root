@@ -433,12 +433,12 @@ namespace cling {
     }
 
     if (posOpenCurly != (size_t)-1 && !content.empty()) {
-      assert(content[posOpenCurly] == '{'
-             && "No curly at claimed position of opening curly!");
+      assert(posOpenCurly < content.length() && content[posOpenCurly] == '{' &&
+             "No curly at claimed position of opening curly!");
       // hide the curly brace:
       content[posOpenCurly] = ' ';
       // and the matching closing '}'
-      size_t posCloseCurly = content.find_last_not_of(whitespace);
+      size_t posCloseCurly = content.find_last_not_of(whitespace); // TODO replace instead with preprocessed one, isUnnamedMacro should return tuple start and stop, rather than researching here 
       if (posCloseCurly != std::string::npos) {
         if (content[posCloseCurly] == ';' && content[posCloseCurly-1] == '}') {
           content[posCloseCurly--] = ' '; // replace ';' and enter next if
