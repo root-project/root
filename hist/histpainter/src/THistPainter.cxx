@@ -5886,6 +5886,15 @@ void THistPainter::PaintColorLevels(Option_t*)
       }
    }
 
+   if ((Hoption.System == kPOLAR) && (Hoption.Polar == 3)) {
+      // do not touch boundaries when draw without axis histogram
+      if (!Hoption.Same)
+         pkr = 0.45;
+      // for natural coordinates force minimal radius to 0
+      if (!Hoption.Logy && (pymax > 0))
+         pymin = 0;
+   }
+
    Int_t color;
    TProfile2D* prof2d = dynamic_cast<TProfile2D*>(fH);
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -5972,8 +5981,15 @@ void THistPainter::PaintColorLevels(Option_t*)
             Double_t midy = (ymin + ymax) / 2;
             Double_t rx = xmax - xmin;
             Double_t ry = ymax - ymin;
-            Double_t a1 = (xlow - pxmin) / (pxmax - pxmin) * 360;
-            Double_t a2 = (xup - pxmin) / (pxmax - pxmin) * 360;
+            Double_t a1, a2;
+
+            if (Hoption.Polar == 3) {
+               a1 = xlow / TMath::Pi() * 180;
+               a2 = xup / TMath::Pi() * 180;
+            } else {
+               a1 = (xlow - pxmin) / (pxmax - pxmin) * 360;
+               a2 = (xup - pxmin) / (pxmax - pxmin) * 360;
+            }
             Double_t r1 = (ylow - pymin) / (pymax - pymin) * rx * pkr;
             Double_t r2 = (yup - pymin) / (pymax - pymin) * rx * pkr;
 
