@@ -175,9 +175,7 @@ parser.CheckModel("example_model.ONNX");
 
 - **Tutorials**
     - [TMVA_SOFIE_Inference](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Inference.py)
-    - [TMVA_SOFIE_Keras](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Keras.C)
     - [TMVA_SOFIE_ONNX](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_ONNX.C)
-    - [TMVA_SOFIE_PyTorch](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_PyTorch.py)
     - [TMVA_SOFIE_PyTorch_HiggsModel](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)
     - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame.C)
     - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame.py)

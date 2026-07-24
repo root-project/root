@@ -141,29 +141,6 @@ if (tmva)
     endif()
 endif()
 
-# SOFIE Keras Parser
-if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_keras_parser sofie_keras_parser.py PYTHON_DEPS keras tensorflow)
-        # Tests on full models, translated from the former C++ googletest tmva/sofie/test/TestRModelParserKeras.C
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_keras_parser_models sofie_keras_parser_models.py PYTHON_DEPS keras tensorflow)
-    endif()
-endif()
-
-# SOFIE PyTorch Parser (translated from the former C++ googletest tmva/sofie/test/TestRModelParserPyTorch.C)
-if (tmva)
-    # onnx 1.19.0 has a bug that makes this version unusable:
-    # https://github.com/onnx/onnx/issues/7249
-    # The PyTorch parser imports onnx indirectly via torch.onnx, so the test
-    # has to be disabled with that onnx version.
-    ROOT_FIND_PYTHON_MODULE(onnx)
-    if(NOT (ROOT_ONNX_FOUND AND DEFINED ROOT_ONNX_VERSION AND ROOT_ONNX_VERSION VERSION_EQUAL "1.19.0"))
-        if(NOT MSVC OR win_broken_tests)
-            ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_pytorch_parser sofie_pytorch_parser.py PYTHON_DEPS torch onnx)
-        endif()
-    endif()
-endif()
-
 # RTensor pythonizations
 if (tmva AND dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
