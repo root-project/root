@@ -691,3 +691,114 @@ void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile([[maybe_unused]] E
 
    PrintSpeedscopeFrames(frames, output);
 }
+
+void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESchemaProfileFormat format,
+                                                            std::ostream &output) const
+{
+   // There is only one format at the moment
+   assert(format == ESchemaProfileFormat::kSpeedscopeJSON);
+
+   const auto &descriptor = GetDescriptor();
+
+   struct RDiskPageLeaf {
+      std::uint64_t fPosition = 0;
+      std::uint64_t fSize = 0;
+      std::string fName;
+      std::array<DescriptorId_t, 3> fAncestors;
+   };
+   static constexpr std::array<const char *, 3> kAncestorsNames = {"cluster group", "cluster", "column range"};
+   std::vector<RDiskPageLeaf> pageLeaves;
+
+   // Collect all pageLeaves in whichever order the iterator provides
+   for (const auto &clusterGroupDescriptor : descriptor.GetClusterGroupIterable()) {
+      const auto groupId = clusterGroupDescriptor.GetId();
+
+      for (const auto clusterId : clusterGroupDescriptor.GetClusterIds()) {
+         const auto &clusterDescriptor = descriptor.GetClusterDescriptor(clusterId);
+
+         for (const auto &columnRange : clusterDescriptor.GetColumnRangeIterable()) {
+            const auto columnId = columnRange.GetPhysicalColumnId();
+
+            const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
+            for (const auto &pageInfo : pageRange.GetPageInfos()) {
+               const auto &locator = pageInfo.GetLocator();
+
+               RDiskPageLeaf pageLeaf;
+               pageLeaf.fPosition = locator.GetPosition<std::uint64_t>();
+               pageLeaf.fSize = locator.GetNBytesOnStorage();
+               pageLeaf.fName = "[page @" + std::to_string(pageLeaf.fPosition) + "]";
+               pageLeaf.fAncestors = {groupId, clusterId, columnId};
+               pageLeaves.push_back(pageLeaf);
+            }
+         }
+      }
+   }
+
+   // Sort pageLeafs by on-disk address
+   std::sort(pageLeaves.begin(), pageLeaves.end(),
+             [](const RDiskPageLeaf &a, const RDiskPageLeaf &b) { return a.fPosition < b.fPosition; });
+
+   // Remove aliases (the ntuple specification allows complete, but not partial, overlap between pages)
+   pageLeaves.erase(
+      std::unique(pageLeaves.begin(), pageLeaves.end(),
+                  [](const RDiskPageLeaf &a, const RDiskPageLeaf &b) { return a.fPosition == b.fPosition; }),
+      pageLeaves.end());
+
+   std::vector<SpeedscopeFrame> frames;
+
+   struct ROpenFrame {
+      ROOT::DescriptorId_t fId = 0; // clusterGroup, cluster, columnRange id
+      std::size_t fIndex = 0;       // index in frames vector
+   };
+   std::vector<ROpenFrame> openFrames;
+
+   std::uint64_t previouspageLeafEnd = 0;
+
+   // Construct frames from the bottom (leafs ordered by disk address) upwards
+   for (const auto &pageLeaf : pageLeaves) {
+      std::size_t sharedDepth = 0;
+
+      // How many of the currently open ancestors does this pageLeaf share?
+      while (sharedDepth < openFrames.size() && sharedDepth < pageLeaf.fAncestors.size() &&
+             openFrames[sharedDepth].fId == pageLeaf.fAncestors[sharedDepth]) {
+         sharedDepth++;
+      }
+
+      // Close ancestors not shared with this pageLeaf (innermost first order)
+      while (openFrames.size() > sharedDepth) {
+         frames[openFrames.back().fIndex].fClosingPosition = previouspageLeafEnd;
+         openFrames.pop_back();
+      }
+
+      // Open the ancestors this pageLeaf needs (outermost first order)
+      for (std::size_t depth = sharedDepth; depth < pageLeaf.fAncestors.size(); ++depth) {
+         SpeedscopeFrame ancestorFrame;
+         ancestorFrame.fString =
+            "[" + std::string(kAncestorsNames[depth]) + " " + std::to_string(pageLeaf.fAncestors[depth]) + "]";
+         ancestorFrame.fOpeningPosition = pageLeaf.fPosition;
+         frames.push_back(ancestorFrame);
+
+         ROpenFrame openFrame;
+         openFrame.fId = pageLeaf.fAncestors[depth];
+         openFrame.fIndex = frames.size() - 1;
+         openFrames.push_back(openFrame);
+      }
+
+      // Emit the pageLeaf itself
+      SpeedscopeFrame pageLeafFrame;
+      pageLeafFrame.fString = pageLeaf.fName;
+      pageLeafFrame.fOpeningPosition = pageLeaf.fPosition;
+      pageLeafFrame.fClosingPosition = pageLeaf.fPosition + pageLeaf.fSize;
+      frames.push_back(pageLeafFrame);
+
+      previouspageLeafEnd = pageLeaf.fPosition + pageLeaf.fSize;
+   }
+
+   // Close whatever is still open after the last pageLeaf
+   while (!openFrames.empty()) {
+      frames[openFrames.back().fIndex].fClosingPosition = previouspageLeafEnd;
+      openFrames.pop_back();
+   }
+
+   PrintSpeedscopeFrames(frames, output);
+}
