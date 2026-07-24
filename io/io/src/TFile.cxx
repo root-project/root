@@ -1150,8 +1150,10 @@ void TFile::DrawMap(const char *keys, Option_t *option)
 {
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TFileDrawMap"))) {
-      if (h->LoadPlugin() == -1)
+      if (h->LoadPlugin() == -1) {
+         ::Error("TFile::Open", "Failed to load plugin TFileDrawMap");
          return;
+      }
       h->ExecPlugin(3, this, keys, option);
    }
 }
@@ -3964,8 +3966,10 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
             // Network files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-               if (h->LoadPlugin() == -1)
+               if (h->LoadPlugin() == -1) {
+                  ::Error("TFile::Open", "Failed to load plugin %s", name.Data());
                   return nullptr;
+               }
                f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
             }
 
@@ -3973,8 +3977,10 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
             // Web files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-               if (h->LoadPlugin() == -1)
+               if (h->LoadPlugin() == -1) {
+                  ::Error("TFile::Open", "Failed to load plugin %s", name.Data());
                   return nullptr;
+               }
                f = (TFile*) h->ExecPlugin(2, name.Data(), option);
             }
 
@@ -3992,8 +3998,10 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
             // no recognized specification: try the plugin manager
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
-               if (h->LoadPlugin() == -1)
+               if (h->LoadPlugin() == -1) {
+                  ::Error("TFile::Open", "Failed to load plugin %s", name.Data());
                   return nullptr;
+               }
                f = (TFile *)h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
