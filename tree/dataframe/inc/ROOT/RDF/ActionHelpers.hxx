@@ -513,6 +513,15 @@ public:
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
+   template <typename... Iterators>
+   void ExecLoop(unsigned int slot, std::size_t elements, Iterators... its)
+   {
+      for (std::size_t i = 0; i < elements; i++) {
+         Exec(slot, *its...);
+         (std::advance(its, 1), ...);
+      }
+   }
+
    template <typename... ColumnTypes, const std::size_t... I>
    void
    ExecWithWeight(unsigned int slot, const std::tuple<const ColumnTypes &...> &columnValues, std::index_sequence<I...>)
@@ -526,7 +535,22 @@ public:
    template <typename... ColumnTypes>
    void Exec(unsigned int slot, const ColumnTypes &...columnValues)
    {
-      if constexpr (WithWeight) {
+      if constexpr (std::disjunction_v<IsDataContainer<ColumnTypes>...>) {
+         constexpr std::array<bool, sizeof...(ColumnTypes)> isContainer{IsDataContainer<ColumnTypes>::value...};
+         constexpr std::size_t firstContainerIdx = FindIdxTrue(isContainer);
+         std::array<std::size_t, sizeof...(columnValues)> sizes = {{GetSize(columnValues)...}};
+         std::size_t elements = 0;
+         for (std::size_t i = 0; i < isContainer.size(); i++) {
+            if (isContainer[i]) {
+               if (i == firstContainerIdx) {
+                  elements = sizes[i];
+               } else if (elements != sizes[i]) {
+                  throw std::runtime_error("Cannot fill values in containers of different sizes.");
+               }
+            }
+         }
+         ExecLoop(slot, elements, MakeBegin(columnValues)...);
+      } else if constexpr (WithWeight) {
          auto t = std::forward_as_tuple(columnValues...);
          ExecWithWeight(slot, t, std::make_index_sequence<sizeof...(ColumnTypes) - 1>());
       } else {
@@ -566,6 +590,15 @@ public:
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
+   template <typename... Iterators>
+   void ExecLoop(unsigned int slot, std::size_t elements, Iterators... its)
+   {
+      for (std::size_t i = 0; i < elements; i++) {
+         Exec(slot, *its...);
+         (std::advance(its, 1), ...);
+      }
+   }
+
    template <typename... ColumnTypes, const std::size_t... I>
    void ExecWithWeight(const std::tuple<const ColumnTypes &...> &columnValues, std::index_sequence<I...>)
    {
@@ -576,9 +609,24 @@ public:
    }
 
    template <typename... ColumnTypes>
-   void Exec(unsigned int, const ColumnTypes &...columnValues)
+   void Exec(unsigned int slot, const ColumnTypes &...columnValues)
    {
-      if constexpr (WithWeight) {
+      if constexpr (std::disjunction_v<IsDataContainer<ColumnTypes>...>) {
+         constexpr std::array<bool, sizeof...(ColumnTypes)> isContainer{IsDataContainer<ColumnTypes>::value...};
+         constexpr std::size_t firstContainerIdx = FindIdxTrue(isContainer);
+         std::array<std::size_t, sizeof...(columnValues)> sizes = {{GetSize(columnValues)...}};
+         std::size_t elements = 0;
+         for (std::size_t i = 0; i < isContainer.size(); i++) {
+            if (isContainer[i]) {
+               if (i == firstContainerIdx) {
+                  elements = sizes[i];
+               } else if (elements != sizes[i]) {
+                  throw std::runtime_error("Cannot fill values in containers of different sizes.");
+               }
+            }
+         }
+         ExecLoop(slot, elements, MakeBegin(columnValues)...);
+      } else if constexpr (WithWeight) {
          auto t = std::forward_as_tuple(columnValues...);
          ExecWithWeight(t, std::make_index_sequence<sizeof...(ColumnTypes) - 1>());
       } else {
