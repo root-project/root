@@ -72,8 +72,10 @@ def get_total_cores_jobqueuecluster(cluster: JobQueueCluster) -> int:
         # 'cores' key for any type of dask-jobqueue cluster.
         return sum(spec["options"]["cores"] for spec in workers_spec.values())
     except KeyError as e:
-        raise RuntimeError("Could not retrieve the provided worker specification from the Dask cluster object. "
-                           "Please report this as a bug.") from e
+        raise RuntimeError(
+            "Could not retrieve the provided worker specification from the Dask cluster object. "
+            "Please report this as a bug."
+        ) from e
 
 
 def get_total_cores(client: Client) -> int:
@@ -84,6 +86,7 @@ def get_total_cores(client: Client) -> int:
         # It may happen that the user is connected to a batch system. We try
         # to import the 'dask_jobqueue' module lazily to avoid a dependency.
         from dask_jobqueue import JobQueueCluster
+
         if isinstance(client.cluster, JobQueueCluster):
             return get_total_cores_jobqueuecluster(client.cluster)
     except ModuleNotFoundError:
@@ -102,8 +105,25 @@ class DaskBackend(Base.BaseBackend):
         # `daskclient` will be `None`. In this case, we create a default Dask
         # client connected to a cluster instance with N worker processes, where
         # N is the number of cores on the local machine.
-        self.client = (daskclient if daskclient is not None else
-                       Client(LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1, processes=True)))
+        self.client = (
+            daskclient
+            if daskclient is not None
+            else Client(LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1, processes=True))
+        )
+
+        workers = self.client.scheduler_info().get("workers", None)
+
+        if workers is None:
+            return
+
+        for worker in workers.values():
+            threads = worker.get("nthreads", 1)
+
+            if threads > 1:
+                raise RuntimeError(
+                    "DistRDF with Dask does not support threaded workers. "
+                    "Please use processes=True and threads_per_worker=1."
+                )
 
     def optimize_npartitions(self) -> int:
         """
@@ -115,12 +135,14 @@ class DaskBackend(Base.BaseBackend):
         return get_total_cores(self.client)
 
     @staticmethod
-    def dask_mapper(current_range: Tuple, 
-                    headers: List[str], 
-                    shared_libraries: List[str],
-                    pcms: List[str],
-                    files: List[str],
-                    mapper: Callable) -> Callable:
+    def dask_mapper(
+        current_range: Tuple,
+        headers: List[str],
+        shared_libraries: List[str],
+        pcms: List[str],
+        files: List[str],
+        mapper: Callable,
+    ) -> Callable:
         """
         Gets the paths to the file(s) in the current executor, then
         declares the headers found.
@@ -141,34 +163,32 @@ class DaskBackend(Base.BaseBackend):
         """
         # Retrieve the current worker local directory
         localdir = get_worker().local_directory
-        
-        #Get and declare headers on each worker
-        headers_on_executor = [
-            os.path.join(localdir, os.path.basename(filepath))
-            for filepath in headers
-        ]
+
+        # Get and declare headers on each worker
+        headers_on_executor = [os.path.join(localdir, os.path.basename(filepath)) for filepath in headers]
         Utils.distribute_headers(headers_on_executor)
 
         # Get and declare shared libraries on each worker
-        shared_libs_on_ex = [
-            os.path.join(localdir, os.path.basename(filepath))
-            for filepath in shared_libraries
-        ]
-                
+        shared_libs_on_ex = [os.path.join(localdir, os.path.basename(filepath)) for filepath in shared_libraries]
+
         Utils.distribute_shared_libraries(shared_libs_on_ex)
 
         return mapper(current_range)
 
-    def ProcessAndMerge(self,
-                        ranges: List[Any],
-                        mapper: Callable[[Ranges.DataRange,
-                                        Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
-                                                    Base.TaskObjects],
-                                        Callable[[ROOT.RDF.RNode, int], List],
-                                        Callable],
-                                        Base.TaskResult],
-                        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
-                        ) -> Base.TaskResult:
+    def ProcessAndMerge(
+        self,
+        ranges: List[Any],
+        mapper: Callable[
+            [
+                Ranges.DataRange,
+                Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]], Base.TaskObjects],
+                Callable[[ROOT.RDF.RNode, int], List],
+                Callable,
+            ],
+            Base.TaskResult,
+        ],
+        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
+    ) -> Base.TaskResult:
         """
         Performs map-reduce using Dask framework.
 
@@ -183,21 +203,21 @@ class DaskBackend(Base.BaseBackend):
         Returns:
             list: A list representing the values of action nodes returned
             after computation (Map-Reduce).
-        """  
-        self.distribute_unique_paths(self.headers) 
+        """
+        self.distribute_unique_paths(self.headers)
         self.distribute_unique_paths(self.shared_libraries)
         self.distribute_unique_paths(self.pcms)
         self.distribute_unique_paths(self.files)
-        
-        
+
         dmapper = dask.delayed(DaskBackend.dask_mapper)
         dreducer = dask.delayed(reducer)
 
-        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, self.pcms, self.files, mapper) for range in ranges]
-        
+        mergeables_lists = [
+            dmapper(range, self.headers, self.shared_libraries, self.pcms, self.files, mapper) for range in ranges
+        ]
+
         while len(mergeables_lists) > 1:
-            mergeables_lists.append(
-                dreducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
+            mergeables_lists.append(dreducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
 
         # Here we start the progressbar for the current RDF computation graph
         # running on the Dask client. This expects a future object, so we need
@@ -213,19 +233,23 @@ class DaskBackend(Base.BaseBackend):
 
         return final_results.compute()
 
-    def ProcessAndMergeLive(self,
-                            ranges: List[Any],
-                            mapper: Callable[[Ranges.DataRange,
-                                            Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
-                                                    Base.TaskObjects],
-                                            Callable[[ROOT.RDF.RNode, int], List],
-                                            Callable],
-                                            Base.TaskResult],
-                            reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
-                            drawables_info_dict: Dict[int, Tuple[List[Optional[Callable]], int, str]],
-                            ) -> Base.TaskResult:
+    def ProcessAndMergeLive(
+        self,
+        ranges: List[Any],
+        mapper: Callable[
+            [
+                Ranges.DataRange,
+                Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]], Base.TaskObjects],
+                Callable[[ROOT.RDF.RNode, int], List],
+                Callable,
+            ],
+            Base.TaskResult,
+        ],
+        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
+        drawables_info_dict: Dict[int, Tuple[List[Optional[Callable]], int, str]],
+    ) -> Base.TaskResult:
         """
-        Performs real-time map-reduce using Dask framework, retrieving the partial results 
+        Performs real-time map-reduce using Dask framework, retrieving the partial results
         as soon as they are available, allowing real-time data representation.
 
         Args:
@@ -237,23 +261,24 @@ class DaskBackend(Base.BaseBackend):
             reducer (function): A function that merges two lists that were
                 returned by the mapper.
 
-            drawables_info_dict (dict): A dictionary where keys are plot object IDs 
-                and values are tuples containing optional callback functions, 
+            drawables_info_dict (dict): A dictionary where keys are plot object IDs
+                and values are tuples containing optional callback functions,
                 index of the plot object, and operation name.
 
         Returns:
             merged_results (TaskResult): The merged result of the computation.
         """
-        
-        self.distribute_unique_paths(self.headers) 
+
+        self.distribute_unique_paths(self.headers)
         self.distribute_unique_paths(self.shared_libraries)
         self.distribute_unique_paths(self.pcms)
         self.distribute_unique_paths(self.files)
-        
-        
+
         # Set up Dask mapper
         dmapper = dask.delayed(DaskBackend.dask_mapper)
-        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, self.pcms, self.files, mapper) for range in ranges]
+        mergeables_lists = [
+            dmapper(range, self.headers, self.shared_libraries, self.pcms, self.files, mapper) for range in ranges
+        ]
         # Compute the delayed tasks to get Dask futures that can be passed to the as_completed method
         future_tasks = self.client.compute(mergeables_lists)
 
@@ -273,7 +298,7 @@ class DaskBackend(Base.BaseBackend):
         backend_pad.__destruct__()
 
         return merged_results
-                
+
     def _setup_canvas(self, num_plots: int) -> ROOT.TCanvas:
         """
         Set up a TCanvas for live visualization with divided pads based on the number of plots.
@@ -295,29 +320,31 @@ class DaskBackend(Base.BaseBackend):
 
         return c
 
-    def _process_partial_results(self, 
-                                canvas: ROOT.TCanvas, 
-                                drawables_info_dict: Dict[int, Tuple[List[Optional[Callable]], int, str]],
-                                reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
-                                future_tasks: List[dask.Future]) -> Base.TaskResult:
+    def _process_partial_results(
+        self,
+        canvas: ROOT.TCanvas,
+        drawables_info_dict: Dict[int, Tuple[List[Optional[Callable]], int, str]],
+        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
+        future_tasks: List[dask.Future],
+    ) -> Base.TaskResult:
         """
         Process partial results and display plots on the provided canvas.
 
         Args:
             canvas: The TCanvas object for displaying plots.
-			
-            drawables_info_dict (dict): A dictionary where keys are plot object IDs 
-                and values are tuples containing optional callback functions, 
+
+            drawables_info_dict (dict): A dictionary where keys are plot object IDs
+                and values are tuples containing optional callback functions,
                 index of the plot object, and operation name.
-			
+
             reducer (function): A function for reducing partial results.
-			
+
             future_tasks: Dask future tasks representing partial results.
 
         Returns:
             merged_results (TaskResult): The merged result of the computation.
         """
-        merged_results: Base.TaskResult = None 
+        merged_results: Base.TaskResult = None
         cumulative_plots: Dict[int, Any] = {}
 
         # Collect all futures in batches that had arrived since the last iteration
@@ -327,38 +354,42 @@ class DaskBackend(Base.BaseBackend):
                 merged_results = reducer(merged_results, result) if merged_results else result
 
             mergeables = merged_results.mergeables
-            
-            for pad_num, (drawable_id, (callbacks_list, index, operation_name)) in enumerate(drawables_info_dict.items(), start=1):
+
+            for pad_num, (drawable_id, (callbacks_list, index, operation_name)) in enumerate(
+                drawables_info_dict.items(), start=1
+            ):
                 cumulative_plots[index] = mergeables[index].GetValue()
 
                 pad = canvas.cd(pad_num)
                 self._apply_callbacks_and_draw(pad, cumulative_plots, operation_name, index, callbacks_list)
-        
+
         return merged_results
 
-    def _apply_callbacks_and_draw(self,
-                                  pad: ROOT.TPad,
-                                  cumulative_plots: Dict[int, Any],
-                                  operation_name: str,
-                                  index: int,
-                                  callbacks_list: List[Optional[Callable]]) -> None:
+    def _apply_callbacks_and_draw(
+        self,
+        pad: ROOT.TPad,
+        cumulative_plots: Dict[int, Any],
+        operation_name: str,
+        index: int,
+        callbacks_list: List[Optional[Callable]],
+    ) -> None:
         """
         Apply callbacks and draw plots on the provided pad.
 
         Args:
             pad: The TPad object for drawing plots.
-			
+
             cumulative_plots: A dictionary of the current merged partial results.
-			
+
             callbacks_list: A list of callback functions to be applied.
-			
+
             operation_name (str): Name of the operation associated with the plot.
-		
+
             index (int): Index of the plot in cumulative_plots dictionary.
         """
         for callback in callbacks_list:
-                if callback is not None:
-                    callback(cumulative_plots[index])
+            if callback is not None:
+                callback(cumulative_plots[index])
 
         if operation_name in ["Graph", "GraphAsymmErrors"]:
             cumulative_plots[index].Draw("AP")
