@@ -3,9 +3,12 @@
 #include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/TThreadExecutor.hxx>
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <numeric>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
 
 #include "gtest/gtest.h"
 
@@ -14,6 +17,15 @@ static const auto NUM_THREADS = 8u;
 #else
 static const auto NUM_THREADS = 0u;
 #endif
+
+template <typename T>
+void expect_vec_eq(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (decltype(v1.size()) i{}; i < v1.size(); ++i) {
+      EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
 
 #ifdef R__USE_IMT
 TEST(RDFConcurrency, NestedParallelismBetweenDefineCalls)
@@ -267,3 +279,148 @@ TEST(RDFConcurrency, HistoNSparseDInMT)
 }
 
 #endif
+
+// Check that multiple RDF can JIT at the same time without interfering
+// with each other
+TEST(RDFConcurrency, JITWithManyThreads)
+{
+   ROOT::EnableThreadSafety();
+
+   std::vector<int> expected(25);
+   std::iota(expected.begin(), expected.end(), 0);
+
+   std::vector<int> results(25);
+   auto do_work = [&results](int slot) {
+      const int begin{slot * 5};
+      const int end{begin + 5};
+      for (int i = begin; i < end; i++) {
+         results[i] = ROOT::RDataFrame{1}.Define("x", std::to_string(i)).Sum<int>("x").GetValue();
+      }
+   };
+
+   std::vector<std::thread> threads;
+   threads.reserve(5);
+   for (int slot = 0; slot < 5; slot++)
+      threads.emplace_back(do_work, slot);
+
+   for (auto &&t : threads)
+      t.join();
+
+   expect_vec_eq(results, expected);
+}
+
+TEST(RDFConcurrency, JITManyThreadsAndExceptions)
+{
+   // Tests multiple concurrrent threads running RDataFrame computations with
+   // JITting involved. The threads are synchronized to ensure the JIT compilations
+   // are interleaved multiple times. Some of the threads will also throw exceptions
+   // to test that they do not interfere with other valid RDataFrame graphs.
+   ROOT::EnableThreadSafety();
+
+   std::condition_variable cv_1;
+   std::condition_variable cv_2;
+   std::condition_variable cv_3;
+   std::mutex m_1;
+   std::mutex m_2;
+   std::mutex m_3;
+   bool ready_1{false};
+   bool ready_2{false};
+   bool ready_3{false};
+
+   int res_work_2{};
+   int res_work_3{};
+
+   auto work_1 = [&]() {
+      try {
+         ROOT::RDataFrame df{1};
+         auto df1 = df.Define("work_1_x", "return 42;")
+                       .Redefine("work_1_x",
+                                 [](int x) {
+                                    throw std::runtime_error("Error in RDF!");
+                                    return x;
+                                 },
+                                 {"work_1_x"});
+         df1.Sum<int>("work_1_x").GetValue();
+      } catch (const std::runtime_error &e) {
+         EXPECT_STREQ(e.what(), "Error in RDF!");
+      }
+      {
+         std::lock_guard lk_1{m_1};
+         ready_1 = true;
+      }
+      cv_1.notify_all();
+   };
+
+   auto work_2 = [&]() {
+      ROOT::RDataFrame df{1};
+      // work_2 starts only when work_1 is done
+      {
+         std::unique_lock lk_1(m_1);
+         cv_1.wait(lk_1, [&ready_1] { return ready_1; });
+      }
+      auto df1 = df.Define("work_2_x", "42");
+      // work_2 proceeds only when work_3 is done
+      {
+         std::unique_lock lk_3{m_3};
+         cv_3.wait(lk_3, [&ready_3] { return ready_3; });
+      }
+      auto df2 = df1.Define("work_2_y", "58");
+      auto df3 = df2.Define("work_2_z", "work_2_x + work_2_y");
+      res_work_2 = df3.Sum<int>("work_2_z").GetValue();
+      {
+         std::lock_guard lk_2{m_2};
+         ready_2 = true;
+      }
+      cv_2.notify_all();
+   };
+
+   auto work_3 = [&]() {
+      try {
+         ROOT::RDataFrame df{1};
+         auto df1 = df.Define("x", "rndm");
+      } catch (...) {
+      }
+      {
+         std::lock_guard lk_3{m_3};
+         ready_3 = true;
+      }
+
+      cv_3.notify_all();
+   };
+
+   auto work_sync = [&]() {
+      // work_sync starts immediately
+      ROOT::RDataFrame df{1};
+      auto df1 = df.Define("work_sync_x", "11");
+
+      // work_sync proceeds only when work_1 is done
+      {
+         std::unique_lock lk_1(m_1);
+         cv_1.wait(lk_1, [&ready_1] { return ready_1; });
+      }
+      auto df2 = df1.Define("work_sync_y", "work_sync_x * 2");
+
+      // work_sync proceeds only when work_2 is done
+      {
+         std::unique_lock lk_2(m_2);
+         cv_2.wait(lk_2, [&ready_2] { return ready_2; });
+      }
+      auto df3 = df2.Define("work_sync_z", "work_sync_y + work_sync_x");
+
+      // work_sync finishes only when work_3 is done
+      {
+         std::unique_lock lk_3(m_3);
+         cv_3.wait(lk_3, [&ready_3] { return ready_3; });
+      }
+      auto df4 = df3.Define("work_sync_fin", "work_sync_x + work_sync_y + work_sync_z");
+      res_work_3 = df4.Sum<int>("work_sync_fin").GetValue();
+   };
+
+   std::array<std::thread, 4> threads{std::thread{work_1}, std::thread{work_2}, std::thread{work_3},
+                                      std::thread{work_sync}};
+   for (auto &&t : threads)
+      t.join();
+
+   EXPECT_EQ(res_work_2, 100);
+   EXPECT_EQ(res_work_3, 66);
+}
