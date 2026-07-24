@@ -619,14 +619,16 @@ void TCanvas::Build()
       SetBatch(kTRUE);
    } else {
       //normal mode with a screen window
-      // Set default physical canvas attributes
-      fPainter->SelectDrawable(fCanvasID);
-      fPainter->SetAttFill({1, 1001});    //Set color index for fill area
-      fPainter->SetAttLine({1, 1, 1});    //Set color index for lines
-      fPainter->SetAttMarker({1, 1, 1});  //Set color index for markers
-      // fPainter->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
-      // Clear workstation
-      fPainter->ClearWindow(fCanvasID);
+      if (auto pp = GetCanvasPainter()) {
+         // Set default physical canvas attributes
+         pp->SelectDrawable(fCanvasID);
+         pp->SetAttFill({1, 1001});    //Set color index for fill area
+         pp->SetAttLine({1, 1, 1});    //Set color index for lines
+         pp->SetAttMarker({1, 1, 1});  //Set color index for markers
+         // pp->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
+         // Clear workstation
+         pp->ClearWindow(fCanvasID);
+      }
 
       // Set Double Buffer on by default
       SetDoubleBuffer(1);
@@ -662,8 +664,8 @@ void TCanvas::Build()
       SetPad(0, 0, 1, 1);
       Range(0, 0, 1, 1);   //pad range is set by default to [0,1] in x and y
 
-      TVirtualPadPainter *vpp = GetCanvasPainter();
-      if (vpp) vpp->SelectDrawable(fPixmapID);//gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
+      if (auto pp = GetCanvasPainter())
+         pp->SelectDrawable(fPixmapID);      //pixmap must be selected
       PaintBorder(GetFillColor(), kTRUE);    //paint background
    }
 
