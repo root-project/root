@@ -40,6 +40,7 @@
 
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string_view>
 #include <vector>
@@ -231,6 +232,57 @@ std::size_t countOccurrences(std::string_view haystack, std::string_view needle)
    return result;
 }
 
+std::string makeHistFactoryJSON(std::string const &modifiers, std::string const &defaultInterpolation = "")
+{
+   const std::string defaultNode =
+      defaultInterpolation.empty() ? "" : "\"default_interpolation\":" + defaultInterpolation + ",";
+   return R"({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],)" +
+          defaultNode + R"(
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0]},
+                  "modifiers": [)" +
+          modifiers + R"(]
+               }
+            ]
+         }
+      ]
+   })";
+}
+
+void expectInterpolation(const RooFit::Detail::JSONNode &node, std::string_view type, std::string_view in,
+                         std::optional<std::string_view> out)
+{
+   ASSERT_TRUE(node.is_map());
+   ASSERT_TRUE(node.has_child("type"));
+   ASSERT_TRUE(node.has_child("in"));
+   ASSERT_TRUE(node.has_child("out"));
+   EXPECT_EQ(node["type"].val(), type);
+   EXPECT_EQ(node["in"].val(), in);
+   if (out) {
+      EXPECT_FALSE(node["out"].is_null());
+      EXPECT_EQ(node["out"].val(), *out);
+   } else {
+      EXPECT_TRUE(node["out"].is_null());
+   }
+}
+
+const RooFit::Detail::JSONNode *findModifier(const RooFit::Detail::JSONNode &channel, std::string const &name)
+{
+   const auto *sample = RooJSONFactoryWSTool::findNamedChild(channel["samples"], "sig");
+   if (!sample) {
+      return nullptr;
+   }
+   return RooJSONFactoryWSTool::findNamedChild((*sample)["modifiers"], name);
+}
+
 // Asserts that exporting `ws` to HS3 throws and logs an error message containing `expectedReason`.
 void expectExportThrowsWithError(RooWorkspace &ws, std::string const &expectedReason)
 {
@@ -246,6 +298,22 @@ void expectExportThrowsWithError(RooWorkspace &ws, std::string const &expectedRe
 
    EXPECT_TRUE(threw);
    EXPECT_TRUE(exported.empty()) << "A HistFactory object was returned despite incompatible duplicate modifiers";
+   EXPECT_NE(errors.find(expectedReason), std::string::npos) << errors;
+}
+
+void expectImportThrowsWithError(std::string const &json, std::string const &expectedReason)
+{
+   RooWorkspace ws;
+   bool threw = false;
+   const std::string errors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+      try {
+         RooJSONFactoryWSTool{ws}.importJSONfromString(json);
+      } catch (const std::runtime_error &) {
+         threw = true;
+      }
+   });
+
+   EXPECT_TRUE(threw);
    EXPECT_NE(errors.find(expectedReason), std::string::npos) << errors;
 }
 
@@ -1613,6 +1681,253 @@ TEST(RooFitHS3, UnbinnedDatasetAxisRange)
    EXPECT_EQ(axesNode.find("\"value\""), std::string::npos) << axesNode;
 }
 
+TEST(RooFitHS3, HistFactoryInterpolationCodeMapping)
+{
+   struct TestCase {
+      const char *modifierType;
+      int inputCode;
+      const char *type;
+      const char *in;
+      const char *out;
+      int canonicalCode;
+   };
+   const TestCase testCases[]{
+      {"normsys", 0, "add", "poly1", nullptr, 0},   {"normsys", 1, "mult", "exp", nullptr, 1},
+      {"normsys", 2, "add", "poly2", "poly1", 2},   {"normsys", 3, "add", "poly2", "poly1", 2},
+      {"normsys", 4, "mult", "poly6", "exp", 4},    {"normsys", 5, "mult", "poly6", "exp", 4},
+      {"histosys", 0, "add", "poly1", nullptr, 0},  {"histosys", 1, "mult", "exp", nullptr, 1},
+      {"histosys", 2, "add", "poly2", "poly1", 2},  {"histosys", 3, "add", "poly2", "poly1", 2},
+      {"histosys", 4, "add", "poly6", "poly1", 4},  {"histosys", 5, "mult", "poly6", "exp", 5},
+      {"histosys", 6, "mult", "poly6", "poly1", 6},
+   };
+
+   for (const auto &testCase : testCases) {
+      SCOPED_TRACE(std::string(testCase.modifierType) + " code " + std::to_string(testCase.inputCode));
+      const bool isNormSys = std::string_view{testCase.modifierType} == "normsys";
+      const std::string data =
+         isNormSys ? R"({"lo":0.8,"hi":1.2})" : R"({"lo":{"contents":[8.0,18.0]},"hi":{"contents":[12.0,22.0]}})";
+      const std::string modifier = R"({"name":"modifier","parameter":"alpha_modifier","type":")" +
+                                   std::string(testCase.modifierType) + R"(","interpolation":)" +
+                                   std::to_string(testCase.inputCode) + R"(,"data":)" + data + "}";
+
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON(modifier)));
+      const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      auto tree = RooFit::Detail::JSONTree::create(exported);
+      const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
+      ASSERT_NE(channel, nullptr);
+      ASSERT_TRUE(channel->has_child("default_interpolation"));
+      expectInterpolation((*channel)["default_interpolation"], testCase.type, testCase.in,
+                          testCase.out ? std::optional<std::string_view>{testCase.out} : std::nullopt);
+
+      const auto *exportedModifier = findModifier(*channel, "modifier");
+      ASSERT_NE(exportedModifier, nullptr);
+      EXPECT_FALSE(exportedModifier->has_child("interpolation"));
+
+      RooWorkspace roundTripped;
+      ASSERT_TRUE(RooJSONFactoryWSTool{roundTripped}.importJSONfromString(exported));
+      if (isNormSys) {
+         auto *interpolation =
+            dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(roundTripped.function("sig_channel0_epsilon"));
+         ASSERT_NE(interpolation, nullptr);
+         ASSERT_EQ(interpolation->interpolationCodes().size(), 1u);
+         EXPECT_EQ(interpolation->interpolationCodes()[0], testCase.canonicalCode);
+      } else {
+         auto *interpolation =
+            dynamic_cast<PiecewiseInterpolation *>(roundTripped.function("histoSys_model_channel0_sig"));
+         ASSERT_NE(interpolation, nullptr);
+         ASSERT_EQ(interpolation->interpolationCodes().size(), 1u);
+         EXPECT_EQ(interpolation->interpolationCodes()[0], testCase.canonicalCode);
+      }
+   }
+}
+
+TEST(RooFitHS3, HistFactoryInterpolationDefaultsAndOverrides)
+{
+   const std::string modifiers = R"(
+      {
+         "name":"norm_default_1", "parameter":"alpha_norm_default_1", "type":"normsys",
+         "interpolation":4, "data":{"lo":0.8,"hi":1.2}
+      },
+      {
+         "name":"norm_default_2", "parameter":"alpha_norm_default_2", "type":"normsys",
+         "interpolation":5, "data":{"lo":0.9,"hi":1.1}
+      },
+      {
+         "name":"norm_linear", "parameter":"alpha_norm_linear", "type":"normsys",
+         "interpolation":0, "data":{"lo":0.85,"hi":1.15}
+      },
+      {
+         "name":"shape_default", "parameter":"alpha_shape_default", "type":"histosys",
+         "interpolation":4,
+         "data":{"lo":{"contents":[8.0,18.0]},"hi":{"contents":[12.0,22.0]}}
+      },
+      {
+         "name":"shape_quadratic", "parameter":"alpha_shape_quadratic", "type":"histosys",
+         "interpolation":2,
+         "data":{"lo":{"contents":[9.0,17.0]},"hi":{"contents":[11.0,23.0]}}
+      })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON(modifiers)));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
+   ASSERT_NE(channel, nullptr);
+
+   expectInterpolation((*channel)["default_interpolation"], "mult", "poly6", "exp");
+   for (const char *name : {"norm_default_1", "norm_default_2"}) {
+      const auto *modifier = findModifier(*channel, name);
+      ASSERT_NE(modifier, nullptr);
+      EXPECT_FALSE(modifier->has_child("interpolation"));
+   }
+
+   const auto *linear = findModifier(*channel, "norm_linear");
+   ASSERT_NE(linear, nullptr);
+   ASSERT_TRUE(linear->has_child("interpolation"));
+   expectInterpolation((*linear)["interpolation"], "add", "poly1", std::nullopt);
+
+   const auto *shapeDefault = findModifier(*channel, "shape_default");
+   ASSERT_NE(shapeDefault, nullptr);
+   ASSERT_TRUE(shapeDefault->has_child("interpolation"));
+   expectInterpolation((*shapeDefault)["interpolation"], "add", "poly6", "poly1");
+
+   const auto *shapeQuadratic = findModifier(*channel, "shape_quadratic");
+   ASSERT_NE(shapeQuadratic, nullptr);
+   ASSERT_TRUE(shapeQuadratic->has_child("interpolation"));
+   expectInterpolation((*shapeQuadratic)["interpolation"], "add", "poly2", "poly1");
+
+   RooWorkspace roundTripped;
+   ASSERT_TRUE(RooJSONFactoryWSTool{roundTripped}.importJSONfromString(exported));
+   auto *shapeInterpolation =
+      dynamic_cast<PiecewiseInterpolation *>(roundTripped.function("histoSys_model_channel0_sig"));
+   ASSERT_NE(shapeInterpolation, nullptr);
+   ASSERT_EQ(shapeInterpolation->paramList().size(), 2u);
+   for (std::size_t i = 0; i < shapeInterpolation->paramList().size(); ++i) {
+      const std::string parameter = shapeInterpolation->paramList().at(i)->GetName();
+      if (parameter == "alpha_shape_default") {
+         EXPECT_EQ(shapeInterpolation->interpolationCodes()[i], 4);
+      } else if (parameter == "alpha_shape_quadratic") {
+         EXPECT_EQ(shapeInterpolation->interpolationCodes()[i], 2);
+      } else {
+         FAIL() << "Unexpected histosys parameter " << parameter;
+      }
+   }
+
+   const std::string implicitModifiers = R"(
+      {"name":"norm","parameter":"alpha_norm","type":"normsys","data":{"lo":0.8,"hi":1.2}},
+      {
+         "name":"shape","parameter":"alpha_shape","type":"histosys",
+         "data":{"lo":{"contents":[8.0,18.0]},"hi":{"contents":[12.0,22.0]}}
+      })";
+   RooWorkspace implicitWorkspace;
+   ASSERT_TRUE(RooJSONFactoryWSTool{implicitWorkspace}.importJSONfromString(makeHistFactoryJSON(implicitModifiers)));
+   const std::string implicitExported = RooJSONFactoryWSTool{implicitWorkspace}.exportJSONtoString();
+   auto implicitTree = RooFit::Detail::JSONTree::create(implicitExported);
+   const auto *implicitChannel =
+      RooJSONFactoryWSTool::findNamedChild(implicitTree->rootnode()["distributions"], "model_channel0");
+   ASSERT_NE(implicitChannel, nullptr);
+   expectInterpolation((*implicitChannel)["default_interpolation"], "mult", "poly6", "exp");
+   const auto *implicitNorm = findModifier(*implicitChannel, "norm");
+   const auto *implicitShape = findModifier(*implicitChannel, "shape");
+   ASSERT_NE(implicitNorm, nullptr);
+   ASSERT_NE(implicitShape, nullptr);
+   EXPECT_FALSE(implicitNorm->has_child("interpolation"));
+   expectInterpolation((*implicitShape)["interpolation"], "add", "poly6", "poly1");
+
+   const std::string stableTieModifiers = R"(
+      {"name":"norm","parameter":"alpha_norm","type":"normsys","interpolation":0,"data":{"lo":0.8,"hi":1.2}},
+      {
+         "name":"shape","parameter":"alpha_shape","type":"histosys","interpolation":2,
+         "data":{"lo":{"contents":[8.0,18.0]},"hi":{"contents":[12.0,22.0]}}
+      })";
+   RooWorkspace stableTieWorkspace;
+   ASSERT_TRUE(RooJSONFactoryWSTool{stableTieWorkspace}.importJSONfromString(makeHistFactoryJSON(stableTieModifiers)));
+   auto stableTieTree = RooFit::Detail::JSONTree::create(RooJSONFactoryWSTool{stableTieWorkspace}.exportJSONtoString());
+   const auto *stableTieChannel =
+      RooJSONFactoryWSTool::findNamedChild(stableTieTree->rootnode()["distributions"], "model_channel0");
+   ASSERT_NE(stableTieChannel, nullptr);
+   expectInterpolation((*stableTieChannel)["default_interpolation"], "add", "poly1", std::nullopt);
+
+   RooWorkspace noInterpolationWorkspace;
+   ASSERT_TRUE(RooJSONFactoryWSTool{noInterpolationWorkspace}.importJSONfromString(
+      makeHistFactoryJSON(R"({"name":"mu","parameter":"mu","type":"normfactor"})")));
+   const std::string noInterpolationExported = RooJSONFactoryWSTool{noInterpolationWorkspace}.exportJSONtoString();
+   auto noInterpolationTree = RooFit::Detail::JSONTree::create(noInterpolationExported);
+   const auto *noInterpolationChannel =
+      RooJSONFactoryWSTool::findNamedChild(noInterpolationTree->rootnode()["distributions"], "model_channel0");
+   ASSERT_NE(noInterpolationChannel, nullptr);
+   EXPECT_FALSE(noInterpolationChannel->has_child("default_interpolation"));
+}
+
+TEST(RooFitHS3, HistFactoryStructuredInterpolationRoundTrip)
+{
+   const std::string modifiers = R"(
+      {
+         "name":"norm", "parameter":"alpha_norm", "type":"normsys",
+         "data":{"lo":0.8,"hi":1.3}
+      },
+      {
+         "name":"shape", "parameter":"alpha_shape", "type":"histosys",
+         "interpolation":{"type":"add","in":"poly2","out":"poly1"},
+         "data":{"lo":{"contents":[8.0,17.0]},"hi":{"contents":[12.0,23.0]}}
+      })";
+   const std::string defaultInterpolation = R"({"type":"mult","in":"poly6","out":"exp"})";
+
+   RooWorkspace before;
+   ASSERT_TRUE(RooJSONFactoryWSTool{before}.importJSONfromString(makeHistFactoryJSON(modifiers, defaultInterpolation)));
+   auto *normBefore = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(before.function("sig_channel0_epsilon"));
+   auto *shapeBefore = dynamic_cast<PiecewiseInterpolation *>(before.function("histoSys_model_channel0_sig"));
+   ASSERT_NE(normBefore, nullptr);
+   ASSERT_NE(shapeBefore, nullptr);
+   EXPECT_EQ(normBefore->interpolationCodes()[0], 4);
+   EXPECT_EQ(shapeBefore->interpolationCodes()[0], 2);
+
+   const std::string exported = RooJSONFactoryWSTool{before}.exportJSONtoString();
+   RooWorkspace after;
+   ASSERT_TRUE(RooJSONFactoryWSTool{after}.importJSONfromString(exported));
+
+   auto prediction = [](RooWorkspace &ws, int bin, double norm, double shape) {
+      ws.var("x")->setBin(bin);
+      ws.var("alpha_norm")->setVal(norm);
+      ws.var("alpha_shape")->setVal(shape);
+      RooArgSet observables{*ws.var("x")};
+      return ws.function("model_channel0_sig_shapes")->getVal(observables) *
+             ws.function("model_channel0_sig_scaleFactors")->getVal();
+   };
+
+   for (double theta : {-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0}) {
+      for (int bin = 0; bin < 2; ++bin) {
+         const double expected = prediction(before, bin, theta, theta);
+         EXPECT_NEAR(prediction(after, bin, theta, theta), expected, std::abs(expected) * 1e-13)
+            << "theta=" << theta << ", bin=" << bin;
+      }
+   }
+}
+
+TEST(RooFitHS3, HistFactoryStructuredInterpolationValidation)
+{
+   const std::string normsys =
+      R"({"name":"norm","parameter":"alpha_norm","type":"normsys","data":{"lo":0.8,"hi":1.2}})";
+
+   expectImportThrowsWithError(makeHistFactoryJSON(normsys, R"({"type":"mult","in":"poly6"})"),
+                               "does not define the required 'out' component");
+   expectImportThrowsWithError(makeHistFactoryJSON(normsys, R"({"type":"mult","in":"spline","out":null})"),
+                               "unknown interpolation function 'spline'");
+   expectImportThrowsWithError(
+      makeHistFactoryJSON(
+         R"({"name":"norm","parameter":"alpha_norm","type":"normsys","interpolation":{"type":"add","in":"poly6","out":"poly1"},"data":{"lo":0.8,"hi":1.2}})"),
+      "cannot be represented by FlexibleInterpVar");
+   expectImportThrowsWithError(
+      makeHistFactoryJSON(
+         R"({"name":"shape","parameter":"alpha_shape","type":"histosys","interpolation":{"type":"add","in":"exp","out":null},"data":{"lo":{"contents":[8.0,18.0]},"hi":{"contents":[12.0,22.0]}}})"),
+      "cannot be represented by PiecewiseInterpolation");
+   expectImportThrowsWithError(
+      makeHistFactoryJSON(
+         R"({"name":"norm","parameter":"alpha_norm","type":"normsys","interpolation":"four","data":{"lo":0.8,"hi":1.2}})"),
+      "invalid legacy interpolation code 'four'");
+}
+
 // HistFactory channels with samples that have a zero-yield bin together with a
 // staterror modifier used to produce NaN gamma errors because the relative
 // error is computed as sqrt(sumW2)/sumW. Importing such a channel should now
@@ -1685,6 +2000,8 @@ TEST(RooFitHS3, HistFactoryZeroYieldBin)
 
 TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
 {
+   // The two "poly" modifiers deliberately use implicit code 4 and explicit
+   // code 5, which are semantic aliases in FlexibleInterpVar.
    const std::string jsonStr = R"({
       "metadata": {"hs3_version": "0.1.90"},
       "distributions": [
@@ -1723,6 +2040,7 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
                         "name": "poly",
                         "parameter": "alpha_poly",
                         "type": "normsys",
+                        "interpolation": 5,
                         "data": {"lo": 0.75, "hi": 1.25}
                      },
                      {
@@ -1928,7 +2246,7 @@ INSTANTIATE_TEST_SUITE_P(
                "name": "input_2", "parameter": "alpha_dup", "type": "normsys",
                "interpolation": 4, "data": {"lo": 0.9, "hi": 1.1}
             })",
-                                            "", "interpolation codes differ"},
+                                            "", "interpolation behaviours differ"},
                    IncompatibleModifierCase{"Constraint",
                                             R"(
             {
@@ -1974,7 +2292,7 @@ TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithNonDefaultInterpolationFails)
    RooWorkspace ws{"ws_incompatible_histosys_interpolation"};
    importDuplicateHistoSysModel(ws, /*interpCode=*/2, /*low2=*/{9.0, 16.0}, /*high2=*/{11.0, 24.0});
 
-   expectExportThrowsWithError(ws, "non-default interpolation cannot currently be represented by the HS3 exporter");
+   expectExportThrowsWithError(ws, "this interpolation cannot currently be combined for duplicate histosys modifiers");
 }
 
 TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
