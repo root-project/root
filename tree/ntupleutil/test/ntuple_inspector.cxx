@@ -1,4 +1,5 @@
 #include <ROOT/RNTupleInspector.hxx>
+#include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <TFile.h>
@@ -13,10 +14,20 @@ using ROOT::ENTupleColumnType;
 using ROOT::RField;
 using ROOT::RFieldBase;
 using ROOT::RNTuple;
+using ROOT::RNTupleDescriptor;
+using ROOT::RNTupleLocator;
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriteOptions;
 using ROOT::RNTupleWriter;
 using ROOT::Experimental::RNTupleInspector;
+using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RClusterDescriptorBuilder;
+using ROOT::Internal::RClusterGroupDescriptorBuilder;
+using ROOT::Internal::RColumnDescriptorBuilder;
+using ROOT::Internal::RFieldDescriptorBuilder;
+using ROOT::Internal::RNTupleDescriptorBuilder;
+using ROOT::Internal::RNTupleFileWriter;
+using ROOT::Internal::RNTupleSerializer;
 
 TEST(RNTupleInspector, CreateFromPointer)
 {
@@ -914,4 +925,295 @@ TEST(RNTupleInspector, SchemaProfile)
 }
 )foo";
    EXPECT_EQ(schemaProfile, expected);
+}
+
+namespace {
+
+void WriteShuffledNTuple(const std::string &ntupleName, const std::string &path)
+{
+   // Specify logical schema
+   RNTupleDescriptorBuilder nTupleDescriptorBuilder;
+
+   nTupleDescriptorBuilder.SetVersionForWriting();
+   nTupleDescriptorBuilder.SetNTuple(ntupleName, "Non-contiguous cluster group, cluster and column range");
+
+   nTupleDescriptorBuilder.AddField(RFieldDescriptorBuilder()
+                                       .FieldId(0)
+                                       .FieldName("")
+                                       .Structure(ROOT::ENTupleStructure::kRecord)
+                                       .MakeDescriptor()
+                                       .Unwrap());
+
+   for (std::uint32_t i = 0; i < 6; ++i) {
+      const ROOT::DescriptorId_t fieldId = 1 + i;
+      const ROOT::DescriptorId_t columnId = i;
+
+      nTupleDescriptorBuilder.AddField(RFieldDescriptorBuilder()
+                                          .FieldId(fieldId)
+                                          .FieldName("tag" + std::to_string(i))
+                                          .Structure(ROOT::ENTupleStructure::kPlain)
+                                          .MakeDescriptor()
+                                          .Unwrap());
+
+      nTupleDescriptorBuilder.AddFieldLink(0, fieldId).ThrowOnError();
+
+      nTupleDescriptorBuilder.AddColumn(RColumnDescriptorBuilder()
+                                           .LogicalColumnId(columnId)
+                                           .PhysicalColumnId(columnId)
+                                           .FieldId(fieldId)
+                                           .BitsOnStorage(32)
+                                           .Type(ROOT::ENTupleColumnType::kIndex32)
+                                           .Index(0)
+                                           .MakeDescriptor()
+                                           .Unwrap());
+   }
+
+   RNTupleWriteOptions options;
+   auto writer =
+      RNTupleFileWriter::Recreate("shuffled_ntuple", path, RNTupleFileWriter::EContainerFormat::kTFile, options);
+
+   const RNTupleDescriptor &schemaDescriptor = nTupleDescriptorBuilder.GetDescriptor();
+
+   // Serialize and write header
+   auto context = RNTupleSerializer::SerializeHeader(nullptr, schemaDescriptor).Unwrap();
+   auto headerBuffer = MakeUninitArray<unsigned char>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeader(headerBuffer.get(), schemaDescriptor).Unwrap();
+   writer->WriteNTupleHeader(headerBuffer.get(), context.GetHeaderSize(), context.GetHeaderSize());
+
+   // Serialize and write pages
+   auto serializePage = [&](std::uint32_t firstValue, std::uint32_t numberOfElements, bool addChecksum) {
+      const std::size_t payloadBytes = std::size_t(numberOfElements) * 4; // kIndex32 -> 4 bytes/element
+      const std::size_t blobBytes = payloadBytes + (addChecksum ? 8 : 0);
+      auto blob = MakeUninitArray<unsigned char>(blobBytes);
+
+      for (std::uint32_t i = 0; i < numberOfElements; ++i)
+         RNTupleSerializer::SerializeUInt32(firstValue + i, blob.get() + i * 4);
+
+      if (addChecksum) {
+         std::uint64_t xxhash3 = 0;
+         RNTupleSerializer::SerializeXxHash3(blob.get(), payloadBytes, xxhash3, blob.get() + payloadBytes);
+      }
+
+      const std::uint64_t offset = writer->WriteBlob(blob.get(), blobBytes, payloadBytes);
+
+      ROOT::RClusterDescriptor::RPageInfo pageInfo;
+      pageInfo.SetNElements(numberOfElements);
+      pageInfo.SetHasChecksum(addChecksum);
+      pageInfo.GetLocator().SetPosition(offset);
+      pageInfo.GetLocator().SetNBytesOnStorage(payloadBytes); // excludes the checksum
+      return pageInfo;
+   };
+
+   auto page1 = serializePage(0, 50, true);
+   auto page2 = serializePage(50, 25, false);
+   auto page3 = serializePage(0, 100, true);
+   auto page4 = serializePage(75, 25, false);
+   auto page5 = serializePage(0, 100, true);
+   auto page6 = serializePage(0, 100, false);
+   auto page7 = serializePage(0, 100, true);
+   auto page8 = serializePage(0, 100, false);
+
+   auto makePageRange = [](ROOT::DescriptorId_t physicalColumnID,
+                           std::initializer_list<ROOT::RClusterDescriptor::RPageInfo> pages) {
+      ROOT::RClusterDescriptor::RPageRange pageRange;
+      pageRange.SetPhysicalColumnId(physicalColumnID);
+      for (const auto &p : pages)
+         pageRange.GetPageInfos().emplace_back(p);
+      return pageRange;
+   };
+
+   // Specify clusters and column ranges
+   {
+      RClusterDescriptorBuilder builder;
+      builder.ClusterId(0).FirstEntryIndex(0).NEntries(100);
+      builder.CommitColumnRange(0, 0, 0, makePageRange(0, {page1, page2, page4})).ThrowOnError();
+      builder.CommitColumnRange(1, 0, 0, makePageRange(1, {page3})).ThrowOnError();
+      builder.CommitColumnRange(3, 0, 0, makePageRange(3, {page6})).ThrowOnError();
+      nTupleDescriptorBuilder.AddCluster(builder.MoveDescriptor().Unwrap()).ThrowOnError();
+   }
+   {
+      RClusterDescriptorBuilder builder;
+      builder.ClusterId(1).FirstEntryIndex(100).NEntries(100);
+      builder.CommitColumnRange(2, 0, 0, makePageRange(2, {page5})).ThrowOnError();
+      nTupleDescriptorBuilder.AddCluster(builder.MoveDescriptor().Unwrap()).ThrowOnError();
+   }
+   {
+      RClusterDescriptorBuilder builder;
+      builder.ClusterId(2).FirstEntryIndex(200).NEntries(100);
+      builder.CommitColumnRange(4, 0, 0, makePageRange(4, {page7})).ThrowOnError();
+      nTupleDescriptorBuilder.AddCluster(builder.MoveDescriptor().Unwrap()).ThrowOnError();
+   }
+   {
+      RClusterDescriptorBuilder builder;
+      builder.ClusterId(3).FirstEntryIndex(300).NEntries(100);
+      builder.CommitColumnRange(5, 0, 0, makePageRange(5, {page8})).ThrowOnError();
+      nTupleDescriptorBuilder.AddCluster(builder.MoveDescriptor().Unwrap()).ThrowOnError();
+   }
+
+   std::vector<ROOT::DescriptorId_t> clusterGroup0Clusters{0, 1, 3};
+   std::vector<ROOT::DescriptorId_t> clusterGroup1Clusters{2};
+   std::vector<ROOT::DescriptorId_t> clusterGroup0PhysicalID, clusterGroup1PhysicalID;
+
+   for (auto id : clusterGroup0Clusters)
+      clusterGroup0PhysicalID.emplace_back(context.MapClusterId(id));
+   for (auto id : clusterGroup1Clusters)
+      clusterGroup1PhysicalID.emplace_back(context.MapClusterId(id));
+
+   // Serialize and write page lists
+   auto writePageList = [&](std::vector<ROOT::DescriptorId_t> &physicalClusterIds, RNTupleLocator &locator) {
+      const auto size = RNTupleSerializer::SerializePageList(nullptr, nTupleDescriptorBuilder.GetDescriptor(),
+                                                             physicalClusterIds, context)
+                           .Unwrap();
+      auto buf = MakeUninitArray<unsigned char>(size);
+      RNTupleSerializer::SerializePageList(buf.get(), nTupleDescriptorBuilder.GetDescriptor(), physicalClusterIds,
+                                           context)
+         .Unwrap();
+      const std::uint64_t pageListOffset = writer->WriteBlob(buf.get(), size, size);
+      locator.SetPosition(pageListOffset);
+      locator.SetNBytesOnStorage(size);
+      return size;
+   };
+
+   // Specify cluster groups
+   RNTupleLocator clusterGroup0Location, clusterGroup1Location;
+   const auto clusterGroup0Size = writePageList(clusterGroup0PhysicalID, clusterGroup0Location);
+   const auto clusterGroup1Size = writePageList(clusterGroup1PhysicalID, clusterGroup1Location);
+
+   {
+      RClusterGroupDescriptorBuilder builder;
+      builder.ClusterGroupId(0)
+         .PageListLength(clusterGroup0Size)
+         .PageListLocator(clusterGroup0Location)
+         .MinEntry(0)
+         .EntrySpan(400)
+         .NClusters(3);
+      builder.AddSortedClusters(clusterGroup0Clusters);
+      nTupleDescriptorBuilder.AddClusterGroup(builder.MoveDescriptor().Unwrap()).ThrowOnError();
+      context.MapClusterGroupId(0);
+   }
+   {
+      RClusterGroupDescriptorBuilder builder;
+      builder.ClusterGroupId(1)
+         .PageListLength(clusterGroup1Size)
+         .PageListLocator(clusterGroup1Location)
+         .MinEntry(200)
+         .EntrySpan(100)
+         .NClusters(1);
+      builder.AddSortedClusters(clusterGroup1Clusters);
+      nTupleDescriptorBuilder.AddClusterGroup(builder.MoveDescriptor().Unwrap()).ThrowOnError();
+      context.MapClusterGroupId(1);
+   }
+
+   auto nTupleDescriptor = nTupleDescriptorBuilder.MoveDescriptor();
+
+   // Serialize and write footer
+   const auto footerSize = RNTupleSerializer::SerializeFooter(nullptr, nTupleDescriptor, context).Unwrap();
+   auto footerBuffer = MakeUninitArray<unsigned char>(footerSize);
+   RNTupleSerializer::SerializeFooter(footerBuffer.get(), nTupleDescriptor, context).Unwrap();
+   writer->WriteNTupleFooter(footerBuffer.get(), footerSize, footerSize);
+
+   // Commit writes and call writer destructor to flush it
+   writer->Commit();
+   writer = nullptr;
+}
+} // namespace
+
+TEST(RNTupleInspector, DiskProfile)
+{
+   FileRaii fileGuard("test_disk_profile.root");
+   WriteShuffledNTuple("shuffled_ntuple", fileGuard.GetPath());
+
+   auto inspector = RNTupleInspector::Create("shuffled_ntuple", fileGuard.GetPath());
+   std::ostringstream diskProfileStream;
+   inspector->PrintDiskProfile(ROOT::Experimental::ESchemaProfileFormat::kSpeedscopeJSON, diskProfileStream);
+   const std::string diskProfile = diskProfileStream.str();
+   const std::string expected = R"foo({
+   "$schema":"https://www.speedscope.app/file-format-schema.json",
+   "shared":{
+      "frames":[
+         { "name":"[cluster group 0]" },
+         { "name":"[cluster 0]" },
+         { "name":"[column range 0]" },
+         { "name":"[page @882]" },
+         { "name":"[page @1132]" },
+         { "name":"[column range 1]" },
+         { "name":"[page @1274]" },
+         { "name":"[column range 0]" },
+         { "name":"[page @1724]" },
+         { "name":"[cluster 1]" },
+         { "name":"[column range 0]" },
+         { "name":"[page @1866]" },
+         { "name":"[cluster 0]" },
+         { "name":"[column range 2]" },
+         { "name":"[page @2316]" },
+         { "name":"[cluster group 1]" },
+         { "name":"[cluster 3]" },
+         { "name":"[column range 0]" },
+         { "name":"[page @2758]" },
+         { "name":"[cluster group 0]" },
+         { "name":"[cluster 2]" },
+         { "name":"[column range 0]" },
+         { "name":"[page @3208]" }
+      ]
+   },
+   "profiles":[
+      {
+         "type":"evented",
+         "name":"Flattened Timeline",
+         "unit":"bytes",
+         "startValue":0,
+         "endValue":3608,
+         "events":[
+            {"type":"O","frame":0,"at":882},
+            {"type":"O","frame":1,"at":882},
+            {"type":"O","frame":2,"at":882},
+            {"type":"O","frame":3,"at":882},
+            {"type":"C","frame":3,"at":1082},
+            {"type":"O","frame":4,"at":1132},
+            {"type":"C","frame":4,"at":1232},
+            {"type":"C","frame":2,"at":1232},
+            {"type":"O","frame":5,"at":1274},
+            {"type":"O","frame":6,"at":1274},
+            {"type":"C","frame":6,"at":1674},
+            {"type":"C","frame":5,"at":1674},
+            {"type":"O","frame":7,"at":1724},
+            {"type":"O","frame":8,"at":1724},
+            {"type":"C","frame":8,"at":1824},
+            {"type":"C","frame":7,"at":1824},
+            {"type":"C","frame":1,"at":1824},
+            {"type":"O","frame":9,"at":1866},
+            {"type":"O","frame":10,"at":1866},
+            {"type":"O","frame":11,"at":1866},
+            {"type":"C","frame":11,"at":2266},
+            {"type":"C","frame":10,"at":2266},
+            {"type":"C","frame":9,"at":2266},
+            {"type":"O","frame":12,"at":2316},
+            {"type":"O","frame":13,"at":2316},
+            {"type":"O","frame":14,"at":2316},
+            {"type":"C","frame":14,"at":2716},
+            {"type":"C","frame":13,"at":2716},
+            {"type":"C","frame":12,"at":2716},
+            {"type":"C","frame":0,"at":2716},
+            {"type":"O","frame":15,"at":2758},
+            {"type":"O","frame":16,"at":2758},
+            {"type":"O","frame":17,"at":2758},
+            {"type":"O","frame":18,"at":2758},
+            {"type":"C","frame":18,"at":3158},
+            {"type":"C","frame":17,"at":3158},
+            {"type":"C","frame":16,"at":3158},
+            {"type":"C","frame":15,"at":3158},
+            {"type":"O","frame":19,"at":3208},
+            {"type":"O","frame":20,"at":3208},
+            {"type":"O","frame":21,"at":3208},
+            {"type":"O","frame":22,"at":3208},
+            {"type":"C","frame":22,"at":3608},
+            {"type":"C","frame":21,"at":3608},
+            {"type":"C","frame":20,"at":3608},
+            {"type":"C","frame":19,"at":3608}
+         ]
+      }
+   ]
+}
+)foo";
+   EXPECT_EQ(diskProfile, expected);
 }
