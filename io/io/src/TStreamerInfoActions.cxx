@@ -238,7 +238,7 @@ namespace TStreamerInfoActions
 
    struct TConfStreamerLoop : public TConfiguration {
       bool fIsPtrPtr = false; // Which are we, an array of objects or an array of pointers to objects?
-      Longptr_t fCounterOffset = 0; // Offset of the '//[n]' counter, relative to the streamed object.
+      Int_t fCounterOffset = 0; // Offset of the '//[n]' counter, relative to the streamed object.
 
       TConfStreamerLoop(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, bool isPtrPtr)
          : TConfiguration(info, id, compinfo, offset), fIsPtrPtr(isPtrPtr),
