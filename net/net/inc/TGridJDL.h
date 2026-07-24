@@ -14,14 +14,12 @@
 #define ROOT_TGridJDL
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridJDL                                                             //
-//                                                                      //
-// Abstract base class to generate JDL files for job submission to the  //
-// Grid.                                                                //
-//                                                                      //
-// Related classes are TGLiteJDL                                        //
-//                              .                                       //
+///                                                                     
+/// \note This class is deprecated. It is kept for backward compatibility
+/// but it should not be used in new code.                               
+///                                                                     
+/// Related classes are TGLiteJDL                                       
+///                              .                                      
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"

@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridJobStatus                                                       //
-//                                                                      //
-// Abstract base class containing the status of a Grid job.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGridJobStatus.h"
 
 

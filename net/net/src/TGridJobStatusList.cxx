@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridJobStatusList                                                   //
-//                                                                      //
-// Abstract base class defining a list of GRID job status               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGridJobStatusList.h"
 
 TGridJobStatusList *gGridJobStatusList = 0;
