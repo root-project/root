@@ -297,8 +297,10 @@ async function buildGUI(gui_element, gui_kind = '') {
    if (divsize)
       myDiv.style('position', 'relative').style('width', divsize[0] + 'px').style('height', divsize[1] + 'px');
    else if (!isBatchMode()) {
-      d3_select('html').style('height', '100%');
-      d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      if (!nb) {
+         d3_select('html').style('height', '100%');
+         d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      }
       myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
    }
    if (canvsize) {
@@ -334,7 +336,9 @@ async function buildGUI(gui_element, gui_kind = '') {
       if (d.has('websocket'))
          opt += ';websocket';
       return hpainter.display('', opt);
-   }).then(() => hpainter);
+   }).then(() => {
+      return hpainter;
+   });
 }
 
 export { buildGUI, internals, readStyleFromURL, HierarchyPainter, createMenu, closeMenu };
