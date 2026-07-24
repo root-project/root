@@ -565,11 +565,6 @@ class ROOTFacade(types.ModuleType):
             # The comment suppresses linter errors about unused imports.
             from ._pythonization import _tmva  # noqa: F401
             from ._pythonization._tmva._rtensor import _AsRTensor
-            from ._pythonization._tmva._sofie._parser._keras.parser import PyKeras
-            from ._pythonization._tmva._sofie._parser._pytorch.parser import PyTorch
-
-            setattr(ns.Experimental.SOFIE, "PyKeras", PyKeras)
-            setattr(ns.Experimental.SOFIE, "PyTorch", PyTorch)
 
             ns.Experimental.AsRTensor = _AsRTensor
         except ImportError:
