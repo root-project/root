@@ -698,6 +698,9 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESc
    // There is only one format at the moment
    assert(format == ESchemaProfileFormat::kSpeedscopeJSON);
 
+   // This method only supports file based backend. Will need the anchor later, but better to check early
+   const auto anchor = ROOT::Internal::GetAnchor(*fPageSource);
+
    const auto &descriptor = GetDescriptor();
 
    struct RDiskPageLeaf {
@@ -753,6 +756,13 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESc
    std::vector<std::size_t> openFrameIndexes;
    std::uint64_t previouspageLeafEnd = 0;
 
+   // Construct frame for ntuple header
+   SpeedscopeFrame headerFrame;
+   headerFrame.fString = "ntuple header";
+   headerFrame.fOpeningPosition = anchor.GetSeekHeader();
+   headerFrame.fClosingPosition = anchor.GetSeekHeader() + anchor.GetNBytesHeader();
+   frames.push_back(headerFrame);
+
    // Construct frames from the bottom (leafs ordered by disk address) upwards
    for (const auto &pageLeaf : pageLeaves) {
       std::size_t sharedDepth = 0;
@@ -796,6 +806,24 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESc
       openIds.pop_back();
       openFrameIndexes.pop_back();
    }
+
+   // Construct frames for page lists
+   for (const auto &clusterGroupDescriptor : descriptor.GetClusterGroupIterable()) {
+      const auto locator = clusterGroupDescriptor.GetPageListLocator();
+
+      SpeedscopeFrame pageListFrame;
+      pageListFrame.fString = "[page list " + std::to_string(clusterGroupDescriptor.GetId()) + "]";
+      pageListFrame.fOpeningPosition = locator.GetPosition<std::uint64_t>();
+      pageListFrame.fClosingPosition = locator.GetPosition<std::uint64_t>() + locator.GetNBytesOnStorage();
+      frames.push_back(pageListFrame);
+   }
+
+   // Construct frame for ntuple footer
+   SpeedscopeFrame footerFrame;
+   footerFrame.fString = "ntuple footer";
+   footerFrame.fOpeningPosition = anchor.GetSeekFooter();
+   footerFrame.fClosingPosition = anchor.GetSeekFooter() + anchor.GetNBytesFooter();
+   frames.push_back(footerFrame);
 
    PrintSpeedscopeFrames(frames, output);
 }

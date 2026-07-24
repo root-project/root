@@ -42,6 +42,8 @@ namespace Internal {
 class RRawFile;
 class RPageAllocatorHeap;
 
+RNTuple GetAnchor(const RPageSource &source);
+
 // clang-format off
 /**
 \class ROOT::Internal::RPageSinkFile
@@ -122,6 +124,7 @@ public:
 // clang-format on
 class RPageSourceFile : public RPageSource {
    friend class ROOT::RNTuple;
+   friend ROOT::RNTuple ROOT::Internal::GetAnchor(const RPageSource &);
 
 private:
    /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name

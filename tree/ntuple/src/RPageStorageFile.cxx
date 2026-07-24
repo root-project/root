@@ -306,6 +306,16 @@ ROOT::Internal::RPageSinkFile::CloneAsHidden(std::string_view name, const ROOT::
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::RNTuple ROOT::Internal::GetAnchor(const RPageSource &source)
+{
+   const auto *fileSource = dynamic_cast<const RPageSourceFile *>(&source);
+   if (!fileSource)
+      throw RException(R__FAIL("Cannot retrieve an RNTuple anchor from a non-file page source"));
+   if (!fileSource->fAnchor)
+      throw RException(R__FAIL("Cannot retrieve RNTuple anchor: no anchor is available"));
+   return *fileSource->fAnchor;
+}
+
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &opts)
    : RPageSource(ntupleName, opts)
 {
