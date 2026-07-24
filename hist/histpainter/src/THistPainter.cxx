@@ -309,7 +309,9 @@ using `TH1::GetOption`:
 | "SAME0"      | Same as "SAME" but do not use the z-axis range of the first plot. |
 | "SAMES0"     | Same as "SAMES" but do not use the z-axis range of the first plot. |
 | "CYL"        | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
-| "POL"        | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
+| "POL"        | Use Polar coordinates. The visible X range mapped on the angle and the visible Y coordinate on the radius.|
+| "POLF"       | Fixed Polar coordinates. The histogram X coordinate mapped on the angle and the Y coordinate on the radius.|
+| "POLN"       | Natural Polar coordinates. The X coordinate directly represent angle in radian and the Y coordinate is the radius.|
 | "SPH"        | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
 | "PSR"        | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
 | "SURF"       | Draw a surface plot with hidden line removal.|
@@ -4063,6 +4065,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Lego    = Hoption.Surf    = Hoption.Off     = Hoption.Tri     = 0;
    Hoption.Proj    = Hoption.AxisPos = Hoption.Spec    = Hoption.Pie     = 0;
    Hoption.Candle  = 0;
+   Hoption.Polar = 0;
 
    //    special 2D options
    Hoption.List     = 0;
@@ -4334,7 +4337,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; memcpy(l,"    ",4); }
    l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; memcpy(l,"    ",4); }
    l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; memcpy(l,"    ",4); }
-   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       memcpy(l,"   ",3); }
+   l = strstr(chopt,"POLN"); if (l) { Hoption.System = kPOLAR; Hoption.Polar = 3; memcpy(l,"    ",4); }
+   l = strstr(chopt,"POLF"); if (l) { Hoption.System = kPOLAR; Hoption.Polar = 2; memcpy(l,"    ",4); }
+   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR; Hoption.Polar = 1; memcpy(l,"   ",3); }
    l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; memcpy(l,"   ",3); }
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   memcpy(l,"   ",3); }
    l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    memcpy(l,"   ",3); }
@@ -5838,14 +5843,49 @@ void THistPainter::PaintColorLevels(Option_t*)
 
    // Initialize the levels on the Z axis
    Int_t ncolors  = gStyle->GetNumberOfColors();
-   Int_t ndiv   = fH->GetContour();
-   if (ndiv == 0 ) {
+   Int_t ndiv = fH->GetContour();
+   if (ndiv == 0) {
       ndiv = gStyle->GetNumberContours();
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
    if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
    Double_t scale = (dz ? ndivz / dz : 1.0);
+
+   Double_t xmin = gPad->GetUxmin();
+   Double_t xmax = gPad->GetUxmax();
+   Double_t ymin = gPad->GetUymin();
+   Double_t ymax = gPad->GetUymax();
+
+   // range used for polar coordinates
+   Double_t pxmin = xmin, pxmax = xmax, pymin = ymin, pymax = ymax;
+   if ((Hoption.System == kPOLAR) && (Hoption.Polar > 1)) {
+      pxmin = fXaxis->GetXmin();
+      pxmax = fXaxis->GetXmax();
+      if (Hoption.Logx) {
+         if (pxmax <= 0)
+            return;
+         pxmax = TMath::Log10(pxmax);
+         if (pxmin <= 0)
+            pxmin = pxmax - 5;
+         else
+            pxmin = TMath::Log10(pxmin);
+      }
+      pymin = fYaxis->GetXmin();
+      pymax = fYaxis->GetXmax();
+      if (Hoption.Logy) {
+         if (pymax <= 0)
+            return;
+         pymax = TMath::Log10(pymax);
+         if (pymin <= 0)
+            pymin = pymax - 5;
+         else
+            pymin = TMath::Log10(pymin);
+      } else if ((pymax > 0) && (pymin >= 0)) {
+         // force minimal radius to 0 to display natural polar graphics
+         pymin = 0;
+      }
+   }
 
    Int_t color;
    TProfile2D* prof2d = dynamic_cast<TProfile2D*>(fH);
@@ -5873,35 +5913,36 @@ void THistPainter::PaintColorLevels(Option_t*)
             }
          }
 
-         if (Hoption.Logz) {
-            if (z > 0) z = TMath::Log10(z);
-            else       z = zmin;
-         }
-         if (z < zmin && !Hoption.Zero) continue;
+         if (Hoption.Logz)
+            z = z > 0 ? TMath::Log10(z) : zmin;
+         if (z < zmin && !Hoption.Zero)
+            continue;
          xup  = xk + xstep;
          xlow = xk;
          if (Hoption.Logx) {
-            if (xup > 0)  xup  = TMath::Log10(xup);
-            else continue;
-            if (xlow > 0) xlow = TMath::Log10(xlow);
-            else continue;
+            if ((xup <= 0) || (xlow <= 0))
+               continue;
+            xup = TMath::Log10(xup);
+            xlow = TMath::Log10(xlow);
          }
          yup  = yk + ystep;
          ylow = yk;
          if (Hoption.Logy) {
-            if (yup > 0)  yup  = TMath::Log10(yup);
-            else continue;
-            if (ylow > 0) ylow = TMath::Log10(ylow);
-            else continue;
+            if ((yup <= 0) || (ylow <= 0))
+               continue;
+            yup  = TMath::Log10(yup);
+            ylow = TMath::Log10(ylow);
          }
-         if (xup  < gPad->GetUxmin()) continue;
-         if (yup  < gPad->GetUymin()) continue;
-         if (xlow > gPad->GetUxmax()) continue;
-         if (ylow > gPad->GetUymax()) continue;
-         if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
-         if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
-         if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
-         if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
+         if ((xup < xmin) || (yup < ymin) || (xlow > xmax) || (ylow > ymax))
+            continue;
+         if (xlow < xmin)
+            xlow = xmin;
+         if (ylow < ymin)
+            ylow = ymin;
+         if (xup > xmax)
+            xup = xmax;
+         if (yup > ymax)
+            yup = ymax;
 
          if (fH->TestBit(TH1::kUserContour)) {
             zc = fH->GetContourLevelPad(0);
@@ -5920,21 +5961,29 @@ void THistPainter::PaintColorLevels(Option_t*)
          }
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
-         if (theColor > ncolors-1) theColor = ncolors-1;
+         if (theColor > ncolors-1)
+            theColor = ncolors-1;
          auto fillColor = gStyle->GetColorPalette(theColor);
          if (Hoption.System != kPOLAR) {
             fH->SetFillColor(fillColor);
             fH->TAttFill::Modify();
             gPad->PaintBox(xlow, ylow, xup, yup);
          } else  {
-            Double_t midx = (gPad->GetUxmin() + gPad->GetUxmax()) / 2,
-                     midy = (gPad->GetUymin() + gPad->GetUymax()) / 2,
-                     a1 = (xlow - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
-                     a2 = (xup - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
-                     rx = gPad->GetUxmax() - gPad->GetUxmin(),
-                     ry = gPad->GetUymax() - gPad->GetUymin(),
-                     r1 = (ylow - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2,
-                     r2 = (yup - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2;
+            Double_t midx = (xmin + xmax) / 2;
+            Double_t midy = (ymin + ymax) / 2;
+            Double_t rx = xmax - xmin;
+            Double_t ry = ymax - ymin;
+            Double_t a1, a2;
+
+            if (Hoption.Polar == 3) {
+               a1 = xlow / TMath::Pi() * 180;
+               a2 = xup / TMath::Pi() * 180;
+            } else {
+               a1 = ((xlow - pxmin) / (pxmax - pxmin) - 0.5) * 360;
+               a2 = ((xup - pxmin) / (pxmax - pxmin) - 0.5) * 360;
+            }
+            Double_t r1 = (ylow - pymin) / (pymax - pymin) * rx / 2;
+            Double_t r2 = (yup - pymin) / (pymax - pymin) * rx / 2;
 
             TCrown crown(midx, midy, r1, r2, a1, a2);
             crown.SetYXRatio(rx > 0 ? ry / rx : 1);
