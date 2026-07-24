@@ -12,17 +12,17 @@
 #ifndef ROOT_TGridJobStatus
 #define ROOT_TGridJobStatus
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridJobStatus                                                       //
-//                                                                      //
-// Abstract base class containing the status of a Grid job.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TNamed.h"
 
 
+//////////////////////////////////////////////////////////////////////////
+///                                                                      
+/// \note This class is deprecated. It is kept for backward compatibility 
+/// but it should not be used in new code.                                
+///                                                                      
+/// Abstract base class containing the status of a Grid job.             
+///                                                                      
+//////////////////////////////////////////////////////////////////////////
 class TGridJobStatus : public TNamed {
 
 public:

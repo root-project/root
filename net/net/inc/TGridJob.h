@@ -12,22 +12,22 @@
 #ifndef ROOT_TGridJob
 #define ROOT_TGridJob
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridJob                                                             //
-//                                                                      //
-// Abstract base class defining interface to a GRID job.                //
-//                                                                      //
-// Related classes are TGridJobStatus.                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "TString.h"
 
 
 class TGridJobStatus;
 
+//////////////////////////////////////////////////////////////////////////
+///                                                                     
+/// Abstract base class defining interface to a GRID job.               
+///                                                                      
+/// \note This class is deprecated. It is kept for backward compatibility
+/// but it should not be used in new code.                               
+///                                                                     
+/// Related classes are TGridJobStatus.                                 
+///                                                                     
+//////////////////////////////////////////////////////////////////////////
 class TGridJob : public TObject {
 
 protected:

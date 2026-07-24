@@ -12,14 +12,6 @@
 #ifndef ROOT_TGridCollection
 #define ROOT_TGridCollection
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridCollection                                                      //
-//                                                                      //
-// Class which manages collection files on the Grid.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 
 class TMap;
@@ -31,6 +23,14 @@ class TGridResult;
 class TFileCollection;
 
 
+//////////////////////////////////////////////////////////////////////////
+///                                                                      
+/// \note This class is deprecated. It is kept for backward compatibility 
+/// but it should not be used in new code.                                
+///                                                                      
+/// Class which manages collection files on the Grid.                    
+///                                                                      
+//////////////////////////////////////////////////////////////////////////
 class TGridCollection : public TObject {
 public:
    TGridCollection() { }
