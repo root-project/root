@@ -1,0 +1,4 @@
+Long32_t ba;
+Long32_t ba;
+.q
+
