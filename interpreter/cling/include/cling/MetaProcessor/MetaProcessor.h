@@ -139,14 +139,15 @@ namespace cling {
     ///             execution of the last statement
     ///\param [in] posOpenCurly - position of the opening '{'; -1 if no curly.
     ///\param [in] lineByLine - Process each line individually.
+    ///\param [in] posCloseCurly - position of the closing '}'; -1 if no curly.
     ///
     ///\returns result of the compilation.
     ///
     Interpreter::CompilationResult
-    readInputFromFile(llvm::StringRef filename,
-                      Value* result,
+    readInputFromFile(llvm::StringRef filename, Value* result,
                       size_t posOpenCurly = (size_t)(-1),
-                      bool lineByLine = false);
+                      bool lineByLine = false,
+                      size_t posCloseCurly = (size_t)(-1));
 
     ///\brief Set the stdout and stderr stream to the appropriate file.
     ///
