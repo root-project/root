@@ -107,6 +107,17 @@ or read the bin count from the relevant histogram or plot frame instead.
 
 ## Graphics and GUI
 
+### New POLF and POLN draw options for TH2
+
+Since ROOT 6.36 implementation of "POL" draw option was changed. Angle and radius range automatically scaled to visible histogram range filling full 2*Pi angle and full radius range.
+This let display TH2 in polar coordinates for any provided range settings, but produced plots are not intuitive. Therefore two new options for polar coordinates were introduced.
+
+"POLF" - fixed polar coordinates. In such case full histogram X range mapped to -PI .. +Pi.
+And Y axis mapped to radius. In case of histogram zooming angle and radius of each bin remains
+the same (therefore name "fixed"), just number of displayed bins are reduced.
+
+"POLN" - natural polar coordinates. In this case X axis directly represents angle value in radians (therefore name "natural") and Y axis is just radius.
+
 ### Store canvas as HTML file
 
 Now canvas (or several canvases) can be stored in portable HTML file.
