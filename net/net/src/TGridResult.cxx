@@ -9,16 +9,5 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridResult                                                          //
-//                                                                      //
-// Abstract base class defining interface to a GRID result.             //
-// Objects of this class are created by TGrid methods.                  //
-//                                                                      //
-// Related classes are TGrid.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGridResult.h"
 
