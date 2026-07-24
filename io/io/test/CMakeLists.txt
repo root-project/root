@@ -37,13 +37,11 @@ endif()
 
 ROOT_ADD_GTEST(ZipHeader ZipHeader.cxx LIBRARIES RIO Tree ROOTNTuple)
 
-ROOT_STANDARD_LIBRARY_PACKAGE(StreamerLoopMemberwise
-                              NO_INSTALL_HEADERS
-                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/StreamerLoopMemberwise.hxx
-                              SOURCES StreamerLoopMemberwise.cxx
-                              LINKDEF StreamerLoopMemberwiseLinkDef.h
-                              DEPENDENCIES RIO Tree)
-ROOT_ADD_GTEST(TStreamerLoopMemberwise TStreamerLoopMemberwise.cxx LIBRARIES RIO Tree StreamerLoopMemberwise)
+ROOT_GENERATE_DICTIONARY(StreamerLoopMemberwiseDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerLoopMemberwise.hxx
+                       MODULE TStreamerLoopMemberwise
+                       LINKDEF StreamerLoopMemberwiseLinkDef.h
+                       DEPENDENCIES RIO Tree)
+ROOT_ADD_GTEST(TStreamerLoopMemberwise TStreamerLoopMemberwise.cxx LIBRARIES RIO Tree)
 
 # Temporarily disabled.  Test routinely fails on MacOS and some Linuxes.
 #if(NOT WIN32 AND (NOT MACOS_VERSION OR NOT MACOSX_VERSION VERSION_LESS 13.00))
