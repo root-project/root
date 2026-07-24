@@ -10,6 +10,7 @@
 1. Fix - prevent very long header in context menu
 1. Fix - draw 3d contours in "surf3" twice https://root-forum.cern.ch/t/64910
 1. Fix - check evaluated value of TF1
+1. Fix - corrupted page layout in SWAN after calling %rootbrowse
 
 
 ## Changes in 7.11.0
