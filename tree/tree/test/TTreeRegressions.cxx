@@ -1,5 +1,6 @@
 #include "TMemFile.h"
 #include "TLeaf.h"
+#include "TChain.h"
 #include "TTree.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
@@ -9,7 +10,9 @@
 
 #include "gtest/gtest.h"
 
+#include <array>
 #include <vector>
+#include <memory>
 
 // ROOT-10702
 TEST(TTreeRegressions, CompositeTypeWithNameClash)
@@ -321,4 +324,149 @@ TEST(TTreeRegressions, DrawAutoBinning)
    EXPECT_EQ(h->GetEntries(), h->GetEffectiveEntries());
    delete h;
    delete gROOT->FindObject("c1");
+}
+
+// Regression for https://github.com/root-project/root/issues/22652
+struct RegressionGH22652 : public ::testing::Test {
+
+   constexpr static auto fMainTreeName{"main"};
+   constexpr static auto fFriendTreeName{"friend"};
+   constexpr static auto fMainTreeFileName{"main_global.root"};
+   constexpr static auto fNFiles{3};
+   constexpr static auto fNEntriesPerFile{100};
+   // file 0: w in [4,5)   file 1: w in [0,1)   file 2: w in [9,10)
+   constexpr static std::array<double, 3> fLowerBounds{4.0, 0.0, 9.0};
+   constexpr static std::array<const char *, 3> fMainChainFileNames{"main_1.root", "main_2.root", "main_3.root"};
+   constexpr static std::array<const char *, 3> fFriendChainFileNames{"friend_1.root", "friend_2.root",
+                                                                      "friend_3.root"};
+
+   constexpr static auto fNShortFiles{6};
+   constexpr static auto fNEntriesPerShortFile{50};
+   constexpr static std::array<const char *, 6> fShortFriendChainFileNames{
+      "short_friend_1.root", "short_friend_2.root", "short_friend_3.root",
+      "short_friend_4.root", "short_friend_5.root", "short_friend_6.root"};
+   // We set the minimum value in the second file to check that the branch address is updated by TChain::GetMinimum
+   constexpr static std::array<double, 6> fShortFriendChainValues{10, 0, 30, 40, 50, 60};
+
+   static void SetUpTestSuite()
+   {
+      {
+         // Main TTree with cumulated number of entries
+         auto fd = std::make_unique<TFile>(fMainTreeFileName, "RECREATE");
+         auto td = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         double x{};
+         td->Branch("x", &x);
+         for (const auto &_ : fMainChainFileNames)
+            for (int i = 0; i < fNEntriesPerFile; ++i)
+               td->Fill();
+         fd->Write();
+      }
+
+      for (int i = 0; i < fNFiles; i++) {
+         // Trees for the main chain
+         {
+            auto fd = std::make_unique<TFile>(fMainChainFileNames[i], "RECREATE");
+            auto td = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+            double x{};
+            td->Branch("x", &x);
+            for (int j = 0; j < fNEntriesPerFile; j++) {
+               // x in [-0.5, 0.495]
+               x = j * 0.01 - 0.5;
+               td->Fill();
+            }
+            fd->Write();
+         }
+
+         // Trees for the friend chain
+         {
+            auto ff = std::make_unique<TFile>(fFriendChainFileNames[i], "RECREATE");
+            auto tf = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+            double w{};
+            tf->Branch("w", &w);
+            for (int j = 0; j < fNEntriesPerFile; j++) {
+               // w in [fLowerBounds[i], fLowerBounds[i] + 1)
+               w = fLowerBounds[i] + j * (1.0 / fNEntriesPerFile);
+               tf->Fill();
+            }
+            ff->Write();
+         }
+      }
+
+      // A second friend chain with the total number of entries but twice as many files (half of the entries per file)
+      for (auto i = 0; i < fNShortFiles; i++) {
+         auto fd = std::make_unique<TFile>(fShortFriendChainFileNames[i], "RECREATE");
+         auto td = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+         double w{};
+         td->Branch("w", &w);
+         for (int j = 0; j < fNEntriesPerShortFile; j++) {
+            w = fShortFriendChainValues[i];
+            td->Fill();
+         }
+         fd->Write();
+      }
+   }
+
+   static void TearDownTestSuite()
+   {
+      for (const auto &f : fMainChainFileNames)
+         std::remove(f);
+
+      for (const auto &f : fFriendChainFileNames)
+         std::remove(f);
+   }
+};
+
+TEST_F(RegressionGH22652, RunMainTChain)
+{
+   // Main is a TChain, friend is a TChain, entries are aligned
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainChainFileNames)
+      m->Add(fn);
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fFriendChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.99);
+}
+
+TEST_F(RegressionGH22652, RunMainTTree)
+{
+   // Main is a TTree, friend is a TChain, entries are aligned
+
+   auto fm = std::make_unique<TFile>(fMainTreeFileName);
+   std::unique_ptr<TTree> m{fm->Get<TTree>(fMainTreeName)};
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fFriendChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.99);
+}
+
+TEST_F(RegressionGH22652, TChainFriendWithShorterFiles)
+{
+   // Main is a TChain, friend is a TChain, total number of entries is the same
+   // but the friend TChain has double the number of files and half the entries
+   // per file. This exercises in particular the correct updating of the branch
+   // addresses of the friend TChain when it switches to another file even though
+   // the main TChain is still traversing the same file.
+   auto m = std::make_unique<TChain>(fMainTreeName);
+   for (const auto &fn : fMainChainFileNames)
+      m->Add(fn);
+
+   auto fc = std::make_unique<TChain>(fFriendTreeName);
+   for (const auto &fn : fShortFriendChainFileNames)
+      fc->Add(fn);
+
+   m->AddFriend(fc.get());
+
+   EXPECT_DOUBLE_EQ(m->GetMinimum("w"), 0.0);
+   EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 60.0);
 }
