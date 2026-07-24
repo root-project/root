@@ -388,13 +388,17 @@ std::string ROOT::RNTupleDescriptor::GetQualifiedFieldName(ROOT::DescriptorId_t 
    return prefix + "." + fieldDescriptor.GetFieldName();
 }
 
+bool ROOT::RNTupleDescriptor::FieldTypeNamesMayNeedFixup() const
+{
+   R__ASSERT(fVersionEpoch == 1);
+   return fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1;
+}
+
 std::string ROOT::RNTupleDescriptor::GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const
 {
    std::string typeName = fieldDesc.GetTypeName();
 
-   // ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
-   R__ASSERT(fVersionEpoch == 1);
-   if (fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1) {
+   if (FieldTypeNamesMayNeedFixup()) {
       typeName = ROOT::Internal::GetRenormalizedTypeName(typeName);
    }
 
@@ -757,6 +761,21 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
       clone.fExtraTypeInfoDescriptors.emplace_back(d.Clone());
    if (fHeaderExtension)
       clone.fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
+
+   // In case we are copying the schema from a pre-1.0.0.1 RNTuple we need to patch all field type names
+   // to use the proper normalization.
+   if (FieldTypeNamesMayNeedFixup()) {
+      std::vector<ROOT::DescriptorId_t> toVisit;
+      toVisit.push_back(GetFieldZeroId());
+      while (!toVisit.empty()) {
+         auto fieldId = toVisit.back();
+         toVisit.pop_back();
+         for (auto &field : GetFieldIterable(fieldId)) {
+            Internal::FixupFieldTypeName(const_cast<ROOT::RFieldDescriptor &>(field));
+            toVisit.push_back(field.GetId());
+         }
+      }
+   }
 
    return clone;
 }
@@ -1534,4 +1553,9 @@ bool ROOT::Internal::IsStdAtomicFieldDesc(const RFieldDescriptor &fieldDesc)
    if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kPlain)
       return false;
    return (fieldDesc.GetTypeName().rfind("std::atomic<", 0) == 0);
+}
+
+void ROOT::Internal::FixupFieldTypeName(ROOT::RFieldDescriptor &fieldDesc)
+{
+   fieldDesc.fTypeName = ROOT::Internal::GetRenormalizedTypeName(fieldDesc.fTypeName);
 }
