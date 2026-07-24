@@ -1,3 +1,9 @@
+if(asan)
+  # When address sanitizer is enabled tests may take longer than usual
+  set(COMPARE_TIME "kFALSE")
+else()
+  set(COMPARE_TIME "kTRUE")
+endif()
 
 ROOTTEST_ADD_TEST(files
                   COMMAND ${CMAKE_COMMAND} -E echo "copy files"
@@ -14,7 +20,7 @@ foreach(macro 60 61 62)
     # measure reading time and write file
     ROOTTEST_ADD_TEST(mark
                       MACRO Read.C
-                      MACROARG "\"NuEvent_60_cxx\", \"DST_60.root\", 1"
+                      MACROARG "\"NuEvent_60_cxx\", \"DST_60.root\", 1, ${COMPARE_TIME}"
                       FIXTURES_REQUIRED root-io-perf-slowreading-files-fixture
                                         root-io-perf-slowreading-60-fixture
                       FIXTURES_SETUP root-io-perf-slowreading-mark-fixture)
@@ -25,7 +31,7 @@ foreach(macro 60 61 62)
     # one could instead run performance code several times and choose best value
     ROOTTEST_ADD_TEST(check-macro${macro}-file${file}
                       MACRO Read.C
-                      MACROARG "\"NuEvent_${macro}_cxx\", \"DST_${file}.root\""
+                      MACROARG "\"NuEvent_${macro}_cxx\", \"DST_${file}.root\", 0, ${COMPARE_TIME}"
                       OUTREF Read.ref
                       FIXTURES_REQUIRED root-io-perf-slowreading-files-fixture
                                         root-io-perf-slowreading-${macro}-fixture

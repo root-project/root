@@ -8,7 +8,7 @@ using namespace std;
 #include "TBenchmark.h"
 #include "TChain.h"
 
-int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
+int Read(TString library, TString rootfilename, Bool_t ref = kFALSE, Bool_t compareTime = kTRUE)
 {
    std::string markfilename = "NuEvent_DST.mark";
    const int tolerance = 100;
@@ -67,7 +67,7 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
       ifstream markfile(markfilename.c_str());
       markfile >> refct;
 #endif
-      if ( TMath::Abs( (refct - ct) / refct ) > (tolerance/100.0)) {
+      if (compareTime && TMath::Abs((refct - ct) / refct) > (tolerance / 100.0)) {
          cout << "Reading time for " << rootfilename << " with " << library
               << " takes " << tolerance << "% more than the reference " << ct << " vs " << refct << "\n";
          return 1; // Failure
