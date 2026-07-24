@@ -21,6 +21,7 @@
 #include <ROOT/StringUtils.hxx>
 
 #include <nlohmann/json.hpp>
+#include <xxhash.h>
 
 #include <cctype>
 #include <cstring>
@@ -31,22 +32,22 @@
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 
-/// Field-by-field equality check across all 14 anchor members.
-/// Used to verify round-trip correctness in tests.
+/// Field-by-field equality check across all data members.
 bool ROOT::Experimental::Internal::RNTupleAnchorS3::operator==(const RNTupleAnchorS3 &other) const
 {
    return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
           fVersionMajor == other.fVersionMajor && fVersionMinor == other.fVersionMinor &&
           fVersionPatch == other.fVersionPatch && fUrlTemplate == other.fUrlTemplate &&
-          fHeaderObjId == other.fHeaderObjId && fHeaderOffset == other.fHeaderOffset &&
-          fNBytesHeader == other.fNBytesHeader && fLenHeader == other.fLenHeader &&
-          fFooterObjId == other.fFooterObjId && fFooterOffset == other.fFooterOffset &&
-          fNBytesFooter == other.fNBytesFooter && fLenFooter == other.fLenFooter;
+          fCloneTemplate == other.fCloneTemplate && fHeaderObjId == other.fHeaderObjId &&
+          fHeaderOffset == other.fHeaderOffset && fNBytesHeader == other.fNBytesHeader &&
+          fLenHeader == other.fLenHeader && fFooterObjId == other.fFooterObjId &&
+          fFooterOffset == other.fFooterOffset && fNBytesFooter == other.fNBytesFooter &&
+          fLenFooter == other.fLenFooter;
 }
 
 /// Serialize the anchor to a pretty-printed JSON string (2-space indent).
-/// nlohmann/json handles type conversion, string escaping, and uint64 precision.
-/// The output is suitable for direct upload to S3 as the anchor object.
+/// The checksum is computed over the compact canonical form of the data fields;
+/// the stored JSON uses pretty-printing for readability.
 std::string ROOT::Experimental::Internal::RNTupleAnchorS3::ToJSON() const
 {
    nlohmann::json jsonAnchor;
@@ -56,6 +57,7 @@ std::string ROOT::Experimental::Internal::RNTupleAnchorS3::ToJSON() const
    jsonAnchor["formatVersionMinor"] = fVersionMinor;
    jsonAnchor["formatVersionPatch"] = fVersionPatch;
    jsonAnchor["urlTemplate"] = fUrlTemplate;
+   jsonAnchor["cloneTemplate"] = fCloneTemplate;
    jsonAnchor["headerObjId"] = fHeaderObjId;
    jsonAnchor["headerOffset"] = fHeaderOffset;
    jsonAnchor["nBytesHeader"] = fNBytesHeader;
@@ -64,6 +66,9 @@ std::string ROOT::Experimental::Internal::RNTupleAnchorS3::ToJSON() const
    jsonAnchor["footerOffset"] = fFooterOffset;
    jsonAnchor["nBytesFooter"] = fNBytesFooter;
    jsonAnchor["lenFooter"] = fLenFooter;
+
+   auto canonical = jsonAnchor.dump(-1);
+   jsonAnchor["checksum"] = XXH3_64bits(canonical.data(), canonical.size());
    return jsonAnchor.dump(2);
 }
 
@@ -98,6 +103,7 @@ ROOT::Experimental::Internal::RNTupleAnchorS3::CreateFromJSON(const std::string 
       anchor.fVersionMinor = jsonAnchor.at("formatVersionMinor").get<std::uint16_t>();
       anchor.fVersionPatch = jsonAnchor.at("formatVersionPatch").get<std::uint16_t>();
       anchor.fUrlTemplate = jsonAnchor.at("urlTemplate").get<std::string>();
+      anchor.fCloneTemplate = jsonAnchor.at("cloneTemplate").get<std::string>();
       anchor.fHeaderObjId = jsonAnchor.at("headerObjId").get<std::uint64_t>();
       anchor.fHeaderOffset = jsonAnchor.at("headerOffset").get<std::uint64_t>();
       anchor.fNBytesHeader = jsonAnchor.at("nBytesHeader").get<std::uint64_t>();
@@ -109,6 +115,23 @@ ROOT::Experimental::Internal::RNTupleAnchorS3::CreateFromJSON(const std::string 
    } catch (const nlohmann::json::exception &e) {
       return R__FAIL("missing or invalid field in S3 anchor: " + std::string(e.what()));
    }
+
+   if (!jsonAnchor.contains("checksum"))
+      return R__FAIL("missing 'checksum' field in S3 anchor");
+
+   std::uint64_t storedChecksum;
+   try {
+      storedChecksum = jsonAnchor.at("checksum").get<std::uint64_t>();
+   } catch (const nlohmann::json::exception &e) {
+      return R__FAIL("invalid 'checksum' field in S3 anchor: " + std::string(e.what()));
+   }
+
+   jsonAnchor.erase("checksum");
+   auto canonical = jsonAnchor.dump(-1);
+   auto computedChecksum = XXH3_64bits(canonical.data(), canonical.size());
+
+   if (storedChecksum != computedChecksum)
+      return R__FAIL("S3 anchor checksum mismatch");
 
    return anchor;
 }
@@ -300,8 +323,17 @@ std::unique_ptr<ROOT::Internal::RPageSink>
 ROOT::Experimental::Internal::RPageSinkS3::CloneAsHidden(std::string_view name,
                                                          const ROOT::RNTupleWriteOptions &opts) const
 {
-   // The hidden (attribute-set) ntuple is stored under a reserved "_clone" sub-prefix so its objects and
-   // anchor can never collide with the main ntuple's numeric object keys ($baseurl/0, $baseurl/1, ...).
-   std::string cloneBaseUrl = fBaseUrl + "/_clone/" + std::string(name);
+   // Resolve the clone template so the hidden ntuple's objects and anchor live under a sub-prefix
+   // that cannot collide with the main ntuple's numeric object keys.
+   std::string cloneBaseUrl = fAnchor.fCloneTemplate;
+
+   auto pos = cloneBaseUrl.find("${baseurl}");
+   if (pos != std::string::npos)
+      cloneBaseUrl.replace(pos, std::strlen("${baseurl}"), fBaseUrl);
+
+   pos = cloneBaseUrl.find("${name}");
+   if (pos != std::string::npos)
+      cloneBaseUrl.replace(pos, std::strlen("${name}"), name);
+
    return std::unique_ptr<ROOT::Internal::RPageSink>(new RPageSinkS3(name, cloneBaseUrl, opts, RFromBaseUrl{}));
 }

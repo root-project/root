@@ -31,6 +31,7 @@ TEST(RNTupleAnchorS3, RoundTrip)
    orig.fVersionMinor = 2;
    orig.fVersionPatch = 0;
    orig.fUrlTemplate = "https://bucket.s3.us-east-1.amazonaws.com/data/${objid}";
+   orig.fCloneTemplate = "${baseurl}/clones/${name}";
    orig.fHeaderObjId = 1;
    orig.fHeaderOffset = 0;
    orig.fNBytesHeader = 1200;
@@ -54,6 +55,7 @@ TEST(RNTupleAnchorS3, RoundTrip)
    EXPECT_EQ(2u, parsed.fVersionMinor);
    EXPECT_EQ(0u, parsed.fVersionPatch);
    EXPECT_EQ("https://bucket.s3.us-east-1.amazonaws.com/data/${objid}", parsed.fUrlTemplate);
+   EXPECT_EQ("${baseurl}/clones/${name}", parsed.fCloneTemplate);
    EXPECT_EQ(1u, parsed.fHeaderObjId);
    EXPECT_EQ(0u, parsed.fHeaderOffset);
    EXPECT_EQ(1200u, parsed.fNBytesHeader);
@@ -122,7 +124,7 @@ TEST(RNTupleAnchorS3, MalformedJson)
    EXPECT_FALSE(bool(result));
 }
 
-TEST(RNTupleAnchorS3, ExtraFieldsIgnored)
+TEST(RNTupleAnchorS3, ExtraFieldsDetectedByChecksum)
 {
    RNTupleAnchorS3 orig;
    orig.fUrlTemplate = "${baseurl}/${objid}";
@@ -134,13 +136,13 @@ TEST(RNTupleAnchorS3, ExtraFieldsIgnored)
    orig.fLenFooter = 600;
 
    auto json = orig.ToJSON();
-   // Inject an unknown field before the closing brace
+   // Inject an unknown field; the checksum no longer matches because the reader hashes
+   // all non-checksum fields, including unknown ones added by tampering.
    auto pos = json.rfind('}');
    json.insert(pos, ",\n  \"future_field\": 999");
 
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
-   ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
-   EXPECT_EQ(orig, result.Inspect());
+   EXPECT_FALSE(bool(result));
 }
 
 TEST(RNTupleAnchorS3, LargeObjectIds)
@@ -241,6 +243,10 @@ TEST(RNTupleAnchorS3, Equality)
    EXPECT_EQ(a, b);
 
    b.fHeaderObjId = 99;
+   EXPECT_FALSE(a == b);
+
+   b = a;
+   b.fCloneTemplate = "${baseurl}/other/${name}";
    EXPECT_FALSE(a == b);
 }
 
@@ -366,6 +372,90 @@ TEST(RNTupleAnchorS3, MaxUint64Values)
    EXPECT_EQ(UINT64_MAX, parsed.fFooterOffset);
    EXPECT_EQ(UINT64_MAX, parsed.fNBytesFooter);
    EXPECT_EQ(UINT64_MAX, parsed.fLenFooter);
+}
+
+// ==================== Checksum Tests ====================
+
+TEST(RNTupleAnchorS3, ChecksumMismatch)
+{
+   RNTupleAnchorS3 anchor;
+   anchor.fHeaderObjId = 42;
+   anchor.fNBytesHeader = 100;
+   anchor.fLenHeader = 200;
+
+   auto json = anchor.ToJSON();
+
+   // Corrupt a data field while keeping the old checksum
+   auto pos = json.find("\"nBytesHeader\": 100");
+   ASSERT_NE(std::string::npos, pos);
+   json.replace(pos, std::strlen("\"nBytesHeader\": 100"), "\"nBytesHeader\": 999");
+
+   auto result = RNTupleAnchorS3::CreateFromJSON(json);
+   EXPECT_FALSE(bool(result));
+}
+
+TEST(RNTupleAnchorS3, MissingChecksumRejected)
+{
+   // An anchor without a checksum field must be rejected.
+   std::string json = R"({
+     "anchorVersion": 0,
+     "formatVersionEpoch": 0,
+     "formatVersionMajor": 1,
+     "formatVersionMinor": 0,
+     "formatVersionPatch": 0,
+     "urlTemplate": "${baseurl}/${objid}",
+     "headerObjId": 0,
+     "headerOffset": 0,
+     "nBytesHeader": 0,
+     "lenHeader": 0,
+     "footerObjId": 0,
+     "footerOffset": 0,
+     "nBytesFooter": 0,
+     "lenFooter": 0
+   })";
+
+   auto result = RNTupleAnchorS3::CreateFromJSON(json);
+   EXPECT_FALSE(bool(result));
+}
+
+TEST(RNTupleAnchorS3, ChecksumDeterministic)
+{
+   RNTupleAnchorS3 anchor;
+   anchor.fHeaderObjId = 1;
+   anchor.fFooterObjId = 5;
+   anchor.fNBytesHeader = 80;
+   anchor.fLenHeader = 100;
+   anchor.fNBytesFooter = 150;
+   anchor.fLenFooter = 200;
+
+   auto json1 = anchor.ToJSON();
+   auto json2 = anchor.ToJSON();
+   EXPECT_EQ(json1, json2) << "ToJSON must produce identical output for the same data";
+
+   auto result = RNTupleAnchorS3::CreateFromJSON(json1);
+   ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
+   auto json3 = result.Inspect().ToJSON();
+   EXPECT_EQ(json1, json3);
+}
+
+TEST(RNTupleAnchorS3, WrongChecksumType)
+{
+   RNTupleAnchorS3 anchor;
+   auto json = anchor.ToJSON();
+
+   // Replace the numeric checksum value with a string
+   auto pos = json.find("\"checksum\":");
+   ASSERT_NE(std::string::npos, pos);
+   auto valStart = json.find(':', pos) + 1;
+   while (valStart < json.size() && json[valStart] == ' ')
+      ++valStart;
+   auto valEnd = valStart;
+   while (valEnd < json.size() && json[valEnd] != '\n' && json[valEnd] != ',')
+      ++valEnd;
+   json.replace(valStart, valEnd - valStart, " \"not_a_number\"");
+
+   auto result = RNTupleAnchorS3::CreateFromJSON(json);
+   EXPECT_FALSE(bool(result));
 }
 
 // ==================== ParseS3Url Tests ====================
@@ -576,6 +666,7 @@ TEST(RPageSinkS3Wire, WriteIssuesExpectedPuts)
    // The anchor body is the JSON document the reader bootstraps from.
    EXPECT_NE(std::string::npos, requests.back().fBody.find("\"footerObjId\""));
    EXPECT_NE(std::string::npos, requests.back().fBody.find("\"urlTemplate\""));
+   EXPECT_NE(std::string::npos, requests.back().fBody.find("\"checksum\""));
 }
 
 TEST(RPageSinkS3Wire, PutErrorThrows)
