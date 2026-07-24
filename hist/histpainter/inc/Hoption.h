@@ -41,6 +41,7 @@ typedef struct Hoption_t {
    int Box;         ///< <b>"BOX"</b> Draw 2D plot with proportional Boxes.
    int Char;        ///< <b>"CHAR"</b> Draw 2D plot with a character set.
    int Color;       ///< <b>"COL"</b> Draw 2D plot with Colored boxes.
+   int Polar;       ///< <b>"POL"</b> Draw 2D plot with Polar coordinates.
    int Contour;     ///< <b>"CONTn"</b> Draw 2D plot as a Contour plot (0 <= n <= 5).
    int Func;        ///< <b>"FUNC"</b> Draw only the function (for example in case of fit).
    int Hist;        ///< <b>"HIST"</b> Draw only the histogram.
