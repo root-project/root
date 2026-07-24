@@ -1,6 +1,6 @@
 import { gStyle, BIT, settings, constants, create, isObject, isFunc, isStr, getPromise,
          clTList, clTPaveStats, clTPaletteAxis, clTProfile, clTProfile2D, clTProfile3D, clTPad,
-         clTAxis, clTF1, clTF2, kNoZoom, clTCutG, kNoStats, kTitle, setHistogramTitle } from '../core.mjs';
+         clTAxis, clTF1, clTF2, kNoZoom, clTCutG, kNoStats, kTitle, setHistogramTitle, addMethods } from '../core.mjs';
 import { getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits, kAxisTime, kAxisLabels } from '../base/ObjectPainter.mjs';
@@ -1852,6 +1852,12 @@ class THistPainter extends ObjectPainter {
 
       if (!histo.fFunctions)
          histo.fFunctions = create(clTList);
+      else if (histo.fFunctions._typename !== clTList) {
+         // Fix - seen once in jupyter notebook that typename was TList*
+         console.error(`Fixing wrong typename ${histo.fFunctions._typename} for histogram list of functions`);
+         histo.fFunctions._typename = clTList;
+         addMethods(histo.fFunctions, clTList);
+      }
 
       if (asfirst)
          histo.fFunctions.AddFirst(obj);

@@ -1373,19 +1373,19 @@ class BrowserLayout {
             text_color = settings.DarkMode ? '#ddd' : 'inherit',
             input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
-      injectStyle(
-         '.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }' +
-         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }` +
-         `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }` +
-         `.jsroot_browser_area input { ${input_style} }` +
-         `.jsroot_browser_area select { ${input_style} }` +
-         `.jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }` +
-         '.jsroot_browser_btns { pointer-events: all; display: flex; flex-direction: column; }' +
-         '.jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }' +
-         '.jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }' +
-         `.jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }` +
-         '.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }',
-         this.main().node(), 'browser_layout_style');
+      injectStyle(`
+.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }
+.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }
+.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }
+.jsroot_browser_area input { ${input_style} }
+.jsroot_browser_area select { ${input_style} }
+.jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }
+.jsroot_browser_btns { pointer-events: all; display: flex; flex-direction: column; }
+.jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }
+.jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }
+.jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }
+.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }
+`, this.main().node(), 'browser_layout_style');
    }
 
    /** @summary method used to create basic elements

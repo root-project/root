@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '23/07/2026',
+version_date = '24/07/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -88981,19 +88981,19 @@ class BrowserLayout {
             text_color = settings.DarkMode ? '#ddd' : 'inherit',
             input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
-      injectStyle(
-         '.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }' +
-         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }` +
-         `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }` +
-         `.jsroot_browser_area input { ${input_style} }` +
-         `.jsroot_browser_area select { ${input_style} }` +
-         `.jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }` +
-         '.jsroot_browser_btns { pointer-events: all; display: flex; flex-direction: column; }' +
-         '.jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }' +
-         '.jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }' +
-         `.jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }` +
-         '.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }',
-         this.main().node(), 'browser_layout_style');
+      injectStyle(`
+.jsroot_browser { pointer-events: none; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; margin: 0px; border: 0px; overflow: hidden; }
+.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }
+.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }
+.jsroot_browser_area input { ${input_style} }
+.jsroot_browser_area select { ${input_style} }
+.jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }
+.jsroot_browser_btns { pointer-events: all; display: flex; flex-direction: column; }
+.jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }
+.jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }
+.jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }
+.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }
+`, this.main().node(), 'browser_layout_style');
    }
 
    /** @summary method used to create basic elements
@@ -97279,6 +97279,12 @@ class THistPainter extends ObjectPainter {
 
       if (!histo.fFunctions)
          histo.fFunctions = create$1(clTList);
+      else if (histo.fFunctions._typename !== clTList) {
+         // Fix - seen once in jupyter notebook that typename was TList*
+         console.error(`Fixing wrong typename ${histo.fFunctions._typename} for histogram list of functions`);
+         histo.fFunctions._typename = clTList;
+         exports.addMethods(histo.fFunctions, clTList);
+      }
 
       if (asfirst)
          histo.fFunctions.AddFirst(obj);
@@ -171026,9 +171032,11 @@ async function buildGUI(gui_element, gui_kind = '') {
    if (divsize)
       myDiv.style('position', 'relative').style('width', divsize[0] + 'px').style('height', divsize[1] + 'px');
    else if (!isBatchMode()) {
-      select('html').style('height', '100%');
-      select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-      myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
+      if (!nb) {
+         select('html').style('height', '100%');
+         select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      }
+      myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
    }
    if (canvsize) {
       settings.CanvasWidth = canvsize[0];
@@ -171063,7 +171071,9 @@ async function buildGUI(gui_element, gui_kind = '') {
       if (d.has('websocket'))
          opt += ';websocket';
       return hpainter.display('', opt);
-   }).then(() => hpainter);
+   }).then(() => {
+      return hpainter;
+   });
 }
 
 /** @summary Draw TEllipse
