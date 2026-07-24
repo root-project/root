@@ -2,13 +2,14 @@
 
 #include "gtest/gtest.h"
 
+#include <ROOT/TestSupport.hxx>
 #include <TFile.h>
 #include <TTree.h>
-#include <TSystem.h>
 
 #include <vector>
 
 using namespace ROOTTest::StreamerLoopMemberwise;
+using ROOT::TestSupport::FileRaii;
 
 // Regression test for the member-wise streaming of a variable-size array
 // (`Hit* fHits; //[fN]`, i.e. a TStreamerLoop element) that lives in a base
@@ -17,7 +18,7 @@ using namespace ROOTTest::StreamerLoopMemberwise;
 // See https://github.com/root-project/root/issues/22895 for more information.
 TEST(TStreamerLoopMemberwise, VariableArrayInBaseClass)
 {
-   const char *fname = "streamerloop_memberwise.root";
+   FileRaii fileGuard("streamerloop_memberwise.root");
    const int kFrames = 4;
 
    int expectedHits = 0;
@@ -33,7 +34,7 @@ TEST(TStreamerLoopMemberwise, VariableArrayInBaseClass)
          slice[f].Set(static_cast<int>(hits.size()), hits.data());
       }
 
-      TFile file(fname, "RECREATE");
+      TFile file(fileGuard.GetPath().c_str(), "RECREATE");
       TTree tree("T", "T");
       std::vector<Super> *ptr = &slice;
       tree.Branch("slice", &ptr); // default split level -> member-wise collection
@@ -44,7 +45,7 @@ TEST(TStreamerLoopMemberwise, VariableArrayInBaseClass)
    int readHits = 0;
    int nullBuffers = 0;
    {
-      TFile file(fname);
+      TFile file(fileGuard.GetPath().c_str());
       auto *tree = file.Get<TTree>("T");
       ASSERT_NE(tree, nullptr);
       std::vector<Super> *slice = nullptr;
@@ -67,6 +68,4 @@ TEST(TStreamerLoopMemberwise, VariableArrayInBaseClass)
 
    EXPECT_EQ(nullBuffers, 0);
    EXPECT_EQ(readHits, expectedHits);
-
-   gSystem->Unlink(fname);
 }
