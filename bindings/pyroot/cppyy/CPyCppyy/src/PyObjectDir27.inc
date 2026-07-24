@@ -111,57 +111,6 @@ static int merge_class_dict(PyObject* dict, PyObject* aclass)
     return 0;
 }
 
-#if PY_VERSION_HEX < 0x03000000
-
-/* Helper for PyObject_Dir.
-   If obj has an attr named attrname that's a list, merge its string
-   elements into keys of dict.
-   Return 0 on success, -1 on error.  Errors due to not finding the attr,
-   or the attr not being a list, are suppressed.
-*/
-
-static int
-merge_list_attr(PyObject* dict, PyObject* obj, const char *attrname)
-{
-    PyObject *list;
-    int result = 0;
-
-    assert(PyDict_Check(dict));
-    assert(obj);
-    assert(attrname);
-
-    list = PyObject_GetAttrString(obj, attrname);
-    if (list == NULL)
-        PyErr_Clear();
-
-    else if (PyList_Check(list)) {
-        int i;
-        for (i = 0; i < PyList_GET_SIZE(list); ++i) {
-            PyObject *item = PyList_GET_ITEM(list, i);
-            if (PyString_Check(item)) {
-                result = PyDict_SetItem(dict, item, Py_None);
-                if (result < 0)
-                    break;
-            }
-        }
-        if (Py_Py3kWarningFlag &&
-            (strcmp(attrname, "__members__") == 0 ||
-             strcmp(attrname, "__methods__") == 0)) {
-            if (PyErr_WarnEx(PyExc_DeprecationWarning,
-                           "__members__ and __methods__ not "
-                           "supported in 3.x", 1) < 0) {
-                Py_XDECREF(list);
-                return -1;
-            }
-        }
-    }
-
-    Py_XDECREF(list);
-    return result;
-}
-
-#endif
-
 /* Helper for PyObject_Dir of type objects: returns __dict__ and __bases__.
    We deliberately don't suck up its __class__, as methods belonging to the
    metaclass would probably be more confusing than helpful.
@@ -207,15 +156,6 @@ static PyObject* _generic_dir(PyObject *obj)
 
     if (dict == NULL)
         goto error;
-
-#if PY_VERSION_HEX < 0x03000000
-    /* Merge in __members__ and __methods__ (if any).
-     * This is removed in Python 3000. */
-    if (merge_list_attr(dict, obj, "__members__") < 0)
-        goto error;
-    if (merge_list_attr(dict, obj, "__methods__") < 0)
-        goto error;
-#endif
 
     /* Merge in attrs reachable from its class. */
     itsclass = PyObject_GetAttrString(obj, "__class__");

@@ -277,7 +277,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
         if isinstance(var_value, type):
-            if str(var_value).startswith("<class cppyy.gbl.") and not hasattr(var_value, "__cpp_template__"):
+            if str(var_value).startswith("<class cppyy.gbl."):
                 # It's a class proxy (possibly a template instantiation cached
                 # in the namespace).
                 pythonize_if_match(var_name, var_value)
@@ -301,7 +301,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
                 # Make sure we don't do any redundant pythonization, e.g. if we
                 # use a version of cppyy that caches both in the namespace and
                 # in the _instantiations attribute.
-                if instance not in ns_vars:
+                if instance not in ns_vars.values():
                     instance_name = var_name + "<" + ",".join(map(get_class_name, args)) + ">"
                     pythonize_if_match(instance_name, instance)
 

@@ -75,6 +75,7 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
@@ -666,6 +667,7 @@ size_t SizeOf(ConstDeclRef DRef) {
     return INTEROP_RETURN(0);
 
   if (const auto* RD = dyn_cast<RecordDecl>(unwrap<Decl>(DRef))) {
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     ASTContext& Context = RD->getASTContext();
     const ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
     return INTEROP_RETURN(Layout.getSize().getQuantity());
@@ -713,8 +715,12 @@ bool IsTypedefed(ConstDeclRef DRef) {
 bool IsAbstract(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<clang::Decl>(DRef);
+  // isAbstract() reads the definition data, which a forward-declared class
+  // does not have; asking whether an incomplete class is abstract must not
+  // crash (answer: not known to be, i.e. false)
   if (const auto* CXXRD = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(D))
-    return INTEROP_RETURN(CXXRD->isAbstract());
+    return INTEROP_RETURN(CXXRD->hasDefinition() &&
+                          CXXRD->getDefinition()->isAbstract());
 
   return INTEROP_RETURN(false);
 }
@@ -845,18 +851,26 @@ TypeRef GetEnumConstantType(ConstDeclRef DRef) {
   return INTEROP_RETURN(nullptr);
 }
 
-size_t GetEnumConstantValue(ConstDeclRef DRef) {
+int64_t GetEnumConstantValue(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<clang::Decl>(DRef);
   if (const auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
-    return INTEROP_RETURN(Val.getExtValue());
+    if (Val.isRepresentableByInt64())
+      return INTEROP_RETURN(Val.getExtValue());
+    // Huge unsigned values (> INT64_MAX): return the zero-extended bit
+    // pattern as its two's complement representation. Do not round-trip
+    // through std::stoul: its unsigned long is 32 bit on LLP64 platforms
+    // (Windows), where it would throw std::out_of_range.
+    return INTEROP_RETURN((int64_t)Val.getZExtValue());
   }
   return INTEROP_RETURN(0);
 }
 
 size_t GetSizeOfType(ConstTypeRef TyRef) {
   INTEROP_TRACE(TyRef);
+  if (!TyRef)
+    return INTEROP_RETURN(0);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (const TagType* TT = QT->getAs<TagType>())
     return INTEROP_RETURN(SizeOf(TT->getDecl()));
@@ -895,6 +909,15 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
   if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
     PrintingPolicy Policy = C.getPrintingPolicy();
     Policy.SuppressUnwrittenScope = true;
+    // Keep scope and type names platform-independent: always drop inline
+    // namespaces (libc++'s std::__1, libstdc++'s std::__cxx11) instead of
+    // relying on the lookup-based "redundant qualifier" heuristic, and do
+    // not substitute preferred names (libc++ tags basic_string<char> with
+    // preferred_name(string)). cppyy matches these names against string
+    // keys and uses them as Python scope paths.
+    Policy.SuppressInlineNamespace =
+        llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::All);
+    Policy.UsePreferredNames = false;
     if (qualified) {
       Policy.FullyQualifiedName = true;
       Policy.Suppress_Elab = true;
@@ -909,7 +932,38 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
     if (const auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
       std::string type_name;
       QualType QT = compat::GetTypeFromDecl(TD);
+      if (!qualified) {
+        // The name must be unqualified only for the tag itself; template
+        // arguments have to keep their scopes (SuppressScope would strip
+        // those too). Print fully qualified, then strip the enclosing scope
+        // prefix of the tag: everything up to the last "::" at angle-bracket
+        // depth zero.
+        Policy.SuppressScope = false;
+        Policy.FullyQualifiedName = true;
+        Policy.Suppress_Elab = true;
+        Policy.SuppressDefaultTemplateArgs = true;
+        // no literal suffixes on non-type arguments ("array<unsigned int,3>",
+        // not "...3UL>"), matching the names ROOT and cppyy always exposed
+        Policy.AlwaysIncludeTypeForTemplateArgument = false;
+      }
       QT.getAsStringInternal(type_name, Policy);
+      if (!qualified) {
+        int depth = 0;
+        size_t strip = 0;
+        for (size_t i = 0; i < type_name.size(); ++i) {
+          char c = type_name[i];
+          if (c == '<')
+            ++depth;
+          else if (c == '>')
+            --depth;
+          else if (depth == 0 && c == ':' && i + 1 < type_name.size() &&
+                   type_name[i + 1] == ':') {
+            strip = i + 2;
+            ++i;
+          }
+        }
+        type_name.erase(0, strip);
+      }
       return type_name;
     }
     if (const auto* FD = llvm::dyn_cast<FunctionDecl>(ND)) {
@@ -920,7 +974,14 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
       return func_name;
     }
 
-    return qualified ? ND->getQualifiedNameAsString() : ND->getNameAsString();
+    if (qualified) {
+      std::string qual_name;
+      llvm::raw_string_ostream OS(qual_name);
+      ND->printQualifiedName(OS, Policy);
+      OS.flush();
+      return qual_name;
+    }
+    return ND->getNameAsString();
   }
 
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
@@ -1049,6 +1110,7 @@ DeclRef GetScope(const std::string& name, ConstDeclRef parent) {
   if (name == "")
     return INTEROP_RETURN(GetGlobalScope());
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = unwrap<NamedDecl>(GetNamed(name, parent));
 
   if (!ND || ND == (NamedDecl*)-1)
@@ -1189,11 +1251,11 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
     auto* D = unwrap<clang::Decl>(GetUnderlyingScope(parent));
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 #ifdef CPPINTEROP_USE_CLING
   if (Within)
     Within->getPrimaryContext()->buildLookup();
 #endif
-  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   // Fast path: qualified lookup. Cheap, no DRef-chain allocation, and
   // resolves every name not brought into `Within` via a using-directive.
@@ -1202,6 +1264,30 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1)
     return INTEROP_RETURN(ND->getCanonicalDecl());
+
+  // Lookup::Named performs a redeclaration-style lookup, which for a class
+  // stops at the class itself, whereas [class.qual] lookup of an existing
+  // member name also searches the base classes (e.g. the `type` member
+  // typedef of libstdc++'s recursively implemented std::tuple_element lives
+  // in a base of the queried specialization). Retry accordingly.
+  if (!ND && Within) {
+    if (auto* RD = llvm::dyn_cast<clang::CXXRecordDecl>(Within)) {
+      if (clang::CXXRecordDecl* Def = RD->getDefinition()) {
+        auto& S = getSema();
+        clang::DeclarationName DName = &S.Context.Idents.get(name);
+        clang::LookupResult R(S, DName, clang::SourceLocation(),
+                              clang::Sema::LookupOrdinaryName,
+                              RedeclarationKind::NotForRedeclaration);
+        R.suppressDiagnostics();
+        S.LookupQualifiedName(R, Def);
+        if (!R.empty()) {
+          R.resolveKind();
+          if (R.isSingleResult())
+            return INTEROP_RETURN(R.getFoundDecl()->getCanonicalDecl());
+        }
+      }
+    }
+  }
 
   // Slow path: only when qualified lookup missed AND `Within` is a
   // namespace whose enclosing chain carries at least one using-directive
@@ -1230,6 +1316,15 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
   }
   auto* ParentDC = D->getDeclContext();
 
+  // A linkage spec (`extern "C++" { ... }`) or C++20 `export` block is not a
+  // scope, skip to the enclosing scope. E.g. on Windows the canonical
+  // declaration of namespace std comes from an `extern "C++"` block in the
+  // MSVC CRT headers, which would otherwise become an "<unnamed>" parent of
+  // std.
+  while (ParentDC && (llvm::isa<LinkageSpecDecl>(ParentDC) ||
+                      llvm::isa<ExportDecl>(ParentDC)))
+    ParentDC = ParentDC->getParent();
+
   if (!ParentDC)
     return INTEROP_RETURN(nullptr);
 
@@ -1244,6 +1339,7 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
 size_t GetNumBases(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<Decl>(DRef);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   if (const auto* CTSD =
           llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
@@ -1259,6 +1355,8 @@ size_t GetNumBases(ConstDeclRef DRef) {
 }
 
 DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   INTEROP_TRACE(DRef, ibase);
   const auto* D = unwrap<Decl>(DRef);
   const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
@@ -1271,6 +1369,7 @@ DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
 
   return INTEROP_RETURN(nullptr);
 }
+
 
 // FIXME: Consider dropping this interface as it seems the same as
 // IsTypeDerivedFrom.
@@ -1285,13 +1384,52 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
   const auto* derived_D = unwrap<clang::Decl>(derived);
   const auto* base_D = unwrap<clang::Decl>(base);
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   if (!isa<CXXRecordDecl>(derived_D) || !isa<CXXRecordDecl>(base_D))
     return INTEROP_RETURN(false);
 
   const auto* Derived = cast<CXXRecordDecl>(derived_D);
   const auto* Base = cast<CXXRecordDecl>(base_D);
-  return INTEROP_RETURN(
-      IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)));
+
+  // This interface historically ignores access specifiers: interactive and
+  // binding use cases pass derived objects where a base is expected also
+  // for non-public bases. The exception is when both classes are
+  // instantiations of the same class template: there, non-public
+  // derivation is a recursive implementation detail (e.g. MSVC's
+  // std::tuple derives privately from the tuple of its tail elements) and
+  // accepting the derived instantiation for its base instantiation would
+  // silently reinterpret the object - a tuple must never be passed as its
+  // own tail. Require a public path in that case only.
+  if (!IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)))
+    return INTEROP_RETURN(false);
+
+  const auto* DerivedCTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(Derived);
+  const auto* BaseCTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(Base);
+  if (!DerivedCTSD || !BaseCTSD ||
+      DerivedCTSD->getSpecializedTemplate()->getCanonicalDecl() !=
+          BaseCTSD->getSpecializedTemplate()->getCanonicalDecl())
+    return INTEROP_RETURN(true);
+
+  // distinct handles may refer to the same class (Sema::IsDerivedFrom above
+  // accepts identical types, the base-path walk below would not)
+  if (Derived->getCanonicalDecl() == Base->getCanonicalDecl())
+    return INTEROP_RETURN(true);
+
+  const CXXRecordDecl* Def = Derived->getDefinition();
+  if (!Def)
+    return INTEROP_RETURN(false);
+
+  CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
+                     /*DetectVirtual=*/false);
+  if (!Def->isDerivedFrom(Base, Paths))
+    return INTEROP_RETURN(false);
+
+  for (const CXXBasePath& Path : Paths)
+    if (Path.Access == AS_public)
+      return INTEROP_RETURN(true);
+
+  return INTEROP_RETURN(false);
 }
 
 // Copied from VTableBuilder.cpp
@@ -1301,6 +1439,9 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
 static unsigned ComputeBaseOffset(const ASTContext& Context,
                                   const CXXRecordDecl* DerivedRD,
                                   const CXXBasePath& Path) {
+
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   CharUnits NonVirtualOffset = CharUnits::Zero();
 
   unsigned NonVirtualStart = 0;
@@ -1349,6 +1490,8 @@ int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base) {
 
   assert(derived || base);
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   const auto* DD = unwrap<Decl>(derived);
   const auto* BD = unwrap<Decl>(base);
   if (!isa<CXXRecordDecl>(DD) || !isa<CXXRecordDecl>(BD))
@@ -1384,6 +1527,8 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
     return;
 
   // Unwrap to mutable: ForceDeclarationOfImplicitMembers is a lazy-init
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   // operation on the AST, logically const for the caller.
   Decl* D = const_cast<Decl*>(unwrap<clang::Decl>(DRef));
 
@@ -1396,7 +1541,6 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
     return;
 
   auto* CXXRD = dyn_cast<CXXRecordDecl>(D);
-  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(CXXRD)) {
     QualType QT = compat::GetTypeFromDecl(CTSD);
     if (!getSema().isCompleteType(CTSD->getLocation(), QT))
@@ -1414,6 +1558,18 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
       if (!MD)
         continue;
 
+      // The shadow is resolved to its target below, which loses the
+      // using-declaration's access. Only forward publicly re-exposed
+      // targets: a target that is public in its own class keeps looking
+      // public to callers, and a non-public target re-exposed publicly is
+      // recognizable to callers by its foreign parent scope (e.g. MSVC's
+      // std::shared_ptr does `public: using _Ptr_base<T>::get;` with a
+      // protected base method). Shadows in non-public sections are dropped:
+      // exposing their target with the target's own (possibly public)
+      // access would wrongly widen access.
+      if (USD->getAccess() != AccessSpecifier::AS_public)
+        continue;
+
       auto* CUSD = dyn_cast<ConstructorUsingShadowDecl>(DI);
       if (!CUSD) {
         methods.push_back(MD);
@@ -1426,6 +1582,15 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
         continue;
       }
       if (CXXCD->isDeleted())
+        continue;
+      // Do not expose the base's parameterless default/copy/move
+      // constructors: callers (e.g. cppyy) treat the class' own special
+      // members as authoritative, and the call layer refuses to invoke
+      // special members injected by a using declaration (see
+      // make_narg_call_with_return). Note that a constructor with defaulted
+      // parameters, e.g. Base(int n = 0), must stay: its non-default form is
+      // a genuinely inherited constructor.
+      if (CXXCD->getNumParams() == 0 || CXXCD->isCopyOrMoveConstructor())
         continue;
 
       // Result is appended to the decls, i.e. CXXRD, iterator
@@ -1535,8 +1700,13 @@ std::vector<FuncRef> GetFunctionsUsingName(ConstDeclRef DRef,
 
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
-
-  CppInternal::utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
+  auto* Within = Decl::castToDeclContext(D);
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    Within->getPrimaryContext()->buildLookup();
+#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+  CppInternal::utils::Lookup::Named(&S, R, Within);
 
   if (R.empty())
     return INTEROP_RETURN(funcs);
@@ -1905,6 +2075,11 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
     Within = llvm::dyn_cast<DeclContext>(D);
   }
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    const_cast<DeclContext*>(Within->getPrimaryContext())->buildLookup();
+#endif
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
 
   if ((intptr_t)ND == (intptr_t)0)
@@ -1914,8 +2089,24 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
     return INTEROP_RETURN(IsTemplatedFunction(ND) ||
                           IsTemplateInstantiationOrSpecialization(ND));
 
-  // FIXME: Cycle through the Decls and check if there is a templated function
-  return INTEROP_RETURN(true);
+  // The name is ambiguous, i.e. an overload set: cycle through the found
+  // decls and check if any of them is a templated function. Blindly
+  // returning true here would present any function with two or more
+  // non-template overloads as a template.
+  auto& S = getSema();
+  auto& Ctx = getASTContext();
+  clang::LookupResult R(S, &Ctx.Idents.get(name), SourceLocation(),
+                        Sema::LookupOrdinaryName,
+                        RedeclarationKind::ForVisibleRedeclaration);
+  CppInternal::utils::Lookup::Named(&S, R, Within);
+  for (const NamedDecl* Found : R) {
+    const Decl* D = Found;
+    if (const auto* USD = llvm::dyn_cast<UsingShadowDecl>(Found))
+      D = USD->getTargetDecl();
+    if (IsTemplatedFunction(D) || IsTemplateInstantiationOrSpecialization(D))
+      return INTEROP_RETURN(true);
+  }
+  return INTEROP_RETURN(false);
 }
 
 // Looks up all constructors in the current DeclContext
@@ -1926,6 +2117,9 @@ void LookupConstructors(const std::string& name, ConstDeclRef parent,
   auto* D = const_cast<Decl*>(unwrap<Decl>(parent));
 
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+    // Both calls below declare implicit members lazily and can deserialize
+    // decls from an AST file, which must happen within a transaction.
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     getSema().ForceDeclarationOfImplicitMembers(CXXRD);
     DeclContextLookupResult Result = getSema().LookupConstructors(CXXRD);
     // Obtaining all constructors when we intend to lookup a method under a
@@ -1953,7 +2147,12 @@ bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
   DeclarationName DName = &getASTContext().Idents.get(name);
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* DC = clang::Decl::castToDeclContext(DU);
+#ifdef CPPINTEROP_USE_CLING
+  if (DC)
+    DC->getPrimaryContext()->buildLookup();
+#endif
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
   if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
@@ -2087,6 +2286,34 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
   Overloads.BestViableFunction(S, Loc, Best);
 
   FunctionDecl* Result = Best != Overloads.end() ? Best->Function : nullptr;
+
+  // If the winner is a not-yet-instantiated template specialization, force
+  // the instantiation of its body now, with diagnostics suppressed, and
+  // reject the match if the body turns out to be ill-formed. Callers use
+  // this function to probe whether a valid instantiation exists (e.g.
+  // CPyCppyy's __cppyy_internal::is_equal fallback for comparison
+  // operators), so an ill-formed body must surface as "no viable function"
+  // here rather than as a hard error when the wrapper is compiled at call
+  // time. This mirrors cling's LookupHelper::overloadFunctionSelector. Note
+  // that probing with an expression-SFINAE helper instead is not equivalent:
+  // C++20 rewritten (reversed) operator candidates make comparisons like a
+  // member operator==(const Base&) ambiguous, which is a hard substitution
+  // failure in a SFINAE context but only a warning in a function body.
+  // DefinitionRequired stays false: a pattern without a body (defined in a
+  // library) is still a valid match.
+  if (Result && Result->isTemplateInstantiation() && !Result->isDefined()) {
+    DiagnosticsEngine& Diags = S.getDiagnostics();
+    bool OldSuppress = Diags.getSuppressAllDiagnostics();
+    Diags.setSuppressAllDiagnostics(true);
+    S.InstantiateFunctionDefinition(Loc, Result, /*Recursive=*/true);
+    Diags.setSuppressAllDiagnostics(OldSuppress);
+    if (Result->isInvalidDecl()) {
+      Diags.Reset(/*soft=*/true);
+      Diags.getClient()->clear();
+      Result = nullptr;
+    }
+  }
+
   delete[] Exprs;
   return INTEROP_RETURN(Result);
 }
@@ -2636,6 +2863,11 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    const_cast<DeclContext*>(Within->getPrimaryContext())->buildLookup();
+#endif
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     if (llvm::isa_and_nonnull<clang::FieldDecl>(ND)) {
@@ -2648,6 +2880,7 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
 
 bool IsLambdaClass(ConstTypeRef TyRef) {
   INTEROP_TRACE(TyRef);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (auto* CXXRD = QT->getAsCXXRecordDecl()) {
     return INTEROP_RETURN(CXXRD->isLambda());
@@ -2661,6 +2894,16 @@ TypeRef GetVariableType(ConstDeclRef var) {
 
   if (const auto* DD = llvm::dyn_cast_or_null<DeclaratorDecl>(D)) {
     QualType QT = DD->getType();
+
+    // For an array of unknown bound (e.g. `extern std::string arr[];`),
+    // prefer the defining declaration's complete type, which carries the
+    // actual dimension.
+    if (QT->isIncompleteArrayType()) {
+      if (const auto* VD = llvm::dyn_cast<VarDecl>(DD)) {
+        if (const VarDecl* Def = VD->getDefinition())
+          QT = Def->getType();
+      }
+    }
 
     // Check if the TyRef is a typedef TyRef
     if (QT->isTypedefNameType()) {
@@ -2678,6 +2921,61 @@ TypeRef GetVariableType(ConstDeclRef var) {
   return INTEROP_RETURN(nullptr);
 }
 
+// Materialize the value of a constant array variable from its evaluated
+// AST initializer into a per-decl host-side buffer, and return the buffer
+// address. This serves variables whose symbol exists in no loaded binary,
+// e.g. const data in a Windows DLL: bindexplib deliberately does not
+// export read-only data, but when the dictionary provides the
+// initializer, its value can be reproduced host-side (the same idea as
+// the integral getRawData early-return in GetVariableOffset). Only
+// arrays of arithmetic/enum elements are handled; element values are
+// stored little-endian, matching all supported hosts.
+static intptr_t MaterializeConstArrayValue(const ASTContext& C,
+                                           const VarDecl* VD,
+                                           const APValue& Val) {
+  if (!Val.isArray())
+    return 0;
+  const ConstantArrayType* CAT = C.getAsConstantArrayType(VD->getType());
+  if (!CAT)
+    return 0;
+  QualType ElemTy = CAT->getElementType();
+  if (!ElemTy->isIntegralOrEnumerationType() && !ElemTy->isFloatingType())
+    return 0;
+  size_t ElemSize = C.getTypeSizeInChars(ElemTy).getQuantity();
+  uint64_t NElem = CAT->getSize().getZExtValue();
+  if (ElemSize == 0 || ElemSize > sizeof(uint64_t) || NElem == 0)
+    return 0;
+
+  // The buffer must live as long as any offset handed out for the decl.
+  static llvm::DenseMap<const VarDecl*, std::unique_ptr<char[]>> Cache;
+  const VarDecl* Key = VD->getCanonicalDecl();
+  auto Found = Cache.find(Key);
+  if (Found != Cache.end())
+    return (intptr_t)Found->second.get();
+
+  auto Buf = std::make_unique<char[]>(ElemSize * NElem);
+  char* Data = Buf.get();
+  uint64_t NInit = Val.getArrayInitializedElts();
+  for (uint64_t i = 0; i < NElem; ++i) {
+    if (i >= NInit && !Val.hasArrayFiller())
+      return 0;
+    const APValue& Elem =
+        i < NInit ? Val.getArrayInitializedElt(i) : Val.getArrayFiller();
+    uint64_t Word = 0;
+    if (Elem.isInt())
+      Word = Elem.getInt().getZExtValue();
+    else if (Elem.isFloat())
+      Word = Elem.getFloat().bitcastToAPInt().getZExtValue();
+    else
+      return 0;
+    std::memcpy(Data + i * ElemSize, &Word, ElemSize);
+  }
+
+  intptr_t Addr = (intptr_t)Data;
+  Cache[Key] = std::move(Buf);
+  return Addr;
+}
+
 intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
                            CXXRecordDecl* BaseCXXRD) {
   if (!D)
@@ -2686,6 +2984,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
   auto& C = I.getSema().getASTContext();
 
   if (auto* FD = llvm::dyn_cast<FieldDecl>(D)) {
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     clang::RecordDecl* FieldParentRecordDecl = FD->getParent();
     intptr_t offset = C.toCharUnitsFromBits(C.getFieldOffset(FD)).getQuantity();
     while (FieldParentRecordDecl->isAnonymousStructOrUnion()) {
@@ -2750,35 +3049,84 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     auto GD = GlobalDecl(VD);
     std::string mangledName;
     compat::maybeMangleDeclName(GD, mangledName);
-    void* address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
-        mangledName.c_str());
+    void* address = nullptr;
+    {
+      // scoped: the final symbol lookup and the evaluate fallback below must
+      // run outside of any nested transaction, or execution is deferred
+      compat::SynthesizingCodeRAII RAII(&getInterp());
+      address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
+          mangledName.c_str());
 
-    if (!address)
-      address = I.getAddressOfGlobal(GD);
-    if (!address) {
-      if (!VD->hasInit()) {
-        compat::SynthesizingCodeRAII RAII(&getInterp());
-        getSema().InstantiateVariableDefinition(SourceLocation(), VD);
-        VD = VD->getDefinition();
-      }
-      if (VD->hasInit() &&
-          (VD->isConstexpr() || VD->getType().isConstQualified())) {
-        if (const APValue* val = VD->evaluateValue()) {
-          if (VD->getType()->isIntegralType(C)) {
-            return (intptr_t)val->getInt().getRawData();
+      if (!address)
+        address = I.getAddressOfGlobal(GD);
+      if (!address) {
+        if (!VD->hasInit()) {
+          // Only variables instantiated from a template pattern (variable
+          // template specializations, static data members of class
+          // templates) can be instantiated here: for a plain declaration,
+          // InstantiateVariableDefinition dereferences a null instantiation
+          // pattern (its assert is compiled out in release builds), e.g. for
+          // an extern const array whose definition lives in an unloaded or
+          // non-exporting binary.
+          if (VD->getTemplateInstantiationPattern())
+            getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+          // An extern declaration whose definition lives in a binary that
+          // does not export it has no definition in the AST (e.g. const
+          // data in a Windows DLL: bindexplib deliberately does not export
+          // read-only data). Keep the declaration in that case.
+          if (VarDecl* Def = VD->getDefinition())
+            VD = Def;
+        }
+        if (VD->hasInit() &&
+            (VD->isConstexpr() || VD->getType().isConstQualified())) {
+          if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralType(C)) {
+              return (intptr_t)val->getInt().getRawData();
+            }
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(C, VD, *val))
+              return ArrAddr;
           }
         }
       }
-    }
-    if (!address) {
-      auto Linkage = C.GetGVALinkageForVariable(VD);
-      if (isDiscardableGVALinkage(Linkage))
-        ForceCodeGen(VD, I);
+      if (!address) {
+        // Emit variables that CodeGen deferred (inline/constexpr,
+        // discardable linkage), and also strong definitions whose
+        // initializer is available in the AST but whose home binary does
+        // not export the symbol: e.g. on Windows, bindexplib deliberately
+        // does not export read-only data from DLLs, but the dictionary
+        // provides the initializer, so an emitted copy has the same value.
+        // Writable globals are exported and found above, so they cannot end
+        // up with a diverging JIT copy here.
+        auto Linkage = C.GetGVALinkageForVariable(VD);
+        if (isDiscardableGVALinkage(Linkage) ||
+            (VD->isThisDeclarationADefinition() && VD->hasInit()))
+          ForceCodeGen(VD, I);
+      }
     }
     auto VDAorErr = compat::getSymbolAddress(I, StringRef(mangledName));
     if (!VDAorErr) {
-      llvm::logAllUnhandledErrors(VDAorErr.takeError(), llvm::errs(),
-                                  "Failed to GetVariableOffset:");
+      // Last resort: ODR-use the variable in an interpreter-evaluated
+      // expression. This forces CodeGen to emit inline/constexpr variables
+      // that exist in no loaded library (e.g. std::nullopt) and that the
+      // deferred-decl handling above did not emit. Mirrors what
+      // TClingDataMemberInfo::Offset does in ROOT.
+      // This can only work when CodeGen can emit the variable, i.e. when its
+      // definition or at least an initializer is available in the AST (e.g.
+      // std::ios_base::__noreplace, a static const member initialized in the
+      // class). For a variable defined in a binary that does not export it,
+      // the emitted reference could never be resolved, and executing the
+      // expression would be undefined behavior.
+      llvm::consumeError(VDAorErr.takeError());
+      if (VD->getDefinition() || VD->hasInit()) {
+        compat::Value V;
+        const std::string addr_of =
+            "&::" + VD->getQualifiedNameAsString() + ";";
+        if (I.evaluate(addr_of.c_str(), V) == compat::Interpreter::kSuccess &&
+            V.hasValue())
+          return (intptr_t)compat::convertTo<void*>(V);
+      }
+      llvm::errs() << "Failed to GetVariableOffset: symbol '" << mangledName
+                   << "' not found and its definition is not available\n";
       return 0;
     }
     return (intptr_t)jitTargetAddressToPointer<void*>(VDAorErr.get());
@@ -2932,6 +3280,8 @@ TypeRef GetPointerType(ConstTypeRef TyRef) {
 
 TypeRef GetReferencedType(ConstTypeRef TyRef, bool rvalue) {
   INTEROP_TRACE(TyRef, rvalue);
+  if (!TyRef.data)
+    return INTEROP_RETURN(nullptr);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (rvalue)
     return INTEROP_RETURN(
@@ -2972,11 +3322,21 @@ TypeRef GetUnderlyingType(ConstTypeRef TyRef) {
 std::string GetTypeAsString(ConstTypeRef var) {
   INTEROP_TRACE(var);
   QualType QT = QualType::getFromOpaquePtr(var.data);
-  PrintingPolicy Policy(getASTContext().getPrintingPolicy());
+  // FIXME: Get the default printing policy from the ASTContext.
+  PrintingPolicy Policy((LangOptions()));
   Policy.Bool = true;               // Print bool instead of _Bool.
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
   Policy.Suppress_Elab = true;
   Policy.FullyQualifiedName = true;
+  // Type names are matched against string keys on the cppyy side (e.g. the
+  // std::string return-value executor), so their spelling must not depend on
+  // the platform: always drop inline namespaces (libc++'s std::__1,
+  // libstdc++'s std::__cxx11) instead of relying on the lookup-based
+  // "redundant qualifier" heuristic, and do not substitute preferred names
+  // (libc++ tags basic_string<char> with preferred_name(string)).
+  Policy.SuppressInlineNamespace =
+      llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::All);
+  Policy.UsePreferredNames = false;
   return INTEROP_RETURN(QT.getAsString(Policy));
 }
 
@@ -3367,6 +3727,33 @@ void collect_type_info(const FunctionDecl* FD, QualType& QT,
   get_type_as_string(QT, type_name, C, Policy);
 }
 
+static bool IsCopyConstructorDeleted(QualType QT) {
+  CXXRecordDecl* RD = QT->getAsCXXRecordDecl();
+  if (!RD) {
+    // For types that are not C++ records (such as PODs), we assume that they
+    // are copyable, ie their copy constructor is not deleted.
+    return false;
+  }
+
+  RD = RD->getDefinition();
+  assert(RD && "expecting a definition");
+
+  if (RD->hasSimpleCopyConstructor())
+    return false;
+
+  for (auto* Ctor : RD->ctors()) {
+    if (Ctor->isCopyConstructor()) {
+      return Ctor->isDeleted();
+    }
+  }
+
+  assert(0 && "did not find a copy constructor?");
+  // Should never happen and the return value is somewhat arbitrary, but we did
+  // not see a deleted copy ctor. The user will be told if the generated code
+  // doesn't compile.
+  return false;
+}
+
 void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
                     std::ostringstream& typedefbuf, std::ostringstream& callbuf,
                     const std::string& class_name, int indent_level,
@@ -3411,7 +3798,18 @@ void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
       } else if (isPointer) {
         callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
       } else {
+        // By-value construction: Figure out if the type can be
+        // copy-constructed. This is tricky and cannot be done in a fully
+        // reliable way, also because std::vector<T> always defines a copy
+        // constructor, even if the type T is only moveable. As a heuristic, we
+        // only check if the copy constructor is deleted, or would be if
+        // implicit.
+        bool Move = IsCopyConstructorDeleted(QT);
+        if (Move)
+          callbuf << "static_cast<" << type_name << "&&>(";
         callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+        if (Move)
+          callbuf << ")";
       }
     }
     callbuf << ")";
@@ -3509,8 +3907,6 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
     else
       callbuf << "((" << class_name << "*)obj)->";
 
-    if (op_flag)
-      callbuf << class_name << "::";
   } else if (isa<NamedDecl>(get_non_transparent_decl_context(FD))) {
     // This is a namespace member.
     if (op_flag || N <= 1)
@@ -3591,17 +3987,14 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
               << type_name.c_str() << "*)args[" << i << "]";
     } else if (isPointer) {
       callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
-    } else if (rtdecl &&
-               (rtdecl->hasTrivialCopyConstructor() &&
-                !rtdecl->hasSimpleCopyConstructor()) &&
-               rtdecl->hasMoveConstructor()) {
+    } else if (rtdecl && IsCopyConstructorDeleted(QT)) {
       // By-value construction; this may either copy or move, but there is no
       // information here in terms of intent. Thus, simply assume that the
       // intent is to move if there is no viable copy constructor (ie. if the
-      // code would otherwise fail to even compile). There does not appear to be
-      // a simple way of determining whether a viable copy constructor exists,
-      // so check for the most common case: the trivial one, but not uniquely
-      // available, while there is a move constructor.
+      // code would otherwise fail to even compile). Checking the actual copy
+      // constructor is reliable across standard libraries, unlike triviality
+      // bits (MSVC's std::unique_ptr has a non-trivial deleted copy
+      // constructor, libstdc++'s a trivial one).
 
       // Move construction as needed for classes (note that this is
       // implicit). Emit `std::move`'s expansion directly rather than the
@@ -3655,7 +4048,10 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
       callbuf << "if (nary > 1) {\n";
       indent(callbuf, indent_level);
       callbuf << "(*(" << class_name << "**)ret) = ";
-      callbuf << "(is_arena) ? new (*(" << class_name << "**)ret) ";
+      // Use ::new to construct in the arena: a class-scope operator new
+      // (e.g. a custom allocator with no matching placement form) would
+      // otherwise hide the global placement operator new.
+      callbuf << "(is_arena) ? ::new (*(" << class_name << "**)ret) ";
       make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level,
                      true);
 
@@ -3679,7 +4075,8 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
     // : new ClassName(args...);
     indent(callbuf, indent_level);
     callbuf << "(*(" << class_name << "**)ret) = ";
-    callbuf << "(is_arena) ? new (*(" << class_name << "**)ret) ";
+    // ::new for the same reason as in the array branch above.
+    callbuf << "(is_arena) ? ::new (*(" << class_name << "**)ret) ";
     make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
 
     callbuf << ": new ";
@@ -3737,7 +4134,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
     make_narg_ctor_with_return(FD, N, class_name, buf, indent_level);
     return;
   }
-  QualType QT = FD->getReturnType();
+  QualType QT = FD->getReturnType().getCanonicalType();
   if (QT->isVoidType()) {
     std::ostringstream typedefbuf;
     std::ostringstream callbuf;
@@ -3770,7 +4167,9 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
       //  Write the placement part of the placement new.
       //
       indent(callbuf, indent_level);
-      callbuf << "new (ret) ";
+      // ::new so that a class-scope operator new cannot hide the global
+      // placement form used to construct the return value in `ret`.
+      callbuf << "::new (ret) ";
       //
       //  Write the TyRef part of the placement new.
       //
@@ -4292,12 +4691,13 @@ JitCall::GenericCall make_wrapper(compat::Interpreter& I,
   //
   //   Compile the wrapper code.
   //
-  bool withAccessControl = true;
-  // We should be able to call private default constructors.
-  if (auto Ctor = dyn_cast<CXXConstructorDecl>(FD))
-    withAccessControl = !Ctor->isDefaultConstructor();
-  void* wrapper =
-      compile_wrapper(I, wrapper_name, wrapper_code, withAccessControl);
+  // Access control must be off, matching cppyy-backend's TClingCallFunc: the
+  // callee was already selected (and public-filtered) by the caller, and
+  // compiling the call may lazily instantiate template bodies that are only
+  // valid with checks relaxed (e.g. a member template accessing a private
+  // member of another specialization of its own class template).
+  void* wrapper = compile_wrapper(I, wrapper_name, wrapper_code,
+                                  /*withAccessControl=*/false);
   if (wrapper) {
     WrapperStore.insert(std::make_pair(FD, wrapper));
   } else {
@@ -5200,6 +5600,11 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
       // FIXME: Diagnose what happened.
       (void)Result;
     }
+    // Never hand out a specialization whose (attempted) instantiation turned
+    // out to be ill-formed, e.g. one rejected by BestOverloadFunctionMatch:
+    // any use of it, such as compiling a call wrapper, can only fail.
+    if (Specialization && Specialization->isInvalidDecl())
+      return nullptr;
     if (instantiate_body)
       InstantiateFunctionDefinition(Specialization);
     return Specialization;
@@ -5316,7 +5721,10 @@ void GetClassTemplateArgs(ConstDeclRef templ_instance,
 void GetClassTemplateInstantiationArgs(ConstDeclRef templ_instance,
                                        std::vector<TemplateArgInfo>& args) {
   INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
-  const auto* CTSD = unwrap<ClassTemplateSpecializationDecl>(templ_instance);
+  const auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+      unwrap<Decl>(templ_instance));
+  if (!CTSD)
+    return INTEROP_VOID_RETURN();
   for (const auto& TA : CTSD->getTemplateInstantiationArgs().asArray()) {
     switch (TA.getKind()) {
     default:

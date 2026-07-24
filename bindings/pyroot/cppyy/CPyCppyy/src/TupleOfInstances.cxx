@@ -1,3 +1,6 @@
+#include "Python.h"
+#include "Cppyy.h"
+
 // Bindings
 #include "CPyCppyy.h"
 #include "TupleOfInstances.h"
@@ -8,7 +11,7 @@ namespace {
 
 typedef struct {
     PyObject_HEAD
-    Cppyy::TCppType_t        ia_klass;
+    Cppyy::TCppScope_t        ia_klass;
     void*                    ia_array_start;
     Py_ssize_t               ia_pos;
     Py_ssize_t               ia_len;
@@ -104,26 +107,18 @@ PyTypeObject InstanceArrayIter_Type = {
     (iternextfunc)ia_iternext,    // tp_iternext
     0, 0,
     ia_getset,                    // tp_getset
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                           // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                           // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                           // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,                            // tp_del
+    0,                            // tp_version_tag
+    0,                            // tp_finalize
+    0                             // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
 
 //= support for C-style arrays of objects ====================================
 PyObject* TupleOfInstances_New(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, cdims_t dims)
+    Cppyy::TCppObject_t address, Cppyy::TCppScope_t klass, cdims_t dims)
 {
 // recursively set up tuples of instances on all dimensions
     if (dims.ndim() == UNKNOWN_SIZE || dims[0] == UNKNOWN_SIZE /* unknown shape or size */) {
@@ -132,7 +127,7 @@ PyObject* TupleOfInstances_New(
         if (!ia) return nullptr;
 
         ia->ia_klass       = klass;
-        ia->ia_array_start = address;
+        ia->ia_array_start = address.data;
         ia->ia_pos         = 0;
         ia->ia_len         = -1;
         ia->ia_stride      = Cppyy::SizeOf(klass);
@@ -141,15 +136,18 @@ PyObject* TupleOfInstances_New(
         return (PyObject*)ia;
     } else if (1 < dims.ndim()) {
     // not the innermost dimension, descend one level
-        size_t block_size = 0;
-        for (Py_ssize_t i = 1; i < dims.ndim(); ++i) block_size += (size_t)dims[i];
+        size_t block_size = 1;
+        for (Py_ssize_t i = 1; i < dims.ndim(); ++i) {
+            if (dims[i] != 0)
+                block_size *= (size_t)dims[i];
+        }
         block_size *= Cppyy::SizeOf(klass);
 
         Py_ssize_t nelems = dims[0];
         PyObject* tup = PyTuple_New(nelems);
         for (Py_ssize_t i = 0; i < nelems; ++i) {
             PyTuple_SetItem(tup, i, TupleOfInstances_New(
-                (char*)address + i*block_size, klass, dims.sub()));
+                ((char*)address.data) + i*block_size, klass, dims.sub()));
         }
         return tup;
     } else {
@@ -170,7 +168,7 @@ PyObject* TupleOfInstances_New(
         // TODO: there's an assumption here that there is no padding, which is bound
         // to be incorrect in certain cases
             PyTuple_SetItem(tup, i,
-                BindCppObjectNoCast((char*)address + i*block_size, klass));
+                BindCppObjectNoCast(((char*)address.data) + i*block_size, klass));
         // Note: objects are bound as pointers, yet since the pointer value stays in
         // place, updates propagate just as if they were bound by-reference
         }
@@ -236,19 +234,11 @@ PyTypeObject TupleOfInstances_Type = {
     0,                             // tp_mro
     0,                             // tp_cache
     0,                             // tp_subclasses
-    0                              // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                           // tp_vectorcall
-#endif
+    0,                             // tp_weaklist
+    0,                             // tp_del
+    0,                             // tp_version_tag
+    0,                             // tp_finalize
+    0                              // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 

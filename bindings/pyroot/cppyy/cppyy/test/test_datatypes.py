@@ -19,7 +19,6 @@ class TestDATATYPES:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
 
-    @mark.xfail(strict=True)
     def test01_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 
@@ -190,7 +189,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail(strict=True)
     def test02_instance_data_write_access(self):
         """Test write access to instance public data and verify values"""
 
@@ -727,7 +725,6 @@ class TestDATATYPES:
         assert gbl.EnumSpace.AA == 1
         assert gbl.EnumSpace.BB == 2
 
-    @mark.xfail(strict=True)
     def test11_typed_enums(self):
         """Determine correct types of enums"""
 
@@ -770,7 +767,6 @@ class TestDATATYPES:
         assert type(sc.vraioufaux.faux) == bool  # no bool as base class
         assert isinstance(sc.vraioufaux.faux, bool)
 
-    @mark.xfail(strict=True)
     def test12_enum_scopes(self):
         """Enum accessibility and scopes"""
 
@@ -1096,7 +1092,6 @@ class TestDATATYPES:
 
         assert not d2
 
-    @mark.xfail(strict=True)
     def test22_buffer_shapes(self):
         """Correctness of declared buffer shapes"""
 
@@ -1260,7 +1255,7 @@ class TestDATATYPES:
         run(self, cppyy.gbl.sum_uc_data, buf, total)
         run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail(strict=True, run=not IS_MAC and not IS_WINDOWS, reason="Fails on all platforms; crashes on macOS with " \
+    @mark.xfail(condition=IS_MAC, run=not IS_MAC and not IS_WINDOWS, reason="Fails on all platforms; crashes on macOS with " \
     "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
@@ -1539,7 +1534,6 @@ class TestDATATYPES:
                 p = (ctype * len(buf)).from_buffer(buf)
                 assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
 
-    @mark.xfail(strict=True)
     def test31_anonymous_union(self):
         """Anonymous unions place there fields in the parent scope"""
 
@@ -1633,7 +1627,6 @@ class TestDATATYPES:
         assert type(p.data_c[0]) == float
         assert p.intensity == 5.
 
-    @mark.xfail(strict=True)
     def test32_anonymous_struct(self):
         """Anonymous struct creates an unnamed type"""
 
@@ -1682,7 +1675,6 @@ class TestDATATYPES:
 
         assert 'foo' in dir(ns.libuntitled1_ExportedSymbols().kotlin.root.com.justamouse.kmmdemo)
 
-    @mark.xfail(strict=True)
     def test33_pointer_to_array(self):
         """Usability of pointer to array"""
 
@@ -1948,7 +1940,6 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Test doesn't work on Windows")
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
@@ -2043,7 +2034,6 @@ class TestDATATYPES:
         output = (captured.out + captured.err).lower()
         assert "error:" not in output
 
-    @mark.xfail(strict=True)
     def test41_complex_numpy_arrays(self, capfd):
         """Usage of complex numpy arrays"""
 
@@ -2097,7 +2087,6 @@ class TestDATATYPES:
         output = (captured.out + captured.err).lower()
         assert "call to implicitly-deleted copy constructor" not in output
 
-    @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="Argument conversion error on macOS and Windows")
     def test42_mixed_complex_arithmetic(self):
         """Mixin of Python and C++ std::complex in arithmetic"""
 
@@ -2227,7 +2216,6 @@ class TestDATATYPES:
         b = ns.B()
         assert b.body1.name == b.body2.name
 
-    @mark.xfail(strict=True)
     def test46_small_int_enums(self):
         """Proper typing of small int enums"""
 
@@ -2282,7 +2270,6 @@ class TestDATATYPES:
         assert ns.func_int8()  == -1
         assert ns.func_uint8() == 255
 
-    @mark.xfail(strict=True)
     def test47_hidden_name_enum(self):
         """Usage of hidden name enum"""
 
@@ -2345,7 +2332,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(strict=True, run=not IS_WINDOWS, condition=IS_MAC_ARM or (not has_cpp_20() and is_modules_off()), reason="Crashes on mac-beta ARM64 and fails on Windows \
+    @mark.xfail(strict=True, run=not IS_WINDOWS, condition=not has_cpp_20() and is_modules_off(), reason="Fails on Windows \
             assertion error for runtime_cxxmodules=OFF build that is explained in GitHub issue #21005")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""

@@ -16,9 +16,16 @@
 
 // Bindings
 #include "CPyCppyy/CommonDefs.h"
-
+#include <Python.h>
 
 namespace CPyCppyy {
+class PythonGILRAII {
+  PyGILState_STATE state;
+
+public:
+  PythonGILRAII() : state(PyGILState_Ensure()) {}
+  ~PythonGILRAII() { PyGILState_Release(state); }
+};
 
 class CPYCPPYY_CLASS_EXTERN DispatchPtr {
 public:

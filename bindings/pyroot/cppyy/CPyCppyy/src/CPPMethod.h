@@ -5,7 +5,7 @@
 #include "PyCallable.h"
 
 // Standard
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -26,12 +26,8 @@ public:
         kIsOffset       = 0x0001, // args were offset by 1 to drop self
         kSelfSwap       = 0x0002, // args[-1] and self need swapping
         kArgsSwap       = 0x0004, // args[0] and args[1] need swapping
-#if PY_VERSION_HEX >= 0x03080000
         kDoFree         = 0x0008, // args need to be free'd (vector call only)
         kDoItemDecref   = 0x0010  // items in args need a decref (vector call only)
-#else
-        kDoDecref       = 0x0020  // args need a decref
-#endif
     };
 
 public:
@@ -73,6 +69,10 @@ public:
 
     int       GetArgMatchScore(PyObject* args_tuple) override;
 
+    bool IsSimilarFnType(Cppyy::TCppType_t fn_type) override {
+        return Cppyy::IsSimilarFnTypes(fn_type, Cppyy::GetTypeFromScope(Cppyy::TCppScope_t(fMethod.data)));
+    }
+
 public:
     PyObject* Call(CPPInstance*& self,
         CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
@@ -113,7 +113,7 @@ private:
 
 // call dispatch buffers
     std::vector<Converter*>     fConverters;
-    std::map<std::string, int>* fArgIndices;
+    std::unordered_map<std::string, int>* fArgIndices;
 
 protected:
 // cached value that doubles as initialized flag (uninitialized if -1)
