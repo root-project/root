@@ -2010,63 +2010,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    return nbytes;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write object from pointer of class classname in this directory.
-///
-/// obj may not derive from TObject. See TDirectoryFile::WriteTObject for comments
-///
-/// ## Very important note
-/// The value passed as 'obj' needs to be from a pointer to the type described by classname.
-/// For example:
-/// ~~~{.cpp}
-/// TopClass *top;
-/// BottomClass *bottom;
-/// top = bottom;
-/// ~~~
-/// you can do:
-/// ~~~{.cpp}
-/// directory->WriteObjectAny(top,"top","name of object");
-/// directory->WriteObjectAny(bottom,"bottom","name of object");
-/// ~~~
-/// <b>BUT YOU CAN NOT DO</b> the following since it will fail with multiple inheritance:
-/// ~~~{.cpp}
-/// directory->WriteObjectAny(top,"bottom","name of object");
-/// ~~~
-/// We <b>STRONGLY</b> recommend to use
-/// ~~~{.cpp}
-/// TopClass *top = ....;
-/// directory->WriteObject(top,"name of object")
-/// ~~~
-/// See also remarks in TDirectoryFile::WriteTObject
-
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
-{
-   TClass *cl = TClass::GetClass(classname);
-   if (!cl) {
-      TObject *info_obj = *(TObject**)obj;
-      TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
-      if (!info) {
-         Error("WriteObjectAny","Unknown class: %s",classname);
-         return 0;
-      } else {
-         cl = info->GetClass();
-      }
-   }
-   return WriteObjectAny(obj,cl,name,option,bufsize);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write object of class with dictionary cl in this directory.
-///
-/// obj may not derive from TObject
-/// To get the TClass* cl pointer, one can use
-///
-///     TClass *cl = TClass::GetClass("classname");
-///
-/// An alternative is to call the function WriteObjectAny above.
-/// see TDirectoryFile::WriteTObject for comments
-
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, const char *title, Option_t *option, Int_t bufsize)
 {
    TDirectory::TContext ctxt(this);
 
@@ -2136,6 +2080,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       oldkey = GetKey(oname);
    }
    key = fFile->CreateKey(this, obj, cl, oname, bsize);
+   key->SetTitle(title);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
@@ -2153,6 +2098,67 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    }
 
    return nbytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object from pointer of class classname in this directory.
+///
+/// obj may not derive from TObject. See TDirectoryFile::WriteTObject for comments
+///
+/// ## Very important note
+/// The value passed as 'obj' needs to be from a pointer to the type described by classname.
+/// For example:
+/// ~~~{.cpp}
+/// TopClass *top;
+/// BottomClass *bottom;
+/// top = bottom;
+/// ~~~
+/// you can do:
+/// ~~~{.cpp}
+/// directory->WriteObjectAny(top,"top","name of object");
+/// directory->WriteObjectAny(bottom,"bottom","name of object");
+/// ~~~
+/// <b>BUT YOU CAN NOT DO</b> the following since it will fail with multiple inheritance:
+/// ~~~{.cpp}
+/// directory->WriteObjectAny(top,"bottom","name of object");
+/// ~~~
+/// We <b>STRONGLY</b> recommend to use
+/// ~~~{.cpp}
+/// TopClass *top = ....;
+/// directory->WriteObject(top,"name of object")
+/// ~~~
+/// See also remarks in TDirectoryFile::WriteTObject
+
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
+{
+   TClass *cl = TClass::GetClass(classname);
+   if (!cl) {
+      TObject *info_obj = *(TObject**)obj;
+      TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
+      if (!info) {
+         Error("WriteObjectAny","Unknown class: %s",classname);
+         return 0;
+      } else {
+         cl = info->GetClass();
+      }
+   }
+   return WriteObjectAny(obj,cl,name,option,bufsize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object of class with dictionary cl in this directory.
+///
+/// obj may not derive from TObject
+/// To get the TClass* cl pointer, one can use
+///
+///     TClass *cl = TClass::GetClass("classname");
+///
+/// An alternative is to call the function WriteObjectAny above.
+/// see TDirectoryFile::WriteTObject for comments
+
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
+{
+   return WriteObjectAny(obj, cl, name, /*title=*/ "", option, bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

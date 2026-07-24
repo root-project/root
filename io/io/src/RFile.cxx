@@ -326,7 +326,8 @@ void *RFile::GetUntyped(std::string_view path,
    return obj;
 }
 
-void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, const void *obj, std::uint32_t flags)
+void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, const void *obj, std::uint32_t flags,
+                       std::string_view title)
 {
    const TClass *cls = TClass::GetClass(type);
    if (!cls)
@@ -377,8 +378,8 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
       }
    }
 
-   const bool allowOverwrite = (flags & kPutAllowOverwrite) != 0;
-   const bool backupCycle = (flags & kPutOverwriteKeepCycle) != 0;
+   const bool allowOverwrite = (flags & kPutFlag_AllowOverwrite) != 0;
+   const bool backupCycle = (flags & kPutFlag_OverwriteKeepCycle) != 0;
    const Option_t *writeOpts = "";
    if (!allowOverwrite) {
       const TKey *existing = dir->GetKey(tokens[tokens.size() - 1].c_str());
@@ -390,7 +391,10 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
       writeOpts = "WriteDelete";
    }
 
-   int success = dir->WriteObjectAny(obj, cls, tokens[tokens.size() - 1].c_str(), writeOpts);
+   const char *objName = tokens[tokens.size() - 1].c_str();
+   assert(dynamic_cast<TDirectoryFile *>(dir));
+   int success =
+      static_cast<TDirectoryFile *>(dir)->WriteObjectAny(obj, cls, objName, std::string(title).c_str(), writeOpts);
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));

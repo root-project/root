@@ -63,7 +63,7 @@ class RFileTests(unittest.TestCase):
             with RFile.Recreate(fileName) as rfile:
                 hist = ROOT.TH1D("hist", "", 100, -10, 10)
                 hist.FillRandom("gaus", 10)
-                rfile.Put("hist", hist)
+                rfile.Put("hist", hist, "My Histo")
                 rfile.Put("foo/hist", hist)
                 rfile.Put("foo/bar/hist", hist)
                 rfile.Put("foo/bar/hist2", hist)
@@ -73,6 +73,7 @@ class RFileTests(unittest.TestCase):
                 key = rfile.GetKeyInfo("hist")
                 self.assertEqual(key.GetPath(), "hist")
                 self.assertEqual(key.GetClassName(), "TH1D")
+                self.assertEqual(key.GetTitle(), "My Histo")
 
                 key = rfile.GetKeyInfo("does_not_exist")
                 self.assertEqual(key, None)
