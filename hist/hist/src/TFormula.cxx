@@ -3419,7 +3419,7 @@ void TFormula::HessianPar(const Double_t *x, TFormula::CladStorage& result)
       return;
    }
 
-   if ((int)result.size() < fNpar) {
+   if ((int)result.size() < fNpar * fNpar) {
       Warning("HessianPar",
               "The size of hessian result is %zu but %d is required. Resizing.",
               result.size(), fNpar * fNpar);
