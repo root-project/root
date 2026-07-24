@@ -5838,14 +5838,19 @@ void THistPainter::PaintColorLevels(Option_t*)
 
    // Initialize the levels on the Z axis
    Int_t ncolors  = gStyle->GetNumberOfColors();
-   Int_t ndiv   = fH->GetContour();
-   if (ndiv == 0 ) {
+   Int_t ndiv = fH->GetContour();
+   if (ndiv == 0) {
       ndiv = gStyle->GetNumberContours();
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
    if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
    Double_t scale = (dz ? ndivz / dz : 1.0);
+
+   Double_t xmin = gPad->GetUxmin();
+   Double_t xmax = gPad->GetUxmax();
+   Double_t ymin = gPad->GetUymin();
+   Double_t ymax = gPad->GetUymax();
 
    Int_t color;
    TProfile2D* prof2d = dynamic_cast<TProfile2D*>(fH);
@@ -5873,35 +5878,36 @@ void THistPainter::PaintColorLevels(Option_t*)
             }
          }
 
-         if (Hoption.Logz) {
-            if (z > 0) z = TMath::Log10(z);
-            else       z = zmin;
-         }
-         if (z < zmin && !Hoption.Zero) continue;
+         if (Hoption.Logz)
+            z = z > 0 ? TMath::Log10(z) : zmin;
+         if (z < zmin && !Hoption.Zero)
+            continue;
          xup  = xk + xstep;
          xlow = xk;
          if (Hoption.Logx) {
-            if (xup > 0)  xup  = TMath::Log10(xup);
-            else continue;
-            if (xlow > 0) xlow = TMath::Log10(xlow);
-            else continue;
+            if ((xup <= 0) || (xlow <= 0))
+               continue;
+            xup = TMath::Log10(xup);
+            xlow = TMath::Log10(xlow);
          }
          yup  = yk + ystep;
          ylow = yk;
          if (Hoption.Logy) {
-            if (yup > 0)  yup  = TMath::Log10(yup);
-            else continue;
-            if (ylow > 0) ylow = TMath::Log10(ylow);
-            else continue;
+            if ((yup <= 0) || (ylow <= 0))
+               continue;
+            yup  = TMath::Log10(yup);
+            ylow = TMath::Log10(ylow);
          }
-         if (xup  < gPad->GetUxmin()) continue;
-         if (yup  < gPad->GetUymin()) continue;
-         if (xlow > gPad->GetUxmax()) continue;
-         if (ylow > gPad->GetUymax()) continue;
-         if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
-         if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
-         if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
-         if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
+         if ((xup < xmin) || (yup < ymin) || (xlow > xmax) || (ylow > ymax))
+            continue;
+         if (xlow < xmin)
+            xlow = xmin;
+         if (ylow < ymin)
+            ylow = ymin;
+         if (xup > xmax)
+            xup = xmax;
+         if (yup > ymax)
+            yup = ymax;
 
          if (fH->TestBit(TH1::kUserContour)) {
             zc = fH->GetContourLevelPad(0);
@@ -5920,21 +5926,22 @@ void THistPainter::PaintColorLevels(Option_t*)
          }
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
-         if (theColor > ncolors-1) theColor = ncolors-1;
+         if (theColor > ncolors-1)
+            theColor = ncolors-1;
          auto fillColor = gStyle->GetColorPalette(theColor);
          if (Hoption.System != kPOLAR) {
             fH->SetFillColor(fillColor);
             fH->TAttFill::Modify();
             gPad->PaintBox(xlow, ylow, xup, yup);
          } else  {
-            Double_t midx = (gPad->GetUxmin() + gPad->GetUxmax()) / 2,
-                     midy = (gPad->GetUymin() + gPad->GetUymax()) / 2,
-                     a1 = (xlow - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
-                     a2 = (xup - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
-                     rx = gPad->GetUxmax() - gPad->GetUxmin(),
-                     ry = gPad->GetUymax() - gPad->GetUymin(),
-                     r1 = (ylow - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2,
-                     r2 = (yup - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2;
+            Double_t midx = (xmin + xmax) / 2;
+            Double_t midy = (ymin + ymax) / 2;
+            Double_t rx = xmax - xmin;
+            Double_t ry = ymax - ymin;
+            Double_t a1 = (xlow - xmin) / (xmax - xmin) * 360;
+            Double_t a2 = (xup - xmin) / (xmax - xmin) * 360;
+            Double_t r1 = (ylow - ymin) / (ymax - ymin) * rx / 2;
+            Double_t r2 = (yup - ymin) / (ymax - ymin) * rx / 2;
 
             TCrown crown(midx, midy, r1, r2, a1, a2);
             crown.SetYXRatio(rx > 0 ? ry / rx : 1);
