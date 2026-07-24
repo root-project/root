@@ -306,6 +306,11 @@ ROOT::Internal::RPageSinkFile::CloneAsHidden(std::string_view name, const ROOT::
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ROOT::RNTuple *ROOT::Internal::GetAnchorFromFile(const RPageSourceFile &source)
+{
+   return source.fAnchor ? &*source.fAnchor : nullptr;
+}
+
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &opts)
    : RPageSource(ntupleName, opts)
 {

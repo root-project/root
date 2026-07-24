@@ -505,8 +505,8 @@ public:
    void PrintSchemaProfile(ESchemaProfileFormat format, std::ostream &output = std::cout) const;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Print a string that represents the on-disk storage of the cluster groups, clusters, column ranges and
-   /// pages on an RNTuple in a format which a performance profile visualizer can render
+   /// \brief Print a string that represents the on-disk storage of the cluster groups, clusters, column ranges, pages,
+   /// header, footer and page lists on an RNTuple in a format which a performance profile visualizer can render
    ///
    /// \warning ntuple must have a file-based backend
    void PrintDiskProfile(ESchemaProfileFormat format, std::ostream &output = std::cout) const;

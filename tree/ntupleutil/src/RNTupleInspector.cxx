@@ -17,6 +17,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
+#include "ROOT/RNTupleUtils.hxx"
 
 #include <TFile.h>
 
@@ -698,6 +699,14 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESc
    // There is only one format at the moment
    assert(format == ESchemaProfileFormat::kSpeedscopeJSON);
 
+   const auto *pageSourceFile = dynamic_cast<const ROOT::Internal::RPageSourceFile *>(fPageSource.get());
+   // GetAnchorFromFile() only supports file-based backend, so better to check early
+   if (!pageSourceFile)
+      throw RException(R__FAIL("Disk profile is only supported for file-based page sources"));
+   const auto anchor = ROOT::Internal::GetAnchorFromFile(*pageSourceFile);
+   if (!anchor)
+      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "Cannot retrieve RNTuple anchor";
+
    const auto &descriptor = GetDescriptor();
 
    struct RDiskPageLeaf {
@@ -746,12 +755,20 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESc
 
    std::vector<SpeedscopeFrame> frames;
 
+   // Construct frame for ntuple header
+   if (anchor) {
+      SpeedscopeFrame headerFrame;
+      headerFrame.fString = "ntuple header";
+      headerFrame.fOpeningPosition = anchor->GetSeekHeader();
+      headerFrame.fClosingPosition = anchor->GetSeekHeader() + anchor->GetNBytesHeader();
+      frames.push_back(headerFrame);
+   }
+
    struct ROpenFrame {
       ROOT::DescriptorId_t fId = 0; // clusterGroup, cluster, columnRange id
       std::size_t fIndex = 0;       // index in frames vector
    };
    std::vector<ROpenFrame> openFrames;
-
    std::uint64_t previouspageLeafEnd = 0;
 
    // Construct frames from the bottom (leafs ordered by disk address) upwards
@@ -798,6 +815,26 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESc
    while (!openFrames.empty()) {
       frames[openFrames.back().fIndex].fClosingPosition = previouspageLeafEnd;
       openFrames.pop_back();
+   }
+
+   // Construct frames for page lists
+   for (const auto &clusterGroupDescriptor : descriptor.GetClusterGroupIterable()) {
+      const auto locator = clusterGroupDescriptor.GetPageListLocator();
+
+      SpeedscopeFrame pageListFrame;
+      pageListFrame.fString = "[page list " + std::to_string(clusterGroupDescriptor.GetId()) + "]";
+      pageListFrame.fOpeningPosition = locator.GetPosition<std::uint64_t>();
+      pageListFrame.fClosingPosition = locator.GetPosition<std::uint64_t>() + locator.GetNBytesOnStorage();
+      frames.push_back(pageListFrame);
+   }
+
+   // Construct frame for ntuple footer
+   if (anchor) {
+      SpeedscopeFrame footerFrame;
+      footerFrame.fString = "ntuple footer";
+      footerFrame.fOpeningPosition = anchor->GetSeekFooter();
+      footerFrame.fClosingPosition = anchor->GetSeekFooter() + anchor->GetNBytesFooter();
+      frames.push_back(footerFrame);
    }
 
    PrintSpeedscopeFrames(frames, output);
