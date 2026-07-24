@@ -2663,7 +2663,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                code += codeline + "\n";
             }
             unnamedMacroOpenCurly
-              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());
+              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getSourceManager(), fInterpreter->getCI()->getPreprocessor());
          }
 
          fCurExecutingMacros.push_back(fname);

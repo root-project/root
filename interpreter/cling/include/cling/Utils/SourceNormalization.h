@@ -20,6 +20,7 @@ namespace clang {
   class LangOptions;
   class SourceLocation;
   class SourceManager;
+  class Preprocessor;
 }
 
 namespace cling {
@@ -29,12 +30,27 @@ namespace utils {
   /// Unnamed macros contain no function definition, but "prompt-style" code
   /// surrounded by a set of curly braces.
   ///
+  /// \note Preprocessing macros are ignored
   /// \param source The source code to analyze.
   /// \param LangOpts - LangOptions to use for lexing.
   /// \return the position of the unnamed macro's opening '{'; or
   ///         std::string::npos if this is not an unnamed macro.
   size_t isUnnamedMacro(llvm::StringRef source,
                         clang::LangOptions& LangOpts);
+
+  ///\brief Determine whether the source is an unnamed macro.
+  ///
+  /// Unnamed macros contain no function definition, but "prompt-style" code
+  /// surrounded by a set of curly braces.
+  ///
+  /// \note Preprocessing macros are fully evaluated
+  /// \param source The source code to analyze.
+  /// \param sm - source manager to use for lexing.
+  /// \param pp - preprocessor to use for lexing.
+  /// \return the position of the unnamed macro's opening '{'; or
+  ///         std::string::npos if this is not an unnamed macro.
+  size_t isUnnamedMacro(llvm::StringRef source, clang::SourceManager& sm,
+                        clang::Preprocessor& pp);
 
   ///\brief Determine whether the source needs to be moved into a function.
   ///

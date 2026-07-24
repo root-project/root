@@ -433,8 +433,8 @@ namespace cling {
     }
 
     if (posOpenCurly != (size_t)-1 && !content.empty()) {
-      assert(content[posOpenCurly] == '{'
-             && "No curly at claimed position of opening curly!");
+      assert(posOpenCurly < content.length() && content[posOpenCurly] == '{' &&
+             "No curly at claimed position of opening curly!");
       // hide the curly brace:
       content[posOpenCurly] = ' ';
       // and the matching closing '}'
