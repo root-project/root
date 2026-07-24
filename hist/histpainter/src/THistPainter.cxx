@@ -5979,8 +5979,8 @@ void THistPainter::PaintColorLevels(Option_t*)
                a1 = xlow / TMath::Pi() * 180;
                a2 = xup / TMath::Pi() * 180;
             } else {
-               a1 = (xlow - pxmin) / (pxmax - pxmin) * 360;
-               a2 = (xup - pxmin) / (pxmax - pxmin) * 360;
+               a1 = ((xlow - pxmin) / (pxmax - pxmin) - 0.5) * 360;
+               a2 = ((xup - pxmin) / (pxmax - pxmin) - 0.5) * 360;
             }
             Double_t r1 = (ylow - pymin) / (pymax - pymin) * rx / 2;
             Double_t r2 = (yup - pymin) / (pymax - pymin) * rx / 2;
