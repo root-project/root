@@ -4063,6 +4063,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Lego    = Hoption.Surf    = Hoption.Off     = Hoption.Tri     = 0;
    Hoption.Proj    = Hoption.AxisPos = Hoption.Spec    = Hoption.Pie     = 0;
    Hoption.Candle  = 0;
+   Hoption.Polar = 0;
 
    //    special 2D options
    Hoption.List     = 0;
@@ -4334,7 +4335,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; memcpy(l,"    ",4); }
    l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; memcpy(l,"    ",4); }
    l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; memcpy(l,"    ",4); }
-   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       memcpy(l,"   ",3); }
+   l = strstr(chopt,"POLN"); if (l) { Hoption.System = kPOLAR; Hoption.Polar = 3; memcpy(l,"    ",4); }
+   l = strstr(chopt,"POLF"); if (l) { Hoption.System = kPOLAR; Hoption.Polar = 2; memcpy(l,"    ",4); }
+   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR; Hoption.Polar = 1; memcpy(l,"   ",3); }
    l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; memcpy(l,"   ",3); }
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   memcpy(l,"   ",3); }
    l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    memcpy(l,"   ",3); }
@@ -5852,6 +5855,36 @@ void THistPainter::PaintColorLevels(Option_t*)
    Double_t ymin = gPad->GetUymin();
    Double_t ymax = gPad->GetUymax();
 
+   // range used for polar coordinates
+   Double_t pxmin = xmin, pxmax = xmax, pymin = ymin, pymax = ymax;
+   if ((Hoption.System == kPOLAR) && (Hoption.Polar == 2)) {
+      pxmin = fXaxis->GetXmin();
+      pxmax = fXaxis->GetXmax();
+      if (Hoption.Logx) {
+         if (pxmax <= 0)
+            return;
+         pxmax = TMath::Log10(pxmax);
+         if (pxmin <= 0)
+            pxmin = pxmax - 5;
+         else
+            pxmin = TMath::Log10(pxmin);
+      }
+      pymin = fYaxis->GetXmin();
+      pymax = fYaxis->GetXmax();
+      if (Hoption.Logy) {
+         if (pymax <= 0)
+            return;
+         pymax = TMath::Log10(pymax);
+         if (pymin <= 0)
+            pymin = pymax - 5;
+         else
+            pymin = TMath::Log10(pymin);
+      } else if ((pymax > 0) && (pymin >= 0)) {
+         // force minimal radius to 0 to display natural polar graphics
+         pymin = 0;
+      }
+   }
+
    Int_t color;
    TProfile2D* prof2d = dynamic_cast<TProfile2D*>(fH);
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -5938,10 +5971,10 @@ void THistPainter::PaintColorLevels(Option_t*)
             Double_t midy = (ymin + ymax) / 2;
             Double_t rx = xmax - xmin;
             Double_t ry = ymax - ymin;
-            Double_t a1 = (xlow - xmin) / (xmax - xmin) * 360;
-            Double_t a2 = (xup - xmin) / (xmax - xmin) * 360;
-            Double_t r1 = (ylow - ymin) / (ymax - ymin) * rx / 2;
-            Double_t r2 = (yup - ymin) / (ymax - ymin) * rx / 2;
+            Double_t a1 = (xlow - pxmin) / (pxmax - pxmin) * 360;
+            Double_t a2 = (xup - pxmin) / (pxmax - pxmin) * 360;
+            Double_t r1 = (ylow - pymin) / (pymax - pymin) * rx / 2;
+            Double_t r2 = (yup - pymin) / (pymax - pymin) * rx / 2;
 
             TCrown crown(midx, midy, r1, r2, a1, a2);
             crown.SetYXRatio(rx > 0 ? ry / rx : 1);
