@@ -41,26 +41,17 @@ Class that contains all the data information
 #include <iostream>
 
 #include <algorithm>
-#include <functional>
-#include <numeric>
-#include <random>
 
 #include "TMVA/DataSetFactory.h"
 
-#include "TEventList.h"
 #include "TFile.h"
 #include "TRandom3.h"
-#include "TMatrixF.h"
-#include "TVectorF.h"
 #include "TMath.h"
 #include "TTree.h"
 #include "TBranch.h"
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Configurable.h"
-#include "TMVA/VariableIdentityTransform.h"
-#include "TMVA/VariableDecorrTransform.h"
-#include "TMVA/VariablePCATransform.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/DataInputHandler.h"
