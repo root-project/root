@@ -367,13 +367,6 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
-  # These SOFIE tutorials take models trained via PyMVA-PyKeras as input
-  if (NOT tmva-sofie OR NOT ROOT_KERAS_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras.py)
-  endif()
-  if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.py)
-  endif()
   # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.py)
@@ -955,7 +948,6 @@ if(pyroot)
       machine_learning/ml_dataloader_resampling.py
       machine_learning/ml_dataloader_Higgs_Classification.py
       machine_learning/TMVA_SOFIE_Models.py
-      machine_learning/TMVA_SOFIE_PyTorch.py
       machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
