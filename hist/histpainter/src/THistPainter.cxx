@@ -309,7 +309,9 @@ using `TH1::GetOption`:
 | "SAME0"      | Same as "SAME" but do not use the z-axis range of the first plot. |
 | "SAMES0"     | Same as "SAMES" but do not use the z-axis range of the first plot. |
 | "CYL"        | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
-| "POL"        | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
+| "POL"        | Use Polar coordinates. The visible X range mapped on the angle and the visible Y coordinate on the radius.|
+| "POLF"       | Fixed Polar coordinates. The histogram X coordinate mapped on the angle and the Y coordinate on the radius.|
+| "POLN"       | Natural Polar coordinates. The X coordinate directly represent angle in radian and the Y coordinate is the radius.|
 | "SPH"        | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
 | "PSR"        | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
 | "SURF"       | Draw a surface plot with hidden line removal.|
