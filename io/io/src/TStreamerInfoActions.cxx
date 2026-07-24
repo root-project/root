@@ -248,12 +248,13 @@ namespace TStreamerInfoActions
 
       void AddToOffset(Int_t delta) override
       {
-         // Add the (potentially negative) delta to the configuration's offsets.  This is used by
+         // Add the (potentially negative) delta to the configuration's offsets. This is used by
          // TBranchElement in the case of a split sub-object and by the member-wise streaming of a
          // base class, where the whole action sequence of the base is shifted by the base-class
-         // offset.  The counter of the variable-size array lives in the same class as the array,
-         // so its offset must be shifted by the same delta as fOffset; it cannot be taken from
-         // the shared fCompInfo->fMethod, which stays relative to the declaring (base) class.
+         // offset. fCounterOffset locates the '//[n]' counter inside the same object as fOffset,
+         // no matter if it's declared in that class or intherited from a base, so it takes the
+         // same shift. It is kept per configuration because fCompInfo->fMethod is shared by
+         // every sequence built from this streamerinfo and has to stay unshifted.
 
          if (fOffset != TVirtualStreamerInfo::kMissing) {
             fOffset += delta;
