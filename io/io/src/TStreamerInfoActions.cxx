@@ -242,7 +242,7 @@ namespace TStreamerInfoActions
 
       TConfStreamerLoop(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, bool isPtrPtr)
          : TConfiguration(info, id, compinfo, offset), fIsPtrPtr(isPtrPtr),
-           fCounterOffset((Longptr_t)compinfo->fMethod)
+           fCounterOffset(static_cast<Int_t>(compinfo->fMethod))
       {
       }
 
