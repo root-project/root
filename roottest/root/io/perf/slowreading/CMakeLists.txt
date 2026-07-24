@@ -1,3 +1,7 @@
+if(asan)
+  # When address sanitizer is enabled tests may take longer than usual
+  return()
+endif()
 
 ROOTTEST_ADD_TEST(files
                   COMMAND ${CMAKE_COMMAND} -E echo "copy files"
