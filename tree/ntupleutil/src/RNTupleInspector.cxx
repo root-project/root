@@ -691,3 +691,139 @@ void ROOT::Experimental::RNTupleInspector::PrintSchemaProfile([[maybe_unused]] E
 
    PrintSpeedscopeFrames(frames, output);
 }
+
+void ROOT::Experimental::RNTupleInspector::PrintDiskProfile([[maybe_unused]] ESchemaProfileFormat format,
+                                                            std::ostream &output) const
+{
+   // There is only one format at the moment
+   assert(format == ESchemaProfileFormat::kSpeedscopeJSON);
+
+   // This method only supports file based backend. Will need the anchor later, but better to check early
+   const auto anchor = ROOT::Internal::GetAnchor(*fPageSource);
+
+   const auto &descriptor = GetDescriptor();
+
+   struct RDiskPageLeaf {
+      std::uint64_t fPosition = 0;
+      std::uint64_t fSize = 0;
+      std::string fName;
+      std::array<ROOT::DescriptorId_t, 3> fAncestorIds; // clusterGroup, cluster, columnRange
+      std::array<std::string, 3> fAncestorNames;        // clusterGroup, cluster, columnRange
+   };
+   std::vector<RDiskPageLeaf> pageLeaves;
+
+   // Collect all pageLeaves in whichever order the iterator provides
+   for (const auto &clusterGroupDescriptor : descriptor.GetClusterGroupIterable()) {
+      const auto groupId = clusterGroupDescriptor.GetId();
+      const std::string groupName = "[cluster group " + std::to_string(groupId) + "]";
+
+      for (const auto clusterId : clusterGroupDescriptor.GetClusterIds()) {
+         const auto &clusterDescriptor = descriptor.GetClusterDescriptor(clusterId);
+         const std::string clusterName = "[cluster " + std::to_string(clusterId) + "]";
+
+         for (const auto &columnRange : clusterDescriptor.GetColumnRangeIterable()) {
+            const auto columnId = columnRange.GetPhysicalColumnId();
+            const std::string columnRangeName = "[column range " + std::to_string(columnId) + "]";
+
+            const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
+            for (const auto &pageInfo : pageRange.GetPageInfos()) {
+               const auto &locator = pageInfo.GetLocator();
+
+               RDiskPageLeaf pageLeaf;
+               pageLeaf.fPosition = locator.GetPosition<std::uint64_t>();
+               pageLeaf.fSize = locator.GetNBytesOnStorage();
+               pageLeaf.fName = "[page @" + std::to_string(pageLeaf.fPosition) + "]";
+               pageLeaf.fAncestorIds = {groupId + 1, clusterId + 1, columnId + 1};
+               pageLeaf.fAncestorNames = {groupName, clusterName, columnRangeName};
+               pageLeaves.push_back(pageLeaf);
+            }
+         }
+      }
+   }
+
+   // Sort pageLeafs by on-disk address
+   std::sort(pageLeaves.begin(), pageLeaves.end(),
+             [](const RDiskPageLeaf &a, const RDiskPageLeaf &b) { return a.fPosition < b.fPosition; });
+
+   // Remove aliases (the ntuple specification allows complete, but not partial, overlap between pages)
+   pageLeaves.erase(
+      std::unique(pageLeaves.begin(), pageLeaves.end(),
+                  [](const RDiskPageLeaf &a, const RDiskPageLeaf &b) { return a.fPosition == b.fPosition; }),
+      pageLeaves.end());
+
+   std::vector<SpeedscopeFrame> frames;
+   std::vector<ROOT::DescriptorId_t> openIds;
+   std::vector<std::size_t> openFrameIndexes;
+   std::uint64_t previouspageLeafEnd = 0;
+
+   // Construct frame for ntuple header
+   SpeedscopeFrame headerFrame;
+   headerFrame.fString = "ntuple header";
+   headerFrame.fOpeningPosition = anchor.GetSeekHeader();
+   headerFrame.fClosingPosition = anchor.GetSeekHeader() + anchor.GetNBytesHeader();
+   frames.push_back(headerFrame);
+
+   // Construct frames from the bottom (leafs ordered by disk address) upwards
+   for (const auto &pageLeaf : pageLeaves) {
+      std::size_t sharedDepth = 0;
+
+      // How many of the currently open ancestors does this pageLeaf share?
+      while (sharedDepth < openIds.size() && sharedDepth < pageLeaf.fAncestorIds.size() &&
+             openIds[sharedDepth] == pageLeaf.fAncestorIds[sharedDepth]) {
+         sharedDepth++;
+      }
+
+      // Close ancestors not shared with this pageLeaf (innermost first order)
+      while (openIds.size() > sharedDepth) {
+         frames[openFrameIndexes.back()].fClosingPosition = previouspageLeafEnd;
+         openIds.pop_back();
+         openFrameIndexes.pop_back();
+      }
+
+      // Open the ancestors this pageLeaf needs (outermost first order)
+      for (std::size_t depth = sharedDepth; depth < pageLeaf.fAncestorIds.size(); ++depth) {
+         SpeedscopeFrame ancestorFrame;
+         ancestorFrame.fString = pageLeaf.fAncestorNames[depth];
+         ancestorFrame.fOpeningPosition = pageLeaf.fPosition;
+         frames.push_back(ancestorFrame);
+         openIds.push_back(pageLeaf.fAncestorIds[depth]);
+         openFrameIndexes.push_back(frames.size() - 1);
+      }
+
+      // Emit the pageLeaf itself
+      SpeedscopeFrame pageLeafFrame;
+      pageLeafFrame.fString = pageLeaf.fName;
+      pageLeafFrame.fOpeningPosition = pageLeaf.fPosition;
+      pageLeafFrame.fClosingPosition = pageLeaf.fPosition + pageLeaf.fSize;
+      frames.push_back(pageLeafFrame);
+
+      previouspageLeafEnd = pageLeaf.fPosition + pageLeaf.fSize;
+   }
+
+   // Close whatever is still open after the last pageLeaf
+   while (!openIds.empty()) {
+      frames[openFrameIndexes.back()].fClosingPosition = previouspageLeafEnd;
+      openIds.pop_back();
+      openFrameIndexes.pop_back();
+   }
+
+   // Construct frames for page lists
+   for (const auto &clusterGroupDescriptor : descriptor.GetClusterGroupIterable()) {
+      const auto locator = clusterGroupDescriptor.GetPageListLocator();
+
+      SpeedscopeFrame pageListFrame;
+      pageListFrame.fString = "[page list " + std::to_string(clusterGroupDescriptor.GetId()) + "]";
+      pageListFrame.fOpeningPosition = locator.GetPosition<std::uint64_t>();
+      pageListFrame.fClosingPosition = locator.GetPosition<std::uint64_t>() + locator.GetNBytesOnStorage();
+      frames.push_back(pageListFrame);
+   }
+
+   // Construct frame for ntuple footer
+   SpeedscopeFrame footerFrame;
+   footerFrame.fString = "ntuple footer";
+   footerFrame.fOpeningPosition = anchor.GetSeekFooter();
+   footerFrame.fClosingPosition = anchor.GetSeekFooter() + anchor.GetNBytesFooter();
+   frames.push_back(footerFrame);
+
+   PrintSpeedscopeFrames(frames, output);
+}
