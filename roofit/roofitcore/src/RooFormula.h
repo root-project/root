@@ -49,6 +49,7 @@ public:
    void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const;
 
    std::string formulaString() const { return _tFormula ? _tFormula->GetTitle() : ""; }
+   std::string reindexedFormulaForUsedVars() const;
    TFormula* getTFormula() const { return _tFormula.get(); }
 
 private:
