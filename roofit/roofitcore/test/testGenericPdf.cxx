@@ -1,6 +1,7 @@
 // Tests for the GenericPdf
 // Authors: Stephan Hageboeck, CERN  05/2019
 //          Jonas Rembser, CERN 06/2022
+#include <TFile.h>
 
 #include <RooArgList.h>
 #include <RooBinning.h>
@@ -414,4 +415,29 @@ TEST(GenericPdf, BinnedBoundariesConsistentWithHistPdf)
       iterGenericPdf++;
       iterFormulaVar++;
    }
+}
+
+// Regression test for https://github.com/root-project/root/issues/21371:
+// an unused parameter (b) is pruned, so the persisted @N indices must be
+// remapped or the formula silently mismaps after a write/read cycle.
+TEST(GenericPdf, SerializationWithUnusedParam)
+{
+   RooWorkspace w("w");
+   w.factory("a[2,-10,10]");
+   w.factory("b[99,-10,10]");
+   w.factory("c[3,-10,10]");
+   w.factory("d[4,-10,10]");
+   w.factory("EXPR::pdf('@0*@2+d', a, b, c, d)");
+
+   TString fn = "RooGenericPdfSerialization.root";
+   w.writeToFile(fn);
+   TFile fin(fn);
+   RooWorkspace *w2 = nullptr;
+   fin.GetObject("w", w2);
+   ASSERT_NE(w2, nullptr);
+   auto *pdf = static_cast<RooAbsReal *>(w2->pdf("pdf"));
+
+   // If @2 still maps to c, changing c updates pdf = a*c + d = 2*5 + 4 = 14.
+   static_cast<RooRealVar *>(w2->var("c"))->setVal(5.0);
+   EXPECT_DOUBLE_EQ(pdf->getVal(), 2.0 * 5.0 + 4.0);
 }
