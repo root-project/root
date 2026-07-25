@@ -18,6 +18,7 @@ dependencies = [
 
 # Point backend to python packages and to explicitly use Ninja
 [tool.scikit-build]
+install.strip = false
 wheel.packages = [
 	"bindings/pyroot/pythonizations/python/ROOT",
 	"bindings/pyroot/cppyy/cppyy/python/cppyy",
