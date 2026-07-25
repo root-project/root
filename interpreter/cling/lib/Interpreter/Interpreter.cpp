@@ -230,9 +230,11 @@ namespace cling {
     }
 
     llvm::Error ErrOut = llvm::Error::success();
-    m_Act =
-        std::make_unique<IncrementalAction>(*m_CI, *getLLVMContext(),
-                                            getOptions().CompilerOpts, ErrOut);
+    m_Act = TSCtx->withContextDo([&](llvm::LLVMContext* Ctx) {
+      return std::make_unique<IncrementalAction>(*m_CI, *Ctx,
+                                                 getOptions().CompilerOpts,
+                                                 ErrOut);
+    });
 
     if (ErrOut) {
       llvm::logAllUnhandledErrors(std::move(ErrOut), llvm::errs(),

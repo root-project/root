@@ -318,7 +318,8 @@ namespace cling {
 
       Consumers.push_back(std::make_unique<PCHGenerator>(
           CI.getPreprocessor(), CI.getModuleCache(), ModuleOutputFile, Sysroot,
-          PCHBuff, CI.getFrontendOpts().ModuleFileExtensions,
+          PCHBuff, CI.getCodeGenOpts(),
+          CI.getFrontendOpts().ModuleFileExtensions,
           /*AllowASTWithErrors=*/false,
           /*IncludeTimestamps=*/
           +CI.getFrontendOpts().BuildingImplicitModule));
