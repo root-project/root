@@ -39,3 +39,7 @@ ROOTTEST_ADD_TEST(run
                                     root-io-newClassDef-new-namespace-fixture
                                     root-io-newClassDef-new-template-fixture
                                     root-io-newClassDef-new-nstemplate-fixture)
+
+# Issue 10240
+ROOTTEST_ADD_TEST(oldNewIOMix
+                  MACRO oldNewIOMix.C+)
