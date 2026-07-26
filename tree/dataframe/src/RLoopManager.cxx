@@ -1374,6 +1374,40 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
 #endif
 }
 
+void ROOT::Detail::RDF::RLoopManager::RNTupleThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange,
+                                                        unsigned int slot, std::uint64_t columnReaderOffset)
+{
+#ifdef R__USE_IMT
+   // These are begin and end entries of the current cluster in the file currently opened by the slot, offset by a
+   // global atomic counter with the value passed via columnReaderOffset. The only reason we use it for the moment is to
+   // provide a seed for a unique rdfentry_ sequence in the current slot task.
+   const auto &[start, end] = entryRange;
+
+   RDSRangeRAII _{*this, slot, columnReaderOffset};
+   RCallCleanUpTask cleanup(*this, slot);
+
+   fSampleInfos[slot] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, slot, fSampleMap);
+
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(
+      {fDataSource->GetLabel(), start - columnReaderOffset, end - columnReaderOffset, slot});
+
+   try {
+      for (auto entry = start; entry < end; ++entry) {
+         if (fDataSource->SetEntry(slot, entry)) {
+            RunAndCheckFilters(slot, entry);
+         }
+      }
+   } catch (...) {
+      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
+      throw;
+   }
+#else
+   (void)entryRange;
+   (void)slot;
+   (void)columnReaderOffset;
+#endif
+}
+
 void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack,
                                                       std::atomic<ULong64_t> &entryCount)
 {
