@@ -171,6 +171,8 @@
          }
 
          void Initialize(RModel& model) override {
+            // the generated code may use the Copy inference helper
+            model.AddNeededHelperFunction("Copy");
             std::vector<std::vector<size_t>> inputIntShapes;
             for (auto &it : fInputs) {
                if (model.CheckIfTensorAlreadyExist(it) == false) {
@@ -325,7 +327,7 @@
                std::string offset;
                for(size_t i=0; i<fInputs.size(); ++i) {
                   auto length = ConvertDimShapeToLength(fInputShapes[i]);
-                  out << SP << "TMVA::Experimental::SOFIE::Copy(tensor_" << fOutput;
+                  out << SP << "Copy(tensor_" << fOutput;
                   if (i > 0)
                      out << offset;
                   offset += " + " + length;

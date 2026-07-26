@@ -751,6 +751,10 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
    AddBlasRoutines(blasRoutines);
    for (auto e : graph->fNeededStdLib)
       AddNeededStdLib(e);
+   // helper functions used by the subgraph must be emitted in the top-level
+   // header, so propagate them to the parent model
+   for (auto const &h : graph->GetNeededHelperFunctions())
+      AddNeededHelperFunction(h);
 
    // add parent input tensors to current graph
    for (auto & name : fInputTensorNames)
@@ -940,9 +944,12 @@ void RModel::GenerateDynamicTensorInfo()
       PrintDynamicTensors();
    }
 
+   // the generated code uses the TensorLifeInfo / OrganizeMemory inference helpers
+   AddNeededHelperFunction("DynamicMemory");
+
    std::stringstream out;
    out << "//  dynamic tensor memory management\n";
-   out << SP << "std::vector<TMVA::Experimental::SOFIE::TensorLifeInfo> dynamicTensorInfos;\n";
+   out << SP << "std::vector<TensorLifeInfo> dynamicTensorInfos;\n";
    out << SP << "dynamicTensorInfos.reserve(" << fDynamicTensorInfos.size() << ");\n";
 
    // loop on all the operators to find begin/end life of the tensors
@@ -1536,6 +1543,9 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
    if (!fIsGNNComponent && !fIsSubGraph) {
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
       fGC += "\n#endif  // " + hgname + "\n";
+      // dump the standalone definitions of the helper functions this model uses
+      // so that the generated header does not depend on TMVA/SOFIE_common.hxx
+      EmitHelperFunctionsCode();
    }
 }
 
@@ -1556,7 +1566,8 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
             fGC += "   f.seekg(" + std::to_string(pos) + ");\n";
         }
 
-        fGC += "   using TMVA::Experimental::SOFIE::ReadTensorFromStream;\n";
+        // ReadTensorFromStream is emitted as a standalone helper in the header
+        AddNeededHelperFunction("ReadTensorFromStream");
 
         // loop on tensors and parse the file
         for (auto& i: fInitializedTensors) {
@@ -1751,9 +1762,8 @@ void RModel::PrintSummary() const {
 void RModel::GenerateRequiredInputTensorInfo()
 {
    fGC += "\n// Input tensor dimensions\n";
-   fGC += "using TMVA::Experimental::SOFIE::SingleDim;\n";
-   fGC += "using TMVA::Experimental::SOFIE::TensorDims;\n";
-   fGC += "using TMVA::Experimental::SOFIE::makeDims;\n\n";
+   // SingleDim / TensorDims / makeDims are emitted as standalone helpers
+   AddNeededHelperFunction("InputTensorDims");
    bool hasDynamicInputTensors = false;
 
    for (std::size_t iInput = 0; iInput < fInputTensorNames.size(); ++iInput) {

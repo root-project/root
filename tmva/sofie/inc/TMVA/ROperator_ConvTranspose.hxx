@@ -301,6 +301,12 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
    fImcol = fNX + "_xcol";
    fOutputTensorNames.emplace_back(fConvK);
    fOutputTensorNames.emplace_back(fImcol);
+
+   // register the inference helper functions used by the generated code
+   // (only the <3D case is supported, which uses col2im)
+   model.AddNeededHelperFunction("col2im");
+   if (!fNB.empty())
+      model.AddNeededHelperFunction("BroadcastConvBias");
 }
 
 template <typename T>
@@ -313,7 +319,7 @@ std::string ROperator_ConvTranspose<T>::GenerateInitCode()
    if (bsize != ysize && !fNBroadcastedB.empty()) {
       // include a separate scope to avoid defining unique operator temp variables
       out << SP << "{\n";
-      out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::BroadcastConvBias<float>(tensor_" << fNB
+      out << SP << SP << "float * data = UTILITY::BroadcastConvBias<float>(tensor_" << fNB
           << ", " << bsize << ", " << ConvertShapeToString(fShapeY) << ");\n";
       out << SP << SP << "std::copy(data, data + " << ConvertShapeToLength(fShapeY) << ", tensor_" << fNBroadcastedB
           << ");\n";
@@ -484,7 +490,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       // output_w)
       // before using col2im I need to transpose matrix
       if (fDim < 3) {
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::col2im<float>(tensor_" << fNX
+         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fNX
              << "_xcol,"
              //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
              //  dilation_w,
@@ -500,7 +506,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       } else {
          // 3d : needs a col2im for 3d
          throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not yet supported");
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
+         out << SP << SP << "UTILITY::Im2col_3d<float>(tensor_" << fNX
              << " + x_offset,"
              //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
              //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
@@ -537,7 +543,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
           << "_xcol , &" << OpName << "_m);\n";
 
       if (fDim < 3) {
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::col2im<float>(tensor_" << fNX
+         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fNX
              << "_xcol,"
              //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
              //  dilation_w,
@@ -554,7 +560,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
          // 3d im2col
          throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not yet supported");
 
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
+         out << SP << SP << "UTILITY::Im2col_3d<float>(tensor_" << fNX
              << " + x_offset,"
              //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
              //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,

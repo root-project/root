@@ -94,6 +94,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     src/RFunction_Mean.cxx
     src/RFunction_Sum.cxx
     src/SOFIE_common.cxx
+    src/SOFIE_common_helpers.cxx
   DEPENDENCIES
     Core
     TMVA
