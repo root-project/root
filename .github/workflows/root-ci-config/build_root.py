@@ -24,19 +24,18 @@ import sys
 import tarfile
 import time
 
+import build_utils
 import openstack
-
 from build_utils import (
+    calc_options_hash,
     die,
     github_log_group,
+    is_macos,
     load_config,
-    calc_options_hash,
-    subprocess_with_log,
     subprocess_with_capture,
+    subprocess_with_log,
     upload_file,
-    is_macos
 )
-import build_utils
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -361,6 +360,12 @@ def archive_and_upload(archive_name, prefix):
 def cmake_configure(options, buildtype):
     srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
+
+    # Add a private option to make the CI build faster by not changing the
+    # BUILD_NODE line of compiledata.h (which leads to all the dictionary
+    # being rebuild when re-using a previous build on a different node)
+    options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
+
     result = subprocess_with_log(f"""
         cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
