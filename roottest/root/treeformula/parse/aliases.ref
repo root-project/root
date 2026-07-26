@@ -5,11 +5,11 @@ Test part1
 ************************
 *        0 *         1 *
 ************************
-************************
-*    Row   * access.on *
-************************
-*        0 *         1 *
-************************
+*************************
+*    Row   * access.one *
+*************************
+*        0 *          1 *
+*************************
 ************************
 *    Row   *      ones *
 ************************
@@ -46,11 +46,11 @@ Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by
 *        0 *           *
 ************************
 Test part2
-************************
-*    Row   * vec.fElem *
-************************
-*        0 *         3 *
-************************
+*******************************
+*    Row   * vec.fElements[3] *
+*******************************
+*        0 *                3 *
+*******************************
 ************************
 *    Row   *        a2 *
 ************************
@@ -66,11 +66,11 @@ Test part2
 ************************
 *        0 *         3 *
 ************************
-************************
-*    Row   * vec.fElem *
-************************
-*        0 *         3 *
-************************
+**********************************
+*    Row   * vec.fElements[3][0] *
+**********************************
+*        0 *                   3 *
+**********************************
 Error in <TTreeFormula::Compile>:  Bad numerical expression : "1[0]"
 Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "a2" by "vec.fElements[3]>1" failed.
 ************************
@@ -129,8 +129,8 @@ Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "a2" by 
 ***********************************
 Error in <TTreeFormula::ParseWithLeaf>: Found a numerical leaf but the name has trailing characters: "misspelt"
 Error in <TTreeFormula::Compile>:  Bad numerical expression : "arr.misspelt"
-************************
-*    Row   * arr.missp *
-************************
-*        0 *           *
-************************
+***************************
+*    Row   * arr.misspelt *
+***************************
+*        0 *              *
+***************************
