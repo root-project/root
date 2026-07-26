@@ -389,6 +389,99 @@ TEST(RooRealIntegral, RooLinearVarModelIntegratedOverVariableClones)
    EXPECT_TRUE(static_cast<RooRealIntegral &>(*integral2).numIntRealVars().empty());
 }
 
+// Make sure the RooBinIntegrator gives correct results when the integration
+// range boundaries lie inside the bins of the integrand, i.e. the range cuts
+// through bins. Previously, the RooBinIntegrator only summed the bins that were
+// fully contained in the range and dropped the partial bins at the edges,
+// because the integration limits were not added as the outermost bin
+// boundaries. Covers GitHub issue #22858.
+TEST(RooRealIntegral, RooBinIntegratorPartialRange)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0., 10.};
+   x.setBins(5); // five bins of width 2: edges at 0, 2, 4, 6, 8, 10
+
+   const double heights[5] = {1.0, 3.0, 2.0, 4.0, 1.5};
+
+   RooDataHist dh{"dh", "", x};
+   for (int i = 0; i < 5; ++i) {
+      dh.set(i, heights[i], 0.0);
+   }
+
+   // We compare the analytic RooHistPdf integral (which is known to be correct)
+   // against the numeric one that uses the RooBinIntegrator, for various ranges
+   // that cut through the bins in different ways.
+   auto checkRange = [&](const char *name, double lo, double hi) {
+      x.setRange(name, lo, hi);
+
+      RooHistPdf analytic{"analytic", "", x, dh, 0};
+      RooHistPdf numeric{"numeric", "", x, dh, 0};
+      numeric.forceNumInt(true);
+
+      std::unique_ptr<RooAbsReal> integAna{analytic.createIntegral(x, Range(name))};
+      std::unique_ptr<RooAbsReal> integNum{numeric.createIntegral(x, Range(name))};
+
+      EXPECT_NEAR(integNum->getVal(), integAna->getVal(), 1e-12)
+         << "RooBinIntegrator disagrees with the analytic integral for range [" << lo << ", " << hi << "]";
+   };
+
+   checkRange("full", 0.0, 10.0);      // full range
+   checkRange("partial", 3.0, 7.0);    // both boundaries cut through bins (the original report)
+   checkRange("aligned", 2.0, 8.0);    // boundaries coincide with bin edges
+   checkRange("singlebin", 3.0, 3.5);  // range entirely inside a single bin
+   checkRange("leftpart", 3.0, 10.0);  // only the lower boundary cuts through a bin
+   checkRange("rightpart", 0.0, 7.0);  // only the upper boundary cuts through a bin
+
+   // Explicitly check the value from the original bug report as well.
+   x.setRange("report", 3.0, 7.0);
+   RooHistPdf numeric{"numeric", "", x, dh, 0};
+   numeric.forceNumInt(true);
+   std::unique_ptr<RooAbsReal> integNum{numeric.createIntegral(x, Range("report"))};
+   const double binWidth = 2.0;
+   const double expected = (heights[1] * 1.0 + heights[2] * 2.0 + heights[3] * 1.0) / binWidth; // = 5.5
+   EXPECT_NEAR(integNum->getVal(), expected, 1e-12);
+}
+
+// Like RooBinIntegratorPartialRange, but for a two-dimensional integrand to
+// make sure the fix for GitHub issue #22858 also holds for the N-dimensional
+// recursive integration path, where the range cuts through bins in every
+// dimension. This is the case most likely to regress silently.
+TEST(RooRealIntegral, RooBinIntegratorPartialRange2D)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0., 10.};
+   RooRealVar y{"y", "y", 0., 6.};
+   x.setBins(5); // edges at 0, 2, 4, 6, 8, 10
+   y.setBins(3); // edges at 0, 2, 4, 6
+
+   RooDataHist dh{"dh", "", {x, y}};
+   // Fill all 5x3 bins with distinct, non-trivial heights.
+   for (int i = 0; i < dh.numEntries(); ++i) {
+      dh.get(i);
+      dh.set(i, 1.0 + 0.5 * i, 0.0);
+   }
+
+   // The sub-ranges cut through the bins in both dimensions.
+   x.setRange("sub", 3.0, 7.0); // cuts the x bins [2,4] and [6,8]
+   y.setRange("sub", 1.0, 5.0); // cuts the y bins [0,2] and [4,6]
+
+   RooHistPdf analytic{"analytic", "", {x, y}, dh, 0};
+   RooHistPdf numeric{"numeric", "", {x, y}, dh, 0};
+   numeric.forceNumInt(true);
+
+   std::unique_ptr<RooAbsReal> integAna{analytic.createIntegral({x, y}, Range("sub"))};
+   std::unique_ptr<RooAbsReal> integNum{numeric.createIntegral({x, y}, Range("sub"))};
+
+   EXPECT_NEAR(integNum->getVal(), integAna->getVal(), 1e-12)
+      << "RooBinIntegrator disagrees with the analytic integral for the 2D sub-range";
+}
+
 // Make sure that RooFit realizes that Gaussian(x, mu, sigma(x)) needs to be
 // integrated analytically.
 // Covers GitHub issue #14320.
