@@ -330,6 +330,15 @@ public:
          std::cout << "Conv - " << fDim << "  " << fNX << " : " << ConvertDimShapeToString(fShapeX)
                   << " --> " << fNY << " : " << ConvertDimShapeToString(fShapeY) << std::endl;
       }
+
+      // register the inference helper functions used by the generated code
+      if (fDim < 3)
+         model.AddNeededHelperFunction("Im2col");
+      else
+         model.AddNeededHelperFunction("Im2col_3d");
+      model.AddNeededHelperFunction("Gemm_Call");
+      if (fBroadcastBias)
+         model.AddNeededHelperFunction("UnidirectionalBroadcast");
    }
 
    std::string GenerateInitCode() override {
@@ -349,7 +358,7 @@ public:
             out << SP << "if (" << length << " > " << ConvertShapeToLength(shape) << ") {\n";
          else
             out << SP << "{\n";
-         out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_"
+         out << SP << SP << "float * data = UTILITY::UnidirectionalBroadcast(tensor_"
              << fNB << ", " << ConvertShapeToString(shape) << ", " << ConvertDimShapeToString(fShapeY) << ");\n";
          out << SP << SP << "fTensor_" << fNB << ".resize(" << length << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNB << ".begin());\n";
@@ -473,7 +482,7 @@ public:
          // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
          // output_w)
          if (fDim < 3) {
-            out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
+            out << SP << SP << "UTILITY::Im2col<float>(tensor_" << fNX
                 << " + x_offset,"
                 //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin,
                 //  pad_w_end, stride_h, stride_w, dilation_h, dilation_w,
@@ -490,7 +499,7 @@ public:
             out << "," << "tensor_" <<fNX << "_xcol);\n\n ";
          } else {
             // 3d im2col
-            out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
+            out << SP << SP << "UTILITY::Im2col_3d<float>(tensor_" << fNX
                 << " + x_offset,"
                 //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
                 //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
@@ -504,7 +513,7 @@ public:
                 << "tensor_" << fNX << "_xcol);\n\n ";
          }
          // BLAS
-         out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
+         out << SP << "Gemm_Call("
              << "tensor_" << fNY << " + out_offset, false, false, "
              << OpName << "_m, " << OpName << "_n, " << OpName << "_k, "
              << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, tensor_" << fNX << "_f, "
@@ -533,7 +542,7 @@ public:
          out << SP << SP << "size_t out_offset = n * " << outputBatchStride << " + g_offset;\n";
 
          if (fDim < 3) {
-            out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
+            out << SP << SP << "UTILITY::Im2col<float>(tensor_" << fNX
                 << " + x_offset,"
                 //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin,
                 //  pad_w_end, stride_h, stride_w, dilation_h, dilation_w,
@@ -550,7 +559,7 @@ public:
             out << ", tensor_" << fNX << "_xcol);\n\n ";
          } else {
             // 3d im2col
-            out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
+            out << SP << SP << "UTILITY::Im2col_3d<float>(tensor_" << fNX
                 << " + x_offset,"
                 //  channels, d, h, w, k_d, k_h, k_w, pad_d_begin, pad_d_end, pad_h_begin, pad_h_end,
                 //  pad_w_begin, pad_w_end, stride_d, stride_h, stride_w, dilation_d, dilation_h, dilation_w,
@@ -571,7 +580,7 @@ public:
              << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] / fAttrGroup
              << ";\n";
 
-         out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
+         out << SP << "Gemm_Call("
              << "tensor_" << fNY << " + out_offset, false, false, "
              << OpName << "_m, " << OpName << "_n, " << OpName << "_k, "
              << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, tensor_" << fNX << "_f + offset_f, "

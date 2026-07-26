@@ -273,6 +273,17 @@ namespace SOFIE{
          }
 
          model.AddNeededStdLib("algorithm");
+
+         // register the inference helper functions used by the generated code
+         if (fType == "float")
+            model.AddNeededHelperFunction("Gemm_Call");
+         // bias handling emits Copy / Fill, fused activation emits Relu
+         if (fNC != "") {
+            model.AddNeededHelperFunction("Copy");
+            model.AddNeededHelperFunction("Fill");
+         }
+         if (fActivation == EActivationType::RELU)
+            model.AddNeededHelperFunction("Relu");
       }
 
       std::string Generate(std::string opName) override {
@@ -447,7 +458,7 @@ namespace SOFIE{
             else
                out << "j;\n";
 
-            std::string prefix = SP2 + SP + "TMVA::Experimental::SOFIE::";
+            std::string prefix = SP2 + SP;
             std::string target = "tensor_" + fNY;
             if (sC.size() != 2) {
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid rank for bias tensor " + ConvertDimShapeToString(fDimShapeC) + ConvertDimShapeToString(sC));
@@ -477,7 +488,7 @@ namespace SOFIE{
 
          if (fType == "float"){
 
-            out << SP2 << "TMVA::Experimental::SOFIE::Gemm_Call(" << "tensor_" << fNY;
+            out << SP2 << "Gemm_Call(" << "tensor_" << fNY;
              if (doStackMul) out << " + " << opName << "_y_offset";
             out <<   ", "
              << (fAttrTransB ? "true, " : "false, ")
@@ -518,7 +529,7 @@ namespace SOFIE{
                out << SP << "//--- applying RELU to output\n";
                std::string tnsr = "tensor_" + fNY;
                std::string reluSize = ConvertDimShapeToLength(fShapeY);
-               out << SP << "TMVA::Experimental::SOFIE::Relu(" << tnsr << ", " << tnsr << ", " << reluSize << ");\n";
+               out << SP << "Relu(" << tnsr << ", " << tnsr << ", " << reluSize << ");\n";
          }
 
          return out.str();

@@ -160,6 +160,10 @@ public:
       }
 
       model.AddNeededStdLib("cmath");
+
+      // the generated init code may broadcast the bias with UnidirectionalBroadcast
+      if (!fNBroadcastedB.empty())
+         model.AddNeededHelperFunction("UnidirectionalBroadcast");
    }
 
    std::string GenerateInitCode() override
@@ -168,7 +172,7 @@ public:
       if (!fNBroadcastedB.empty()) {
          out << SP << "// Broadcasting the bias of LayerNormalization op\n";
          out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_";
+         out << SP << SP << "float* data = UTILITY::UnidirectionalBroadcast(tensor_";
          out << fNB << ", " << ConvertDimShapeToString(fShapeB) << ", " << ConvertDimShapeToString(fShapeX) << ");\n";
          out << SP << "std::copy(data, data + " << fLength << ", tensor_" << fNBroadcastedB << ");\n";
          out << SP << "delete[] data;\n";
