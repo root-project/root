@@ -92,7 +92,10 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
       }
       idcur = (TFree*)lfree->After(idcur);
    }
-   return 0;
+
+   // never here
+   assert(false);
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +129,6 @@ void TFree::FillBuffer(char *&buffer)
 TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
 {
    TFree *idcur = this;
-   if (idcur == 0) return 0;
    TFree *idcur1 = 0;
    do {
       Long64_t nleft = Long64_t(idcur->fLast - idcur->fFirst +1);
@@ -186,4 +188,3 @@ Int_t TFree::Sizeof() const
    if (fLast > TFile::kStartBigFile) return 18;
    else                              return 10;
 }
-
