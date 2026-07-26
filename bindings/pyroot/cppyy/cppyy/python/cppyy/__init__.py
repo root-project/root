@@ -145,25 +145,93 @@ class py_make_smartptr(object):
             obj = self.cls(*args)
         return self.ptrcls[self.cls](obj)   # C++ takes ownership
 
+# The introspection trick above only works for class types the smart pointer can
+# adopt from a Python-owned object. An arithmetic element type (int, double, ...)
+# has no such object, so it needs a heap-allocated scalar. We test for *arithmetic*
+# rather than *fundamental* types because std::is_fundamental also matches 'void'
+# and 'std::nullptr_t', neither of which can back a 'new T{}' scalar.
+#
+# _py_arithmetic maps the Python numeric builtins onto a C++ spelling by convention
+# (Python's int is arbitrary-precision, bool subclasses int); they carry no
+# __cpp_name__ to query, so the mapping has to be explicit.
+_py_arithmetic = {int: 'int', float: 'float', bool: 'bool'}
+
+def _as_arithmetic(cls):
+    """Return the C++ type name if 'cls' denotes an arithmetic type, else None.
+
+    'cls' may be a Python builtin type (int/float/bool), a string naming a C++
+    type, or a cppyy type proxy (e.g. cppyy.gbl.int)."""
+    name = _py_arithmetic.get(cls)
+    if name is not None:
+        return name
+    name = cls if isinstance(cls, str) else getattr(cls, '__cpp_name__', None)
+    if name is None:
+        return None
+    # Let C++ be the source of truth: std::is_arithmetic resolves canonical
+    # spellings and typedefs (size_t, Int_t, ...) alike, with no hand-kept list to
+    # drift out of sync. cppyy caches the trait instantiation itself.
+    #
+    # A name that is no resolvable type (e.g. a typo) makes the trait lookup raise;
+    # treat that as "not arithmetic" so it falls through to the class path, which
+    # reports the bad name itself instead of leaking std::is_arithmetic<...>.
+    try:
+        is_arith = bool(gbl.std.is_arithmetic[name].value)
+    except Exception:
+        is_arith = False
+    return name if is_arith else None
+
+# Helpers that build a smart pointer to a heap-allocated scalar. They are
+# deliberately *non-variadic*: instantiating std::make_unique/make_shared for an
+# arithmetic type makes the interpreter JIT a call wrapper whose variadic Args...
+# pack is mis-desugared on some platforms (macOS with C++ modules) into invalid
+# code like 'make_unique<int, 0>'; these single-argument templates avoid it.
+# See https://github.com/root-project/root/issues/19122.
+#
+# Each body static_asserts T is arithmetic, mirroring the Python-side
+# _as_arithmetic() gate (class types take the adopt path instead). The assert is
+# in the body, not the signature: an extra template parameter is exactly what
+# triggers the mis-desugaring above.
+_scalar_makers = {}
+def _scalar_maker(name):
+    maker = _scalar_makers.get(name)
+    if maker is None:
+        if not _scalar_makers:
+            cppdef("""namespace __cppyy_internal {
+            template <class T> std::unique_ptr<T> make_unique_scalar()    { static_assert(std::is_arithmetic_v<T>, "scalar maker requires an arithmetic type"); return std::unique_ptr<T>(new T{}); }
+            template <class T> std::unique_ptr<T> make_unique_scalar(T v) { static_assert(std::is_arithmetic_v<T>, "scalar maker requires an arithmetic type"); return std::unique_ptr<T>(new T(v)); }
+            template <class T> std::shared_ptr<T> make_shared_scalar()    { static_assert(std::is_arithmetic_v<T>, "scalar maker requires an arithmetic type"); return std::shared_ptr<T>(new T{}); }
+            template <class T> std::shared_ptr<T> make_shared_scalar(T v) { static_assert(std::is_arithmetic_v<T>, "scalar maker requires an arithmetic type"); return std::shared_ptr<T>(new T(v)); }
+            }""")
+        maker = getattr(gbl.__cppyy_internal, name)
+        _scalar_makers[name] = maker
+    return maker
+
 class make_smartptr(object):
-    __slots__ = ['ptrcls', 'maker']
-    def __init__(self, ptrcls, maker):
-        self.ptrcls = ptrcls
-        self.maker  = maker
+    __slots__ = ['ptrcls', 'maker', 'scalarname']
+    def __init__(self, ptrcls, maker, scalarname):
+        self.ptrcls     = ptrcls
+        self.maker      = maker
+        self.scalarname = scalarname
     def __call__(self, ptr):
         return py_make_smartptr(type(ptr), self.ptrcls)(ptr)
     def __getitem__(self, cls):
+        # Arithmetic element types: build from a heap scalar (see _scalar_maker).
+        name = _as_arithmetic(cls)
+        if name is not None:
+            return _scalar_maker(self.scalarname)[name]
+        # Class types (cppyy proxies or Python classes, incl. Python-derived):
+        # construct in Python and let the smart pointer adopt the object.
         try:
             if not cls.__module__ == int.__module__:
                 return py_make_smartptr(cls, self.ptrcls)
         except AttributeError:
             pass
-        if isinstance(cls, str) and not cls in ('int', 'float'):
+        if isinstance(cls, str):
             return py_make_smartptr(getattr(gbl, cls), self.ptrcls)
         return self.maker[cls]
 
-gbl.std.make_shared = make_smartptr(gbl.std.shared_ptr, gbl.std.make_shared)
-gbl.std.make_unique = make_smartptr(gbl.std.unique_ptr, gbl.std.make_unique)
+gbl.std.make_shared = make_smartptr(gbl.std.shared_ptr, gbl.std.make_shared, 'make_shared_scalar')
+gbl.std.make_unique = make_smartptr(gbl.std.unique_ptr, gbl.std.make_unique, 'make_unique_scalar')
 del make_smartptr
 
 
