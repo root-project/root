@@ -29,6 +29,8 @@ RModel_GraphIndependent::RModel_GraphIndependent(GraphIndependent_Init& graph_in
 
 void RModel_GraphIndependent::Generate() {
     std::string hgname;
+    // the inference interface uses the GNN_Data helper type
+    AddNeededHelperFunction("GNN_Data");
     GenerateHeaderInfo(hgname);
 
     std::ofstream f;
@@ -123,7 +125,7 @@ void RModel_GraphIndependent::Generate() {
       //fGC += "std::vector<float> fGlobalUpdates {" + std::to_string(num_global_features) + "};";
     }
 
-    fGC += "\nvoid infer(TMVA::Experimental::SOFIE::GNN_Data& input_graph){\n";
+    fGC += "\nvoid infer(GNN_Data& input_graph){\n";
 
     // computing updated edge attributes
     // could use std::span
@@ -200,9 +202,19 @@ void RModel_GraphIndependent::Generate() {
        fGC += "\n";
     }
 
+    // propagate helper functions needed by the update-function components
+    for (auto *block : {edges_update_block.get(), nodes_update_block.get(), globals_update_block.get()}) {
+        if (block && block->GetFunctionBlock()) {
+            for (auto const &h : block->GetFunctionBlock()->GetNeededHelperFunctions())
+                AddNeededHelperFunction(h);
+        }
+    }
+
     fGC += ("}\n};\n} //TMVA_SOFIE_" + fName + "\n");
     fGC += "\n#endif  // TMVA_SOFIE_" + hgname + "\n";
 
+    // dump the standalone helper-function definitions into the generated header
+    EmitHelperFunctionsCode();
 }
 
 }//SOFIE

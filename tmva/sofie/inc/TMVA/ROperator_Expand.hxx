@@ -40,6 +40,8 @@ public:
 
 
    void Initialize(RModel& model) override {
+      // the generated code may use the UnidirectionalBroadcast inference helper
+      model.AddNeededHelperFunction("UnidirectionalBroadcast");
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
         throw std::runtime_error("TMVA SOFIE Expand Op Input Tensor " + fNX + " is not found in model");
@@ -75,7 +77,7 @@ public:
          }
       }
       // Y is the common shape of fShapeX and shape
-      auto ret  = TMVA::Experimental::SOFIE::UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeDim);
+      auto ret  = UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeDim);
       fShapeY = ret.second;
       fInitialized = model.IsInitializedTensor(fNX) && fInitializedShape;
       std::vector<size_t> shapeX;
@@ -153,7 +155,7 @@ public:
       if (lengthX != lengthY) {
          out << SP << "if ( (" << lengthX << ") < (" << lengthY << ") ) {\n";
          out << SP << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertDimShapeToString(fShapeX) << ", " << ConvertDimShapeToString(fShapeY)
+         out << SP << SP << "UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertDimShapeToString(fShapeX) << ", " << ConvertDimShapeToString(fShapeY)
                    << ", tensor_"<<fNY<<");\n";
          out << SP << "} else {\n";
          out << SP << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + (" << lengthX << "), tensor_" << fNY << ");\n";

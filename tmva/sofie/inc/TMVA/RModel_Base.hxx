@@ -51,9 +51,18 @@ protected:
    WeightFileType fWeightFile = WeightFileType::Text;
 
    std::unordered_set<std::string> fNeededBlasRoutines;
+   // Set to true once GenerateHeaderInfo has emitted the extern "C" declaration
+   // of the BLAS sgemm_ routine (from fNeededBlasRoutines). It lets the
+   // standalone Gemm_Call helper skip emitting a second, duplicate declaration.
+   bool fBlasSgemmDeclared = false; //!
 
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
+
+   // Inference helper functions (from SOFIE_common) that the generated code
+   // needs. Their standalone definitions are emitted into the generated header
+   // so that it does not depend on including TMVA/SOFIE_common.hxx.
+   std::set<std::string> fNeededHelperFunctions;
 
    std::string fName = "UnnamedModel";
    std::string fGC; // generated code
@@ -89,7 +98,25 @@ public:
    {
        fCustomOpHeaders.insert(filename);
    }
+   // Register an inference helper function that the generated code needs. See
+   // GenerateHelperFunctionsCode for the list of recognised keys.
+   void AddNeededHelperFunction(std::string name)
+   {
+      fNeededHelperFunctions.insert(std::move(name));
+   }
+   const std::set<std::string> &GetNeededHelperFunctions() const { return fNeededHelperFunctions; }
+
+   // Placeholder tokens emitted by GenerateHeaderInfo and later replaced by
+   // EmitHelperFunctionsCode with the actual helper includes / definitions.
+   // This two-step approach is needed because the full set of required helpers
+   // is only known once all operators (and sub-graphs) have been generated.
+   static constexpr const char *kHelperIncludesMarker = "//@SOFIE_HELPER_INCLUDES@\n";
+   static constexpr const char *kHelperFunctionsMarker = "//@SOFIE_HELPER_FUNCTIONS@\n";
+
    void GenerateHeaderInfo(std::string &hgname);
+   // Replace the helper markers in the generated code with the standalone
+   // definitions of the helper functions collected in fNeededHelperFunctions.
+   void EmitHelperFunctionsCode();
    void PrintGenerated(std::ostream &os=std::cout) { os << fGC; }
 
    std::string ReturnGenerated() { return fGC; }
