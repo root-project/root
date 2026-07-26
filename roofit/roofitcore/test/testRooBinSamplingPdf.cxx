@@ -6,6 +6,7 @@
 #include <RooBinSamplingPdf.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooRandom.h>
@@ -111,6 +112,57 @@ TEST(RooBinSamplingPdf, CheckConsistentNormalization)
    binSamplingPdf.getVal(normSet);
    std::unique_ptr<RooAbsReal> int3{binSamplingPdf.createIntegral(normSet)};
    EXPECT_FLOAT_EQ(int2->getVal(), int3->getVal());
+}
+
+// The RooBinSamplingPdf uses the analytical integral of the wrapped pdf to
+// sample the bins when it is available, and falls back to the numeric
+// integrator otherwise. This test checks that the analytical path (here
+// exercised with a RooGaussian) gives the same result as the numeric path
+// (exercised with an identical RooGenericPdf that has no analytical integral).
+TEST(RooBinSamplingPdf, AnalyticalMatchesNumeric)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", -5, 5);
+   x.setBins(20);
+   RooRealVar mean("mean", "mean", 0.7, -5, 5);
+   RooRealVar sigma("sigma", "sigma", 1.3, 0.1, 5);
+
+   // Has an analytical integral over x -> analytical bin sampling.
+   RooGaussian gaus("gaus", "gaus", x, mean, sigma);
+   // Identical shape, but no analytical integral -> numeric bin sampling.
+   RooGenericPdf gen("gen", "gen", "std::exp(-0.5*(x-mean)*(x-mean)/(sigma*sigma))", {x, mean, sigma});
+
+   RooBinSamplingPdf bsAna("bsAna", "bsAna", x, gaus);
+   RooBinSamplingPdf bsNum("bsNum", "bsNum", x, gen);
+
+   RooArgSet normSet{x};
+
+   // Compare the sampled values bin by bin.
+   for (int i = 0; i < x.numBins(); ++i) {
+      x.setBin(i);
+      EXPECT_NEAR(bsAna.getVal(normSet), bsNum.getVal(normSet), 1e-5 * bsNum.getVal(normSet))
+         << "mismatch in bin " << i;
+   }
+
+   // The results must also agree when used in a fit, for both the legacy and
+   // the vectorizing "cpu" evaluation backend.
+   std::unique_ptr<RooDataHist> dataH(gaus.generateBinned(x, 20000));
+   RooDataSet data("data", "data", x, RooFit::Import(*dataH));
+
+   for (auto backend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
+      mean.setVal(0.7);
+      sigma.setVal(1.3);
+      std::unique_ptr<RooAbsReal> nllAna{gaus.createNLL(data, IntegrateBins(1.E-3), backend)};
+      mean.setVal(0.7);
+      sigma.setVal(1.3);
+      std::unique_ptr<RooAbsReal> nllNum{gen.createNLL(data, IntegrateBins(1.E-3), backend)};
+
+      EXPECT_NEAR(nllAna->getVal(), nllNum->getVal(), 1e-5 * std::abs(nllNum->getVal()))
+         << "NLL mismatch for backend " << backend.name();
+   }
 }
 
 INSTANTIATE_TEST_SUITE_P(RooBinSamplingPdf, ParamTest, testing::Values("Off", "Cpu"),
