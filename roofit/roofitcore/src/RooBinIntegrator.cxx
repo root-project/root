@@ -94,7 +94,19 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
       }
     }
-    _binb.emplace_back(tmp->begin(), tmp->end());
+    std::vector<double> binb{tmp->begin(), tmp->end()};
+
+    // The bin boundaries provided by the integrand only include the boundaries
+    // that lie strictly inside the integration range. To integrate correctly
+    // over partial bins at the edges of the range, the integration limits need
+    // to be added as the outermost boundaries (if not already present).
+    if (binb.empty() || binb.front() > _xmin[i]) {
+      binb.insert(binb.begin(), _xmin[i]);
+    }
+    if (binb.back() < _xmax[i]) {
+      binb.push_back(_xmax[i]);
+    }
+    _binb.emplace_back(std::move(binb));
 
   }
   checkLimits();
