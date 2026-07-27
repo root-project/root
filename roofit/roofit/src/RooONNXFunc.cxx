@@ -259,7 +259,7 @@ void RooONNXFunc::initialize()
    // link-time dependency to the SOFIE parser library.
    if (gSystem->Load("libROOTTMVASofieParser") < 0) {
       throw std::runtime_error("RooONNXFunc: cannot load ONNX file since SOFIE ONNX parser is missing."
-                               " Please build ROOT with tmva-sofie=ON.");
+                               " Please build ROOT with tmva=ON.");
    }
    using OnnxToCpp = std::string (*)(std::uint8_t const *, std::size_t, const char *);
    auto onnxToCppWithSofie = resolveLazy<OnnxToCpp>("_RooONNXFunc_onnxToCppWithSofie",

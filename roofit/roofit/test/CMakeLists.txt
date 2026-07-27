@@ -40,7 +40,7 @@ endif()
 
 add_subdirectory(vectorisedPDFs)
 
-if(tmva-sofie)
+if(tmva)
   ROOT_FIND_PYTHON_MODULE(torch)
   ROOT_FIND_PYTHON_MODULE(onnx)
 

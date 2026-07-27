@@ -7,15 +7,15 @@ This is a new development in TMVA and is currently in early experimental stage. 
 
 
 ## Prerequisite
-- Protobuf 3.0 or higher (for input of ONNX model files)
 - BLAS or Eigen (for execution of the generated code for inference)
 
 ## Installation
 
-Build ROOT with the cmake option tmva-sofie enabled.
+SOFIE is built as part of TMVA, so it is enabled whenever ROOT is built with
+the `tmva` cmake option (which is ON by default).
 
 ```bash
-cmake ../root -Dtmva-sofie=ON
+cmake ../root -Dtmva=ON
 make -j8
 ```
 

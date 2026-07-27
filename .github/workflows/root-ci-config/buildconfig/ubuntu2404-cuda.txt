@@ -12,7 +12,6 @@ tmva-cpu=ON
 tmva-cudnn=ON
 tmva-gpu=ON
 tmva-pymva=OFF
-tmva-sofie=OFF
 tmva=ON
 unfold=OFF
 webgui=ON
