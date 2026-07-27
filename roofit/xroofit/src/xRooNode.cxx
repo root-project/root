@@ -9355,6 +9355,25 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
       }
    }
 
+   // We evaluated the above with `normSet`, which lives on this function's stack.
+   // RooFit proxies only cache a bare pointer to the last normSet and re-use it
+   // later (e.g. RooProduct::evaluate reads back _compRSet.nset()), so before it
+   // goes out of scope we must clear it everywhere it could have been cached,
+   // otherwise a later evaluation dereferences freed stack ("use of uninitialised
+   // value" in valgrind). sterilize() only walks clients, but getVal() propagates
+   // the normSet to the servers of the evaluated function, so reset those here.
+   {
+      RooArgSet evaluatedNodes;
+      for (RooAbsArg *treeRoot : {static_cast<RooAbsArg *>(rar), static_cast<RooAbsArg *>(p),
+                                  static_cast<RooAbsArg *>(oldrar), _coefs.get<RooAbsArg>()}) {
+         if (treeRoot)
+            treeRoot->treeNodeServerList(&evaluatedNodes);
+      }
+      for (RooAbsArg *node : evaluatedNodes) {
+         node->setProxyNormSet(nullptr);
+      }
+   }
+
    if (oldrar) {
       std::vector<RooAbsArg *> extra;
       if (auto s = dynamic_cast<RooSimultaneous *>(rar)) {
