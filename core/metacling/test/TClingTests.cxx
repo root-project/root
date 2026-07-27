@@ -318,20 +318,41 @@ struct ClassIsAggregate {
     int x;
     double y;
 };
+
+struct ClassIsTriviallyCopyable {
+    int x;
+    double y;
+};
+
+// a non-trivial copy constructor is enough to lose trivial copyability, even
+// though the destructor stays trivial
+struct ClassIsNotTriviallyCopyable {
+    int x;
+    ClassIsNotTriviallyCopyable(const ClassIsNotTriviallyCopyable &other) : x(other.x) {}
+};
                           )cpp");
 
+   // clang-format off
    const std::vector<std::pair<std::string, Long_t>> classNPPairs{
-      {"ClassHasImplicitCtor", kClassHasImplicitCtor}, {"ClassHasExplicitCtor", kClassHasExplicitCtor},
-      {"ClassHasExplicitDtor", kClassHasExplicitDtor}, {"ClassHasImplicitDtor", kClassHasImplicitDtor},
-      {"ClassHasDefaultCtor", kClassHasDefaultCtor},   {"ClassHasDefaultCtor", kClassIsValid},
-      {"ClassIsAbstract", kClassIsAbstract},           {"ClassHasVirtual", kClassHasVirtual},
-      {"ClassHasAssignOpr", kClassHasAssignOpr},       {"ClassIsAggregate", kClassIsAggregate}};
+      {"ClassHasImplicitCtor", kClassHasImplicitCtor},           {"ClassHasExplicitCtor", kClassHasExplicitCtor},
+      {"ClassHasExplicitDtor", kClassHasExplicitDtor},           {"ClassHasImplicitDtor", kClassHasImplicitDtor},
+      {"ClassHasDefaultCtor", kClassHasDefaultCtor},             {"ClassHasDefaultCtor", kClassIsValid},
+      {"ClassIsAbstract", kClassIsAbstract},                     {"ClassHasVirtual", kClassHasVirtual},
+      {"ClassHasAssignOpr", kClassHasAssignOpr},                 {"ClassIsAggregate", kClassIsAggregate},
+      {"ClassIsTriviallyCopyable", kClassIsTriviallyCopyable}};
+   // clang-format on
 
    for (auto &[clName, clPropRef] : classNPPairs) {
       auto cl = TClass::GetClass(clName.c_str());
       const auto prop = gInterpreter->ClassInfo_ClassProperty(cl->GetClassInfo());
       EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
    }
+
+   // A trivial destructor is not enough: the copy constructor matters too.
+   auto notTrivial = TClass::GetClass("ClassIsNotTriviallyCopyable");
+   const auto notTrivialProp = gInterpreter->ClassInfo_ClassProperty(notTrivial->GetClassInfo());
+   EXPECT_FALSE(notTrivialProp & kClassIsTriviallyCopyable);
+   EXPECT_FALSE(notTrivialProp & kClassHasDtor);
 }
 
 // #12108

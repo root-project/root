@@ -95,6 +95,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include <sstream>
 #include <string>
 #include <map>
+#include <mutex>
 #include <typeinfo>
 #include <cmath>
 #include <cassert>
@@ -4379,6 +4380,31 @@ void TClass::MakeCustomMenuList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if an object of this class can be relocated to a new address
+/// with a raw memory copy, i.e. without running a move or copy constructor.
+///
+/// It requires the interpreter to know the type and the type to be trivially
+/// copyable, which rules out both a resource being freed twice or from the wrong
+/// address (the failure mode of root-project/root#20882) and a non-trivial copy
+/// constructor being skipped. It is still not a proof: a trivially copyable class
+/// can hold a pointer into itself, and nothing observable here would reveal that.
+/// Such a class is relocated the way it always has been.
+///
+/// An emulated class, described only by a TStreamerInfo, gets the conservative
+/// answer since its members can be anything -- e.g. the std::string of an
+/// emulated pair<string,double>.
+
+Bool_t TClass::CanBeRelocatedWithMemcpy() const
+{
+   const Long_t classProperty = ClassProperty();
+   // No kClassIsValid means no interpreter information at all (emulated class,
+   // forward declaration, ...), so assume the worst.
+   if (!(classProperty & kClassIsValid))
+      return kFALSE;
+   return (classProperty & kClassIsTriviallyCopyable) != 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Register the fact that an object was moved from the memory location
 /// 'arenaFrom' to the memory location 'arenaTo'.
 
@@ -4387,6 +4413,30 @@ void TClass::Move(void *arenaFrom, void *arenaTo) const
    // If/when we have access to a copy constructor (or better to a move
    // constructor), this function should also perform the data move.
    // For now we just information the repository.
+
+   // This only records the new address; a caller that relocated the data with a
+   // raw memory copy silently corrupts the types that do not support it, so warn
+   // about those rather than let it surface later as an obscure crash (typically
+   // an invalid free). A caller that did run a real move or copy constructor can
+   // ignore the message -- we have no way to tell the two apart here. The in-tree
+   // callers, in TEmulatedCollectionProxy::Expand, already avoid the memcpy for
+   // these types, so this is aimed at external users of this public method.
+   if (!CanBeRelocatedWithMemcpy()) {
+      // Keyed by name rather than by 'this': a TClass can be deleted and another
+      // one allocated at the same address, which would silence the message.
+      static std::mutex sMoveDiagMutex;
+      static std::set<std::string> sMoveDiagDone;
+      bool firstTime = false;
+      {
+         std::lock_guard<std::mutex> guard(sMoveDiagMutex);
+         firstTime = sMoveDiagDone.emplace(GetName()).second;
+      }
+      if (firstTime)
+         Error("Move",
+               "Objects of type %s can not be relocated with a raw memory copy. TClass::Move does not move the data "
+               "itself (here from %p to %p), so if the caller relocated it that way the objects are now corrupted.",
+               GetName(), arenaFrom, arenaTo);
+   }
 
    if ((GetState() <= kEmulated) && !fCollectionProxy) {
       MoveAddressInRepository("TClass::Move",arenaFrom,arenaTo,this);

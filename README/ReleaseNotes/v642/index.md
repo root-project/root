@@ -63,7 +63,11 @@ The following people have contributed to this new version:
 
 ## I/O
 
+* Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
+
 ## Core
+
+* `TClass::CanBeRelocatedWithMemcpy()` reports whether an object of a class can be moved to a new address with a raw memory copy, i.e. without running a move or copy constructor. It is backed by the new `kClassIsTriviallyCopyable` class property, which `TInterpreter::ClassInfo_ClassProperty()` now fills in. A class the interpreter does not know about, in particular an emulated one, is conservatively reported as not relocatable.
 
 ## Histograms
 

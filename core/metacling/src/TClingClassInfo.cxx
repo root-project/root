@@ -199,6 +199,9 @@ long TClingClassInfo::ClassProperty() const
       // according to the C++ standard, being a POD implies being an aggregate
       property |= kClassIsAggregate;
    }
+   if (CRD->hasDefinition() && CRD->isTriviallyCopyable()) {
+      property |= kClassIsTriviallyCopyable;
+   }
    return property;
 }
 
