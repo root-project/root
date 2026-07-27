@@ -114,6 +114,8 @@ protected:
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
    RSoAField(std::string_view fieldName, std::string_view className);
    RSoAField(RSoAField &&other) = default;

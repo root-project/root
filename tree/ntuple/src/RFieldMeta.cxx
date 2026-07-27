@@ -987,6 +987,11 @@ void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
    }
 }
 
+void ROOT::Experimental::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeVersion).ThrowOnError();
+}
+
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
 {
    fSoAClass->New(where);
