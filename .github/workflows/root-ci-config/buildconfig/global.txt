@@ -84,7 +84,6 @@ tmva-cpu=ON
 tmva-gpu=OFF
 tmva-cudnn=OFF
 tmva-pymva=OFF
-tmva-sofie=ON
 tmva=ON
 unfold=ON
 unuran=ON
