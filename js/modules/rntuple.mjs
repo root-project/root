@@ -234,9 +234,9 @@ function decodeZigzag32(view) {
  * @private */
 function decodeZigzag64(view) {
    for (let o = 0; o < view.byteLength; o += 8) {
-      const x = view.getUint64(o, LITTLE_ENDIAN);
-      view.setInt64(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
-   }
+        const x = view.getBigUint64(o, LITTLE_ENDIAN);
+        view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
+    }
 }
 
 
