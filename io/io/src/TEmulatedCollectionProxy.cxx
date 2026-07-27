@@ -24,6 +24,7 @@ the class TEmulatedMapProxy.
 */
 
 #include "TEmulatedCollectionProxy.h"
+#include "TClass.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
@@ -371,10 +372,50 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    return;
 }
 
-void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
+void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
 {
    // Expand the container
    size_t i;
+
+   // The storage is a std::vector of raw, aligned bytes: growing it past its
+   // capacity relocates the elements with a raw memory copy. That corrupts an
+   // object holding a pointer into itself -- notably std::string (and TString)
+   // using the small-string optimization, whose data pointer would keep pointing
+   // into the old, freed, buffer and be freed again from there when the object is
+   // destroyed (https://github.com/root-project/root/issues/20882).
+   //
+   // TClass::Move (used below) does not actually move the data (in the C++ sense), so it cannot fix
+   // those up. Expand is however only reached while preparing the collection to
+   // be entirely overwritten by a member-wise read, so we destroy such elements
+   // here -- while they are still valid -- and let the code below reconstruct
+   // them at the new location instead of relocating them.
+   auto needsRealMove = [](const Value *v) {
+      if (!v || (v->fCase & kIsPointer))
+         return false; // a pointer relocates fine
+      if (v->fCase & kBIT_ISSTRING)
+         return true; // std::string, see above
+      if (v->fCase & kIsClass) {
+         // TClass is conservative for the types the interpreter does not know.
+         TClass *cl = v->fType.GetClass();
+         return !cl || !cl->IsTriviallyRelocatable();
+      }
+      return false; // fundamental types and enums
+   };
+   if (nCurr > 0) {
+      // Only worth asking about the type if the buffer actually reallocates.
+      bool willReallocate = false;
+      WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+         willReallocate = (left * fValDiff / alignmentElemSize) > c->capacity();
+      });
+      if (willReallocate && (needsRealMove(fVal) || needsRealMove(fKey))) {
+         // Destroys the elements in place and resizes to 0, keeping the capacity;
+         // the buffer grows again right below with no live object to relocate.
+         // 'force' is the caller's: it decides whether pointees are deleted too.
+         Shrink(nCurr, 0, force);
+         nCurr = 0;
+      }
+   }
+
    void *oldstart = fEnv->fStart;
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
       assert(fValDiff % alignmentElemSize == 0);
@@ -467,7 +508,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
          Shrink(nCurr, left, force);
          return;
       }
-      Expand(nCurr, left);
+      Expand(nCurr, left, force);
       return;
    }
    Fatal("TEmulatedCollectionProxy","Resize> Logic error - no proxy object set.");
