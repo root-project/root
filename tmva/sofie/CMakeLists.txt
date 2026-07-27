@@ -109,7 +109,4 @@ if(sofie_root_support)
   target_compile_definitions(ROOTTMVASofie PRIVATE SOFIE_SUPPORT_ROOT_BINARY)
 endif()
 
-# The SOFIE tests are built together with the ONNX parser when tmva-sofie is ON
-if (tmva-sofie)
-   ROOT_ADD_TEST_SUBDIRECTORY(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)
