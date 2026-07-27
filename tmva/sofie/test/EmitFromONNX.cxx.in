@@ -52,7 +52,7 @@ int EmitModel(std::string filename, std::string outname)
    return 0;
 }
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char * /*argv*/[])
 {
    // clang-format off
    @EMIT_CAPTURES@;
