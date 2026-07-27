@@ -20,3 +20,9 @@ endif()
 ROOT_ADD_GTEST(tessellated
   test_tessellated.cxx
   LIBRARIES Geom)
+
+if(imt)
+  ROOT_ADD_GTEST(manager_lifetime
+    test_manager_lifetime.cxx
+    LIBRARIES Geom GeomChecker Imt)
+endif()
