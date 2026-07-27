@@ -117,7 +117,7 @@ protected:
    void Shrink(UInt_t nCurr, UInt_t left, Bool_t force);
 
    // Expand the container
-   void Expand(UInt_t nCurr, UInt_t left);
+   void Expand(UInt_t nCurr, UInt_t left, Bool_t force);
 
 private:
    TEmulatedCollectionProxy &operator=(const TEmulatedCollectionProxy &); // Not implemented.

@@ -318,20 +318,49 @@ struct ClassIsAggregate {
     int x;
     double y;
 };
+
+struct ClassIsTriviallyRelocatable {
+    int x;
+    double y;
+};
+
+// not trivially copyable because of the virtual function, but still trivially
+// relocatable in the C++26 sense
+struct ClassIsTriviallyRelocatablePolymorphic {
+    virtual ~ClassIsTriviallyRelocatablePolymorphic() = default;
+    int x;
+};
+
+// a non-trivial copy constructor is enough to lose trivial relocatability, even
+// though the destructor stays trivial
+struct ClassIsNotTriviallyRelocatable {
+    int x;
+    ClassIsNotTriviallyRelocatable(const ClassIsNotTriviallyRelocatable &other) : x(other.x) {}
+};
                           )cpp");
 
+   // clang-format off
    const std::vector<std::pair<std::string, Long_t>> classNPPairs{
-      {"ClassHasImplicitCtor", kClassHasImplicitCtor}, {"ClassHasExplicitCtor", kClassHasExplicitCtor},
-      {"ClassHasExplicitDtor", kClassHasExplicitDtor}, {"ClassHasImplicitDtor", kClassHasImplicitDtor},
-      {"ClassHasDefaultCtor", kClassHasDefaultCtor},   {"ClassHasDefaultCtor", kClassIsValid},
-      {"ClassIsAbstract", kClassIsAbstract},           {"ClassHasVirtual", kClassHasVirtual},
-      {"ClassHasAssignOpr", kClassHasAssignOpr},       {"ClassIsAggregate", kClassIsAggregate}};
+      {"ClassHasImplicitCtor", kClassHasImplicitCtor},           {"ClassHasExplicitCtor", kClassHasExplicitCtor},
+      {"ClassHasExplicitDtor", kClassHasExplicitDtor},           {"ClassHasImplicitDtor", kClassHasImplicitDtor},
+      {"ClassHasDefaultCtor", kClassHasDefaultCtor},             {"ClassHasDefaultCtor", kClassIsValid},
+      {"ClassIsAbstract", kClassIsAbstract},                     {"ClassHasVirtual", kClassHasVirtual},
+      {"ClassHasAssignOpr", kClassHasAssignOpr},                 {"ClassIsAggregate", kClassIsAggregate},
+      {"ClassIsTriviallyRelocatable", kClassIsTriviallyRelocatable},
+      {"ClassIsTriviallyRelocatablePolymorphic", kClassIsTriviallyRelocatable}};
+   // clang-format on
 
    for (auto &[clName, clPropRef] : classNPPairs) {
       auto cl = TClass::GetClass(clName.c_str());
       const auto prop = gInterpreter->ClassInfo_ClassProperty(cl->GetClassInfo());
       EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
    }
+
+   // A trivial destructor is not enough: the copy constructor matters too.
+   auto notTrivial = TClass::GetClass("ClassIsNotTriviallyRelocatable");
+   const auto notTrivialProp = gInterpreter->ClassInfo_ClassProperty(notTrivial->GetClassInfo());
+   EXPECT_FALSE(notTrivialProp & kClassIsTriviallyRelocatable);
+   EXPECT_FALSE(notTrivialProp & kClassHasDtor);
 }
 
 // #12108

@@ -530,6 +530,7 @@ public:
    Bool_t             InheritsFrom(const char *cl) const override;
    Bool_t             InheritsFrom(const TClass *cl) const override;
    void               InterpretedShowMembers(void* obj, TMemberInspector &insp, Bool_t isTransient);
+   Bool_t             IsTriviallyRelocatable() const;
    Bool_t             IsFolder() const override { return kTRUE; }
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
