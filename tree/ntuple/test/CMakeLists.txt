@@ -42,6 +42,7 @@ ROOT_GENERATE_DICTIONARY(STLContainerEvolutionDict ${CMAKE_CURRENT_SOURCE_DIR}/S
 if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.
   ROOT_ADD_GTEST(ntuple_evolution_shape ntuple_evolution_shape.cxx LIBRARIES ROOTNTuple)
+  ROOT_ADD_GTEST(ntuple_evolution_soa ntuple_evolution_soa.cxx LIBRARIES ROOTNTuple)
   ROOT_ADD_GTEST(ntuple_emulated ntuple_emulated.cxx LIBRARIES ROOTNTuple)
 endif()
 ROOT_ADD_GTEST(ntuple_field_name ntuple_field_name.cxx LIBRARIES ROOTNTuple)
