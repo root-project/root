@@ -1,6 +1,6 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TMVA/ROperator_Reduce.hxx"
-#include "onnx_proto3.pb.h"
+#include "onnx.hxx"
 #include <stdexcept>
 
 namespace TMVA {
