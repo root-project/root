@@ -55,7 +55,7 @@ on:
 
 jobs:
   Build_Wheel:
-    runs-on: macos-26 
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
@@ -65,18 +65,19 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/workflows/cibuildwheel-impl
         env:
-            MACOSX_DEPLOYMENT_TARGET: 26.5
+          MACOSX_DEPLOYMENT_TARGET: 15.0
         with:
           build-tag: ${{ matrix.target }}
 
   Test_Wheels:
     needs: Build_Wheel
-    runs-on: macos-26
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-    name: test-wheel-cp${{ matrix.python-version }}
+        os: [macos-15, macos-26]
+    name: test-wheel-cp${{ matrix.python-version }}-${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - name: Download produced wheels
