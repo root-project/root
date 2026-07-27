@@ -1,6 +1,6 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TMVA/ROperator_NonZero.hxx"
-#include "onnx_proto3.pb.h"
+#include "onnx.hxx"
 
 namespace TMVA {
 namespace Experimental {

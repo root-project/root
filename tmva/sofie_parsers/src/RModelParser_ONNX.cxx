@@ -1,7 +1,8 @@
 #include "Byteswap.h"
 #include "TMVA/RModelParser_ONNX.hxx"
-#include "onnx_proto3.pb.h"
+#include "onnx.hxx"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <cstring>
@@ -128,8 +129,8 @@ struct ExtractDataFromTP<float> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->float_data_size() != length)
          throw std::runtime_error("TMVA::SOFIE - Failed to read float initialized tensor - actual size is " + std::to_string(tensor->float_data_size()));
-      tensor->mutable_float_data()->ExtractSubrange(0, tensor->float_data_size(),
-                                                            static_cast<float *>(data));
+      const auto &src = tensor->float_data();
+      std::copy(src.begin(), src.end(), static_cast<float *>(data));
    }
 };
 template<>
@@ -137,8 +138,8 @@ struct ExtractDataFromTP<double> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->double_data_size() != length)
          throw std::runtime_error("TMVA::SOFIE - Failed to read double initialized tensor - actual size is " + std::to_string(tensor->double_data_size()));
-      tensor->mutable_double_data()->ExtractSubrange(0, tensor->double_data_size(),
-                                                            static_cast<double *>(data));
+      const auto &src = tensor->double_data();
+      std::copy(src.begin(), src.end(), static_cast<double *>(data));
    }
 };
 template<>
@@ -146,8 +147,8 @@ struct ExtractDataFromTP<int32_t> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->int32_data_size() != length)
          throw std::runtime_error("TMVA::SOFIE - Failed to read int32 initialized tensor - actual size is " + std::to_string(tensor->int32_data_size()));
-      tensor->mutable_int32_data()->ExtractSubrange(0, tensor->int32_data_size(),
-                                                            static_cast<int32_t *>(data));
+      const auto &src = tensor->int32_data();
+      std::copy(src.begin(), src.end(), static_cast<int32_t *>(data));
    }
 };
 template<>
@@ -155,8 +156,8 @@ struct ExtractDataFromTP<int64_t> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->int64_data_size() != length)
          throw std::runtime_error("TMVA::SOFIE - Failed to read int64 initialized tensor - actual size is " + std::to_string(tensor->int64_data_size()));
-      tensor->mutable_int64_data()->ExtractSubrange(0, tensor->int64_data_size(),
-                                                            static_cast<int64_t *>(data));
+      const auto &src = tensor->int64_data();
+      std::copy(src.begin(), src.end(), static_cast<int64_t *>(data));
    }
 };
 
@@ -576,8 +577,8 @@ std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(const std::string
    return LoadModel(input);
 }
 
-std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::istream &input) {
-   GOOGLE_PROTOBUF_VERIFY_VERSION;
+std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::istream &input)
+{
    auto model = std::make_unique<onnx::ModelProto>();
 
    if (!model->ParseFromIstream(&input)) {
@@ -589,9 +590,7 @@ std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::istream &inp
    if (fVerbose) {
       std::cout << "ONNX Version " << model->ir_version() << std::endl;
    }
-   google::protobuf::ShutdownProtobufLibrary();
    return model;
-
 }
 
 void RModelParser_ONNX::CheckGraph(const onnx::GraphProto & graph, int & level, std::map<std::string, int> & missingOperators) {
