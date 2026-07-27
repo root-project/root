@@ -1,6 +1,8 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TMVA/ROperator_Shape.hxx"
-#include "onnx_proto3.pb.h"
+#include "onnx.hxx"
+
+#include <climits> // for INT_MAX
 
 namespace TMVA {
 namespace Experimental {
