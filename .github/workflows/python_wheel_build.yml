@@ -89,7 +89,9 @@ jobs:
           merge-multiple: true
 
       - name: Install required system packages
-        run: sudo apt-get install -y krb5-user xrootd-client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y krb5-user xrootd-client
 
       - name: Setup Python
         uses: actions/setup-python@v5
