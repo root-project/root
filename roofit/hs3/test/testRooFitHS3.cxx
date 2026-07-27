@@ -259,6 +259,29 @@ std::string makeHistFactoryJSON(std::string const &modifiers, std::string const 
    })";
 }
 
+std::string makeStandaloneInterpolationJSON(std::string const &functions)
+{
+   return R"({
+      "metadata": {"hs3_version": "0.2"},
+      "parameter_points": [
+         {
+            "name": "default_values",
+            "parameters": [
+               {"name": "alpha", "value": 0.25},
+               {"name": "beta", "value": -0.4},
+               {"name": "nominal", "value": 10.0},
+               {"name": "low1", "value": 8.0},
+               {"name": "low2", "value": 7.0},
+               {"name": "high1", "value": 12.0},
+               {"name": "high2", "value": 14.0}
+            ]
+         }
+      ],
+      "functions": [)" +
+          functions + R"(]
+   })";
+}
+
 void expectInterpolation(const RooFit::Detail::JSONNode &node, std::string_view type, std::string_view in,
                          std::optional<std::string_view> out)
 {
@@ -1681,6 +1704,183 @@ TEST(RooFitHS3, UnbinnedDatasetAxisRange)
    EXPECT_NE(axesNode.find("\"min\":-2.5"), std::string::npos) << axesNode;
    EXPECT_NE(axesNode.find("\"max\":7.5"), std::string::npos) << axesNode;
    EXPECT_EQ(axesNode.find("\"value\""), std::string::npos) << axesNode;
+}
+
+TEST(RooFitHS3, StandaloneFlexibleInterpVarStructuredInterpolations)
+{
+   RooRealVar alpha{"alpha", "alpha", 0.25, -2.0, 2.0};
+   RooRealVar beta{"beta", "beta", -0.4, -2.0, 2.0};
+   RooArgList parameters{alpha, beta};
+   RooStats::HistFactory::FlexibleInterpVar shared{"fiv_shared", "", parameters, 1.0, {0.8, 0.7}, {1.2, 1.4}, {4, 5}};
+   RooStats::HistFactory::FlexibleInterpVar mixed{"fiv_mixed", "", parameters, 1.0, {0.8, 0.7}, {1.2, 1.4}, {0, 1}};
+
+   RooWorkspace source;
+   source.import(shared, RooFit::Silence());
+   source.import(mixed, RooFit::RecycleConflictNodes(), RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{source}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+
+   const auto *sharedNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "fiv_shared");
+   ASSERT_NE(sharedNode, nullptr);
+   EXPECT_FALSE(sharedNode->has_child("interpolationCodes"));
+   ASSERT_TRUE(sharedNode->has_child("interpolations"));
+   ASSERT_TRUE((*sharedNode)["interpolations"].is_seq());
+   ASSERT_EQ((*sharedNode)["interpolations"].num_children(), 1u);
+   expectInterpolation((*sharedNode)["interpolations"].child(0), "mult", "poly6", "exp");
+
+   const auto *mixedNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "fiv_mixed");
+   ASSERT_NE(mixedNode, nullptr);
+   EXPECT_FALSE(mixedNode->has_child("interpolationCodes"));
+   ASSERT_TRUE(mixedNode->has_child("interpolations"));
+   ASSERT_EQ((*mixedNode)["interpolations"].num_children(), 2u);
+   expectInterpolation((*mixedNode)["interpolations"].child(0), "add", "poly1", std::nullopt);
+   expectInterpolation((*mixedNode)["interpolations"].child(1), "mult", "exp", std::nullopt);
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedShared = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("fiv_shared"));
+   auto *importedMixed = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("fiv_mixed"));
+   ASSERT_NE(importedShared, nullptr);
+   ASSERT_NE(importedMixed, nullptr);
+   EXPECT_EQ(importedShared->interpolationCodes(), (std::vector<int>{4, 4}));
+   EXPECT_EQ(importedMixed->interpolationCodes(), (std::vector<int>{0, 1}));
+   EXPECT_DOUBLE_EQ(importedShared->getVal(), source.function("fiv_shared")->getVal());
+   EXPECT_DOUBLE_EQ(importedMixed->getVal(), source.function("fiv_mixed")->getVal());
+}
+
+TEST(RooFitHS3, StandalonePiecewiseInterpolationStructuredInterpolations)
+{
+   RooRealVar alpha{"alpha", "alpha", 0.25, -2.0, 2.0};
+   RooRealVar beta{"beta", "beta", -0.4, -2.0, 2.0};
+   RooRealVar nominal{"nominal", "nominal", 10.0};
+   RooRealVar low1{"low1", "low1", 8.0};
+   RooRealVar low2{"low2", "low2", 7.0};
+   RooRealVar high1{"high1", "high1", 12.0};
+   RooRealVar high2{"high2", "high2", 14.0};
+   RooArgList lows{low1, low2};
+   RooArgList highs{high1, high2};
+
+   PiecewiseInterpolation shared{"pip_shared", "", nominal, lows, highs, RooArgList{alpha, beta}, {4, 4}};
+   PiecewiseInterpolation mixedRepeated{"pip_mixed_repeated",     "",    nominal, lows, highs,
+                                        RooArgList{alpha, alpha}, {0, 2}};
+   mixedRepeated.setPositiveDefinite();
+
+   RooWorkspace source;
+   source.import(shared, RooFit::Silence());
+   source.import(mixedRepeated, RooFit::RecycleConflictNodes(), RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{source}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+
+   const auto *sharedNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "pip_shared");
+   ASSERT_NE(sharedNode, nullptr);
+   EXPECT_FALSE(sharedNode->has_child("interpolationCodes"));
+   ASSERT_TRUE(sharedNode->has_child("interpolations"));
+   ASSERT_EQ((*sharedNode)["interpolations"].num_children(), 1u);
+   expectInterpolation((*sharedNode)["interpolations"].child(0), "add", "poly6", "poly1");
+
+   const auto *mixedNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "pip_mixed_repeated");
+   ASSERT_NE(mixedNode, nullptr);
+   EXPECT_FALSE(mixedNode->has_child("interpolationCodes"));
+   ASSERT_TRUE(mixedNode->has_child("interpolations"));
+   ASSERT_EQ((*mixedNode)["interpolations"].num_children(), 2u);
+   expectInterpolation((*mixedNode)["interpolations"].child(0), "add", "poly1", std::nullopt);
+   expectInterpolation((*mixedNode)["interpolations"].child(1), "add", "poly2", "poly1");
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedShared = dynamic_cast<PiecewiseInterpolation *>(imported.function("pip_shared"));
+   auto *importedMixed = dynamic_cast<PiecewiseInterpolation *>(imported.function("pip_mixed_repeated"));
+   ASSERT_NE(importedShared, nullptr);
+   ASSERT_NE(importedMixed, nullptr);
+   EXPECT_EQ(importedShared->interpolationCodes(), (std::vector<int>{4, 4}));
+   EXPECT_EQ(importedMixed->interpolationCodes(), (std::vector<int>{0, 2}));
+   ASSERT_EQ(importedMixed->paramList().size(), 2u);
+   EXPECT_STREQ(importedMixed->paramList().at(0)->GetName(), "alpha");
+   EXPECT_STREQ(importedMixed->paramList().at(1)->GetName(), "alpha");
+   EXPECT_TRUE(importedMixed->positiveDefinite());
+   EXPECT_DOUBLE_EQ(importedShared->getVal(), source.function("pip_shared")->getVal());
+   EXPECT_DOUBLE_EQ(importedMixed->getVal(), source.function("pip_mixed_repeated")->getVal());
+}
+
+TEST(RooFitHS3, StandaloneInterpolationLegacyAndDefaults)
+{
+   const std::string functions = R"(
+      {
+         "name":"legacy_fiv", "type":"interpolation0d", "vars":["alpha","beta"], "nom":1.0,
+         "low":[0.8,0.7], "high":[1.2,1.4], "interpolationCodes":[5,3]
+      },
+      {
+         "name":"default_fiv", "type":"interpolation0d", "vars":["alpha","beta"], "nom":1.0,
+         "low":[0.8,0.7], "high":[1.2,1.4]
+      },
+      {
+         "name":"precedence_fiv", "type":"interpolation0d", "vars":["alpha","beta"], "nom":1.0,
+         "low":[0.8,0.7], "high":[1.2,1.4],
+         "interpolations":[{"type":"add","in":"poly1","out":null}], "interpolationCodes":[4,4]
+      },
+      {
+         "name":"legacy_pip", "type":"interpolation", "vars":["alpha","alpha"], "nom":"nominal",
+         "low":["low1","low2"], "high":["high1","high2"], "positiveDefinite":true,
+         "interpolationCodes":[0,2]
+      },
+      {
+         "name":"default_pip", "type":"interpolation", "vars":["alpha","beta"], "nom":"nominal",
+         "low":["low1","low2"], "high":["high1","high2"], "positiveDefinite":false
+      })";
+
+   ScopedNoDomainConstVarImportFlag flagGuard{false};
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(makeStandaloneInterpolationJSON(functions)));
+
+   auto *legacyFiv = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("legacy_fiv"));
+   auto *defaultFiv = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("default_fiv"));
+   auto *precedenceFiv = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("precedence_fiv"));
+   auto *legacyPip = dynamic_cast<PiecewiseInterpolation *>(imported.function("legacy_pip"));
+   auto *defaultPip = dynamic_cast<PiecewiseInterpolation *>(imported.function("default_pip"));
+   ASSERT_NE(legacyFiv, nullptr);
+   ASSERT_NE(defaultFiv, nullptr);
+   ASSERT_NE(precedenceFiv, nullptr);
+   ASSERT_NE(legacyPip, nullptr);
+   ASSERT_NE(defaultPip, nullptr);
+   EXPECT_EQ(legacyFiv->interpolationCodes(), (std::vector<int>{4, 2}));
+   EXPECT_EQ(defaultFiv->interpolationCodes(), (std::vector<int>{0, 0}));
+   EXPECT_EQ(precedenceFiv->interpolationCodes(), (std::vector<int>{0, 0}));
+   EXPECT_EQ(legacyPip->interpolationCodes(), (std::vector<int>{0, 2}));
+   EXPECT_EQ(defaultPip->interpolationCodes(), (std::vector<int>{0, 0}));
+   EXPECT_TRUE(legacyPip->positiveDefinite());
+
+   const std::string exported = RooJSONFactoryWSTool{imported}.exportJSONtoString();
+   EXPECT_EQ(exported.find("interpolationCodes"), std::string::npos) << exported;
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *legacyFivNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "legacy_fiv");
+   const auto *legacyPipNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "legacy_pip");
+   ASSERT_NE(legacyFivNode, nullptr);
+   ASSERT_NE(legacyPipNode, nullptr);
+   ASSERT_EQ((*legacyFivNode)["interpolations"].num_children(), 2u);
+   ASSERT_EQ((*legacyPipNode)["interpolations"].num_children(), 2u);
+}
+
+TEST(RooFitHS3, StandaloneInterpolationRejectsMalformedLengths)
+{
+   ScopedNoDomainConstVarImportFlag flagGuard{false};
+   const std::string descriptor = R"({"type":"add","in":"poly1","out":null})";
+
+   expectImportThrowsWithError(
+      makeStandaloneInterpolationJSON(R"({"name":"bad","type":"interpolation0d","vars":["alpha","beta"],"nom":1.0,)"
+                                      R"("low":[0.8,0.7],"high":[1.2,1.4],"interpolations":[]})"),
+      "component 'interpolations' must contain either one descriptor or one descriptor per parameter");
+
+   expectImportThrowsWithError(
+      makeStandaloneInterpolationJSON(
+         R"({"name":"bad","type":"interpolation","vars":["alpha","beta"],"nom":"nominal",)"
+         R"("low":["low1","low2"],"high":["high1","high2"],"positiveDefinite":false,"interpolations":[)" +
+         descriptor + "," + descriptor + "," + descriptor + "]}"),
+      "component 'interpolations' must contain either one descriptor or one descriptor per parameter");
+
+   expectImportThrowsWithError(
+      makeStandaloneInterpolationJSON(R"({"name":"bad","type":"interpolation0d","vars":["alpha","beta"],"nom":1.0,)"
+                                      R"("low":[0.8,0.7],"high":[1.2,1.4],"interpolationCodes":[4]})"),
+      "legacy component 'interpolationCodes' must contain one code per parameter");
 }
 
 TEST(RooFitHS3, HistFactoryInterpolationCodeMapping)
