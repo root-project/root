@@ -1608,24 +1608,22 @@ void mergeDuplicateNormSys(const Channel &channel, Sample &sample)
 void mergeDuplicateHistoSys(const Channel &channel, Sample &sample)
 {
    const std::size_t nBins = sample.hist.size();
-   mergeDuplicateModifiers(channel, sample, sample.histosys, "histosys",
-                           [&](HistoSys &merged, const HistoSys &modifier) {
-                              if (merged.interpolation != additivePolynomialLinear) {
-                                 duplicateModifierError(
-                                    channel, sample, "histosys", merged.name,
-                                    "this interpolation cannot currently be combined for duplicate histosys "
-                                    "modifiers");
-                              }
-                              if (merged.low.size() != nBins || merged.high.size() != nBins ||
-                                  modifier.low.size() != nBins || modifier.high.size() != nBins) {
-                                 duplicateModifierError(channel, sample, "histosys", merged.name,
-                                                        "histogram binning differs");
-                              }
-                              for (std::size_t bin = 0; bin < nBins; ++bin) {
-                                 merged.low[bin] += modifier.low[bin] - sample.hist[bin];
-                                 merged.high[bin] += modifier.high[bin] - sample.hist[bin];
-                              }
-                           });
+   mergeDuplicateModifiers(
+      channel, sample, sample.histosys, "histosys", [&](HistoSys &merged, const HistoSys &modifier) {
+         if (merged.interpolation != additivePolynomialLinear) {
+            duplicateModifierError(channel, sample, "histosys", merged.name,
+                                   "this interpolation cannot currently be combined for duplicate histosys "
+                                   "modifiers");
+         }
+         if (merged.low.size() != nBins || merged.high.size() != nBins || modifier.low.size() != nBins ||
+             modifier.high.size() != nBins) {
+            duplicateModifierError(channel, sample, "histosys", merged.name, "histogram binning differs");
+         }
+         for (std::size_t bin = 0; bin < nBins; ++bin) {
+            merged.low[bin] += modifier.low[bin] - sample.hist[bin];
+            merged.high[bin] += modifier.high[bin] - sample.hist[bin];
+         }
+      });
 }
 
 void ensureUniqueModifiers(const Channel &channel, const Sample &sample)
