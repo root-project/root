@@ -18,3 +18,4 @@ runs:
       with:
         name: ${{ inputs.build-tag }}
         path: wheelhouse/*
+        retention-days: 1
