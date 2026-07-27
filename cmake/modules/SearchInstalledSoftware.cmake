@@ -1013,7 +1013,7 @@ endif()
 # SOFIE itself has no external dependencies: ONNX models are read with a small
 # self-contained protobuf wire-format decoder (tmva/sofie_parsers/src/onnx.hxx).
 
-if(tmva-sofie)
+if(tmva)
   if(testing)
     message(STATUS "Looking for BLAS as an optional testing dependency of TMVA-SOFIE")
     find_package(BLAS)
