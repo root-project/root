@@ -492,6 +492,7 @@ public:
 
    RooAbsProxy *getProxy(Int_t index) const;
    Int_t numProxies() const;
+   void setProxyNormSet(const RooArgSet *nset);
 
    /// De-duplicated pointer to this object's name.
    /// This can be used for fast name comparisons.
@@ -582,7 +583,6 @@ protected:
    void unRegisterProxy(RooArgProxy &proxy);
    void unRegisterProxy(RooSetProxy &proxy);
    void unRegisterProxy(RooListProxy &proxy);
-   void setProxyNormSet(const RooArgSet *nset);
 
    // Attribute list
    std::set<std::string> _boolAttrib;                // Boolean attributes

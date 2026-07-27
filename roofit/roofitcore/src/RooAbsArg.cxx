@@ -1284,7 +1284,10 @@ Int_t RooAbsArg::numProxies() const
 }
 
 /// Forward a change in the cached normalization argset
-/// to all the registered proxies.
+/// to all the registered proxies. Passing `nullptr` makes this object forget
+/// any normalization set previously passed to `getVal()`, which is required if
+/// that set may not outlive this object (e.g. it lived on the caller's stack),
+/// as the proxies only keep a bare pointer to it.
 
 void RooAbsArg::setProxyNormSet(const RooArgSet *nset)
 {
