@@ -680,13 +680,9 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
    timer.Start();
    pool.Foreach(
       [&](const std::pair<size_t, size_t> &range) {
-         // one-time init per OS thread
-         static thread_local bool navInit = false;
-         if (!navInit) {
-            if (!geom->GetCurrentNavigator())
-               geom->AddNavigator();
-            navInit = true;
-         }
+         // Make sure this manager has a navigator for the current worker.
+         if (!geom->GetCurrentNavigator())
+            geom->AddNavigator();
 
          std::vector<TGeoOverlapResult> local;
          local.reserve(32);

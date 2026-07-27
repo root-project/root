@@ -236,6 +236,7 @@ in order to enhance rays.
 \image html geom_random2.jpg
 */
 
+#include <atomic>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -304,6 +305,33 @@ UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = nullptr;
 static Bool_t gGeometryLocked = kFALSE;
+
+namespace {
+
+struct TGeoManagerThreadState {
+   const TGeoManager *fManager = nullptr;
+   TGeoNavigator *fNavigator = nullptr;
+   ULong64_t fNavigatorGeneration = 0;
+   Int_t fThreadId = -1;
+   ULong64_t fThreadIdGeneration = 0;
+};
+
+TGeoManagerThreadState &GetGeoManagerThreadState()
+{
+   TTHREAD_TLS(TGeoManagerThreadState) state;
+   return state;
+}
+
+// Thread-local navigator pointers and thread ordinals cannot be reset by the thread deleting a manager.
+// Advancing this generation on destructive/global state transitions makes every thread refresh on its next access.
+std::atomic<ULong64_t> gGeoManagerThreadStateGeneration{1};
+
+void InvalidateGeoManagerThreadState()
+{
+   gGeoManagerThreadStateGeneration.fetch_add(1, std::memory_order_release);
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -807,8 +835,13 @@ TGeoNavigator *TGeoManager::AddNavigator()
    TGeoNavigator *nav = array->AddNavigator();
    if (fClosed)
       nav->GetCache()->BuildInfoBranch();
-   if (fMultiThread)
+   if (fMultiThread) {
+      auto &state = GetGeoManagerThreadState();
+      state.fManager = this;
+      state.fNavigator = nav;
+      state.fNavigatorGeneration = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
       fgMutex.unlock();
+   }
    return nav;
 }
 
@@ -817,20 +850,27 @@ TGeoNavigator *TGeoManager::AddNavigator()
 
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
-   TTHREAD_TLS(TGeoNavigator *) tnav = nullptr;
    if (!fMultiThread)
       return fCurrentNavigator;
-   TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
-   if (nav)
-      return nav;
+   auto &state = GetGeoManagerThreadState();
+   const auto generation = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
+   if (state.fNavigator && state.fManager == this && state.fNavigatorGeneration == generation)
+      return state.fNavigator;
+
+   std::lock_guard<std::mutex> lock(fgMutex);
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
-   if (it == fNavigators.end())
+   if (it == fNavigators.end()) {
+      state.fManager = this;
+      state.fNavigator = nullptr;
+      state.fNavigatorGeneration = generation;
       return nullptr;
+   }
    TGeoNavigatorArray *array = it->second;
-   nav = array->GetCurrentNavigator();
-   tnav = nav; // TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
-   return nav;
+   state.fManager = this;
+   state.fNavigator = array->GetCurrentNavigator();
+   state.fNavigatorGeneration = generation;
+   return state.fNavigator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -838,6 +878,9 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 
 TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 {
+   std::unique_lock<std::mutex> lock(fgMutex, std::defer_lock);
+   if (fMultiThread)
+      lock.lock();
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end())
@@ -851,6 +894,9 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 
 Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 {
+   std::unique_lock<std::mutex> lock(fgMutex, std::defer_lock);
+   if (fMultiThread)
+      lock.lock();
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) {
@@ -865,8 +911,14 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
       std::cout << "  thread id: " << threadId << std::endl;
       return kFALSE;
    }
-   if (!fMultiThread)
+   if (fMultiThread) {
+      auto &state = GetGeoManagerThreadState();
+      state.fManager = this;
+      state.fNavigator = nav;
+      state.fNavigatorGeneration = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
+   } else {
       fCurrentNavigator = nav;
+   }
    return kTRUE;
 }
 
@@ -883,6 +935,7 @@ void TGeoManager::SetNavigatorsLock(Bool_t flag)
 
 void TGeoManager::ClearNavigators()
 {
+   InvalidateGeoManagerThreadState();
    if (fMultiThread)
       fgMutex.lock();
    TGeoNavigatorArray *arr = nullptr;
@@ -907,6 +960,7 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
       TGeoNavigatorArray *arr = (*it).second;
       if (arr) {
          if ((TGeoNavigator *)arr->Remove((TObject *)nav)) {
+            InvalidateGeoManagerThreadState();
             delete nav;
             if (!arr->GetEntries())
                fNavigators.erase(it);
@@ -944,6 +998,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       ClearThreadsMap();
       ClearThreadData();
    }
+   InvalidateGeoManagerThreadState();
    fMaxThreads = nthreads + 1;
    if (fMaxThreads > 0) {
       fMultiThread = kTRUE;
@@ -986,6 +1041,7 @@ void TGeoManager::CreateThreadData() const
 
 void TGeoManager::ClearThreadsMap()
 {
+   InvalidateGeoManagerThreadState();
    if (gGeoManager && !gGeoManager->IsMultiThread())
       return;
    fgMutex.lock();
@@ -1001,23 +1057,27 @@ void TGeoManager::ClearThreadsMap()
 
 Int_t TGeoManager::ThreadId()
 {
-   TTHREAD_TLS(Int_t) tid = -1;
-   Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
-   if (ttid > -1)
-      return ttid;
-   if (gGeoManager && !gGeoManager->IsMultiThread())
+   auto &state = GetGeoManagerThreadState();
+   const auto generation = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
+   if (state.fThreadId > -1 && state.fThreadIdGeneration == generation)
+      return state.fThreadId;
+   if (gGeoManager && !gGeoManager->IsMultiThread()) {
+      state.fThreadId = 0;
+      state.fThreadIdGeneration = generation;
       return 0;
+   }
    std::thread::id threadId = std::this_thread::get_id();
+   std::lock_guard<std::mutex> lock(fgMutex);
    TGeoManager::ThreadsMapIt_t it = fgThreadId->find(threadId);
-   if (it != fgThreadId->end())
-      return it->second;
-   // Map needs to be updated.
-   fgMutex.lock();
+   if (it != fgThreadId->end()) {
+      state.fThreadId = it->second;
+      state.fThreadIdGeneration = generation;
+      return state.fThreadId;
+   }
    (*fgThreadId)[threadId] = fgNumThreads;
-   tid = fgNumThreads; // TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
-   ttid = fgNumThreads++;
-   fgMutex.unlock();
-   return ttid;
+   state.fThreadId = fgNumThreads++;
+   state.fThreadIdGeneration = generation;
+   return state.fThreadId;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
