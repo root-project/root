@@ -10,6 +10,10 @@
 /// \date May 2018
 /// \author Danilo Piparo
 
+#ifdef R__HAS_VDT
+#include <vdt/vdtMath.h>
+#endif
+
 void vo002_VectorCalculations()
 {
 

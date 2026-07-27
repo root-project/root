@@ -11,6 +11,11 @@
  *************************************************************************/
 
 #include "ROOT/RVec.hxx"
+
+#ifdef R__HAS_VDT
+#include <vdt/vdtMath.h>
+#endif
+
 using namespace ROOT::VecOps;
 
 // Check that no bytes are wasted and everything is well-aligned.

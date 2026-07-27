@@ -47,7 +47,28 @@
 #include <vector>
 
 #ifdef R__HAS_VDT
-#include <vdt/vdtMath.h>
+// Forward declarations of the vdt functions used by the fast_* helpers below.
+// We deliberately avoid including <vdt/vdtMath.h> from this public header so
+// that we don't rely on this header always being in the include path.
+namespace vdt {
+inline double fast_exp(double);
+inline double fast_log(double);
+inline double fast_sin(double);
+inline double fast_cos(double);
+inline double fast_tan(double);
+inline double fast_asin(double);
+inline double fast_acos(double);
+inline double fast_atan(double);
+
+inline float fast_expf(float);
+inline float fast_logf(float);
+inline float fast_sinf(float);
+inline float fast_cosf(float);
+inline float fast_tanf(float);
+inline float fast_asinf(float);
+inline float fast_acosf(float);
+inline float fast_atanf(float);
+} // namespace vdt
 #endif
 
 
@@ -1411,7 +1432,7 @@ RVecs as arguments.
  - erf, erfc
  - lgamma, tgamma
 
-If the VDT library is available, the following functions can be invoked. Internally the calculations
+If the VDT library is available and the `<vdt/vdtMath.h>` header included, the following functions can be invoked. Internally the calculations
 are vectorized:
  - fast_expf, fast_logf, fast_sinf, fast_cosf, fast_tanf, fast_asinf, fast_acosf, fast_atanf
  - fast_exp, fast_log, fast_sin, fast_cos, fast_tan, fast_asin, fast_acos, fast_atan
