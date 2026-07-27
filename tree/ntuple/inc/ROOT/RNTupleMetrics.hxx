@@ -59,8 +59,10 @@ private:
    bool fIsEnabled = false;
 
 public:
-   RNTuplePerfCounter(const std::string &name, const std::string &unit, const std::string &desc)
-      : fName(name), fUnit(unit), fDescription(desc) {}
+   RNTuplePerfCounter(std::string_view name, std::string_view unit, std::string_view desc)
+      : fName(name), fUnit(unit), fDescription(desc)
+   {
+   }
    virtual ~RNTuplePerfCounter();
    void Enable() { fIsEnabled = true; }
    bool IsEnabled() const { return fIsEnabled; }
@@ -86,7 +88,7 @@ private:
    std::int64_t fCounter = 0;
 
 public:
-   RNTuplePlainCounter(const std::string &name, const std::string &unit, const std::string &desc)
+   RNTuplePlainCounter(std::string_view name, std::string_view unit, std::string_view desc)
       : RNTuplePerfCounter(name, unit, desc)
    {
    }
@@ -113,8 +115,10 @@ private:
    std::atomic<std::int64_t> fCounter{0};
 
 public:
-   RNTupleAtomicCounter(const std::string &name, const std::string &unit, const std::string &desc)
-      : RNTuplePerfCounter(name, unit, desc) { }
+   RNTupleAtomicCounter(std::string_view name, std::string_view unit, std::string_view desc)
+      : RNTuplePerfCounter(name, unit, desc)
+   {
+   }
 
    R__ALWAYS_INLINE
    void Inc() {
@@ -175,8 +179,8 @@ private:
    const MetricFunc_t fFunc;
 
 public:
-   RNTupleCalcPerf(const std::string &name, const std::string &unit, const std::string &desc,
-                   RNTupleMetrics &metrics, MetricFunc_t &&func)
+   RNTupleCalcPerf(std::string_view name, std::string_view unit, std::string_view desc, RNTupleMetrics &metrics,
+                   MetricFunc_t &&func)
       : RNTuplePerfCounter(name, unit, desc), fMetrics(metrics), fFunc(std::move(func))
    {
    }
@@ -211,7 +215,7 @@ When printing, the value is converted from ticks to nanoseconds.
 template <typename BaseCounterT>
 class RNTupleTickCounter : public BaseCounterT {
 public:
-   RNTupleTickCounter(const std::string &name, const std::string &unit, const std::string &desc)
+   RNTupleTickCounter(std::string_view name, std::string_view unit, std::string_view desc)
       : BaseCounterT(name, unit, desc)
    {
       R__ASSERT(unit == "ns");
@@ -294,10 +298,10 @@ private:
    std::string fName;
    bool fIsEnabled = false;
 
-   bool Contains(const std::string &name) const;
+   bool Contains(std::string_view name) const;
 
 public:
-   explicit RNTupleMetrics(const std::string &name) : fName(name) {}
+   explicit RNTupleMetrics(std::string_view name) : fName(name) {}
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    RNTupleMetrics(RNTupleMetrics &&other) = default;
@@ -306,7 +310,7 @@ public:
 
    // TODO(jblomer): return a reference
    template <typename CounterPtrT, class... Args>
-   CounterPtrT MakeCounter(const std::string &name, Args&&... args)
+   CounterPtrT MakeCounter(std::string_view name, Args &&...args)
    {
       R__ASSERT(!Contains(name));
       auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
@@ -323,7 +327,7 @@ public:
 
    void ObserveMetrics(RNTupleMetrics &observee);
 
-   void Print(std::ostream &output, const std::string &prefix = "") const;
+   void Print(std::ostream &output, std::string_view prefix = "") const;
    void Enable();
    bool IsEnabled() const { return fIsEnabled; }
 };

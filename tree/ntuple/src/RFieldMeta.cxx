@@ -57,7 +57,7 @@ namespace {
 
 TClass *EnsureValidClass(std::string_view className)
 {
-   auto cl = TClass::GetClass(std::string(className).c_str());
+   auto cl = TClass::GetClass(className);
    if (cl == nullptr) {
       throw ROOT::RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
    }
@@ -413,14 +413,14 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
    return ROOT::kInvalidDescriptorId;
 }
 
-void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
+void ROOT::RClassField::SetStagingClass(std::string_view className, unsigned int classVersion)
 {
-   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
+   TClass::GetClass(className)->GetStreamerInfo(classVersion);
    if (classVersion != GetTypeVersion() || className != GetTypeName()) {
-      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+      fStagingClass = TClass::GetClass((std::string(className) + "@@" + std::to_string(classVersion)).c_str());
       if (!fStagingClass) {
          // For a rename rule, we may simply ask for the old class name
-         fStagingClass = TClass::GetClass(className.c_str());
+         fStagingClass = TClass::GetClass(className);
       }
    } else {
       fStagingClass = fClass;

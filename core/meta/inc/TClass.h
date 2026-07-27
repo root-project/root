@@ -597,8 +597,8 @@ public:
    static void           AddClassToDeclIdMap(TDictionary::DeclId_t id, TClass* cl);
    static void           RemoveClass(TClass *cl);
    static void           RemoveClassDeclId(TDictionary::DeclId_t id);
-   static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
-   static TClass        *GetClass(const char *name, Bool_t load, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size);
+   static TClass        *GetClass(std::string_view name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static TClass        *GetClass(std::string_view name, Bool_t load, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size);
    static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE, size_t hint_pair_offset = 0, size_t hint_pair_size = 0);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    template<typename T>

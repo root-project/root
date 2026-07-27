@@ -41,7 +41,7 @@ private:
 
 public:
    RNTupleProcessorProvenance() = default;
-   RNTupleProcessorProvenance(const std::string &provenance) : fProvenance(provenance) {}
+   RNTupleProcessorProvenance(std::string_view provenance) : fProvenance(provenance) {}
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the full processor provenance, in the form of "x.y.z".
@@ -53,12 +53,12 @@ public:
    /// \param[in] processorName Name of the processor to add.
    ///
    /// \return The updated provenance.
-   RNTupleProcessorProvenance Evolve(const std::string &processorName) const
+   RNTupleProcessorProvenance Evolve(std::string_view processorName) const
    {
       if (fProvenance.empty())
          return RNTupleProcessorProvenance(processorName);
 
-      return RNTupleProcessorProvenance(fProvenance + "." + processorName);
+      return RNTupleProcessorProvenance(fProvenance + "." + std::string(processorName));
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -173,7 +173,7 @@ public:
    /// \param[in] provenance Processor provenance of the field.
    ///
    /// \return The field index of the newly added field.
-   FieldIndex_t AddField(const std::string &qualifiedFieldName, std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
+   FieldIndex_t AddField(std::string_view qualifiedFieldName, std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
                          const RNTupleProcessorProvenance &provenance);
 
    /////////////////////////////////////////////////////////////////////////////

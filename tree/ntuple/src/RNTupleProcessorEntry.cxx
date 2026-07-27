@@ -52,13 +52,13 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
-ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string &qualifiedFieldName,
+ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(std::string_view qualifiedFieldName,
                                                               std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
                                                               const RNTupleProcessorProvenance &provenance)
 {
-   auto fieldNameWithProcessorPrefix = qualifiedFieldName;
+   auto fieldNameWithProcessorPrefix = std::string(qualifiedFieldName);
    if (const auto &processorPrefix = provenance.Get(); !processorPrefix.empty())
-      fieldNameWithProcessorPrefix = processorPrefix + "." + qualifiedFieldName;
+      fieldNameWithProcessorPrefix = std::string(processorPrefix) + "." + std::string(qualifiedFieldName);
 
    if (FindFieldIndex(fieldNameWithProcessorPrefix, field->GetTypeName()))
       throw ROOT::RException(R__FAIL("field \"" + fieldNameWithProcessorPrefix + "\" is already present in the entry"));

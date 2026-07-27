@@ -143,12 +143,12 @@ bool ROOT::Experimental::RNTupleSingleProcessor::CanReadFieldFromDisk(std::strin
 }
 
 std::unique_ptr<ROOT::RFieldBase>
-ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::string &qualifiedFieldName,
-                                                                  const std::string &typeName)
+ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(std::string_view qualifiedFieldName,
+                                                                  std::string_view typeName)
 {
    assert(fPageSource);
 
-   std::string onDiskFieldName = qualifiedFieldName;
+   std::string_view onDiskFieldName = qualifiedFieldName;
 
    // Strip the "_join" prefix (for join fields) from the field name, if present.
    if (onDiskFieldName.find("_join.") == 0) {
@@ -171,7 +171,7 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
       field = fieldDesc.CreateField(desc);
    } else {
       // Strip the parent field name prefix(es), if present.
-      std::string subfieldName = onDiskFieldName;
+      std::string_view subfieldName = onDiskFieldName;
       auto posDot = onDiskFieldName.find_last_of('.');
       if (posDot != std::string::npos)
          subfieldName = onDiskFieldName.substr(posDot + 1);
@@ -186,14 +186,14 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
-ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
+ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(std::string_view fieldName, std::string_view typeName,
                                                             void *valuePtr,
                                                             const Internal::RNTupleProcessorProvenance &provenance)
 {
    auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName);
    if (!fieldIdx) {
       // Strip the processor name prefix(es), if present.
-      std::string qualifiedFieldName = fieldName;
+      std::string_view qualifiedFieldName = fieldName;
       if (provenance.IsPresentInFieldName(qualifiedFieldName)) {
          qualifiedFieldName = qualifiedFieldName.substr(provenance.Get().size() + 1);
       }
@@ -201,7 +201,7 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
       auto field = CreateAndConnectField(qualifiedFieldName, typeName);
 
       if (!field) {
-         throw RException(R__FAIL("cannot register field with name \"" + qualifiedFieldName +
+         throw RException(R__FAIL("cannot register field with name \"" + std::string(qualifiedFieldName) +
                                   "\" because it is not present in the on-disk information of the RNTuple(s) this "
                                   "processor is created from"));
       }
@@ -338,7 +338,7 @@ void ROOT::Experimental::RNTupleChainProcessor::ConnectInnerProcessor(std::size_
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
-ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
+ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(std::string_view fieldName, std::string_view typeName,
                                                            void *valuePtr,
                                                            const Internal::RNTupleProcessorProvenance &provenance)
 {
@@ -478,7 +478,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
-ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
+ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(std::string_view fieldName, std::string_view typeName,
                                                           void *valuePtr,
                                                           const Internal::RNTupleProcessorProvenance &provenance)
 {
@@ -488,7 +488,7 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
       // the primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor),
       // there will be name conflicts, so error out.
       if (fPrimaryProcessor->CanReadFieldFromDisk(fieldName)) {
-         throw RException(R__FAIL("ambiguous field name: \"" + fieldName +
+         throw RException(R__FAIL("ambiguous field name: \"" + std::string(fieldName) +
                                   "\" is present in the primary RNTupleProcessor \"" +
                                   fPrimaryProcessor->GetProcessorName() +
                                   "\", but may also refer to a field in the auxiliary RNTupleProcessor named \"" +

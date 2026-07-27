@@ -54,11 +54,11 @@ public:
       fCreateContext.fContinueOnError = fOriginalContinueOnError;
    }
 
-   void AddClassToStack(const std::string &cl)
+   void AddClassToStack(std::string_view cl)
    {
       if (std::find(fCreateContext.fClassesOnStack.begin(), fCreateContext.fClassesOnStack.end(), cl) !=
           fCreateContext.fClassesOnStack.end()) {
-         throw ROOT::RException(R__FAIL("cyclic class definition: " + cl));
+         throw ROOT::RException(R__FAIL("cyclic class definition: " + std::string(cl)));
       }
       fCreateContext.fClassesOnStack.emplace_back(cl);
    }
@@ -87,7 +87,7 @@ void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Inter
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
+ROOT::Internal::CallFieldBaseCreate(std::string_view fieldName, std::string_view typeName,
                                     const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                     ROOT::DescriptorId_t fieldId)
 {
@@ -261,14 +261,14 @@ std::string ROOT::RFieldBase::GetQualifiedFieldName() const
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
+ROOT::RFieldBase::Create(std::string_view fieldName, std::string_view typeName)
 {
    return R__FORWARD_RESULT(
       RFieldBase::Create(fieldName, typeName, ROOT::RCreateFieldOptions{}, nullptr, ROOT::kInvalidDescriptorId));
 }
 
 std::vector<ROOT::RFieldBase::RCheckResult>
-ROOT::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
+ROOT::RFieldBase::Check(std::string_view fieldName, std::string_view typeName)
 {
    RFieldZero fieldZero;
    ROOT::RCreateFieldOptions cfOpts{};
@@ -290,14 +290,15 @@ ROOT::RFieldBase::Check(const std::string &fieldName, const std::string &typeNam
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
+ROOT::RFieldBase::Create(std::string_view fieldName, std::string_view typeName,
                          const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                          ROOT::DescriptorId_t fieldId)
 {
    using ROOT::Internal::ParseUIntTypeToken;
    using ROOT::Internal::TokenizeTypeList;
 
-   const auto resolvedType = ROOT::Internal::GetCanonicalTypePrefix(TClassEdit::ResolveTypedef(typeName.c_str()));
+   const auto resolvedType =
+      ROOT::Internal::GetCanonicalTypePrefix(TClassEdit::ResolveTypedef(std::string(typeName).c_str()));
 
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
@@ -316,7 +317,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    };
 
    if (resolvedType.empty())
-      return R__FORWARD_RESULT(fnFail("no type name specified for field '" + fieldName + "'"));
+      return R__FORWARD_RESULT(fnFail("no type name specified for field '" + std::string(fieldName) + "'"));
 
    std::unique_ptr<ROOT::RFieldBase> result;
 
@@ -492,7 +493,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
 
       if (!result) {
-         auto cl = TClass::GetClass(typeName.c_str());
+         auto cl = TClass::GetClass(typeName);
 
          if (cl && cl->GetState() > TClass::kForwardDeclared) {
             createContextGuard.AddClassToStack(resolvedType);
@@ -535,7 +536,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                return recordField;
             } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
                if (fieldDesc.GetLinkIds().size() != 1)
-                  throw ROOT::RException(R__FAIL("invalid structure for collection field " + fieldName));
+                  throw ROOT::RException(R__FAIL("invalid structure for collection field " + std::string(fieldName)));
 
                auto itemFieldId = fieldDesc.GetLinkIds()[0];
                const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
@@ -581,7 +582,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
       return result;
    }
-   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::ECategory::kUnknownType));
+   return R__FORWARD_RESULT(fnFail("unknown type: " + std::string(typeName), RInvalidField::ECategory::kUnknownType));
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RFieldBase::GetColumnRepresentations() const
