@@ -436,6 +436,21 @@ TEST_F(TClingTests, UndeclaredIdentifierCrash)
    gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
 }
 
+// https://github.com/root-project/root/issues/16601
+// Declaring a global whose static initializer needs symbols from a library that
+// is not loaded yet (here libMatrix, via TVectorT) must still autoload that
+// library: TInterpreter::Declare suspends *class* autoloading while parsing, but
+// this must not prevent the JIT from materializing symbols that the emitted
+// static-initializer code genuinely requires to run.
+TEST_F(TClingTests, DeclareAutoloadsSymbolsForStaticInit)
+{
+   ASSERT_FALSE(gInterpreter->IsLoaded("libMatrix"));
+   EXPECT_TRUE(gInterpreter->Declare("#include <TVectorT.h>\n"
+                                     "const auto gROOT16601vec = TVectorT<float>(3);"));
+   // The variable must exist and be usable, i.e. its constructor ran.
+   EXPECT_EQ(3L, gInterpreter->ProcessLine("gROOT16601vec.GetNrows();"));
+}
+
 // https://github.com/root-project/root/issues/15818
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST_F(TClingTests, VeryLongExpression)
