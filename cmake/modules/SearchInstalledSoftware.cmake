@@ -988,15 +988,11 @@ endif()
 # SOFIE itself has no external dependencies: ONNX models are read with a small
 # self-contained protobuf wire-format decoder (tmva/sofie_parsers/src/onnx.hxx).
 
-if(tmva)
-  if(testing)
-    message(STATUS "Looking for BLAS as an optional testing dependency of TMVA-SOFIE")
-    find_package(BLAS)
-    if(NOT BLAS_FOUND)
-      # BLAS only backs the TMVA-SOFIE tests, not the feature itself, so a
-      # missing BLAS must not turn into a configuration error.
-      message(WARNING "BLAS not found: TMVA-SOFIE will not be fully tested")
-    endif()
+if(tmva AND testing AND test_tmva_sofie)
+  message(STATUS "Looking for BLAS as an optional testing dependency of TMVA-SOFIE")
+  find_package(BLAS)
+  if(NOT BLAS_FOUND)
+    message(SEND_ERROR "BLAS not found, but it's required for TMVA-SOFIE testing. Please install BLAS or configure with test_tmva_sofie=OFF")
   endif()
 endif()
 
