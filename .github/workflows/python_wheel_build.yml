@@ -61,12 +61,18 @@ jobs:
       matrix:
         python: [cp310, cp311, cp312, cp313, cp314]
         config:
+          - runner: macos-14
+            platform: macosx_arm64
+            deployment_target: "14.0"
           - runner: macos-15
             platform: macosx_arm64
             deployment_target: "15.0"
           - runner: macos-26
             platform: macosx_arm64
             deployment_target: "26.0"
+          - runner: ubuntu-latest
+            platform: manylinux_x86_64
+            deployment_target: ""
     name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
     steps:
       - uses: actions/checkout@v6
@@ -84,11 +90,27 @@ jobs:
       matrix:
         python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         config:
+          # native tests: each runner tests its own wheel
+          - runner: macos-14
+            wheel_pattern: "macosx_14"
+            label: "native"
           - runner: macos-15
             wheel_pattern: "macosx_15"
+            label: "native"
           - runner: macos-26
             wheel_pattern: "macosx_26"
-    name: test-wheel-cp${{ matrix.python }}-${{ matrix.config.runner }}
+            label: "native"
+          - runner: ubuntu-latest
+            wheel_pattern: "manylinux"
+            label: "native"
+          # portability tests: oldest wheel on newer runners
+          - runner: macos-15
+            wheel_pattern: "macosx_14"
+            label: "port"
+          - runner: macos-26
+            wheel_pattern: "macosx_14"
+            label: "port"
+    name: test-${{ matrix.python }}-${{ matrix.config.wheel_pattern }}-on-${{ matrix.config.runner }}-${{ matrix.config.label }}
     steps:
       - uses: actions/checkout@v6
       - name: Download produced wheels
@@ -105,12 +127,11 @@ jobs:
           ls -R wheels
           PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
           WHEEL=$(ls wheels/*${PY_VER}*${{ matrix.config.wheel_pattern }}*.whl | head -n 1)
-          echo "Python version: ${PY_VER}, installing wheel: ${WHEEL}"
+          echo "Testing wheel: ${WHEEL} on ${{ matrix.config.runner }} (${{ matrix.config.label }})"
           pip install "$WHEEL"
       - name: Install tutorials dependencies
         run: |
           python -m pip install --no-cache-dir -r test/wheels/requirements-ci.txt
-
       - name: Run tutorials
         run: |
           pytest -vv --verbosity="4" -rF test/wheels
