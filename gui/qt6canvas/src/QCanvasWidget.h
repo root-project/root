@@ -12,7 +12,7 @@
 #define ROOT_QCanvasWidget_h
 
 #include <QWidget>
-#include <QMenuBar>
+#include <QAction>
 #include "ui_QCanvasWidget.h"
 
 #include <string>
@@ -24,7 +24,9 @@ class TH2I;
 class QCanvasWidget : public QWidget, public Ui::QCanvasWidget {
    Q_OBJECT
 
-   QMenuBar *fMenuBar = nullptr;
+   QAction *fViewToolbar = nullptr;
+   QAction *fViewEventStatus = nullptr;
+   QAction *fViewToolTip = nullptr;
 
    QString fLastFileDir;
 
@@ -43,6 +45,8 @@ public:
 
    void SaveCanvas(const QString &fname);
 
+   void ApplyCanvasStatusBits();
+
 public slots:
 
    void NewCanvas();
@@ -52,6 +56,16 @@ public slots:
    void SaveCanvasAs();
    void PrintCanvas();
    void QuitRoot();
+
+   void ShowColors();
+   void ShowMarkers();
+   void IconifyCanvas();
+
+   void SetViewToolbar(bool);
+   void SetViewEventStatus(bool);
+   void SetViewToolTip(bool);
+
+   void CanvasStatusEventSlot(const QString &);
 };
 
 #endif

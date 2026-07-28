@@ -224,6 +224,9 @@ void TQt6Canvas::AssignStatusBits(UInt_t bits)
    Canvas()->SetBit(TCanvas::kShowEditor, bits & TCanvas::kShowEditor);
    Canvas()->SetBit(TCanvas::kShowToolTips, bits & TCanvas::kShowToolTips);
    Canvas()->SetBit(TCanvas::kMenuBar, bits & TCanvas::kMenuBar);
+   Canvas()->SetBit(TCanvas::kShowToolBar, bits & TCanvas::kShowToolBar);
+   if (fCanvasWidget)
+      fCanvasWidget->ApplyCanvasStatusBits();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

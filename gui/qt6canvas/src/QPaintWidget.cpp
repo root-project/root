@@ -19,11 +19,12 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMouseEvent>
+#include <QHelpEvent>
 #include <QCloseEvent>
+#include <QToolTip>
 #include <QFont>
 #include <QRect>
 #include <QPainter>
-#include <QStatusBar>
 
 
 QPaintWidget::QPaintWidget(QWidget *parent) : QWidget(parent)
@@ -54,6 +55,36 @@ QPoint QPaintWidget::scaledMousePoint(QMouseEvent *e)
    int scaledX = scaledPosition(e->position().x());
    int scaledY = scaledPosition(e->position().y());
    return QPoint(scaledX, scaledY);
+}
+
+
+bool QPaintWidget::event(QEvent *event)
+{
+   if (fShowToolTip && (event->type() == QEvent::ToolTip)) {
+      auto *helpEvent = static_cast<QHelpEvent *>(event);
+
+      TObject *selected = fCanvas->GetSelected();
+      Int_t px = fCanvas->GetEventX();
+      Int_t py = fCanvas->GetEventY();
+      QString customText;
+      if (selected) {
+         customText = QString("%1::%2<br>%3<br>%4, %5<br>%6")
+                       .arg(selected->ClassName()).arg(selected->GetName())
+                       .arg(selected->GetTitle())
+                       .arg(px).arg(py)
+                       .arg(selected->GetObjectInfo(px, py));
+      } else {
+         customText = QString("No selected object<br>%1, %2")
+                       .arg(px).arg(py);
+      }
+
+      // 4. Force screen coordinates to bypass standard widget offset logic
+      QToolTip::showText(helpEvent->globalPos(), customText, this);
+
+      return true; // Event handled successfully
+   }
+
+   return QWidget::event(event);
 }
 
 
@@ -131,26 +162,24 @@ void QPaintWidget::mouseMoveEvent(QMouseEvent *e)
         fCanvas->HandleInput(kMouseMotion, pnt.x(), pnt.y());
    }
 
-  if(fShowEventStatus) {
-     TObject *selected = fCanvas->GetSelected();
-     Int_t px = fCanvas->GetEventX();
-     Int_t py = fCanvas->GetEventY();
-     QString buffer = "";
-     if (selected) {
-        buffer = selected->GetName();
-        buffer += "  ";
-        buffer += selected->GetObjectInfo(px, py);
-     } else {
-        buffer = "No selected object x = ";
-        buffer += QString::number(px);
-        buffer += "  y = ";
-        buffer += QString::number(py);
-     }
+   if (fShowEventStatus) {
+      TObject *selected = fCanvas->GetSelected();
+      Int_t px = fCanvas->GetEventX();
+      Int_t py = fCanvas->GetEventY();
+      QString buffer = "";
+      if (selected) {
+         buffer = selected->GetName();
+         buffer += "  ";
+         buffer += selected->GetObjectInfo(px, py);
+      } else {
+         buffer = "No selected object x = ";
+         buffer += QString::number(px);
+         buffer += "  y = ";
+         buffer += QString::number(py);
+      }
 
-     // emit CanvasStatusEvent(buffer.toLatin1().constData());
-
-     if (fStatusBar) fStatusBar->showMessage(buffer.toLatin1().constData());
-  }
+      emit CanvasStatusEvent(buffer);
+   }
 }
 
 void QPaintWidget::mouseReleaseEvent( QMouseEvent *e )
