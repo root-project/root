@@ -17,7 +17,6 @@ class TCanvas;
 class TPad;
 class TMethod;
 class QPainter;
-class QStatusBar;
 
 class QPaintWidget : public QWidget {
 
@@ -34,9 +33,14 @@ public:
 
    void SetCanvas(TCanvas *canv) { fCanvas = canv; }
 
-   void SetStatusBar(QStatusBar *bar) { fStatusBar = bar; }
+   void SetShowToolTip(bool on) { fShowToolTip = on; }
+
+signals:
+   void CanvasStatusEvent(const QString &msg);
 
 protected:
+   bool event(QEvent *event) override;
+
    void resizeEvent(QResizeEvent *event) override;
 
    void paintEvent(QPaintEvent *event) override;
@@ -56,11 +60,9 @@ protected:
 
    double fQtScalingfactor = 1.;
 
-   QStatusBar  *fStatusBar = nullptr;
-
    bool              fMaskDoubleClick = false;
    bool              fShowEventStatus = true;
-
+   bool              fShowToolTip = false;
 };
 
 #endif

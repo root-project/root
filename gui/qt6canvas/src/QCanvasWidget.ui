@@ -17,7 +17,7 @@
     </property>
     <layout class="QGridLayout" >
       <item row="0" column="0" >
-        <widget class="QFrame" name="fMenuFrame" >
+        <widget class="QMenuBar" name="fMenuBar" >
           <property name="sizePolicy" >
             <sizepolicy>
               <hsizetype>7</hsizetype>
@@ -32,15 +32,27 @@
               <height>30</height>
             </size>
           </property>
-          <property name="frameShape" >
-            <enum>NoFrame</enum>
+        </widget>
+      </item>
+      <item row="1" column="0" >
+        <widget class="QToolBar" name="fToolBar" >
+          <property name="sizePolicy" >
+            <sizepolicy>
+              <hsizetype>7</hsizetype>
+              <vsizetype>1</vsizetype>
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
           </property>
-          <property name="frameShadow" >
-            <enum>Plain</enum>
+          <property name="minimumSize" >
+            <size>
+              <width>0</width>
+              <height>30</height>
+            </size>
           </property>
         </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
         <widget class="QPaintWidget" name="fPaintWidget">
           <property name="sizePolicy" >
             <sizepolicy>
@@ -58,7 +70,7 @@
           </property>
         </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
         <widget class="QStatusBar" name="fStatusBar">
           <property name="sizePolicy" >
             <sizepolicy>
