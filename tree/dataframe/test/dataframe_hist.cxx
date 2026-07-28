@@ -270,7 +270,7 @@ TEST_P(RDFHist, InvalidNumberOfArguments)
       // expected
    }
 
-   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   auto hist = std::make_shared<RHist<double>>(axis);
    try {
       // Cannot use EXPECT_THROW because of template arguments...
       dfX.Hist<double, double>(hist, {"x", "x"});
@@ -279,7 +279,7 @@ TEST_P(RDFHist, InvalidNumberOfArguments)
       // expected
    }
 
-   auto engine = std::make_shared<RHistEngine<double>>(10, std::make_pair(5.0, 15.0));
+   auto engine = std::make_shared<RHistEngine<double>>(axis);
    try {
       // Cannot use EXPECT_THROW because of template arguments...
       dfX.Hist<double, double>(engine, {"x", "x"});
@@ -297,10 +297,10 @@ TEST_P(RDFHist, InvalidNumberOfArgumentsJit)
    const RRegularAxis axis(10, {5.0, 15.0});
    EXPECT_THROW(dfX.Hist({axis}, {"x", "x"}), std::invalid_argument);
 
-   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   auto hist = std::make_shared<RHist<double>>(axis);
    EXPECT_THROW(dfX.Hist(hist, {"x", "x"}), std::invalid_argument);
 
-   auto engine = std::make_shared<RHistEngine<double>>(10, std::make_pair(5.0, 15.0));
+   auto engine = std::make_shared<RHistEngine<double>>(axis);
    EXPECT_THROW(dfX.Hist(engine, {"x", "x"}), std::invalid_argument);
 }
 
@@ -379,7 +379,7 @@ TEST_P(RDFHist, EngineWeight)
                   .Define("w", [](ULong64_t e) { return 0.1 + e * 0.03; }, {"rdfentry_"});
 
    const RRegularAxis axis(10, {5.0, 15.0});
-   auto hist = std::make_shared<RHistEngine<RBinWithError>>(10, std::make_pair(5.0, 15.0));
+   auto hist = std::make_shared<RHistEngine<RBinWithError>>(axis);
    auto resPtr = dfXW.Hist<double, double>(hist, {"x"}, "w");
    EXPECT_EQ(hist, resPtr.GetSharedPtr());
    for (auto index : axis.GetNormalRange()) {
@@ -396,7 +396,7 @@ TEST_P(RDFHist, EngineWeightJit)
    auto dfXW = df.Define("x", "rdfentry_ + 5.5").Define("w", "0.1 + rdfentry_ * 0.03");
 
    const RRegularAxis axis(10, {5.0, 15.0});
-   auto hist = std::make_shared<RHistEngine<RBinWithError>>(10, std::make_pair(5.0, 15.0));
+   auto hist = std::make_shared<RHistEngine<RBinWithError>>(axis);
    auto resPtr = dfXW.Hist(hist, {"x"}, "w");
    EXPECT_EQ(hist, resPtr.GetSharedPtr());
    for (auto index : axis.GetNormalRange()) {
@@ -422,7 +422,7 @@ TEST_P(RDFHist, WeightInvalidNumberOfArguments)
       // expected
    }
 
-   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   auto hist = std::make_shared<RHist<double>>(axis);
    try {
       // Cannot use EXPECT_THROW because of template arguments...
       dfXW.Hist<double, double, double>(hist, {"x", "x"}, "w");
@@ -431,7 +431,7 @@ TEST_P(RDFHist, WeightInvalidNumberOfArguments)
       // expected
    }
 
-   auto engine = std::make_shared<RHistEngine<double>>(10, std::make_pair(5.0, 15.0));
+   auto engine = std::make_shared<RHistEngine<double>>(axis);
    try {
       // Cannot use EXPECT_THROW because of template arguments...
       dfXW.Hist<double, double, double>(engine, {"x", "x"}, "w");
@@ -449,10 +449,10 @@ TEST_P(RDFHist, WeightInvalidNumberOfArgumentsJit)
    const RRegularAxis axis(10, {5.0, 15.0});
    EXPECT_THROW(dfXW.Hist({axis}, {"x", "x"}, "w"), std::invalid_argument);
 
-   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   auto hist = std::make_shared<RHist<double>>(axis);
    EXPECT_THROW(dfXW.Hist(hist, {"x", "x"}, "w"), std::invalid_argument);
 
-   auto engine = std::make_shared<RHistEngine<double>>(10, std::make_pair(5.0, 15.0));
+   auto engine = std::make_shared<RHistEngine<double>>(axis);
    EXPECT_THROW(dfXW.Hist(engine, {"x", "x"}, "w"), std::invalid_argument);
 }
 
