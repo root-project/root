@@ -46,6 +46,7 @@ the TEventList object created in the above commands:
 - A TEventList object can be saved on a file via the Write function.
 */
 
+#include "strlcpy.h"
 #include "TEventList.h"
 #include "TBuffer.h"
 #include "TCut.h"
