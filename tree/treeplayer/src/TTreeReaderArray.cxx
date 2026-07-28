@@ -843,8 +843,8 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch *&branch, TL
       return false;
    }
 
-   if (tempDict->IsA() == TDataType::Class() &&
-       TDictionary::GetDictionary(((TDataType *)tempDict)->GetTypeName()) == fDict) {
+   if (tempDict->IsA() == TDataType::Class() && fDict->IsA() == TDataType::Class() &&
+       ((TDataType *)tempDict)->GetType() == ((TDataType *)fDict)->GetType()) {
       // fLeafOffset = myLeaf->GetOffset() / 4;
       branchActualType = fDict;
       fLeaf = myLeaf;
