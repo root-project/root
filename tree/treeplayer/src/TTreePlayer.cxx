@@ -2433,6 +2433,8 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 ///       conversion specifier is given, will be suffixed by the letter g.
 ///       before being passed to fprintf.  If no format is specified for a
 ///       column, the default is used  (aka ${colsize}.${precision}g )
+///       As with printf, a leading minus sign left-justifies the column,
+///       e.g. `col=-20s` prints a 20-character-wide, left-justified column.
 ///
 /// For example:
 /// ~~~{.cpp}
@@ -2519,6 +2521,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
               || opt[numpos+numlen] == 'h'
               || opt[numpos+numlen] == 's'
               || opt[numpos+numlen] == '#'
+              || opt[numpos+numlen] == '-'
               || opt[numpos+numlen]=='.'
               || opt[numpos+numlen]==':')) numlen++;
       TString flist = opt(numpos,numlen);
@@ -2541,7 +2544,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
             colFormats.push_back(flist(i,next-i));
             i = next;
          }
-         UInt_t siz = atoi(colFormats[colFormats.size()-1].Data());
+         // A leading '-' requests left-justification (printf convention) and
+         // yields a negative size; a size of 0 means "use the default".
+         Int_t siz = atoi(colFormats[colFormats.size()-1].Data());
          colSizes.push_back( siz ? siz : colDefaultSize );
       }
    }
@@ -2679,7 +2684,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    if (hasArray) onerow += "***********";
 
    for (ui=0;ui<ncols;ui++) {
-      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      TString starFormat = Form("*%%%d.%ds",std::abs(colSizes[ui])+2,std::abs(colSizes[ui])+2);
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
@@ -2689,7 +2694,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    onerow = "*    Row   ";
    if (hasArray) onerow += "* Instance ";
    for (ui=0;ui<ncols;ui++) {
-      TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
+      TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],std::abs(colSizes[ui]));
       onerow += Form(numbFormat.Data(),var[ui]->PrintValue(-1));
    }
    if (fScanRedirect)
@@ -2699,7 +2704,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    onerow = "***********";
    if (hasArray) onerow += "***********";
    for (ui=0;ui<ncols;ui++) {
-      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      TString starFormat = Form("*%%%d.%ds",std::abs(colSizes[ui])+2,std::abs(colSizes[ui])+2);
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
@@ -2767,7 +2772,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
             onerow += Form("* %8d ",inst);
          }
          for (ui=0;ui<ncols;++ui) {
-            TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
+            TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],std::abs(colSizes[ui]));
             if (var[ui]->GetNdim()) onerow += Form(numbFormat.Data(),var[ui]->PrintValue(0,inst,colFormats[ui].Data()));
             else {
                TString emptyForm = Form("* %%%dc ",colSizes[ui]);
@@ -2797,7 +2802,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    onerow = "***********";
    if (hasArray) onerow += "***********";
    for (ui=0;ui<ncols;ui++) {
-      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      TString starFormat = Form("*%%%d.%ds",std::abs(colSizes[ui])+2,std::abs(colSizes[ui])+2);
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
