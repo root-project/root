@@ -701,7 +701,8 @@ void TEnv::SaveLevel(EEnvLevel level)
       sname += fRcName;
       rootrcdir = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
    } else if (level == kEnvUser) {
-      rootrcdir = gSystem->PrependPathName(GetUserDirectory(), fRcName);
+      TString sname = fRcName;
+      rootrcdir = gSystem->PrependPathName(GetUserDirectory(), sname);
    } else if (level == kEnvLocal) {
       rootrcdir = fRcName;
    } else {
