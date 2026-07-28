@@ -12,10 +12,12 @@
 
 #include "TCanvas.h"
 #include "TROOT.h"
+#include "TMarker.h"
 #include "TApplication.h"
 #include "TTimer.h"
 #include "TFile.h"
 #include "TError.h"
+#include "TColorWheel.h"
 
 #include <QMessageBox>
 #include <QPushButton>
@@ -32,9 +34,9 @@ QCanvasWidget::QCanvasWidget(QWidget *parent, const char *name) : QWidget(parent
 
    setObjectName(name);
 
-   fPaintWidget->SetStatusBar(fStatusBar);
+   connect(fPaintWidget, &QPaintWidget::CanvasStatusEvent, this, &QCanvasWidget::CanvasStatusEventSlot);
 
-   fMenuBar = new QMenuBar(fMenuFrame);
+   // fMenuBar = new QMenuBar(fMenuFrame);
    fMenuBar->setMinimumWidth(50);
    fMenuBar->setNativeMenuBar(kFALSE); // disable putting this to screen menu. for MAC style WMs
 
@@ -64,7 +66,37 @@ QCanvasWidget::QCanvasWidget(QWidget *parent, const char *name) : QWidget(parent
 
    fMenuBar->addMenu("&Edit");
 
-   fMenuBar->addMenu("&View");
+   auto viewMenu = fMenuBar->addMenu("&View");
+   auto act = viewMenu->addAction("&Editor");
+   act->setEnabled(false);
+
+   fViewToolbar = viewMenu->addAction("&Toolbar");
+   fViewToolbar->setCheckable(true);
+   connect(fViewToolbar, &QAction::toggled, this, &QCanvasWidget::SetViewToolbar);
+   SetViewToolbar(false);
+
+   fViewEventStatus = viewMenu->addAction("Event &Statusbar");
+   fViewEventStatus->setCheckable(true);
+   connect(fViewEventStatus, &QAction::toggled, this, &QCanvasWidget::SetViewEventStatus);
+   SetViewEventStatus(true);
+
+   fViewToolTip = viewMenu->addAction("T&ooltip Info");
+   fViewToolTip->setCheckable(true);
+   connect(fViewToolTip, &QAction::toggled, this, &QCanvasWidget::SetViewToolTip);
+   SetViewToolTip(false);
+
+   viewMenu->addSeparator();
+
+   viewMenu->addAction("&Colors", this, &QCanvasWidget::ShowColors);
+
+   act = viewMenu->addAction("&Fonts");
+   act->setEnabled(false);
+
+   viewMenu->addAction("&Markers", this, &QCanvasWidget::ShowMarkers);
+
+   viewMenu->addSeparator();
+   viewMenu->addAction("&Iconify", this, &QCanvasWidget::IconifyCanvas);
+
 
    fMenuBar->addMenu("&Options");
 
@@ -76,6 +108,8 @@ QCanvasWidget::QCanvasWidget(QWidget *parent, const char *name) : QWidget(parent
 
    fMenuBar->addMenu("&Help");
 
+   // fToolBar = new QToolBar("Canvas tools", this);
+   fToolBar->setVisible(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,4 +304,93 @@ void QCanvasWidget::QuitRoot()
       TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of tool bar
 
+void QCanvasWidget::SetViewToolbar(bool on)
+{
+   fToolBar->setVisible(on);
+   fViewToolbar->setChecked(on);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of event status
+
+void QCanvasWidget::SetViewEventStatus(bool on)
+{
+   fStatusBar->setVisible(on);
+   fViewEventStatus->setChecked(on);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Status event handler
+
+void QCanvasWidget::CanvasStatusEventSlot(const QString &msg)
+{
+   if (fStatusBar && fStatusBar->isVisible())
+      fStatusBar->showMessage(msg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of tooltip
+
+void QCanvasWidget::SetViewToolTip(bool on)
+{
+   fViewToolTip->setChecked(on);
+
+   fPaintWidget->SetShowToolTip(on);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Show new canvas with ROOT colors wheel
+
+void QCanvasWidget::ShowColors()
+{
+   TVirtualPad::TContext ctxt;
+
+   auto wheel = new TColorWheel();
+   wheel->Draw();
+   gPad->Update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Show new canvas with ROOT markers
+
+void QCanvasWidget::ShowMarkers()
+{
+   TVirtualPad::TContext ctxt;
+
+   auto m = new TCanvas("markers","Marker Types",600,200);
+   TMarker::DisplayMarkerTypes();
+   m->Update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Iconify canvas widget
+
+void QCanvasWidget::IconifyCanvas()
+{
+   showMinimized();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Apply canvas status bits like show tooltip or menu bar
+
+void QCanvasWidget::ApplyCanvasStatusBits()
+{
+   auto canv = GetPaintWidget()->getCanvas();
+   if (!canv)
+      return;
+
+   SetViewEventStatus(canv->TestBit(TCanvas::kShowEventStatus));
+
+   // canv->TestBit(TCanvas::kShowEditor);
+
+   SetViewToolbar(canv->TestBit(TCanvas::kShowToolBar));
+
+   SetViewToolTip(canv->TestBit(TCanvas::kShowToolTips));
+
+   fMenuBar->setVisible(canv->TestBit(TCanvas::kMenuBar));
+
+
+}
