@@ -183,3 +183,71 @@ struct TypeChangeSoA {
    EXPECT_EVALUATE_EQ("ptrTypeChange->fInt2[0]", 137);
    EXPECT_EVALUATE_EQ("ptrTypeChange->fInt2[1]", 138);
 }
+
+TEST(RNTupleEvolutionSoA, AddedMember)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_ntuple_evolution_soa_added_member.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMemberRecord {
+   int fInt1;
+   ClassDefInlineNV(AddedMemberRecord, 2)
+};
+struct AddedMemberSoA {
+   ROOT::RVec<int> fInt1;
+   ClassDefInlineNV(AddedMemberSoA, 2)
+};
+)"));
+      MakeSoALink("AddedMemberRecord", "AddedMemberSoA");
+
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(ROOT::RFieldBase::Create("f", "AddedMemberSoA").Unwrap());
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("AddedMemberSoA", "ptrAddedMember", ptr);
+      ProcessLine("for (int i = 0; i < 1000; ++i) ptrAddedMember->fInt1.push_back(137);");
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      writer.reset();
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMemberRecord {
+   int fInt1;
+   int fInt2;
+   std::string fStr;
+   ClassDefInlineNV(AddedMemberRecord, 3)
+};
+struct AddedMemberSoA {
+   ROOT::RVec<int> fInt1;
+   ROOT::RVec<int> fInt2;
+   ROOT::RVec<std::string> fStr;
+   ClassDefInlineNV(AddedMemberSoA, 3)
+};
+)"));
+   MakeSoALink("AddedMemberRecord", "AddedMemberSoA");
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(1, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("AddedMemberSoA", "ptrAddedMember", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt1.size()", 1000);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt1[0]", 137);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt1[999]", 137);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt2.size()", 1000);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt2[0]", 0);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt2[999]", 0);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fStr.size()", 1000);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fStr[0].size()", 0);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fStr[999].size()", 0);
+}
