@@ -1296,6 +1296,33 @@ TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer *user_buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Drop the basket at index `basketnumber` from the list of baskets in memory.
+///
+/// Used by the bulk IO paths, which hand the basket buffer over to the user and
+/// park the basket in fExtraBasket. Clearing the slot is not enough, the
+/// bookkeeping has to follow: fNBaskets counts the baskets in memory, and
+/// TObjArray::fLast decides how many slots the array streams, so leaving fLast
+/// behind makes the branch stream one extra (empty) slot per basket read. See
+/// https://github.com/root-project/root/issues/8961.
+///
+/// Deliberately not TObjArray::RemoveAt: a bulk read leaves the array empty, so
+/// its backward scan for the new last element would run all the way down,
+/// making a full read quadratic in the number of baskets.
+
+void TBranch::DisassociateBulkBasket(Int_t basketnumber)
+{
+   if (fNBaskets <= 1) {
+      fBaskets.AddAt(nullptr, basketnumber);
+      fBaskets.SetLast(-1);
+      fNBaskets = 0;
+   } else if (fBaskets.RemoveAt(basketnumber)) {
+      // Other baskets are still in memory (e.g. with cluster prefetching), so
+      // the new last element has to be looked up.
+      --fNBaskets;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return address of basket in the file
 
 Long64_t TBranch::GetBasketSeek(Int_t basketnumber) const
@@ -1410,7 +1437,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket *&basket, Long64_t &first,
             // When the user provides a memory buffer (i.e., for bulk IO), we should
             // make sure to drop all references to that buffer in the TTree afterward.
             fCurrentBasket = nullptr;
-            fBaskets[fReadBasket] = nullptr;
+            DisassociateBulkBasket(fReadBasket);
          } else {
             fCurrentBasket = basket;
          }
@@ -1515,7 +1542,7 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
          user_buf.SetBuffer(buf->Buffer(), buf->BufferSize());
          buf->ResetBit(TBufferIO::kIsOwner);
          fCurrentBasket = nullptr;
-         fBaskets[fReadBasket] = nullptr;
+         DisassociateBulkBasket(fReadBasket);
       } else {
          // This is the only copy, we can't return it as is to the user, just make a copy.
          if (user_buf.BufferSize() < buf->BufferSize()) {
@@ -1633,7 +1660,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
          user_buf.SetBuffer(buf->Buffer(), buf->BufferSize());
          buf->ResetBit(TBufferIO::kIsOwner);
          fCurrentBasket = nullptr;
-         fBaskets[fReadBasket] = nullptr;
+         DisassociateBulkBasket(fReadBasket);
       } else {
          // This is the only copy, we can't return it as is to the user, just make a copy.
          if (user_buf.BufferSize() < buf->BufferSize()) {
