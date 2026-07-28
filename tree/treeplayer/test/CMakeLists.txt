@@ -15,6 +15,8 @@ add_custom_command(TARGET treeplayer_branchobject POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/branchobject.root branchobject.root)
 endif()
 
+ROOT_ADD_GTEST(treeplayer_gh11786 gh11786.cxx LIBRARIES TreePlayer)
+
 ROOT_ADD_GTEST(treeplayer_gh16804 gh16804.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(treeplayer_gh16805 gh16805.cxx LIBRARIES TreePlayer)
