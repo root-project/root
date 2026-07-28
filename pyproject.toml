@@ -76,6 +76,7 @@ ssl="ON"
 imt="ON"
 roofit="ON"
 mathmore="ON"
+builtin_gif="ON"
 
 # Expose the ROOT cli as an executable command via _rootcli wrapper 
 [project.scripts]
