@@ -18,6 +18,24 @@ if(BUILD_TESTING)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   set_tests_properties(run-hsimple   PROPERTIES FIXTURES_SETUP    HSIMPLE)
   set_tests_properties(read-hsimple  PROPERTIES FIXTURES_REQUIRED HSIMPLE)
+
+  # Add a test to check root-config gives the right compiler invocation flags
+  execute_process(
+    COMMAND ${ROOT_BINDIR}/root-config --cflags --libs
+    OUTPUT_VARIABLE ROOT_CONFIG_OUTPUT_STR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  # Pass a list to the compiler invocation to avoid errors such as "invalid library name" when passing the quoted string
+  # output from root-config
+  string(REPLACE " " ";" ROOT_CONFIG_OUTPUT "${ROOT_CONFIG_OUTPUT_STR}")
+  add_test(NAME read-hsimple-root-config-build
+    COMMAND ${CMAKE_CXX_COMPILER} -o readHSimple-root-config ${CMAKE_SOURCE_DIR}/readHSimple.cxx ${ROOT_CONFIG_OUTPUT}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  add_test(NAME read-hsimple-root-config-run
+    COMMAND readHSimple-root-config
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(read-hsimple-root-config-build   PROPERTIES FIXTURES_SETUP    HSIMPLE-ROOT-CONFIG)
+  set_tests_properties(read-hsimple-root-config-run     PROPERTIES FIXTURES_REQUIRED "HSIMPLE;HSIMPLE-ROOT-CONFIG")
+
   if(ROOT_pyroot_FOUND)
     find_package(Python3 3.10 REQUIRED)
     # Need to duplicate the import ROOT test because the PASS_REGULAR_EXPRESSION
