@@ -196,7 +196,7 @@ int ReadRefFile(const char *fname, std::vector<RefEntry> &entries)
    FILE *sg = fopen(fname, "r");
    if (!sg) {
       printf("Could not open %s\n", fname);
-      return 0;
+      return 2;
    }
 
    entries.clear();
