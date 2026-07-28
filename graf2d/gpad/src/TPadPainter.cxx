@@ -126,7 +126,7 @@ Bool_t TPadPainter::IsCocoa() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if trasnparent colors are supported
+/// Returns true if transparent colors are supported
 
 Bool_t TPadPainter::IsSupportAlpha() const
 {

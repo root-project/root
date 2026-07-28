@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_eve_7
 /// Helper script for showing of extracted / simplified geometries.
 /// The test macro how to create the shapes is in file write_geo_extract.C
 /// \macro_code

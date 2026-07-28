@@ -9,8 +9,8 @@
 #include <iostream>
 
 
-// \file
-/// \ingroup tutorial_eve7
+/// \file
+/// \ingroup tutorial_eve_7
 /// Helper script to create REveGeoShapeExtract fro TGeo geometry
 /// One can rely on GeoTable to access paths
 /// \macro_code
