@@ -55,29 +55,40 @@ on:
 
 jobs:
   Build_Wheel:
-    runs-on: macos-15
+    runs-on: ${{ matrix.config.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target: [cp310-macosx_arm64, cp311-macosx_arm64, cp312-macosx_arm64, cp313-macosx_arm64, cp314-macosx_arm64]
-    name: ${{ matrix.target }}
+        python: [cp310, cp311, cp312, cp313, cp314]
+        config:
+          - runner: macos-15
+            platform: macosx_arm64
+            deployment_target: "15.0"
+          - runner: macos-26
+            platform: macosx_arm64
+            deployment_target: "26.0"
+    name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/workflows/cibuildwheel-impl
         env:
-          MACOSX_DEPLOYMENT_TARGET: 15.0
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.config.deployment_target }}
         with:
-          build-tag: ${{ matrix.target }}
+          build-tag: ${{ matrix.python }}-${{ matrix.config.platform }}
 
   Test_Wheels:
     needs: Build_Wheel
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.config.runner }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        os: [macos-15, macos-26]
-    name: test-wheel-cp${{ matrix.python-version }}-${{ matrix.os }}
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        config:
+          - runner: macos-15
+            wheel_pattern: "macosx_15"
+          - runner: macos-26
+            wheel_pattern: "macosx_26"
+    name: test-wheel-cp${{ matrix.python }}-${{ matrix.config.runner }}
     steps:
       - uses: actions/checkout@v6
       - name: Download produced wheels
@@ -85,20 +96,17 @@ jobs:
         with:
           path: wheels
           merge-multiple: true
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-
+          python-version: ${{ matrix.python }}
       - name: Install produced wheel
         run: |
           ls -R wheels
           PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
-          WHEEL=$(ls wheels/*${PY_VER}*macosx*.whl | head -n 1)
+          WHEEL=$(ls wheels/*${PY_VER}*${{ matrix.config.wheel_pattern }}*.whl | head -n 1)
           echo "Python version: ${PY_VER}, installing wheel: ${WHEEL}"
           pip install "$WHEEL"
-
       - name: Install tutorials dependencies
         run: |
           python -m pip install --no-cache-dir -r test/wheels/requirements-ci.txt
