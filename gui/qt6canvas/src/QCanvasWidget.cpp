@@ -23,6 +23,55 @@
 #include <QPushButton>
 #include <QFileDialog>
 
+
+enum { kFileNewCanvas, kFileOpen, kFileSaveAs, kFilePrint, kOptionInterrupt, kOptionRefresh,
+       kInspectRoot, kToolsBrowser, kToolModify, kToolArc, kToolLine, kToolArrow, kToolDiamond,
+       kToolEllipse, kToolPad, kToolPave, kToolPLabel, kToolPText, kToolPsText, kToolGraph,
+       kToolCurlyLine, kToolCurlyArc, kToolLatex, kToolMarker, kToolCutG };
+
+struct QToolBarData_t {
+   const char *fPixmap;
+   const char *fTipText;
+   Bool_t      fStayDown;
+   Int_t       fId;
+   void       *fButton;
+};
+
+
+static QToolBarData_t qToolBarData[] = {
+   // { filename,      tooltip,            staydown,  id,              button}
+   { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  0 },
+   { "open.xpm",       "Open",             kFALSE,    kFileOpen,       0 },
+   { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     0 },
+   { "printer.xpm",    "Print",            kFALSE,    kFilePrint,      0 },
+   { "",               "",                 kFALSE,    -1,              0 },
+   { "interrupt.xpm",  "Interrupt",        kFALSE,    kOptionInterrupt,0 },
+   { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  0 },
+   { "",               "",                 kFALSE,    -1,              0 },
+   { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    0 },
+//   { "browser.xpm",    "Browser",          kFALSE,    kToolsBrowser,   0 },
+   { "",                "",                kFALSE,    -1,              0 },
+   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,     0 },
+   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,        0 },
+   { "line.xpm",       "Line",             kFALSE,    kToolLine,       0 },
+   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,      0 },
+   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,    0 },
+   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,    0 },
+   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,        0 },
+   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,       0 },
+   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,     0 },
+   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,      0 },
+   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,     0 },
+   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,      0 },
+   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,  0 },
+   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc,   0 },
+   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,      0 },
+   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,     0 },
+   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       0 },
+   { 0,                0,                  kFALSE,    0,               0 }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -78,7 +127,7 @@ QCanvasWidget::QCanvasWidget(QWidget *parent, const char *name) : QWidget(parent
    fViewEventStatus = viewMenu->addAction("Event &Statusbar");
    fViewEventStatus->setCheckable(true);
    connect(fViewEventStatus, &QAction::toggled, this, &QCanvasWidget::SetViewEventStatus);
-   SetViewEventStatus(true);
+   SetViewEventStatus(false);
 
    fViewToolTip = viewMenu->addAction("T&ooltip Info");
    fViewToolTip->setCheckable(true);
@@ -108,8 +157,101 @@ QCanvasWidget::QCanvasWidget(QWidget *parent, const char *name) : QWidget(parent
 
    fMenuBar->addMenu("&Help");
 
-   // fToolBar = new QToolBar("Canvas tools", this);
-   fToolBar->setVisible(false);
+   // configure tool bar
+
+   //fToolBar->setStyleSheet("QToolBar { layout-spacing: 0px; }"
+   //                        "QToolBar QToolButton { padding: 0px; margin: 0px; border: none; }");
+   fToolBar->setIconSize(QSize(16, 16));
+   for (int i = 0; qToolBarData[i].fPixmap; i++) {
+      auto btn = &(qToolBarData[i]);
+      if (strlen(btn->fPixmap) == 0) {
+         fToolBar->addSeparator();
+         continue;
+      }
+
+      TString iconname = TROOT::GetIconPath();
+      iconname.Append("/");
+      iconname.Append(btn->fPixmap);
+
+      QIcon buttonIcon(iconname.Data());
+
+      fToolBar->addAction(buttonIcon, btn->fTipText, [btn, this]() {
+         auto canv = GetPaintWidget()->getCanvas();
+
+         switch(btn->fId) {
+            case kFileNewCanvas: NewCanvas(); break;
+            case kFileOpen: OpenRootFile(); break;
+            case kFileSaveAs: SaveCanvasAs(); break;
+            case kFilePrint: PrintCanvas(); break;
+            case kOptionInterrupt: gROOT->SetInterrupt(); break;
+            case kOptionRefresh:
+               if (canv) {
+                  canv->Modified(kTRUE);
+                  // trigger update of the paint widget, paint will be called
+                  canv->Update();
+               }
+               break;
+            case kInspectRoot:
+               if (canv) {
+                  canv->cd();
+                  gROOT->Inspect();
+                  canv->Update();
+               }
+               break;
+
+            case kToolsBrowser: break;
+            case kToolModify: gROOT->SetEditorMode(); break;
+            case kToolArc:
+               gROOT->SetEditorMode("Arc");
+               break;
+            case kToolLine:
+               gROOT->SetEditorMode("Line");
+               break;
+            case kToolArrow:
+               gROOT->SetEditorMode("Arrow");
+               break;
+            case kToolDiamond:
+               gROOT->SetEditorMode("Diamond");
+               break;
+            case kToolEllipse:
+               gROOT->SetEditorMode("Ellipse");
+               break;
+            case kToolPad:
+               gROOT->SetEditorMode("Pad");
+               break;
+            case kToolPave:
+               gROOT->SetEditorMode("Pave");
+               break;
+            case kToolPLabel:
+               gROOT->SetEditorMode("PaveLabel");
+               break;
+            case kToolPText:
+               gROOT->SetEditorMode("PaveText");
+               break;
+            case kToolPsText:
+               gROOT->SetEditorMode("PavesText");
+               break;
+            case kToolGraph:
+               gROOT->SetEditorMode("PolyLine");
+               break;
+            case kToolCurlyLine:
+               gROOT->SetEditorMode("CurlyLine");
+               break;
+            case kToolCurlyArc:
+               gROOT->SetEditorMode("CurlyArc");
+               break;
+            case kToolLatex:
+               gROOT->SetEditorMode("Text");
+               break;
+            case kToolMarker:
+               gROOT->SetEditorMode("Marker");
+               break;
+            case kToolCutG:
+               gROOT->SetEditorMode("CutG");
+               break;
+         }
+      });
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
