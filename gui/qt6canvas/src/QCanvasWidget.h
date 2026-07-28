@@ -15,6 +15,8 @@
 #include <QMenuBar>
 #include "ui_QCanvasWidget.h"
 
+#include <string>
+#include <vector>
 
 class TH1F;
 class TH2I;
@@ -24,12 +26,22 @@ class QCanvasWidget : public QWidget, public Ui::QCanvasWidget {
 
    QMenuBar *fMenuBar = nullptr;
 
+   QString fLastFileDir;
+
+protected:
+
+   std::vector<std::string> GetSupportedFileFormats();
+
+   void FillSaveMenu(QMenu *menu);
+
 public:
    QCanvasWidget(QWidget *parent = nullptr, const char *name = nullptr);
 
    virtual ~QCanvasWidget();
 
    QPaintWidget *GetPaintWidget() const { return fPaintWidget; }
+
+   void SaveCanvas(const QString &fname);
 
 public slots:
 
