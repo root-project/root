@@ -12,8 +12,7 @@
 ## \macro_image
 ## \macro_code
 ##
-## \author Wim Lavrijsen, Enric Tejedor
-## \author Vincenzo Eduardo Padulano (CERN), 09.2025
+## \authors Wim Lavrijsen, Enric Tejedor, Vincenzo Eduardo Padulano (CERN), 09.2025
 
 import numpy
 from ROOT import TH1F, TH2F, TCanvas, TFile, TNtuple, TProfile, gBenchmark, gSystem

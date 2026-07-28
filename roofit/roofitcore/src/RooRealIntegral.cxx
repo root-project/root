@@ -464,7 +464,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
 
   // Replace exclusive lvalue branch servers with lvalue branches
-  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaroes
+  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaries
   if (!exclLVServers.empty() && !function.isBinnedDistribution(exclLVBranches)) {
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;

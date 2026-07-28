@@ -1,4 +1,5 @@
 /// \file ROOT/RTreeMapBase.hxx
+/// \defgroup TreeMap ROOT7
 /// \author Patryk Tymoteusz Pilichowski <patryk.tymoteusz.pilichowski@cern.ch>
 /// \date 2025-08-21
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
