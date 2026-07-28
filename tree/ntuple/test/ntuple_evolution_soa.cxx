@@ -119,3 +119,67 @@ struct RemovedMemberSoA {
    EXPECT_EVALUATE_EQ("ptrRemovedMember->fInt3[0]", 15);
    EXPECT_EVALUATE_EQ("ptrRemovedMember->fInt3[1]", 16);
 }
+
+TEST(RNTupleEvolutionSoA, TypeChange)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_ntuple_evolution_soa_type_change.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct TypeChangeRecord {
+   bool fInt1;
+   long long int fInt2;
+   ClassDefNV(TypeChangeRecord, 2)
+};
+struct TypeChangeSoA {
+   ROOT::RVec<bool> fInt1;
+   ROOT::RVec<long long int> fInt2;
+   ClassDefNV(TypeChangeSoA, 2)
+};
+)"));
+      MakeSoALink("TypeChangeRecord", "TypeChangeSoA");
+
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(ROOT::RFieldBase::Create("f", "TypeChangeSoA").Unwrap());
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("TypeChangeSoA", "ptrTypeChange", ptr);
+      ProcessLine("ptrTypeChange->fInt1 = {true, false};");
+      ProcessLine("ptrTypeChange->fInt2 = {137, 138};");
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      writer.reset();
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct TypeChangeRecord {
+   int fInt1;
+   int fInt2;
+   ClassDefNV(TypeChangeRecord, 3)
+};
+struct TypeChangeSoA {
+   ROOT::RVec<int> fInt1;
+   ROOT::RVec<int> fInt2;
+   ClassDefNV(TypeChangeSoA, 3)
+};
+)"));
+   MakeSoALink("TypeChangeRecord", "TypeChangeSoA");
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(1, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("TypeChangeSoA", "ptrTypeChange", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrTypeChange->fInt1[0]", 1);
+   EXPECT_EVALUATE_EQ("ptrTypeChange->fInt1[1]", 0);
+   EXPECT_EVALUATE_EQ("ptrTypeChange->fInt2[0]", 137);
+   EXPECT_EVALUATE_EQ("ptrTypeChange->fInt2[1]", 138);
+}
