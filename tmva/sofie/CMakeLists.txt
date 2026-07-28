@@ -109,4 +109,7 @@ if(sofie_root_support)
   target_compile_definitions(ROOTTMVASofie PRIVATE SOFIE_SUPPORT_ROOT_BINARY)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+# Tests are not enabled unconditionally because they require BLAS
+if(test_tmva_sofie)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()
