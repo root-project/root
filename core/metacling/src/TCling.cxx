@@ -3191,6 +3191,30 @@ void TCling::ClearStack()
    // No-op for cling due to cling::Value.
 }
 
+namespace {
+   // Re-enable JIT symbol library autoloading (independently of class/dictionary
+   // autoloading) for the lifetime of the object. See its use in TCling::Declare
+   // and #16601.
+   class EnableAutoLoadingForJITSymbolsRAII {
+      TClingCallbacks *fCallbacks;
+      bool fOldValue = false;
+
+   public:
+      EnableAutoLoadingForJITSymbolsRAII(TClingCallbacks *callbacks) : fCallbacks(callbacks)
+      {
+         if (fCallbacks) {
+            fOldValue = fCallbacks->IsAutoLoadingForJITSymbols();
+            fCallbacks->SetAutoLoadingForJITSymbols(true);
+         }
+      }
+      ~EnableAutoLoadingForJITSymbolsRAII()
+      {
+         if (fCallbacks)
+            fCallbacks->SetAutoLoadingForJITSymbols(fOldValue);
+      }
+   };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Declare code to the interpreter, without any of the interpreter actions
 /// that could trigger a re-interpretation of the code. I.e. make cling
@@ -3205,6 +3229,12 @@ bool TCling::Declare(const char* code)
 
    SuspendAutoLoadingRAII autoLoadOff(this);
    SuspendAutoParsing autoParseRaii(this);
+
+   // The suspensions above make parsing behave like a plain compiler, but they also
+   // gate the JIT's library autoloading - and a declared global's static initializer
+   // may still need symbols from a not-yet-loaded library (e.g. TVectorT<float> from
+   // libMatrix). Re-allow autoloading for such genuine JIT symbol resolution. #16601
+   EnableAutoLoadingForJITSymbolsRAII autoLoadJITOn(fClingCallbacks);
 
    bool oldDynLookup = fInterpreter->isDynamicLookupEnabled();
    fInterpreter->enableDynamicLookup(false);

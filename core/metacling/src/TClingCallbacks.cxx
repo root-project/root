@@ -97,7 +97,14 @@ public:
                              llvm::orc::JITDylibLookupFlags JDLookupFlags,
                              const llvm::orc::SymbolLookupSet &Symbols) override
    {
-      if (!fCallbacks.IsAutoLoadingEnabled())
+      // The IsAutoLoadingEnabled() gate keeps speculative lookups (e.g. querying
+      // the address of a global that is not loaded) from triggering a costly scan
+      // of all libraries. But that gate is also flipped off by the class-autoloading
+      // suspension in TCling::Declare, which merely wants parsing to behave like a
+      // plain compiler - it must not stop us from autoloading a library whose
+      // symbols the emitted static-initializer code genuinely needs to run. Declare
+      // signals that case via IsAutoLoadingForJITSymbols(). See #16601.
+      if (!fCallbacks.IsAutoLoadingEnabled() && !fCallbacks.IsAutoLoadingForJITSymbols())
          return llvm::Error::success();
 
       // If we get here, the symbols have not been found in the current process,
