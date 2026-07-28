@@ -254,3 +254,31 @@ TEST(TTreeReaderLeafs, BranchAndLeafWithDifferentNames)
    EXPECT_EQ(*rvwithdot, 42);
    EXPECT_FALSE(r.Next());
 }
+
+// Test for https://github.com/root-project/root/issues/9758
+// A TTreeReaderArray of a typedef'd fundamental type (e.g. ULong64_t) must be
+// readable through the extended "branch.leaf" syntax, not only through the plain
+// branch name. The leaf type name ("ULong64_t") and the reader's resolved type
+// name ("unsigned long long") differ, so the leaf/reader match must compare the
+// underlying data type, not the dictionary identity.
+TEST(TTreeReaderLeafs, ArrayLeafTypedefWithDots)
+{
+   TTree t("t", "t");
+   Int_t n = 3;
+   ULong64_t x[3] = {1, 2, 3};
+   t.Branch("n", &n, "n/I");
+   t.Branch("x", x, "x[n]/l");
+   t.Fill();
+
+   TTreeReader r(&t);
+   TTreeReaderArray<ULong64_t> arr(r, "x");
+   TTreeReaderArray<ULong64_t> arrWithDot(r, "x.x");
+   ASSERT_TRUE(r.Next());
+   ASSERT_EQ(arr.GetSize(), 3u);
+   ASSERT_EQ(arrWithDot.GetSize(), 3u);
+   for (std::size_t i = 0; i < arr.GetSize(); ++i) {
+      EXPECT_EQ(arr[i], x[i]);
+      EXPECT_EQ(arrWithDot[i], x[i]);
+   }
+   EXPECT_FALSE(r.Next());
+}
