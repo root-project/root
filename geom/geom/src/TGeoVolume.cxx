@@ -2973,91 +2973,11 @@ void TGeoVolumeMulti::SetVisibility(Bool_t vis)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TGeoVolumeAssembly::ThreadData_t::ThreadData_t() : fCurrent(-1), fNext(-1) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoVolumeAssembly::ThreadData_t::~ThreadData_t() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TGeoVolumeAssembly::ThreadData_t &TGeoVolumeAssembly::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::ClearThreadData() const
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   TGeoVolume::ClearThreadData();
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   // Create assembly thread data here
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-      }
-   }
-   TGeoVolume::CreateThreadData(nthreads);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t TGeoVolumeAssembly::GetCurrentNodeIndex() const
-{
-   return fThreadData[TGeoManager::ThreadId()]->fCurrent;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t TGeoVolumeAssembly::GetNextNodeIndex() const
-{
-   return fThreadData[TGeoManager::ThreadId()]->fNext;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::SetCurrentNodeIndex(Int_t index)
-{
-   fThreadData[TGeoManager::ThreadId()]->fCurrent = index;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::SetNextNodeIndex(Int_t index)
-{
-   fThreadData[TGeoManager::ThreadId()]->fNext = index;
-}
-
+std::atomic<UInt_t> TGeoVolumeAssembly::fgInstanceCount{0};
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-TGeoVolumeAssembly::TGeoVolumeAssembly() : TGeoVolume()
-{
-   fThreadSize = 0;
-   CreateThreadData(1);
-}
+TGeoVolumeAssembly::TGeoVolumeAssembly() : TGeoVolume() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Just the name has to be provided. Assemblies does not have their own
@@ -3070,8 +2990,6 @@ TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name) : TGeoVolume()
    fShape = new TGeoShapeAssembly(this);
    if (fGeoManager)
       fNumber = fGeoManager->AddVolume(this);
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
