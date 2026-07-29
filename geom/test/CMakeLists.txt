@@ -21,6 +21,10 @@ ROOT_ADD_GTEST(tessellated
   test_tessellated.cxx
   LIBRARIES Geom)
 
+ROOT_ADD_GTEST(thread_navigation
+  test_thread_navigation.cxx
+  LIBRARIES Geom)
+
 if(imt)
   ROOT_ADD_GTEST(manager_lifetime
     test_manager_lifetime.cxx

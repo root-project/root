@@ -1,0 +1,188 @@
+#include <gtest/gtest.h>
+
+#include <TGeoBBox.h>
+#include <TGeoCompositeShape.h>
+#include <TGeoManager.h>
+#include <TGeoMatrix.h>
+#include <TGeoMaterial.h>
+#include <TGeoMedium.h>
+#include <TGeoNavigator.h>
+#include <TGeoNode.h>
+#include <TGeoPgon.h>
+#include <TGeoTube.h>
+#include <TGeoVolume.h>
+#include <TGeoXtru.h>
+
+#include <algorithm>
+#include <cmath>
+#include <thread>
+#include <vector>
+
+/**
+   Navigating the same geometry from several threads must give exactly the same answer as
+   navigating it from one. This exercises every class that keeps per-thread scratch state:
+   TGeoXtru, TGeoPgon, TGeoVolumeAssembly, TGeoBoolNode (via a composite shape) and
+   TGeoPatternFinder (via a divided volume).
+
+   Worth running under ThreadSanitizer: the threads book their navigators lazily, so this
+   also covers concurrent TGeoManager::AddNavigator() against navigator-map readers.
+*/
+
+namespace {
+
+/// Geometry containing one instance of each shape family that owns per-thread data.
+TGeoManager *MakeGeometry()
+{
+   auto *geom = new TGeoManager("mt_nav_geom", "geometry for MT navigation test");
+
+   auto *matVac = new TGeoMaterial("Vacuum", 0, 0, 0);
+   auto *matAl = new TGeoMaterial("Al", 26.98, 13, 2.7);
+   auto *vac = new TGeoMedium("Vacuum", 1, matVac);
+   auto *alu = new TGeoMedium("Aluminium", 2, matAl);
+
+   TGeoVolume *top = geom->MakeBox("TOP", vac, 100., 100., 100.);
+   geom->SetTopVolume(top);
+
+   // --- TGeoXtru: convex, simple polygon extruded over two sections
+   Double_t xv[5] = {-10., -5., 5., 10., 0.};
+   Double_t yv[5] = {-6., -10., -10., -6., 10.};
+   auto *xtru = new TGeoXtru(2);
+   xtru->DefinePolygon(5, xv, yv);
+   xtru->DefineSection(0, -20., 0., 0., 1.);
+   xtru->DefineSection(1, 20., 0., 0., 1.);
+   top->AddNode(new TGeoVolume("XTRU", xtru, alu), 1, new TGeoTranslation(-45., 0., 0.));
+
+   // --- TGeoPgon
+   auto *pgon = new TGeoPgon("pgon", 0., 360., 8, 2);
+   pgon->DefineSection(0, -20., 5., 12.);
+   pgon->DefineSection(1, 20., 5., 12.);
+   top->AddNode(new TGeoVolume("PGON", pgon, alu), 1, new TGeoTranslation(45., 0., 0.));
+
+   // --- TGeoBoolNode, through a composite shape
+   new TGeoBBox("cbox", 12., 12., 12.);
+   new TGeoTube("ctub", 0., 6., 20.);
+   auto *comp = new TGeoCompositeShape("comp", "cbox - ctub");
+   top->AddNode(new TGeoVolume("COMP", comp, alu), 1, new TGeoTranslation(0., 45., 0.));
+
+   // --- TGeoPatternFinder, through a divided volume
+   TGeoVolume *slab = geom->MakeBox("SLAB", alu, 20., 5., 5.);
+   slab->Divide("SLABDIV", 1, 10, -20., 4.);
+   top->AddNode(slab, 1, new TGeoTranslation(0., -45., 0.));
+
+   // --- TGeoVolumeAssembly
+   auto *assembly = new TGeoVolumeAssembly("ASSEMBLY");
+   TGeoVolume *brick = geom->MakeBox("BRICK", alu, 3., 3., 3.);
+   for (int i = 0; i < 6; ++i)
+      assembly->AddNode(brick, i + 1, new TGeoTranslation(0., 0., -25. + 10. * i));
+   top->AddNode(assembly, 1, new TGeoTranslation(0., 0., 0.));
+
+   geom->CloseGeometry();
+   return geom;
+}
+
+struct Ray {
+   Double_t point[3];
+   Double_t dir[3];
+};
+
+/// Deterministic fan of rays aimed at each shape, so every class with per-thread state is
+/// actually traversed. Start points sit 40 cm from the target, well inside the world volume.
+std::vector<Ray> MakeRays()
+{
+   const Double_t targets[][3] = {
+      {-45., 0., 0.}, {-45., 0., 10.}, {-45., 3., -10.}, // XTRU
+      {45., 0., 0.},  {45., 0., 10.},  {45., 8., -10.},  // PGON
+      {0., 45., 0.},  {0., 45., 8.},   {8., 45., 0.},    // composite (box minus tube)
+      {0., -45., 0.}, {5., -45., 0.},  {-5., -45., 2.},  // divided slab
+      {0., 0., -25.}, {0., 0., -5.},   {0., 0., 15.},    // assembly bricks
+   };
+   std::vector<Ray> rays;
+   for (const auto &t : targets) {
+      for (int i = 0; i < 12; ++i) {
+         const double phi = 2. * M_PI * i / 12.;
+         const double theta = 0.4 + 0.15 * (i % 5);
+         const double d[3] = {std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta)};
+         Ray ray;
+         for (int k = 0; k < 3; ++k) {
+            ray.point[k] = t[k] + 40. * d[k];
+            ray.dir[k] = -d[k];
+         }
+         rays.push_back(ray);
+      }
+   }
+   return rays;
+}
+
+struct RayResult {
+   Int_t nsteps{0};
+   Double_t pathlen{0.};
+   Long64_t checksum{0}; // sequence of volumes traversed
+
+   bool operator==(const RayResult &o) const
+   {
+      return nsteps == o.nsteps && checksum == o.checksum && std::abs(pathlen - o.pathlen) < 1e-9;
+   }
+};
+
+RayResult ShootRay(TGeoNavigator *nav, const Ray &ray)
+{
+   RayResult res;
+   nav->InitTrack(ray.point, ray.dir);
+   while (!nav->IsOutside() && res.nsteps < 500) {
+      TGeoNode *node = nav->GetCurrentNode();
+      res.checksum = res.checksum * 31 + (node ? node->GetVolume()->GetNumber() : -1);
+      nav->FindNextBoundaryAndStep(1.e6, kFALSE);
+      res.pathlen += nav->GetStep();
+      ++res.nsteps;
+      if (!nav->IsOnBoundary())
+         break;
+   }
+   return res;
+}
+
+} // namespace
+
+TEST(Geometry, MultiThreadedNavigationMatchesSerial)
+{
+   TGeoManager *geom = MakeGeometry();
+   ASSERT_NE(geom, nullptr);
+   const std::vector<Ray> rays = MakeRays();
+
+   // Reference: single-threaded, default navigator.
+   std::vector<RayResult> reference;
+   reference.reserve(rays.size());
+   for (const Ray &ray : rays)
+      reference.push_back(ShootRay(geom->GetCurrentNavigator(), ray));
+
+   // Rays that miss every object legitimately cross a single boundary (the world). Guard against
+   // a vacuous comparison by requiring that a good share of them actually traverse the shapes.
+   const size_t nTraversing =
+      std::count_if(reference.begin(), reference.end(), [](const RayResult &r) { return r.nsteps > 2; });
+   ASSERT_GT(nTraversing, reference.size() / 2);
+
+   constexpr int kNThreads = 8;
+   geom->SetMaxThreads(kNThreads);
+
+   std::vector<std::vector<RayResult>> perThread(kNThreads);
+   std::vector<std::thread> threads;
+   threads.reserve(kNThreads);
+   for (int t = 0; t < kNThreads; ++t) {
+      threads.emplace_back([&, t] {
+         // Booked lazily and concurrently, exactly as a task-parallel workload would.
+         TGeoNavigator *nav = geom->AddNavigator();
+         perThread[t].reserve(rays.size());
+         for (const Ray &ray : rays)
+            perThread[t].push_back(ShootRay(nav, ray));
+      });
+   }
+   for (std::thread &th : threads)
+      th.join();
+
+   for (int t = 0; t < kNThreads; ++t) {
+      ASSERT_EQ(perThread[t].size(), reference.size()) << "thread " << t;
+      for (size_t i = 0; i < reference.size(); ++i)
+         EXPECT_TRUE(perThread[t][i] == reference[i]) << "thread " << t << ", ray " << i;
+   }
+
+   delete geom;
+}
