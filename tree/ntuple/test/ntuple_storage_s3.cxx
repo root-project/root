@@ -11,6 +11,9 @@
 #include "TSocket.h"
 #include "TSystem.h"
 
+#include <nlohmann/json.hpp>
+#include <xxhash.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -20,27 +23,64 @@
 
 using RNTupleAnchorS3 = ROOT::Experimental::Internal::RNTupleAnchorS3;
 
+namespace {
+
+/// Build a JSON object with all required anchor fields at their defaults.
+nlohmann::json MakeAnchorJson()
+{
+   nlohmann::json jsonAnchor;
+   jsonAnchor["anchorVersion"] = 0;
+   jsonAnchor["formatVersionEpoch"] = ROOT::RNTuple::kVersionEpoch;
+   jsonAnchor["formatVersionMajor"] = ROOT::RNTuple::kVersionMajor;
+   jsonAnchor["formatVersionMinor"] = ROOT::RNTuple::kVersionMinor;
+   jsonAnchor["formatVersionPatch"] = ROOT::RNTuple::kVersionPatch;
+   jsonAnchor["urlTemplate"] = "${baseurl}/${objid}";
+   jsonAnchor["cloneTemplate"] = "${baseurl}/_clone/${name}";
+   jsonAnchor["headerObjId"] = 0;
+   jsonAnchor["headerOffset"] = 0;
+   jsonAnchor["nBytesHeader"] = 0;
+   jsonAnchor["lenHeader"] = 0;
+   jsonAnchor["footerObjId"] = 0;
+   jsonAnchor["footerOffset"] = 0;
+   jsonAnchor["nBytesFooter"] = 0;
+   jsonAnchor["lenFooter"] = 0;
+   return jsonAnchor;
+}
+
+/// Build JSON, add checksum, parse to anchor.
+RNTupleAnchorS3 MakeAnchor(const nlohmann::json &jsonAnchor)
+{
+   auto canonicalJson = jsonAnchor.dump(-1);
+   auto checksum = XXH3_64bits(canonicalJson.data(), canonicalJson.size());
+   nlohmann::json jsonWithChecksum = jsonAnchor;
+   jsonWithChecksum["checksum"] = checksum;
+   auto result = RNTupleAnchorS3::CreateFromJSON(jsonWithChecksum.dump());
+   return result.Inspect();
+}
+
+} // anonymous namespace
+
 // ==================== RNTupleAnchorS3 Tests ====================
 
 TEST(RNTupleAnchorS3, RoundTrip)
 {
-   RNTupleAnchorS3 orig;
-   orig.fVersionAnchor = 0;
-   orig.fVersionEpoch = 1;
-   orig.fVersionMajor = 0;
-   orig.fVersionMinor = 2;
-   orig.fVersionPatch = 0;
-   orig.fUrlTemplate = "https://bucket.s3.us-east-1.amazonaws.com/data/${objid}";
-   orig.fCloneTemplate = "${baseurl}/clones/${name}";
-   orig.fHeaderObjId = 1;
-   orig.fHeaderOffset = 0;
-   orig.fNBytesHeader = 1200;
-   orig.fLenHeader = 4096;
-   orig.fFooterObjId = 42;
-   orig.fFooterOffset = 0;
-   orig.fNBytesFooter = 800;
-   orig.fLenFooter = 2048;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["formatVersionEpoch"] = 1;
+   jsonAnchor["formatVersionMajor"] = 0;
+   jsonAnchor["formatVersionMinor"] = 2;
+   jsonAnchor["formatVersionPatch"] = 0;
+   jsonAnchor["urlTemplate"] = "https://bucket.s3.us-east-1.amazonaws.com/data/${objid}";
+   jsonAnchor["cloneTemplate"] = "${baseurl}/clones/${name}";
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["headerOffset"] = 0;
+   jsonAnchor["nBytesHeader"] = 1200;
+   jsonAnchor["lenHeader"] = 4096;
+   jsonAnchor["footerObjId"] = 42;
+   jsonAnchor["footerOffset"] = 0;
+   jsonAnchor["nBytesFooter"] = 800;
+   jsonAnchor["lenFooter"] = 2048;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    EXPECT_FALSE(json.empty());
 
@@ -49,21 +89,21 @@ TEST(RNTupleAnchorS3, RoundTrip)
    const auto &parsed = result.Inspect();
 
    EXPECT_EQ(orig, parsed);
-   EXPECT_EQ(0u, parsed.fVersionAnchor);
-   EXPECT_EQ(1u, parsed.fVersionEpoch);
-   EXPECT_EQ(0u, parsed.fVersionMajor);
-   EXPECT_EQ(2u, parsed.fVersionMinor);
-   EXPECT_EQ(0u, parsed.fVersionPatch);
-   EXPECT_EQ("https://bucket.s3.us-east-1.amazonaws.com/data/${objid}", parsed.fUrlTemplate);
-   EXPECT_EQ("${baseurl}/clones/${name}", parsed.fCloneTemplate);
-   EXPECT_EQ(1u, parsed.fHeaderObjId);
-   EXPECT_EQ(0u, parsed.fHeaderOffset);
-   EXPECT_EQ(1200u, parsed.fNBytesHeader);
-   EXPECT_EQ(4096u, parsed.fLenHeader);
-   EXPECT_EQ(42u, parsed.fFooterObjId);
-   EXPECT_EQ(0u, parsed.fFooterOffset);
-   EXPECT_EQ(800u, parsed.fNBytesFooter);
-   EXPECT_EQ(2048u, parsed.fLenFooter);
+   EXPECT_EQ(0u, parsed.GetVersionAnchor());
+   EXPECT_EQ(1u, parsed.GetVersionEpoch());
+   EXPECT_EQ(0u, parsed.GetVersionMajor());
+   EXPECT_EQ(2u, parsed.GetVersionMinor());
+   EXPECT_EQ(0u, parsed.GetVersionPatch());
+   EXPECT_EQ("https://bucket.s3.us-east-1.amazonaws.com/data/${objid}", parsed.GetUrlTemplate());
+   EXPECT_EQ("${baseurl}/clones/${name}", parsed.GetCloneTemplate());
+   EXPECT_EQ(1u, parsed.GetHeaderObjId());
+   EXPECT_EQ(0u, parsed.GetHeaderOffset());
+   EXPECT_EQ(1200u, parsed.GetNBytesHeader());
+   EXPECT_EQ(4096u, parsed.GetLenHeader());
+   EXPECT_EQ(42u, parsed.GetFooterObjId());
+   EXPECT_EQ(0u, parsed.GetFooterOffset());
+   EXPECT_EQ(800u, parsed.GetNBytesFooter());
+   EXPECT_EQ(2048u, parsed.GetLenFooter());
 }
 
 TEST(RNTupleAnchorS3, UnsupportedVersion)
@@ -75,7 +115,7 @@ TEST(RNTupleAnchorS3, UnsupportedVersion)
 
 TEST(RNTupleAnchorS3, MissingField)
 {
-   // Valid JSON but missing footer fields
+   // Valid JSON but missing footer fields and cloneTemplate
    std::string json = R"({
      "anchorVersion": 0,
      "formatVersionEpoch": 1,
@@ -94,19 +134,20 @@ TEST(RNTupleAnchorS3, MissingField)
 
 TEST(RNTupleAnchorS3, SpecialCharsInUrl)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "https://example.com/path/with\"quotes/${objid}";
-   orig.fHeaderObjId = 1;
-   orig.fNBytesHeader = 100;
-   orig.fLenHeader = 200;
-   orig.fFooterObjId = 2;
-   orig.fNBytesFooter = 50;
-   orig.fLenFooter = 100;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["urlTemplate"] = "https://example.com/path/with\"quotes/${objid}";
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
+   jsonAnchor["footerObjId"] = 2;
+   jsonAnchor["nBytesFooter"] = 50;
+   jsonAnchor["lenFooter"] = 100;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
-   EXPECT_EQ(orig.fUrlTemplate, result.Inspect().fUrlTemplate);
+   EXPECT_EQ(orig.GetUrlTemplate(), result.Inspect().GetUrlTemplate());
 }
 
 TEST(RNTupleAnchorS3, MalformedJson)
@@ -126,15 +167,15 @@ TEST(RNTupleAnchorS3, MalformedJson)
 
 TEST(RNTupleAnchorS3, ExtraFieldsDetectedByChecksum)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "${baseurl}/${objid}";
-   orig.fHeaderObjId = 1;
-   orig.fNBytesHeader = 500;
-   orig.fLenHeader = 1000;
-   orig.fFooterObjId = 10;
-   orig.fNBytesFooter = 300;
-   orig.fLenFooter = 600;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["nBytesHeader"] = 500;
+   jsonAnchor["lenHeader"] = 1000;
+   jsonAnchor["footerObjId"] = 10;
+   jsonAnchor["nBytesFooter"] = 300;
+   jsonAnchor["lenFooter"] = 600;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    // Inject an unknown field; the checksum no longer matches because the reader hashes
    // all non-checksum fields, including unknown ones added by tampering.
@@ -147,64 +188,64 @@ TEST(RNTupleAnchorS3, ExtraFieldsDetectedByChecksum)
 
 TEST(RNTupleAnchorS3, LargeObjectIds)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "${baseurl}/${objid}";
-   orig.fHeaderObjId = 4294967296ULL; // 2^32 -- beyond uint32 range
-   orig.fHeaderOffset = 0;
-   orig.fNBytesHeader = 100;
-   orig.fLenHeader = 200;
-   orig.fFooterObjId = 9007199254740993ULL; // 2^53 + 1 -- beyond double precision
-   orig.fFooterOffset = 1099511627776ULL;   // 2^40
-   orig.fNBytesFooter = 50;
-   orig.fLenFooter = 100;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = 4294967296ULL; // 2^32 -- beyond uint32 range
+   jsonAnchor["headerOffset"] = 0;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
+   jsonAnchor["footerObjId"] = 9007199254740993ULL; // 2^53 + 1 -- beyond double precision
+   jsonAnchor["footerOffset"] = 1099511627776ULL;   // 2^40
+   jsonAnchor["nBytesFooter"] = 50;
+   jsonAnchor["lenFooter"] = 100;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
    const auto &parsed = result.Inspect();
-   EXPECT_EQ(4294967296ULL, parsed.fHeaderObjId);
-   EXPECT_EQ(9007199254740993ULL, parsed.fFooterObjId);
-   EXPECT_EQ(1099511627776ULL, parsed.fFooterOffset);
+   EXPECT_EQ(4294967296ULL, parsed.GetHeaderObjId());
+   EXPECT_EQ(9007199254740993ULL, parsed.GetFooterObjId());
+   EXPECT_EQ(1099511627776ULL, parsed.GetFooterOffset());
 }
 
 TEST(RNTupleAnchorS3, DefaultValues)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "${baseurl}/${objid}";
+   auto orig = MakeAnchor(MakeAnchorJson());
 
    auto json = orig.ToJSON();
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
    const auto &parsed = result.Inspect();
-   EXPECT_EQ(0u, parsed.fHeaderObjId);
-   EXPECT_EQ(0u, parsed.fNBytesHeader);
-   EXPECT_EQ(0u, parsed.fLenHeader);
-   EXPECT_EQ(0u, parsed.fFooterObjId);
-   EXPECT_EQ(0u, parsed.fNBytesFooter);
-   EXPECT_EQ(0u, parsed.fLenFooter);
+   EXPECT_EQ(0u, parsed.GetHeaderObjId());
+   EXPECT_EQ(0u, parsed.GetNBytesHeader());
+   EXPECT_EQ(0u, parsed.GetLenHeader());
+   EXPECT_EQ(0u, parsed.GetFooterObjId());
+   EXPECT_EQ(0u, parsed.GetNBytesFooter());
+   EXPECT_EQ(0u, parsed.GetLenFooter());
 }
 
 TEST(RNTupleAnchorS3, UrlTemplateDefault)
 {
    // A freshly constructed anchor carries the writer's default object-naming scheme.
-   EXPECT_EQ("${baseurl}/${objid}", RNTupleAnchorS3().fUrlTemplate);
+   EXPECT_EQ("${baseurl}/${objid}", RNTupleAnchorS3().GetUrlTemplate());
 }
 
 TEST(RNTupleAnchorS3, BackslashInUrl)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "C:\\Users\\data\\${objid}";
-   orig.fHeaderObjId = 1;
-   orig.fNBytesHeader = 100;
-   orig.fLenHeader = 200;
-   orig.fFooterObjId = 2;
-   orig.fNBytesFooter = 50;
-   orig.fLenFooter = 100;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["urlTemplate"] = "C:\\Users\\data\\${objid}";
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
+   jsonAnchor["footerObjId"] = 2;
+   jsonAnchor["nBytesFooter"] = 50;
+   jsonAnchor["lenFooter"] = 100;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
-   EXPECT_EQ("C:\\Users\\data\\${objid}", result.Inspect().fUrlTemplate);
+   EXPECT_EQ("C:\\Users\\data\\${objid}", result.Inspect().GetUrlTemplate());
 }
 
 TEST(RNTupleAnchorS3, MissingAnchorVersion)
@@ -230,37 +271,40 @@ TEST(RNTupleAnchorS3, MissingAnchorVersion)
 
 TEST(RNTupleAnchorS3, Equality)
 {
-   RNTupleAnchorS3 a;
-   a.fUrlTemplate = "${baseurl}/${objid}";
-   a.fHeaderObjId = 1;
-   a.fNBytesHeader = 100;
-   a.fLenHeader = 200;
-   a.fFooterObjId = 2;
-   a.fNBytesFooter = 50;
-   a.fLenFooter = 100;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
+   jsonAnchor["footerObjId"] = 2;
+   jsonAnchor["nBytesFooter"] = 50;
+   jsonAnchor["lenFooter"] = 100;
 
-   RNTupleAnchorS3 b = a;
+   auto a = MakeAnchor(jsonAnchor);
+   auto b = MakeAnchor(jsonAnchor);
    EXPECT_EQ(a, b);
 
-   b.fHeaderObjId = 99;
-   EXPECT_FALSE(a == b);
+   auto jsonAnchor2 = jsonAnchor;
+   jsonAnchor2["headerObjId"] = 99;
+   auto c = MakeAnchor(jsonAnchor2);
+   EXPECT_NE(a, c);
 
-   b = a;
-   b.fCloneTemplate = "${baseurl}/other/${name}";
-   EXPECT_FALSE(a == b);
+   auto jsonAnchor3 = jsonAnchor;
+   jsonAnchor3["cloneTemplate"] = "${baseurl}/other/${name}";
+   auto d = MakeAnchor(jsonAnchor3);
+   EXPECT_NE(a, d);
 }
 
 TEST(RNTupleAnchorS3, ToJSONProducesValidJson)
 {
-   RNTupleAnchorS3 anchor;
-   anchor.fUrlTemplate = "${baseurl}/${objid}";
-   anchor.fHeaderObjId = 5;
-   anchor.fNBytesHeader = 500;
-   anchor.fLenHeader = 1000;
-   anchor.fFooterObjId = 10;
-   anchor.fNBytesFooter = 300;
-   anchor.fLenFooter = 600;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = 5;
+   jsonAnchor["nBytesHeader"] = 500;
+   jsonAnchor["lenHeader"] = 1000;
+   jsonAnchor["footerObjId"] = 10;
+   jsonAnchor["nBytesFooter"] = 300;
+   jsonAnchor["lenFooter"] = 600;
 
+   auto anchor = MakeAnchor(jsonAnchor);
    auto json = anchor.ToJSON();
 
    // Basic structural checks for valid JSON
@@ -279,15 +323,16 @@ TEST(RNTupleAnchorS3, ToJSONProducesValidJson)
 
 TEST(RNTupleAnchorS3, NewlinesAndTabsInUrl)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "https://example.com/path\twith\ttabs\nand\nnewlines/${objid}";
-   orig.fHeaderObjId = 1;
-   orig.fNBytesHeader = 100;
-   orig.fLenHeader = 200;
-   orig.fFooterObjId = 2;
-   orig.fNBytesFooter = 50;
-   orig.fLenFooter = 100;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["urlTemplate"] = "https://example.com/path\twith\ttabs\nand\nnewlines/${objid}";
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
+   jsonAnchor["footerObjId"] = 2;
+   jsonAnchor["nBytesFooter"] = 50;
+   jsonAnchor["lenFooter"] = 100;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    // Verify the JSON doesn't contain literal tabs/newlines inside the string value
    // (they should be escaped as \t and \n)
@@ -308,7 +353,7 @@ TEST(RNTupleAnchorS3, NewlinesAndTabsInUrl)
 
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
-   EXPECT_EQ(orig.fUrlTemplate, result.Inspect().fUrlTemplate);
+   EXPECT_EQ(orig.GetUrlTemplate(), result.Inspect().GetUrlTemplate());
 }
 
 TEST(RNTupleAnchorS3, WrongFieldType)
@@ -324,19 +369,20 @@ TEST(RNTupleAnchorS3, WrongFieldType)
 
 TEST(RNTupleAnchorS3, EmptyUrlTemplate)
 {
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "";
-   orig.fHeaderObjId = 1;
-   orig.fNBytesHeader = 100;
-   orig.fLenHeader = 200;
-   orig.fFooterObjId = 2;
-   orig.fNBytesFooter = 50;
-   orig.fLenFooter = 100;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["urlTemplate"] = "";
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
+   jsonAnchor["footerObjId"] = 2;
+   jsonAnchor["nBytesFooter"] = 50;
+   jsonAnchor["lenFooter"] = 100;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
-   EXPECT_EQ("", result.Inspect().fUrlTemplate);
+   EXPECT_EQ("", result.Inspect().GetUrlTemplate());
 }
 
 TEST(RNTupleAnchorS3, JsonArray)
@@ -349,40 +395,41 @@ TEST(RNTupleAnchorS3, JsonArray)
 TEST(RNTupleAnchorS3, MaxUint64Values)
 {
    // Test boundary values for all uint64 fields
-   RNTupleAnchorS3 orig;
-   orig.fUrlTemplate = "${baseurl}/${objid}";
-   orig.fHeaderObjId = UINT64_MAX;
-   orig.fHeaderOffset = UINT64_MAX;
-   orig.fNBytesHeader = UINT64_MAX;
-   orig.fLenHeader = UINT64_MAX;
-   orig.fFooterObjId = UINT64_MAX;
-   orig.fFooterOffset = UINT64_MAX;
-   orig.fNBytesFooter = UINT64_MAX;
-   orig.fLenFooter = UINT64_MAX;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = UINT64_MAX;
+   jsonAnchor["headerOffset"] = UINT64_MAX;
+   jsonAnchor["nBytesHeader"] = UINT64_MAX;
+   jsonAnchor["lenHeader"] = UINT64_MAX;
+   jsonAnchor["footerObjId"] = UINT64_MAX;
+   jsonAnchor["footerOffset"] = UINT64_MAX;
+   jsonAnchor["nBytesFooter"] = UINT64_MAX;
+   jsonAnchor["lenFooter"] = UINT64_MAX;
 
+   auto orig = MakeAnchor(jsonAnchor);
    auto json = orig.ToJSON();
    auto result = RNTupleAnchorS3::CreateFromJSON(json);
    ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
    const auto &parsed = result.Inspect();
-   EXPECT_EQ(UINT64_MAX, parsed.fHeaderObjId);
-   EXPECT_EQ(UINT64_MAX, parsed.fHeaderOffset);
-   EXPECT_EQ(UINT64_MAX, parsed.fNBytesHeader);
-   EXPECT_EQ(UINT64_MAX, parsed.fLenHeader);
-   EXPECT_EQ(UINT64_MAX, parsed.fFooterObjId);
-   EXPECT_EQ(UINT64_MAX, parsed.fFooterOffset);
-   EXPECT_EQ(UINT64_MAX, parsed.fNBytesFooter);
-   EXPECT_EQ(UINT64_MAX, parsed.fLenFooter);
+   EXPECT_EQ(UINT64_MAX, parsed.GetHeaderObjId());
+   EXPECT_EQ(UINT64_MAX, parsed.GetHeaderOffset());
+   EXPECT_EQ(UINT64_MAX, parsed.GetNBytesHeader());
+   EXPECT_EQ(UINT64_MAX, parsed.GetLenHeader());
+   EXPECT_EQ(UINT64_MAX, parsed.GetFooterObjId());
+   EXPECT_EQ(UINT64_MAX, parsed.GetFooterOffset());
+   EXPECT_EQ(UINT64_MAX, parsed.GetNBytesFooter());
+   EXPECT_EQ(UINT64_MAX, parsed.GetLenFooter());
 }
 
 // ==================== Checksum Tests ====================
 
 TEST(RNTupleAnchorS3, ChecksumMismatch)
 {
-   RNTupleAnchorS3 anchor;
-   anchor.fHeaderObjId = 42;
-   anchor.fNBytesHeader = 100;
-   anchor.fLenHeader = 200;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = 42;
+   jsonAnchor["nBytesHeader"] = 100;
+   jsonAnchor["lenHeader"] = 200;
 
+   auto anchor = MakeAnchor(jsonAnchor);
    auto json = anchor.ToJSON();
 
    // Corrupt a data field while keeping the old checksum
@@ -404,6 +451,7 @@ TEST(RNTupleAnchorS3, MissingChecksumRejected)
      "formatVersionMinor": 0,
      "formatVersionPatch": 0,
      "urlTemplate": "${baseurl}/${objid}",
+     "cloneTemplate": "${baseurl}/_clone/${name}",
      "headerObjId": 0,
      "headerOffset": 0,
      "nBytesHeader": 0,
@@ -420,14 +468,15 @@ TEST(RNTupleAnchorS3, MissingChecksumRejected)
 
 TEST(RNTupleAnchorS3, ChecksumDeterministic)
 {
-   RNTupleAnchorS3 anchor;
-   anchor.fHeaderObjId = 1;
-   anchor.fFooterObjId = 5;
-   anchor.fNBytesHeader = 80;
-   anchor.fLenHeader = 100;
-   anchor.fNBytesFooter = 150;
-   anchor.fLenFooter = 200;
+   auto jsonAnchor = MakeAnchorJson();
+   jsonAnchor["headerObjId"] = 1;
+   jsonAnchor["footerObjId"] = 5;
+   jsonAnchor["nBytesHeader"] = 80;
+   jsonAnchor["lenHeader"] = 100;
+   jsonAnchor["nBytesFooter"] = 150;
+   jsonAnchor["lenFooter"] = 200;
 
+   auto anchor = MakeAnchor(jsonAnchor);
    auto json1 = anchor.ToJSON();
    auto json2 = anchor.ToJSON();
    EXPECT_EQ(json1, json2) << "ToJSON must produce identical output for the same data";

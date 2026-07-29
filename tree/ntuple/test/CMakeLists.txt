@@ -177,7 +177,7 @@ if(daos OR daos_mock)
 endif()
 
 if(curl)
-  ROOT_ADD_GTEST(ntuple_storage_s3 ntuple_storage_s3.cxx LIBRARIES ROOTNTuple Net)
+  ROOT_ADD_GTEST(ntuple_storage_s3 ntuple_storage_s3.cxx LIBRARIES ROOTNTuple Net nlohmann_json::nlohmann_json xxHash::xxHash)
 endif()
 
 
