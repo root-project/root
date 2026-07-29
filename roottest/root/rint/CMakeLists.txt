@@ -16,6 +16,15 @@ ROOTTEST_ADD_TEST(BackslashNewline
                   COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                   INPUT BackslashNewline_input.txt)
 
+# issue 7626: ".> file" must redirect the output of the executed code to the
+# file while keeping the prompt and the typed characters on the terminal (so
+# they never leak into the file). driveRedirect.py emits the content of the
+# redirected file; the reference contains only that output.
+ROOTTEST_ADD_TEST(Redirect
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveRedirect.py
+                  INPUT redirect_input.txt
+                  OUTREF redirect.oref)
+
 # issue 6439
 if(dataframe)
   ROOTTEST_ADD_TEST(failedCompilationBadState_1
