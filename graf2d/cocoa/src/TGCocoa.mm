@@ -579,8 +579,11 @@ void TGCocoa::Update(Int_t mode)
    R__LOCKGUARD(gROOTMutex);
 
    if (mode == 2) {
-      assert(gClient != 0 && "Update, gClient is null");
-      gClient->DoRedraw();//Call DoRedraw for all widgets, who need to be updated.
+      // with none-virtualX displays like qt6canv gClient not created at all
+      // while graphics libraries can be loaded by different ways prvent crash when client not present
+      // before not defined gClient was triggering assert here
+      if (gClient)
+         gClient->DoRedraw();//Call DoRedraw for all widgets, who need to be updated.
    } else if (mode > 0) {
       //Execute buffered commands.
       fPimpl->fX11CommandBuffer.Flush(fPimpl.get());
