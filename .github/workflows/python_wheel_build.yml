@@ -81,6 +81,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.config.deployment_target }}
         with:
           build-tag: ${{ matrix.python }}-${{ matrix.config.platform }}
+          artifact-name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
 
   Test_Wheels:
     needs: Build_Wheel
