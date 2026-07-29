@@ -177,82 +177,76 @@ int readLegacyInterpolationCode(const JSONNode &node, const std::string &context
    return code;
 }
 
-Interpolation interpolationFromPiecewiseCode(int code, const std::string &context)
-{
-   switch (code) {
-   case 0: return additivePiecewiseLinear;
-   case 1: return multiplicativePiecewiseExponential;
-   case 2:
-   case 3: return additiveQuadraticLinear;
-   case 4: return additivePolynomialLinear;
-   case 5: return multiplicativePolynomialExponential;
-   case 6: return multiplicativePolynomialLinear;
-   default:
-      RooJSONFactoryWSTool::error(context + " has unsupported PiecewiseInterpolation code " + std::to_string(code));
-   }
-}
-
-Interpolation interpolationFromFlexibleCode(int code, const std::string &context)
-{
-   switch (code) {
-   case 0: return additivePiecewiseLinear;
-   case 1: return multiplicativePiecewiseExponential;
-   case 2:
-   case 3: return additiveQuadraticLinear;
-   case 4:
-   case 5: return multiplicativePolynomialExponential;
-   default: RooJSONFactoryWSTool::error(context + " has unsupported FlexibleInterpVar code " + std::to_string(code));
-   }
-}
-
-int piecewiseCodeFromInterpolation(const Interpolation &interpolation, const std::string &context)
-{
-   if (interpolation == additivePiecewiseLinear)
-      return 0;
-   if (interpolation == multiplicativePiecewiseExponential)
-      return 1;
-   if (interpolation == additiveQuadraticLinear)
-      return 2;
-   if (interpolation == additivePolynomialLinear)
-      return 4;
-   if (interpolation == multiplicativePolynomialExponential)
-      return 5;
-   if (interpolation == multiplicativePolynomialLinear)
-      return 6;
-   RooJSONFactoryWSTool::error(context + " " + interpolationString(interpolation) +
-                               " cannot be represented by PiecewiseInterpolation");
-}
-
-int flexibleCodeFromInterpolation(const Interpolation &interpolation, const std::string &context)
-{
-   if (interpolation == additivePiecewiseLinear)
-      return 0;
-   if (interpolation == multiplicativePiecewiseExponential)
-      return 1;
-   if (interpolation == additiveQuadraticLinear)
-      return 2;
-   if (interpolation == multiplicativePolynomialExponential)
-      return 4;
-   RooJSONFactoryWSTool::error(context + " " + interpolationString(interpolation) +
-                               " cannot be represented by FlexibleInterpVar");
-}
-
 enum class InterpolationClass {
    Piecewise,
    Flexible
 };
 
+// Single source of truth for the mapping between the structured HS3 interpolation
+// descriptors and the RooFit integer codes of PiecewiseInterpolation and
+// FlexibleInterpVar. A code of `kUnrepresentable` means the descriptor cannot be
+// expressed by that class: FlexibleInterpVar internally remaps code 4 to code 5,
+// so it has no additive-linear or multiplicative-linear poly6 variant.
+struct InterpolationCodes {
+   const Interpolation &descriptor;
+   int piecewise;
+   int flexible;
+};
+
+constexpr int kUnrepresentable = -1;
+
+// clang-format off
+const std::vector<InterpolationCodes> interpolationTable{
+   {additivePiecewiseLinear,             0, 0},
+   {multiplicativePiecewiseExponential,  1, 1},
+   {additiveQuadraticLinear,             2, 2},
+   {additivePolynomialLinear,            4, kUnrepresentable},
+   {multiplicativePolynomialExponential, 5, 4},
+   {multiplicativePolynomialLinear,      6, kUnrepresentable},
+};
+// clang-format on
+
+int codeForClass(const InterpolationCodes &row, InterpolationClass interpolationClass)
+{
+   return interpolationClass == InterpolationClass::Piecewise ? row.piecewise : row.flexible;
+}
+
+const char *interpolationClassName(InterpolationClass interpolationClass)
+{
+   return interpolationClass == InterpolationClass::Piecewise ? "PiecewiseInterpolation" : "FlexibleInterpVar";
+}
+
 Interpolation interpolationFromCode(int code, InterpolationClass interpolationClass, const std::string &context)
 {
-   return interpolationClass == InterpolationClass::Piecewise ? interpolationFromPiecewiseCode(code, context)
-                                                              : interpolationFromFlexibleCode(code, context);
+   // Code 3 was historically an unimplemented alias of code 2 for both classes,
+   // and FlexibleInterpVar treats code 5 identically to its canonical code 4.
+   if (code == 3) {
+      code = 2;
+   }
+   if (interpolationClass == InterpolationClass::Flexible && code == 5) {
+      code = 4;
+   }
+   for (const auto &row : interpolationTable) {
+      const int rowCode = codeForClass(row, interpolationClass);
+      if (rowCode != kUnrepresentable && rowCode == code) {
+         return row.descriptor;
+      }
+   }
+   RooJSONFactoryWSTool::error(context + " has unsupported " + interpolationClassName(interpolationClass) + " code " +
+                               std::to_string(code));
 }
 
 int codeFromInterpolation(const Interpolation &interpolation, InterpolationClass interpolationClass,
                           const std::string &context)
 {
-   return interpolationClass == InterpolationClass::Piecewise ? piecewiseCodeFromInterpolation(interpolation, context)
-                                                              : flexibleCodeFromInterpolation(interpolation, context);
+   for (const auto &row : interpolationTable) {
+      const int rowCode = codeForClass(row, interpolationClass);
+      if (rowCode != kUnrepresentable && row.descriptor == interpolation) {
+         return rowCode;
+      }
+   }
+   RooJSONFactoryWSTool::error(context + " " + interpolationString(interpolation) + " cannot be represented by " +
+                               interpolationClassName(interpolationClass));
 }
 
 void writeInterpolations(JSONNode &node, const std::vector<int> &codes, InterpolationClass interpolationClass,
@@ -1366,9 +1360,10 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   } else {
                      const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
                                                  "' of channel '" + channel.name + "'";
-                     sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i],
-                                                 interpolationFromFlexibleCode(fip->interpolationCodes()[i], context),
-                                                 constraint);
+                     sample.normsys.emplace_back(
+                        sysname, var, fip->high()[i], fip->low()[i],
+                        interpolationFromCode(fip->interpolationCodes()[i], InterpolationClass::Flexible, context),
+                        constraint);
                   }
                }
             } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
@@ -1448,9 +1443,10 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   } else {
                      const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
                                                  "' of channel '" + channel.name + "'";
-                     sample.histosys.emplace_back(sysname, var, lo, hi,
-                                                  interpolationFromPiecewiseCode(pip->interpolationCodes()[i], context),
-                                                  constraint);
+                     sample.histosys.emplace_back(
+                        sysname, var, lo, hi,
+                        interpolationFromCode(pip->interpolationCodes()[i], InterpolationClass::Piecewise, context),
+                        constraint);
                   }
                }
             }
