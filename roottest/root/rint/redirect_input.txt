@@ -1,0 +1,6 @@
+.> redirect_output.txt
+printf("redirection-7626-line-one\n");
+printf("redirection-7626-line-two\n");
+[A[A
+.>
+.q
