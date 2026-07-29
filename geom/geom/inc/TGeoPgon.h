@@ -14,28 +14,54 @@
 
 #include "TGeoPcon.h"
 
-#include <mutex>
+#include <algorithm>
+#include <atomic>
 #include <vector>
 
 class TGeoPgon : public TGeoPcon {
+   static std::atomic<UInt_t> fgInstanceCount; //! source of dense per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! dense index of this shape into the per-thread vector
+   mutable std::atomic<Int_t> fGeneration{0};  //! bumped whenever the per-thread state must be rebuilt
+
 public:
    struct ThreadData_t {
-      Int_t *fIntBuffer;    ///<![fNedges+4] temporary int buffer array
-      Double_t *fDblBuffer; ///<![fNedges+4] temporary double buffer array
+      Int_t *fIntBuffer{nullptr};    //![fNedges+4] temporary int buffer array
+      Double_t *fDblBuffer{nullptr}; //![fNedges+4] temporary double buffer array
+      Int_t fInitGen{-1};            //! generation this slot was last initialized for
 
-      ThreadData_t();
+      ThreadData_t() = default;
       ~ThreadData_t();
+      // Owns the two scratch buffers: movable so the slot can live in a resizable vector,
+      // but not copyable.
+      ThreadData_t(ThreadData_t &&other) noexcept;
+      ThreadData_t &operator=(ThreadData_t &&other) noexcept;
+      ThreadData_t(const ThreadData_t &) = delete;
+      ThreadData_t &operator=(const ThreadData_t &) = delete;
    };
-   ThreadData_t &GetThreadData() const;
-   void ClearThreadData() const override;
-   void CreateThreadData(Int_t nthreads) override;
+
+   /// Per-thread scratch buffers, owned by the calling thread and indexed by this shape.
+   /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+      ThreadData_t &td = tdata[fIndex];
+      if (td.fInitGen != fGeneration.load(std::memory_order_acquire))
+         InitThreadSlot(td);
+      return td;
+   }
+   /// Invalidate the per-thread data. Each thread rebuilds its own slot lazily on next access.
+   void ClearThreadData() const override { fGeneration.fetch_add(1, std::memory_order_release); }
+   /// No-op: per-thread data is allocated lazily, so no provisioning for a fixed thread count
+   /// is required and any number of threads works.
+   void CreateThreadData(Int_t) override {}
 
 protected:
+   void InitThreadSlot(ThreadData_t &td) const;
+
    // data members
-   Int_t fNedges;                                   // number of edges (at least one)
-   mutable std::vector<ThreadData_t *> fThreadData; ///<! Navigation data per thread
-   mutable Int_t fThreadSize;                       ///<! Size for the navigation data array
-   mutable std::mutex fMutex;                       ///<! Mutex for thread data
+   Int_t fNedges; // number of edges (at least one)
 
    // internal utility methods
    Int_t GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi,
