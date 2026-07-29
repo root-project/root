@@ -39,7 +39,10 @@ The anchor is always the last object written during CommitDatasetImpl, ensuring 
 if the anchor exists, the entire ntuple is complete.
 */
 // clang-format on
-struct RNTupleAnchorS3 {
+class RNTupleAnchorS3 {
+   friend class RPageSinkS3;
+
+private:
    /// Allows evolving the anchor JSON schema in future versions
    std::uint32_t fVersionAnchor = 0;
    /// Version of the RNTuple binary format supported by the writer
@@ -67,12 +70,32 @@ struct RNTupleAnchorS3 {
    std::uint64_t fNBytesFooter = 0;
    std::uint64_t fLenFooter = 0;
 
-   bool operator==(const RNTupleAnchorS3 &other) const;
+public:
+   RNTupleAnchorS3() = default;
 
-   /// Serialize the anchor to a JSON string suitable for storage at the base URL
-   std::string ToJSON() const;
    /// Deserialize the anchor from a JSON string. Returns an error on malformed or incompatible input.
    static RResult<RNTupleAnchorS3> CreateFromJSON(const std::string &json);
+   /// Serialize the anchor to a JSON string suitable for storage at the base URL
+   std::string ToJSON() const;
+
+   bool operator==(const RNTupleAnchorS3 &other) const;
+   bool operator!=(const RNTupleAnchorS3 &other) const { return !(*this == other); }
+
+   std::uint32_t GetVersionAnchor() const { return fVersionAnchor; }
+   std::uint16_t GetVersionEpoch() const { return fVersionEpoch; }
+   std::uint16_t GetVersionMajor() const { return fVersionMajor; }
+   std::uint16_t GetVersionMinor() const { return fVersionMinor; }
+   std::uint16_t GetVersionPatch() const { return fVersionPatch; }
+   const std::string &GetUrlTemplate() const { return fUrlTemplate; }
+   const std::string &GetCloneTemplate() const { return fCloneTemplate; }
+   std::uint64_t GetHeaderObjId() const { return fHeaderObjId; }
+   std::uint64_t GetHeaderOffset() const { return fHeaderOffset; }
+   std::uint64_t GetNBytesHeader() const { return fNBytesHeader; }
+   std::uint64_t GetLenHeader() const { return fLenHeader; }
+   std::uint64_t GetFooterObjId() const { return fFooterObjId; }
+   std::uint64_t GetFooterOffset() const { return fFooterOffset; }
+   std::uint64_t GetNBytesFooter() const { return fNBytesFooter; }
+   std::uint64_t GetLenFooter() const { return fLenFooter; }
 };
 
 /// \brief Translate an ntpl+s3 URI into its plain HTTP(S) equivalent.
