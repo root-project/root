@@ -3925,7 +3925,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///                   vs "e2" vs "e3" and "e4" mapped on the current color palette.
 ///                   (to create histograms in the 2, 3, and 4 dimensional case,
 ///                   see section "Saving the result of Draw to an histogram")
-///   - "e1:e2:e3:e4:e5" with option "GL5D" produces a 5D plot using OpenGL. `gStyle->SetCanvasPreferGL(true)` is needed.
+///   - "e1:e2:e3:e4:e5" with option "GL5D" produces a 5D plot using OpenGL. `gStyle->SetCanvasPreferGL(true)` is
+///   needed.
 ///   - Any number of variables no fewer than two can be used with the options "CANDLE" and "PARA"
 ///   - An arbitrary number of variables can be used with the option "GOFF"
 ///
@@ -3964,7 +3965,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///   If the selection expression returns an array, it is iterated over in sync with the
 ///   array returned by the varexp argument (as described below in "Drawing expressions using arrays and array
 ///   elements"). For example, if, for a given event, varexp evaluates to
-///   `{1., 2., 3.}` and selection evaluates to `{0, 1, 0}`, the resulting histogram is filled with the value 2. For example, for each event here we perform a simple object selection:
+///   `{1., 2., 3.}` and selection evaluates to `{0, 1, 0}`, the resulting histogram is filled with the value 2. For
+///   example, for each event here we perform a simple object selection:
 ///   ~~~{.cpp}
 ///   // Muon_pt is an array: fill a histogram with the array elements > 100 in each event
 ///   tree->Draw('Muon_pt', 'Muon_pt > 100')
@@ -4039,7 +4041,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// | `fMatrix[][2]  - fResults[][]`   |  six       | on both 1st and 2nd dimensions of fResults |
 /// | `fMatrix[][2]  - fResults[3][]`  |  two       | on 1st dim of fMatrix and 2nd of fResults (at the same time) |
 /// | `fMatrix[][]   - fResults[][]`   |  six       | on 1st dim then on  2nd dim |
-/// | `fMatrix[][fResult[][]]`         |  30        | on 1st dim of fMatrix then on both dimensions of fResults.  The value if fResults[j][k] is used as the second index of fMatrix.|
+/// | `fMatrix[][fResult[][]]`         |  30        | on 1st dim of fMatrix then on both dimensions of fResults.  The
+/// value if fResults[j][k] is used as the second index of fMatrix.|
 ///
 ///
 /// In summary, TTree::Draw loops through all unspecified dimensions.  To
@@ -4519,12 +4522,14 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///  Once TTree::Draw has been called, it is possible to access useful
 ///  information still stored in the TTree object via the following functions:
 ///
-/// - GetSelectedRows() // return the number of values accepted by the selection expression. In case where no selection was specified, returns the number of values processed.
+/// - GetSelectedRows() // return the number of values accepted by the selection expression. In case where no selection
+/// was specified, returns the number of values processed.
 /// - GetV1()           // returns a pointer to the double array of V1
 /// - GetV2()           // returns a pointer to the double array of V2
 /// - GetV3()           // returns a pointer to the double array of V3
 /// - GetV4()           // returns a pointer to the double array of V4
-/// - GetW()            // returns a pointer to the double array of Weights where weight equal the result of the selection expression.
+/// - GetW()            // returns a pointer to the double array of Weights where weight equal the result of the
+/// selection expression.
 ///
 /// where V1,V2,V3 correspond to the expressions in
 /// ~~~ {.cpp}
