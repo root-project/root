@@ -48,6 +48,8 @@ public:
   double expectedEvents(const RooArgSet* nset) const override ;
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
+
   RooAbsPdf const& pdf() const { return *_pdf; }
 
   RooAbsReal const &getN() const { return *_n; }
