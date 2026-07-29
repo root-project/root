@@ -6,8 +6,7 @@ inputs:
     required: true
   artifact-name:
     description: 'The name of the artifact to upload'
-    required: false
-    default: ${{ inputs.build-tag }}
+    required: true
 
 runs:
   using: "composite"
