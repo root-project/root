@@ -103,8 +103,7 @@ namespace textinput {
   // If input is not a tty don't write in tty-mode either.
   TerminalDisplayUnix::TerminalDisplayUnix():
     TerminalDisplay(TerminalConfigUnix::Get().IsInteractive()),
-    fIsAttached(false), fNColors(16), fOutputID(STDOUT_FILENO),
-    fTTYOutputID(-1)
+    fIsAttached(false), fNColors(16), fTTYOutputID(-1)
   {
      if (::isatty(fileno(stdin))) {
         // As long as we read from a terminal, keep a handle on the controlling
@@ -122,7 +121,7 @@ namespace textinput {
            SetIsTTY(true);
      }
 
-    HandleResizeSignal(); // needs fOutputID
+    HandleResizeSignal(); // needs fTTYOutputID
     gTerminalDisplayUnix() = this;
     signal(SIGWINCH, TerminalDisplayUnix__handleResizeSignal);
 #ifdef TCSANOW
@@ -140,10 +139,6 @@ namespace textinput {
 
   TerminalDisplayUnix::~TerminalDisplayUnix() {
     Detach();
-    if (fOutputID != STDOUT_FILENO) {
-      SYNC_OUT(fOutputID);
-      ::close(fOutputID);
-    }
     if (fTTYOutputID != -1) {
       SYNC_OUT(fTTYOutputID);
       ::close(fTTYOutputID);
@@ -156,7 +151,7 @@ namespace textinput {
     struct winsize sz;
     // Query the terminal for its size: use the controlling terminal if we have
     // it, as stdout may be redirected to a file (which has no window size).
-    int sizeFD = (fTTYOutputID != -1) ? fTTYOutputID : fOutputID;
+    int sizeFD = (fTTYOutputID != -1) ? fTTYOutputID : STDOUT_FILENO;
     int ret = ioctl(sizeFD, TIOCGWINSZ, (char*)&sz);
     if (!ret && sz.ws_col) {
       SetWidth(sz.ws_col);
@@ -285,13 +280,13 @@ namespace textinput {
   /// \param[in] len length of the raw string
   void
   TerminalDisplayUnix::WriteRawString(const char *text, size_t len) {
-    int outputID = fOutputID;
     // The prompt and line-editing output normally go to stdout. But if stdout
     // is not (or no longer) connected to a terminal - most notably after the
     // ".> file" meta command redirects it to a file - write to the controlling
     // terminal instead, so the command line stays visible and usable while only
     // the executed code's output follows the redirection (issue 7626).
-    if (outputID == STDOUT_FILENO && fTTYOutputID != -1 && !::isatty(STDOUT_FILENO))
+    int outputID = STDOUT_FILENO;
+    if (fTTYOutputID != -1 && !::isatty(STDOUT_FILENO))
       outputID = fTTYOutputID;
     if (write(outputID, text, len) == -1) {
       // Silence Ubuntu's "unused result". We don't care if it fails.
@@ -312,7 +307,7 @@ namespace textinput {
   TerminalDisplayUnix::Attach() {
     // set to noecho
     if (fIsAttached) return;
-    SYNC_OUT(fOutputID);
+    SYNC_OUT(STDOUT_FILENO);
     TerminalConfigUnix::Get().Attach();
     fWritePos = Pos();
     fWriteLen = 0;
@@ -322,7 +317,7 @@ namespace textinput {
   void
   TerminalDisplayUnix::Detach() {
     if (!fIsAttached) return;
-    SYNC_OUT(fOutputID);
+    SYNC_OUT(STDOUT_FILENO);
     TerminalConfigUnix::Get().Detach();
     TerminalDisplay::Detach();
     fIsAttached = false;
