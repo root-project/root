@@ -138,9 +138,13 @@ TerminalConfigUnix::Detach() {
 }
 
 bool TerminalConfigUnix::IsInteractive() const {
-  // Whether both stdin and stdout are attached to a tty.
-  return isatty(fileno(stdin)) && isatty(fileno(stdout))
-    && (getpgrp() == tcgetpgrp(STDOUT_FILENO));
+  // Whether we are driving an interactive terminal. This is decided by stdin,
+  // which is the terminal we read from and whose attributes we (re)configure
+  // through fFD: stdout may be redirected (e.g. to a file by the ".> file" meta
+  // command) while the command line is still driven interactively from the
+  // terminal. We must also be in the foreground process group of that terminal,
+  // otherwise reconfiguring it (raw mode) would disturb whoever controls it.
+  return isatty(fFD) && (getpgrp() == tcgetpgrp(fFD));
 }
 
 
