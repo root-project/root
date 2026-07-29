@@ -40,6 +40,8 @@
 
 #include <RooFit/Detail/MathFuncs.h>
 
+#include "HistFactoryInterpolationCodeUtils.h"
+
 #include "Riostream.h"
 #include "TBuffer.h"
 
@@ -407,23 +409,10 @@ void PiecewiseInterpolation::setAllInterpCodes(int code)
 
 void PiecewiseInterpolation::setInterpCodeForParam(int iParam, int code)
 {
-   RooAbsArg const &param = _paramSet[iParam];
-   if (code < 0 || code > 6) {
-      coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR: " << param.GetName()
-                            << " with unknown interpolation code " << code << ", keeping current code "
-                            << _interpCode[iParam] << std::endl;
-      return;
+   if (RooStats::HistFactory::Detail::setInterpolationCode(*this, "PiecewiseInterpolation", _paramSet[iParam],
+                                                           _interpCode, iParam, code, /*maxCode=*/6)) {
+      setValueDirty();
    }
-   if (code == 3) {
-      // In the past, code 3 was equivalent to code 2, which confused users.
-      // Now, we just say that code 3 doesn't exist and default to code 2 in
-      // that case for backwards compatible behavior.
-      coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR: " << param.GetName()
-                            << " with unknown interpolation code " << code << ", defaulting to code 2" << std::endl;
-      code = 2;
-   }
-   _interpCode.at(iParam) = code;
-   setValueDirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
