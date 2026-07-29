@@ -80,4 +80,10 @@ if(BUILD_TESTING)
     )
 
   endif()
+
+  if(TARGET ROOT::ROOTVecOps)
+    add_executable(RVec testRVec.cxx)
+    target_link_libraries(RVec PUBLIC ROOT::ROOTVecOps)
+    add_test(NAME RVec COMMAND $<TARGET_FILE:RVec>)
+  endif()
 endif()
