@@ -51,7 +51,6 @@ namespace textinput {
   private:
     bool fIsAttached; // whether tty is configured
     size_t fNColors; // number of colors supported by output
-    int fOutputID; // Prompt output file descriptor
     int fTTYOutputID; // Controlling terminal, used when stdout is redirected
   };
 }
