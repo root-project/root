@@ -3702,6 +3702,10 @@ static llvm::cl::list<std::string>
 gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
           llvm::cl::desc("Specify compiler diagnostics options."),
           llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptDepFile("MF",
+            llvm::cl::desc("Write dependency output to the specified file."),
+            llvm::cl::cat(gRootclingOptions));
 // Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
@@ -4510,6 +4514,11 @@ int RootClingMain(int argc,
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    string main_dictname(gOptDictionaryFileName.getValue());
+   // Keep the original dictionary output file name (with extension) for the
+   // dependency file target: `main_dictname` gets its extension stripped below
+   // and `gOptDictionaryFileName` is turned into a temporary name by the
+   // tmpCatalog a few lines down.
+   const std::string dictOutputFileName(gOptDictionaryFileName.getValue());
    std::ostream *splitDictStream = nullptr;
    std::unique_ptr<std::ostream> splitDeleter(nullptr);
    // Store the temp files
@@ -4991,6 +5000,98 @@ int RootClingMain(int argc,
 
    // make sure the file is closed before committing
    fileout.close();
+
+   // Write the dependency file if requested (-MF <file>). It uses the
+   // Makefile format understood by CMake's DEPFILE and Ninja's "deps = gcc",
+   // listing every real header that was opened while generating the dictionary
+   // so that incremental builds pick up changes to transitively included files.
+   if (!gOptDepFile.empty() && rootclingRetCode == 0 && !dictOutputFileName.empty()) {
+      std::ofstream depFile(gOptDepFile.c_str());
+      if (!depFile) {
+         ROOT::TMetaUtils::Error(nullptr,
+                                 "rootcling: failed to open dependency file %s\n",
+                                 gOptDepFile.c_str());
+         rootclingRetCode = 1;
+      } else {
+         // Escape a path for the Makefile-format dependency file: forward
+         // slashes (needed on Windows) and backslash-escape the characters that
+         // are special to make (space, tab, '#', ':').
+         auto escapeForDepFile = [](std::string path) {
+            std::replace(path.begin(), path.end(), '\\', '/');
+            std::string escaped;
+            escaped.reserve(path.size());
+            for (char c : path) {
+               if (c == ' ' || c == '\t' || c == '#' || c == ':')
+                  escaped += '\\';
+               escaped += c;
+            }
+            return escaped;
+         };
+
+         // The target is the final dictionary source file. Note that
+         // gOptDictionaryFileName has been turned into a temporary name by the
+         // tmpCatalog, so we use the original name captured earlier.
+         depFile << escapeForDepFile(dictOutputFileName) << ":";
+
+         // Collect all files that were read by clang during dictionary
+         // generation (headers included directly or indirectly).
+         clang::SourceManager &SM = CI->getSourceManager();
+         clang::FileManager &FM = SM.getFileManager();
+
+         llvm::SmallVector<clang::OptionalFileEntryRef, 64> files;
+         FM.GetUniqueIDMapping(files);
+
+         llvm::SmallString<256> absDictOutput(dictOutputFileName);
+         llvm::sys::fs::make_absolute(absDictOutput);
+         llvm::SmallString<256> absDictTmp(gOptDictionaryFileName.getValue());
+         llvm::sys::fs::make_absolute(absDictTmp);
+
+         std::set<std::string> includedFiles;
+         for (const auto &FEOpt : files) {
+            if (!FEOpt)
+               continue;
+            llvm::StringRef filename = FEOpt->getName();
+            if (filename.empty())
+               continue;
+            // Skip cling's in-memory buffers, which the FileManager also
+            // reports: "input_line_N", "<<< cling interactive line includer >>>",
+            // "<built-in>", "<command line>", ... These are not real files;
+            // some contain spaces or angle brackets that would corrupt the
+            // dependency file, and all of them would make the dictionary appear
+            // perpetually out of date. Requiring the entry to exist on disk
+            // filters them out (together with the explicit angle-bracket check).
+            if (filename.contains('<') || filename.contains('>'))
+               continue;
+            // Make the path absolute so it is unambiguous regardless of the
+            // working directory: rootcling may run from a different directory
+            // than the one the dependency file is later consumed from (with
+            // CMP0116 OLD the depfile is not rewritten, and a relative entry
+            // like "./Foo.hxx" would be resolved against the wrong base and
+            // leave the dictionary permanently out of date).
+            llvm::SmallString<256> absPath(filename);
+            llvm::sys::fs::make_absolute(absPath);
+            if (!llvm::sys::fs::exists(absPath))
+               continue;
+            std::string filenameStr(absPath.str());
+            // Skip the output dictionary file itself (final or temporary name).
+            if (filenameStr == absDictOutput || filenameStr == absDictTmp)
+               continue;
+            includedFiles.insert(std::move(filenameStr));
+         }
+
+         // Each dependency line except the last ends with a backslash.
+         for (const auto &file : includedFiles)
+            depFile << " \\\n  " << escapeForDepFile(file);
+         if (!includedFiles.empty())
+            depFile << "\n";
+
+         depFile.close();
+         if (!depFile.good()) {
+            ROOT::TMetaUtils::Error(nullptr, "rootcling: failed to write dependency file %s\n", gOptDepFile.c_str());
+            rootclingRetCode = 1;
+         }
+      }
+   }
 
    // Before returning, rename the files if no errors occurred
    // otherwise clean them to avoid remnants (see ROOT-10015)
