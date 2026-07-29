@@ -65,6 +65,37 @@ auto PassAsVec(F &&f) -> PassAsVecHelper<std::make_index_sequence<N>, T, F>
    return PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
 }
 
+/**
+ * \brief Helper function to add a copy of an object to a vector of shared_ptrs, used in the implementation of
+ * VariationsFor.
+ * \tparam T An object that is used as result of a RDataFrame action, e.g. a histogram
+ * \param obj The object to be copied and wrapped by a new std::shared_ptr.
+ *
+ * The default implementation of this function template uses copy constructor, which should work for most objects types
+ * since they are copied for each slot.
+ */
+template <typename T>
+std::shared_ptr<T> CopyForVariations(const T &obj)
+{
+   return std::make_shared<T>(obj);
+}
+
+/// \brief Specialization of CopyForVariations for ROOT::Experimental::RHist objects, which are not copyable but
+/// clonable.
+template <typename B>
+std::shared_ptr<ROOT::Experimental::RHist<B>> CopyForVariations(const ROOT::Experimental::RHist<B> &obj)
+{
+   return std::make_shared<ROOT::Experimental::RHist<B>>(obj.Clone());
+}
+
+/// \brief Specialization of CopyForVariations for ROOT::Experimental::RHistEngine objects, which are not copyable but
+/// clonable.
+template <typename B>
+std::shared_ptr<ROOT::Experimental::RHistEngine<B>> CopyForVariations(const ROOT::Experimental::RHistEngine<B> &obj)
+{
+   return std::make_shared<ROOT::Experimental::RHistEngine<B>>(obj.Clone());
+}
+
 } // namespace RDF
 } // namespace Internal
 
@@ -243,9 +274,9 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
       // clone the result once for each variation
       variedResults.reserve(nVariations);
       for (auto i = 0u; i < nVariations; ++i){
-         // implicitly assuming that T is copiable: this should be the case
-         // for all result types in use, as they are copied for each slot
-         variedResults.emplace_back(new T{*resPtr.fObjPtr});
+
+         // Make a copy of the result object for this variation
+         variedResults.push_back(ROOT::Internal::RDF::CopyForVariations(*resPtr.fObjPtr));
 
          // Check if the result's type T inherits from TNamed
          if constexpr (std::is_base_of<TNamed, T>::value) {

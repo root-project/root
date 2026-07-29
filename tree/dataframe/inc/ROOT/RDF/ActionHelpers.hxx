@@ -541,6 +541,13 @@ public:
       }
    }
 
+   RHistFillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<Result_t> *>(newResult);
+      result->Clear();
+      return RHistFillHelper(result, fContexts.size());
+   }
+
    std::string GetActionName() { return "Hist"; }
 };
 
@@ -587,6 +594,13 @@ public:
    }
 
    void Finalize() {}
+
+   RHistEngineFillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<Result_t> *>(newResult);
+      result->Clear();
+      return RHistEngineFillHelper(result);
+   }
 
    std::string GetActionName() { return "Hist"; }
 };
