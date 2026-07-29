@@ -2070,6 +2070,43 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
    std::unique_ptr<RooProdPdf> prodPdfClone{static_cast<RooProdPdf *>(this->Clone())};
    ctx.markAsCompiled(*prodPdfClone);
 
+   // If this RooProdPdf has a normalization range (e.g. the fit range in a
+   // ranged fit), propagate it to the component pdfs while they are compiled,
+   // so that a nested RooAddPdf reinterprets its coefficients with respect to
+   // the full range exactly like a top-level RooAddPdf would. Otherwise, a
+   // RooProdPdf wrapping an extended RooAddPdf (the common way to attach
+   // constraint terms) gives a different yield than the bare RooAddPdf in a
+   // ranged fit (GitHub issue #16673).
+   //
+   // This must not change how constraint terms are normalized, so the range is
+   // only set on components whose normalization observables define it.
+   // Constraint pdfs are normalized over the nuisance parameters, which don't
+   // define the fit range, so they are skipped. Forcing the range on them would
+   // be wrong, and for a multi-range fit it even throws, because each undefined
+   // sub-range falls back to the parameter's full range and the sub-ranges then
+   // overlap.
+   std::vector<std::pair<RooAbsPdf *, std::string>> restoreNormRanges;
+   if (const char *prodNormRange = normRange()) {
+      std::vector<std::string> rangeTokens = ROOT::Split(prodNormRange, ",", /*skipEmpty=*/true);
+      for (auto *pdf : static_range_cast<RooAbsPdf *>(prodPdfClone->_pdfList)) {
+         RooArgSet pdfObs;
+         pdf->getObservables(&normSet, pdfObs);
+         bool rangeDefined = !pdfObs.empty();
+         for (RooAbsArg *obs : pdfObs) {
+            auto *lval = dynamic_cast<RooAbsRealLValue *>(obs);
+            for (auto const &token : rangeTokens) {
+               if (!lval || !lval->hasRange(token.c_str())) {
+                  rangeDefined = false;
+               }
+            }
+         }
+         if (rangeDefined && std::string(pdf->normRange() ? pdf->normRange() : "") != prodNormRange) {
+            restoreNormRanges.emplace_back(pdf, pdf->normRange() ? pdf->normRange() : "");
+            pdf->setNormRange(prodNormRange);
+         }
+      }
+   }
+
    for (const auto server : prodPdfClone->servers()) {
       auto nsetForServer = fillNormSetForServer(normSet, *server);
       RooArgSet const &nset = nsetForServer ? *nsetForServer : normSet;
@@ -2078,6 +2115,10 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       server->getObservables(&nset, depList);
 
       ctx.compileServer(*server, *prodPdfClone, depList);
+   }
+
+   for (auto const &[pdf, oldRange] : restoreNormRanges) {
+      pdf->setNormRange(oldRange.empty() ? nullptr : oldRange.c_str());
    }
 
    auto fixedProdPdf = std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), normSet);
