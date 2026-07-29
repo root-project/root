@@ -19,8 +19,10 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMouseEvent>
+#include <QWheelEvent>
 #include <QHelpEvent>
 #include <QCloseEvent>
+
 #include <QToolTip>
 #include <QFont>
 #include <QRect>
@@ -112,17 +114,16 @@ void QPaintWidget::paintEvent(QPaintEvent *)
    }
 }
 
-void QPaintWidget::mousePressEvent( QMouseEvent *e )
+void QPaintWidget::mousePressEvent(QMouseEvent *e)
 {
-   TObjLink* pickobj = nullptr;
+   //TObjLink* pickobj = nullptr;
    QPoint scaled = scaledMousePoint(e);
-   QPoint menu_pnt = e->globalPosition().toPoint();
-
-   TPad *pad = fCanvas->Pick(scaled.x(), scaled.y(), pickobj);
-   TObject *selected = fCanvas->GetSelected();
+   // QPoint menu_pnt = e->globalPosition().toPoint();
+   // TPad *pad = fCanvas->Pick(scaled.x(), scaled.y(), pickobj);
+   // TObject *selected = fCanvas->GetSelected();
 
    switch(e->button()) {
-     case Qt::LeftButton :
+     case Qt::LeftButton:
         fCanvas->HandleInput(kButton1Down, scaled.x(), scaled.y());
         // emit PadClicked(pad, scaled.x(), scaled.y());
         break;
@@ -134,7 +135,7 @@ void QPaintWidget::mousePressEvent( QMouseEvent *e )
         fCanvas->HandleInput(kButton2Down, scaled.x(), scaled.y());
         // emit SelectedPadChanged(pad);
         break;
-     case  Qt::NoButton :
+     case Qt::NoButton :
         break;
      default:
         break;
@@ -182,11 +183,11 @@ void QPaintWidget::mouseMoveEvent(QMouseEvent *e)
    }
 }
 
-void QPaintWidget::mouseReleaseEvent( QMouseEvent *e )
+void QPaintWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-   QPoint scaled = scaledMousePoint(e);
+   QPoint scaled = scaledMousePoint(event);
 
-   switch(e->button()) {
+   switch(event->button()) {
       case Qt::LeftButton :
          fCanvas->HandleInput(kButton1Up, scaled.x(), scaled.y());
          break;
@@ -201,19 +202,20 @@ void QPaintWidget::mouseReleaseEvent( QMouseEvent *e )
       default:
          break;
    }
-   e->accept();
+
+   event->accept();
 }
 
-void QPaintWidget::mouseDoubleClickEvent( QMouseEvent *e )
+void QPaintWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
-   QPoint scaled = scaledMousePoint(e);
+   QPoint scaled = scaledMousePoint(event);
 
-   switch(e->button()) {
+   switch(event->button()) {
       case Qt::LeftButton : {
          if (!fMaskDoubleClick)
             fCanvas->HandleInput(kButton1Double, scaled.x(), scaled.y());
-         TObjLink* pickobj = nullptr;
-         TPad *pad = fCanvas->Pick(scaled.x(), scaled.y(), pickobj);
+         // TObjLink* pickobj = nullptr;
+         // TPad *pad = fCanvas->Pick(scaled.x(), scaled.y(), pickobj);
          // emit PadDoubleClicked(pad, scaled.x(), scaled.y());
          break;
       }
@@ -228,5 +230,36 @@ void QPaintWidget::mouseDoubleClickEvent( QMouseEvent *e )
       default:
          break;
    }
-    e->accept();
+
+   event->accept();
+}
+
+void QPaintWidget::wheelEvent(QWheelEvent *event)
+{
+   QPoint delta = event->pixelDelta();
+   if (delta.isNull())
+      delta = event->angleDelta() / 8;
+   bool positive = delta.x() > 0 || delta.y() > 0;
+
+   int sx = scaledPosition(event->position().x());
+   int sy = scaledPosition(event->position().y());
+
+   fCanvas->HandleInput(positive ? kWheelUp : kWheelDown, sx, sy);
+
+   event->accept();
+}
+
+void QPaintWidget::enterEvent(QEnterEvent *event)
+{
+   QWidget::enterEvent(event);
+
+   fCanvas->HandleInput(kMouseEnter, 0, 0);
+}
+
+
+void QPaintWidget::leaveEvent(QEvent *event)
+{
+   QWidget::leaveEvent(event);
+
+   fCanvas->HandleInput(kMouseLeave, 0, 0);
 }
