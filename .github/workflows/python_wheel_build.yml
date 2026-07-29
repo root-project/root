@@ -105,6 +105,12 @@ jobs:
             wheel_pattern: "manylinux"
             label: "native"
           # portability tests: oldest wheel on newer runners
+          - runner: macos-15
+            wheel_pattern: "macosx_14"
+            label: "port"
+          - runner: macos-26
+            wheel_pattern: "macosx_14"
+            label: "port"
           - runner: macos-26
             wheel_pattern: "macosx_15"
             label: "port"
