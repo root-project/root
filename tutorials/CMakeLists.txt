@@ -118,6 +118,12 @@ endif()
 # functionality is also covered by rf617 (the multidimensional case).
 list(APPEND roofit_veto roofit/roofit/rf615_simulation_based_inference.py)
 
+# TODO: fix the problem and re-enable the tutorial test.
+# This tutorial intermittently produces corrupted (zero/negative) sample weights
+# when RDataLoader is used with a filtered multi-cluster RDataFrame causing
+# XGBoost's positive-weight assertion to fail sporadically in the CI.
+list(APPEND dataframe_veto machine_learning/ml_dataloader_XGBoost.py)
+
 if (NOT dataframe)
     # RDataFrame
     list(APPEND dataframe_veto analysis/dataframe/*.C analysis/dataframe/*.py)
