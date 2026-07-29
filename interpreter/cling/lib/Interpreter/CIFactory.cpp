@@ -1288,10 +1288,8 @@ namespace {
     CI->getDiagnosticOpts().SnippetLineLimit = 1;
     CI->getDiagnosticOpts().ShowLineNumbers = 0;
 
-    // Copied from CompilerInstance::createDiagnostics:
-    // Chain in -verify checker, if requested.
-    // if (DiagOpts.VerifyDiagnostics)
-    //   Diags->setClient(new clang::VerifyDiagnosticConsumer(*Diags));
+    if (DiagOpts.VerifyDiagnostics)
+      Diags->setClient(new clang::VerifyDiagnosticConsumer(*Diags));
 
     IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay =
         new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
@@ -1408,12 +1406,6 @@ namespace {
                                           CI->getFileManager(),
                                           /*UserFilesAreVolatile*/ true);
     CI->setSourceManager(SM); // CI now owns SM
-
-    // if (CI->getCodeGenOpts().TimePasses)
-    //   CI->createFrontendTimer();
-
-    if (FrontendOpts.ModulesEmbedAllFiles)
-       CI->getSourceManager().setAllFilesAreTransient(true);
 
     // As main file we want
     // * a virtual file that is claiming to be huge

@@ -1,6 +1,7 @@
 //--------------------------------------------------------------------*- C++ -*-
 // CLING - the C++ LLVM-based InterpreterG :)
-// author:  Axel Naumann <axel@cern.ch>
+// author:  Sahil Patidar <sahilpatidar60@gmail.com>
+// author:  Vassil Vassilev <vvasilev@cern.ch>
 //
 // This file is dual-licensed: you can choose to license it under the University
 // of Illinois Open Source License or the GNU Lesser General Public License. See

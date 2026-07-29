@@ -128,7 +128,6 @@ namespace cling {
 
     bool Initialize(llvm::SmallVectorImpl<ParseResultTransaction>& result,
                     bool isChildInterpreter);
-    // clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::CompilerInstance* getCI() const { return m_CI; }
     clang::Parser* getParser() const { return m_Parser.get(); }
     clang::CodeGenerator* getCodeGenerator() const { return m_CodeGen; }

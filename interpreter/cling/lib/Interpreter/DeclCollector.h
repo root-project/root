@@ -52,7 +52,6 @@ namespace cling {
     ///
     std::vector<std::unique_ptr<WrapperTransformer>> m_WrapperTransformers;
 
-    // IncrementalParser* m_IncrParser = nullptr;
     std::unique_ptr<clang::ASTConsumer> m_Consumer;
     Transaction* m_CurTransaction = nullptr;
 
@@ -88,8 +87,7 @@ namespace cling {
 
     void Initialize(clang::ASTContext &Context) override;
 
-    void Setup(//IncrementalParser* IncrParser,
-               std::unique_ptr<ASTConsumer> Consumer,
+    void Setup(std::unique_ptr<ASTConsumer> Consumer,
                clang::Preprocessor& PP);
 
     /// \{
