@@ -24,6 +24,8 @@ public:
    TQt6GuiFactory(const char *name = "RootQt6", const char *title = "ROOT Qt6 GUI Factory");
    ~TQt6GuiFactory() override {}
 
+   Bool_t UseVirtualX() const override { return kFALSE; }
+
    TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv) override;
 
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height) override;
