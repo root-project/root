@@ -113,6 +113,7 @@ jobs:
     env:
       VIRTUAL_ENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'mac-beta' && '27' || '' }} # Problems with gfortran falling back 18 (unsupported)
+      HOME: /Users/sftnight
 
     strategy:
       fail-fast: false
@@ -154,7 +155,6 @@ jobs:
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
-          HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
@@ -230,6 +230,30 @@ jobs:
           name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/packages/root_v*
           if-no-files-found: error
+
+      - name: Install
+        env:
+          BUILD_DIR: ${{ env.HOME }}/ROOT-CI/build
+          INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/install
+        if: ${{ !cancelled() && !matrix.is_special }}
+        run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
+
+      - name: Build post-install test project
+        if: ${{ !cancelled() && !matrix.is_special }}
+        env:
+          SOURCE_DIR: ${{ env.HOME }}/ROOT-CI/src/test/PostInstall/
+          INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/install
+          POST_INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/PostInstall
+        run: |
+          cmake -S ${{ env.SOURCE_DIR }} -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
+          cmake --build ${{ env.POST_INSTALL_DIR }};
+
+      - name: CTest in post-install test project
+        if: ${{ !cancelled() && !matrix.is_special }}
+        env:
+          POST_INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/PostInstall
+        working-directory: ${{ env.POST_INSTALL_DIR }}
+        run: ctest --output-on-failure -j $(sysctl -n hw.logicalcpu)
 
 
   build-windows:
