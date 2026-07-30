@@ -17,7 +17,6 @@
 #include "RooSetProxy.h"
 #include "RooAbsReal.h"
 #include "RooHistPdf.h"
-#include "TVirtualFFT.h"
 
 class RooRealVar;
 
@@ -86,10 +85,6 @@ public:
     FFTCacheElem(const RooFFTConvPdf& self, const RooArgSet* nset) ;
 
     RooArgList containedArgs(Action) override ;
-
-    std::unique_ptr<TVirtualFFT> fftr2c1;
-    std::unique_ptr<TVirtualFFT> fftr2c2;
-    std::unique_ptr<TVirtualFFT> fftc2r;
 
     std::unique_ptr<RooAbsPdf> pdf1Clone;
     std::unique_ptr<RooAbsPdf> pdf2Clone;
