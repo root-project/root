@@ -977,11 +977,25 @@ void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
       void *rvecPtr = static_cast<unsigned char *>(to) + fSoAMemberOffsets[i];
       auto begin = ROOT::RRVecField::ResizeRVec(rvecPtr, N, memberSize, memberField, fRecordMemberDeleters[i].get());
 
-      if (memberField->IsSimple() && N) {
+      if (N == 0)
+         continue;
+
+      if (memberField->IsSimple()) {
          GetPrincipalColumnOf(*memberField)->ReadV(collectionStart, N, begin);
       } else {
-         for (std::size_t j = 0; j < N; ++j) {
-            CallReadOn(*memberField, collectionStart + j, begin + (j * memberSize));
+         if (memberField->IsArtificial()) {
+            // Other artificial fields simply don't read at all. This does not work here because then
+            // the vector elements of trivial types would be left uninitialized (complex types explicitly call
+            // the constructor on vector resize). Thus we explicitly default-initialize trivial types.
+            // Note that this causes a subtle difference in behavior: if the added member is default-initialized to
+            // a non-zero value, this will be forgotten in the SoA layout.
+            if (memberField->GetTraits() & kTraitTriviallyConstructible) {
+               std::memset(begin, 0, N * memberSize);
+            }
+         } else {
+            for (std::size_t j = 0; j < N; ++j) {
+               CallReadOn(*memberField, collectionStart + j, begin + (j * memberSize));
+            }
          }
       }
    }
