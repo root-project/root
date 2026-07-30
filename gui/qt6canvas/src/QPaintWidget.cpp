@@ -28,6 +28,18 @@
 #include <QRect>
 #include <QPainter>
 
+/** \class QPaintWidget
+    \ingroup qt6canvas
+
+Represent area where actual canvas painting is performed
+
+Qt defines `paintEvent` virtual method where all painting should be done.
+At this moment QPainter object is created which then used in \ref TVirtualPadPainter API.
+*/
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
 QPaintWidget::QPaintWidget(QWidget *parent) : QWidget(parent)
 {
@@ -48,9 +60,15 @@ QPaintWidget::QPaintWidget(QWidget *parent) : QWidget(parent)
    fQtScalingfactor = (double) metric(QPaintDevice::PdmDevicePixelRatioScaled)/65536.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 QPaintWidget::~QPaintWidget()
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert mouse event position to canvas coordinates
 
 QPoint QPaintWidget::scaledMousePoint(QMouseEvent *e)
 {
@@ -59,6 +77,10 @@ QPoint QPaintWidget::scaledMousePoint(QMouseEvent *e)
    return QPoint(scaledX, scaledY);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generic event handler
+///
+/// Used to handle tooltip event - if configured
 
 bool QPaintWidget::event(QEvent *event)
 {
@@ -89,6 +111,8 @@ bool QPaintWidget::event(QEvent *event)
    return QWidget::event(event);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Resize event handler
 
 void QPaintWidget::resizeEvent(QResizeEvent *)
 {
@@ -97,6 +121,14 @@ void QPaintWidget::resizeEvent(QResizeEvent *)
       fCanvas->Modified();
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint event handler
+///
+/// Only inside this method painting on QWidget is allowed
+/// For this temporary QPainter object is created and assigned to fPainter
+/// Any attempt to paint outside this method will be blocked - while fPainter will be 0
+
 
 void QPaintWidget::paintEvent(QPaintEvent *)
 {
@@ -114,13 +146,12 @@ void QPaintWidget::paintEvent(QPaintEvent *)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse press event handler
+
 void QPaintWidget::mousePressEvent(QMouseEvent *e)
 {
-   //TObjLink* pickobj = nullptr;
    QPoint scaled = scaledMousePoint(e);
-   // QPoint menu_pnt = e->globalPosition().toPoint();
-   // TPad *pad = fCanvas->Pick(scaled.x(), scaled.y(), pickobj);
-   // TObject *selected = fCanvas->GetSelected();
 
    switch(e->button()) {
      case Qt::LeftButton:
@@ -143,6 +174,9 @@ void QPaintWidget::mousePressEvent(QMouseEvent *e)
    e->accept();
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse move event handler
 
 void QPaintWidget::mouseMoveEvent(QMouseEvent *e)
 {
@@ -183,6 +217,9 @@ void QPaintWidget::mouseMoveEvent(QMouseEvent *e)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse release event handler
+
 void QPaintWidget::mouseReleaseEvent(QMouseEvent *event)
 {
    QPoint scaled = scaledMousePoint(event);
@@ -206,6 +243,9 @@ void QPaintWidget::mouseReleaseEvent(QMouseEvent *event)
    event->accept();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse double click event handler
+
 void QPaintWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
    QPoint scaled = scaledMousePoint(event);
@@ -214,9 +254,6 @@ void QPaintWidget::mouseDoubleClickEvent(QMouseEvent *event)
       case Qt::LeftButton : {
          if (!fMaskDoubleClick)
             fCanvas->HandleInput(kButton1Double, scaled.x(), scaled.y());
-         // TObjLink* pickobj = nullptr;
-         // TPad *pad = fCanvas->Pick(scaled.x(), scaled.y(), pickobj);
-         // emit PadDoubleClicked(pad, scaled.x(), scaled.y());
          break;
       }
       case Qt::RightButton :
@@ -234,6 +271,9 @@ void QPaintWidget::mouseDoubleClickEvent(QMouseEvent *event)
    event->accept();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Wheel event handler
+
 void QPaintWidget::wheelEvent(QWheelEvent *event)
 {
    QPoint delta = event->pixelDelta();
@@ -249,6 +289,9 @@ void QPaintWidget::wheelEvent(QWheelEvent *event)
    event->accept();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Enter event handler
+
 void QPaintWidget::enterEvent(QEnterEvent *event)
 {
    QWidget::enterEvent(event);
@@ -256,6 +299,8 @@ void QPaintWidget::enterEvent(QEnterEvent *event)
    fCanvas->HandleInput(kMouseEnter, 0, 0);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Leave event handler
 
 void QPaintWidget::leaveEvent(QEvent *event)
 {

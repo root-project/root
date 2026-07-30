@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef QPaintWidget_H
-#define QPaintWidget_H
+#ifndef ROOT_QPaintWidget
+#define ROOT_QPaintWidget
 
 #include <QWidget>
 
@@ -57,9 +57,9 @@ protected:
 
    QPoint scaledMousePoint(QMouseEvent *event);
 
-   TCanvas *fCanvas = nullptr;
+   TCanvas *fCanvas = nullptr; ///<  canvas shown in the widget
 
-   QPainter *fPainter = nullptr;
+   QPainter *fPainter = nullptr; ///< temporary painter created inside paintEvent handler
 
    double fQtScalingfactor = 1.;
 

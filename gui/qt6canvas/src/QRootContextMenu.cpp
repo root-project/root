@@ -9,14 +9,12 @@
  *************************************************************************/
 
 
-/** \class RRootContextMenu
+/** \class QRootContextMenu
     \ingroup qt6canvas
 
-This class provides an interface to context sensitive popup menus.
+This class provides an interface to context-sensitive popup menus.
 These menus pop up when the user hits the right mouse button, and
 are destroyed when the menu pops downs.
-The picture below shows a canvas with a pop-up menu.
-
 */
 
 
@@ -108,10 +106,6 @@ void QRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    addMenuAction(&menu, &map, buffer, -1, nullptr);
    menu.addSeparator();
    bool last_separ = true;
-
-
-
-   // addMenuAction(&menu, &map, buffer, curId++);
 
    int entry = 0, toggle = kToggleStart, togglelist = kToggleListStart;
    int userfunction = kUserFunctionStart;
@@ -268,8 +262,7 @@ void QRootContextMenu::Dialog(TObject * object, TFunction * func)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Close the context menu if the object is deleted in the
-/// RecursiveRemove() operation.
+/// Handle remove of some ROOT objects
 
 void QRootContextMenu::RecursiveRemove(TObject *obj)
 {
@@ -284,7 +277,10 @@ void QRootContextMenu::RecursiveRemove(TObject *obj)
    }
 }
 
-QAction* QRootContextMenu::addMenuAction(QMenu* menu, QSignalMapper* map, const QString& text, int id, void *arg)
+////////////////////////////////////////////////////////////////////////////////
+/// Register menu action in signal map
+
+QAction* QRootContextMenu::addMenuAction(QMenu* menu, QSignalMapper *map, const QString& text, int id, void *arg)
 {
    bool enabled = true;
 
@@ -307,6 +303,9 @@ QAction* QRootContextMenu::addMenuAction(QMenu* menu, QSignalMapper* map, const 
 
    return act;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add color elements to attributes editor dialog
 
 void QRootContextMenu::AddColorElements(int colindx, QFormLayout *layout)
 {
@@ -352,6 +351,9 @@ void QRootContextMenu::AddColorElements(int colindx, QFormLayout *layout)
    layout->addRow("Opacity:", alphaSlider);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Update color button with currently selected color
+
 void QRootContextMenu::UpdateColorElements()
 {
    QString qss = QString("background-color: rgba(%1, %2, %3, %4); border: 1px solid gray;")
@@ -361,6 +363,9 @@ void QRootContextMenu::UpdateColorElements()
                      .arg(fSelectedColor.alpha() / 255.0);
    fColorButton->setStyleSheet(qss);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start TAttLine editor
 
 void QRootContextMenu::SetLineAttributesDialog()
 {
@@ -441,6 +446,9 @@ void QRootContextMenu::SetLineAttributesDialog()
       attline->SetLineWidth(newWidth);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start TAttFill editor
 
 void QRootContextMenu::SetFillAttributesDialog()
 {
@@ -542,6 +550,9 @@ protected:
     }
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start TAttText editor
 
 void QRootContextMenu::SetTextAttributesDialog()
 {
@@ -657,8 +668,10 @@ void QRootContextMenu::SetTextAttributesDialog()
 
       atttext->SetTextAlign(alignCombo->currentData().toInt());
    }
-
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start TAttMarker editor
 
 void QRootContextMenu::SetMarkerAttributesDialog()
 {
@@ -734,6 +747,8 @@ void QRootContextMenu::SetMarkerAttributesDialog()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute specified menu item
 
 void QRootContextMenu::executeMenu(int id)
 {

@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_QCanvasWidget_h
-#define ROOT_QCanvasWidget_h
+#ifndef ROOT_QCanvasWidget
+#define ROOT_QCanvasWidget
 
 #include <QWidget>
 #include <QAction>
