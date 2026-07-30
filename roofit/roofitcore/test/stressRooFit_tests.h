@@ -937,7 +937,7 @@ public:
    }
 };
 
-// One-dimensional numeric convolution (require ROOT to be compiled with --enable-fftw3).
+// One-dimensional numeric convolution.
 class TestBasic208 : public RooUnitTest {
 public:
    TestBasic208(TFile *refFile, bool writeRef, int verbose)
@@ -947,24 +947,7 @@ public:
 
    bool isTestAvailable() override
    {
-      if (useCodegenBackend()) {
-         return false;
-      }
-
-      // only if ROOT was build with fftw3 enabled
-      TString conffeatures = gROOT->GetConfigFeatures();
-      if (conffeatures.Contains("fftw3")) {
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
-            if (h->LoadPlugin() == -1) {
-               gROOT->ProcessLine("new TNamed ;");
-               return false;
-            } else {
-               return true;
-            }
-         }
-      }
-      return false;
+      return !useCodegenBackend();
    }
 
    double ctol() override { return 1e-2; } // Account for difficult shape of Landau distribution
