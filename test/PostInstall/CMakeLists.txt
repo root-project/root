@@ -60,5 +60,24 @@ if(BUILD_TESTING)
     set_tests_properties(python-package-metadata
       PROPERTIES ENVIRONMENT PYTHONPATH=${ROOT_LIBRARY_DIR}
     )
+
+    # Test ACLiC can be run from Python after installation
+    configure_file(post_install_test_ACLiC.C ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+    configure_file(post_install_test_ACLiC.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+    add_test(NAME python-post-install-ACLiC
+      COMMAND ${Python3_EXECUTABLE} post_install_test_ACLiC.py
+    )
+    set_tests_properties(python-post-install-ACLiC
+      PROPERTIES
+      ENVIRONMENT PYTHONPATH=${ROOT_LIBRARY_DIR}
+      FIXTURES_REQUIRED python-post-install-ACLiC-fixture
+    )
+    add_test(NAME python-post-install-ACLiC-cleanupfiles
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/post_install_test_ACLiC_cleanup.cmake
+    )
+    set_tests_properties(python-post-install-ACLiC-cleanupfiles
+      PROPERTIES FIXTURES_CLEANUP python-post-install-ACLiC-fixture
+    )
+
   endif()
 endif()
