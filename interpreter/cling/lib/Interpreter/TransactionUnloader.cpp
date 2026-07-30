@@ -93,6 +93,17 @@ namespace cling {
     for (Transaction::const_reverse_iterator I = T->deserialized_rdecls_begin(),
            E = T->deserialized_rdecls_end(); I != E; ++I) {
       const DeclGroupRef& DGR = (*I).m_DGR;
+      const Transaction::ConsumerCallInfo& Call = I->m_Call;
+
+      // Similar to what is done in TransactionUnloader::unloadDeclarations.
+      // Implicit function instantiations come through both
+      // `HandleCXXImplicitFunctionInstantiation` and `HandleTopLevelDecl`
+      // (after). Therefore, the same decl is duplicated in the transaction
+      // differing in the ConsumerCallInfo. `UnloadDecl()` should be called only
+      // once.
+      if (Call == Transaction::kCCIHandleCXXImplicitFunctionInstantiation)
+        continue;
+
       for (DeclGroupRef::const_iterator
              Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
         // UnloadDecl() shall unload decls that came through `parseForModule()',
