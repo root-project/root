@@ -749,25 +749,16 @@ public:
    template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
    RInterface<Proxied> DefinePerSample(std::string_view name, F expression)
    {
-      RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
-      RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister,
-                                        GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
+      return DefinePerSampleImpl<F, RetType_t>(name, std::move(expression), false);
+   }
 
-      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType_t));
-      if (retTypeName.empty()) {
-         // The type is not known to the interpreter.
-         // We must not error out here, but if/when this column is used in jitted code
-         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType_t));
-         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
-      }
-
-      auto newColumn =
-         std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression), *fLoopManager);
-
-      RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddDefine(std::move(newColumn));
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
-      return newInterface;
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Redefine an existing column that is updated when the input sample changes.
+   /// As for DefinePerSample, but the column must already exist and will be overwritten.
+   template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
+   RInterface<Proxied> RedefinePerSample(std::string_view name, F expression)
+   {
+      return DefinePerSampleImpl<F, RetType_t>(name, std::move(expression), true);
    }
 
    // clang-format off
@@ -810,19 +801,15 @@ public:
    // clang-format on
    RInterface<Proxied> DefinePerSample(std::string_view name, std::string_view expression)
    {
-      RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
-      // these checks must be done before jitting lest we throw exceptions in jitted code
-      RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister,
-                                        GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
+      return DefinePerSampleJitImpl(name, expression, false);
+   }
 
-      auto jittedDefine = RDFInternal::BookDefinePerSampleJit(name, expression, *fLoopManager, fColRegister);
-
-      RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddDefine(std::move(jittedDefine));
-
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
-
-      return newInterface;
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Redefine an existing column that is updated when the input sample changes.
+   /// As for DefinePerSample, but the column must already exist and will be overwritten.
+   RInterface<Proxied> RedefinePerSample(std::string_view name, std::string_view expression)
+   {
+      return DefinePerSampleJitImpl(name, expression, true);
    }
 
    /// \brief Register systematic variations for a single existing column using custom variation tags.
@@ -3830,6 +3817,63 @@ private:
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
                     "Error in `Define`: type returned by expression is not default-constructible");
       return *this; // never reached
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Implementation of DefinePerSample and RedefinePerSample (non-jitted).
+   template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
+   RInterface<Proxied> DefinePerSampleImpl(std::string_view name, F expression, bool redefine)
+   {
+      if (!redefine) {
+         RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
+         RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister,
+                                           GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
+      } else {
+         RDFInternal::CheckForDefinition("RedefinePerSample", name, fColRegister,
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
+         RDFInternal::CheckForNoVariations("RedefinePerSample", name, fColRegister);
+      }
+
+      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType_t));
+      if (retTypeName.empty()) {
+         // The type is not known to the interpreter.
+         // We must not error out here, but if/when this column is used in jitted code
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType_t));
+         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
+      }
+
+      auto newColumn =
+         std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression), *fLoopManager);
+
+      RDFInternal::RColumnRegister newCols(fColRegister);
+      newCols.AddDefine(std::move(newColumn));
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+      return newInterface;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Implementation of DefinePerSample and RedefinePerSample (jitted).
+   RInterface<Proxied> DefinePerSampleJitImpl(std::string_view name, std::string_view expression, bool redefine)
+   {
+      // these checks must be done before jitting lest we throw exceptions in jitted code
+      if (!redefine) {
+         RDFInternal::CheckValidCppVarName(name, redefine ? "RedefinePerSample" : "DefinePerSample");
+         RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister,
+                                           GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
+      } else {
+         RDFInternal::CheckForDefinition("RedefinePerSample", name, fColRegister,
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
+         RDFInternal::CheckForNoVariations("RedefinePerSample", name, fColRegister);
+      }
+
+      auto jittedDefine = RDFInternal::BookDefinePerSampleJit(name, expression, *fLoopManager, fColRegister);
+
+      RDFInternal::RColumnRegister newCols(fColRegister);
+      newCols.AddDefine(std::move(jittedDefine));
+
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+
+      return newInterface;
    }
 
    ////////////////////////////////////////////////////////////////////////////
