@@ -28,6 +28,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
   HEADERS
+    TQt6Application.h
     TQt6Canvas.h
     TQt6PadPainter.h
     TQt6GuiFactory.h
@@ -36,6 +37,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     src/QPaintWidget.cpp
     src/QRootMethodDialog.cpp
     src/QRootContextMenu.cpp
+    src/TQt6Application.cxx
     src/TQt6Canvas.cxx
     src/TQt6PadPainter.cxx
     src/TQt6GuiFactory.cxx

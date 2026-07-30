@@ -18,7 +18,9 @@ For Qt6 it provides specialization for TCanvasImp and TContextMenuImp classes
 
 
 #include "TQt6GuiFactory.h"
+
 #include "TQt6Canvas.h"
+#include "TQt6Application.h"
 #include "QRootContextMenu.h"
 
 #include <iostream>
@@ -39,7 +41,7 @@ TQt6GuiFactory::TQt6GuiFactory(const char *name, const char *title)
 TApplicationImp *TQt6GuiFactory::CreateApplicationImp(const char *classname,
                       Int_t *argc, char **argv)
 {
-   return TGuiFactory::CreateApplicationImp(classname, argc, argv);
+   return new TQt6Application(classname, argc, argv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
