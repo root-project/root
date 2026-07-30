@@ -33,6 +33,8 @@ public:
    void    Raise() override {}
    void    Lower() override {}
 
+   static void CreateQApplication(int argc = 0, char **argv = nullptr);
+
    ClassDefOverride(TQt6Application,0)  // ROOT Qt6 GUI application environment
 };
 
