@@ -17,5 +17,6 @@
 #pragma link C++ class ROOT::Experimental::TQt6Canvas+;
 #pragma link C++ class ROOT::Experimental::TQt6PadPainter+;
 #pragma link C++ class ROOT::Experimental::TQt6GuiFactory+;
+#pragma link C++ class ROOT::Experimental::TQt6Application+;
 
 #endif
