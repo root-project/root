@@ -45,6 +45,8 @@ public:
    TGuiFactory(const char *name = "Batch", const char *title = "Batch GUI Factory");
    virtual ~TGuiFactory() { }
 
+   virtual Bool_t UseVirtualX() const { return kTRUE; }
+
    virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 
    virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);

@@ -250,37 +250,42 @@ void TApplication::InitializeGraphics(Bool_t only_web)
    if (fgGraphInit || !fgGraphNeeded)
       return;
 
+   Bool_t use_x11 = kFALSE;
+
    if (!only_web) {
       // Load the graphics related libraries
       LoadGraphicsLibs();
 
-      // Try to load TrueType font renderer. Only try to load if not in batch
-      // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
-      // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                          TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
-      // Check for use of DFSG - fonts
-      if (!ttfont)
-         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+      use_x11 = gGuiFactory->UseVirtualX();
 
-   #if !defined(R__WIN32)
-      if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
-          ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
-         if (gClassTable->GetDict("TGX11TTF")) {
-            // in principle we should not have linked anything against libGX11TTF
-            // but with ACLiC this can happen, initialize TGX11TTF by hand
-            // (normally this is done by the static library initializer)
-            ProcessLine("TGX11TTF::Activate();");
-         } else {
-            TPluginHandler *h;
-            if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-               if (h->LoadPlugin() == -1)
-                  Info("InitializeGraphics", "no TTF support");
+      if (use_x11) {
+         // Try to load TrueType font renderer. Only try to load if not in batch
+         // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
+         // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
+         const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                             TROOT::GetTTFFontDir());
+         char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+         // Check for use of DFSG - fonts
+         if (!ttfont)
+            ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+
+      #if !defined(R__WIN32)
+         if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
+            ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+            if (gClassTable->GetDict("TGX11TTF")) {
+               // in principle we should not have linked anything against libGX11TTF
+               // but with ACLiC this can happen, initialize TGX11TTF by hand
+               // (normally this is done by the static library initializer)
+               ProcessLine("TGX11TTF::Activate();");
+            } else {
+               if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf"))
+                  if (h->LoadPlugin() == -1)
+                     Info("InitializeGraphics", "no TTF support");
+            }
          }
+      #endif
+         delete [] ttfont;
       }
-   #endif
-      delete [] ttfont;
    }
 
    if (!only_web || !fAppImp) {
@@ -303,14 +308,12 @@ void TApplication::InitializeGraphics(Bool_t only_web)
    Init();
 
    // Set default screen factor (if not disabled in rc file)
-   if (!only_web && gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
+   if (use_x11 && gVirtualX && gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
       Int_t  x, y;
       UInt_t w, h;
-      if (gVirtualX) {
-         gVirtualX->GetGeometry(-1, x, y, w, h);
-         if (h > 0)
+      gVirtualX->GetGeometry(-1, x, y, w, h);
+      if (h > 0)
             gStyle->SetScreenFactor(0.001 * h);
-      }
    }
 }
 
@@ -465,7 +468,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
    const auto &positionalArgs = opts.GetArgs();
    const auto lastArgBeforeDashDash = opts.GetFirstPostDashDashArg().value_or(positionalArgs.size());
-   
+
    TString pwd;
 
    // Process all positional arguments before `--`
@@ -589,7 +592,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                                "Everything after the -- will be ignored.");
       }
    }
-   
+
    // go back to startup directory
    if (pwd != "")
       gSystem->ChangeDirectory(pwd);
@@ -681,7 +684,7 @@ void TApplication::OpenInBrowser(const TString &url)
       // The user will have a warning and the URL in the terminal.
       Warning("OpenInBrowser", "The $DISPLAY is not set! Please manually open (e.g. Ctrl-click) %s\n", url.Data());
       return;
-   }   
+   }
    // Command for opening a browser in Linux. Since the DISPLAY is set, it will open the browser.
    TString cLinux("xdg-open ");
    cLinux.Append(url);
@@ -1406,6 +1409,23 @@ void TApplication::LoadGraphicsLibs()
       if (h->LoadPlugin() == -1)
          return;
 
+   TString guiFactory = gEnv->GetValue("Gui.Factory", "native");
+   guiFactory.ToLower();
+   if (guiFactory == "native")
+      guiFactory = "root";
+
+   if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
+      if (h->LoadPlugin() == -1) {
+         gROOT->SetBatch(kTRUE);
+         return;
+      }
+      gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
+
+      if (!gGuiFactory || !gGuiFactory->UseVirtualX())
+         return;
+   }
+
+
    TString name;
    TString title1 = "ROOT interface to ";
    TString nativex, title;
@@ -1440,19 +1460,6 @@ void TApplication::LoadGraphicsLibs()
       }
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
       fgGraphInit = kTRUE;
-   }
-
-   TString guiFactory = gEnv->GetValue("Gui.Factory", "native");
-   guiFactory.ToLower();
-   if (guiFactory == "native")
-      guiFactory = "root";
-
-   if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
-      if (h->LoadPlugin() == -1) {
-         gROOT->SetBatch(kTRUE);
-         return;
-      }
-      gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
    }
 }
 
