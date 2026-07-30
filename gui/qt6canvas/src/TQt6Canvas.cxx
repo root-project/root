@@ -11,13 +11,12 @@
 #include "TQt6Canvas.h"
 
 #include "TQt6PadPainter.h"
+#include "TQt6Application.h"
 
 #include "TSystem.h"
 #include "TStyle.h"
-#include "TError.h"
 #include "TCanvas.h"
 #include "TROOT.h"
-#include "TApplication.h"
 #include "TClass.h"
 
 #include <cstdio>
@@ -28,31 +27,14 @@
 #include <sstream>
 #include <vector>
 
-#include <QApplication>
 #include "QCanvasWidget.h"
 
 using namespace ROOT::Experimental;
-
-class TQt6CanvasTimer : public TTimer {
-public:
-   TQt6CanvasTimer(Long_t milliSec, Bool_t mode) :
-       TTimer(milliSec, mode) {}
-
-
-   /// used to send control messages to clients
-   void Timeout() override
-   {
-      QApplication::sendPostedEvents();
-      QApplication::processEvents();
-   }
-};
-
 
 /** \class TQt6Canvas
     \ingroup qt6canvas
     \brief Basic TCanvasImp ABI implementation for Qt6
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -274,29 +256,8 @@ void TQt6Canvas::ForceUpdate()
 
 TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   static QApplication *qapp = nullptr;
-   static int qargc = 1;
-   static char *qargv[2];
-
-   if (!qapp && !QApplication::instance()) {
-
-      if (!gApplication) {
-         ::Error("TQt6Canvas::NewCanvas", "Not found gApplication to create QApplication");
-         return nullptr;
-      }
-
-      qargv[0] = gApplication->Argv(0);
-      qargv[1] = nullptr;
-
-      qapp = new QApplication(qargc, qargv);
-   }
-
-   static TQt6CanvasTimer *timer = nullptr;
-
-   if (!timer) {
-      timer = new TQt6CanvasTimer(10, kTRUE);
-      timer->TurnOn();
-   }
+   // ensure QApplication is exists
+   TQt6Application::CreateQApplication();
 
    auto widget = new QCanvasWidget();
    widget->setWindowTitle(QString(c->GetTitle()));
