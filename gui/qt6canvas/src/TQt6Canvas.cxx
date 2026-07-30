@@ -16,7 +16,6 @@
 #include "TStyle.h"
 #include "TError.h"
 #include "TCanvas.h"
-#include "TThread.h"
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TClass.h"
@@ -54,7 +53,6 @@ public:
     \brief Basic TCanvasImp ABI implementation for Qt6
 */
 
-using namespace std::string_literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -62,18 +60,6 @@ using namespace std::string_literals;
 TQt6Canvas::TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TCanvasImp(c, name, x, y, width, height)
 {
-   // Workaround for multi-threaded environment
-   // Ensure main thread id picked when canvas implementation is created -
-   // otherwise it may be assigned in other thread and screw-up gPad access.
-   // Workaround may not work if main thread id was wrongly initialized before
-   // This resolves issue https://github.com/root-project/root/issues/15498
-   // TThread::SelfId();
-
-   // fTimer = new TQt6CanvasTimer(*this);
-
-   // fTimer->TurnOn();
-
-   // fAsyncMode = kTRUE;
 }
 
 
@@ -99,7 +85,6 @@ Int_t TQt6Canvas::InitWindow()
 
 TVirtualPadPainter *TQt6Canvas::CreatePadPainter()
 {
-   printf("Create pad painter\n");
    return new TQt6PadPainter(fPaintWidget);
 }
 
@@ -262,11 +247,6 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
       h = 600;
    }
 
-   // x = Canvas()->fWindowTopX;
-   // y = Canvas()->fWindowTopY;
-   // w = Canvas()->fWindowWidth;
-   // h = Canvas()->fWindowHeight;
-
    return 0;
 }
 
@@ -290,7 +270,7 @@ void TQt6Canvas::ForceUpdate()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Static method to create TQt6Canvas instance
-/// Used by plugin manager
+/// Used by plugin manager to directly create TQt6Canvas without gui factory
 
 TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
@@ -335,6 +315,10 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    // set all internal dimensions
    c->Resize();
+
+   // TODO: maybe apply same logic to adjust canvas dimension as in TRootCanvas
+   //       Keep commented code here intentionally to be able find this place when
+   //       search for correspondent class members
 
    // c->fWindowTopX = x;
    // c->fWindowTopY = y;

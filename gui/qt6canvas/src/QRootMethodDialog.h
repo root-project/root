@@ -13,8 +13,8 @@
  *************************************************************************/
 
 
-#ifndef QRootMethodDialog_h
-#define QRootMethodDialog_h
+#ifndef ROOT_QRootMethodDialog
+#define ROOT_QRootMethodDialog
 
 #include <QtCore/QVector>
 #include <QDialog>

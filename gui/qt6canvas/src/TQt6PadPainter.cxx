@@ -36,6 +36,8 @@ const Float_t kScale = 0.75 * 0.93376068;
 /** \class TQt6PadPainter
     \ingroup qt6canvas
     \brief Implement TVirtualPadPainter for Qt6 graphics
+
+   Uses QPainter object which only exists inside paintEvent of Qt.
 */
 
 //////////////////////////////////////////////////////////////////////////

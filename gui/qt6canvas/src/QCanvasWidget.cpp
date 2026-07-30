@@ -72,6 +72,15 @@ static QToolBarData_t qToolBarData[] = {
 };
 
 
+
+/** \class QCanvasWidget
+    \ingroup qt6canvas
+
+Qt widget which display canvas and provides menu, toolbar and status bar
+Actual graphics shown in the \ref QPaintWidget
+*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 

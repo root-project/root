@@ -12,9 +12,8 @@
 /** \class TQt6GuiFactory
     \ingroup qt6canvas
 
-This class is a factory for ROOT GUI components. It overrides
-the member functions of the ABS TGuiFactory.
-
+This class is a factory for ROOT GUI components.
+For Qt6 it provides specialization for TCanvasImp and TContextMenuImp classes
 */
 
 

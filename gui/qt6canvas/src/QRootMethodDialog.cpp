@@ -32,6 +32,15 @@
 
 #include <iostream>
 
+/** \class QRootMethodDialog
+    \ingroup qt6canvas
+
+Specialized dialog to enter arguments for method exection
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create method dialog
+
 QRootMethodDialog::QRootMethodDialog() : QDialog()
 {
    QGridLayout *gridLayout = new QGridLayout(this);
@@ -59,6 +68,9 @@ QRootMethodDialog::QRootMethodDialog() : QDialog()
    gridLayout->addLayout(buttLayout, 1, 0, Qt::AlignBottom);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add argument
+
 void QRootMethodDialog::addArg(const char *argname, const char *value, const char *)
 {
    QLabel* lbl = new QLabel(argname);
@@ -73,12 +85,18 @@ void QRootMethodDialog::addArg(const char *argname, const char *value, const cha
    fArgs.push_back(le);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get argument value
+
 QString QRootMethodDialog::getArg(int n)
 {
    if ((n<0) || (n>=fArgs.size())) return QString("");
    return fArgs[n]->text();
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run method dialog
 
 void QRootMethodDialog::methodDialog(TContextMenu *menu, TObject *object, TFunction* func)
 {
