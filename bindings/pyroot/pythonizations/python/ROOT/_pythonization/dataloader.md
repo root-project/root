@@ -181,6 +181,25 @@ for X, y in dl.as_numpy():
     clf.partial_fit(X, y, classes=[0, 1])
 ~~~
 
+### Transforming your batches
+
+Apply a transformation on your batches with `map`:
+
+~~~{.py}
+def transform(batch):
+    ...
+
+for X, y in map(transform, dl.as_numpy()):
+    ...
+~~~
+
+In the case of a Tensorflow Dataset, use `Dataset.map`:
+
+~~~{.py}
+ds = dl.as_tensorflow().map(transform)
+model.fit(ds, ...)
+~~~
+
 ## Train / Validation Split
 
 Pass `test_size` to split the dataset into two loaders each representing a fraction of the original dataset (no data is duplicated):
