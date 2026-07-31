@@ -58,7 +58,6 @@ if(tmva)
         ROOT/_pythonization/_tmva/__init__.py
         ROOT/_pythonization/_tmva/_rbdt.py
         ROOT/_pythonization/_tmva/_rtensor.py
-        ROOT/_pythonization/_tmva/_tree_inference.py
         ROOT/_pythonization/_tmva/_utils.py
         ROOT/_pythonization/_tmva/_gnn.py
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/__init__.py

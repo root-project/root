@@ -23,7 +23,10 @@
 #include <TFile.h>
 #include <TSystem.h>
 
+#include <nlohmann/json.hpp>
+
 #include <cmath>
+#include <memory>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -352,6 +355,156 @@ TMVA::Experimental::RBDT TMVA::Experimental::RBDT::LoadText(std::istream &file, 
    }
 
    return ff;
+}
+
+/// Construct an RBDT from an XGBoost model in its native JSON serialization.
+///
+/// In contrast to LoadText(), which parses the human-readable text dump, this
+/// reads the structured model that XGBoost writes with Booster.save_model().
+/// That format stores each tree as a set of parallel arrays and references
+/// features by index, so no feature-name resolution is needed. Everything else
+/// (objective, base score, number of classes) is taken from the file, which
+/// makes this a self-contained, Python-free entry point.
+TMVA::Experimental::RBDT TMVA::Experimental::RBDT::LoadXGBoost(std::string const &jsonPath)
+{
+   const std::string info = "constructing RBDT from '" + jsonPath + "': ";
+
+   if (gSystem->AccessPathName(jsonPath.c_str())) {
+      throw std::runtime_error(info + "file does not exist");
+   }
+
+   nlohmann::json j;
+   {
+      std::ifstream jsonFile(jsonPath.c_str());
+      jsonFile >> j;
+   }
+
+   auto const &learner = j.at("learner");
+   auto const &modelParam = learner.at("learner_model_param");
+
+   // Map the XGBoost objective to the RBDT one, matching the Python SaveXGBoost.
+   std::string const xgbObjective = learner.at("objective").at("name").get<std::string>();
+   static const std::unordered_map<std::string, std::string> objectiveMap{
+      {"multi:softprob", "softmax"}, // Naming the objective softmax is more common today
+      {"binary:logistic", "logistic"},
+      {"reg:linear", "identity"},
+      {"reg:squarederror", "identity"},
+   };
+   auto foundObjective = objectiveMap.find(xgbObjective);
+   if (foundObjective == objectiveMap.end()) {
+      std::string supported;
+      for (auto const &item : objectiveMap) {
+         supported += (supported.empty() ? "" : ", ") + item.first;
+      }
+      throw std::runtime_error(info + "XGBoost model has unsupported objective \"" + xgbObjective +
+                               "\". Supported objectives are " + supported + ".");
+   }
+   bool const logistic = foundObjective->second == "logistic";
+
+   // The base score is stored as a string, e.g. "5.14E-1". Since XGBoost 3.1.0 it
+   // is always serialized as a JSON array embedded in that string (e.g.
+   // "[5.14E-1]"), even for single-output models. Only a genuine multi-element
+   // array (multi-target base score) is unsupported.
+   std::string const baseScoreStr = modelParam.at("base_score").get<std::string>();
+   double baseScoreProb;
+   if (baseScoreStr.find('[') != std::string::npos) {
+      nlohmann::json const baseScoreArr = nlohmann::json::parse(baseScoreStr);
+      if (baseScoreArr.size() > 1) {
+         throw std::runtime_error(info + "model contains multiple base scores, which is not supported. This "
+                                         "typically occurs with XGBoost >= 3.1.0, which supports multi-target base "
+                                         "scores.");
+      }
+      baseScoreProb = baseScoreArr.at(0).get<double>();
+   } else {
+      baseScoreProb = std::stod(baseScoreStr);
+   }
+   // For a logistic objective the base score is a probability, but RBDT works on
+   // the raw margin, so we apply the logit transform (as the Python code does).
+   Value_t const baseScore = logistic ? std::log(baseScoreProb / (1.0 - baseScoreProb)) : baseScoreProb;
+
+   // Only multiclass models produce more than one output.
+   int nClasses = 1;
+   if (xgbObjective.rfind("multi:", 0) == 0) {
+      nClasses = std::stoi(modelParam.at("num_class").get<std::string>());
+   }
+
+   RBDT ff;
+   ff.fLogistic = logistic;
+   ff.fBaseScore = baseScore;
+   ff.fBaseResponses.resize(nClasses <= 2 ? 1 : nClasses);
+
+   auto const &trees = learner.at("gradient_booster").at("model").at("trees");
+
+   int treesSkipped = 0;
+   int nPreviousNodes = 0;
+   int nPreviousLeaves = 0;
+   IndexMap nodeIndices;
+   IndexMap leafIndices;
+
+   // Fill the flat RBDT arrays tree by tree, keying the index maps by the node's
+   // position in the XGBoost arrays. terminateTree() then remaps the child
+   // references to the RBDT indexing (negated for leaves), exactly as for the
+   // text dump. Node 0 is always the tree root, so iterating in array order
+   // makes it the first internal node of the tree, which is what fRootIndices
+   // expects.
+   for (auto const &tree : trees) {
+      auto const &leftChildren = tree.at("left_children");
+      auto const &rightChildren = tree.at("right_children");
+      auto const &splitIndices = tree.at("split_indices");
+      auto const &splitConditions = tree.at("split_conditions");
+
+      std::size_t const nNodes = leftChildren.size();
+      for (std::size_t i = 0; i < nNodes; ++i) {
+         int const left = leftChildren[i].get<int>();
+         if (left == -1) {
+            // Leaf node: the split condition holds the leaf response.
+            ff.fResponses.push_back(splitConditions[i].get<Value_t>());
+            std::size_t const nLeafIndices = leafIndices.size();
+            leafIndices[i] = nLeafIndices + nPreviousLeaves;
+         } else {
+            // Internal node: x < cut goes left (yes), otherwise right (no).
+            ff.fCutValues.push_back(splitConditions[i].get<Value_t>());
+            ff.fCutIndices.push_back(splitIndices[i].get<unsigned int>());
+            ff.fLeftIndices.push_back(left);
+            ff.fRightIndices.push_back(rightChildren[i].get<int>());
+            std::size_t const nNodeIndices = nodeIndices.size();
+            nodeIndices[i] = nNodeIndices + nPreviousNodes;
+         }
+      }
+
+      terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
+   }
+
+   if (nClasses > 2 && (ff.fRootIndices.size() + treesSkipped) % nClasses != 0) {
+      std::stringstream ss;
+      ss << info << "Forest has " << ff.fRootIndices.size() << " trees, which is not compatible with " << nClasses
+         << " classes!";
+      throw std::runtime_error(ss.str());
+   }
+
+   return ff;
+}
+
+/// Save an XGBoost model to a ROOT file as a TMVA::Experimental::RBDT object.
+///
+/// \param jsonPath   Path to the XGBoost model in its native JSON serialization
+///                   (as written by xgboost's Booster.save_model()).
+/// \param keyName    Name under which the RBDT is stored in the output file.
+/// \param outputPath Path of the ROOT file to create (opened in RECREATE mode).
+///
+/// This is the language-agnostic entry point for the XGBoost-to-ROOT path: it
+/// only needs the model file on disk, so it can be used from C++ as well as
+/// from Python.
+void TMVA::Experimental::SaveXGBoost(std::string const &jsonPath, std::string const &keyName,
+                                     std::string const &outputPath)
+{
+   RBDT bdt = RBDT::LoadXGBoost(jsonPath);
+
+   std::unique_ptr<TFile> file{TFile::Open(outputPath.c_str(), "RECREATE")};
+   if (!file || file->IsZombie()) {
+      throw std::runtime_error("Failed to open output file " + outputPath);
+   }
+   file->WriteObject(&bdt, keyName.c_str());
 }
 
 TMVA::Experimental::RBDT::RBDT(const std::string &key, const std::string &filename)

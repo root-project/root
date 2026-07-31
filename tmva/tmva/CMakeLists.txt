@@ -455,6 +455,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
 
   ${EXTRA_DICT_OPTS}
 )
+# RBDT::LoadXGBoost parses the XGBoost native JSON serialization.
+target_link_libraries(TMVAUtils PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

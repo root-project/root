@@ -65,6 +65,8 @@ public:
    static RBDT LoadText(std::string const &txtpath, std::vector<std::string> &features, int nClasses, bool logistic,
                         Value_t baseScore);
 
+   static RBDT LoadXGBoost(std::string const &jsonPath);
+
 private:
    /// Map from XGBoost to RBDT indices.
    using IndexMap = std::unordered_map<int, int>;
@@ -91,6 +93,8 @@ private:
 
    ClassDefNV(RBDT, 1);
 };
+
+void SaveXGBoost(std::string const &jsonPath, std::string const &keyName, std::string const &outputPath);
 
 } // namespace Experimental
 
