@@ -20,13 +20,11 @@
 
 #include <ROOT/StringUtils.hxx>
 
-#include <TFile.h>
 #include <TSystem.h>
 
 #include <nlohmann/json.hpp>
 
 #include <cmath>
-#include <memory>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -382,7 +380,7 @@ TMVA::Experimental::RBDT TMVA::Experimental::RBDT::LoadXGBoost(std::string const
    auto const &learner = j.at("learner");
    auto const &modelParam = learner.at("learner_model_param");
 
-   // Map the XGBoost objective to the RBDT one, matching the Python SaveXGBoost.
+   // Map the XGBoost objective to the RBDT one.
    std::string const xgbObjective = learner.at("objective").at("name").get<std::string>();
    static const std::unordered_map<std::string, std::string> objectiveMap{
       {"multi:softprob", "softmax"}, // Naming the objective softmax is more common today
@@ -483,39 +481,4 @@ TMVA::Experimental::RBDT TMVA::Experimental::RBDT::LoadXGBoost(std::string const
    }
 
    return ff;
-}
-
-/// Save an XGBoost model to a ROOT file as a TMVA::Experimental::RBDT object.
-///
-/// \param jsonPath   Path to the XGBoost model in its native JSON serialization
-///                   (as written by xgboost's Booster.save_model()).
-/// \param keyName    Name under which the RBDT is stored in the output file.
-/// \param outputPath Path of the ROOT file to create (opened in RECREATE mode).
-///
-/// This is the language-agnostic entry point for the XGBoost-to-ROOT path: it
-/// only needs the model file on disk, so it can be used from C++ as well as
-/// from Python.
-void TMVA::Experimental::SaveXGBoost(std::string const &jsonPath, std::string const &keyName,
-                                     std::string const &outputPath)
-{
-   RBDT bdt = RBDT::LoadXGBoost(jsonPath);
-
-   std::unique_ptr<TFile> file{TFile::Open(outputPath.c_str(), "RECREATE")};
-   if (!file || file->IsZombie()) {
-      throw std::runtime_error("Failed to open output file " + outputPath);
-   }
-   file->WriteObject(&bdt, keyName.c_str());
-}
-
-TMVA::Experimental::RBDT::RBDT(const std::string &key, const std::string &filename)
-{
-   std::unique_ptr<TFile> file{TFile::Open(filename.c_str(), "READ")};
-   if (!file || file->IsZombie()) {
-      throw std::runtime_error("Failed to open input file " + filename);
-   }
-   auto *fromFile = file->Get<TMVA::Experimental::RBDT>(key.c_str());
-   if (!fromFile) {
-      throw std::runtime_error("No RBDT with name " + key);
-   }
-   *this = *fromFile;
 }

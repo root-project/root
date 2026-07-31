@@ -50,9 +50,8 @@ if __name__ == "__main__":
     bdt = XGBClassifier(max_depth=3, n_estimators=500)
     bdt.fit(x, y, sample_weight=w)
 
-    # Save model in TMVA format. The XGBoost-to-ROOT conversion is implemented
-    # in C++ and takes the model in XGBoost's native JSON serialization, so we
-    # dump the trained model to a file first.
-    print("Training done on ", x.shape[0], "events. Saving model in tmva101.root")
+    # Save the trained model in XGBoost's native JSON format. It can be loaded
+    # back for inference with TMVA's fast tree inference engine via
+    # TMVA::Experimental::RBDT::LoadXGBoost, both from Python and from C++.
+    print("Training done on ", x.shape[0], "events. Saving model in tmva101.json")
     bdt.get_booster().save_model("tmva101.json")
-    ROOT.TMVA.Experimental.SaveXGBoost("tmva101.json", "myBDT", "tmva101.root")
