@@ -299,7 +299,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize)
     ush flags    = 0;
     ulg crc      = 0;
     int method   = Z_DEFLATED;
-    bits_internal_state state;
+    bits_internal_state *state = (bits_internal_state *) malloc(sizeof(bits_internal_state));
 
     if (tgtsize <= 6L) { R__error("target buffer too small"); /* errorflag = 1; */ }
 #if 0
@@ -307,27 +307,27 @@ ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize)
     crc = updcrc(src, (extent) srcsize);
 #endif
 #ifdef DYN_ALLOC
-    state.R__window = 0;
-    state.R__prev = 0;
+    state->R__window = 0;
+    state->R__prev = 0;
 #endif
 
     /* R__read_buf  = R__mem_read; */
     /* assert(R__read_buf == R__mem_read); */
-    state.in_buf    = src;
-    state.in_size   = (unsigned)srcsize;
-    state.in_offset = 0;
+    state->in_buf    = src;
+    state->in_size   = (unsigned)srcsize;
+    state->in_offset = 0;
 
-    state.out_buf    = tgt;
-    state.out_size   = (unsigned)tgtsize;
-    state.out_offset = 2 + 4;
-    state.R__window_size = 0L;
+    state->out_buf    = tgt;
+    state->out_size   = (unsigned)tgtsize;
+    state->out_offset = 2 + 4;
+    state->R__window_size = 0L;
 
-    R__bi_init(&state);
-    state.t_state = R__get_thread_tree_state();
-    R__ct_init(state.t_state, &att, &method);
-    R__lm_init(&state,(gCompressionLevel != 0 ? gCompressionLevel : 1), &flags);
-    R__Deflate(&state,&(state.error_flag));
-    state.R__window_size = 0L; /* was updated by lm_init() */
+    R__bi_init(state);
+    state->t_state = R__get_thread_tree_state();
+    R__ct_init(state->t_state, &att, &method);
+    R__lm_init(state,(gCompressionLevel != 0 ? gCompressionLevel : 1), &flags);
+    R__Deflate(state,&(state->error_flag));
+    state->R__window_size = 0L; /* was updated by lm_init() */
 
     /* For portability, force little-endian order on all machines: */
     tgt[0] = (char)(method & 0xff);
@@ -337,7 +337,12 @@ ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize)
     tgt[4] = (char)((crc >> 16) & 0xff);
     tgt[5] = (char)((crc >> 24) & 0xff);
 
-    return (ulg)state.out_offset;
+    ulg res = (ulg)state->out_offset;
+
+    R__lm_free(state);
+    free(state);
+
+    return res;
 }
 
 
