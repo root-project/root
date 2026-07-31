@@ -4,6 +4,9 @@ inputs:
   build-tag:
     description: 'The tag for this build'
     required: true
+  artifact-name:
+    description: 'The name of the artifact to upload'
+    required: true
 
 runs:
   using: "composite"
@@ -16,5 +19,5 @@ runs:
     - name: Upload wheel
       uses: actions/upload-artifact@v6
       with:
-        name: ${{ inputs.build-tag }}
+        name: ${{ inputs.artifact-name }}
         path: wheelhouse/*

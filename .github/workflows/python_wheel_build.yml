@@ -50,35 +50,80 @@ on:
         - "30"
         required: true
         default: "00"
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   Build_Wheel:
-    runs-on: macos-26 
+    runs-on: ${{ matrix.config.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [cp310, cp311, cp312, cp313, cp314]
+        config:
+          - runner: macos-15
+            platform: macosx_arm64
+            deployment_target: "15.0"
+          - runner: macos-26
+            platform: macosx_arm64
+            deployment_target: "26.0"
+          - runner: ubuntu-latest
+            platform: manylinux_x86_64
+            deployment_target: ""
+    name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
     steps:
-      - name: Checkout the official ROOT repo
-        uses: actions/checkout@v6
-        with:
-          path: root
-#          ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}
-      - name: Make wheel
+      - uses: actions/checkout@v6
+      - uses: ./.github/workflows/cibuildwheel-impl
         env:
-            MACOSX_DEPLOYMENT_TARGET: 26.5
-        run: |
-            mkdir wheel_creation && cd wheel_creation
-            cp -r ../root .
-            python3 -m venv root_build_env 
-            source root_build_env/bin/activate
-            pip install --upgrade pip setuptools wheel build
-            cd root
-            pip install -r requirements.txt
-            python3 -m build --wheel
-            pip install delocate 
-            mkdir fixed_wheels
-            delocate-wheel -v -w fixed_wheels/ dist/*.whl
-
-      - name: Upload_wheel
-        uses: actions/upload-artifact@v6
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.config.deployment_target }}
         with:
-          name: Wheel upload
-          path: /Users/runner/work/root/root/wheel_creation/root/fixed_wheels/*.whl
-          if-no-files-found: error
+          build-tag: ${{ matrix.python }}-${{ matrix.config.platform }}
+          artifact-name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
+
+  Test_Wheels:
+    needs: Build_Wheel
+    runs-on: ${{ matrix.test_config.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        test_config:
+          # native tests: each runner tests its own wheel
+          - runner: macos-15
+            wheel_pattern: "macosx_15"
+            label: "native"
+          - runner: macos-26
+            wheel_pattern: "macosx_26"
+            label: "native"
+          - runner: ubuntu-latest
+            wheel_pattern: "manylinux"
+            label: "native"
+          # portability tests: oldest wheel on newer runners
+          - runner: macos-26
+            wheel_pattern: "macosx_15"
+            label: "port"
+    name: test-${{ matrix.python }}-${{ matrix.test_config.wheel_pattern }}-on-${{ matrix.test_config.runner }}-${{ matrix.test_config.label }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: wheels
+          merge-multiple: true
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install produced wheel
+        run: |
+          ls -R wheels
+          PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          WHEEL=$(ls wheels/*${PY_VER}*${{ matrix.test_config.wheel_pattern }}*.whl | head -n 1)
+          echo "Testing wheel: ${WHEEL} on ${{ matrix.test_config.runner }} (${{ matrix.test_config.label }})"
+          pip install "$WHEEL"
+      - name: Install tutorials dependencies
+        run: |
+          python -m pip install --no-cache-dir -r test/wheels/requirements-ci.txt
+      - name: Run tutorials
+        run: |
+          pytest -vv --verbosity="4" -rF test/wheels
