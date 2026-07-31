@@ -377,6 +377,10 @@ TEST(RNTuple, TClassMetaName)
    ROOT::RStreamerField f6("f", "EdmWrapper<long long>");
    EXPECT_STREQ("EdmWrapper<Long64_t>", f6.GetClass()->GetName());
    EXPECT_EQ("EdmWrapper<Long64_t>", f6.GetTypeAlias());
+   auto clone = f6.Clone("f");
+   auto streamerFieldPtr = static_cast<ROOT::RStreamerField *>(clone.get());
+   EXPECT_STREQ("EdmWrapper<Long64_t>", streamerFieldPtr->GetClass()->GetName());
+   EXPECT_EQ("EdmWrapper<Long64_t>", streamerFieldPtr->GetTypeAlias());
 }
 
 TEST(RNTuple, StreamerInfoRecords)
