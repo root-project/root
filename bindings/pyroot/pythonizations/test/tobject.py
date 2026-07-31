@@ -4,6 +4,42 @@ import ROOT
 from ROOT import TUrl
 
 
+class TObjectContains(unittest.TestCase):
+    """
+    Test for the __contains__ pythonization of TObject and subclasses.
+    Such pythonization relies on TObject::FindObject, which is redefined
+    in some of its subclasses, such as TCollection.
+    Thanks to this pythonization, we can use the syntax `obj in col`
+    to know if col contains obj.
+    """
+
+    num_elems = 3
+
+    # Helpers
+    def create_tlist(self):
+        l = ROOT.TList()
+        for _ in range(self.num_elems):
+            o = ROOT.TObject()
+            # Prevent immediate deletion of C++ TObjects
+            ROOT.SetOwnership(o, False)
+            l.Add(o)
+
+        return l
+
+    # Tests
+    def test_contains(self):
+        l = self.create_tlist()
+
+        for elem in l:
+            self.assertTrue(elem in l)
+            # Make sure it does not work just because of __iter__
+            self.assertTrue(l.__contains__(elem))
+
+        o = ROOT.TObject()
+        self.assertFalse(o in l)
+        self.assertFalse(l.__contains__(o))
+
+
 class TObjectComparisonOps(unittest.TestCase):
     """
     Test for the comparison operators of TObject and subclasses:

@@ -1,3 +1,5 @@
+#ifndef PYROOT_TEST_TREEHELPER_H
+#define PYROOT_TEST_TREEHELPER_H
 
 // Helper struct for this test
 struct MyStruct {
@@ -120,3 +122,5 @@ public:
   }
 };
 }
+
+#endif // PYROOT_TEST_TREEHELPER_H
