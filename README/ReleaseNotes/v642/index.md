@@ -78,6 +78,11 @@ maps) will now obtain different, mathematically consistent values.
 
 ## Math
 
+## RDataFrame
+
+* Added `RedefinePerSample` transformation. Works similarly to `DefinePerSample`, but allows to redefine existing values
+  of a column on a per-sample basis. This operation is supported in local and distributed mode.
+
 ## RooFit
 
 ### Small changes
