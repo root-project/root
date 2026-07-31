@@ -4,7 +4,9 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#ifdef HISTFACTORY_XML
 #include <RooStats/HistFactory/ConfigParser.h>
+#endif
 #include <RooFit/ModelConfig.h>
 
 #include <RooFitHS3/JSONIO.h>
@@ -897,6 +899,9 @@ TEST(HistFactory, ShapeFactorValueAndRange)
    }
 
    // 2. XML file round trip.
+   //    The ConfigParser is only built with the xml build option, so this part
+   //    of the test is skipped when ROOT is built without XML support.
+#ifdef HISTFACTORY_XML
    {
       Measurement meas = makeMeasurement();
       const std::string xmlDir = "TestShapeFactorRangeXML";
@@ -912,6 +917,7 @@ TEST(HistFactory, ShapeFactorValueAndRange)
       ASSERT_EQ(measFromXML.size(), 1u);
       checkShapeFactor(measFromXML.front(), "XML file round trip");
    }
+#endif
 
    // 3. End to end: the gamma parameters of the workspace pick up the requested
    //    value and range.
