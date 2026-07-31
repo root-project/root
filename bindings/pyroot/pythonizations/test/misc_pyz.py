@@ -1,7 +1,185 @@
-import unittest
 import array
+import os
+import unittest
 
 import ROOT
+from ROOT import TClass, TComplex, TDirectory, TObject, TObjString
+
+
+class TClassDynamicCast(unittest.TestCase):
+    """
+    Test for the pythonization of TClass::DynamicCast, which adds an
+    an extra cast before returning the Python proxy to the user so that
+    it has the right type.
+    """
+
+    # Tests
+    def test_dynamiccast(self):
+        tobj_class = TClass.GetClass("TObject")
+        tobjstr_class = TClass.GetClass("TObjString")
+
+        o = TObjString("a")
+
+        # Upcast: TObject <- TObjString
+        o_upcast = tobjstr_class.DynamicCast(tobj_class, o)
+        self.assertEqual(type(o_upcast), TObject)
+
+        # Downcast: TObject -> TObjString
+        o_downcast = tobjstr_class.DynamicCast(tobj_class, o_upcast, False)
+        self.assertEqual(type(o_downcast), TObjString)
+
+
+class TContextContextManager(unittest.TestCase):
+    """
+    Test of TContext used as context manager
+    """
+
+    def default_constructor(self):
+        """
+        Check status of gDirectory with default constructor.
+        """
+        filename = "TContextContextManager_test_default_constructor.root"
+        self.assertEqual(ROOT.gDirectory, ROOT.gROOT)
+
+        with TDirectory.TContext():
+            # Create a file to change gDirectory
+            testfile = ROOT.TFile(filename, "recreate")
+            self.assertEqual(ROOT.gDirectory, testfile)
+            testfile.Close()
+
+        self.assertEqual(ROOT.gDirectory, ROOT.gROOT)
+        os.remove(filename)
+
+    def constructor_onearg(self):
+        """
+        Check status of gDirectory with constructor taking a new directory.
+        """
+        filenames = ["TContextContextManager_test_constructor_onearg_{}.root".format(i) for i in range(2)]
+
+        file0 = ROOT.TFile(filenames[0], "recreate")
+        file1 = ROOT.TFile(filenames[1], "recreate")
+        self.assertEqual(ROOT.gDirectory, file1)
+
+        with TDirectory.TContext(file0):
+            self.assertEqual(ROOT.gDirectory, file0)
+
+        self.assertEqual(ROOT.gDirectory, file1)
+        file0.Close()
+        file1.Close()
+        for filename in filenames:
+            os.remove(filename)
+
+    def constructor_twoargs(self):
+        """
+        Check status of gDirectory with constructor taking the previous directory and a new one.
+        """
+        filenames = ["TContextContextManager_test_constructor_onearg_{}.root".format(i) for i in range(3)]
+
+        file0 = ROOT.TFile(filenames[0], "recreate")
+        file1 = ROOT.TFile(filenames[1], "recreate")
+        file2 = ROOT.TFile(filenames[2], "recreate")
+        self.assertEqual(ROOT.gDirectory, file2)
+
+        with TDirectory.TContext(file0, file1):
+            self.assertEqual(ROOT.gDirectory, file1)
+
+        self.assertEqual(ROOT.gDirectory, file0)
+        file0.Close()
+        file1.Close()
+        file2.Close()
+        for filename in filenames:
+            os.remove(filename)
+
+    def test_all(self):
+        """
+        Run all tests of this class sequentially.
+        The tests of this class rely on the current directory, which can be changed
+        unpredictably if they are run concurrently.
+        """
+        self.default_constructor()
+        self.constructor_onearg()
+        self.constructor_twoargs()
+
+
+class TestTComplexOperators(unittest.TestCase):
+    """
+    Test for the operators of TComplex:
+    __radd__, __rsub__, __rmul__, __rtruediv__/__rdiv__.
+    """
+
+    c = TComplex(4.,0)
+
+    d = 2.
+
+    s = 'string'
+
+    # check the expected result for d + c and that Re(c + d) == Re(d + c)
+    def test_radd(self):
+        self.assertEqual((self.d + self.c).Re(), 6.0)
+        self.assertEqual((self.c + self.d).Re(), (self.d + self.c).Re())
+
+    # check the expected result for d - c and that Re(c - d) == -Re(d - c)
+    def test_rsub(self):
+        self.assertEqual((self.d - self.c).Re(), -2.0)
+        self.assertEqual((self.c - self.d).Re(), -((self.d - self.c).Re()))
+
+    # check the expected result for d * c and that Re(c * d) == Re(d * c)
+    def test_rmul(self):
+        self.assertEqual((self.d * self.c).Re(), 8.0)
+        self.assertEqual((self.c * self.d).Re(), (self.d * self.c).Re())
+
+    # check the expected result for d / c
+    def test_rdiv(self):
+        self.assertEqual((self.d / self.c).Re(), 0.5)
+        with self.assertRaises(TypeError):
+            self.s / self.c
+
+
+class TIterIterator(unittest.TestCase):
+    """
+    Test for the pythonization that allows instances of TIter to
+    behave as Python iterators.
+    """
+
+    num_elems = 3
+
+    # Helpers
+    def create_tcollection(self):
+        c = ROOT.TList()
+        for _ in range(self.num_elems):
+            o = ROOT.TObject()
+            # Prevent immediate deletion of C++ TObjects
+            ROOT.SetOwnership(o, False)
+            c.Add(o)
+
+        return c
+
+    # Tests
+    def test_iterable(self):
+        # Check that TIter instances are iterable
+        c = self.create_tcollection()
+
+        itc = ROOT.TIter(c)
+        # An iterator of an iterator is itself
+        self.assertEqual(itc, iter(itc))
+
+    def test_iterator(self):
+        # Check that TIter instances are iterators
+        c = self.create_tcollection()
+
+        itc1 = ROOT.TIter(c)
+        itc2 = ROOT.TIter(c)
+        for _ in range(c.GetEntries()):
+            self.assertIs(next(itc1), itc2.Next())
+
+    def test_for_loop_syntax(self):
+        # Somehow redundant, but good to test with real syntax
+        c = self.create_tcollection()
+
+        itc1 = ROOT.TIter(c)
+        itc2 = ROOT.TIter(c)
+        for elem1, elem2 in zip(itc1, itc2):
+            self.assertIs(elem1, elem2)
 
 
 class TGraphGetters(unittest.TestCase):

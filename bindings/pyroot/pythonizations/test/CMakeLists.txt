@@ -15,9 +15,6 @@ endif()
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 ROOT_ADD_PYUNITTEST(pyroot_root_no_implicit_cppyy root_no_implicit_cppyy.py)
 
-# @pythonization decorator
-ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
-
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
@@ -29,88 +26,64 @@ if(Python3_VERSION VERSION_GREATER_EQUAL 3.9)
     ROOT_ADD_PYUNITTEST(uhi_test_suite uhi_test_suite.py GENERIC PYTHON_DEPS uhi numpy)
 endif()
 
-# STL containers pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_set stl_set.py)
+# STL containers pythonizations (std::vector and std::set)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_stl stl.py)
 
-# TObject and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
+# TObject and subclasses pythonizations (__contains__ and comparison operators)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject tobject.py)
 
-# TClass pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tclass_dynamiccast tclass_dynamiccast.py)
+# TDirectory and TFile pythonizations (attr/item syntax, Get, WriteObject, Open,
+# constructor and context manager)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_tfile tdirectory_tfile.py)
 
-# TContext pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcontext_contextmanager tcontext_contextmanager.py)
-
-# TDirectory and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax tdirectory_attrsyntax.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get tdirectoryfile_attrsyntax_get.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_attrsyntax_get_writeobject_open tfile_attrsyntax_get_writeobject_open.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_constructor tfile_constructor.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_context_manager tfile_context_manager.py)
-
-# TTree and subclasses pythonizations
+# TTree and subclasses pythonizations (branch attr access, iteration and
+# SetBranchAddress). ttree_branch stays separate: it declares its own MyStruct,
+# which would clash with the TreeHelper.h definition used by the others.
 file(COPY TreeHelper.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py PYTHON_DEPS numpy)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree ttree.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 
-# TColor-related pythonizations
+# TColor-related pythonizations (regression_20018 lives in tcolor.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
-ROOT_ADD_PYUNITTEST(regression_20018 regression_20018.py)
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1 th1.py)
 # The above tests a deadlock. It should complete in about 1s. If we don't reduce the timeout, we need to wait 1500 s.
 set_tests_properties(pyunittests-bindings-pyroot-pythonizations-pyroot-pyz-th1 PROPERTIES TIMEOUT 30)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_fillN th1_fillN.py PYTHON_DEPS numpy)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_addfunction th1_addfunction.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2_fillN th2_fillN.py PYTHON_DEPS numpy)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_th3 th3.py)
+# th1_addfunction, th2 and th3 merged into thist.py
+ROOT_ADD_PYUNITTEST(pyroot_pyz_thist thist.py)
 
-# TGraph, TGraph2D and error subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters tgraph_getters.py)
+# TCollection and subclasses pythonizations (len, list methods, operators, iteration)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection tcollection.py)
 
-# TCollection and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_listmethods tcollection_listmethods.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_operators tcollection_operators.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_iterable tcollection_iterable.py)
+# TSeqCollection and subclasses pythonizations (item access and list methods)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection tseqcollection.py)
 
-# TSeqCollection and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_itemaccess tseqcollection_itemaccess.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_listmethods tseqcollection_listmethods.py)
+# TArray and subclasses pythonizations (len and item access)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray tarray.py)
 
-# TIter pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator titer_iterator.py)
+# TVectorT pythonizations (len and item access)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort tvectort.py)
 
-# TArray and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_getitem tarray_getitem.py)
+# TVector3 pythonizations (len and item access)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3 tvector3.py)
 
-# TVectorT pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_len tvectort_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem tvectort_getitem.py)
+# TString pythonizations (len, str/repr, comparison operators and converter)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring tstring.py)
 
-# TVector3 pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_len tvector3_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_getitem tvector3_getitem.py)
+# TObjString pythonizations (len, str/repr and comparison operators)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring tobjstring.py)
 
-# TString pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_str_repr tstring_str_repr.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_comparisonops tstring_comparisonops.py)
+# @pythonization decorator (kept standalone: it inspects the global set of
+# pythonized classes, so it must not share a process with other tests)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 
-# TString converter
-ROOT_ADD_PYUNITTEST(pyroot_conv_tstring tstring_converter.py)
-
-# TObjString pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_len tobjstring_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops.py)
+# Miscellaneous small pythonizations grouped in a single file to avoid paying the
+# Python-startup + import-ROOT overhead once per tiny test: TClass::DynamicCast,
+# TContext context manager, TComplex operators, TIter iteration and TGraph getters.
+ROOT_ADD_PYUNITTEST(pyroot_pyz_misc misc_pyz.py)
 
 # RVec and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec rvec.py)
@@ -186,9 +159,6 @@ if (dataframe)
         ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
     endif()
 endif()
-
-# TComplex pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 
 # Tests with memory usage
 ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
