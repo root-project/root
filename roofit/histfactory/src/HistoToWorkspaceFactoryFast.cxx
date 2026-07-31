@@ -870,6 +870,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       proto.Print();
     }
 
+    measurement.ApplyPreprocessFunctionCallbacks(proto);
+
     RooArgSet likelihoodTerms("likelihoodTerms");
     RooArgSet constraintTerms("constraintTerms");
     vector<string> likelihoodTermNames;
