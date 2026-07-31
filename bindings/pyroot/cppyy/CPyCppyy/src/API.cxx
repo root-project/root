@@ -60,8 +60,15 @@ static bool Initialize()
             return false;
         }
 
-    // force loading of the cppyy module
-        PyRun_SimpleString(const_cast<char*>("import cppyy"));
+    }
+
+// Make sure the cppyy extension module is imported, as this is what runs the
+// CPyCppyy module initialization that sets up internals such as gThisModule.
+    if (!CPyCppyy::gThisModule) {
+        PyObject* cppyymod = PyImport_ImportModule("cppyy");
+        if (!cppyymod)
+            return false;
+        Py_DECREF(cppyymod);
     }
 
     if (!gMainDict) {
