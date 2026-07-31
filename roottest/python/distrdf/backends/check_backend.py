@@ -101,9 +101,10 @@ class TestBackendInit:
             pytest.raises(
                 RuntimeError,
                 match="running in distributed mode with Dask workers using more than one thread is not supported",
-            )
+            ),
         ):
             Backend.DaskBackend(daskclient=client)
+
 
 class TestInitialization:
     """Check initialization method in the Dask backend"""
