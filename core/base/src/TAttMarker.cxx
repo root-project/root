@@ -2,7 +2,7 @@
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include <iostream>
-#include "Strlen.h"
 #include "TAttMarker.h"
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
@@ -107,7 +106,7 @@ accessed via a global name (third column).
        28                    open cross           kOpenCross
        29                    full star            kFullStar
        30                    open star            kOpenStar
-       31                    *
+       31                    *                    kStar2
        32                    open triangle down   kOpenTriangleDown
        33                    full diamond         kFullDiamond
        34                    full cross           kFullCross
@@ -131,8 +130,7 @@ accessed via a global name (third column).
 Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker types",0,0,500,200);
-   TMarker marker;
-   marker.DisplayMarkerTypes();
+   TMarker::DisplayMarkerTypes();
 }
 End_Macro
 
@@ -158,8 +156,7 @@ starting from 50:
 Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker line widths",0,0,600,266);
-   TMarker marker;
-   marker.DisplayMarkerLineWidths();
+   TMarker::DisplayMarkerLineWidths();
 }
 End_Macro
 
@@ -209,10 +206,15 @@ style used is 1. That's the most common one to draw scatter plots.
 
 TAttMarker::TAttMarker()
 {
-   if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; return;}
-   fMarkerColor = gStyle->GetMarkerColor();
-   fMarkerStyle = gStyle->GetMarkerStyle();
-   fMarkerSize  = gStyle->GetMarkerSize();
+   if (!gStyle) {
+      fMarkerColor = 1;
+      fMarkerStyle = kDot;
+      fMarkerSize = 1;
+   } else {
+      fMarkerColor = gStyle->GetMarkerColor();
+      fMarkerStyle = gStyle->GetMarkerStyle();
+      fMarkerSize  = gStyle->GetMarkerSize();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,49 +255,31 @@ void TAttMarker::Copy(TAttMarker &attmarker) const
 
 Style_t TAttMarker::GetMarkerStyleBase(Style_t style)
 {
-   if (style <= 49)
+   if (style <= kFourSquaresPlus)
       return style;
 
    switch ((style - 50) % 18) {
-   case 0:
-      return 2;
-   case 1:
-      return 3;
-   case 2:
-      return 5;
-   case 3:
-      return 24;
-   case 4:
-      return 25;
-   case 5:
-      return 26;
-   case 6:
-      return 27;
-   case 7:
-      return 28;
-   case 8:
-      return 30;
-   case 9:
-      return 32;
-   case 10:
-      return 35;
-   case 11:
-      return 36;
-   case 12:
-      return 37;
-   case 13:
-      return 38;
-   case 14:
-      return 40;
-   case 15:
-      return 42;
-   case 16:
-      return 44;
-   case 17:
-      return 46;
-   default:
-      return style;
+   case 0: return kPlus;
+   case 1: return kStar;
+   case 2: return kMultiply;
+   case 3: return kOpenCircle;
+   case 4: return kOpenSquare;
+   case 5: return kOpenTriangleUp;
+   case 6: return kOpenDiamond;
+   case 7: return kOpenCross;
+   case 8: return kOpenStar;
+   case 9: return kOpenTriangleDown;
+   case 10: return kOpenDiamondCross;
+   case 11: return kOpenSquareDiagonal;
+   case 12: return kOpenThreeTriangles;
+   case 13: return kOctagonCross;
+   case 14: return kOpenFourTrianglesX;
+   case 15: return kOpenDoubleDiamond;
+   case 16: return kOpenFourTrianglesPlus;
+   case 17: return kOpenCrossX;
    }
+
+   return kDot;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,14 +290,15 @@ Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
 {
    if (style >= 50)
       return ((style - 50) / 18) + 2;
-   else if (style == 2 || style == 3 || style == 4 || style == 5
-       || style == 24 || style == 25 || style == 26 || style == 27
-       || style == 28 || style == 30 || style == 31 || style == 32
-       || style == 35 || style == 36 || style == 37 || style == 38
-       || style == 40 || style == 42 || style == 44 || style == 46)
+   if (style == kPlus || style == kStar || style == kCircle || style == kMultiply || style == kOpenCircle ||
+       style == kOpenSquare || style == kOpenTriangleUp || style == kOpenDiamond || style == kOpenCross ||
+       style == kOpenStar || style == kStar2 || style == kOpenTriangleDown || style == kOpenDiamondCross ||
+       style == kOpenSquareDiagonal || style == kOpenThreeTriangles || style == kOctagonCross ||
+       style == kOpenFourTrianglesX || style == kOpenDoubleDiamond || style == kOpenFourTrianglesPlus ||
+       style == kOpenCrossX)
       return 1;
-   else
-      return 0;
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -342,7 +327,7 @@ void TAttMarker::ModifyOn(TVirtualPad &pad)
 void TAttMarker::ResetAttMarker(Option_t *)
 {
    fMarkerColor  = 1;
-   fMarkerStyle  = 1;
+   fMarkerStyle  = kDot;
    fMarkerSize   = 1;
 }
 
@@ -364,7 +349,7 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
 
 void TAttMarker::SetMarkerAttributes()
 {
-   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
+   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor, fMarkerStyle, fMarkerSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -378,7 +363,37 @@ void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
    fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker color.
+
+void TAttMarker::SetMarkerColor(Color_t mcolor)
+{
+   fMarkerColor = mcolor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker color.
+
 void TAttMarker::SetMarkerColor(TColorNumber lcolor)
 {
    SetMarkerColor(lcolor.number());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker style.
+
+void TAttMarker::SetMarkerStyle(Style_t mstyle)
+{
+   fMarkerStyle = mstyle;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker size.
+/// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
+/// They are meant to be very fast to draw and are always drawn with the same number of pixels;
+/// therefore this method does not apply on them.
+
+void TAttMarker::SetMarkerSize(Size_t msize)
+{
+   fMarkerSize  = msize;
 }
