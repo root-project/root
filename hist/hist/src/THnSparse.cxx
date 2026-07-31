@@ -262,54 +262,6 @@ ULong64_t THnSparseCoordCompression::SetBufferFromCoord(const Int_t* coord_in,
    return GetHashFromBuffer(buf_out);
 }
 
-/*
-////////////////////////////////////////////////////////////////////////////////
-/// Calculate hash from bin indexes.
-
-ULong64_t THnSparseCoordCompression::GetHashFromCoords(const Int_t* coord) const
-{
-   // Bins are addressed in two different modes, depending
-   // on whether the compact bin index fits into a Long64_t or not.
-   // If it does, we can use it as a "perfect hash" for the TExMap.
-   // If not we build a hash from the compact bin index, and use that
-   // as the TExMap's hash.
-
-   if (fCoordBufferSize <= 8) {
-      // fits into a Long64_t
-      ULong64_t hash1 = 0;
-      for (Int_t i = 0; i < fNdimensions; ++i) {
-         hash1 += coord[i] << fBitOffsets[i];
-      }
-      return hash1;
-   }
-
-   // else: doesn't fit into a Long64_t:
-   memset(coord, 0, fCoordBufferSize);
-   for (Int_t i = 0; i < fNdimensions; ++i) {
-      const Int_t offset = fBitOffsets[i] / 8;
-      const Int_t shift = fBitOffsets[i] % 8;
-      ULong64_t val = coord[i];
-
-      Char_t* pbuf = fCoordBuffer + offset;
-      *pbuf += 0xff & (val << shift);
-      val = val >> (8 - shift);
-      while (val) {
-         ++pbuf;
-         *pbuf += 0xff & val;
-         val = val >> 8;
-      }
-   }
-
-   ULong64_t hash = 5381;
-   Char_t* str = fCoordBuffer;
-   while (str - fCoordBuffer < fCoordBufferSize) {
-      hash *= 5;
-      hash += *(str++);
-   }
-   return hash;
-}
-*/
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate hash from compact bin index.
