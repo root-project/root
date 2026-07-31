@@ -754,7 +754,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Redefine an existing column that is updated when the input sample changes.
-   /// As for DefinePerSample, but the column must already exist and will be overwritten.
+   /// \sa DefinePerSample. Works similarly, but the column must already exist and will be overwritten.
    template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
    RInterface<Proxied> RedefinePerSample(std::string_view name, F expression)
    {
@@ -806,7 +806,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Redefine an existing column that is updated when the input sample changes.
-   /// As for DefinePerSample, but the column must already exist and will be overwritten.
+   /// \sa DefinePerSample. Works similarly, but the column must already exist and will be overwritten.
    RInterface<Proxied> RedefinePerSample(std::string_view name, std::string_view expression)
    {
       return DefinePerSampleJitImpl(name, expression, true);
