@@ -232,6 +232,10 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
       else if (special == 200)      ROOT::Fit::InitExpo  (*fitdata, f1); // exponential
 
+      // A polN reaches this point only because coordinate errors turned the
+      // linear fitter off above, so it needs a starting point like the others.
+      else if (special == 299 + npar)
+         ROOT::Fit::InitPolynom(*fitdata, f1); // polN
    }
 
 
