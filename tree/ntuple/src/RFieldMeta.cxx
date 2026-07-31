@@ -1547,7 +1547,8 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName()));
+   // To get the correct TClass instance in the clone, we clone using the un-normalized type name
+   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, fClass->GetName()));
 }
 
 std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
