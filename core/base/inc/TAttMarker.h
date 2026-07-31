@@ -13,9 +13,11 @@
 #define ROOT_TAttMarker
 
 #include "Rtypes.h"
+#include <vector>
 
 class TColorNumber;
 class TVirtualPad;
+class TPoint;
 
 class TAttMarker {
 
@@ -42,6 +44,10 @@ public:
    virtual void     SetMarkerColorAlpha(Color_t mcolor, Float_t malpha);
    virtual void     SetMarkerStyle(Style_t mstyle = 1);
    virtual void     SetMarkerSize(Size_t msize = 1);
+
+   enum EMarkerShape { kShapeDot, kShapeCircle, kShapeFilledCircle, kShapePolyLine, kShapeFilledArea, kShapeSegments };
+
+      EMarkerShape GetMarkerShape(Int_t &sz, std::vector<TPoint> &points, Float_t scale = 1.) const;
 
    static  Style_t  GetMarkerStyleBase(Style_t style);
    static  Width_t  GetMarkerLineWidth(Style_t style);
