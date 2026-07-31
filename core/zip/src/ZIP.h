@@ -100,7 +100,7 @@ typedef struct tree_internal_state tree_internal_state;
 
         /* in deflate.c */
 int R__lm_init OF((bits_internal_state *state,int pack_level, ush *flags));
-void R__lm_free OF((void));
+void R__lm_free OF((bits_internal_state *state));
 ulg  R__Deflate OF((bits_internal_state *state,int *errorflag));
 
         /* in trees.c */

@@ -301,7 +301,7 @@ int R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
 /* ===========================================================================
  * Free the window and hash table
  */
-void R__lm_free()
+void R__lm_free(bits_internal_state *state)
 {
 #ifdef DYN_ALLOC
     if (state->R__window != NULL) {
@@ -313,6 +313,8 @@ void R__lm_free()
         fcfree(state->R__head);
         state->R__prev = state->R__head = NULL;
     }
+#else
+   (void) state;
 #endif /* DYN_ALLOC */
 }
 
