@@ -61,9 +61,6 @@ jobs:
       matrix:
         python: [cp310, cp311, cp312, cp313, cp314]
         config:
-          - runner: macos-14
-            platform: macosx_arm64
-            deployment_target: "14.0"
           - runner: macos-15
             platform: macosx_arm64
             deployment_target: "15.0"
@@ -92,9 +89,6 @@ jobs:
         python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         test_config:
           # native tests: each runner tests its own wheel
-          - runner: macos-14
-            wheel_pattern: "macosx_14"
-            label: "native"
           - runner: macos-15
             wheel_pattern: "macosx_15"
             label: "native"
@@ -105,12 +99,6 @@ jobs:
             wheel_pattern: "manylinux"
             label: "native"
           # portability tests: oldest wheel on newer runners
-          - runner: macos-15
-            wheel_pattern: "macosx_14"
-            label: "port"
-          - runner: macos-26
-            wheel_pattern: "macosx_14"
-            label: "port"
           - runner: macos-26
             wheel_pattern: "macosx_15"
             label: "port"
