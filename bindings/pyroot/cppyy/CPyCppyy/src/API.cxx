@@ -79,10 +79,16 @@ static bool Initialize()
 #if PY_VERSION_HEX < 0x03080000
         PySys_SetArgv(sizeof(argv)/sizeof(argv[0]), argv);
 #endif
-
-    // force loading of the cppyy module
-        PyRun_SimpleString(const_cast<char*>("import cppyy"));
     }
+
+// Make sure the cppyy extension module is imported, as this is what runs the
+// CPyCppyy module initialization that sets up internals such as gThisModule.
+    if (!CPyCppyy::gThisModule) {
+        PyObject* cppyymod = PyImport_ImportModule("cppyy");
+        if (!cppyymod)
+            return false;
+        Py_DECREF(cppyymod);
+     }
 
     if (!gMainDict) {
     // retrieve the main dictionary

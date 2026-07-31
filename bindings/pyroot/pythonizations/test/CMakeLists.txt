@@ -200,6 +200,8 @@ endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
 
+ROOT_ADD_PYUNITTEST(regression_pickle_no_cppyy regression_pickle_no_cppyy.py)
+
 ROOT_ADD_PYUNITTEST(package_metadata package_metadata.py)
 
 if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
