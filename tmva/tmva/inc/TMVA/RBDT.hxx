@@ -55,13 +55,10 @@ public:
 
    RTensor<Value_t> Compute(RTensor<Value_t> const &x) const;
 
-   static RBDT LoadText(std::string const &txtpath, std::vector<std::string> &features, int nClasses, bool logistic,
-                        Value_t baseScore);
-
    static RBDT LoadXGBoost(std::string const &jsonPath);
 
 private:
-   /// Private default constructor, used by the public LoadText() and LoadXGBoost() factories.
+   /// Private default constructor, used by the public LoadXGBoost() factory.
    RBDT() = default;
 
    /// Map from XGBoost to RBDT indices.
@@ -73,8 +70,6 @@ private:
    static void correctIndices(std::span<int> indices, IndexMap const &nodeIndices, IndexMap const &leafIndices);
    static void terminateTree(TMVA::Experimental::RBDT &ff, int &nPreviousNodes, int &nPreviousLeaves,
                              IndexMap &nodeIndices, IndexMap &leafIndices, int &treesSkipped);
-   static RBDT
-   LoadText(std::istream &is, std::vector<std::string> &features, int nClasses, bool logistic, Value_t baseScore);
 
    std::vector<int> fRootIndices;
    std::vector<unsigned int> fCutIndices;
