@@ -17,10 +17,10 @@ from tmva101_Training import load_data
 # Load data
 x, y_true, w = load_data("test_signal.root", "test_background.root")
 
-# Load trained model
-File = "tmva101.root"
+# Load trained model from the XGBoost JSON written by tmva101_Training.py
+File = "tmva101.json"
 
-bdt = ROOT.TMVA.Experimental.RBDT("myBDT", File)
+bdt = ROOT.TMVA.Experimental.RBDT.LoadXGBoost(File)
 
 # Make prediction
 y_pred = bdt.Compute(x)

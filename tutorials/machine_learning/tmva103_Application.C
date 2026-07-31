@@ -15,15 +15,15 @@ using namespace TMVA::Experimental;
 
 void tmva103_Application()
 {
-   const char* model_filename = "tmva101.root";
+   const char* model_filename = "tmva101.json";
 
    if (gSystem->AccessPathName(model_filename)) {
       Info("tmva103_Application.C", "%s does not exist", model_filename);
       return;
    }
 
-   // Load BDT model
-   RBDT bdt("myBDT", model_filename);
+   // Load BDT model from the XGBoost JSON written by tmva101_Training.py
+   RBDT bdt = RBDT::LoadXGBoost(model_filename);
 
    // Apply model on a single input
    auto y1 = bdt.Compute({1.0, 2.0, 3.0, 4.0});

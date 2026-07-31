@@ -20,7 +20,6 @@
 #ifndef TMVA_RBDT
 #define TMVA_RBDT
 
-#include <Rtypes.h>
 #include <ROOT/RSpan.hxx>
 #include <TMVA/RTensor.hxx>
 
@@ -37,12 +36,6 @@ namespace Experimental {
 class RBDT final {
 public:
    typedef float Value_t;
-
-   /// IO constructor (both for ROOT IO and LoadText()).
-   RBDT() = default;
-
-   /// Construct backends from model in ROOT file.
-   RBDT(const std::string &key, const std::string &filename);
 
    /// Compute model prediction on a single event.
    ///
@@ -68,6 +61,9 @@ public:
    static RBDT LoadXGBoost(std::string const &jsonPath);
 
 private:
+   /// Private default constructor, used by the public LoadText() and LoadXGBoost() factories.
+   RBDT() = default;
+
    /// Map from XGBoost to RBDT indices.
    using IndexMap = std::unordered_map<int, int>;
 
@@ -90,11 +86,7 @@ private:
    std::vector<Value_t> fBaseResponses;
    Value_t fBaseScore = 0.0;
    bool fLogistic = false;
-
-   ClassDefNV(RBDT, 1);
 };
-
-void SaveXGBoost(std::string const &jsonPath, std::string const &keyName, std::string const &outputPath);
 
 } // namespace Experimental
 
