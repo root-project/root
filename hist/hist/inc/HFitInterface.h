@@ -146,6 +146,12 @@ namespace ROOT {
        */
       void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1);
 
+      /**
+          compute initial parameter for a polynomial function given the fit data
+          Set the parameters to an unweighted least-squares line through the data.
+          Only the first-degree case is seeded; a higher degree is left untouched.
+       */
+      void InitPolynom(const ROOT::Fit::BinData &data, TF1 *f1);
 
       /**
           compute initial parameter for gaussian function given the fit data
