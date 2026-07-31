@@ -55,17 +55,6 @@ void softmaxTransformInplace(Value_t *out, int nOut)
 
 namespace util {
 
-inline bool isInteger(const std::string &s)
-{
-   if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+')))
-      return false;
-
-   char *p;
-   strtol(s.c_str(), &p, 10);
-
-   return (*p == 0);
-}
-
 template <class NumericType>
 struct NumericAfterSubstrOutput {
    explicit NumericAfterSubstrOutput()
@@ -232,133 +221,9 @@ void TMVA::Experimental::RBDT::terminateTree(TMVA::Experimental::RBDT &ff, int &
    nPreviousLeaves = ff.fResponses.size();
 }
 
-TMVA::Experimental::RBDT TMVA::Experimental::RBDT::LoadText(std::string const &txtpath,
-                                                            std::vector<std::string> &features, int nClasses,
-                                                            bool logistic, Value_t baseScore)
-{
-   const std::string info = "constructing RBDT from " + txtpath + ": ";
-
-   if (gSystem->AccessPathName(txtpath.c_str())) {
-      throw std::runtime_error(info + "file does not exists");
-   }
-
-   std::ifstream file(txtpath.c_str());
-   return LoadText(file, features, nClasses, logistic, baseScore);
-}
-
-TMVA::Experimental::RBDT TMVA::Experimental::RBDT::LoadText(std::istream &file, std::vector<std::string> &features,
-                                                            int nClasses, bool logistic, Value_t baseScore)
-{
-   const std::string info = "constructing RBDT from istream: ";
-
-   RBDT ff;
-   ff.fLogistic = logistic;
-   ff.fBaseScore = baseScore;
-   ff.fBaseResponses.resize(nClasses <= 2 ? 1 : nClasses);
-
-   int treesSkipped = 0;
-
-   int nVariables = 0;
-   std::unordered_map<std::string, int> varIndices;
-   bool fixFeatures = false;
-
-   if (!features.empty()) {
-      fixFeatures = true;
-      nVariables = features.size();
-      for (int i = 0; i < nVariables; ++i) {
-         varIndices[features[i]] = i;
-      }
-   }
-
-   std::string line;
-
-   IndexMap nodeIndices;
-   IndexMap leafIndices;
-
-   int nPreviousNodes = 0;
-   int nPreviousLeaves = 0;
-
-   while (std::getline(file, line)) {
-      std::size_t foundBegin = line.find("[");
-      std::size_t foundEnd = line.find("]");
-      if (foundBegin != std::string::npos) {
-         std::string subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
-         if (util::isInteger(subline) && !ff.fResponses.empty()) {
-            terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
-         } else if (!util::isInteger(subline)) {
-            std::stringstream ss(line);
-            int index;
-            ss >> index;
-            line = ss.str();
-
-            std::vector<std::string> splitstring = ROOT::Split(subline, "<");
-            std::string const &varName = splitstring[0];
-            Value_t cutValue;
-            {
-               std::stringstream ss1(splitstring[1]);
-               ss1 >> cutValue;
-            }
-            if (!varIndices.count(varName)) {
-               if (fixFeatures) {
-                  throw std::runtime_error(info + "feature " + varName + " not in list of features");
-               }
-               varIndices[varName] = nVariables;
-               features.push_back(varName);
-               ++nVariables;
-            }
-            int yes;
-            int no;
-            util::NumericAfterSubstrOutput<int> output = util::numericAfterSubstr<int>(line, "yes=");
-            if (!output.failed) {
-               yes = output.value;
-            } else {
-               throw std::runtime_error(info + "problem while parsing the text dump");
-            }
-            output = util::numericAfterSubstr<int>(output.rest, "no=");
-            if (!output.failed) {
-               no = output.value;
-            } else {
-               throw std::runtime_error(info + "problem while parsing the text dump");
-            }
-
-            ff.fCutValues.push_back(cutValue);
-            ff.fCutIndices.push_back(varIndices[varName]);
-            ff.fLeftIndices.push_back(yes);
-            ff.fRightIndices.push_back(no);
-            std::size_t nNodeIndices = nodeIndices.size();
-            nodeIndices[index] = nNodeIndices + nPreviousNodes;
-         }
-
-      } else {
-         util::NumericAfterSubstrOutput<Value_t> output = util::numericAfterSubstr<Value_t>(line, "leaf=");
-         if (output.found) {
-            std::stringstream ss(line);
-            int index;
-            ss >> index;
-            line = ss.str();
-
-            ff.fResponses.push_back(output.value);
-            std::size_t nLeafIndices = leafIndices.size();
-            leafIndices[index] = nLeafIndices + nPreviousLeaves;
-         }
-      }
-   }
-   terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
-
-   if (nClasses > 2 && (ff.fRootIndices.size() + treesSkipped) % nClasses != 0) {
-      std::stringstream ss;
-      ss << "Error in RBDT construction : Forest has " << ff.fRootIndices.size()
-         << " trees, which is not compatible with " << nClasses << "classes!";
-      throw std::runtime_error(ss.str());
-   }
-
-   return ff;
-}
-
 /// Construct an RBDT from an XGBoost model in its native JSON serialization.
 ///
-/// In contrast to LoadText(), which parses the human-readable text dump, this
-/// reads the structured model that XGBoost writes with Booster.save_model().
+/// This reads the structured model that XGBoost writes with Booster.save_model().
 /// That format stores each tree as a set of parallel arrays and references
 /// features by index, so no feature-name resolution is needed. Everything else
 /// (objective, base score, number of classes) is taken from the file, which
