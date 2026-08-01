@@ -2574,7 +2574,7 @@ void TH1::ClearUnderflowAndOverflow()
 ///  If the routine is called with the onlyPositive flag set an error will
 ///  be produced in case of negative bin content and a NaN value returned
 ///  \param onlyPositive If set to true, an error will be produced and NaN will be returned
-///  when a bin with negative number of entries is encountered.
+///  when a bin with negative number of entries is encountered. In that case, no integral will be stored.
 ///  \param option
 ///  - `""` (default) Compute the cumulative density function assuming current bin contents represent counts.
 ///  - `"width"` Computes the cumulative density function assuming current bin contents represent densities.
@@ -2609,8 +2609,10 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
 
             if (onlyPositive && y < 0) {
                  Error("ComputeIntegral","Bin content is negative - return a NaN value");
-                 fIntegral[nbins] = TMath::QuietNaN();
-                 break;
+                 // discard the partial integral, so that it is never used as a valid one
+                 delete[] fIntegral;
+                 fIntegral = nullptr;
+                 return TMath::QuietNaN();
              }
             fIntegral[ibin] = fIntegral[ibin - 1] + y;
          }
@@ -5204,7 +5206,8 @@ Double_t TH1::GetRandom(TRandom *rng, Option_t *option) const
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content
-   if (integral == TMath::QuietNaN() ) return TMath::QuietNaN();
+   if (std::isnan(integral))
+      return TMath::QuietNaN();
 
    Double_t r1 = (rng) ? rng->Rndm() : gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);

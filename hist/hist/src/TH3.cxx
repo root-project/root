@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <stdexcept>
 
 
@@ -959,7 +960,14 @@ void TH3::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
       Error("FillRandom", "Histograms with different dimensions"); return;
    }
 
-   if (h->ComputeIntegral() == 0) return;
+   // check for negative bins here, since GetRandom3 reuses this integral
+   const Double_t integral = h->ComputeIntegral(true);
+   if (std::isnan(integral)) {
+      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities");
+      return;
+   }
+   if (integral == 0)
+      return;
 
    TH3 *h3 = (TH3*)h;
    Int_t loop;
@@ -1277,6 +1285,9 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 3 random numbers along axis x, y and z distributed according
 /// to the cell-contents of this 3-dim histogram
+///
+/// Return a NaN if the histogram has a bin with negative content
+///
 /// @param[out] x  reference to random generated x value
 /// @param[out] y  reference to random generated y value
 /// @param[out] z  reference to random generated z value
@@ -1302,7 +1313,12 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom *rng, Option
    }
    if (integral == 0 ) { x = 0; y = 0; z = 0; return;}
    // case histogram has negative bins
-   if (integral == TMath::QuietNaN() ) { x = TMath::QuietNaN(); y = TMath::QuietNaN(); z = TMath::QuietNaN(); return;}
+   if (std::isnan(integral)) {
+      x = TMath::QuietNaN();
+      y = TMath::QuietNaN();
+      z = TMath::QuietNaN();
+      return;
+   }
 
    if (!rng) rng = gRandom;
    Double_t r1 = rng->Rndm();

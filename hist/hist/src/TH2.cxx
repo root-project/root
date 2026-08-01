@@ -27,6 +27,7 @@
 #include "TObjArray.h"
 #include "TVirtualHistPainter.h"
 
+#include <cmath>
 #include <cstdio>
 
 #include "Rebin2DHelpers.h"
@@ -769,7 +770,14 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
       Error("FillRandom", "Histograms with different dimensions"); return;
    }
 
-   if (h->ComputeIntegral() == 0) return;
+   // check for negative bins here, since GetRandom2 reuses this integral
+   const Double_t integral = h->ComputeIntegral(true);
+   if (std::isnan(integral)) {
+      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities");
+      return;
+   }
+   if (integral == 0)
+      return;
 
    Int_t loop;
    Double_t x,y;
@@ -1188,7 +1196,11 @@ void TH2::GetRandom2(Double_t &x, Double_t &y, TRandom *rng, Option_t *option)
    }
    if (integral == 0 ) { x = 0; y = 0; return;}
    // case histogram has negative bins
-   if (integral == TMath::QuietNaN() ) { x = TMath::QuietNaN(); y = TMath::QuietNaN(); return;}
+   if (std::isnan(integral)) {
+      x = TMath::QuietNaN();
+      y = TMath::QuietNaN();
+      return;
+   }
 
    if (!rng) rng = gRandom;
    Double_t r1 = rng->Rndm();

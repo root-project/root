@@ -171,6 +171,14 @@ The behavior for one-dimensional histograms is unchanged. Code that relied on
 the previous 2D/3D output (for example to build per-axis selection efficiency
 maps) will now obtain different, mathematically consistent values.
 
+### Behavior change: random sampling from 2D and 3D histograms with negative bins
+
+`TH2::GetRandom2()` and `TH3::GetRandom3()` now return NaN when the histogram
+has a bin with negative content, like `TH1::GetRandom()`. Previously, they could
+return numbers computed from an invalid integral. `TH2::FillRandom()` and
+`TH3::FillRandom()` with a source histogram now print an error and fill nothing
+in this case, as `TH1::FillRandom()` already did.
+
 ## Math
 
 ### Skipping identically-vanishing second derivatives in numerical Hessian evaluation
