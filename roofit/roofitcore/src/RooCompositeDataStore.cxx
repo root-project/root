@@ -33,7 +33,6 @@ When iterated from start to finish, datasets will be traversed in the order of t
 #include "RooMsgService.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
-#include "RooTrace.h"
 #include "RooCategory.h"
 
 #include <iomanip>
@@ -47,7 +46,6 @@ using std::map, std::list, std::string;
 
 RooCompositeDataStore::RooCompositeDataStore()
 {
-  TRACE_CREATE;
 }
 
 
@@ -64,7 +62,6 @@ RooCompositeDataStore::RooCompositeDataStore(
     const RooAbsCategory::value_type idx = indexCat.lookupIndex(iter.first);
     _dataMap[idx] = iter.second;
   }
-  TRACE_CREATE;
 }
 
 
@@ -78,7 +75,6 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = item.second->clone() ;
     _dataMap[item.first] = clonedata ;
   }
-  TRACE_CREATE;
 }
 
 
@@ -98,7 +94,6 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = item.second->clone(vars) ;
     _dataMap[item.first] = clonedata ;
   }
-  TRACE_CREATE;
 }
 
 
@@ -114,7 +109,6 @@ RooCompositeDataStore::~RooCompositeDataStore()
       delete item.second;
     }
   }
-  TRACE_DESTROY;
 }
 
 

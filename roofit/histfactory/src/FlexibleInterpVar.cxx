@@ -16,7 +16,6 @@
  */
 
 #include <RooMsgService.h>
-#include <RooTrace.h>
 
 #include <RooFit/Detail/MathFuncs.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
@@ -36,7 +35,6 @@ using namespace HistFactory;
 
 FlexibleInterpVar::FlexibleInterpVar()
 {
-  TRACE_CREATE;
 }
 
 
@@ -82,7 +80,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _interpCode.size());
   }
 
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +89,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
   _paramList("paramList","List of coefficients",this)
 {
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +99,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
   _nominal(other._nominal), _low(other._low), _high(other._high), _interpCode(other._interpCode), _interpBoundary(other._interpBoundary)
 
 {
-  TRACE_CREATE;
 }
 
 
@@ -112,7 +107,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 
 FlexibleInterpVar::~FlexibleInterpVar()
 {
-  TRACE_DESTROY;
 }
 
 void FlexibleInterpVar::setInterpCode(RooAbsReal &param, int code)

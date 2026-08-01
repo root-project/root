@@ -104,7 +104,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _coefList("!coefficients","List of coefficients",this),
   _coefErrCount{_errorCount}
 {
-  TRACE_CREATE;
 }
 
 
@@ -302,7 +301,6 @@ RooAddPdf::RooAddPdf(const RooAddPdf &other, const char *name)
 {
 
   finalizeConstruction();
-  TRACE_CREATE;
 }
 
 

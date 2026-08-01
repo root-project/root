@@ -98,7 +98,6 @@ the new `RooAbsData::uniqueId()`.
 #include "RooVectorDataStore.h"
 #include "RooCompositeDataStore.h"
 #include "RooSentinel.h"
-#include "RooTrace.h"
 #include "RooFitImplHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
@@ -125,7 +124,6 @@ void RooDataSet::cleanup() {}
 
 RooDataSet::RooDataSet()
 {
-  TRACE_CREATE;
 }
 
 namespace {
@@ -275,7 +273,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
              const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)  :
   RooAbsData(name,title,{})
 {
-  TRACE_CREATE;
 
   // Define configuration for this method
   RooCmdConfig pc("RooDataSet::ctor(" + std::string(GetName()) + ")");
@@ -531,7 +528,6 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooAbsData(other,newname), RooDirItem()
 {
    initialize(other._wgtVar ? other._wgtVar->GetName() : nullptr);
-   TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -652,7 +648,6 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, co
 RooDataSet::~RooDataSet()
 {
   removeFromDir(this) ;
-  TRACE_DESTROY;
 }
 
 

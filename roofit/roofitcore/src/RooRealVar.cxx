@@ -36,7 +36,6 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "RooMsgService.h"
 #include "RooParamBinning.h"
 #include "RooVectorDataStore.h"
-#include "RooTrace.h"
 #include "RooRealVarSharedProperties.h"
 #include "RooUniformBinning.h"
 #include "RooSentinel.h"
@@ -95,7 +94,6 @@ RooRealVarSharedProperties& RooRealVar::_nullProp()
 RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning())
 {
   _fast = true ;
-  TRACE_CREATE;
 }
 
 
@@ -111,7 +109,6 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   removeMin();
   removeMax();
   setConstant(true) ;
-  TRACE_CREATE;
 }
 
 
@@ -146,7 +143,6 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   //   setPlotRange(minValue,maxValue) ;
   setRange(minValue,maxValue) ;
-  TRACE_CREATE;
 }
 
 
@@ -166,7 +162,6 @@ RooRealVar::RooRealVar(const char *name, const char *title,
     inRange(value,nullptr,&clipValue) ;
     _value = clipValue ;
 
-    TRACE_CREATE;
 }
 
 
@@ -192,8 +187,6 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
     _altNonSharedBinning[item.first] = std::move(abc);
   }
 
-  TRACE_CREATE;
-
 }
 
 
@@ -207,7 +200,6 @@ RooRealVar::~RooRealVar()
   // _sharedPropList get erased.
   deleteSharedProperties();
 
-  TRACE_DESTROY;
 }
 
 

@@ -55,7 +55,6 @@
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"
-#include "RooTrace.h"
 #include "RooArgList.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
@@ -78,7 +77,6 @@ void RooArgSet::cleanup() { }
 
 RooArgSet::RooArgSet()
 {
-  TRACE_CREATE;
 }
 
 
@@ -90,7 +88,6 @@ RooArgSet::RooArgSet(const RooAbsCollection& coll) :
   RooAbsCollection(coll.GetName())
 {
   add(coll,true) ; // verbose to catch duplicate errors
-  TRACE_CREATE;
 }
 
 
@@ -109,7 +106,6 @@ RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) 
     add(*var1,true) ;
   }
   add(collection,true) ; // verbose to catch duplicate errors
-  TRACE_CREATE;
 }
 
 
@@ -118,7 +114,6 @@ RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) 
 RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {
-  TRACE_CREATE;
 }
 
 
@@ -129,7 +124,6 @@ RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *n
 {
   add(set1) ;
   add(set2) ;
-  TRACE_CREATE;
 }
 
 
@@ -149,7 +143,6 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
     }
     add(*static_cast<RooAbsArg*>(obj)) ;
   }
-  TRACE_CREATE;
 }
 
 
@@ -160,7 +153,6 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
   : RooAbsCollection(other,name)
 {
-  TRACE_CREATE;
 }
 
 
@@ -169,7 +161,6 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
 
 RooArgSet::~RooArgSet()
 {
-  TRACE_DESTROY;
 }
 
 
