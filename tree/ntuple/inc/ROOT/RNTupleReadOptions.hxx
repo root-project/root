@@ -13,6 +13,8 @@
 #ifndef ROOT_RNTupleReadOptions
 #define ROOT_RNTupleReadOptions
 
+#include <cstdint>
+
 namespace ROOT {
 
 class RNTupleReadOptions;
@@ -23,6 +25,8 @@ class RNTupleReadOptionsManip final {
 public:
    static unsigned int GetClusterBunchSize(const RNTupleReadOptions &options);
    static void SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val);
+   static std::uint64_t GetMaxEnvelopeSize(const RNTupleReadOptions &options);
+   static void SetMaxEnvelopeSize(RNTupleReadOptions &options, std::uint64_t val);
 };
 
 } // namespace Internal
@@ -96,6 +100,9 @@ private:
    unsigned int fClusterBunchSize = 1;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    bool fEnableMetrics = false;
+   /// Largest header or footer envelope a page source will accept from an anchor it does not fully trust,
+   /// such as the S3 anchor, which is a separately stored object. Guards the allocation made from those sizes.
+   std::uint64_t fMaxEnvelopeSize = 1024 * 1024 * 1024;
 
 public:
    EClusterCache GetClusterCache() const { return fClusterCache; }
@@ -118,6 +125,16 @@ inline unsigned int RNTupleReadOptionsManip::GetClusterBunchSize(const RNTupleRe
 inline void RNTupleReadOptionsManip::SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val)
 {
    options.fClusterBunchSize = val;
+}
+
+inline std::uint64_t RNTupleReadOptionsManip::GetMaxEnvelopeSize(const RNTupleReadOptions &options)
+{
+   return options.fMaxEnvelopeSize;
+}
+
+inline void RNTupleReadOptionsManip::SetMaxEnvelopeSize(RNTupleReadOptions &options, std::uint64_t val)
+{
+   options.fMaxEnvelopeSize = val;
 }
 
 } // namespace Internal
