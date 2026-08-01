@@ -39,7 +39,6 @@ which returns spans pointing directly to the data.
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooHistError.h"
-#include "RooTrace.h"
 #include "RooFitImplHelpers.h"
 
 #include "Math/Util.h"
@@ -55,7 +54,6 @@ using std::string, std::vector, std::list;
 
 RooVectorDataStore::RooVectorDataStore()
 {
-  TRACE_CREATE;
 }
 
 
@@ -72,7 +70,6 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
   }
 
   setAllBuffersNative() ;
-  TRACE_CREATE;
 }
 
 
@@ -160,7 +157,6 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
 
   setAllBuffersNative() ;
 
-  TRACE_CREATE;
 }
 
 
@@ -184,7 +180,6 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
     _varsww.assign(other._varsww) ;
     fill() ;
   }
-  TRACE_CREATE;
 
 }
 
@@ -238,8 +233,6 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
 
   setAllBuffersNative() ;
 
-  TRACE_CREATE;
-
 }
 
 
@@ -286,7 +279,6 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
 
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 
-  TRACE_CREATE;
 }
 
 
@@ -312,7 +304,6 @@ RooVectorDataStore::~RooVectorDataStore()
   }
 
   delete _cache ;
-  TRACE_DESTROY;
 }
 
 

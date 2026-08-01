@@ -52,7 +52,6 @@
 #include "RooRealVar.h"
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
-#include "RooTrace.h"
 #include "RooDataHist.h"
 #include "RooHistFunc.h"
 
@@ -65,7 +64,6 @@
 
 PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 {
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +128,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char *name, const char *tit
 
   // Choose special integrator by default
   specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator") ;
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +171,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
   _interpCode(other._interpCode)
 {
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
-  TRACE_CREATE;
 }
 
 
@@ -184,7 +180,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
 
 PiecewiseInterpolation::~PiecewiseInterpolation()
 {
-  TRACE_DESTROY;
 }
 
 

@@ -46,7 +46,6 @@ using std::string, std::vector;
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
 {
-   TRACE_CREATE;
 }
 
 //_____________________________________________________________________________
@@ -72,7 +71,6 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    // general initialization
    initialize();
 
-   TRACE_CREATE;
 }
 
 //_____________________________________________________________________________
@@ -112,7 +110,6 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    // general initialization
    initialize();
 
-   TRACE_CREATE;
 }
 
 //_____________________________________________________________________________
@@ -167,7 +164,6 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    // general initialization
    initialize();
 
-   TRACE_CREATE;
 }
 
 //_____________________________________________________________________________
@@ -185,13 +181,11 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
    // general initialization
    initialize();
 
-   TRACE_CREATE;
 }
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::~RooMomentMorphFuncND()
 {
-   TRACE_DESTROY;
 }
 
 //_____________________________________________________________________________

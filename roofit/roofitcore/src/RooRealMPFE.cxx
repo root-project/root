@@ -62,7 +62,6 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooCategory.h"
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
-#include "RooTrace.h"
 
 #include "Rtypes.h"
 #include "TSystem.h"
@@ -217,7 +216,6 @@ void RooRealMPFE::initialize()
 
   if (_pipe->isChild()) {
     // Start server loop
-    RooTrace::callgrind_zero() ;
     _state = Server ;
     serverLoop();
 

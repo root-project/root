@@ -59,7 +59,6 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 #include "RooLinkedListIter.h"
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
-#include "RooTrace.h"
 #include "RooFormulaVar.h"
 #include "RooFormula.h"
 #include "RooUniformBinning.h"
@@ -85,7 +84,6 @@ using std::string, std::ostream;
 
 RooDataHist::RooDataHist()
 {
-  TRACE_CREATE;
 }
 
 
@@ -124,7 +122,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgSe
 
   registerWeightArraysToDataStore();
 
-  TRACE_CREATE;
 }
 
 
@@ -176,7 +173,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importTH1Set(vars, indexCat, histMap, wgt, false) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 }
 
 
@@ -200,7 +196,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 }
 
 
@@ -230,7 +225,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importTH1(vars,*hist,wgt, false) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 }
 
 
@@ -368,7 +362,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   }
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 
 }
 
@@ -987,7 +980,6 @@ RooDataHist::~RooDataHist()
    delete[] _binv;
 
    removeFromDir(this) ;
-  TRACE_DESTROY;
 }
 
 

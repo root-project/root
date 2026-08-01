@@ -1815,7 +1815,6 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
    this->disableInterferences(_config.nonInterfering);
    this->setup(false);
 
-   TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1946,7 +1945,6 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
       }
       _diagrams.push_back(diagram);
    }
-   TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1973,7 +1971,6 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc()
      _observables("observable", "morphing observable", this, true, false),
      _binWidths("binWidths", "set of bin width objects", this, true, false)
 {
-   TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1986,7 +1983,6 @@ RooLagrangianMorphFunc::~RooLagrangianMorphFunc()
          delete vertex;
       }
    }
-   TRACE_DESTROY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

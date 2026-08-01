@@ -76,7 +76,6 @@ for advanced uses of categories.
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
-#include "RooTrace.h"
 #include "RooHelpers.h"
 #include "RooFitLegacy/RooCategorySharedProperties.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
@@ -102,7 +101,6 @@ std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_shar
 
 RooCategory::RooCategory()
 {
-  TRACE_CREATE;
 }
 
 
@@ -115,7 +113,6 @@ RooCategory::RooCategory(const char *name, const char *title) :
 {
   setValueDirty() ;
   setShapeDirty() ;
-  TRACE_CREATE;
 }
 
 
@@ -140,7 +137,6 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name),
   _ranges(other._ranges)
 {
-  TRACE_CREATE;
 }
 
 
@@ -149,7 +145,6 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
 
 RooCategory::~RooCategory()
 {
-  TRACE_DESTROY;
 }
 
 
