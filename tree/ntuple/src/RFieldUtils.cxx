@@ -894,5 +894,5 @@ void ROOT::Internal::DestroyRVecWithChecks(std::size_t alignOfT, unsigned char *
 
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
-      free(*beginPtr);
+      ::operator delete(*beginPtr);
 }
