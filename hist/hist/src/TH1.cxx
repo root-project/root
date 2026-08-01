@@ -2609,8 +2609,12 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
 
             if (onlyPositive && y < 0) {
                  Error("ComputeIntegral","Bin content is negative - return a NaN value");
-                 fIntegral[nbins] = TMath::QuietNaN();
-                 break;
+                 // Do not cache a partial integral: later rows could overwrite the
+                 // failure marker, and other consumers assume fIntegral is a valid CDF.
+                 // A subsequent request recomputes the integral and reports the error again.
+                 delete[] fIntegral;
+                 fIntegral = nullptr;
+                 return TMath::QuietNaN();
              }
             fIntegral[ibin] = fIntegral[ibin - 1] + y;
          }
@@ -5204,7 +5208,8 @@ Double_t TH1::GetRandom(TRandom *rng, Option_t *option) const
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content
-   if (integral == TMath::QuietNaN() ) return TMath::QuietNaN();
+   if (std::isnan(integral))
+      return TMath::QuietNaN();
 
    Double_t r1 = (rng) ? rng->Rndm() : gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);
