@@ -19,7 +19,6 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooListProxy.h"
-#include "RooTrace.h"
 #include "RooAbsBinning.h"
 
 #include <memory>

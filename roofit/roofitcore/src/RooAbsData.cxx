@@ -99,7 +99,6 @@ observable snapshots are stored in the dataset.
 #include "RooDataSet.h"
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
-#include "RooTrace.h"
 #include "RooUniformBinning.h"
 #include "RooSimultaneous.h"
 
@@ -150,8 +149,6 @@ RooAbsData::StorageType RooAbsData::getDefaultStorageType( )
 
 RooAbsData::RooAbsData() : storageType(defaultStorageType)
 {
-
-  RooTrace::create(this) ;
 }
 
 void RooAbsData::initializeVars(RooArgSet const& vars)
@@ -199,8 +196,6 @@ RooAbsData::RooAbsData(RooStringView name, RooStringView title, const RooArgSet&
    initializeVars(vars);
 
    _namePtr = RooNameReg::instance().constPtr(GetName()) ;
-
-   RooTrace::create(this);
 }
 
 void RooAbsData::copyImpl(const RooAbsData &other, const char *newName)
@@ -250,8 +245,6 @@ RooAbsData::RooAbsData(const RooAbsData &other, const char *newName)
      _cachedVars{"Cached Variables"}
 {
    copyImpl(other, newName);
-
-   RooTrace::create(this);
 }
 
 RooAbsData &RooAbsData::operator=(const RooAbsData &other)
@@ -285,8 +278,6 @@ RooAbsData::~RooAbsData()
   for (auto& item : _ownedComponents) {
     delete item.second;
   }
-
-  RooTrace::destroy(this) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

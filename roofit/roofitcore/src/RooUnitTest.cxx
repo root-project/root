@@ -42,7 +42,6 @@ Object          | function
 #include "RooHist.h"
 #include "RooMsgService.h"
 #include "RooDouble.h"
-#include "RooTrace.h"
 #include "RooRandom.h"
 
 #include <TClass.h>
@@ -582,9 +581,7 @@ bool RooUnitTest::runTest()
   gRandom->SetSeed(12345) ;
   RooRandom::randomGenerator()->SetSeed(12345) ;
 
-  RooTrace::callgrind_zero() ;
   if (!testCode()) return false ;
-  RooTrace::callgrind_dump() ;
 
   if (_verb<2) {
     clearSilentMode() ;

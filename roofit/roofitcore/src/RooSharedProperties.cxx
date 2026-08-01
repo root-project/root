@@ -25,7 +25,6 @@ that can be stored in RooSharedPropertiesList.
 
 #include "RooSharedProperties.h"
 #include "RooMsgService.h"
-#include "RooTrace.h"
 
 #include "Riostream.h"
 
@@ -36,7 +35,6 @@ that can be stored in RooSharedPropertiesList.
 
 RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(false)
 {
-  RooTrace::create(this) ;
 }
 
 
@@ -45,7 +43,6 @@ RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(false)
 
 RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr), _refCount(0), _inSharedList(false)
 {
-  RooTrace::create(this) ;
 }
 
 
@@ -55,7 +52,6 @@ RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr), 
 
 RooSharedProperties::~RooSharedProperties()
 {
-  RooTrace::destroy(this) ;
 }
 
 

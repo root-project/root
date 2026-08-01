@@ -50,7 +50,6 @@
 #include "RooFormulaVar.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
-#include "RooTrace.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsBinning.h"

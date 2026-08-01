@@ -19,6 +19,10 @@
 \class RooTrace
 \ingroup Roofitcore
 
+\deprecated RooTrace is unused and untested, and its hooks are compiled out by
+default. It will be removed in ROOT 6.44. For memory debugging, please use
+general-purpose tools like AddressSanitizer or Valgrind instead.
+
 Controls the memory tracing hooks in all RooFit
 objects. When tracing is active, a table of live RooFit objects
 is kept that can be queried at any time. In verbose mode, messages
@@ -95,6 +99,15 @@ and there is no guarantee that this works.
 
 using std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
 
+// RooTrace is deprecated as a whole, so its own implementation necessarily
+// refers to the deprecated class and would otherwise trigger warnings.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 RooTrace* RooTrace::_instance=nullptr ;
 
@@ -365,3 +378,9 @@ void RooTrace::callgrind_dump()
 {
   ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_dump()" << std::endl ;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif

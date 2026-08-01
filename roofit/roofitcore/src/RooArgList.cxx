@@ -42,7 +42,6 @@
 
 #include "RooStreamParser.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooTrace.h"
 #include "RooMsgService.h"
 #include "RooConstVar.h"
 
@@ -57,7 +56,6 @@ using std::endl, std::istream, std::ostream;
 
 RooArgList::RooArgList()
 {
-  TRACE_CREATE;
 }
 
 
@@ -69,7 +67,6 @@ RooArgList::RooArgList(const RooAbsCollection& coll) :
   RooAbsCollection(coll.GetName())
 {
   add(coll) ;
-  TRACE_CREATE;
 }
 
 
@@ -80,7 +77,6 @@ RooArgList::RooArgList(const RooAbsCollection& coll) :
 RooArgList::RooArgList(const char *name) :
   RooAbsCollection(name)
 {
-  TRACE_CREATE;
 }
 
 
@@ -100,7 +96,6 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
     }
     add(*static_cast<RooAbsArg*>(obj)) ;
   }
-  TRACE_CREATE;
 }
 
 
@@ -113,7 +108,6 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 RooArgList::RooArgList(const RooArgList& other, const char *name)
   : RooAbsCollection(other,name)
 {
-  TRACE_CREATE;
 }
 
 
@@ -123,7 +117,6 @@ RooArgList::RooArgList(const RooArgList& other, const char *name)
 
 RooArgList::~RooArgList()
 {
-  TRACE_DESTROY;
 }
 
 

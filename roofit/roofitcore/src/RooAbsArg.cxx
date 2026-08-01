@@ -81,7 +81,6 @@ for single nodes.
 #include <RooRealIntegral.h>
 #include <RooResolutionModel.h>
 #include <RooSetProxy.h>
-#include <RooTrace.h>
 #include <RooTreeDataStore.h>
 #include <RooVectorDataStore.h>
 #include <RooWorkspace.h>

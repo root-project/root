@@ -34,7 +34,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"
-#include "RooTrace.h"
 #include "RooArgList.h"
 #include "RooLinkedListIter.h"
 #include "RooCmdConfig.h"
@@ -142,7 +141,6 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   _name(name),
   _allRRV(other._allRRV)
 {
-  RooTrace::create(this) ;
   if (!name) setName(other.GetName()) ;
 
   _list.reserve(other._list.size());

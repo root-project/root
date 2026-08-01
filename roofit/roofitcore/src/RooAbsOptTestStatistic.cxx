@@ -61,7 +61,6 @@ parallelized calculation of test statistics.
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
-#include "RooTrace.h"
 #include "RooVectorDataStore.h"
 
 #include "ROOT/StringUtils.hxx"

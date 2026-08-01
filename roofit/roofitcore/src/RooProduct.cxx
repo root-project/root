@@ -29,7 +29,6 @@ Represents the product of a given set of RooAbsReal objects.
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooMsgService.h"
-#include "RooTrace.h"
 
 #include <cmath>
 #include <memory>
@@ -50,7 +49,6 @@ namespace {
 
 RooProduct::RooProduct() : _cacheMgr(this,10)
 {
-  TRACE_CREATE;
 }
 
 
@@ -59,7 +57,6 @@ RooProduct::RooProduct() : _cacheMgr(this,10)
 
 RooProduct::~RooProduct()
 {
-  TRACE_DESTROY;
 }
 
 
@@ -76,7 +73,6 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   for (auto comp : prodSet) {
     addTerm(comp);
   }
-  TRACE_CREATE;
 }
 
 
@@ -93,7 +89,6 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
   _compCSet("!compCSet",this,other._compCSet),
   _cacheMgr(other._cacheMgr,this)
 {
-  TRACE_CREATE;
 }
 
 

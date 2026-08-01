@@ -42,7 +42,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooNumIntFactory.h>
 #include <RooRealBinding.h>
 #include <RooSuperCategory.h>
-#include <RooTrace.h>
 #include <RooFitImplHelpers.h>
 
 #include <iostream>
@@ -277,7 +276,6 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 RooRealIntegral::RooRealIntegral()
 {
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +628,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
 
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -738,14 +735,12 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
  other._intList.snapshot(_saveInt) ;
  other._sumList.snapshot(_saveSum) ;
 
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooRealIntegral::~RooRealIntegral()
 {
-  TRACE_DESTROY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

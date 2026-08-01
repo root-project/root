@@ -23,7 +23,9 @@
 #define TRACE_CREATE
 #define TRACE_DESTROY
 
-class RooTrace {
+class R__DEPRECATED(6, 44, "RooTrace is unused and untested, and its hooks are compiled out by default. "
+                            "For memory debugging, please use general-purpose tools like AddressSanitizer "
+                            "or Valgrind instead.") RooTrace {
 public:
   RooTrace() ;
   virtual ~RooTrace() {} ;

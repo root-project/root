@@ -25,7 +25,6 @@ Represents the ratio of two RooAbsReal objects.
 #include <RooMsgService.h>
 #include <RooProduct.h>
 #include <RooRealVar.h>
-#include <RooTrace.h>
 
 #include "RooFit/Detail/MathFuncs.h"
 
@@ -38,7 +37,6 @@ Represents the ratio of two RooAbsReal objects.
 
 RooRatio::RooRatio()
 {
-   TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr, RooAbsReal &dr)
@@ -46,7 +44,6 @@ RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr, RooAbsRe
      _numerator("numerator", "numerator", this, nr),
      _denominator("denominator", "denominator", this, dr)
 {
-   TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr, double dr)
@@ -57,7 +54,6 @@ RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr, double d
    auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), dr);
    _denominator.setArg(*drvar);
    addOwnedComponents(RooArgSet(*drvar));
-   TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, double nr, RooAbsReal &dr)
@@ -68,7 +64,6 @@ RooRatio::RooRatio(const char *name, const char *title, double nr, RooAbsReal &d
    auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), nr);
    _numerator.setArg(*nrvar);
    addOwnedComponents(RooArgSet(*nrvar));
-   TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, double nr, double dr)
@@ -81,7 +76,6 @@ RooRatio::RooRatio(const char *name, const char *title, double nr, double dr)
    _numerator.setArg(*nrvar);
    _denominator.setArg(*drvar);
    addOwnedComponents(RooArgSet(*nrvar, *drvar));
-   TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, const RooArgList &nrlist, const RooArgList &drlist)
@@ -94,12 +88,10 @@ RooRatio::RooRatio(const char *name, const char *title, const RooArgList &nrlist
    _numerator.setArg(*nrprod);
    _denominator.setArg(*drprod);
    addOwnedComponents(RooArgSet(*nrprod, *drprod));
-   TRACE_CREATE;
 }
 
 RooRatio::~RooRatio()
 {
-   TRACE_DESTROY;
 }
 
 RooRatio::RooRatio(const RooRatio &other, const char *name)
@@ -107,7 +99,6 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
      _numerator("numerator", this, other._numerator),
      _denominator("denominator", this, other._denominator)
 {
-   TRACE_CREATE;
 }
 
 double RooRatio::evaluate() const

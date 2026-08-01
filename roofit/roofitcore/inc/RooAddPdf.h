@@ -22,7 +22,6 @@
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
-#include "RooTrace.h"
 
 #include <vector>
 #include <list>
@@ -33,7 +32,7 @@ class AddCacheElem;
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE; }
+  RooAddPdf() : _projCacheMgr(this,10) {}
   RooAddPdf(const char *name, const char *title=nullptr);
   RooAddPdf(const char *name, const char *title,
             RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -42,7 +41,7 @@ public:
 
   RooAddPdf(const RooAddPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooAddPdf(*this,newname) ; }
-  ~RooAddPdf() override { TRACE_DESTROY; }
+  ~RooAddPdf() override {}
 
   bool checkObservables(const RooArgSet* nset) const override;
 

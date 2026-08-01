@@ -4,7 +4,6 @@
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
 #include "RooRandom.h"
-#include "RooTrace.h"
 
 #include "Math/MinimizerOptions.h"
 
@@ -88,8 +87,6 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
       // Preload singletons here so they don't show up in trace accounting
       RooNumIntConfig::defaultConfig();
       RooResolutionModel::identity();
-
-      RooTrace::active(true);
    }
 
    // Add dedicated logging stream for errors that will remain active in silent mode
@@ -182,10 +179,6 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
       }
       delete unitTest;
       i++;
-   }
-
-   if (dryRun) {
-      RooTrace::dump();
    }
 
    gBenchmark->Stop("StressRooFit");
