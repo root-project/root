@@ -404,7 +404,7 @@ void R__CLING_PTRCHECK(off) SmallVectorTemplateBase<T, TriviallyCopyable>::grow(
    // Always grow, even from zero.
    size_t NewCapacity = size_t(NextPowerOf2(this->capacity() + 2));
    NewCapacity = std::min(std::max(NewCapacity, MinSize), this->SizeTypeMax());
-   T *NewElts = static_cast<T *>(malloc(NewCapacity * sizeof(T)));
+   T *NewElts = static_cast<T *>(::operator new(NewCapacity * sizeof(T), std::nothrow));
    R__ASSERT(NewElts != nullptr);
 
    // Move the elements over.
@@ -416,7 +416,7 @@ void R__CLING_PTRCHECK(off) SmallVectorTemplateBase<T, TriviallyCopyable>::grow(
 
       // If this wasn't grown from the inline copy, deallocate the old space.
       if (!this->isSmall())
-         free(this->begin());
+         ::operator delete(this->begin());
    }
 
    this->fBeginX = NewElts;
@@ -566,7 +566,7 @@ public:
       // Subclass has already destructed this vector's elements.
       // If this wasn't grown from the inline copy, deallocate the old space.
       if (!this->isSmall() && this->Owns())
-         free(this->begin());
+         ::operator delete(this->begin());
    }
 
    // also give up adopted memory if applicable
@@ -1043,7 +1043,7 @@ RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS) noexcept(kIsNoExcept)
       if (this->Owns()) {
          this->destroy_range(this->begin(), this->end());
          if (!this->isSmall())
-            free(this->begin());
+            ::operator delete(this->begin());
       }
       this->fBeginX = RHS.fBeginX;
       this->fSize = RHS.fSize;
