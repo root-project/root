@@ -113,6 +113,9 @@ protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override ;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
+  std::unique_ptr<RooAbsReal>
+  createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const override;
+
   RooArgSet const& flattenedCatList() const;
 
   mutable RooSetProxy _plotCoefNormSet ;

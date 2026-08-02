@@ -55,6 +55,7 @@ in each category.
 #include "RooBinSamplingPdf.h"
 #include "RooCategory.h"
 #include "RooCmdConfig.h"
+#include "RooCompositeDataStore.h"
 #include "RooDataHist.h"
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h"
@@ -596,6 +597,43 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
 
+  // Special case: if an asymmetry is requested with respect to our index
+  // category, we cannot reroute the plotting to the component pdfs. The
+  // component pdfs don't depend on the index category, so the asymmetry engine
+  // in the base class would not be able to split them by index state. Instead,
+  // we delegate directly to the base class implementation, which constructs the
+  // asymmetry from the two index-state component pdfs (see the overridden
+  // createAsymmetryComponent() and GitHub issue #14255).
+  if (auto *asymCmd = static_cast<RooCmdArg *>(cmdList.FindObject("Asymmetry"))) {
+    auto *asymCat = dynamic_cast<RooAbsCategory const *>(asymCmd->getObject(0));
+    if (asymCat && asymCat == &_indexCat.arg()) {
+
+      RooLinkedList cmdList2(cmdList);
+
+      // The base-class asymmetry-plotting engine averages the projection over
+      // the projection dataset. This is not supported for the composite data
+      // stores that back datasets with a category index, so we flatten such a
+      // projection dataset into a plain (vector-backed) copy first. Both the
+      // copy and the replacement command must outlive the plotOn() call below,
+      // because the command list only stores pointers to them.
+      std::unique_ptr<RooAbsData> flatProjData;
+      RooCmdArg newProjWData;
+      if (auto *projWData = static_cast<RooCmdArg *>(cmdList2.FindObject("ProjData"))) {
+        auto *projData = dynamic_cast<RooDataSet const *>(projWData->getObject(1));
+        if (projData && dynamic_cast<RooCompositeDataStore const *>(projData->store())) {
+          flatProjData = std::make_unique<RooDataSet>(projData->GetName(), projData->GetTitle(), *projData->get(),
+                                                      RooFit::Import(*const_cast<RooDataSet *>(projData)));
+          const RooArgSet *projDataSet = projWData->getSet(0);
+          newProjWData = projDataSet ? RooFit::ProjWData(*projDataSet, *flatProjData)
+                                     : RooFit::ProjWData(*flatProjData);
+          replaceOrAdd(cmdList2, newProjWData);
+        }
+      }
+
+      return RooAbsReal::plotOn(frame, cmdList2);
+    }
+  }
+
   // Extract projection configuration from command list
   RooCmdConfig pc("RooSimultaneous::plotOn(" + std::string(GetName()) + ")");
   pc.defineString("sliceCatState","SliceCat",0,"",true) ;
@@ -901,6 +939,32 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   }
 
   return frame2 ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Build the component function of an asymmetry plot (see
+/// RooAbsReal::plotAsymOn()) for a fixed state of the asymmetry category.
+///
+/// When the asymmetry is requested in our own index category, the component for
+/// a given index state is simply the corresponding pdf. We return a clone of
+/// that pdf directly instead of a RooSimultaneous with a pinned index, because
+/// a RooSimultaneous compiles its per-category observables with a category
+/// prefix. That prefix makes it incompatible with the vectorized evaluation
+/// backend that averages the asymmetry over the projection data, and would
+/// otherwise silently yield a flat (zero) asymmetry (see issue #14255). For any
+/// other asymmetry category we fall back to the generic implementation.
+
+std::unique_ptr<RooAbsReal>
+RooSimultaneous::createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const
+{
+   if (&asymCat == &_indexCat.arg()) {
+      const std::string &label = _indexCat.arg().lookupName(asymCatState.getCurrentIndex());
+      if (RooAbsPdf *pdf = getPdf(label)) {
+         return RooHelpers::cloneTreeWithSameParameters(static_cast<RooAbsReal const &>(*pdf));
+      }
+   }
+   return RooAbsReal::createAsymmetryComponent(asymCat, asymCatState);
 }
 
 
