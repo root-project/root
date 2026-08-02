@@ -523,6 +523,9 @@ protected:
 
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
+  virtual std::unique_ptr<RooAbsReal>
+  createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const;
+
   bool matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 
   bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
