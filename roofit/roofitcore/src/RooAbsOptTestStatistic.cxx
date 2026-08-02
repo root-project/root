@@ -226,7 +226,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
     _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
-    //     std::cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << std::endl ;
   } else {
     _dataClone = static_cast<RooAbsData*>(indata.Clone()) ;
   }
@@ -432,9 +431,6 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
     hasWarned = true;
   }
 
-  //   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << std::endl ;
-  //   _funcClone->Print("t") ;
-
   RooAbsTestStatistic::constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
   if (operMode()!=Slave) return ;
 
@@ -489,8 +485,6 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
     break ;
   }
 
-//   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump AFTER const-opt" << std::endl ;
-//   _funcClone->Print("t") ;
 }
 
 
@@ -506,8 +500,6 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
 
 void RooAbsOptTestStatistic::optimizeCaching()
 {
-//   std::cout << "RooAbsOptTestStatistic::optimizeCaching(" << GetName() << "," << this << ")" << std::endl ;
-
   // Trigger create of all object caches now in nodes that have deferred object creation
   // so that cache contents can be processed immediately
   _funcClone->getVal(_normSet) ;
@@ -657,12 +649,8 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
 {
 
   if (operMode()==SimMaster) {
-    //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << std::endl ;
     return false ;
   }
-
-  //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << std::endl ;
-  //indata.Print("v") ;
 
 
   // If the current dataset is owned, transfer the ownership to unique pointer
