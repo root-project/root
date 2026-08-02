@@ -554,7 +554,11 @@ int CPyCppyy::CPPMethod::GetPriority()
             if (scope)
                 priority += static_cast<int>(Cppyy::GetNumBasesLongestBranch(scope));
 
-            if (Cppyy::IsEnumScope(scope))
+        // Deprioritize enum args so a competing integer overload wins, matching C++
+        // (no implicit int->enum). GetScope() does not resolve an enum name under every
+        // backend, so IsEnumScope(scope) can miss it; query the arg type directly too.
+            if (Cppyy::IsEnumScope(scope) ||
+                Cppyy::IsEnumType(Cppyy::GetMethodArgType(fMethod, iarg)))
                 priority -= 100;
 
         // a couple of special cases as explained above
