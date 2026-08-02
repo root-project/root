@@ -430,13 +430,11 @@ void RooRealMPFE::calculate() const
 
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
-    //     std::cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << std::endl ;
     const_cast<RooRealMPFE*>(this)->initialize() ;
   }
 
   // Inline mode -- Calculate value now
   if (_state==Inline) {
-    //     std::cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << std::endl ;
     _value = _arg ;
     clearValueDirty() ;
   }
@@ -444,7 +442,6 @@ void RooRealMPFE::calculate() const
 #ifndef _WIN32
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
-    //     std::cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << std::endl ;
     Int_t i(0) ;
 
     //for (i=0 ; i<_vars.size() ; i++) {
@@ -468,7 +465,6 @@ void RooRealMPFE::calculate() const
       }
 
       if ( valChanged || constChanged || _forceCalc) {
-   //cout << "RooRealMPFE::calculate(" << GetName() << " variable " << var->GetName() << " changed " << std::endl ;
    if (_verboseClient) std::cout << "RooRealMPFE::calculate(" << GetName()
              << ") variable " << _vars.at(i)->GetName() << " changed" << std::endl ;
    if (constChanged) {
@@ -535,19 +531,15 @@ double RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is dirty, calling calculate and evaluate" << std::endl ;
     calculate() ;
     _value = evaluate() ;
   } else if (_calcInProgress) {
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") calculation in progress, calling evaluate" << std::endl ;
     // Cache is clean and calculation is in progress
     _value = evaluate() ;
   } else {
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is clean, doing nothing" << std::endl ;
     // Cache is clean and calculated value is in cache
   }
 
-//   std::cout << "RooRealMPFE::getValV(" << GetName() << ") value = " << Form("%5.10f",_value) << std::endl ;
   return _value ;
 }
 
