@@ -55,7 +55,6 @@ namespace RooLinkedListImplDetails {
    _sz(sz), _free(capacity()),
    _chunk(new RooLinkedListElem[_free]), _freelist(_chunk)
       {
-   //cout << "RLLID::Chunk ctor(" << this << ") of size " << _free << " list elements" << std::endl ;
    // initialise free list
    for (Int_t i = 0; i < _free; ++i)
      _chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : nullptr;
@@ -285,7 +284,6 @@ RooLinkedList::RooLinkedList(const RooLinkedList& other) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   std::cout << "RooLinkedList::createElem(" << this << ") obj = " << obj << " elem = " << elem << std::endl ;
 
 RooLinkedListElem* RooLinkedList::createElement(TObject* obj, RooLinkedListElem* elem)
 {
@@ -426,7 +424,6 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   }
 
   if (_htableName){
-    //cout << "storing link " << _last << " with hash arg " << arg << std::endl ;
     _htableName->insert({arg->GetName(), arg});
     _htableLink->insert({arg, reinterpret_cast<TObject *>(_last)});
   }
@@ -609,7 +606,6 @@ TObject* RooLinkedList::find(const char* name) const
     if (_useNptr) {
       // See if it might have been renamed
       const TNamed* nptr= RooNameReg::known(name);
-      //cout << "RooLinkedList::find: possibly renamed '" << name << "', kRenamedArg=" << (nptr&&nptr->TestBit(RooNameReg::kRenamedArg)) << std::endl;
       if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
         RooLinkedListElem* ptr = _first ;
         while(ptr) {
@@ -622,7 +618,6 @@ TObject* RooLinkedList::find(const char* name) const
       }
       return nullptr ;
     }
-    //cout << "RooLinkedList::find: possibly renamed '" << name << "'" << std::endl;
   }
 
   RooLinkedListElem* ptr = _first ;
@@ -661,7 +656,6 @@ RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
   if (_htableName) {
     RooAbsArg* a = const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>((*_htableName)[arg->GetName()]));
     if (a) return a;
-    //cout << "RooLinkedList::findArg: possibly renamed '" << arg->GetName() << "', kRenamedArg=" << arg->namePtr()->TestBit(RooNameReg::kRenamedArg) << std::endl;
     // See if it might have been renamed
     if (!arg->namePtr()->TestBit(RooNameReg::kRenamedArg)) return nullptr;
   }

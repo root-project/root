@@ -73,19 +73,15 @@ RooParamBinning::~RooParamBinning()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
-///   std::cout << "RooParamBinning::cctor(" << this << ") orig = " << &other << std::endl ;
 
 RooParamBinning::RooParamBinning(const RooParamBinning &other, const char *name) : RooAbsBinning(name)
 {
 
   if (other._lp) {
-//     std::cout << "RooParamBinning::cctor(this = " << this << ") taking addresses from orig  ListProxy" << std::endl ;
     _xlo = static_cast<RooAbsReal*>(other._lp->at(0)) ;
     _xhi = static_cast<RooAbsReal*>(other._lp->at(1)) ;
 
   } else {
-
-//     std::cout << "RooParamBinning::cctor(this = " << this << ") taking addresses from orig pointers " << other._xlo << " " << other._xhi << std::endl ;
 
     _xlo   = other._xlo ;
     _xhi   = other._xhi ;
@@ -94,7 +90,6 @@ RooParamBinning::RooParamBinning(const RooParamBinning &other, const char *name)
   _nbins = other._nbins ;
   _lp = nullptr ;
 
-  //cout << "RooParamBinning::cctor(this = " << this << " xlo = " << &_xlo << " xhi = " << &_xhi << " _lp = " << _lp << " owner = " << _owner << ")" << std::endl ;
 }
 
 
@@ -110,14 +105,11 @@ void RooParamBinning::insertHook(RooAbsRealLValue& owner) const
   _owner = &owner ;
 
   // If list proxy already exists update pointers from proxy
-//   std::cout << "RooParamBinning::insertHook(" << this << "," << GetName() << ") _lp at beginning = " << _lp << std::endl ;
   if (_lp) {
-//     std::cout << "updating raw pointers from list proxy contents" << std::endl ;
     _xlo = xlo() ;
     _xhi = xhi() ;
     delete _lp ;
   }
-//   std::cout << "_xlo = " << _xlo << " _xhi = " << _xhi << std::endl ;
 
   // If list proxy does not exist, create it now
   _lp = new RooListProxy(Form("range::%s",GetName()),"lp",&owner,false,true) ;
