@@ -786,3 +786,45 @@ TEST(RooSimultaneous, ExpectedDataWithNonIntegerWeights)
    EXPECT_FLOAT_EQ(tab->get("a"), ws.var("coeff_a")->getVal());
    EXPECT_FLOAT_EQ(tab->get("b"), ws.var("coeff_b")->getVal());
 }
+
+/// GitHub issue #14255.
+/// Asymmetry plots with respect to the index category of a RooSimultaneous
+/// should work. The asymmetry of two Gaussians in a shared observable, sitting
+/// in the +1 and -1 states of the index category, has the analytic form
+/// (G+ - G-) / (G+ + G-), which we compare the plotted curve against.
+TEST(RooSimultaneous, AsymmetryPlot)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss_A(x[-10, 10], -1.0, 1.0)");
+   ws.factory("Gaussian::gauss_B(x, +1.0, 1.0)");
+   ws.factory("ExtendPdf::pdf_A(gauss_A, n_A[10000.])");
+   ws.factory("ExtendPdf::pdf_B(gauss_B, n_B[10000.])");
+   ws.factory("SIMUL::simPdf(sample[A=-1, B=+1], A=pdf_A, B=pdf_B)");
+
+   RooRealVar &x = *ws.var("x");
+   RooCategory &sample = *ws.cat("sample");
+
+   std::unique_ptr<RooDataSet> data{ws.pdf("simPdf")->generate({x, sample}, 10000)};
+
+   std::unique_ptr<RooPlot> frame{x.frame()};
+   // Note: the projection dataset uses a composite data store, which the plot
+   // must handle transparently.
+   ws.pdf("simPdf")->plotOn(frame.get(), Asymmetry(sample), ProjWData(sample, *data));
+
+   RooCurve *curve = frame->getCurve();
+   ASSERT_NE(curve, nullptr);
+
+   auto analytic = [](double xv) {
+      double gp = std::exp(-0.5 * (xv - 1.0) * (xv - 1.0));
+      double gn = std::exp(-0.5 * (xv + 1.0) * (xv + 1.0));
+      return (gp - gn) / (gp + gn);
+   };
+
+   for (double xv : {-4.0, -2.0, -1.0, 0.0, 1.0, 2.0, 4.0}) {
+      EXPECT_NEAR(curve->interpolate(xv), analytic(xv), 1e-6) << "at x = " << xv;
+   }
+}
