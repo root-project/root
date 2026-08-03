@@ -14,6 +14,7 @@
 #include <TError.h>
 #include <TFile.h>
 #include <TIterator.h>
+#include <TNamed.h>
 #include <TKey.h>
 #include <TList.h>
 #include <TROOT.h>
@@ -326,6 +327,12 @@ void *RFile::GetUntyped(std::string_view path,
    }
 
    return obj;
+}
+
+void RFile::Put(const TNamed &namedObj, std::string_view dirPath)
+{
+   std::string completePath = (dirPath.empty() ? "" : std::string(dirPath) + '/') + namedObj.GetName();
+   Put(completePath, namedObj, namedObj.GetTitle());
 }
 
 void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, const void *obj, std::uint32_t flags,
