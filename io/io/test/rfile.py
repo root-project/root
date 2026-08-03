@@ -157,7 +157,7 @@ class RFileTests(unittest.TestCase):
 
         fileName = "test_rfile_gettree_py.root"
         try:
-            with ROOT.TFile.Open(fileName, "RECREATE") as file:
+            with ROOT.TFile.Open(fileName, "RECREATE") as _file:
                 tree = ROOT.TTree("tree", "tree")
                 x = array("i", [0])
                 tree.Branch("myColumn", x, "myColumn/I")
@@ -172,6 +172,32 @@ class RFileTests(unittest.TestCase):
                 self.assertEqual(tree.GetEntries(), 10)
                 xs = [entry.myColumn for entry in tree]
                 self.assertEqual(xs, [x for x in range(10)])
+        finally:
+            os.remove(fileName)
+
+    def test_putTNamed(self):
+        named1 = ROOT.TNamed("named1", "title 1")
+        named2 = ROOT.TNamed("named2", "title 2")
+
+        fileName = "test_rfile_tnamed_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as file:
+                file.Put(named1)
+                # Put named2 under a dir
+                file.Put(named2, "my")
+                # If first argument is a TNamed, second argument must be a string (or None)
+                with self.assertRaises(TypeError):
+                    file.Put(named2, [2, 3])
+
+            with ROOT.RFile.Open(fileName) as file:
+                named1 = file.Get("named1")
+                named2 = file.Get("my/named2")
+                self.assertEqual(named1.GetTitle(), "title 1")
+                self.assertEqual(named2.GetTitle(), "title 2")
+                key1 = file.GetKeyInfo("named1")
+                key2 = file.GetKeyInfo("my/named2")
+                self.assertEqual(key1.GetTitle(), "title 1")
+                self.assertEqual(key2.GetTitle(), "title 2")
         finally:
             os.remove(fileName)
 

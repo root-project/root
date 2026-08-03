@@ -127,10 +127,24 @@ class _RFile_Put:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, name, obj, title = ""):
+    def __call__(self, path, obj = None, title = ""):
         """
         Non-templated Put()
         """
+        import ROOT
+
+        if isinstance(path, ROOT.TNamed):
+            # TNamed-specific overload: arguments are actually Put(namedObj, dirPath).
+            path, obj = obj, path
+            fullPath = ""
+            if isinstance(path, str):
+                fullPath = f"{path}/"
+            elif path is not None:
+                raise TypeError(f"Put(TNamed, dirPath) only accepts a string as the dirPath, not a {type(path)}")
+            fullPath += obj.GetName()
+            path = fullPath
+            title = obj.GetTitle()
+
         objType = type(obj)
         if isinstance(obj, str):
             # special case: automatically convert python str to std::string
@@ -139,7 +153,7 @@ class _RFile_Put:
             raise TypeError(f"type {objType} is not supported by ROOT I/O")
         else:
             className = objType.__cpp_name__
-        self._rfile.Put[className](name, obj, title)
+        self._rfile.Put[className](path, obj, title)
 
     def __getitem__(self, template_arg):
         """
