@@ -11,12 +11,14 @@
 
 #include <stdexcept>
 #include <cassert>
+#include <cmath>
 
 #include "TVirtualX.h"
 #include "RStipples.h"
 #include "TColor.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TAttMarker.h"
 
 #include "TGLPadUtils.h"
 #include "TGLIncludes.h"
@@ -1145,6 +1147,78 @@ void MarkerPainter::DrawFourSquaresPlus(UInt_t n, const TPoint *xy)const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawMarkers(UInt_t n, const TPoint *xy, const TAttMarker &attr) const
+{
+   Int_t markerSize = 0;
+   std::vector<TPoint> markerShape;
+   auto markerType = attr.GetMarkerShape(markerSize, markerShape, 1., kTRUE);
+
+   auto masrkerStyle = TAttMarker::GetMarkerStyleBase(attr.GetMarkerStyle());
+   Bool_t changePolygonMode = (masrkerStyle == kOpenSquare) || (masrkerStyle == kOpenTriangleUp);
+
+   switch(markerType) {
+      case TAttMarker::kShapeDot:
+         glBegin(GL_POINTS);
+         for (UInt_t i = 0; i < n; ++i)
+            glVertex2d(xy[i].fX, xy[i].fY);
+         glEnd();
+         break;
+      case TAttMarker::kShapeFilledCircle:
+         // to fill circle, place point in the middle
+         markerShape.emplace_back(0,0);
+         // no break, circle points will be append
+      case TAttMarker::kShapeCircle:
+         CalculateCircle(markerShape, markerSize * 0.5, markerSize < 200 ? kSmallCirclePts : kLargeCirclePts);
+         // no break, markerShape will be used as all other marker shapes
+      case TAttMarker::kShapePolyLine:
+      case TAttMarker::kShapeFilledArea:
+         if (changePolygonMode)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+         for (unsigned i = 0; i < n; ++i) {
+            const Double_t x = xy[i].fX;
+            const Double_t y = xy[i].fY;
+            if ((markerType == TAttMarker::kShapePolyLine) || (markerType == TAttMarker::kShapeCircle))
+               glBegin(GL_LINE_LOOP);
+            else if (markerType == TAttMarker::kShapeFilledCircle)
+               glBegin(GL_TRIANGLE_FAN);
+            else
+               glBegin(GL_POLYGON);
+
+            for (auto &pnt : markerShape)
+               glVertex2d(x + pnt.fX, y - pnt.fY);
+            glEnd();
+         }
+         if (changePolygonMode)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+         break;
+      case TAttMarker::kShapeSegments:
+         glBegin(GL_LINES);
+         for (unsigned i = 0; i < n; ++i) {
+            const Double_t x = xy[i].fX;
+            const Double_t y = xy[i].fY;
+            for (auto &pnt : markerShape)
+               glVertex2d(x + pnt.fX, y - pnt.fY);
+         }
+         glEnd();
+         break;
+      case TAttMarker::kShapeTriangles:
+         for (unsigned i = 0; i < n; ++i) {
+            const Double_t x = xy[i].fX;
+            const Double_t y = xy[i].fY;
+            glBegin(GL_TRIANGLES);
+            for (auto &pnt : markerShape)
+               glVertex2d(x + pnt.fX, y - pnt.fY);
+            glEnd();
+         }
+         break;
+   }
+
+}
+
+
+
 /*
 Small RAII class for GLU tesselator.
 */
@@ -1345,8 +1419,8 @@ void CalculateCircle(std::vector<TPoint> &circle, Double_t r, UInt_t pts)
    circle.resize(circle.size() + pts + 1);
 
    for (UInt_t i = 0; i < pts; ++i, angle += delta) {
-      circle[first + i].fX = SCoord_t(r * TMath::Cos(angle));
-      circle[first + i].fY = SCoord_t(r * TMath::Sin(angle));
+      circle[first + i].fX = std::round(r * TMath::Cos(angle));
+      circle[first + i].fY = std::round(r * TMath::Sin(angle));
    }
 
    circle.back().fX = circle[first].fX;
